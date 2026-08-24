@@ -169,6 +169,21 @@ describe('FichaCriar', () => {
     expect(componente['estado']().dinheiro).toBe(dinheiroIgnorado);
   });
 
+  it('ignorar a rolagem também zera o bônus monetário de Prestígio, não só o dinheiro rolado', () => {
+    const { fixture, raiz, componente } = montar();
+    componente['atualizar']({ sobrescreverProgressao: true, prestigioManual: 30, passo: 5 });
+    fixture.detectChanges();
+
+    expect(componente['bonusMonetario']()).toBeGreaterThan(0);
+
+    const ignorar = raiz.querySelector('[data-testid="ignorar-recursos"]') as HTMLButtonElement;
+    ignorar.click();
+    fixture.detectChanges();
+
+    expect(componente['totalDinheiro']()).toBe(0);
+    expect(raiz.textContent).toContain('Dinheiro inicial ignorado');
+  });
+
   describe('confirmação de saída do guia', () => {
     it('não navega ao clicar em Sair sem confirmar, e não usa o confirm() nativo do navegador', () => {
       const { fixture, raiz, componente } = montar();

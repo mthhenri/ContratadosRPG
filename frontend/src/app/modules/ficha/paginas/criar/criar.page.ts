@@ -257,7 +257,10 @@ export class FichaCriar {
   });
   protected readonly orcamento = computed(() => calcularOrcamentoAtributos({ classe: this.classeCalculada(), nivel: this.nivelInicial() }));
   protected readonly bonusMonetario = computed(() => calcularBonusMonetario({ prestigioInicial: this.prestigioInicial() }).bonus);
-  protected readonly totalDinheiro = computed(() => this.estado().dinheiro.rolado ? this.estado().dinheiro.inicial + this.bonusMonetario() : 0);
+  /** Ignorar a rolagem (m3-74) é ignorar **todo** o dinheiro inicial, não só o valor rolado — o
+   * bônus monetário de Prestígio também some, senão "começa com $0" (texto do passo) vira mentira
+   * pra quem tem Prestígio > 0. */
+  protected readonly totalDinheiro = computed(() => this.estado().dinheiro.rolado && !this.recursosIgnorados() ? this.estado().dinheiro.inicial + this.bonusMonetario() : 0);
   /** Bônus fixo de atributos do perfil (arquétipo/subclasse) atual — `{}` sem perfil definitivo. */
   protected readonly bonusAtributos = computed(() => obterBonusAtributosComEscolha({ classe: this.classeCalculada(), arquetipo: this.estado().arquetipo }, this.estado().bonusEscolhido));
   protected readonly bonusAtributosLista = computed(() => this.campos

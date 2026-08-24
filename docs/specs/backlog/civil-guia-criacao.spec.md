@@ -111,36 +111,25 @@ Código afetado:
   componente já é "burro"/input-output, então o filtro por classe deve vir de fora,
   como um novo `input()` — mesmo padrão dos demais props do componente).
 
-## Decisões que faltam antes de implementar
+## Decisões (resolvidas pelo dono em 2026-08-24)
 
-Estas perguntas não têm resposta unívoca no documento-fonte e precisam de decisão
-do dono antes de qualquer código — registrar a resposta escolhida no fecho da spec
-quando ela sair do backlog:
-
-1. **"Pode zerar outros dois atributos adicionais" (item 2) — o que isso concede?**
-   O documento não diz se zerar um atributo (além de Luta/Pontaria) devolve um ponto
-   extra ao orçamento (como um point-buy: zerar = +1 ponto pra gastar em outro lugar)
-   ou se é só uma permissão isolada de ficar com um atributo abaixo do piso de 1, sem
-   nenhum ganho de orçamento. Não existe mais no repositório a calculadora antiga
-   (`contratados-calculadora/src/script.js`, citada como referência por
-   `progressao-civil.dados.ts`) pra checar como ela resolvia isso.
-2. **Override manual de Treinamento no passo // Novo agente.** O doc é absoluto
-   ("todo civil inicia sem nenhum treinamento"), mas o guia já permite ao mestre
-   sobrescrever Nível/Prestígio de um agente por conveniência narrativa (ficha
-   avulsa, importar personagem com histórico). Civil deveria ter o mesmo escape
-   (campo manual 0–5), ou o passo trava sempre em Treinamento 0 sem exceção?
-3. **Passo // Recursos (dinheiro rolado 1000 + 4D4×250) para Civil.** Fora do escopo
-   explícito desta spec (o dono escolheu só o passo // Equipamento inicial), mas os
-   dois passos compartilham o conceito de "dinheiro do agente" na Revisão
-   (`totalDinheiro()`, linha 670 do HTML). Confirmar se Civil também rola esse
-   dinheiro normalmente (bônus monetário por Prestígio já zera sozinho, já que
-   Civil não tem Prestígio) ou se esse passo também precisa de tratamento — decidir
-   ao especificar o corte de implementação, não nesta spec.
-4. **Peso do kit inicial (5, doc "Informações Adicionais" genérico) se aplica a
-   Civil?** A seção de Civil só menciona o teto de dinheiro ($1000), não um teto de
-   peso — mas Civil também tem um conceito de capacidade diferente (Inventário =
-   Força × 3, já implementado em `inventario.ts`). Decidir se o teto de peso de
-   criação (5) continua valendo pra Civil ou se essa restrição nem se aplica.
+1. **"Pode zerar outros dois atributos adicionais" — devolve ponto.** Confirmado:
+   diferente do agente, o Civil pode **mover pontos de atributo pela ficha** —
+   zerar um atributo (além de Luta/Pontaria, que já nascem em 0) devolve 1 ponto ao
+   orçamento de criação, gastável em outro atributo (respeitando sempre o teto de 2
+   por atributo na criação). Zerando os 2 atributos adicionais permitidos, o Civil
+   pode mover até 2 pontos extras, além dos 2 pontos base — máximo de 4 pontos de
+   criação disponíveis se os 2 atributos extras forem zerados.
+2. **Override manual de Treinamento — permitido.** O passo // Novo agente mantém um
+   campo de override manual pra Civil, igual ao de agente, só que clampado em 0–5
+   (Treinamento) em vez de 0–20, e sem nenhum campo/conceito de Prestígio.
+3. **Passo // Recursos (dinheiro rolado) — não precisa de tratamento.** Confirmado
+   fora de escopo: o dono não vê necessidade de mudar esse passo pra Civil. Fica
+   registrado em "Fora de Escopo" abaixo, sem pendência.
+4. **Peso do kit inicial (5) — não vale pra Civil.** Confirmado: o Civil só tem o
+   teto de $1000; o teto de peso do Equipamento Inicial genérico não se aplica a
+   ele (`kitValido`/medidor de peso devem ignorar esse limite quando a classe é
+   Civil, não só exibir um número maior).
 
 ## Entregáveis (quando a spec for promovida a `active/`)
 
@@ -149,11 +138,11 @@ Numerados por item; cada um deve poder ser um corte revisável separado
 
 **Item 1 — Novo agente:**
 1. `criar.page.ts`: `nivelInicial()`/`prestigioInicial()` retornam Treinamento
-   0–5 clampado (via `obterLimitesClasse`) e um valor de Prestígio sem sentido pra
-   Civil (decisão #2 acima define se existe override manual ou é sempre 0).
+   0–5 (automático via média, ou override manual clampado 0–5 — decisão #2) pra
+   Civil; nenhum valor de Prestígio é computado/exibido pra essa classe.
 2. `.html`: bloco // Novo agente ramifica por `classeCalculada() === ClasseEnum.CIVIL`
-   — rótulo "Treinamento" no lugar de "Nível", sem campo/rótulo de "Prestígio",
-   sem motivo de entrada/memorial de médias (Civil não herda da campanha).
+   — rótulo "Treinamento" no lugar de "Nível", sem campo/rótulo de "Prestígio", override
+   manual com `max="5"` em vez de `max="20"` pra Civil.
 3. Resumo lateral e Revisão (`.html:665`, `731-732`, `745`): mesma ramificação —
    "Treinamento" no lugar de "Nível / Prestígio", stat "Defesa" oculto pra Civil.
 
@@ -163,25 +152,28 @@ Numerados por item; cada um deve poder ser um corte revisável separado
    vira função de `classe`, ou o guia sobrescreve ao entrar no passo // Classe).
 5. `shared/src/regras/agente/criacao.ts`: `calcularOrcamentoAtributos` e
    `validarDistribuicaoAtributos` ganham branch de Civil (`pontosCriacao: 2`, sem a
-   exceção "um atributo até 3") — com teste novo em `criacao.spec.ts`.
-6. Implementar a decisão #1 (zerar 2 atributos adicionais) do jeito escolhido pelo
-   dono, com teste cobrindo o caso.
+   exceção "um atributo até 3", teto de 2 valendo pra todos) — com teste novo em
+   `criacao.spec.ts`.
+6. Point-buy da decisão #1: zerar um atributo além de Luta/Pontaria (até 2
+   atributos) devolve 1 ponto ao orçamento de criação, gastável em outro atributo
+   sem passar do teto de 2 — com teste cobrindo o caso (inclui a combinação dos 2
+   zerados rendendo até 4 pontos totais de criação).
 
 **Item 3 — Equipamento inicial:**
 7. `compras.dados.ts` ou `criar.page.ts`: orçamento do kit vira 1000 pra Civil
-   (2500 pras demais classes) — decisão #4 resolve se o peso (5) também muda.
+   (2500 pras demais classes); `kitValido`/medidor de peso ignoram o teto de peso
+   (decisão #4) quando a classe é Civil.
 8. `guia-equipamento-loja.component.ts`: novo `input()` de categorias vetadas (ou
    equivalente), usado pelo passo pra ocultar `PROTECOES`/`EXPLOSIVOS` do catálogo
    quando a ficha é Civil.
 
 ## Critérios de Aceite (da implementação futura)
 
-- As 4 decisões abertas estão registradas com a resposta escolhida (nesta spec ou no
-  fecho da task, referenciando o dono).
-- Criar uma ficha Civil pelo guia, do zero: Treinamento sempre 0 (ou 0–5 conforme
-  decisão #2), sem Prestígio/Defesa visível, atributos partem de Luta/Pontaria = 0 e
-  só aceitam 2 pontos de orçamento (mais o que a decisão #1 conceder), kit trava em
-  $1000 e não mostra Proteções/Explosivos no catálogo.
+- Criar uma ficha Civil pelo guia, do zero: Treinamento 0 por padrão ou via
+  override manual 0–5, sem Prestígio/Defesa visível, atributos partem de
+  Luta/Pontaria = 0 e aceitam 2 pontos de orçamento (até 4 se os 2 atributos
+  extras forem zerados via point-buy), kit trava em $1000 sem teto de peso e não
+  mostra Proteções/Explosivos no catálogo.
 - Criar uma ficha de agente convencional (Combatente/Especialista/Suporte/
   Experimento) continua idêntico a hoje — nenhuma regressão nos passos tocados.
 - `npm run lint`/`npm run test` em `shared` e `frontend` verdes; testes novos cobrem
@@ -196,9 +188,8 @@ Numerados por item; cada um deve poder ser um corte revisável separado
 
 - Qualquer regra de Civil **já implementada e correta** no motor (ver "Estado atual"
   acima) — não retocar.
-- Passo // Recursos (dinheiro rolado) — decisão #3 registra a pendência, mas a
-  implementação em si fica fora desta spec (o dono não selecionou esse passo no
-  escopo).
+- Passo // Recursos (dinheiro rolado) — decisão #3: confirmado que não precisa de
+  tratamento pra Civil, sem pendência.
 - Progressão de Treinamento **pós-criação** (o mestre avançando o Treinamento de uma
   ficha Civil já existente, fora do guia) — módulo de ficha/painel do mestre, não o
   guia de criação.
@@ -219,10 +210,11 @@ Numerados por item; cada um deve poder ser um corte revisável separado
 
 ## Riscos e Mitigação
 
-- **Decisões abertas erradas viram regra de jogo incorreta silenciosa** (ex.: dar
-  ponto de orçamento errado ao zerar atributo). Mitigado por travar a implementação
-  até o dono responder as 4 perguntas — nenhuma delas tem leitura única e segura do
-  documento.
+- **Point-buy do item 2 (decisão #1) é regra nova, sem teste de referência anterior**
+  (a calculadora antiga citada em `progressao-civil.dados.ts` não existe mais no
+  repo). Mitigado por teste explícito cobrindo o caso dos 2 atributos zerados
+  rendendo os pontos extras, e pela revisão visual do passo // Atributos com uma
+  ficha Civil real antes de fechar a task.
 - **`criacao.ts` é consumido por outros lugares além do guia** (ex.: qualquer tela
   que valide distribuição de atributos de uma ficha existente) — ramificar por
   classe ali é mudança de contrato compartilhado (`shared/regras`), não só do guia.

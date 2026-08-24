@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — `P-018`: as 4 decisões da spec de Civil respondidas pelo autor
+
+Ao revisar `docs/specs/backlog/civil-guia-criacao.spec.md` (ver entrada abaixo), o autor respondeu
+as 4 perguntas que a spec deixou em aberto: (1) zerar um atributo além de Luta/Pontaria **devolve**
+1 ponto ao orçamento de criação (Civil pode mover pontos pela ficha, diferente do agente) — até 4
+pontos totais se os 2 atributos extras forem zerados; (2) o passo // Novo agente **mantém** override
+manual de Treinamento pra Civil, só que clampado 0–5 em vez de 0–20; (3) o passo // Recursos
+(dinheiro rolado) **não precisa** de tratamento pra Civil; (4) o teto de peso do kit inicial (5)
+**não vale** pra Civil, só o teto de $1000. Spec atualizada com as respostas (seção "Decisões"),
+inclusive os entregáveis/critérios de aceite que dependiam delas. Spec continua em `backlog/` — o
+autor não pediu para implementar ainda, só resolver as decisões; `P-018` continua em Ativos.
+
+## 2026-08-24 — Fix avulso: "ignorar rolagem" no passo // Recursos também zera o bônus de Prestígio
+
+Reportado pelo autor ao revisar a spec de `P-018` ("não tem relação com o civil, mas... esse você
+pode ajustar já"). `criar.page.ts` (`ignorarRecursos`) só zerava o dinheiro **rolado** (`4D4×250`)
+ao clicar "Não rolar dinheiro inicial"; `totalDinheiro()` continuava somando `bonusMonetario()` (o
+bônus por Prestígio, `calcularBonusMonetario`), então um agente com Prestígio inicial > 0 que
+ignorasse a rolagem terminava com dinheiro > 0 mesmo — contradizendo o próprio texto do passo
+("Este agente começa com $0 de dinheiro inicial").
+
+Correção: `totalDinheiro()` retorna 0 quando `recursosIgnorados()` é verdadeiro, independente do
+bônus de Prestígio; a linha de detalhamento "Bônus monetário" no passo também mostra $0 nesse
+estado (antes mostrava o valor calculado mesmo com a rolagem ignorada, incoerente com o total).
+Teste novo em `criar.page.spec.ts` cobre o caso (Prestígio > 0 via override manual, ignora a
+rolagem, confere `totalDinheiro() === 0`). `npm run test -w frontend`: 89 arquivos / 1324 testes
+verdes; `npm run lint -w frontend`: 0 erros (warnings pré-existentes, nenhum novo).
+
 ## 2026-08-24 — Spec de escopo do `P-018` (guia de criação vs. mecânica de Civil)
 
 Pedido do autor: "vamos resolver a p-018". Investigação (não implementação) mostrou que o sintoma
