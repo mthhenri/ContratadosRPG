@@ -98,6 +98,9 @@ export class CriaturaVisualizar {
   protected readonly historicoTemMais = signal(false);
   private readonly historicoPagina = signal(0);
 
+  /** P-021: botão "Abrir calculadora" de dentro do painel do histórico (só existe no mobile). */
+  protected readonly calculadoraAberta = signal(false);
+
   /** Rolagens desta tela ainda em voo no REST (m3-77) — ver `onRolagemRemota`. */
   private rolagensLocaisEmVoo = 0;
 

@@ -47,6 +47,13 @@ export class HistoricoRolagensSidebar {
   readonly acimaDaCalculadora = input(false);
 
   readonly carregarMais = output<void>();
+  /**
+   * P-021: no mobile este painel é full-bleed e cobre o gatilho da calculadora, que mora no
+   * cabeçalho da página — sem jeito de abri-la enquanto o histórico está aberto. Só emitido quando
+   * há um botão "Abrir calculadora" pra clicar (mobile, `acimaDaCalculadora` true — mesmo sinal já
+   * usado pra saber que existe uma calculadora pareada nesta tela); quem consome decide o que abrir.
+   */
+  readonly abrirCalculadora = output<void>();
 
   protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
   protected readonly aberto = signal(false);

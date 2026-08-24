@@ -54,8 +54,9 @@
           [mostrarFicha]="false"
           [acimaDaCalculadora]="true"
           (carregarMais)="carregarMaisHistorico()"
+          (abrirCalculadora)="calculadoraAberta.set(true)"
         />
-        <app-calculadora-flutuante />
+        <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
       }
 
       @if (ficha() && podeGerenciar()) {

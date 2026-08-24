@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
-import type { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoUsuarioEnum, type TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import * as bcrypt from 'bcrypt';
 import { config as carregarVariaveisDeAmbiente } from 'dotenv';
 import knex, { type Knex } from 'knex';
@@ -113,12 +113,15 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
 
     if (!existente) {
       await this.transacao.raw(
-        `INSERT INTO usuario (login, senha, nome, created_date, updated_date, is_deleted)
-         SELECT :login, :senha, :nome, NOW(), NOW(), false
-         WHERE NOT EXISTS (
-           SELECT 1 FROM usuario WHERE login = :login AND is_deleted = false
-         )`,
-        { login: usuario.login, senha: senhaHash, nome: usuario.nome },
+        `INSERT INTO usuario
+           (login, senha, nome, tipo_usuario_id, token_versao, created_date, updated_date, is_deleted)
+         SELECT :login, :senha, :nome, tipo_usuario.id, 1, NOW(), NOW(), false
+         FROM tipo_usuario
+         WHERE tipo_usuario.codigo = :tipo AND tipo_usuario.is_deleted = false
+           AND NOT EXISTS (
+             SELECT 1 FROM usuario WHERE login = :login AND is_deleted = false
+           )`,
+        { login: usuario.login, senha: senhaHash, nome: usuario.nome, tipo: TipoUsuarioEnum.NORMAL },
       );
     }
 

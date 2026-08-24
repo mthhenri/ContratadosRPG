@@ -43,6 +43,241 @@ do autor na revisão de backlog):
 Confirmado por busca no código (`InventarioEsquadrao`, `CampanhaInventarioItemDto`) antes de fechar
 as duas — nenhuma das duas foi removida "de cabeça".
 
+## 2026-08-24 — Auditoria das habilidades de 0 E (abre `P-027`)
+
+Pedido do autor: conferir se as habilidades `[0 E]` estão "aplicando corretamente" nas fichas de
+agente — depois esclarecido como "seus efeitos estão sendo aplicados dentro da ficha", citando
+Mochileiro (troca o atributo do cálculo de Inventário) como exemplo do que ele esperava ver
+acontecer automaticamente, não só o gasto de Energia.
+
+Duas camadas verificadas: (1) transcrição — as 36 habilidades `[0 E]` de
+`docs/core/sistema-v4.1.0.md` batem 1:1 com `custoEnergia: 0` em
+`shared/src/regras/agente/habilidades-catalogo.dados.ts`, sem nenhuma trocada por `null`/valor
+errado; (2) gasto de Energia — `ficha-habilidades.component.ts` já trata `custoEnergia === 0`
+explicitamente (botão desabilitado, sem dedução), e `aplicarReducaoCustoEnergia`
+(`shared/regras/agente/amplificador.ts:224-230`) tem guarda e teste dedicados pra custo 0 nunca
+subir pro mínimo de 1 do desconto de amplificador.
+
+A camada que o autor realmente perguntava — efeito **mecânico automático** na fórmula da ficha —
+tem cobertura desigual. `Mochileiro` (Inventário, `inventario.ts`) e `Peculiaridade`
+(Origem/bônus de Experimento, `identidade/experimento.ts`) são automatizadas de fato. Mas
+`Tanque` (+1 Vida/progressão, Habilidades Gerais Melhoradas) e `Segundo Fôlego`/`Metabolismo
+Acelerado` (dados extras de recuperação no descanso) — mesmo tipo de efeito, modificador
+permanente e incondicional de fórmula — não são: `VidaCalcularDto` e `DescansoCalcularDto` nem
+têm campo `habilidades` hoje, então é arquiteturalmente impossível esses três serem aplicados sem
+mudança de contrato. O comentário de topo do catálogo documenta que "a aplicação automática de
+efeitos na fórmula foi aposentada" (m3-31, jogador aplica na mão), mas Mochileiro/Peculiaridade
+contradizem essa alegação como precedente — não é decisão de design consistente, é cobertura
+incompleta.
+
+Registrado como `P-027` em `PROBLEMS.md` (Ativos) com o levantamento completo — inclusive a
+decisão em aberto (automatizar os 3 restantes, ou formalizar "aplica na mão" pra eles também,
+documentando a inconsistência com Mochileiro/Peculiaridade). Auditoria cobriu só as 36 habilidades
+de `[0 E]`, a pedido do dono — as de custo > 0 do catálogo (~150) não foram revisadas por essa
+mesma lente e ficam fora desta rodada. Nenhum código foi alterado nesta investigação.
+
+## 2026-08-24 — `P-018`: as 4 decisões da spec de Civil respondidas pelo autor
+
+Ao revisar `docs/specs/backlog/civil-guia-criacao.spec.md` (ver entrada abaixo), o autor respondeu
+as 4 perguntas que a spec deixou em aberto: (1) zerar um atributo além de Luta/Pontaria **devolve**
+1 ponto ao orçamento de criação (Civil pode mover pontos pela ficha, diferente do agente) — até 4
+pontos totais se os 2 atributos extras forem zerados; (2) o passo // Novo agente **mantém** override
+manual de Treinamento pra Civil, só que clampado 0–5 em vez de 0–20; (3) o passo // Recursos
+(dinheiro rolado) **não precisa** de tratamento pra Civil; (4) o teto de peso do kit inicial (5)
+**não vale** pra Civil, só o teto de $1000. Spec atualizada com as respostas (seção "Decisões"),
+inclusive os entregáveis/critérios de aceite que dependiam delas. Spec continua em `backlog/` — o
+autor não pediu para implementar ainda, só resolver as decisões; `P-018` continua em Ativos.
+
+## 2026-08-24 — Fix avulso: "ignorar rolagem" no passo // Recursos também zera o bônus de Prestígio
+
+Reportado pelo autor ao revisar a spec de `P-018` ("não tem relação com o civil, mas... esse você
+pode ajustar já"). `criar.page.ts` (`ignorarRecursos`) só zerava o dinheiro **rolado** (`4D4×250`)
+ao clicar "Não rolar dinheiro inicial"; `totalDinheiro()` continuava somando `bonusMonetario()` (o
+bônus por Prestígio, `calcularBonusMonetario`), então um agente com Prestígio inicial > 0 que
+ignorasse a rolagem terminava com dinheiro > 0 mesmo — contradizendo o próprio texto do passo
+("Este agente começa com $0 de dinheiro inicial").
+
+Correção: `totalDinheiro()` retorna 0 quando `recursosIgnorados()` é verdadeiro, independente do
+bônus de Prestígio; a linha de detalhamento "Bônus monetário" no passo também mostra $0 nesse
+estado (antes mostrava o valor calculado mesmo com a rolagem ignorada, incoerente com o total).
+Teste novo em `criar.page.spec.ts` cobre o caso (Prestígio > 0 via override manual, ignora a
+rolagem, confere `totalDinheiro() === 0`). `npm run test -w frontend`: 89 arquivos / 1324 testes
+verdes; `npm run lint -w frontend`: 0 erros (warnings pré-existentes, nenhum novo).
+
+## 2026-08-24 — Spec de escopo do `P-018` (guia de criação vs. mecânica de Civil)
+
+Pedido do autor: "vamos resolver a p-018". Investigação (não implementação) mostrou que o sintoma
+original de `P-018` (Nível/Prestígio calculados e rotulados igual a um agente no passo // Novo
+agente) era só a ponta visível — o guia de criação (`criar.page.ts`/`.html`) trata Civil como
+qualquer outra classe em vários pontos, apesar de boa parte do motor de regras
+(`shared/src/regras/agente`: `saude.ts`, `defesa.ts`, `dano.ts`, `movimento.ts`, `inventario.ts`,
+`sanidade.ts`, `habilidades*.ts`, `limites.ts`, `progressao.ts`) já ter ramificação de Civil
+correta e testada.
+
+Três divergências adicionais confirmadas nesta sessão, com fonte em
+`docs/core/sistema-v4.1.0.md` § "Jogando como um Civil": (1) o campo manual de Nível aceita 0–20
+(devia ser 0–5, `limites.ts` já expõe `nivelMaximo` por classe) e o resumo lateral mostra um stat
+de "Defesa" (`nivelInicial() + 10`) que Civil não possui; (2) `ATRIBUTOS_BASE_PADRAO`
+(`ficha-padrao.ts`) e `calcularOrcamentoAtributos`/`validarDistribuicaoAtributos`
+(`shared/src/regras/agente/criacao.ts`) usam a base/orçamento de agente (todos os atributos em 1,
+4 pontos de criação) pra qualquer classe — Civil deveria começar com Luta/Pontaria em 0 e ter só 2
+pontos de criação, sem a exceção de "um atributo até 3"; (3) o passo // Equipamento inicial aplica
+o teto genérico ($2500/5 de peso) e o catálogo completo pra Civil, que deveria ter orçamento fixo
+de $1000 e as categorias Proteções/Explosivos vetadas.
+
+Apresentado ao autor com `AskUserQuestion` (achado + os 3 escopos possíveis); ele confirmou os
+três, mas pediu explicitamente para **não implementar ainda** — só produzir a spec, seguindo o
+fluxo orientado por especificação de `AGENTS.md`. Spec criada em
+`docs/specs/backlog/civil-guia-criacao.spec.md`, com o levantamento completo (código + citação de
+doc por linha), 4 decisões de regra que só o dono pode responder antes de codar (o que "zerar mais
+dois atributos" concede em pontos; se Civil tem override manual de Treinamento ou é sempre 0; se o
+passo // Recursos também precisa de tratamento; se o teto de peso do kit se aplica a Civil),
+entregáveis numerados por passo e critérios de aceite (incluindo o gate visual obrigatório da
+implementação futura). `PROBLEMS.md` `P-018` **continua em Ativos** (não é um fechamento, é
+escopo) — só a "Correção" ganhou o ponteiro pra spec.
+
+## 2026-08-24 — Três ajustes avulsos de tooling/qualidade (fecha `P-022`, `P-023`, `P-024`)
+
+Três problemas independentes de `PROBLEMS.md`, resolvidos na mesma sessão a pedido direto do autor
+("resolve a P-022, P-023 e P-024"). Nenhum toca comportamento de runtime da aplicação — todos são
+correções de ferramenta/teste/fixture.
+
+**`P-022` — lint do backend falhava em 2 specs preexistentes.** `campanha.service.spec.ts:685` e
+`ficha.service.spec.ts:2373` tinham `@typescript-eslint/no-unnecessary-type-assertion` acusando a
+asserção `as {...}`/`as unknown as {...}` como redundante. Investigação: rodar `eslint --fix` no
+arquivo inteiro (validado numa cópia antes de aplicar) mostrou que a asserção de **shape** não era o
+alvo real da regra — o alvo era o `!` (non-null assertion) logo antes, em
+`mock.calls[0]!` → `mock.calls[0]`, porque o tipo do array de chamadas do mock já não é opcional
+nessa posição. Remover só o `!` (não o `as {...}`, que continua necessário — `mock.calls[0][0]` seria
+`any` sem ele, o que geraria `no-unsafe-*` novos) resolve os dois com um diff de 1 linha por arquivo.
+Confirmado por tentativa e erro: remover o `as {...}` em vez do `!` reintroduz o problema como 3 erros
+novos (`no-unsafe-assignment`/`no-unsafe-member-access`) — descartado.
+
+**`P-023` — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id`.** O `INSERT INTO usuario`
+de `backend/tools/database/seed-dev.ts` (`garantirUsuario`) nunca foi atualizado depois da migration
+`0015` (M6): não preenchia `tipo_usuario_id` nem `token_versao`, as duas colunas `NOT NULL` sem
+`DEFAULT` que essa migration introduziu. Corrigido replicando exatamente o padrão de
+`UsuarioRepository.criarUsuario` (`backend/src/modules/usuario/usuario.repository.ts:101-110`):
+`INSERT ... SELECT :login, :senha, :nome, tipo_usuario.id, 1, NOW(), NOW(), false FROM tipo_usuario
+WHERE tipo_usuario.codigo = :tipo AND tipo_usuario.is_deleted = false AND NOT EXISTS (...)`, com
+`tipo: TipoUsuarioEnum.NORMAL` fixo — mesma regra do registro público
+(`UsuarioService.criar`: "Cria uma conta NORMAL, compartilhando a mesma regra com o registro
+público"), sem fixar o id numérico da tabela de referência. Verificado ao vivo: subi o Postgres local
+(`sudo -u postgres pg_ctlcluster 16 main start`), rodei `npm run db:migrate` e depois
+`npm run db:seed:dev` duas vezes seguidas — `4 usuários, 2 campanhas, 8 membros, 8 fichas` nas duas
+rodadas (idempotente), e `SELECT login, tipo_usuario_id, token_versao FROM usuario` confirmou os 4
+logins do cenário com `tipo_usuario_id`/`token_versao` preenchidos, e `senhor.contratados`
+preservando `tipo_usuario_id = 2` (ADMIN, da migration `0015`) porque `alterarSenha: false` faz o
+`UPDATE` de reforço pular o tipo — só a criação (`INSERT`) resolve o tipo, como deveria.
+
+**`P-024` — `typecheck -w shared` falhava em `a-estatua.spec.ts` por um campo `atributo` inexistente.**
+O fixture de `ataques` (linhas 133-149) ainda usava o formato antigo do DTO
+(`atributo: 'luta'`) — `FichaCriaturaAtaqueDto` migrou faz tempo para `teste`/`danoCritico` como
+expressão livre de dados (comentário do próprio DTO, `ficha-criatura.dtos.ts:169-179`: "não mais
+`atributo: keyof FichaAtributosDto` + dobra automática... o Mestre escreve a fórmula exata"), e o
+fixture nunca acompanhou. `tsc` só apontava a propriedade excedente (`TS2353`) nas duas asserções de
+objeto — não as duas propriedades **faltando** (`teste`/`danoCritico`, ambas obrigatórias); checagem
+de excesso e de ausência não coexistem no mesmo diagnóstico quando as duas falham ao mesmo tempo no
+mesmo literal, então a ausência só ficou visível depois de tirar `atributo`. Preenchidos com valores
+extraídos do próprio exemplo do sistema (`docs/core/guia_de_mestre-v4.0.0.md` — "Pancada"/
+"Esmagamento" da Estátua, coluna de teste "Luta 5D20+12" → `teste: '5d20kh1+12'`, mesma notação de
+pool com contagem de dados explícita usada em `regras/rolagem/rolagem.ts`) e a regra de crítico do
+sistema (`sistema-v4.1.0.md` § Crítico e Margem de Crítico: "Dobrar... todos os dados e valores fixos"
+→ `danoCritico` dobra dados e fixo de `dano`: `3D12+4` → `6D12+8`, `4D12+10` → `8D12+20`). Nenhuma das
+duas asserções (`obterDanoReferenciaPorVd`) depende desses campos, e `validarFichaCriatura` não lê
+`teste`/`danoCritico` — os valores só precisavam ser estruturalmente válidos, não teve risco de
+quebrar uma asserção existente.
+
+**Verificação.** `npm run typecheck -w shared` limpo; `npm run lint -w backend`/`-w shared` sem
+erros (só os `warn` já esperados de quotes/semi/max-len); `npm test -w backend` (453/453) e
+`npm test -w shared` (723/723) verdes.
+
+## 2026-08-24 — Ajuste avulso: botão "Abrir calculadora" dentro do painel do histórico no mobile (fecha `P-021`)
+
+Ajuste avulso, pedido direto do autor a partir de `PROBLEMS.md` `P-021` — no mobile (`360×800`),
+dentro da ficha, se a calculadora não estivesse aberta **antes** de abrir o histórico de rolagens,
+não dava pra abrir a calculadora com o histórico já aberto.
+
+**Causa raiz (confirmada ao vivo, Playwright + `elementFromPoint`).** No mobile os dois gatilhos
+(`CalculadoraFlutuante`/`HistoricoRolagensSidebar`) deixam de ser círculos `position: fixed` e
+viram botões inline no cabeçalho da ficha (`utilitario-inline-mobile()`, `position: static`), com
+`z-index: auto`. O painel do histórico é `position: fixed`, `width: 100vw` no mobile — cobre a tela
+inteira, inclusive a faixa do cabeçalho onde os dois gatilhos moram; um elemento `position: static`
+nunca cria stacking context e sempre pinta abaixo de qualquer elemento posicionado, então o painel
+cobria o botão da calculadora por cima, mesmo ele continuando visível a olho nu. Na prática só essa
+direção estava quebrada: calculadora aberta → histórico por cima já funcionava (o popup da
+calculadora sempre teve `z-index: 66` fixo, e nunca é full-bleed).
+
+**Primeira tentativa, descartada.** Dar aos dois gatilhos um `z-index` numérico no mobile (item flex
+cria stacking context mesmo em `position: static`, CSS Flexbox §4) tornava o clique possível, mas o
+resultado visual era ruim: o botão da calculadora, sem nenhum fundo/contorno herdado do cabeçalho
+(que fica coberto junto), "boiava" solto sobre o conteúdo do painel — chegando a cobrir a primeira
+carta do histórico. Dar-lhe fundo/sombra ajudava a legibilidade do próprio botão, mas exigia também
+reservar um respiro no topo do painel (`--teto-flutuante`, medido em 122px) pra não sobrepor
+conteúdo real — pedido de revisão do autor pela via visual: descartada por complexidade/risco
+desproporcionais ao ganho.
+
+**Correção final.** Em vez de expor o gatilho da calculadora por cima do histórico, o próprio painel
+do `HistoricoRolagensSidebar` ganhou um botão "Abrir calculadora" (ícone + rótulo), visível **só no
+mobile** (CSS, `display: none` fora de `@include bp.mobile`), logo abaixo do cabeçalho do painel —
+`@if (acimaDaCalculadora())`, reaproveitando o mesmo sinal de entrada que já indica que esta tela
+pareia histórico + calculadora (as 4 telas que usam os dois juntos: ficha de agente, ficha de
+criatura, painel de Encontro, detalhe da campanha). Novo `output<void>() abrirCalculadora`, emitido
+no clique. `CalculadoraFlutuante.aberta` deixou de ser um `signal` só interno e virou `model<boolean>`
+— drop-in (mesma API `.set()/.update()/()` usada internamente, nada mudou no resto do componente) —
+pra aceitar comando externo via `[(aberta)]`. As 4 páginas ganharam um `calculadoraAberta = signal
+(false)` próprio, ligando `(abrirCalculadora)="calculadoraAberta.set(true)"` no histórico a
+`[(aberta)]="calculadoraAberta"` na calculadora. Nenhum `z-index`/`position` foi tocado — os dois
+gatilhos originais (e o popup da calculadora) voltaram exatamente ao estado anterior ao `P-021`.
+
+**Verificado ao vivo** (Postgres local sem Docker, backend+frontend reais, Playwright, `360×800` e
+`1920×1080`, ficha REST-seed real, com e sem rolagem real no histórico pra checar sobreposição):
+histórico aberto → botão "Abrir calculadora" visível sem sobrepor nada (nem o cabeçalho, nem a
+primeira carta) → clique abre a calculadora por cima, os dois ficam abertos ao mesmo tempo; fechar
+cada um independente do outro, nos dois sentidos; reabrir a calculadora pelo botão de novo depois de
+fechada. Desktop confirmado sem o botão (`acimaDaCalculadora` true, mas `display: none` fora do
+mobile) e com o gatilho circular de sempre intacto.
+
+Testado: frontend 1323/1323 (sem novo caso — mudança de UI pura, sem regra nova; `[(aberta)]`
+model não tinha teste dedicado antes e continua comportando-se como o signal interno que era),
+lint limpo (0 erros). `PROBLEMS.md` `P-021` fechado.
+
+## 2026-08-24 — Ajuste avulso: `[appendTo]="'body'"` em todos os `p-dialog` do frontend (fecha `P-025`)
+
+Ajuste avulso, pedido direto do autor a partir de `PROBLEMS.md` `P-025` — o editor de Origem
+(`ficha-visualizacao.component.html`) não abria no mobile (`360×800`): o `<p-dialog>` existia no
+DOM com `display`/`visibility`/`opacity` "visíveis", mas `position: static` e bounding box zero,
+inacessível. Causa já diagnosticada no registro do problema: sem `[appendTo]="'body'"`, o CDK
+overlay do PrimeNG renderiza preso à árvore do próprio componente em vez de mover para
+`document.body`, e em certos contextos de empilhamento o `position: fixed` que o PrimeNG tentaria
+aplicar não "pega".
+
+**Correção.** Adicionado `[appendTo]="'body'"` ao `p-dialog` do editor de Origem — mesmo fix já
+validado ao vivo em `m3-78` para o editor da Habilidade de Personalidade. Auditados **todos** os
+`p-dialog` do frontend (pedido explícito do `P-025`: "vale auditar os demais"): mais dois estavam
+sem o atributo — `ficha-sanidade.component.html` (diálogo do editor de sequela/trauma/lesão,
+`apresentacao="dialog"`, usado no `modo="compacto"` da ficha) e `receber-dano-dialog.component.html`
+(`app-receber-dano-dialog`, reaproveitado no cartão do combatente do Encontro e no rótulo "Vida" da
+ficha). Os dois ganharam o mesmo `[appendTo]="'body'"`. No total, 6 `p-dialog` existem no projeto;
+os 4 restantes (visibilidade da ficha, Habilidade de Personalidade, confirmação de Peculiaridade,
+ficha-inventário/ficha-rolagens) já tinham o atributo.
+
+**Verificado ao vivo** (Postgres local sem Docker — `pg_ctlcluster`, `1920×1080`/`360×800`, ficha
+REST-seed real, Playwright): o editor de Origem abre corretamente nos dois viewports — bounding box
+real (`342×449` a `360px`), modal centralizado no desktop, formulário completo visível e utilizável
+em ambos. O diálogo "Receber dano" (mesmo padrão, aberto pelo ícone ao lado do rótulo "Vida")
+também confirmado nos dois viewports com bounding box real. O terceiro (`ficha-sanidade`, modo
+`dialog`/`compacto`, só alcançável dentro de um card compacto de esquadrão numa campanha) recebeu o
+mesmo fix de uma linha e foi coberto pelo lint/build/teste completos do frontend, mas não foi
+possível reproduzir ao vivo o estado exato (`modo="compacto"` dentro do card de esquadrão do painel
+de campanha) dentro do escopo desta sessão — mesmo mecanismo (`p-dialog`/CDK overlay) já provado nos
+outros dois, risco tratado como baixo.
+
+Testado: frontend 1323/1323 (sem mudança de contagem — é fix de atributo HTML, sem novo teste
+unitário; JSDOM não reproduz o bug de overlay, que só aparece no navegador real), lint limpo (0
+erros; regras `warn` novas de estilo `.ts` não relacionadas a esta task). `PROBLEMS.md` `P-025`
+fechado.
+
 ## 2026-08-23 — `m7-19`: mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro
 
 Ajuste avulso pós-M7 (`docs/specs/backlog/m7-19-editar-formula-iniciativa-mestre.spec.md`), pedido
