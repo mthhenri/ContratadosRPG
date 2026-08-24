@@ -44,6 +44,20 @@
       </button>
     </header>
 
+    <!-- P-021: só no mobile (CSS) — o gatilho da calculadora no cabeçalho da página fica coberto
+         por este painel full-bleed, então a única forma de abri-la com o histórico já aberto é
+         por aqui de dentro. -->
+    @if (acimaDaCalculadora()) {
+      <button
+        type="button"
+        class="historico-rolagens__abrir-calculadora"
+        (click)="abrirCalculadora.emit()"
+      >
+        <app-icone nome="calculadora" />
+        Abrir calculadora
+      </button>
+    }
+
     <div class="historico-rolagens__corpo" appOverflowFade>
       @if (carregando()) {
         <p class="historico-rolagens__vazio">Carregando…</p>

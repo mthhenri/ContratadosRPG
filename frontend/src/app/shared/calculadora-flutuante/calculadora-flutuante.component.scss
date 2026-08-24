@@ -36,12 +36,8 @@
 
     // Mobile: inline no cabeçalho, ao lado do gatilho do histórico — flutuante nessa faixa
     // colidiria com a barra de navegação inferior (m3-60) e com a bandeja de dados.
-    //
-    // P-021: mesma correção do gatilho de `HistoricoRolagensSidebar` (ver comentário lá) — sem
-    // um z-index numérico, o painel `position: fixed` do histórico (100vw no mobile) cobria este
-    // botão por trás, e não dava pra abrir a calculadora com o histórico já aberto.
     @include bp.mobile {
-      z-index: 70;
+      z-index: auto;
       flex: none;
       font-size: 15px;
       color: var(--text-dim);

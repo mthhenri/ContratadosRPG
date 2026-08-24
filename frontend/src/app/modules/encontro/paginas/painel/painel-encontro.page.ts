@@ -186,6 +186,9 @@ export class PainelEncontro {
   protected readonly rolagensFeed = signal<readonly RolagemResumoDto[]>([]);
   protected readonly carregandoRolagens = signal(true);
 
+  /** P-021: botão "Abrir calculadora" de dentro do painel do histórico (só existe no mobile). */
+  protected readonly calculadoraAberta = signal(false);
+
   /** `membros()` sem o `null` do carregamento — só existe pro input `membros` das Anotações. */
   protected readonly membrosDaCampanha = computed(() => this.membros() ?? []);
 

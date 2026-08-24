@@ -61,12 +61,13 @@
             <span>Minha ficha</span>
           </button>
         }
-        <app-calculadora-flutuante />
+        <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
         <app-historico-rolagens-sidebar
           titulo="Rolagens da Campanha"
           [itens]="rolagensFeed()"
           [carregando]="carregandoRolagens()"
           [acimaDaCalculadora]="true"
+          (abrirCalculadora)="calculadoraAberta.set(true)"
         />
         @if (usuarioAtivoId(); as usuarioId) {
           <app-caderno-flutuante

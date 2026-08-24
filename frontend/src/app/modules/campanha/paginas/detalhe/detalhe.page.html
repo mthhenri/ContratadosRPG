@@ -80,13 +80,14 @@
           [itens]="rolagensFeed()"
           [carregando]="carregandoRolagens()"
           [acimaDaCalculadora]="true"
+          (abrirCalculadora)="calculadoraAberta.set(true)"
         />
         @if (exibirComoMestre()) {
           <app-inventario-esquadrao-sidebar
             [campanhaId]="campanhaAtual.id" [itens]="inventarioEsquadrao()"
             [fichas]="fichasDestinoInventario()" (atualizado)="inventarioEsquadrao.set($event)" />
         }
-        <app-calculadora-flutuante />
+        <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
         @if (usuarioAtivoId(); as usuarioId) {
           <app-caderno-flutuante
             [campanhaId]="campanhaAtual.id"

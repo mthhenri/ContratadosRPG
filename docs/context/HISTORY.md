@@ -1,43 +1,54 @@
 # HISTORY.md — Histórico do Projeto
 
-## 2026-08-24 — Ajuste avulso: gatilhos mobile de Calculadora/Histórico ficavam atrás do overlay do outro (fecha `P-021`)
+## 2026-08-24 — Ajuste avulso: botão "Abrir calculadora" dentro do painel do histórico no mobile (fecha `P-021`)
 
 Ajuste avulso, pedido direto do autor a partir de `PROBLEMS.md` `P-021` — no mobile (`360×800`),
 dentro da ficha, se a calculadora não estivesse aberta **antes** de abrir o histórico de rolagens,
-não dava pra abrir a calculadora com o histórico já aberto; e não dava pra fechar um sem fechar o
-outro primeiro.
+não dava pra abrir a calculadora com o histórico já aberto.
 
 **Causa raiz (confirmada ao vivo, Playwright + `elementFromPoint`).** No mobile os dois gatilhos
 (`CalculadoraFlutuante`/`HistoricoRolagensSidebar`) deixam de ser círculos `position: fixed` e
 viram botões inline no cabeçalho da ficha (`utilitario-inline-mobile()`, `position: static`), com
-`z-index: auto` explícito nas duas folhas de estilo. O painel do histórico é `position: fixed`,
-`width: 100vw` no mobile — cobre a tela inteira, inclusive a faixa do cabeçalho onde os dois
-gatilhos moram. Um elemento `position: static` com `z-index: auto` nunca cria stacking context
-próprio e sempre pinta **abaixo** de qualquer elemento posicionado (mesmo que o posicionado tenha
-`z-index` "menor" em valor absoluto) — então, com o histórico aberto, seu painel `fixed` cobria o
-botão da calculadora por cima, mesmo o botão continuando visível a olho nu (o clique ia parar no
-painel, não no botão). Confirmado com `document.elementFromPoint` no ponto exato do botão: o
-elemento retornado era conteúdo do painel do histórico, não o botão.
+`z-index: auto`. O painel do histórico é `position: fixed`, `width: 100vw` no mobile — cobre a tela
+inteira, inclusive a faixa do cabeçalho onde os dois gatilhos moram; um elemento `position: static`
+nunca cria stacking context e sempre pinta abaixo de qualquer elemento posicionado, então o painel
+cobria o botão da calculadora por cima, mesmo ele continuando visível a olho nu. Na prática só essa
+direção estava quebrada: calculadora aberta → histórico por cima já funcionava (o popup da
+calculadora sempre teve `z-index: 66` fixo, e nunca é full-bleed).
 
-**Correção.** `z-index: auto` → `z-index: 70` nos dois gatilhos, só dentro do
-`@include bp.mobile`. Suficiente porque os dois são itens flex de `.ficha-pagina__acoes`
-(`display: flex`) — pela CSS Flexbox Level 1 §4, um item flex com `z-index` numérico cria stacking
-context próprio **mesmo em `position: static`** (carve-out específico do Flexbox; não vale para
-elementos normais fora de um container flex). `70` supera os dois overlays existentes (histórico:
-backdrop 64, painel 65; calculadora: popup 66) nos dois sentidos, sem precisar dar `position` a
-nada. Desktop não tocado — lá os gatilhos já são `position: fixed` com `z-index` próprio
-(55/66) e nunca tiveram o problema.
+**Primeira tentativa, descartada.** Dar aos dois gatilhos um `z-index` numérico no mobile (item flex
+cria stacking context mesmo em `position: static`, CSS Flexbox §4) tornava o clique possível, mas o
+resultado visual era ruim: o botão da calculadora, sem nenhum fundo/contorno herdado do cabeçalho
+(que fica coberto junto), "boiava" solto sobre o conteúdo do painel — chegando a cobrir a primeira
+carta do histórico. Dar-lhe fundo/sombra ajudava a legibilidade do próprio botão, mas exigia também
+reservar um respiro no topo do painel (`--teto-flutuante`, medido em 122px) pra não sobrepor
+conteúdo real — pedido de revisão do autor pela via visual: descartada por complexidade/risco
+desproporcionais ao ganho.
+
+**Correção final.** Em vez de expor o gatilho da calculadora por cima do histórico, o próprio painel
+do `HistoricoRolagensSidebar` ganhou um botão "Abrir calculadora" (ícone + rótulo), visível **só no
+mobile** (CSS, `display: none` fora de `@include bp.mobile`), logo abaixo do cabeçalho do painel —
+`@if (acimaDaCalculadora())`, reaproveitando o mesmo sinal de entrada que já indica que esta tela
+pareia histórico + calculadora (as 4 telas que usam os dois juntos: ficha de agente, ficha de
+criatura, painel de Encontro, detalhe da campanha). Novo `output<void>() abrirCalculadora`, emitido
+no clique. `CalculadoraFlutuante.aberta` deixou de ser um `signal` só interno e virou `model<boolean>`
+— drop-in (mesma API `.set()/.update()/()` usada internamente, nada mudou no resto do componente) —
+pra aceitar comando externo via `[(aberta)]`. As 4 páginas ganharam um `calculadoraAberta = signal
+(false)` próprio, ligando `(abrirCalculadora)="calculadoraAberta.set(true)"` no histórico a
+`[(aberta)]="calculadoraAberta"` na calculadora. Nenhum `z-index`/`position` foi tocado — os dois
+gatilhos originais (e o popup da calculadora) voltaram exatamente ao estado anterior ao `P-021`.
 
 **Verificado ao vivo** (Postgres local sem Docker, backend+frontend reais, Playwright, `360×800` e
-`1920×1080`, ficha REST-seed real): confirmados os 4 caminhos — abrir histórico → clicar
-calculadora abre por cima; abrir calculadora → clicar histórico abre por cima (já funcionava);
-com os dois abertos, fechar só a calculadora mantém o histórico aberto; fechar só o histórico
-mantém a calculadora aberta. Desktop com os dois abertos ao mesmo tempo, sem sobreposição
-incorreta, confirmado em captura.
+`1920×1080`, ficha REST-seed real, com e sem rolagem real no histórico pra checar sobreposição):
+histórico aberto → botão "Abrir calculadora" visível sem sobrepor nada (nem o cabeçalho, nem a
+primeira carta) → clique abre a calculadora por cima, os dois ficam abertos ao mesmo tempo; fechar
+cada um independente do outro, nos dois sentidos; reabrir a calculadora pelo botão de novo depois de
+fechada. Desktop confirmado sem o botão (`acimaDaCalculadora` true, mas `display: none` fora do
+mobile) e com o gatilho circular de sempre intacto.
 
-Testado: frontend 1323/1323 (sem mudança de contagem — mudança pura de `z-index` em CSS, sem
-comportamento novo em TypeScript; JSDOM não reproduz stacking/pintura real do navegador), lint
-limpo (0 erros). `PROBLEMS.md` `P-021` fechado.
+Testado: frontend 1323/1323 (sem novo caso — mudança de UI pura, sem regra nova; `[(aberta)]`
+model não tinha teste dedicado antes e continua comportando-se como o signal interno que era),
+lint limpo (0 erros). `PROBLEMS.md` `P-021` fechado.
 
 ## 2026-08-24 — Ajuste avulso: `[appendTo]="'body'"` em todos os `p-dialog` do frontend (fecha `P-025`)
 
