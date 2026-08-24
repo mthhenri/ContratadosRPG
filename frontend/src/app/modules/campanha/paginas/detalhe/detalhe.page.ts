@@ -13,11 +13,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { filter, finalize, forkJoin, merge } from 'rxjs';
-import {
+import {
   EncontroStatusEnum,
 
-  TipoCampanhaMembroPapelEnum,
-  TipoFichaEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 import {
   CampanhaInventarioItemDto,
@@ -25,7 +25,7 @@ import {
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAcessoResumoDto, FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import type { EncontroResumoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type { EncontroResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -41,8 +41,8 @@ import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-temp
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
-import { CampanhaService } from '../../campanha.service';
-import { EncontroService } from '../../../encontro/encontro.service';
+import { CampanhaService } from '../../campanha.service';
+import { EncontroService } from '../../../encontro/encontro.service';
 import { rotuloStatusEncontro } from '../../../encontro/rotulos-encontro';
 import { FichaService } from '../../../ficha/ficha.service';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
@@ -203,7 +203,7 @@ type EquipeFichaExibicao =
 })
 export class CampanhaDetalhe {
   private readonly bandejaDadosService = inject(BandejaDadosService);
-  private readonly campanhaService = inject(CampanhaService);
+  private readonly campanhaService = inject(CampanhaService);
   private readonly encontroService = inject(EncontroService);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) da ficha embutida na visão do jogador — mesmo composable de `VisualizarPage`. */
@@ -253,7 +253,7 @@ export class CampanhaDetalhe {
     () => this.encontros().filter((resumo) => resumo.status === EncontroStatusEnum.ENCERRADO).length,
   );
 
-  protected readonly rotuloStatusEncontro = rotuloStatusEncontro;
+  protected readonly rotuloStatusEncontro = rotuloStatusEncontro;
   protected readonly EncontroStatusEnum = EncontroStatusEnum;
   protected readonly carregando = signal(true);
   protected readonly regenerando = signal(false);
@@ -294,6 +294,9 @@ export class CampanhaDetalhe {
    */
   protected readonly rolagensFeed = signal<readonly RolagemResumoDto[]>([]);
   protected readonly carregandoRolagens = signal(true);
+
+  /** P-021: botão "Abrir calculadora" de dentro do painel do histórico (só existe no mobile). */
+  protected readonly calculadoraAberta = signal(false);
   /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão do assistente). */
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
 

@@ -2370,7 +2370,7 @@ describe('FichaService', () => {
         campanhaId: 3,
         itens: [expect.objectContaining({ nome: 'Colete Reserva', quantidade: 1 })],
       });
-      const itemNovo = (campanhaRepositorio.alterarInventario.mock.calls[0]![0] as unknown as {
+      const itemNovo = (campanhaRepositorio.alterarInventario.mock.calls[0][0] as unknown as {
         itens: { id: string }[];
       }).itens[0];
       expect(typeof itemNovo.id).toBe('string');

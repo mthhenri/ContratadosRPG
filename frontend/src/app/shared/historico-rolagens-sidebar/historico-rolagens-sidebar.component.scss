@@ -106,6 +106,45 @@
     }
   }
 
+  // P-021: atalho pra abrir a calculadora de dentro do painel — só existe no mobile, onde o
+  // gatilho normal dela (no cabeçalho da página) fica coberto por este painel full-bleed. No
+  // desktop a calculadora já tem gatilho próprio sempre visível (círculo flutuante fora deste
+  // painel), então o botão nem entra no layout.
+  &__abrir-calculadora {
+    display: none;
+
+    @include bp.mobile {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 12px 18px 0;
+      padding: 10px 14px;
+      min-height: bp.$alvo-toque;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-label);
+      color: var(--text-dim);
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-control);
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+      app-icone {
+        font-size: 14px;
+      }
+
+      &:hover {
+        color: var(--accent);
+        border-color: var(--accent-border);
+      }
+    }
+  }
+
   &__titulo {
     margin: 0;
     font-family: var(--font-mono);

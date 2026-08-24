@@ -682,7 +682,7 @@ describe('CampanhaService', () => {
           expect.objectContaining({ nome: 'Kit Médico Avançado', quantidade: 2 }),
         ],
       });
-      const itemNovo = (repositorio.alterarInventario.mock.calls[0]![0] as { itens: { id: string }[] }).itens[1];
+      const itemNovo = (repositorio.alterarInventario.mock.calls[0][0] as { itens: { id: string }[] }).itens[1];
       expect(typeof itemNovo.id).toBe('string');
       expect(itemNovo.id.length).toBeGreaterThan(0);
     });

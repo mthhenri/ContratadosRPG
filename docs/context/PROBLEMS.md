@@ -130,10 +130,58 @@
   Civil; trata todas as classes com a mesma fórmula/teto/rótulo. Pode haver mais pontos do guia com
   o mesmo problema (o dono não detalhou todos) — escopo completo a confirmar com ele.
 - **Contorno:** nenhum.
-- **Correção:** não determinada — depende de mapear com o dono todas as regras de Civil que o guia
-  hoje ignora (a começar pelo Treinamento 0–5 no lugar de Nível/Prestígio) antes de desenhar a
-  correção.
+- **Correção:** escopo mapeado e specado em `docs/specs/backlog/civil-guia-criacao.spec.md`
+  (2026-08-24) — cobre // Novo agente (Nível/Prestígio → Treinamento), // Atributos (base e
+  orçamento de criação do Civil) e // Equipamento inicial (orçamento fixo, categorias vetadas).
+  A spec depende de 4 decisões do dono antes de virar código; ver o arquivo. Outras divergências
+  de Civil levantadas na mesma investigação (passo // Recursos, progressão pós-criação) ficaram
+  fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
+
+### P-027 — Habilidades de 0 E que alteram fórmula permanente não são aplicadas automaticamente · `ABERTO` · regras/frontend
+
+- **Sintoma:** o dono perguntou se as habilidades de custo `[0 E]` estão com seus efeitos aplicados
+  de fato na ficha do agente, citando "Mochileiro" (troca o atributo de cálculo do Inventário de
+  Força para Intelecto) como exemplo do que esperava ver acontecer sozinho. Auditoria das 36
+  habilidades `[0 E]` do catálogo (`shared/src/regras/agente/habilidades-catalogo.dados.ts`) contra
+  `docs/core/sistema-v4.1.0.md` confirmou que a transcrição de custo está 100% correta (nenhuma
+  virou `null`/valor errado) e que o **gasto** de Energia (0 → botão desabilitado, sem dedução) está
+  certo em `ficha-habilidades.component.ts` e no desconto de amplificador
+  (`aplicarReducaoCustoEnergia`, `shared/regras/agente/amplificador.ts:224-230`, com teste cobrindo
+  "custo 0 permanece 0"). O problema é um nível abaixo: pelo menos 3 habilidades que, como
+  "Mochileiro", deveriam mudar uma **fórmula permanente** da ficha (não uma reação/gatilho pontual
+  que o jogador aplica na hora) não têm esse efeito automatizado:
+  - **Tanque** (Habilidades Gerais Melhoradas — Combatente): "+1 de Vida por progressão" e "+3 de
+    resistência em todas as proteções". `VidaCalcularDto`
+    (`shared/src/regras/agente/agente.dtos.ts:19-23`) não tem campo `habilidades` — é
+    arquiteturalmente impossível `calcularVida` enxergar essa habilidade hoje.
+  - **Segundo Fôlego** (Geral) e **Metabolismo Acelerado** (Experimento Híbrido, subclasse):
+    ambas somam dados extras à recuperação de Energia/Vida do descanso. O motor de descanso
+    (`shared/src/regras/descanso/descanso.ts`, `calcularFaixa`/`DescansoCalcularDto`) não recebe
+    `habilidades` nenhuma — mesmo problema estrutural.
+  - Contraste: **Mochileiro** (Inventário, `shared/src/regras/agente/inventario.ts`) e
+    **Peculiaridade** (Origem/bônus de Experimento, `shared/src/regras/identidade/experimento.ts`)
+    são exemplos de que esse tipo de automação **já existe** no motor para outras duas habilidades
+    — não é um limite técnico, é cobertura incompleta.
+- **Causa:** o comentário de topo de `habilidades-catalogo.dados.ts` documenta uma decisão de
+  design deliberada ("a aplicação automática de efeitos na fórmula foi aposentada — o jogador lê a
+  descrição e aplica na mão", `m3-31`), mas essa decisão não foi consistente: Mochileiro e
+  Peculiaridade continuaram automatizadas (provavelmente por serem fundacionais — usadas em outros
+  cálculos/telas), enquanto Tanque/Segundo Fôlego/Metabolismo Acelerado, que são do mesmo tipo
+  (modificador permanente e incondicional de fórmula, não reação/gatilho de cena), nunca foram
+  automatizadas ou tiveram a decisão revisitada explicitamente. Não foi feito o levantamento
+  completo das outras ~150 habilidades de custo > 0 do catálogo — esta auditoria cobriu só as 36 de
+  `[0 E]`, a pedido do dono.
+- **Contorno:** o jogador aplica manualmente (soma a Vida/dados de descanso na hora), como as
+  demais habilidades "de mão".
+- **Correção:** não determinada — decidir com o dono se Tanque/Segundo Fôlego/Metabolismo Acelerado
+  devem virar automação (como Mochileiro) ou se a política "aplica na mão" deve valer para elas
+  também (e o porquê da inconsistência com Mochileiro/Peculiaridade fica só documentado, não
+  corrigido). Se a resposta for automatizar: `VidaCalcularDto`/`calcularVida` ganham `habilidades`
+  (Tanque) e `DescansoCalcularDto`/`calcularFaixa` ganham `habilidades` (Segundo Fôlego/Metabolismo
+  Acelerado), mesmo padrão de `inventario.ts`. Repetir esta auditoria para as habilidades de custo
+  > 0 antes de considerar o catálogo inteiro coberto — fora do escopo desta investigação.
+- **Desde:** levantado a pedido do dono em 2026-08-24.
 
 ### P-020 — Código-fonte do sistema não é legível para revisão humana · `ABERTO` · **CRÍTICO** · qualidade/manutenibilidade
 
@@ -157,89 +205,26 @@
 - **Desde:** reportado pelo dono em 2026-08-12, após revisão manual da gestão administrativa de
   usuários (`m6-05`).
 
-### P-021 — Calculadora e histórico não abrem juntos no mobile da ficha · `ABERTO` · frontend/mobile
-
-- **Sintoma:** dentro da ficha no mobile, se a calculadora não estiver aberta antes de abrir o
-  histórico, não há como abrir a calculadora com o histórico já aberto — nem para abrir, nem para
-  fechar. É preciso abrir a calculadora antes de abrir o histórico; e para fechar, é preciso fechar
-  o histórico primeiro.
-- **Causa:** não investigada.
-- **Contorno:** abrir a calculadora antes do histórico; fechar o histórico antes de mexer na
-  calculadora.
-- **Correção:** não determinada.
-- **Desde:** reportado pelo dono em 2026-08-12.
-
-### P-022 — `npm run lint -w backend` falha em dois specs preexistentes · `ABERTO` · backend/lint
-
-- **Sintoma:** `npm run lint -w backend` termina com 2 erros `@typescript-eslint/no-unnecessary-type-assertion`
-  — `campanha.service.spec.ts:685:25` e `ficha.service.spec.ts` (linha desloca a cada edição do
-  arquivo; era `:2288:25`, `:2373:25` após a `m4-11`). Os testes passam; só o lint quebra.
-- **Causa:** asserção de tipo que virou redundante depois de alguma melhoria de inferência
-  (tipagem do dublê ou versão do typescript-eslint) — não investigada a fundo.
-- **Contorno:** nenhum necessário para desenvolver; os dois arquivos não bloqueiam build nem teste.
-- **Correção:** `eslint --fix` resolve os dois (a regra é auto-corrigível). Não foi feito na
-  `m7-03` para não misturar correção alheia ao diff da task.
-- **Desde:** observado na `m7-03` (2026-08-17), com as mudanças da task em `git stash` — portanto
-  **preexistente**, não introduzido pelo Encontro de Combate.
-
-### P-023 — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id` · `ABERTO` · backend/tooling
-
-- **Sintoma:** `npm run db:seed:dev` aborta na primeira fixture:
-  `null value in column "tipo_usuario_id" of relation "usuario" violates not-null constraint`.
-  Nenhum dado de desenvolvimento é criado.
-- **Causa:** o `INSERT INTO usuario` de `backend/tools/database/seed-dev.ts` não acompanhou a
-  coluna `tipo_usuario_id` introduzida pelo M6 (gestão de usuários/papéis) — a fixture continua
-  inserindo login/senha/nome só.
-- **Contorno:** montar o cenário pela **API REST** (`/autenticacao/registro` + `/login`,
-  `POST /campanha`, `POST /campanha/entrar`, `POST /ficha`), que passa pelas services e preenche o
-  tipo corretamente. Foi assim que a `m7-07` cumpriu o gate visual.
-- **Correção:** resolver o tipo padrão no seed do mesmo jeito que a `AutenticacaoService` resolve —
-  sem fixar o id numérico do seed da tabela de referência.
-- **Desde:** observado na `m7-07` (2026-08-18); introduzido junto da migration do M6.
-
-### P-024 — `npm run typecheck -w shared` falha em `a-estatua.spec.ts` (campo `atributo` inexistente) · `ABERTO` · shared/tipos
-
-- **Sintoma:** `tsc --project tsconfig.json --noEmit` no workspace `shared` acusa dois erros
-  `TS2353` em `shared/src/regras/criatura/a-estatua.spec.ts:136` e `:143` — os fixtures de ataque
-  declaram um campo `atributo` que não existe em `FichaCriaturaAtaqueDto`
-  (`nome`/`teste`/`custoAcao`/`dano`/`danoCritico`/`area`/`efeito?`). Os testes passam
-  normalmente (`vitest run`, que usa `esbuild` e não bloqueia em erro de tipo); só o `tsc` estrito
-  quebra.
-- **Causa:** não investigada — o DTO provavelmente perdeu/nunca teve `atributo` desde que o
-  fixture foi escrito.
-- **Contorno:** nenhum necessário para desenvolver; `npm test -w shared` (a suíte real) continua
-  verde.
-- **Correção:** remover `atributo` dos dois objetos do fixture (ou adicionar o campo ao DTO, se a
-  intenção era outra — checar com o autor).
-- **Desde:** achado durante a `m4-11` (2026-08-22), rodando `npm run typecheck -w shared` como
-  parte da verificação da task; confirmado preexistente (arquivo não tocado pela `m4-11`).
-
-### P-025 — Editor de Origem (`p-dialog` sem `appendTo="body"`) não abre no mobile · `ABERTO` · frontend/CSS
-
-- **Sintoma:** no viewport `360×800`, clicar no lápis "Editar origem" (aba Extras, `identidade`)
-  não mostra nenhum diálogo — o `<p-dialog>` existe no DOM (`display`/`visibility`/`opacity`
-  computados como "visível"), mas com `position: static` e sem bounding box (altura/largura reais
-  zero), portanto inacessível/inutilizável. No desktop (`1920×1080`) o mesmo diálogo funciona
-  normalmente.
-- **Causa:** o `<p-dialog>` do editor de Origem (`ficha-visualizacao.component.html`) não declara
-  `[appendTo]="'body'"` — diferente de outros diálogos do mesmo arquivo
-  (`confirmandoVisibilidade`, `habilidadesPendentesPeculiaridade`), que declaram e funcionam nos
-  dois viewports. Sem `appendTo="body"`, o CDK overlay do PrimeNG renderiza o diálogo preso à
-  árvore do próprio componente em vez de movê-lo para `document.body`; em algum contexto de
-  empilhamento do card de Status no mobile (não isolado a fundo — não é `transform`/`contain`/
-  `filter` em nenhum ancestral, confirmado via `getComputedStyle`), o `position: fixed` que o
-  PrimeNG tentaria aplicar não "pega", e o diálogo cai para `static`.
-- **Contorno:** nenhum para quem usa a ficha — o dono/mestre não consegue editar Origem pelo
-  celular hoje (só pelo desktop).
-- **Correção:** adicionar `[appendTo]="'body'"` ao `<p-dialog>` do editor de Origem — mesmo fix já
-  aplicado ao novo editor da Habilidade de Personalidade (`m3-78`), confirmado ao vivo que resolve
-  (bounding box real, 348×699 em 360px, depois do fix). Vale auditar os demais `<p-dialog>` do
-  arquivo sem `appendTo` pelo mesmo padrão, caso existam.
-- **Desde:** achado na verificação ao vivo da `m3-78` (2026-08-23) ao testar o editor novo — o
-  editor de Origem, código pré-existente e não tocado pela task, reproduziu o mesmo defeito quando
-  testado isoladamente para descartar regressão. Não corrigido nesta task (fora do escopo da spec).
-
 ## Resolvidos
+
+- **P-022** — lint do backend falhava em 2 specs preexistentes (`no-unnecessary-type-assertion` em
+  `campanha.service.spec.ts`/`ficha.service.spec.ts`). O alvo real era o `!` (non-null assertion),
+  não o `as {...}` de shape. Resolvido em 2026-08-24, ver `HISTORY.md`.
+
+- **P-023** — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id` (M6). O `INSERT` de
+  `seed-dev.ts` passou a resolver `tipo_usuario_id`/`token_versao` do mesmo jeito que
+  `UsuarioRepository.criarUsuario`. Resolvido em 2026-08-24, ver `HISTORY.md`.
+
+- **P-024** — `typecheck -w shared` falhava em `a-estatua.spec.ts` (campo `atributo` obsoleto no
+  fixture de ataques da criatura). Migrado para `teste`/`danoCritico`. Resolvido em 2026-08-24, ver
+  `HISTORY.md`.
+
+- **P-021** — calculadora e histórico não abriam juntos no mobile da ficha (um bloqueava o
+  clique no gatilho do outro). Resolvido em 2026-08-24, ver `HISTORY.md`.
+
+- **P-025** — editor de Origem (`p-dialog` sem `appendTo="body"`) não abria no mobile. Auditados
+  e corrigidos todos os 6 `p-dialog` do frontend (mais 2 achados sem o atributo:
+  `ficha-sanidade`/`receber-dano-dialog`). Resolvido em 2026-08-24, ver `HISTORY.md`.
 
 Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
 task que a fez.

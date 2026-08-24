@@ -339,13 +339,17 @@
         <!-- Editor de Origem (m3-23): nome/descrição/Saber de Campo + Especialidade + 2 linhas de
              Formação. Reusa o mesmo mini-editor da Classe/Arquétipo (`ficha-ident__classe-editor`).
              Abre num `p-dialog` (não mais inline): o formulário é grande — Nome/Descrição/Saber de
-             Campo + Especialidade + 2 caixas de Formação — e inflava demais o card de Identidade. -->
+             Campo + Especialidade + 2 caixas de Formação — e inflava demais o card de Identidade.
+             `[appendTo]="'body'"` (fix do P-025): sem ele, o CDK overlay não assume `position:
+             fixed` corretamente dentro da `.ficha-status__conteudo` rolável, e no mobile (360px) o
+             diálogo ficava com `position: static` e altura zero, inacessível. -->
         <p-dialog
           [visible]="editandoOrigem()"
           [modal]="true"
           [draggable]="false"
           [resizable]="false"
           [dismissableMask]="true"
+          [appendTo]="'body'"
           header="Origem"
           styleClass="ficha-ident__dialogo-origem"
           (onHide)="cancelarOrigem()"
@@ -493,11 +497,10 @@
 
         <!-- Editor da Habilidade de Personalidade (m3-78): os 3 estágios (Base/1ª/2ª Fortificação)
              lado a lado, mesmo mini-editor em `p-dialog` do editor de Origem. `[appendTo]="'body'"`
-             (diferente do editor de Origem, que não usa): sem ele, o `<p-dialog>` renderiza preso à
-             árvore do componente e o CDK overlay não assume `position: fixed` corretamente dentro da
-             `.ficha-status__conteudo` rolável — no mobile (360px) o diálogo fica com `position:
-             static` e altura zero, inacessível (confirmado ao vivo, mesmo defeito latente do editor
-             de Origem, fora de escopo desta task). -->
+             (mesmo fix do editor de Origem, ver acima, P-025): sem ele, o `<p-dialog>` renderiza
+             preso à árvore do componente e o CDK overlay não assume `position: fixed` corretamente
+             dentro da `.ficha-status__conteudo` rolável — no mobile (360px) o diálogo fica com
+             `position: static` e altura zero, inacessível. -->
         <p-dialog
           [visible]="editandoPersonalidadeHabilidade()"
           [modal]="true"

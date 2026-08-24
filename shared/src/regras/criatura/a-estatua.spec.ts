@@ -133,16 +133,18 @@ describe('Caso de teste completo — "A Estátua"', () => {
       ataques: [
         {
           nome: 'Pancada',
-          atributo: 'luta',
+          teste: '5d20kh1+12', // Luta 5D20+12 (docs/core/guia_de_mestre-v4.0.0.md).
           custoAcao: CustoAcaoEnum.MOVIMENTO,
           dano: '3D12+4',
+          danoCritico: '6D12+8', // Crítico dobra dados e fixo (sistema-v4.1.0.md § Crítico).
           area: false,
         },
         {
           nome: 'Esmagamento',
-          atributo: 'luta',
+          teste: '5d20kh1+12', // Luta 5D20+12 (docs/core/guia_de_mestre-v4.0.0.md).
           custoAcao: CustoAcaoEnum.PADRAO,
           dano: '4D12+10',
+          danoCritico: '8D12+20', // Crítico dobra dados e fixo (sistema-v4.1.0.md § Crítico).
           area: false,
           efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
         },

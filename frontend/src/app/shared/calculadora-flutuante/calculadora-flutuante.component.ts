@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, model, signal, viewChild } from '@angular/core';
 
 import { Icone } from '../icone/icone.component';
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
@@ -42,7 +42,15 @@ function limitar(valor: number, minimo: number, maximo: number): number {
   },
 })
 export class CalculadoraFlutuante {
-  protected readonly aberta = signal(false);
+  /**
+   * `model` (não `signal` interno) — P-021: no mobile, quando `HistoricoRolagensSidebar` cobre a
+   * tela inteira, o próprio gatilho deste componente fica inacessível atrás do painel dela. A
+   * correção move o botão "Abrir calculadora" para *dentro* do painel do histórico, que precisa
+   * de um jeito de abrir esta calculadora de fora — daí o `model` em vez de estado só interno.
+   * Continua funcionando sem nenhum binding externo (`<app-calculadora-flutuante />` sozinho,
+   * como nas telas que não pareiam com o histórico).
+   */
+  readonly aberta = model(false);
   protected readonly expressao = signal('');
   protected readonly erro = signal(false);
   protected readonly historico = signal<readonly EntradaHistoricoCalculadora[]>([]);

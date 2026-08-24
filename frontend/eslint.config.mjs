@@ -24,6 +24,9 @@ export default tseslint.config(
         'error',
         { type: 'element', prefix: 'app', style: 'kebab-case' },
       ],
+      quotes: ['warn', 'double', { avoidEscape: true }],
+      semi: ['warn', 'always'],
+      'max-len': ['warn', { code: 100, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true }],
     },
   },
   {

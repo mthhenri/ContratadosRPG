@@ -624,7 +624,7 @@
                 }
               </div>
               <div class="guia__fechamento-recursos">
-                <div><span>Bônus monetário</span><b>{{ bonusMonetario() | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>
+                <div><span>Bônus monetário</span><b>{{ (recursosIgnorados() ? 0 : bonusMonetario()) | currency: 'BRL' : 'symbol' : '1.0-0' }}</b></div>
                 <div class="guia__fechamento-total"><span>Total na ficha</span><strong>{{ estado().dinheiro.rolado ? (totalDinheiro() | currency: 'BRL' : 'symbol' : '1.0-0') : '—' }}</strong></div>
               </div>
             }
