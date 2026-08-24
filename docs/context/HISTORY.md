@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — Ajuste avulso: `[appendTo]="'body'"` em todos os `p-dialog` do frontend (fecha `P-025`)
+
+Ajuste avulso, pedido direto do autor a partir de `PROBLEMS.md` `P-025` — o editor de Origem
+(`ficha-visualizacao.component.html`) não abria no mobile (`360×800`): o `<p-dialog>` existia no
+DOM com `display`/`visibility`/`opacity` "visíveis", mas `position: static` e bounding box zero,
+inacessível. Causa já diagnosticada no registro do problema: sem `[appendTo]="'body'"`, o CDK
+overlay do PrimeNG renderiza preso à árvore do próprio componente em vez de mover para
+`document.body`, e em certos contextos de empilhamento o `position: fixed` que o PrimeNG tentaria
+aplicar não "pega".
+
+**Correção.** Adicionado `[appendTo]="'body'"` ao `p-dialog` do editor de Origem — mesmo fix já
+validado ao vivo em `m3-78` para o editor da Habilidade de Personalidade. Auditados **todos** os
+`p-dialog` do frontend (pedido explícito do `P-025`: "vale auditar os demais"): mais dois estavam
+sem o atributo — `ficha-sanidade.component.html` (diálogo do editor de sequela/trauma/lesão,
+`apresentacao="dialog"`, usado no `modo="compacto"` da ficha) e `receber-dano-dialog.component.html`
+(`app-receber-dano-dialog`, reaproveitado no cartão do combatente do Encontro e no rótulo "Vida" da
+ficha). Os dois ganharam o mesmo `[appendTo]="'body'"`. No total, 6 `p-dialog` existem no projeto;
+os 4 restantes (visibilidade da ficha, Habilidade de Personalidade, confirmação de Peculiaridade,
+ficha-inventário/ficha-rolagens) já tinham o atributo.
+
+**Verificado ao vivo** (Postgres local sem Docker — `pg_ctlcluster`, `1920×1080`/`360×800`, ficha
+REST-seed real, Playwright): o editor de Origem abre corretamente nos dois viewports — bounding box
+real (`342×449` a `360px`), modal centralizado no desktop, formulário completo visível e utilizável
+em ambos. O diálogo "Receber dano" (mesmo padrão, aberto pelo ícone ao lado do rótulo "Vida")
+também confirmado nos dois viewports com bounding box real. O terceiro (`ficha-sanidade`, modo
+`dialog`/`compacto`, só alcançável dentro de um card compacto de esquadrão numa campanha) recebeu o
+mesmo fix de uma linha e foi coberto pelo lint/build/teste completos do frontend, mas não foi
+possível reproduzir ao vivo o estado exato (`modo="compacto"` dentro do card de esquadrão do painel
+de campanha) dentro do escopo desta sessão — mesmo mecanismo (`p-dialog`/CDK overlay) já provado nos
+outros dois, risco tratado como baixo.
+
+Testado: frontend 1323/1323 (sem mudança de contagem — é fix de atributo HTML, sem novo teste
+unitário; JSDOM não reproduz o bug de overlay, que só aparece no navegador real), lint limpo (0
+erros; regras `warn` novas de estilo `.ts` não relacionadas a esta task). `PROBLEMS.md` `P-025`
+fechado.
+
 ## 2026-08-23 — `m7-19`: mestre pode sobrescrever a expressão de dados de Iniciativa por combatente/encontro
 
 Ajuste avulso pós-M7 (`docs/specs/backlog/m7-19-editar-formula-iniciativa-mestre.spec.md`), pedido
