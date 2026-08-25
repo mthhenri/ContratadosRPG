@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-25 — Descrição da Origem deixa de travar o passo Identidade do guia
+
+O dono reportou que o guia de criação ainda bloqueava o avanço do passo Identidade quando a
+"Descrição da origem" estava vazia. `sistema-v4.1.0.md` ("⬦ Origem") define a Origem como composta
+por **três elementos** — Formação, Especialidade e Saber de Campo — e `descricao` não é um deles; é
+só um texto de sabor. O backend (`ficha.service.ts`, `validarFormaOrigem`) já refletia isso: só
+`nome` e `saberDeCampo` são obrigatórios, `descricao` é opcional por comentário explícito desde a
+m3-24. O guia (`criar.page.ts#passoValido`) e o template (`criar.page.html`) estavam desalinhados,
+exigindo `descricao` com `required` e uma checagem de `.trim().length > 0` que o backend nunca teve.
+Removida a checagem de `passoValido` e o atributo `required` do textarea, que ganhou o rótulo
+"Descrição da origem (opcional)". Suíte `criar.page.spec.ts` (83 testes) segue verde sem alteração —
+nenhum teste fixava `passoValido` com `descricao` vazia e os demais campos completos.
+
 ## 2026-08-24 — Ajuste avulso: médias do esquadrão não chegavam ao 1º agente de um jogador comum
 
 Bug reportado direto pelo autor: "ao criar o primeiro agente na campanha não tá pegando as

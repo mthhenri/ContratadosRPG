@@ -432,8 +432,8 @@
                       <input class="campo__controle" [value]="estado().origem.nome" (input)="atualizarOrigem('nome', valor($event))" placeholder="Ex.: Ex-militar" required />
                     </label>
                     <label class="campo">
-                      <span class="campo__rotulo">Descrição da origem</span>
-                      <textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.descricao" (input)="atualizarOrigem('descricao', valor($event))" required></textarea>
+                      <span class="campo__rotulo">Descrição da origem (opcional)</span>
+                      <textarea class="campo__controle campo__controle--area" rows="3" [value]="estado().origem.descricao" (input)="atualizarOrigem('descricao', valor($event))"></textarea>
                     </label>
                   </div>
 

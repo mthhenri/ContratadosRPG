@@ -625,7 +625,6 @@ export class FichaCriar {
         && this.personalidadeEstagiosCompletos()
         && (this.temPeculiaridade() || (
           e.origem.nome.trim().length > 0
-          && e.origem.descricao.trim().length > 0
           && e.origem.formacao.every((item, indice) => (item.bonus !== null || e.formacoesCustomizadas[indice])
             && item.texto.trim().length > 0
             && (!this.definicaoFormacao(indice)?.parametro || Boolean(item.parametro?.trim())))
