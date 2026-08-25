@@ -441,6 +441,35 @@ describe('FichaVisualizacao', () => {
       expect(abrevs).toEqual(['Físico', 'Balíst.', 'Explos.', 'Químico', 'Geral']);
     });
 
+    it('aplica Maestria de Vigor a cada resistência de uma Proteção equipada', () => {
+      const { raiz } = montar({
+        ...dados,
+        atributos: { ...dados.atributos, vigor: 6 },
+        maestria: 'vigor',
+        inventario: {
+          itens: [
+            {
+              nome: 'Colete Kevlar',
+              categoria: ItemCategoriaEnum.PROTECOES,
+              custo: 400,
+              peso: 2,
+              quantidade: 1,
+              guardada: false,
+              modificacoes: [],
+              resistencia: '3 [Balístico]',
+              equipado: true,
+            },
+          ],
+          amplificadores: [],
+        },
+      });
+
+      const valores = Array.from(raiz.querySelectorAll('.ficha-resistencia__valor')).map((valor) =>
+        valor.textContent?.trim(),
+      );
+      expect(valores).toEqual(['0', '9', '0', '0', '0']);
+    });
+
     it('soma a resistência das Proteções equipadas (mesmo shared/regras da aba Combate)', () => {
       const { raiz } = montar({
         ...dados,

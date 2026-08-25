@@ -18,6 +18,7 @@ import type {
   FichaSequelaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
+  aplicarMaestriaVigorNaResistencia,
   ajusteInventarioAmplificadores,
   emAnomaliaBiologica,
   limiteMinimoEnergiaMaximaFragmentos,
@@ -493,6 +494,8 @@ export class FichaInventario {
   readonly energiaMaxima = input.required<number>();
   /** Atributos efetivos da ficha — fórmula de dano do item pode somar atributo (ex.: `+FOR`; m3-45). */
   readonly atributos = input.required<FichaAtributosDto>();
+  /** Maestria da ficha — Vigor altera apenas a resistência exibida das Proteções. */
+  readonly maestria = input<keyof FichaAtributosDto | null>(null);
   /** Proficiência atual — entra no ambiente da rolagem, mesmo quando a fórmula do item não a usa (m3-45). */
   readonly proficiencia = input<number | null>(null);
   /** Nível atual — idem `proficiencia` (m3-45). */
@@ -2605,7 +2608,7 @@ export class FichaInventario {
       categoria,
       custoTexto: this.formatarDinheiro(item.custo),
       pesoTexto: `${this.formatarPeso(item.peso)} slot${item.peso !== 1 ? 's' : ''}`,
-      stat: this.formatarStatCatalogo(item),
+      stat: this.formatarStatCatalogo(item, categoria),
       bonus: item.bonus ?? null,
       descricao: item.descricao ?? null,
     };
@@ -2723,7 +2726,7 @@ export class FichaInventario {
       quantidade: item.quantidade,
       custoTotalTexto: this.formatarDinheiro(custoTotal),
       pesoTexto,
-      stat: this.formatarStat(statComputado),
+      stat: this.formatarStat(statComputado, item.categoria),
       danoFormula: statComputado?.dano ?? null,
       descricao: item.descricao ?? null,
       modificavel: !CATEGORIAS_NAO_MODIFICAVEIS.includes(item.categoria),
@@ -2929,17 +2932,17 @@ export class FichaInventario {
     return valor % 1 === 0 ? String(valor) : valor.toFixed(1);
   }
 
-  private formatarStatCatalogo(item: ItemCatalogo): string | null {
+  private formatarStatCatalogo(item: ItemCatalogo, categoria: ItemCategoriaEnum): string | null {
     if (item.dano) {
       return `Dano ${item.dano}${item.informacao ? ` · ${item.informacao}` : ''}`;
     }
     if (item.resistencia) {
-      return `Resist. ${item.resistencia}`;
+      return `Resist. ${this.resistenciaComMaestria(item.resistencia, categoria)}`;
     }
     return null;
   }
 
-  private formatarStat(stat: StatItemDto | null): string | null {
+  private formatarStat(stat: StatItemDto | null, categoria: ItemCategoriaEnum): string | null {
     if (!stat) {
       return null;
     }
@@ -2947,11 +2950,22 @@ export class FichaInventario {
       return `Dano ${stat.dano}${stat.informacao ? ` · ${stat.informacao}` : ''}`;
     }
     if (stat.resistencia) {
-      return `Resist. ${stat.resistencia}`;
+      return `Resist. ${this.resistenciaComMaestria(stat.resistencia, categoria)}`;
     }
     if (stat.bonusArmazenamento !== undefined) {
       return `+${this.formatarPeso(stat.bonusArmazenamento)} inv.`;
     }
     return null;
+  }
+
+  private resistenciaComMaestria(resistencia: string, categoria: ItemCategoriaEnum): string {
+    return (
+      aplicarMaestriaVigorNaResistencia(
+        resistencia,
+        categoria,
+        this.maestria(),
+        this.atributos().vigor,
+      ) ?? resistencia
+    );
   }
 }

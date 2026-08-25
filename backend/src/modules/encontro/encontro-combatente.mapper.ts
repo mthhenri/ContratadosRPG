@@ -6,6 +6,7 @@ import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-r
 import { CombatenteOrigemEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import {
   ajusteDadoIniciativaAmplificadores,
+  calcularAtributosEfetivos,
   calcularEnergia,
   calcularVida,
   montarResistencias,
@@ -109,8 +110,9 @@ function resolverEstadoDaCriatura(dados: FichaCriaturaDadosDto): EstadoDoCombate
 /**
  * Resistência a dano por tipo (m7-17) — só agente e criatura têm ficha tipada o bastante pra
  * calcular. Agente reusa o mesmo motor da aba Combate da ficha (`montarResistencias`: manual +
- * equipamento + Formação); criatura soma as linhas de `resistencias` (`subtipo` não distingue
- * aqui). NPC (contrato ainda não tipado, m4-05) e avulso saem `null` — não é `0`, é "não existe".
+ * equipamento + Formação, incluindo Maestria de Vigor quando aplicável); criatura soma as linhas
+ * de `resistencias` (`subtipo` não distingue aqui). NPC (contrato ainda não tipado, m4-05) e
+ * avulso saem `null` — não é `0`, é "não existe".
  */
 function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record<TipoDanoEnum, number>> | null {
   if (linha.fichaId === null || linha.fichaDados === null) {
@@ -125,6 +127,8 @@ function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record
       habilidades: dados.habilidades,
       manual: dados.derivados?.resistencias,
       formacao,
+      maestria: dados.maestria,
+      vigor: calcularAtributosEfetivos(dados.atributos, dados.estado.lesoes ?? []).vigor,
     });
     return Object.fromEntries(resistencias.map((linhaResistencia) => [linhaResistencia.tipo, linhaResistencia.total]));
   }

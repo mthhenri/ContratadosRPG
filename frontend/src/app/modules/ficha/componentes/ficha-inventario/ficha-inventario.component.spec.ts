@@ -208,6 +208,30 @@ describe('FichaInventario', () => {
     expect(alvo.emitidos[0].amplificadores).toEqual([]);
   });
 
+  it('mostra a Maestria de Vigor na Proteção guardada e no catálogo de adição', () => {
+    const colete: CarrinhoItemDto = {
+      nome: 'Colete de Kevlar',
+      categoria: ItemCategoriaEnum.PROTECOES,
+      custo: 400,
+      peso: 2,
+      quantidade: 1,
+      guardada: false,
+      equipado: true,
+      modificacoes: [],
+    };
+    const alvo = montar({ itens: [colete], amplificadores: [] });
+    alvo.fixture.componentRef.setInput('atributos', { ...atributos, vigor: 6 });
+    alvo.fixture.componentRef.setInput('maestria', 'vigor');
+    alvo.componentInstance['definirCategoria'](ItemCategoriaEnum.PROTECOES);
+    alvo.componentInstance['alternarCatalogo']();
+    alvo.fixture.detectChanges();
+
+    const estatisticas = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__item-stat, .ficha-inv__cartao-stat')).map(
+      (elemento) => elemento.textContent?.trim(),
+    );
+    expect(estatisticas.filter((texto) => texto?.includes('9 [Balístico]'))).toHaveLength(2);
+  });
+
   it('empilha a quantidade ao adicionar item de categoria empilhável já presente', () => {
     const operacional: CarrinhoItemDto = {
       nome: 'Kit de Ferramentas',

@@ -1,5 +1,5 @@
 import { ItemCategoriaEnum, TipoDanoEnum } from '../../enums';
-import type { FichaHabilidadeDto } from '../../dtos/ficha';
+import type { FichaAtributosDto, FichaHabilidadeDto } from '../../dtos/ficha';
 import {
   calcularStatItem,
   interpretarNotacaoResistencia,
@@ -38,11 +38,16 @@ export interface ResistenciaLinhaDto {
   readonly tipo: TipoDanoEnum;
   /** Base manual, editável (stored em `derivados.resistencias`). */
   readonly manual: number;
-  /** Soma do equipamento (itens equipados + mods, incluindo Fragmento aplicado, + amplificadores). */
+  /**
+   * Soma do equipamento (itens equipados + mods, incluindo Fragmento aplicado, + amplificadores e,
+   * quando aplicável, o bônus de Maestria de Vigor de cada Proteção).
+   */
   readonly equipamento: number;
   /** Bônus de Formação da Origem no tipo (`COMBATE_RESISTENCIA_TIPO_DANO`, m3-41). */
   readonly formacao: number;
-  /** `manual + equipamento + formacao` — sem piso, pode negativar. */
+  /** Bônus da Maestria de Vigor — presente somente quando a ficha possui essa Maestria. */
+  readonly maestria?: number;
+  /** `manual + equipamento + formacao` — `maestria`, quando presente, já compõe `equipamento`. */
   readonly total: number;
 }
 
@@ -56,6 +61,30 @@ export interface ResistenciasMontarDto {
   readonly manual?: Partial<Record<TipoDanoEnum, number>>;
   /** Bônus de Formação por tipo (`obterResistenciaFormacao`, m3-41) — ausente = 0 em todos. */
   readonly formacao?: Partial<Record<TipoDanoEnum, number>>;
+  /** Maestria adquirida pela ficha; apenas `vigor` altera as resistências. */
+  readonly maestria?: keyof FichaAtributosDto | null;
+  /** Valor atual de Vigor da ficha, usado pela Maestria de Vigor. */
+  readonly vigor?: number;
+}
+
+/**
+ * Aplica a Maestria de Vigor à notação de resistência de uma Proteção. A Maestria pertence à
+ * ficha, não ao catálogo: por isso o valor persistido do item não é alterado e consumidores sem
+ * contexto de personagem (como a calculadora pública) continuam vendo a base canônica.
+ */
+export function aplicarMaestriaVigorNaResistencia(
+  resistencia: string | undefined,
+  categoria: ItemCategoriaEnum,
+  maestria: keyof FichaAtributosDto | null,
+  vigor: number,
+): string | undefined {
+  if (!resistencia || categoria !== ItemCategoriaEnum.PROTECOES || maestria !== 'vigor') {
+    return resistencia;
+  }
+
+  return interpretarNotacaoResistencia(resistencia)
+    .map((entrada) => `${entrada.valor + vigor} [${entrada.tipos}]`)
+    .join(', ');
 }
 
 /** Ordem canônica de exibição — mesma ordem de `TipoDanoEnum`. */
@@ -77,11 +106,17 @@ const ORDEM_TIPOS: readonly TipoDanoEnum[] = [
 function calcularResistenciaEquipamento(
   itens: readonly CarrinhoItemDto[],
   habilidades: readonly FichaHabilidadeDto[],
-): Map<string, number> {
+  maestria: keyof FichaAtributosDto | null,
+  vigor: number,
+): { readonly equipamento: Map<string, number>; readonly maestria: Map<string, number> } {
   const totais = new Map<string, number>();
+  const maestrias = new Map<string, number>();
   const temTanque = habilidades.some((habilidade) => habilidade.nome === 'Tanque');
   const somar = (tipo: string, valor: number): void => {
     totais.set(tipo, (totais.get(tipo) ?? 0) + valor);
+  };
+  const somarMaestria = (tipo: string, valor: number): void => {
+    maestrias.set(tipo, (maestrias.get(tipo) ?? 0) + valor);
   };
 
   itens
@@ -95,6 +130,8 @@ function calcularResistenciaEquipamento(
       if (!stat?.resistencia) {
         return;
       }
+      const bonusMaestria =
+        item.categoria === ItemCategoriaEnum.PROTECOES && maestria === 'vigor' ? vigor : 0;
       // Escudos usam notação composta "[Tipo/Tipo]" (catalogo.dados.ts) pra dizer que o valor cheio
       // vale pros dois tipos — cada lado do "/" precisa virar sua própria entrada em `totais`, senão
       // a chave composta nunca bate com nenhum `TipoDanoEnum` de `ORDEM_TIPOS`.
@@ -102,11 +139,16 @@ function calcularResistenciaEquipamento(
       interpretarNotacaoResistencia(stat.resistencia).forEach((entrada) =>
         entrada.tipos
           .split('/')
-          .forEach((tipo) => somar(tipo.trim(), entrada.valor + bonusTanque)),
+          .forEach((tipo) => {
+            somar(tipo.trim(), entrada.valor + bonusTanque + bonusMaestria);
+            if (bonusMaestria > 0) {
+              somarMaestria(tipo.trim(), bonusMaestria);
+            }
+          }),
       );
     });
 
-  return totais;
+  return { equipamento: totais, maestria: maestrias };
 }
 
 /**
@@ -115,7 +157,14 @@ function calcularResistenciaEquipamento(
  * mexem em resistência.
  */
 export function montarResistencias(dto: ResistenciasMontarDto): readonly ResistenciaLinhaDto[] {
-  const doEquipamento = calcularResistenciaEquipamento(dto.itens, dto.habilidades ?? []);
+  const maestriaVigor = dto.maestria === 'vigor' ? (dto.vigor ?? 0) : 0;
+  const calculado = calcularResistenciaEquipamento(
+    dto.itens,
+    dto.habilidades ?? [],
+    dto.maestria ?? null,
+    maestriaVigor,
+  );
+  const doEquipamento = calculado.equipamento;
 
   const resistente = empilhamentosAmplificador(dto.amplificadores, 'Resistente');
   if (resistente > 0) {
@@ -131,6 +180,14 @@ export function montarResistencias(dto: ResistenciasMontarDto): readonly Resiste
     const manual = dto.manual?.[tipo] ?? 0;
     const equipamento = doEquipamento.get(tipo) ?? 0;
     const formacao = dto.formacao?.[tipo] ?? 0;
-    return { tipo, manual, equipamento, formacao, total: manual + equipamento + formacao };
+    const maestria = calculado.maestria.get(tipo);
+    return {
+      tipo,
+      manual,
+      equipamento,
+      formacao,
+      ...(maestria === undefined ? {} : { maestria }),
+      total: manual + equipamento + formacao,
+    };
   });
 }

@@ -7,7 +7,9 @@ import {
   CadenciaEnum,
   EncontroStatusEnum,
   FormacaoBonusEnum,
+  ItemCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
+  TipoDanoEnum,
   TipoFichaEnum,
   TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
@@ -541,6 +543,49 @@ describe('EncontroService', () => {
         defesa: null,
         esquiva: null,
         resistencias: null,
+      });
+    });
+
+    it('Maestria de Vigor chega às resistências do agente no Encontro', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          fichaId: 40,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'K. Amaral',
+          tipoFicha: TipoFichaEnum.JOGADOR,
+          fichaDados: {
+            maestria: 'vigor',
+            atributos: { vigor: 6, destreza: 2 },
+            estado: { vidaAtual: 20, vidaMaxima: 20, energiaAtual: 10, energiaMaxima: 10 },
+            habilidades: [],
+            inventario: {
+              itens: [{
+                nome: 'Colete de Kevlar',
+                categoria: ItemCategoriaEnum.PROTECOES,
+                custo: 400,
+                peso: 2,
+                quantidade: 1,
+                guardada: false,
+                equipado: true,
+                modificacoes: [],
+              }],
+              amplificadores: [],
+            },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, mestre);
+
+      expect(estado.combatentes[0].resistencias).toEqual({
+        [TipoDanoEnum.FISICO]: 11,
+        [TipoDanoEnum.BALISTICO]: 9,
+        [TipoDanoEnum.EXPLOSAO]: 0,
+        [TipoDanoEnum.QUIMICO]: 0,
+        [TipoDanoEnum.GERAL]: 0,
       });
     });
 

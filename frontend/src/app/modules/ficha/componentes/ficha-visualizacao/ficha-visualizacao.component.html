@@ -1143,6 +1143,7 @@
                   [attr.aria-label]="'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]"
                   [appTooltip]="
                     'Base manual ' + resistencia.manual + ' + equipamento ' + resistencia.equipamento +
+                    (resistencia.maestria !== undefined ? ' (inclui Maestria de Vigor ' + resistencia.maestria + ')' : '') +
                     (resistencia.formacao !== 0 ? ' + formação ' + resistencia.formacao : '')
                   "
                   (click)="editarResistencia(resistencia.tipo)"
@@ -1706,6 +1707,7 @@
             [energiaAtual]="estado().energiaAtual"
             [energiaMaxima]="energiaMaxima()"
             [atributos]="atributosEfetivos()"
+            [maestria]="dados().maestria"
             [proficiencia]="proficiencia()"
             [nivel]="dados().nivel"
             [cor]="cor()"

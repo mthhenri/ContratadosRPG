@@ -2416,6 +2416,8 @@ export class FichaVisualizacao {
       habilidades: this.dados().habilidades,
       manual: this.dados().derivados?.resistencias,
       formacao: obterResistenciaFormacao(this.formacaoOrigem()),
+      maestria: this.dados().maestria,
+      vigor: this.atributosEfetivos().vigor,
     }),
   );
 

@@ -69,6 +69,45 @@ describe('montarResistencias', () => {
     ]);
   });
 
+  it('Maestria de Vigor soma Vigor à resistência de cada Proteção equipada', () => {
+    const resultado = montarResistencias({
+      itens: [protecao({ resistencia: '3 [Balístico]' })],
+      amplificadores: [],
+      maestria: 'vigor',
+      vigor: 6,
+    });
+
+    expect(resultado.map((linha) => ({ tipo: linha.tipo, total: linha.total }))).toEqual([
+      { tipo: TipoDanoEnum.FISICO, total: 0 },
+      { tipo: TipoDanoEnum.BALISTICO, total: 9 },
+      { tipo: TipoDanoEnum.EXPLOSAO, total: 0 },
+      { tipo: TipoDanoEnum.QUIMICO, total: 0 },
+      { tipo: TipoDanoEnum.GERAL, total: 0 },
+    ]);
+  });
+
+  it('Maestria de Vigor não cria resistência sem uma Proteção equipada', () => {
+    const resultado = montarResistencias({
+      itens: [],
+      amplificadores: [],
+      maestria: 'vigor',
+      vigor: 6,
+    });
+
+    expect(resultado.every((linha) => linha.total === 0)).toBe(true);
+  });
+
+  it('Maestria de outro atributo não altera as resistências', () => {
+    const resultado = montarResistencias({
+      itens: [],
+      amplificadores: [],
+      maestria: 'forca',
+      vigor: 6,
+    });
+
+    expect(resultado.every((linha) => linha.total === 0)).toBe(true);
+  });
+
   it('soma a resistência de uma Proteção equipada no total (sem base manual)', () => {
     const item = protecao({ resistencia: '3 [Balístico]' });
     const resultado = montarResistencias({ itens: [item], amplificadores: [] });
