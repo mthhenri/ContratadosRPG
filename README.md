@@ -37,17 +37,16 @@ Monorepo npm workspaces:
 
 ## Desenvolvimento
 
-> Disponível após o milestone M0 (fundação).
-
 ```bash
 npm install                              # instala os 3 workspaces
 npm run db:up                            # Postgres via Docker Compose
 npm run db:migrate --workspace=backend   # migrations
 npm run db:reset:dev                     # apaga/recria o banco local e aplica fixtures
-npm run db:seed:dev                      # reconcilia somente as fixtures locais
-npm run backend:dev                      # API em http://localhost:3100
-npm run frontend:dev                     # SPA em http://localhost:4300
+npm run dev                              # backend + frontend juntos (predev sobe o banco)
 ```
+
+`dev` roda `backend:dev` (API em http://localhost:3100) e `frontend:dev` (SPA em
+http://localhost:4300) em paralelo; rode-os separados se preferir consoles isolados.
 
 O reset é destrutivo e exclusivo do ambiente local. Consulte
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) antes do primeiro uso.
