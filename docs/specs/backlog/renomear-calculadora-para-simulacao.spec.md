@@ -89,8 +89,8 @@ em `historico-rolagens-sidebar`) — esses nomes já descrevem a coisa certa e n
 3. **Topbar (`layout.component.html`/`.ts`)** — `routerLink="/calculadora"` → `/simulacao`,
    `<span>Calculadora</span>` → `<span>Simulação</span>`, `nome="calculadora"` → `nome="simulacao"`
    (ícone, entregável 4); atualizar o comentário de topo da classe `Layout` que cita "Calculadora"
-   (e, se a task `topbar-renomear-painel-icone-fichas` já tiver rodado antes desta, também não
-   deve mais citar "Painel" — refletir o rótulo de nav vigente no momento da implementação, não
+   (e, se a task `renomear-painel-para-campanhas` já tiver rodado antes desta, também não deve
+   mais citar "Painel" — refletir o rótulo/rota de nav vigente no momento da implementação, não
    necessariamente o texto literal citado aqui).
 4. **Ícone (`icone.component.ts`/`.html`)** — renomear o literal `'calculadora'` do union
    `IconeNome` para `'simulacao'` (mesmo `<svg>`, sem redesenhar o traço — é só a chave, a

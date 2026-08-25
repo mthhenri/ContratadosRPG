@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-25 — Spec de topbar ampliada: `/painel` também vira `/campanhas`
+
+O autor, revisando `topbar-renomear-painel-icone-fichas.spec.md` (`I-019`) ao lado da spec irmã
+`renomear-calculadora-para-simulacao.spec.md` (criada na mesma sessão), apontou que a rota
+`/painel` deveria seguir o mesmo padrão: virar `/campanhas`, e não só o rótulo do item de nav.
+Levantamento (`grep` em `frontend/src`) confirmou o precedente é aplicável — o módulo já se chama
+`campanha` (`modules/campanha/`) e a classe BEM raiz da lista já é `.campanhas`; só o segmento de
+URL `path: 'painel'` (e ~40 arquivos de navegação/teste que o referenciam: `app.routes.ts`,
+guards, login/registro, `acesso-negado`, todo `campanha/paginas/**` e a navegação condicional de
+`ficha/**`) ficou com o nome antigo. Sem acoplamento no backend (as menções lá a "painel" são só
+comentários genéricos, tipo "painel de controle"). A spec original foi renomeada via `git mv` para
+`docs/specs/backlog/renomear-painel-para-campanhas.spec.md` e reescrita para cobrir o rename de
+rota completo, mantendo os três ajustes pontuais originais (rótulo, ícone de Fichas, remoção do
+link duplicado no dropdown de perfil) como entregáveis dentro dela — mesma decisão de "quebra
+limpa, sem redirect de compatibilidade" já tomada para `/calculadora`→`/simulacao`. Pointers
+atualizados: `CONTEXT.md` (tabela de specs pendentes), `IDEAS.md` (`I-019`) e a referência cruzada
+dentro de `renomear-calculadora-para-simulacao.spec.md` (entregável 3, cita o nome da task irmã).
+Nenhuma implementação nesta sessão — só reescrita de spec e documentação.
+
 ## 2026-08-25 — Iniciativa passa a rolar pelo atributo, não pelo atributo de testes
 
 O autor apontou a regra diretamente: "iniciativa deveria considerar o atributo, não o atributo de
