@@ -20,6 +20,12 @@ Permitir **importar um arquivo Markdown para dentro do Caderno da campanha**: o 
 `.md`, o nome do arquivo vira o título da página e o conteúdo entra formatado no editor, já
 persistido como uma página nova do próprio caderno.
 
+**O arquivo em si nunca é enviado nem armazenado.** A leitura é 100% client-side
+(`arquivo.text()`); só o **texto normalizado** resultante vai ao backend, como `conteudoMarkdown` de
+um `POST` no mesmo endpoint que já cria página manualmente — sem upload, sem `FormData`, sem blob em
+disco/S3, sem endpoint ou migration novos. É consequência direta da regra já documentada do Caderno
+("páginas com título e Markdown, sem imagens ou anexos"): ele não tem conceito de arquivo anexado.
+
 Junto disso — e como pré-requisito de fidelidade, não como extra —, o editor do Caderno passa a
 **suportar tabelas GFM** (`| a | b |`). Hoje ele não suporta: um arquivo com tabela (o caso mais
 comum de anotação de mesa: tabela de pistas, de NPCs, de loot) seria importado como um bloco de
@@ -266,6 +272,10 @@ erro num signal.
 
 ## Critérios de Aceite
 
+- Nenhuma requisição de upload/`FormData` é feita ao importar — só o `POST`/`PUT` de
+  `{ titulo, conteudoMarkdown }` já existente para criar/alterar página; o objeto `File` escolhido
+  nunca sai do navegador (confirmar na aba Rede da verificação ao vivo: o payload da requisição é
+  JSON de texto, sem `multipart/form-data` e sem o tamanho em bytes do arquivo original).
 - Com o Caderno aberto no **meu caderno**, o botão de importar aparece ao lado de "Criar página";
   escolher `Sessão 04 — Pistas.md` cria imediatamente uma página com o título `Sessão 04 — Pistas`
   (sem a extensão) e o conteúdo do arquivo no editor, já salva (aparece na lista, rótulo `Salvo`).
