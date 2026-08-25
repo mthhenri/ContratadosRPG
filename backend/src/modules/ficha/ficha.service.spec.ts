@@ -690,7 +690,7 @@ describe('FichaService', () => {
         expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
       });
 
-      it.each(['nome', 'descricao', 'saberDeCampo'] as const)(
+      it.each(['nome', 'saberDeCampo'] as const)(
         'lança BusinessException quando a Origem não tem %s',
         async (campo) => {
           const origem = criarOrigem({ [campo]: '   ' });

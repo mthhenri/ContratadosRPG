@@ -1186,7 +1186,7 @@ describe('FichaVisualizacao', () => {
       expect(alvo.fixture.componentInstance['rascunhoOrigem']()).toBeNull();
     });
 
-    it.each(['nome', 'descricao', 'saberDeCampo'] as const)(
+    it.each(['nome', 'saberDeCampo'] as const)(
       'origemRascunhoValida é false quando falta %s',
       (campo) => {
         const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
@@ -1196,6 +1196,14 @@ describe('FichaVisualizacao', () => {
         expect(componente['origemRascunhoValida']()).toBe(false);
       },
     );
+
+    it('origemRascunhoValida é true mesmo sem descricao (campo opcional)', () => {
+      const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;
+      componente['editarOrigem']();
+      componente['rascunhoOrigem'].set({ ...origemExemplo, descricao: '' });
+
+      expect(componente['origemRascunhoValida']()).toBe(true);
+    });
 
     it('origemRascunhoValida é false quando falta o gatilho ou o efeito da Especialidade', () => {
       const componente = montar(dados, 'Corvo', 42, true).fixture.componentInstance;

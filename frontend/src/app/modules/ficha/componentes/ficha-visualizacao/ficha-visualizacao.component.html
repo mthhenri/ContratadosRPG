@@ -367,11 +367,10 @@
                 />
               </label>
               <label class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Descrição *</span>
+                <span class="ficha-ident__meta-rotulo">Descrição</span>
                 <input
                   class="ficha-ident__select"
                   type="text"
-                  required
                   [value]="rascunho.descricao"
                   (input)="mudarTextoOrigemRascunho('descricao', $any($event.target).value)"
                 />
@@ -508,6 +507,8 @@
           [resizable]="false"
           [dismissableMask]="true"
           [appendTo]="'body'"
+          [style]="{ width: '640px' }"
+          [breakpoints]="{ '680px': '95vw' }"
           header="Habilidade de Personalidade"
           styleClass="ficha-ident__dialogo-origem"
           (onHide)="cancelarPersonalidadeHabilidade()"
@@ -517,8 +518,8 @@
               <div class="ficha-ident__caixa">
                 <span class="ficha-ident__meta-rotulo">Base — {{ identidade().personalidade }}</span>
                 <textarea
-                  class="ficha-ident__select"
-                  rows="2"
+                  class="ficha-ident__select ficha-ident__select--area"
+                  rows="4"
                   placeholder="Combinado com o Mestre"
                   [value]="rascunho.base?.descricao ?? ''"
                   (input)="mudarBaseRascunhoPersonalidade('descricao', $any($event.target).value)"
@@ -535,8 +536,8 @@
               <div class="ficha-ident__caixa">
                 <span class="ficha-ident__meta-rotulo">1ª Fortificação — {{ identidade().personalidade }}</span>
                 <textarea
-                  class="ficha-ident__select"
-                  rows="2"
+                  class="ficha-ident__select ficha-ident__select--area"
+                  rows="4"
                   placeholder="Combinado com o Mestre"
                   [value]="rascunho.fortificacao1?.descricao ?? ''"
                   (input)="mudarFortificacaoRascunhoPersonalidade('fortificacao1', 'descricao', $any($event.target).value)"
@@ -553,8 +554,8 @@
               <div class="ficha-ident__caixa">
                 <span class="ficha-ident__meta-rotulo">2ª Fortificação — {{ identidade().personalidade }}</span>
                 <textarea
-                  class="ficha-ident__select"
-                  rows="2"
+                  class="ficha-ident__select ficha-ident__select--area"
+                  rows="4"
                   placeholder="Combinado com o Mestre"
                   [value]="rascunho.fortificacao2?.descricao ?? ''"
                   (input)="mudarFortificacaoRascunhoPersonalidade('fortificacao2', 'descricao', $any($event.target).value)"
@@ -1758,7 +1759,7 @@
         </div>
         }
         @if (abaStatusEfetiva() === 'extras') {
-        <div class="ficha-status__conteudo ficha-extras">
+        <div class="ficha-status__conteudo ficha-extras" [style.--cor-ficha]="cor()">
           <nav class="ficha-extras__navegacao" aria-label="Seções de Extras">
             <button
               type="button"
@@ -1839,33 +1840,51 @@
 
           <div class="ficha-cartao__divisor"></div>
 
-          <!-- Personalidade (m3-25/m3-49/m3-78): a palavra + os 3 estágios (Base/1ª/2ª Fortificação) da Habilidade de Personalidade, com seletor do estágio ativo. -->
+          <!-- Personalidade (m3-25/m3-49/m3-78): a palavra + os 3 estágios (Base/1ª/2ª Fortificação) da
+               Habilidade de Personalidade — passos conectados por setas (progresso), o ativo destacado
+               com a cor da ficha, no lugar do seletor. O estágio materializado usa o mesmo desenho de
+               cartão da aba Habilidades (chip da categoria + nome + custo em Energia + descrição). -->
           <div class="ficha-extras__secao">
             <p class="ficha-cartao__subrotulo">Personalidade</p>
             @if (identidade().personalidade; as personalidade) {
               <h4 class="ficha-extras__titulo">{{ personalidade }}</h4>
-              <div class="ficha-ident__meta-linha">
-                <span class="ficha-ident__meta-rotulo">Habilidade de Personalidade</span>
-                <span class="ficha-ident__meta-valor-linha">
-                  @if (ajustavel()) {
-                    <select class="ficha-ident__select" aria-label="Estágio ativo da Habilidade de Personalidade" [value]="personalidadeHabilidadeEfetiva().ativa" (change)="mudarEstagioAtivoPersonalidade($any($event.target).value)">
-                      @for (estagio of estagiosDisponiveisAtuais(); track estagio) {
-                        <option [value]="estagio" [selected]="estagio === personalidadeHabilidadeEfetiva().ativa">{{ rotulosPersonalidadeEstagio[estagio] }}</option>
-                      }
-                    </select>
-                  } @else {
-                    <span class="ficha-ident__meta-valor">{{ rotulosPersonalidadeEstagio[personalidadeHabilidadeEfetiva().ativa] }}</span>
+
+              <div class="ficha-extras__progresso-linha">
+                <!-- Passos com formato de seta (`clip-path`), encaixados sem vão entre eles — a
+                     forma É a conexão, sem glifo de seta à parte. `#progressoContainer` + o
+                     `effect` do componente trazem o estágio ativo pra dentro da área visível
+                     quando ele nasce fora dela (mesmo padrão de `abasStatusContainer`). -->
+                <div class="ficha-extras__progresso" role="tablist" aria-label="Estágio ativo da Habilidade de Personalidade" #progressoContainer appOverflowFade>
+                  @for (estagio of estagiosDisponiveisAtuais(); track estagio) {
+                    <button
+                      type="button"
+                      class="ficha-extras__progresso-passo"
+                      [class.ficha-extras__progresso-passo--ativo]="estagio === personalidadeHabilidadeEfetiva().ativa"
+                      role="tab"
+                      [attr.aria-selected]="estagio === personalidadeHabilidadeEfetiva().ativa"
+                      [disabled]="!ajustavel()"
+                      (click)="mudarEstagioAtivoPersonalidade(estagio)"
+                    >
+                      {{ rotulosPersonalidadeEstagio[estagio] }}
+                    </button>
                   }
-                  @if (ajustavel() && !editandoPersonalidadeHabilidade()) {
-                    <button class="ficha-ident__chip-lapis" type="button" aria-label="Editar Habilidade de Personalidade" [appTooltip]="'Editar Habilidade de Personalidade'" (click)="editarPersonalidadeHabilidade()">✎</button>
-                  }
-                </span>
-              </div>
-              @if (habilidadePersonalidadeMaterializada(); as habilidade) {
-                <p class="ficha-extras__texto">{{ habilidade.descricao }}</p>
-                @if (habilidade.custoEnergia !== null) {
-                  <span class="chip">{{ habilidade.custoEnergia }} E</span>
+                </div>
+                @if (ajustavel() && !editandoPersonalidadeHabilidade()) {
+                  <button class="ficha-ident__chip-lapis" type="button" aria-label="Editar Habilidade de Personalidade" [appTooltip]="'Editar Habilidade de Personalidade'" (click)="editarPersonalidadeHabilidade()">✎</button>
                 }
+              </div>
+
+              @if (habilidadePersonalidadeMaterializada(); as habilidade) {
+                <div class="ficha-extras__habilidade">
+                  <div class="ficha-extras__habilidade-linha">
+                    <span class="ficha-extras__habilidade-chip">Personalidade</span>
+                    <span class="ficha-extras__habilidade-nome">{{ habilidade.nome }}</span>
+                    @if (habilidade.custoEnergia !== null) {
+                      <span class="ficha-extras__habilidade-custo">[{{ habilidade.custoEnergia }} E]</span>
+                    }
+                  </div>
+                  <p class="ficha-extras__habilidade-descricao">{{ habilidade.descricao }}</p>
+                </div>
               } @else {
                 <p class="ficha-visao__vazio">Estágio ativo ainda sem descrição definida.</p>
               }

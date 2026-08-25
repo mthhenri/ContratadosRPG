@@ -1266,18 +1266,15 @@ export class FichaService {
   }
 
   /**
-   * Valida a forma da Origem (m3-24), incluindo os três textos livres (`nome`/`descricao`/
-   * `saberDeCampo`) e a **Especialidade acoplada** (m3-41 — Entregável 3): `especialidade` é campo
-   * obrigatório de `FichaOrigemDto` (nunca existe Origem sem Especialidade, por construção do
-   * contrato); esta validação garante que nenhum dos textos chega **vazio/incompleto** — mesma
-   * exigência já feita para o `texto` de cada Formação.
+   * Valida a forma da Origem (m3-24), incluindo os textos livres obrigatórios (`nome`/
+   * `saberDeCampo` — `descricao` é opcional) e a **Especialidade acoplada** (m3-41 — Entregável 3):
+   * `especialidade` é campo obrigatório de `FichaOrigemDto` (nunca existe Origem sem Especialidade,
+   * por construção do contrato); esta validação garante que nenhum dos textos obrigatórios chega
+   * **vazio/incompleto** — mesma exigência já feita para o `texto` de cada Formação.
    */
   private validarFormaOrigem(origem: FichaOrigemDto): void {
     if (!origem.nome.trim()) {
       throw new BusinessException('Origem inválida: o nome é obrigatório');
-    }
-    if (!origem.descricao.trim()) {
-      throw new BusinessException('Origem inválida: a descrição é obrigatória');
     }
     if (!origem.saberDeCampo.trim()) {
       throw new BusinessException('Origem inválida: o Saber de Campo é obrigatório');

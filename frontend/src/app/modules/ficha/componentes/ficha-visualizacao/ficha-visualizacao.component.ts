@@ -997,6 +997,14 @@ export class FichaVisualizacao {
    */
   private readonly abasStatusContainer = viewChild<ElementRef<HTMLElement>>('abasStatusContainer');
 
+  /**
+   * Container da tira de passos da Habilidade de Personalidade (ver SCSS/HTML) — rola na
+   * horizontal quando os 3 rótulos por extenso não cabem (mobile); usado pelo `effect` abaixo pra
+   * trazer o **estágio ativo** pra dentro da área visível, mesmo padrão de `abasStatusContainer`
+   * acima.
+   */
+  private readonly progressoContainer = viewChild<ElementRef<HTMLElement>>('progressoContainer');
+
   /** Campo de vitalidade em digitação direta (clicou no valor), ou `null` fora de edição. */
   protected readonly editandoVitalidade = signal<CampoVitalidade | null>(null);
 
@@ -1195,6 +1203,39 @@ export class FichaVisualizacao {
           scrollAlvo -= areaContainer.left - areaBotao.left;
         } else if (areaBotao.right > areaContainer.right) {
           scrollAlvo += areaBotao.right - areaContainer.right;
+        } else {
+          return; // já totalmente visível — nada a rolar.
+        }
+        const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        container.scrollTo({ left: scrollAlvo, behavior: reduzMovimento ? 'auto' : 'smooth' });
+      });
+    });
+
+    // Mesmo problema da barra de abas do Status acima, na tira de passos da Habilidade de
+    // Personalidade (m3-78): "Base"/"1ª Fortificação"/"2ª Fortificação" por extenso não cabem
+    // lado a lado no mobile, e sem isto o estágio recém-ativado podia nascer cortado na borda —
+    // sobretudo o mais comum, o mais alto desbloqueado (`estagioMaisAltoDesbloqueado`), que é
+    // literalmente o último da tira. Mesma correção: `requestAnimationFrame` (o layout ainda não
+    // assentou a largura no mesmo tick que a classe `--ativo` muda) e cálculo manual da borda
+    // certa, nunca `scrollIntoView` puro.
+    effect(() => {
+      void this.personalidadeHabilidadeEfetiva().ativa; // dependência do effect — dispara ao trocar o estágio
+      const container = this.progressoContainer()?.nativeElement;
+      if (!container) {
+        return;
+      }
+      requestAnimationFrame(() => {
+        const passo = container.querySelector<HTMLElement>('.ficha-extras__progresso-passo--ativo');
+        if (!passo) {
+          return;
+        }
+        const areaContainer = container.getBoundingClientRect();
+        const areaPasso = passo.getBoundingClientRect();
+        let scrollAlvo = container.scrollLeft;
+        if (areaPasso.left < areaContainer.left) {
+          scrollAlvo -= areaContainer.left - areaPasso.left;
+        } else if (areaPasso.right > areaContainer.right) {
+          scrollAlvo += areaPasso.right - areaContainer.right;
         } else {
           return; // já totalmente visível — nada a rolar.
         }
@@ -1962,16 +2003,16 @@ export class FichaVisualizacao {
   /**
    * `true` quando o rascunho de Origem tem todos os campos obrigatórios preenchidos (espelha
    * `FichaService.validarFormaOrigem` no backend — o backend continua o árbitro final, isto só
-   * evita a viagem de rede com um rascunho que ele vai rejeitar): os três textos livres
-   * (Nome/Descrição/Saber de Campo), o gatilho e o efeito da Especialidade, o texto de cada linha
-   * de Formação e o parâmetro quando a definição escolhida o exige.
+   * evita a viagem de rede com um rascunho que ele vai rejeitar): Nome e Saber de Campo (a
+   * Descrição é opcional), o gatilho e o efeito da Especialidade, o texto de cada linha de
+   * Formação e o parâmetro quando a definição escolhida o exige.
    */
   protected readonly origemRascunhoValida = computed(() => {
     const rascunho = this.rascunhoOrigem();
     if (!rascunho) {
       return false;
     }
-    if (!rascunho.nome.trim() || !rascunho.descricao.trim() || !rascunho.saberDeCampo.trim()) {
+    if (!rascunho.nome.trim() || !rascunho.saberDeCampo.trim()) {
       return false;
     }
     if (!rascunho.especialidade.gatilho.trim() || !rascunho.especialidade.efeito.trim()) {

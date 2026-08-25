@@ -106,6 +106,18 @@
         min-width: 0;
         width: 100%;
       }
+
+      // No painel padrão largo, o conteúdo de Status não define a altura da fileira: ela é medida
+      // pelas colunas de Agente/Atributos e Status apenas acompanha essa altura (`align-items:
+      // stretch` da `&__linha-colunas`). `contain: size` trava esse tamanho e `overflow: hidden`
+      // impede que o conteúdo real (abas longas como Extras) o estoure — quem rola por dentro é o
+      // `.ficha-extras__painel` (ver `.ficha-extras`), nunca a página inteira.
+      @media (min-width: (bp.$bp-tablet + 1px)) {
+        .ficha-visao:not(.ficha-visao--compacto) & {
+          contain: size;
+          overflow: hidden;
+        }
+      }
     }
   }
 
@@ -528,6 +540,16 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+
+  // Mesmo travamento de altura da coluna que o envolve (ver `.ficha-visao__coluna--status`): sem
+  // isto o card cresce com o conteúdo e o `overflow: hidden` da coluna não tem efeito, porque o
+  // próprio card já teria estourado o teto antes de chegar lá.
+  @media (min-width: (bp.$bp-tablet + 1px)) {
+    .ficha-visao:not(.ficha-visao--compacto) & {
+      min-height: 0;
+      overflow: hidden;
+    }
+  }
 }
 
 // === Status: barra de abas — mesmo padrão de `.ficha-abas` do estilo antigo (pílulas do tamanho
@@ -1007,21 +1029,6 @@
     padding: 4px;
   }
 
-  // No painel padrão largo, o conteúdo de Status não define a altura da fileira: ela é medida
-  // pelas colunas de Agente/Atributos e Status apenas acompanha essa altura. Assim, abas longas
-  // como Extras rolam por dentro sem empurrar as três colunas para baixo.
-  @media (min-width: (bp.$bp-tablet + 1px)) {
-    &:not(&--compacto) &__coluna--status {
-      contain: size;
-      overflow: hidden;
-    }
-
-    &:not(&--compacto) .ficha-cartao--status {
-      min-height: 0;
-      overflow: hidden;
-    }
-  }
-
   &__navegacao-botao {
     display: flex;
     align-items: center;
@@ -1125,6 +1132,200 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+  }
+
+  // Progresso do estágio ativo da Habilidade de Personalidade (Base → 1ª → 2ª Fortificação): os
+  // passos são setas de verdade (`clip-path`) encaixadas sem vão — a forma é a conexão, no lugar
+  // do `<select>` — o estágio desbloqueado mais alto não muda (`estagiosDisponiveisAtuais()`,
+  // gated por Nível), só qual deles está ativo agora.
+  &__progresso-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__progresso {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    // Setas encaixadas quebram a leitura se empilharem em duas linhas (a ponta some no meio do
+    // salto) — em vez de embrulhar, a tira rola na horizontal nos raros containers estreitos
+    // demais pros três rótulos (`Base`/`1ª Fortificação`/`2ª Fortificação`) caberem inteiros
+    // (mobile com a coluna dividindo espaço com o lápis de edição). `appOverflowFade` (ver HTML)
+    // esmaece a borda cortada em vez de deixar um rótulo truncado sem nenhuma pista de que rola.
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+
+    --fade-esquerda: 0px;
+    --fade-direita: 0px;
+    &.overflow-fade--esquerda,
+    &.overflow-fade--direita {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--fade-esquerda),
+        #000 calc(100% - var(--fade-direita)),
+        transparent 100%
+      );
+    }
+    &.overflow-fade--esquerda {
+      --fade-esquerda: 16px;
+    }
+    &.overflow-fade--direita {
+      --fade-direita: 16px;
+    }
+  }
+
+  &__progresso-passo {
+    --ponta: 9px;
+    position: relative;
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 0;
+    padding: 6px 12px 6px calc(12px + var(--ponta));
+    margin-left: calc(-1 * var(--ponta));
+    white-space: nowrap;
+    cursor: pointer;
+    // Seta: ponta à direita, entalhe à esquerda — o entalhe do próximo passo encaixa na ponta do
+    // anterior (`margin-left` negativo do tamanho da ponta fecha o vão entre os dois).
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--ponta)) 0,
+      100% 50%,
+      calc(100% - var(--ponta)) 100%,
+      0 100%,
+      var(--ponta) 50%
+    );
+    transition:
+      color 0.12s ease,
+      background 0.12s ease;
+
+    // Os três rótulos por extenso ("Base"/"1ª Fortificação"/"2ª Fortificação") mal cabem na
+    // largura do card no mobile — encolhe fonte/entalhe/padding em vez de deixar a tira rolar
+    // escondida (ver `overflow-x` do `&__progresso` acima), evitando o "2ª F…" cortado sem pista
+    // de que há mais conteúdo pro lado.
+    @include bp.mobile {
+      --ponta: 7px;
+      font-size: 9px;
+      padding: 6px 8px 6px calc(8px + var(--ponta));
+    }
+
+    // Primeiro passo: sem entalhe à esquerda (não há passo anterior pra encaixar nele).
+    &:first-child {
+      margin-left: 0;
+      padding-left: 12px;
+      clip-path: polygon(0 0, calc(100% - var(--ponta)) 0, 100% 50%, calc(100% - var(--ponta)) 100%, 0 100%);
+
+      @include bp.mobile {
+        padding-left: 8px;
+      }
+    }
+
+    // Último passo: sem ponta à direita (não há próximo passo pra apontar).
+    &:last-child {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--ponta) 50%);
+    }
+
+    // Um único passo disponível (Nível ainda não desbloqueou Fortificação): retângulo simples.
+    &:first-child:last-child {
+      margin-left: 0;
+      padding-left: 12px;
+      clip-path: none;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &:hover:not(:disabled):not(&--ativo) {
+      color: var(--text);
+    }
+
+    // Ativo segue a cor de identidade da ficha (mesmo fallback --accent de `.habilidades__chip
+    // --personalidade`, ver `ficha-habilidades.component.scss`) — preenche o passo inteiro (a
+    // seta vira o indicador "selecionado", não só a borda) e sobe no empilhamento pra sua ponta
+    // cobrir o entalhe do vizinho sem sobra visível.
+    &--ativo {
+      z-index: 1;
+      color: var(--bg);
+      background: var(--cor-ficha, var(--accent));
+      font-weight: 700;
+    }
+  }
+
+  // Estágio materializado da Habilidade de Personalidade — mesmo cartão da aba Habilidades
+  // (`.habilidades__item`/`__linha`/`__chip`/`__nome`/`__custo`/`__descricao`), reconstruído aqui
+  // porque aquele componente encapsula seu próprio SCSS (não dá pra importar a classe direto).
+  &__habilidade {
+    padding: 9px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-left-color: var(--cor-ficha, var(--accent));
+    border-radius: var(--radius-control);
+  }
+
+  &__habilidade-linha {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__habilidade-chip {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cor-ficha, var(--accent));
+    background: var(--surface);
+    border: 1px solid var(--cor-ficha-border);
+    border-radius: var(--radius-control);
+    padding: 2px 7px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  &__habilidade-nome {
+    flex: 1 1 auto;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  // Custo em Energia — mesmo azul de `.habilidades__custo` (`var(--energy)`), nunca a cor da ficha.
+  &__habilidade-custo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--energy);
+    flex: 0 0 auto;
+  }
+
+  &__habilidade-descricao {
+    display: block;
+    margin: 4px 0 0;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
   }
 
   // Histórico de Fragmentos Consumidos (m3-64) — lista que só cresce (nunca some), então rola por
@@ -1701,6 +1902,16 @@
     &:focus {
       border-color: var(--accent-border);
     }
+  }
+
+  // Textarea maior do editor da Habilidade de Personalidade (ver HTML) — `.ficha-ident__select`
+  // sozinho não fixa altura (serve pra inputs/selects de uma linha também); aqui o texto é o efeito
+  // completo de um estágio, então ganha mais espaço vertical e só resiza no eixo vertical (o
+  // horizontal quebraria a largura fixa da caixa).
+  &__select--area {
+    min-height: 96px;
+    line-height: 1.5;
+    resize: vertical;
   }
 
   &__classe-acoes {
