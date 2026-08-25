@@ -43,6 +43,30 @@ Dano/Resistência/"encaixa em" no form), empilhamento por quantidade confirmado 
 sem botão "Modificar" no card, abas do catálogo (11 categorias reais, sem "Sem Categoria" nem
 Fragmentos separados) confirmadas sem regressão. Item de teste removido da fixture ao final.
 
+## 2026-08-25 — Item custom do agente passa a ser editado na dialog de criação
+
+O pedido de edição de item custom foi corrigido para o inventário certo: somente o inventário da
+ficha do agente ganhou a ação; toda a implementação iniciada no inventário do esquadrão (UI, testes,
+service, endpoint e DTO) foi retirada. A spec foi reescrita para registrar explicitamente esse
+limite. O esquadrão continua com o comportamento anterior, sem lápis nem formulário de alteração.
+
+Na ficha, itens custom são reconhecidos pela ausência de correspondência de nome/categoria no
+catálogo canônico e mostram o lápis “Editar informações”. A ação abre uma `p-dialog` real em
+qualquer modo de apresentação e reutiliza o próprio `formItemCustomTemplate`, com a mesma largura,
+breakpoints, densidade e controles da criação. O formulário recebe todos os dados atuais; nome,
+descrição, custo e peso ficam editáveis, enquanto categoria e dados mecânicos permanecem bloqueados.
+“Salvar alterações” substitui somente os quatro campos permitidos, aplica trim/piso zero, remove
+descrição vazia e preserva quantidade, guarda, munição, módulo, categoria emprestada, modificações e
+demais propriedades.
+
+**Evidência.** A suíte completa do frontend passou com **1343/1343** testes; lint concluiu sem erros
+(somente os avisos de estilo preexistentes) e o build terminou com os dois avisos de budget já
+conhecidos. Na aplicação real, a dialog foi comparada com a criação em `1920×1080` e `360×800`:
+modalidade, foco inicial no nome, campos preenchidos, categoria bloqueada, alvos principais de 44px,
+ausência de overflow e persistência após recarregar foram confirmados. No mobile a dialog ficou em
+342×567 dentro do viewport; no desktop, 640×403. O inventário do esquadrão foi inspecionado e segue
+sem ação de edição.
+
 ## 2026-08-25 — Spec de topbar ampliada: `/painel` também vira `/campanhas`
 
 O autor, revisando `topbar-renomear-painel-icone-fichas.spec.md` (`I-019`) ao lado da spec irmã

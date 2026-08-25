@@ -254,7 +254,8 @@
          própria lista (aqui embaixo); no modo `dialog` o mesmo template abre num `p-dialog` (fim do
          arquivo) — a coluna de Status não tem espaço pro formulário inteiro sem quebrar. -->
     <ng-template #formItemCustomTemplate>
-      <form class="ficha-inv__form" [formGroup]="itemCustomForm" (ngSubmit)="confirmarCriarItem()">
+      <form class="ficha-inv__form" [formGroup]="itemCustomForm"
+        (ngSubmit)="editandoItemIndice() !== null ? confirmarEdicaoItem() : confirmarCriarItem()">
         <div class="ficha-inv__form-linha">
           <label class="ficha-inv__campo">
             <span class="ficha-inv__campo-rotulo">Nome</span>
@@ -267,6 +268,7 @@
                 type="button"
                 class="ficha-inv__categoria-select-gatilho"
                 [attr.aria-expanded]="categoriaItemSelectAberta()"
+                [disabled]="editandoItemIndice() !== null"
                 (click)="alternarCategoriaItemSelect()"
               >
                 <app-icone [nome]="iconesCategoria[categoriaCustom()]" />
@@ -316,7 +318,8 @@
             @if (mostraEmprestimo()) {
               <label class="ficha-inv__campo">
                 <span class="ficha-inv__campo-rotulo">Encaixa em (recebe modificações de)</span>
-                <select class="ficha-inv__entrada" formControlName="categoriaEmprestada">
+                <select class="ficha-inv__entrada" formControlName="categoriaEmprestada"
+                  [disabled]="editandoItemIndice() !== null">
                   <option value="">— nenhuma —</option>
                   @for (cat of categoriasEmprestaveis; track cat) {
                     <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
@@ -327,7 +330,8 @@
             @if (mostraModulo()) {
               <label class="ficha-inv__campo">
                 <span class="ficha-inv__campo-rotulo">Módulo do fragmento</span>
-                <select class="ficha-inv__entrada" formControlName="modulo">
+                <select class="ficha-inv__entrada" formControlName="modulo"
+                  [disabled]="editandoItemIndice() !== null">
                   <option value="">—</option>
                   @for (m of modulosFragmento; track m) {
                     <option [value]="m">Módulo {{ m }}</option>
@@ -364,6 +368,7 @@
               <select
                 class="ficha-inv__entrada"
                 formControlName="baseConstrutor"
+                [disabled]="editandoItemIndice() !== null"
                 (change)="escolherBaseConstrutor($any($event.target).value)"
               >
                 @for (base of opcoesBaseConstrutor(); track base.nome) {
@@ -378,11 +383,13 @@
           <div class="ficha-inv__form-linha">
             <label class="ficha-inv__campo">
               <span class="ficha-inv__campo-rotulo">Dano</span>
-              <input class="ficha-inv__entrada" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]" />
+              <input class="ficha-inv__entrada" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]"
+                [readonly]="editandoItemIndice() !== null" />
             </label>
             <label class="ficha-inv__campo">
               <span class="ficha-inv__campo-rotulo">Informação (alcance / área / munição)</span>
-              <input class="ficha-inv__entrada" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m" />
+              <input class="ficha-inv__entrada" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m"
+                [readonly]="editandoItemIndice() !== null" />
             </label>
           </div>
         }
@@ -391,13 +398,15 @@
             @if (mostraResistencia()) {
               <label class="ficha-inv__campo">
                 <span class="ficha-inv__campo-rotulo">Resistência</span>
-                <input class="ficha-inv__entrada" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]" />
+                <input class="ficha-inv__entrada" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]"
+                  [readonly]="editandoItemIndice() !== null" />
               </label>
             }
             @if (mostraBonus()) {
               <label class="ficha-inv__campo">
                 <span class="ficha-inv__campo-rotulo">Bônus de inventário</span>
-                <input class="ficha-inv__entrada" type="text" formControlName="bonus" placeholder="Ex.: +6 inv." />
+                <input class="ficha-inv__entrada" type="text" formControlName="bonus" placeholder="Ex.: +6 inv."
+                  [readonly]="editandoItemIndice() !== null" />
               </label>
             }
           </div>
@@ -413,9 +422,10 @@
         </label>
         <div class="ficha-inv__form-acoes">
           <button type="submit" class="ficha-inv__btn ficha-inv__btn--principal" [disabled]="itemCustomForm.invalid">
-            Adicionar item
+            {{ editandoItemIndice() !== null ? 'Salvar alterações' : 'Adicionar item' }}
           </button>
-          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario" (click)="cancelarCriarItem()">
+          <button type="button" class="ficha-inv__btn ficha-inv__btn--secundario"
+            (click)="editandoItemIndice() !== null ? cancelarEdicaoItem() : cancelarCriarItem()">
             Cancelar
           </button>
         </div>
@@ -424,6 +434,21 @@
     @if (apresentacao() === 'inline' && criandoItem()) {
       <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
     }
+
+    <p-dialog
+      [visible]="editandoItemIndice() !== null"
+      [modal]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [dismissableMask]="true"
+      [style]="{ width: '640px' }"
+      [breakpoints]="{ '680px': '90vw', '480px': '95vw' }"
+      header="Editar item custom"
+      styleClass="ficha-inv__dialogo"
+      (onHide)="cancelarEdicaoItem()"
+    >
+      <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
+    </p-dialog>
 
     <!-- Catálogo (busca + categorias + grade de itens/amplificadores) — mesmo racional do form acima:
          `catalogoTemplate` abre inline aqui no modo `inline`, ou num `p-dialog` maior no modo `dialog`. -->
@@ -682,6 +707,17 @@
                   [attr.aria-label]="'Editar apelido de ' + item.nomeExibido"
                   [appTooltip]="'Editar apelido'"
                   (click)="editarApelido(item.indice)"
+                >
+                  <app-icone nome="editar" />
+                </button>
+              }
+              @if (editavel() && item.custom) {
+                <button
+                  type="button"
+                  class="ficha-inv__item-apelido-lapis"
+                  [attr.aria-label]="'Editar informações ' + item.nome"
+                  [appTooltip]="'Editar informações'"
+                  (click)="abrirEdicaoItem(item.indice)"
                 >
                   <app-icone nome="editar" />
                 </button>

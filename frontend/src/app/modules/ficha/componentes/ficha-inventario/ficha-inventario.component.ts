@@ -374,6 +374,8 @@ interface ItemInventarioVM {
   readonly danoFormula: string | null;
   /** Descrição do item custom (texto livre), ou `null` para itens do catálogo. */
   readonly descricao: string | null;
+  /** `true` quando nome/categoria não correspondem a um item do catálogo canônico. */
+  readonly custom: boolean;
   /** `false` para consumíveis (Operacional/Medicinal): sem "Modificar" (nem custom). */
   readonly modificavel: boolean;
   readonly ehArmazenamento: boolean;
@@ -605,6 +607,8 @@ export class FichaInventario {
 
   /** Índice do item com a edição de apelido aberta (m3-33), ou `null`. */
   protected readonly editandoApelidoIndice = signal<number | null>(null);
+  /** Índice do item custom com as informações em edição, ou `null`. */
+  protected readonly editandoItemIndice = signal<number | null>(null);
   /** Único número de munição em edição direta no card. */
   protected readonly contagemMunicaoEditando = signal<{ readonly indice: number; readonly campo: 'atual' | 'maxima' } | null>(null);
   /** Feedback breve depois de consumir uma cena/disparo, igual à confirmação de cópia. */
@@ -1340,6 +1344,7 @@ export class FichaInventario {
 
   /** Abre/fecha o formulário de item custom. */
   protected alternarCriarItem(): void {
+    this.editandoItemIndice.set(null);
     this.categoriaItemSelectAberta.set(false);
     if (this.criandoItem()) {
       this.criandoItem.set(false);
@@ -2194,6 +2199,70 @@ export class FichaInventario {
     );
   }
 
+  /** Abre a dialog de item custom com o mesmo formulário da criação, preenchido pelo item atual. */
+  protected abrirEdicaoItem(indice: number): void {
+    const item = this.inventario().itens[indice];
+    if (!item) {
+      return;
+    }
+    this.resetarItemCustomForm({
+      nome: item.nome,
+      categoria: item.categoria,
+      descricao: item.descricao ?? '',
+      custo: item.custo,
+      peso: item.peso,
+      dano: item.dano ?? '',
+      informacao: item.informacao ?? '',
+      resistencia: item.resistencia ?? '',
+      bonus: item.bonus ?? '',
+      categoriaEmprestada: item.categoriaEmprestada ?? '',
+      modulo: item.modulo ?? '',
+    });
+    this.criandoItem.set(false);
+    this.catalogoAberto.set(false);
+    this.categoriaItemSelectAberta.set(false);
+    this.editandoItemIndice.set(indice);
+  }
+
+  /** Cancela a edição de informações sem alterar o item. */
+  protected cancelarEdicaoItem(): void {
+    this.editandoItemIndice.set(null);
+    this.categoriaItemSelectAberta.set(false);
+  }
+
+  /** Persiste nome, descrição, custo e peso de um item custom sem modificar seus campos mecânicos. */
+  protected confirmarEdicaoItem(): void {
+    const indice = this.editandoItemIndice();
+    if (indice === null) {
+      return;
+    }
+    const item = this.inventario().itens[indice];
+    if (!item) {
+      this.cancelarEdicaoItem();
+      return;
+    }
+
+    if (this.itemCustomForm.invalid) {
+      return;
+    }
+    const bruto = this.itemCustomForm.getRawValue();
+    const descricao = bruto.descricao.trim();
+    const itemSemDescricao = { ...item };
+    delete itemSemDescricao.descricao;
+    this.emitirItens(this.inventario().itens.map((atual, indiceAtual) =>
+      indiceAtual === indice
+        ? {
+            ...itemSemDescricao,
+            nome: bruto.nome.trim(),
+            custo: Math.max(0, bruto.custo),
+            peso: Math.max(0, bruto.peso),
+            ...(descricao ? { descricao } : {}),
+          }
+        : atual,
+    ));
+    this.cancelarEdicaoItem();
+  }
+
   /**
    * Abre/fecha o painel "Modificar" de um item. No modo `inline` vários itens podem ficar abertos ao
    * mesmo tempo (cada um expande na própria lista); no modo `dialog` só um por vez faz sentido (um
@@ -2737,6 +2806,7 @@ export class FichaInventario {
       stat: this.formatarStat(statComputado, item.categoria),
       danoFormula: statComputado?.dano ?? null,
       descricao: item.descricao ?? null,
+      custom: !CATALOGO_ITENS[item.categoria]?.some((catalogo) => catalogo.nome === item.nome),
       modificavel: !CATEGORIAS_NAO_MODIFICAVEIS.includes(item.categoria),
       ehArmazenamento,
       guardada: item.guardada,

@@ -36,6 +36,17 @@ describe('FichaInventario', () => {
     modificacoes: [],
   };
 
+  const itemCustom: CarrinhoItemDto = {
+    nome: 'Amuleto Caseiro',
+    categoria: ItemCategoriaEnum.EXOTICOS,
+    custo: 300,
+    peso: 2,
+    quantidade: 1,
+    guardada: false,
+    modificacoes: [],
+    descricao: 'Brilha no escuro',
+  };
+
   const atributos: FichaAtributosDto = {
     destreza: 2,
     forca: 6,
@@ -145,6 +156,68 @@ describe('FichaInventario', () => {
     const modificares = raiz.querySelectorAll('.ficha-inv__modificar');
     // Só o item "Leve" (Corpo a Corpo) tem "Modificar"; o consumível não.
     expect(modificares.length).toBe(1);
+  });
+
+  it('oferece editar informações somente para item custom editável', () => {
+    const { raiz } = montar({ itens: [itemCustom, itemLeve], amplificadores: [] });
+
+    expect(raiz.querySelector('[aria-label="Editar informações Amuleto Caseiro"]')).toBeTruthy();
+    expect(raiz.querySelector('[aria-label="Editar informações Leve"]')).toBeNull();
+  });
+
+  it('abre uma dialog real com o formulário de criação pré-preenchido para o item custom', () => {
+    const alvo = montar({ itens: [itemCustom], amplificadores: [] });
+    const botao = alvo.raiz.querySelector(
+      '[aria-label="Editar informações Amuleto Caseiro"]',
+    ) as HTMLButtonElement;
+
+    botao.click();
+    alvo.fixture.detectChanges();
+
+    const dialogo = alvo.raiz.querySelector('.p-dialog') as HTMLElement;
+    expect(dialogo).toBeTruthy();
+    expect(dialogo.textContent).toContain('Editar item custom');
+    expect(alvo.raiz.querySelector('.ficha-inv__form--edicao')).toBeNull();
+    expect((dialogo.querySelector('[formControlName="nome"]') as HTMLInputElement).value).toBe('Amuleto Caseiro');
+    expect((dialogo.querySelector('[formControlName="descricao"]') as HTMLTextAreaElement).value).toBe('Brilha no escuro');
+    expect((dialogo.querySelector('[formControlName="custo"]') as HTMLInputElement).value).toBe('300');
+    expect((dialogo.querySelector('[formControlName="peso"]') as HTMLInputElement).value).toBe('2');
+    expect((dialogo.querySelector('.ficha-inv__categoria-select-gatilho') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('salva custo e peso sem negativos e remove a descrição esvaziada sem tocar nos demais campos', () => {
+    const itemComCamposMecanicos: CarrinhoItemDto = {
+      ...itemCustom,
+      dano: '2D6 [Físico]',
+      informacao: 'Curto',
+      categoriaEmprestada: ItemCategoriaEnum.CORPO_A_CORPO,
+      quantidade: 3,
+    };
+    const alvo = montar({ itens: [itemComCamposMecanicos], amplificadores: [] });
+    (alvo.raiz.querySelector(
+      '[aria-label="Editar informações Amuleto Caseiro"]',
+    ) as HTMLButtonElement).click();
+    alvo.fixture.detectChanges();
+    const dialogo = alvo.raiz.querySelector('.p-dialog') as HTMLElement;
+    const nome = dialogo.querySelector('[formControlName="nome"]') as HTMLInputElement;
+    nome.value = '  Amuleto Revisado  ';
+    nome.dispatchEvent(new Event('input'));
+    alvo.componentInstance['itemCustomForm'].patchValue({ descricao: '   ', custo: -20, peso: -1 });
+    (dialogo.querySelector('.ficha-inv__form') as HTMLFormElement)
+      .dispatchEvent(new Event('submit', { cancelable: true }));
+
+    const { descricao: descricaoRemovida, ...itemSemDescricao } = itemComCamposMecanicos;
+    void descricaoRemovida;
+    expect(alvo.emitidos).toEqual([{
+      itens: [{
+        ...itemSemDescricao,
+        nome: 'Amuleto Revisado',
+        custo: 0,
+        peso: 0,
+      }],
+      amplificadores: [],
+    }]);
+    expect(alvo.emitidos[0].itens[0]).not.toHaveProperty('descricao');
   });
 
   it('não oferece "Modificar" num Fragmento Potencializador solto — só "Aplicar em..."/"Consumir" (doc: só o Construtor recebe modificação como a arma base)', () => {

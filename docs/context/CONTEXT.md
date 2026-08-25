@@ -590,7 +590,6 @@ só adaptou o visual de desktop).
 | `preservar-modificacoes-inventario-esquadrao` | campanha/inventário | preservar `modificacoes` do item ao transferir ficha ↔ base (`IDEAS.md` `I-020`) |
 | `descricao-modificacoes-item-inventario` | ficha/inventário | resumo textual das modificações ativas, acima da contagem de munição/cenas (`IDEAS.md` `I-021`) |
 | `renomear-painel-para-campanhas` | layout/navegação/rotas | rota `/painel`→`/campanhas` (nav, redirects, guards, todo `routerLink`/`navigate`), ícone próprio de Fichas, limpar menu de perfil (`IDEAS.md` `I-019`; escopo ampliado em 2026-08-25) |
-| `edicao-item-custom-inventario` | ficha/campanha/inventário | editar descrição/peso/custo de um item custom já existente (ficha e esquadrão), pedido direto do autor |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
@@ -849,6 +848,12 @@ dano/informação/resistência com os valores daquele item e pré-preenche o pes
 pra homebrew; `calcularStatItem` funde a Resistência de um Construtor Proteção com o bônus do módulo
 desde essa task — antes só Proteções/Armazenamento eram elegíveis a esse bloco) —, sub-inventários,
 custom), Limite mínimo
+Itens custom do inventário do agente podem ter nome, descrição, custo e peso corrigidos pelo lápis
+“Editar informações”. A ação abre uma `p-dialog` real que reutiliza integralmente o formulário e o
+contrato visual da criação, já preenchido; categoria e campos mecânicos ficam bloqueados, e salvar
+preserva quantidade, modificações e todos os demais dados. Item de catálogo não oferece a ação. O
+inventário do esquadrão não participa desse fluxo e permanece sem edição de informações.
+
 de Energia/Anomalia Biológica (`m3-67`: `(Vigor + Destreza) × 2` — abaixo dele, aviso não-bloqueante
 na aquisição de fragmento e, na aba Extras, os efeitos calculados como texto informativo (−15
 testes, −10 Defesa, teto de 10% da Vida Máxima) + atalho pra pré-preencher o trauma "Limiar da
