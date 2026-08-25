@@ -261,6 +261,22 @@
   M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
 
+### I-022 — Caderno: importar em lote, arrastar-e-soltar e exportar `.md` · campanha/caderno
+
+- **Ideia:** depois da importação de **um** arquivo Markdown por vez
+  (`docs/specs/backlog/caderno-importar-markdown.spec.md`), ampliar o trânsito de arquivos do
+  Caderno: selecionar vários `.md` de uma vez (uma página por arquivo), arrastar-e-soltar arquivos
+  sobre a janela do Caderno, e o caminho inverso — exportar uma página (ou o caderno inteiro) como
+  `.md`/`.zip`.
+- **Origem:** recortado explicitamente do escopo de `caderno-importar-markdown.spec.md` (2026-08-25),
+  para a primeira entrega ficar em um fluxo só.
+- **Por quê:** quem já mantém notas fora do sistema (Obsidian, pasta de `.md`) traz um diretório
+  inteiro, não um arquivo; e sem exportação o conteúdo entra no Caderno mas não sai dele.
+- **Custo aparente:** só frontend. Lote pede resultado por arquivo (sucesso/erro parcial) e algum
+  indicador de progresso; arrastar-e-soltar pede zona de soltura e estados de hover na janela
+  flutuante; exportação de caderno inteiro pede empacotamento no navegador. Nenhuma mudança de
+  schema, endpoint ou contrato.
+
 ---
 
 ## Promovidas

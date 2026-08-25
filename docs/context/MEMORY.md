@@ -79,7 +79,7 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 | Quero mexer em | Fica em |
 |---|---|
 | Módulos de tela | `frontend/src/app/modules/` — `autenticacao/`, `calculadora/`, `campanha/`, `ficha/`, `pagina-caderno/`, `usuario/` |
-| Janela, estado, Markdown seguro e transporte do caderno | `frontend/src/app/modules/pagina-caderno/` |
+| Janela, estado, editor Markdown e transporte do caderno | `frontend/src/app/modules/pagina-caderno/` — `caderno-flutuante.*` (janela/estado), `editor-markdown.component.ts` (Milkdown atrás do token `EDITOR_MARKDOWN_FACTORY`, preset `commonmark` apenas até hoje), `pagina-caderno.service.ts` (REST). `markdown-seguro.ts` está **órfão** desde a migração para o Milkdown: só o próprio `.spec.ts` o chama — vale como registro da regra "caderno sem imagens nem HTML", não como caminho de código |
 | Componentes da ficha | `frontend/src/app/modules/ficha/componentes/` — `ficha-visualizacao/`, `ficha-inventario/`, `ficha-habilidades/`, `ficha-sanidade/`, `ficha-rolagens/`, `ficha-rolagens-painel/`, `ficha-combos/`, `ficha-habilidade-seletor/`, `guia-equipamento-loja/`, `guia-formula/` |
 | Ficha flutuante da Iniciativa e atalho mobile **Minha ficha** | `frontend/src/app/modules/encontro/componentes/ficha-flutuante/` e `frontend/src/app/modules/encontro/paginas/painel/`; no mobile, `ficha-flutuante__corpo` é a rolagem vertical única e passa `rolagemExterna` à ficha de jogador |
 | Composables de página da ficha (uma instância por página, `providers: []`) | `frontend/src/app/modules/ficha/` — `ficha-edicao.service.ts` (handlers `ajustar*`), `ficha-rolagem-registro.service.ts` (flag "Rolagem oculta" + registro do histórico) |
