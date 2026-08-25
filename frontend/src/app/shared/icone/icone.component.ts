@@ -40,6 +40,7 @@ export type IconeNome =
   | 'operacional'
   | 'medicinal'
   | 'amplificador'
+  | 'sem-categoria'
   | 'campanhas'
   | 'calculadora'
   | 'documentos'

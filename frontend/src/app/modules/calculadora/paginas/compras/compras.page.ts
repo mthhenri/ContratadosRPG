@@ -182,12 +182,14 @@ interface AmpCarrinhoVM {
 const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.OPERACIONAL,
   ItemCategoriaEnum.MEDICINAL,
+  ItemCategoriaEnum.SEM_CATEGORIA,
 ];
 
 /** Categorias que **não aceitam modificação** alguma (nem do catálogo, nem custom): consumíveis. */
 const CATEGORIAS_NAO_MODIFICAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.OPERACIONAL,
   ItemCategoriaEnum.MEDICINAL,
+  ItemCategoriaEnum.SEM_CATEGORIA,
 ];
 
 /** Categorias que possuem **dano** (o form custom mostra Dano + Informação). */
@@ -318,9 +320,14 @@ function fragmentosZerados(): GradeFragmentos {
   styleUrl: './compras.page.scss',
 })
 export class ComprasPage {
-  /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
+  /**
+   * Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom) e sem
+   * Sem Categoria (categoria de sistema, sem item de catálogo — só existe via item custom).
+   */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
-    (categoria) => !CATEGORIAS_FRAGMENTO.includes(categoria.categoria),
+    (categoria) =>
+      !CATEGORIAS_FRAGMENTO.includes(categoria.categoria) &&
+      categoria.categoria !== ItemCategoriaEnum.SEM_CATEGORIA,
   );
   protected readonly iconesCategoria = ICONES_CATEGORIA;
 

@@ -29,4 +29,10 @@ export enum ItemCategoriaEnum {
    * docs/core/sistema-v4.1.0.md — "⬡ Fragmentos → ⬦ Potencializador".
    */
   FRAGMENTO_POTENCIALIZADOR = 'FRAGMENTO_POTENCIALIZADOR',
+  /**
+   * Categoria de sistema, sem capítulo correspondente em sistema-v4.1.0.md: bucket
+   * organizacional puro, sem efeito mecânico, só disponível para item custom (nunca
+   * ganha item de catálogo). Ver docs/specs/done/item-sem-categoria.spec.md.
+   */
+  SEM_CATEGORIA = 'SEM_CATEGORIA',
 }

@@ -1,5 +1,48 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-25 — Item custom ganha a categoria de sistema `SEM_CATEGORIA`
+
+Pedido avulso do autor (`item-sem-categoria.spec.md`): item custom não tinha onde registrar algo sem
+categoria mecânica real (modificação solta, papel/documento, objeto puramente narrativo) — o form
+obrigava a escolher uma categoria real (normalmente Operacional) que não descrevia o item. `shared`
+ganhou `ItemCategoriaEnum.SEM_CATEGORIA`, documentada como categoria de sistema sem capítulo
+correspondente em `sistema-v4.1.0.md` (bucket organizacional puro, nunca ganha item de catálogo);
+`CATALOGO_ITENS`/`CATALOGO_CATEGORIAS`/o teste de coerência de `compras.spec.ts` (`semCatalogo`)
+foram ajustados no mesmo padrão de Amplificador/Fragmentos. Ícone novo `sem-categoria` (glifo "tag",
+recorte Tabler Icons) em `icone.component`.
+
+Nos três lugares que compram item (ficha, esquadrão, calculadora "Compras"): a categoria entra em
+`CATEGORIAS_EMPILHAVEIS` (cai na grade dupla, ao lado de Medicinal/Operacional) e em
+`CATEGORIAS_NAO_MODIFICAVEIS` (sem "Modificar", sem Dano/Resistência/"encaixa em" no form); as abas
+do catálogo navegável continuam excluindo-a (nunca tem item comprável), mas o seletor de categoria do
+form de item custom passa a oferecê-la. No inventário de esquadrão isso exigiu separar
+`categoriasItem` de `categorias` (antes a mesma referência) — as abas excluem `SEM_CATEGORIA`, o
+seletor de item custom não. `guia-equipamento-loja` não mudou (já filtra categoria vazia
+automaticamente e não cria item custom).
+
+Durante a implementação, duas sessões concorrentes editavam os mesmos componentes de ficha/esquadrão
+(recurso de edição de item custom, spec irmã) — o build do frontend ficou quebrado por um trecho não
+commitado por um período; o trabalho em `shared` foi concluído e testado enquanto isso, e o gate de
+frontend retomado assim que o build normalizou.
+
+Durante a verificação visual ao vivo, o autor pediu um ajuste à parte: a dialog "Item custom" da
+ficha (`p-dialog`) estava com scroll interno ao abrir o seletor de categoria — `.p-dialog-content` do
+PrimeNG tem `overflow-y: auto`, e o dropdown de 13 opções (12 + a nova) ultrapassava a altura do
+conteúdo em ~20px. Primeira tentativa (`minHeight` maior na dialog) funcionava mas inflava a dialog
+mesmo fechada; a pedido do autor, trocada pela correção de causa raiz — `.p-dialog` (o painel) já é
+`overflow: visible`, só o `.p-dialog-content` clipava; `:host ::ng-deep
+.ficha-inv__dialogo--item-custom .p-dialog-content { overflow-y: visible }` deixa o dropdown flutuar
+livre por cima da página, como qualquer outro dropdown solto do app, sem alterar o tamanho da dialog.
+Confirmado ao vivo (1366×768, 1920×1080, 360×800) sem scroll e sem corte do dropdown.
+
+**Evidência.** `shared`: suíte `compras.spec.ts` verde (87/87). Frontend: `tsc --noEmit` limpo; lint
+sem erros (só avisos de estilo preexistentes); `inventario-esquadrao.component.spec.ts` 10/12 (as 2
+falhas são da spec irmã de edição de item, não relacionadas). Verificação ao vivo em `1920×1080` e
+`360×800` (ficha `FICHA-JGD-0002`, dev fixture): criação de item custom com "Sem Categoria" (sem
+Dano/Resistência/"encaixa em" no form), empilhamento por quantidade confirmado (×2/×3 no mesmo item),
+sem botão "Modificar" no card, abas do catálogo (11 categorias reais, sem "Sem Categoria" nem
+Fragmentos separados) confirmadas sem regressão. Item de teste removido da fixture ao final.
+
 ## 2026-08-25 — Spec de topbar ampliada: `/painel` também vira `/campanhas`
 
 O autor, revisando `topbar-renomear-painel-icone-fichas.spec.md` (`I-019`) ao lado da spec irmã

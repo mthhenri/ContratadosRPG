@@ -25,6 +25,7 @@ const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
   [ItemCategoriaEnum.AMPLIFICADOR]: 'amplificador',
   [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: 'fragmento-construtor',
   [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: 'fragmento-potencializador',
+  [ItemCategoriaEnum.SEM_CATEGORIA]: 'sem-categoria',
 };
 
 @Component({
@@ -52,11 +53,16 @@ export class InventarioEsquadrao {
   private readonly categoriaSelecionada = toSignal(this.categoriaAtiva.valueChanges, {
     initialValue: ItemCategoriaEnum.OPERACIONAL,
   });
+  /** Abas do catálogo comprável — sem Amplificador, Fragmentos e Sem Categoria (sem item de catálogo). */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(({ categoria }) =>
+    ![ItemCategoriaEnum.AMPLIFICADOR, ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
+      ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, ItemCategoriaEnum.SEM_CATEGORIA].includes(categoria),
+  );
+  /** Categorias disponíveis para um item custom — inclui Sem Categoria, ao contrário das abas. */
+  protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(({ categoria }) =>
     ![ItemCategoriaEnum.AMPLIFICADOR, ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
       ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR].includes(categoria),
   );
-  protected readonly categoriasItem = this.categorias;
   protected readonly iconesCategoria = ICONES_CATEGORIA;
   protected readonly itemCustomForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),

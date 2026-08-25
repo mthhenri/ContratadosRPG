@@ -62,6 +62,7 @@ export const CATALOGO_CATEGORIAS: readonly CategoriaCatalogo[] = [
   { categoria: ItemCategoriaEnum.AMPLIFICADOR, rotulo: 'Amplificadores', icone: '🔬' },
   { categoria: ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR, rotulo: 'Fragmento Construtor', icone: '🧬' },
   { categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR, rotulo: 'Fragmento Potencializador', icone: '🧬' },
+  { categoria: ItemCategoriaEnum.SEM_CATEGORIA, rotulo: 'Sem Categoria', icone: '❔' },
 ];
 
 // ── Custo de modificação por categoria ───────────────────────────────────────

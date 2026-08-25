@@ -335,6 +335,11 @@
 
 ## 1. Próxima Task
 
+**Ajuste avulso (pedido direto do autor, 2026-08-25, sem número de milestone) concluído** — item
+custom ganha a categoria de sistema `SEM_CATEGORIA`, pra registrar item sem categoria mecânica real
+(modificação solta, papel/documento, objeto narrativo) sem mentir escolhendo uma categoria real que
+não descreve o item. Ver "Ficha de jogador" (seção 4) e `HISTORY.md` para o relato completo.
+
 **Ajuste avulso (bug reportado direto pelo autor, 2026-08-24, sem número de milestone) concluído**
 — a média de Nível/Prestígio do esquadrão não chegava ao primeiro agente de um jogador comum numa
 campanha que já tinha agentes de outros jogadores. Ver o bloco no topo do arquivo e
@@ -865,6 +870,13 @@ compacto junto ao avatar no desktop e migra para o menu de ações no mobile. Mu
 refaz o recorte REST autorizado, fazendo a ficha sumir ou reaparecer para jogadores sem F5.
 Na visualização completa, o menu de dono/mestre oferece **Remover da campanha** somente para ficha
 vinculada; a desatribuição é direta e retorna ao acervo após o backend confirmar.
+
+Item custom ganhou a categoria de sistema `SEM_CATEGORIA` (`ItemCategoriaEnum`, sem capítulo
+correspondente em `sistema-v4.1.0.md` — bucket organizacional puro, nunca ganha item de catálogo):
+disponível só no seletor de categoria do form de item custom (ficha, esquadrão, calculadora
+"Compras"), nunca como aba do catálogo navegável. Item dessa categoria é sempre empilhável (cai na
+grade dupla, junto de Medicinal/Operacional) e nunca modificável (sem Dano/Resistência/"encaixa em"
+no form, sem painel "Modificar").
 
 Input `modo: 'padrao' | 'compacto'` no componente: `'compacto'` reduz as 3 colunas pra 2
 (Identidade/Vitalidade/Reações/Resistências ao lado do card de Status) e corta a barra de abas ao

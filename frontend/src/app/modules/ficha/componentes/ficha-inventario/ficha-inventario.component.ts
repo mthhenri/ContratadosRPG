@@ -100,12 +100,14 @@ const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
   [ItemCategoriaEnum.AMPLIFICADOR]: 'amplificador',
   [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: 'fragmento-construtor',
   [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: 'fragmento-potencializador',
+  [ItemCategoriaEnum.SEM_CATEGORIA]: 'sem-categoria',
 };
 
-/** Categorias com item comprável separadamente empilhável (várias unidades do mesmo item). */
+/** Categorias empilháveis (várias unidades do mesmo item) — vão pra grade dupla, não pra lista principal. */
 const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.OPERACIONAL,
   ItemCategoriaEnum.MEDICINAL,
+  ItemCategoriaEnum.SEM_CATEGORIA,
 ];
 
 /**
@@ -135,6 +137,7 @@ const CATEGORIAS_NAO_MODIFICAVEIS: readonly ItemCategoriaEnum[] = [
   ItemCategoriaEnum.OPERACIONAL,
   ItemCategoriaEnum.MEDICINAL,
   ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+  ItemCategoriaEnum.SEM_CATEGORIA,
 ];
 
 /** Categorias que possuem **dano** (o form custom mostra Dano + Informação). */
@@ -548,9 +551,14 @@ export class FichaInventario {
     this.fragmentosConsumidos().map((registro) => registro.modulo),
   );
 
-  /** Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom). */
+  /**
+   * Abas do catálogo comprável — sem os Fragmentos (achados, montados como item custom) e sem
+   * Sem Categoria (categoria de sistema, sem item de catálogo — só existe via item custom).
+   */
   protected readonly categorias = CATALOGO_CATEGORIAS.filter(
-    (categoria) => !CATEGORIAS_FRAGMENTO.includes(categoria.categoria),
+    (categoria) =>
+      !CATEGORIAS_FRAGMENTO.includes(categoria.categoria) &&
+      categoria.categoria !== ItemCategoriaEnum.SEM_CATEGORIA,
   );
   protected readonly iconesCategoria = ICONES_CATEGORIA;
 
@@ -1120,7 +1128,7 @@ export class FichaInventario {
       .sort((a, b) => (ordem.get(a.categoria) ?? ORDEM_CATEGORIAS_LISTA.length) - (ordem.get(b.categoria) ?? ORDEM_CATEGORIAS_LISTA.length));
   });
 
-  /** Medicinal + Operacional misturados numa grade de 2 colunas, ordenados por nome exibido. */
+  /** Categorias empilháveis misturadas numa grade de 2 colunas, ordenados por nome exibido. */
   protected readonly itensListaMedicinalOperacional = computed<readonly ItemInventarioVM[]>(() =>
     this.itensInventarioFiltrados()
       .filter((item) => CATEGORIAS_EMPILHAVEIS.includes(item.categoria) && this.noInventarioPrincipal(item))

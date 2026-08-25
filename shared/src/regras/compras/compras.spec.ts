@@ -771,6 +771,7 @@ describe('coerência do catálogo e das tabelas', () => {
       ItemCategoriaEnum.AMPLIFICADOR,
       ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR,
       ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
+      ItemCategoriaEnum.SEM_CATEGORIA,
     ];
     Object.values(ItemCategoriaEnum).forEach((categoria) => {
       const itens = CATALOGO_ITENS[categoria];

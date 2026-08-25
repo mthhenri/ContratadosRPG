@@ -627,7 +627,7 @@
         [style]="{ width: '640px' }"
         [breakpoints]="{ '680px': '90vw', '480px': '95vw' }"
         header="Item custom"
-        styleClass="ficha-inv__dialogo"
+        styleClass="ficha-inv__dialogo ficha-inv__dialogo--item-custom"
         (onHide)="cancelarCriarItem()"
       >
         <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
@@ -651,7 +651,7 @@
   }
 
   <!-- Cartão de um item — mesmo card na lista principal (armas → munições → proteções →
-       armazenamento → fragmentos) e na grade dupla de Medicinal/Operacional abaixo (só a
+       armazenamento → fragmentos) e na grade dupla de categorias empilháveis abaixo (só a
        ordem/layout mudam — ver `itensListaPrincipal`/`itensListaMedicinalOperacional`). -->
   <ng-template #cartaoItemTemplate let-item="item">
     <div class="ficha-inv__item">

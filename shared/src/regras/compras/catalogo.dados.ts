@@ -232,4 +232,6 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
   // (módulo + forma base + stats próprios). Sem itens fixos aqui.
   [ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR]: [],
   [ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR]: [],
+  // Categoria de sistema, só existe via item custom — nunca ganha item de catálogo.
+  [ItemCategoriaEnum.SEM_CATEGORIA]: [],
 };

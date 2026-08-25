@@ -1944,3 +1944,13 @@
     }
   }
 }
+
+// A dialog "Item custom" tem conteúdo curto; `.p-dialog-content` do PrimeNG vem com
+// `overflow-y: auto` por padrão, e o dropdown de categoria (posicionado absoluto, 13 opções)
+// ultrapassa a altura do conteúdo o suficiente pra disparar o scroll interno da dialog — mesmo
+// sem precisar de rolagem nenhuma no resto do form. `.p-dialog` (o painel em si) já é
+// `overflow: visible`, então soltar o clipe só do `.p-dialog-content` deixa o dropdown flutuar
+// livre por cima do resto da página, igual a qualquer outro dropdown solto do app.
+:host ::ng-deep .ficha-inv__dialogo--item-custom .p-dialog-content {
+  overflow-y: visible;
+}
