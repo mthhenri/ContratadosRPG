@@ -29,6 +29,22 @@
 
 ## Ativos
 
+### P-028 — Maestria de Vigor sem verificação visual ao vivo · `CONTORNADO` · processo/frontend
+
+- **Sintoma:** o commit `0e439b0` aplica a Maestria de Vigor às resistências das Proteções, no
+  Inventário, no catálogo "Adicionar itens" e no Encontro, mas ainda não há evidência visual na
+  aplicação real de que `3 [Balístico]` vira `9 [Balístico]` com Vigor 6, sem overflow nem
+  regressão de responsividade.
+- **Causa:** a implementação foi commitada antes da sessão autenticada necessária para observar a
+  ficha real e o catálogo nos dois viewports obrigatórios.
+- **Contorno:** testes unitários focados, lint e builds estão verdes; eles cobrem o cálculo e a
+  renderização estrutural, mas não substituem a inspeção ao vivo.
+- **Correção:** iniciar a aplicação local, entrar com o cenário de desenvolvimento, ativar Maestria
+  de Vigor numa ficha com uma Proteção e conferir Inventário + "Adicionar itens" em `1920×1080` e
+  `360×800`; então remover este item, mover a spec para `done/` e registrar o fecho em
+  `HISTORY.md`/`CONTEXT.md`.
+- **Desde:** `maestrias-efeitos.spec.md` / commit `0e439b0` (2026-08-25).
+
 ### P-002 — `HISTORY.md` sem registro desde a `m3-27` · `ABERTO` · processo
 
 - **Sintoma:** o último bloco registrado é a `m3-27` (2026-07-29), mas **11 commits de trabalho
