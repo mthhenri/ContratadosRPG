@@ -573,6 +573,7 @@ só adaptou o visual de desktop).
 | `preservar-modificacoes-inventario-esquadrao` | campanha/inventário | preservar `modificacoes` do item ao transferir ficha ↔ base (`IDEAS.md` `I-020`) |
 | `descricao-modificacoes-item-inventario` | ficha/inventário | resumo textual das modificações ativas, acima da contagem de munição/cenas (`IDEAS.md` `I-021`) |
 | `topbar-renomear-painel-icone-fichas` | layout/navegação | renomear "Painel"→"Campanhas", ícone próprio de Fichas, limpar menu de perfil (`IDEAS.md` `I-019`) |
+| `edicao-item-custom-inventario` | ficha/campanha/inventário | editar descrição/peso/custo de um item custom já existente (ficha e esquadrão), pedido direto do autor |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
