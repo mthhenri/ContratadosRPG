@@ -32,7 +32,12 @@ function resolverMaximosDoAgente(dados: FichaJogadorDadosDto): {
 } {
   const vidaMaxima =
     dados.estado.vidaMaxima ??
-    calcularVida({ classe: dados.classe, nivel: dados.nivel, vigor: dados.atributos.vigor });
+    calcularVida({
+      classe: dados.classe,
+      nivel: dados.nivel,
+      vigor: dados.atributos.vigor,
+      habilidades: dados.habilidades,
+    });
   const energiaMaxima =
     dados.estado.energiaMaxima ??
     calcularEnergia({ classe: dados.classe, nivel: dados.nivel, destreza: dados.atributos.destreza });
@@ -117,6 +122,7 @@ function resolverResistencias(linha: EncontroCombatenteLinhaDto): Partial<Record
     const resistencias = montarResistencias({
       itens: dados.inventario?.itens ?? [],
       amplificadores: dados.inventario?.amplificadores ?? [],
+      habilidades: dados.habilidades,
       manual: dados.derivados?.resistencias,
       formacao,
     });

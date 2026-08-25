@@ -20,6 +20,8 @@ export interface VidaCalcularDto {
   readonly classe: ClasseEnum;
   readonly nivel: number;
   readonly vigor: number;
+  /** Habilidades permanentes que alteram a fórmula (`Tanque`: +1 por progressão). */
+  readonly habilidades?: readonly FichaHabilidadeDto[];
 }
 
 /** Entrada de `calcularEnergia`: Energia = base(classe) + Destreza e progressão por Nível. */

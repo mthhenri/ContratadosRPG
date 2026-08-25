@@ -3,6 +3,7 @@ import {
   FragmentoModuloEnum,
   FragmentoTipoEnum,
   ItemCategoriaEnum,
+  HabilidadeCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
   TipoDanoEnum,
 } from '../../enums';
@@ -29,6 +30,34 @@ function protecao(parcial: Partial<CarrinhoItemDto> & { resistencia: string }): 
 }
 
 describe('montarResistencias', () => {
+  it('Tanque soma +3 à resistência de cada Proteção equipada, em todos os tipos dela', () => {
+    const habilidades = [{
+      nome: 'Tanque',
+      categoria: HabilidadeCategoriaEnum.ARQUETIPO,
+      custoEnergia: 0,
+      descricao: '',
+    }];
+    const resultado = montarResistencias({
+      itens: [protecao({ resistencia: '2 [Físico/Balístico]' })],
+      amplificadores: [],
+      habilidades,
+    });
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(5);
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.BALISTICO)?.equipamento).toBe(5);
+  });
+
+  it('Tanque não bonifica resistência de item que não pertence à categoria Proteções', () => {
+    const habilidades = [{
+      nome: 'Tanque',
+      categoria: HabilidadeCategoriaEnum.ARQUETIPO,
+      custoEnergia: 0,
+      descricao: '',
+    }];
+    const item = protecao({ categoria: ItemCategoriaEnum.ARMAZENAMENTO, resistencia: '2 [Físico]' });
+    const resultado = montarResistencias({ itens: [item], amplificadores: [], habilidades });
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(2);
+  });
+
   it('devolve sempre as cinco linhas, mesmo sem nenhum equipamento (tudo em 0)', () => {
     const resultado = montarResistencias({ itens: [], amplificadores: [] });
     expect(resultado).toEqual([

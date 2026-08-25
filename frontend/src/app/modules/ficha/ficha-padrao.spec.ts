@@ -50,6 +50,15 @@ describe('construirFichaInicial', () => {
     expect(dados.arquetipo).toBe(ArquetipoEnum.LUTADOR);
   });
 
+  it('Vanguarda nasce com a Vida adicional por progressão de Tanque', () => {
+    const { dados } = construirFichaInicial(
+      base({ arquetipo: ArquetipoEnum.VANGUARDA, nivel: 4 }),
+    );
+    expect(dados.habilidades.some((habilidade) => habilidade.nome === 'Tanque')).toBe(true);
+    expect(dados.estado.vidaMaxima).toBe(86);
+    expect(dados.estado.vidaAtual).toBe(86);
+  });
+
   it('soma a escolha do jogador ao bônus fixo (Engenheiro: Intelecto fixo + Destreza escolhida)', () => {
     const { dados } = construirFichaInicial(
       base({

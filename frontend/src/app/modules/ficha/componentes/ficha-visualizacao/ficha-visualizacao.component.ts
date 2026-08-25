@@ -1674,7 +1674,9 @@ export class FichaVisualizacao {
 
   // m3-10: máxima é stored (snapshot na criação, editável); cai no derivado só em fichas antigas.
   protected readonly vidaMaxima = computed(
-    () => this.dados().estado.vidaMaxima ?? calcularVida(this.entrada()),
+    () =>
+      this.dados().estado.vidaMaxima ??
+      calcularVida({ ...this.entrada(), habilidades: this.dados().habilidades }),
   );
   protected readonly energiaMaxima = computed(
     () => this.dados().estado.energiaMaxima ?? calcularEnergia(this.entrada()),
@@ -1702,8 +1704,10 @@ export class FichaVisualizacao {
    */
   protected readonly progressaoVida = computed(() => {
     const { classe, atributos } = this.dados();
-    const base = calcularVida({ classe, nivel: 0, vigor: atributos.vigor });
-    const porNivel = calcularVida({ classe, nivel: 1, vigor: atributos.vigor }) - base;
+    const habilidades = this.dados().habilidades;
+    const base = calcularVida({ classe, nivel: 0, vigor: atributos.vigor, habilidades });
+    const porNivel =
+      calcularVida({ classe, nivel: 1, vigor: atributos.vigor, habilidades }) - base;
     return `${this.classeTexto()} · Vida: ${base} base, +${porNivel}/nível (Vigor ${atributos.vigor})`;
   });
 
@@ -2404,6 +2408,7 @@ export class FichaVisualizacao {
     montarResistencias({
       itens: this.dados().inventario.itens,
       amplificadores: this.dados().inventario.amplificadores,
+      habilidades: this.dados().habilidades,
       manual: this.dados().derivados?.resistencias,
       formacao: obterResistenciaFormacao(this.formacaoOrigem()),
     }),

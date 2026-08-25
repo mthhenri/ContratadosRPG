@@ -12,8 +12,10 @@ import { ArquetipoEnum, ClasseEnum } from '../../enums';
  * Fora do catálogo (só criadas, sem lista no sistema): Personalidade e Especialidade. Civil TEM
  * lista fechada própria (`HABILIDADES_CIVIL`, abaixo) — não confundir com essas duas.
  *
- * **Efeito mecânico:** habilidades vinculadas a um passo de rolagem só contam **Energia** (m3-31); a
- * aplicação automática de efeitos na fórmula foi aposentada — o jogador lê a descrição e aplica na mão.
+ * **Efeito mecânico:** habilidades condicionais vinculadas a uma ação continuam sendo aplicadas pelo
+ * jogador (m3-31). Efeitos permanentes e incondicionais de fórmula são automatizados pelo motor quando
+ * o cálculo correspondente recebe `habilidades` (Mochileiro, Tanque, Segundo Fôlego, Metabolismo
+ * Acelerado e Peculiaridade).
  */
 export interface HabilidadeBaseDto {
   readonly nome: string;

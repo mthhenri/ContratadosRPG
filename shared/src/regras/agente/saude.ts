@@ -1,6 +1,8 @@
 import { ClasseEnum } from '../../enums';
 import { EnergiaCalcularDto, LimiteEnergiaCalcularDto, SaudeClasseDto, SaudeClasseObterDto, VidaCalcularDto } from './agente.dtos';
 
+const NOME_TANQUE = 'Tanque';
+
 /**
  * Coeficientes de saúde por classe. Vida e Energia seguem a mesma forma:
  *
@@ -64,10 +66,14 @@ function ehCivil(classe: ClasseEnum): boolean {
  */
 export function calcularVida(dto: VidaCalcularDto): number {
   const coeficientes = SAUDE_POR_CLASSE[dto.classe];
+  const bonusTanque = dto.habilidades?.some((habilidade) => habilidade.nome === NOME_TANQUE)
+    ? dto.nivel
+    : 0;
   const vida =
     coeficientes.vidaBase +
     dto.vigor * coeficientes.vidaPorVigor +
-    dto.nivel * (coeficientes.vidaPorNivel + dto.vigor * coeficientes.vidaPorNivelVigor);
+    dto.nivel * (coeficientes.vidaPorNivel + dto.vigor * coeficientes.vidaPorNivelVigor) +
+    bonusTanque;
   return Math.floor(vida);
 }
 

@@ -1410,7 +1410,12 @@ export class FichaService {
   private aplicarSnapshotDeMaximos(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
     const vidaMaxima =
       dados.estado.vidaMaxima ??
-      calcularVida({ classe: dados.classe, nivel: dados.nivel, vigor: dados.atributos.vigor });
+      calcularVida({
+        classe: dados.classe,
+        nivel: dados.nivel,
+        vigor: dados.atributos.vigor,
+        habilidades: dados.habilidades,
+      });
     const energiaMaxima =
       dados.estado.energiaMaxima ??
       calcularEnergia({

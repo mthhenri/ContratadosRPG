@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { QualidadeDescansoEnum, TipoDescansoEnum } from '../../enums';
+import {
+  HabilidadeCategoriaEnum,
+  QualidadeDescansoEnum,
+  TipoDescansoEnum,
+} from '../../enums';
 import {
   calcularDescanso,
   calcularResultadoDescanso,
@@ -15,6 +19,67 @@ import {
  * baixo). Sem divergências numéricas vs `contratados-calculadora/src/script.js`.
  */
 describe('calcularDescanso', () => {
+  const habilidade = (nome: string) => ({
+    nome,
+    categoria: HabilidadeCategoriaEnum.CLASSE,
+    custoEnergia: 0,
+    descricao: '',
+  });
+
+  it('Segundo Fôlego soma Vigor ÷ 2, arredondado para baixo, aos dados de Energia', () => {
+    const calculo = calcularDescanso({
+      tipo: TipoDescansoEnum.MEDIO,
+      qualidade: QualidadeDescansoEnum.ADEQUADO,
+      vigor: 5,
+      destreza: 2,
+      nivel: 0,
+      refeicao: false,
+      interrompido: false,
+      habilidades: [habilidade('Segundo Fôlego')],
+    });
+    expect(calculo.energia.quantidadeDados).toBe(4);
+    expect(calculo.energia.minimo).toBe(4);
+    expect(calculo.energia.maximo).toBe(24);
+  });
+
+  it('Metabolismo Acelerado soma Medicina D4 de Vida e Vontade D4 de Energia no Médio', () => {
+    const calculo = calcularDescanso({
+      tipo: TipoDescansoEnum.MEDIO,
+      qualidade: QualidadeDescansoEnum.ADEQUADO,
+      vigor: 2,
+      destreza: 3,
+      medicina: 2,
+      vontade: 4,
+      nivel: 0,
+      refeicao: false,
+      interrompido: false,
+      habilidades: [habilidade('Metabolismo Acelerado')],
+    });
+    expect(calculo.vida?.dadosAdicionais).toEqual([{ quantidade: 2, faces: 4 }]);
+    expect(calculo.vida?.minimo).toBe(4);
+    expect(calculo.vida?.maximo).toBe(16);
+    expect(calculo.energia.dadosAdicionais).toEqual([{ quantidade: 4, faces: 4 }]);
+    expect(calculo.energia.minimo).toBe(7);
+    expect(calculo.energia.maximo).toBe(34);
+  });
+
+  it('Metabolismo Acelerado não adiciona D4 no Descanso Curto', () => {
+    const calculo = calcularDescanso({
+      tipo: TipoDescansoEnum.CURTO,
+      qualidade: QualidadeDescansoEnum.ADEQUADO,
+      vigor: 2,
+      destreza: 3,
+      medicina: 2,
+      vontade: 4,
+      nivel: 0,
+      refeicao: false,
+      interrompido: false,
+      habilidades: [habilidade('Metabolismo Acelerado')],
+    });
+    expect(calculo.energia.dadosAdicionais).toEqual([]);
+    expect(calculo.energia.quantidadeDados).toBe(3);
+  });
+
   it('reproduz o exemplo do documento: Nível 3, Destreza 4, Curto insalubre → 4D3+6 de Energia', () => {
     const calculo = calcularDescanso({
       tipo: TipoDescansoEnum.CURTO,

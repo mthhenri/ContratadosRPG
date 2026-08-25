@@ -3,7 +3,12 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map, merge } from 'rxjs';
 
-import { QualidadeDescansoEnum, TipoDescansoEnum } from '@contratados-rpg/shared/enums';
+import {
+  HabilidadeCategoriaEnum,
+  QualidadeDescansoEnum,
+  TipoDescansoEnum,
+} from '@contratados-rpg/shared/enums';
+import type { FichaHabilidadeDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   calcularDescanso,
   calcularResultadoDescanso,
@@ -30,6 +35,10 @@ interface DescansoEstadoBruto {
   vigor: number;
   destreza: number;
   nivel: number;
+  medicina: number;
+  vontade: number;
+  segundoFolego: boolean;
+  metabolismoAcelerado: boolean;
   refeicao: 'nao' | 'sim';
   interrompido: 'nao' | 'sim';
   extraVida: string;
@@ -99,6 +108,10 @@ export class DescansoPage {
     vigor: new FormControl(1, { nonNullable: true }),
     destreza: new FormControl(1, { nonNullable: true }),
     nivel: new FormControl(0, { nonNullable: true }),
+    medicina: new FormControl(1, { nonNullable: true }),
+    vontade: new FormControl(1, { nonNullable: true }),
+    segundoFolego: new FormControl(false, { nonNullable: true }),
+    metabolismoAcelerado: new FormControl(false, { nonNullable: true }),
     // Refeição e interrupção são `<select>` Sim/Não: guardados como string (não boolean) porque o
     // value accessor nativo do `<select>` escreve string — um boolean viraria a string `'sim'`,
     // sempre truthy. A conversão para boolean acontece em `entrada` (paridade com o site antigo).
@@ -122,10 +135,35 @@ export class DescansoPage {
       vigor: valor.vigor,
       destreza: valor.destreza,
       nivel: valor.nivel,
+      medicina: valor.medicina,
+      vontade: valor.vontade,
+      habilidades: this.habilidadesSelecionadas(valor),
       refeicao: valor.refeicao === 'sim',
       interrompido: valor.interrompido === 'sim',
     };
   });
+
+  /** Materializa somente as habilidades marcadas, no mesmo contrato das fichas persistidas. */
+  private habilidadesSelecionadas(valor: DescansoEstadoBruto): readonly FichaHabilidadeDto[] {
+    const habilidades: FichaHabilidadeDto[] = [];
+    if (valor.segundoFolego) {
+      habilidades.push({
+        nome: 'Segundo Fôlego',
+        categoria: HabilidadeCategoriaEnum.GERAL,
+        custoEnergia: 0,
+        descricao: '',
+      });
+    }
+    if (valor.metabolismoAcelerado) {
+      habilidades.push({
+        nome: 'Metabolismo Acelerado',
+        categoria: HabilidadeCategoriaEnum.SUBCLASSE,
+        custoEnergia: 0,
+        descricao: '',
+      });
+    }
+    return habilidades;
+  }
 
   /** Faixa determinística de recuperação (Energia sempre; Vida `null` no Descanso Curto). */
   protected readonly calculo = computed(() => calcularDescanso(this.entrada()));
@@ -166,6 +204,12 @@ export class DescansoPage {
     }
     if (entrada.interrompido) {
       notas.push('Interrupção: resultado final dividido por 2 (arredonda para baixo).');
+    }
+    if (this.bruto().segundoFolego) {
+      notas.push('Segundo Fôlego: +Vigor ÷ 2 dados na recuperação de Energia.');
+    }
+    if (this.bruto().metabolismoAcelerado) {
+      notas.push('Metabolismo Acelerado: +Medicina D4 de Vida e +Vontade D4 de Energia.');
     }
     notas.push('Fórmula geral: ATRIBUTO × dados + (Nível × 2).');
     return notas;
@@ -323,19 +367,29 @@ export class DescansoPage {
     interrompido: boolean,
   ): RolagemFaixa {
     const rolagens = rolarDados({ faces: faixa.dadoFinal, quantidade: faixa.quantidadeDados });
+    const dadosHabilidade = faixa.dadosAdicionais.flatMap((dados) =>
+      rolarDados({ faces: dados.faces, quantidade: dados.quantidade }),
+    );
     const extra = interpretarDadosExtras({ texto: textoExtra });
-    const dadosExtras = this.rolarExtras(extra);
+    const dadosDigitados = this.rolarExtras(extra);
 
     const resultado = calcularResultadoDescanso({
       rolagens,
-      dadosExtras,
+      dadosExtras: [...dadosHabilidade, ...dadosDigitados],
       bonusNivel: faixa.bonusNivel,
       interrompido,
     });
 
     return {
       total: resultado.total,
-      breakdown: this.montarBreakdown(rolagens, extra, dadosExtras, faixa.bonusNivel, resultado),
+      breakdown: this.montarBreakdown(
+        rolagens,
+        dadosHabilidade,
+        extra,
+        dadosDigitados,
+        faixa.bonusNivel,
+        resultado,
+      ),
     };
   }
 
@@ -353,12 +407,16 @@ export class DescansoPage {
   /** Memória de cálculo textual (paridade com o `breakdown` do site antigo). */
   private montarBreakdown(
     rolagens: readonly number[],
+    dadosHabilidade: readonly number[],
     extra: DadosExtrasDto | null,
     dadosExtras: readonly number[],
     bonusNivel: number,
     resultado: { soma: number; total: number; interrompido: boolean },
   ): string {
     let texto = rolagens.length > 0 ? `[${rolagens.join(' + ')}]` : '0';
+    if (dadosHabilidade.length > 0) {
+      texto += ` +habilidade[${dadosHabilidade.join(' + ')}]`;
+    }
     if (extra) {
       const somaExtra = dadosExtras.reduce((acumulado, valor) => acumulado + valor, 0);
       texto += extra.faces > 0 ? ` +extra[${dadosExtras.join(' + ')}]` : ` +${somaExtra}`;
@@ -378,8 +436,11 @@ export class DescansoPage {
   /** Fórmula legível `NDx + (Nível × 2) = NDx+B` (÷ 2 na interrupção), paridade com o site. */
   private formatarFormula(faixa: RecuperacaoFaixaDto, interrompido: boolean): string {
     const notacao = `${faixa.quantidadeDados}D${faixa.dadoFinal}`;
+    const adicionais = faixa.dadosAdicionais
+      .map((dados) => ` + ${dados.quantidade}D${dados.faces}`)
+      .join('');
     const nivel = faixa.bonusNivel / 2;
-    return `${notacao} + (${nivel}×2) = ${notacao}+${faixa.bonusNivel}${interrompido ? ' ÷ 2' : ''}`;
+    return `${notacao}${adicionais} + (${nivel}×2)${interrompido ? ' ÷ 2' : ''}`;
   }
 
   /** Pulso de escala no valor recém-assentado (guardado para ambientes sem `Element.animate`). */

@@ -104,6 +104,57 @@
   font-family: var(--font-mono);
 }
 
+// Opções permanentes de habilidade — mesmo padrão de controle marcado da aba Compras.
+.descanso-habilidades {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.descanso-habilidade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+
+  input {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+  }
+
+  span {
+    display: grid;
+    gap: 2px;
+  }
+
+  b {
+    font: 600 11px var(--font-mono);
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  small {
+    font: 12px var(--font-sans);
+    color: var(--text-mute);
+  }
+
+  &:has(input:checked) {
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+  }
+}
+
 // === Stats (faixa determinística e rolagem) ===
 .calc-stats {
   display: grid;

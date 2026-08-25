@@ -49,6 +49,38 @@ describe('DescansoPage', () => {
     expect(valorFaixa(raiz, 'destaque')).toBe('1–10');
   });
 
+  it('aplica Segundo Fôlego e Metabolismo Acelerado na faixa e na rolagem', async () => {
+    const { fixture, raiz } = await montar();
+    selecionar(raiz, 'desc-tipo', 'MEDIO');
+    (raiz.querySelector('#desc-segundo-folego') as HTMLInputElement).click();
+    (raiz.querySelector('#desc-metabolismo-acelerado') as HTMLInputElement).click();
+    const steppers = raiz.querySelectorAll('.calc-config .stepper__valor');
+    const definir = (indice: number, valor: string): void => {
+      const campo = steppers[indice] as HTMLInputElement;
+      campo.value = valor;
+      campo.dispatchEvent(new Event('input'));
+    };
+    definir(0, '5');
+    definir(1, '2');
+    definir(3, '3');
+    definir(4, '4');
+    fixture.detectChanges();
+
+    expect(valorFaixa(raiz, 'energia')).toBe('8–40');
+    expect(valorFaixa(raiz, 'destaque')).toBe('8–32');
+
+    const aleatorio = vi.spyOn(Math, 'random').mockReturnValue(0);
+    (fixture.componentInstance as unknown as { rolar(animar?: boolean): void }).rolar(false);
+    fixture.detectChanges();
+    aleatorio.mockRestore();
+    expect(
+      raiz.querySelector('.descanso-rolagem .calc-stat--energia .calc-stat__valor')?.textContent?.trim(),
+    ).toBe('8');
+    expect(
+      raiz.querySelector('.descanso-rolagem .calc-stat--destaque .calc-stat__valor')?.textContent?.trim(),
+    ).toBe('8');
+  });
+
   it('rola os dados (sem animação) somando recuperação + Nível pelo motor', async () => {
     const { fixture, raiz } = await montar();
     // Médio (Energia 1D6 / Vida 1D4), Nível 3 → bônus 6. Math.random fixado em 0 → cada dado = 1.

@@ -219,7 +219,7 @@ export class FichaEdicaoService {
 
   private recalcularSaude(dados: FichaJogadorDadosDto): FichaJogadorDadosDto {
     const entrada = normalizarEntrada(dados.classe, dados.nivel, dados.atributos);
-    const vidaMaxima = calcularVida(entrada);
+    const vidaMaxima = calcularVida({ ...entrada, habilidades: dados.habilidades });
     const energiaMaxima = calcularEnergia(entrada);
     return {
       ...dados,
@@ -303,7 +303,16 @@ export class FichaEdicaoService {
       dadosAtuais.habilidades,
       habilidades,
     );
-    this.ficha.set({ ...fichaAtual, dados: { ...dadosAtuais, habilidades, derivados } });
+    const estado = this.progredirVidaPorHabilidades(
+      dadosAtuais.estado,
+      entrada,
+      dadosAtuais.habilidades,
+      habilidades,
+    );
+    this.ficha.set({
+      ...fichaAtual,
+      dados: { ...dadosAtuais, habilidades, derivados, estado },
+    });
     this.agendarPersistencia();
   }
 
@@ -332,6 +341,28 @@ export class FichaEdicaoService {
       return derivados;
     }
     return { ...derivados, inventarioMaximo: derivados.inventarioMaximo + delta };
+  }
+
+  /**
+   * Ganhar/perder `Tanque` soma/remove `+1 de Vida por progressão` no máximo stored, pelo mesmo
+   * modelo de delta usado nas mudanças de Nível/atributo. Ajustes manuais feitos por cima da
+   * fórmula permanecem intactos.
+   */
+  private progredirVidaPorHabilidades(
+    estado: FichaJogadorDadosDto['estado'],
+    entrada: EntradaAgente,
+    habilidadesAntes: readonly FichaHabilidadeDto[],
+    habilidadesDepois: readonly FichaHabilidadeDto[],
+  ): FichaJogadorDadosDto['estado'] {
+    if (estado.vidaMaxima === undefined) {
+      return estado;
+    }
+    const delta =
+      calcularVida({ ...entrada, habilidades: habilidadesDepois }) -
+      calcularVida({ ...entrada, habilidades: habilidadesAntes });
+    return delta === 0
+      ? estado
+      : { ...estado, vidaMaxima: estado.vidaMaxima + delta };
   }
 
   ajustarInventario(inventario: FichaInventarioDto): void {
@@ -590,7 +621,13 @@ export class FichaEdicaoService {
     const depois = normalizarEntrada(novos.classe, novos.nivel, novos.atributos);
     return {
       ...novos,
-      estado: this.progredirEstado(novos.estado, antes, depois),
+      estado: this.progredirEstado(
+        novos.estado,
+        antes,
+        depois,
+        antigos.habilidades,
+        novos.habilidades,
+      ),
       derivados: this.progredirDerivados(novos.derivados, antes, depois, novos.habilidades),
     };
   }
@@ -599,8 +636,12 @@ export class FichaEdicaoService {
     estado: FichaJogadorDadosDto['estado'],
     antes: EntradaAgente,
     depois: EntradaAgente,
+    habilidadesAntes: readonly FichaHabilidadeDto[],
+    habilidadesDepois: readonly FichaHabilidadeDto[],
   ): FichaJogadorDadosDto['estado'] {
-    const deltaVida = calcularVida(depois) - calcularVida(antes);
+    const deltaVida =
+      calcularVida({ ...depois, habilidades: habilidadesDepois }) -
+      calcularVida({ ...antes, habilidades: habilidadesAntes });
     const deltaEnergia = calcularEnergia(depois) - calcularEnergia(antes);
     return {
       ...estado,

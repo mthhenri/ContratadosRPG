@@ -497,6 +497,38 @@ describe('FichaVisualizar', () => {
     );
   });
 
+  it('ganhar e perder "Tanque" ajusta a Vida Máxima stored pelo delta da progressão', () => {
+    const { fixture } = montar({ usuarioLogadoId: 7 });
+    const componente = fixture.componentInstance;
+    const carregada = componente['ficha']()!;
+    const vidaAntes = calcularVida({
+      classe: carregada.dados.classe,
+      nivel: carregada.dados.nivel,
+      vigor: carregada.dados.atributos.vigor,
+    });
+    componente['ficha'].set({
+      ...carregada,
+      dados: {
+        ...carregada.dados,
+        estado: { ...carregada.dados.estado, vidaMaxima: vidaAntes },
+      },
+    });
+    const tanque = [{
+      nome: 'Tanque',
+      categoria: HabilidadeCategoriaEnum.ARQUETIPO,
+      custoEnergia: 0,
+      descricao: '',
+    }];
+
+    componente['fichaEdicao'].ajustarHabilidades(tanque);
+    expect(componente['ficha']()!.dados.estado.vidaMaxima).toBe(
+      vidaAntes + carregada.dados.nivel,
+    );
+
+    componente['fichaEdicao'].ajustarHabilidades([]);
+    expect(componente['ficha']()!.dados.estado.vidaMaxima).toBe(vidaAntes);
+  });
+
   it('lesão PERMANENTE cascateia às máximas/derivados; temporária não; base e Maestria intactos', () => {
     const classe = ClasseEnum.COMBATENTE;
     const nivel = 2;

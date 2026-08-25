@@ -1,6 +1,18 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-24 · **Última decisão registrada:** ajuste avulso pós-M7/M3 (bug
+> **Última revisão:** 2026-08-24 · **Última decisão registrada:** `P-027` — os efeitos permanentes
+> e incondicionais das habilidades de custo 0 E agora pertencem às fórmulas compartilhadas:
+> **Tanque** soma +1 de Vida por progressão e +3 à resistência de toda Proteção equipada;
+> **Segundo Fôlego** soma `⌊Vigor ÷ 2⌋` dados-base à Energia recuperada em qualquer descanso; e
+> **Metabolismo Acelerado** soma Medicina D4 de Vida e Vontade D4 de Energia em descansos Médio e
+> Longo. Criação, edição, fallbacks de ficha e mapper de Encontro propagam `habilidades`; a edição
+> de Tanque altera a Vida máxima persistida somente pelo delta mecânico, preservando ajuste manual.
+> A calculadora pública de Descanso expõe os dois efeitos, atributos, faixas, fórmulas e rolagens.
+> Testado: shared 729/729, backend 456/456, frontend 1329/1329; builds verdes e lint sem erros nos
+> três workspaces. Verificado ao vivo em `1920×1080` e `360×800`, sem overflow ou erro de console;
+> o cenário combinado confirmou Vida 8–32 e Energia 8–40. Ver `HISTORY.md` para o relato completo.
+>
+> **Uma decisão atrás:** ajuste avulso pós-M7/M3 (bug
 > reportado direto pelo autor) — a média de Nível/Prestígio do esquadrão não chegava ao **primeiro
 > agente de um jogador comum** numa campanha que já tinha agentes de outros jogadores. Causa: o
 > passo // Novo agente (`criar.page.ts`) decidia "primeiro agente da campanha" checando
@@ -31,7 +43,7 @@
 > continua mostrando "Primeiro agente da campanha" para o mestre. Ver `HISTORY.md` para o relato
 > completo.
 >
-> **Uma decisão atrás:** `m7-19` (ajuste avulso pós-M7, o
+> **Duas decisões atrás:** `m7-19` (ajuste avulso pós-M7, o
 > mestre pode sobrescrever, por combatente e por encontro, a expressão de dados usada para rolar a
 > Iniciativa) — cobre casos que a fórmula padrão do sistema não prevê (efeito temporário de cena,
 > condição homebrew, ajuste pontual) sem precisar de sequela ou Formação permanente na ficha. Novo
@@ -64,7 +76,7 @@
 > por um jogador é recusada com 403, e uma expressão sintaticamente inválida (`3D`) é recusada com
 > 400 sem persistir.
 >
-> **Duas decisões atrás:** `m7-18` (ajuste avulso pós-M7,
+> **Três decisões atrás:** `m7-18` (ajuste avulso pós-M7,
 > "Rolar tudo" do mestre passa a somar o dado extra de Iniciativa de Formação da Origem) — certas
 > Formações da Origem concedem dado extra de Iniciativa (`PERICIA_DADO_INICIATIVA`,
 > `obterDadoExtraIniciativaFormacao`, `shared/regras/identidade/formacoes.ts`), já aplicado
@@ -93,7 +105,7 @@
 > Atento (3 empilhamentos, sem Formação) confirmou `dadoExtraIniciativa: 3` via REST; "Rolar
 > iniciativas" real produziu **12**, consistente com `4D6` (Destreza 1 + Atento 3).
 >
-> **Três decisões atrás:** `m3-78` (ajuste avulso pós-M3, a
+> **Quatro decisões atrás:** `m3-78` (ajuste avulso pós-M3, a
 > Habilidade de Personalidade ganha 3 estágios com custo em Energia) — deixou de ser um único texto
 > definido a qualquer momento pelo editor completo e passou a ter 3 estágios nomeados (Base, 1ª e 2ª
 > Fortificação — níveis 7/14), cada um com descrição e custo em Energia próprios (nunca um nome
@@ -144,7 +156,7 @@
 > shared 723/723, frontend 735/735 (módulo `ficha`), lint e build limpos; verificado ao vivo nos dois
 > viewports, no guia e no editor de uma ficha real.
 >
-> **Quatro decisões atrás:** `m7-20` (regressão do botão
+> **Cinco decisões atrás:** `m7-20` (regressão do botão
 > "abrir ficha" na grade compacta do jogador, corrigida) — no desktop, com a ficha lateral do
 > jogador aberta, o botão "abrir ficha" de cada cartão da Iniciativa tinha voltado a aparecer:
 > `m7-12` escondia esse botão em `:host-context(.grade--compacta) .combatente { &__abrir-ficha:
@@ -162,7 +174,7 @@
 > cartão que tem ficha. Sanidade em `360×800` confirmou que o mobile (fora do escopo da regra, que
 > vive só no breakpoint desktop) não mudou.
 >
-> **Cinco decisões atrás:** `m3-77` (ficha aberta reage por
+> **Seis decisões atrás:** `m3-77` (ficha aberta reage por
 > socket a rolagem feita em outro caminho — histórico + `BandejaDados`) — quem está com
 > `visualizar.page.ts`/`visualizar-criatura.page.ts` aberta passa a ver, sem F5, uma rolagem
 > `PUBLICA` feita por outra aba do dono, pelo mestre ou pelo Encontro. Backend:
@@ -187,7 +199,7 @@
 > verdade). Ver `[[m3-31-sem-fusao-automatica-de-efeitos-na-rolagem]]` (irmã de tema, não de causa) na
 > memória do agente.
 >
-> **Seis decisões atrás:** `m3-76` (mod custom ganha peso próprio, exceção ao padrão de +0,2 do
+> **Sete decisões atrás:** `m3-76` (mod custom ganha peso próprio, exceção ao padrão de +0,2 do
 > sistema) — `pesoCustom?: number` em `ModificacaoAplicadaDto`/`ModificacaoItemDto`
 > (`shared/regras/compras`), devolvido por `obterPesoModificacao` só quando a mod não tem
 > correspondência no catálogo; form de mod custom (`ficha-inventario`) ganhou o campo opcional.
@@ -199,7 +211,7 @@
 > Testado: shared 163/163, frontend 1297/1297 (+4); lint limpo. Ver
 > `[[verificacao-visual-pega-bug-silencioso-de-exibicao]]` na memória do agente.
 >
-> **Sete decisões atrás:** `m3-75` (spec pós-milestone, pedido
+> **Oito decisões atrás:** `m3-75` (spec pós-milestone, pedido
 > direto do autor: "na criação de ficha de agente, fazer trim em todos os campos de texto") — todo
 > campo de texto livre do passo "Identidade" (`personalidade`, `origem.nome/.descricao/
 > .saberDeCampo`, cada `formacao[].texto/.parametro`, `especialidade.gatilho/.efeito`) só usava
@@ -216,7 +228,7 @@
 > 1292, +1); lint limpo. Sem impacto visual — mudança pura de montagem de payload, nenhum
 > template/estilo tocado.
 >
-> **Oito decisões atrás:** ajuste avulso no catálogo do passo
+> **Nove decisões atrás:** ajuste avulso no catálogo do passo
 > "Equipamento inicial" do guia (`GuiaEquipamentoLoja`, pedido direto do autor, mesmo dia de
 > `m3-73`/`m3-74`) — as abas de categoria (Corpo a Corpo/Explosivos/Armas de Fogo/…) usavam os
 > emojis crus de `CATALOGO_CATEGORIAS` (`shared/regras/compras`), o único ponto do catálogo de
@@ -235,7 +247,7 @@
 > "Pistola" (Armas de Fogo) enquanto a aba ativa era Corpo a Corpo encontrou o item e adicionou com a
 > categoria certa.
 >
-> **Nove decisões atrás (mesmo dia):** `m3-73`/`m3-74` (dois ajustes
+> **Dez decisões atrás (mesmo dia):** `m3-73`/`m3-74` (dois ajustes
 > avulsos do guia de criação, mesmo dia) — `m3-73` corrigiu o seletor de habilidades do passo
 > "Habilidades": a aba ativa (Gerais/Classe/Subclasse/Arquétipo) voltava sozinha pro primeiro grupo
 > a cada "+" clicado, porque `abaAtiva`/`subgrupoAtivo` eram `linkedSignal`s na forma básica,
@@ -251,7 +263,7 @@
 > dinheiro em `1920×1080`/`360×800`, e a aba do seletor permanecendo em Arquétipo por duas adições
 > seguidas. Ver `HISTORY.md` para o detalhe de causa raiz dos dois.
 >
-> **Dez decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
+> **Onze decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
 > (`/fichas`) deixou de listar agentes e criaturas
 > misturados. A tela agora separa por tipo em blocos (`AGENTES`/`CRIATURAS`, NPC estruturalmente
 > pronto e desligado até `m4-07`/`m4-08`), com um `<select>` de visão (Todos/Agentes/Criaturas) —
@@ -274,7 +286,7 @@
 > funciona — atribuir um agente emite normalmente); e o fluxo completo funciona ponta a ponta
 > (criar solta pela UI → aparece com chip "Sem campanha" → abre em `/fichas/criatura/:id`).
 >
-> **Onze decisões atrás:** correção pós-`m7-17` — a ficha
+> **Doze decisões atrás:** correção pós-`m7-17` — a ficha
 > flutuante do Encontro (`FichaFlutuanteConteudo`) ajusta Vida/Energia/Condições da ficha pela
 > `FichaEdicaoService` genérica (`FichaService.alterarVitalidade`/`alterarFicha`), que só emite
 > `ficha:alterada` na sala `ficha:<id>` — sala que o painel de Iniciativa nunca ouve (só escuta
@@ -292,7 +304,7 @@
 > `GatewayModule` ↔ `EncontroModule` (mesmo padrão já usado com `FichaModule`/`CampanhaModule`);
 > `FichaModule` continua sem saber que `encontro` existe. Ver "Tempo real" (seção 4).
 >
-> **Doze decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
+> **Treze decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
 > com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo por campo em cada uma das cinco linhas,
 > e o mobile deixou de empilhar cada célula (o que alongava o dialog e quebrava a leitura
 > coluna↔coluna) — continua tabela, só mais estreita. O cartão da Iniciativa passou a mostrar a
@@ -305,7 +317,7 @@
 > definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
 > e coberto por teste de regressão.
 >
-> **Treze decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
+> **Quatorze decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
 > oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
 > `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
 > carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
@@ -335,7 +347,7 @@ de código ainda aberta é o **M4** (`m4-05`…`m4-10`), ao lado de `m3-53` (M3)
 spec ativa no momento.
 
 **`m7-18` (ajuste avulso pós-M7, "Rolar tudo" do mestre passa a somar o dado extra de Iniciativa de
-Formação da Origem) concluída** — ver "Uma decisão atrás" no bloco do topo do arquivo.
+Formação da Origem) concluída** — ver "Três decisões atrás" no bloco do topo do arquivo.
 
 **`m3-78` (ajuste avulso pós-M3, Habilidade de Personalidade ganha 3 estágios com custo em Energia)
 concluída** — ver "Guia de criação de ficha" (seção 4). Fecha a fila de
@@ -802,6 +814,11 @@ CRUD completo com a matriz de permissões §14 arbitrada **só no service**, val
 contra `shared/regras` antes de persistir, e concessão/revogação de acesso de visualização
 (`usuario_ficha_acesso`).
 
+As habilidades permanentes de custo 0 E entram nas fórmulas compartilhadas, sem regra duplicada
+na UI ou no backend: `Tanque` altera Vida e resistência das Proteções equipadas; adicionar/remover a
+habilidade aplica apenas o delta à Vida máxima persistida, preservando ajustes manuais. Criação,
+edição, visualização e Encontro usam o mesmo motor e propagam `habilidades` aos fallbacks.
+
 A tela de visualização (`FichaVisualizacao`, componente reusável) é um **layout de três colunas**
 (Identidade · Atributos · Status com abas internas), com **toda edição no próprio lugar** — nada
 de página de formulário separada. Editores prontos: atributos e maestria (com modificador de teste
@@ -1116,7 +1133,8 @@ existe no histórico local.
 
 Seis abas públicas e 100% client-side (consomem `shared/regras` direto, sem backend): `agente`,
 `dt`, `novo-agente`, `patente`, `descanso`, `compras` (com modo Vender). Paridade com a calculadora
-antiga confirmada.
+antiga confirmada. A aba `descanso` também recebe Medicina, Vontade e as opções Segundo Fôlego e
+Metabolismo Acelerado; faixa, fórmula e rolagem vêm integralmente de `shared/regras/descanso`.
 
 ### Documentos de regras — `frontend/shared/leitor-documentos`
 

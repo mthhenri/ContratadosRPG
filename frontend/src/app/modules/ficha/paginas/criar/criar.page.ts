@@ -272,7 +272,14 @@ export class FichaCriar {
   protected limiteAtributo(chave: ChaveAtributo): number {
     return Math.max(0, Math.min(ATRIBUTO_MAXIMO_GUIA, this.orcamento().maximoFinal) - (this.bonusAtributos()[chave] ?? 0));
   }
-  protected readonly vida = computed(() => calcularVida({ classe: this.classeCalculada(), nivel: this.nivelInicial(), vigor: this.atributosFinais().vigor }));
+  protected readonly vida = computed(() =>
+    calcularVida({
+      classe: this.classeCalculada(),
+      nivel: this.nivelInicial(),
+      vigor: this.atributosFinais().vigor,
+      habilidades: this.habilidadesParaCalculo(),
+    }),
+  );
   protected readonly energia = computed(() => calcularEnergia({ classe: this.classeCalculada(), nivel: this.nivelInicial(), destreza: this.atributosFinais().destreza }));
   /** Base de Vida/Energia da classe (sem Nível/atributos) — passo // CLASSE, antes de `vida()`/`energia()`
    * fazerem sentido: ali o jogador ainda não escolheu atributos, só tem o valor de fábrica (1 em cada). */
@@ -374,6 +381,12 @@ export class FichaCriar {
     });
     return personalidade ? [...daCatalogo, personalidade] : daCatalogo;
   });
+
+  /** Habilidade Inicial gratuita + escolhas do Nível, para fórmulas permanentes como `Tanque`. */
+  private habilidadesParaCalculo(): readonly FichaHabilidadeDto[] {
+    const inicial = this.habilidadeInicial();
+    return inicial ? [inicial, ...this.habilidadesDoNivel()] : this.habilidadesDoNivel();
+  }
   /** `true` quando a Peculiaridade já foi escolhida no passo // Habilidades — Experimento com ela não tem Origem (m3-41). */
   protected readonly temPeculiaridade = computed(() => {
     const classe = this.estado().classe;

@@ -1,7 +1,9 @@
 import { ajustarDado } from './dado';
+import { TipoDescansoEnum } from '../../enums';
 import { DADOS_DESCANSO, QUALIDADE_MOD, REFEICAO_MOD } from './descanso.dados';
 import {
   DadosExtrasDto,
+  DadosRecuperacaoDto,
   DadosExtrasInterpretarDto,
   DescansoCalcularDto,
   DescansoCalculoDto,
@@ -29,14 +31,28 @@ function calcularFaixa(
   modificadorDado: number,
   bonusNivel: number,
   interrompido: boolean,
+  dadosAdicionais: readonly DadosRecuperacaoDto[] = [],
 ): RecuperacaoFaixaDto {
   const dadoFinal = ajustarDado({ dadoBase, modificador: modificadorDado });
-  const minimoBruto = quantidade * 1 + bonusNivel;
-  const mediaBruta = quantidade * ((dadoFinal + 1) / 2) + bonusNivel;
-  const maximoBruto = quantidade * dadoFinal + bonusNivel;
+  const minimoAdicional = dadosAdicionais.reduce(
+    (total, dados) => total + dados.quantidade,
+    0,
+  );
+  const mediaAdicional = dadosAdicionais.reduce(
+    (total, dados) => total + dados.quantidade * ((dados.faces + 1) / 2),
+    0,
+  );
+  const maximoAdicional = dadosAdicionais.reduce(
+    (total, dados) => total + dados.quantidade * dados.faces,
+    0,
+  );
+  const minimoBruto = quantidade + minimoAdicional + bonusNivel;
+  const mediaBruta = quantidade * ((dadoFinal + 1) / 2) + mediaAdicional + bonusNivel;
+  const maximoBruto = quantidade * dadoFinal + maximoAdicional + bonusNivel;
   return {
     dadoFinal,
     quantidadeDados: quantidade,
+    dadosAdicionais,
     bonusNivel,
     minimo: interrompido ? Math.floor(minimoBruto / 2) : minimoBruto,
     media: interrompido ? mediaBruta / 2 : mediaBruta,
@@ -53,18 +69,46 @@ function calcularFaixa(
  * pela refeição (+1). Descanso Curto não recupera Vida (`vida` = `null`).
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Descanso". Espelha `calcDescanso` do
- * site antigo; os dados extras (aleatórios) não entram nesta faixa, só na
- * rolagem (`calcularResultadoDescanso`).
+ * site antigo. Dados extras digitados livremente não entram nesta faixa, só na rolagem
+ * (`calcularResultadoDescanso`); dados adicionais permanentes de habilidades entram porque fazem
+ * parte da própria fórmula.
  */
 export function calcularDescanso(dto: DescansoCalcularDto): DescansoCalculoDto {
   const tipoDados = DADOS_DESCANSO[dto.tipo];
   const modificadorDado = QUALIDADE_MOD[dto.qualidade] + (dto.refeicao ? REFEICAO_MOD : 0);
   const bonusNivel = dto.nivel * 2;
+  const temSegundoFolego = dto.habilidades?.some(
+    (habilidade) => habilidade.nome === 'Segundo Fôlego',
+  );
+  const temMetabolismoAcelerado =
+    dto.tipo !== TipoDescansoEnum.CURTO &&
+    dto.habilidades?.some((habilidade) => habilidade.nome === 'Metabolismo Acelerado');
+  const dadosEnergiaSegundoFolego = temSegundoFolego ? Math.floor(dto.vigor / 2) : 0;
+  const dadosVidaAdicionais: readonly DadosRecuperacaoDto[] = temMetabolismoAcelerado
+    ? [{ quantidade: Math.max(0, dto.medicina ?? 0), faces: 4 }]
+    : [];
+  const dadosEnergiaAdicionais: readonly DadosRecuperacaoDto[] = temMetabolismoAcelerado
+    ? [{ quantidade: Math.max(0, dto.vontade ?? 0), faces: 4 }]
+    : [];
 
-  const energia = calcularFaixa(dto.destreza, tipoDados.dadoEnergia, modificadorDado, bonusNivel, dto.interrompido);
+  const energia = calcularFaixa(
+    dto.destreza + dadosEnergiaSegundoFolego,
+    tipoDados.dadoEnergia,
+    modificadorDado,
+    bonusNivel,
+    dto.interrompido,
+    dadosEnergiaAdicionais,
+  );
   const vida =
     tipoDados.recuperaVida && tipoDados.dadoVida !== null
-      ? calcularFaixa(dto.vigor, tipoDados.dadoVida, modificadorDado, bonusNivel, dto.interrompido)
+      ? calcularFaixa(
+          dto.vigor,
+          tipoDados.dadoVida,
+          modificadorDado,
+          bonusNivel,
+          dto.interrompido,
+          dadosVidaAdicionais,
+        )
       : null;
 
   return { modificadorDado, energia, vida };

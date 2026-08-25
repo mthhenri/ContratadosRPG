@@ -44,6 +44,20 @@
       </div>
 
       <div class="calc-campo">
+        <span class="calc-campo__rotulo">
+          Medicina <span class="calc-campo__auxiliar">(Metabolismo)</span>
+        </span>
+        <app-step-input formControlName="medicina" [min]="0" [max]="12" ariaRotulo="Medicina" />
+      </div>
+
+      <div class="calc-campo">
+        <span class="calc-campo__rotulo">
+          Vontade <span class="calc-campo__auxiliar">(Metabolismo)</span>
+        </span>
+        <app-step-input formControlName="vontade" [min]="0" [max]="12" ariaRotulo="Vontade" />
+      </div>
+
+      <div class="calc-campo">
         <label class="calc-campo__rotulo" for="desc-refeicao">Refeição consumida?</label>
         <select id="desc-refeicao" class="calc-select" formControlName="refeicao">
           @for (opcao of opcoesSimNao; track opcao.valor) {
@@ -59,6 +73,27 @@
             <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
           }
         </select>
+      </div>
+
+      <div class="descanso-habilidades" role="group" aria-label="Habilidades de descanso">
+        <label class="descanso-habilidade" for="desc-segundo-folego">
+          <input id="desc-segundo-folego" type="checkbox" formControlName="segundoFolego" />
+          <span>
+            <b>Segundo Fôlego</b>
+            <small>+Vigor ÷ 2 dados de Energia</small>
+          </span>
+        </label>
+        <label class="descanso-habilidade" for="desc-metabolismo-acelerado">
+          <input
+            id="desc-metabolismo-acelerado"
+            type="checkbox"
+            formControlName="metabolismoAcelerado"
+          />
+          <span>
+            <b>Metabolismo Acelerado</b>
+            <small>+Medicina D4 de Vida e +Vontade D4 de Energia</small>
+          </span>
+        </label>
       </div>
     </div>
   </section>

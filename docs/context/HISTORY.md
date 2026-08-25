@@ -13,6 +13,44 @@ Removida a checagem de `passoValido` e o atributo `required` do textarea, que ga
 "Descrição da origem (opcional)". Suíte `criar.page.spec.ts` (83 testes) segue verde sem alteração —
 nenhum teste fixava `passoValido` com `descricao` vazia e os demais campos completos.
 
+## 2026-08-24 — P-027: efeitos permanentes das habilidades de 0 E automatizados
+
+Auditoria das 36 habilidades de custo 0 E havia encontrado uma cobertura incoerente: Mochileiro e
+Peculiaridade já alteravam fórmulas automaticamente, mas Tanque, Segundo Fôlego e Metabolismo
+Acelerado ainda dependiam de aplicação manual, embora também sejam modificadores permanentes e
+incondicionais. O pedido do autor para resolver a P-027 fixa a política: esses três efeitos passam a
+pertencer ao motor compartilhado. Habilidades condicionais e o catálogo de custo maior que 0 E
+continuam fora deste recorte.
+
+**Regra e integração.** `calcularVida` agora recebe `habilidades` e soma a Tanque +1 de Vida por
+progressão; `montarResistencias` soma +3 a cada tipo de resistência declarado por uma Proteção
+equipada, sem beneficiar item guardado ou outra categoria. Criação, edição, fallbacks de
+visualização/backend e o mapper de Encontro propagam as habilidades. Ao adicionar ou remover
+Tanque, `FichaEdicaoService` calcula e persiste somente o delta mecânico, preservando qualquer
+ajuste manual anterior de Vida máxima.
+
+O motor de descanso passou a aceitar Medicina, Vontade e habilidades, além de representar dados
+adicionais heterogêneos na faixa e na rolagem. Segundo Fôlego soma `⌊Vigor ÷ 2⌋` dados-base à
+recuperação de Energia em qualquer descanso. Metabolismo Acelerado soma Medicina D4 de Vida e
+Vontade D4 de Energia somente em descanso Médio ou Longo. A aba pública de Descanso ganhou os dois
+controles no padrão visual da própria calculadora e dos controles selecionáveis de Compras, os
+atributos necessários, notas e memória de cálculo com os dados de habilidade explícitos.
+
+**Evidência.** TDD confirmou primeiro 5 falhas focadas no shared e 3 no frontend; depois do fix,
+as suítes completas passaram: shared **729/729**, backend **456/456**, frontend **1329/1329**.
+Builds dos três workspaces verdes; lint dos três sem erros (somente avisos de estilo preexistentes).
+O build frontend manteve os avisos de budget já conhecidos: bundle inicial 645,97 kB contra 630 kB
+(`P-004`) e SCSS de `FichaVisualizacao` 48,07 kB contra 45 kB. O `tsc --noEmit` avulso do frontend
+passou; o equivalente do backend ainda encontra erros preexistentes em specs de Encontro/Rolagem,
+embora o build e os 456 testes do workspace estejam verdes.
+
+Verificação ao vivo da aplicação real em `1920×1080` e `360×800`: controles coerentes com o
+análogo, hierarquia e densidade preservadas, novos alvos de toque acima de 44 px, foco visível,
+sem overflow horizontal e sem erros no console. No cenário Médio, Vigor 5, Destreza 2, Medicina 3,
+Vontade 4 e ambas as habilidades, a UI mostrou e rolou as faixas esperadas: Vida **8–32** e Energia
+**8–40**. Spec movida para `docs/specs/done/p-027-habilidades-zero-energia-formulas.spec.md` e
+`P-027` removida de `PROBLEMS.md`.
+
 ## 2026-08-24 — Ajuste avulso: médias do esquadrão não chegavam ao 1º agente de um jogador comum
 
 Bug reportado direto pelo autor: "ao criar o primeiro agente na campanha não tá pegando as

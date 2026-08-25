@@ -1,4 +1,5 @@
 import { QualidadeDescansoEnum, TipoDescansoEnum } from '../../enums';
+import type { FichaHabilidadeDto } from '../../dtos/ficha';
 
 /**
  * DTOs de entrada e value-objects de saída do domínio de descanso
@@ -41,7 +42,13 @@ export interface DescansoCalcularDto {
   readonly vigor: number;
   /** Destreza — quantidade de dados de recuperação de Energia. */
   readonly destreza: number;
+  /** Medicina — quantidade de D4 extras de Vida de `Metabolismo Acelerado`. */
+  readonly medicina?: number;
+  /** Vontade — quantidade de D4 extras de Energia de `Metabolismo Acelerado`. */
+  readonly vontade?: number;
   readonly nivel: number;
+  /** Habilidades permanentes que alteram a recuperação do descanso. */
+  readonly habilidades?: readonly FichaHabilidadeDto[];
   /** Consumo de Refeição no descanso (+1 tipo de dado). */
   readonly refeicao: boolean;
   /** Descanso interrompido — recuperação final dividida por 2 (arredonda para baixo). */
@@ -50,7 +57,7 @@ export interface DescansoCalcularDto {
 
 /**
  * Faixa de recuperação de uma track (Energia ou Vida): o dado resolvido, os
- * componentes da fórmula `ATRIBUTO dados + (Nível × 2)` e o intervalo
+ * componentes da fórmula `ATRIBUTO dados + dados adicionais + (Nível × 2)` e o intervalo
  * mínimo–máximo. Com interrupção, `minimo`/`maximo` já vêm com `⌊valor ÷ 2⌋`
  * aplicado (paridade com o site antigo); `media` é o valor esperado (não exibido
  * pelo site), também dividido por 2 na interrupção.
@@ -60,12 +67,20 @@ export interface RecuperacaoFaixaDto {
   readonly dadoFinal: number;
   /** Quantidade de dados rolados (= atributo da track). */
   readonly quantidadeDados: number;
+  /** Grupos de dados com faces diferentes do dado-base (ex.: Medicina D4). */
+  readonly dadosAdicionais: readonly DadosRecuperacaoDto[];
   /** Bônus fixo por Nível (= Nível × 2). */
   readonly bonusNivel: number;
   readonly minimo: number;
   readonly media: number;
   readonly maximo: number;
   readonly interrompido: boolean;
+}
+
+/** Grupo adicional de dados de recuperação com quantidade e faces próprias. */
+export interface DadosRecuperacaoDto {
+  readonly quantidade: number;
+  readonly faces: number;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClasseEnum } from '../../enums';
+import { ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
 import { calcularEnergia, calcularLimiteEnergia, calcularVida, obterSaudeClasse } from './saude';
 
 /**
@@ -8,6 +8,17 @@ import { calcularEnergia, calcularLimiteEnergia, calcularVida, obterSaudeClasse 
  * Civil" > "Saúde".
  */
 describe('calcularVida', () => {
+  it('Tanque concede +1 de Vida por progressão, sem alterar a base do Nível 0', () => {
+    const habilidades = [{
+      nome: 'Tanque',
+      categoria: HabilidadeCategoriaEnum.ARQUETIPO,
+      custoEnergia: 0,
+      descricao: '',
+    }];
+    expect(calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 0, vigor: 2, habilidades })).toBe(38);
+    expect(calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 5, vigor: 2, habilidades })).toBe(98);
+  });
+
   it('Combatente: Vida = 30 + VIG×4, progressão 7 + VIG×2 por Nível', () => {
     expect(calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 0, vigor: 0 })).toBe(30);
     expect(calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 0, vigor: 2 })).toBe(38);

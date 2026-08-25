@@ -1,4 +1,5 @@
 import { ItemCategoriaEnum, TipoDanoEnum } from '../../enums';
+import type { FichaHabilidadeDto } from '../../dtos/ficha';
 import {
   calcularStatItem,
   interpretarNotacaoResistencia,
@@ -49,6 +50,8 @@ export interface ResistenciaLinhaDto {
 export interface ResistenciasMontarDto {
   readonly itens: readonly CarrinhoItemDto[];
   readonly amplificadores: readonly AmplificadorAplicadoDto[];
+  /** Habilidades permanentes que alteram Proteções (`Tanque`: +3 por Proteção equipada). */
+  readonly habilidades?: readonly FichaHabilidadeDto[];
   /** Base manual por tipo — ausente = 0 em todos (ficha nova/anterior à edição manual). */
   readonly manual?: Partial<Record<TipoDanoEnum, number>>;
   /** Bônus de Formação por tipo (`obterResistenciaFormacao`, m3-41) — ausente = 0 em todos. */
@@ -71,8 +74,12 @@ const ORDEM_TIPOS: readonly TipoDanoEnum[] = [
  * de mod como "Camadas Extras" de uma mochila só vale enquanto ela está sendo usada, mesma regra de
  * `calcularTotaisCarrinho`/`bonusInventario` — guardada não conta).
  */
-function calcularResistenciaEquipamento(itens: readonly CarrinhoItemDto[]): Map<string, number> {
+function calcularResistenciaEquipamento(
+  itens: readonly CarrinhoItemDto[],
+  habilidades: readonly FichaHabilidadeDto[],
+): Map<string, number> {
   const totais = new Map<string, number>();
+  const temTanque = habilidades.some((habilidade) => habilidade.nome === 'Tanque');
   const somar = (tipo: string, valor: number): void => {
     totais.set(tipo, (totais.get(tipo) ?? 0) + valor);
   };
@@ -91,8 +98,11 @@ function calcularResistenciaEquipamento(itens: readonly CarrinhoItemDto[]): Map<
       // Escudos usam notação composta "[Tipo/Tipo]" (catalogo.dados.ts) pra dizer que o valor cheio
       // vale pros dois tipos — cada lado do "/" precisa virar sua própria entrada em `totais`, senão
       // a chave composta nunca bate com nenhum `TipoDanoEnum` de `ORDEM_TIPOS`.
+      const bonusTanque = temTanque && item.categoria === ItemCategoriaEnum.PROTECOES ? 3 : 0;
       interpretarNotacaoResistencia(stat.resistencia).forEach((entrada) =>
-        entrada.tipos.split('/').forEach((tipo) => somar(tipo.trim(), entrada.valor)),
+        entrada.tipos
+          .split('/')
+          .forEach((tipo) => somar(tipo.trim(), entrada.valor + bonusTanque)),
       );
     });
 
@@ -105,7 +115,7 @@ function calcularResistenciaEquipamento(itens: readonly CarrinhoItemDto[]): Map<
  * mexem em resistência.
  */
 export function montarResistencias(dto: ResistenciasMontarDto): readonly ResistenciaLinhaDto[] {
-  const doEquipamento = calcularResistenciaEquipamento(dto.itens);
+  const doEquipamento = calcularResistenciaEquipamento(dto.itens, dto.habilidades ?? []);
 
   const resistente = empilhamentosAmplificador(dto.amplificadores, 'Resistente');
   if (resistente > 0) {

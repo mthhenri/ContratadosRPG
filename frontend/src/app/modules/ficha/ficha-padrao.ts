@@ -116,9 +116,6 @@ export function construirFichaInicial(
   const maestria =
     opcoes.maestria && maestriaAtingivel(atributos[opcoes.maestria]) ? opcoes.maestria : null;
 
-  const vidaMaxima = calcularVida({ classe, nivel, vigor: atributos.vigor });
-  const energiaMaxima = calcularEnergia({ classe, nivel, destreza: atributos.destreza });
-
   // O agente já nasce com a Habilidade Inicial do seu arquétipo/subclasse (doc — vem de graça, não
   // é escolhida). `habilidadesIniciais` devolve os itens do catálogo já com categoria/origem.
   const habilidades: FichaHabilidadeDto[] = [
@@ -131,6 +128,9 @@ export function construirFichaInicial(
     })),
     ...(opcoes.habilidadesExtras ?? []),
   ];
+
+  const vidaMaxima = calcularVida({ classe, nivel, vigor: atributos.vigor, habilidades });
+  const energiaMaxima = calcularEnergia({ classe, nivel, destreza: atributos.destreza });
 
   const derivadosBase = calcularDerivados(classe, nivel, atributos, habilidades);
   const derivados = opcoes.identidade?.origem?.formacao.length
