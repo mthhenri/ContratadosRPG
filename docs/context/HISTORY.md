@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-25 — Spec de importação de Markdown no Caderno (backlog, não implementada)
+
+Pedido avulso do autor: poder enviar um arquivo `.md` para o Caderno de campanha, usando o nome do
+arquivo como título e jogando o conteúdo formatado para dentro da página — "e temos que ver também o
+suporte para tabelas". Da investigação saiu o achado que define o escopo: o editor do Caderno roda o
+Milkdown **só** com o preset `commonmark` (`editor-markdown.component.ts:103`), então **tabela não
+existe hoje** — uma tabela em pipes entra como parágrafo, sem cabeçalho, sem célula, sem alinhamento.
+Importar sem ligar o GFM entregaria o caso mais comum de anotação de mesa quebrado, então as duas
+frentes ficaram na mesma spec, com o suporte a tabela como pré-requisito de fidelidade.
+
+Verificado durante o levantamento (pesa no plano): `@milkdown/preset-gfm@7.22.1` já é dependência de
+`@milkdown/kit@^7.22.1`, e o kit expõe `./preset/gfm`, `./prose/tables` e `./component/table-block` —
+**nenhum pacote novo**. O preset traz `remarkGFMPlugin`, `tableEditingPlugin`, keymap de `Tab`/
+`Shift-Tab` entre células e a input rule `|3x3| `, mas **não** o `columnResizingPlugin` (que fica
+fora de propósito: largura de coluna não existe em Markdown). `deleteSelectedCellsCommand` exige uma
+`CellSelection`, então os botões de remover linha/coluna precisam de `selectRowCommand`/
+`selectColCommand` antes. E o `htmlSchema` do commonmark renderiza HTML como **texto** (`textContent`),
+não como HTML — logo não há vetor de XSS na leitura que o mestre faz do caderno dos jogadores, e HTML
+importado fica preservado em vez de removido.
+
+A importação não abre superfície nova no backend: reaproveita `POST campanha/:campanhaId/caderno/
+paginas` e o `salvarAgora()` do store, com um `importarPagina` que salva na hora em vez de esperar o
+debounce. A normalização do arquivo (BOM, CRLF, front matter YAML removido, imagem virando link por
+causa da regra "caderno sem imagens") vira função pura testável ao lado de `markdown-seguro.ts` —
+que, aliás, se confirmou **órfão**: nenhum componente chama `renderizarMarkdownSeguro` desde a
+migração para o Milkdown. Título é o nome do arquivo literal, sem inferir do `# H1` do conteúdo, e
+conteúdo acima de 100 000 caracteres é recusado, não truncado. Lote, arrastar-e-soltar e exportação
+foram recortados para `I-022` (`IDEAS.md`).
+
+**Evidência.** Nenhuma — é spec, não implementação: nada de código foi alterado. Os fatos sobre o
+`@milkdown/preset-gfm` vieram da leitura do pacote publicado (`npm pack` da versão 7.22.1), e os
+demais, da leitura do módulo `pagina-caderno` (frontend, backend e `shared`).
+
 ## 2026-08-25 — Item custom ganha a categoria de sistema `SEM_CATEGORIA`
 
 Pedido avulso do autor (`item-sem-categoria.spec.md`): item custom não tinha onde registrar algo sem

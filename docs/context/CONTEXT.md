@@ -335,6 +335,14 @@
 
 ## 1. Próxima Task
 
+**Spec avulsa nova no backlog (pedido direto do autor, 2026-08-25, sem número de milestone):**
+`caderno-importar-markdown.spec.md` — importar um arquivo `.md` para o Caderno da campanha (nome do
+arquivo vira título, conteúdo entra formatado e já persistido) **e** ligar o suporte a tabelas GFM no
+editor, hoje inexistente (o Milkdown roda só com o preset `commonmark`, então tabela em pipes é
+parágrafo, não tabela). Frontend apenas: nenhum endpoint, DTO, migration ou dependência nova
+(`@milkdown/preset-gfm` já vem dentro de `@milkdown/kit`). Escopo recortado — lote,
+arrastar-e-soltar e exportação ficaram como `I-022` em `IDEAS.md`. Ainda **não implementada**.
+
 **Ajuste avulso (pedido direto do autor, 2026-08-25, sem número de milestone) concluído** — item
 custom ganha a categoria de sistema `SEM_CATEGORIA`, pra registrar item sem categoria mecânica real
 (modificação solta, papel/documento, objeto narrativo) sem mentir escolhendo uma categoria real que
