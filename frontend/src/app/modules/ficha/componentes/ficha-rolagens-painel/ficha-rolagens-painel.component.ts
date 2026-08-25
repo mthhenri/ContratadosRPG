@@ -8,6 +8,7 @@ import type {
 import {
   ajusteDadoIniciativaAmplificadores,
   calcularAjusteDadosEquipamento,
+  calcularAtributosEfetivos,
   calcularAtributosParaDados,
   calcularProficiencia,
 } from '@contratados-rpg/shared/regras/agente';
@@ -83,6 +84,15 @@ export class FichaRolagensPainel {
     });
     return calcularAtributosParaDados(this.dados().atributos, this.dados().estado.lesoes, combinado);
   });
+
+  /**
+   * Atributos **efetivos** (lesão, sem ajuste de teste) — repassados ao editor pra rolar Iniciativa
+   * pelo atributo puro de Destreza, não pelo `atributosParaDados` acima (que só vale pra testes
+   * normais de atributo).
+   */
+  protected readonly atributosEfetivos = computed(() =>
+    calcularAtributosEfetivos(this.dados().atributos, this.dados().estado.lesoes),
+  );
 
   /** Proficiência derivada (nível; `null` para Civil) — fonte `PROF` das fórmulas (m3-22). */
   protected readonly proficiencia = computed(() =>

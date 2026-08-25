@@ -20,6 +20,15 @@ export const NOME_PRESET_INICIATIVA = 'Iniciativa';
 export interface ExecutarPassoPresetDto {
   readonly preset: FichaRolagemDto;
   readonly atributos: FichaAtributosDto;
+  /**
+   * Atributos **efetivos** (lesão, sem ajuste de teste) — usados só quando `preset.nome` é
+   * `"Iniciativa"`. A Iniciativa rola pelo atributo de Destreza (`sistema-v4.1.0.md`: "definida
+   * pelo seu atributo de Destreza"), não pelo atributo ajustado pra testes: `dadosTeste` (ajuste
+   * manual) e a penalidade de equipamento (Armadura Pesada) só valem pra testes de atributo, e não
+   * reduzem a Destreza em si. Cai em `atributos` quando ausente (fallback de quem ainda não separa
+   * os dois).
+   */
+  readonly atributosEfetivos?: FichaAtributosDto;
   readonly proficiencia: number | null;
   readonly nivel: number;
   readonly habilidadesDisponiveis: readonly FichaHabilidadeDto[];
@@ -64,10 +73,15 @@ export function executarPassoPreset(dto: ExecutarPassoPresetDto): PassoExecutado
   if (!passo) {
     return null;
   }
-  const atributosParaRolar =
-    dto.preset.nome === NOME_PRESET_INICIATIVA && dto.dadoExtraIniciativa
-      ? { ...dto.atributos, destreza: dto.atributos.destreza + dto.dadoExtraIniciativa }
-      : dto.atributos;
+  const atributosParaRolar = ((): FichaAtributosDto => {
+    if (dto.preset.nome !== NOME_PRESET_INICIATIVA) {
+      return dto.atributos;
+    }
+    const base = dto.atributosEfetivos ?? dto.atributos;
+    return dto.dadoExtraIniciativa
+      ? { ...base, destreza: base.destreza + dto.dadoExtraIniciativa }
+      : base;
+  })();
   const resultado = rolarPasso(passo, atributosParaRolar, dto.proficiencia, dto.nivel, undefined, dto.critico ?? false);
   if (!resultado) {
     return null;

@@ -1630,8 +1630,8 @@
                   class="ficha-mini__valor"
                   [appTooltip]="
                     dadoExtraIniciativa() > 0
-                      ? 'Destreza ' + atributosParaDados().destreza + ' + ' + dadoExtraIniciativa() + ' (amplificador/Formação)'
-                      : 'Destreza ' + atributosParaDados().destreza
+                      ? 'Destreza ' + atributosEfetivos().destreza + ' + ' + dadoExtraIniciativa() + ' (amplificador/Formação)'
+                      : 'Destreza ' + atributosEfetivos().destreza
                   "
                 >
                   {{ dadosIniciativa() }}d6

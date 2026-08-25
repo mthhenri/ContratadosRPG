@@ -1,8 +1,7 @@
 import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ajusteDadoIniciativaAmplificadores,
-  calcularAjusteDadosEquipamento,
-  calcularAtributosParaDados,
+  calcularAtributosEfetivos,
   calcularProficiencia,
 } from '@contratados-rpg/shared/regras/agente';
 import { obterDadoExtraIniciativaFormacao } from '@contratados-rpg/shared/regras/identidade';
@@ -13,8 +12,8 @@ import { executarPassoPreset, NOME_PRESET_INICIATIVA, type PassoExecutadoDto } f
  * Rolagem de **Iniciativa de um agente** a partir do documento da ficha (m7-06) — extraída de
  * `FichaVisualizacao.rolarIniciativa` porque a tela "Iniciativa" precisa exatamente da mesma coisa
  * fora da ficha: o jogador rola a própria iniciativa lá, e teria de recompor a mesma pilha
- * (`atributosParaDados` + Proficiência + dado extra de `Atento`/Formação) para chegar ao mesmo
- * número. Duas composições paralelas divergiriam no primeiro ajuste de regra — daí a extração.
+ * (Destreza efetiva + Proficiência + dado extra de `Atento`/Formação) para chegar ao mesmo número.
+ * Duas composições paralelas divergiriam no primeiro ajuste de regra — daí a extração.
  *
  * Continua **sem motor próprio**: tudo aqui é composição de `shared/regras` com
  * `executarPassoPreset`. O bônus de Iniciativa do agente não é um número somado ao final — são
@@ -23,18 +22,15 @@ import { executarPassoPreset, NOME_PRESET_INICIATIVA, type PassoExecutadoDto } f
  */
 
 /**
- * Atributos do agente **contados como dados de rolagem**: efetivos (lesão) + ajuste manual
- * (`dadosTeste`) + ajuste de equipamento (hoje só a Armadura Pesada, −1 dado em Destreza). Mesma
- * receita de `FichaVisualizacao.atributosParaDados`.
+ * Atributo **efetivo** do agente (base − lesões, `calcularAtributosEfetivos`) — a Iniciativa rola
+ * pelo atributo de Destreza (`sistema-v4.1.0.md`: "definida pelo seu atributo de Destreza"), não
+ * pelo atributo ajustado pra testes: `dadosTeste` (ajuste manual) e a penalidade de equipamento
+ * (Armadura Pesada, −1 dado em Destreza) só valem pra testes de atributo, e não reduzem a Destreza
+ * em si — só lesão reduz o atributo, e só o dado extra de Iniciativa (abaixo) ou uma condição que
+ * mexa nela especificamente reduzem a Iniciativa.
  */
-export function atributosParaDadosDaFicha(dados: FichaJogadorDadosDto): FichaAtributosDto {
-  const manual = dados.dadosTeste ?? {};
-  const equipamento = calcularAjusteDadosEquipamento(dados.inventario.itens);
-  const combinado: Partial<Record<keyof FichaAtributosDto, number>> = { ...manual };
-  (Object.keys(equipamento) as (keyof FichaAtributosDto)[]).forEach((chave) => {
-    combinado[chave] = (combinado[chave] ?? 0) + (equipamento[chave] ?? 0);
-  });
-  return calcularAtributosParaDados(dados.atributos, dados.estado.lesoes, combinado);
+export function atributosEfetivosDaFicha(dados: FichaJogadorDadosDto): FichaAtributosDto {
+  return calcularAtributosEfetivos(dados.atributos, dados.estado.lesoes);
 }
 
 /** Dados extras de Iniciativa: amplificador `Atento` + Formação da Origem `PERICIA_DADO_INICIATIVA`. */
@@ -45,9 +41,9 @@ export function dadoExtraIniciativaDaFicha(dados: FichaJogadorDadosDto): number 
   );
 }
 
-/** Total de d6 que a Iniciativa deste agente rola — a Destreza para dados mais o dado extra. */
+/** Total de d6 que a Iniciativa deste agente rola — a Destreza efetiva mais o dado extra. */
 export function dadosDeIniciativaDaFicha(dados: FichaJogadorDadosDto): number {
-  return atributosParaDadosDaFicha(dados).destreza + dadoExtraIniciativaDaFicha(dados);
+  return atributosEfetivosDaFicha(dados).destreza + dadoExtraIniciativaDaFicha(dados);
 }
 
 /**
@@ -62,7 +58,7 @@ export function rolarIniciativaDaFicha(dados: FichaJogadorDadosDto): PassoExecut
   }
   return executarPassoPreset({
     preset,
-    atributos: atributosParaDadosDaFicha(dados),
+    atributos: atributosEfetivosDaFicha(dados),
     proficiencia: calcularProficiencia({ classe: dados.classe, nivel: dados.nivel }),
     nivel: dados.nivel,
     habilidadesDisponiveis: dados.habilidades,

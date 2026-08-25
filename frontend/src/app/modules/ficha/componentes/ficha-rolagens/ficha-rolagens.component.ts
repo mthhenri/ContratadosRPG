@@ -90,6 +90,13 @@ export class FichaRolagens {
   readonly rolagens = input<readonly FichaRolagemDto[]>([]);
   /** Atributos da ficha (já **efetivos**, pós-lesão) — alimentam a rolagem. */
   readonly atributos = input.required<FichaAtributosDto>();
+  /**
+   * Atributos **efetivos** (lesão, sem ajuste de teste) — repassados a `executarPassoPreset`, que
+   * só os usa quando o preset rolado se chama "Iniciativa" (a Iniciativa rola pelo atributo de
+   * Destreza, não pelo ajustado pra testes normais). `null` quando o chamador não distingue os dois
+   * (cai em `atributos`).
+   */
+  readonly atributosEfetivos = input<FichaAtributosDto | null>(null);
   /** Proficiência (nível; `null` para Civil) somada nos passos de Teste + fonte `PROF` (m3-22). */
   readonly proficiencia = input<number | null>(null);
   /** Nível do agente — fonte `NIV` nas fórmulas (m3-22). */
@@ -454,6 +461,7 @@ export class FichaRolagens {
     const executado = executarPassoPreset({
       preset: original,
       atributos: this.atributos(),
+      atributosEfetivos: this.atributosEfetivos() ?? undefined,
       proficiencia: this.proficiencia(),
       nivel: this.nivel(),
       habilidadesDisponiveis: this.habilidadesDisponiveis(),

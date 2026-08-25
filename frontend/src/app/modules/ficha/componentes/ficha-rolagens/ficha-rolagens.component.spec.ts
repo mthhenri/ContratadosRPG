@@ -36,12 +36,16 @@ describe('FichaRolagens', () => {
       proficiencia?: number | null;
       habilidades?: readonly FichaHabilidadeDto[];
       atalhosDano?: { readonly corpo?: string | null; readonly furtivo?: string | null };
+      atributosEfetivos?: FichaAtributosDto;
     } = {},
   ) {
     TestBed.configureTestingModule({ imports: [FichaRolagens] });
     const fixture = TestBed.createComponent(FichaRolagens);
     fixture.componentRef.setInput('rolagens', rolagens);
     fixture.componentRef.setInput('atributos', atributos);
+    if (opcoes.atributosEfetivos) {
+      fixture.componentRef.setInput('atributosEfetivos', opcoes.atributosEfetivos);
+    }
     fixture.componentRef.setInput('editavel', opcoes.editavel ?? true);
     // m3-51: por padrão `true` — preserva o comportamento dos testes existentes de rolagem,
     // escritos antes do gate; os que testam especificamente o gate passam `false`.
@@ -379,6 +383,15 @@ describe('FichaRolagens', () => {
     const vm = alvo.componentInstance['presets']()[0];
     alvo.componentInstance['gastarEnergiaDoPasso'](vm, 0);
     expect(alvo.energias).toEqual([]);
+  });
+
+  it('rola "Iniciativa" pela Destreza de atributosEfetivos, não pela de atributos (atributo, não atributo de testes)', () => {
+    const alvo = montar([{ nome: 'Iniciativa', formula: 'DESd6' }], {
+      atributosEfetivos: { ...atributos, destreza: 5 },
+    });
+    const vm = alvo.componentInstance['presets']()[0];
+    alvo.componentInstance['rolarPassoDoPreset'](vm, 0);
+    expect(alvo.mostrar.mock.calls[0][0].resultado.dados[0]?.valores).toHaveLength(5);
   });
 
   describe('podeRolar (m3-51) — visualizador não rola dados', () => {

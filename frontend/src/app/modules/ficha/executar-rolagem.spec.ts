@@ -58,3 +58,63 @@ describe('executarPassoPreset — dado extra de Iniciativa', () => {
     expect(executado?.resultado.dados[0]?.valores).toHaveLength(atributos.destreza);
   });
 });
+
+describe('executarPassoPreset — Iniciativa rola pelo atributo, não pelo atributo de testes', () => {
+  /** `atributos` simula o atributo ajustado pra testes (ex.: `dadosTeste`/equipamento já somados). */
+  const atributosParaTestes: FichaAtributosDto = { ...atributos, destreza: 5 };
+  /** `atributosEfetivos` simula o atributo puro (base − lesões), sem esses ajustes de teste. */
+  const atributosEfetivos: FichaAtributosDto = { ...atributos, destreza: 2 };
+
+  it('usa atributosEfetivos para a Iniciativa quando fornecido, ignorando atributos', () => {
+    const executado = executarPassoPreset({
+      preset: presetIniciativa,
+      atributos: atributosParaTestes,
+      atributosEfetivos,
+      proficiencia: null,
+      nivel: 1,
+      habilidadesDisponiveis: [],
+      indicePasso: 0,
+    });
+    expect(executado?.resultado.dados[0]?.valores).toHaveLength(atributosEfetivos.destreza);
+  });
+
+  it('soma o dado extra de Iniciativa por cima de atributosEfetivos', () => {
+    const executado = executarPassoPreset({
+      preset: presetIniciativa,
+      atributos: atributosParaTestes,
+      atributosEfetivos,
+      proficiencia: null,
+      nivel: 1,
+      habilidadesDisponiveis: [],
+      indicePasso: 0,
+      dadoExtraIniciativa: 2,
+    });
+    expect(executado?.resultado.dados[0]?.valores).toHaveLength(atributosEfetivos.destreza + 2);
+  });
+
+  it('sem atributosEfetivos, cai em atributos (compatibilidade)', () => {
+    const executado = executarPassoPreset({
+      preset: presetIniciativa,
+      atributos: atributosParaTestes,
+      proficiencia: null,
+      nivel: 1,
+      habilidadesDisponiveis: [],
+      indicePasso: 0,
+    });
+    expect(executado?.resultado.dados[0]?.valores).toHaveLength(atributosParaTestes.destreza);
+  });
+
+  it('não usa atributosEfetivos para outros presets (só a Iniciativa é especial)', () => {
+    const outroPreset: FichaRolagemDto = { nome: 'Furtividade', formula: 'DESd20kh1' };
+    const executado = executarPassoPreset({
+      preset: outroPreset,
+      atributos: atributosParaTestes,
+      atributosEfetivos,
+      proficiencia: null,
+      nivel: 1,
+      habilidadesDisponiveis: [],
+      indicePasso: 0,
+    });
+    expect(executado?.resultado.dados[0]?.valores).toHaveLength(atributosParaTestes.destreza);
+  });
+});
