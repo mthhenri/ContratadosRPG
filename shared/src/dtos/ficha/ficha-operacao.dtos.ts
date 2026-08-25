@@ -75,6 +75,22 @@ export interface FichaListarDto {
 }
 
 /**
+ * Saída da média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — recorte
+ * calculado (`Entidade + Recorte + Dto`, sem verbo), consumido pelo guia de criação ao aplicar
+ * "Iniciando um Novo Agente" (`docs/core/sistema-v4.1.0.md`). É um **agregado**: nunca expõe
+ * fichas individuais, então **não** passa pela matriz de visibilidade por ficha (§14) que
+ * `listarFichas` aplica — qualquer membro da campanha pode consultar, mestre ou jogador comum,
+ * mesmo sem `usuario_ficha_acesso` sobre as fichas alheias somadas na média. Reusa `FichaListarDto`
+ * como entrada (mesmo `campanhaId`). `quantidade` é o total de agentes considerados — `0` quando a
+ * campanha ainda não tem nenhum, caso em que `mediaNivel`/`mediaPrestigio` saem `0`.
+ */
+export interface FichaMediasEsquadraoDto {
+  readonly mediaNivel: number;
+  readonly mediaPrestigio: number;
+  readonly quantidade: number;
+}
+
+/**
  * Item de listagem — recorte enxuto da ficha, com os campos de jogo lidos do JSONB
  * (`dados->>'classe'`, `dados->>'nivel'` — §10.4). `usuarioId` é o dono, para o front distinguir
  * "minha ficha" das demais.

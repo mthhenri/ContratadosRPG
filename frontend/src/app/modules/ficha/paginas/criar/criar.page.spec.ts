@@ -21,13 +21,25 @@ describe('FichaCriar', () => {
     vidaAtual: 1, energiaAtual: 1, morrendo: false, machucado: false, inconsciente: false,
   } satisfies FichaResumoDto;
 
-  function montar(fichas: FichaResumoDto[] = [], rascunhoExistente: unknown = null, campanhaId: number | null = CAMPANHA_ID) {
+  function montar(
+    fichas: FichaResumoDto[] = [],
+    rascunhoExistente: unknown = null,
+    campanhaId: number | null = CAMPANHA_ID,
+    mediasOverride?: { mediaNivel: number; mediaPrestigio: number; quantidade: number },
+  ) {
     const membros: CampanhaMembroResumoDto[] = [
       { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
     ];
     const campanhaService = { listarMembros: vi.fn(() => of(membros)) };
+    const medias = mediasOverride ?? (fichas.length
+      ? {
+          mediaNivel: fichas.reduce((s, f) => s + f.nivel, 0) / fichas.length,
+          mediaPrestigio: fichas.reduce((s, f) => s + (f.prestigio ?? 0), 0) / fichas.length,
+          quantidade: fichas.length,
+        }
+      : { mediaNivel: 0, mediaPrestigio: 0, quantidade: 0 });
     const fichaService = {
-      listarFichas: vi.fn(() => of(fichas)),
+      calcularMediasEsquadrao: vi.fn(() => of(medias)),
       criarFicha: vi.fn(() => of({ id: 99, campanhaId: campanhaId ?? undefined, usuarioId: 1, nome: 'Teste' })),
     };
     const rascunhos = {
@@ -1115,13 +1127,13 @@ describe('FichaCriar', () => {
   });
 
   describe('guia sem campanha (/fichas/nova) — ficha avulsa do acervo', () => {
-    it('sem campanhaId, pula listarMembros/listarFichas e segue "primeiro agente"', () => {
+    it('sem campanhaId, pula listarMembros/calcularMediasEsquadrao e segue "primeiro agente"', () => {
       const { componente, campanhaService, fichaService } = montar([], null, null);
 
       expect(campanhaService.listarMembros).not.toHaveBeenCalled();
-      expect(fichaService.listarFichas).not.toHaveBeenCalled();
+      expect(fichaService.calcularMediasEsquadrao).not.toHaveBeenCalled();
       expect(componente['campanhaId']).toBeNull();
-      expect(componente['fichas']()).toEqual([]);
+      expect(componente['mediasEsquadrao']()).toBeNull();
     });
 
     it('sem campanhaId, o passo Novo agente mostra "Ficha avulsa" em vez de "Primeiro agente da campanha"', () => {
@@ -1202,6 +1214,27 @@ describe('FichaCriar', () => {
 
       expect(componente['nivelInicial']()).toBe(15);
       expect(componente['prestigioInicial']()).toBe(42);
+    });
+  });
+
+  describe('primeiro agente de um jogador comum numa campanha já com outros agentes', () => {
+    it('aplica a média do esquadrão mesmo sem nenhuma ficha alheia visível ao jogador (agregado do backend, não listarFichas)', () => {
+      // Cenário do bug reportado: um jogador comum sem `usuario_ficha_acesso` sobre as fichas
+      // alheias não as enxergaria numa listagem individual — mas a média é um agregado (§14 não
+      // se aplica), então `calcularMediasEsquadrao` devolve a média real do esquadrão mesmo
+      // quando este jogador não tem nenhuma ficha própria ainda.
+      const { fixture, raiz, componente } = montar([], null, CAMPANHA_ID, {
+        mediaNivel: 5,
+        mediaPrestigio: 20,
+        quantidade: 3,
+      });
+      componente['atualizar']({ passo: 2 });
+      fixture.detectChanges();
+
+      expect(raiz.textContent).not.toContain('Primeiro agente da campanha');
+      expect(componente['estado']().mediaNivel).toBe(5);
+      expect(componente['estado']().mediaPrestigio).toBe(20);
+      expect(componente['novoAgente']().nivelInicial).toBe(4);
     });
   });
 });

@@ -17,6 +17,7 @@ import {
   FichaCriaturaCriarDto,
   FichaCriaturaRecuperadaDto,
   FichaImagemAlteradaDto,
+  FichaMediasEsquadraoDto,
   FichaRecuperadaDto,
   FichaResumoDto,
   FichaVitalidadeAlterarDto,
@@ -88,6 +89,18 @@ export class FichaService {
     return this.httpClient
       .get<StandardResponse<FichaResumoDto[]>>(this.base, { params: { campanhaId } })
       .pipe(map((resposta) => resposta.dados as FichaResumoDto[]));
+  }
+
+  /**
+   * Média de Nível/Prestígio dos agentes ativos da campanha ("Iniciando um Novo Agente",
+   * `docs/core/sistema-v4.1.0.md`) — agregado; qualquer membro recebe a mesma média, mestre ou
+   * jogador comum, mesmo sem acesso concedido às fichas alheias que entram na conta (§14 não se
+   * aplica a este agregado, só a fichas individuais — ver `FichaMediasEsquadraoDto`).
+   */
+  calcularMediasEsquadrao(campanhaId: number): Observable<FichaMediasEsquadraoDto> {
+    return this.httpClient
+      .get<StandardResponse<FichaMediasEsquadraoDto>>(`${this.base}/medias-esquadrao`, { params: { campanhaId } })
+      .pipe(map((resposta) => resposta.dados as FichaMediasEsquadraoDto));
   }
 
   /**

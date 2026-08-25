@@ -94,6 +94,21 @@ describe('FichaRepository', () => {
     expect(resultado.imagemFoco).toEqual(foco);
   });
 
+  it('calcularMediasEsquadrao agrega só fichas JOGADOR, cast a float8 pra não devolver string do numeric do AVG', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ mediaNivel: 5, mediaPrestigio: 20, quantidade: 1 }] });
+    const repositorio = new FichaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.calcularMediasEsquadrao({ campanhaId: 3 });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain("COALESCE(AVG((ficha.dados->>'nivel')::numeric), 0)::float8");
+    expect(sql).toContain("COALESCE(AVG((ficha.dados->>'prestigio')::numeric), 0)::float8");
+    expect(sql).toContain("tipo_ficha.codigo = 'JOGADOR'");
+    expect(sql).toContain('ficha.campanha_id = :campanhaId AND ficha.is_deleted = false');
+    expect(parametros).toEqual({ campanhaId: 3 });
+    expect(resultado).toEqual({ mediaNivel: 5, mediaPrestigio: 20, quantidade: 1 });
+  });
+
   it('alterarFicha grava null quando imagemFoco não é informado', async () => {
     const raw = vi.fn().mockResolvedValue({
       rows: [

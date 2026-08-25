@@ -19,6 +19,7 @@ import type {
   FichaInternoCriarDto,
   FichaInventarioInternoAlterarDto,
   FichaListarDto,
+  FichaMediasEsquadraoDto,
   FichaRecuperadaDto,
   FichaRecuperarDto,
   FichaResumoInternoDto,
@@ -219,6 +220,31 @@ export class FichaRepository extends BaseRepository {
        ORDER BY ficha.nome ASC`,
       { campanhaId: dto.campanhaId, usuarioId: dto.usuarioId },
     );
+  }
+
+  /**
+   * Média de Nível/Prestígio dos agentes (`JOGADOR`) ativos de uma campanha — agregado puro
+   * (`AVG`/`COUNT`), sem devolver nenhuma ficha individual: por isso não usa `colunasResumo()` nem
+   * segue a mesma regra de visibilidade de `listarVisiveisParaUsuario` (a service confere só que o
+   * autor é membro, não filtra por ficha). `COALESCE(AVG(...), 0)` porque `AVG` sobre zero linhas
+   * devolve `NULL` — o "primeiro agente da campanha" (`quantidade = 0`) espera médias `0`. `AVG`
+   * do Postgres sempre devolve `numeric`, que o driver `pg` serializa como **string** (evita perda
+   * de precisão) — o `::float8` externo ao `COALESCE` força o resultado a `double precision`, que o
+   * `pg` já devolve como `number` de verdade (achado na verificação ao vivo, script REST: sem o
+   * cast, `mediaNivel` chegava `"5.0000000000000000"` e quebrava `Math.round` no frontend).
+   */
+  async calcularMediasEsquadrao(dto: FichaListarDto): Promise<FichaMediasEsquadraoDto> {
+    const [medias] = await this.executarConsulta<FichaMediasEsquadraoDto>(
+      `SELECT COALESCE(AVG((ficha.dados->>'nivel')::numeric), 0)::float8 AS "mediaNivel",
+              COALESCE(AVG((ficha.dados->>'prestigio')::numeric), 0)::float8 AS "mediaPrestigio",
+              COUNT(*)::int AS quantidade
+       FROM ficha
+       ${this.juncaoTipoResumo()}
+       WHERE ficha.campanha_id = :campanhaId AND ficha.is_deleted = false
+         AND tipo_ficha.codigo = 'JOGADOR'`,
+      { campanhaId: dto.campanhaId },
+    );
+    return medias;
   }
 
   /**

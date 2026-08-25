@@ -1,5 +1,55 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-24 — Ajuste avulso: médias do esquadrão não chegavam ao 1º agente de um jogador comum
+
+Bug reportado direto pelo autor: "ao criar o primeiro agente na campanha não tá pegando as
+médias como deveria". Investigação (skill `systematic-debugging`) confirmou o cenário exato com
+o autor antes de mexer em código: um **jogador comum** cria seu **primeiro** agente numa
+campanha que **já tem** agentes de outros jogadores, e o guia trata como se fosse o primeiro
+agente da campanha inteira (Nível 0, Prestígio 0, sem bônus monetário).
+
+**Causa raiz.** O passo // Novo agente (`criar.page.ts`) decidia "primeiro agente da campanha"
+checando `fichas().length`, alimentado por `FichaService.listarFichas(campanhaId)` — que no
+backend (`FichaService.listarFichas`, §14) devolve **todas** as fichas só para o mestre; um
+jogador comum recebe apenas as próprias e as concedidas por `usuario_ficha_acesso`. Um jogador
+sem nenhuma ficha própria ainda e sem concessão sobre as fichas alheias recebia `fichas = []`
+mesmo a campanha tendo agentes de verdade — silenciando a regra "Iniciando um Novo Agente"
+(`docs/core/sistema-v4.1.0.md`), que explicitamente cobre "a chegada de um jogador em uma
+campanha em andamento".
+
+**Fix.** A média de Nível/Prestígio do esquadrão é um **agregado** (nunca expõe fichas
+individuais), então não precisa — e não deve — seguir a mesma matriz de visibilidade por ficha
+que protege o documento de jogo completo. Novo recorte calculado
+`FichaMediasEsquadraoDto { mediaNivel, mediaPrestigio, quantidade }`
+(`shared/dtos/ficha/ficha-operacao.dtos.ts`, reaproveita `FichaListarDto` como entrada) +
+`FichaRepository.calcularMediasEsquadrao` (SQL `AVG`/`COUNT` sobre fichas `JOGADOR` ativas da
+campanha, `COALESCE(..., 0)` pro caso zero-agente) + `FichaService.calcularMediasEsquadrao`
+(exige só que o autor seja membro, **sem** ramificar por papel — mestre e jogador comum recebem
+a mesma média) + endpoint `GET /ficha/medias-esquadrao?campanhaId=`
+(`FichaController.mediasEsquadrao`). `criar.page.ts` trocou o signal `fichas` (`FichaResumoDto[]`)
+por `mediasEsquadrao` (`FichaMediasEsquadraoDto | null`), passando a consumir o novo endpoint em
+vez de `listarFichas`; os quatro pontos do template que checavam `fichas().length` passaram a
+checar `mediasEsquadrao()?.quantidade`. Sem campanha (ficha avulsa) continua pulando a
+consulta — mesmo caminho "primeiro agente" de sempre.
+
+**Achado só na verificação ao vivo:** `AVG(...)::numeric` do Postgres chega pelo driver `pg`
+como **string** (`"5.0000000000000000"`), não `number` — o teste unitário do repositório até
+mockava esse formato sem questionar. Um script de verificação (REST + Playwright, dois usuários
+reais) pegou o valor errado chegando ao frontend antes de qualquer captura de tela. Corrigido com
+`::float8` externo ao `COALESCE` (dobra o cast: `numeric` pro `AVG` não perder precisão,
+`float8` na saída pro `pg` devolver `number` de verdade).
+
+Testado: shared 723/723 (sem mudança), backend 456/456 (+4), frontend 1326/1326 (+2); lint limpo
+nos três. Verificado ao vivo (Postgres+backend+frontend reais, REST + Playwright, dois usuários):
+mestre cria um agente Nível 5/Prestígio 20 numa campanha; jogador comum sem
+`usuario_ficha_acesso` sobre essa ficha confirma por REST que `GET /ficha?campanhaId=` devolve
+`[]` (a ficha alheia continua protegida individualmente) mas `GET /ficha/medias-esquadrao`
+devolve `{mediaNivel:5, mediaPrestigio:20, quantidade:1}`; no guia desse jogador, o passo //
+Novo agente não mostra mais "Primeiro agente da campanha" — mostra Média de Nível 5/Prestígio 20
+e calcula Nível inicial 4/Prestígio inicial 18, confirmado em `1920×1080` e `360×800`. Controle
+de regressão: uma campanha genuinamente vazia (nenhum agente ainda) continua mostrando "Primeiro
+agente da campanha" para o mestre.
+
 ## 2026-08-24 — Sessão de planejamento: 3 specs novas no backlog e limpeza de `IDEAS.md`
 
 Pedido direto do autor, revisando `docs/context/IDEAS.md`: promover `I-020`/`I-021` a spec, e

@@ -36,6 +36,7 @@ import type {
   FichaInventarioItemPegarDto,
   FichaJogadorDadosDto,
   FichaListarDto,
+  FichaMediasEsquadraoDto,
   FichaOrigemDto,
   FichaRecuperadaDto,
   FichaRecuperarDto,
@@ -221,6 +222,29 @@ export class FichaService {
       usuarioId: usuarioAtivo.sub,
     });
     return fichas.map((ficha) => this.paraResumoPublico(ficha));
+  }
+
+  /**
+   * Média de Nível/Prestígio dos agentes ativos de uma campanha — agregado calculado no banco
+   * (`FichaRepository.calcularMediasEsquadrao`), usado pelo guia de criação para "Iniciando um
+   * Novo Agente" (`docs/core/sistema-v4.1.0.md`). Só exige que o autor seja membro da campanha,
+   * a mesma checagem de `listarFichas` — mas **não** ramifica por papel: diferente de
+   * `listarFichas`, o agregado não expõe nenhuma ficha individual, então a matriz de visibilidade
+   * por ficha (§14) não se aplica aqui, e um jogador comum consulta a mesma média que o mestre.
+   */
+  async calcularMediasEsquadrao(
+    dto: FichaListarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaMediasEsquadraoDto> {
+    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (!membroEncontrado) {
+      throw new UnauthorizedAccessException();
+    }
+
+    return this.fichaRepositorio.calcularMediasEsquadrao(dto);
   }
 
   /**

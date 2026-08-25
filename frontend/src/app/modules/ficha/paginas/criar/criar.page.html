@@ -276,7 +276,7 @@
               }
             }
             @case ('Novo agente') {
-              @if (!fichas().length) {
+              @if (!mediasEsquadrao()?.quantidade) {
                 <div class="guia__aviso guia__aviso--informacao">
                   <app-icone nome="novo-agente" />
                   @if (campanhaId !== null) {
@@ -286,7 +286,7 @@
                   }
                 </div>
               }
-              @if (campanhaId !== null && fichas().length) {
+              @if (campanhaId !== null && mediasEsquadrao()?.quantidade) {
                 <label class="campo">
                   <span class="campo__rotulo">Motivo de entrada</span>
                   <select class="campo__controle" [value]="estado().motivo" (change)="mudarMotivo($event)">
@@ -303,7 +303,7 @@
                   <span><b>Sobrescrever Nível e Prestígio</b><small>Informe os valores iniciais exatos em vez de usar a média da campanha.</small></span>
                 </label>
               }
-              @if (campanhaId !== null && fichas().length && !estado().sobrescreverProgressao) {
+              @if (campanhaId !== null && mediasEsquadrao()?.quantidade && !estado().sobrescreverProgressao) {
                 <div class="guia__campos guia__campos--duas-colunas">
                   <label class="campo"><span class="campo__rotulo">Média de nível</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().mediaNivel" (input)="atualizar({ mediaNivel: numero($event) })" /></label>
                   <label class="campo"><span class="campo__rotulo">Média de prestígio</span><input class="campo__controle campo__controle--numero" type="number" min="0" [value]="estado().mediaPrestigio" (input)="atualizar({ mediaPrestigio: numero($event) })" /></label>
@@ -730,7 +730,7 @@
             @if (estado().passo >= 2 || visitado() >= 2) {
               <div class="guia__resumo-linha"><span>Nível inicial</span><b>{{ nivelInicial() }}</b></div>
               <div class="guia__resumo-linha"><span>Prestígio</span><b>{{ prestigioInicial() }}</b></div>
-              @if (fichas().length) {
+              @if (mediasEsquadrao()?.quantidade) {
                 <div class="guia__resumo-linha guia__resumo-linha--completa"><span>Motivo de entrada</span><b>{{ motivoRotulo() }}</b></div>
               }
               @if (novoAgente().recebeAmaldicoadoPeloPassado) {

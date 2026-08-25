@@ -32,6 +32,7 @@ import type {
   FichaImagemAlteradaDto,
   FichaInventarioItemMandarParaBaseDto,
   FichaInventarioItemPegarDto,
+  FichaMediasEsquadraoDto,
   FichaRecuperadaDto,
   FichaResumoDto,
   FichaVitalidadeAlterarDto,
@@ -70,6 +71,18 @@ export class FichaController {
   @Get('minhas')
   minhas(@ActiveUser() usuarioAtivo: JwtPayload): Promise<FichaResumoDto[]> {
     return this.fichaService.listarAcervo({ usuarioId: usuarioAtivo.sub });
+  }
+
+  /**
+   * Média de Nível/Prestígio do esquadrão da campanha ("Iniciando um Novo Agente") — agregado,
+   * qualquer membro pode consultar. Segmento literal antes de `:id` pela mesma razão de `minhas`.
+   */
+  @Get('medias-esquadrao')
+  mediasEsquadrao(
+    @Query('campanhaId', ParseIntPipe) campanhaId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaMediasEsquadraoDto> {
+    return this.fichaService.calcularMediasEsquadrao({ campanhaId }, usuarioAtivo);
   }
 
   /**

@@ -184,6 +184,20 @@ describe('FichaService', () => {
     expect(recebido).toEqual(fichas);
   });
 
+  it('calcula as médias do esquadrão pelo campanhaId', () => {
+    const { servico, http } = criar();
+    const medias = { mediaNivel: 5, mediaPrestigio: 20, quantidade: 3 };
+
+    let recebido: typeof medias | undefined;
+    servico.calcularMediasEsquadrao(9).subscribe((r) => (recebido = r));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/ficha/medias-esquadrao'));
+    expect(requisicao.request.method).toBe('GET');
+    expect(requisicao.request.params.get('campanhaId')).toBe('9');
+    requisicao.flush(envelope(medias));
+
+    expect(recebido).toEqual(medias);
+  });
+
   it('lista as fichas do acervo (m3-28)', () => {
     const { servico, http } = criar();
     const fichas: FichaResumoDto[] = [

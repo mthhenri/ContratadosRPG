@@ -49,6 +49,7 @@ interface FichaRepositorioDublado {
   recuperarPorId: ReturnType<typeof vi.fn>;
   listarPorCampanha: ReturnType<typeof vi.fn>;
   listarVisiveisParaUsuario: ReturnType<typeof vi.fn>;
+  calcularMediasEsquadrao: ReturnType<typeof vi.fn>;
   listarPorUsuario: ReturnType<typeof vi.fn>;
   recuperarAcesso: ReturnType<typeof vi.fn>;
   concederAcesso: ReturnType<typeof vi.fn>;
@@ -276,6 +277,7 @@ describe('FichaService', () => {
       recuperarPorId: vi.fn(),
       listarPorCampanha: vi.fn(),
       listarVisiveisParaUsuario: vi.fn(),
+      calcularMediasEsquadrao: vi.fn(),
       listarPorUsuario: vi.fn(),
       recuperarAcesso: vi.fn(),
       concederAcesso: vi.fn(),
@@ -1070,6 +1072,50 @@ describe('FichaService', () => {
 
       expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
       expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('calcularMediasEsquadrao', () => {
+    it('devolve o agregado do repositório para o mestre', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      fichaRepositorio.calcularMediasEsquadrao.mockResolvedValue({
+        mediaNivel: 5,
+        mediaPrestigio: 20,
+        quantidade: 3,
+      });
+
+      const resultado = await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMestre);
+
+      expect(fichaRepositorio.calcularMediasEsquadrao).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(resultado).toEqual({ mediaNivel: 5, mediaPrestigio: 20, quantidade: 3 });
+    });
+
+    it('devolve o mesmo agregado para um membro comum — não ramifica por papel (agregado, sem ficha individual)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.calcularMediasEsquadrao.mockResolvedValue({
+        mediaNivel: 5,
+        mediaPrestigio: 20,
+        quantidade: 3,
+      });
+
+      const resultado = await service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro);
+
+      expect(fichaRepositorio.calcularMediasEsquadrao).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(resultado).toEqual({ mediaNivel: 5, mediaPrestigio: 20, quantidade: 3 });
+    });
+
+    it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.calcularMediasEsquadrao).not.toHaveBeenCalled();
     });
   });
 

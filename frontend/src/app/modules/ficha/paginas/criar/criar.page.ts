@@ -5,7 +5,7 @@ import { catchError, finalize, forkJoin, of, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArquetipoEnum, ClasseEnum, FormacaoBonusEnum, FormacaoParametroEnum, MotivoEntradaAgenteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaAtributosDto, FichaHabilidadeDto, FichaOrigemDto, FichaPersonalidadeEstagioDto, FichaPersonalidadeHabilidadeDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaAtributosDto, FichaHabilidadeDto, FichaMediasEsquadraoDto, FichaOrigemDto, FichaPersonalidadeEstagioDto, FichaPersonalidadeHabilidadeDto } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularDerivados, calcularEnergia, calcularOrcamentoAtributos, calcularProgressaoAcumulada, calcularVida, catalogoHabilidades, habilidadesIniciais, listarPacotesHabilidadesIniciais, MAESTRIA_PONTOS_MINIMO, maestriaAtingivel, obterBonusAtributosComEscolha, obterSaudeClasse, obterSlotsEscolhaBonus, validarDistribuicaoAtributos } from '@contratados-rpg/shared/regras/agente';
 import type { GrupoHabilidades, HabilidadeCatalogoItemDto, HabilidadesPacoteInicialId, SlotEscolhaAtributo, TipoVagaHabilidade } from '@contratados-rpg/shared/regras/agente';
 import { calcularBonusMonetario, calcularDinheiroInicial, calcularNovoAgente } from '@contratados-rpg/shared/regras/novo-agente';
@@ -126,8 +126,9 @@ export class FichaCriar {
   /**
    * `null` sob `/fichas/nova` (m3-28, ficha avulsa) — sob `/painel/:campanhaId/ficha/nova` vem do
    * parâmetro de rota, como sempre. Sem campanha não há esquadrão: o construtor pula
-   * `listarMembros`/`listarFichas` e o guia sempre segue o caminho "primeiro agente" (Nível 0,
-   * Prestígio 0, sem bônus monetário) — não existe média para calcular sem fichas de campanha.
+   * `listarMembros`/`calcularMediasEsquadrao` e o guia sempre segue o caminho "primeiro agente"
+   * (Nível 0, Prestígio 0, sem bônus monetário) — não existe média para calcular sem fichas de
+   * campanha.
    */
   protected readonly campanhaId: number | null = this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : null;
   protected readonly gruposClasseBase = GRUPOS_CLASSE_BASE;
@@ -157,7 +158,7 @@ export class FichaCriar {
     }
     return FichaCriar.ROTULOS_VAGA[tipo];
   }
-  protected readonly membros = signal<CampanhaMembroResumoDto[]>([]); protected readonly fichas = signal<FichaResumoDto[]>([]);
+  protected readonly membros = signal<CampanhaMembroResumoDto[]>([]); protected readonly mediasEsquadrao = signal<FichaMediasEsquadraoDto | null>(null);
   protected readonly carregando = signal(true); protected readonly criando = signal(false); protected readonly rolandoRecursos = signal(false); protected readonly erro = signal('');
 
   /**
@@ -428,9 +429,9 @@ export class FichaCriar {
     const campanhaId = this.campanhaId;
     forkJoin({
       membros: campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]),
-      fichas: campanhaId !== null ? this.fichaService.listarFichas(campanhaId) : of([]),
+      medias: campanhaId !== null ? this.fichaService.calcularMediasEsquadrao(campanhaId) : of(null),
     })
-      .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, fichas }) => { this.membros.set(membros); this.fichas.set(fichas); if (!fichas.length) return; this.atualizar({ mediaNivel: fichas.reduce((s, f) => s + f.nivel, 0) / fichas.length, mediaPrestigio: fichas.reduce((s, f) => s + (f.prestigio ?? 0), 0) / fichas.length }); });
+      .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, medias }) => { this.membros.set(membros); this.mediasEsquadrao.set(medias); if (!medias?.quantidade) return; this.atualizar({ mediaNivel: medias.mediaNivel, mediaPrestigio: medias.mediaPrestigio }); });
     // `!this.temRascunho()` evita sobrescrever o rascunho salvo antes do jogador decidir "Retomar"
     // ou "Começar do zero": sem essa trava, este efeito salvava o estado inicial (vazio) assim que
     // `carregando()` virava `false` — antes de qualquer clique — apagando o rascunho que o banner
