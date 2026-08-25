@@ -2,22 +2,16 @@ import { stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
-const diretorioFrontend = fileURLToPath(new URL('../', import.meta.url));
-const diretorioDocumentos = join(
-  diretorioFrontend,
-  'dist',
-  'frontend',
-  'browser',
-  'documentos',
-);
-const documentos = [
-  'sistema-v4.1.0.pdf',
-  'guia_de_mestre-v4.0.0.pdf',
+const diretorioSaida = join(fileURLToPath(new URL('../', import.meta.url)), 'dist', 'frontend', 'browser');
+const arquivosPublicados = [
+  join(diretorioSaida, 'documentos', 'sistema-v4.1.0.pdf'),
+  join(diretorioSaida, 'documentos', 'guia_de_mestre-v4.0.0.pdf'),
+  join(diretorioSaida, 'pdf-worker', 'pdf.worker.min.mjs'),
 ];
 
 const verificacoes = await Promise.all(
-  documentos.map(async (documento) => {
-    const caminho = join(diretorioDocumentos, documento);
+  arquivosPublicados.map(async (caminho) => {
+    const documento = caminho.slice(diretorioSaida.length + 1);
 
     try {
       const informacoes = await stat(caminho);

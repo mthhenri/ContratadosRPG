@@ -343,6 +343,16 @@ parágrafo, não tabela). Frontend apenas: nenhum endpoint, DTO, migration ou de
 (`@milkdown/preset-gfm` já vem dentro de `@milkdown/kit`). Escopo recortado — lote,
 arrastar-e-soltar e exportação ficaram como `I-022` em `IDEAS.md`. Ainda **não implementada**.
 
+**Ajuste avulso (bug reportado direto pelo autor, 2026-08-25, sem número de milestone) concluído**
+— "Documentos" não abria no Edge mobile: o Edge mobile não incorpora PDF em iframe e bloqueia o
+download automático que o plugin nativo precisaria (m3-72 previa esse risco explicitamente). O
+mobile passou a ter um leitor próprio via `pdfjs-dist` (`LeitorPdfMobile`, sem seleção/busca de
+texto — decisão de escopo), lazy-carregado; o desktop continua exatamente no `<iframe>` nativo de
+`m3-72`, sem mudança. Achado só na implementação: `pdfjs-dist` mais recente (6.x) quebra a
+renderização por depender de um método de `Map` ainda não disponível em nenhum navegador estável —
+fixado em `^4.10.38`. Ver o parágrafo sobre `m3-72` (seção 1, logo abaixo) e `HISTORY.md` para o
+relato completo.
+
 **Ajuste avulso (pedido direto do autor, 2026-08-25, sem número de milestone) concluído** — item
 custom ganha a categoria de sistema `SEM_CATEGORIA`, pra registrar item sem categoria mecânica real
 (modificação solta, papel/documento, objeto narrativo) sem mentir escolhendo uma categoria real que
@@ -582,7 +592,12 @@ descrito na seção 4, em "Guia de criação de ficha". A `m3-64` resolveu o ant
 inicial agora é uma regra pura em `shared/regras/agente` e tem consumidor obrigatório no guia.
 
 A `m3-72` também concluiu: Sistema e Guia do Mestre agora abrem pelo mesmo acesso global
-**Documentos**, em janela flutuante no desktop e tela cheia no mobile.
+**Documentos**, em janela flutuante no desktop e tela cheia no mobile. Desde o ajuste avulso de
+2026-08-25 (ver "Próxima Task" e `HISTORY.md`), o desktop continua exatamente no `<iframe>` nativo
+de `m3-72`, mas o mobile passou a renderizar com um leitor próprio (`LeitorPdfMobile`, via
+`pdfjs-dist` `^4.10.38`, lazy-carregado, sem seleção/busca de texto) porque o viewer nativo em
+iframe não funciona no Edge mobile — a condição que a própria `m3-72` previa como gatilho para
+trazer o PDF.js de volta.
 
 `m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
 `/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do

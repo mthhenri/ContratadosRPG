@@ -1,5 +1,80 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-25 — Documentos não abria no Edge mobile: leitor próprio (PDF.js) só no mobile
+
+Bug reportado direto pelo autor: no mobile, "Documentos" não abria no Edge. Causa — `m3-72`
+delega a renderização do PDF ao viewer nativo do navegador dentro de um `<iframe>`; o Edge mobile
+(como boa parte dos navegadores mobile) não tem plugin de PDF embutido para iframe e cai no
+comportamento de baixar o arquivo para exibir, mas esse download automático (sem gesto direto do
+usuário sobre o próprio arquivo) é bloqueado silenciosamente dentro de um iframe — a janela ficava
+em branco. A própria spec de `m3-72` já previa esse risco ("em ambientes que não incorporam PDF, o
+comportamento pode ser abrir ou baixar o documento externamente") e documentou a condição exata sob
+a qual um leitor próprio (PDF.js, removido naquela task por nitidez/duplicação de texto) poderia
+voltar: "só deve voltar em tarefa futura se uma limitação concreta do viewer nativo justificar esse
+custo". O Edge mobile é exatamente essa limitação concreta.
+
+Escopo (confirmado com o autor antes de implementar): **só o mobile** troca de motor — o desktop
+continua exatamente no `<iframe>` nativo de `m3-72` (nitidez e comportamento já validados, nenhum
+bug relatado ali). Novo componente `LeitorPdfMobile` (`frontend/.../leitor-documentos/
+leitor-pdf-mobile/`), renderizado por `LeitorDocumentos` só quando `ehMobile()`; o desktop mantém o
+`<iframe class="leitor-documentos__pdf">` de sempre. Decisão deliberada de escopo, também
+combinada com o autor: sem camada de texto (sem seleção/busca no PDF do mobile) — é exatamente o
+que causou a duplicação visual que motivou a reversão anterior do PDF.js em `m3-72`, e o mobile já
+tratava busca/seleção como responsabilidade do viewer nativo "quando suportado", nunca como
+garantia. `pdfjs-dist` carrega via `import('pdfjs-dist')` dinâmico (lazy) dentro do componente —
+confirmado no bundle de produção que o chunk inicial não mudou (646.29 kB, mesma folga/estouro
+pré-existente do `P-004`) e a lib cai num chunk lazy próprio de ~429 kB, só buscado quando o mobile
+abre Documentos.
+
+**Achado 1 (bloqueou a primeira tentativa):** `pdfjs-dist` mais recente (`^6.2.108`, instalado
+inicialmente) quebra a renderização com `TypeError: ...getOrInsertComputed is not a function`
+dentro do próprio pdf.js (`WorkerTransport.getOptionalContentConfig` → `_PDFPageProxy.render`) —
+regressão conhecida do projeto (mozilla/pdf.js#20680), que passou a depender de
+`Map.prototype.getOrInsertComputed` (proposta TC39 bem recente, ainda não disponível nem no
+Chromium empacotado com o Playwright deste ambiente). Como o objetivo aqui é justamente compatibilidade
+com um engine que já está atrás da curva (Edge mobile), fixar numa versão que depende de um método de
+`Map` ainda não disponível em navegador nenhum estável derrotaria o propósito da task. Resolvido
+fixando `pdfjs-dist` em `^4.10.38` (última linha 4.x, API de renderização estável e amplamente
+implantada) — nessa versão `PDFPageProxy.render()` exige `canvasContext` (2D context obtido via
+`canvas.getContext('2d')`), não o parâmetro `canvas` direto que a 6.x introduziu.
+
+**Achado 2 (só na verificação ao vivo):** o `<canvas>` do leitor mobile ficava visualmente
+sobreposto ao texto "Carregando documento…" ao trocar de Sistema para Guia do Mestre — a página
+antiga continuava visível por baixo do estado de carregamento. Causa: o atributo `[hidden]` do
+Angular não tinha uma regra `&[hidden] { display: none; }` própria no SCSS do componente, e a
+regra `display: block` do próprio `.leitor-pdf-mobile__tela` (necessária para o layout normal)
+tinha especificidade maior que o `[hidden]` da folha de estilo do agente do usuário — exatamente a
+mesma classe de cuidado que `leitor-documentos.component.scss` já tinha para `.leitor-documentos__
+janela[hidden]`. Corrigido com a mesma receita, escopada ao canvas.
+
+Pipeline de asset: o worker do pdf.js (`pdf.worker.min.mjs`, obrigatório para pdf.js rodar fora da
+main thread) é vendorizado de `node_modules/pdfjs-dist` para `public/pdf-worker/` por um novo script
+`scripts/preparar-pdf-worker.mjs` (mesmo padrão de `preparar-documentos.mjs`, encadeado nos mesmos
+hooks `prestart`/`prebuild`, resolvendo o caminho real via `import.meta.resolve` para funcionar com
+o hoisting do workspace), publicado por `public/**/*` sem entrada nova em `angular.json`, e ignorado
+no git (`/public/pdf-worker/`, ao lado dos dois PDFs). `scripts/verificar-documentos-publicados.mjs`
+passou a checar também esse arquivo publicado no build de produção.
+
+Sem seleção/busca de texto no mobile é decisão deliberada de escopo (ver acima) — não uma limitação
+técnica não avaliada.
+
+Testado: frontend 1348/1348 (+19: 20 casos novos em `leitor-pdf-mobile.component.spec.ts`, mockando
+`pdfjs-dist` via `vi.mock`, e o caso mobile de `leitor-documentos.component.spec.ts` reescrito para
+afirmar o componente novo em vez do iframe — a suíte inteira do `leitor-documentos` roda numa build
+de teste separada, `vi.mock` não vaza para lá); lint 0 erros (só os avisos pré-existentes de aspas,
+débito já registrado em `CONVENTIONS.md`/`P-020`, arquivos novos escritos já no padrão de aspas
+duplas). Build de produção limpo, os três artefatos publicados (dois PDFs + worker) confirmados.
+Verificado ao vivo (skill `verify`, Playwright, rota pública `/calculadora` — sem Postgres/backend
+neste ambiente sem Docker, e a feature não os usa): `360×800` confirma o leitor próprio renderizando
+com nitidez (Sistema 77 páginas, Guia do Mestre 41), navegação de página, zoom (canvas medido
+300px→450px→540px ao longo de dois cliques em "Aumentar zoom"), troca de documento, recolher/
+reabrir preservando a instância montada, sem overflow horizontal; `1920×1080` confirma o desktop
+inalterado (ainda `<iframe src="/documentos/sistema-v4.1.0.pdf">`, nenhum `app-leitor-pdf-mobile`
+no DOM). **Limitação da verificação:** o Edge mobile em si não estava disponível neste ambiente —
+a verificação rodou contra Chromium (Playwright) em viewport mobile, que reproduz a classe geral do
+problema (renderização sem depender de plugin nativo de PDF do navegador), mas não confirma
+literalmente contra o Edge/iOS.
+
 ## 2026-08-25 — Spec de importação de Markdown no Caderno (backlog, não implementada)
 
 Pedido avulso do autor: poder enviar um arquivo `.md` para o Caderno de campanha, usando o nome do

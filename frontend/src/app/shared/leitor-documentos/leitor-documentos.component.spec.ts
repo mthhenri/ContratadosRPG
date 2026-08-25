@@ -105,7 +105,7 @@ describe('LeitorDocumentos', () => {
     });
   });
 
-  it('usa tela cheia no mobile sem alça de redimensionamento', () => {
+  it('usa tela cheia no mobile sem alça de redimensionamento, com o leitor próprio em vez do iframe', () => {
     abrir();
     definirViewport(360, 800);
     window.dispatchEvent(new Event('resize'));
@@ -114,7 +114,10 @@ describe('LeitorDocumentos', () => {
       'leitor-documentos__janela--mobile',
     );
     expect(fixture.nativeElement.querySelector('.leitor-documentos__redimensionar')).toBeNull();
-    expect(obter<HTMLIFrameElement>('iframe')).toBeTruthy();
+    // Edge mobile não incorpora PDF em iframe e bloqueia o download automático que o plugin
+    // nativo precisaria (janela em branco) — o mobile usa o leitor próprio via pdfjs-dist.
+    expect(fixture.nativeElement.querySelector('iframe')).toBeNull();
+    expect(obter('app-leitor-pdf-mobile')).toBeTruthy();
   });
 
   it('fecha com Escape quando o foco está no shell do leitor', () => {

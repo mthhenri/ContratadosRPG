@@ -20,13 +20,14 @@ import {
   type LeitorGeometria,
 } from './leitor-documentos.model';
 import { LeitorDocumentosService } from './leitor-documentos.service';
+import { LeitorPdfMobile } from './leitor-pdf-mobile/leitor-pdf-mobile.component';
 
 const BREAKPOINT_MOBILE = 560;
 
 @Component({
   selector: 'app-leitor-documentos',
   standalone: true,
-  imports: [Icone, Tooltip],
+  imports: [Icone, Tooltip, LeitorPdfMobile],
   templateUrl: './leitor-documentos.component.html',
   styleUrl: './leitor-documentos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
