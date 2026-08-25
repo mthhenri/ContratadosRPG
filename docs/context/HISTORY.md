@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-25 — Iniciativa passa a rolar pelo atributo, não pelo atributo de testes
+
+O autor apontou a regra diretamente: "iniciativa deveria considerar o atributo, não o atributo de
+testes, então apenas coisas que reduzem O ATRIBUTO afetam a iniciativa, além de coisas que reduzem,
+especificamente a iniciativa". `sistema-v4.1.0.md` ("⬦ Iniciativa") confirma — "definida pelo seu
+atributo de Destreza" —, mas `rolar-iniciativa.ts` (`dadosDeIniciativaDaFicha`/
+`rolarIniciativaDaFicha`) computava a contagem de dados a partir de `atributosParaDadosDaFicha`, a
+mesma pilha usada por um teste normal de atributo: efetivo (lesão) **+ `dadosTeste`** (ajuste manual
+por teste) **+ penalidade de equipamento** (Armadura Pesada, −1 dado em Destreza). Nenhum dos dois
+ajustes reduz a Destreza em si — só valem pra rolagens de teste —, então a Iniciativa herdava
+penalidades que não deveriam ser dela. O mesmo erro se repetia no glance de Informações da ficha
+completa (`FichaVisualizacao.dadosIniciativa`, cálculo duplicado em vez de reusar o helper) e no
+editor genérico de rolagens (`FichaRolagens`/`FichaRolagensPainel`), alcançável fora da ficha completa
+pela coluna lateral de `CampanhaDetalhe` — os dois caminhos podiam produzir números diferentes pro
+mesmo agente.
+
+**Fix.** `rolar-iniciativa.ts` passou a derivar a Destreza de `calcularAtributosEfetivos` (base −
+lesões, `shared/regras/agente/lesao.ts`), nunca mais de `atributosParaDadosDaFicha` (removida, sem
+mais consumidor). `executarPassoPreset` (`executar-rolagem.ts`) ganhou um campo opcional
+`atributosEfetivos`, usado como base da contagem de dados só quando `preset.nome === "Iniciativa"`
+(cai em `atributos` quando ausente, preservando quem ainda não distingue os dois) — o dado extra de
+`Atento`/Formação continua somando por cima, como já fazia. `FichaRolagens` e `FichaRolagensPainel`
+passaram a repassar esse novo atributo efetivo ao editor genérico, e `FichaVisualizacao.dadosIniciativa`
+passou a reusar `dadosDeIniciativaDaFicha` em vez de duplicar a fórmula — os dois caminhos (glance da
+ficha e editor genérico) voltam a produzir sempre o mesmo número.
+
+**Evidência.** Testes novos em `rolar-iniciativa.spec.ts` (novo arquivo), `executar-rolagem.spec.ts`
+e `ficha-rolagens.component.spec.ts` provam que `dadosTeste` e a penalidade de equipamento são
+ignorados enquanto lesão e o dado extra continuam valendo. Suíte completa do frontend
+**1338/1338**; `tsc --noEmit` limpo nos projetos app e spec; lint sem erros (só os avisos de estilo
+preexistentes, fora do diff). Mudança puramente numérica/lógica, sem alteração de layout ou estilo —
+o gate visual obrigatório não se aplica; a cobertura de teste garante o número certo em cada caminho.
+
 ## 2026-08-25 — Descrição da Origem deixa de travar o passo Identidade do guia
 
 O dono reportou que o guia de criação ainda bloqueava o avanço do passo Identidade quando a
