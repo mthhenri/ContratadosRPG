@@ -82,11 +82,18 @@
       <span class="leitor-documentos__dica">Busca, páginas e zoom ficam na barra do PDF.</span>
     </div>
 
-    <iframe
-      class="leitor-documentos__pdf"
-      [src]="documentoUrl()"
-      [title]="documentoConfiguracao().titulo"
-    ></iframe>
+    @if (ehMobile()) {
+      <app-leitor-pdf-mobile
+        [url]="documentoConfiguracao().url"
+        [titulo]="documentoConfiguracao().titulo"
+      />
+    } @else {
+      <iframe
+        class="leitor-documentos__pdf"
+        [src]="documentoUrl()"
+        [title]="documentoConfiguracao().titulo"
+      ></iframe>
+    }
 
     @if (!ehMobile() && !maximizada()) {
       <span
