@@ -563,6 +563,51 @@ describe('FichaInventario', () => {
     expect(pesoCard).toBe('1 slots');
   });
 
+  it('chip de modificação de catálogo mostra a descrição escalada pelo número de compras', () => {
+    const municao: CarrinhoItemDto = {
+      nome: '9mm',
+      categoria: ItemCategoriaEnum.MUNICOES,
+      custo: 100,
+      peso: 0.5,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [{ nome: 'Calibre', empilhamentos: 4 }],
+    };
+    const alvo = montar({ itens: [municao], amplificadores: [] });
+    const chipDesc = alvo.raiz.querySelector('.ficha-inv__mod-tag-desc');
+
+    expect(chipDesc?.textContent?.trim()).toBe('+4 dado de dano');
+  });
+
+  it('chip de "Pesada" mostra o total dos dois valores por stack (dado + peso) já calculado', () => {
+    const item: CarrinhoItemDto = {
+      ...itemLeve,
+      modificacoes: [{ nome: 'Pesada', empilhamentos: 5 }],
+    };
+    const alvo = montar({ itens: [item], amplificadores: [] });
+    const chipDesc = alvo.raiz.querySelector('.ficha-inv__mod-tag-desc');
+
+    expect(chipDesc?.textContent?.trim()).toBe('+3 tipos de dado (máx D10), +1,5 de peso');
+  });
+
+  it('chip de mod custom mostra o total do efeito escalado pelo nº de stacks, não o valor digitado', () => {
+    const item: CarrinhoItemDto = {
+      ...itemLeve,
+      modificacoes: [
+        {
+          nome: 'Ígnea',
+          empilhamentos: 3,
+          empilhamentoMaximo: 3,
+          efeitos: [{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 2 }],
+        },
+      ],
+    };
+    const alvo = montar({ itens: [item], amplificadores: [] });
+    const chipDesc = alvo.raiz.querySelector('.ficha-inv__mod-tag-desc');
+
+    expect(chipDesc?.textContent?.trim()).toBe('+6 de dano');
+  });
+
   it('aumentar os empilhamentos de uma mod custom preserva seus efeitos', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] });
     alvo.componentInstance['alternarCriarMod'](0);

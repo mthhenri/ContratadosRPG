@@ -12,6 +12,7 @@ import {
   contarComprasModificacao,
   descreverEfeitoModificacao,
   descreverEfeitosModificacao,
+  escalarDescricaoCatalogoPorCompras,
   interpretarBonusArmazenamento,
   criarContagemMunicao,
   listarModificacoesDisponiveis,
@@ -988,6 +989,79 @@ describe('coerência do catálogo e das tabelas', () => {
         ]),
       ).toBe('+1D6 [Químico] · aplica Em Chamas');
       expect(descreverEfeitosModificacao(undefined)).toBe('');
+    });
+
+    it('descreverEfeitosModificacao escala o valor de cada efeito pelo nº de compras', () => {
+      expect(
+        descreverEfeitosModificacao(
+          [
+            { tipo: ModificacaoEfeitoTipoEnum.DANO_DADOS, valor: 1, faces: 6, tipoDano: 'Químico' },
+            { tipo: ModificacaoEfeitoTipoEnum.CONDICAO, condicao: 'Em Chamas' },
+          ],
+          3,
+        ),
+      ).toBe('+3D6 [Químico] · aplica Em Chamas');
+      expect(
+        descreverEfeitosModificacao([{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 2 }], 4),
+      ).toBe('+8 de dano');
+      // Sem escala explícita (ou escala 1), o comportamento é idêntico ao valor digitado.
+      expect(descreverEfeitosModificacao([{ tipo: ModificacaoEfeitoTipoEnum.DANO_FIXO, valor: 2 }])).toBe(
+        '+2 de dano',
+      );
+    });
+
+    it('escalarDescricaoCatalogoPorCompras multiplica o único número por stack pelo nº de compras', () => {
+      expect(escalarDescricaoCatalogoPorCompras('Empunhadura Sofisticada', '+2 nos testes de ataque por stack', 5)).toBe(
+        '+10 nos testes de ataque',
+      );
+      expect(escalarDescricaoCatalogoPorCompras('Lacerante', 'Ignora 5 pts de resist. [Físico] por stack', 5)).toBe(
+        'Ignora 25 pts de resist. [Físico]',
+      );
+      expect(escalarDescricaoCatalogoPorCompras('Flexível', '+1 ao Esquivar por compra', 3)).toBe('+3 ao Esquivar');
+      expect(escalarDescricaoCatalogoPorCompras('Explosiva', '+1D6 [Explosão] por stack', 4)).toBe('+4D6 [Explosão]');
+    });
+
+    it('escalarDescricaoCatalogoPorCompras não altera com 1 compra ou sem marcador de stack', () => {
+      expect(escalarDescricaoCatalogoPorCompras('Empunhadura Sofisticada', '+2 nos testes de ataque por stack', 1)).toBe(
+        '+2 nos testes de ataque por stack',
+      );
+      expect(escalarDescricaoCatalogoPorCompras('Atordoamento', 'Alvos atingidos ficam Atordoados por 1 turno', 5)).toBe(
+        'Alvos atingidos ficam Atordoados por 1 turno',
+      );
+    });
+
+    it('escalarDescricaoCatalogoPorCompras não escala texto ambíguo fora da tabela de escalas manuais', () => {
+      expect(escalarDescricaoCatalogoPorCompras('Mod Inventada', 'Causa Envenenado 2t (DT Força). +2 DT/+1t por stack', 5)).toBe(
+        'Causa Envenenado 2t (DT Força). +2 DT/+1t por stack',
+      );
+    });
+
+    it('escalarDescricaoCatalogoPorCompras calcula o total de descrições com dois valores por stack (tabela manual)', () => {
+      expect(escalarDescricaoCatalogoPorCompras('Pesada', '+1 tipo de dado (máx D10), +0,5 peso/stack', 3)).toBe(
+        '+3 tipos de dado (máx D10), +1,5 de peso',
+      );
+      expect(
+        escalarDescricaoCatalogoPorCompras('Sangramento', 'Causa Sangramento 2t (DT Força). +2 DT/+1t por stack', 5),
+      ).toBe('Causa Sangramento 2t (DT Força). +10 DT/+5t');
+      expect(
+        escalarDescricaoCatalogoPorCompras('Venenosa', 'Causa Envenenado 2t (DT Força). +2 DT/+1t por stack', 2),
+      ).toBe('Causa Envenenado 2t (DT Força). +4 DT/+2t');
+      expect(
+        escalarDescricaoCatalogoPorCompras(
+          'Posicionável',
+          'Instalável e ativável remotamente (30m; DT +2/+5m/stack)',
+          3,
+        ),
+      ).toBe('Instalável e ativável remotamente (30m; DT +6/+15m)');
+      expect(escalarDescricaoCatalogoPorCompras('Camuflada', '−1 peso (mín. 1), −1 resist. por stack', 4)).toBe(
+        '−4 peso (mín. 1), −4 resist.',
+      );
+    });
+
+    it('escalarDescricaoCatalogoPorCompras ignora a escala manual se o texto do catálogo mudou', () => {
+      expect(escalarDescricaoCatalogoPorCompras('Pesada', 'texto diferente do catálogo atual/stack', 3)).toBe(
+        'texto diferente do catálogo atual/stack',
+      );
     });
   });
 });

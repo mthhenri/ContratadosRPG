@@ -44,6 +44,7 @@ import {
   custoRemoverFragmento,
   custoSanidadeConsumirFragmento,
   descreverEfeitosModificacao,
+  escalarDescricaoCatalogoPorCompras,
   existeFragmentoNaMesmaFuncao,
   formaFixaConstrutor,
   ItemCatalogo,
@@ -2732,12 +2733,14 @@ export class FichaInventario {
     let acumuladoStacks = 0;
     const modsAtivas: ModAtivaVM[] = item.modificacoes.map((modificacao) => {
       const definicao = definicoes.find((mod) => mod.nome === modificacao.nome);
-      const custo =
-        contarComprasModificacao({
-          item,
-          modificacao: modificacao.nome,
-          empilhamentos: modificacao.empilhamentos,
-        }) * obterCustoModificacao({ item, modificacao: modificacao.nome });
+      const compras = contarComprasModificacao({
+        item,
+        modificacao: modificacao.nome,
+        empilhamentos: modificacao.empilhamentos,
+      });
+      const custo = compras * obterCustoModificacao({ item, modificacao: modificacao.nome });
+      const descricaoCatalogo =
+        definicao && escalarDescricaoCatalogoPorCompras(modificacao.nome, definicao.descricao, compras);
       // Teto próprio da mod (catálogo: da definição; custom: o limite gravado nela) — trava dura,
       // a menos que a mod esteja marcada `ignoraLimiteProprio`.
       const tetoProprio = definicao
@@ -2760,16 +2763,15 @@ export class FichaInventario {
         excedente: excedeTotal || excedeStack,
         ignoraTotal,
         ignoraProprio,
-        // Chip da mod custom: os efeitos mecânicos gerados + a nota livre (o que houver).
+        // Chip: efeitos mecânicos gerados (já escalados pelo nº de compras) + a nota livre (custom) ou a descrição do catálogo.
         descricao:
-          [descreverEfeitosModificacao(modificacao.efeitos), modificacao.descricao?.trim()]
+          [descreverEfeitosModificacao(modificacao.efeitos, compras), modificacao.descricao?.trim() || descricaoCatalogo]
             .filter((parte): parte is string => !!parte)
             .join(' — ') || null,
         deFragmento: !!modificacao.origemFragmento,
         fixa: modificacao.origemFragmento?.tipo === FragmentoTipoEnum.CONSTRUTOR,
       };
     });
-
     const construtorMunicao =
       item.categoria === ItemCategoriaEnum.FRAGMENTO_CONSTRUTOR &&
       item.categoriaEmprestada === ItemCategoriaEnum.MUNICOES;

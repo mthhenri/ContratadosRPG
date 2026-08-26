@@ -174,12 +174,135 @@ export function descreverEfeitoModificacao(efeito: ModificacaoEfeitoDto): string
   }
 }
 
-/** Junta os efeitos de uma modificação custom em uma linha (` · ` entre eles), para a UI. */
-export function descreverEfeitosModificacao(efeitos: readonly ModificacaoEfeitoDto[] | undefined): string {
+/**
+ * Junta os efeitos de uma modificação custom em uma linha (` · ` entre eles), para a UI — já
+ * multiplicados por `escala` (nº de compras, mesma régua de `contarComprasModificacao`), pra
+ * mostrar o **total** aplicado no item, não o valor unitário digitado por stack no formulário de
+ * mod custom. Mesmo raciocínio de `escalarDescricaoCatalogoPorCompras` para o catálogo — `valor`
+ * de cada efeito é sempre "por stack" (é como `calcularStatItem`/`calcularBonusArmazenamentoItem`
+ * já o multiplicam por `modificacao.empilhamentos` ao aplicar de verdade).
+ */
+export function descreverEfeitosModificacao(
+  efeitos: readonly ModificacaoEfeitoDto[] | undefined,
+  escala = 1,
+): string {
   return (efeitos ?? [])
-    .map((efeito) => descreverEfeitoModificacao(efeito))
+    .map((efeito) => descreverEfeitoModificacao(escala === 1 ? efeito : { ...efeito, valor: (efeito.valor ?? 0) * escala }))
     .filter((texto) => texto.length > 0)
     .join(' · ');
+}
+
+const MARCADOR_ESCALAVEL = /\s*(?:\bpor stack\b|\/stack\b|\bpor compra\b)/i;
+
+/** `1,5` → `1,5`; `2` (de `2,0`) → `2` — formatação PT-BR sem casa decimal supérflua. */
+function formatarNumeroEscalado(valor: number): string {
+  return Number.isInteger(valor) ? `${valor}` : valor.toFixed(1).replace('.', ',');
+}
+
+/**
+ * Descrições de catálogo com **dois** valores "por stack" na mesma frase (ex.: Sangramento —
+ * "+2 DT/+1t por stack") ou peso decimal encadeado com outro bônus (ex.: Pesada — "+0,5
+ * peso/stack") são ambíguas para a regra textual genérica abaixo (que só escala quando há um
+ * único número). Em vez de devolver o texto sem escalar nesses casos, esta tabela escreve à mão o
+ * total das poucas modificações do catálogo (`compras.dados.ts`) que caem nessa situação — cada
+ * entrada é validada contra o texto original (`textoOriginal`) e só se aplica se a descrição do
+ * catálogo ainda for exatamente aquela; se o catálogo mudar o texto, cai de volta pro algoritmo
+ * genérico em vez de mostrar um total obsoleto.
+ */
+const ESCALAS_MANUAIS: Record<string, { textoOriginal: string; formatar: (compras: number) => string }> = {
+  Pesada: {
+    textoOriginal: '+1 tipo de dado (máx D10), +0,5 peso/stack',
+    formatar: (c) => `+${c} tipo${c === 1 ? '' : 's'} de dado (máx D10), +${formatarNumeroEscalado(0.5 * c)} de peso`,
+  },
+  Sangramento: {
+    textoOriginal: 'Causa Sangramento 2t (DT Força). +2 DT/+1t por stack',
+    formatar: (c) => `Causa Sangramento 2t (DT Força). +${2 * c} DT/+${c}t`,
+  },
+  Venenosa: {
+    textoOriginal: 'Causa Envenenado 2t (DT Força). +2 DT/+1t por stack',
+    formatar: (c) => `Causa Envenenado 2t (DT Força). +${2 * c} DT/+${c}t`,
+  },
+  Tática: {
+    textoOriginal: 'Saque livre. Extras: +1 dado no 1º turno/stack',
+    formatar: (c) => `Saque livre. Extras: +${c} dado${c === 1 ? '' : 's'} no 1º turno`,
+  },
+  Aerodinâmica: {
+    textoOriginal: '+1 nível de alcance. Extras: +2 no teste/stack',
+    formatar: (c) => `+1 nível de alcance. Extras: +${2 * c} no teste`,
+  },
+  Posicionável: {
+    textoOriginal: 'Instalável e ativável remotamente (30m; DT +2/+5m/stack)',
+    formatar: (c) => `Instalável e ativável remotamente (30m; DT +${2 * c}/+${5 * c}m)`,
+  },
+  Estabilizador: {
+    textoOriginal: 'Concede Ataque Duplo (+1E). Extras: −1E/stack',
+    formatar: (c) => `Concede Ataque Duplo (+1E). Extras: −${c}E`,
+  },
+  Incendiária: {
+    textoOriginal: '+1D6 [Químico] + 50% Em Chamas. Extras: +1 dado +2 DT/stack',
+    formatar: (c) => `+1D6 [Químico] + 50% Em Chamas. Extras: +${c} dado${c === 1 ? '' : 's'} +${2 * c} DT`,
+  },
+  'Ponta Oca': {
+    textoOriginal: '+1D6 [Físico] + 50% Sangramento. Extras: +1 dado +2 DT/stack',
+    formatar: (c) => `+1D6 [Físico] + 50% Sangramento. Extras: +${c} dado${c === 1 ? '' : 's'} +${2 * c} DT`,
+  },
+  Blindada: {
+    textoOriginal: '+2 na resist. principal, +0,5 peso/stack',
+    formatar: (c) => `+${2 * c} na resist. principal, +${formatarNumeroEscalado(0.5 * c)} peso`,
+  },
+  Camuflada: {
+    textoOriginal: '−1 peso (mín. 1), −1 resist. por stack',
+    formatar: (c) => `−${c} peso (mín. 1), −${c} resist.`,
+  },
+  Combativo: {
+    textoOriginal:
+      '(Apenas escudos) Usa o escudo como arma CaC. Dano: (Peso)D3+FOR [Físico] máx 5 dados. Sem resist. ao atacar. +1 dado/stack extra',
+    formatar: (c) =>
+      `(Apenas escudos) Usa o escudo como arma CaC. Dano: (Peso)D3+FOR [Físico] máx 5 dados. Sem resist. ao atacar. +${c} dado${c === 1 ? '' : 's'} extra`,
+  },
+  Espinhos: {
+    textoOriginal: '1D6+VIG [Físico] ao atacante. +1 dado/stack',
+    formatar: (c) => `1D6+VIG [Físico] ao atacante. +${c} dado${c === 1 ? '' : 's'}`,
+  },
+  Impacto: {
+    textoOriginal: 'Atordoar 1E (DT Força). +2 DT/stack extra',
+    formatar: (c) => `Atordoar 1E (DT Força). +${2 * c} DT extra`,
+  },
+};
+
+/**
+ * Escala a descrição estática de uma modificação de **catálogo** (`ModificacaoDados.descricao`,
+ * escrita "por stack") pelo número de compras já feitas, devolvendo o **total** em vez do valor
+ * unitário — ex.: "+2 nos testes de ataque por stack" com 5 compras vira "+10 nos testes de
+ * ataque". Usa `compras` (não o empilhamento bruto): mesma régua de `contarComprasModificacao`
+ * (a 1ª compra não dobra o bônus).
+ *
+ * Modificações com dois valores "por stack" na mesma frase usam `ESCALAS_MANUAIS` (só quando o
+ * texto do catálogo bate exatamente com o esperado). Fora essa lista, só escala quando a
+ * descrição tem **exatamente um** número (uma notação de dado como `1D6` conta como um só) em
+ * todo o texto — o resto volta sem alteração, para nunca exibir um total errado.
+ */
+export function escalarDescricaoCatalogoPorCompras(nome: string, descricao: string, compras: number): string {
+  if (compras <= 1) {
+    return descricao;
+  }
+  const manual = ESCALAS_MANUAIS[nome];
+  if (manual && manual.textoOriginal === descricao) {
+    return manual.formatar(compras);
+  }
+  const tokens = descricao.match(/\d+[dD]\d+|\d+/g) ?? [];
+  if (tokens.length !== 1 || !MARCADOR_ESCALAVEL.test(descricao)) {
+    return descricao;
+  }
+  const dado = tokens[0].match(/^(\d+)[dD](\d+)$/);
+  const comTotal = descricao.replace(new RegExp(`([+\\-−]?)${tokens[0]}`), (_match, sinal: string) => {
+    if (dado) {
+      const [, quantidade, faces] = dado;
+      return `${sinal}${parseInt(quantidade, 10) * compras}D${faces}`;
+    }
+    return `${sinal}${parseInt(tokens[0], 10) * compras}`;
+  });
+  return comTotal.replace(MARCADOR_ESCALAVEL, '').trim();
 }
 
 /**

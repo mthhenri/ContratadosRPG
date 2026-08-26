@@ -1390,12 +1390,12 @@ export class ComprasPage {
     let acumuladoStacks = 0;
     const modsAtivas: ModAtivaVM[] = item.modificacoes.map((modificacao) => {
       const definicao = definicoes.find((mod) => mod.nome === modificacao.nome);
-      const custo =
-        contarComprasModificacao({
-          item,
-          modificacao: modificacao.nome,
-          empilhamentos: modificacao.empilhamentos,
-        }) * obterCustoModificacao({ item, modificacao: modificacao.nome });
+      const compras = contarComprasModificacao({
+        item,
+        modificacao: modificacao.nome,
+        empilhamentos: modificacao.empilhamentos,
+      });
+      const custo = compras * obterCustoModificacao({ item, modificacao: modificacao.nome });
       const tetoProprio = definicao
         ? definicao.empilhamentoMaximo
         : modificacao.empilhamentoMaximo ?? modificacao.empilhamentos;
@@ -1415,9 +1415,9 @@ export class ComprasPage {
         excedente: excedeTotal || excedeStack,
         ignoraTotal,
         ignoraProprio,
-        // Chip da mod custom: os efeitos mecânicos gerados + a nota livre (o que houver).
+        // Chip da mod custom: os efeitos mecânicos gerados (já escalados pelo nº de compras) + a nota livre (o que houver).
         descricao:
-          [descreverEfeitosModificacao(modificacao.efeitos), modificacao.descricao?.trim()]
+          [descreverEfeitosModificacao(modificacao.efeitos, compras), modificacao.descricao?.trim()]
             .filter((parte): parte is string => !!parte)
             .join(' — ') || null,
       };
