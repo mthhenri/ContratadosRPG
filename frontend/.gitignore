@@ -15,6 +15,9 @@ yarn-error.log
 /public/documentos/sistema-v4.1.0.pdf
 /public/documentos/guia_de_mestre-v4.0.0.pdf
 
+# Worker do pdfjs-dist (vendorizado de node_modules para os assets do Angular)
+/public/pdf-worker/
+
 # IDEs and editors
 .idea/
 .project
