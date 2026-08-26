@@ -105,6 +105,21 @@ describe('CadernoFlutuanteStore', () => {
     });
   });
 
+  it('importa uma página por POST imediato e a insere no topo', () => {
+    const importada = { ...pagina, id: 22, titulo: 'Sessão 04', conteudoMarkdown: '# Pistas\n' };
+    api.criarPagina.mockReturnValue(of(importada));
+    store.abrir(3);
+
+    store.importarPagina({ titulo: 'Sessão 04', conteudoMarkdown: '# Pistas\n' });
+
+    expect(api.criarPagina).toHaveBeenCalledWith(3, {
+      titulo: 'Sessão 04',
+      conteudoMarkdown: '# Pistas\n',
+    });
+    expect(store.paginas()[0]?.id).toBe(22);
+    expect(store.estadoSalvamento()).toBe('SALVO');
+  });
+
   it('preserva o rascunho ao minimizar e tenta salvá-lo ao fechar', () => {
     store.abrir(3);
     store.selecionarPagina(pagina);

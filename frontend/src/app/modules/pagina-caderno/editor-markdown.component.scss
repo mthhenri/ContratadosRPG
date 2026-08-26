@@ -1,4 +1,5 @@
 :host {
+  position: relative;
   min-width: 0;
   min-height: 0;
   display: block;
@@ -10,6 +11,33 @@
 
 .editor-markdown__superficie {
   min-height: 100%;
+}
+
+.editor-markdown__voltar-topo {
+  position: sticky;
+  z-index: 2;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  float: right;
+  margin: -50px 14px 14px 0;
+  padding: 0;
+  color: var(--bg);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-control);
+  box-shadow: 0 8px 20px var(--shadow);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    filter: brightness(1.08);
+    outline: none;
+  }
 }
 
 .editor-markdown__barra {
@@ -52,6 +80,11 @@
       border-color: var(--accent-border);
       outline: none;
     }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
   }
 
   > span {
@@ -82,6 +115,25 @@
   font-family: var(--font-mono);
 }
 
+:host ::ng-deep .milkdown .editor h1 {
+  margin: 0.65em 0 0.8em;
+  padding-bottom: 0.45em;
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+}
+
+:host ::ng-deep .milkdown .editor h2 {
+  margin: 1.7em 0 0.65em;
+  color: var(--text-dim);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+
 :host ::ng-deep .milkdown .editor :is(code, pre) {
   font-family: var(--font-mono);
 }
@@ -96,6 +148,36 @@
 
 :host ::ng-deep .milkdown .editor a {
   color: var(--accent);
+}
+
+:host ::ng-deep .milkdown .editor table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+
+  th,
+  td {
+    min-width: 96px;
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+  }
+
+  thead th {
+    color: var(--text-mute);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .selectedCell {
+    background: var(--accent-dim);
+    border-color: var(--accent-border);
+  }
 }
 
 :host ::ng-deep .milkdown .editor.ProseMirror-focused {
@@ -115,5 +197,22 @@
   :host ::ng-deep .milkdown .editor {
     padding: 14px 14px 72px;
     font-size: 13px;
+  }
+
+  :host ::ng-deep .milkdown .editor h1 {
+    font-size: 20px;
+  }
+
+  :host ::ng-deep .milkdown .editor h2 {
+    font-size: 15px;
+  }
+
+  :host ::ng-deep .milkdown .editor table {
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 8px 6px;
+    }
   }
 }

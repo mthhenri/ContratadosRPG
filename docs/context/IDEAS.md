@@ -264,7 +264,7 @@
 ### I-022 — Caderno: importar em lote, arrastar-e-soltar e exportar `.md` · campanha/caderno
 
 - **Ideia:** depois da importação de **um** arquivo Markdown por vez
-  (`docs/specs/backlog/caderno-importar-markdown.spec.md`), ampliar o trânsito de arquivos do
+  (`docs/specs/done/caderno-importar-markdown.spec.md`), ampliar o trânsito de arquivos do
   Caderno: selecionar vários `.md` de uma vez (uma página por arquivo), arrastar-e-soltar arquivos
   sobre a janela do Caderno, e o caminho inverso — exportar uma página (ou o caderno inteiro) como
   `.md`/`.zip`.
@@ -290,7 +290,7 @@ Ideias que viraram spec. Ficam aqui só para não serem reinventadas.
 | I-018 — Inventário de esquadrão sem esperar o módulo de Base | implementado (`docs/superpowers/specs/2026-08-12-inventario-de-esquadrao-design.md`; componentes `inventario-esquadrao`/`inventario-esquadrao-sidebar`) | 2026-08-24 |
 | I-019 — Topbar: renomear "Painel", ícone próprio de Fichas, limpar menu de perfil | `docs/specs/backlog/renomear-painel-para-campanhas.spec.md` (escopo ampliado em 2026-08-25 para incluir a rota `/painel`→`/campanhas`, não só o rótulo) | 2026-08-24 |
 | I-020 — Preservar itens modificados no inventário de esquadrão | `docs/specs/backlog/preservar-modificacoes-inventario-esquadrao.spec.md` | 2026-08-24 |
-| I-021 — Descrição textual das modificações no item do inventário | `docs/specs/backlog/descricao-modificacoes-item-inventario.spec.md` | 2026-08-24 |
+| I-021 — Descrição textual das modificações no item do inventário | implementado (`docs/specs/done/descricao-modificacoes-item-inventario.spec.md`) | 2026-08-24 |
 
 ---
 

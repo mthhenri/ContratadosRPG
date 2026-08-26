@@ -187,6 +187,22 @@
               <button class="caderno__acao-icone" type="button" aria-label="Criar página" (click)="iniciarNovaPagina()">
                 <app-icone nome="mais" />
               </button>
+              <button
+                class="caderno__acao-icone"
+                type="button"
+                aria-label="Importar arquivo Markdown"
+                (click)="entradaImportacao.click()"
+              >
+                <app-icone nome="importar" />
+              </button>
+              <input
+                #entradaImportacao
+                type="file"
+                accept=".md,.markdown,text/markdown"
+                tabindex="-1"
+                hidden
+                (change)="aoSelecionarArquivo($event)"
+              />
             }
             @if (!ehMobile()) {
               <button class="caderno__acao-icone" type="button" aria-label="Recolher páginas" (click)="alternarLista()">
@@ -195,6 +211,10 @@
             }
           </div>
         </div>
+
+        @if (avisoImportacao(); as aviso) {
+          <p class="caderno__estado" [class.caderno__estado--erro]="aviso.erro" role="status" aria-live="polite">{{ aviso.texto }}</p>
+        }
 
         @if (estado().carregando) {
           <p class="caderno__estado">Carregando páginas…</p>
@@ -224,6 +244,9 @@
       </aside>
 
       <main class="caderno__editor" [formGroup]="formulario">
+        @if (avisoImportacao(); as aviso) {
+          <p class="caderno__estado caderno__estado--importacao-mobile" [class.caderno__estado--erro]="aviso.erro" role="status" aria-live="polite">{{ aviso.texto }}</p>
+        }
         @if (!ehMobile() && listaRecolhida()) {
           <button class="caderno__mostrar-lista caderno__acao-icone" type="button" aria-label="Mostrar páginas" (click)="alternarLista()">
             <app-icone nome="voltar" />
@@ -284,6 +307,16 @@
               <div>
                 <button class="caderno__botao caderno__botao--perigo" type="button" data-acao="confirmar-exclusao" (click)="confirmarExclusao()">Confirmar exclusão</button>
                 <button class="caderno__botao" type="button" (click)="cancelarExclusao()">Cancelar</button>
+              </div>
+            </div>
+          }
+          @if (trocaPaginaPendente()) {
+            <div class="caderno__confirmacao" role="alertdialog" aria-label="Confirmar descarte de alterações">
+              <strong>Há alterações não salvas.</strong>
+              <span>Descartar e continuar sem salvar esta versão?</span>
+              <div>
+                <button class="caderno__botao caderno__botao--perigo" type="button" data-acao="confirmar-descartar-rascunho" (click)="confirmarDescarteDeRascunho()">Descartar e continuar</button>
+                <button class="caderno__botao" type="button" data-acao="cancelar-descartar-rascunho" (click)="cancelarDescarteDeRascunho()">Cancelar</button>
               </div>
             </div>
           }

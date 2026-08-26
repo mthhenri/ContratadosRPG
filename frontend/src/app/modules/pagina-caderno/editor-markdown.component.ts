@@ -9,6 +9,7 @@ import {
   inject,
   input,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import {
@@ -18,6 +19,16 @@ import {
   rootCtx,
 } from '@milkdown/kit/core';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
+import {
+  addColAfterCommand,
+  addRowAfterCommand,
+  deleteSelectedCellsCommand,
+  gfm,
+  insertTableCommand,
+  selectColCommand,
+  selectRowCommand,
+} from '@milkdown/kit/preset/gfm';
+import { isInTable, selectionCell, TableMap } from '@milkdown/kit/prose/tables';
 import {
   commonmark,
   createCodeBlockCommand,
@@ -32,6 +43,9 @@ import {
 } from '@milkdown/kit/preset/commonmark';
 import { callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
 
+import { Icone } from '../../shared/icone/icone.component';
+import { Tooltip } from '../../shared/tooltip/tooltip.directive';
+
 type FormatoMarkdown =
   | 'TEXTO'
   | 'TITULO_1'
@@ -41,7 +55,12 @@ type FormatoMarkdown =
   | 'LISTA'
   | 'LISTA_NUMERADA'
   | 'CITACAO'
-  | 'CODIGO';
+  | 'CODIGO'
+  | 'TABELA'
+  | 'LINHA_ADICIONAR'
+  | 'LINHA_REMOVER'
+  | 'COLUNA_ADICIONAR'
+  | 'COLUNA_REMOVER';
 
 const LIMITE_MARKDOWN = 100_000;
 
@@ -58,6 +77,7 @@ interface EditorMarkdownInstancia {
   definirMarkdown(markdown: string): void;
   definirSomenteLeitura(somenteLeitura: boolean): void;
   aplicarFormato(formato: FormatoMarkdown): void;
+  estaEmTabela(): boolean;
 }
 
 type EditorMarkdownFactory = (opcoes: EditorMarkdownOpcoes) => EditorMarkdownInstancia;
@@ -81,9 +101,30 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
           CITACAO: () => editor!.action(callCommand(wrapInBlockquoteCommand.key)),
           CODIGO: () => editor!.action(callCommand(toggleInlineCodeCommand.key)) ||
             editor!.action(callCommand(createCodeBlockCommand.key)),
+          TABELA: () => editor!.action(callCommand(insertTableCommand.key, { row: 3, col: 3 })),
+          LINHA_ADICIONAR: () => editor!.action(callCommand(addRowAfterCommand.key)),
+          COLUNA_ADICIONAR: () => editor!.action(callCommand(addColAfterCommand.key)),
+          LINHA_REMOVER: () => selecionarEstrutura('linha'),
+          COLUNA_REMOVER: () => selecionarEstrutura('coluna'),
         } satisfies Record<FormatoMarkdown, () => unknown>;
         formatos[formato]();
         editor.action((contexto) => contexto.get(editorViewCtx).focus());
+      };
+      const selecionarEstrutura = (estrutura: 'linha' | 'coluna'): unknown => {
+        if (!editor) return false;
+        const indice = editor.action((contexto) => {
+          const estado = contexto.get(editorViewCtx).state;
+          if (!isInTable(estado)) return null;
+          const celula = selectionCell(estado);
+          const tabela = celula.node(-1);
+          const mapa = TableMap.get(tabela);
+          const retangulo = mapa.findCell(celula.pos - celula.start(-1));
+          return estrutura === 'linha' ? retangulo.top : retangulo.left;
+        });
+        if (indice === null) return false;
+        const comando = estrutura === 'linha' ? selectRowCommand : selectColCommand;
+        editor.action(callCommand(comando.key, { index: indice }));
+        return editor.action(callCommand(deleteSelectedCellsCommand.key));
       };
       return {
         criar: async () => {
@@ -101,6 +142,7 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
               });
             })
             .use(commonmark)
+            .use(gfm)
             .use(listener)
             .create();
         },
@@ -113,6 +155,8 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
           );
         },
         aplicarFormato,
+        estaEmTabela: () =>
+          editor?.action((contexto) => isInTable(contexto.get(editorViewCtx).state)) ?? false,
       };
     },
   },
@@ -121,23 +165,35 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
 @Component({
   selector: 'app-editor-markdown',
   standalone: true,
+  imports: [Icone, Tooltip],
   template: `
     @if (!somenteLeitura()) {
       <div class="editor-markdown__barra" role="toolbar" aria-label="Formatação Markdown">
-        <button type="button" aria-label="Texto normal" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TEXTO')">¶</button>
-        <button type="button" aria-label="Título principal" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TITULO_1')">H1</button>
-        <button type="button" aria-label="Subtítulo" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TITULO_2')">H2</button>
+        <button type="button" aria-label="Texto normal" [appTooltip]="'Texto normal'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TEXTO')">¶</button>
+        <button type="button" aria-label="Título principal" [appTooltip]="'Título principal (H1)'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TITULO_1')">H1</button>
+        <button type="button" aria-label="Subtítulo" [appTooltip]="'Subtítulo (H2)'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TITULO_2')">H2</button>
         <span aria-hidden="true"></span>
-        <button type="button" aria-label="Negrito" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('NEGRITO')"><strong>B</strong></button>
-        <button type="button" aria-label="Itálico" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('ITALICO')"><em>I</em></button>
-        <button type="button" aria-label="Código" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('CODIGO')">&lt;/&gt;</button>
+        <button type="button" aria-label="Negrito" [appTooltip]="'Negrito'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('NEGRITO')"><strong>B</strong></button>
+        <button type="button" aria-label="Itálico" [appTooltip]="'Itálico'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('ITALICO')"><em>I</em></button>
+        <button type="button" aria-label="Código" [appTooltip]="'Código em linha ou bloco de código'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('CODIGO')">&lt;/&gt;</button>
         <span aria-hidden="true"></span>
-        <button type="button" aria-label="Lista" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LISTA')">• —</button>
-        <button type="button" aria-label="Lista numerada" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LISTA_NUMERADA')">1.</button>
-        <button type="button" aria-label="Citação" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('CITACAO')">“</button>
+        <button type="button" aria-label="Lista" [appTooltip]="'Lista não numerada'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LISTA')">• —</button>
+        <button type="button" aria-label="Lista numerada" [appTooltip]="'Lista numerada'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LISTA_NUMERADA')">1.</button>
+        <button type="button" aria-label="Citação" [appTooltip]="'Citação: destaca um trecho como fala ou referência'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('CITACAO')">“</button>
+        <span aria-hidden="true"></span>
+        <button type="button" aria-label="Inserir tabela" [appTooltip]="'Inserir tabela 3 × 3'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TABELA')"><app-icone nome="tabela" /></button>
+        <button type="button" aria-label="Adicionar linha" [appTooltip]="'Inserir linha abaixo'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LINHA_ADICIONAR')"><app-icone nome="linha-adicionar" /></button>
+        <button type="button" aria-label="Remover linha" [appTooltip]="'Remover linha atual'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LINHA_REMOVER')"><app-icone nome="linha-remover" /></button>
+        <button type="button" aria-label="Adicionar coluna" [appTooltip]="'Inserir coluna à direita'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('COLUNA_ADICIONAR')"><app-icone nome="coluna-adicionar" /></button>
+        <button type="button" aria-label="Remover coluna" [appTooltip]="'Remover coluna atual'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('COLUNA_REMOVER')"><app-icone nome="coluna-remover" /></button>
       </div>
     }
     <div #raiz class="editor-markdown__superficie"></div>
+    @if (mostrarVoltarAoTopo()) {
+      <button class="editor-markdown__voltar-topo" type="button" aria-label="Voltar ao topo" [appTooltip]="'Voltar ao topo'" (click)="voltarAoTopo()">
+        <app-icone nome="teto" />
+      </button>
+    }
   `,
   styleUrl: './editor-markdown.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -146,14 +202,20 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
     '[class.editor-markdown--somente-leitura]': 'somenteLeitura()',
     '[attr.aria-label]':
       'somenteLeitura() ? "Conteúdo Markdown somente leitura" : "Editor Markdown"',
+    '(click)': 'atualizarEstadoTabela()',
+    '(keyup)': 'atualizarEstadoTabela()',
+    '(scroll)': 'atualizarPosicaoRolagem()',
   },
 })
 export class EditorMarkdown implements AfterViewInit, OnDestroy {
   readonly valor = input('');
   readonly somenteLeitura = input(false);
   readonly valorChange = output<string>();
+  protected readonly emTabela = signal(false);
+  protected readonly mostrarVoltarAoTopo = signal(false);
 
   private readonly criarEditor = inject(EDITOR_MARKDOWN_FACTORY);
+  private readonly host = inject(ElementRef<HTMLElement>);
   private readonly raiz = viewChild.required<ElementRef<HTMLElement>>('raiz');
   private instancia: EditorMarkdownInstancia | null = null;
   private sincronizando = false;
@@ -206,5 +268,17 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
 
   protected aplicarFormato(formato: FormatoMarkdown): void {
     if (!this.somenteLeitura()) this.instancia?.aplicarFormato(formato);
+  }
+
+  protected atualizarEstadoTabela(): void {
+    this.emTabela.set(this.instancia?.estaEmTabela() ?? false);
+  }
+
+  protected atualizarPosicaoRolagem(): void {
+    this.mostrarVoltarAoTopo.set(this.host.nativeElement.scrollTop > 160);
+  }
+
+  protected voltarAoTopo(): void {
+    this.host.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

@@ -335,13 +335,14 @@
 
 ## 1. Próxima Task
 
-**Spec avulsa nova no backlog (pedido direto do autor, 2026-08-25, sem número de milestone):**
-`caderno-importar-markdown.spec.md` — importar um arquivo `.md` para o Caderno da campanha (nome do
-arquivo vira título, conteúdo entra formatado e já persistido) **e** ligar o suporte a tabelas GFM no
-editor, hoje inexistente (o Milkdown roda só com o preset `commonmark`, então tabela em pipes é
-parágrafo, não tabela). Frontend apenas: nenhum endpoint, DTO, migration ou dependência nova
-(`@milkdown/preset-gfm` já vem dentro de `@milkdown/kit`). Escopo recortado — lote,
-arrastar-e-soltar e exportação ficaram como `I-022` em `IDEAS.md`. Ainda **não implementada**.
+**Ajustes avulsos concluídos no Caderno (pedidos diretos do autor, 2026-08-25/26):** a importação
+de um `.md` cria e persiste imediatamente uma página com título vindo do arquivo, normaliza front
+matter/BOM/CRLF/imagens e o editor Milkdown usa GFM para tabelas. A barra agora explica todas as
+ações por tooltip, diferencia visualmente H1 de H2, usa ícones de grade para inserir/remover
+linhas e colunas e oferece retorno suave ao topo depois da rolagem. Frontend apenas: nenhum
+endpoint, DTO, migration ou dependência nova. Lote, arrastar-e-soltar e exportação continuam em
+`I-022`. A seleção de página é alternável: clicar na ativa a fecha; se houver rascunho diferente da
+versão persistida, trocar ou fechar pede descarte explícito antes de cancelar o autosave pendente.
 
 **Ajuste avulso (bug reportado direto pelo autor, 2026-08-25, sem número de milestone) concluído**
 — "Documentos" não abria no Edge mobile: o Edge mobile não incorpora PDF em iframe e bloqueia o
@@ -611,16 +612,16 @@ só adaptou o visual de desktop).
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
 | `preservar-modificacoes-inventario-esquadrao` | campanha/inventário | preservar `modificacoes` do item ao transferir ficha ↔ base (`IDEAS.md` `I-020`) |
-| `descricao-modificacoes-item-inventario` | ficha/inventário | resumo textual das modificações ativas, acima da contagem de munição/cenas (`IDEAS.md` `I-021`) |
 | `renomear-painel-para-campanhas` | layout/navegação/rotas | rota `/painel`→`/campanhas` (nav, redirects, guards, todo `routerLink`/`navigate`), ícone próprio de Fichas, limpar menu de perfil (`IDEAS.md` `I-019`; escopo ampliado em 2026-08-25) |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
 `docs/specs/done/`, `m3-78` fechou a fila no bloco do topo do arquivo). `m7-18`…`m7-20` eram o mesmo
 tipo de ajuste avulso, pós-M7 (milestone já concluído) — todos **concluídos** (specs em
-`docs/specs/done/`, `m7-19` fechou a fila; ver bloco no topo do arquivo e "Próxima Task"). As três
-specs avulsas acima (2026-08-24) nasceram de `IDEAS.md` `I-019`/`I-020`/`I-021` — sem número de
-milestone, a critério do autor na revisão de backlog. Milestone ainda não aberto: `m5-guia-missao`.
+`docs/specs/done/`, `m7-19` fechou a fila; ver bloco no topo do arquivo e "Próxima Task"). As duas
+specs avulsas acima (2026-08-24) nasceram de `IDEAS.md` `I-019`/`I-020` — sem número de
+milestone, a critério do autor na revisão de backlog. A `I-021` já foi concluída em
+`descricao-modificacoes-item-inventario.spec.md`. Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
 
@@ -826,6 +827,8 @@ têm hover contextual, resposta de pressão ao clique e respeitam `prefers-reduc
 No desktop, a janela pode ser arrastada, redimensionada e minimizada e preserva sua geometria no
 navegador. A lista de páginas pode ser recolhida e se recolhe ao criar uma página; em janelas de
 640px ou menos ela se sobrepõe ao editor para não estreitá-lo, e a largura mínima da janela é 440px.
+O seletor de arquivo do fluxo de importação é acionado por um botão real e fica totalmente oculto;
+sua área interativa nunca ultrapassa o botão de 32px no desktop ou 44px no mobile.
 No mobile, o gatilho fica inline
 ao lado de histórico e calculadora, ocupa a área útil ao abrir e alterna entre lista e editor.
 
@@ -876,6 +879,12 @@ Itens custom do inventário do agente podem ter nome, descrição, custo e peso 
 contrato visual da criação, já preenchido; categoria e campos mecânicos ficam bloqueados, e salvar
 preserva quantidade, modificações e todos os demais dados. Item de catálogo não oferece a ação. O
 inventário do esquadrão não participa desse fluxo e permanece sem edição de informações.
+
+O card de cada item também resume as modificações que têm efeito estruturado ou nota livre, no
+formato `Nome: descrição`; efeitos de uma mesma modificação mantêm o separador ` · ` do motor e
+modificações diferentes usam `; `. A linha fica imediatamente acima da contagem de cenas/disparos
+e não aparece para modificação puramente cosmética. É derivação exclusiva do frontend; chips e
+contratos compartilhados permanecem inalterados (`descricao-modificacoes-item-inventario`).
 
 de Energia/Anomalia Biológica (`m3-67`: `(Vigor + Destreza) × 2` — abaixo dele, aviso não-bloqueante
 na aquisição de fragmento e, na aba Extras, os efeitos calculados como texto informativo (−15

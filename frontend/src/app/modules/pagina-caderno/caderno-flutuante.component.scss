@@ -215,6 +215,7 @@ $largura-caderno-sobreposicao: 640px;
   }
 
   &__estado { margin: 0; padding: 18px 14px; color: var(--text-mute); font: 12px/1.5 var(--font-sans); }
+  &__estado--importacao-mobile { display: none; }
   &__vazio {
     min-height: 180px;
     display: grid;
@@ -363,6 +364,7 @@ $largura-caderno-sobreposicao: 640px;
 
 @include bp.mobile {
   .caderno {
+    &__estado--importacao-mobile { display: block; }
     &__gatilho {
       z-index: auto;
       color: var(--text-dim);

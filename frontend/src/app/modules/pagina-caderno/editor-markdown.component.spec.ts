@@ -12,6 +12,8 @@ describe('EditorMarkdown', () => {
     queueMicrotask(() => aoAlterar(markdown));
   });
   const definirSomenteLeitura = vi.fn();
+  const aplicarFormato = vi.fn();
+  const estaEmTabela = vi.fn(() => false);
   const destruir = vi.fn();
 
   beforeEach(async () => {
@@ -34,6 +36,8 @@ describe('EditorMarkdown', () => {
               obterMarkdown: () => markdownAtual,
               definirMarkdown,
               definirSomenteLeitura,
+              aplicarFormato,
+              estaEmTabela,
             };
           },
         },
@@ -87,5 +91,59 @@ describe('EditorMarkdown', () => {
   it('destrói a instância junto com o componente', () => {
     fixture.destroy();
     expect(destruir).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ['Inserir tabela', 'TABELA'],
+    ['Adicionar linha', 'LINHA_ADICIONAR'],
+    ['Remover linha', 'LINHA_REMOVER'],
+    ['Adicionar coluna', 'COLUNA_ADICIONAR'],
+    ['Remover coluna', 'COLUNA_REMOVER'],
+  ])('aciona %s pelo formato %s', (rotulo, formato) => {
+    const botao = fixture.nativeElement.querySelector(`[aria-label="${rotulo}"]`) as HTMLButtonElement;
+    expect(botao).not.toBeNull();
+    botao.disabled = false;
+    botao.click();
+    expect(aplicarFormato).toHaveBeenCalledWith(formato);
+  });
+
+  it('desabilita ações estruturais fora de tabela', () => {
+    for (const rotulo of ['Adicionar linha', 'Remover linha', 'Adicionar coluna', 'Remover coluna']) {
+      const botao = fixture.nativeElement.querySelector(`[aria-label="${rotulo}"]`) as HTMLButtonElement;
+      expect(botao.disabled).toBe(true);
+      expect(botao.getAttribute('aria-disabled')).toBe('true');
+    }
+  });
+
+  it('explica uma ação de formatação ao passar o ponteiro sobre o botão', () => {
+    vi.useFakeTimers();
+    try {
+      const botao = fixture.nativeElement.querySelector('[aria-label="Citação"]') as HTMLButtonElement;
+
+      botao.dispatchEvent(new Event('pointerenter'));
+      vi.advanceTimersByTime(300);
+
+      expect(document.body.querySelector('[role="tooltip"]')?.textContent).toContain('Citação');
+    } finally {
+      document.body.querySelector('[role="tooltip"]')?.remove();
+      vi.useRealTimers();
+    }
+  });
+
+  it('oferece voltar ao topo depois de rolar o editor', () => {
+    const rolarAteOTopo = vi.fn();
+    Object.defineProperty(fixture.nativeElement, 'scrollTo', {
+      configurable: true,
+      value: rolarAteOTopo,
+    });
+    fixture.nativeElement.scrollTop = 280;
+    fixture.nativeElement.dispatchEvent(new Event('scroll'));
+    fixture.detectChanges();
+
+    const botao = fixture.nativeElement.querySelector('[aria-label="Voltar ao topo"]') as HTMLButtonElement;
+    expect(botao).not.toBeNull();
+
+    botao.click();
+    expect(rolarAteOTopo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
   });
 });

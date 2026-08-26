@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-26 — Troca de página do Caderno protege rascunhos locais
+
+O item selecionado na lista do Caderno agora é alternável: clicar nele uma segunda vez limpa a
+seleção e volta ao estado de escolha. Uma troca para outra página segue direta quando não há
+diferença local. Se título ou conteúdo diferirem da página persistida, a janela mostra o mesmo
+diálogo compacto de confirmação usado no Caderno: **Descartar e continuar** cancela o autosave
+agendado, limpa o rascunho e então executa a troca; **Cancelar** fecha o diálogo e mantém o texto.
+
+As regressões cobrem desseleção limpa, bloqueio antes de trocar, cancelamento e descarte sem PUT
+posterior. A aplicação real confirmou o diálogo e seus controles em desktop; a regra de layout
+mobile continuou sem overflow horizontal.
+
+## 2026-08-26 — Caderno importa Markdown e torna a barra do editor explicável
+
+Concluída `caderno-importar-markdown.spec.md`: a janela aceita um arquivo `.md`/`.markdown` por
+vez, limita o arquivo a 1 MB e ao contrato de 100.000 caracteres, deriva o título do nome e cria a
+nova página por `POST` imediatamente. A normalização pura remove BOM, front matter YAML e CRLF,
+converte imagens Markdown em links e preserva código e tabelas. O Milkdown passou a carregar o
+preset GFM; a tabela criada é 3×3, pode receber/remover linhas e colunas na célula ativa e mantém o
+conteúdo rolável sem alargar a página.
+
+No ajuste seguinte, H1 ganhou escala, régua e contraste próprios, enquanto H2 ficou menor e mais
+discreto. Todos os controles da barra ganharam tooltip, incluindo a explicação de que aspas criam
+uma citação. Os atalhos de tabela deixaram `+L`/`+C`: agora usam glifos de grade para inserir ou
+remover linha/coluna, no vocabulário visual de uma planilha. Depois de 160 px de rolagem, o editor
+mostra o botão de retorno suave ao topo.
+
+Regressões cobrem a normalização, persistência imediata, operações de tabela, tooltip de citação e
+volta ao topo. A aplicação real foi observada em `1920×1080` e `360×800`: H1/H2 têm hierarquia
+distinta, tooltip aparece, a tabela GFM renderiza, os ícones ficam na barra e não houve overflow
+mobile; o retorno ao topo também foi exercitado. A sessão usou uma campanha e contas locais
+temporárias de verificação.
+
 ## 2026-08-25 — Documentos não abria no Edge mobile: leitor próprio (PDF.js) só no mobile
 
 Bug reportado direto pelo autor: no mobile, "Documentos" não abria no Edge. Causa — `m3-72`
@@ -74,6 +107,45 @@ no DOM). **Limitação da verificação:** o Edge mobile em si não estava dispo
 a verificação rodou contra Chromium (Playwright) em viewport mobile, que reproduz a classe geral do
 problema (renderização sem depender de plugin nativo de PDF do navegador), mas não confirma
 literalmente contra o Edge/iOS.
+
+## 2026-08-25 — Input de importação do Caderno deixa de cobrir a janela
+
+Corrigida uma regressão visual durante a implementação de
+`caderno-importar-markdown.spec.md`: o `input[type=file]` invisível usava
+`position: absolute; inset: 0`, mas o seletor que deveria dar `position: relative` ao `label`
+compilava como `.caderno label.caderno__acao-icone`. A janela não possui um wrapper `.caderno`,
+então a regra nunca casava; no navegador, o label visível media 32×32 enquanto o input media
+279×469 e interceptava hover/clique de "Criar página" e da lista lateral.
+
+A sobreposição foi removida por completo. "Importar arquivo Markdown" agora é um botão real, com
+o mesmo alvo visual dos outros controles, que aciona programaticamente um input `hidden` e fora da
+ordem de tabulação. O teste de regressão exige esse contrato e prova que o botão aciona o seletor.
+Na aplicação real, `elementFromPoint` voltou a resolver separadamente Criar, Importar e Fechar; o
+input passou a `display: none` e caixa 0×0. Verificado em `1920×1080` (botões 32×32) e `360×800`
+(44×44), sem overflow.
+
+## 2026-08-25 — Descrição agregada das modificações no card de inventário
+
+Executada a spec avulsa `descricao-modificacoes-item-inventario.spec.md` (`I-021`). O view model
+de `FichaInventario` agora deriva `descricaoModificacoesTexto` diretamente das modificações do
+item: cada entrada renderizável usa `Nome: efeitos estruturados` (via
+`descreverEfeitosModificacao`) ou, na ausência deles, a nota livre; múltiplas modificações são
+separadas por `; `. Modificações sem efeitos nem nota continuam sem produzir qualquer espaço no
+card. O template mostra a linha depois do bônus da Munição Construtor e imediatamente antes da
+contagem de cenas/disparos, reutilizando a tipografia de stat já aprovada. O chip individual de
+modificação e o contrato de `shared` não mudaram.
+
+O desenvolvimento foi guiado por três regressões de componente: uma modificação estruturada e sua
+posição acima da munição, composição de duas modificações e ausência total para modificação
+cosmética. O teste focado passou com 165 casos; a suíte completa do frontend passou com 91 arquivos
+e 1.365 testes. Lint terminou com zero erros e 13.818 avisos preexistentes; build de produção passou,
+mantendo apenas os dois avisos preexistentes de orçamento (bundle inicial e SCSS da visualização).
+
+No gate visual, o análogo foi o próprio `.ficha-inv__item-stat` do card de inventário. Uma ficha
+temporária real exibiu `Calibre: +1 dado de dano; Rastreável: ...` em `1920×1080` e `360×800`: o
+resumo ficou acima de `2 / 3 cena(s)`, quebrou em linhas legíveis no mobile e não gerou overflow no
+documento nem nos dois cards medidos. O segundo item, com modificação sem texto, não ganhou resumo. A ficha
+temporária foi removida por soft delete após a inspeção.
 
 ## 2026-08-25 — Spec de importação de Markdown no Caderno (backlog, não implementada)
 

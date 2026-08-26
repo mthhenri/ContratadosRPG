@@ -66,6 +66,8 @@ describe('CadernoFlutuante', () => {
               obterMarkdown: () => markdown,
               definirMarkdown: (valor: string) => { markdown = valor; },
               definirSomenteLeitura: vi.fn(),
+              aplicarFormato: vi.fn(),
+              estaEmTabela: vi.fn(() => false),
             };
           },
         },
@@ -175,6 +177,57 @@ describe('CadernoFlutuante', () => {
     expect(raiz().textContent).toContain('Somente leitura');
     expect(raiz().querySelector('[data-acao="excluir"]')).toBeNull();
     expect(obter<HTMLInputElement>('input[formControlName="titulo"]').readOnly).toBe(true);
+    expect(raiz().querySelector('[aria-label="Importar arquivo Markdown"]')).toBeNull();
+  });
+
+  it('importa Markdown como página nova com título derivado e conteúdo normalizado', async () => {
+    clicar('[aria-label="Abrir caderno"]');
+    const entrada = obter<HTMLInputElement>('input[type="file"]');
+    const arquivo = new File(['\uFEFF---\ntags: [mesa]\n---\n\n# Pistas\r\n'], 'Sessão 04 — Pistas.md', {
+      type: 'text/markdown',
+    });
+    Object.defineProperty(entrada, 'files', { configurable: true, value: [arquivo] });
+
+    entrada.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(api.criarPagina).toHaveBeenCalledWith(3, {
+      titulo: 'Sessão 04 — Pistas',
+      conteudoMarkdown: '# Pistas\n',
+    });
+    expect(raiz().textContent).toContain('Front matter removido.');
+    expect(entrada.value).toBe('');
+  });
+
+  it('restringe a seleção de arquivo a um botão real e mantém o input fora da interação', () => {
+    clicar('[aria-label="Abrir caderno"]');
+    const botao = obter<HTMLButtonElement>('button[aria-label="Importar arquivo Markdown"]');
+    const entrada = obter<HTMLInputElement>('input[type="file"]');
+    const abrirSeletor = vi.spyOn(entrada, 'click');
+
+    expect(entrada.hidden).toBe(true);
+    expect(entrada.tabIndex).toBe(-1);
+
+    botao.click();
+
+    expect(abrirSeletor).toHaveBeenCalledOnce();
+  });
+
+  it('recusa arquivo fora dos formatos Markdown sem chamar a API', async () => {
+    clicar('[aria-label="Abrir caderno"]');
+    const entrada = obter<HTMLInputElement>('input[type="file"]');
+    Object.defineProperty(entrada, 'files', {
+      configurable: true,
+      value: [new File(['texto'], 'nota.txt', { type: 'text/plain' })],
+    });
+
+    entrada.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(api.criarPagina).not.toHaveBeenCalled();
+    expect(raiz().textContent).toContain('Formato inválido: envie um arquivo .md');
   });
 
   it('pede confirmação antes de excluir uma página editável', () => {
@@ -184,6 +237,90 @@ describe('CadernoFlutuante', () => {
     expect(api.excluirPagina).not.toHaveBeenCalled();
     clicar('[data-acao="confirmar-exclusao"]');
     expect(api.excluirPagina).toHaveBeenCalledWith(11);
+  });
+
+  it('desseleciona a página ativa quando ela é escolhida outra vez sem rascunho pendente', () => {
+    abrirPagina();
+
+    clicar('[data-pagina-id="11"]');
+
+    expect(raiz().textContent).toContain('Selecione uma página');
+    expect(raiz().querySelector('app-editor-markdown')).toBeNull();
+  });
+
+  it('pede confirmação antes de abandonar um rascunho para abrir outra página', () => {
+    const outraPagina = { ...pagina, id: 12, titulo: 'Segunda sessão' };
+    api.listarPaginas.mockReturnValue(of([
+      { ...pagina, conteudoMarkdown: undefined },
+      { ...outraPagina, conteudoMarkdown: undefined },
+    ]));
+    api.recuperarPagina.mockImplementation((id: number) => of(id === 12 ? outraPagina : pagina));
+    abrirPagina();
+    const titulo = obter<HTMLInputElement>('input[formControlName="titulo"]');
+    titulo.value = 'Rascunho local';
+    titulo.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    clicar('[data-pagina-id="12"]');
+
+    expect(obter('[role="alertdialog"]').textContent).toContain('Há alterações não salvas');
+    expect(api.recuperarPagina).toHaveBeenCalledTimes(1);
+  });
+
+  it('descarta o rascunho confirmado sem disparar o salvamento automático', () => {
+    vi.useFakeTimers();
+    try {
+      const outraPagina = { ...pagina, id: 12, titulo: 'Segunda sessão' };
+      api.listarPaginas.mockReturnValue(of([
+        { ...pagina, conteudoMarkdown: undefined },
+        { ...outraPagina, conteudoMarkdown: undefined },
+      ]));
+      api.recuperarPagina.mockImplementation((id: number) => of(id === 12 ? outraPagina : pagina));
+      abrirPagina();
+      const titulo = obter<HTMLInputElement>('input[formControlName="titulo"]');
+      titulo.value = 'Rascunho local';
+      titulo.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      clicar('[data-pagina-id="12"]');
+
+      clicar('[data-acao="confirmar-descartar-rascunho"]');
+      vi.advanceTimersByTime(1_000);
+
+      expect(api.alterarPagina).not.toHaveBeenCalled();
+      expect(obter<HTMLInputElement>('input[formControlName="titulo"]').value).toBe('Segunda sessão');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('mantém o rascunho ao cancelar a troca de página', () => {
+    abrirPagina();
+    const titulo = obter<HTMLInputElement>('input[formControlName="titulo"]');
+    titulo.value = 'Rascunho local';
+    titulo.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    clicar('[data-pagina-id="11"]');
+
+    clicar('[data-acao="cancelar-descartar-rascunho"]');
+
+    expect(obter<HTMLInputElement>('input[formControlName="titulo"]').value).toBe('Rascunho local');
+    expect(raiz().querySelector('[role="alertdialog"]')).toBeNull();
+  });
+
+  it('leva a confirmação de descarte ao painel visível no mobile', () => {
+    definirViewport(360, 800);
+    window.dispatchEvent(new Event('resize'));
+    abrirPagina();
+    const titulo = obter<HTMLInputElement>('input[formControlName="titulo"]');
+    titulo.value = 'Rascunho local';
+    titulo.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    clicar('[aria-label="Voltar para páginas"]');
+
+    clicar('[data-pagina-id="11"]');
+
+    expect(obter('.caderno__corpo').classList).toContain('caderno__corpo--conteudo');
+    expect(obter('[role="alertdialog"]')).toBeTruthy();
   });
 
   it('mostra o estado de salvamento durante uma gravação pendente', () => {

@@ -85,7 +85,13 @@ export type IconeNome =
   | 'duplicar'
   | 'd20'
   | 'modificador'
-  | 'vassoura';
+  | 'vassoura'
+  | 'importar'
+  | 'tabela'
+  | 'linha-adicionar'
+  | 'linha-remover'
+  | 'coluna-adicionar'
+  | 'coluna-remover';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

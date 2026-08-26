@@ -18,6 +18,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { BuscaCampanhaResultadoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
+import { PAGINA_CADERNO_CONTEUDO_MAXIMO } from '@contratados-rpg/shared/validators';
 import {
   BuscaCampanhaFonteEnum,
   BuscaCampanhaResultadoTipoEnum,
@@ -30,11 +31,22 @@ import type { CadernoGeometria } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
 import { EditorMarkdown } from './editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
+import {
+  derivarTituloDeArquivo,
+  normalizarMarkdownImportado,
+  possuiFrontMatterYaml,
+  type FalhaImportacaoMarkdown,
+} from './importar-markdown';
 
 const BREAKPOINT_MOBILE = 560;
+const TAMANHO_MAXIMO_IMPORTACAO_BYTES = 1_000_000;
 let proximoNivelJanela = 1210;
 
 type ModoCaderno = 'MEU' | 'JOGADORES';
+
+interface TrocaPaginaPendente {
+  readonly paginaId: number | null;
+}
 
 @Component({
   selector: 'app-caderno-flutuante',
@@ -73,10 +85,12 @@ export class CadernoFlutuante implements OnDestroy {
   protected readonly modoCaderno = signal<ModoCaderno>('MEU');
   protected readonly jogadorSelecionadoId = signal<number | null>(null);
   protected readonly exclusaoPendente = signal(false);
+  protected readonly trocaPaginaPendente = signal<TrocaPaginaPendente | null>(null);
   protected readonly listaRecolhida = signal(false);
   protected readonly fontesSelecionadas = signal<readonly BuscaCampanhaFonteEnum[]>([]);
   protected readonly buscando = signal(false);
   protected readonly erroBusca = signal(false);
+  protected readonly avisoImportacao = signal<{ texto: string; erro: boolean } | null>(null);
   private readonly termoBuscaAtual = signal('');
   protected readonly ehMobile = signal(this.verificarMobile());
   protected readonly nivelJanela = signal(proximoNivelJanela);
@@ -153,6 +167,7 @@ export class CadernoFlutuante implements OnDestroy {
       const campanhaAnterior = this.store.campanhaId();
       if (campanhaAnterior !== null && campanhaAnterior !== campanhaId) {
         untracked(() => {
+          this.avisoImportacao.set(null);
           this.store.descartarCampanha();
           this.store.fechar();
         });
@@ -238,6 +253,7 @@ export class CadernoFlutuante implements OnDestroy {
     this.modoCaderno.set(modo);
     this.jogadorSelecionadoId.set(null);
     this.exclusaoPendente.set(false);
+    this.avisoImportacao.set(null);
     if (modo === 'MEU') this.store.carregarMeuCaderno();
     else this.store.iniciarNovaPagina();
     this.store.definirVistaMobile('LISTA');
@@ -253,7 +269,14 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected selecionarPagina(id: number): void {
     this.exclusaoPendente.set(false);
-    this.store.recuperarPagina(id);
+    this.avisoImportacao.set(null);
+    const paginaId = this.store.paginaAtiva()?.id === id ? null : id;
+    if (this.store.temAlteracoesNaoSalvas()) {
+      this.store.definirVistaMobile('CONTEUDO');
+      this.trocaPaginaPendente.set({ paginaId });
+      return;
+    }
+    this.executarTrocaPagina(paginaId);
   }
 
   protected alternarLista(): void {
@@ -262,9 +285,55 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected iniciarNovaPagina(): void {
     this.exclusaoPendente.set(false);
+    this.avisoImportacao.set(null);
     this.listaRecolhida.set(true);
     this.store.iniciarNovaPagina();
     setTimeout(() => this.documento.querySelector<HTMLInputElement>('.caderno__titulo-input')?.focus());
+  }
+
+  protected async aoSelecionarArquivo(evento: Event): Promise<void> {
+    const entrada = evento.target as HTMLInputElement;
+    const arquivo = entrada.files?.[0] ?? null;
+    entrada.value = '';
+    if (!arquivo) return;
+    this.avisoImportacao.set(null);
+    if (!/\.(?:md|markdown)$/iu.test(arquivo.name)) {
+      this.definirFalhaImportacao('EXTENSAO');
+      return;
+    }
+    if (arquivo.size > TAMANHO_MAXIMO_IMPORTACAO_BYTES) {
+      this.definirFalhaImportacao('TAMANHO');
+      return;
+    }
+    const texto = await arquivo.text();
+    const frontMatterRemovido = possuiFrontMatterYaml(texto);
+    const conteudoMarkdown = normalizarMarkdownImportado(texto);
+    if (conteudoMarkdown.length > PAGINA_CADERNO_CONTEUDO_MAXIMO) {
+      this.definirFalhaImportacao('TAMANHO');
+      return;
+    }
+    if (!conteudoMarkdown) {
+      this.definirFalhaImportacao('VAZIO');
+      return;
+    }
+    this.store.importarPagina({
+      titulo: derivarTituloDeArquivo(arquivo.name),
+      conteudoMarkdown,
+    });
+    this.avisoImportacao.set({
+      texto: `Importado de "${arquivo.name}".${frontMatterRemovido ? ' Front matter removido.' : ''}`,
+      erro: false,
+    });
+    setTimeout(() => this.documento.querySelector<HTMLInputElement>('.caderno__titulo-input')?.focus());
+  }
+
+  private definirFalhaImportacao(falha: FalhaImportacaoMarkdown): void {
+    const textos = {
+      EXTENSAO: 'Formato inválido: envie um arquivo .md',
+      TAMANHO: 'Arquivo maior que o limite da página (100.000 caracteres)',
+      VAZIO: 'O arquivo não tem conteúdo',
+    } as const;
+    this.avisoImportacao.set({ texto: textos[falha], erro: true });
   }
 
   protected alterarConteudoMarkdown(conteudoMarkdown: string): void {
@@ -287,6 +356,18 @@ export class CadernoFlutuante implements OnDestroy {
     this.exclusaoPendente.set(false);
   }
 
+  protected confirmarDescarteDeRascunho(): void {
+    const troca = this.trocaPaginaPendente();
+    if (!troca) return;
+    this.trocaPaginaPendente.set(null);
+    this.store.desselecionarPagina();
+    this.executarTrocaPagina(troca.paginaId);
+  }
+
+  protected cancelarDescarteDeRascunho(): void {
+    this.trocaPaginaPendente.set(null);
+  }
+
   protected confirmarExclusao(): void {
     this.exclusaoPendente.set(false);
     this.store.excluirPaginaAtiva();
@@ -294,6 +375,11 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected voltarParaPaginas(): void {
     this.store.definirVistaMobile('LISTA');
+  }
+
+  private executarTrocaPagina(paginaId: number | null): void {
+    if (paginaId === null) this.store.desselecionarPagina();
+    else this.store.recuperarPagina(paginaId);
   }
 
   protected fonteSelecionada(fonte: BuscaCampanhaFonteEnum): boolean {

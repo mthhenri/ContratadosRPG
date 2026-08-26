@@ -136,6 +136,29 @@ export class CadernoFlutuanteStore {
     this.definirVistaMobile('CONTEUDO');
   }
 
+  temAlteracoesNaoSalvas(): boolean {
+    const pagina = this.paginaAtivaInterna();
+    const rascunho = this.rascunhoInterno();
+    if (!pagina) return rascunho.titulo.length > 0 || rascunho.conteudoMarkdown.length > 0;
+    return pagina.titulo !== rascunho.titulo || pagina.conteudoMarkdown !== rascunho.conteudoMarkdown;
+  }
+
+  desselecionarPagina(): void {
+    this.limparPaginaSelecionada();
+    this.definirVistaMobile('LISTA');
+  }
+
+  importarPagina(rascunho: CadernoRascunho): void {
+    this.cancelarAgendamento();
+    this.paginaAtivaInterna.set(null);
+    this.rascunhoInterno.set(rascunho);
+    this.revisaoRascunho = 1;
+    this.revisaoEmSalvamento = 0;
+    this.estadoSalvamentoInterno.set('INATIVO');
+    this.definirVistaMobile('CONTEUDO');
+    this.salvarAgora();
+  }
+
   alterarRascunho(rascunho: CadernoRascunho): void {
     if (this.paginaAtivaInterna()?.somenteLeitura) return;
     this.rascunhoInterno.set(rascunho);
