@@ -620,6 +620,11 @@
     &[aria-expanded='true'] {
       border-color: var(--accent-border);
     }
+    &:disabled {
+      opacity: .5;
+      color: var(--text-mute);
+      cursor: default;
+    }
   }
   &__categoria-select-chevron {
     color: var(--text-mute);

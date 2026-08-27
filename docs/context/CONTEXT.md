@@ -335,6 +335,18 @@
 
 ## 1. Próxima Task
 
+**Ajuste avulso (pedido direto do autor, 2026-08-27, sem número de milestone) concluído** — o
+inventário de esquadrão ganhou o mesmo editor "Editar informações" de item custom que já existia
+na ficha (nome/custo/peso/descrição; categoria/dano/informação/resistência/bônus/quantidade/
+modificações continuam travados), com um `PATCH` novo (`CampanhaInventarioItemAlterarDto`) porque
+esse inventário é REST puro. Durante a edição, toda a lista (cabeçalho e demais itens) fica
+desabilitada e com estilo `:disabled` de verdade — antes desta task o seletor de Categoria não
+tinha nenhum estado desabilitado visual, apesar de já existir a intenção de travá-lo. **Mesmo dia:**
+o autor achou o defeito irmão já existente na ficha do agente (`ficha-inventario.component.scss`
+nunca teve `:disabled` na Categoria, apesar do template já desabilitá-la há mais tempo) — corrigido
+com a mesma regra. Ver `HISTORY.md` para o relato completo, incluindo a armadilha de build
+(`shared/dist` desatualizado) documentada na skill `verify`.
+
 **Ajustes avulsos concluídos no Caderno (pedidos diretos do autor, 2026-08-25/26):** a importação
 de um `.md` cria e persiste imediatamente uma página com título vindo do arquivo, normaliza front
 matter/BOM/CRLF/imagens e o editor Milkdown usa GFM para tabelas. A barra agora explica todas as

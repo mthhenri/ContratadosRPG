@@ -12,6 +12,7 @@ import {
   CampanhaEstadoAlteradaDto,
   CampanhaInventarioDto,
   CampanhaInventarioItemAdicionarDto,
+  CampanhaInventarioItemAlterarDto,
   CampanhaEntrarDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
@@ -125,6 +126,16 @@ export class CampanhaService {
   ): Observable<CampanhaInventarioDto> {
     return this.httpClient
       .post<StandardResponse<CampanhaInventarioDto>>(`${this.base}/${id}/inventario/item`, dto)
+      .pipe(map((resposta) => resposta.dados as CampanhaInventarioDto));
+  }
+
+  alterarItemInventario(
+    id: number,
+    itemId: string,
+    dto: Omit<CampanhaInventarioItemAlterarDto, 'campanhaId' | 'itemId'>,
+  ): Observable<CampanhaInventarioDto> {
+    return this.httpClient
+      .patch<StandardResponse<CampanhaInventarioDto>>(`${this.base}/${id}/inventario/item/${itemId}`, dto)
       .pipe(map((resposta) => resposta.dados as CampanhaInventarioDto));
   }
 

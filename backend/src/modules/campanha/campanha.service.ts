@@ -15,6 +15,7 @@ import type {
   CampanhaInternoAlterarDto,
   CampanhaInventarioDto,
   CampanhaInventarioItemAdicionarDto,
+  CampanhaInventarioItemAlterarDto,
   CampanhaInventarioItemDto,
   CampanhaInventarioItemQuantidadeAjustarDto,
   CampanhaInventarioItemRemoverDto,
@@ -352,6 +353,44 @@ export class CampanhaService {
           bonus: dto.bonus,
           ...(dto.modificacoes?.length ? { modificacoes: dto.modificacoes } : {}),
         }];
+    const inventarioAlterado = await this.campanhaRepositorio.alterarInventario({
+      campanhaId: dto.campanhaId,
+      itens: itensNovos,
+    });
+    this.campanhaGateway.emitirInventarioAlterado({ campanhaId: dto.campanhaId });
+    return inventarioAlterado;
+  }
+
+  /**
+   * Altera nome/custo/peso/descrição de um item existente — respeita o gate. Campos mecânicos
+   * (categoria, dano, informação, resistência, bônus), quantidade e modificações permanecem
+   * intocados, mesmo recorte do editor análogo na ficha (`FichaInventario.confirmarEdicaoItem`).
+   */
+  async alterarItemInventario(
+    dto: CampanhaInventarioItemAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    await this.validarAcessoInventario({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    const itensAtuais = await this.campanhaRepositorio.recuperarInventario({ campanhaId: dto.campanhaId });
+    if (!itensAtuais.some((item) => item.id === dto.itemId)) {
+      throw new ResourceNotFoundException('Item do inventário de esquadrão');
+    }
+
+    const itensNovos = itensAtuais.map((item) => {
+      if (item.id !== dto.itemId) {
+        return item;
+      }
+      const itemSemDescricao = { ...item };
+      delete itemSemDescricao.descricao;
+      return {
+        ...itemSemDescricao,
+        nome: dto.nome,
+        custo: dto.custo,
+        peso: dto.peso,
+        ...(dto.descricao ? { descricao: dto.descricao } : {}),
+      };
+    });
+
     const inventarioAlterado = await this.campanhaRepositorio.alterarInventario({
       campanhaId: dto.campanhaId,
       itens: itensNovos,

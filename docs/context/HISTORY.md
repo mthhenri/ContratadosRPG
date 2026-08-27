@@ -1,5 +1,59 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — Inventário de esquadrão ganha edição de item custom
+
+Ajuste avulso pedido direto pelo autor: poder editar um item custom já guardado no inventário de
+esquadrão, igual ao editor "Editar informações" que já existe no inventário da ficha
+(`FichaInventario.confirmarEdicaoItem`). Como o inventário de esquadrão é REST puro (sem o padrão
+"componente controlado, página persiste" da ficha), a mudança precisou de uma rota nova: DTO
+`CampanhaInventarioItemAlterarDto` (`shared/dtos/campanha`) e `PATCH
+:id/inventario/item/:itemId` (`CampanhaController.alterarItemInventario` →
+`CampanhaService.alterarItemInventario`), com o mesmo recorte da ficha — só nome, custo, peso e
+descrição mudam; categoria, dano, informação, resistência, bônus, quantidade e modificações
+continuam intocados. `InventarioEsquadrao` ganhou o lápis "Editar informações" ao lado do nome,
+visível só em itens custom (`ehItemCustom`, mesmo teste de `!CATALOGO_ITENS[categoria]?.some(...)`
+da ficha) e reaproveita o formulário existente de item custom: ao entrar em edição, Categoria/
+Dano/Informação/Resistência/Bônus ficam desabilitados, Quantidade e o botão "Modificações" somem,
+e o rótulo do botão principal muda para "Salvar alterações".
+
+Durante a implementação o autor pediu, no meio da mesma sessão, dois ajustes de acompanhamento:
+(1) enquanto a edição está aberta, **todo o resto da lista fica travado** — os botões de cabeçalho
+"Item custom"/"Adicionar itens", o lápis de outros itens e, por item, quantidade (−/+), "Pegar" e
+remover ficam `disabled` (guardado tanto no template quanto nos métodos do componente, dupla
+camada); e (2) o seletor de Categoria desabilitado **parecia clicável** (cursor de ponteiro, cor
+normal) — sem nenhum estilo `:disabled` antes desta task, ele já era clicável de verdade e não
+tinha motivo pra parecer diferente. Corrigido com regras `:disabled` (opacidade reduzida, cor
+esmaecida, `cursor: default`/`not-allowed`, `pointer-events: none` nos botões de quantidade/
+remover) em todos os controles que passaram a travar.
+
+Testado: `shared` 738/738 (sem mudança de contagem — só um DTO novo), `backend` (suíte de
+campanha) 80/80, `frontend` (specs de `inventario-esquadrao`/`campanha.service`) 25/25; typecheck
+do frontend limpo. Verificado ao vivo (Postgres+backend+frontend reais, Playwright, mestre sem
+combatentes na campanha): criar um item custom "Operacional", entrar em edição, confirmar que
+Categoria/Dano/Informação/Resistência/Bônus ficam bloqueados e Quantidade/Modificações somem,
+confirmar que os botões de cabeçalho e os de cada item (quantidade, Pegar, remover) ficam
+desabilitados e visualmente esmaecidos nos dois viewports (`1920×1080`/`360×800`), salvar (nome e
+custo mudam de fato via `PATCH`, persistido) e recarregar a página no mobile para confirmar que o
+valor sobrevive a um GET novo. **Achado só na verificação ao vivo:** o backend resolve
+`@contratados-rpg/shared/*` do pacote publicado (`shared/dist`), não do `shared/src` — o processo
+`nest start --watch` já estava de pé com o DTO antigo e continuou compilando com sucesso (via
+transpile-only) mesmo com o import do DTO novo inexistente, respondendo 404 na rota nova até
+`shared` ser reconstruído (`npm run build --workspace=shared`) e o backend reiniciado; documentado
+como armadilha na skill `verify` (`.claude/` e `.agents/`) para não repetir a confusão.
+
+**Correção, mesmo dia:** o autor testou a ficha do agente (não só o esquadrão) e apontou que o
+mesmo problema — "Categoria" desabilitada durante a edição de item custom, mas com aparência de
+clicável — já existia ali há mais tempo: `ficha-inventario.component.scss` nunca teve nenhuma
+regra `:disabled` para `&__categoria-select-gatilho`, apesar de o template já desabilitar esse
+botão (`[disabled]="editandoItemIndice() !== null"`) desde antes desta sessão. Aplicada a mesma
+correção (`opacity: .5`, `color: var(--text-mute)`, `cursor: default`). Verificado ao vivo
+(Postgres+backend+frontend reais, ficha de agente criada via `POST /ficha` com `dados` montado
+reaproveitando `calcularVida`/`calcularEnergia`/`calcularDerivados`/`habilidadesIniciais`/
+`rolarDinheiroInicial` de `shared/regras`, já que o seed de dev está quebrado — `P-023`): abrir
+"Editar item custom" na aba Inventário mostra a Categoria com opacidade reduzida, cor esmaecida e
+sem cursor de ponteiro (confirmado por estilo computado, não só visualmente). `frontend`
+(`ficha-inventario`) 165/165, typecheck limpo.
+
 ## 2026-08-26 — Especificado o recorte de resistência-base para Maestria e Tanque
 
 O autor esclareceu que Maestria de Vigor e Tanque não incidem sobre resistências adicionadas por

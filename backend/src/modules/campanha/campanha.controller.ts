@@ -11,6 +11,7 @@ import type {
   CampanhaEstadoAlterarDto,
   CampanhaInventarioDto,
   CampanhaInventarioItemAdicionarDto,
+  CampanhaInventarioItemAlterarDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMestreTransferidoDto,
@@ -136,6 +137,19 @@ export class CampanhaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<CampanhaInventarioDto> {
     return this.campanhaService.adicionarItemInventario({ ...dto, campanhaId: id }, usuarioAtivo);
+  }
+
+  @Patch(':id/inventario/item/:itemId')
+  alterarItemInventario(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('itemId') itemId: string,
+    @Body() dto: Omit<CampanhaInventarioItemAlterarDto, 'campanhaId' | 'itemId'>,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaInventarioDto> {
+    return this.campanhaService.alterarItemInventario(
+      { ...dto, campanhaId: id, itemId },
+      usuarioAtivo,
+    );
   }
 
   @Delete(':id/inventario/item/:itemId')

@@ -20,6 +20,18 @@ npm run frontend:dev                      # 4300 (proxy → 3100, inclui /socket
 iniciado *antes* de um `npm install` não enxerga dependência nova — se a mudança adicionou
 pacote, suba um frontend próprio numa porta isolada em vez de confiar no que está no ar.
 
+### Armadilha: DTO novo em `shared/` não aparece no backend rodando
+
+O backend importa `@contratados-rpg/shared/*` pelo pacote publicado (resolve para `shared/dist`,
+não para `shared/src`). `nest start --watch` recompila e reinicia sozinho a cada save em
+`backend/src`, mas **não** detecta mudanças em `shared/src` — um DTO/enum novo só aparece no
+backend depois de `npm run build --workspace=shared`. Sintoma: `tsc`/testes de `shared` e
+`backend` passam isoladamente, mas a rota nova responde 404 ("Cannot PATCH/POST/...") ou o
+compilador do `nest start --watch` acusa `TS2724: has no exported member` mesmo com o código
+correto. Rode o build do `shared` **antes** de testar contra o backend já em execução; se o
+processo já tentou subir com o import quebrado e morreu por `EADDRINUSE` numa tentativa seguinte,
+mate o processo órfão (`netstat -ano | grep :3100`) antes de reiniciar.
+
 ### Armadilha: `Origin` e o 500 fantasma
 
 `APP_FRONTEND_ORIGEM` no `.env` é `http://localhost:4300`. O Chrome manda `Origin` em

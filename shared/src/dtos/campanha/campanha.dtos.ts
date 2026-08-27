@@ -412,6 +412,21 @@ export interface CampanhaInventarioItemAdicionarDto {
   readonly modificacoes?: readonly ModificacaoAplicadaDto[];
 }
 
+/**
+ * Entrada de alterar informações descritivas de um item existente — `campanhaId`/`itemId` vêm do
+ * `@Param`, os demais campos do corpo. Mesmo recorte do editor análogo na ficha
+ * (`FichaInventario.confirmarEdicaoItem`): só nome/custo/peso/descrição mudam; categoria, dano,
+ * informação, resistência, bônus, quantidade e modificações permanecem intocados.
+ */
+export interface CampanhaInventarioItemAlterarDto {
+  readonly campanhaId: number;
+  readonly itemId: string;
+  readonly nome: string;
+  readonly custo: number;
+  readonly peso: number;
+  readonly descricao?: string;
+}
+
 /** Entrada de remover item inteiro — `campanhaId`/`itemId` vêm do `@Param`. */
 export interface CampanhaInventarioItemRemoverDto {
   readonly campanhaId: number;

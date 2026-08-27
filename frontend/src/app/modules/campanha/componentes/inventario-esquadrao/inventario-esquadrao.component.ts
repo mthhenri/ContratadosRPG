@@ -77,6 +77,9 @@ export class InventarioEsquadrao {
 
   protected readonly catalogoAberto = signal(false);
   protected readonly criandoItem = signal(false);
+  /** `id` do item custom em edição (m3-14-esquadrão), ou `null`. Mesmo recorte da ficha —
+   *  só nome/custo/peso/descrição mudam; categoria/dano/informação/resistência/bônus ficam travados. */
+  protected readonly editandoItemId = signal<string | null>(null);
   protected readonly categoriaItemSelectAberta = signal(false);
   protected readonly busca = new FormControl('', { nonNullable: true });
   protected readonly categoriaAtiva = new FormControl(ItemCategoriaEnum.OPERACIONAL, { nonNullable: true });
@@ -167,7 +170,7 @@ export class InventarioEsquadrao {
   }
 
   protected alternarCatalogo(): void {
-    if (this.somenteLeitura()) return;
+    if (this.somenteLeitura() || this.editandoItemId()) return;
     this.catalogoAberto.update((aberto) => !aberto);
     if (this.catalogoAberto()) {
       this.criandoItem.set(false);
@@ -176,7 +179,7 @@ export class InventarioEsquadrao {
   }
 
   protected alternarCriarItem(): void {
-    if (this.somenteLeitura()) return;
+    if (this.somenteLeitura() || this.editandoItemId()) return;
     if (this.criandoItem()) {
       this.cancelarCriarItem();
       return;
@@ -194,6 +197,57 @@ export class InventarioEsquadrao {
     this.criandoItem.set(false);
     this.categoriaItemSelectAberta.set(false);
     this.modificacoesItemCustom.set([]);
+  }
+
+  /** `true` quando nome/categoria não correspondem a um item do catálogo canônico (mesmo teste da ficha). */
+  protected ehItemCustom(item: CampanhaInventarioItemDto): boolean {
+    return !CATALOGO_ITENS[item.categoria]?.some((catalogo) => catalogo.nome === item.nome);
+  }
+
+  /** Abre o formulário de item custom preenchido pelo item atual — só nome/custo/peso/descrição ficam editáveis. */
+  protected abrirEdicaoItem(item: CampanhaInventarioItemDto): void {
+    if (this.somenteLeitura()) return;
+    this.itemCustomForm.reset({
+      nome: item.nome,
+      categoria: item.categoria,
+      custo: item.custo,
+      peso: item.peso,
+      quantidade: item.quantidade,
+      descricao: item.descricao ?? '',
+      dano: item.dano ?? '',
+      informacao: item.informacao ?? '',
+      resistencia: item.resistencia ?? '',
+      bonus: item.bonus ?? '',
+    });
+    this.modificacoesItemCustom.set(item.modificacoes ?? []);
+    this.criandoItem.set(false);
+    this.catalogoAberto.set(false);
+    this.categoriaItemSelectAberta.set(false);
+    this.editandoItemId.set(item.id);
+  }
+
+  /** Cancela a edição de informações sem alterar o item. */
+  protected cancelarEdicaoItem(): void {
+    this.editandoItemId.set(null);
+    this.categoriaItemSelectAberta.set(false);
+  }
+
+  /** Persiste nome, descrição, custo e peso do item custom em edição, sem tocar campos mecânicos. */
+  protected confirmarEdicaoItem(): void {
+    const itemId = this.editandoItemId();
+    if (itemId === null || this.somenteLeitura() || this.itemCustomForm.invalid || this.operando()) return;
+    const bruto = this.itemCustomForm.getRawValue();
+    const descricao = bruto.descricao.trim();
+    this.operando.set(true);
+    this.campanhaService.alterarItemInventario(this.campanhaId(), itemId, {
+      nome: bruto.nome.trim(),
+      custo: Math.max(0, bruto.custo),
+      peso: Math.max(0, bruto.peso),
+      ...(descricao ? { descricao } : {}),
+    }).pipe(finalize(() => this.operando.set(false))).subscribe((resultado) => {
+      this.atualizado.emit(resultado.itens);
+      this.cancelarEdicaoItem();
+    });
   }
 
   protected alternarCategoriaItemSelect(): void {
@@ -363,13 +417,13 @@ export class InventarioEsquadrao {
   }
 
   protected ajustar(itemId: string, delta: number): void {
-    if (this.somenteLeitura()) return;
+    if (this.somenteLeitura() || this.editandoItemId()) return;
     this.campanhaService.ajustarQuantidadeItemInventario(this.campanhaId(), itemId, delta)
       .subscribe((resultado) => this.atualizado.emit(resultado.itens));
   }
 
   protected solicitarRemocao(itemId: string): void {
-    if (this.somenteLeitura()) return;
+    if (this.somenteLeitura() || this.editandoItemId()) return;
     this.itemConfirmandoRemocao.set(itemId);
   }
 
@@ -378,7 +432,7 @@ export class InventarioEsquadrao {
   }
 
   protected confirmarRemocao(itemId: string): void {
-    if (this.somenteLeitura()) return;
+    if (this.somenteLeitura() || this.editandoItemId()) return;
     this.campanhaService.removerItemInventario(this.campanhaId(), itemId)
       .subscribe((resultado) => {
         this.itemConfirmandoRemocao.set(null);
@@ -387,7 +441,7 @@ export class InventarioEsquadrao {
   }
 
   protected abrirTransferencia(item: CampanhaInventarioItemDto): void {
-    if (this.somenteLeitura()) return;
+    if (this.somenteLeitura() || this.editandoItemId()) return;
     this.transferencia.set(item);
     this.fichaDestino.setValue(this.fichas()[0]?.id ?? null);
     this.quantidade.setValue(item.quantidade);

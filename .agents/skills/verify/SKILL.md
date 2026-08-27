@@ -22,6 +22,12 @@ dependência, reinicie o processo que a utiliza ou suba-o em uma porta isolada.
 Ao usar outra porta, mantenha `APP_FRONTEND_ORIGEM` do backend igual à origem do
 frontend; caso contrário, PUT/POST/DELETE podem aparecer como erro 500 por CORS.
 
+O backend importa `@contratados-rpg/shared/*` do pacote publicado (`shared/dist`), não de
+`shared/src`. `nest start --watch` recompila sozinho a cada save em `backend/src`, mas não
+detecta mudanças em `shared/src` — um DTO/enum novo só chega ao backend depois de
+`npm run build --workspace=shared`. Sintoma: a rota nova responde 404 mesmo com o código
+correto, ou o watcher acusa `TS2724: has no exported member`.
+
 Exemplo de stack isolado:
 
 ```bash

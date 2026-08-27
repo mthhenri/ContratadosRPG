@@ -10,9 +10,11 @@
   &__adicionar { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 7px 12px; border: 0; border-radius: var(--radius-control); background: var(--accent); color: var(--bg); font: 600 11px var(--font-mono); cursor: pointer; white-space: nowrap; }
   &__adicionar app-icone { display: inline-flex; width: 13px; height: 13px; }
   &__adicionar:hover { filter: brightness(1.08); }
+  &__adicionar:disabled { opacity: .45; cursor: not-allowed; filter: none; }
   &__item-custom { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 7px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: transparent; color: var(--text-dim); font: 600 11px var(--font-mono); cursor: pointer; white-space: nowrap; }
   &__item-custom app-icone { display: inline-flex; width: 13px; height: 13px; }
   &__item-custom:hover, &__item-custom:focus-visible { border-color: var(--accent-border); color: var(--accent); outline: none; }
+  &__item-custom:disabled { opacity: .45; cursor: not-allowed; border-color: var(--border-strong); color: var(--text-dim); }
   &__form { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface-2); }
   &__form-linha { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
   &__form-linha--numeros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -30,6 +32,7 @@
   &__mini-btn:hover { background: var(--surface-2); color: var(--accent); }
   &__categoria-select { position: relative; }
   &__categoria-select-gatilho { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); color: var(--text); font: 13px var(--font-mono); text-align: left; cursor: pointer; }
+  &__categoria-select-gatilho:disabled { opacity: .5; color: var(--text-mute); cursor: default; }
   &__categoria-select-gatilho app-icone, &__categoria-select-opcao app-icone { display: inline-flex; flex: none; width: 14px; height: 14px; color: var(--accent); }
   &__categoria-select-gatilho span { flex: 1; }
   &__categoria-select-chevron { width: 11px !important; height: 11px !important; color: var(--text-mute) !important; }
@@ -75,7 +78,10 @@
   &__lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
   &__item { display: grid; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface-2); }
   &__item-identidade { display: grid; gap: 3px; min-width: 0; flex: 1; }
-  &__item-identidade strong { color: var(--text); font: 700 12px var(--font-mono); }
+  &__item-identidade strong { display: inline-flex; align-items: center; color: var(--text); font: 700 12px var(--font-mono); }
+  &__item-editar { display: inline-flex; align-items: center; margin-left: 6px; padding: 3px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text-mute); cursor: pointer; }
+  &__item-editar app-icone { display: inline-flex; width: 12px; height: 12px; }
+  &__item-editar:hover, &__item-editar:focus-visible { color: var(--accent); outline: none; }
   &__categoria { color: var(--accent); font: 700 10px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); }
   &__mods-ativas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
   &__mod-tag { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--text-dim); font: 11px var(--font-sans); overflow-wrap: anywhere; }
@@ -84,6 +90,7 @@
   &__quantidade { border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; }
   &__quantidade button, &__remover { width: 32px; height: 32px; border: 0; background: transparent; color: var(--text-dim); cursor: pointer; }
   &__quantidade button:hover { background: var(--surface); color: var(--accent); }
+  &__quantidade button:disabled, &__remover:disabled { opacity: .4; color: var(--text-mute); cursor: not-allowed; background: transparent; pointer-events: none; }
   &__quantidade output { min-width: 30px; text-align: center; color: var(--text); font: 600 12px var(--font-mono); }
   &__pegar { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 10px; border: 1px solid var(--accent-border); border-radius: var(--radius-control); background: var(--accent-dim); color: var(--accent); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); cursor: pointer; }
   &__pegar:hover:not(:disabled), &__pegar:focus-visible { background: var(--accent); color: var(--bg); outline: none; }
@@ -139,6 +146,7 @@
     &__busca { min-height: 44px; }
     &__categoria-opcao { min-height: 44px; padding: 9px 14px; }
     &__item-acoes { flex-wrap: wrap; }
+    &__item-editar { padding: 10px; margin: -10px -10px -10px -4px; }
     &__catalogo-lista { grid-template-columns: 1fr; max-height: none; overflow-y: visible; padding-right: 0; }
     &__catalogo-adicionar { min-height: 44px; }
     &__catalogo-modificar { min-height: 44px; }
