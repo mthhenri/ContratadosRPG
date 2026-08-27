@@ -335,8 +335,8 @@
 
 ## 1. Próxima Task
 
-**`skills-01`…`skills-09` (as nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
-fila de milestone) concluídas.** Estado atual: as duas pastas de skill
+**Módulo `skills-agentes` concluído:** a spec guarda-chuva e as nove tasks `skills-01`…`skills-09`
+(fora da fila de milestone) estão em `docs/specs/done/`. Estado atual: as duas pastas de skill
 (`.claude/skills/`↔`.agents/skills/`) estão 100% idênticas (`diff -r` vazio) — `dto-conventions`
 (corrigida), `verify` (corrigida), `task-flow`, `sql-migrations`, `design-fidelity` e
 `regras-do-jogo`, `convencoes-check` e `tempo-real` (as seis últimas, skills novas). `task-flow` reúne o fluxo de spec e o fecho de task, com
@@ -357,7 +357,9 @@ pós-REST, salas, assinantes e a ponte `emitirFichaAlterada` →
 para ficha, resumo público, mini-card, Iniciativa e recorte de revelação. Tasks puramente
 documentais — sem mudança de código de produto além das próprias `SKILL.md`, com
 validação por uso real em cada uma (comandos executados, migration hipotética escrita, tela
-aprovada comparada ao vivo — não só citação copiada da spec).
+aprovada comparada ao vivo — não só citação copiada da spec). A auditoria de fecho confirmou as
+9 specs, os 8 diretórios de skill, frontmatter/nomes corretos, teto de 150 linhas e espelhamento
+sem diferença.
 
 **Ajuste avulso (pedido direto do autor, 2026-08-27, sem número de milestone) concluído** — o
 inventário de esquadrão ganhou o mesmo editor "Editar informações" de item custom que já existia

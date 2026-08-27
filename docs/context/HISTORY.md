@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — módulo `skills-agentes`: guarda-chuva concluído
+
+Com as nove tasks numeradas em `done`, a spec guarda-chuva `skills-agentes` foi encerrada. A
+auditoria final encontrou exatamente as oito skills previstas (`dto-conventions`, `verify`,
+`task-flow`, `sql-migrations`, `design-fidelity`, `regras-do-jogo`, `convencoes-check` e
+`tempo-real`) nas duas árvores espelhadas. Todos os `SKILL.md` têm frontmatter com nome compatível,
+description de gatilho e até 91 linhas; `git diff --no-index -- .claude/skills .agents/skills`
+retornou 0.
+
+Os critérios do conjunto estão cumpridos: `MEMORY.md` orienta onde as skills vivem e quando usá-las,
+sem duplicar regras; o contrato canônico permanece em `AGENTS.md`/`CLAUDE.md`; cada task registrou
+o próprio exercício prático. Os problemas que motivaram as skills continuam fora do escopo, nos
+itens e specs próprios. Sem mudança de produto ou UI neste fecho; não se aplicam build, lint,
+testes ou gate visual.
+
 ## 2026-08-27 — `skills-09`: nova skill `tempo-real` percorre a propagação antes de uma mudança de ficha
 
 Nona e última task de `skills-agentes.spec.md`. As cópias idênticas de `tempo-real` em
