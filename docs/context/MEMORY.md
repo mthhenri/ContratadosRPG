@@ -27,7 +27,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | Protótipos aprovados (fidelidade 1:1) | [`docs/design/examples/`](../design/examples/) | montar uma tela nova |
 | Schema SQL + forma dos documentos JSONB | [`docs/SCHEMA.md`](../SCHEMA.md) | escrever migration ou mexer em `ficha.dados` |
 | Nomenclatura de DTO | skill `dto-conventions` + `SYSTEM.SPEC.md` | nomear qualquer classe de entrada/saída |
-| Skills de agente — onde vivem e o contrato que cumprem | [`CLAUDE.md`](../../CLAUDE.md) "Sincronização com CLAUDE.md"/"Contrato comum a toda skill do projeto" — skills ficam em `.claude/skills/<nome>/SKILL.md`, cópia idêntica em `.agents/skills/<nome>/SKILL.md` | criar, corrigir ou revisar qualquer skill; escolher qual skill ler antes de um tipo de trabalho (hoje: `dto-conventions` antes de nomear DTO, `verify` antes de declarar uma UI pronta) |
+| Skills de agente — onde vivem e o contrato que cumprem | [`CLAUDE.md`](../../CLAUDE.md) "Sincronização com CLAUDE.md"/"Contrato comum a toda skill do projeto" — skills ficam em `.claude/skills/<nome>/SKILL.md`, cópia idêntica em `.agents/skills/<nome>/SKILL.md` | criar, corrigir ou revisar qualquer skill; escolher qual skill ler antes de um tipo de trabalho (hoje: `dto-conventions` antes de nomear DTO, `verify` antes de declarar uma UI pronta, `task-flow` antes de abrir/implementar/fechar qualquer task) |
 | Runbook de deploy | [`docs/DEPLOY.md`](../DEPLOY.md) | mexer em produção |
 | Banco local, reset, fixtures e credenciais dev | [`docs/DEVELOPMENT.md`](../DEVELOPMENT.md) + `backend/tools/database/` | recriar ou popular o ambiente local |
 | Pendências operacionais do M1 | [`docs/PARIDADE-M1.md`](../PARIDADE-M1.md) | fechar o M1 de fato |
@@ -150,6 +150,10 @@ usuários), use a skill `verify` do projeto.
 
 ## 5. Fluxo de uma task
 
-Definido no [`CLAUDE.md`](../../CLAUDE.md) ("Task Workflow"). Em uma linha: mover a spec de
-`backlog/` para `active/` → implementar **exatamente** o que a spec define, sem extrapolar → mover a
-spec para `done/` → registrar em `docs/context/` (relato em `HISTORY.md`, estado em `CONTEXT.md`).
+Definido no [`CLAUDE.md`](../../CLAUDE.md) ("Fluxo orientado por especificação" e "Gate
+obrigatório de qualidade e conclusão") — a ordem de execução e os formatos copiáveis de
+`docs/context/` estão reunidos na skill `task-flow`; use-a para abrir, implementar e fechar
+qualquer task, em vez de reler o `CLAUDE.md` inteiro toda vez. Em uma linha: mover a spec de
+`backlog/` para `active/` (spec nova: partir de `docs/specs/TEMPLATE.spec.md`) → implementar
+**exatamente** o que a spec define, sem extrapolar → mover a spec para `done/` → registrar em
+`docs/context/` (relato em `HISTORY.md`, estado em `CONTEXT.md`).

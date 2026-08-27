@@ -1,5 +1,51 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-04`: nova skill `task-flow` reúne o fluxo de spec e o fecho de task
+
+Quarta das nove tasks de `skills-agentes.spec.md` — primeira das cinco que **cria** skill nova
+(as três anteriores só corrigiram o que já existia). Motivação: `PROBLEMS.md` `P-002` (11 commits
+reais entraram depois da `m3-27` sem nenhum registro em `HISTORY.md`, porque vieram por PR fora do
+fluxo) e `P-028` (implementação commitada antes do gate visual) são os dois sintomas mais visíveis
+de que o fluxo de spec e o fecho de task — a regra mais longa do `CLAUDE.md` — é também a mais
+violada na prática. Não havia template de spec no repositório; cada spec nova era escrita imitando
+outra à mão.
+
+**O que foi criado:**
+- `task-flow/SKILL.md` (nas duas pastas, idênticas, 105 linhas): ordem de execução Abrir →
+  Implementar → Gates → Fechar → Fecho auditável, com a tabela de comandos reais por workspace
+  (teste focado, suíte completa, lint) e os formatos copiáveis de `PROBLEMS.md`/`IDEAS.md`. Ponteiro
+  para `CLAUDE.md` como fonte da regra — a skill não a reescreve, só reúne a ordem e os formatos, que
+  hoje não estavam juntos em lugar nenhum.
+- `docs/specs/TEMPLATE.spec.md`: seções obrigatórias (Objetivo, Entregáveis, Critérios de Aceite,
+  Fora de Escopo, Dependências) e opcional (Riscos e Mitigação), citando
+  `formatacao-legibilidade-frontend.spec.md` (avulsa) e `m4-06-regras-npc.spec.md` (milestone) como
+  referência.
+- Nota sobre trabalho que chega por PR fora do fluxo (`P-002`): a skill não decide a política em
+  aberto (`IDEAS.md` `I-003`) — só diz que o registro em `HISTORY.md` deve acontecer mesmo assim, e
+  aponta para `I-003` como a decisão pendente do autor.
+
+**Cada comando citado na tabela de Gates foi executado de verdade**, não só copiado do
+`package.json`: `npm run lint --workspace=shared` (0 erros, warnings pré-existentes), `npm run test
+--workspace=shared -- src/regras/encontro/ordem.spec.ts` (12/12), `npm run test --workspace=backend
+-- src/modules/ficha/ficha.repository.spec.ts` (6/6), `npm run test --workspace=frontend --
+--include=<arquivo> --list-tests` (confirma a sintaxe do builder Vitest do Angular 21, que aceita
+`--include` como glob), `npm run build --workspace=shared`.
+
+**Validação por uso** (critério de aceite obrigatório): o próprio fecho desta task foi escrito
+seguindo só o `task-flow/SKILL.md`, do zero. A skill se sustentou sozinha para os passos de
+"Fechar" (mover spec, formato do bloco de `HISTORY.md`, editar só as seções afetadas de
+`CONTEXT.md`, checar `PROBLEMS.md`/`IDEAS.md`/`MEMORY.md`). Único ponto que exigiu decisão fora do
+texto literal da skill: `MEMORY.md` não tinha ainda uma entrada citando `task-flow` — path
+esperado ("atualizar `MEMORY.md` quando algo descoberto sobreviver à tarefa"), resolvido
+adicionando `task-flow` ao ponteiro existente de "Skills de agente" e reescrevendo a §5 ("Fluxo de
+uma task") para apontar para a skill nova em vez de só o `CLAUDE.md`.
+
+`PROBLEMS.md`: `P-002` continua **aberto** — o bloco retroativo dos 11 commits é trabalho de
+conteúdo, explicitamente fora do escopo desta task (só o processo foi corrigido, não o buraco já
+existente). `IDEAS.md`: `I-003` continua em "Abertas" — a skill aponta para ela, mas a decisão de
+política é do autor, não desta task. Task puramente documental — sem mudança de código de produto,
+sem gate visual aplicável.
+
 ## 2026-08-27 — `skills-03`: `verify` alinhada pela versão rica, validada de ponta a ponta
 
 Terceira das nove tasks de `skills-agentes.spec.md`. Ao contrário de `skills-02`, aqui a cópia
