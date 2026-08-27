@@ -29,6 +29,25 @@
 
 ## Ativos
 
+### P-030 — Vida/Energia/Defesa/Esquiva/Bloqueio divergem entre a ficha e o painel do mestre · `ABERTO` · backend/ficha/encontro
+
+- **Sintoma:** o mini-card do Esquadrão (painel do mestre, `campanha/detalhe`) e o cartão de
+  combatente da Iniciativa mostram números menores de Vida máxima e Esquiva (e, pela mesma causa,
+  potencialmente Energia máxima/Defesa/Bloqueio) do que a ficha do mesmo agente aberta ao lado —
+  exemplo real do autor: `128`/`24` no painel contra `135`/`32` na ficha.
+- **Causa:** esses stats têm um valor **stored/calculado** persistido no JSONB (`dados.derivados`/
+  `dados.estado`) e um valor **efetivo** que a ficha soma por cima só na leitura (bônus de
+  amplificadores portados e de itens de Proteção equipados, nunca persistido de volta — filosofia
+  intencional, m3-10/m3-43). `FichaService.paraResumoPublico` e o mapper do Encontro
+  (`encontro-combatente.mapper.ts`) leem só o stored, sem aplicar esse "por cima" — mesma lacuna que
+  `contraAtaque` já teve parcialmente corrigida (`calcularContraAtaqueAoVivo`, m3-39), mas para um
+  problema diferente e sem cobrir amplificador/equipamento.
+- **Contorno:** nenhum — reabrir a ficha do agente mostra o valor correto; o painel do mestre e a
+  Iniciativa continuam desatualizados até a correção.
+- **Correção:** executar `docs/specs/backlog/ficha-resumo-stats-efetivos.spec.md`, que centraliza o
+  cálculo "efetivo" numa função pura compartilhada e a aplica nos dois consumidores de backend.
+- **Desde:** reportado pelo autor em 2026-08-27.
+
 ### P-029 — Bônus de Maestria de Vigor e Tanque alcançam resistência criada por modificação · `ABERTO` · regras/inventário
 
 - **Sintoma:** em uma Proteção com tipo de resistência criado por modificação — por exemplo,
