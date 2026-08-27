@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-26 — Base configura modificações antes de adicionar itens
+
+Concluída `modificar-itens-direto-inventario-esquadrao.spec.md`. O catálogo da base agora mantém
+o atalho direto para adicionar um item simples e acrescenta **Modificar**, que abre a seleção de
+modificações antes da confirmação. O formulário de Item custom usa a mesma seleção: um Machado
+custom e uma arma do catálogo, por exemplo, recebem as modificações canônicas válidas da categoria
+sem passar antes pela ficha.
+
+O seletor consome `listarModificacoesDisponiveis`, `verificarConflitoModificacao` e a escala de
+descrição de `shared/regras/compras`: respeita categoria, restrições específicas do catálogo,
+conflitos, empilhamentos iniciais e teto de cada modificação. A base não tenta aplicar prestígio,
+custo pessoal, fragmentos ou modificações livres, pois não há uma ficha proprietária para essas
+regras. A prévia e o item salvo usam o chip somente leitura já estabelecido no inventário.
+
+As regressões cobrem a adição modificada pelos dois caminhos. `shared` (738 testes), `backend`
+(461) e `frontend` (1.382) passaram; builds de todos os workspaces também passaram. O lint não
+teve erros, mas continua não-zero por 13.917 avisos históricos. A aplicação real foi conferida:
+em `1920×1080`, o diálogo manteve a densidade do inventário e não teve overflow; em `360×800`, a
+lista rolou verticalmente, os controles mantiveram 44px e não houve overflow horizontal. Os dois
+itens temporários adicionados durante a verificação foram removidos ao final.
+
 ## 2026-08-26 — Inventário de esquadrão preserva modificações estruturadas
 
 Concluída `preservar-modificacoes-inventario-esquadrao.spec.md` (`I-020`). O contrato de inventário

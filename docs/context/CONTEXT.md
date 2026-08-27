@@ -806,6 +806,11 @@ Remover um registro exige confirmação inline no próprio card. Modificações 
 preservadas nos dois sentidos da transferência ficha ↔ base; itens empilháveis só compartilham
 stack quando as modificações também são estruturalmente iguais. O card da base exibe as
 modificações como chip somente leitura, usando o mesmo texto de efeitos da ficha.
+Antes de adicionar, tanto o item do catálogo quanto o Item custom podem abrir o seletor de
+modificações canônicas: ele aplica categoria, restrições do item, conflitos e empilhamentos de
+`shared/regras/compras`, enquanto a base deliberadamente não calcula prestígio, custo pessoal,
+fragmentos ou modificações livres. O catálogo preserva a adição simples e oferece **Modificar**;
+o Item custom mostra uma prévia de seus chips antes da criação.
 No desktop, as sidebars compartilhadas de inventário de esquadrão e histórico de rolagens têm 500px;
 o histórico usa a mesma largura na campanha e na ficha. A pilha de atalhos flutuantes (inventário,
 histórico e calculadora, conforme a tela) fica a 24px do canto inferior esquerdo tanto na campanha

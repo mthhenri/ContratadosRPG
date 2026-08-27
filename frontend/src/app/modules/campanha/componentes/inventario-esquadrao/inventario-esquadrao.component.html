@@ -102,7 +102,21 @@
           <textarea class="inventario-esquadrao__entrada inventario-esquadrao__entrada--area" rows="2"
             formControlName="descricao" placeholder="O que o item é ou faz…"></textarea>
         </label>
+        @if (modificacoesItemCustom().length) {
+          <div class="inventario-esquadrao__mods-ativas" aria-label="Modificações configuradas">
+            @for (modificacao of modificacoesItemCustom(); track modificacao.nome) {
+              <div class="inventario-esquadrao__mod-tag">
+                <strong>{{ modificacao.nome }} ×{{ modificacao.empilhamentos }}</strong>
+                @if (descricaoModificacao(modificacao, { nome: itemCustomForm.controls.nome.value, categoria: categoriaCustom(), custo: itemCustomForm.controls.custo.value, peso: itemCustomForm.controls.peso.value, quantidade: itemCustomForm.controls.quantidade.value, modificacoes: modificacoesItemCustom() }); as descricao) {
+                  <span>{{ descricao }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
         <div class="inventario-esquadrao__form-acoes">
+          <button type="button" class="inventario-esquadrao__form-btn inventario-esquadrao__abrir-modificacoes-custom"
+            [disabled]="itemCustomForm.invalid || operando()" (click)="abrirConfiguracaoItemCustom()">Modificações</button>
           <button type="submit" class="inventario-esquadrao__form-btn inventario-esquadrao__form-btn--principal"
             [disabled]="itemCustomForm.invalid || operando()">Adicionar item</button>
           <button type="button" class="inventario-esquadrao__form-btn" (click)="cancelarCriarItem()">Cancelar</button>
@@ -140,12 +154,16 @@
                 <span class="inventario-esquadrao__catalogo-item-custo">${{ item.custo }}</span>
                 <span>{{ item.peso }} {{ item.peso === 1 ? 'slot' : 'slots' }}</span>
               </div>
-              <button class="inventario-esquadrao__catalogo-adicionar" type="button"
-                [class.inventario-esquadrao__catalogo-adicionar--feito]="itemAdicionado() === item.nome"
-                (click)="adicionar(item)" [disabled]="operando()">
-                <app-icone [nome]="itemAdicionado() === item.nome ? 'check' : 'mais'" />
-                {{ itemAdicionado() === item.nome ? 'Adicionado' : 'Adicionar' }}
-              </button>
+              <div class="inventario-esquadrao__catalogo-item-acoes">
+                <button class="inventario-esquadrao__catalogo-adicionar" type="button"
+                  [class.inventario-esquadrao__catalogo-adicionar--feito]="itemAdicionado() === item.nome"
+                  (click)="adicionar(item)" [disabled]="operando()">
+                  <app-icone [nome]="itemAdicionado() === item.nome ? 'check' : 'mais'" />
+                  {{ itemAdicionado() === item.nome ? 'Adicionado' : 'Adicionar' }}
+                </button>
+                <button class="inventario-esquadrao__catalogo-modificar" type="button" [disabled]="operando()"
+                  (click)="abrirConfiguracaoCatalogo(item)">Modificar</button>
+              </div>
             </article>
           } @empty {
             <p class="inventario-esquadrao__catalogo-vazio">Nenhum item encontrado nesta categoria.</p>
@@ -169,7 +187,7 @@
                   @for (modificacao of item.modificacoes; track $index) {
                     <div class="inventario-esquadrao__mod-tag">
                       <strong>{{ modificacao.nome }} ×{{ modificacao.empilhamentos }}</strong>
-                      @if (descricaoModificacao(modificacao); as descricao) {
+                      @if (descricaoModificacao(modificacao, item); as descricao) {
                         <span>{{ descricao }}</span>
                       }
                     </div>
@@ -218,6 +236,44 @@
     <footer class="dialogo__acoes">
       <button class="botao botao--secundario" type="button" (click)="transferencia.set(null)">Cancelar</button>
       <button class="botao botao--primario inventario-esquadrao__confirmar" type="button" [disabled]="operando()" (click)="confirmarTransferencia()">Confirmar</button>
+    </footer>
+  </section>
+  }
+  @if (configuracaoModificacoes(); as configuracao) {
+  <button class="dialogo__fundo" type="button" aria-label="Cancelar modificações" (click)="cancelarConfiguracaoModificacoes()"></button>
+  <section class="dialogo inventario-esquadrao__dialogo inventario-esquadrao__dialogo--modificacoes" role="dialog" aria-modal="true" aria-label="Modificar item">
+    <header class="dialogo__cabecalho"><h2>Modificar item</h2><p>{{ configuracao.item.nome }}</p></header>
+    <p class="inventario-esquadrao__modificacoes-ajuda">Selecione as modificações compatíveis. A base não usa prestígio ou custo pessoal.</p>
+    <div class="inventario-esquadrao__modificacoes-lista">
+      @for (modificacao of modificacoesDisponiveis(); track modificacao.nome) {
+        <article class="inventario-esquadrao__modificacao">
+          <div>
+            <strong>{{ modificacao.nome }}</strong>
+            <span>{{ escalarDescricaoCatalogoPorCompras(modificacao.nome, modificacao.descricao, quantidadeModificacao(modificacao) || modificacao.empilhamentosIniciais) }}</span>
+          </div>
+          <div class="inventario-esquadrao__modificacao-acoes">
+            @if (quantidadeModificacao(modificacao)) {
+              <button type="button" class="inventario-esquadrao__modificacao-remover" [attr.aria-label]="'Remover ' + modificacao.nome"
+                (click)="removerModificacao(modificacao)">−</button>
+              <output>{{ quantidadeModificacao(modificacao) }}×</output>
+            }
+            <button type="button" class="inventario-esquadrao__modificacao-adicionar" [disabled]="conflitoModificacao(modificacao) || quantidadeModificacao(modificacao) >= modificacao.empilhamentoMaximo"
+              (click)="adicionarModificacao(modificacao)">
+              {{ quantidadeModificacao(modificacao) ? '+' : 'Adicionar' }} {{ modificacao.nome }}
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <p class="inventario-esquadrao__catalogo-vazio">Não há modificações para esta categoria.</p>
+      }
+    </div>
+    <footer class="dialogo__acoes">
+      <button class="botao botao--secundario" type="button" (click)="cancelarConfiguracaoModificacoes()">Cancelar</button>
+      <button class="botao botao--primario inventario-esquadrao__confirmar-modificacoes"
+        [class.inventario-esquadrao__concluir-modificacoes-custom]="configuracao.origem === 'custom'"
+        type="button" [disabled]="operando()" (click)="confirmarModificacoes()">
+        {{ configuracao.origem === 'catalogo' ? 'Adicionar item' : 'Concluir modificações' }}
+      </button>
     </footer>
   </section>
   }

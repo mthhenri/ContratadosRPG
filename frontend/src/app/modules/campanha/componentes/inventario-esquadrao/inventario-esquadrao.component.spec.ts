@@ -49,6 +49,31 @@ describe('InventarioEsquadrao', () => {
     expect(raiz.textContent).toContain('Adicionado');
   });
 
+  it('adiciona um item do catálogo com modificação antes de confirmar', () => {
+    const raiz = fixture.nativeElement as HTMLElement;
+    (raiz.querySelector('.inventario-esquadrao__adicionar') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const abaCorpoACorpo = Array.from(raiz.querySelectorAll('.inventario-esquadrao__categoria-opcao')).find((botao) =>
+      botao.textContent?.includes('Corpo a Corpo'),
+    ) as HTMLButtonElement;
+    abaCorpoACorpo.click();
+    fixture.detectChanges();
+
+    (raiz.querySelector('.inventario-esquadrao__catalogo-modificar') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(raiz.textContent).toContain('Modificar item');
+    (Array.from(raiz.querySelectorAll('.inventario-esquadrao__modificacao-adicionar')).find((botao) =>
+      botao.textContent?.includes('Balanceada'),
+    ) as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (raiz.querySelector('.inventario-esquadrao__confirmar-modificacoes') as HTMLButtonElement).click();
+
+    expect(campanhaService.adicionarItemInventario).toHaveBeenCalledWith(8, expect.objectContaining({
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      modificacoes: [{ nome: 'Balanceada', empilhamentos: 1 }],
+    }));
+  });
+
   it('adiciona item customizado com os campos mecânicos representáveis pelo inventário coletivo', () => {
     const raiz = fixture.nativeElement as HTMLElement;
     const botao = Array.from(raiz.querySelectorAll('button')).find((item) =>
@@ -91,6 +116,30 @@ describe('InventarioEsquadrao', () => {
     fixture.componentInstance['confirmarCriarItem']();
 
     expect(campanhaService.adicionarItemInventario).not.toHaveBeenCalled();
+  });
+
+  it('adiciona item customizado com modificação canônica da sua categoria', () => {
+    fixture.componentInstance['alternarCriarItem']();
+    fixture.componentInstance['itemCustomForm'].patchValue({
+      nome: 'Machado da base', categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+    });
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    (raiz.querySelector('.inventario-esquadrao__abrir-modificacoes-custom') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (Array.from(raiz.querySelectorAll('.inventario-esquadrao__modificacao-adicionar')).find((botao) =>
+      botao.textContent?.includes('Balanceada'),
+    ) as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (raiz.querySelector('.inventario-esquadrao__concluir-modificacoes-custom') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    fixture.componentInstance['confirmarCriarItem']();
+
+    expect(campanhaService.adicionarItemInventario).toHaveBeenCalledWith(8, expect.objectContaining({
+      nome: 'Machado da base',
+      categoria: ItemCategoriaEnum.CORPO_A_CORPO,
+      modificacoes: [{ nome: 'Balanceada', empilhamentos: 1 }],
+    }));
   });
 
   it('filtra os itens do catálogo pela busca sem decorar o nome com ícone', () => {

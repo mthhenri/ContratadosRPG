@@ -8,8 +8,13 @@ import {
   CATALOGO_CATEGORIAS,
   CATALOGO_ITENS,
   descreverEfeitosModificacao,
+  escalarDescricaoCatalogoPorCompras,
+  listarModificacoesDisponiveis,
+  verificarConflitoModificacao,
+  type CarrinhoItemDto,
   type ItemCatalogo,
   type ModificacaoAplicadaDto,
+  type ModificacaoDados,
 } from '@contratados-rpg/shared/regras/compras';
 
 import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
@@ -17,6 +22,26 @@ import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 
 interface FichaDestinoInventario { readonly id: number; readonly nome: string; }
+
+interface DadosItemRascunho {
+  readonly nome: string;
+  readonly categoria: ItemCategoriaEnum;
+  readonly custo: number;
+  readonly peso: number;
+  readonly quantidade: number;
+  readonly descricao?: string;
+  readonly dano?: string;
+  readonly informacao?: string;
+  readonly resistencia?: string;
+  readonly bonus?: string;
+  readonly modificacoes?: readonly ModificacaoAplicadaDto[];
+}
+
+interface ConfiguracaoModificacoes {
+  readonly origem: 'catalogo' | 'custom';
+  readonly item: CarrinhoItemDto;
+  readonly itemCatalogo?: ItemCatalogo;
+}
 
 const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
   [ItemCategoriaEnum.CORPO_A_CORPO]: 'corpo-a-corpo',
@@ -70,6 +95,7 @@ export class InventarioEsquadrao {
       ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR].includes(categoria),
   );
   protected readonly iconesCategoria = ICONES_CATEGORIA;
+  protected readonly escalarDescricaoCatalogoPorCompras = escalarDescricaoCatalogoPorCompras;
   protected readonly itemCustomForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     categoria: new FormControl(ItemCategoriaEnum.OPERACIONAL, { nonNullable: true }),
@@ -101,6 +127,8 @@ export class InventarioEsquadrao {
   protected readonly itemAdicionado = signal<string | null>(null);
   protected readonly itemConfirmandoRemocao = signal<string | null>(null);
   protected readonly transferencia = signal<CampanhaInventarioItemDto | null>(null);
+  protected readonly configuracaoModificacoes = signal<ConfiguracaoModificacoes | null>(null);
+  protected readonly modificacoesItemCustom = signal<readonly ModificacaoAplicadaDto[]>([]);
   protected readonly fichaDestino = new FormControl<number | null>(null);
   protected readonly quantidade = new FormControl(1, { nonNullable: true });
   protected readonly itensCatalogo = computed(() => {
@@ -109,6 +137,13 @@ export class InventarioEsquadrao {
     return termo
       ? itens.filter((item) => `${item.nome} ${item.descricao ?? ''}`.toLocaleLowerCase('pt-BR').includes(termo))
       : itens;
+  });
+  protected readonly modificacoesEmConfiguracao = computed(() =>
+    this.configuracaoModificacoes()?.item.modificacoes ?? [],
+  );
+  protected readonly modificacoesDisponiveis = computed(() => {
+    const configuracao = this.configuracaoModificacoes();
+    return configuracao ? listarModificacoesDisponiveis(configuracao.item) : [];
   });
 
   protected rotuloCategoria(categoria: ItemCategoriaEnum): string {
@@ -119,9 +154,15 @@ export class InventarioEsquadrao {
     return item.dano ?? item.resistencia ?? item.bonus ?? item.informacao ?? null;
   }
 
-  protected descricaoModificacao(modificacao: ModificacaoAplicadaDto): string | null {
+  protected descricaoModificacao(modificacao: ModificacaoAplicadaDto, item?: DadosItemRascunho): string | null {
+    const descricaoCatalogo = item
+      ? listarModificacoesDisponiveis(this.criarRascunho(item)).find(({ nome }) => nome === modificacao.nome)?.descricao
+      : undefined;
     return descreverEfeitosModificacao(modificacao.efeitos, modificacao.empilhamentos)
       || modificacao.descricao
+      || (descricaoCatalogo
+        ? escalarDescricaoCatalogoPorCompras(modificacao.nome, descricaoCatalogo, modificacao.empilhamentos)
+        : null)
       || null;
   }
 
@@ -144,6 +185,7 @@ export class InventarioEsquadrao {
       nome: '', categoria: ItemCategoriaEnum.OPERACIONAL, custo: 0, peso: 1, quantidade: 1,
       descricao: '', dano: '', informacao: '', resistencia: '', bonus: '',
     });
+    this.modificacoesItemCustom.set([]);
     this.catalogoAberto.set(false);
     this.criandoItem.set(true);
   }
@@ -151,6 +193,7 @@ export class InventarioEsquadrao {
   protected cancelarCriarItem(): void {
     this.criandoItem.set(false);
     this.categoriaItemSelectAberta.set(false);
+    this.modificacoesItemCustom.set([]);
   }
 
   protected alternarCategoriaItemSelect(): void {
@@ -187,19 +230,25 @@ export class InventarioEsquadrao {
       ...(comDano && informacao ? { informacao } : {}),
       ...(this.mostraResistencia() && resistencia ? { resistencia } : {}),
       ...(this.mostraBonus() && bonus ? { bonus } : {}),
+      ...(this.modificacoesItemCustom().length ? { modificacoes: this.modificacoesItemCustom() } : {}),
     }).pipe(finalize(() => this.operando.set(false))).subscribe((resultado) => {
       this.atualizado.emit(resultado.itens);
       this.cancelarCriarItem();
     });
   }
 
-  protected adicionar(item: ItemCatalogo): void {
+  protected adicionar(
+    item: ItemCatalogo,
+    modificacoes: readonly ModificacaoAplicadaDto[] = [],
+    categoria = this.categoriaSelecionada(),
+  ): void {
     if (this.somenteLeitura() || this.operando()) return;
     this.operando.set(true);
     this.campanhaService.adicionarItemInventario(this.campanhaId(), {
-      nome: item.nome, categoria: this.categoriaSelecionada(), custo: item.custo, peso: item.peso,
+      nome: item.nome, categoria, custo: item.custo, peso: item.peso,
       quantidade: 1, descricao: item.descricao, dano: item.dano, informacao: item.informacao,
       resistencia: item.resistencia, bonus: item.bonus,
+      ...(modificacoes.length ? { modificacoes } : {}),
     }).pipe(finalize(() => this.operando.set(false))).subscribe((resultado) => {
       this.atualizado.emit(resultado.itens);
       this.itemAdicionado.set(item.nome);
@@ -207,6 +256,110 @@ export class InventarioEsquadrao {
         if (this.itemAdicionado() === item.nome) this.itemAdicionado.set(null);
       }, 900);
     });
+  }
+
+  protected abrirConfiguracaoCatalogo(item: ItemCatalogo): void {
+    if (this.somenteLeitura() || this.operando()) return;
+    this.configuracaoModificacoes.set({
+      origem: 'catalogo',
+      itemCatalogo: item,
+      item: this.criarRascunho({ ...item, categoria: this.categoriaSelecionada(), quantidade: 1 }),
+    });
+  }
+
+  protected abrirConfiguracaoItemCustom(): void {
+    if (this.somenteLeitura() || this.itemCustomForm.invalid || this.operando()) return;
+    const bruto = this.itemCustomForm.getRawValue();
+    this.configuracaoModificacoes.set({
+      origem: 'custom',
+      item: this.criarRascunho({
+        nome: bruto.nome.trim(), categoria: bruto.categoria, custo: Math.max(0, bruto.custo), peso: Math.max(0, bruto.peso),
+        quantidade: Math.max(1, bruto.quantidade), descricao: bruto.descricao.trim() || undefined,
+        dano: bruto.dano.trim() || undefined, informacao: bruto.informacao.trim() || undefined,
+        resistencia: bruto.resistencia.trim() || undefined, bonus: bruto.bonus.trim() || undefined,
+        modificacoes: this.modificacoesItemCustom(),
+      }),
+    });
+  }
+
+  protected adicionarModificacao(modificacao: ModificacaoDados): void {
+    const configuracao = this.configuracaoModificacoes();
+    if (!configuracao) return;
+    const atual = configuracao.item.modificacoes.find(({ nome }) => nome === modificacao.nome);
+    if (atual) {
+      if (atual.empilhamentos >= modificacao.empilhamentoMaximo) return;
+      this.definirModificacoesConfiguracao(configuracao.item.modificacoes.map((item) => item.nome === modificacao.nome
+        ? { ...item, empilhamentos: item.empilhamentos + 1 }
+        : item));
+      return;
+    }
+    if (verificarConflitoModificacao({ item: configuracao.item, modificacao: modificacao.nome }).bloqueada) return;
+    this.definirModificacoesConfiguracao([
+      ...configuracao.item.modificacoes,
+      { nome: modificacao.nome, empilhamentos: modificacao.empilhamentosIniciais },
+    ]);
+  }
+
+  protected removerModificacao(modificacao: ModificacaoDados): void {
+    const configuracao = this.configuracaoModificacoes();
+    if (!configuracao) return;
+    const atual = configuracao.item.modificacoes.find(({ nome }) => nome === modificacao.nome);
+    if (!atual) return;
+    this.definirModificacoesConfiguracao(atual.empilhamentos > modificacao.empilhamentosIniciais
+      ? configuracao.item.modificacoes.map((item) => item.nome === modificacao.nome
+        ? { ...item, empilhamentos: item.empilhamentos - 1 }
+        : item)
+      : configuracao.item.modificacoes.filter((item) => item.nome !== modificacao.nome));
+  }
+
+  protected quantidadeModificacao(modificacao: ModificacaoDados): number {
+    return this.modificacoesEmConfiguracao().find(({ nome }) => nome === modificacao.nome)?.empilhamentos ?? 0;
+  }
+
+  protected conflitoModificacao(modificacao: ModificacaoDados): boolean {
+    const configuracao = this.configuracaoModificacoes();
+    return !!configuracao && !this.quantidadeModificacao(modificacao)
+      && verificarConflitoModificacao({ item: configuracao.item, modificacao: modificacao.nome }).bloqueada;
+  }
+
+  protected confirmarModificacoes(): void {
+    const configuracao = this.configuracaoModificacoes();
+    if (!configuracao) return;
+    if (configuracao.origem === 'catalogo' && configuracao.itemCatalogo) {
+      this.configuracaoModificacoes.set(null);
+      this.adicionar(configuracao.itemCatalogo, configuracao.item.modificacoes, configuracao.item.categoria);
+      return;
+    }
+    this.modificacoesItemCustom.set(configuracao.item.modificacoes);
+    this.configuracaoModificacoes.set(null);
+  }
+
+  protected cancelarConfiguracaoModificacoes(): void {
+    this.configuracaoModificacoes.set(null);
+  }
+
+  private definirModificacoesConfiguracao(modificacoes: readonly ModificacaoAplicadaDto[]): void {
+    this.configuracaoModificacoes.update((configuracao) => configuracao ? {
+      ...configuracao,
+      item: { ...configuracao.item, modificacoes },
+    } : null);
+  }
+
+  private criarRascunho(item: DadosItemRascunho): CarrinhoItemDto {
+    return {
+      nome: item.nome,
+      categoria: item.categoria,
+      custo: item.custo,
+      peso: item.peso,
+      quantidade: item.quantidade,
+      guardada: true,
+      modificacoes: item.modificacoes ?? [],
+      ...(item.descricao ? { descricao: item.descricao } : {}),
+      ...(item.dano ? { dano: item.dano } : {}),
+      ...(item.informacao ? { informacao: item.informacao } : {}),
+      ...(item.resistencia ? { resistencia: item.resistencia } : {}),
+      ...(item.bonus ? { bonus: item.bonus } : {}),
+    };
   }
 
   protected ajustar(itemId: string, delta: number): void {
