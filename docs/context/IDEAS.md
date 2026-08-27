@@ -27,6 +27,13 @@
 
 ## Abertas
 
+### I-023 — Gate automático de convenções no CI · processo/qualidade
+
+- **Ideia:** executar o passe mecânico de `convencoes-check` automaticamente no CI para avisar sobre violações novas antes do merge, preservando a classificação manual para falsos positivos e regras semânticas.
+- **Origem:** `skills-08-convencoes-check.spec.md` (2026-08-27), que entrega o passe local mas mantém o gate de CI fora de escopo.
+- **Por quê:** o passe depende de ser lembrado no fecho; uma checagem automatizada reduziria a regressão das proibições detectáveis sem fingir que substitui revisão humana.
+- **Custo aparente:** script estável com allowlist versionada, integração em GitHub Actions e política para diferenciar dívida preexistente de linha nova.
+
 ### I-001 — Campanha com status, briefing e log de atividade · campanha
 
 - **Ideia:** dar à campanha os elementos que os protótipos aprovados já desenham mas o sistema não

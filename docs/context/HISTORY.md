@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-08`: nova skill `convencoes-check` torna o passe final de convenções repetível
+
+Oitava das nove tasks de `skills-agentes.spec.md`. Foram criadas cópias idênticas de
+`convencoes-check` em `.claude/skills/` e `.agents/skills/`: o `SKILL.md` (66 linhas) mantém o
+procedimento, a regra explícita de que o recorte é só o diff e a leitura manual obrigatória; a
+referência `references/buscas.md` (74 linhas) contém as buscas prontas, interpretação e falsos
+positivos. O passe lê diretamente o patch (`git diff --unified=0`) em vez de expandir todos os
+arquivos como argumentos — validação feita nesta task detectou que essa última forma ultrapassa o
+limite de argumentos do Windows numa auditoria total.
+
+As buscas cobrem identificadores `atualizar`/`atualizado`, DTO/enum, Angular standalone/formulário,
+SQL parametrizado/INSERT/SELECT/DELETE/configuração, e os contratos de estilo/frontend, incluindo
+as exceções de máscara/gradiente e `process.env` em comentários. A parte manual preserva o que grep
+não decide: controller fina, dono de permissão, motor puro, DTOs, repositórios e WebSocket. A skill
+declara que passe limpo não substitui revisão de diff, testes ou gate visual.
+
+**Validação por uso:** o passe completo rodou sobre o commit recente `fe9de3a` e sobre o diff desta
+task. No commit de código, os oito acertos de `?` foram ternários TypeScript, não SQL; as demais
+buscas não apontaram violação naquele recorte. A auditoria total da busca de nomenclatura reencontrou
+os dois casos previstos (`atualizadoEm` e `atualizarDados`) e outros identificadores preexistentes;
+nenhum foi corrigido aqui. A dívida foi registrada como `PROBLEMS.md` `P-032`, e o futuro gate de CI
+virou `IDEAS.md` `I-023`, mantendo o escopo desta task documental.
+
+Verificado: todas as buscas documentadas executaram sem erro de sintaxe, `git diff --check` limpo e
+`diff -r .claude/skills .agents/skills` vazio. Não houve mudança de UI nem código de produto; por
+isso não se aplica gate visual, build, lint ou suíte de testes.
+
 ## 2026-08-27 — `skills-07`: nova skill `regras-do-jogo` evita divergência entre documento, motor e consumidores
 
 Sétima das nove tasks de `skills-agentes.spec.md`. A skill nova `regras-do-jogo` foi criada nas

@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-032 — Convenção `alterar`/`alterado` ainda violada em identificadores existentes · `ABERTO` · compartilhado/frontend
+
+- **Sintoma:** identificadores de produção ainda usam `atualizar`/`atualizado`, contrariando a proibição explícita de `CONVENTIONS.md`. O passe de `skills-08` reencontrou ao menos `shared/src/dtos/campanha/campanha.dtos.ts:67` (`atualizadoEm`) e `frontend/src/app/modules/ficha/ficha-edicao-criatura.service.ts:110` (`atualizarDados`); a auditoria também mostra outros pontos, portanto não é defeito isolado.
+- **Causa:** não investigada; não havia passe mecânico de convenções no fecho das tasks.
+- **Contorno:** consumir os contratos/métodos atuais como estão; novos identificadores devem usar `alterar`/`alterado`.
+- **Correção:** especificar e executar uma migração de nomenclatura com todos os chamadores, testes e possível contrato público mapeados — não renomear de passagem.
+- **Desde:** anterior a `skills-08` (reencontrado em 2026-08-27).
+
 ### P-031 — Quatro migrations usam `ck_` em vez de `chk_` em CHECK constraint · `ABERTO` · backend/schema
 
 - **Sintoma:** `docs/CONVENTIONS.md` documenta o prefixo `chk_` para CHECK constraint, e
