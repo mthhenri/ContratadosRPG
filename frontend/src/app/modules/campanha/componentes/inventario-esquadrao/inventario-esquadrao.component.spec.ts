@@ -126,6 +126,19 @@ describe('InventarioEsquadrao', () => {
     expect(fichaService.pegarItemInventario).toHaveBeenCalledWith(3, 'item-1', 2);
   });
 
+  it('exibe as modificações preservadas no card do item', () => {
+    fixture.componentRef.setInput('itens', [{
+      id: 'item-1', nome: 'Colete Reforçado', categoria: ItemCategoriaEnum.PROTECOES,
+      custo: 100, peso: 3, quantidade: 1,
+      modificacoes: [{ nome: 'Placa Extra', empilhamentos: 1, efeitos: [{ tipo: 'RESISTENCIA', valor: 2 }] }],
+    }]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.inventario-esquadrao__mod-tag')?.textContent)
+      .toContain('Placa Extra ×1');
+    expect(fixture.nativeElement.textContent).toContain('+2 de resist. (todas)');
+  });
+
   it('pede confirmação no próprio item antes de remover', () => {
     fixture.componentRef.setInput('itens', [{
       id: 'item-1', nome: 'Kit médico', categoria: ItemCategoriaEnum.MEDICINAL,

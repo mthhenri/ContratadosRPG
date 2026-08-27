@@ -164,6 +164,18 @@
               <span class="inventario-esquadrao__categoria">{{ rotuloCategoria(item.categoria) }}</span>
               <strong>{{ item.nome }}</strong>
               <small>{{ item.peso }} {{ item.peso === 1 ? 'slot' : 'slots' }} · ${{ item.custo }}</small>
+              @if (item.modificacoes?.length) {
+                <div class="inventario-esquadrao__mods-ativas">
+                  @for (modificacao of item.modificacoes; track $index) {
+                    <div class="inventario-esquadrao__mod-tag">
+                      <strong>{{ modificacao.nome }} ×{{ modificacao.empilhamentos }}</strong>
+                      @if (descricaoModificacao(modificacao); as descricao) {
+                        <span>{{ descricao }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             </div>
             @if (!somenteLeitura()) {
             <div class="inventario-esquadrao__item-acoes">

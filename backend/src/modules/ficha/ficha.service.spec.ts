@@ -2337,6 +2337,34 @@ describe('FichaService', () => {
       expect(campanhaGateway.emitirInventarioAlterado).toHaveBeenCalledWith({ campanhaId: 3 });
     });
 
+    it('preserva as modificações do item de base ao transferi-lo para a ficha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComInventarioVazio);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+      campanhaRepositorio.recuperarInventario.mockResolvedValue([
+        {
+          id: 'item-1', nome: 'Colete Reforçado', categoria: ItemCategoriaEnum.PROTECOES,
+          custo: 100, peso: 3, quantidade: 1,
+          modificacoes: [{ nome: 'Placa Extra', empilhamentos: 1, efeitos: [{ tipo: 'RESISTENCIA', valor: 2 }] }],
+        },
+      ]);
+      fichaRepositorio.alterarInventario.mockResolvedValue({ ...fichaComInventarioVazio });
+      campanhaRepositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.pegarItemInventario({ fichaId: 5, campanhaItemId: 'item-1' }, usuarioDono);
+
+      expect(fichaRepositorio.alterarInventario).toHaveBeenCalledWith({
+        id: 5,
+        dados: {
+          inventario: {
+            itens: [expect.objectContaining({
+              modificacoes: [{ nome: 'Placa Extra', empilhamentos: 1, efeitos: [{ tipo: 'RESISTENCIA', valor: 2 }] }],
+            })],
+            amplificadores: [],
+          },
+        },
+      });
+    });
+
     it('transfere só a quantidade pedida, mantendo o resto no inventário de esquadrão', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComInventarioVazio);
       campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
@@ -2420,6 +2448,35 @@ describe('FichaService', () => {
         itens: { id: string }[];
       }).itens[0];
       expect(typeof itemNovo.id).toBe('string');
+    });
+
+    it('preserva as modificações do item da ficha ao transferi-lo para a base', async () => {
+      const fichaComItemModificado = {
+        ...fichaComItem,
+        dados: {
+          inventario: {
+            itens: [{
+              ...fichaComItem.dados.inventario.itens[0],
+              modificacoes: [{ nome: 'Placa Extra', empilhamentos: 1, efeitos: [{ tipo: 'RESISTENCIA', valor: 2 }] }],
+            }],
+            amplificadores: [],
+          },
+        },
+      } as unknown as FichaRecuperadaDto;
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComItemModificado);
+      campanhaServiceDublado.validarAcessoInventario.mockResolvedValue(undefined);
+      campanhaRepositorio.recuperarInventario.mockResolvedValue([]);
+      fichaRepositorio.alterarInventario.mockResolvedValue(fichaComItemModificado);
+      campanhaRepositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.mandarItemInventarioParaBase({ fichaId: 5, indice: 0 }, usuarioDono);
+
+      expect(campanhaRepositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [expect.objectContaining({
+          modificacoes: [{ nome: 'Placa Extra', empilhamentos: 1, efeitos: [{ tipo: 'RESISTENCIA', valor: 2 }] }],
+        })],
+      });
     });
 
     it('lança BusinessException quando o item está equipado', async () => {

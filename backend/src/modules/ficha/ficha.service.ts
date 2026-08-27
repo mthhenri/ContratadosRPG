@@ -476,7 +476,7 @@ export class FichaService {
       informacao: itemCampanha.informacao,
       resistencia: itemCampanha.resistencia,
       bonus: itemCampanha.bonus,
-      modificacoes: [],
+      modificacoes: itemCampanha.modificacoes ?? [],
     };
 
     const fichaAlterada = await this.fichaRepositorio.alterarInventario({
@@ -564,6 +564,7 @@ export class FichaService {
       informacao: itemOrigem.informacao,
       resistencia: itemOrigem.resistencia,
       bonus: itemOrigem.bonus,
+      ...(itemOrigem.modificacoes.length > 0 ? { modificacoes: itemOrigem.modificacoes } : {}),
     };
 
     const fichaAlterada = await this.fichaRepositorio.alterarInventario({

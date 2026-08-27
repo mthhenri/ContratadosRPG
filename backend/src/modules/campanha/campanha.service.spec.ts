@@ -755,6 +755,52 @@ describe('CampanhaService', () => {
       });
     });
 
+    it('não empilha itens operacionais quando as modificações são diferentes', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      repositorio.recuperarInventario.mockResolvedValue([{
+        id: 'item-existente', nome: 'Lanterna', categoria: ItemCategoriaEnum.OPERACIONAL,
+        custo: 50, peso: 0.5, quantidade: 1,
+        modificacoes: [{ nome: 'Blindada', empilhamentos: 1 }],
+      }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.adicionarItemInventario({
+        campanhaId: 3, nome: 'Lanterna', categoria: ItemCategoriaEnum.OPERACIONAL,
+        custo: 50, peso: 0.5, quantidade: 1,
+        modificacoes: [{ nome: 'Blindada', empilhamentos: 2 }],
+      }, usuarioNaoMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [
+          expect.objectContaining({ id: 'item-existente', quantidade: 1 }),
+          expect.objectContaining({ quantidade: 1, modificacoes: [{ nome: 'Blindada', empilhamentos: 2 }] }),
+        ],
+      });
+    });
+
+    it('empilha itens operacionais quando as modificações são estruturalmente iguais', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      const modificacoes = [{ nome: 'Blindada', empilhamentos: 1, descricao: 'Proteção reforçada' }];
+      repositorio.recuperarInventario.mockResolvedValue([{
+        id: 'item-existente', nome: 'Lanterna', categoria: ItemCategoriaEnum.OPERACIONAL,
+        custo: 50, peso: 0.5, quantidade: 1, modificacoes,
+      }]);
+      repositorio.alterarInventario.mockResolvedValue({ itens: [] });
+
+      await service.adicionarItemInventario({
+        campanhaId: 3, nome: 'Lanterna', categoria: ItemCategoriaEnum.OPERACIONAL,
+        custo: 50, peso: 0.5, quantidade: 1, modificacoes,
+      }, usuarioNaoMestre);
+
+      expect(repositorio.alterarInventario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        itens: [expect.objectContaining({ id: 'item-existente', quantidade: 2, modificacoes })],
+      });
+    });
+
     it('mantém itens de outras categorias em registros separados mesmo quando idênticos', async () => {
       repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
       repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });

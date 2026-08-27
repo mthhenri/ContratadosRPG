@@ -51,6 +51,13 @@ const CATEGORIAS_EMPILHAVEIS_INVENTARIO = new Set<ItemCategoriaEnum>([
   ItemCategoriaEnum.MEDICINAL,
 ]);
 
+function modificacoesSaoIdenticas(
+  modificacoes: CampanhaInventarioItemDto['modificacoes'],
+  outrasModificacoes: CampanhaInventarioItemAdicionarDto['modificacoes'],
+): boolean {
+  return JSON.stringify(modificacoes ?? []) === JSON.stringify(outrasModificacoes ?? []);
+}
+
 /** Compara apenas a identidade descritiva; `id` e `quantidade` pertencem ao registro/stack. */
 function itensInventarioSaoIdenticos(
   item: CampanhaInventarioItemDto,
@@ -64,7 +71,8 @@ function itensInventarioSaoIdenticos(
     && item.dano === dto.dano
     && item.informacao === dto.informacao
     && item.resistencia === dto.resistencia
-    && item.bonus === dto.bonus;
+    && item.bonus === dto.bonus
+    && modificacoesSaoIdenticas(item.modificacoes, dto.modificacoes);
 }
 
 /**
@@ -342,6 +350,7 @@ export class CampanhaService {
           informacao: dto.informacao,
           resistencia: dto.resistencia,
           bonus: dto.bonus,
+          ...(dto.modificacoes?.length ? { modificacoes: dto.modificacoes } : {}),
         }];
     const inventarioAlterado = await this.campanhaRepositorio.alterarInventario({
       campanhaId: dto.campanhaId,

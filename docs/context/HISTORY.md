@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-26 — Inventário de esquadrão preserva modificações estruturadas
+
+Concluída `preservar-modificacoes-inventario-esquadrao.spec.md` (`I-020`). O contrato de inventário
+de campanha agora aceita `modificacoes?: ModificacaoAplicadaDto[]`, mantendo a compatibilidade com
+itens JSONB legados. As transferências ficha → base copiam o array quando há modificações e base →
+ficha usam `[]` como fallback para os registros antigos. A adição à base também preserva o campo, e
+o empilhamento de itens Operacionais/Medicinais só ocorre quando as modificações são
+estruturalmente iguais, na mesma ordem.
+
+No `InventarioEsquadrao`, cada modificação é exibida apenas para leitura como chip no mesmo padrão
+da ficha: nome, empilhamentos e o texto canônico de `descreverEfeitosModificacao` (com a nota livre
+como fallback). O análogo escolhido foi o chip de `FichaInventario`.
+
+Regressões novas cobrem as duas transferências, o fallback legado, a separação de stacks com mods
+diferentes, a união de mods iguais e a renderização do chip. `shared` (738 testes), `backend` (461)
+e `frontend` (1.379) passaram; typecheck e os três builds também passaram. O lint não teve erros,
+mas continua saindo não-zero pelos 13.875 avisos preexistentes. A aplicação real foi inspecionada
+com uma entrada temporária removida ao final: em `1920×1080`, o chip ficou alinhado ao card e sem
+overflow; em `360×800`, quebrou de forma legível dentro do painel, com controles de 44px e sem
+overflow horizontal.
+
 ## 2026-08-26 — Troca de página do Caderno protege rascunhos locais
 
 O item selecionado na lista do Caderno agora é alternável: clicar nele uma segunda vez limpa a

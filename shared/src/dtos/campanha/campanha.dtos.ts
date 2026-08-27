@@ -1,4 +1,5 @@
 import type { ArquetipoEnum, ClasseEnum, ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '../../enums';
+import type { ModificacaoAplicadaDto } from "../../regras/compras";
 
 /**
  * DTOs do módulo `campanha` — CRUD de campanha (m2-04). Seguem a fórmula
@@ -361,9 +362,10 @@ export interface CampanhaEstadoAlteradaDto {
 
 /**
  * Item do inventário de esquadrão — só os campos **descritivos** do catálogo de compras
- * (`ItemCatalogo`, `shared/regras/compras`), sem `equipado`/`modificacoes`/`containerId`: este
- * inventário só guarda, não equipa nada. `id` é um uuid gerado no `POST` — identificador estável
- * para remover/ajustar/transferir o item.
+ * (`ItemCatalogo`, `shared/regras/compras`), sem `equipado`/`containerId`: este inventário só
+ * guarda, não equipa nada. Modificações são preservadas para que um item transferido conserve
+ * seus efeitos ao retornar à ficha. `id` é um uuid gerado no `POST` — identificador estável para
+ * remover/ajustar/transferir o item.
  */
 export interface CampanhaInventarioItemDto {
   readonly id: string;
@@ -377,6 +379,8 @@ export interface CampanhaInventarioItemDto {
   readonly informacao?: string;
   readonly resistencia?: string;
   readonly bonus?: string;
+  /** Opcional para compatibilidade com itens persistidos antes do suporte a modificações. */
+  readonly modificacoes?: readonly ModificacaoAplicadaDto[];
 }
 
 /** Saída da listagem/mutação do inventário de esquadrão — a lista inteira e atual de itens. */
@@ -405,6 +409,7 @@ export interface CampanhaInventarioItemAdicionarDto {
   readonly informacao?: string;
   readonly resistencia?: string;
   readonly bonus?: string;
+  readonly modificacoes?: readonly ModificacaoAplicadaDto[];
 }
 
 /** Entrada de remover item inteiro — `campanhaId`/`itemId` vêm do `@Param`. */

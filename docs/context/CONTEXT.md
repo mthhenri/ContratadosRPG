@@ -611,7 +611,6 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `preservar-modificacoes-inventario-esquadrao` | campanha/inventário | preservar `modificacoes` do item ao transferir ficha ↔ base (`IDEAS.md` `I-020`) |
 | `renomear-painel-para-campanhas` | layout/navegação/rotas | rota `/painel`→`/campanhas` (nav, redirects, guards, todo `routerLink`/`navigate`), ícone próprio de Fichas, limpar menu de perfil (`IDEAS.md` `I-019`; escopo ampliado em 2026-08-25) |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
@@ -620,7 +619,8 @@ ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (
 tipo de ajuste avulso, pós-M7 (milestone já concluído) — todos **concluídos** (specs em
 `docs/specs/done/`, `m7-19` fechou a fila; ver bloco no topo do arquivo e "Próxima Task"). As duas
 specs avulsas acima (2026-08-24) nasceram de `IDEAS.md` `I-019`/`I-020` — sem número de
-milestone, a critério do autor na revisão de backlog. A `I-021` já foi concluída em
+milestone, a critério do autor na revisão de backlog. A `I-020` e a `I-021` já foram concluídas em
+`preservar-modificacoes-inventario-esquadrao.spec.md` e
 `descricao-modificacoes-item-inventario.spec.md`. Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
@@ -802,9 +802,10 @@ descrição e campos mecânicos condicionais (`dano`, `informação`, `resistên
 contrato que o inventário coletivo já preserva. Usável em ~360px.
 Operacionais e Medicinais com todos os campos descritivos idênticos compartilham um stack ao serem
 adicionados; as demais categorias e qualquer variação descritiva permanecem em registros separados.
-Remover um registro exige confirmação inline no próprio card. O suporte estruturado a itens
-modificados no inventário de esquadrão ainda não faz parte do sistema e está registrado como
-**I-020** em `IDEAS.md`.
+Remover um registro exige confirmação inline no próprio card. Modificações estruturadas são
+preservadas nos dois sentidos da transferência ficha ↔ base; itens empilháveis só compartilham
+stack quando as modificações também são estruturalmente iguais. O card da base exibe as
+modificações como chip somente leitura, usando o mesmo texto de efeitos da ficha.
 No desktop, as sidebars compartilhadas de inventário de esquadrão e histórico de rolagens têm 500px;
 o histórico usa a mesma largura na campanha e na ficha. A pilha de atalhos flutuantes (inventário,
 histórico e calculadora, conforme a tela) fica a 24px do canto inferior esquerdo tanto na campanha

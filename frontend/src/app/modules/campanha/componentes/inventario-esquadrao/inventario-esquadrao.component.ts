@@ -4,7 +4,13 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { finalize } from 'rxjs';
 import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/campanha';
 import { ItemCategoriaEnum } from '@contratados-rpg/shared/enums';
-import { CATALOGO_CATEGORIAS, CATALOGO_ITENS, type ItemCatalogo } from '@contratados-rpg/shared/regras/compras';
+import {
+  CATALOGO_CATEGORIAS,
+  CATALOGO_ITENS,
+  descreverEfeitosModificacao,
+  type ItemCatalogo,
+  type ModificacaoAplicadaDto,
+} from '@contratados-rpg/shared/regras/compras';
 
 import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { CampanhaService } from '../../campanha.service';
@@ -111,6 +117,12 @@ export class InventarioEsquadrao {
 
   protected resumoMecanico(item: ItemCatalogo): string | null {
     return item.dano ?? item.resistencia ?? item.bonus ?? item.informacao ?? null;
+  }
+
+  protected descricaoModificacao(modificacao: ModificacaoAplicadaDto): string | null {
+    return descreverEfeitosModificacao(modificacao.efeitos, modificacao.empilhamentos)
+      || modificacao.descricao
+      || null;
   }
 
   protected alternarCatalogo(): void {
