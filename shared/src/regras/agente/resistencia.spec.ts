@@ -86,6 +86,39 @@ describe('montarResistencias', () => {
     ]);
   });
 
+  it('restringe Maestria de Vigor e Tanque aos tipos nativos diante de Hazmat', () => {
+    const resultado = montarResistencias({
+      itens: [protecao({
+        resistencia: '10 [Físico], 6 [Balístico]',
+        modificacoes: [{ nome: 'Hazmat', empilhamentos: 1 }],
+      })],
+      amplificadores: [],
+      habilidades: [{ nome: 'Tanque', categoria: HabilidadeCategoriaEnum.ARQUETIPO, custoEnergia: 0, descricao: '' }],
+      maestria: 'vigor',
+      vigor: 6,
+    });
+
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(19);
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.BALISTICO)?.equipamento).toBe(15);
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.QUIMICO)?.equipamento).toBe(2);
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.QUIMICO)?.maestria).toBeUndefined();
+  });
+
+  it('preserva o bônus de Maestria no tipo nativo alterado por Blindada', () => {
+    const resultado = montarResistencias({
+      itens: [protecao({
+        resistencia: '5 [Físico], 3 [Balístico]',
+        modificacoes: [{ nome: 'Blindada', empilhamentos: 1 }],
+      })],
+      amplificadores: [],
+      maestria: 'vigor',
+      vigor: 6,
+    });
+
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(13);
+    expect(resultado.find((linha) => linha.tipo === TipoDanoEnum.BALISTICO)?.equipamento).toBe(11);
+  });
+
   it('Maestria de Vigor não cria resistência sem uma Proteção equipada', () => {
     const resultado = montarResistencias({
       itens: [],
@@ -204,7 +237,13 @@ describe('montarResistencias', () => {
     }
 
     it('soma a resistência embutida de uma mochila vestida (guardada = false)', () => {
-      const resultado = montarResistencias({ itens: [armazenamento({})], amplificadores: [] });
+      const resultado = montarResistencias({
+        itens: [armazenamento({})],
+        amplificadores: [],
+        habilidades: [{ nome: 'Tanque', categoria: HabilidadeCategoriaEnum.ARQUETIPO, custoEnergia: 0, descricao: '' }],
+        maestria: 'vigor',
+        vigor: 6,
+      });
       expect(resultado.find((l) => l.tipo === TipoDanoEnum.FISICO)?.equipamento).toBe(2);
       expect(resultado.find((l) => l.tipo === TipoDanoEnum.BALISTICO)?.equipamento).toBe(2);
     });

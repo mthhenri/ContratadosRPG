@@ -3,6 +3,7 @@ import type { FichaAtributosDto, FichaHabilidadeDto } from '../../dtos/ficha';
 import {
   calcularStatItem,
   interpretarNotacaoResistencia,
+  resolverDadosItem,
   type AmplificadorAplicadoDto,
   type CarrinhoItemDto,
 } from '../compras';
@@ -72,18 +73,52 @@ export interface ResistenciasMontarDto {
  * ficha, não ao catálogo: por isso o valor persistido do item não é alterado e consumidores sem
  * contexto de personagem (como a calculadora pública) continuam vendo a base canônica.
  */
-export function aplicarMaestriaVigorNaResistencia(
-  resistencia: string | undefined,
-  categoria: ItemCategoriaEnum,
-  maestria: keyof FichaAtributosDto | null,
-  vigor: number,
-): string | undefined {
-  if (!resistencia || categoria !== ItemCategoriaEnum.PROTECOES || maestria !== 'vigor') {
-    return resistencia;
+export interface ResistenciaProtecaoBonificarDto {
+  /** Resistência final: base já fundida às modificações. */
+  readonly resistencia: string | undefined;
+  readonly categoria: ItemCategoriaEnum;
+  /** Resistência canônica antes das modificações; define os tipos que recebem os bônus. */
+  readonly resistenciaBase: string | undefined;
+  readonly maestria: keyof FichaAtributosDto | null;
+  readonly vigor: number;
+  readonly habilidades: readonly FichaHabilidadeDto[];
+}
+
+/** Expande a notação composta de uma resistência em seus tipos de dano declarados. */
+function listarTiposResistencia(resistencia: string | undefined): ReadonlySet<string> {
+  return new Set(
+    interpretarNotacaoResistencia(resistencia ?? '')
+      .flatMap((entrada) => entrada.tipos.split('/'))
+      .map((tipo) => tipo.trim()),
+  );
+}
+
+/**
+ * Aplica Maestria de Vigor e Tanque somente aos tipos nativos da Proteção. A resistência final já
+ * contém as modificações, mas `resistenciaBase` preserva o recorte semântico exigido pelo sistema.
+ */
+export function aplicarBonusProtecaoNaResistencia(dto: ResistenciaProtecaoBonificarDto): string | undefined {
+  if (!dto.resistencia || dto.categoria !== ItemCategoriaEnum.PROTECOES) {
+    return dto.resistencia;
   }
 
-  return interpretarNotacaoResistencia(resistencia)
-    .map((entrada) => `${entrada.valor + vigor} [${entrada.tipos}]`)
+  const tiposNativos = listarTiposResistencia(dto.resistenciaBase);
+  const bonusMaestria = dto.maestria === 'vigor' ? dto.vigor : 0;
+  const bonusTanque = dto.habilidades.some((habilidade) => habilidade.nome === 'Tanque') ? 3 : 0;
+  if (tiposNativos.size === 0 || bonusMaestria + bonusTanque === 0) {
+    return dto.resistencia;
+  }
+
+  return interpretarNotacaoResistencia(dto.resistencia)
+    .flatMap((entrada) => {
+      const grupos = new Map<number, string[]>();
+      entrada.tipos.split('/').forEach((tipoBruto) => {
+        const tipo = tipoBruto.trim();
+        const valor = entrada.valor + (tiposNativos.has(tipo) ? bonusMaestria + bonusTanque : 0);
+        grupos.set(valor, [...(grupos.get(valor) ?? []), tipo]);
+      });
+      return [...grupos.entries()].map(([valor, tipos]) => `${valor} [${tipos.join('/')}]`);
+    })
     .join(', ');
 }
 
@@ -130,19 +165,21 @@ function calcularResistenciaEquipamento(
       if (!stat?.resistencia) {
         return;
       }
-      const bonusMaestria =
-        item.categoria === ItemCategoriaEnum.PROTECOES && maestria === 'vigor' ? vigor : 0;
+      const tiposNativos = listarTiposResistencia(resolverDadosItem(item)?.resistencia);
       // Escudos usam notação composta "[Tipo/Tipo]" (catalogo.dados.ts) pra dizer que o valor cheio
       // vale pros dois tipos — cada lado do "/" precisa virar sua própria entrada em `totais`, senão
       // a chave composta nunca bate com nenhum `TipoDanoEnum` de `ORDEM_TIPOS`.
+      const bonusMaestria = item.categoria === ItemCategoriaEnum.PROTECOES && maestria === 'vigor' ? vigor : 0;
       const bonusTanque = temTanque && item.categoria === ItemCategoriaEnum.PROTECOES ? 3 : 0;
       interpretarNotacaoResistencia(stat.resistencia).forEach((entrada) =>
         entrada.tipos
           .split('/')
           .forEach((tipo) => {
-            somar(tipo.trim(), entrada.valor + bonusTanque + bonusMaestria);
-            if (bonusMaestria > 0) {
-              somarMaestria(tipo.trim(), bonusMaestria);
+            const tipoNormalizado = tipo.trim();
+            const bonusNativo = tiposNativos.has(tipoNormalizado) ? bonusTanque + bonusMaestria : 0;
+            somar(tipoNormalizado, entrada.valor + bonusNativo);
+            if (bonusMaestria > 0 && tiposNativos.has(tipoNormalizado)) {
+              somarMaestria(tipoNormalizado, bonusMaestria);
             }
           }),
       );

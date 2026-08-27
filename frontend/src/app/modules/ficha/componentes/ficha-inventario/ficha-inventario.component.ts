@@ -14,11 +14,12 @@ import {
 import type {
   FichaAtributosDto,
   FichaFragmentoConsumidoDto,
+  FichaHabilidadeDto,
   FichaInventarioDto,
   FichaSequelaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
-  aplicarMaestriaVigorNaResistencia,
+  aplicarBonusProtecaoNaResistencia,
   ajusteInventarioAmplificadores,
   emAnomaliaBiologica,
   limiteMinimoEnergiaMaximaFragmentos,
@@ -502,6 +503,8 @@ export class FichaInventario {
   readonly atributos = input.required<FichaAtributosDto>();
   /** Maestria da ficha — Vigor altera apenas a resistência exibida das Proteções. */
   readonly maestria = input<keyof FichaAtributosDto | null>(null);
+  /** Habilidades permanentes da ficha — Tanque altera a resistência exibida das Proteções. */
+  readonly habilidades = input<readonly FichaHabilidadeDto[]>([]);
   /** Proficiência atual — entra no ambiente da rolagem, mesmo quando a fórmula do item não a usa (m3-45). */
   readonly proficiencia = input<number | null>(null);
   /** Nível atual — idem `proficiencia` (m3-45). */
@@ -2805,7 +2808,7 @@ export class FichaInventario {
       quantidade: item.quantidade,
       custoTotalTexto: this.formatarDinheiro(custoTotal),
       pesoTexto,
-      stat: this.formatarStat(statComputado, item.categoria),
+      stat: this.formatarStat(statComputado, item),
       danoFormula: statComputado?.dano ?? null,
       descricao: item.descricao ?? null,
       custom: !CATALOGO_ITENS[item.categoria]?.some((catalogo) => catalogo.nome === item.nome),
@@ -3017,12 +3020,12 @@ export class FichaInventario {
       return `Dano ${item.dano}${item.informacao ? ` · ${item.informacao}` : ''}`;
     }
     if (item.resistencia) {
-      return `Resist. ${this.resistenciaComMaestria(item.resistencia, categoria)}`;
+      return `Resist. ${this.resistenciaComBonus(item.resistencia, categoria, item.resistencia)}`;
     }
     return null;
   }
 
-  private formatarStat(stat: StatItemDto | null, categoria: ItemCategoriaEnum): string | null {
+  private formatarStat(stat: StatItemDto | null, item: CarrinhoItemDto): string | null {
     if (!stat) {
       return null;
     }
@@ -3030,7 +3033,11 @@ export class FichaInventario {
       return `Dano ${stat.dano}${stat.informacao ? ` · ${stat.informacao}` : ''}`;
     }
     if (stat.resistencia) {
-      return `Resist. ${this.resistenciaComMaestria(stat.resistencia, categoria)}`;
+      return `Resist. ${this.resistenciaComBonus(
+        stat.resistencia,
+        item.categoria,
+        resolverDadosItem(item)?.resistencia,
+      )}`;
     }
     if (stat.bonusArmazenamento !== undefined) {
       return `+${this.formatarPeso(stat.bonusArmazenamento)} inv.`;
@@ -3038,14 +3045,20 @@ export class FichaInventario {
     return null;
   }
 
-  private resistenciaComMaestria(resistencia: string, categoria: ItemCategoriaEnum): string {
+  private resistenciaComBonus(
+    resistencia: string,
+    categoria: ItemCategoriaEnum,
+    resistenciaBase: string | undefined,
+  ): string {
     return (
-      aplicarMaestriaVigorNaResistencia(
+      aplicarBonusProtecaoNaResistencia({
         resistencia,
         categoria,
-        this.maestria(),
-        this.atributos().vigor,
-      ) ?? resistencia
+        resistenciaBase,
+        maestria: this.maestria(),
+        vigor: this.atributos().vigor,
+        habilidades: this.habilidades(),
+      }) ?? resistencia
     );
   }
 }

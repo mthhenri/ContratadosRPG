@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 import {
   FragmentoModuloEnum,
   FragmentoTipoEnum,
+  HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
   ModificacaoEfeitoTipoEnum,
 } from '@contratados-rpg/shared/enums';
@@ -281,7 +282,7 @@ describe('FichaInventario', () => {
     expect(alvo.emitidos[0].amplificadores).toEqual([]);
   });
 
-  it('mostra a Maestria de Vigor na Proteção guardada e no catálogo de adição', () => {
+  it('mostra Maestria e Tanque só nos tipos nativos da Proteção guardada e no catálogo', () => {
     const colete: CarrinhoItemDto = {
       nome: 'Colete de Kevlar',
       categoria: ItemCategoriaEnum.PROTECOES,
@@ -290,11 +291,14 @@ describe('FichaInventario', () => {
       quantidade: 1,
       guardada: false,
       equipado: true,
-      modificacoes: [],
+      modificacoes: [{ nome: 'Hazmat', empilhamentos: 1 }],
     };
     const alvo = montar({ itens: [colete], amplificadores: [] });
     alvo.fixture.componentRef.setInput('atributos', { ...atributos, vigor: 6 });
     alvo.fixture.componentRef.setInput('maestria', 'vigor');
+    alvo.fixture.componentRef.setInput('habilidades', [{
+      nome: 'Tanque', categoria: HabilidadeCategoriaEnum.ARQUETIPO, custoEnergia: 0, descricao: '',
+    }]);
     alvo.componentInstance['definirCategoria'](ItemCategoriaEnum.PROTECOES);
     alvo.componentInstance['alternarCatalogo']();
     alvo.fixture.detectChanges();
@@ -302,7 +306,9 @@ describe('FichaInventario', () => {
     const estatisticas = Array.from(alvo.raiz.querySelectorAll('.ficha-inv__item-stat, .ficha-inv__cartao-stat')).map(
       (elemento) => elemento.textContent?.trim(),
     );
-    expect(estatisticas.filter((texto) => texto?.includes('9 [Balístico]'))).toHaveLength(2);
+    expect(estatisticas.filter((texto) => texto?.includes('14 [Físico]'))).toHaveLength(2);
+    expect(estatisticas.filter((texto) => texto?.includes('12 [Balístico]'))).toHaveLength(2);
+    expect(estatisticas.filter((texto) => texto?.includes('2 [Químico]'))).toHaveLength(1);
   });
 
   it('empilha a quantidade ao adicionar item de categoria empilhável já presente', () => {
