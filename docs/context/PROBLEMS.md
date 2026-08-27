@@ -29,6 +29,20 @@
 
 ## Ativos
 
+### P-029 — Bônus de Maestria de Vigor e Tanque alcançam resistência criada por modificação · `ABERTO` · regras/inventário
+
+- **Sintoma:** em uma Proteção com tipo de resistência criado por modificação — por exemplo,
+  Armadura Pesada + Hazmat — o cálculo atual soma indevidamente a Maestria de Vigor e Tanque ao
+  novo tipo Químico, embora ele não exista na Proteção-base da loja.
+- **Causa:** `montarResistencias` e a formatação do Inventário aplicam os bônus sobre o stat final
+  já fundido com modificações, sem distinguir os tipos de dano nativos da Proteção.
+- **Contorno:** não aplicar Hazmat, Antibombas ou uma modificação `RESISTENCIA` que crie tipo novo
+  enquanto a ficha tiver Maestria de Vigor ou Tanque, caso se queira evitar o valor incorreto.
+- **Correção:** executar `docs/specs/backlog/resistencia-protecao-base-bonus.spec.md`, aplicando os
+  dois bônus somente aos tipos da resistência-base da Proteção e mantendo o mesmo recorte na ficha,
+  no catálogo e no Encontro.
+- **Desde:** refinamento solicitado pelo autor em 2026-08-26, após `maestrias-efeitos.spec.md`.
+
 ### P-028 — Maestria de Vigor sem verificação visual ao vivo · `CONTORNADO` · processo/frontend
 
 - **Sintoma:** o commit `0e439b0` aplica a Maestria de Vigor às resistências das Proteções, no

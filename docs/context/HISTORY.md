@@ -1,5 +1,15 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-26 — Especificado o recorte de resistência-base para Maestria e Tanque
+
+O autor esclareceu que Maestria de Vigor e Tanque não incidem sobre resistências adicionadas por
+modificação. A nova spec de backlog `resistencia-protecao-base-bonus.spec.md` fecha a semântica:
+ambos os bônus aplicam-se uma única vez aos tipos de dano nativos de cada Proteção; uma modificação
+como Hazmat preserva sua resistência Química, mas ela não recebe `+Vigor` nem `+3`. A spec também
+cobre modificações que alteram tipos já nativos, escudos de notação composta, efeitos customizados,
+armazenamento e a coerência entre Combate/Encontro/Inventário/catálogo. Nenhum código foi alterado
+neste registro; o defeito vigente foi formalizado como `P-029`.
+
 ## 2026-08-26 — Base configura modificações antes de adicionar itens
 
 Concluída `modificar-itens-direto-inventario-esquadrao.spec.md`. O catálogo da base agora mantém
