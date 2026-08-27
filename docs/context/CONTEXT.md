@@ -335,11 +335,11 @@
 
 ## 1. Próxima Task
 
-**`skills-01`…`skills-08` (oito das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
+**`skills-01`…`skills-09` (as nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
 fila de milestone) concluídas.** Estado atual: as duas pastas de skill
 (`.claude/skills/`↔`.agents/skills/`) estão 100% idênticas (`diff -r` vazio) — `dto-conventions`
 (corrigida), `verify` (corrigida), `task-flow`, `sql-migrations`, `design-fidelity` e
-`regras-do-jogo` e `convencoes-check` (as cinco últimas, skills novas). `task-flow` reúne o fluxo de spec e o fecho de task, com
+`regras-do-jogo`, `convencoes-check` e `tempo-real` (as seis últimas, skills novas). `task-flow` reúne o fluxo de spec e o fecho de task, com
 `docs/specs/TEMPLATE.spec.md` como template oficial. `sql-migrations` cobre schema/migration/SQL
 de repositório. `design-fidelity` executa o gate visual obrigatório do `CLAUDE.md` (escolher
 análogo → construir com tokens → verificar via `verify` → checklist de 6 itens → corrigir antes
@@ -351,8 +351,11 @@ prefixo `ck_` errado) e uma lacuna pequena de `examples/README.md` (par `iniciat
 na tabela, documentada na própria skill). Detalhe completo de cada task em `HISTORY.md` (busque
 `skills-0N`). `convencoes-check` faz o passe final mecânico somente no diff (com buscas e falsos
 positivos em `references/buscas.md`) e exige a leitura manual do que grep não prova; a auditoria
-inicial registrou `PROBLEMS.md` `P-032`, sem correção oportunista. Só `skills-09` segue no backlog. Tasks
-puramente documentais — sem mudança de código de produto além das próprias `SKILL.md`, com
+inicial registrou `PROBLEMS.md` `P-032`, sem correção oportunista. `tempo-real` mapeia a emissão
+pós-REST, salas, assinantes e a ponte `emitirFichaAlterada` →
+`EncontroService.sincronizarFichaAlterada`; também força a pergunta "quem mais precisa saber?"
+para ficha, resumo público, mini-card, Iniciativa e recorte de revelação. Tasks puramente
+documentais — sem mudança de código de produto além das próprias `SKILL.md`, com
 validação por uso real em cada uma (comandos executados, migration hipotética escrita, tela
 aprovada comparada ao vivo — não só citação copiada da spec).
 

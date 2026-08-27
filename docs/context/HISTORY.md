@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-09`: nova skill `tempo-real` percorre a propagação antes de uma mudança de ficha
+
+Nona e última task de `skills-agentes.spec.md`. As cópias idênticas de `tempo-real` em
+`.claude/skills/` e `.agents/skills/` registram o contrato broadcast-only (REST escreve; service
+emite após persistir; gateway não autoriza nem recebe mutação) e o mapa confirmado no código atual:
+services emissoras, eventos, salas e assinantes de `TempoRealService`. O texto aponta para a seção
+de tempo real de `verify`, sem duplicar o roteiro de socket, polling ou reconexão.
+
+O checklist de ficha inclui o documento aberto, `FichaService.paraResumoPublico`, mini-card do
+painel, `encontro-combatente.mapper.ts`, a ponte
+`CampanhaGateway.emitirFichaAlterada` → `EncontroService.sincronizarFichaAlterada`, ficha
+flutuante e `encontro-revelacao.ts`. **Exercício negativo:** aplicado a `P-030`, o checklist
+identificou exatamente os dois consumidores que a causa já documenta — `paraResumoPublico` e o
+mapper do Encontro — sem corrigir o defeito fora de `ficha-resumo-stats-efetivos.spec.md`.
+
+**Exercício positivo ao vivo:** no stack local, `codex.dev` (mestre) alterou a Vida da ficha `7` de
+`jogador.stub.1` na Campanha do Codex (`50 → 49`) pela rota REST; o socket autenticado do jogador
+entrou com sucesso em `ficha:7` e recebeu `ficha:alterada` com `vidaAtual: 49`. Em seguida, duas
+sessões reais da SPA aberta em `/fichas/7` confirmaram o mesmo valor remoto e a restauração para
+`50`; a sentinela da sessão observadora permaneceu intacta, provando que não houve reload. Isso
+confirmou o handshake por `auth.token`, a autorização da sala, a emissão pós-mutação e o consumidor
+remoto com dois usuários reais.
+
+Verificado: mapa conferido com buscas de emissores/assinantes, `git diff --check` limpo e
+`git diff --no-index -- .claude/skills .agents/skills` com saída 0. Não houve mudança de UI nem
+código de produto; por isso build, lint, suíte ampla e gate visual não se aplicam.
+
 ## 2026-08-27 — `skills-08`: nova skill `convencoes-check` torna o passe final de convenções repetível
 
 Oitava das nove tasks de `skills-agentes.spec.md`. Foram criadas cópias idênticas de
