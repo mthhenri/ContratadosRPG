@@ -29,6 +29,25 @@
 
 ## Ativos
 
+### P-031 — Quatro migrations usam `ck_` em vez de `chk_` em CHECK constraint · `ABERTO` · backend/schema
+
+- **Sintoma:** `docs/CONVENTIONS.md` documenta o prefixo `chk_` para CHECK constraint, e
+  `0018 - Caderno de campanha e busca textual.sql` segue isso (`chk_pagina_caderno_titulo`,
+  `chk_pagina_caderno_conteudo`). Mas `0021 - Tabelas encontro, encontro_combatente e
+  encontro_evento.sql`, `0022`, `0023` e `0024` usam `ck_` (`ck_encontro_combatente_origem`,
+  `ck_encontro_combatente_turnos_por_rodada`, `ck_rolagem_origem`) — prefixo errado e
+  inconsistente com o resto do schema.
+- **Causa:** não investigada — as quatro migrations são da mesma leva (M7, encontro de combate),
+  provavelmente copiaram o prefixo umas das outras sem conferir contra `CONVENTIONS.md`.
+- **Contorno:** nenhum — o prefixo errado já está aplicado em produção; renomear a constraint é
+  uma migration nova (`ALTER TABLE ... RENAME CONSTRAINT ...`), não um problema de leitura.
+- **Correção:** migration `ALTER TABLE ... RENAME CONSTRAINT ck_x TO chk_x` para as quatro
+  constraints, quando alguém for mexer nessa área de qualquer forma (renomear constraint isolada
+  não vale task própria).
+- **Desde:** achado durante `skills-05` (criação da skill `sql-migrations`, 2026-08-27) ao
+  conferir se `0021` exemplifica bem os prefixos do `CONVENTIONS.md` antes de citá-la como
+  referência.
+
 ### P-030 — Vida/Energia/Defesa/Esquiva/Bloqueio divergem entre a ficha e o painel do mestre · `ABERTO` · backend/ficha/encontro
 
 - **Sintoma:** o mini-card do Esquadrão (painel do mestre, `campanha/detalhe`) e o cartão de

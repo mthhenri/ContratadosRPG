@@ -1,5 +1,313 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-06`: nova skill `design-fidelity` executa o gate visual obrigatório
+
+Sexta das nove tasks de `skills-agentes.spec.md`. Motivação: `verify` ensina **como** rodar e
+dirigir o app, mas nenhuma skill ensinava **contra o que comparar** — a parte mais detalhada do
+`CLAUDE.md` ("Processo obrigatório para qualquer UI ou estilo", seis passos) e a mais violada na
+prática (`P-028`: Maestria de Vigor commitada sem verificação visual, com testes e lint verdes;
+`P-020`: templates/SCSS compactados, resultado de construir sem padrão; `P-005`: corte de letra
+achado só em auditoria posterior).
+
+`design-fidelity/SKILL.md` (86 linhas) + `references/analogos.md` (22 linhas), nas duas pastas,
+cobrem os seis passos do `CLAUDE.md` na ordem: escolher e registrar o análogo (shell, densidade,
+hierarquia, controles, estados, iconografia, responsivo — não só cor) → construir só com tokens e
+blocos BEM de `_componentes.scss` → verificar com a skill `verify` (ponteiro, sem duplicar) nos
+dois viewports e nos estados reais da tela → checklist de 6 itens sim/não → corrigir antes de
+apresentar → nota de que delegação (relato/screenshot de subagente) não fecha o gate.
+
+**Achados durante a conferência dos exemplos** (exigida pela spec antes de citá-los, mesmo padrão
+de `skills-05`): a motivação da própria spec cita "24 capturas" em `docs/design/examples/` — o
+diretório tem **21** (`ls docs/design/examples/*.html`), não 24; o número errado não foi
+propagado para a skill, que cita o comando em vez de um número fixo. Também: `iniciativa-
+desktop.html`/`iniciativa-mobile.html` existem e são válidos, mas não aparecem na tabela do
+`examples/README.md` nem em `DESIGN.md` — só descobertos ao conferir a listagem contra a
+motivação da spec, que já citava esse par como exemplo de "painel de mestre/combate". Registrado
+como nota na própria linha da tabela de `references/analogos.md` (não abri `PROBLEMS.md` para
+isso — é lacuna pequena de documentação, não comportamento quebrado, e já fica registrada no
+lugar onde alguém vai precisar dela). Também achado: o deliverable 4 da spec pedia apontar para
+`npm run format:html-scss -w frontend` — script que **não existe** (`formatacao-legibilidade-
+frontend.spec.md` segue em `backlog/`, não implementada); a skill não cita o comando como se já
+existisse, só aponta para a spec pendente.
+
+**Validação por uso** (critério de aceite obrigatório): exercitada a skill sobre uma tela já
+existente e aprovada — Painel/Campanhas (análogo `campanhas.html`, componente vivo
+`campanha/paginas/lista`). Stack real (Postgres nativo, backend, frontend), sessão via
+`localStorage` e cenário por REST (mesmo padrão de `verify`), capturas nos dois viewports
+comparadas lado a lado com o análogo aberto via Playwright a partir do arquivo estático: topbar,
+cards de stat, card de campanha e densidade batem estruturalmente nos dois tamanhos — única
+diferença é conteúdo (dados de seed, esperado) e o rótulo do item de navegação "Calculadora" no
+análogo vs. "Simulação" no app atual (deriva de nomenclatura já conhecida, não defeito desta
+tela). Checklist de 6 itens: todos "sim". Tela aprovada passou, como o critério de aceite exigia.
+
+`diff -r .claude/skills .agents/skills` vazio. Fora de escopo, como definido na spec: não corrigi
+`P-005`/`P-028`/`P-020` (a skill existe para não repeti-los, não para resolvê-los agora), não
+recapturei `examples/`, não toquei tokens/`_componentes.scss`.
+
+## 2026-08-27 — `skills-05`: nova skill `sql-migrations` cobre schema, migration e SQL de repositório
+
+Quinta das nove tasks de `skills-agentes.spec.md`. Motivação: é a área mais densa em regras do
+`CONVENTIONS.md` e a única cujo erro é irreversível em produção — `P-017` (resolvido) foi
+exatamente uma migration que nunca rodou em produção, e `docs/CONVENTIONS.md:209` ainda anunciava
+"Próxima migration: `0009`" com o diretório real em `0025` (16 migrations de atraso), prova de que
+um número escrito em doc envelhece e ninguém nota.
+
+`sql-migrations/SKILL.md` (nas duas pastas, idênticas, 108 linhas) cobre em ordem: onde o dado
+vive (identidade/posse → coluna; conteúdo de jogo → JSONB `dados`; enum de coluna → tabela
+`tipo_*` com tradução `codigo↔id` no repositório; enum de conteúdo de jogo → enum TS, nunca
+tabela), como escrever a migration (nome, numeração **só por comando** — nunca número fixo —,
+`-- UP`/`-- DOWN`, proibição de transação manual, marcador `-- NO TRANSACTION` para
+`CREATE INDEX CONCURRENTLY`), prefixos, regras de SQL de repositório (`BaseRepository`,
+`:nomeParametro`, `INSERT...SELECT...RETURNING`) e checklist pré-commit. Sem template genérico —
+todo exemplo aponta migration ou arquivo real do repositório (`0025` para coluna nova, `0021` para
+tabela nova, `encontro.repository.ts` para a tradução `codigo↔id`).
+
+**Achado durante a conferência dos exemplos** (exigida pela spec antes de citá-los): `0021`, `0022`,
+`0023` e `0024` usam o prefixo `ck_` em vez do `chk_` documentado em `CONVENTIONS.md` para CHECK
+constraint — `0018` segue o prefixo certo, então a inconsistência é real, não uma leitura errada
+minha da regra. Fora de escopo corrigir a migration (nenhuma migration real pode ser tocada nesta
+task); registrado como `PROBLEMS.md` `P-031` e citado no `SKILL.md` como armadilha explícita ao
+copiar `0021` — quem seguir o exemplo estrutural da tabela não deve copiar esse prefixo.
+
+**Validação por uso** (critério de aceite obrigatório): escrita uma migration hipotética completa
+(`0026 - Tabela de referência tipo_encontro_evento.sql`, convertendo a coluna solta `tipo VARCHAR`
+de `encontro_evento` numa tabela `tipo_encontro_evento` de verdade) seguindo só o `SKILL.md`, sem
+reler `CONVENTIONS.md`/`SYSTEM.SPEC.md` — número descoberto pelo comando (`0026`, o diretório
+segue em `0025`), nome no formato certo, `-- UP`/`-- DOWN`, `BaseEntity` explícita sem `DEFAULT`,
+prefixos `pk_`/`uix_`/`trg_`/`fk_` corretos (nenhum `chk_` necessário neste caso — sem checar essa
+armadilha na prática, mas o texto a documenta), `DOWN` desfazendo o `UP` na ordem inversa,
+literais SQL em vez de parâmetro nos `INSERT` de seed (exceção documentada). Comparada contra
+`0025`: mesma estrutura de nome e seções. Nenhuma lacuna encontrada desta vez — ao contrário de
+`skills-03`, o texto se sustentou sozinho do início ao fim. Arquivo fica só no scratchpad da
+sessão, não commitado (a spec pede explicitamente para não entrar no diff da task).
+
+Todo comando citado na skill foi conferido contra o `package.json` real (`db:migrate`,
+`db:rollback`, `db:reset:dev`, `db:seed:dev`) e o `render.yaml` (confirma que o deploy hoje roda
+`db:migrate` automaticamente — o cenário do `P-017` original, migration esquecida manualmente, já
+está mitigado no pipeline, mas o hábito de conferir continua valendo para qualquer ambiente fora
+dele). `diff -r .claude/skills .agents/skills` vazio. Fora de escopo, como definido na spec: não
+corrigi `CONVENTIONS.md:209` (linha de doc desatualizada, fica registrada aqui para o autor decidir
+entre corrigi-la avulsa ou deixá-la — não é `PROBLEMS.md` porque não é comportamento quebrado, só
+texto obsoleto) nem toquei schema/repositório real algum.
+
+## 2026-08-27 — `skills-04`: nova skill `task-flow` reúne o fluxo de spec e o fecho de task
+
+Quarta das nove tasks de `skills-agentes.spec.md` — primeira das cinco que **cria** skill nova
+(as três anteriores só corrigiram o que já existia). Motivação: `PROBLEMS.md` `P-002` (11 commits
+reais entraram depois da `m3-27` sem nenhum registro em `HISTORY.md`, porque vieram por PR fora do
+fluxo) e `P-028` (implementação commitada antes do gate visual) são os dois sintomas mais visíveis
+de que o fluxo de spec e o fecho de task — a regra mais longa do `CLAUDE.md` — é também a mais
+violada na prática. Não havia template de spec no repositório; cada spec nova era escrita imitando
+outra à mão.
+
+**O que foi criado:**
+- `task-flow/SKILL.md` (nas duas pastas, idênticas, 105 linhas): ordem de execução Abrir →
+  Implementar → Gates → Fechar → Fecho auditável, com a tabela de comandos reais por workspace
+  (teste focado, suíte completa, lint) e os formatos copiáveis de `PROBLEMS.md`/`IDEAS.md`. Ponteiro
+  para `CLAUDE.md` como fonte da regra — a skill não a reescreve, só reúne a ordem e os formatos, que
+  hoje não estavam juntos em lugar nenhum.
+- `docs/specs/TEMPLATE.spec.md`: seções obrigatórias (Objetivo, Entregáveis, Critérios de Aceite,
+  Fora de Escopo, Dependências) e opcional (Riscos e Mitigação), citando
+  `formatacao-legibilidade-frontend.spec.md` (avulsa) e `m4-06-regras-npc.spec.md` (milestone) como
+  referência.
+- Nota sobre trabalho que chega por PR fora do fluxo (`P-002`): a skill não decide a política em
+  aberto (`IDEAS.md` `I-003`) — só diz que o registro em `HISTORY.md` deve acontecer mesmo assim, e
+  aponta para `I-003` como a decisão pendente do autor.
+
+**Cada comando citado na tabela de Gates foi executado de verdade**, não só copiado do
+`package.json`: `npm run lint --workspace=shared` (0 erros, warnings pré-existentes), `npm run test
+--workspace=shared -- src/regras/encontro/ordem.spec.ts` (12/12), `npm run test --workspace=backend
+-- src/modules/ficha/ficha.repository.spec.ts` (6/6), `npm run test --workspace=frontend --
+--include=<arquivo> --list-tests` (confirma a sintaxe do builder Vitest do Angular 21, que aceita
+`--include` como glob), `npm run build --workspace=shared`.
+
+**Validação por uso** (critério de aceite obrigatório): o próprio fecho desta task foi escrito
+seguindo só o `task-flow/SKILL.md`, do zero. A skill se sustentou sozinha para os passos de
+"Fechar" (mover spec, formato do bloco de `HISTORY.md`, editar só as seções afetadas de
+`CONTEXT.md`, checar `PROBLEMS.md`/`IDEAS.md`/`MEMORY.md`). Único ponto que exigiu decisão fora do
+texto literal da skill: `MEMORY.md` não tinha ainda uma entrada citando `task-flow` — path
+esperado ("atualizar `MEMORY.md` quando algo descoberto sobreviver à tarefa"), resolvido
+adicionando `task-flow` ao ponteiro existente de "Skills de agente" e reescrevendo a §5 ("Fluxo de
+uma task") para apontar para a skill nova em vez de só o `CLAUDE.md`.
+
+`PROBLEMS.md`: `P-002` continua **aberto** — o bloco retroativo dos 11 commits é trabalho de
+conteúdo, explicitamente fora do escopo desta task (só o processo foi corrigido, não o buraco já
+existente). `IDEAS.md`: `I-003` continua em "Abertas" — a skill aponta para ela, mas a decisão de
+política é do autor, não desta task. Task puramente documental — sem mudança de código de produto,
+sem gate visual aplicável.
+
+## 2026-08-27 — `skills-03`: `verify` alinhada pela versão rica, validada de ponta a ponta
+
+Terceira das nove tasks de `skills-agentes.spec.md`. Ao contrário de `skills-02`, aqui a cópia
+carregada pelo Claude Code (`.claude/skills/verify/`) já era a boa; a de `.agents/` era um resumo
+que tinha apagado justamente o que uma skill de verificação existe para carregar: números,
+comandos e seletores. Alinhamento feito **para cima**, com `.claude/` como base.
+
+**Aproveitado da versão curta** (entregável 2 da spec): a frase que delimita o papel da skill —
+"testes e lint são complementares, mas não substituem a verificação manual quando ela for
+necessária" — substituiu a abertura mais seca de `.claude/` ("Não vale rodar teste/lint como
+verificação"). Conferência item a item não achou mais nada de aproveitável na versão curta além
+dessa frase.
+
+**Conferência de cada dado operacional contra o código/config de hoje** (entregável 3):
+portas `3100`/`4300` e proxy do frontend com `ws:true` (`frontend/proxy.conf.json`) — batem;
+container `contratados-rpg-postgres` (`docker-compose.yml`) — bate; chave e formato da sessão no
+`localStorage` (`contratados-rpg.sessao`, `UsuarioAutenticadoDto` inteiro — `sessao.service.ts`) —
+batem; `APP_FRONTEND_ORIGEM`/`APP_PORTA` (`.env.example` e `config.service.ts`) — batem; seletores
+`.ficha-ident__nome`, `[aria-label="Aumentar vida"/"Reduzir vida"/"Vida atual"]`
+(`ficha-visualizacao.component.html`) — batem, inclusive a nota de que `"Vida atual"` só existe no
+modo de digitação. Único dado sem confirmação literal: `pingInterval`/`pingTimeout` não estão
+configurados em nenhum lugar do backend (`WsIoAdapter` não os sobrescreve) — os "25s"/"20s" do
+texto são os **padrões do Socket.IO**, não uma config do projeto; o texto foi ajustado para dizer
+isso explicitamente, em vez de sugerir que alguém escreveu esses números em algum gateway.
+
+**Validação por uso** (critério de aceite obrigatório): rodada de ponta a ponta seguindo só o que
+está escrito no arquivo. Docker não está disponível neste sandbox remoto (`dockerd` recusa subir —
+container sem privilégio); como substituto **só para esta verificação**, um Postgres 16 nativo já
+instalado no ambiente foi usado no lugar do container (mesma porta/usuário/banco do
+`.env.example`), sem alterar a skill — ela continua descrevendo `npm run db:up` normalmente, que é
+o que qualquer colaborador com Docker de verdade vai rodar. A partir daí, tudo seguiu literalmente
+o texto: `npm install` (que já dispara o build de `shared` — a armadilha documentada),
+`db:migrate`, `backend:dev`, `frontend:dev`, sessão real via `localStorage` com a chave e o formato
+exatos do arquivo, cenário por REST (registro → login → `POST /campanha` → `POST /ficha`),
+Playwright global via `require.resolve` com `paths`, os dois viewports (`1920×1080`, `360×800`)
+com os seletores citados — todos encontrados. **Lacuna real encontrada e corrigida**: o arquivo
+nunca dizia **qual URL abrir** para ver a ficha criada; `/ficha/:id` (chute óbvio) não existe — a
+rota de visualização é `/fichas/:id` (acervo, m3-28), enquanto `/painel/:campanhaId/ficha` é só
+criação/edição. Sem essa linha, quem seguisse o arquivo à risca ficaria preso exatamente onde a
+verificação por uso pegou. Adicionada ao `SKILL.md`. Fora isso, o texto bastou sozinho — sem
+precisar de conhecimento externo à skill.
+
+Os sete itens da tabela de motivação (resolução do Playwright global, armadilha `shared/dist` com
+`EADDRINUSE`, 500 fantasma de CORS com a explicação do porquê de `GET` escapar, seletores reais da
+ficha, `io server disconnect` sem laço de reconexão, números de ping + comando de `UPDATE` direto
+no Postgres, nome do container + proxy `ws:true`) seguem todos presentes — nenhum perdido na fusão,
+porque a fusão partiu de `.claude/` como base, sem reescrever do zero. `SKILL.md` final com 119
+linhas — sem necessidade do corte para `references/tempo-real.md` previsto no entregável 6.
+Cópia idêntica confirmada (`diff -r .claude/skills .agents/skills` vazio) — a divergência entre as
+duas pastas está zerada em todo o repositório agora que `dto-conventions` (`skills-02`) e `verify`
+(`skills-03`) foram alinhadas. `P-023` (seed de dev quebrado) segue sem correção nesta task, por ser
+fora de escopo — a skill já apontava o contorno por REST, que foi o próprio caminho usado aqui.
+
+## 2026-08-27 — `skills-02`: `dto-conventions` deixa de ser cópia de outro projeto
+
+Segunda das nove tasks de `skills-agentes.spec.md`. Corrige a skill `dto-conventions`, que estava
+**errada em uso**: `.claude/skills/dto-conventions/SKILL.md` — a cópia que o Claude Code
+efetivamente carrega — intitulava-se "Convenções de DTO — Project 2.0", ensinava
+`import { UsuarioCriarDto } from '@project20/shared/dtos/usuario'` e usava como exemplo entidades
+que não existem aqui (`Demanda`, `Projeto`, `Ponto`, `Execucao`, `Atividade`, `Calendario`, `Tag`,
+`Assistente`). `.agents/skills/dto-conventions/SKILL.md` já falava do projeto certo
+(`@contratados-rpg/shared`) mas era um resumo de 50 linhas sem as regras de complemento composto,
+o caso `Interno`, a justificativa da proibição de herança e os anti-padrões.
+
+`SKILL.md` foi reescrito a partir da versão rica de `.claude/` como base estrutural, com todo
+exemplo trocado por DTO real conferido em `shared/src/dtos/` (não inventado — cada nome citado foi
+localizado com `grep` antes de entrar no arquivo):
+
+- Fórmula geral e tabela: `FichaCriarDto`/`FichaCriadaDto`, `FichaAlterarDto`/`FichaAlteradaDto`,
+  `FichaRecuperarDto`/`FichaRecuperadaDto`, `FichaListarDto`/`FichaResumoDto`,
+  `CampanhaConviteRegenerarDto`/`CampanhaConviteRegeneradoDto` (complemento simples + verbo),
+  `CampanhaMembrosListarDto`/`CampanhaMembroResumoDto` (complemento coleção, plural na entrada),
+  `CampanhaMembroInternoRecuperarDto`/`CampanhaMembroInternoRecuperadoDto` (`Interno`).
+- Complemento composto: `CampanhaInventarioItemQuantidadeAjustarDto` (complemento longo, todas as
+  palavras antes do verbo).
+- Herança: único caso real do projeto hoje, `UsuarioListadosDto extends PaginatedResult
+  <UsuarioResumoDto>` (`shared/src/dtos/usuario/usuario.dtos.ts:203`) — e a correção de que
+  `StandardResponse<TData>` é **interface montada pelo interceptor**, não algo que um DTO de
+  negócio estende diretamente (a versão antiga de `.claude/` ensinava
+  `class UsuarioCriadoDto extends StandardResponse<...>`, que não reflete como o projeto usa o
+  tipo).
+- Casos especiais movidos para `dto-conventions/references/casos-especiais.md` (nas duas pastas,
+  como o `SKILL.md` principal ficaria acima de ~150 linhas com eles dentro): `Interno` com
+  exemplos reais de `ficha`, `campanha` e `encontro`; consulta computada
+  (`FichaMediasEsquadraoDto`, `Entidade + Recorte + Dto` sem verbo, reaproveitando `FichaListarDto`
+  como entrada); value-object (`FichaImagemArquivoDto`, já comentado no próprio código-fonte como
+  "value-object sem entidade nem verbo"); e a tabela de anti-padrões, com
+  `CampanhaListadoDto` (❌, forma que não existe) ao lado de `CampanhaResumoDto` (✅, a que existe).
+- O checklist final de conferência (nome/verbo/direção/complemento/herança/localização), que só a
+  versão de `.agents/` tinha, foi preservado no fim do `SKILL.md`.
+- `description` do frontmatter manteve a força de gatilho da versão de `.claude/` (dispara mesmo
+  sem a palavra "DTO" na tarefa), só corrigindo o nome do projeto.
+
+**Achado de correção além do escopo de nomenclatura:** todo DTO real do projeto é `interface`, não
+`class` — as duas versões antigas da skill mostravam DTOs uniformemente como `class` com
+`extends`. A skill reescrita usa `export interface` nos exemplos e reserva `class` só para o caso
+real de herança de `PaginatedResult`, correspondendo ao código de `shared/src/dtos/` (confirmado:
+apenas um `export class` em todo `shared/src/dtos/`, contra 213 `export interface`).
+
+**Validação por uso** (aplicando a skill do zero, sem olhar o nome já existente antes de derivar):
+
+1. `CampanhaConviteRegenerarDto` — Entidade `Campanha` + Complemento `Convite` (sub-aspecto, não o
+   modelo inteiro) + verbo `Regenerar` no infinitivo (entrada) → nome derivado bate exatamente com
+   o já existente em `shared/src/dtos/campanha/campanha.dtos.ts:187`.
+2. `CampanhaMembrosListarDto` — Entidade `Campanha` + Complemento coleção `Membros` (plural, é uma
+   lista) + verbo `Listar` no infinitivo → bate exatamente com o já existente em
+   `campanha.dtos.ts:202`; a saída correta seguinte pela regra (`Resumo`, nunca o modelo inteiro
+   listado) é `CampanhaMembroResumoDto` (singular no item de listagem), que também bate com o real
+   (`campanha.dtos.ts:229`).
+3. **Caso hipotético, sub-aspecto de `Encontro` ainda não modelado:** alterar se um combatente do
+   encontro fica visível para os jogadores (hoje o campo não existe em `EncontroCombatenteDto`).
+   Aplicando a fórmula: Entidade `EncontroCombatente` (a operação é sobre o combatente, não o
+   encontro inteiro — mesmo padrão de `EncontroCombatenteIdentidadeAlterarDto`) + Complemento
+   `Visibilidade` (sub-aspecto único) + verbo `Alterar`/`Alterada` → nome coerente derivado:
+   `EncontroCombatenteVisibilidadeAlterarDto` (entrada) /
+   `EncontroCombatenteVisibilidadeAlteradaDto` (saída). Consistente com o par real já existente
+   `EncontroCombatenteIdentidadeAlterarDto`/`EncontroCombatenteIdentidadeAlteradaDto`
+   (`encontro.dtos.ts:198`) — não foi criado no código, é só o resultado da aplicação da skill.
+
+Critérios de aceite conferidos: `grep -ri "project20\|Project 2.0" .claude/skills .agents/skills`
+vazio; todo nome de DTO citado como exemplo existe em `shared/src/dtos/` (confirmado um a um via
+`grep`), exceto `CampanhaListadoDto`, marcado de propósito como anti-padrão inexistente; todo
+import citado resolve contra `shared/package.json` (`exports`) e os barrels de
+`shared/src/dtos/*/index.ts`; `diff -r .claude/skills .agents/skills` sai vazio para
+`dto-conventions/` (a diferença remanescente do `diff -r` geral é só em `verify/`, fora do escopo
+desta task — fica para `skills-03`).
+
+Sem mudança de código de produto; sem impacto em `shared`/`backend`/`frontend`, portanto sem rodar
+suíte de teste ou build.
+
+## 2026-08-27 — `skills-01`: regra de sincronia de skills + contrato de skill
+
+Primeira das nove tasks de `skills-agentes.spec.md` (spec guarda-chuva, fora da fila de
+milestone). Não corrige nem cria nenhuma skill — fixa a regra contra a qual `skills-02`…`skills-09`
+serão conferidas.
+
+A regra "Sincronização com CLAUDE.md" de `CLAUDE.md`/`AGENTS.md` cobria só os dois arquivos raiz;
+skills ficaram de fora e divergiram sem detecção. A seção ganhou um parágrafo estendendo a mesma
+exigência a `.claude/skills/` e `.agents/skills/` (cópias integrais arquivo a arquivo, incluindo
+`references/`, mesma tarefa, `diff -r .claude/skills .agents/skills` vazio antes de concluir) e uma
+subseção nova, "Contrato comum a toda skill do projeto", condensando os oito itens já enumerados em
+`skills-agentes.spec.md` ("Contrato comum a toda skill do projeto"): duas cópias idênticas,
+`description` de frontmatter escrita como gatilho, ponteiro em vez de cópia da fonte, o que a skill
+carrega de próprio (ordem de execução/checklist/armadilha de campo), teto de ~150 linhas com
+excedente em `references/`, o documento vence em conflito, português e validação por uso. As duas
+edições foram aplicadas palavra por palavra nos dois arquivos; `diff CLAUDE.md AGENTS.md` continua
+vazio exceto o cabeçalho (`# CLAUDE.md` / `# AGENTS.md`, divergência pré-existente e fora desta
+task). `MEMORY.md` (§1, "Onde estão as regras") ganhou uma linha de ponteiro nova apontando onde as
+skills vivem e qual ler antes de qual trabalho, sem duplicar o contrato.
+
+**Inventário de divergência registrado (`diff -r .claude/skills .agents/skills`, rodado antes de
+qualquer alteração desta task, saída não vazia):**
+
+- `dto-conventions/SKILL.md`: as duas versões divergem em conteúdo quase inteiro. A cópia em
+  `.claude/skills/` é de **outro projeto** ("Project 2.0" no título e no `description`, exemplos com
+  `import ... from '@project20/shared/dtos/usuario'`, entidades inexistentes aqui — `Demanda`,
+  `Projeto`, `Ponto`, `Execucao`, `Atividade`, `Calendario`) e é a versão **em vigor hoje** (Claude
+  Code carrega `.claude/`). A cópia em `.agents/skills/` já fala do projeto certo
+  (`@contratados-rpg/shared`, sem as entidades estranhas) mas é mais enxuta. Nenhuma das duas foi
+  tocada nesta task — correção é `skills-02`.
+- `verify/SKILL.md`: divergência inversa. `.claude/skills/verify/SKILL.md` é a versão mais rica e
+  operacionalmente mais correta (resolução global do Playwright via `npm root -g`, seletores reais
+  da ficha, `pingInterval 25s`/`pingTimeout 20s`, `EADDRINUSE`, o "500 fantasma" de CORS explicado
+  com a causa). `.agents/skills/verify/SKILL.md` tem a mesma estrutura mas perdeu esses detalhes de
+  campo. Nenhuma das duas foi tocada nesta task — alinhamento é `skills-03`.
+
+Sem mudança de código de produto; sem impacto em `shared`/`backend`/`frontend`, portanto sem rodar
+suíte de teste ou build. Verificação desta task: `diff CLAUDE.md AGENTS.md` (só o cabeçalho difere,
+como já era antes) e leitura da subseção nova em ambos os arquivos confirmando que um agente sem
+contexto prévio deste repositório consegue criar uma skill conforme só com o que está em
+`CLAUDE.md`/`AGENTS.md`, sem precisar ler `skills-agentes.spec.md`.
+
 ## 2026-08-27 — Inventário de esquadrão ganha edição de item custom
 
 Ajuste avulso pedido direto pelo autor: poder editar um item custom já guardado no inventário de

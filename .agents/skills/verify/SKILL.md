@@ -1,38 +1,51 @@
 ---
 name: verify
-description: Levanta o stack real e verifica a aplicação ContratadosRPG em execução, incluindo UI, REST e WebSocket.
+description: Como levantar o stack real (Postgres + NestJS + Angular) e dirigir a aplicação de verdade para verificar uma mudança — inclusive o tempo real (WebSocket) com dois usuários.
 ---
 
-# Verificação ao vivo
+# Verificação ao vivo — ContratadosRPG
 
-Esta skill é para observar a aplicação real; testes e lint são complementares,
-mas não substituem a verificação manual quando ela for necessária.
+Roda o app de verdade e observa. Testes e lint são complementares, mas não substituem a
+verificação manual quando ela for necessária.
 
-## Stack
+## Levantar o stack
 
 ```bash
-npm run db:up
+npm run db:up                             # Postgres 16 (container contratados-rpg-postgres)
 npm run db:migrate --workspace=backend
-npm run backend:dev       # 3100
-npm run frontend:dev      # 4300, proxy para 3100
+npm run backend:dev                       # 3100
+npm run frontend:dev                      # 4300 (proxy → 3100, inclui /socket.io com ws:true)
 ```
 
-O frontend e o backend podem já estar rodando. Se a alteração adicionou uma
-dependência, reinicie o processo que a utiliza ou suba-o em uma porta isolada.
-Ao usar outra porta, mantenha `APP_FRONTEND_ORIGEM` do backend igual à origem do
-frontend; caso contrário, PUT/POST/DELETE podem aparecer como erro 500 por CORS.
+**Portas já ocupadas?** O autor costuma deixar backend e frontend rodando. Um `ng serve`
+iniciado *antes* de um `npm install` não enxerga dependência nova — se a mudança adicionou
+pacote, suba um frontend próprio numa porta isolada em vez de confiar no que está no ar.
 
-O backend importa `@contratados-rpg/shared/*` do pacote publicado (`shared/dist`), não de
-`shared/src`. `nest start --watch` recompila sozinho a cada save em `backend/src`, mas não
-detecta mudanças em `shared/src` — um DTO/enum novo só chega ao backend depois de
-`npm run build --workspace=shared`. Sintoma: a rota nova responde 404 mesmo com o código
-correto, ou o watcher acusa `TS2724: has no exported member`.
+### Armadilha: DTO novo em `shared/` não aparece no backend rodando
 
-Exemplo de stack isolado:
+O backend importa `@contratados-rpg/shared/*` pelo pacote publicado (resolve para `shared/dist`,
+não para `shared/src`). `nest start --watch` recompila e reinicia sozinho a cada save em
+`backend/src`, mas **não** detecta mudanças em `shared/src` — um DTO/enum novo só aparece no
+backend depois de `npm run build --workspace=shared`. Sintoma: `tsc`/testes de `shared` e
+`backend` passam isoladamente, mas a rota nova responde 404 ("Cannot PATCH/POST/...") ou o
+compilador do `nest start --watch` acusa `TS2724: has no exported member` mesmo com o código
+correto. Rode o build do `shared` **antes** de testar contra o backend já em execução; se o
+processo já tentou subir com o import quebrado e morreu por `EADDRINUSE` numa tentativa seguinte,
+mate o processo órfão (`netstat -ano | grep :3100`) antes de reiniciar.
+
+### Armadilha: `Origin` e o 500 fantasma
+
+`APP_FRONTEND_ORIGEM` no `.env` é `http://localhost:4300`. O Chrome manda `Origin` em
+requisições same-origin com método **não-simples** (PUT/POST/DELETE) — `GET` não manda.
+Servir o frontend em **outra porta** faz todo PUT do browser voltar
+**500 "Erro interno do servidor"** (o CORS rejeita a origem e o filtro global mapeia pra 500),
+enquanto as telas carregam normalmente. Isso *parece* bug de produto e não é.
+
+Ao usar porta alternativa, suba um backend próprio com a origem casada:
 
 ```bash
 APP_PORTA=3101 APP_FRONTEND_ORIGEM=http://localhost:4301 npm run backend:dev
-npm run start --workspace=frontend -- --port 4301 --proxy-config <proxy-para-3101>
+npm run start --workspace=frontend -- --port 4301 --proxy-config <proxy apontando p/ 3101>
 ```
 
 ## Viewports padrão
@@ -49,41 +62,58 @@ await browser.newContext({ viewport: { width: 1920, height: 1080 } }); // deskto
 ```
 
 O breakpoint mobile do CSS (`$bp-mobile`) é `560px` — 360px está bem dentro dele, então
-qualquer verificação em 360×800 já exercita o layout mobile real, não uma zona
-intermediária.
+qualquer verificação em 360×800 já exercita o layout mobile real, não uma zona intermediária.
 
-## UI e sessão
+## Dirigir a UI
 
-Playwright está disponível globalmente. O `SessaoService` aceita uma sessão
-real no localStorage, evitando login pela tela:
+Playwright está **global** (`npm root -g`), não em `node_modules`. Chromium já em cache.
 
 ```js
-await contexto.addInitScript(([chave, valor]) => localStorage.setItem(chave, valor),
-  ['contratados-rpg.sessao', JSON.stringify(usuarioAutenticadoDto)]);
+const { chromium } = require(require.resolve('playwright', { paths: [require('child_process').execSync('npm root -g').toString().trim()] }));
 ```
 
-Monte cenários por REST (`/autenticacao/registro`, `/login`, campanha e ficha).
-Para provar que uma ação não recarregou a página, defina `window.__sentinela`
-antes e confira o valor depois.
-
-## WebSocket
-
-- O JWT vai em `auth.token`.
-- Token ausente ou inválido pode produzir `connect` seguido de `disconnect`, e
-  não necessariamente `connect_error`.
-- A entrada em sala é autorizada pela service dona da ficha; falha responde
-  `{sucesso:false}` sem executar `join`.
-- O primeiro join usa polling antes do upgrade; capture também POSTs de
-  `/socket.io/?...transport=polling`, não só frames WebSocket.
-
-Para testar o gateway diretamente:
+Sessão real sem passar pela tela de login — o `SessaoService` lê uma chave só:
 
 ```js
-const { io } = require('socket.io-client');
+await contexto.addInitScript(([k, v]) => localStorage.setItem(k, v),
+  ['contratados-rpg.sessao', JSON.stringify(usuarioAutenticadoDto)]); // { token, id, login, nome }
+```
+
+Monte o cenário por REST (`/autenticacao/registro`, `/login`, `POST /campanha`,
+`POST /campanha/entrar` com `codigoConvite`, `POST /ficha`). Abra a ficha criada em
+`http://localhost:4300/fichas/:id` — **não** `/ficha/:id`; a rota de visualização vive sob o
+acervo (`/fichas`), só a criação/edição fica sob `/painel/:campanhaId/ficha`. Seletores úteis:
+`.ficha-ident__nome` (codinome), `[aria-label="Aumentar vida"]` / `"Reduzir vida"` (ajuste
+rápido). `[aria-label="Vida atual"]` **só existe** no modo de digitação.
+
+**Provar "sem recarregar":** plante `window.__sentinela` antes e confira depois — se a página
+recarregou, a variável some.
+
+## Tempo real (WebSocket)
+
+- O cliente conecta em `environment.apiBase || undefined` (mesma origem em dev, via proxy).
+- Handshake leva o JWT em `auth.token`. Token ausente/inválido → o gateway aceita o transporte
+  e **só então** chama `disconnect(true)`: o cliente vê `connect` seguido de `disconnect`
+  (`io server disconnect`), **não** `connect_error`. Não há laço de reconexão (`socket.active`
+  fica `false`) — servidor que desconecta manda o cliente não retentar.
+- Entrada em sala é gateada pela §14 na service dona: `ficha:entrar` responde
+  `{sucesso:false}` e não faz `join` para quem não pode ver a ficha.
+- O join sai por **polling** antes do upgrade pra websocket — escutar só `framesent` do
+  WebSocket **não** captura o `ficha:entrar`. Capture também os POST de
+  `/socket.io/?...transport=polling`.
+
+Cliente cru pra testar o gateway direto (mesmo protocolo do Angular):
+
+```js
+const { io } = require(require.resolve('socket.io-client', { paths: [REPO] }));
 io('http://localhost:3100', { auth: { token } });
 ```
 
-Para testar reconexão, não dependa apenas de `context.setOffline(true)`: o socket
-pode levar até o intervalo de ping para perceber a perda. Derrube o backend,
-altere a ficha diretamente no Postgres sem emitir evento e suba o backend; uma
-atualização na tela deve vir do refetch de reconexão.
+**Testar a reconexão (§9):** `context.setOffline(true)` **não serve** — o socket só percebe
+pelo timeout de ping. O `WsIoAdapter` (`backend/src/core/gateway/ws-io.adapter.ts`) não
+sobrescreve `pingInterval`/`pingTimeout`, então valem os padrões do Socket.IO
+(`pingInterval 25s` + `pingTimeout 20s`, até ~45s). Derrube o backend de
+verdade (fecha o TCP → `disconnect` na hora), altere a ficha **direto no Postgres**
+(`docker exec contratados-rpg-postgres psql -U postgres -d contratados_rpg -c "UPDATE ficha …"`)
+— assim nenhum `ficha:alterada` existe para a mudança — e suba o backend. Se a tela atualizar,
+foi o refetch da reconexão, não o broadcast.
