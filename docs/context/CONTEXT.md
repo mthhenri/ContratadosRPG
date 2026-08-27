@@ -335,19 +335,21 @@
 
 ## 1. Próxima Task
 
-**`skills-01`…`skills-04` (quatro das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora
-da fila de milestone) concluídas.** Estado atual: as duas pastas de skill
+**`skills-01`…`skills-05` (cinco das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
+fila de milestone) concluídas.** Estado atual: as duas pastas de skill
 (`.claude/skills/`↔`.agents/skills/`) estão 100% idênticas (`diff -r` vazio); o "Contrato comum a
 toda skill do projeto" está fixado em `CLAUDE.md`/`AGENTS.md` (`skills-01`); `dto-conventions`
 (`skills-02`) e `verify` (`skills-03`) foram corrigidas contra o código real do projeto — a
 primeira tinha conteúdo de outro projeto em vigor ("Project 2.0"), a segunda tinha perdido a
 armadilha de campo na cópia curta; `task-flow` (`skills-04`) é skill nova que reúne o fluxo de
-spec e o fecho de task, com `docs/specs/TEMPLATE.spec.md` como template oficial de spec. Detalhe
-completo de cada uma em `HISTORY.md` (busque `skills-0N`). `skills-05`…`skills-09` (novas skills)
-seguem independentes entre si na fila do backlog. Tasks puramente documentais — sem mudança de
-código de produto além das próprias `SKILL.md`, sem suíte de teste de produto ou gate visual
-aplicável (comandos de exemplo citados em `task-flow` foram executados de verdade, não só
-copiados).
+spec e o fecho de task, com `docs/specs/TEMPLATE.spec.md` como template oficial de spec;
+`sql-migrations` (`skills-05`) é skill nova para schema/migration/SQL de repositório — achou e
+registrou `PROBLEMS.md` `P-031` (quatro migrations com prefixo `ck_` em vez de `chk_`) durante a
+conferência dos exemplos citados. Detalhe completo de cada uma em `HISTORY.md` (busque
+`skills-0N`). `skills-06`…`skills-09` (novas skills) seguem independentes entre si na fila do
+backlog. Tasks puramente documentais — sem mudança de código de produto além das próprias
+`SKILL.md`, sem suíte de teste de produto ou gate visual aplicável (comandos citados foram
+executados/conferidos de verdade, não só copiados).
 
 **Ajuste avulso (pedido direto do autor, 2026-08-27, sem número de milestone) concluído** — o
 inventário de esquadrão ganhou o mesmo editor "Editar informações" de item custom que já existia

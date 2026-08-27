@@ -1,5 +1,51 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-05`: nova skill `sql-migrations` cobre schema, migration e SQL de repositório
+
+Quinta das nove tasks de `skills-agentes.spec.md`. Motivação: é a área mais densa em regras do
+`CONVENTIONS.md` e a única cujo erro é irreversível em produção — `P-017` (resolvido) foi
+exatamente uma migration que nunca rodou em produção, e `docs/CONVENTIONS.md:209` ainda anunciava
+"Próxima migration: `0009`" com o diretório real em `0025` (16 migrations de atraso), prova de que
+um número escrito em doc envelhece e ninguém nota.
+
+`sql-migrations/SKILL.md` (nas duas pastas, idênticas, 108 linhas) cobre em ordem: onde o dado
+vive (identidade/posse → coluna; conteúdo de jogo → JSONB `dados`; enum de coluna → tabela
+`tipo_*` com tradução `codigo↔id` no repositório; enum de conteúdo de jogo → enum TS, nunca
+tabela), como escrever a migration (nome, numeração **só por comando** — nunca número fixo —,
+`-- UP`/`-- DOWN`, proibição de transação manual, marcador `-- NO TRANSACTION` para
+`CREATE INDEX CONCURRENTLY`), prefixos, regras de SQL de repositório (`BaseRepository`,
+`:nomeParametro`, `INSERT...SELECT...RETURNING`) e checklist pré-commit. Sem template genérico —
+todo exemplo aponta migration ou arquivo real do repositório (`0025` para coluna nova, `0021` para
+tabela nova, `encontro.repository.ts` para a tradução `codigo↔id`).
+
+**Achado durante a conferência dos exemplos** (exigida pela spec antes de citá-los): `0021`, `0022`,
+`0023` e `0024` usam o prefixo `ck_` em vez do `chk_` documentado em `CONVENTIONS.md` para CHECK
+constraint — `0018` segue o prefixo certo, então a inconsistência é real, não uma leitura errada
+minha da regra. Fora de escopo corrigir a migration (nenhuma migration real pode ser tocada nesta
+task); registrado como `PROBLEMS.md` `P-031` e citado no `SKILL.md` como armadilha explícita ao
+copiar `0021` — quem seguir o exemplo estrutural da tabela não deve copiar esse prefixo.
+
+**Validação por uso** (critério de aceite obrigatório): escrita uma migration hipotética completa
+(`0026 - Tabela de referência tipo_encontro_evento.sql`, convertendo a coluna solta `tipo VARCHAR`
+de `encontro_evento` numa tabela `tipo_encontro_evento` de verdade) seguindo só o `SKILL.md`, sem
+reler `CONVENTIONS.md`/`SYSTEM.SPEC.md` — número descoberto pelo comando (`0026`, o diretório
+segue em `0025`), nome no formato certo, `-- UP`/`-- DOWN`, `BaseEntity` explícita sem `DEFAULT`,
+prefixos `pk_`/`uix_`/`trg_`/`fk_` corretos (nenhum `chk_` necessário neste caso — sem checar essa
+armadilha na prática, mas o texto a documenta), `DOWN` desfazendo o `UP` na ordem inversa,
+literais SQL em vez de parâmetro nos `INSERT` de seed (exceção documentada). Comparada contra
+`0025`: mesma estrutura de nome e seções. Nenhuma lacuna encontrada desta vez — ao contrário de
+`skills-03`, o texto se sustentou sozinho do início ao fim. Arquivo fica só no scratchpad da
+sessão, não commitado (a spec pede explicitamente para não entrar no diff da task).
+
+Todo comando citado na skill foi conferido contra o `package.json` real (`db:migrate`,
+`db:rollback`, `db:reset:dev`, `db:seed:dev`) e o `render.yaml` (confirma que o deploy hoje roda
+`db:migrate` automaticamente — o cenário do `P-017` original, migration esquecida manualmente, já
+está mitigado no pipeline, mas o hábito de conferir continua valendo para qualquer ambiente fora
+dele). `diff -r .claude/skills .agents/skills` vazio. Fora de escopo, como definido na spec: não
+corrigi `CONVENTIONS.md:209` (linha de doc desatualizada, fica registrada aqui para o autor decidir
+entre corrigi-la avulsa ou deixá-la — não é `PROBLEMS.md` porque não é comportamento quebrado, só
+texto obsoleto) nem toquei schema/repositório real algum.
+
 ## 2026-08-27 — `skills-04`: nova skill `task-flow` reúne o fluxo de spec e o fecho de task
 
 Quarta das nove tasks de `skills-agentes.spec.md` — primeira das cinco que **cria** skill nova
