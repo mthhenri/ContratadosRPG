@@ -5,7 +5,8 @@ description: Como levantar o stack real (Postgres + NestJS + Angular) e dirigir 
 
 # Verificação ao vivo — ContratadosRPG
 
-Roda o app de verdade e observa. Não vale rodar teste/lint como verificação.
+Roda o app de verdade e observa. Testes e lint são complementares, mas não substituem a
+verificação manual quando ela for necessária.
 
 ## Levantar o stack
 
@@ -79,7 +80,9 @@ await contexto.addInitScript(([k, v]) => localStorage.setItem(k, v),
 ```
 
 Monte o cenário por REST (`/autenticacao/registro`, `/login`, `POST /campanha`,
-`POST /campanha/entrar` com `codigoConvite`, `POST /ficha`). Seletores úteis da ficha:
+`POST /campanha/entrar` com `codigoConvite`, `POST /ficha`). Abra a ficha criada em
+`http://localhost:4300/fichas/:id` — **não** `/ficha/:id`; a rota de visualização vive sob o
+acervo (`/fichas`), só a criação/edição fica sob `/painel/:campanhaId/ficha`. Seletores úteis:
 `.ficha-ident__nome` (codinome), `[aria-label="Aumentar vida"]` / `"Reduzir vida"` (ajuste
 rápido). `[aria-label="Vida atual"]` **só existe** no modo de digitação.
 
@@ -107,7 +110,9 @@ io('http://localhost:3100', { auth: { token } });
 ```
 
 **Testar a reconexão (§9):** `context.setOffline(true)` **não serve** — o socket só percebe
-pelo timeout de ping (`pingInterval 25s` + `pingTimeout 20s`, até ~45s). Derrube o backend de
+pelo timeout de ping. O `WsIoAdapter` (`backend/src/core/gateway/ws-io.adapter.ts`) não
+sobrescreve `pingInterval`/`pingTimeout`, então valem os padrões do Socket.IO
+(`pingInterval 25s` + `pingTimeout 20s`, até ~45s). Derrube o backend de
 verdade (fecha o TCP → `disconnect` na hora), altere a ficha **direto no Postgres**
 (`docker exec contratados-rpg-postgres psql -U postgres -d contratados_rpg -c "UPDATE ficha …"`)
 — assim nenhum `ficha:alterada` existe para a mudança — e suba o backend. Se a tela atualizar,

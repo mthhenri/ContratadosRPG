@@ -335,25 +335,34 @@
 
 ## 1. Próxima Task
 
-**`skills-01` e `skills-02` (primeira e segunda das nove tasks de `skills-agentes.spec.md`,
-guarda-chuva fora da fila de milestone) concluídas.** `skills-01` fixou a regra de sincronia
-(`.claude/skills/`↔`.agents/skills/` cópia integral, `diff -r .claude/skills .agents/skills`
-vazio) e o "Contrato comum a toda skill do projeto" em `CLAUDE.md`/`AGENTS.md`, sem tocar em
-nenhuma `SKILL.md`. `skills-02` corrigiu a skill `dto-conventions`, que estava **em vigor com o
-conteúdo errado**: a cópia carregada pelo Claude Code (`.claude/skills/`) era um arquivo de outro
-projeto ("Project 2.0", `import ... from '@project20/shared/dtos/usuario'`, entidades inexistentes
-aqui). Reescrita a partir da versão rica (`.claude/`), corrigida para `@contratados-rpg/shared`,
-com todo exemplo trocado por DTO real conferido em `shared/src/dtos/` (`CampanhaConviteRegenerarDto`,
+**`skills-01`, `skills-02` e `skills-03` (três primeiras das nove tasks de
+`skills-agentes.spec.md`, guarda-chuva fora da fila de milestone) concluídas — as duas pastas de
+skill (`.claude/skills/`↔`.agents/skills/`) estão hoje 100% idênticas (`diff -r` vazio) em todo o
+repositório.** `skills-01` fixou a regra de sincronia e o "Contrato comum a toda skill do
+projeto" em `CLAUDE.md`/`AGENTS.md`, sem tocar em nenhuma `SKILL.md`. `skills-02` corrigiu a skill
+`dto-conventions`, que estava **em vigor com o conteúdo errado**: a cópia carregada pelo Claude
+Code (`.claude/skills/`) era um arquivo de outro projeto ("Project 2.0",
+`import ... from '@project20/shared/dtos/usuario'`, entidades inexistentes aqui). Reescrita a
+partir da versão rica (`.claude/`), corrigida para `@contratados-rpg/shared`, com todo exemplo
+trocado por DTO real conferido em `shared/src/dtos/` (`CampanhaConviteRegenerarDto`,
 `CampanhaMembrosListarDto`, `CampanhaMembroInternoRecuperarDto`,
 `CampanhaInventarioItemQuantidadeAjustarDto`, `UsuarioListadosDto extends PaginatedResult`,
 `FichaMediasEsquadraoDto` como consulta computada, `FichaImagemArquivoDto` como value-object) e o
 checklist final que só a versão de `.agents/` tinha. Casos especiais e anti-padrões foram
 extraídos para `dto-conventions/references/casos-especiais.md` (as duas pastas) para manter o
-`SKILL.md` principal em ~111 linhas. Cópia idêntica nas duas pastas confirmada (`diff -r` vazio) e
-nenhum resquício de "Project 2.0"/`project20` (`grep -ri` vazio). Fica para `skills-03` (alinhar
-`verify` pela versão de `.claude/`, hoje mais rica que `.agents/`); `skills-04`…`skills-09` (novas
-skills) seguem independentes entre si na fila do backlog. Task puramente documental — sem mudança
-de código de produto, sem suíte de teste ou build para rodar, sem gate visual aplicável.
+`SKILL.md` principal em ~111 linhas. `skills-03` alinhou a skill `verify` — aqui o oposto de
+`skills-02`: a versão de `.claude/` já era a boa, a de `.agents/` tinha apagado a armadilha de
+campo (números, comandos, seletores). Alinhamento para cima, com `.claude/` como base; único
+aproveitamento da versão curta foi uma frase sobre o papel da skill perante teste/lint. Todo dado
+operacional (portas, container, chave/formato de sessão, `APP_FRONTEND_ORIGEM`, seletores da
+ficha) conferido contra o código/config real — só `pingInterval`/`pingTimeout` precisou de
+correção de enquadramento (são padrão do Socket.IO, não config do projeto). Validação por uso
+rodada de ponta a ponta (Postgres nativo como substituto do Docker, indisponível neste sandbox;
+stack real, sessão via `localStorage`, cenário por REST, Playwright nos dois viewports) achou e
+corrigiu uma lacuna real: o arquivo não dizia a URL de visualização da ficha (`/fichas/:id`, não
+`/ficha/:id`). `skills-04`…`skills-09` (novas skills) seguem independentes entre si na fila do
+backlog. Tasks puramente documentais — sem mudança de código de produto além das próprias
+`SKILL.md`, sem suíte de teste ou build para rodar, sem gate visual aplicável.
 
 **Ajuste avulso (pedido direto do autor, 2026-08-27, sem número de milestone) concluído** — o
 inventário de esquadrão ganhou o mesmo editor "Editar informações" de item custom que já existia

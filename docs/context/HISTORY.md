@@ -1,5 +1,58 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-03`: `verify` alinhada pela versão rica, validada de ponta a ponta
+
+Terceira das nove tasks de `skills-agentes.spec.md`. Ao contrário de `skills-02`, aqui a cópia
+carregada pelo Claude Code (`.claude/skills/verify/`) já era a boa; a de `.agents/` era um resumo
+que tinha apagado justamente o que uma skill de verificação existe para carregar: números,
+comandos e seletores. Alinhamento feito **para cima**, com `.claude/` como base.
+
+**Aproveitado da versão curta** (entregável 2 da spec): a frase que delimita o papel da skill —
+"testes e lint são complementares, mas não substituem a verificação manual quando ela for
+necessária" — substituiu a abertura mais seca de `.claude/` ("Não vale rodar teste/lint como
+verificação"). Conferência item a item não achou mais nada de aproveitável na versão curta além
+dessa frase.
+
+**Conferência de cada dado operacional contra o código/config de hoje** (entregável 3):
+portas `3100`/`4300` e proxy do frontend com `ws:true` (`frontend/proxy.conf.json`) — batem;
+container `contratados-rpg-postgres` (`docker-compose.yml`) — bate; chave e formato da sessão no
+`localStorage` (`contratados-rpg.sessao`, `UsuarioAutenticadoDto` inteiro — `sessao.service.ts`) —
+batem; `APP_FRONTEND_ORIGEM`/`APP_PORTA` (`.env.example` e `config.service.ts`) — batem; seletores
+`.ficha-ident__nome`, `[aria-label="Aumentar vida"/"Reduzir vida"/"Vida atual"]`
+(`ficha-visualizacao.component.html`) — batem, inclusive a nota de que `"Vida atual"` só existe no
+modo de digitação. Único dado sem confirmação literal: `pingInterval`/`pingTimeout` não estão
+configurados em nenhum lugar do backend (`WsIoAdapter` não os sobrescreve) — os "25s"/"20s" do
+texto são os **padrões do Socket.IO**, não uma config do projeto; o texto foi ajustado para dizer
+isso explicitamente, em vez de sugerir que alguém escreveu esses números em algum gateway.
+
+**Validação por uso** (critério de aceite obrigatório): rodada de ponta a ponta seguindo só o que
+está escrito no arquivo. Docker não está disponível neste sandbox remoto (`dockerd` recusa subir —
+container sem privilégio); como substituto **só para esta verificação**, um Postgres 16 nativo já
+instalado no ambiente foi usado no lugar do container (mesma porta/usuário/banco do
+`.env.example`), sem alterar a skill — ela continua descrevendo `npm run db:up` normalmente, que é
+o que qualquer colaborador com Docker de verdade vai rodar. A partir daí, tudo seguiu literalmente
+o texto: `npm install` (que já dispara o build de `shared` — a armadilha documentada),
+`db:migrate`, `backend:dev`, `frontend:dev`, sessão real via `localStorage` com a chave e o formato
+exatos do arquivo, cenário por REST (registro → login → `POST /campanha` → `POST /ficha`),
+Playwright global via `require.resolve` com `paths`, os dois viewports (`1920×1080`, `360×800`)
+com os seletores citados — todos encontrados. **Lacuna real encontrada e corrigida**: o arquivo
+nunca dizia **qual URL abrir** para ver a ficha criada; `/ficha/:id` (chute óbvio) não existe — a
+rota de visualização é `/fichas/:id` (acervo, m3-28), enquanto `/painel/:campanhaId/ficha` é só
+criação/edição. Sem essa linha, quem seguisse o arquivo à risca ficaria preso exatamente onde a
+verificação por uso pegou. Adicionada ao `SKILL.md`. Fora isso, o texto bastou sozinho — sem
+precisar de conhecimento externo à skill.
+
+Os sete itens da tabela de motivação (resolução do Playwright global, armadilha `shared/dist` com
+`EADDRINUSE`, 500 fantasma de CORS com a explicação do porquê de `GET` escapar, seletores reais da
+ficha, `io server disconnect` sem laço de reconexão, números de ping + comando de `UPDATE` direto
+no Postgres, nome do container + proxy `ws:true`) seguem todos presentes — nenhum perdido na fusão,
+porque a fusão partiu de `.claude/` como base, sem reescrever do zero. `SKILL.md` final com 119
+linhas — sem necessidade do corte para `references/tempo-real.md` previsto no entregável 6.
+Cópia idêntica confirmada (`diff -r .claude/skills .agents/skills` vazio) — a divergência entre as
+duas pastas está zerada em todo o repositório agora que `dto-conventions` (`skills-02`) e `verify`
+(`skills-03`) foram alinhadas. `P-023` (seed de dev quebrado) segue sem correção nesta task, por ser
+fora de escopo — a skill já apontava o contorno por REST, que foi o próprio caminho usado aqui.
+
 ## 2026-08-27 — `skills-02`: `dto-conventions` deixa de ser cópia de outro projeto
 
 Segunda das nove tasks de `skills-agentes.spec.md`. Corrige a skill `dto-conventions`, que estava
