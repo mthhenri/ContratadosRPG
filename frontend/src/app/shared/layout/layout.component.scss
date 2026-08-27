@@ -42,7 +42,7 @@
     white-space: nowrap;
 
     // No mobile o logo (app-marca) já ancora a identidade — esconder o wordmark textual libera
-    // espaço. 900px (não `bp.mobile`/560px) porque "Calculadora" passa a colidir com o perfil a
+    // espaço. 900px (não `bp.mobile`/560px) porque "Simulacao" passa a colidir com o perfil a
     // partir de ~870px (achado ao vivo, m2-16f). 900px já cobre o 560px de sempre (é um limiar
     // mais largo, não um segundo breakpoint) — mesmo valor usado em `ficha-sanidade.component.scss`.
     @media (max-width: 900px) {
@@ -55,7 +55,7 @@
     color: var(--accent);
   }
 
-  // Nav central (Painel/Calculadora) — mesmo padrão de routerLinkActive do CalculadoraShell.
+  // Nav central (Painel/Simulacao) — mesmo padrão de routerLinkActive do SimulacaoShell.
   &__nav {
     flex: 1;
     display: flex;

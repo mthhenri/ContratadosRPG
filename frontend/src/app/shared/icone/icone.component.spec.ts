@@ -36,6 +36,14 @@ describe('Icone', () => {
     expect(assinatura('descanso')).not.toBe(assinatura('compras'));
   });
 
+  it('distingue visualmente a simulação da calculadora aritmética', () => {
+    expect(assinatura('simulacao')).not.toBe(assinatura('calculadora'));
+  });
+
+  it('representa a simulação como árvore vertical de cenários', () => {
+    expect(montar('simulacao').querySelectorAll('svg > circle')).toHaveLength(7);
+  });
+
   it('renderiza o glifo monocromático próprio de documentos', () => {
     const nome: IconeNome = 'documentos';
     const raiz = montar(nome);

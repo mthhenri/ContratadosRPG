@@ -1,6 +1,6 @@
 // _breakpoints.scss
 // Estratégia responsiva do tema "Terminal de Contenção" (m1-15) — fonte única dos
-// breakpoints da calculadora. Componentes fazem `@use 'tema/breakpoints' as bp;` (resolvido
+// breakpoints da simulacao. Componentes fazem `@use 'tema/breakpoints' as bp;` (resolvido
 // via stylePreprocessorOptions.includePaths em angular.json) e chamam `@include bp.mobile`.
 //
 // Por que Sass e não CSS custom property: media queries são avaliadas em tempo de

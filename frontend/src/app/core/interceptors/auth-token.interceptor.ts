@@ -6,7 +6,7 @@ import { SessaoService } from '../services/sessao.service';
 /**
  * Injeta o token JWT da sessão (`SessaoService`) no header `Authorization: Bearer <token>`
  * de toda requisição, quando há sessão aberta. Sem sessão, a requisição segue intacta (rotas
- * públicas — calculadora, registro e login — não precisam de token). Registrado em
+ * públicas — simulacao, registro e login — não precisam de token). Registrado em
  * `app.config.ts` via `withInterceptors`, antes do `error-handler.interceptor` (que trata o
  * `401`). Contraparte do `JwtAuthGuard` global do backend (m2-02).
  */

@@ -16,8 +16,8 @@ import { Marca } from '../marca/marca.component';
  * m2-09), indicador de carregamento global (alimentado pelo `loading.interceptor` via
  * `LoadingService`), área de toasts PrimeNG (alimentada pelo `error-handler.interceptor`) e o
  * `router-outlet` onde as páginas são renderizadas. A topbar reflete o estado de sessão
- * (`SessaoService`, m2-06): entrar/registrar quando deslogado; nav (Painel/Calculadora) +
- * dropdown de perfil quando logado. A calculadora permanece pública.
+ * (`SessaoService`, m2-06): entrar/registrar quando deslogado; nav (Painel/Simulacao) +
+ * dropdown de perfil quando logado. A simulacao permanece pública.
  */
 @Component({
   selector: 'app-layout',

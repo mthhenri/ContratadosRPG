@@ -35,6 +35,14 @@ describe('Rotas — autenticação', () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => localStorage.clear());
 
+  it('expõe a simulação na rota pública /simulacao', () => {
+    const rota = routes.find((candidata) => candidata.path === 'simulacao');
+
+    expect(rota).toBeDefined();
+    expect(rota?.loadChildren).toBeDefined();
+    expect(routes.some((candidata) => candidata.path === 'calculadora')).toBe(false);
+  });
+
   it('resolve a tela pública de login', async () => {
     const { elemento } = await navegar('/login');
     expect(elemento.querySelector('.autenticacao')).not.toBeNull();

@@ -5,7 +5,7 @@ import { ModificacaoEfeitoTipoEnum } from '@contratados-rpg/shared/enums';
  * quais campos o tipo usa no formulário. É formatação de tela — a semântica/cálculo vive em
  * `shared/regras/compras` (`ModificacaoEfeitoTipoEnum`, `descreverEfeitoModificacao`, `calcularStatItem`).
  * Compartilhado por `FichaInventario` e `ComprasPage` (mesmo cadastro nos dois), morando em
- * `app/shared` para não acoplar os módulos `ficha` ↔ `calculadora`.
+ * `app/shared` para não acoplar os módulos `ficha` ↔ `simulacao`.
  */
 export interface VarianteEfeito {
   readonly valor: string;

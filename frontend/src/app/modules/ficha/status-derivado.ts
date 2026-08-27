@@ -29,7 +29,7 @@ import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '@contratados-rpg/
 import type { PatenteDados } from '@contratados-rpg/shared/regras/dados';
 import { obterPatente } from '@contratados-rpg/shared/regras/patente';
 
-import { ROTULOS_PATENTE } from '../calculadora/rotulos';
+import { ROTULOS_PATENTE } from '../simulacao/rotulos';
 
 /**
  * Status derivado da ficha compartilhado pela **exibição** (`FichaVisualizacao`) e pela **edição**
@@ -79,7 +79,7 @@ export interface InfoExtra {
  * Entrada já normalizada aos limites da classe (os cinco atributos que a maioria das fórmulas
  * consome, `+ luta`/`+ intelecto` — usados só por `calcularContraAtaque`/`calcularInventario`
  * ("Mochileiro"); clampados aqui do mesmo jeito, mas fora de `aplicarLimitesPorClasse` porque essa
- * função também serve a Calculadora pública, que não tem campo de Luta no formulário).
+ * função também serve a Simulacao pública, que não tem campo de Luta no formulário).
  */
 export type EntradaAgente = {
   readonly classe: ClasseEnum;

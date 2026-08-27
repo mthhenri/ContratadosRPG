@@ -1,0 +1,17 @@
+<section class="simulacao">
+  <header class="simulacao__cabecalho">
+    <h1 class="simulacao__titulo">Simulação</h1>
+    <span class="chip-classificacao">Acesso Livre</span>
+  </header>
+
+  <nav class="abas" aria-label="Abas da simulação">
+    @for (aba of abas; track aba.caminho) {
+      <a class="abas__item" [routerLink]="aba.caminho" routerLinkActive="abas__item--ativo">
+        <app-icone [nome]="aba.icone" />
+        <span class="abas__rotulo">{{ aba.rotulo }}</span>
+      </a>
+    }
+  </nav>
+
+  <router-outlet />
+</section>

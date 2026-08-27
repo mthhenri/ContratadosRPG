@@ -19,7 +19,7 @@
 
 // === Refinamento mobile (m1-15) — ajustes globais dirigidos por token ===
 // No mobile a densidade "confortável" aperta um pouco: reduzir o padding de card e o gap de
-// grid nos próprios tokens reflui TODOS os cards/grids da calculadora de uma vez (eles
+// grid nos próprios tokens reflui TODOS os cards/grids da simulacao de uma vez (eles
 // consomem var(--pad-card)/var(--gap-grid)), sem tocar em cada componente nem repetir valores.
 @include bp.mobile {
   :root {

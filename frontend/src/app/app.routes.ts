@@ -20,9 +20,9 @@ export const routes: Routes = [
     redirectTo: '/painel',
   },
   {
-    path: 'calculadora',
+    path: 'simulacao',
     loadChildren: () =>
-      import('./modules/calculadora/calculadora.routes').then((modulo) => modulo.calculadoraRoutes),
+      import('./modules/simulacao/simulacao.routes').then((modulo) => modulo.simulacaoRoutes),
   },
   // Rotas públicas de autenticação (login/registro) — m2-06.
   {
