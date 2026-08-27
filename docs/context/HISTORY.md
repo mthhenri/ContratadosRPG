@@ -1,5 +1,82 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-02`: `dto-conventions` deixa de ser cópia de outro projeto
+
+Segunda das nove tasks de `skills-agentes.spec.md`. Corrige a skill `dto-conventions`, que estava
+**errada em uso**: `.claude/skills/dto-conventions/SKILL.md` — a cópia que o Claude Code
+efetivamente carrega — intitulava-se "Convenções de DTO — Project 2.0", ensinava
+`import { UsuarioCriarDto } from '@project20/shared/dtos/usuario'` e usava como exemplo entidades
+que não existem aqui (`Demanda`, `Projeto`, `Ponto`, `Execucao`, `Atividade`, `Calendario`, `Tag`,
+`Assistente`). `.agents/skills/dto-conventions/SKILL.md` já falava do projeto certo
+(`@contratados-rpg/shared`) mas era um resumo de 50 linhas sem as regras de complemento composto,
+o caso `Interno`, a justificativa da proibição de herança e os anti-padrões.
+
+`SKILL.md` foi reescrito a partir da versão rica de `.claude/` como base estrutural, com todo
+exemplo trocado por DTO real conferido em `shared/src/dtos/` (não inventado — cada nome citado foi
+localizado com `grep` antes de entrar no arquivo):
+
+- Fórmula geral e tabela: `FichaCriarDto`/`FichaCriadaDto`, `FichaAlterarDto`/`FichaAlteradaDto`,
+  `FichaRecuperarDto`/`FichaRecuperadaDto`, `FichaListarDto`/`FichaResumoDto`,
+  `CampanhaConviteRegenerarDto`/`CampanhaConviteRegeneradoDto` (complemento simples + verbo),
+  `CampanhaMembrosListarDto`/`CampanhaMembroResumoDto` (complemento coleção, plural na entrada),
+  `CampanhaMembroInternoRecuperarDto`/`CampanhaMembroInternoRecuperadoDto` (`Interno`).
+- Complemento composto: `CampanhaInventarioItemQuantidadeAjustarDto` (complemento longo, todas as
+  palavras antes do verbo).
+- Herança: único caso real do projeto hoje, `UsuarioListadosDto extends PaginatedResult
+  <UsuarioResumoDto>` (`shared/src/dtos/usuario/usuario.dtos.ts:203`) — e a correção de que
+  `StandardResponse<TData>` é **interface montada pelo interceptor**, não algo que um DTO de
+  negócio estende diretamente (a versão antiga de `.claude/` ensinava
+  `class UsuarioCriadoDto extends StandardResponse<...>`, que não reflete como o projeto usa o
+  tipo).
+- Casos especiais movidos para `dto-conventions/references/casos-especiais.md` (nas duas pastas,
+  como o `SKILL.md` principal ficaria acima de ~150 linhas com eles dentro): `Interno` com
+  exemplos reais de `ficha`, `campanha` e `encontro`; consulta computada
+  (`FichaMediasEsquadraoDto`, `Entidade + Recorte + Dto` sem verbo, reaproveitando `FichaListarDto`
+  como entrada); value-object (`FichaImagemArquivoDto`, já comentado no próprio código-fonte como
+  "value-object sem entidade nem verbo"); e a tabela de anti-padrões, com
+  `CampanhaListadoDto` (❌, forma que não existe) ao lado de `CampanhaResumoDto` (✅, a que existe).
+- O checklist final de conferência (nome/verbo/direção/complemento/herança/localização), que só a
+  versão de `.agents/` tinha, foi preservado no fim do `SKILL.md`.
+- `description` do frontmatter manteve a força de gatilho da versão de `.claude/` (dispara mesmo
+  sem a palavra "DTO" na tarefa), só corrigindo o nome do projeto.
+
+**Achado de correção além do escopo de nomenclatura:** todo DTO real do projeto é `interface`, não
+`class` — as duas versões antigas da skill mostravam DTOs uniformemente como `class` com
+`extends`. A skill reescrita usa `export interface` nos exemplos e reserva `class` só para o caso
+real de herança de `PaginatedResult`, correspondendo ao código de `shared/src/dtos/` (confirmado:
+apenas um `export class` em todo `shared/src/dtos/`, contra 213 `export interface`).
+
+**Validação por uso** (aplicando a skill do zero, sem olhar o nome já existente antes de derivar):
+
+1. `CampanhaConviteRegenerarDto` — Entidade `Campanha` + Complemento `Convite` (sub-aspecto, não o
+   modelo inteiro) + verbo `Regenerar` no infinitivo (entrada) → nome derivado bate exatamente com
+   o já existente em `shared/src/dtos/campanha/campanha.dtos.ts:187`.
+2. `CampanhaMembrosListarDto` — Entidade `Campanha` + Complemento coleção `Membros` (plural, é uma
+   lista) + verbo `Listar` no infinitivo → bate exatamente com o já existente em
+   `campanha.dtos.ts:202`; a saída correta seguinte pela regra (`Resumo`, nunca o modelo inteiro
+   listado) é `CampanhaMembroResumoDto` (singular no item de listagem), que também bate com o real
+   (`campanha.dtos.ts:229`).
+3. **Caso hipotético, sub-aspecto de `Encontro` ainda não modelado:** alterar se um combatente do
+   encontro fica visível para os jogadores (hoje o campo não existe em `EncontroCombatenteDto`).
+   Aplicando a fórmula: Entidade `EncontroCombatente` (a operação é sobre o combatente, não o
+   encontro inteiro — mesmo padrão de `EncontroCombatenteIdentidadeAlterarDto`) + Complemento
+   `Visibilidade` (sub-aspecto único) + verbo `Alterar`/`Alterada` → nome coerente derivado:
+   `EncontroCombatenteVisibilidadeAlterarDto` (entrada) /
+   `EncontroCombatenteVisibilidadeAlteradaDto` (saída). Consistente com o par real já existente
+   `EncontroCombatenteIdentidadeAlterarDto`/`EncontroCombatenteIdentidadeAlteradaDto`
+   (`encontro.dtos.ts:198`) — não foi criado no código, é só o resultado da aplicação da skill.
+
+Critérios de aceite conferidos: `grep -ri "project20\|Project 2.0" .claude/skills .agents/skills`
+vazio; todo nome de DTO citado como exemplo existe em `shared/src/dtos/` (confirmado um a um via
+`grep`), exceto `CampanhaListadoDto`, marcado de propósito como anti-padrão inexistente; todo
+import citado resolve contra `shared/package.json` (`exports`) e os barrels de
+`shared/src/dtos/*/index.ts`; `diff -r .claude/skills .agents/skills` sai vazio para
+`dto-conventions/` (a diferença remanescente do `diff -r` geral é só em `verify/`, fora do escopo
+desta task — fica para `skills-03`).
+
+Sem mudança de código de produto; sem impacto em `shared`/`backend`/`frontend`, portanto sem rodar
+suíte de teste ou build.
+
 ## 2026-08-27 — `skills-01`: regra de sincronia de skills + contrato de skill
 
 Primeira das nove tasks de `skills-agentes.spec.md` (spec guarda-chuva, fora da fila de

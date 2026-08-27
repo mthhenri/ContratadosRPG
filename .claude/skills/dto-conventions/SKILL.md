@@ -1,20 +1,20 @@
 ---
 name: dto-conventions
 description: >
-  Convenções completas de nomenclatura, estrutura e localização de DTOs do Project 2.0.
+  Convenções completas de nomenclatura, estrutura e localização de DTOs do ContratadosRPG.
   Use esta skill sempre que for criar, nomear, revisar, listar ou validar DTOs do projeto —
   mesmo que o usuário não mencione "DTO" explicitamente. Se a tarefa envolve entrada ou saída
   de dados entre camadas (controller, service, repository, frontend), consulte esta skill antes
-  de escrever qualquer nome de classe. Erros de nomenclatura de DTO são uma das falhas mais
-  frequentes em tasks de implementação — esta skill existe para eliminá-los.
+  de escrever qualquer nome de classe ou interface. Erros de nomenclatura de DTO são uma das
+  falhas mais frequentes em tasks de implementação — esta skill existe para eliminá-los.
 ---
 
-# Convenções de DTO — Project 2.0
+# Convenções de DTO
 
-> **Leia antes de nomear qualquer DTO.** Estas regras são inegociáveis e derivam do
-> `CONVENTIONS.md` e `SYSTEM.SPEC.md` do projeto.
-
----
+> **Leia antes de nomear qualquer DTO.** A regra vive em `docs/CONVENTIONS.md` ("## DTOs") e
+> `docs/SYSTEM.SPEC.md`; em conflito entre esta skill e esses documentos, o documento vence.
+> Antes de inventar um nome novo, procure um par análogo em `shared/src/dtos/` — o repositório
+> já tem ~214 DTOs; o melhor argumento contra um nome errado é um precedente já existente.
 
 ## Fórmula Geral
 
@@ -24,186 +24,88 @@ Entidade + Complemento (se houver) + Verbo + Dto
 
 - **Entrada** → verbo no **infinitivo**: `CriarDto`, `AlterarDto`, `RecuperarDto`
 - **Saída** → verbo no **particípio**: `CriadoDto`, `AlteradoDto`, `RecuperadoDto`
-- **Complemento** → aparece apenas quando a operação atinge um sub-aspecto da entidade, não o modelo inteiro
-
----
-
-## Tabela de Referência
+- **Complemento** → aparece só quando a operação atinge um sub-aspecto da entidade, não o
+  modelo inteiro
 
 | Entrada | Saída | Situação |
 |---|---|---|
-| `UsuarioCriarDto` | `UsuarioCriadoDto` | Operação no modelo inteiro |
-| `UsuarioAlterarDto` | `UsuarioAlteradoDto` | Alteração completa |
-| `UsuarioRecuperarDto` | `UsuarioRecuperadoDto` | Recuperação individual |
-| `UsuarioListarDto` | `UsuarioResumoDto` | Listagem — saída **sempre** resumida |
-| `UsuarioSenhaAlterarDto` | `UsuarioSenhaAlteradaDto` | Sub-aspecto (complemento simples) |
-| `DemandaTagAtribuirDto` | `DemandaTagAtribuidaDto` | Um item do sub-aspecto |
-| `DemandaTagsAtribuirDto` | `DemandaTagsAtribuidasDto` | Coleção do sub-aspecto (plural) |
-| `AssistenteDescricaoAuxiliarDto` | `AssistenteDescricaoAuxiliadaDto` | Complemento composto + verbo |
+| `FichaCriarDto` | `FichaCriadaDto` | Operação no modelo inteiro |
+| `FichaAlterarDto` | `FichaAlteradaDto` | Alteração completa — nunca `Atualizar`/`Atualizado` |
+| `FichaRecuperarDto { id }` | `FichaRecuperadaDto` | Recuperação individual — entrada sempre `{ id: number }` |
+| `FichaListarDto` | `FichaResumoDto` | Listagem — saída **sempre** resumida |
+| `CampanhaConviteRegenerarDto` | `CampanhaConviteRegeneradoDto` | Complemento simples + verbo |
+| `CampanhaMembrosListarDto` | `CampanhaMembroResumoDto` | Complemento coleção (plural na entrada) |
+| `CampanhaMembroInternoRecuperarDto` | `CampanhaMembroInternoRecuperadoDto` | `Interno` como complemento (só service ↔ repository) |
 
----
+Todos os exemplos acima existem hoje em `shared/src/dtos/campanha/` e `shared/src/dtos/ficha/` —
+confira com `grep -n "export interface CampanhaConviteRegenerarDto" shared/src/dtos/campanha/*.ts`
+antes de copiar um nome deste arquivo para outro contexto.
 
 ## Regras do Complemento
 
-### Quando usar
-- **Omitir** quando a operação representa o modelo inteiro → `UsuarioAlterarDto`
-- **Usar** quando a operação atinge apenas um sub-aspecto → `UsuarioSenhaAlterarDto`
+- **Omitir** quando a operação representa o modelo inteiro → `FichaAlterarDto`.
+- **Usar** quando atinge só um sub-aspecto → `CampanhaConviteRegenerarDto`.
+- **Múltiplos campos**: agrupar num substantivo semântico, nunca concatenar dois complementos.
+  Sem substantivo natural que agrupe os campos, a operação provavelmente é alteração completa
+  → omitir o complemento.
+- **Coleção**: plural do complemento (`CampanhaMembrosListarDto`, não `CampanhaMembroListarDto`).
+- **Complemento com mais de uma palavra**: todas as palavras vêm antes do verbo, sem exceção —
+  `CampanhaInventarioItemQuantidadeAjustarDto` ✅ / `CampanhaInventarioAjustarItemQuantidadeDto` ❌.
+  Vale igual quando `Interno` é uma das palavras: `CampanhaMembroInternoRecuperarDto` ✅ /
+  `CampanhaMembroRecuperarInternoDto` ❌.
 
-### Quando o complemento cobre múltiplos campos
-Agrupar num substantivo semântico — nunca concatenar dois complementos:
-```
-senha + email       → Credenciais   → UsuarioCredenciaisAlterarDto  ✅
-nome + cargoTitulo  → Perfil        → UsuarioPerfilAlterarDto        ✅
-```
-Se não existe substantivo natural que agrupe os campos, a operação provavelmente é uma
-alteração completa do modelo → omitir o complemento.
-
-### Quando o complemento é uma coleção
-Usar o plural do complemento:
-```
-AtribuirUmaTag    → DemandaTagAtribuirDto   ✅
-AtribuirVáriasTags → DemandaTagsAtribuirDto ✅
-```
-
-### Quando o complemento tem mais de uma palavra
-**Todo o complemento — todas as palavras — vem antes do verbo, sem exceção.**
-Qualificadores como `Interno` fazem parte do complemento quando modificam seu substantivo:
-
-```
-membro + interno → complemento "MembroInterno" → DemandaMembroInternoAtribuirDto  ✅
-                                               → DemandaMembroAtribuirInternoDto  ❌
-
-tag + interno    → complemento "TagInterno"    → DemandaTagInternoRemoverDto      ✅
-tags + interno   → complemento "TagsInterno"   → DemandaTagsInternoAtribuirDto    ✅
-```
-
-Quando `Interno` é o **único** complemento, a regra é a mesma — continua antes do verbo:
-```
-ExecucaoInternoAlterarDto   ✅      ExecucaoAlterarInternoDto   ❌
-ExecucaoInternoEncerrarDto  ✅      ExecucaoEncerrarInternoDto  ❌
-```
-
----
-
-## Casos Especiais
-
-### DTOs Internos (service → repository)
-Operações internas que nunca chegam ao frontend usam `Interno` como complemento:
-```
-ProjetoInternoAlterarDto
-DemandaInternoAlterarDto
-AtividadeInternoAlterarDto
-ExecucaoInternoAlterarDto
-ExecucaoInternoEncerrarDto
-CalendarioInternoAlterarDto
-TagInternoAlterarDto
-```
-
-### Relatórios / Consultas Computadas
-Não representam operação CRUD — descrevem um **recorte calculado**.
-Fórmula: `Entidade + Recorte + Dto` — **sem verbo**:
-```
-PontoDiarioDto    ← resumo de ponto de um dia
-PontoMensalDto    ← resumo de ponto de um mês
-```
-O DTO de parâmetros de entrada, quando existe, segue o padrão normal:
-```
-PontoDiarioConsultarDto
-PontoMensalListarDto
-```
-
-### Value-Objects / Sub-estruturas
-Estruturas reutilizáveis sem ciclo de vida próprio: apenas o **nome do conceito**, sem entidade nem verbo:
-```
-IntervaloDto    ← { inicioData, fimData, duracaoMinutos }
-```
-
----
+Casos especiais que fogem dessa fórmula (`Interno`, relatório/consulta computada, value-object)
+e a tabela de anti-padrões estão em
+[`references/casos-especiais.md`](references/casos-especiais.md).
 
 ## Regras Absolutas
 
 | Regra | ✅ Correto | ❌ Proibido |
 |---|---|---|
-| Palavra `Alterar`, nunca `Atualizar` | `UsuarioAlterarDto` | `UsuarioAtualizarDto` |
-| Saída de listagem sempre `Resumo` | `UsuarioResumoDto` | `UsuarioListadoDto` |
-| Recuperação individual sempre `{ id: number }` | `UsuarioRecuperarDto { id: number }` | parâmetro primitivo `id: number` |
-| Toda operação com parâmetros usa DTO | `validarLogin(dto: UsuarioValidarLoginDto)` | `validarLogin(login: string)` |
+| Palavra `Alterar`, nunca `Atualizar` | `FichaAlterarDto` | `FichaAtualizarDto` |
+| Saída de listagem sempre `Resumo` | `CampanhaResumoDto` | `CampanhaListadoDto` |
+| Recuperação individual sempre `{ id: number }` | `FichaRecuperarDto { id: number }` | parâmetro primitivo `id: number` |
+| Toda operação com parâmetros usa DTO | `validarLogin(dto: UsuarioAutenticarDto)` | `validarLogin(login: string)` |
 | `id` de `@Param` injetado no DTO **pela controller** | `service.alterar({ ...dto, id })` | `service.alterar(id, dto)` |
-| `extends` só de DTOs **core** | `class UsuarioListadosDto extends PaginatedResult<UsuarioResumoDto>` | `class X extends OutroDtoDeNegocio {}` |
-| DTOs de negócio declaram os próprios campos | campos explícitos em cada classe | herança vazia entre DTOs de negócio |
-| Nenhum DTO é alias ou re-export | — | `export { UsuarioCriarDto as UsuarioDto }` |
+| DTOs de negócio declaram os próprios campos | campos explícitos em cada interface | herança entre DTOs de negócio |
+| Nenhum DTO é alias ou re-export | — | `export { FichaCriarDto as FichaDto }` |
 
----
+## Herança
 
-## Herança de DTOs
+DTOs de negócio **nunca** estendem outro DTO de negócio — cada um declara os próprios campos
+explicitamente, mesmo que sejam idênticos a outro. A única herança permitida é de DTOs **core**
+(genéricos/arquiteturais, em `shared/src/interfaces/`): `PaginatedResult<TItem>` (classe) e
+`StandardResponse<TData>` (interface, montada pelo interceptor — DTOs de negócio não a estendem
+diretamente).
 
-DTOs de negócio **nunca** estendem outros DTOs de negócio — cada um declara os próprios campos
-explicitamente, mesmo que sejam idênticos. A única herança permitida é de DTOs **core**
-(genéricos/arquiteturais do `shared/interfaces/`).
-
-### ✅ Herança permitida — DTOs core
 ```typescript
-// Listagem paginada: estende PaginatedResult com o DTO de item
+// ✅ Herança permitida — único caso real do projeto hoje (shared/src/dtos/usuario/usuario.dtos.ts)
 export class UsuarioListadosDto extends PaginatedResult<UsuarioResumoDto> {}
 
-// Resposta padrão: estende StandardResponse quando necessário
-export class UsuarioCriadoDto extends StandardResponse<{ id: number }> {}
+// ❌ Proibido — DTO de negócio estendendo outro DTO de negócio, mesmo vazio
+export class FichaAlteradaDto extends FichaCriadaDto {}
 ```
 
-DTOs core são identificados por serem **genéricos e arquiteturais** — existiriam em qualquer projeto.
-Exemplos: `PaginatedResult<T>`, `StandardResponse<T>`.
-
-### ❌ Herança proibida — DTOs de negócio
-```typescript
-// Nunca um DTO de negócio estende outro DTO de negócio
-export class UsuarioAlteradoDto extends UsuarioCriadoDto {}     // ❌
-export class DemandaDetalheDto  extends DemandaResumoDto {}     // ❌
-export class ProjetoAlterarDto  extends ProjetoCriarDto {}      // ❌
-
-// Herança vazia entre DTOs de negócio também é proibida
-export class ExecucaoIniciadaDto extends ExecucaoCriadaDto {}   // ❌
-```
-
-A razão: pares de DTOs (ex. `Criado`/`Alterado`) tendem a divergir ao longo do tempo.
-Herança permanente entre eles cria acoplamento frágil e viola a regra de campos explícitos.
-
----
+A razão: pares de DTOs (`Criado`/`Alterado`, por exemplo) tendem a divergir ao longo do tempo;
+herança permanente entre eles cria acoplamento frágil e viola a regra de campos explícitos.
 
 ## Localização
 
-```
-shared/src/dtos/
-  usuario/
-  projeto/
-  demanda/
-  atividade/
-  execucao/
-  ponto/
-  calendario/
-  tag/
-  assistente/
-```
+DTOs ficam exclusivamente em `shared/src/dtos/<modulo>/`, nunca em `backend/` ou `frontend/`.
+Os módulos hoje são: `campanha/`, `encontro/`, `ficha/`, `pagina-caderno/`, `rolagem/`,
+`usuario/`. Cada módulo expõe um barrel (`index.ts`) — importe sempre por ele:
 
-DTOs **nunca** são criados dentro de `backend/` ou `frontend/`.
-
-### Import correto
 ```typescript
-import { UsuarioCriarDto }  from '@project20/shared/dtos/usuario';
-import { PontoDiarioDto }   from '@project20/shared/dtos/ponto';
-import { IntervaloDto }     from '@project20/shared/dtos/ponto';
+import { CampanhaConviteRegenerarDto } from '@contratados-rpg/shared/dtos/campanha';
+import { FichaResumoDto }              from '@contratados-rpg/shared/dtos/ficha';
 ```
 
----
+Um DTO **nunca** é declarado dentro de `backend/` nem `frontend/` — apenas importado do shared.
 
-## Anti-padrões Frequentes
+## Checklist Final
 
-```
-❌ UsuarioAtualizarDto          → ✅ UsuarioAlterarDto
-❌ UsuarioListadoDto            → ✅ UsuarioResumoDto
-❌ DemandaMembroAtribuirInternoDto → ✅ DemandaMembroInternoAtribuirDto
-❌ ExecucaoEncerrarInternoDto   → ✅ ExecucaoInternoEncerrarDto
-❌ DtoNegocio extends OutroDtoNegocio  → ✅ campos explícitos em cada DTO de negócio
-❌ export class X extends Y {} (vazio entre negócio) → ✅ estender só DTOs core (PaginatedResult, StandardResponse)
-❌ alterar(id: number, dados)   → ✅ alterar(dto: EntidadeInternoAlterarDto)
-❌ DTO criado em backend/       → ✅ sempre em shared/src/dtos/[modulo]/
-```
+Antes de finalizar, confirme, nesta ordem: **nome** (bate com um par já existente do mesmo
+padrão?) → **verbo** (infinitivo na entrada, particípio na saída) → **direção** (entrada/saída
+corretas) → **complemento** (necessário? todas as palavras antes do verbo? plural se coleção?)
+→ **herança** (nenhuma entre DTOs de negócio) → **localização** (`shared/src/dtos/<modulo>/`,
+importado pelo barrel).
