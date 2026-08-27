@@ -5,16 +5,13 @@ import type {
   FichaHabilidadeDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
-  ajusteBloqueioAmplificadores,
   ajusteDanoFurtivoAmplificadores,
-  ajusteDefesaAmplificadores,
   ajusteDeslocamentoAmplificadores,
-  ajusteEsquivaAmplificadores,
   ajusteInventarioAmplificadores,
   aplicarLimitesPorClasse,
   calcularAreaPercepcao,
-  calcularBonusDefesaEquipamento,
   calcularContraAtaque,
+  calcularStatsEfetivos,
   calcularDanoCorpo,
   calcularDanoFurtivo,
   calcularDefesa,
@@ -142,11 +139,16 @@ export function montarInformacoesExtras(
 ): InfoExtra[] {
   const defesaCalc = calcularDefesa(entrada);
   const proficienciaCalc = calcularProficiencia(entrada);
-  const bonusEquipamento = calcularBonusDefesaEquipamento(itens);
-  // doc — "Defesa": a Defesa Base complementada por Habilidades/Fragmentos vira a "Defesa Final", e é
-  // sobre ela que Esquiva/Bloqueio/Contra-Ataque somam seus próprios bônus de reação. Todo bônus de
-  // Defesa (amplificador "Defesa", equipamento) precisa então valer também para as três reações.
-  const bonusDefesa = ajusteDefesaAmplificadores(amplificadores) + bonusEquipamento.defesa;
+  const statsEfetivos = calcularStatsEfetivos({
+    classe: entrada.classe,
+    nivel: entrada.nivel,
+    atributos: entrada,
+    habilidades,
+    derivados,
+    estado: {},
+    amplificadores,
+    itens,
+  });
 
   const linhaNumero = (
     chave: ChaveInfoExtra,
@@ -154,10 +156,11 @@ export function montarInformacoesExtras(
     calculado: number | null,
     formatar: (valor: number) => string,
     ajusteAmplificador = 0,
+    efetivoCalculado?: number | null,
   ): InfoExtra => {
     const stored = derivados?.[chave];
     const valor = typeof stored === 'number' ? stored : calculado;
-    const efetivo = valor === null ? null : valor + ajusteAmplificador;
+    const efetivo = efetivoCalculado ?? (valor === null ? null : valor + ajusteAmplificador);
     return {
       chave,
       rotulo,
@@ -183,20 +186,22 @@ export function montarInformacoesExtras(
   };
 
   return [
-    linhaNumero('defesa', 'Defesa', defesaCalc?.defesa ?? null, (valor) => String(valor), bonusDefesa),
+    linhaNumero('defesa', 'Defesa', defesaCalc?.defesa ?? null, (valor) => String(valor), 0, statsEfetivos.defesa),
     linhaNumero(
       'esquiva',
       'Esquiva',
       defesaCalc?.esquiva ?? null,
       (valor) => String(valor),
-      bonusDefesa + ajusteEsquivaAmplificadores(amplificadores) + bonusEquipamento.esquiva,
+      0,
+      statsEfetivos.esquiva,
     ),
     linhaNumero(
       'bloqueio',
       'Bloqueio',
       defesaCalc?.bloqueio ?? null,
       (valor) => String(valor),
-      bonusDefesa + ajusteBloqueioAmplificadores(amplificadores) + bonusEquipamento.bloqueio,
+      0,
+      statsEfetivos.bloqueio,
     ),
     linhaNumero(
       'contraAtaque',
@@ -208,7 +213,8 @@ export function montarInformacoesExtras(
         habilidades,
       }),
       (valor) => String(valor),
-      bonusDefesa,
+      0,
+      statsEfetivos.contraAtaque,
     ),
     linhaNumero(
       'deslocamento',

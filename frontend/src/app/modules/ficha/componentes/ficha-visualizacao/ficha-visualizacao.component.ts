@@ -41,14 +41,13 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   MAESTRIA_PONTOS_MINIMO,
-  ajusteEnergiaAmplificadores,
-  ajusteVidaAmplificadores,
   aplicarBonusConsumoFragmento,
   calcularAjusteDadosEquipamento,
   calcularAtributosEfetivos,
   calcularAtributosParaDados,
   calcularEnergia,
   calcularInventario,
+  calcularStatsEfetivos,
   calcularProficiencia,
   calcularProgressaoAcumulada,
   emAnomaliaBiologica,
@@ -1694,12 +1693,24 @@ export class FichaVisualizacao {
    * razão de `informacoesExtras` (evitar commitar o delta de volta como override manual).
    */
   protected readonly vidaMaximaEfetiva = computed(
-    () => this.vidaMaxima() + ajusteVidaAmplificadores(this.dados().inventario.amplificadores, this.dados().nivel),
+    () => {
+      const dados = this.dados();
+      return calcularStatsEfetivos({
+        ...dados,
+        itens: dados.inventario.itens,
+        amplificadores: dados.inventario.amplificadores,
+      }).vidaMaxima;
+    },
   );
   protected readonly energiaMaximaEfetiva = computed(
-    () =>
-      this.energiaMaxima() +
-      ajusteEnergiaAmplificadores(this.dados().inventario.amplificadores, this.dados().nivel),
+    () => {
+      const dados = this.dados();
+      return calcularStatsEfetivos({
+        ...dados,
+        itens: dados.inventario.itens,
+        amplificadores: dados.inventario.amplificadores,
+      }).energiaMaxima;
+    },
   );
 
   /**

@@ -7,8 +7,7 @@ import { CombatenteOrigemEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-
 import {
   ajusteDadoIniciativaAmplificadores,
   calcularAtributosEfetivos,
-  calcularEnergia,
-  calcularVida,
+  calcularStatsEfetivos,
   montarResistencias,
 } from '@contratados-rpg/shared/regras/agente';
 import { somarResistenciasCriaturaPorTipo } from '@contratados-rpg/shared/regras/criatura';
@@ -31,18 +30,17 @@ function resolverMaximosDoAgente(dados: FichaJogadorDadosDto): {
   vidaMaxima: number;
   energiaMaxima: number;
 } {
-  const vidaMaxima =
-    dados.estado.vidaMaxima ??
-    calcularVida({
-      classe: dados.classe,
-      nivel: dados.nivel,
-      vigor: dados.atributos.vigor,
-      habilidades: dados.habilidades,
-    });
-  const energiaMaxima =
-    dados.estado.energiaMaxima ??
-    calcularEnergia({ classe: dados.classe, nivel: dados.nivel, destreza: dados.atributos.destreza });
-  return { vidaMaxima, energiaMaxima };
+  const statsEfetivos = calcularStatsEfetivos({
+    classe: dados.classe,
+    nivel: dados.nivel,
+    atributos: dados.atributos,
+    habilidades: dados.habilidades,
+    derivados: dados.derivados,
+    estado: dados.estado,
+    itens: dados.inventario?.itens,
+    amplificadores: dados.inventario?.amplificadores,
+  });
+  return { vidaMaxima: statsEfetivos.vidaMaxima, energiaMaxima: statsEfetivos.energiaMaxima };
 }
 
 /** Recorte de estado que cada tipo de combatente resolve à sua maneira. */
@@ -70,15 +68,25 @@ interface EstadoDoCombatente {
 /** Agente: vida/energia e as três condições vêm de `estado`; as defesas, de `derivados`. */
 function resolverEstadoDoAgente(dados: FichaJogadorDadosDto): EstadoDoCombatente {
   const { vidaMaxima, energiaMaxima } = resolverMaximosDoAgente(dados);
+  const statsEfetivos = calcularStatsEfetivos({
+    classe: dados.classe,
+    nivel: dados.nivel,
+    atributos: dados.atributos,
+    habilidades: dados.habilidades,
+    derivados: dados.derivados,
+    estado: dados.estado,
+    itens: dados.inventario?.itens,
+    amplificadores: dados.inventario?.amplificadores,
+  });
   return {
     vidaAtual: dados.estado.vidaAtual,
     vidaMaxima,
     energiaAtual: dados.estado.energiaAtual,
     energiaMaxima,
-    defesa: dados.derivados?.defesa ?? null,
-    esquiva: dados.derivados?.esquiva ?? null,
-    bloqueio: dados.derivados?.bloqueio ?? null,
-    contraAtaque: dados.derivados?.contraAtaque ?? null,
+    defesa: statsEfetivos.defesa,
+    esquiva: statsEfetivos.esquiva,
+    bloqueio: statsEfetivos.bloqueio,
+    contraAtaque: statsEfetivos.contraAtaque,
     destreza: dados.atributos.destreza,
     iniciativaBonus: 0,
     // Flags alternadas à mão por quem joga (m3-10) — o encontro lê, nunca deduz de `vidaAtual`.

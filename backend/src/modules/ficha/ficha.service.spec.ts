@@ -1014,6 +1014,39 @@ describe('FichaService', () => {
       expect(resultado.contraAtaque).toBe(99);
     });
 
+    it('expõe o snapshot manual com bônus efetivos de amplificador e proteção equipada', async () => {
+      fichaRepositorio.listarPorUsuario.mockResolvedValue([
+        fichaSemSnapshot({
+          vidaMaxima: 100,
+          energiaMaxima: 50,
+          defesa: 20,
+          esquiva: 25,
+          bloqueio: 26,
+          contraAtaque: 24,
+          amplificadores: [
+            { nome: 'Vida', empilhamentos: 2 },
+            { nome: 'Energia', empilhamentos: 2 },
+            { nome: 'Defesa', empilhamentos: 1 },
+            { nome: 'Reflexos', empilhamentos: 1 },
+            { nome: 'Resiliência', empilhamentos: 1 },
+          ],
+          itens: [
+            {
+              nome: 'Colete de Kevlar', categoria: ItemCategoriaEnum.PROTECOES, custo: 0, peso: 0,
+              quantidade: 1, guardada: false, equipado: true,
+              modificacoes: [{ nome: 'Flexível', empilhamentos: 2 }, { nome: 'Resistente', empilhamentos: 3 }],
+            },
+          ],
+        }),
+      ]);
+
+      const [resultado] = await service.listarAcervo({ usuarioId: usuarioDono.sub });
+
+      expect(resultado).toMatchObject({
+        vidaMaxima: 103, energiaMaxima: 53, defesa: 21, esquiva: 28, bloqueio: 30, contraAtaque: 25,
+      });
+    });
+
     it('undefined quando nenhuma habilidade concede contra-ataque, mesmo sem snapshot', async () => {
       fichaRepositorio.listarPorUsuario.mockResolvedValue([fichaSemSnapshot({ habilidades: [] })]);
 

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { ClasseEnum, HabilidadeCategoriaEnum } from '../../enums';
+import { ClasseEnum, HabilidadeCategoriaEnum, ItemCategoriaEnum } from '../../enums';
 import type { FichaAtributosDto, FichaHabilidadeDto } from '../../dtos/ficha';
 import { calcularDerivados } from './derivados';
 import { calcularContraAtaque, calcularDefesa } from './defesa';
 import { calcularInventario } from './inventario';
+import { calcularStatsEfetivos } from './stats-efetivos';
 
 const atributos: FichaAtributosDto = {
   destreza: 2,
@@ -104,5 +105,63 @@ describe('calcularDerivados — inventário com "Mochileiro"', () => {
       }),
     );
     expect(derivados.inventarioMaximo).not.toBe(atributos.forca * 5);
+  });
+});
+
+describe('calcularStatsEfetivos', () => {
+  it('soma amplificadores e proteção equipada sobre os snapshots stored, incluindo a cascata de Defesa', () => {
+    const stats = calcularStatsEfetivos({
+      classe: ClasseEnum.COMBATENTE,
+      nivel: 3,
+      atributos,
+      habilidades: [],
+      derivados: { defesa: 20, esquiva: 25, bloqueio: 26, contraAtaque: 24 },
+      estado: { vidaMaxima: 100, energiaMaxima: 50 },
+      amplificadores: [
+        { nome: 'Vida', empilhamentos: 2 },
+        { nome: 'Energia', empilhamentos: 2 },
+        { nome: 'Defesa', empilhamentos: 1 },
+        { nome: 'Reflexos', empilhamentos: 1 },
+        { nome: 'Resiliência', empilhamentos: 1 },
+      ],
+      itens: [
+        {
+          uid: 'colete',
+          nome: 'Colete de Kevlar',
+          categoria: ItemCategoriaEnum.PROTECOES,
+          custo: 100,
+          peso: 1,
+          quantidade: 1,
+          guardada: false,
+          equipado: true,
+          modificacoes: [
+            { nome: 'Flexível', empilhamentos: 2 },
+            { nome: 'Resistente', empilhamentos: 3 },
+          ],
+        },
+      ],
+    });
+
+    expect(stats).toEqual({
+      vidaMaxima: 103,
+      energiaMaxima: 53,
+      defesa: 21,
+      esquiva: 28,
+      bloqueio: 30,
+      contraAtaque: 25,
+    });
+  });
+
+  it('preserva a ausência de reações para Civil', () => {
+    expect(
+      calcularStatsEfetivos({
+        classe: ClasseEnum.CIVIL,
+        nivel: 0,
+        atributos,
+        habilidades: [],
+        derivados: {},
+        estado: {},
+      }),
+    ).toMatchObject({ defesa: null, esquiva: null, bloqueio: null, contraAtaque: null });
   });
 });
