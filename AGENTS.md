@@ -12,6 +12,35 @@ ao outro na mesma tarefa e confirme que não há diferença entre eles antes de
 concluir. Não use um arquivo como redirecionamento, resumo ou complemento do
 outro.
 
+A mesma regra vale para `.claude/skills/` e `.agents/skills/`: as duas pastas
+são cópias integrais e devem permanecer idênticas arquivo a arquivo, incluindo
+auxiliares em `references/`. Alterar uma skill obriga aplicar exatamente a
+mesma alteração na outra pasta na mesma tarefa; `diff -r .claude/skills
+.agents/skills` deve sair vazio antes de concluir. Nenhuma pasta é resumo,
+redirecionamento ou complemento da outra.
+
+### Contrato comum a toda skill do projeto
+
+Toda skill do repositório — existente ou nova — cumpre:
+
+- **Duas cópias idênticas** em `.claude/skills/<nome>/SKILL.md` e
+  `.agents/skills/<nome>/SKILL.md` (regra acima), inclusive auxiliares.
+- **`description` do frontmatter escrita como gatilho**: em português,
+  dizendo quando usar a skill com as palavras que a tarefa real usa — é o que
+  faz a skill disparar, não uma descrição curta e genérica.
+- **Ponteiro, não cópia**: a skill aponta para a fonte da verdade
+  (`SYSTEM.SPEC.md`, `CONVENTIONS.md`, `docs/core/`, `docs/design/`) em vez de
+  reescrevê-la — mesmo princípio de `MEMORY.md`.
+- **O que a skill carrega de próprio** é ordem de execução, checklist de
+  conferência e armadilha de campo — o que a documentação não carrega.
+- **Tamanho**: `SKILL.md` até ~150 linhas; excedente vai para
+  `<skill>/references/<assunto>.md`.
+- **Em conflito** com `SYSTEM.SPEC.md`/`CONVENTIONS.md`/`docs/core/`/
+  `docs/design/`, o documento vence e a skill é corrigida na mesma tarefa.
+- **Português**, mesmo tom do restante da documentação do projeto.
+- **Validação por uso**: uma skill só fecha depois de exercitada em um
+  recorte real de trabalho, não só por ter sido escrita.
+
 ## Início obrigatório da sessão
 
 Antes de implementar qualquer mudança, leia nesta ordem:

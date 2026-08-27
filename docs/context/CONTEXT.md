@@ -335,6 +335,22 @@
 
 ## 1. Próxima Task
 
+**`skills-01` (primeira das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da fila de
+milestone) concluída** — regra de sincronia e contrato de skill, sem tocar em nenhuma `SKILL.md`.
+`CLAUDE.md`/`AGENTS.md` ganharam, na seção "Sincronização com CLAUDE.md", a mesma exigência de
+cópia integral já aplicada a `AGENTS.md`↔`CLAUDE.md` estendida a `.claude/skills/`↔`.agents/skills/`
+(`diff -r .claude/skills .agents/skills` vazio) e a subseção nova "Contrato comum a toda skill do
+projeto" (8 itens: duas cópias idênticas, `description` como gatilho, ponteiro em vez de cópia da
+fonte, o que a skill carrega de próprio, teto de ~150 linhas, documento vence em conflito,
+português, validação por uso). `MEMORY.md` (§1) ganhou o ponteiro de onde as skills vivem.
+Levantamento registrado em `HISTORY.md`: hoje as duas skills existentes divergem nas duas direções
+— `dto-conventions` em vigor (`.claude/skills/`) é cópia de outro projeto ("Project 2.0"), a cópia
+certa está em `.agents/skills/`; `verify` é o inverso, a versão rica e correta está em
+`.claude/skills/`. Fica para `skills-02` (corrigir `dto-conventions`) e `skills-03` (alinhar
+`verify` pela versão de `.claude/`); `skills-04`…`skills-09` (novas skills) seguem independentes
+entre si na fila do backlog. Task puramente documental — sem mudança de código de produto, sem
+suíte de teste ou build para rodar, sem gate visual aplicável.
+
 **Ajuste avulso (pedido direto do autor, 2026-08-27, sem número de milestone) concluído** — o
 inventário de esquadrão ganhou o mesmo editor "Editar informações" de item custom que já existia
 na ficha (nome/custo/peso/descrição; categoria/dano/informação/resistência/bônus/quantidade/

@@ -1,5 +1,47 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-01`: regra de sincronia de skills + contrato de skill
+
+Primeira das nove tasks de `skills-agentes.spec.md` (spec guarda-chuva, fora da fila de
+milestone). Não corrige nem cria nenhuma skill — fixa a regra contra a qual `skills-02`…`skills-09`
+serão conferidas.
+
+A regra "Sincronização com CLAUDE.md" de `CLAUDE.md`/`AGENTS.md` cobria só os dois arquivos raiz;
+skills ficaram de fora e divergiram sem detecção. A seção ganhou um parágrafo estendendo a mesma
+exigência a `.claude/skills/` e `.agents/skills/` (cópias integrais arquivo a arquivo, incluindo
+`references/`, mesma tarefa, `diff -r .claude/skills .agents/skills` vazio antes de concluir) e uma
+subseção nova, "Contrato comum a toda skill do projeto", condensando os oito itens já enumerados em
+`skills-agentes.spec.md` ("Contrato comum a toda skill do projeto"): duas cópias idênticas,
+`description` de frontmatter escrita como gatilho, ponteiro em vez de cópia da fonte, o que a skill
+carrega de próprio (ordem de execução/checklist/armadilha de campo), teto de ~150 linhas com
+excedente em `references/`, o documento vence em conflito, português e validação por uso. As duas
+edições foram aplicadas palavra por palavra nos dois arquivos; `diff CLAUDE.md AGENTS.md` continua
+vazio exceto o cabeçalho (`# CLAUDE.md` / `# AGENTS.md`, divergência pré-existente e fora desta
+task). `MEMORY.md` (§1, "Onde estão as regras") ganhou uma linha de ponteiro nova apontando onde as
+skills vivem e qual ler antes de qual trabalho, sem duplicar o contrato.
+
+**Inventário de divergência registrado (`diff -r .claude/skills .agents/skills`, rodado antes de
+qualquer alteração desta task, saída não vazia):**
+
+- `dto-conventions/SKILL.md`: as duas versões divergem em conteúdo quase inteiro. A cópia em
+  `.claude/skills/` é de **outro projeto** ("Project 2.0" no título e no `description`, exemplos com
+  `import ... from '@project20/shared/dtos/usuario'`, entidades inexistentes aqui — `Demanda`,
+  `Projeto`, `Ponto`, `Execucao`, `Atividade`, `Calendario`) e é a versão **em vigor hoje** (Claude
+  Code carrega `.claude/`). A cópia em `.agents/skills/` já fala do projeto certo
+  (`@contratados-rpg/shared`, sem as entidades estranhas) mas é mais enxuta. Nenhuma das duas foi
+  tocada nesta task — correção é `skills-02`.
+- `verify/SKILL.md`: divergência inversa. `.claude/skills/verify/SKILL.md` é a versão mais rica e
+  operacionalmente mais correta (resolução global do Playwright via `npm root -g`, seletores reais
+  da ficha, `pingInterval 25s`/`pingTimeout 20s`, `EADDRINUSE`, o "500 fantasma" de CORS explicado
+  com a causa). `.agents/skills/verify/SKILL.md` tem a mesma estrutura mas perdeu esses detalhes de
+  campo. Nenhuma das duas foi tocada nesta task — alinhamento é `skills-03`.
+
+Sem mudança de código de produto; sem impacto em `shared`/`backend`/`frontend`, portanto sem rodar
+suíte de teste ou build. Verificação desta task: `diff CLAUDE.md AGENTS.md` (só o cabeçalho difere,
+como já era antes) e leitura da subseção nova em ambos os arquivos confirmando que um agente sem
+contexto prévio deste repositório consegue criar uma skill conforme só com o que está em
+`CLAUDE.md`/`AGENTS.md`, sem precisar ler `skills-agentes.spec.md`.
+
 ## 2026-08-27 — Inventário de esquadrão ganha edição de item custom
 
 Ajuste avulso pedido direto pelo autor: poder editar um item custom já guardado no inventário de
