@@ -1,5 +1,40 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-07`: nova skill `regras-do-jogo` evita divergência entre documento, motor e consumidores
+
+Sétima das nove tasks de `skills-agentes.spec.md`. A skill nova `regras-do-jogo` foi criada nas
+duas pastas espelhadas, com `SKILL.md` enxuto e `references/armadilhas.md` separado: o documento
+canônico continua sendo a fonte da regra, e a skill só conduz o trabalho da seção certa em
+`docs/core/` para a área correta de `shared/src/regras/` e seus consumidores.
+
+O mapa foi conferido arquivo a arquivo pelos `index.ts` e fontes das 11 áreas existentes:
+`agente`, `compras`, `criatura`, `dados`, `descanso`, `dt`, `encontro`, `identidade`,
+`novo-agente`, `patente` e `rolagem`. O texto registra os limites do motor (função pura e dados
+tipados; sem I/O, estado, framework, persistência ou permissão), exige teste contra o documento e
+inclui o checklist que procura fórmulas duplicadas fora do shared.
+
+As três armadilhas ficaram na referência, para não transformar a entrada da skill num tratado de
+regras: stored vs. efetivo (`P-030`) exige percorrer ficha, Inventário, catálogo, resumo público e
+Encontro; stat fundido (`P-029`) preserva o recorte da resistência-base antes de aplicar bônus; e
+Civil fora da tabela (`P-018`) obriga conferir a faixa de `progressao-civil.dados.ts` antes de
+usar progressão. Nenhuma fórmula foi copiada para a skill nem alterada no motor ou em `docs/core/`.
+
+**Validação por uso:** (1) `calcularVida` levou de `sistema-v4.1.0.md` (seções de Saúde/Progressão
+da classe) a `shared/src/regras/agente/saude.ts` e seu teste `saude.spec.ts`; a busca por
+consumidores levou à composição compartilhada `calcularStatsEfetivos`, ao resumo de ficha e ao
+mapper de Encontro. (2) o percurso de `P-030`, sem qualquer correção, partiu de
+`dados.derivados`/`dados.estado` e apontou explicitamente `FichaService.paraResumoPublico` e
+`encontro-combatente.mapper.ts`, os dois consumidores que não podem ser omitidos numa mudança de
+valor efetivo. Os caminhos e símbolos citados existem no código atual.
+
+Verificado: `npm run test --workspace=shared` e `diff -r .claude/skills .agents/skills`. A task
+não corrigiu `P-018`, `P-029` nem `P-030`, não alterou `shared/src/regras/` nem `docs/core/`, e
+deixou as respectivas specs no backlog, como definido no escopo.
+
+Durante o gate final, `diff CLAUDE.md AGENTS.md` revelou uma divergência preexistente apenas no
+título inicial dos dois arquivos. Como o contrato exige cópias integrais, ambos passaram a usar
+`# AGENTS.md / CLAUDE.md`; a nova conferência ficou vazia.
+
 ## 2026-08-27 — `skills-06`: nova skill `design-fidelity` executa o gate visual obrigatório
 
 Sexta das nove tasks de `skills-agentes.spec.md`. Motivação: `verify` ensina **como** rodar e

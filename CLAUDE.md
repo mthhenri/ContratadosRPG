@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md / CLAUDE.md
 
 Este arquivo é a orientação canônica para agentes de código que trabalham no
 repositório ContratadosRPG. As instruções valem para o Codex e para qualquer

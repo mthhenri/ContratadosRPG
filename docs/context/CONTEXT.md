@@ -335,19 +335,21 @@
 
 ## 1. Próxima Task
 
-**`skills-01`…`skills-06` (seis das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
+**`skills-01`…`skills-07` (sete das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
 fila de milestone) concluídas.** Estado atual: as duas pastas de skill
 (`.claude/skills/`↔`.agents/skills/`) estão 100% idênticas (`diff -r` vazio) — `dto-conventions`
-(corrigida), `verify` (corrigida), `task-flow`, `sql-migrations` e `design-fidelity` (as três
-últimas, skills novas). `task-flow` reúne o fluxo de spec e o fecho de task, com
+(corrigida), `verify` (corrigida), `task-flow`, `sql-migrations`, `design-fidelity` e
+`regras-do-jogo` (as quatro últimas, skills novas). `task-flow` reúne o fluxo de spec e o fecho de task, com
 `docs/specs/TEMPLATE.spec.md` como template oficial. `sql-migrations` cobre schema/migration/SQL
 de repositório. `design-fidelity` executa o gate visual obrigatório do `CLAUDE.md` (escolher
 análogo → construir com tokens → verificar via `verify` → checklist de 6 itens → corrigir antes
-de apresentar), com tabela de análogos em `references/analogos.md`. Duas dessas tasks acharam e
+de apresentar), com tabela de análogos em `references/analogos.md`. `regras-do-jogo` conduz a
+mudança de fórmula do documento canônico ao motor puro e seus consumidores derivados, incluindo
+as armadilhas stored vs. efetivo, stat fundido e Civil fora da tabela. Duas dessas tasks acharam e
 registraram dívida real durante a conferência de exemplos: `PROBLEMS.md` `P-031` (migrations com
 prefixo `ck_` errado) e uma lacuna pequena de `examples/README.md` (par `iniciativa-*` sem entrada
 na tabela, documentada na própria skill). Detalhe completo de cada task em `HISTORY.md` (busque
-`skills-0N`). `skills-07`…`skills-09` seguem independentes entre si na fila do backlog. Tasks
+`skills-0N`). `skills-08` e `skills-09` seguem independentes entre si na fila do backlog. Tasks
 puramente documentais — sem mudança de código de produto além das próprias `SKILL.md`, com
 validação por uso real em cada uma (comandos executados, migration hipotética escrita, tela
 aprovada comparada ao vivo — não só citação copiada da spec).
