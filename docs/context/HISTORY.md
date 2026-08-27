@@ -1,5 +1,49 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-27 — `skills-06`: nova skill `design-fidelity` executa o gate visual obrigatório
+
+Sexta das nove tasks de `skills-agentes.spec.md`. Motivação: `verify` ensina **como** rodar e
+dirigir o app, mas nenhuma skill ensinava **contra o que comparar** — a parte mais detalhada do
+`CLAUDE.md` ("Processo obrigatório para qualquer UI ou estilo", seis passos) e a mais violada na
+prática (`P-028`: Maestria de Vigor commitada sem verificação visual, com testes e lint verdes;
+`P-020`: templates/SCSS compactados, resultado de construir sem padrão; `P-005`: corte de letra
+achado só em auditoria posterior).
+
+`design-fidelity/SKILL.md` (86 linhas) + `references/analogos.md` (22 linhas), nas duas pastas,
+cobrem os seis passos do `CLAUDE.md` na ordem: escolher e registrar o análogo (shell, densidade,
+hierarquia, controles, estados, iconografia, responsivo — não só cor) → construir só com tokens e
+blocos BEM de `_componentes.scss` → verificar com a skill `verify` (ponteiro, sem duplicar) nos
+dois viewports e nos estados reais da tela → checklist de 6 itens sim/não → corrigir antes de
+apresentar → nota de que delegação (relato/screenshot de subagente) não fecha o gate.
+
+**Achados durante a conferência dos exemplos** (exigida pela spec antes de citá-los, mesmo padrão
+de `skills-05`): a motivação da própria spec cita "24 capturas" em `docs/design/examples/` — o
+diretório tem **21** (`ls docs/design/examples/*.html`), não 24; o número errado não foi
+propagado para a skill, que cita o comando em vez de um número fixo. Também: `iniciativa-
+desktop.html`/`iniciativa-mobile.html` existem e são válidos, mas não aparecem na tabela do
+`examples/README.md` nem em `DESIGN.md` — só descobertos ao conferir a listagem contra a
+motivação da spec, que já citava esse par como exemplo de "painel de mestre/combate". Registrado
+como nota na própria linha da tabela de `references/analogos.md` (não abri `PROBLEMS.md` para
+isso — é lacuna pequena de documentação, não comportamento quebrado, e já fica registrada no
+lugar onde alguém vai precisar dela). Também achado: o deliverable 4 da spec pedia apontar para
+`npm run format:html-scss -w frontend` — script que **não existe** (`formatacao-legibilidade-
+frontend.spec.md` segue em `backlog/`, não implementada); a skill não cita o comando como se já
+existisse, só aponta para a spec pendente.
+
+**Validação por uso** (critério de aceite obrigatório): exercitada a skill sobre uma tela já
+existente e aprovada — Painel/Campanhas (análogo `campanhas.html`, componente vivo
+`campanha/paginas/lista`). Stack real (Postgres nativo, backend, frontend), sessão via
+`localStorage` e cenário por REST (mesmo padrão de `verify`), capturas nos dois viewports
+comparadas lado a lado com o análogo aberto via Playwright a partir do arquivo estático: topbar,
+cards de stat, card de campanha e densidade batem estruturalmente nos dois tamanhos — única
+diferença é conteúdo (dados de seed, esperado) e o rótulo do item de navegação "Calculadora" no
+análogo vs. "Simulação" no app atual (deriva de nomenclatura já conhecida, não defeito desta
+tela). Checklist de 6 itens: todos "sim". Tela aprovada passou, como o critério de aceite exigia.
+
+`diff -r .claude/skills .agents/skills` vazio. Fora de escopo, como definido na spec: não corrigi
+`P-005`/`P-028`/`P-020` (a skill existe para não repeti-los, não para resolvê-los agora), não
+recapturei `examples/`, não toquei tokens/`_componentes.scss`.
+
 ## 2026-08-27 — `skills-05`: nova skill `sql-migrations` cobre schema, migration e SQL de repositório
 
 Quinta das nove tasks de `skills-agentes.spec.md`. Motivação: é a área mais densa em regras do

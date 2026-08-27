@@ -335,21 +335,22 @@
 
 ## 1. Próxima Task
 
-**`skills-01`…`skills-05` (cinco das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
+**`skills-01`…`skills-06` (seis das nove tasks de `skills-agentes.spec.md`, guarda-chuva fora da
 fila de milestone) concluídas.** Estado atual: as duas pastas de skill
-(`.claude/skills/`↔`.agents/skills/`) estão 100% idênticas (`diff -r` vazio); o "Contrato comum a
-toda skill do projeto" está fixado em `CLAUDE.md`/`AGENTS.md` (`skills-01`); `dto-conventions`
-(`skills-02`) e `verify` (`skills-03`) foram corrigidas contra o código real do projeto — a
-primeira tinha conteúdo de outro projeto em vigor ("Project 2.0"), a segunda tinha perdido a
-armadilha de campo na cópia curta; `task-flow` (`skills-04`) é skill nova que reúne o fluxo de
-spec e o fecho de task, com `docs/specs/TEMPLATE.spec.md` como template oficial de spec;
-`sql-migrations` (`skills-05`) é skill nova para schema/migration/SQL de repositório — achou e
-registrou `PROBLEMS.md` `P-031` (quatro migrations com prefixo `ck_` em vez de `chk_`) durante a
-conferência dos exemplos citados. Detalhe completo de cada uma em `HISTORY.md` (busque
-`skills-0N`). `skills-06`…`skills-09` (novas skills) seguem independentes entre si na fila do
-backlog. Tasks puramente documentais — sem mudança de código de produto além das próprias
-`SKILL.md`, sem suíte de teste de produto ou gate visual aplicável (comandos citados foram
-executados/conferidos de verdade, não só copiados).
+(`.claude/skills/`↔`.agents/skills/`) estão 100% idênticas (`diff -r` vazio) — `dto-conventions`
+(corrigida), `verify` (corrigida), `task-flow`, `sql-migrations` e `design-fidelity` (as três
+últimas, skills novas). `task-flow` reúne o fluxo de spec e o fecho de task, com
+`docs/specs/TEMPLATE.spec.md` como template oficial. `sql-migrations` cobre schema/migration/SQL
+de repositório. `design-fidelity` executa o gate visual obrigatório do `CLAUDE.md` (escolher
+análogo → construir com tokens → verificar via `verify` → checklist de 6 itens → corrigir antes
+de apresentar), com tabela de análogos em `references/analogos.md`. Duas dessas tasks acharam e
+registraram dívida real durante a conferência de exemplos: `PROBLEMS.md` `P-031` (migrations com
+prefixo `ck_` errado) e uma lacuna pequena de `examples/README.md` (par `iniciativa-*` sem entrada
+na tabela, documentada na própria skill). Detalhe completo de cada task em `HISTORY.md` (busque
+`skills-0N`). `skills-07`…`skills-09` seguem independentes entre si na fila do backlog. Tasks
+puramente documentais — sem mudança de código de produto além das próprias `SKILL.md`, com
+validação por uso real em cada uma (comandos executados, migration hipotética escrita, tela
+aprovada comparada ao vivo — não só citação copiada da spec).
 
 **Ajuste avulso (pedido direto do autor, 2026-08-27, sem número de milestone) concluído** — o
 inventário de esquadrão ganhou o mesmo editor "Editar informações" de item custom que já existia
