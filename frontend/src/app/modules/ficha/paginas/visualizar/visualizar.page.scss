@@ -2,7 +2,7 @@
 // gestão de acesso (dono/mestre). Só tokens do tema "Terminal de Contenção" (proibição #29). O
 // cabeçalho reusa o padrão `.ficha-pagina` da tela de edição (m3-06).
 
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 // Piso reservado no rodapé (m3-60). No mobile a ficha ganha uma barra de navegação fixa
 // (`.ficha-nav`), e a bandeja de dados (`bottom: 20px`) e o gatilho da calculadora
@@ -13,523 +13,541 @@
 // template (hoje dentro de `.ficha-pagina__topo`, m3-61). Todo consumidor lê com fallback `0px`,
 // então nas outras telas nada muda.
 :host {
-  --piso-flutuante: 0px;
+    --piso-flutuante: 0px;
 
-  @include bp.mobile {
-    // altura da barra: 44px de alvo + 6px de padding em cima e embaixo + 1px de borda
-    --piso-flutuante: 57px;
-  }
+    @include bp.mobile {
+        // altura da barra: 44px de alvo + 6px de padding em cima e embaixo + 1px de borda
+        --piso-flutuante: 57px;
+    }
 }
 
 .ficha-pagina {
-  // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
-  // (identidade+vitalidade | atributos | status derivado), como o protótipo de fidelidade.
-  max-width: 85vw;
-  margin: 0 auto;
-  padding: 12px 20px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-grid);
-
-  // m3-56: `80vw` deixa margens enormes (~20% de cada lado) numa tela de 360-430px, que já é
-  // estreita — a página passa a usar a largura inteira (menos o padding lateral) abaixo de
-  // `$bp-mobile`, mesmo racional das demais páginas da ficha.
-  @include bp.mobile {
-    max-width: 100%;
-    // m3-60: o rodapé reserva a altura da barra de navegação fixa + a safe area do iOS, senão o
-    // último bloco de cada aba fica embaixo dela e é inalcançável.
-    padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
-  }
-
-  // Indicador de auto-save (m3-60) — discreto, no cabeçalho, ao lado do indicador de tempo real.
-  // Nunca vira toast: salvar é constante nesta tela (cada passo de Vida agenda um save), e um
-  // toast por edição seria ruído contínuo.
-  &__persistencia {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-mute);
-    white-space: nowrap;
-
-    &--salvo {
-      color: var(--positive);
-    }
-  }
-
-  &__topo {
+    // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
+    // (identidade+vitalidade | atributos | status derivado), como o protótipo de fidelidade.
+    max-width: 85vw;
+    margin: 0 auto;
+    padding: 12px 20px 40px;
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: var(--gap-grid);
 
+    // m3-56: `80vw` deixa margens enormes (~20% de cada lado) numa tela de 360-430px, que já é
+    // estreita — a página passa a usar a largura inteira (menos o padding lateral) abaixo de
+    // `$bp-mobile`, mesmo racional das demais páginas da ficha.
     @include bp.mobile {
-      flex-wrap: wrap;
-    }
-  }
-
-  // Grupo de ações do cabeçalho (m3-62): selo de auto-save + selo de tempo real + gatilhos
-  // flutuantes (histórico/calculadora) + kebab, todos num único flex — `margin-left: auto` cola o
-  // grupo na borda direita tanto ao lado de `&__voltar` quanto sozinho numa segunda linha (o
-  // kebab não fica mais isolado grudado na esquerda quando a fileira quebra). No mobile o próprio
-  // grupo quebra internamente se não couber — defensivo pro selo "tempo real offline"
-  // (`app-indicador-tempo-real`, só aparece após ~1,5s desconectado) não espremer os botões.
-  &__acoes {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto;
-
-    @include bp.mobile {
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-  }
-
-  // Botão quadrado só-ícone (mesmo tratamento de `.detalhe__cabecalho-voltar` na tela de
-  // campanha) — antes era ícone+texto ("Voltar à campanha") sempre visível, que com o grupo de
-  // ações (m3-62) somado no mesmo `&__topo` não cabia mais numa linha em 360px e forçava o
-  // cabeçalho a duas linhas. Ícone-only libera espaço horizontal em qualquer largura; o rótulo
-  // sobrevive via `aria-label`/`title`.
-  &__voltar {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 26px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    text-decoration: none;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    app-icone {
-      font-size: 13px;
+        max-width: 100%;
+        // m3-60: o rodapé reserva a altura da barra de navegação fixa + a safe area do iOS, senão o
+        // último bloco de cada aba fica embaixo dela e é inalcançável.
+        padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
     }
 
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
+    // Indicador de auto-save (m3-60) — discreto, no cabeçalho, ao lado do indicador de tempo real.
+    // Nunca vira toast: salvar é constante nesta tela (cada passo de Vida agenda um save), e um
+    // toast por edição seria ruído contínuo.
+    &__persistencia {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+        white-space: nowrap;
+
+        &--salvo {
+            color: var(--positive);
+        }
     }
 
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
+    &__topo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
 
-  // Menu de ações do cabeçalho (kebab) — abre um dropdown com "Acesso de visualização" (m3-10).
-  &__menu-container {
-    position: relative;
-    flex: 0 0 auto;
-  }
-
-  &__menu-botao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 30px;
-    font-size: 18px;
-    line-height: 1;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
+        @include bp.mobile {
+            flex-wrap: wrap;
+        }
     }
 
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
+    // Grupo de ações do cabeçalho (m3-62): selo de auto-save + selo de tempo real + gatilhos
+    // flutuantes (histórico/calculadora) + kebab, todos num único flex — `margin-left: auto` cola o
+    // grupo na borda direita tanto ao lado de `&__voltar` quanto sozinho numa segunda linha (o
+    // kebab não fica mais isolado grudado na esquerda quando a fileira quebra). No mobile o próprio
+    // grupo quebra internamente se não couber — defensivo pro selo "tempo real offline"
+    // (`app-indicador-tempo-real`, só aparece após ~1,5s desconectado) não espremer os botões.
+    &__acoes {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
 
-  // Camada invisível que fecha o menu ao clicar fora.
-  &__menu-fundo {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    background: transparent;
-    border: 0;
-    cursor: default;
-  }
-
-  &__menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    z-index: 21;
-    min-width: 220px;
-    padding: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
-  }
-
-  &__menu-item {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    width: 100%;
-    padding: 9px 10px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text);
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease, color 0.15s ease;
-
-    &:hover {
-      background: var(--surface-2);
-      color: var(--accent);
+        @include bp.mobile {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
     }
 
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
+    // Botão quadrado só-ícone (mesmo tratamento de `.detalhe__cabecalho-voltar` na tela de
+    // campanha) — antes era ícone+texto ("Voltar à campanha") sempre visível, que com o grupo de
+    // ações (m3-62) somado no mesmo `&__topo` não cabia mais numa linha em 360px e forçava o
+    // cabeçalho a duas linhas. Ícone-only libera espaço horizontal em qualquer largura; o rótulo
+    // sobrevive via `aria-label`/`title`.
+    &__voltar {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 26px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        text-decoration: none;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        app-icone {
+            font-size: 13px;
+        }
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
     }
-  }
 
-  &__menu-item--visibilidade {
-    display: none;
-
-    @include bp.mobile {
-      display: flex;
+    // Menu de ações do cabeçalho (kebab) — abre um dropdown com "Acesso de visualização" (m3-10).
+    &__menu-container {
+        position: relative;
+        flex: 0 0 auto;
     }
-  }
 
-  &__menu-contagem {
-    margin-left: auto;
-    font-size: 11px;
-    color: var(--text-mute);
-  }
+    &__menu-botao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 30px;
+        font-size: 18px;
+        line-height: 1;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
 
-  &__carregando {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-style: italic;
-    color: var(--text-mute);
-    margin: 0;
-  }
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    // Camada invisível que fecha o menu ao clicar fora.
+    &__menu-fundo {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: transparent;
+        border: 0;
+        cursor: default;
+    }
+
+    &__menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 21;
+        min-width: 220px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    }
+
+    &__menu-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        padding: 9px 10px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        text-align: left;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover {
+            background: var(--surface-2);
+            color: var(--accent);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__menu-item--visibilidade {
+        display: none;
+
+        @include bp.mobile {
+            display: flex;
+        }
+    }
+
+    &__menu-contagem {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--text-mute);
+    }
+
+    &__carregando {
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-style: italic;
+        color: var(--text-mute);
+        margin: 0;
+    }
 }
 
 // === Card (copiado de _componentes.scss .card) — o painel de acesso ===
 .ficha-cartao {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 18px;
-  }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 18px;
+    }
 
-  &__indice {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 3px;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-  }
+    &__indice {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
 
-  &__titulo {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0;
-  }
+    &__titulo {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
 
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 
-  &__meta {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-mute);
-    flex: 0 0 auto;
-  }
+    &__meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-mute);
+        flex: 0 0 auto;
+    }
 }
 
 .acesso {
-  &__ajuda {
-    font-family: var(--font-sans);
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-dim);
-    margin: 0 0 16px;
-  }
-
-  &__conceder {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-
-  &__select {
-    flex: 1;
-    min-width: 200px;
-    background: var(--surface-2);
-    color: var(--text);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 11px 12px;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    outline: none;
-
-    &:focus {
-      border-color: var(--accent-border);
+    &__ajuda {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+        margin: 0 0 16px;
     }
-  }
 
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    &__conceder {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
 
-  &__vazio-elegiveis,
-  &__vazio {
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-mute);
-    margin: 12px 0 0;
-  }
+    &__select {
+        flex: 1;
+        min-width: 200px;
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 11px 12px;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        outline: none;
 
-  &__lista {
-    list-style: none;
-    margin: 16px 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+        &:focus {
+            border-color: var(--accent-border);
+        }
+    }
 
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 
-  &__avatar {
-    width: 30px;
-    height: 30px;
-    flex: none;
-    border-radius: var(--radius-control);
-    background-color: var(--surface-2);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
-  }
+    &__vazio-elegiveis,
+    &__vazio {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-style: italic;
+        color: var(--text-mute);
+        margin: 12px 0 0;
+    }
 
-  &__nome {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
+    &__lista {
+        list-style: none;
+        margin: 16px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-  // `botao botao--secundario acesso__revogar` no template — já herda `min-height: bp.$alvo-toque`
-  // do `.botao` (mobile) acima; sem override próprio necessário aqui.
-  &__revogar {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    flex: none;
-  }
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__avatar {
+        width: 30px;
+        height: 30px;
+        flex: none;
+        border-radius: var(--radius-control);
+        background-color: var(--surface-2);
+        background-image: repeating-linear-gradient(
+            135deg,
+            var(--border-strong) 0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--border-strong);
+    }
+
+    &__nome {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    // `botao botao--secundario acesso__revogar` no template — já herda `min-height: bp.$alvo-toque`
+    // do `.botao` (mobile) acima; sem override próprio necessário aqui.
+    &__revogar {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        flex: none;
+    }
 }
 
 // Confirmação de exclusão da ficha (m3-52) — mesmo tratamento do `.acesso` acima, dentro da
 // mesma dialog genérica.
 .exclusao {
-  &__aviso {
-    margin: 0 0 16px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
+    &__aviso {
+        margin: 0 0 16px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
 
-  &__acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
 
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 }
 
 // Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .botao {
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  cursor: pointer;
-  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition:
+        filter 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 
-  @include bp.mobile {
-    min-height: bp.$alvo-toque;
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
-
-  &--primario {
-    background: var(--accent);
-    color: var(--bg);
-    border: 0;
-
-    &:hover:not(:disabled) {
-      filter: brightness(1.08);
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
     }
-  }
 
-  &--secundario {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border-strong);
-
-    &:hover:not(:disabled) {
-      background: var(--surface-2);
-      border-color: var(--accent-border);
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
     }
-  }
+
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
+
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+    }
+
+    &--secundario {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
 }
 
 // === Dialog de gestão de acesso (m3-10) — overlay + painel centralizado, só tokens do tema. ===
 .dialogo {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 60px 20px;
-  overflow-y: auto;
-
-  @include bp.mobile {
-    padding: 24px 12px;
-    align-items: center;
-  }
-
-  &__fundo {
     position: fixed;
     inset: 0;
-    background: rgb(0 0 0 / 55%);
-    border: 0;
-    cursor: default;
-  }
-
-  &__painel {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 460px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-  }
-
-  &__cabecalho {
+    z-index: 40;
     display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 16px;
-  }
-
-  &__titulo {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0;
-  }
-
-  &__fechar {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
-    }
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+    overflow-y: auto;
 
     @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
+        padding: 24px 12px;
+        align-items: center;
     }
-  }
+
+    &__fundo {
+        position: fixed;
+        inset: 0;
+        background: rgb(0 0 0 / 55%);
+        border: 0;
+        cursor: default;
+    }
+
+    &__painel {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 460px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
+        box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 16px;
+    }
+
+    &__titulo {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
+
+    &__fechar {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
 }
 
 // === Esqueleto de carregamento (m3-56) ===
@@ -540,185 +558,185 @@
 // (bloco base reusado, cor `--border-strong`, raio `--radius-control`) — reimplementado aqui porque
 // o encapsulamento de estilo do Angular não compartilha `.scss` entre componentes.
 .ficha-esqueleto {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-grid);
-
-  &__topo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  // Mesma fileira de três colunas do `.ficha-visao__linha-colunas` real — inclusive o colapso em
-  // coluna única abaixo de `$bp-tablet` (a página de carregamento nunca deve ser mais larga que a
-  // real, senão o layout "pula" quando o conteúdo chega).
-  &__linha {
-    display: flex;
-    align-items: stretch;
-    gap: var(--gap-grid);
-
-    @include bp.tablet {
-      flex-direction: column;
-    }
-  }
-
-  &__coluna {
     display: flex;
     flex-direction: column;
     gap: var(--gap-grid);
-    min-width: 0;
 
-    &--identidade {
-      width: 420px;
-      flex: 0 0 auto;
-
-      @include bp.tablet {
-        width: 100%;
-      }
+    &__topo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
-    &--atributos {
-      width: 260px;
-      flex: 0 0 auto;
+    // Mesma fileira de três colunas do `.ficha-visao__linha-colunas` real — inclusive o colapso em
+    // coluna única abaixo de `$bp-tablet` (a página de carregamento nunca deve ser mais larga que a
+    // real, senão o layout "pula" quando o conteúdo chega).
+    &__linha {
+        display: flex;
+        align-items: stretch;
+        gap: var(--gap-grid);
 
-      @include bp.tablet {
-        width: 100%;
-      }
+        @include bp.tablet {
+            flex-direction: column;
+        }
     }
 
-    &--status {
-      flex: 1 1 auto;
-      min-width: 420px;
-
-      @include bp.tablet {
+    &__coluna {
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap-grid);
         min-width: 0;
-        width: 100%;
-      }
+
+        &--identidade {
+            width: 420px;
+            flex: 0 0 auto;
+
+            @include bp.tablet {
+                width: 100%;
+            }
+        }
+
+        &--atributos {
+            width: 260px;
+            flex: 0 0 auto;
+
+            @include bp.tablet {
+                width: 100%;
+            }
+        }
+
+        &--status {
+            flex: 1 1 auto;
+            min-width: 420px;
+
+            @include bp.tablet {
+                min-width: 0;
+                width: 100%;
+            }
+        }
     }
-  }
 
-  &__cartao {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
+    &__cartao {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex: 1;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
 
-    &--conteudo {
-      gap: 14px;
+        &--conteudo {
+            gap: 14px;
+        }
     }
-  }
 
-  &__ident-topo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  &__barras {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-
-    @media (max-width: 360px) {
-      grid-template-columns: minmax(0, 1fr);
+    &__ident-topo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
-  }
 
-  &__mini-grade {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-  }
+    &__barras {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
 
-  // Mesma barra de abas do card de Status real (`.ficha-status__abas`).
-  &__abas {
-    display: flex;
-    gap: 5px;
-    padding: 4px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-  }
+        @media (max-width: 360px) {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    &__mini-grade {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    // Mesma barra de abas do card de Status real (`.ficha-status__abas`).
+    &__abas {
+        display: flex;
+        gap: 5px;
+        padding: 4px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+    }
 }
 
 // Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
 .esqueleto-bloco {
-  display: block;
-  border-radius: var(--radius-control);
-  background: var(--border-strong);
-  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+    display: block;
+    border-radius: var(--radius-control);
+    background: var(--border-strong);
+    animation: esqueleto-pulso 1.4s ease-in-out infinite;
 
-  &--rotulo {
-    width: 130px;
-    height: 12px;
-  }
-
-  &--chip {
-    width: 150px;
-    height: 20px;
-    margin-left: auto;
-  }
-
-  &--avatar {
-    width: 44px;
-    height: 44px;
-    flex: none;
-    border-radius: 50%;
-  }
-
-  &--titulo {
-    width: 65%;
-    max-width: 200px;
-    height: 18px;
-  }
-
-  &--linha {
-    width: 100%;
-    height: 14px;
-
-    &.esqueleto-bloco--curta {
-      width: 45%;
+    &--rotulo {
+        width: 130px;
+        height: 12px;
     }
-  }
 
-  &--barra {
-    width: 100%;
-    height: 56px;
-  }
+    &--chip {
+        width: 150px;
+        height: 20px;
+        margin-left: auto;
+    }
 
-  &--mini {
-    width: 100%;
-    height: 48px;
-  }
+    &--avatar {
+        width: 44px;
+        height: 44px;
+        flex: none;
+        border-radius: 50%;
+    }
 
-  &--aba {
-    flex: 1;
-    height: 30px;
-  }
+    &--titulo {
+        width: 65%;
+        max-width: 200px;
+        height: 18px;
+    }
 
-  &--bloco {
-    width: 100%;
-    height: 160px;
-  }
+    &--linha {
+        width: 100%;
+        height: 14px;
+
+        &.esqueleto-bloco--curta {
+            width: 45%;
+        }
+    }
+
+    &--barra {
+        width: 100%;
+        height: 56px;
+    }
+
+    &--mini {
+        width: 100%;
+        height: 48px;
+    }
+
+    &--aba {
+        flex: 1;
+        height: 30px;
+    }
+
+    &--bloco {
+        width: 100%;
+        height: 160px;
+    }
 }
 
 @keyframes esqueleto-pulso {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .esqueleto-bloco {
-    animation: none;
-  }
+    .esqueleto-bloco {
+        animation: none;
+    }
 }

@@ -1,83 +1,99 @@
 <section class="acervo">
-  <article class="card">
-    <header class="card__cabecalho">
-      <span class="card__indice">//</span>
-      <h1 class="card__titulo">Fichas</h1>
-      <span class="card__regua"></span>
-      @if (!carregando() && itens().length) {
-        <span class="card__contagem" aria-hidden="true">{{ itens().length }}</span>
-      }
-    </header>
+    <article class="card">
+        <header class="card__cabecalho">
+            <span class="card__indice">//</span>
+            <h1 class="card__titulo">Fichas</h1>
+            <span class="card__regua"></span>
+            @if (!carregando() && itens().length) {
+            <span class="card__contagem" aria-hidden="true">{{ itens().length }}</span>
+            }
+        </header>
 
-    <div class="acervo__acoes">
-      <div class="acervo__acoes-criar">
-        <button class="botao botao--primario acervo__acao" type="button" (click)="abrirCriarFicha()">
-          <app-icone nome="novo-agente" />
-          Criar ficha
-        </button>
-        @if (podeCriarCriatura()) {
-          <button class="botao botao--secundario acervo__acao" type="button" (click)="abrirCriarCriatura()">
-            <app-icone nome="alerta" />
-            Criar criatura
-          </button>
-        }
-      </div>
-      <select class="acervo__select-filtro" aria-label="Filtrar por tipo" (change)="mudarFiltro($event)">
-        <option [value]="FILTRO_TODOS" [selected]="filtro() === FILTRO_TODOS">Todos</option>
-        @for (bloco of blocos; track bloco.tipo) {
-          <option [value]="bloco.tipo" [selected]="filtro() === bloco.tipo">{{ bloco.titulo }}</option>
-        }
-      </select>
-    </div>
-
-    @if (carregando()) {
-      <div class="acervo__esqueleto" role="status" aria-label="Carregando fichas">
-        @for (i of [0, 1, 2]; track i) {
-          <div class="acervo__esqueleto-cartao">
-            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
-            <div class="acervo__esqueleto-rodape">
-              <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+        <div class="acervo__acoes">
+            <div class="acervo__acoes-criar">
+                <button
+                    class="botao botao--primario acervo__acao"
+                    type="button"
+                    (click)="abrirCriarFicha()"
+                >
+                    <app-icone nome="novo-agente" />
+                    Criar ficha
+                </button>
+                @if (podeCriarCriatura()) {
+                <button
+                    class="botao botao--secundario acervo__acao"
+                    type="button"
+                    (click)="abrirCriarCriatura()"
+                >
+                    <app-icone nome="alerta" />
+                    Criar criatura
+                </button>
+                }
             </div>
-          </div>
-        }
-      </div>
-    } @else if (itens().length === 0) {
-      <p class="acervo__estado">
-        <app-icone nome="agente" />
-        Nenhuma ficha ainda. Crie uma — ela nasce solta, sem campanha, e você pode atribuí-la depois.
-      </p>
-    } @else {
-      @for (bloco of blocos; track bloco.tipo) {
-        @if (mostrarBloco(bloco.tipo)) {
-          <header class="acervo__secao">
+            <select
+                class="acervo__select-filtro"
+                aria-label="Filtrar por tipo"
+                (change)="mudarFiltro($event)"
+            >
+                <option [value]="FILTRO_TODOS" [selected]="filtro() === FILTRO_TODOS">Todos</option>
+                @for (bloco of blocos; track bloco.tipo) {
+                <option [value]="bloco.tipo" [selected]="filtro() === bloco.tipo">
+                    {{ bloco.titulo }}
+                </option>
+                }
+            </select>
+        </div>
+
+        @if (carregando()) {
+        <div class="acervo__esqueleto" role="status" aria-label="Carregando fichas">
+            @for (i of [0, 1, 2]; track i) {
+            <div class="acervo__esqueleto-cartao">
+                <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                <div class="acervo__esqueleto-rodape">
+                    <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+                </div>
+            </div>
+            }
+        </div>
+        } @else if (itens().length === 0) {
+        <p class="acervo__estado">
+            <app-icone nome="agente" />
+            Nenhuma ficha ainda. Crie uma — ela nasce solta, sem campanha, e você pode atribuí-la
+            depois.
+        </p>
+        } @else { @for (bloco of blocos; track bloco.tipo) { @if (mostrarBloco(bloco.tipo)) {
+        <header class="acervo__secao">
             <h2 class="acervo__secao-titulo">{{ bloco.titulo }}</h2>
             <span class="acervo__secao-regua"></span>
-            <span class="acervo__secao-contagem" aria-hidden="true">{{ itensDoTipo(bloco.tipo).length }}</span>
-          </header>
+            <span class="acervo__secao-contagem" aria-hidden="true"
+                >{{ itensDoTipo(bloco.tipo).length }}</span
+            >
+        </header>
 
-          @if (itensDoTipo(bloco.tipo).length === 0) {
-            <p class="acervo__estado">{{ bloco.estadoVazio }}</p>
-          } @else {
-            <ul class="acervo__lista" [class.acervo__lista--limitada]="filtro() === FILTRO_TODOS" appOverflowFade>
-              @for (item of itensDoTipo(bloco.tipo); track item.id) {
-                <li>
-                  <app-cartao-ficha-acervo
+        @if (itensDoTipo(bloco.tipo).length === 0) {
+        <p class="acervo__estado">{{ bloco.estadoVazio }}</p>
+        } @else {
+        <ul
+            class="acervo__lista"
+            [class.acervo__lista--limitada]="filtro() === FILTRO_TODOS"
+            appOverflowFade
+        >
+            @for (item of itensDoTipo(bloco.tipo); track item.id) {
+            <li>
+                <app-cartao-ficha-acervo
                     [item]="item"
                     [menuAberto]="menuFichaAberto()?.id === item.id"
                     (menu)="alternarMenuFicha(item, $event)"
                     (avatarHover)="agendarPreviewAvatar($event, item.imagemUrl)"
                     (avatarSaida)="cancelarPreviewAvatar()"
-                  />
-                </li>
-              }
-            </ul>
-          }
-        }
-      }
-    }
-  </article>
+                />
+            </li>
+            }
+        </ul>
+        } } } }
+    </article>
 </section>
 
 <!--
@@ -86,56 +102,60 @@
   mesmo problema e mesma correção de `CampanhaDetalhe`, m3-52).
 -->
 @if (menuFichaAberto(); as menuAberto) {
-  <button class="acervo__menu-fundo" type="button" aria-label="Fechar menu" (click)="fecharMenuFicha()"></button>
-  <div
+<button
+    class="acervo__menu-fundo"
+    type="button"
+    aria-label="Fechar menu"
+    (click)="fecharMenuFicha()"
+></button>
+<div
     class="acervo__menu"
     role="menu"
     [style.top.px]="menuFichaPosicao()?.top"
     [style.bottom.px]="menuFichaPosicao()?.bottom"
     [style.right.px]="menuFichaPosicao()?.right"
-  >
+>
     @if (temCampanhaElegivelParaAtribuir(menuAberto.tipo)) {
-      <button
+    <button
         class="acervo__menu-item"
         type="button"
         role="menuitem"
         (click)="pedirAtribuir(menuAberto.id, menuAberto.nome, menuAberto.tipo)"
-      >
+    >
         <app-icone nome="campanhas" />
         <span>Atribuir a campanha</span>
-      </button>
-    }
-    @if (menuAberto.campanhaId !== null) {
-      <button
+    </button>
+    } @if (menuAberto.campanhaId !== null) {
+    <button
         class="acervo__menu-item"
         type="button"
         role="menuitem"
         [disabled]="removendo() === menuAberto.id"
         (click)="removerDaCampanha(menuAberto.id)"
-      >
+    >
         <app-icone nome="voltar" />
         <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
-      </button>
+    </button>
     }
     <button
-      class="acervo__menu-item"
-      type="button"
-      role="menuitem"
-      (click)="pedirDuplicar(menuAberto.id, menuAberto.nome)"
+        class="acervo__menu-item"
+        type="button"
+        role="menuitem"
+        (click)="pedirDuplicar(menuAberto.id, menuAberto.nome)"
     >
-      <app-icone nome="duplicar" />
-      <span>Duplicar ficha</span>
+        <app-icone nome="duplicar" />
+        <span>Duplicar ficha</span>
     </button>
     <button
-      class="acervo__menu-item"
-      type="button"
-      role="menuitem"
-      (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
+        class="acervo__menu-item"
+        type="button"
+        role="menuitem"
+        (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
     >
-      <app-icone nome="excluir" />
-      <span>Excluir ficha</span>
+        <app-icone nome="excluir" />
+        <span>Excluir ficha</span>
     </button>
-  </div>
+</div>
 }
 
 <!--
@@ -144,161 +164,170 @@
   `position: fixed` filho na pintura, mesmo problema/correção de `CampanhaDetalhe`).
 -->
 @if (previewAvatar(); as preview) {
-  <div
+<div
     class="acervo__avatar-preview"
     [style.top.px]="preview.top"
     [style.left.px]="preview.left"
     aria-hidden="true"
-  >
+>
     <img class="acervo__avatar-preview-imagem" [src]="preview.url" alt="" />
-  </div>
-}
-
-@if (confirmandoDuplicar(); as pendenteDuplicar) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarDuplicar()"></button>
+</div>
+} @if (confirmandoDuplicar(); as pendenteDuplicar) {
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="cancelarDuplicar()"
+    ></button>
     <div class="dialogo__painel">
-      <header class="dialogo__cabecalho">
-        <span class="card__indice"><app-icone nome="duplicar" /></span>
-        <h2 class="dialogo__titulo">Duplicar Ficha</h2>
-        <span class="card__regua"></span>
-        <button
-          class="dialogo__fechar"
-          type="button"
-          aria-label="Fechar"
-          [disabled]="duplicando() === pendenteDuplicar.id"
-          (click)="cancelarDuplicar()"
-        >
-          ✕
-        </button>
-      </header>
+        <header class="dialogo__cabecalho">
+            <span class="card__indice"><app-icone nome="duplicar" /></span>
+            <h2 class="dialogo__titulo">Duplicar Ficha</h2>
+            <span class="card__regua"></span>
+            <button
+                class="dialogo__fechar"
+                type="button"
+                aria-label="Fechar"
+                [disabled]="duplicando() === pendenteDuplicar.id"
+                (click)="cancelarDuplicar()"
+            >
+                ✕
+            </button>
+        </header>
 
-      <p class="dialogo__aviso">
-        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"?
-      </p>
+        <p class="dialogo__aviso">
+            Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"?
+        </p>
 
-      <div class="dialogo__acoes">
-        <button
-          class="botao botao--primario dialogo__acao"
-          type="button"
-          [disabled]="duplicando() === pendenteDuplicar.id"
-          (click)="confirmarDuplicar()"
-        >
-          <app-icone nome="duplicar" />
-          {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
-        </button>
-        <button
-          class="botao botao--secundario dialogo__acao"
-          type="button"
-          [disabled]="duplicando() === pendenteDuplicar.id"
-          (click)="cancelarDuplicar()"
-        >
-          Cancelar
-        </button>
-      </div>
+        <div class="dialogo__acoes">
+            <button
+                class="botao botao--primario dialogo__acao"
+                type="button"
+                [disabled]="duplicando() === pendenteDuplicar.id"
+                (click)="confirmarDuplicar()"
+            >
+                <app-icone nome="duplicar" />
+                {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
+            </button>
+            <button
+                class="botao botao--secundario dialogo__acao"
+                type="button"
+                [disabled]="duplicando() === pendenteDuplicar.id"
+                (click)="cancelarDuplicar()"
+            >
+                Cancelar
+            </button>
+        </div>
     </div>
-  </div>
-}
-
-@if (confirmandoExcluirFicha(); as pendenteExcluir) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarExcluirFicha()"></button>
+</div>
+} @if (confirmandoExcluirFicha(); as pendenteExcluir) {
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="cancelarExcluirFicha()"
+    ></button>
     <div class="dialogo__painel">
-      <header class="dialogo__cabecalho">
-        <span class="card__indice"><app-icone nome="excluir" /></span>
-        <h2 class="dialogo__titulo">Excluir Ficha</h2>
-        <span class="card__regua"></span>
-        <button
-          class="dialogo__fechar"
-          type="button"
-          aria-label="Fechar"
-          [disabled]="excluindoFicha() === pendenteExcluir.id"
-          (click)="cancelarExcluirFicha()"
-        >
-          ✕
-        </button>
-      </header>
+        <header class="dialogo__cabecalho">
+            <span class="card__indice"><app-icone nome="excluir" /></span>
+            <h2 class="dialogo__titulo">Excluir Ficha</h2>
+            <span class="card__regua"></span>
+            <button
+                class="dialogo__fechar"
+                type="button"
+                aria-label="Fechar"
+                [disabled]="excluindoFicha() === pendenteExcluir.id"
+                (click)="cancelarExcluirFicha()"
+            >
+                ✕
+            </button>
+        </header>
 
-      <p class="dialogo__aviso">
-        Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
-      </p>
+        <p class="dialogo__aviso">
+            Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
+        </p>
 
-      <div class="dialogo__acoes">
-        <button
-          class="botao botao--primario dialogo__acao"
-          type="button"
-          [disabled]="excluindoFicha() === pendenteExcluir.id"
-          (click)="confirmarExcluirFicha()"
-        >
-          <app-icone nome="excluir" />
-          {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
-        </button>
-        <button
-          class="botao botao--secundario dialogo__acao"
-          type="button"
-          [disabled]="excluindoFicha() === pendenteExcluir.id"
-          (click)="cancelarExcluirFicha()"
-        >
-          Cancelar
-        </button>
-      </div>
+        <div class="dialogo__acoes">
+            <button
+                class="botao botao--primario dialogo__acao"
+                type="button"
+                [disabled]="excluindoFicha() === pendenteExcluir.id"
+                (click)="confirmarExcluirFicha()"
+            >
+                <app-icone nome="excluir" />
+                {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
+            </button>
+            <button
+                class="botao botao--secundario dialogo__acao"
+                type="button"
+                [disabled]="excluindoFicha() === pendenteExcluir.id"
+                (click)="cancelarExcluirFicha()"
+            >
+                Cancelar
+            </button>
+        </div>
     </div>
-  </div>
-}
-
-@if (confirmandoAtribuir(); as pendenteAtribuir) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Atribuir a campanha">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarAtribuir()"></button>
+</div>
+} @if (confirmandoAtribuir(); as pendenteAtribuir) {
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Atribuir a campanha">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="cancelarAtribuir()"
+    ></button>
     <div class="dialogo__painel">
-      <header class="dialogo__cabecalho">
-        <span class="card__indice"><app-icone nome="campanhas" /></span>
-        <h2 class="dialogo__titulo">Atribuir a Campanha</h2>
-        <span class="card__regua"></span>
-        <button
-          class="dialogo__fechar"
-          type="button"
-          aria-label="Fechar"
-          [disabled]="atribuindo() === pendenteAtribuir.id"
-          (click)="cancelarAtribuir()"
-        >
-          ✕
-        </button>
-      </header>
+        <header class="dialogo__cabecalho">
+            <span class="card__indice"><app-icone nome="campanhas" /></span>
+            <h2 class="dialogo__titulo">Atribuir a Campanha</h2>
+            <span class="card__regua"></span>
+            <button
+                class="dialogo__fechar"
+                type="button"
+                aria-label="Fechar"
+                [disabled]="atribuindo() === pendenteAtribuir.id"
+                (click)="cancelarAtribuir()"
+            >
+                ✕
+            </button>
+        </header>
 
-      <p class="dialogo__aviso">
-        Mover <strong>{{ pendenteAtribuir.nome }}</strong> para qual campanha?
-      </p>
+        <p class="dialogo__aviso">
+            Mover <strong>{{ pendenteAtribuir.nome }}</strong> para qual campanha?
+        </p>
 
-      <select
-        class="acervo__select"
-        aria-label="Campanha de destino"
-        [value]="campanhaEscolhida()"
-        (change)="mudarCampanhaEscolhida($event)"
-      >
-        @for (campanha of campanhasElegiveis(); track campanha.id) {
-          <option [value]="campanha.id">{{ campanha.nome }}</option>
-        }
-      </select>
+        <select
+            class="acervo__select"
+            aria-label="Campanha de destino"
+            [value]="campanhaEscolhida()"
+            (change)="mudarCampanhaEscolhida($event)"
+        >
+            @for (campanha of campanhasElegiveis(); track campanha.id) {
+            <option [value]="campanha.id">{{ campanha.nome }}</option>
+            }
+        </select>
 
-      <div class="dialogo__acoes">
-        <button
-          class="botao botao--primario dialogo__acao"
-          type="button"
-          [disabled]="atribuindo() === pendenteAtribuir.id"
-          (click)="confirmarAtribuir()"
-        >
-          <app-icone nome="campanhas" />
-          {{ atribuindo() === pendenteAtribuir.id ? 'Atribuindo…' : 'Confirmar' }}
-        </button>
-        <button
-          class="botao botao--secundario dialogo__acao"
-          type="button"
-          [disabled]="atribuindo() === pendenteAtribuir.id"
-          (click)="cancelarAtribuir()"
-        >
-          Cancelar
-        </button>
-      </div>
+        <div class="dialogo__acoes">
+            <button
+                class="botao botao--primario dialogo__acao"
+                type="button"
+                [disabled]="atribuindo() === pendenteAtribuir.id"
+                (click)="confirmarAtribuir()"
+            >
+                <app-icone nome="campanhas" />
+                {{ atribuindo() === pendenteAtribuir.id ? 'Atribuindo…' : 'Confirmar' }}
+            </button>
+            <button
+                class="botao botao--secundario dialogo__acao"
+                type="button"
+                [disabled]="atribuindo() === pendenteAtribuir.id"
+                (click)="cancelarAtribuir()"
+            >
+                Cancelar
+            </button>
+        </div>
     </div>
-  </div>
+</div>
 }

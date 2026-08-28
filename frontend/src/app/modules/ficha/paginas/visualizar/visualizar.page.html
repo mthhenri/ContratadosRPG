@@ -1,349 +1,365 @@
 <section class="ficha-pagina">
-  <header class="ficha-pagina__topo">
-    @if (campanhaId(); as campanhaAtualId) {
-      <a
-        class="ficha-pagina__voltar"
-        [routerLink]="['/painel', campanhaAtualId]"
-        aria-label="Voltar à campanha"
-        [appTooltip]="'Voltar à campanha'"
-      >
-        <app-icone nome="voltar" />
-      </a>
-    } @else {
-      <a
-        class="ficha-pagina__voltar"
-        routerLink="/fichas"
-        aria-label="Voltar ao acervo"
-        [appTooltip]="'Voltar ao acervo'"
-      >
-        <app-icone nome="voltar" />
-      </a>
-    }
+    <header class="ficha-pagina__topo">
+        @if (campanhaId(); as campanhaAtualId) {
+        <a
+            class="ficha-pagina__voltar"
+            [routerLink]="['/painel', campanhaAtualId]"
+            aria-label="Voltar à campanha"
+            [appTooltip]="'Voltar à campanha'"
+        >
+            <app-icone nome="voltar" />
+        </a>
+        } @else {
+        <a
+            class="ficha-pagina__voltar"
+            routerLink="/fichas"
+            aria-label="Voltar ao acervo"
+            [appTooltip]="'Voltar ao acervo'"
+        >
+            <app-icone nome="voltar" />
+        </a>
+        }
 
-    <!-- Ações do cabeçalho agrupadas (m3-62): um único container flex, não mais itens soltos
+        <!-- Ações do cabeçalho agrupadas (m3-62): um único container flex, não mais itens soltos
          direto em `.ficha-pagina__topo` — no mobile, quando a linha não cabe, o grupo inteiro
          quebra pra baixo (e quebra internamente entre si) sempre colado à direita, em vez de cada
          item quebrar isolado (o kebab acabava sozinho grudado na esquerda, e o selo de tempo real
          ao vivo bagunçava a fileira). Ver `&__acoes` no SCSS. -->
-    <div class="ficha-pagina__acoes">
-      <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
-      @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
-        <span
-          class="ficha-pagina__persistencia"
-          [class.ficha-pagina__persistencia--salvo]="fichaEdicao.estadoPersistencia() === 'salvo'"
-          role="status"
-        >
-          {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
-        </span>
-      }
+        <div class="ficha-pagina__acoes">
+            <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
+            @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
+            <span
+                class="ficha-pagina__persistencia"
+                [class.ficha-pagina__persistencia--salvo]="fichaEdicao.estadoPersistencia() === 'salvo'"
+                role="status"
+            >
+                {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
+            </span>
+            }
 
-      <app-indicador-tempo-real />
+            <app-indicador-tempo-real />
 
-      @if (ficha()) {
-        <!-- Gatilhos flutuantes (m3-61): no desktop cada um vira um círculo fixo no canto inferior
+            @if (ficha()) {
+            <!-- Gatilhos flutuantes (m3-61): no desktop cada um vira um círculo fixo no canto inferior
              direito (Histórico empilhado ACIMA da Calculadora); no mobile os dois voltam a ser
              botões inline aqui no cabeçalho, lado a lado — ver `@include bp.mobile` no SCSS de cada
              um. Precisam ficar juntos no DOM para o `flex` do grupo colocá-los um do lado do outro
              nessa faixa. -->
-        <app-historico-rolagens-sidebar
-          titulo="Histórico de Rolagens"
-          [itens]="historicoRolagens()"
-          [carregando]="historicoCarregando()"
-          [carregandoMais]="historicoCarregandoMais()"
-          [temMais]="historicoTemMais()"
-          [mostrarFicha]="false"
-          [acimaDaCalculadora]="true"
-          (carregarMais)="carregarMaisHistorico()"
-          (abrirCalculadora)="calculadoraAberta.set(true)"
-        />
-        <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
-      }
-
-      @if (ficha() && podeGerenciar()) {
-        <div class="ficha-pagina__menu-container">
-          <button
-            class="ficha-pagina__menu-botao"
-            type="button"
-            aria-label="Ações da ficha"
-            aria-haspopup="menu"
-            [attr.aria-expanded]="menuAberto()"
-            (click)="alternarMenu()"
-          >
-            ⋯
-          </button>
-          @if (menuAberto()) {
-            <button
-              class="ficha-pagina__menu-fundo"
-              type="button"
-              aria-label="Fechar menu"
-              (click)="fecharMenu()"
-            ></button>
-            <div class="ficha-pagina__menu" role="menu">
-              <button
-                class="ficha-pagina__menu-item"
-                type="button"
-                role="menuitem"
-                (click)="abrirAcesso()"
-              >
-                <app-icone nome="olho" />
-                <span>Acesso de visualização</span>
-                @if (acessos().length) {
-                  <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
-                }
-              </button>
-              <button
-                class="ficha-pagina__menu-item ficha-pagina__menu-item--visibilidade"
-                type="button"
-                role="menuitem"
-                (click)="solicitarAlteracaoVisibilidade()"
-              >
-                <app-icone [nome]="ficha()?.oculta ? 'olho' : 'olho-fechado'" />
-                <span>{{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}</span>
-              </button>
-              @if (campanhaId() !== null) {
+            <app-historico-rolagens-sidebar
+                titulo="Histórico de Rolagens"
+                [itens]="historicoRolagens()"
+                [carregando]="historicoCarregando()"
+                [carregandoMais]="historicoCarregandoMais()"
+                [temMais]="historicoTemMais()"
+                [mostrarFicha]="false"
+                [acimaDaCalculadora]="true"
+                (carregarMais)="carregarMaisHistorico()"
+                (abrirCalculadora)="calculadoraAberta.set(true)"
+            />
+            <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
+            } @if (ficha() && podeGerenciar()) {
+            <div class="ficha-pagina__menu-container">
                 <button
-                  class="ficha-pagina__menu-item"
-                  type="button"
-                  role="menuitem"
-                  [disabled]="removendoDaCampanha()"
-                  (click)="removerDaCampanha()"
+                    class="ficha-pagina__menu-botao"
+                    type="button"
+                    aria-label="Ações da ficha"
+                    aria-haspopup="menu"
+                    [attr.aria-expanded]="menuAberto()"
+                    (click)="alternarMenu()"
                 >
-                  <app-icone nome="voltar" />
-                  <span>{{ removendoDaCampanha() ? 'Removendo…' : 'Remover da campanha' }}</span>
+                    ⋯
                 </button>
-              }
-              <button
-                class="ficha-pagina__menu-item"
-                type="button"
-                role="menuitem"
-                (click)="abrirExclusao()"
-              >
-                <app-icone nome="excluir" />
-                <span>Excluir ficha</span>
-              </button>
+                @if (menuAberto()) {
+                <button
+                    class="ficha-pagina__menu-fundo"
+                    type="button"
+                    aria-label="Fechar menu"
+                    (click)="fecharMenu()"
+                ></button>
+                <div class="ficha-pagina__menu" role="menu">
+                    <button
+                        class="ficha-pagina__menu-item"
+                        type="button"
+                        role="menuitem"
+                        (click)="abrirAcesso()"
+                    >
+                        <app-icone nome="olho" />
+                        <span>Acesso de visualização</span>
+                        @if (acessos().length) {
+                        <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
+                        }
+                    </button>
+                    <button
+                        class="ficha-pagina__menu-item ficha-pagina__menu-item--visibilidade"
+                        type="button"
+                        role="menuitem"
+                        (click)="solicitarAlteracaoVisibilidade()"
+                    >
+                        <app-icone [nome]="ficha()?.oculta ? 'olho' : 'olho-fechado'" />
+                        <span>{{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}</span>
+                    </button>
+                    @if (campanhaId() !== null) {
+                    <button
+                        class="ficha-pagina__menu-item"
+                        type="button"
+                        role="menuitem"
+                        [disabled]="removendoDaCampanha()"
+                        (click)="removerDaCampanha()"
+                    >
+                        <app-icone nome="voltar" />
+                        <span
+                            >{{ removendoDaCampanha() ? 'Removendo…' : 'Remover da campanha'
+                            }}</span
+                        >
+                    </button>
+                    }
+                    <button
+                        class="ficha-pagina__menu-item"
+                        type="button"
+                        role="menuitem"
+                        (click)="abrirExclusao()"
+                    >
+                        <app-icone nome="excluir" />
+                        <span>Excluir ficha</span>
+                    </button>
+                </div>
+                }
             </div>
-          }
+            }
         </div>
-      }
-    </div>
-  </header>
+    </header>
 
-  @if (carregando()) {
+    @if (carregando()) {
     <!-- Esqueleto de carregamento (m3-56) — mesmo padrão `.esqueleto-bloco`/`esqueleto-pulso` já
          usado em campanha (lista/detalhe) e usuário (perfil); a silhueta espelha o layout real de
          `FichaVisualizacao` (topo | identidade+atributos | status com barra de abas), inclusive no
          mobile (mesmas larguras/breakpoints do componente real, ver `.ficha-esqueleto` no SCSS). -->
     <div class="ficha-esqueleto" role="status" aria-label="Carregando ficha">
-      <div class="ficha-esqueleto__topo">
-        <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
-        <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
-      </div>
-
-      <div class="ficha-esqueleto__linha">
-        <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--identidade">
-          <div class="ficha-esqueleto__cartao">
-            <div class="ficha-esqueleto__ident-topo">
-              <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
-              <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-            </div>
-            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
-            <div class="ficha-esqueleto__barras">
-              <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
-              <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
-            </div>
-            <div class="ficha-esqueleto__mini-grade">
-              @for (indice of [0, 1, 2, 3]; track indice) {
-                <span class="esqueleto-bloco esqueleto-bloco--mini"></span>
-              }
-            </div>
-          </div>
+        <div class="ficha-esqueleto__topo">
+            <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+            <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
         </div>
 
-        <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--atributos">
-          <div class="ficha-esqueleto__cartao">
-            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-            @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-              <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-            }
-          </div>
-        </div>
+        <div class="ficha-esqueleto__linha">
+            <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--identidade">
+                <div class="ficha-esqueleto__cartao">
+                    <div class="ficha-esqueleto__ident-topo">
+                        <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+                        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+                    </div>
+                    <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                    <span
+                        class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
+                    ></span>
+                    <div class="ficha-esqueleto__barras">
+                        <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+                        <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+                    </div>
+                    <div class="ficha-esqueleto__mini-grade">
+                        @for (indice of [0, 1, 2, 3]; track indice) {
+                        <span class="esqueleto-bloco esqueleto-bloco--mini"></span>
+                        }
+                    </div>
+                </div>
+            </div>
 
-        <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--status">
-          <div class="ficha-esqueleto__abas">
-            @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-              <span class="esqueleto-bloco esqueleto-bloco--aba"></span>
-            }
-          </div>
-          <div class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
-            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--bloco"></span>
-          </div>
+            <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--atributos">
+                <div class="ficha-esqueleto__cartao">
+                    <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+                    @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
+                    <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                    }
+                </div>
+            </div>
+
+            <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--status">
+                <div class="ficha-esqueleto__abas">
+                    @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
+                    <span class="esqueleto-bloco esqueleto-bloco--aba"></span>
+                    }
+                </div>
+                <div class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
+                    <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                    <span
+                        class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
+                    ></span>
+                    <span class="esqueleto-bloco esqueleto-bloco--bloco"></span>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  } @else if (ficha(); as fichaAtual) {
+    } @else if (ficha(); as fichaAtual) {
     <!-- Edição no próprio lugar (m3-10): cada campo tem seu lápis; não há mais botão global. -->
     <app-ficha-visualizacao
-      [fichaId]="fichaAtual.id"
-      [nome]="fichaAtual.nome"
-      [cor]="fichaAtual.cor"
-      [imagemUrl]="fichaAtual.imagemUrl"
-      [foco]="fichaAtual.imagemFoco"
-      [oculta]="fichaAtual.oculta"
-      [dados]="fichaAtual.dados"
-      [ajustavel]="podeGerenciar()"
-      [podeRolar]="podeGerenciar()"
-      [ehMestre]="ehMestre()"
-      [abaInicial]="abaInicial"
-      (abaMudou)="mudarAba($event)"
-      [abaStatusInicial]="abaStatusInicial"
-      (abaStatusMudou)="mudarAbaStatus($event)"
-      [destinoMobileInicial]="destinoMobileInicial"
-      (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
-      (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
-      (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
-      (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
-      (ajusteNome)="fichaEdicao.ajustarNome($event)"
-      (ajusteCor)="fichaEdicao.ajustarCor($event)"
-      (ajusteOculta)="fichaEdicao.ajustarOculta($event)"
-      (ajusteImagem)="fichaEdicao.ajustarImagem($event)"
-      (removerImagem)="fichaEdicao.removerImagem()"
-      (focoMudou)="fichaEdicao.ajustarImagemFoco($event)"
-      (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
-      (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
-      (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
-      (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
-      (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
-      (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
-      (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
-      (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
-      (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
-      (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
-      (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
-      (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
-      (ajusteHabilidadePersonalidade)="fichaEdicao.ajustarHabilidadePersonalidade($event)"
-      (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
-      (origemLimpa)="fichaEdicao.limparOrigem()"
-      (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
+        [fichaId]="fichaAtual.id"
+        [nome]="fichaAtual.nome"
+        [cor]="fichaAtual.cor"
+        [imagemUrl]="fichaAtual.imagemUrl"
+        [foco]="fichaAtual.imagemFoco"
+        [oculta]="fichaAtual.oculta"
+        [dados]="fichaAtual.dados"
+        [ajustavel]="podeGerenciar()"
+        [podeRolar]="podeGerenciar()"
+        [ehMestre]="ehMestre()"
+        [abaInicial]="abaInicial"
+        (abaMudou)="mudarAba($event)"
+        [abaStatusInicial]="abaStatusInicial"
+        (abaStatusMudou)="mudarAbaStatus($event)"
+        [destinoMobileInicial]="destinoMobileInicial"
+        (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+        (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+        (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+        (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+        (ajusteNome)="fichaEdicao.ajustarNome($event)"
+        (ajusteCor)="fichaEdicao.ajustarCor($event)"
+        (ajusteOculta)="fichaEdicao.ajustarOculta($event)"
+        (ajusteImagem)="fichaEdicao.ajustarImagem($event)"
+        (removerImagem)="fichaEdicao.removerImagem()"
+        (focoMudou)="fichaEdicao.ajustarImagemFoco($event)"
+        (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+        (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+        (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+        (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+        (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+        (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+        (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+        (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+        (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
+        (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+        (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+        (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+        (ajusteHabilidadePersonalidade)="fichaEdicao.ajustarHabilidadePersonalidade($event)"
+        (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+        (origemLimpa)="fichaEdicao.limparOrigem()"
+        (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
     />
-  } @else {
+    } @else {
     <p class="ficha-pagina__carregando">Ficha não encontrada.</p>
-  }
+    }
 </section>
 
 @if (dialogAcesso()) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharAcesso()"></button>
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="fecharAcesso()"
+    ></button>
     <div class="dialogo__painel acesso">
-      <header class="dialogo__cabecalho">
-        <span class="ficha-cartao__indice"><app-icone nome="olho" /></span>
-        <h2 class="dialogo__titulo">Acesso de Visualização</h2>
-        <span class="ficha-cartao__regua"></span>
-        <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="fecharAcesso()">
-          ✕
-        </button>
-      </header>
-
-      <p class="acesso__ajuda">
-        Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas não
-        editá-la; você pode revogar a qualquer momento.
-      </p>
-
-      <div class="acesso__conceder">
-        <select
-          class="acesso__select"
-          aria-label="Membro para conceder acesso"
-          [formControl]="membroParaConceder"
-        >
-          <option [ngValue]="null" disabled>Selecione um membro…</option>
-          @for (membro of membrosElegiveis(); track membro.usuarioId) {
-            <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
-          }
-        </select>
-        <button
-          class="botao botao--primario acesso__acao"
-          type="button"
-          [disabled]="membroParaConceder.value === null || concedendo()"
-          (click)="conceder()"
-        >
-          <app-icone nome="mais" />
-          {{ concedendo() ? 'Concedendo…' : 'Conceder' }}
-        </button>
-      </div>
-
-      @if (membrosElegiveis().length === 0) {
-        <p class="acesso__vazio-elegiveis">Nenhum outro membro disponível para conceder acesso.</p>
-      }
-
-      @if (acessos().length) {
-        <ul class="acesso__lista">
-          @for (acesso of acessos(); track acesso.usuarioId) {
-            <li class="acesso__item">
-              <span class="acesso__avatar" aria-hidden="true"></span>
-              <span class="acesso__nome">{{ acesso.nome }}</span>
-              <button
-                class="botao botao--secundario acesso__revogar"
+        <header class="dialogo__cabecalho">
+            <span class="ficha-cartao__indice"><app-icone nome="olho" /></span>
+            <h2 class="dialogo__titulo">Acesso de Visualização</h2>
+            <span class="ficha-cartao__regua"></span>
+            <button
+                class="dialogo__fechar"
                 type="button"
-                [disabled]="revogando() !== null"
-                (click)="revogar(acesso.usuarioId)"
-              >
-                <app-icone nome="excluir" />
-                {{ revogando() === acesso.usuarioId ? 'Revogando…' : 'Revogar' }}
-              </button>
+                aria-label="Fechar"
+                (click)="fecharAcesso()"
+            >
+                ✕
+            </button>
+        </header>
+
+        <p class="acesso__ajuda">
+            Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas
+            não editá-la; você pode revogar a qualquer momento.
+        </p>
+
+        <div class="acesso__conceder">
+            <select
+                class="acesso__select"
+                aria-label="Membro para conceder acesso"
+                [formControl]="membroParaConceder"
+            >
+                <option [ngValue]="null" disabled>Selecione um membro…</option>
+                @for (membro of membrosElegiveis(); track membro.usuarioId) {
+                <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
+                }
+            </select>
+            <button
+                class="botao botao--primario acesso__acao"
+                type="button"
+                [disabled]="membroParaConceder.value === null || concedendo()"
+                (click)="conceder()"
+            >
+                <app-icone nome="mais" />
+                {{ concedendo() ? 'Concedendo…' : 'Conceder' }}
+            </button>
+        </div>
+
+        @if (membrosElegiveis().length === 0) {
+        <p class="acesso__vazio-elegiveis">Nenhum outro membro disponível para conceder acesso.</p>
+        } @if (acessos().length) {
+        <ul class="acesso__lista">
+            @for (acesso of acessos(); track acesso.usuarioId) {
+            <li class="acesso__item">
+                <span class="acesso__avatar" aria-hidden="true"></span>
+                <span class="acesso__nome">{{ acesso.nome }}</span>
+                <button
+                    class="botao botao--secundario acesso__revogar"
+                    type="button"
+                    [disabled]="revogando() !== null"
+                    (click)="revogar(acesso.usuarioId)"
+                >
+                    <app-icone nome="excluir" />
+                    {{ revogando() === acesso.usuarioId ? 'Revogando…' : 'Revogar' }}
+                </button>
             </li>
-          }
+            }
         </ul>
-      } @else {
+        } @else {
         <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
-      }
+        }
     </div>
-  </div>
-}
-
-@if (dialogExclusao()) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharExclusao()"></button>
+</div>
+} @if (dialogExclusao()) {
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="fecharExclusao()"
+    ></button>
     <div class="dialogo__painel exclusao">
-      <header class="dialogo__cabecalho">
-        <span class="ficha-cartao__indice"><app-icone nome="excluir" /></span>
-        <h2 class="dialogo__titulo">Excluir Ficha</h2>
-        <span class="ficha-cartao__regua"></span>
-        <button
-          class="dialogo__fechar"
-          type="button"
-          aria-label="Fechar"
-          [disabled]="excluindo()"
-          (click)="fecharExclusao()"
-        >
-          ✕
-        </button>
-      </header>
+        <header class="dialogo__cabecalho">
+            <span class="ficha-cartao__indice"><app-icone nome="excluir" /></span>
+            <h2 class="dialogo__titulo">Excluir Ficha</h2>
+            <span class="ficha-cartao__regua"></span>
+            <button
+                class="dialogo__fechar"
+                type="button"
+                aria-label="Fechar"
+                [disabled]="excluindo()"
+                (click)="fecharExclusao()"
+            >
+                ✕
+            </button>
+        </header>
 
-      <p class="exclusao__aviso">
-        Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
-      </p>
+        <p class="exclusao__aviso">
+            Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
+        </p>
 
-      <div class="exclusao__acoes">
-        <button
-          class="botao botao--primario exclusao__acao"
-          type="button"
-          [disabled]="excluindo()"
-          (click)="confirmarExclusao()"
-        >
-          <app-icone nome="excluir" />
-          {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
-        </button>
-        <button
-          class="botao botao--secundario exclusao__acao"
-          type="button"
-          [disabled]="excluindo()"
-          (click)="fecharExclusao()"
-        >
-          Cancelar
-        </button>
-      </div>
+        <div class="exclusao__acoes">
+            <button
+                class="botao botao--primario exclusao__acao"
+                type="button"
+                [disabled]="excluindo()"
+                (click)="confirmarExclusao()"
+            >
+                <app-icone nome="excluir" />
+                {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
+            </button>
+            <button
+                class="botao botao--secundario exclusao__acao"
+                type="button"
+                [disabled]="excluindo()"
+                (click)="fecharExclusao()"
+            >
+                Cancelar
+            </button>
+        </div>
     </div>
-  </div>
+</div>
 }

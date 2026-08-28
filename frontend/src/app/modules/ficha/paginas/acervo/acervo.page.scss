@@ -1,619 +1,630 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 .acervo {
-  max-width: 80vw;
-  margin: 0 auto;
+    max-width: 80vw;
+    margin: 0 auto;
 
-  // Dois grupos — criar (esquerda) e filtro por tipo (direita), mesmo padrão que a m7-16 aplicou
-  // em `.iniciativa__acoes`: no mobile cada grupo empilha na mesma ordem sempre, nada salta de
-  // posição conforme o que está visível (ex.: "Criar criatura" só aparece pra quem é mestre).
-  &__acoes {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
+    // Dois grupos — criar (esquerda) e filtro por tipo (direita), mesmo padrão que a m7-16 aplicou
+    // em `.iniciativa__acoes`: no mobile cada grupo empilha na mesma ordem sempre, nada salta de
+    // posição conforme o que está visível (ex.: "Criar criatura" só aparece pra quem é mestre).
+    &__acoes {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
 
-    @include bp.mobile {
-      flex-direction: column;
-      align-items: stretch;
-    }
-  }
-
-  &__acoes-criar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-
-    @include bp.mobile {
-      flex-direction: column;
-    }
-  }
-
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    @include bp.mobile {
-      width: 100%;
-      justify-content: center;
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  // Select de visão (Todos/Agentes/Criaturas…) — compacto, à direita da barra de ações; distinto
-  // de `&__select` (dialog "Atribuir a campanha", que ocupa a largura inteira do painel).
-  &__select-filtro {
-    flex: none;
-    padding: 9px 12px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-
-    @include bp.mobile {
-      width: 100%;
-    }
-  }
-
-  // Cabeçalho de bloco (Agentes/Criaturas…) — mesmo tratamento de `CampanhaDetalhe.__secao`
-  // (rótulo mono uppercase + régua fina + contagem).
-  &__secao {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin: 24px 0 12px;
-
-    &:first-of-type {
-      margin-top: 0;
-    }
-  }
-
-  &__secao-titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-  }
-
-  &__secao-regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  &__secao-contagem {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-mute);
-  }
-
-  &__estado {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0;
-    font-family: var(--font-sans);
-    color: var(--text-dim);
-
-    app-icone {
-      color: var(--text-mute);
-    }
-  }
-
-  // Esqueleto de carregamento — grade de silhuetas de cartão (nome + meta + rodapé com chip),
-  // mesma forma dos cartões reais, evitando o "flash" seco de texto "Carregando…" antes da lista.
-  &__esqueleto {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--gap-grid);
-
-    @include bp.tablet {
-      grid-template-columns: repeat(2, 1fr);
+        @include bp.mobile {
+            flex-direction: column;
+            align-items: stretch;
+        }
     }
 
-    @include bp.mobile {
-      grid-template-columns: 1fr;
-    }
-  }
+    &__acoes-criar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
 
-  &__esqueleto-cartao {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 16px 18px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__esqueleto-rodape {
-    display: flex;
-    margin-top: auto;
-  }
-
-  // Grade de cartões de um bloco (Agentes/Criaturas…) — sem trava de altura por padrão: com um
-  // tipo filtrado, o bloco usa a altura toda e quem rola é a página.
-  &__lista {
-    list-style: none;
-    margin: 0;
-    padding: 2px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--gap-grid);
-    align-items: start;
-
-    @include bp.tablet {
-      grid-template-columns: repeat(2, 1fr);
+        @include bp.mobile {
+            flex-direction: column;
+        }
     }
 
-    @include bp.mobile {
-      grid-template-columns: 1fr;
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        @include bp.mobile {
+            width: 100%;
+            justify-content: center;
+            min-height: bp.$alvo-toque;
+        }
     }
 
-    // "Todos" (m4-11, decisão de abertura): cada bloco trava em ~2 linhas de card e rola por
-    // dentro, com o mesmo fade topo/base de `CampanhaLista` (m2-17) — um tipo filtrado solta esta
-    // trava (`AcervoPage.filtro`).
-    &--limitada {
-      max-height: 300px;
-      overflow-y: auto;
+    // Select de visão (Todos/Agentes/Criaturas…) — compacto, à direita da barra de ações; distinto
+    // de `&__select` (dialog "Atribuir a campanha", que ocupa a largura inteira do painel).
+    &__select-filtro {
+        flex: none;
+        padding: 9px 12px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
 
-      --fade-topo: 0px;
-      --fade-base: 0px;
-      &.overflow-fade--topo,
-      &.overflow-fade--base {
-        -webkit-mask-image: linear-gradient(
-          to bottom,
-          transparent 0,
-          #000 var(--fade-topo),
-          #000 calc(100% - var(--fade-base)),
-          transparent 100%
-        );
-        mask-image: linear-gradient(
-          to bottom,
-          transparent 0,
-          #000 var(--fade-topo),
-          #000 calc(100% - var(--fade-base)),
-          transparent 100%
-        );
-      }
-      &.overflow-fade--topo {
-        --fade-topo: 22px;
-      }
-      &.overflow-fade--base {
-        --fade-base: 22px;
-      }
-    }
-  }
-
-  // Preview ampliado do avatar (hover sustentado, `agendarPreviewAvatar`) — `fixed` pela mesma
-  // razão do menu (a lista tem overflow/mask-image, cortaria na pintura). `pointer-events: none`:
-  // é só apresentação, não deve roubar o `mouseleave` do avatar por baixo. `object-fit: contain`
-  // (não `cover`, como o avatar do cartão): o preview mostra a foto inteira, sem recorte. Mesma
-  // receita de `CampanhaDetalhe.__avatar-preview`.
-  &__avatar-preview {
-    position: fixed;
-    z-index: 22;
-    width: 200px;
-    height: 200px;
-    padding: 4px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
-    pointer-events: none;
-  }
-
-  &__avatar-preview-imagem {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: calc(var(--radius-card) - 4px);
-  }
-
-  &__cartao-texto {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-  }
-
-  &__cartao-nome {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-    transition: color 0.15s ease;
-  }
-
-  &__cartao-meta {
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  &__cartao-vitais {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 2px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-mute);
-  }
-
-  &__cartao-rodape {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: auto;
-  }
-
-  &__cartao-regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  // Chip de campanha (ou "Sem campanha") — variação do chip de classificação do tema.
-  &__chip {
-    flex-shrink: 1;
-    min-width: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    white-space: normal;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    padding: 4px 8px;
-
-    &--campanha {
-      color: var(--accent);
-      border-color: var(--accent-border);
+        @include bp.mobile {
+            width: 100%;
+        }
     }
 
-    app-icone {
-      font-size: 11px;
-    }
-  }
+    // Cabeçalho de bloco (Agentes/Criaturas…) — mesmo tratamento de `CampanhaDetalhe.__secao`
+    // (rótulo mono uppercase + régua fina + contagem).
+    &__secao {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin: 24px 0 12px;
 
-  // Botão do menu de ações (kebab) — o dropdown em si (`&__menu*`) mora na raiz do template, fora
-  // desta subárvore (ver a nota no componente: `overflow-y` + `mask-image` cortariam um
-  // `position: fixed` comum na pintura — mesmo problema/correção de `CampanhaDetalhe`, m3-52).
-  &__menu-botao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 22px;
-    font-size: 15px;
-    line-height: 1;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
+        &:first-of-type {
+            margin-top: 0;
+        }
     }
 
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
-
-  &__menu-fundo {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    background: transparent;
-    border: 0;
-    cursor: default;
-  }
-
-  &__menu {
-    position: fixed;
-    z-index: 21;
-    min-width: 190px;
-    padding: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
-  }
-
-  &__menu-item {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    width: 100%;
-    padding: 9px 10px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text);
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease, color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      background: var(--surface-2);
-      color: var(--accent);
+    &__secao-titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
     }
 
-    &:disabled {
-      opacity: 0.55;
-      cursor: default;
+    &__secao-regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
     }
-  }
 
-  &__select {
-    width: 100%;
-    margin-bottom: 16px;
-    padding: 9px 10px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-  }
+    &__secao-contagem {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
+
+    &__estado {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        font-family: var(--font-sans);
+        color: var(--text-dim);
+
+        app-icone {
+            color: var(--text-mute);
+        }
+    }
+
+    // Esqueleto de carregamento — grade de silhuetas de cartão (nome + meta + rodapé com chip),
+    // mesma forma dos cartões reais, evitando o "flash" seco de texto "Carregando…" antes da lista.
+    &__esqueleto {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--gap-grid);
+
+        @include bp.tablet {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__esqueleto-cartao {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 16px 18px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__esqueleto-rodape {
+        display: flex;
+        margin-top: auto;
+    }
+
+    // Grade de cartões de um bloco (Agentes/Criaturas…) — sem trava de altura por padrão: com um
+    // tipo filtrado, o bloco usa a altura toda e quem rola é a página.
+    &__lista {
+        list-style: none;
+        margin: 0;
+        padding: 2px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--gap-grid);
+        align-items: start;
+
+        @include bp.tablet {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+
+        // "Todos" (m4-11, decisão de abertura): cada bloco trava em ~2 linhas de card e rola por
+        // dentro, com o mesmo fade topo/base de `CampanhaLista` (m2-17) — um tipo filtrado solta esta
+        // trava (`AcervoPage.filtro`).
+        &--limitada {
+            max-height: 300px;
+            overflow-y: auto;
+
+            --fade-topo: 0px;
+            --fade-base: 0px;
+            &.overflow-fade--topo,
+            &.overflow-fade--base {
+                -webkit-mask-image: linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    #000 var(--fade-topo),
+                    #000 calc(100% - var(--fade-base)),
+                    transparent 100%
+                );
+                mask-image: linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    #000 var(--fade-topo),
+                    #000 calc(100% - var(--fade-base)),
+                    transparent 100%
+                );
+            }
+            &.overflow-fade--topo {
+                --fade-topo: 22px;
+            }
+            &.overflow-fade--base {
+                --fade-base: 22px;
+            }
+        }
+    }
+
+    // Preview ampliado do avatar (hover sustentado, `agendarPreviewAvatar`) — `fixed` pela mesma
+    // razão do menu (a lista tem overflow/mask-image, cortaria na pintura). `pointer-events: none`:
+    // é só apresentação, não deve roubar o `mouseleave` do avatar por baixo. `object-fit: contain`
+    // (não `cover`, como o avatar do cartão): o preview mostra a foto inteira, sem recorte. Mesma
+    // receita de `CampanhaDetalhe.__avatar-preview`.
+    &__avatar-preview {
+        position: fixed;
+        z-index: 22;
+        width: 200px;
+        height: 200px;
+        padding: 4px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+        pointer-events: none;
+    }
+
+    &__avatar-preview-imagem {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: calc(var(--radius-card) - 4px);
+    }
+
+    &__cartao-texto {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    &__cartao-nome {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+        transition: color 0.15s ease;
+    }
+
+    &__cartao-meta {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    &__cartao-vitais {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 2px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
+    }
+
+    &__cartao-rodape {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: auto;
+    }
+
+    &__cartao-regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    // Chip de campanha (ou "Sem campanha") — variação do chip de classificação do tema.
+    &__chip {
+        flex-shrink: 1;
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: normal;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-mute);
+        border: 1px solid var(--border-strong);
+        border-radius: 3px;
+        padding: 4px 8px;
+
+        &--campanha {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+
+        app-icone {
+            font-size: 11px;
+        }
+    }
+
+    // Botão do menu de ações (kebab) — o dropdown em si (`&__menu*`) mora na raiz do template, fora
+    // desta subárvore (ver a nota no componente: `overflow-y` + `mask-image` cortariam um
+    // `position: fixed` comum na pintura — mesmo problema/correção de `CampanhaDetalhe`, m3-52).
+    &__menu-botao {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 22px;
+        font-size: 15px;
+        line-height: 1;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    &__menu-fundo {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: transparent;
+        border: 0;
+        cursor: default;
+    }
+
+    &__menu {
+        position: fixed;
+        z-index: 21;
+        min-width: 190px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    }
+
+    &__menu-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        padding: 9px 10px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        text-align: left;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            color: var(--accent);
+        }
+
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+    }
+
+    &__select {
+        width: 100%;
+        margin-bottom: 16px;
+        padding: 9px 10px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+    }
 }
 
 // Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 18px;
-  }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 18px;
+    }
 
-  &__indice {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 3px;
-  }
+    &__indice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+    }
 
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-  }
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+    }
 
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 
-  &__contagem {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-mute);
-  }
+    &__contagem {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
 }
 
 // Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .botao {
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  cursor: pointer;
-  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition:
+        filter 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 
-  &--primario {
-    background: var(--accent);
-    color: var(--bg);
-    border: 0;
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
 
-    &:hover:not(:disabled) {
-      filter: brightness(1.08);
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
     }
-  }
 
-  &--secundario {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border-strong);
+    &--secundario {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-strong);
 
-    &:hover:not(:disabled) {
-      background: var(--surface-2);
-      border-color: var(--accent-border);
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
     }
-  }
 
-  &:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
+    }
 }
 
 // Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
 .esqueleto-bloco {
-  display: block;
-  border-radius: var(--radius-control);
-  background: var(--border-strong);
-  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+    display: block;
+    border-radius: var(--radius-control);
+    background: var(--border-strong);
+    animation: esqueleto-pulso 1.4s ease-in-out infinite;
 
-  &--titulo {
-    width: 65%;
-    max-width: 180px;
-    height: 16px;
-  }
-
-  &--linha {
-    width: 100%;
-    height: 12px;
-
-    &.esqueleto-bloco--curta {
-      width: 55%;
+    &--titulo {
+        width: 65%;
+        max-width: 180px;
+        height: 16px;
     }
-  }
 
-  &--chip {
-    width: 100px;
-    height: 20px;
-  }
+    &--linha {
+        width: 100%;
+        height: 12px;
+
+        &.esqueleto-bloco--curta {
+            width: 55%;
+        }
+    }
+
+    &--chip {
+        width: 100px;
+        height: 20px;
+    }
 }
 
 @keyframes esqueleto-pulso {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .esqueleto-bloco {
-    animation: none;
-  }
+    .esqueleto-bloco {
+        animation: none;
+    }
 }
 
 // Dialog — bloco sancionado copiado de docs/design/tema/_componentes.scss (mesmo padrão de
 // `CampanhaDetalhe`/`FichaVisualizar`).
 .dialogo {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 60px 20px;
-  overflow-y: auto;
-
-  &__fundo {
     position: fixed;
     inset: 0;
-    background: rgb(0 0 0 / 55%);
-    border: 0;
-    cursor: default;
-  }
-
-  &__painel {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 420px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-  }
-
-  &__cabecalho {
+    z-index: 40;
     display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 16px;
-  }
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+    overflow-y: auto;
 
-  &__titulo {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0;
-  }
-
-  &__fechar {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
+    &__fundo {
+        position: fixed;
+        inset: 0;
+        background: rgb(0 0 0 / 55%);
+        border: 0;
+        cursor: default;
     }
 
-    &:disabled {
-      opacity: 0.55;
-      cursor: default;
+    &__painel {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 420px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
+        box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
     }
-  }
 
-  &__aviso {
-    margin: 0 0 16px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 16px;
+    }
 
-  &__acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+    &__titulo {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
 
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    &__fechar {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+    }
+
+    &__aviso {
+        margin: 0 0 16px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 }
