@@ -31,7 +31,8 @@ describe('PaginaCadernoRepository', () => {
     expect(sql).toContain(`to_char(pagina_criada.updated_date AT TIME ZONE 'UTC'`);
     expect(sql).toContain(`'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'`);
     expect(sql).toContain('INSERT INTO pagina_caderno');
-    expect(sql).toContain('SELECT :campanhaId, :usuarioAutorId, :titulo, :conteudoMarkdown');
+    expect(sql).toContain('SELECT :campanhaId, :usuarioAutorId');
+    expect(sql).toContain(':titulo, :conteudoMarkdown');
     expect(sql).not.toContain('VALUES');
     expect(sql).toContain("''::tsvector");
     expect(parametros).toEqual({
@@ -126,6 +127,64 @@ describe('PaginaCadernoRepository', () => {
     expect(sql).toContain('SET is_deleted = true, deleted_date = NOW(), updated_date = NOW()');
     expect(sql).toContain('WHERE id = :id AND is_deleted = false');
     expect(parametros).toEqual({ id: 9 });
+  });
+
+  it('persiste a página do Esquadrão sem autor e conserva snapshot e projeção Markdown', async () => {
+    const raw = vi.fn().mockResolvedValue({
+      rows: [
+        {
+          ...paginaPersistida,
+          usuarioAutorId: null,
+          autorNome: null,
+          tipo: 'ESQUADRAO',
+          estadoColaborativo: new Uint8Array([1, 2]),
+        },
+      ],
+    });
+    const repositorio = new PaginaCadernoRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.criarPaginaEsquadrao({
+      campanhaId: 3,
+      titulo: 'Plano compartilhado',
+      conteudoMarkdown: 'Dois agentes.',
+      estadoColaborativo: new Uint8Array([1, 2]),
+    });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain("codigo = 'ESQUADRAO'");
+    expect(sql).toContain(':estadoColaborativo');
+    expect(sql).toContain('INSERT INTO pagina_caderno');
+    expect(sql).toContain('SELECT :campanhaId, NULL');
+    expect(sql).not.toContain('VALUES');
+    expect(parametros).toEqual({
+      campanhaId: 3,
+      titulo: 'Plano compartilhado',
+      conteudoMarkdown: 'Dois agentes.',
+      estadoColaborativo: new Uint8Array([1, 2]),
+    });
+    expect(resultado?.tipo).toBe('ESQUADRAO');
+  });
+
+  it('busca somente as páginas ativas do Esquadrão ao selecionar essa fonte', async () => {
+    const raw = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ total: '0' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    const repositorio = new PaginaCadernoRepository({ raw } as unknown as Knex);
+
+    await repositorio.buscarCampanha({
+      campanhaId: 3,
+      usuarioAtivoId: 7,
+      termo: 'plano',
+      fontes: [BuscaCampanhaFonteEnum.CADERNO_ESQUADRAO],
+      pagina: 1,
+      limite: 20,
+    });
+
+    const [sql] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain("tipo_pagina_caderno.codigo = 'ESQUADRAO'");
+    expect(sql).toContain('pagina_caderno.is_deleted = false');
+    expect(sql).not.toContain('usuario.nome AS "autorNome"');
   });
 
   it('combina somente os ramos autorizados e pagina com ordem estável', async () => {
