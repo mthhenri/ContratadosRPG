@@ -23,7 +23,8 @@ inspeção direta do guia de Agente, contra o análogo aprovado
 `docs/design/examples/ficha-criacao-guia.html`, confirmando mesma densidade, hierarquia,
 controles, contraste e ausência de overflow. A Gestão de Usuários não pôde ser observada porque a
 única conta administrativa local tem credencial pessoal não disponibilizada; nenhuma credencial ou
-permissão foi simulada.
+permissão foi simulada. Por esse gate pendente, a spec permanece em `active` até a validação dessa
+tela.
 
 ## 2026-08-27 — módulo `skills-agentes`: guarda-chuva concluído
 
