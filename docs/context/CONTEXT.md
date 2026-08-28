@@ -1,6 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Última revisão:** 2026-08-24 · **Última decisão registrada:** `P-027` — os efeitos permanentes
+> **Formatação do frontend:** `frontend/.prettierrc.json` governa exclusivamente HTML/SCSS
+> (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
+> manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
+
+> **Última revisão:** 2026-08-28 · **Última decisão registrada:** `P-027` — os efeitos permanentes
 > e incondicionais das habilidades de custo 0 E agora pertencem às fórmulas compartilhadas:
 > **Tanque** soma +1 de Vida por progressão e +3 à resistência de toda Proteção equipada;
 > **Segundo Fôlego** soma `⌊Vigor ÷ 2⌋` dados-base à Energia recuperada em qualquer descanso; e

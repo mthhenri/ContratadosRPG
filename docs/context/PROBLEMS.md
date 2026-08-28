@@ -214,29 +214,11 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-020 — Código-fonte do sistema não é legível para revisão humana · `ABERTO` · **CRÍTICO** · qualidade/manutenibilidade
-
-- **Sintoma:** arquivos do sistema, principalmente templates HTML/Angular e folhas SCSS/CSS,
-  contêm blocos extensos compactados em uma única linha, estruturas profundamente aninhadas e
-  responsabilidades visuais difíceis de distinguir. Abrir o código, compreender a hierarquia e
-  revisar uma alteração exige esforço desproporcional e favorece enganos, como editar o elemento
-  visual errado. `frontend/src/app/modules/usuario/paginas/gestao/gestao.page.html` e o início de
-  `gestao.page.scss` são exemplos atuais, não o limite do problema.
-- **Causa:** implementação incremental sem uma regra efetiva de formatação e legibilidade aplicada
-  ao código-fonte; templates e estilos foram condensados para economizar linhas/contexto, embora
-  essa compactação não seja necessária para build nem runtime.
-- **Contorno:** nenhum aceitável. Formatadores e leitura pelo navegador ajudam pontualmente, mas
-  não tornam o código versionado compreensível para quem precisa mantê-lo e revisá-lo.
-- **Correção:** executar uma refatoração sistêmica, começando por inventariar HTML, SCSS/CSS e
-  demais arquivos de difícil leitura; estabelecer e automatizar um padrão de formatação; expandir
-  marcação e estilos compactados; separar blocos e responsabilidades extensas; e validar que cada
-  arquivo possa ser compreendido diretamente por uma pessoa sem depender de descompactação mental
-  ou ferramentas auxiliares. A refatoração deve preservar comportamento, ser feita em cortes
-  revisáveis e coberta pelos testes e gates visuais existentes.
-- **Desde:** reportado pelo dono em 2026-08-12, após revisão manual da gestão administrativa de
-  usuários (`m6-05`).
-
 ## Resolvidos
+
+- **P-020** — HTML/SCSS de `frontend/src` formatados com Prettier e o script
+  `npm run format:html-scss --workspace=frontend`; TypeScript permanece excluído. Resolvido em
+  2026-08-28, ver `HISTORY.md`.
 
 - **P-022** — lint do backend falhava em 2 specs preexistentes (`no-unnecessary-type-assertion` em
   `campanha.service.spec.ts`/`ficha.service.spec.ts`). O alvo real era o `!` (non-null assertion),

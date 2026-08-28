@@ -1,5 +1,30 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-28 — `formatacao-legibilidade-frontend`: HTML e SCSS do frontend legíveis por leitura direta
+
+O frontend passou a ter Prettier como dependência de desenvolvimento, com configuração local de
+100 colunas, quatro espaços e sensibilidade de whitespace HTML em CSS. O comando explícito é
+`npm run format:html-scss --workspace=frontend`; ele alcança somente `src/**/*.html` e
+`src/**/*.scss`. `.prettierignore` mais `requirePragma` nos overrides protegem `.ts`/`.tsx`, que
+permaneceram fora do diff. Todo HTML/SCSS de `frontend/src` foi reformatado sem alterar regra,
+marcação, seletor ou token visual. O inventário de 32 arquivos com linhas acima de 150 caracteres
+foi eliminado como estrutura compactada; restam somente 13 literais atômicos que o próprio
+Prettier não pode quebrar sem alterar seu valor (sete mensagens de tooltip/atributos Angular e
+seis caminhos SVG `d`).
+
+`P-020` foi fechado. Lint do frontend terminou sem erros (avisos preexistentes de estilo em
+TypeScript); build de produção e a suíte Angular terminaram verdes. O build ainda reporta os dois
+budgets preexistentes: bundle inicial e `ficha-visualizacao.component.scss`.
+
+Gate visual executado com a aplicação real: referência antes da formatação e resultado posterior
+foram capturados em `1920×1080` e `360×800` para criação de Agente, criação de Criatura,
+Inventário e Perfil. As oito comparações retornaram zero bytes de pixel diferentes; também houve
+inspeção direta do guia de Agente, contra o análogo aprovado
+`docs/design/examples/ficha-criacao-guia.html`, confirmando mesma densidade, hierarquia,
+controles, contraste e ausência de overflow. A Gestão de Usuários não pôde ser observada porque a
+única conta administrativa local tem credencial pessoal não disponibilizada; nenhuma credencial ou
+permissão foi simulada.
+
 ## 2026-08-27 — módulo `skills-agentes`: guarda-chuva concluído
 
 Com as nove tasks numeradas em `done`, a spec guarda-chuva `skills-agentes` foi encerrada. A
