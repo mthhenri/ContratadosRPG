@@ -2,1952 +2,1952 @@
 // reusando o catálogo e as regras das compras (m1). Só tokens do tema "Terminal de Contenção" — nenhum
 // hex/fonte/raio solto (proibição #29). O padrão de card/controle/botão espelha a aba Compras (m1-10).
 
-@use 'sass:math';
-@use 'tema/breakpoints' as bp;
+@use "sass:math";
+@use "tema/breakpoints" as bp;
 
 .ficha-inv {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  font-family: var(--font-mono);
-
-  // Padrão "caixa": fundo surface-2, borda hairline, raio de controle.
-  &__cartao,
-  &__mod-tag,
-  &__mod-entrada,
-  &__info {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__aviso {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--warning);
-  }
-
-  // === Linha "Inventário" (peso usado / máximo editável) ===
-  // `__carga*`, não `__peso*` — essa classe já existe como badge de peso por item/carta (abaixo).
-  // Mesmo padrão visual das barras de Vida/Energia (`.ficha-barra` na visualização — rótulo + valor
-  // em cima, trilho preenchido embaixo), só compacto e sem os passos − / +.
-  &__carga {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 0 2px;
-  }
-  &__carga-topo {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    // O valor completo ("0 / 34.5 (base 30 +4.5 vest.)") é `nowrap` e cresce com o texto do bônus
-    // — numa coluna estreita (mobile) ele não cabe ao lado do rótulo "Inventário" e, sem quebra
-    // aqui, ou o texto do valor estourava a linha ou o global `overflow-x: clip` cortava o fim
-    // ("vest.)") sem aviso. Com `wrap`, é a LINHA que quebra (o valor desce inteiro pra baixo do
-    // rótulo) — o texto do valor em si nunca parte no meio.
-    flex-wrap: wrap;
-    gap: 4px 8px;
-  }
-  &__carga-direita {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-  }
-  // Ícone de sobrecarga (substitui o antigo texto de aviso) — hover/foco mostram "Sobrecarregado!"
-  // via `title` nativo (mesmo padrão do badge de Fragmento aplicado, abaixo).
-  &__carga-alerta {
-    align-self: center;
-    color: var(--accent);
-    cursor: help;
-  }
-  &__carga-rotulo {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
-  &__carga-trilho {
-    width: 100%;
-    height: 6px;
-    border-radius: var(--radius-control);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    overflow: hidden;
-  }
-  &__carga-preenchimento {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--text-dim);
-    transition: width 0.2s ease;
+    gap: 12px;
+    font-family: var(--font-mono);
 
-    .ficha-inv__carga--aviso & {
-      background: var(--accent);
-    }
-  }
-  &__carga-valor {
-    display: inline-flex;
-    align-items: baseline;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    white-space: nowrap;
-
-    .ficha-inv__carga--aviso & {
-      color: var(--accent);
-    }
-
-    &--editavel {
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: var(--radius-control);
-      padding: 0 4px;
-      margin: 0 -4px;
-      cursor: text;
-      transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-
-      &:hover {
-        border-color: var(--border-strong);
+    // Padrão "caixa": fundo surface-2, borda hairline, raio de controle.
+    &__cartao,
+    &__mod-tag,
+    &__mod-entrada,
+    &__info {
         background: var(--surface-2);
-      }
-    }
-  }
-  &__carga-entrada {
-    width: 5ch;
-    min-width: 3ch;
-    max-width: 100%;
-    field-sizing: content;
-    margin-left: 4px;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 1px 5px;
-    outline: none;
-    -moz-appearance: textfield;
-    -webkit-appearance: textfield;
-    appearance: textfield;
-
-    &:focus {
-      border-color: var(--accent-border);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
     }
 
-    &::-webkit-outer-spin-button,
-    &::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-  }
-
-  // === Ações ===
-  &__acoes {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-
-    // Modo busca (botão de lupa): a linha inteira vira busca + "X" pra sair.
-    &--busca {
-      flex-wrap: nowrap;
-      align-items: center;
-    }
-
-    // Adicionar/Item custom + filtro + busca juntos numa linha só, pontas opostas (a pedido do
-    // autor) — antes eram 3 blocos empilhados (herdados do `flex-direction:column` do `.ficha-inv`).
-    &--linha {
-      justify-content: space-between;
-      align-items: center;
-
-      // Sobrescreve o `align-self:flex-start` do `&__filtro` abaixo: aquele valor existe pro
-      // filtro não esticar na largura quando é filho direto do `.ficha-inv` (coluna) — aqui,
-      // dentro da linha, o eixo cruzado é vertical e o alvo é centralizar com os botões vizinhos.
-      .ficha-inv__filtro {
-        align-self: center;
-      }
-    }
-  }
-  // Agrupa Adicionar itens + Item custom como uma unidade só dentro da `&--linha` (senão o
-  // `justify-content: space-between` do pai trataria os dois botões como pontas isoladas).
-  &__acoes-grupo {
-    display: flex;
-    gap: 8px;
-  }
-  &__busca--flex {
-    flex: 1;
-    min-width: 0;
-  }
-  // Toggle "mostrar custos" — empurrado pro fim da linha de ações.
-  &__btn--custos {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
-  }
-
-  // === Filtro de visualização (Equipamentos/Amplificadores/Fragmentos) ===
-  // Controle segmentado de 3 opções, sempre uma ativa (revisão de UX — eram dois botões-toggle
-  // soltos na linha de ações, cujo rótulo trocava para "Equipamentos" no estado ativo: ambíguo
-  // sobre qual filtro estava ligado, e os dois quebravam linha sozinhos sem se conectar
-  // visualmente). Mesmo padrão visual da barra de abas do Status (`ficha-visualizacao` —
-  // `.ficha-status__abas`/`.ficha-status__aba`), só que os itens ficam do tamanho do próprio
-  // conteúdo (`width: auto`) — é um filtro de 3 opções lado a lado, não uma barra de navegação de
-  // largura fixa.
-  &__filtro {
-    display: inline-flex;
-    align-self: flex-start;
-    // Consome o espaço livre da barra no desktop e fixa o grupo de filtros na ponta direita.
-    margin-inline-start: auto;
-    gap: 4px;
-    padding: 4px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-
-    // Rótulos compactos mantêm os três filtros na mesma linha no mobile, sem overflow.
-    @include bp.mobile {
-      // No mobile o filtro já ocupa sua linha própria abaixo das ações de adição.
-      margin-inline-start: 0;
-      flex-wrap: nowrap;
-      max-width: 100%;
-    }
-  }
-
-  &__filtro-texto--mobile {
-    display: none;
-  }
-
-  &__filtro-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    padding: 6px 11px;
-    cursor: pointer;
-    transition:
-      color 0.12s ease,
-      background-color 0.12s ease;
-
-    app-icone {
-      display: inline-flex;
-      width: 13px;
-      height: 13px;
-    }
-
-    &:hover:not(&--ativo) {
-      color: var(--text);
-      background: var(--surface);
-    }
-
-    &--ativo {
-      font-weight: 700;
-      color: var(--bg);
-      background: var(--accent);
-    }
-
-    // Card compacto (m2-20): só o ícone, botão quadrado — mesmo tratamento pedido para
-    // Adicionar/Item custom (ver `&--quadrado` abaixo). Coluna estreita demais pro rótulo.
-    &--compacto {
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      padding: 0;
-      gap: 0;
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-
-      .ficha-inv__filtro-texto--desktop {
-        display: none;
-      }
-      .ficha-inv__filtro-texto--mobile {
-        display: inline;
-      }
-
-      &--compacto {
-        min-width: bp.$alvo-toque;
-      }
-    }
-  }
-
-  // === Botões ===
-  &__btn {
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: var(--radius-control);
-    padding: 7px 12px;
-    cursor: pointer;
-
-    &--principal {
-      background: var(--accent);
-      color: var(--bg);
-      border: 0;
-    }
-    &--secundario {
-      background: transparent;
-      color: var(--text-dim);
-      border: 1px solid var(--border-strong);
-    }
-    &--largo {
-      width: 100%;
-      margin-top: auto;
-    }
-    &--flex {
-      flex: 1;
-    }
-    &--icone {
-      padding: 4px 8px;
-    }
-    // "+ Adicionar itens" / "+ Item custom": botão quadrado só com o ícone (a pedido do autor —
-    // eram botões de texto largos demais pra caber lado a lado numa coluna estreita).
-    &--quadrado {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      flex: 0 0 auto;
-      font-size: 15px;
-    }
-    &--pequeno {
-      padding: 5px 8px;
-      font-size: 11px;
-    }
-    &--ativo {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-    // Feedback de adição: pisca positivo por ~900ms (fonte do "✓ Adicionado").
-    &--feito {
-      background: var(--positive);
-      color: var(--bg);
-      border: 0;
-      animation: ficha-inv-pulso 0.9s ease-out;
-    }
-    // Ação destrutiva confirmada (remover/esvaziar).
-    &--perigo {
-      background: var(--accent);
-      color: var(--bg);
-      border: 0;
-    }
-    &:hover:not(:disabled) {
-      filter: brightness(1.08);
-    }
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  @keyframes ficha-inv-pulso {
-    0% {
-      transform: scale(1);
-    }
-    35% {
-      transform: scale(1.05);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
-
-  // === Confirmações inline (remover última unidade / esvaziar) ===
-  &__confirmar {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-
-    &--linha {
-      display: flex;
-      margin-top: 10px;
-    }
-  }
-  &__confirmar-texto {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  // === Formulários (item custom / modificação custom) ===
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 14px;
-    background: var(--surface-2);
-  }
-  &__form-linha {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-
-    // Nome + limite de empilhamentos + peso na mesma linha no desktop (nome mais estreito que o
-    // padrão `auto-fit`, sobrando espaço pros dois campos numéricos ao lado); empilha no mobile,
-    // um campo por linha, mesma receita do resto do formulário (m3-76).
-    &--mod-cabecalho {
-      grid-template-columns: minmax(200px, 2fr) minmax(110px, 1fr) minmax(130px, 1fr);
-
-      @include bp.mobile {
-        grid-template-columns: 1fr;
-      }
-    }
-  }
-  &__form-acoes {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  &__campo-dica {
-    margin: -4px 0 0;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--text-dim);
-  }
-  &__efeito {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 12px;
-  }
-  &__efeito-titulo {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-  }
-  &__efeito-vazio {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--text-dim);
-  }
-  &__efeito-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    &:empty {
-      display: none;
-    }
-  }
-  &__efeito-linha {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    border: 1px solid var(--border);
-    border-left: 2px solid var(--accent-border);
-    border-radius: var(--radius-control);
-    padding: 10px 12px;
-    background: var(--surface);
-  }
-  // Linha do topo do efeito: índice + seletor de tipo (cresce) + remover — tudo alinhado.
-  &__efeito-topo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  &__efeito-indice {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: var(--radius-control);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-  }
-  &__efeito-tipo {
-    flex: 1;
-    min-width: 0;
-  }
-  &__efeito-remover {
-    flex: none;
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-
-    &:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-  }
-  // Campos específicos do tipo, num grid que não deixa célula órfã.
-  &__efeito-campos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
-
-    &:empty {
-      display: none;
-    }
-  }
-  // Botão "adicionar efeito": afordância de linha nova, largura total, tracejado.
-  &__efeito-adicionar {
-    width: 100%;
-    padding: 9px;
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius-control);
-    background: transparent;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-
-    &:hover {
-      border-color: var(--accent-border);
-      color: var(--accent);
-    }
-  }
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    &--largo {
-      grid-column: 1 / -1;
-    }
-  }
-  &__campo-rotulo {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-  }
-  &__entrada {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    color: var(--text);
-    font-family: var(--font-mono);
-    padding: 9px 10px;
-    font-size: 13px;
-    outline: none;
-
-    &:focus {
-      border-color: var(--accent-border);
-    }
-    // Campo travado por uma Base do Fragmento Construtor escolhida no catálogo (m3-69) — mesmo
-    // racional visual de "preenchido pelo motor, não editável" do resto do tema.
-    &:disabled {
-      background: var(--surface-2);
-      color: var(--text-dim);
-      cursor: not-allowed;
-    }
-    &--num {
-      text-align: center;
-      // Remove as setas nativas do number para casar com o stepper − / +.
-      -moz-appearance: textfield;
-      appearance: textfield;
-
-      &::-webkit-outer-spin-button,
-      &::-webkit-inner-spin-button {
-        -webkit-appearance: none;
+    &__aviso {
         margin: 0;
-      }
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--warning);
     }
-    &--area {
-      resize: vertical;
-      min-height: 40px;
-      font-family: var(--font-sans);
+
+    // === Linha "Inventário" (peso usado / máximo editável) ===
+    // `__carga*`, não `__peso*` — essa classe já existe como badge de peso por item/carta (abaixo).
+    // Mesmo padrão visual das barras de Vida/Energia (`.ficha-barra` na visualização — rótulo + valor
+    // em cima, trilho preenchido embaixo), só compacto e sem os passos − / +.
+    &__carga {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 0 2px;
     }
-  }
-  // === Dropdown de Categoria do item custom (popover próprio, mesmo motivo do "Mover para" mais
-  // abaixo: o `<select>` nativo não suporta ícone por `<option>` em nenhum browser). Visualmente
-  // casa com `&__entrada` (mesma altura/borda dos campos vizinhos Nome/Custo/Peso da mesma linha).
-  &__categoria-select {
-    position: relative;
-  }
-  &__categoria-select-gatilho {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    color: var(--text);
-    font-family: var(--font-mono);
-    padding: 9px 10px;
-    font-size: 13px;
-    cursor: pointer;
-
-    span {
-      flex: 1;
-      text-align: left;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    &__carga-topo {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        // O valor completo ("0 / 34.5 (base 30 +4.5 vest.)") é `nowrap` e cresce com o texto do bônus
+        // — numa coluna estreita (mobile) ele não cabe ao lado do rótulo "Inventário" e, sem quebra
+        // aqui, ou o texto do valor estourava a linha ou o global `overflow-x: clip` cortava o fim
+        // ("vest.)") sem aviso. Com `wrap`, é a LINHA que quebra (o valor desce inteiro pra baixo do
+        // rótulo) — o texto do valor em si nunca parte no meio.
+        flex-wrap: wrap;
+        gap: 4px 8px;
     }
-    app-icone {
-      display: inline-flex;
-      flex: none;
+    &__carga-direita {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
     }
-    &[aria-expanded='true'] {
-      border-color: var(--accent-border);
+    // Ícone de sobrecarga (substitui o antigo texto de aviso) — hover/foco mostram "Sobrecarregado!"
+    // via `title` nativo (mesmo padrão do badge de Fragmento aplicado, abaixo).
+    &__carga-alerta {
+        align-self: center;
+        color: var(--accent);
+        cursor: help;
     }
-    &:disabled {
-      opacity: .5;
-      color: var(--text-mute);
-      cursor: default;
+    &__carga-rotulo {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        white-space: nowrap;
     }
-  }
-  &__categoria-select-chevron {
-    color: var(--text-mute);
-    width: 14px;
-    height: 14px;
-  }
-  &__categoria-select-lista {
-    position: absolute;
-    z-index: 5;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    max-height: 260px;
-    overflow-y: auto;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 4px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  }
-  &__categoria-select-opcao {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-align: left;
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 7px 8px;
-    cursor: pointer;
-
-    app-icone {
-      flex: none;
+    &__carga-trilho {
+        width: 100%;
+        height: 6px;
+        border-radius: var(--radius-control);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        overflow: hidden;
     }
-    &:hover {
-      background: var(--surface-2);
-      color: var(--text);
+    &__carga-preenchimento {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--text-dim);
+        transition: width 0.2s ease;
+
+        .ficha-inv__carga--aviso & {
+            background: var(--accent);
+        }
     }
-    &--ativa {
-      color: var(--accent);
-      background: var(--accent-dim);
+    &__carga-valor {
+        display: inline-flex;
+        align-items: baseline;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        white-space: nowrap;
+
+        .ficha-inv__carga--aviso & {
+            color: var(--accent);
+        }
+
+        &--editavel {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-control);
+            padding: 0 4px;
+            margin: 0 -4px;
+            cursor: text;
+            transition:
+                border-color 0.15s ease,
+                background-color 0.15s ease;
+
+            &:hover {
+                border-color: var(--border-strong);
+                background: var(--surface-2);
+            }
+        }
     }
-  }
-  &__stepper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    &__carga-entrada {
+        width: 5ch;
+        min-width: 3ch;
+        max-width: 100%;
+        field-sizing: content;
+        margin-left: 4px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 1px 5px;
+        outline: none;
+        -moz-appearance: textfield;
+        -webkit-appearance: textfield;
+        appearance: textfield;
 
-    .ficha-inv__entrada--num {
-      flex: 1;
-      min-width: 0;
+        &:focus {
+            border-color: var(--accent-border);
+        }
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
     }
-    &--modal {
-      justify-content: center;
-      margin: 4px 0 12px;
 
-      .ficha-inv__entrada--num {
-        max-width: 90px;
-      }
+    // === Ações ===
+    &__acoes {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        // Modo busca (botão de lupa): a linha inteira vira busca + "X" pra sair.
+        &--busca {
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        // Adicionar/Item custom + filtro + busca juntos numa linha só, pontas opostas (a pedido do
+        // autor) — antes eram 3 blocos empilhados (herdados do `flex-direction:column` do `.ficha-inv`).
+        &--linha {
+            justify-content: space-between;
+            align-items: center;
+
+            // Sobrescreve o `align-self:flex-start` do `&__filtro` abaixo: aquele valor existe pro
+            // filtro não esticar na largura quando é filho direto do `.ficha-inv` (coluna) — aqui,
+            // dentro da linha, o eixo cruzado é vertical e o alvo é centralizar com os botões vizinhos.
+            .ficha-inv__filtro {
+                align-self: center;
+            }
+        }
     }
-  }
-
-  // === Porte de armazenamento (botão menor e simples vestir/guardar, com ícone próprio) ===
-  // Guardada = cinza claro (padrão); Vestida = cor do tema do usuário (accent).
-  &__porte {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 5px 10px;
-    cursor: pointer;
-
-    app-icone {
-      display: inline-flex;
-      width: 14px;
-      height: 14px;
+    // Agrupa Adicionar itens + Item custom como uma unidade só dentro da `&--linha` (senão o
+    // `justify-content: space-between` do pai trataria os dois botões como pontas isoladas).
+    &__acoes-grupo {
+        display: flex;
+        gap: 8px;
     }
-    &--vestida {
-      color: var(--accent);
-      border-color: var(--accent-border);
+    &__busca--flex {
+        flex: 1;
+        min-width: 0;
     }
-    &--leitura {
-      cursor: default;
+    // Toggle "mostrar custos" — empurrado pro fim da linha de ações.
+    &__btn--custos {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
     }
-  }
 
-  // === Ações do item (Modificar / Vestir-Guardar antes do X de remover) ===
-  // Ficam no cabeçalho, ao lado de dinheiro e peso (ver `__item-controles`).
-  &__item-acoes {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  &__item-remover {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  &__remover-texto {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
+    // === Filtro de visualização (Equipamentos/Amplificadores/Fragmentos) ===
+    // Controle segmentado de 3 opções, sempre uma ativa (revisão de UX — eram dois botões-toggle
+    // soltos na linha de ações, cujo rótulo trocava para "Equipamentos" no estado ativo: ambíguo
+    // sobre qual filtro estava ligado, e os dois quebravam linha sozinhos sem se conectar
+    // visualmente). Mesmo padrão visual da barra de abas do Status (`ficha-visualizacao` —
+    // `.ficha-status__abas`/`.ficha-status__aba`), só que os itens ficam do tamanho do próprio
+    // conteúdo (`width: auto`) — é um filtro de 3 opções lado a lado, não uma barra de navegação de
+    // largura fixa.
+    &__filtro {
+        display: inline-flex;
+        align-self: flex-start;
+        // Consome o espaço livre da barra no desktop e fixa o grupo de filtros na ponta direita.
+        margin-inline-start: auto;
+        gap: 4px;
+        padding: 4px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
 
-  // Linha "Dano X [Tipo]" + botão de rolar (m3-45).
-  &__item-stat {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  // Botão "Rolar dano" (m3-45) — mesmo padrão de pílula ícone+texto do `&__modificar`, sem gate de
-  // `editavel()`: rolar dado não é uma ação de edição da ficha.
-  &__item-rolar {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 4px 9px;
-    cursor: pointer;
-    transition:
-      color 0.12s ease,
-      border-color 0.12s ease,
-      background 0.12s ease;
-
-    app-icone {
-      display: inline-flex;
-      width: 12px;
-      height: 12px;
+        // Rótulos compactos mantêm os três filtros na mesma linha no mobile, sem overflow.
+        @include bp.mobile {
+            // No mobile o filtro já ocupa sua linha própria abaixo das ações de adição.
+            margin-inline-start: 0;
+            flex-wrap: nowrap;
+            max-width: 100%;
+        }
     }
-    &:hover,
-    &:focus-visible {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
+
+    &__filtro-texto--mobile {
+        display: none;
     }
-  }
 
-  // Descrição/efeito de item e modificação custom (texto livre).
-  &__item-desc {
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 8px;
-  }
-  &__municao {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 5px;
-    padding: 4px 6px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    background: var(--surface-2);
-    font-family: var(--font-mono);
-    font-size: 11px;
+    &__filtro-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-dim);
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        padding: 6px 11px;
+        cursor: pointer;
+        transition:
+            color 0.12s ease,
+            background-color 0.12s ease;
 
-    &--vazia {
-      border-color: var(--vida-border);
-      color: var(--vida);
+        app-icone {
+            display: inline-flex;
+            width: 13px;
+            height: 13px;
+        }
+
+        &:hover:not(&--ativo) {
+            color: var(--text);
+            background: var(--surface);
+        }
+
+        &--ativo {
+            font-weight: 700;
+            color: var(--bg);
+            background: var(--accent);
+        }
+
+        // Card compacto (m2-20): só o ícone, botão quadrado — mesmo tratamento pedido para
+        // Adicionar/Item custom (ver `&--quadrado` abaixo). Coluna estreita demais pro rótulo.
+        &--compacto {
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            gap: 0;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+
+            .ficha-inv__filtro-texto--desktop {
+                display: none;
+            }
+            .ficha-inv__filtro-texto--mobile {
+                display: inline;
+            }
+
+            &--compacto {
+                min-width: bp.$alvo-toque;
+            }
+        }
     }
-  }
-  &__mandar-base {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 30px;
-    padding: 5px 10px;
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-    background: var(--accent-dim);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    cursor: pointer;
 
-    app-icone {
-      display: inline-flex;
-      width: 14px;
-      height: 14px;
+    // === Botões ===
+    &__btn {
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: var(--radius-control);
+        padding: 7px 12px;
+        cursor: pointer;
+
+        &--principal {
+            background: var(--accent);
+            color: var(--bg);
+            border: 0;
+        }
+        &--secundario {
+            background: transparent;
+            color: var(--text-dim);
+            border: 1px solid var(--border-strong);
+        }
+        &--largo {
+            width: 100%;
+            margin-top: auto;
+        }
+        &--flex {
+            flex: 1;
+        }
+        &--icone {
+            padding: 4px 8px;
+        }
+        // "+ Adicionar itens" / "+ Item custom": botão quadrado só com o ícone (a pedido do autor —
+        // eram botões de texto largos demais pra caber lado a lado numa coluna estreita).
+        &--quadrado {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            flex: 0 0 auto;
+            font-size: 15px;
+        }
+        &--pequeno {
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+        &--ativo {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+        // Feedback de adição: pisca positivo por ~900ms (fonte do "✓ Adicionado").
+        &--feito {
+            background: var(--positive);
+            color: var(--bg);
+            border: 0;
+            animation: ficha-inv-pulso 0.9s ease-out;
+        }
+        // Ação destrutiva confirmada (remover/esvaziar).
+        &--perigo {
+            background: var(--accent);
+            color: var(--bg);
+            border: 0;
+        }
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
     }
-    &:hover,
-    &:focus-visible {
-      background: var(--accent);
-      color: var(--bg);
-      outline: none;
+
+    @keyframes ficha-inv-pulso {
+        0% {
+            transform: scale(1);
+        }
+        35% {
+            transform: scale(1.05);
+        }
+        100% {
+            transform: scale(1);
+        }
     }
-  }
 
-  &__municao-valor {
-    font: inherit;
-    font-weight: 700;
-  }
+    // === Confirmações inline (remover última unidade / esvaziar) ===
+    &__confirmar {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
 
-  &__municao-valor--editavel {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    text-decoration: underline dotted var(--border-strong);
-    text-underline-offset: 3px;
-  }
+        &--linha {
+            display: flex;
+            margin-top: 10px;
+        }
+    }
+    &__confirmar-texto {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
 
-  &__municao-separador,
-  &__municao-unidade {
-    color: var(--text-mute);
-  }
+    // === Formulários (item custom / modificação custom) ===
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 14px;
+        background: var(--surface-2);
+    }
+    &__form-linha {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
 
-  &__municao-vazia {
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-  }
+        // Nome + limite de empilhamentos + peso na mesma linha no desktop (nome mais estreito que o
+        // padrão `auto-fit`, sobrando espaço pros dois campos numéricos ao lado); empilha no mobile,
+        // um campo por linha, mesma receita do resto do formulário (m3-76).
+        &--mod-cabecalho {
+            grid-template-columns: minmax(200px, 2fr) minmax(110px, 1fr) minmax(130px, 1fr);
 
-  &__municao-consumir {
-    margin-right: 6px;
-    color: var(--vida);
-    border-color: var(--vida-border);
-    transition:
-      color 0.12s ease,
-      background 0.12s ease,
-      border-color 0.12s ease,
-      transform 0.12s ease;
-  }
+            @include bp.mobile {
+                grid-template-columns: 1fr;
+            }
+        }
+    }
+    &__form-acoes {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    &__campo-dica {
+        margin: -4px 0 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+    &__efeito {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 12px;
+    }
+    &__efeito-titulo {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+    &__efeito-vazio {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+    &__efeito-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
 
-  // Mesma força do `__mini-btn` base: sem isso o fundo transparente posterior apagava a confirmação.
-  &__mini-btn.ficha-inv__municao-consumir--feito {
-    color: var(--bg);
-    background: var(--accent);
-    border-color: var(--accent);
-    transform: scale(1.08);
-  }
+        &:empty {
+            display: none;
+        }
+    }
+    &__efeito-linha {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-left: 2px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        padding: 10px 12px;
+        background: var(--surface);
+    }
+    // Linha do topo do efeito: índice + seletor de tipo (cresce) + remover — tudo alinhado.
+    &__efeito-topo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    &__efeito-indice {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: var(--radius-control);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+    }
+    &__efeito-tipo {
+        flex: 1;
+        min-width: 0;
+    }
+    &__efeito-remover {
+        flex: none;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        background: transparent;
+        color: var(--text-dim);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
 
-  &__municao-entrada {
-    width: 32px;
-    padding: 0;
-    border: 0;
-    border-bottom: 1px solid var(--accent-border);
-    border-radius: 0;
-    background: transparent;
-    color: var(--text);
-    font: inherit;
-    font-weight: 700;
-    text-align: center;
-    outline: 0;
-  }
+        &:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+    }
+    // Campos específicos do tipo, num grid que não deixa célula órfã.
+    &__efeito-campos {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
 
-  @include bp.mobile {
+        &:empty {
+            display: none;
+        }
+    }
+    // Botão "adicionar efeito": afordância de linha nova, largura total, tracejado.
+    &__efeito-adicionar {
+        width: 100%;
+        padding: 9px;
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-control);
+        background: transparent;
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+
+        &:hover {
+            border-color: var(--accent-border);
+            color: var(--accent);
+        }
+    }
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        &--largo {
+            grid-column: 1 / -1;
+        }
+    }
+    &__campo-rotulo {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+    &__entrada {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        color: var(--text);
+        font-family: var(--font-mono);
+        padding: 9px 10px;
+        font-size: 13px;
+        outline: none;
+
+        &:focus {
+            border-color: var(--accent-border);
+        }
+        // Campo travado por uma Base do Fragmento Construtor escolhida no catálogo (m3-69) — mesmo
+        // racional visual de "preenchido pelo motor, não editável" do resto do tema.
+        &:disabled {
+            background: var(--surface-2);
+            color: var(--text-dim);
+            cursor: not-allowed;
+        }
+        &--num {
+            text-align: center;
+            // Remove as setas nativas do number para casar com o stepper − / +.
+            -moz-appearance: textfield;
+            appearance: textfield;
+
+            &::-webkit-outer-spin-button,
+            &::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+        }
+        &--area {
+            resize: vertical;
+            min-height: 40px;
+            font-family: var(--font-sans);
+        }
+    }
+    // === Dropdown de Categoria do item custom (popover próprio, mesmo motivo do "Mover para" mais
+    // abaixo: o `<select>` nativo não suporta ícone por `<option>` em nenhum browser). Visualmente
+    // casa com `&__entrada` (mesma altura/borda dos campos vizinhos Nome/Custo/Peso da mesma linha).
+    &__categoria-select {
+        position: relative;
+    }
+    &__categoria-select-gatilho {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        color: var(--text);
+        font-family: var(--font-mono);
+        padding: 9px 10px;
+        font-size: 13px;
+        cursor: pointer;
+
+        span {
+            flex: 1;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        app-icone {
+            display: inline-flex;
+            flex: none;
+        }
+        &[aria-expanded="true"] {
+            border-color: var(--accent-border);
+        }
+        &:disabled {
+            opacity: 0.5;
+            color: var(--text-mute);
+            cursor: default;
+        }
+    }
+    &__categoria-select-chevron {
+        color: var(--text-mute);
+        width: 14px;
+        height: 14px;
+    }
+    &__categoria-select-lista {
+        position: absolute;
+        z-index: 5;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        max-height: 260px;
+        overflow-y: auto;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 4px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+    &__categoria-select-opcao {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-align: left;
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        padding: 7px 8px;
+        cursor: pointer;
+
+        app-icone {
+            flex: none;
+        }
+        &:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+        &--ativa {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+    }
+    &__stepper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .ficha-inv__entrada--num {
+            flex: 1;
+            min-width: 0;
+        }
+        &--modal {
+            justify-content: center;
+            margin: 4px 0 12px;
+
+            .ficha-inv__entrada--num {
+                max-width: 90px;
+            }
+        }
+    }
+
+    // === Porte de armazenamento (botão menor e simples vestir/guardar, com ícone próprio) ===
+    // Guardada = cinza claro (padrão); Vestida = cor do tema do usuário (accent).
+    &__porte {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 5px 10px;
+        cursor: pointer;
+
+        app-icone {
+            display: inline-flex;
+            width: 14px;
+            height: 14px;
+        }
+        &--vestida {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+        &--leitura {
+            cursor: default;
+        }
+    }
+
+    // === Ações do item (Modificar / Vestir-Guardar antes do X de remover) ===
+    // Ficam no cabeçalho, ao lado de dinheiro e peso (ver `__item-controles`).
+    &__item-acoes {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    &__item-remover {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    &__remover-texto {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    // Linha "Dano X [Tipo]" + botão de rolar (m3-45).
+    &__item-stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    // Botão "Rolar dano" (m3-45) — mesmo padrão de pílula ícone+texto do `&__modificar`, sem gate de
+    // `editavel()`: rolar dado não é uma ação de edição da ficha.
+    &__item-rolar {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 4px 9px;
+        cursor: pointer;
+        transition:
+            color 0.12s ease,
+            border-color 0.12s ease,
+            background 0.12s ease;
+
+        app-icone {
+            display: inline-flex;
+            width: 12px;
+            height: 12px;
+        }
+        &:hover,
+        &:focus-visible {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+
+    // Descrição/efeito de item e modificação custom (texto livre).
+    &__item-desc {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+        margin-top: 8px;
+    }
     &__municao {
-      align-items: center;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 5px;
+        padding: 4px 6px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        background: var(--surface-2);
+        font-family: var(--font-mono);
+        font-size: 11px;
+
+        &--vazia {
+            border-color: var(--vida-border);
+            color: var(--vida);
+        }
+    }
+    &__mandar-base {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 5px 10px;
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        background: var(--accent-dim);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+
+        app-icone {
+            display: inline-flex;
+            width: 14px;
+            height: 14px;
+        }
+        &:hover,
+        &:focus-visible {
+            background: var(--accent);
+            color: var(--bg);
+            outline: none;
+        }
     }
 
-    &__municao-consumir {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-      margin: -6px 6px -6px 0;
+    &__municao-valor {
+        font: inherit;
+        font-weight: 700;
     }
 
     &__municao-valor--editavel {
-      position: relative;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-decoration: underline dotted var(--border-strong);
+        text-underline-offset: 3px;
     }
-  }
-  &__mod-tag-desc {
-    font-family: var(--font-sans);
-    color: var(--text-dim);
-  }
-  // Badge do fragmento aplicado (m3-35) — precede o nome da mod no chip.
-  &__mod-tag-fragmento {
-    display: inline-flex;
-    width: 12px;
-    height: 12px;
-    margin-right: 4px;
-    color: var(--accent);
-    vertical-align: -1px;
-  }
 
-  // === Botão "Modificar" (revela a caixa de mods) ===
-  &__modificar {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 12px;
-    cursor: pointer;
+    &__municao-separador,
+    &__municao-unidade {
+        color: var(--text-mute);
+    }
 
-    app-icone {
-      display: inline-flex;
-      width: 14px;
-      height: 14px;
+    &__municao-vazia {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
     }
-    &:hover {
-      color: var(--text);
-    }
-    &--aberto {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-  }
-  &__modificar-contagem {
-    color: var(--text-mute);
 
-    &--excede {
-      color: var(--warning);
-      font-weight: 700;
+    &__municao-consumir {
+        margin-right: 6px;
+        color: var(--vida);
+        border-color: var(--vida-border);
+        transition:
+            color 0.12s ease,
+            background 0.12s ease,
+            border-color 0.12s ease,
+            transform 0.12s ease;
     }
-  }
-  &__modificar-chevron {
-    margin-left: auto;
-  }
 
-  // === Marca de "excedente" (além do limite da patente — permitido, mas sinalizado) ===
-  &__excede-tag {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--warning);
-    border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
-    border-radius: 3px;
-    padding: 0 4px;
-    vertical-align: middle;
-  }
-  &__mod-entrada-motivo--excede {
-    color: var(--warning);
-  }
-  // Toggles "não conta no limite" no chip da mod (total da arma / teto próprio) — ícone-only,
-  // rótulo vai em `aria-label`/`title` (hover). Estado ativo = accent, igual aos demais toggles.
-  &__mod-flags {
-    display: flex;
-    gap: 4px;
-    margin-top: 1px;
-  }
-  &__mod-flag {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
+    // Mesma força do `__mini-btn` base: sem isso o fundo transparente posterior apagava a confirmação.
+    &__mini-btn.ficha-inv__municao-consumir--feito {
+        color: var(--bg);
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: scale(1.08);
+    }
 
-    &:hover {
-      color: var(--text);
+    &__municao-entrada {
+        width: 32px;
+        padding: 0;
+        border: 0;
+        border-bottom: 1px solid var(--accent-border);
+        border-radius: 0;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        font-weight: 700;
+        text-align: center;
+        outline: 0;
     }
-    &--ativo {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-  }
-  // Checkbox do form de mod custom.
-  &__check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    cursor: pointer;
-
-    input {
-      width: 15px;
-      height: 15px;
-      accent-color: var(--accent);
-      flex: none;
-    }
-  }
-  &__mod-custom {
-    margin-bottom: 12px;
-  }
-
-  // === Modal (dialog "quantos remover") ===
-  &__modal-fundo {
-    position: fixed;
-    inset: 0;
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 20;
-  }
-  &__modal {
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    max-width: 360px;
-    width: 100%;
-  }
-  &__modal-titulo {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text);
-    margin: 0 0 8px;
-  }
-  &__modal-texto {
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin: 0 0 10px;
-  }
-  &__modal-acoes {
-    display: flex;
-    gap: 8px;
-  }
-
-  // === Catálogo ===
-  &__catalogo {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 12px;
-  }
-  &__busca {
-    width: 100%;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    color: var(--text);
-    font-family: var(--font-mono);
-    padding: 10px 12px;
-    font-size: 14px;
-    outline: none;
-
-    &:focus {
-      border-color: var(--accent-border);
-    }
-  }
-  &__categorias {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  &__categoria {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 12px;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      color: var(--text);
-    }
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    &--ativa {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-  }
-  &__info {
-    font-size: 12px;
-    color: var(--text-dim);
-    padding: 10px 12px;
-
-    strong {
-      color: var(--text);
-    }
-  }
-  &__vazio {
-    font-family: var(--font-sans);
-    color: var(--text-mute);
-    text-align: center;
-    padding: 16px 0;
-  }
-
-  // === Grades roláveis (catálogo/mods) + fade-out vertical (via [appOverflowFade]) ===
-  &__grade,
-  &__mod-grade {
-    --fade-topo: 0px;
-    --fade-base: 0px;
-
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 24px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 24px;
-    }
-  }
-  &__grade {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 12px;
-    max-height: 360px;
-    overflow-y: auto;
-    padding-right: 4px;
-
-    // m3-60: no mobile a página inteira rola como uma coisa só — um teto aqui viraria rolagem
-    // dentro de rolagem, sem barra visível (o tema esconde a nativa por design). Sem overflow o
-    // `appOverflowFade` não marca o host, então o fade some junto (fade sem overflow é ruído).
-    @include bp.mobile {
-      max-height: none;
-      overflow-y: visible;
-      padding-right: 0;
-    }
-  }
-
-  &__cartao {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px;
-
-    &-nome {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    &-stat {
-      font-size: 11px;
-      color: var(--energy);
-    }
-    &-desc {
-      font-family: var(--font-sans);
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-    &-ativo {
-      font-size: 11px;
-      color: var(--positive);
-    }
-    &-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-top: 2px;
-    }
-    &-acoes {
-      display: flex;
-      gap: 6px;
-      margin-top: auto;
-    }
-  }
-
-  // === Cartão de módulo na grade de Fragmentos (catálogo — pseudo-categoria) ===
-  &__cartao--fragmento {
-    gap: 8px;
-  }
-  &__cartao-fragmento-custo {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-  // Botões Potencializador/Construtor empilhados (não lado a lado — em cartões estreitos os dois
-  // rótulos lado a lado cortavam/vazavam pra fora do cartão; empilhado sempre cabe).
-  &__cartao-acoes--coluna {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  &__custo {
-    color: var(--warning);
-    font-weight: 700;
-  }
-  // Custo bruto quando a Afinidade já reduz o que será cobrado (m3-66) — secundário e riscado,
-  // ao lado do reduzido (o que de fato será debitado) em destaque.
-  &__custo--bruto {
-    color: var(--text-mute);
-    font-weight: 400;
-    text-decoration: line-through;
-    margin-right: 4px;
-  }
-  &__peso {
-    color: var(--text-mute);
-  }
-
-  &__tag {
-    display: inline-block;
-    white-space: nowrap;
-    font-size: 10px;
-    color: var(--positive);
-    border: 1px solid color-mix(in srgb, var(--positive) 45%, transparent);
-    border-radius: 3px;
-    padding: 1px 5px;
-    margin-left: 4px;
-
-    &--penalidade {
-      color: var(--accent);
-      border-color: var(--accent-border);
-    }
-  }
-
-  // === Lista rolável (itens) e a de Amplificadores/Fragmentos — mesma máscara de fade nos dois ===
-  // `&__lista`: sem teto por padrão (modo `inline`, aba antiga — ocupava a página inteira); no modo
-  // `dialog` (`--compacto` no fim do arquivo) ganha teto fixo + rolagem própria, pra não esticar a
-  // coluna Status além da altura da coluna de Identidade vizinha (mesmo raciocínio de
-  // `.sanidade__lista`/`.ficha-status__anotacoes` na visualização). `&__amps`: teto fixo sempre
-  // (m3-44 — item 19), pra a seção de Amplificadores/Fragmentos não crescer sem fim e estourar
-  // 1920×1080 junto com a lista principal de itens.
-  &__lista,
-  &__amps {
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 20px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 20px;
-    }
-  }
-
-  &__lista {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  // === Grade dupla de Medicinal/Operacional (misturados, ordenados por nome) ===
-  &__grade-medop {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
 
     @include bp.mobile {
-      grid-template-columns: 1fr;
-    }
-  }
+        &__municao {
+            align-items: center;
+        }
 
-  // === Itens da lista ===
-  &__item {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 12px;
+        &__municao-consumir {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+            margin: -6px 6px -6px 0;
+        }
 
-    &--amp {
-      background: var(--surface-2);
+        &__municao-valor--editavel {
+            position: relative;
+        }
     }
-    &-cabecalho {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px 16px;
-      flex-wrap: wrap;
+    &__mod-tag-desc {
+        font-family: var(--font-sans);
+        color: var(--text-dim);
     }
-    // Nome + categoria (encolhe para dar espaço aos controles).
-    &-identidade {
-      min-width: 0;
-      flex: 1 1 auto;
-    }
-    // Ações (Modificar / Vestida / X) + meta ($ e peso), juntos à direita.
-    &-controles {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      gap: 10px 12px;
-      margin-left: auto;
-    }
-    &-nome {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    // Apelido do jogador (m3-33): legenda com o nome mecânico do catálogo logo abaixo.
-    &-nome-mecanico {
-      display: block;
-      font-size: 11px;
-      color: var(--text-mute);
-      margin-top: 1px;
-    }
-    // `app-icone` (SVG, `1.15em`) em vez do glifo de texto: alinha certinho com a baseline do
-    // nome (glifo Unicode de fonte tem métrica própria e sempre desalinha).
-    &-apelido-lapis {
-      display: inline-flex;
-      align-items: center;
-      margin-left: 6px;
-      font-size: 12px;
-      color: var(--text-mute);
-      background: transparent;
-      border: 0;
-      cursor: pointer;
-      padding: 0;
-      transition: color 0.15s ease;
-
-      &:hover {
+    // Badge do fragmento aplicado (m3-35) — precede o nome da mod no chip.
+    &__mod-tag-fragmento {
+        display: inline-flex;
+        width: 12px;
+        height: 12px;
+        margin-right: 4px;
         color: var(--accent);
-      }
-    }
-    &-apelido-entrada {
-      display: block;
-      width: 100%;
-      max-width: 260px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-control);
-      padding: 4px 8px;
-      outline: none;
-      transition: border-color 0.15s ease;
-
-      &:focus {
-        border-color: var(--accent-border);
-      }
-    }
-    &-categoria {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-mute);
-      margin-left: 8px;
-    }
-    &-porte {
-      display: block;
-      margin: 8px 0 0;
-    }
-    &-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-    }
-    &-stat {
-      font-size: 12px;
-      color: var(--energy);
-      margin-top: 8px;
-    }
-  }
-
-  &__alternar {
-    display: block;
-    width: 100%;
-    text-align: left;
-    font-size: 12px;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 8px 10px;
-    margin-top: 10px;
-    cursor: pointer;
-
-    &--ativo {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-  }
-
-  // === Modificações ativas (chips) ===
-  &__mods-ativas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-  }
-  &__mod-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    font-size: 11px;
-
-    &-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      flex: 1;
-      min-width: 0;
-      color: var(--text);
-    }
-    &-linha {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-    &-nome {
-      flex: 1;
-      min-width: 0;
-    }
-    &-custo {
-      flex: none;
-      color: var(--warning);
-    }
-    &-botoes {
-      display: flex;
-      gap: 4px;
-    }
-    // Mod além do limite da patente: destaque âmbar discreto.
-    &--excede {
-      border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
-      background: color-mix(in srgb, var(--warning) 7%, transparent);
-      border-radius: var(--radius-control);
-    }
-  }
-  &__mini-btn {
-    font-size: 13px;
-    width: 24px;
-    height: 24px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  // === Painel de modificações ===
-  &__mod-painel {
-    margin-top: 10px;
-  }
-  &__mod-secao {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--accent);
-    margin: 12px 0 8px;
-  }
-  &__mod-grade {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 8px;
-    max-height: 230px;
-    overflow-y: auto;
-    padding-right: 4px;
-
-    // Mesmo racional de `&__grade` (m3-60): sem teto no mobile, sem rolagem dentro de rolagem.
-    @include bp.mobile {
-      max-height: none;
-      overflow-y: visible;
-      padding-right: 0;
-    }
-  }
-  &__mod-entrada {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 10px;
-    font-size: 10px;
-
-    &--ativa {
-      border-color: var(--accent-border);
-    }
-    &--bloqueada {
-      opacity: 0.55;
-    }
-    &-topo {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    &-nome {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    &-pontos {
-      display: flex;
-      gap: 3px;
-    }
-    &-desc {
-      font-family: var(--font-sans);
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-    &-motivo,
-    &-custo {
-      color: var(--warning);
-    }
-    &-bloqueia {
-      color: var(--text-mute);
-    }
-  }
-  &__ponto {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    border: 1px solid var(--border-strong);
-
-    &--cheio {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-  }
-
-  // === Amplificadores / Fragmentos (mesma seção-lista, m3-44 — item 19) ===
-  // Teto fixo + rolagem própria (fade no `&__lista, &__amps` acima) — impede que a seção cresça sem
-  // fim e estoure a restrição de caber em 1920×1080 junto com a lista principal de itens.
-  &__amps {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 420px;
-    overflow-y: auto;
-    padding-right: 4px;
-
-    // Mesmo racional de `&__grade` (m3-60): a restrição que justifica o teto é caber em 1920×1080
-    // junto com a lista principal — no mobile não existe, e o teto só produz rolagem aninhada.
-    @include bp.mobile {
-      max-height: none;
-      overflow-y: visible;
-      padding-right: 0;
+        vertical-align: -1px;
     }
 
-    &-cabecalho {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px 10px;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-dim);
-    }
-  }
+    // === Botão "Modificar" (revela a caixa de mods) ===
+    &__modificar {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 12px;
+        cursor: pointer;
 
-  // === Amplificadores em grade de 2 colunas (m3-44 — item 12; 1 no mobile) ===
-  &__grade-amps {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+        app-icone {
+            display: inline-flex;
+            width: 14px;
+            height: 14px;
+        }
+        &:hover {
+            color: var(--text);
+        }
+        &--aberto {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+    &__modificar-contagem {
+        color: var(--text-mute);
 
-    @include bp.mobile {
-      grid-template-columns: 1fr;
+        &--excede {
+            color: var(--warning);
+            font-weight: 700;
+        }
     }
-  }
-
-  // === Sub-inventário próprio (Pochete/Bolso de Corpo, m3-44 — item 14) ===
-  // Mesma "caixa" de `&__cartao`/`&__form`, com cabeçalho no padrão de `&__amps-cabecalho`.
-  &__subinventario {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 12px;
-
-    &--aviso {
-      border-color: var(--accent-border);
-
-      .ficha-inv__amps-cabecalho {
-        color: var(--accent);
-      }
-    }
-  }
-  &__subinventario-restricao {
-    font-size: 11px;
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: normal;
-    color: var(--text-mute);
-  }
-
-  // === "Mover para" (m3-44 — mover item para um Pochete/Bolso de Corpo vestido) ===
-  // Popover próprio (não `<select>` nativo — o popup nativo não é temável de verdade, mesmo com
-  // `color-scheme: dark` global; aqui os tokens do tema valem 100%). `position: relative` no
-  // wrapper ancora a lista absoluta (`&-lista`) logo abaixo do gatilho.
-  &__mover {
-    position: relative;
-    display: inline-flex;
-  }
-  &__mover-gatilho {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 5px 8px;
-    max-width: 150px;
-    cursor: pointer;
-
-    span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    app-icone {
-      display: inline-flex;
-      flex: none;
-      width: 14px;
-      height: 14px;
-    }
-    &[aria-expanded='true'] {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
-  }
-  &__mover-lista {
-    position: absolute;
-    z-index: 5;
-    top: calc(100% + 4px);
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    min-width: 160px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 4px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  }
-  &__mover-opcao {
-    text-align: left;
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 7px 8px;
-    cursor: pointer;
-
-    &:hover {
-      background: var(--surface-2);
-      color: var(--text);
-    }
-    &--ativa {
-      color: var(--accent);
-      background: var(--accent-dim);
-    }
-  }
-
-  // === Refinamento mobile (alvos de toque; refino dedicado é m3-09) ===
-  @include bp.mobile {
-    &__categoria {
-      min-height: bp.$alvo-toque;
-      padding: 9px 14px;
-    }
-    &__mini-btn {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-      font-size: 16px;
-    }
-    // m3-56: 40px → 44px (`$alvo-toque`) — o botão de ação primária (Adicionar/Confirmar/Aplicar)
-    // é controle principal, não decorativo; os 40px antigos ficavam abaixo do alvo de toque.
-    &__btn {
-      min-height: bp.$alvo-toque;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      // m3-60: `&--icone` (lupa da busca, X de remover item) já tinha os 44px de altura vindos
-      // daqui, mas ficava em 28–32px de largura — só o eixo horizontal faltava.
-      min-width: bp.$alvo-toque;
+    &__modificar-chevron {
+        margin-left: auto;
     }
 
-    // === m3-60: alvos de toque que a m3-56 não cobriu ===
-    // Pílulas de ação por item (Modificar / Vestida-Guardada / Equipado-Na mochila / Aplicar /
-    // Consumir) e "Rolar dano": medidos 30×26 e 111×27. Ficam na própria linha de ações
-    // (`&__item-acoes`, que já quebra em várias linhas no mobile), então o piso de 44px não
-    // desloca nada além da própria linha — o desenho da pílula (borda, cor, fonte) segue igual.
-    &__modificar,
-    &__porte,
-    &__item-rolar {
-      min-height: bp.$alvo-toque;
-      min-width: bp.$alvo-toque;
-      justify-content: center;
+    // === Marca de "excedente" (além do limite da patente — permitido, mas sinalizado) ===
+    &__excede-tag {
+        display: inline-block;
+        margin-left: 6px;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--warning);
+        border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+        border-radius: 3px;
+        padding: 0 4px;
+        vertical-align: middle;
     }
-
-    // Toggles "não conta no total/no teto" da mod: 20×20 → 44×44, mesmo tratamento já dado ao
-    // `&__mini-btn` acima. O `gap` sobe junto para os dois alvos vizinhos não se encostarem.
+    &__mod-entrada-motivo--excede {
+        color: var(--warning);
+    }
+    // Toggles "não conta no limite" no chip da mod (total da arma / teto próprio) — ícone-only,
+    // rótulo vai em `aria-label`/`title` (hover). Estado ativo = accent, igual aos demais toggles.
     &__mod-flags {
-      gap: 8px;
+        display: flex;
+        gap: 4px;
+        margin-top: 1px;
     }
     &__mod-flag {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-      font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+
+        &:hover {
+            color: var(--text);
+        }
+        &--ativo {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+    // Checkbox do form de mod custom.
+    &__check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+        cursor: pointer;
+
+        input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--accent);
+            flex: none;
+        }
+    }
+    &__mod-custom {
+        margin-bottom: 12px;
     }
 
-    // Lápis de apelido: 14×14 dentro da linha do nome do item. Aqui um piso de altura inflaria a
-    // linha de texto, então a área clicável cresce por padding com margem negativa — a caixa de
-    // toque vira 44×44 de verdade (não só um `::before`), mas a caixa de margem que a linha
-    // enxerga continua sendo a do ícone. A folga é derivada do token (`$alvo-toque` menos o ícone,
-    // dividido pelos dois lados), não um número solto.
-    &__item-apelido-lapis {
-      $folga: math.div(bp.$alvo-toque - 14px, 2);
-
-      padding: $folga;
-      // Esquerda: a folga desconta os 6px de `margin-left` que separam o lápis do nome.
-      margin: (-$folga) (-$folga) (-$folga) (6px - $folga);
+    // === Modal (dialog "quantos remover") ===
+    &__modal-fundo {
+        position: fixed;
+        inset: 0;
+        background: color-mix(in srgb, var(--bg) 70%, transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 20;
+    }
+    &__modal {
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
+        max-width: 360px;
+        width: 100%;
+    }
+    &__modal-titulo {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text);
+        margin: 0 0 8px;
+    }
+    &__modal-texto {
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+        margin: 0 0 10px;
+    }
+    &__modal-acoes {
+        display: flex;
+        gap: 8px;
     }
 
-    // Mesmo padrão no valor editável da carga (80×22): o piso de 44px empurraria a barra de
-    // Inventário para baixo; padding com margem negativa mantém a linha na altura de hoje.
-    &__carga-valor--editavel {
-      $folga: math.div(bp.$alvo-toque - 22px, 2);
+    // === Catálogo ===
+    &__catalogo {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 12px;
+    }
+    &__busca {
+        width: 100%;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        color: var(--text);
+        font-family: var(--font-mono);
+        padding: 10px 12px;
+        font-size: 14px;
+        outline: none;
 
-      padding: $folga 4px;
-      margin: (-$folga) -4px;
+        &:focus {
+            border-color: var(--accent-border);
+        }
+    }
+    &__categorias {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    &__categoria {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 12px;
+        cursor: pointer;
+
+        &:hover:not(:disabled) {
+            color: var(--text);
+        }
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        &--ativa {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+    &__info {
+        font-size: 12px;
+        color: var(--text-dim);
+        padding: 10px 12px;
+
+        strong {
+            color: var(--text);
+        }
+    }
+    &__vazio {
+        font-family: var(--font-sans);
+        color: var(--text-mute);
+        text-align: center;
+        padding: 16px 0;
     }
 
-    &__item-cabecalho,
-    &__mod-tag,
-    &__cartao-acoes {
-      flex-wrap: wrap;
+    // === Grades roláveis (catálogo/mods) + fade-out vertical (via [appOverflowFade]) ===
+    &__grade,
+    &__mod-grade {
+        --fade-topo: 0px;
+        --fade-base: 0px;
+
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 24px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 24px;
+        }
+    }
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 12px;
+        max-height: 360px;
+        overflow-y: auto;
+        padding-right: 4px;
+
+        // m3-60: no mobile a página inteira rola como uma coisa só — um teto aqui viraria rolagem
+        // dentro de rolagem, sem barra visível (o tema esconde a nativa por design). Sem overflow o
+        // `appOverflowFade` não marca o host, então o fade some junto (fade sem overflow é ruído).
+        @include bp.mobile {
+            max-height: none;
+            overflow-y: visible;
+            padding-right: 0;
+        }
     }
 
-    // m3-56: gatilho "Mover para..." (m3-44 — sub-inventários) é controle primário repetido em
-    // cada item, mas ficava com padding mínimo (~24px de altura) — mesmo alvo de toque do resto.
+    &__cartao {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 12px;
+
+        &-nome {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        &-stat {
+            font-size: 11px;
+            color: var(--energy);
+        }
+        &-desc {
+            font-family: var(--font-sans);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        &-ativo {
+            font-size: 11px;
+            color: var(--positive);
+        }
+        &-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        &-acoes {
+            display: flex;
+            gap: 6px;
+            margin-top: auto;
+        }
+    }
+
+    // === Cartão de módulo na grade de Fragmentos (catálogo — pseudo-categoria) ===
+    &__cartao--fragmento {
+        gap: 8px;
+    }
+    &__cartao-fragmento-custo {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+    // Botões Potencializador/Construtor empilhados (não lado a lado — em cartões estreitos os dois
+    // rótulos lado a lado cortavam/vazavam pra fora do cartão; empilhado sempre cabe).
+    &__cartao-acoes--coluna {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    &__custo {
+        color: var(--warning);
+        font-weight: 700;
+    }
+    // Custo bruto quando a Afinidade já reduz o que será cobrado (m3-66) — secundário e riscado,
+    // ao lado do reduzido (o que de fato será debitado) em destaque.
+    &__custo--bruto {
+        color: var(--text-mute);
+        font-weight: 400;
+        text-decoration: line-through;
+        margin-right: 4px;
+    }
+    &__peso {
+        color: var(--text-mute);
+    }
+
+    &__tag {
+        display: inline-block;
+        white-space: nowrap;
+        font-size: 10px;
+        color: var(--positive);
+        border: 1px solid color-mix(in srgb, var(--positive) 45%, transparent);
+        border-radius: 3px;
+        padding: 1px 5px;
+        margin-left: 4px;
+
+        &--penalidade {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+    }
+
+    // === Lista rolável (itens) e a de Amplificadores/Fragmentos — mesma máscara de fade nos dois ===
+    // `&__lista`: sem teto por padrão (modo `inline`, aba antiga — ocupava a página inteira); no modo
+    // `dialog` (`--compacto` no fim do arquivo) ganha teto fixo + rolagem própria, pra não esticar a
+    // coluna Status além da altura da coluna de Identidade vizinha (mesmo raciocínio de
+    // `.sanidade__lista`/`.ficha-status__anotacoes` na visualização). `&__amps`: teto fixo sempre
+    // (m3-44 — item 19), pra a seção de Amplificadores/Fragmentos não crescer sem fim e estourar
+    // 1920×1080 junto com a lista principal de itens.
+    &__lista,
+    &__amps {
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 20px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 20px;
+        }
+    }
+
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    // === Grade dupla de Medicinal/Operacional (misturados, ordenados por nome) ===
+    &__grade-medop {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // === Itens da lista ===
+    &__item {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 12px;
+
+        &--amp {
+            background: var(--surface-2);
+        }
+        &-cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px 16px;
+            flex-wrap: wrap;
+        }
+        // Nome + categoria (encolhe para dar espaço aos controles).
+        &-identidade {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+        // Ações (Modificar / Vestida / X) + meta ($ e peso), juntos à direita.
+        &-controles {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px 12px;
+            margin-left: auto;
+        }
+        &-nome {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        // Apelido do jogador (m3-33): legenda com o nome mecânico do catálogo logo abaixo.
+        &-nome-mecanico {
+            display: block;
+            font-size: 11px;
+            color: var(--text-mute);
+            margin-top: 1px;
+        }
+        // `app-icone` (SVG, `1.15em`) em vez do glifo de texto: alinha certinho com a baseline do
+        // nome (glifo Unicode de fonte tem métrica própria e sempre desalinha).
+        &-apelido-lapis {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 6px;
+            font-size: 12px;
+            color: var(--text-mute);
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.15s ease;
+
+            &:hover {
+                color: var(--accent);
+            }
+        }
+        &-apelido-entrada {
+            display: block;
+            width: 100%;
+            max-width: 260px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-control);
+            padding: 4px 8px;
+            outline: none;
+            transition: border-color 0.15s ease;
+
+            &:focus {
+                border-color: var(--accent-border);
+            }
+        }
+        &-categoria {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-mute);
+            margin-left: 8px;
+        }
+        &-porte {
+            display: block;
+            margin: 8px 0 0;
+        }
+        &-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+        &-stat {
+            font-size: 12px;
+            color: var(--energy);
+            margin-top: 8px;
+        }
+    }
+
+    &__alternar {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font-size: 12px;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 8px 10px;
+        margin-top: 10px;
+        cursor: pointer;
+
+        &--ativo {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+
+    // === Modificações ativas (chips) ===
+    &__mods-ativas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+    }
+    &__mod-tag {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+
+        &-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+            color: var(--text);
+        }
+        &-linha {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        &-nome {
+            flex: 1;
+            min-width: 0;
+        }
+        &-custo {
+            flex: none;
+            color: var(--warning);
+        }
+        &-botoes {
+            display: flex;
+            gap: 4px;
+        }
+        // Mod além do limite da patente: destaque âmbar discreto.
+        &--excede {
+            border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
+            background: color-mix(in srgb, var(--warning) 7%, transparent);
+            border-radius: var(--radius-control);
+        }
+    }
+    &__mini-btn {
+        font-size: 13px;
+        width: 24px;
+        height: 24px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+    }
+
+    // === Painel de modificações ===
+    &__mod-painel {
+        margin-top: 10px;
+    }
+    &__mod-secao {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin: 12px 0 8px;
+    }
+    &__mod-grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+        max-height: 230px;
+        overflow-y: auto;
+        padding-right: 4px;
+
+        // Mesmo racional de `&__grade` (m3-60): sem teto no mobile, sem rolagem dentro de rolagem.
+        @include bp.mobile {
+            max-height: none;
+            overflow-y: visible;
+            padding-right: 0;
+        }
+    }
+    &__mod-entrada {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 10px;
+        font-size: 10px;
+
+        &--ativa {
+            border-color: var(--accent-border);
+        }
+        &--bloqueada {
+            opacity: 0.55;
+        }
+        &-topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        &-nome {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        &-pontos {
+            display: flex;
+            gap: 3px;
+        }
+        &-desc {
+            font-family: var(--font-sans);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+        &-motivo,
+        &-custo {
+            color: var(--warning);
+        }
+        &-bloqueia {
+            color: var(--text-mute);
+        }
+    }
+    &__ponto {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        border: 1px solid var(--border-strong);
+
+        &--cheio {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+    }
+
+    // === Amplificadores / Fragmentos (mesma seção-lista, m3-44 — item 19) ===
+    // Teto fixo + rolagem própria (fade no `&__lista, &__amps` acima) — impede que a seção cresça sem
+    // fim e estoure a restrição de caber em 1920×1080 junto com a lista principal de itens.
+    &__amps {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 420px;
+        overflow-y: auto;
+        padding-right: 4px;
+
+        // Mesmo racional de `&__grade` (m3-60): a restrição que justifica o teto é caber em 1920×1080
+        // junto com a lista principal — no mobile não existe, e o teto só produz rolagem aninhada.
+        @include bp.mobile {
+            max-height: none;
+            overflow-y: visible;
+            padding-right: 0;
+        }
+
+        &-cabecalho {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+        }
+    }
+
+    // === Amplificadores em grade de 2 colunas (m3-44 — item 12; 1 no mobile) ===
+    &__grade-amps {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // === Sub-inventário próprio (Pochete/Bolso de Corpo, m3-44 — item 14) ===
+    // Mesma "caixa" de `&__cartao`/`&__form`, com cabeçalho no padrão de `&__amps-cabecalho`.
+    &__subinventario {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 12px;
+
+        &--aviso {
+            border-color: var(--accent-border);
+
+            .ficha-inv__amps-cabecalho {
+                color: var(--accent);
+            }
+        }
+    }
+    &__subinventario-restricao {
+        font-size: 11px;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: normal;
+        color: var(--text-mute);
+    }
+
+    // === "Mover para" (m3-44 — mover item para um Pochete/Bolso de Corpo vestido) ===
+    // Popover próprio (não `<select>` nativo — o popup nativo não é temável de verdade, mesmo com
+    // `color-scheme: dark` global; aqui os tokens do tema valem 100%). `position: relative` no
+    // wrapper ancora a lista absoluta (`&-lista`) logo abaixo do gatilho.
+    &__mover {
+        position: relative;
+        display: inline-flex;
+    }
     &__mover-gatilho {
-      min-height: bp.$alvo-toque;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 5px 8px;
+        max-width: 150px;
+        cursor: pointer;
+
+        span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        app-icone {
+            display: inline-flex;
+            flex: none;
+            width: 14px;
+            height: 14px;
+        }
+        &[aria-expanded="true"] {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+    }
+    &__mover-lista {
+        position: absolute;
+        z-index: 5;
+        top: calc(100% + 4px);
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        min-width: 160px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 4px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
     }
     &__mover-opcao {
-      min-height: bp.$alvo-toque;
-      display: flex;
-      align-items: center;
-    }
-  }
+        text-align: left;
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        padding: 7px 8px;
+        cursor: pointer;
 
-  // === Modo `dialog` (card de Status, redesenho de comparação visual) ===
-  // Catálogo, item/mod custom e "Aplicar em..." saíram para `p-dialog`s (ver template) — o que
-  // sobra aqui na coluna é só a referência + a lista de itens/amplificadores, então aperta
-  // padding/fonte e troca o texto dos botões de ação por item (Modificar/Vestir-Guardar/Aplicar
-  // Fragmento) por ícone + `title`, pra caber sem quebrar numa coluna mais estreita que a página
-  // cheia da aba antiga.
-  &--compacto {
-    gap: 10px;
-
-    .ficha-inv__carga-rotulo {
-      font-size: 10px;
-    }
-    .ficha-inv__carga-valor {
-      font-size: 13px;
-    }
-    .ficha-inv__carga-entrada {
-      font-size: 13px;
+        &:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+        &--ativa {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
     }
 
-    // Teto fixo + rolagem própria — a coluna Status é esticada (`align-items:stretch`) até a
-    // altura da coluna de Identidade vizinha; sem este teto a lista cresce sem fim e estica a
-    // coluna (e a página) além disso.
-    .ficha-inv__lista {
-      max-height: 458px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .ficha-inv__item {
-      padding: 9px 10px;
-    }
-    .ficha-inv__item-cabecalho {
-      gap: 6px 10px;
-    }
-    .ficha-inv__item-controles {
-      gap: 6px 8px;
-    }
-    .ficha-inv__item-acoes {
-      gap: 5px;
-    }
-    .ficha-inv__item-nome {
-      font-size: 13px;
-    }
-
-    .ficha-inv__modificar,
-    .ficha-inv__porte {
-      padding: 5px 7px;
-    }
-    // Só o ícone (+ o badge de contagem, quando houver) — o rótulo vira `title` (tooltip).
-    .ficha-inv__modificar > span:not(.ficha-inv__modificar-contagem) {
-      display: none;
-    }
-    .ficha-inv__porte > span {
-      display: none;
-    }
-    // Coluna estreita demais pra 2 colunas de Medicinal/Operacional — cai pra 1. Amplificadores
-    // (m3-44 — item 12) mantém as 2 colunas aqui: a coluna Status já tem ~700px de sobra na
-    // grade de 3 colunas do desktop (m3-26), só cai pra 1 no breakpoint mobile do próprio
-    // `&__grade-amps`.
-    .ficha-inv__grade-medop {
-      grid-template-columns: 1fr;
-    }
-    .ficha-inv__amps {
-      max-height: 458px;
-    }
-
-    // === m3-60: o modo compacto no mobile ===
-    // Estas regras precisam vir DEPOIS das do bloco `&--compacto` acima: têm a mesma
-    // especificidade (0,2,0), então quem ganha é a ordem de origem — o media query não soma
-    // especificidade nenhuma.
+    // === Refinamento mobile (alvos de toque; refino dedicado é m3-09) ===
     @include bp.mobile {
-      // O teto de 458px existe para não esticar a coluna Status ao lado da de Identidade na
-      // grade de 3 colunas do desktop. No mobile não há coluna vizinha e a página inteira já
-      // rola: medidos 458px de janela para 1895px de lista (24% visível), com a barra de
-      // rolagem escondida pelo tema. Some o teto → some a rolagem aninhada e o fade junto.
-      .ficha-inv__lista,
-      .ficha-inv__amps {
-        max-height: none;
-        overflow-y: visible;
-        padding-right: 0;
-      }
+        &__categoria {
+            min-height: bp.$alvo-toque;
+            padding: 9px 14px;
+        }
+        &__mini-btn {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+            font-size: 16px;
+        }
+        // m3-56: 40px → 44px (`$alvo-toque`) — o botão de ação primária (Adicionar/Confirmar/Aplicar)
+        // é controle principal, não decorativo; os 40px antigos ficavam abaixo do alvo de toque.
+        &__btn {
+            min-height: bp.$alvo-toque;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            // m3-60: `&--icone` (lupa da busca, X de remover item) já tinha os 44px de altura vindos
+            // daqui, mas ficava em 28–32px de largura — só o eixo horizontal faltava.
+            min-width: bp.$alvo-toque;
+        }
 
-      // Rótulo de volta: sem ele, "Modificar", "Vestida/Guardada", "Equipado/Na mochila",
-      // "Aplicar em..." e "Consumir" viram quatro ícones nus indistinguíveis na mesma linha. O
-      // motivo de escondê-los (coluna estreita da grade de 3 colunas) não vale no mobile, onde o
-      // card ocupa a largura inteira e `&__item-acoes` já quebra linha.
-      // Seletor idêntico ao que esconde (inclusive o `:not(...)`, que conta especificidade de
-      // classe): com (0,3,0) dos dois lados quem decide é a ordem de origem. Um `> span` simples
-      // aqui teria (0,2,0) e perderia — a mesma armadilha do `width` depois do `@extend`.
-      .ficha-inv__modificar > span:not(.ficha-inv__modificar-contagem),
-      .ficha-inv__porte > span {
-        display: inline;
-      }
-      .ficha-inv__modificar,
-      .ficha-inv__porte {
-        padding: 5px 10px;
-      }
-    }
-  }
+        // === m3-60: alvos de toque que a m3-56 não cobriu ===
+        // Pílulas de ação por item (Modificar / Vestida-Guardada / Equipado-Na mochila / Aplicar /
+        // Consumir) e "Rolar dano": medidos 30×26 e 111×27. Ficam na própria linha de ações
+        // (`&__item-acoes`, que já quebra em várias linhas no mobile), então o piso de 44px não
+        // desloca nada além da própria linha — o desenho da pílula (borda, cor, fonte) segue igual.
+        &__modificar,
+        &__porte,
+        &__item-rolar {
+            min-height: bp.$alvo-toque;
+            min-width: bp.$alvo-toque;
+            justify-content: center;
+        }
 
-  // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
-  // Independente do `&--compacto` acima (que é sobre `apresentacao === 'dialog'`, sempre ativo
-  // nesta visualização em todos os modos — padrão/embutido/compacto). Este aqui é só o card de
-  // equipe: até a m2-21 tinha um teto mais baixo (230px) que o padrão de 458px, porque a coluna
-  // Status competia de perto com o agrupador Identidade+Atributos ao lado. A m2-21 tirou Atributos
-  // desse agrupador (foi pra dentro da aba Informações do card de Status) — ele agora é só
-  // Identidade+Vitalidade+Reações+Resistências, bem mais baixo, e o teto apertado passou a
-  // desperdiçar a maior parte da altura disponível na aba (a pedido do autor, pós-m2-21). 420px é
-  // a mesma régua já usada nos cards da lateral (`detalhe.page.scss`) para "lista longa, rola por
-  // dentro" — mais que o dobro do que cabia antes, sem soltar a lista sem teto nenhum.
-  &--card-compacto {
-    // Precisa vir DEPOIS do `&--compacto` acima: mesma especificidade (0,2,0) na `.ficha-inv__lista`
-    // (`.ficha-inv--compacto .ficha-inv__lista` vs `.ficha-inv--card-compacto .ficha-inv__lista`) —
-    // quem ganha é a ordem de origem, e as duas classes convivem no mesmo elemento raiz.
-    .ficha-inv__lista {
-      max-height: 490px;
+        // Toggles "não conta no total/no teto" da mod: 20×20 → 44×44, mesmo tratamento já dado ao
+        // `&__mini-btn` acima. O `gap` sobe junto para os dois alvos vizinhos não se encostarem.
+        &__mod-flags {
+            gap: 8px;
+        }
+        &__mod-flag {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+            font-size: 14px;
+        }
+
+        // Lápis de apelido: 14×14 dentro da linha do nome do item. Aqui um piso de altura inflaria a
+        // linha de texto, então a área clicável cresce por padding com margem negativa — a caixa de
+        // toque vira 44×44 de verdade (não só um `::before`), mas a caixa de margem que a linha
+        // enxerga continua sendo a do ícone. A folga é derivada do token (`$alvo-toque` menos o ícone,
+        // dividido pelos dois lados), não um número solto.
+        &__item-apelido-lapis {
+            $folga: math.div(bp.$alvo-toque - 14px, 2);
+
+            padding: $folga;
+            // Esquerda: a folga desconta os 6px de `margin-left` que separam o lápis do nome.
+            margin: (-$folga) (-$folga) (-$folga) (6px - $folga);
+        }
+
+        // Mesmo padrão no valor editável da carga (80×22): o piso de 44px empurraria a barra de
+        // Inventário para baixo; padding com margem negativa mantém a linha na altura de hoje.
+        &__carga-valor--editavel {
+            $folga: math.div(bp.$alvo-toque - 22px, 2);
+
+            padding: $folga 4px;
+            margin: (-$folga) -4px;
+        }
+
+        &__item-cabecalho,
+        &__mod-tag,
+        &__cartao-acoes {
+            flex-wrap: wrap;
+        }
+
+        // m3-56: gatilho "Mover para..." (m3-44 — sub-inventários) é controle primário repetido em
+        // cada item, mas ficava com padding mínimo (~24px de altura) — mesmo alvo de toque do resto.
+        &__mover-gatilho {
+            min-height: bp.$alvo-toque;
+        }
+        &__mover-opcao {
+            min-height: bp.$alvo-toque;
+            display: flex;
+            align-items: center;
+        }
     }
 
-    // Mesmo raciocínio do `&--compacto` (acima): no mobile não há coluna vizinha e a página
-    // inteira já rola — um teto aqui viraria rolagem aninhada sem barra visível.
-    @include bp.mobile {
-      .ficha-inv__lista {
-        max-height: none;
-      }
+    // === Modo `dialog` (card de Status, redesenho de comparação visual) ===
+    // Catálogo, item/mod custom e "Aplicar em..." saíram para `p-dialog`s (ver template) — o que
+    // sobra aqui na coluna é só a referência + a lista de itens/amplificadores, então aperta
+    // padding/fonte e troca o texto dos botões de ação por item (Modificar/Vestir-Guardar/Aplicar
+    // Fragmento) por ícone + `title`, pra caber sem quebrar numa coluna mais estreita que a página
+    // cheia da aba antiga.
+    &--compacto {
+        gap: 10px;
+
+        .ficha-inv__carga-rotulo {
+            font-size: 10px;
+        }
+        .ficha-inv__carga-valor {
+            font-size: 13px;
+        }
+        .ficha-inv__carga-entrada {
+            font-size: 13px;
+        }
+
+        // Teto fixo + rolagem própria — a coluna Status é esticada (`align-items:stretch`) até a
+        // altura da coluna de Identidade vizinha; sem este teto a lista cresce sem fim e estica a
+        // coluna (e a página) além disso.
+        .ficha-inv__lista {
+            max-height: 458px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .ficha-inv__item {
+            padding: 9px 10px;
+        }
+        .ficha-inv__item-cabecalho {
+            gap: 6px 10px;
+        }
+        .ficha-inv__item-controles {
+            gap: 6px 8px;
+        }
+        .ficha-inv__item-acoes {
+            gap: 5px;
+        }
+        .ficha-inv__item-nome {
+            font-size: 13px;
+        }
+
+        .ficha-inv__modificar,
+        .ficha-inv__porte {
+            padding: 5px 7px;
+        }
+        // Só o ícone (+ o badge de contagem, quando houver) — o rótulo vira `title` (tooltip).
+        .ficha-inv__modificar > span:not(.ficha-inv__modificar-contagem) {
+            display: none;
+        }
+        .ficha-inv__porte > span {
+            display: none;
+        }
+        // Coluna estreita demais pra 2 colunas de Medicinal/Operacional — cai pra 1. Amplificadores
+        // (m3-44 — item 12) mantém as 2 colunas aqui: a coluna Status já tem ~700px de sobra na
+        // grade de 3 colunas do desktop (m3-26), só cai pra 1 no breakpoint mobile do próprio
+        // `&__grade-amps`.
+        .ficha-inv__grade-medop {
+            grid-template-columns: 1fr;
+        }
+        .ficha-inv__amps {
+            max-height: 458px;
+        }
+
+        // === m3-60: o modo compacto no mobile ===
+        // Estas regras precisam vir DEPOIS das do bloco `&--compacto` acima: têm a mesma
+        // especificidade (0,2,0), então quem ganha é a ordem de origem — o media query não soma
+        // especificidade nenhuma.
+        @include bp.mobile {
+            // O teto de 458px existe para não esticar a coluna Status ao lado da de Identidade na
+            // grade de 3 colunas do desktop. No mobile não há coluna vizinha e a página inteira já
+            // rola: medidos 458px de janela para 1895px de lista (24% visível), com a barra de
+            // rolagem escondida pelo tema. Some o teto → some a rolagem aninhada e o fade junto.
+            .ficha-inv__lista,
+            .ficha-inv__amps {
+                max-height: none;
+                overflow-y: visible;
+                padding-right: 0;
+            }
+
+            // Rótulo de volta: sem ele, "Modificar", "Vestida/Guardada", "Equipado/Na mochila",
+            // "Aplicar em..." e "Consumir" viram quatro ícones nus indistinguíveis na mesma linha. O
+            // motivo de escondê-los (coluna estreita da grade de 3 colunas) não vale no mobile, onde o
+            // card ocupa a largura inteira e `&__item-acoes` já quebra linha.
+            // Seletor idêntico ao que esconde (inclusive o `:not(...)`, que conta especificidade de
+            // classe): com (0,3,0) dos dois lados quem decide é a ordem de origem. Um `> span` simples
+            // aqui teria (0,2,0) e perderia — a mesma armadilha do `width` depois do `@extend`.
+            .ficha-inv__modificar > span:not(.ficha-inv__modificar-contagem),
+            .ficha-inv__porte > span {
+                display: inline;
+            }
+            .ficha-inv__modificar,
+            .ficha-inv__porte {
+                padding: 5px 10px;
+            }
+        }
     }
-  }
+
+    // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
+    // Independente do `&--compacto` acima (que é sobre `apresentacao === 'dialog'`, sempre ativo
+    // nesta visualização em todos os modos — padrão/embutido/compacto). Este aqui é só o card de
+    // equipe: até a m2-21 tinha um teto mais baixo (230px) que o padrão de 458px, porque a coluna
+    // Status competia de perto com o agrupador Identidade+Atributos ao lado. A m2-21 tirou Atributos
+    // desse agrupador (foi pra dentro da aba Informações do card de Status) — ele agora é só
+    // Identidade+Vitalidade+Reações+Resistências, bem mais baixo, e o teto apertado passou a
+    // desperdiçar a maior parte da altura disponível na aba (a pedido do autor, pós-m2-21). 420px é
+    // a mesma régua já usada nos cards da lateral (`detalhe.page.scss`) para "lista longa, rola por
+    // dentro" — mais que o dobro do que cabia antes, sem soltar a lista sem teto nenhum.
+    &--card-compacto {
+        // Precisa vir DEPOIS do `&--compacto` acima: mesma especificidade (0,2,0) na `.ficha-inv__lista`
+        // (`.ficha-inv--compacto .ficha-inv__lista` vs `.ficha-inv--card-compacto .ficha-inv__lista`) —
+        // quem ganha é a ordem de origem, e as duas classes convivem no mesmo elemento raiz.
+        .ficha-inv__lista {
+            max-height: 490px;
+        }
+
+        // Mesmo raciocínio do `&--compacto` (acima): no mobile não há coluna vizinha e a página
+        // inteira já rola — um teto aqui viraria rolagem aninhada sem barra visível.
+        @include bp.mobile {
+            .ficha-inv__lista {
+                max-height: none;
+            }
+        }
+    }
 }
 
 // A dialog "Item custom" tem conteúdo curto; `.p-dialog-content` do PrimeNG vem com
@@ -1957,5 +1957,5 @@
 // `overflow: visible`, então soltar o clipe só do `.p-dialog-content` deixa o dropdown flutuar
 // livre por cima do resto da página, igual a qualquer outro dropdown solto do app.
 :host ::ng-deep .ficha-inv__dialogo--item-custom .p-dialog-content {
-  overflow-y: visible;
+    overflow-y: visible;
 }

@@ -1,29 +1,29 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 // Moldura do cartão — extraída de `acervo.page.scss` (m4-11): a encapsulação de componente do
 // Angular não deixa o CSS da página alcançar o template deste componente, então o bloco precisa
 // viver aqui, não lá. Mesmos seletores/tokens de antes — nenhuma mudança visual pro agente.
 .acervo__cartao {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  height: 100%;
-  padding: 16px 18px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
 }
 
 .acervo__cartao-link {
-  display: flex;
-  align-items: stretch;
-  gap: 10px;
-  min-width: 0;
-  text-decoration: none;
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    min-width: 0;
+    text-decoration: none;
 
-  &:hover .acervo__cartao-nome {
-    color: var(--accent);
-  }
+    &:hover .acervo__cartao-nome {
+        color: var(--accent);
+    }
 }
 
 // Avatar da ficha (m3-62) — placeholder listrado a 20% de opacidade quando não há imagem
@@ -32,133 +32,141 @@
 // definida, o fallback pra `--border-strong` mantém o visual neutro de sempre. Esticado
 // (`align-self: stretch` do pai) pra acompanhar a altura do bloco nome+meta+vitais.
 .acervo__cartao-avatar {
-  position: relative;
-  width: 52px;
-  flex: none;
-  cursor: pointer;
-  border-radius: var(--radius-control);
-  background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
-  background-image: repeating-linear-gradient(
-    135deg,
-    color-mix(
+    position: relative;
+    width: 52px;
+    flex: none;
+    cursor: pointer;
+    border-radius: var(--radius-control);
+    background-color: color-mix(
         in srgb,
-        color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
-        transparent
-      )
-      0 3px,
-    transparent 3px 9px
-  );
-  border: 1px solid var(--cor-ficha, var(--border-strong));
-  overflow: hidden;
+        var(--cor-ficha, var(--border-strong)) 14%,
+        var(--surface)
+    );
+    background-image: repeating-linear-gradient(
+        135deg,
+        color-mix(
+                in srgb,
+                color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong))
+                    20%,
+                transparent
+            )
+            0 3px,
+        transparent 3px 9px
+    );
+    border: 1px solid var(--cor-ficha, var(--border-strong));
+    overflow: hidden;
 }
 
 .acervo__cartao-avatar-imagem {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .acervo__cartao-texto {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
 }
 
 .acervo__cartao-nome {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  transition: color 0.15s ease;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    transition: color 0.15s ease;
 }
 
 .acervo__cartao-meta {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--text-dim);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-dim);
 }
 
 .acervo__cartao-vitais {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 2px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-mute);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mute);
 }
 
 .acervo__cartao-rodape {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
 }
 
 .acervo__cartao-regua {
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+    flex: 1;
+    height: 1px;
+    background: var(--border);
 }
 
 // Chip de campanha (ou "Sem campanha") — variação do chip de classificação do tema.
 .acervo__chip {
-  flex-shrink: 1;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: normal;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-mute);
-  border: 1px solid var(--border-strong);
-  border-radius: 3px;
-  padding: 4px 8px;
+    flex-shrink: 1;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: normal;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    padding: 4px 8px;
 
-  &--campanha {
-    color: var(--accent);
-    border-color: var(--accent-border);
-  }
+    &--campanha {
+        color: var(--accent);
+        border-color: var(--accent-border);
+    }
 
-  app-icone {
-    font-size: 11px;
-  }
+    app-icone {
+        font-size: 11px;
+    }
 }
 
 // Botão do menu de ações (kebab) — o dropdown em si mora na raiz da página (ver a nota no
 // componente: `overflow-y` + `mask-image` do `<ul>` cortariam um `position: fixed` comum na
 // pintura — mesmo problema/correção já documentados no acervo e em `CampanhaDetalhe`, m3-52).
 .acervo__menu-botao {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 22px;
-  font-size: 15px;
-  line-height: 1;
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 22px;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+        color 0.15s ease,
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 
-  &:hover {
-    color: var(--accent);
-    border-color: var(--accent-border);
-    background: var(--surface-2);
-  }
+    &:hover {
+        color: var(--accent);
+        border-color: var(--accent-border);
+        background: var(--surface-2);
+    }
 
-  @include bp.mobile {
-    width: bp.$alvo-toque;
-    height: bp.$alvo-toque;
-  }
+    @include bp.mobile {
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+    }
 }

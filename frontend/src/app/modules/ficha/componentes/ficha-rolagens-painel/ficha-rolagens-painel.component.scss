@@ -1,48 +1,51 @@
 // Painel de Rolagens (m2-21) — só tokens do tema "Terminal de Contenção" (proibição #29).
 // O toggle "Rolagem oculta" veio de `ficha-visualizacao.component.scss` junto com a marcação: com
 // encapsulamento emulado, a regra precisa morar no componente que renderiza o botão.
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 :host {
-  display: block;
+    display: block;
 }
 
 // Toggle "rolagem oculta" (m3-27) — mesma receita visual do `.ficha-condicoes__item`, num bloco
 // próprio (é uma decisão de visibilidade de rolagem, não uma condição de saúde).
 .ficha-rolagem-oculta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 6px 10px;
-  background: var(--surface-2);
-  color: var(--text-dim);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 
-  app-icone {
-    font-size: 13px;
-  }
+    app-icone {
+        font-size: 13px;
+    }
 
-  &:hover {
-    border-color: var(--accent-border);
-    color: var(--text);
-  }
+    &:hover {
+        border-color: var(--accent-border);
+        color: var(--text);
+    }
 
-  &--ativa {
-    color: var(--accent);
-    border-color: var(--accent-border);
-    background: var(--accent-dim);
-  }
+    &--ativa {
+        color: var(--accent);
+        border-color: var(--accent-border);
+        background: var(--accent-dim);
+    }
 
-  @include bp.mobile {
-    min-height: bp.$alvo-toque;
-  }
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
 }

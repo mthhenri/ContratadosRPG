@@ -1,4 +1,4 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 // Visualização/edição da ficha de criatura (m4-04b) — layout de 3 colunas com abas, alvo de
 // fidelidade docs/design/examples/ficha-de-criatura.html (medidas tiradas do DOM renderizado do
@@ -10,62 +10,113 @@
 // canônico `docs/design/tema/_componentes.scss`. Só tokens do tema "Terminal de Contenção" —
 // nenhum hex/fonte/raio solto (proibição #29).
 
-:host { display: block; }
+:host {
+    display: block;
+}
 
 // `.botao` canônico (`_componentes.scss`) copiado pra cá: a definição que existe no SCSS da página
 // (`visualizar-criatura.page.scss`) fica presa ao encapsulamento dela e não alcança este componente.
 .botao {
-  padding: 7px 12px;
-  font: 600 11px var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+    padding: 7px 12px;
+    font: 600 11px var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+        filter 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 
-  &:disabled { opacity: .55; cursor: default; }
-  &--primario { background: var(--accent); color: var(--bg); border: 0; &:hover:not(:disabled) { filter: brightness(1.08); } }
-  &--secundario { background: transparent; color: var(--text); border: 1px solid var(--border-strong); &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } }
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
+    }
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+    }
+    &--secundario {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
 }
 
 // Campo genérico "rótulo + controle" (mesmo vocabulário de `criar-criatura.page.scss`), usado pela
 // grade de edição da Classificação.
 .campo {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-  margin: 0;
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    margin: 0;
 
-  &__rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-mute); }
+    &__rotulo {
+        font: 600 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        color: var(--text-mute);
+    }
 }
 
 // === Card (copiado de `_componentes.scss` `.card`) ===
 .criatura__cartao {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: var(--pad-card);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
 
-  &--identidade { gap: 16px; }
-  // `flex: 1` (mesmo mecanismo de `.ficha-cartao--atributos` na ficha de jogador) — com
-  // `&__linha-colunas{align-items:stretch}` acima, o card estica até a altura da Identidade em vez
-  // de parar no tamanho do próprio conteúdo, mantendo as duas colunas sempre alinhadas embaixo.
-  &--atributos { gap: 10px; flex: 1; justify-content: flex-start; }
-  &--painel { gap: 14px; flex: 1 1 auto; }
+    &--identidade {
+        gap: 16px;
+    }
+    // `flex: 1` (mesmo mecanismo de `.ficha-cartao--atributos` na ficha de jogador) — com
+    // `&__linha-colunas{align-items:stretch}` acima, o card estica até a altura da Identidade em vez
+    // de parar no tamanho do próprio conteúdo, mantendo as duas colunas sempre alinhadas embaixo.
+    &--atributos {
+        gap: 10px;
+        flex: 1;
+        justify-content: flex-start;
+    }
+    &--painel {
+        gap: 14px;
+        flex: 1 1 auto;
+    }
 }
 
 // === Stat box (copiado de `_componentes.scss` `.stat`, com o valor no corpo de 16px do mockup) ===
 .stat {
-  min-width: 0;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  padding: 9px 12px;
+    min-width: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 9px 12px;
 
-  &__rotulo { display: block; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: .11em; color: var(--text-mute); margin-bottom: 6px; }
-  &__valor { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    &__rotulo {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        color: var(--text-mute);
+        margin-bottom: 6px;
+    }
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.2;
+    }
 }
 
 // === Abas (copiado de `_componentes.scss` `.abas`) ===
@@ -73,506 +124,1184 @@
 // ocupar o máximo da barra (2 abas = metade cada), a pedido do autor — o `.abas` canônico deixa
 // os itens do tamanho do conteúdo.
 .criatura__abas {
-  display: flex;
-  gap: 5px;
-  padding: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  overflow-x: auto;
+    display: flex;
+    gap: 5px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow-x: auto;
 }
 .criatura__aba {
-  display: inline-flex;
-  flex: 1 1 0;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  line-height: 1;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  white-space: nowrap;
-  color: var(--text-dim);
-  background: transparent;
-  border: 0;
-  padding: 6px 10px;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  transition: color .12s ease, background .12s ease;
+    display: inline-flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    white-space: nowrap;
+    color: var(--text-dim);
+    background: transparent;
+    border: 0;
+    padding: 6px 10px;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+        color 0.12s ease,
+        background 0.12s ease;
 
-  &--ativa { font-weight: 700; color: var(--bg); background: var(--accent); }
+    &--ativa {
+        font-weight: 700;
+        color: var(--bg);
+        background: var(--accent);
+    }
 }
 
 // Chip de classificação canônico (`docs/design/tema/_componentes.scss`) — copiado pra cá pelo
 // mesmo motivo do `.botao` acima (encapsulamento de estilo).
 .chip-classificacao {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--text-mute);
-  border: 1px solid var(--border-strong);
-  border-radius: 3px;
-  padding: 4px 9px;
-  flex: 0 0 auto;
-}
-
-.criatura {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-grid);
-  color: var(--text);
-
-  // Barra superior — mesma estrutura de `.ficha-visao__topo` (FichaVisualizacao).
-  &__topo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  &__rotulo-secao {
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
+    letter-spacing: 0.12em;
     color: var(--text-mute);
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    padding: 4px 9px;
     flex: 0 0 auto;
-  }
+}
 
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  // `align-items: stretch` (era `start`) faz a coluna de Atributos esticar até a mesma altura da
-  // de Identidade (que é sempre a mais alta) — mesmo mecanismo de `.ficha-visao__linha-colunas` na
-  // ficha de jogador, onde `.ficha-cartao--atributos` tem `flex: 1` pra aproveitar esse espaço.
-  &__linha-colunas {
-    display: grid;
-    grid-template-columns: 420px 260px minmax(0, 1fr);
-    align-items: stretch;
-    gap: 14px;
-    @include bp.tablet { grid-template-columns: 1fr; }
-  }
-
-  &__coluna {
+.criatura {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-    &--status { align-self: stretch; }
-  }
+    gap: var(--gap-grid);
+    color: var(--text);
 
-  // --- Identidade: avatar + designação ---
-  &__ident { display: flex; align-items: flex-start; gap: 16px; }
+    // Barra superior — mesma estrutura de `.ficha-visao__topo` (FichaVisualizacao).
+    &__topo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
 
-  // Tamanho e moldura alinhados ao avatar da ficha de jogador (`FichaVisualizacao.__avatar`):
-  // 100×100, borda de 2px na cor da ficha, e a mesma hachura tingida por `color-mix` (antes era
-  // um cinza neutro fixo — agora acompanha `--cor-ficha` igual ao jogador).
-  &__avatar {
-    width: 100px;
-    height: 100px;
-    flex: none;
-    position: relative;
-    border-radius: var(--radius-control);
-    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface-2));
-    background-image: repeating-linear-gradient(
-      135deg,
-      color-mix(
-          in srgb,
-          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
-          transparent
-        )
-        0 3px,
-      transparent 3px 9px
-    );
-    border: 2px solid var(--cor-ficha, var(--border-strong));
-    &--editavel { cursor: default; }
-  }
-  // Moldura própria pro crop — o `overflow: hidden` não pode ficar direto em `&__avatar`, porque
-  // `&__avatar-upload` (abaixo) usa offset negativo pra ficar meio pra fora da caixa de propósito.
-  // Sem essa moldura, a imagem com zoom (crop-pan) vazava por cima dos badges vizinhos (o "zoom
-  // quebrado" reportado pelo autor).
-  &__avatar-moldura {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    border-radius: calc(var(--radius-control) - 2px);
-  }
-  // `transform-origin: 0 0` — mesmo referencial de `estiloTransformEnquadramento` (crop-pan em
-  // `translate()+scale()` únicos, ver `shared/enquadramento-imagem.util.ts`).
-  &__avatar-imagem { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 0 0; }
-  // Input nativo invisível cobrindo o avatar por inteiro — clicar em qualquer ponto abre o picker
-  // nativo, sem precisar de <label> (mesmo padrão de `FichaVisualizacao.__cor-entrada`).
-  &__cor-entrada { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; cursor: pointer; }
-  &__avatar-upload {
-    position: absolute; right: -8px; bottom: -8px; z-index: 1;
-    display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
-    border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border-strong);
-    color: var(--text-dim); font-size: 9px; cursor: pointer;
-    &:hover { color: var(--accent); border-color: var(--accent-border); }
-  }
-  &__avatar-upload-entrada { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; cursor: pointer; }
-  &__avatar-remover {
-    position: absolute; right: 5px; top: 5px; z-index: 1;
-    display: flex; align-items: center; justify-content: center; width: 16px; height: 16px;
-    border-radius: 3px; background: color-mix(in srgb, var(--bg) 75%, transparent); border: 1px solid var(--border-strong);
-    color: var(--text-dim); font-size: 9px; padding: 0; cursor: pointer;
-    &:hover { color: var(--vida); border-color: var(--vida); }
-  }
-  // Selo de enquadramento (pan/zoom, ajuste pós-mockup) no canto superior esquerdo — único canto
-  // livre (upload no inferior direito, remover no superior direito).
-  &__avatar-enquadrar {
-    position: absolute; left: 5px; top: 5px; z-index: 1;
-    display: flex; align-items: center; justify-content: center; width: 16px; height: 16px;
-    border-radius: 3px; background: color-mix(in srgb, var(--bg) 75%, transparent); border: 1px solid var(--border-strong);
-    color: var(--text-dim); font-size: 9px; padding: 0; cursor: pointer;
-    &:hover { color: var(--accent); border-color: var(--accent-border); }
-  }
+    &__rotulo-secao {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+        flex: 0 0 auto;
+    }
 
-  &__ident-texto { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-  &__ident-rotulo { font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text-mute); }
-  &__designacao { margin: 0; font: 700 21px/1.15 var(--font-mono); color: var(--text); }
-  &__designacao--editavel { background: transparent; border: 0; padding: 0; cursor: pointer; text-align: left; &:hover { color: var(--accent); } }
-  &__designacao-entrada { min-width: 0; padding: 3px 8px; font: 700 19px var(--font-mono); color: var(--text); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); }
-  &__registro { font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-mute); }
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 
-  // --- Classificação (chips + lápis / grade de selects) ---
-  &__chips { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
-  &__chip {
-    display: inline-flex; align-items: center; gap: 7px;
-    font: 600 12px var(--font-mono); color: var(--text);
-    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
-    padding: 6px 11px;
-    // Ameaça é o destaque da coluna — mesmo accent do mockup.
-    &--ameaca { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); }
-  }
-  &__chip-info {
-    display: flex; align-items: center; justify-content: center; width: 13px; height: 13px;
-    font: 8px var(--font-mono); color: var(--text-dim);
-    border: 1px solid var(--border-strong); border-radius: 50%; cursor: help;
-  }
-  &__chips-rotulo { font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text-dim); }
-  &__classificacao-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: -6px; }
+    // `align-items: stretch` (era `start`) faz a coluna de Atributos esticar até a mesma altura da
+    // de Identidade (que é sempre a mais alta) — mesmo mecanismo de `.ficha-visao__linha-colunas` na
+    // ficha de jogador, onde `.ficha-cartao--atributos` tem `flex: 1` pra aproveitar esse espaço.
+    &__linha-colunas {
+        display: grid;
+        grid-template-columns: 420px 260px minmax(0, 1fr);
+        align-items: stretch;
+        gap: 14px;
+        @include bp.tablet {
+            grid-template-columns: 1fr;
+        }
+    }
 
-  // Lápis de seção — mesmo botão `.ficha-cartao__lapis` da ficha de jogador (padding em vez de
-  // caixa quadrada fixa), reusado em todo gatilho de "editar esta seção" da tela (Classificação,
-  // Atributos, Descrição/Natureza/Tema de Horror, Anotações).
-  &__lapis {
-    flex: none;
-    font-size: 12px;
-    line-height: 1;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 4px 7px;
-    cursor: pointer;
-    transition: color .15s ease, border-color .15s ease, background-color .15s ease;
-    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
-    // Estado ativo (m4-04b): só a Classificação usa — troca o ícone por "✕" pra cancelar a edição
-    // em vez de reabrir (mesmo idioma de "✕" já usado em Combos/Rolagens/Habilidades/Inventário).
-    &--ativo { color: var(--vida); border-color: var(--vida); }
-  }
+    &__coluna {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+        &--status {
+            align-self: stretch;
+        }
+    }
 
-  // --- VD / Tenacidade / Defesa ---
-  &__stats { display: grid; grid-template-columns: .8fr 1.4fr .8fr; gap: 9px; }
-  &__stats--info { display: flex; flex-wrap: wrap; gap: 9px; }
-  &__stat {
-    text-align: left;
-    &--info { min-width: 120px; }
-    &--flexivel { flex: 1 1 0; }
-    // Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (m4-04b, ajuste pós-mockup) —
-    // mais largo que os outros dois porque carrega até 4 tags; as tags quebram linha aqui dentro
-    // (não a fileira inteira) se a coluna ficar estreita.
-    &--deslocamento { flex: 2 1 260px; .criatura__tags { margin-top: 2px; } }
-  }
-  &__stat-botao {
-    display: block; width: 100%; padding: 0; text-align: left; font-family: var(--font-mono); font-size: 16px; font-weight: 700;
-    color: var(--text); background: transparent; border: 0; cursor: pointer; line-height: 1.2;
-    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
-    &--texto { font-size: 14px; }
-    &--tenacidade { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  }
-  &__stat-sufixo { font: 12px var(--font-mono); font-weight: 400; color: var(--text-mute); }
+    // --- Identidade: avatar + designação ---
+    &__ident {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
 
-  // --- Vida ---
-  &__vida { display: flex; flex-direction: column; align-items: center; gap: 11px; padding-top: 4px; }
-  &__vida-rotulo-linha { display: flex; align-items: center; gap: 6px; }
-  &__vida-rotulo {
-    font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .16em; color: var(--text-dim);
-    border-bottom: 1px dotted var(--border-strong); padding-bottom: 2px;
-  }
-  // Botão "Receber dano" (m7-17), ao lado do rótulo "Vida".
-  &__receber-dano {
-    display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
-    font-size: 10px; color: var(--text-dim); background: transparent;
-    border: 1px solid var(--border-strong); border-radius: 3px; cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    // Tamanho e moldura alinhados ao avatar da ficha de jogador (`FichaVisualizacao.__avatar`):
+    // 100×100, borda de 2px na cor da ficha, e a mesma hachura tingida por `color-mix` (antes era
+    // um cinza neutro fixo — agora acompanha `--cor-ficha` igual ao jogador).
+    &__avatar {
+        width: 100px;
+        height: 100px;
+        flex: none;
+        position: relative;
+        border-radius: var(--radius-control);
+        background-color: color-mix(
+            in srgb,
+            var(--cor-ficha, var(--border-strong)) 14%,
+            var(--surface-2)
+        );
+        background-image: repeating-linear-gradient(
+            135deg,
+            color-mix(
+                    in srgb,
+                    color-mix(
+                            in srgb,
+                            var(--cor-ficha, var(--border-strong)) 60%,
+                            var(--border-strong)
+                        )
+                        20%,
+                    transparent
+                )
+                0 3px,
+            transparent 3px 9px
+        );
+        border: 2px solid var(--cor-ficha, var(--border-strong));
+        &--editavel {
+            cursor: default;
+        }
+    }
+    // Moldura própria pro crop — o `overflow: hidden` não pode ficar direto em `&__avatar`, porque
+    // `&__avatar-upload` (abaixo) usa offset negativo pra ficar meio pra fora da caixa de propósito.
+    // Sem essa moldura, a imagem com zoom (crop-pan) vazava por cima dos badges vizinhos (o "zoom
+    // quebrado" reportado pelo autor).
+    &__avatar-moldura {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: calc(var(--radius-control) - 2px);
+    }
+    // `transform-origin: 0 0` — mesmo referencial de `estiloTransformEnquadramento` (crop-pan em
+    // `translate()+scale()` únicos, ver `shared/enquadramento-imagem.util.ts`).
+    &__avatar-imagem {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform-origin: 0 0;
+    }
+    // Input nativo invisível cobrindo o avatar por inteiro — clicar em qualquer ponto abre o picker
+    // nativo, sem precisar de <label> (mesmo padrão de `FichaVisualizacao.__cor-entrada`).
+    &__cor-entrada {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    &__avatar-upload {
+        position: absolute;
+        right: -8px;
+        bottom: -8px;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        color: var(--text-dim);
+        font-size: 9px;
+        cursor: pointer;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+    }
+    &__avatar-upload-entrada {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    &__avatar-remover {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--bg) 75%, transparent);
+        border: 1px solid var(--border-strong);
+        color: var(--text-dim);
+        font-size: 9px;
+        padding: 0;
+        cursor: pointer;
+        &:hover {
+            color: var(--vida);
+            border-color: var(--vida);
+        }
+    }
+    // Selo de enquadramento (pan/zoom, ajuste pós-mockup) no canto superior esquerdo — único canto
+    // livre (upload no inferior direito, remover no superior direito).
+    &__avatar-enquadrar {
+        position: absolute;
+        left: 5px;
+        top: 5px;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--bg) 75%, transparent);
+        border: 1px solid var(--border-strong);
+        color: var(--text-dim);
+        font-size: 9px;
+        padding: 0;
+        cursor: pointer;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+    }
 
-    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
+    &__ident-texto {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 0;
+    }
+    &__ident-rotulo {
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--text-mute);
+    }
+    &__designacao {
+        margin: 0;
+        font: 700 21px/1.15 var(--font-mono);
+        color: var(--text);
+    }
+    &__designacao--editavel {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+        &:hover {
+            color: var(--accent);
+        }
+    }
+    &__designacao-entrada {
+        min-width: 0;
+        padding: 3px 8px;
+        font: 700 19px var(--font-mono);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-control);
+    }
+    &__registro {
+        font: 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-mute);
+    }
 
-    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
-  }
-  &__vitalidade { display: flex; align-items: center; gap: 9px; }
-  &__passo {
-    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 20px; height: 20px;
-    font: 12px var(--font-mono); color: var(--text-dim); background: transparent;
-    border: 1px solid var(--border-strong); border-radius: 3px; cursor: pointer;
-    &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-border); }
-    &:disabled { cursor: not-allowed; opacity: .4; }
-  }
-  &__vitalidade-valor {
-    padding: 0; font: 700 19px var(--font-mono); text-align: center; color: var(--vida);
-    background: transparent; border: 0; cursor: pointer; &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
-  }
-  &__vitalidade-maxima {
-    padding: 0; font: 13px var(--font-mono); color: var(--text-mute);
-    background: transparent; border: 0; cursor: pointer; &:hover:not(:disabled) { color: var(--text-dim); } &:disabled { cursor: default; }
-  }
-  &__barra-vida { width: 100%; max-width: 240px; height: 3px; background: var(--bg); border-radius: 2px; overflow: hidden; }
-  &__barra-vida-preenchida { height: 100%; background: var(--vida); transition: width .2s ease; }
+    // --- Classificação (chips + lápis / grade de selects) ---
+    &__chips {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+    &__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font: 600 12px var(--font-mono);
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 6px 11px;
+        // Ameaça é o destaque da coluna — mesmo accent do mockup.
+        &--ameaca {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
+    }
+    &__chip-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 13px;
+        height: 13px;
+        font: 8px var(--font-mono);
+        color: var(--text-dim);
+        border: 1px solid var(--border-strong);
+        border-radius: 50%;
+        cursor: help;
+    }
+    &__chips-rotulo {
+        font: 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--text-dim);
+    }
+    &__classificacao-grade {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: -6px;
+    }
 
-  // --- Atributos ---
-  // Cabeçalho com régua entre título e lápis — mesma estrutura de `.ficha-cartao__cabecalho`
-  // (FichaVisualizacao); `justify-content: space-between` saiu porque a régua já ocupa o espaço
-  // sobrando entre título e lápis (mesmo racional de `&__topo`/`&__info-cabecalho`).
-  &__cartao-cabecalho { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
-  // Fonte monoespaçada (era `--font-sans`) — igual ao título canônico `.ficha-cartao__titulo`.
-  &__cartao-titulo { margin: 0; font: 700 15px var(--font-mono); color: var(--text); flex: 0 0 auto; }
-  &__cartao-regua { flex: 1; height: 1px; background: var(--border); }
+    // Lápis de seção — mesmo botão `.ficha-cartao__lapis` da ficha de jogador (padding em vez de
+    // caixa quadrada fixa), reusado em todo gatilho de "editar esta seção" da tela (Classificação,
+    // Atributos, Descrição/Natureza/Tema de Horror, Anotações).
+    &__lapis {
+        flex: none;
+        font-size: 12px;
+        line-height: 1;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 4px 7px;
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+        // Estado ativo (m4-04b): só a Classificação usa — troca o ícone por "✕" pra cancelar a edição
+        // em vez de reabrir (mesmo idioma de "✕" já usado em Combos/Rolagens/Habilidades/Inventário).
+        &--ativo {
+            color: var(--vida);
+            border-color: var(--vida);
+        }
+    }
 
-  // Alinhado a `.ficha-atributos__rotulo-grupo` (mesmo tracking-label, cor `--text-dim`).
-  &__atributos-grupo {
-    text-align: center; font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label);
-    color: var(--text-dim); margin-top: 2px;
-  }
-  // Grade + caixinha alinhadas a `.ficha-atributos--2col` da ficha de jogador (mesmo card de 2
-  // colunas — o 2col é a variante compacta que essa coluna sempre usou, só sem o nome).
-  &__atributos-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-  &__atributo-card {
-    position: relative;
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    padding: 7px 6px;
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control); text-align: center;
-    // O 5º do grupo não tem par: metade da largura, centralizado (como no mockup).
-    &--sozinho { grid-column: 1 / -1; width: calc(50% - 4px); margin: 0 auto; }
-  }
-  // Idêntico ao dadinho de rolar teste da ficha de jogador (`.ficha-atributo__rolar`).
-  &__atributo-rolar {
-    position: absolute; top: 4px; right: 4px;
-    display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
-    padding: 0; font-size: 13px; color: var(--text-mute); background: transparent; border: 1px solid transparent; border-radius: var(--radius-control);
-    cursor: pointer; transition: color .12s ease, border-color .12s ease, background .12s ease;
-    &:hover:not(:disabled), &:focus-visible { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
-    &:disabled { cursor: not-allowed; opacity: .5; }
-  }
-  // Idêntico a `.ficha-atributo__abrev`.
-  &__atributo-abrev {
-    display: inline-flex; align-items: center; gap: 4px;
-    font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute);
-    border-bottom: 1px dotted var(--border-strong); padding-bottom: 1px; cursor: help;
-  }
-  // Idêntico a `.ficha-atributos--2col .ficha-atributo__valor` (22px — a variante compacta, não os
-  // 26px do card cheio, já que esta grade sempre foi de 2 colunas).
-  &__atributo-valor { font-family: var(--font-mono); font-size: 22px; font-weight: 700; line-height: 1; color: var(--text); }
-  // Idêntico a `.ficha-atributos--2col .ficha-atributo__mod-valor`, mas com uma progressão de cor
-  // de 4 níveis em vez do binário anterior — Forte 100% `--accent` (cor do tema do **site**, não a
-  // `--cor-ficha` da criatura), Médio 75%/25%, Fraco 50%/50%, Frágil 100% cinza (regra do autor).
-  // O cinza é `--text-mute` (o cinza do tema) — ou, quando o próprio `--accent` selecionado nas
-  // configurações já é acromático (preset "Cinza"), a ponta preto/branco que `modificadorCorFraca()`
-  // calcula (`--cor-modificador-fraca`), porque misturar cinza com cinza não geraria gradiente nenhum.
-  &__atributo-efetivo {
-    --cor-modificador-forte: var(--accent);
-    --cor-modificador-fraca-efetiva: var(--cor-modificador-fraca, var(--text-mute));
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 1;
-    color: var(--cor-modificador-fraca-efetiva);
-    &[data-nivel='2'] { color: color-mix(in srgb, var(--cor-modificador-forte) 50%, var(--cor-modificador-fraca-efetiva)); }
-    &[data-nivel='3'] { color: color-mix(in srgb, var(--cor-modificador-forte) 75%, var(--cor-modificador-fraca-efetiva)); }
-    &[data-nivel='4'] { color: var(--cor-modificador-forte); }
-  }
+    // --- VD / Tenacidade / Defesa ---
+    &__stats {
+        display: grid;
+        grid-template-columns: 0.8fr 1.4fr 0.8fr;
+        gap: 9px;
+    }
+    &__stats--info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+    &__stat {
+        text-align: left;
+        &--info {
+            min-width: 120px;
+        }
+        &--flexivel {
+            flex: 1 1 0;
+        }
+        // Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (m4-04b, ajuste pós-mockup) —
+        // mais largo que os outros dois porque carrega até 4 tags; as tags quebram linha aqui dentro
+        // (não a fileira inteira) se a coluna ficar estreita.
+        &--deslocamento {
+            flex: 2 1 260px;
+            .criatura__tags {
+                margin-top: 2px;
+            }
+        }
+    }
+    &__stat-botao {
+        display: block;
+        width: 100%;
+        padding: 0;
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        line-height: 1.2;
+        &:hover:not(:disabled) {
+            color: var(--accent);
+        }
+        &:disabled {
+            cursor: default;
+        }
+        &--texto {
+            font-size: 14px;
+        }
+        &--tenacidade {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+    }
+    &__stat-sufixo {
+        font: 12px var(--font-mono);
+        font-weight: 400;
+        color: var(--text-mute);
+    }
 
-  // Salvar/Cancelar ocupam a largura toda, divididos igualmente (m4-04b, ajuste pós-mockup) — mais
-  // fácil de acertar em mesa do que os botões compactos do cabeçalho (`.ficha-cartao__acao`, que a
-  // ficha de jogador usa porque o dela cabe no próprio cabeçalho, sem precisar de destaque).
-  &__atributos-acoes { display: flex; gap: 6px; > .botao { flex: 1 1 0; } }
-  &__atributos-aviso { margin: 0; font: 10px/1.4 var(--font-mono); color: var(--vida); }
-  &__atributos-lista { display: grid; gap: 8px; }
-  &__atributo-linha {
-    display: grid; gap: 6px; padding: 8px 10px;
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control);
-  }
-  &__atributo-linha-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  &__atributo-linha-nome { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); }
-  // Barrinhas de sinal (4 níveis) — mesmo widget de `.atributo__modificador` do assistente de
-  // criação (`criar-criatura.page.scss`, m4-05), preservado sem mudança de interação.
-  &__atributo-modificadores { display: flex; justify-content: space-between; gap: 3px; }
-  &__atributo-modificador {
-    display: grid; grid-auto-flow: column; align-items: end; gap: 2px;
-    width: 100%; height: 22px; padding: 4px 5px;
-    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
-    cursor: pointer; transition: .15s ease;
-    i { display: block; width: 3px; background: var(--border-strong); border-radius: 1px; transition: .15s ease; }
-    i:nth-child(1) { height: 35%; background: var(--text-mute); }
-    i:nth-child(2) { height: 55%; }
-    i:nth-child(3) { height: 75%; }
-    i:nth-child(4) { height: 100%; }
-    &:hover:not(:disabled) { border-color: var(--accent-border); }
-    &:not([data-nivel='1']) i:nth-child(2) { background: var(--positive); }
-    &[data-nivel='3'] i:nth-child(3), &[data-nivel='4'] i:nth-child(3) { background: var(--warning); }
-    &[data-nivel='4'] i:nth-child(4) { background: var(--accent); }
-    &--ativo { border-color: var(--accent); background: var(--accent-dim); }
-    &:disabled { cursor: default; opacity: .6; }
-  }
+    // --- Vida ---
+    &__vida {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 11px;
+        padding-top: 4px;
+    }
+    &__vida-rotulo-linha {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    &__vida-rotulo {
+        font: 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--text-dim);
+        border-bottom: 1px dotted var(--border-strong);
+        padding-bottom: 2px;
+    }
+    // Botão "Receber dano" (m7-17), ao lado do rótulo "Vida".
+    &__receber-dano {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: 3px;
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
 
-  // --- Informações (cards da coluna de Status) ---
-  &__info-card {
-    padding: 14px 16px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-  }
-  &__info-cabecalho { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
-  &__info-titulo { margin: 0; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text); }
-  &__info-regua { flex: 1 1 0; height: 1px; background: var(--border); }
-  &__info-acao {
-    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none;
-    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control);
-    cursor: pointer; transition: .15s ease;
-    &:hover { color: var(--accent); border-color: var(--accent-border); }
-    &--remover:hover { color: var(--vida); border-color: var(--vida); }
-  }
-  &__info-duas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
-  &__info-texto { margin: 0; font: 14px/1.6 var(--font-sans); color: var(--text-dim); max-width: 78ch; }
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
 
-  // Gancho/Motivação: linha própria abaixo da descrição, separada por um filete (como no mockup).
-  &__info-nota {
-    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
-  }
-  &__info-nota-rotulo {
-    flex: none; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--text-mute);
-    &--destaque { color: var(--accent); }
-  }
-  &__info-nota-texto {
-    flex: 1 1 200px; min-width: 0; margin: 0; padding: 0; text-align: left;
-    font: 13px/1.5 var(--font-sans); color: var(--text-dim); background: transparent; border: 0; cursor: pointer;
-    &:hover:not(:disabled) { color: var(--text); } &:disabled { cursor: default; }
-  }
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+    &__vitalidade {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+    &__passo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        font: 12px var(--font-mono);
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: 3px;
+        cursor: pointer;
+        &:hover:not(:disabled) {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+    }
+    &__vitalidade-valor {
+        padding: 0;
+        font: 700 19px var(--font-mono);
+        text-align: center;
+        color: var(--vida);
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        &:hover:not(:disabled) {
+            color: var(--accent);
+        }
+        &:disabled {
+            cursor: default;
+        }
+    }
+    &__vitalidade-maxima {
+        padding: 0;
+        font: 13px var(--font-mono);
+        color: var(--text-mute);
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        &:hover:not(:disabled) {
+            color: var(--text-dim);
+        }
+        &:disabled {
+            cursor: default;
+        }
+    }
+    &__barra-vida {
+        width: 100%;
+        max-width: 240px;
+        height: 3px;
+        background: var(--bg);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    &__barra-vida-preenchida {
+        height: 100%;
+        background: var(--vida);
+        transition: width 0.2s ease;
+    }
 
-  &__tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  &__tag {
-    display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 11px;
-    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
-    &--vazia { border-style: dashed; }
-    &--larga { flex: 1 1 100%; }
-  }
-  &__tag-rotulo { font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); }
-  &__tag-valor {
-    padding: 0; font: 700 13px var(--font-mono); color: var(--text); background: transparent; border: 0; cursor: pointer;
-    text-align: left;
-    &:hover:not(:disabled) { color: var(--accent); } &:disabled { cursor: default; }
-  }
+    // --- Atributos ---
+    // Cabeçalho com régua entre título e lápis — mesma estrutura de `.ficha-cartao__cabecalho`
+    // (FichaVisualizacao); `justify-content: space-between` saiu porque a régua já ocupa o espaço
+    // sobrando entre título e lápis (mesmo racional de `&__topo`/`&__info-cabecalho`).
+    &__cartao-cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 4px;
+    }
+    // Fonte monoespaçada (era `--font-sans`) — igual ao título canônico `.ficha-cartao__titulo`.
+    &__cartao-titulo {
+        margin: 0;
+        font: 700 15px var(--font-mono);
+        color: var(--text);
+        flex: 0 0 auto;
+    }
+    &__cartao-regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 
-  // --- Controles genéricos (select/input/textarea) ---
-  &__select, &__entrada-texto, &__entrada-numero, &__entrada-textarea {
-    width: 100%; min-height: 34px; padding: 7px 10px; font: 13px var(--font-sans); color: var(--text);
-    background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-control); outline: 0;
-  }
-  &__select--stat, &__select--tag { min-height: 0; padding: 2px 6px; font-size: 12px; }
-  &__entrada-numero { width: 100px; font-family: var(--font-mono); font-weight: 700; }
-  &__entrada-numero--stat { width: 100%; min-height: 0; padding: 2px 6px; font-size: 16px; }
-  &__entrada-numero--vida { width: 84px; min-height: 0; padding: 2px 6px; font-size: 17px; text-align: center; }
-  &__entrada-numero--tag { width: 64px; min-height: 0; padding: 2px 6px; font-size: 12px; }
-  &__entrada-numero--linha { width: 64px; min-height: 0; padding: 2px 6px; font-size: 14px; text-align: center; }
-  &__entrada-texto--tag { min-height: 0; padding: 2px 6px; font-size: 12px; }
-  &__entrada-textarea { min-height: 76px; resize: vertical; font: 14px/1.6 var(--font-sans); }
+    // Alinhado a `.ficha-atributos__rotulo-grupo` (mesmo tracking-label, cor `--text-dim`).
+    &__atributos-grupo {
+        text-align: center;
+        font: 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+        margin-top: 2px;
+    }
+    // Grade + caixinha alinhadas a `.ficha-atributos--2col` da ficha de jogador (mesmo card de 2
+    // colunas — o 2col é a variante compacta que essa coluna sempre usou, só sem o nome).
+    &__atributos-grade {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+    &__atributo-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 7px 6px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        text-align: center;
+        // O 5º do grupo não tem par: metade da largura, centralizado (como no mockup).
+        &--sozinho {
+            grid-column: 1 / -1;
+            width: calc(50% - 4px);
+            margin: 0 auto;
+        }
+    }
+    // Idêntico ao dadinho de rolar teste da ficha de jogador (`.ficha-atributo__rolar`).
+    &__atributo-rolar {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        font-size: 13px;
+        color: var(--text-mute);
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.12s ease,
+            border-color 0.12s ease,
+            background 0.12s ease;
+        &:hover:not(:disabled),
+        &:focus-visible {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    }
+    // Idêntico a `.ficha-atributo__abrev`.
+    &__atributo-abrev {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        border-bottom: 1px dotted var(--border-strong);
+        padding-bottom: 1px;
+        cursor: help;
+    }
+    // Idêntico a `.ficha-atributos--2col .ficha-atributo__valor` (22px — a variante compacta, não os
+    // 26px do card cheio, já que esta grade sempre foi de 2 colunas).
+    &__atributo-valor {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--text);
+    }
+    // Idêntico a `.ficha-atributos--2col .ficha-atributo__mod-valor`, mas com uma progressão de cor
+    // de 4 níveis em vez do binário anterior — Forte 100% `--accent` (cor do tema do **site**, não a
+    // `--cor-ficha` da criatura), Médio 75%/25%, Fraco 50%/50%, Frágil 100% cinza (regra do autor).
+    // O cinza é `--text-mute` (o cinza do tema) — ou, quando o próprio `--accent` selecionado nas
+    // configurações já é acromático (preset "Cinza"), a ponta preto/branco que `modificadorCorFraca()`
+    // calcula (`--cor-modificador-fraca`), porque misturar cinza com cinza não geraria gradiente nenhum.
+    &__atributo-efetivo {
+        --cor-modificador-forte: var(--accent);
+        --cor-modificador-fraca-efetiva: var(--cor-modificador-fraca, var(--text-mute));
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--cor-modificador-fraca-efetiva);
+        &[data-nivel="2"] {
+            color: color-mix(
+                in srgb,
+                var(--cor-modificador-forte) 50%,
+                var(--cor-modificador-fraca-efetiva)
+            );
+        }
+        &[data-nivel="3"] {
+            color: color-mix(
+                in srgb,
+                var(--cor-modificador-forte) 75%,
+                var(--cor-modificador-fraca-efetiva)
+            );
+        }
+        &[data-nivel="4"] {
+            color: var(--cor-modificador-forte);
+        }
+    }
 
-  &__anotacoes {
-    width: 100%; min-height: 100px; padding: 10px 12px; font: 14px/1.6 var(--font-sans); color: var(--text);
-    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
-    resize: vertical; outline: 0;
-    &:focus { border-color: var(--accent); }
-  }
+    // Salvar/Cancelar ocupam a largura toda, divididos igualmente (m4-04b, ajuste pós-mockup) — mais
+    // fácil de acertar em mesa do que os botões compactos do cabeçalho (`.ficha-cartao__acao`, que a
+    // ficha de jogador usa porque o dela cabe no próprio cabeçalho, sem precisar de destaque).
+    &__atributos-acoes {
+        display: flex;
+        gap: 6px;
+        > .botao {
+            flex: 1 1 0;
+        }
+    }
+    &__atributos-aviso {
+        margin: 0;
+        font: 10px/1.4 var(--font-mono);
+        color: var(--vida);
+    }
+    &__atributos-lista {
+        display: grid;
+        gap: 8px;
+    }
+    &__atributo-linha {
+        display: grid;
+        gap: 6px;
+        padding: 8px 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+    &__atributo-linha-topo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    &__atributo-linha-nome {
+        font: 600 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+    }
+    // Barrinhas de sinal (4 níveis) — mesmo widget de `.atributo__modificador` do assistente de
+    // criação (`criar-criatura.page.scss`, m4-05), preservado sem mudança de interação.
+    &__atributo-modificadores {
+        display: flex;
+        justify-content: space-between;
+        gap: 3px;
+    }
+    &__atributo-modificador {
+        display: grid;
+        grid-auto-flow: column;
+        align-items: end;
+        gap: 2px;
+        width: 100%;
+        height: 22px;
+        padding: 4px 5px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition: 0.15s ease;
+        i {
+            display: block;
+            width: 3px;
+            background: var(--border-strong);
+            border-radius: 1px;
+            transition: 0.15s ease;
+        }
+        i:nth-child(1) {
+            height: 35%;
+            background: var(--text-mute);
+        }
+        i:nth-child(2) {
+            height: 55%;
+        }
+        i:nth-child(3) {
+            height: 75%;
+        }
+        i:nth-child(4) {
+            height: 100%;
+        }
+        &:hover:not(:disabled) {
+            border-color: var(--accent-border);
+        }
+        &:not([data-nivel="1"]) i:nth-child(2) {
+            background: var(--positive);
+        }
+        &[data-nivel="3"] i:nth-child(3),
+        &[data-nivel="4"] i:nth-child(3) {
+            background: var(--warning);
+        }
+        &[data-nivel="4"] i:nth-child(4) {
+            background: var(--accent);
+        }
+        &--ativo {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+        &:disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+    }
 
-  &__vazio { margin: 0; font: 12px var(--font-sans); color: var(--text-mute); }
+    // --- Informações (cards da coluna de Status) ---
+    &__info-card {
+        padding: 14px 16px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+    }
+    &__info-cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 12px;
+    }
+    &__info-titulo {
+        margin: 0;
+        font: 700 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--text);
+    }
+    &__info-regua {
+        flex: 1 1 0;
+        height: 1px;
+        background: var(--border);
+    }
+    &__info-acao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        flex: none;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition: 0.15s ease;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+        &--remover:hover {
+            color: var(--vida);
+            border-color: var(--vida);
+        }
+    }
+    &__info-duas {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+    }
+    &__info-texto {
+        margin: 0;
+        font: 14px/1.6 var(--font-sans);
+        color: var(--text-dim);
+        max-width: 78ch;
+    }
 
-  @include bp.mobile {
-    &__ident { flex-direction: column; align-items: flex-start; }
-    &__stats { grid-template-columns: 1fr; }
-    &__classificacao-grade { grid-template-columns: 1fr; }
-    &__info-duas { grid-template-columns: 1fr; }
-  }
+    // Gancho/Motivação: linha própria abaixo da descrição, separada por um filete (como no mockup).
+    &__info-nota {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+    &__info-nota-rotulo {
+        flex: none;
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--text-mute);
+        &--destaque {
+            color: var(--accent);
+        }
+    }
+    &__info-nota-texto {
+        flex: 1 1 200px;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        text-align: left;
+        font: 13px/1.5 var(--font-sans);
+        color: var(--text-dim);
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        &:hover:not(:disabled) {
+            color: var(--text);
+        }
+        &:disabled {
+            cursor: default;
+        }
+    }
+
+    &__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    &__tag {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 7px 11px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        &--vazia {
+            border-style: dashed;
+        }
+        &--larga {
+            flex: 1 1 100%;
+        }
+    }
+    &__tag-rotulo {
+        font: 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+    &__tag-valor {
+        padding: 0;
+        font: 700 13px var(--font-mono);
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        text-align: left;
+        &:hover:not(:disabled) {
+            color: var(--accent);
+        }
+        &:disabled {
+            cursor: default;
+        }
+    }
+
+    // --- Controles genéricos (select/input/textarea) ---
+    &__select,
+    &__entrada-texto,
+    &__entrada-numero,
+    &__entrada-textarea {
+        width: 100%;
+        min-height: 34px;
+        padding: 7px 10px;
+        font: 13px var(--font-sans);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-control);
+        outline: 0;
+    }
+    &__select--stat,
+    &__select--tag {
+        min-height: 0;
+        padding: 2px 6px;
+        font-size: 12px;
+    }
+    &__entrada-numero {
+        width: 100px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+    }
+    &__entrada-numero--stat {
+        width: 100%;
+        min-height: 0;
+        padding: 2px 6px;
+        font-size: 16px;
+    }
+    &__entrada-numero--vida {
+        width: 84px;
+        min-height: 0;
+        padding: 2px 6px;
+        font-size: 17px;
+        text-align: center;
+    }
+    &__entrada-numero--tag {
+        width: 64px;
+        min-height: 0;
+        padding: 2px 6px;
+        font-size: 12px;
+    }
+    &__entrada-numero--linha {
+        width: 64px;
+        min-height: 0;
+        padding: 2px 6px;
+        font-size: 14px;
+        text-align: center;
+    }
+    &__entrada-texto--tag {
+        min-height: 0;
+        padding: 2px 6px;
+        font-size: 12px;
+    }
+    &__entrada-textarea {
+        min-height: 76px;
+        resize: vertical;
+        font: 14px/1.6 var(--font-sans);
+    }
+
+    &__anotacoes {
+        width: 100%;
+        min-height: 100px;
+        padding: 10px 12px;
+        font: 14px/1.6 var(--font-sans);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        resize: vertical;
+        outline: 0;
+        &:focus {
+            border-color: var(--accent);
+        }
+    }
+
+    &__vazio {
+        margin: 0;
+        font: 12px var(--font-sans);
+        color: var(--text-mute);
+    }
+
+    @include bp.mobile {
+        &__ident {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        &__stats {
+            grid-template-columns: 1fr;
+        }
+        &__classificacao-grade {
+            grid-template-columns: 1fr;
+        }
+        &__info-duas {
+            grid-template-columns: 1fr;
+        }
+    }
 }
 
 // Toggle "Rolagem oculta" (mesma receita visual de `.ficha-rolagem-oculta`,
 // `ficha-rolagens-painel.component.scss`) — copiado pra cá pelo mesmo motivo do `.botao` acima:
 // encapsulamento de estilos não alcança o componente que hospeda o botão do card de criatura.
 .ficha-rolagem-oculta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background: var(--surface-2);
-  color: var(--text-dim);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  cursor: pointer;
-  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--surface-2);
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 
-  app-icone { font-size: 13px; }
+    app-icone {
+        font-size: 13px;
+    }
 
-  &:hover { border-color: var(--accent-border); color: var(--text); }
+    &:hover {
+        border-color: var(--accent-border);
+        color: var(--text);
+    }
 
-  &--ativa { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
+    &--ativa {
+        color: var(--accent);
+        border-color: var(--accent-border);
+        background: var(--accent-dim);
+    }
 
-  @include bp.mobile { min-height: bp.$alvo-toque; }
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
 }
 
 // `.dialogo` canônico (copiado de `visualizar-criatura.page.scss` — mesmo motivo do `.botao`
 // acima) — hospeda a confirmação de "tornar rolagens públicas".
 .dialogo {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 60px 20px;
-  overflow-y: auto;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+    overflow-y: auto;
 
-  @include bp.mobile { padding: 24px 12px; align-items: center; }
+    @include bp.mobile {
+        padding: 24px 12px;
+        align-items: center;
+    }
 
-  &__fundo { position: fixed; inset: 0; background: rgb(0 0 0 / 55%); border: 0; cursor: default; }
+    &__fundo {
+        position: fixed;
+        inset: 0;
+        background: rgb(0 0 0 / 55%);
+        border: 0;
+        cursor: default;
+    }
 
-  &__painel {
-    position: relative; z-index: 1; width: 100%; max-width: 460px;
-    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-card);
-    padding: var(--pad-card); box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-  }
+    &__painel {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 460px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
+        box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+    }
 
-  &__titulo { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); font-size: 13px; font-weight: 600; color: var(--text); margin: 0; }
+    &__titulo {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
 
-  &__fechar {
-    flex: 0 0 auto; width: 26px; height: 26px; font-size: 13px; color: var(--text-dim);
-    background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control);
-    cursor: pointer; transition: color .15s ease, border-color .15s ease, background-color .15s ease;
-    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
-    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
-  }
+    &__fechar {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
 }
 
 .revelar-rolagem {
-  &__aviso { margin: 0 0 16px; font: 13px/1.6 var(--font-sans); color: var(--text-dim); }
-  &__acoes { display: flex; gap: 10px; }
-  &__acao { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    &__aviso {
+        margin: 0 0 16px;
+        font: 13px/1.6 var(--font-sans);
+        color: var(--text-dim);
+    }
+    &__acoes {
+        display: flex;
+        gap: 10px;
+    }
+    &__acao {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
 }

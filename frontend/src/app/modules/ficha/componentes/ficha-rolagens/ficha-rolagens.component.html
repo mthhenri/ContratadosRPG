@@ -1,312 +1,495 @@
 <div class="ficha-rol">
-  <!-- Rolagem avulsa (m3-31): digite e role na hora, sem salvar preset nem gastar energia. Gated
+    <!-- Rolagem avulsa (m3-31): digite e role na hora, sem salvar preset nem gastar energia. Gated
        por `podeRolar()` (m3-51) — visualizador só-acesso não rola. -->
-  @if (podeRolar()) {
-  <div class="ficha-rol__rapida">
-    <span class="ficha-rol__rotulo-linha">
-      <span class="ficha-rol__rotulo">Rolagem rápida</span>
-      <app-guia-formula #guiaExterna />
-    </span>
-    <div class="ficha-rol__rapida-linha">
-      <input
-        class="ficha-rol__entrada ficha-rol__entrada--mono"
-        type="text"
-        [formControl]="rapida"
-        placeholder="Ex.: 2d6 + FOR [Físico]  ·  LUTd20kh1cm1 + PROF  ·  CORPO  ·  FURTIVO"
-        aria-label="Fórmula da rolagem rápida"
-        (keydown.enter)="rolarRapida()"
-      />
-      <button
-        type="button"
-        class="ficha-rol__btn ficha-rol__btn--rolar"
-        [disabled]="!rapida.value.trim() || rapidaValida() === false"
-        (click)="rolarRapida()"
-      >
-        Rolar
-      </button>
-    </div>
-    @if (rapidaValida() === false) {
-      <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula não reconhecida. Veja o guia (?) ao lado.</span>
-    }
-  </div>
-  }
-
-  @if (editavel()) {
-    <button type="button" class="ficha-rol__novo" (click)="abrirNovo()">+ Novo preset</button>
-  }
-
-  @if (vazio()) {
-    <p class="ficha-rol__vazio">Nenhum preset de rolagem salvo.</p>
-  }
-
-  <div class="ficha-rol__lista" appOverflowFade>
-    @for (preset of presets(); track preset.indice) {
-      <article class="ficha-rol__preset">
-        <div class="ficha-rol__preset-topo">
-          <div class="ficha-rol__preset-id">
-            <button
-              type="button"
-              class="ficha-rol__mini-btn ficha-rol__mini-btn--chevron"
-              [class.ficha-rol__mini-btn--aberto]="presetsAbertos().has(preset.indice)"
-              [appTooltip]="presetsAbertos().has(preset.indice) ? 'Fechar' : 'Abrir'"
-              [attr.aria-label]="(presetsAbertos().has(preset.indice) ? 'Fechar' : 'Abrir') + ' ' + preset.nome"
-              (click)="alternarAberto(preset.indice)"
-            >
-              <app-icone [nome]="'chevron'" />
-            </button>
-            @if (preset.encadeado) {
-              <span class="ficha-rol__cadeia" [appTooltip]="'Encadeado — vários passos'">⛓</span>
-            }
-            <span class="ficha-rol__preset-nome">{{ preset.nome }}</span>
-          </div>
-          @if (editavel()) {
-            <div class="ficha-rol__preset-acoes">
-              @if (indiceRemovendo() === preset.indice) {
-                <span class="ficha-rol__remover">
-                  <button type="button" class="ficha-rol__mini-btn ficha-rol__mini-btn--perigo" [appTooltip]="'Confirmar remoção'" aria-label="Confirmar remoção do preset" (click)="confirmarRemocao(preset.indice)">✓</button>
-                  <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Cancelar'" aria-label="Cancelar remoção do preset" (click)="cancelarRemocao()">✕</button>
-                </span>
-              } @else {
-                <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Duplicar'" aria-label="Duplicar preset" (click)="duplicar(preset.indice)">
-                  <app-icone [nome]="'copiar'" />
+    @if (podeRolar()) {
+        <div class="ficha-rol__rapida">
+            <span class="ficha-rol__rotulo-linha">
+                <span class="ficha-rol__rotulo">Rolagem rápida</span>
+                <app-guia-formula #guiaExterna />
+            </span>
+            <div class="ficha-rol__rapida-linha">
+                <input
+                    class="ficha-rol__entrada ficha-rol__entrada--mono"
+                    type="text"
+                    [formControl]="rapida"
+                    placeholder="Ex.: 2d6 + FOR [Físico]  ·  LUTd20kh1cm1 + PROF  ·  CORPO  ·  FURTIVO"
+                    aria-label="Fórmula da rolagem rápida"
+                    (keydown.enter)="rolarRapida()"
+                />
+                <button
+                    type="button"
+                    class="ficha-rol__btn ficha-rol__btn--rolar"
+                    [disabled]="!rapida.value.trim() || rapidaValida() === false"
+                    (click)="rolarRapida()"
+                >
+                    Rolar
                 </button>
-                <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Editar'" aria-label="Editar preset" (click)="editar(preset.indice)">✎</button>
-                <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Remover'" aria-label="Remover preset" (click)="removerPedido(preset.indice)">✕</button>
-              }
             </div>
-          }
+            @if (rapidaValida() === false) {
+                <span class="ficha-rol__dica ficha-rol__dica--erro"
+                    >Fórmula não reconhecida. Veja o guia (?) ao lado.</span
+                >
+            }
         </div>
+    }
 
-        @if (presetsAbertos().has(preset.indice)) {
-        @if (preset.descricao) {
-          <p class="ficha-rol__preset-desc" [appTooltip]="preset.descricao">{{ preset.descricao }}</p>
-        }
+    @if (editavel()) {
+        <button type="button" class="ficha-rol__novo" (click)="abrirNovo()">+ Novo preset</button>
+    }
 
-        <div class="ficha-rol__passos">
-          @for (passo of preset.plano.passos; track $index; let indicePasso = $index) {
-            <div class="ficha-rol__passo" [class.ficha-rol__passo--invalido]="!passo.interpretacao.valida && !somenteEnergia(passo)">
-              <div class="ficha-rol__passo-linha">
-                @if (preset.encadeado) {
-                  <span class="ficha-rol__passo-nome">{{ passo.nome }}</span>
-                }
-                @if (somenteEnergia(passo)) {
-                  <span
-                    class="ficha-rol__passo-formula ficha-rol__passo-formula--energia"
-                    [appTooltip]="'Sem fórmula — gasta a Energia das habilidades vinculadas de uma vez, sem rolar'"
-                  >
-                    só energia
-                  </span>
-                  @if (podeRolar()) {
-                    <button
-                      type="button"
-                      class="ficha-rol__btn ficha-rol__btn--gastar"
-                      [disabled]="passo.habilidadesVinculadas.length === 0"
-                      [appTooltip]="'Gastar a energia das habilidades vinculadas'"
-                      (click)="gastarEnergiaDoPasso(preset, indicePasso)"
-                    >
-                      Gastar
-                    </button>
-                  }
-                } @else {
-                  <span class="ficha-rol__passo-formula" [appTooltip]="passo.formula">{{ passo.formula }}</span>
-                  @if (!passo.interpretacao.valida) {
-                    <span class="ficha-rol__aviso" [appTooltip]="'Fórmula não reconhecida — não é possível rolar'">!</span>
-                  }
-                  @if (podeRolar()) {
-                    <button
-                      type="button"
-                      class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
-                      [disabled]="!passo.interpretacao.valida"
-                      [appTooltip]="'Rolar'"
-                      [attr.aria-label]="'Rolar ' + (preset.encadeado ? passo.nome + ' — ' : '') + preset.nome"
-                      (click)="rolarPassoDoPreset(preset, indicePasso)"
-                    >
-                      <app-icone [nome]="'d20'" />
-                    </button>
-                    @if (passo.critico) {
-                      <button
-                        type="button"
-                        class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
-                        [disabled]="!passo.interpretacao.valida"
-                        [appTooltip]="'Rolar crítico — dobra o dano'"
-                        [attr.aria-label]="'Rolar crítico (dobra o dano) — ' + (preset.encadeado ? passo.nome + ' — ' : '') + preset.nome"
-                        (click)="rolarPassoDoPreset(preset, indicePasso, true)"
-                      >
-                        <app-icone [nome]="'d20'" />
-                      </button>
+    @if (vazio()) {
+        <p class="ficha-rol__vazio">Nenhum preset de rolagem salvo.</p>
+    }
+
+    <div class="ficha-rol__lista" appOverflowFade>
+        @for (preset of presets(); track preset.indice) {
+            <article class="ficha-rol__preset">
+                <div class="ficha-rol__preset-topo">
+                    <div class="ficha-rol__preset-id">
+                        <button
+                            type="button"
+                            class="ficha-rol__mini-btn ficha-rol__mini-btn--chevron"
+                            [class.ficha-rol__mini-btn--aberto]="
+                                presetsAbertos().has(preset.indice)
+                            "
+                            [appTooltip]="presetsAbertos().has(preset.indice) ? 'Fechar' : 'Abrir'"
+                            [attr.aria-label]="
+                                (presetsAbertos().has(preset.indice) ? 'Fechar' : 'Abrir') +
+                                ' ' +
+                                preset.nome
+                            "
+                            (click)="alternarAberto(preset.indice)"
+                        >
+                            <app-icone [nome]="'chevron'" />
+                        </button>
+                        @if (preset.encadeado) {
+                            <span
+                                class="ficha-rol__cadeia"
+                                [appTooltip]="'Encadeado — vários passos'"
+                                >⛓</span
+                            >
+                        }
+                        <span class="ficha-rol__preset-nome">{{ preset.nome }}</span>
+                    </div>
+                    @if (editavel()) {
+                        <div class="ficha-rol__preset-acoes">
+                            @if (indiceRemovendo() === preset.indice) {
+                                <span class="ficha-rol__remover">
+                                    <button
+                                        type="button"
+                                        class="ficha-rol__mini-btn ficha-rol__mini-btn--perigo"
+                                        [appTooltip]="'Confirmar remoção'"
+                                        aria-label="Confirmar remoção do preset"
+                                        (click)="confirmarRemocao(preset.indice)"
+                                    >
+                                        ✓
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="ficha-rol__mini-btn"
+                                        [appTooltip]="'Cancelar'"
+                                        aria-label="Cancelar remoção do preset"
+                                        (click)="cancelarRemocao()"
+                                    >
+                                        ✕
+                                    </button>
+                                </span>
+                            } @else {
+                                <button
+                                    type="button"
+                                    class="ficha-rol__mini-btn"
+                                    [appTooltip]="'Duplicar'"
+                                    aria-label="Duplicar preset"
+                                    (click)="duplicar(preset.indice)"
+                                >
+                                    <app-icone [nome]="'copiar'" />
+                                </button>
+                                <button
+                                    type="button"
+                                    class="ficha-rol__mini-btn"
+                                    [appTooltip]="'Editar'"
+                                    aria-label="Editar preset"
+                                    (click)="editar(preset.indice)"
+                                >
+                                    ✎
+                                </button>
+                                <button
+                                    type="button"
+                                    class="ficha-rol__mini-btn"
+                                    [appTooltip]="'Remover'"
+                                    aria-label="Remover preset"
+                                    (click)="removerPedido(preset.indice)"
+                                >
+                                    ✕
+                                </button>
+                            }
+                        </div>
                     }
-                  }
-                }
-              </div>
-
-              @if (passo.habilidadesVinculadas.length) {
-                <div class="ficha-rol__passo-vinculos">
-                  @for (vinculo of vinculosAgrupados(passo.habilidadesVinculadas); track vinculo.nome) {
-                    <span class="ficha-rol__vinculo" [appTooltip]="descricaoDe(vinculo.nome)">
-                      {{ vinculo.nome }}@if (vinculo.quantidade > 1) {<span class="ficha-rol__vinculo-qtd"> ×{{ vinculo.quantidade }}</span>}
-                    </span>
-                  }
-                  <span class="ficha-rol__energia" [appTooltip]="'Energia gasta ao rolar este passo'">
-                    − {{ passo.energiaGasta }}{{ passo.energiaVariavel ? ' + X' : '' }} E
-                  </span>
-                  @if (passo.energiaVariavel) {
-                    <label class="ficha-rol__energia-var">
-                      <span class="ficha-rol__energia-var-rotulo">X</span>
-                      <input
-                        #campoEnergia
-                        class="ficha-rol__entrada ficha-rol__entrada--curta"
-                        type="number"
-                        min="0"
-                        inputmode="numeric"
-                        [value]="energiaVariavelDe(preset.indice, indicePasso)"
-                        (input)="definirEnergiaVariavel(preset.indice, indicePasso, campoEnergia.value)"
-                      />
-                    </label>
-                  }
                 </div>
-              }
-            </div>
-          }
-        </div>
-        }
-      </article>
-    }
-  </div>
 
-  <!-- Formulário de novo/editar preset (m3-38): abre num dialog — a coluna de Status é estreita
+                @if (presetsAbertos().has(preset.indice)) {
+                    @if (preset.descricao) {
+                        <p class="ficha-rol__preset-desc" [appTooltip]="preset.descricao">
+                            {{ preset.descricao }}
+                        </p>
+                    }
+
+                    <div class="ficha-rol__passos">
+                        @for (
+                            passo of preset.plano.passos;
+                            track $index;
+                            let indicePasso = $index
+                        ) {
+                            <div
+                                class="ficha-rol__passo"
+                                [class.ficha-rol__passo--invalido]="
+                                    !passo.interpretacao.valida && !somenteEnergia(passo)
+                                "
+                            >
+                                <div class="ficha-rol__passo-linha">
+                                    @if (preset.encadeado) {
+                                        <span class="ficha-rol__passo-nome">{{ passo.nome }}</span>
+                                    }
+                                    @if (somenteEnergia(passo)) {
+                                        <span
+                                            class="ficha-rol__passo-formula ficha-rol__passo-formula--energia"
+                                            [appTooltip]="'Sem fórmula — gasta a Energia das habilidades vinculadas de uma vez, sem rolar'"
+                                        >
+                                            só energia
+                                        </span>
+                                        @if (podeRolar()) {
+                                            <button
+                                                type="button"
+                                                class="ficha-rol__btn ficha-rol__btn--gastar"
+                                                [disabled]="
+                                                    passo.habilidadesVinculadas.length === 0
+                                                "
+                                                [appTooltip]="'Gastar a energia das habilidades vinculadas'"
+                                                (click)="gastarEnergiaDoPasso(preset, indicePasso)"
+                                            >
+                                                Gastar
+                                            </button>
+                                        }
+                                    } @else {
+                                        <span
+                                            class="ficha-rol__passo-formula"
+                                            [appTooltip]="passo.formula"
+                                            >{{ passo.formula }}</span
+                                        >
+                                        @if (!passo.interpretacao.valida) {
+                                            <span
+                                                class="ficha-rol__aviso"
+                                                [appTooltip]="'Fórmula não reconhecida — não é possível rolar'"
+                                                >!</span
+                                            >
+                                        }
+                                        @if (podeRolar()) {
+                                            <button
+                                                type="button"
+                                                class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
+                                                [disabled]="!passo.interpretacao.valida"
+                                                [appTooltip]="'Rolar'"
+                                                [attr.aria-label]="
+                                                    'Rolar ' +
+                                                    (preset.encadeado ? passo.nome + ' — ' : '') +
+                                                    preset.nome
+                                                "
+                                                (click)="rolarPassoDoPreset(preset, indicePasso)"
+                                            >
+                                                <app-icone [nome]="'d20'" />
+                                            </button>
+                                            @if (passo.critico) {
+                                                <button
+                                                    type="button"
+                                                    class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
+                                                    [disabled]="!passo.interpretacao.valida"
+                                                    [appTooltip]="'Rolar crítico — dobra o dano'"
+                                                    [attr.aria-label]="
+                                                        'Rolar crítico (dobra o dano) — ' +
+                                                        (preset.encadeado
+                                                            ? passo.nome + ' — '
+                                                            : '') +
+                                                        preset.nome
+                                                    "
+                                                    (click)="
+                                                        rolarPassoDoPreset(
+                                                            preset,
+                                                            indicePasso,
+                                                            true
+                                                        )
+                                                    "
+                                                >
+                                                    <app-icone [nome]="'d20'" />
+                                                </button>
+                                            }
+                                        }
+                                    }
+                                </div>
+
+                                @if (passo.habilidadesVinculadas.length) {
+                                    <div class="ficha-rol__passo-vinculos">
+                                        @for (
+                                            vinculo of vinculosAgrupados(
+                                                passo.habilidadesVinculadas
+                                            );
+                                            track vinculo.nome
+                                        ) {
+                                            <span
+                                                class="ficha-rol__vinculo"
+                                                [appTooltip]="descricaoDe(vinculo.nome)"
+                                            >
+                                                {{ vinculo.nome }}
+                                                @if (vinculo.quantidade > 1) {
+                                                    <span class="ficha-rol__vinculo-qtd">
+                                                        ×{{ vinculo.quantidade }}</span
+                                                    >
+                                                }
+                                            </span>
+                                        }
+                                        <span
+                                            class="ficha-rol__energia"
+                                            [appTooltip]="'Energia gasta ao rolar este passo'"
+                                        >
+                                            − {{ passo.energiaGasta
+                                            }}{{ passo.energiaVariavel ? " + X" : "" }} E
+                                        </span>
+                                        @if (passo.energiaVariavel) {
+                                            <label class="ficha-rol__energia-var">
+                                                <span class="ficha-rol__energia-var-rotulo">X</span>
+                                                <input
+                                                    #campoEnergia
+                                                    class="ficha-rol__entrada ficha-rol__entrada--curta"
+                                                    type="number"
+                                                    min="0"
+                                                    inputmode="numeric"
+                                                    [value]="
+                                                        energiaVariavelDe(
+                                                            preset.indice,
+                                                            indicePasso
+                                                        )
+                                                    "
+                                                    (input)="
+                                                        definirEnergiaVariavel(
+                                                            preset.indice,
+                                                            indicePasso,
+                                                            campoEnergia.value
+                                                        )
+                                                    "
+                                                />
+                                            </label>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+        }
+    </div>
+
+    <!-- Formulário de novo/editar preset (m3-38): abre num dialog — a coluna de Status é estreita
        demais pro formulário completo (nome, fórmula, habilidades por passo, encadeamento). -->
-  <p-dialog
-    [visible]="indiceEmEdicao() !== null"
-    [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
-    [dismissableMask]="true"
-    [appendTo]="'body'"
-    [style]="{ width: '560px' }"
-    [breakpoints]="{ '600px': '95vw' }"
-    [header]="indiceEmEdicao() === -1 ? 'Novo preset' : 'Editar preset'"
-    styleClass="ficha-rol__dialogo"
-    (onHide)="cancelarEdicao()"
-  >
-    @if (indiceEmEdicao() !== null) {
-      <ng-container [ngTemplateOutlet]="formTpl" />
-    }
-  </p-dialog>
+    <p-dialog
+        [visible]="indiceEmEdicao() !== null"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [dismissableMask]="true"
+        [appendTo]="'body'"
+        [style]="{ width: '560px' }"
+        [breakpoints]="{ '600px': '95vw' }"
+        [header]="indiceEmEdicao() === -1 ? 'Novo preset' : 'Editar preset'"
+        styleClass="ficha-rol__dialogo"
+        (onHide)="cancelarEdicao()"
+    >
+        @if (indiceEmEdicao() !== null) {
+            <ng-container [ngTemplateOutlet]="formTpl" />
+        }
+    </p-dialog>
 </div>
 
 <ng-template #formTpl>
-  <form class="ficha-rol__form" [formGroup]="form" (ngSubmit)="confirmar()">
-    <div class="ficha-rol__form-linha">
-      <label class="ficha-rol__campo ficha-rol__campo--nome">
-        <span class="ficha-rol__rotulo">Nome</span>
-        <input class="ficha-rol__entrada" type="text" formControlName="nome" placeholder="Ex.: Ataque (Luta)" required />
-      </label>
-      <label class="ficha-rol__critico-check" [appTooltip]="'Ganha o botão \'Rolar crítico\' — dobra o dano'">
-        <input type="checkbox" formControlName="critico" />
-        <span>Critável</span>
-      </label>
-    </div>
-
-    <div class="ficha-rol__campo">
-      <span class="ficha-rol__rotulo-linha">
-        <span class="ficha-rol__rotulo">Fórmula</span>
-        <app-guia-formula [aoClicar]="abrirGuiaExterna" />
-      </span>
-      <input
-        class="ficha-rol__entrada ficha-rol__entrada--mono"
-        type="text"
-        formControlName="formula"
-        placeholder="Ex.: LUTd20kh1 + PROF  ·  2d6 [Balístico]  ·  4d6kh1!"
-      />
-      @if (formulaAtualValida() === false) {
-        <span class="ficha-rol__dica ficha-rol__dica--erro">Fórmula não reconhecida. Veja o guia (?) ao lado.</span>
-      } @else if (precisaFormulaOuHabilidade()) {
-        <span class="ficha-rol__dica">Deixe em branco pra um preset só de habilidades — o botão só gasta a Energia, sem rolar.</span>
-      }
-    </div>
-
-    <label class="ficha-rol__campo">
-      <span class="ficha-rol__rotulo">Descrição <span class="ficha-rol__rotulo-aux">(opcional)</span></span>
-      <input class="ficha-rol__entrada" type="text" formControlName="descricao" placeholder="Nota sobre o preset…" />
-    </label>
-
-    <ng-container
-      [ngTemplateOutlet]="habTpl"
-      [ngTemplateOutletContext]="{ controle: form.controls.habilidades, sufixo: 'primária' }"
-    />
-
-    <div class="ficha-rol__campo" formArrayName="seguintes">
-      <span class="ficha-rol__rotulo-linha">
-        <span class="ficha-rol__rotulo">
-          Passos seguintes <span class="ficha-rol__rotulo-aux">(encadeamento)</span>
-        </span>
-        <button type="button" class="ficha-rol__add-passo" (click)="adicionarPasso()">+ Passo</button>
-      </span>
-      @for (passoCtrl of seguintes.controls; track $index) {
-        <div class="ficha-rol__passo-edit" [formGroupName]="$index">
-          <div class="ficha-rol__passo-edit-linha">
-            <input class="ficha-rol__entrada ficha-rol__entrada--nome" type="text" formControlName="nome" placeholder="Nome (ex.: Dano)" required />
-            <label class="ficha-rol__critico-check ficha-rol__critico-check--mini" [appTooltip]="'Dobra o dano'">
-              <input type="checkbox" formControlName="critico" />
-              <span>Critável</span>
+    <form class="ficha-rol__form" [formGroup]="form" (ngSubmit)="confirmar()">
+        <div class="ficha-rol__form-linha">
+            <label class="ficha-rol__campo ficha-rol__campo--nome">
+                <span class="ficha-rol__rotulo">Nome</span>
+                <input
+                    class="ficha-rol__entrada"
+                    type="text"
+                    formControlName="nome"
+                    placeholder="Ex.: Ataque (Luta)"
+                    required
+                />
             </label>
-            <button type="button" class="ficha-rol__mini-btn" [appTooltip]="'Remover passo'" aria-label="Remover passo" (click)="removerPasso($index)">✕</button>
-          </div>
-          <input class="ficha-rol__entrada ficha-rol__entrada--mono" type="text" formControlName="formula" placeholder="Fórmula (ex.: 2d6 + FOR [Físico])" />
-          <ng-container
-            [ngTemplateOutlet]="habTpl"
-            [ngTemplateOutletContext]="{ controle: passoCtrl.controls.habilidades, sufixo: 'passo' }"
-          />
+            <label
+                class="ficha-rol__critico-check"
+                [appTooltip]="'Ganha o botão \'Rolar crítico\' — dobra o dano'"
+            >
+                <input type="checkbox" formControlName="critico" />
+                <span>Critável</span>
+            </label>
         </div>
-      }
-    </div>
 
-    <div class="ficha-rol__form-acoes">
-      <button type="submit" class="ficha-rol__btn ficha-rol__btn--principal" [disabled]="form.invalid || precisaFormulaOuHabilidade()">Salvar</button>
-      <button type="button" class="ficha-rol__btn ficha-rol__btn--secundario" (click)="cancelarEdicao()">Cancelar</button>
-    </div>
-  </form>
+        <div class="ficha-rol__campo">
+            <span class="ficha-rol__rotulo-linha">
+                <span class="ficha-rol__rotulo">Fórmula</span>
+                <app-guia-formula [aoClicar]="abrirGuiaExterna" />
+            </span>
+            <input
+                class="ficha-rol__entrada ficha-rol__entrada--mono"
+                type="text"
+                formControlName="formula"
+                placeholder="Ex.: LUTd20kh1 + PROF  ·  2d6 [Balístico]  ·  4d6kh1!"
+            />
+            @if (formulaAtualValida() === false) {
+                <span class="ficha-rol__dica ficha-rol__dica--erro"
+                    >Fórmula não reconhecida. Veja o guia (?) ao lado.</span
+                >
+            } @else if (precisaFormulaOuHabilidade()) {
+                <span class="ficha-rol__dica"
+                    >Deixe em branco pra um preset só de habilidades — o botão só gasta a Energia,
+                    sem rolar.</span
+                >
+            }
+        </div>
+
+        <label class="ficha-rol__campo">
+            <span class="ficha-rol__rotulo"
+                >Descrição <span class="ficha-rol__rotulo-aux">(opcional)</span></span
+            >
+            <input
+                class="ficha-rol__entrada"
+                type="text"
+                formControlName="descricao"
+                placeholder="Nota sobre o preset…"
+            />
+        </label>
+
+        <ng-container
+            [ngTemplateOutlet]="habTpl"
+            [ngTemplateOutletContext]="{ controle: form.controls.habilidades, sufixo: 'primária' }"
+        />
+
+        <div class="ficha-rol__campo" formArrayName="seguintes">
+            <span class="ficha-rol__rotulo-linha">
+                <span class="ficha-rol__rotulo">
+                    Passos seguintes <span class="ficha-rol__rotulo-aux">(encadeamento)</span>
+                </span>
+                <button type="button" class="ficha-rol__add-passo" (click)="adicionarPasso()">
+                    + Passo
+                </button>
+            </span>
+            @for (passoCtrl of seguintes.controls; track $index) {
+                <div class="ficha-rol__passo-edit" [formGroupName]="$index">
+                    <div class="ficha-rol__passo-edit-linha">
+                        <input
+                            class="ficha-rol__entrada ficha-rol__entrada--nome"
+                            type="text"
+                            formControlName="nome"
+                            placeholder="Nome (ex.: Dano)"
+                            required
+                        />
+                        <label
+                            class="ficha-rol__critico-check ficha-rol__critico-check--mini"
+                            [appTooltip]="'Dobra o dano'"
+                        >
+                            <input type="checkbox" formControlName="critico" />
+                            <span>Critável</span>
+                        </label>
+                        <button
+                            type="button"
+                            class="ficha-rol__mini-btn"
+                            [appTooltip]="'Remover passo'"
+                            aria-label="Remover passo"
+                            (click)="removerPasso($index)"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <input
+                        class="ficha-rol__entrada ficha-rol__entrada--mono"
+                        type="text"
+                        formControlName="formula"
+                        placeholder="Fórmula (ex.: 2d6 + FOR [Físico])"
+                    />
+                    <ng-container
+                        [ngTemplateOutlet]="habTpl"
+                        [ngTemplateOutletContext]="{
+                            controle: passoCtrl.controls.habilidades,
+                            sufixo: 'passo',
+                        }"
+                    />
+                </div>
+            }
+        </div>
+
+        <div class="ficha-rol__form-acoes">
+            <button
+                type="submit"
+                class="ficha-rol__btn ficha-rol__btn--principal"
+                [disabled]="form.invalid || precisaFormulaOuHabilidade()"
+            >
+                Salvar
+            </button>
+            <button
+                type="button"
+                class="ficha-rol__btn ficha-rol__btn--secundario"
+                (click)="cancelarEdicao()"
+            >
+                Cancelar
+            </button>
+        </div>
+    </form>
 </ng-template>
 
 <ng-template #habTpl let-controle="controle" let-sufixo="sufixo">
-  @if (habilidadesDisponiveis().length) {
-    <div class="ficha-rol__campo">
-      <span class="ficha-rol__rotulo" [appTooltip]="'Só contam energia; repita para aplicar mais de uma vez'">
-        Habilidades <span class="ficha-rol__rotulo-aux">({{ sufixo }})</span>
-      </span>
-      <div class="ficha-rol__hab-lista">
-        @for (habilidade of habilidadesDisponiveis(); track habilidade.nome) {
-          @let quantidade = contarHabilidade(controle, habilidade.nome);
-          <div
-            class="ficha-rol__hab"
-            [class.ficha-rol__hab--marcada]="quantidade > 0"
-            [appTooltip]="habilidade.descricao"
-          >
-            <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
-            <span class="ficha-rol__hab-custo">{{ habilidade.custoEnergia === null ? 'X' : habilidade.custoEnergia }} E</span>
-            <span class="ficha-rol__hab-stepper">
-              <button
-                type="button"
-                class="ficha-rol__hab-passo"
-                [disabled]="quantidade === 0"
-                [attr.aria-label]="'Remover ' + habilidade.nome"
-                (click)="removerHabilidade(controle, habilidade.nome)"
-              >
-                −
-              </button>
-              <span class="ficha-rol__hab-qtd">{{ quantidade }}</span>
-              <button
-                type="button"
-                class="ficha-rol__hab-passo"
-                [attr.aria-label]="'Adicionar ' + habilidade.nome"
-                (click)="adicionarHabilidade(controle, habilidade.nome)"
-              >
-                +
-              </button>
+    @if (habilidadesDisponiveis().length) {
+        <div class="ficha-rol__campo">
+            <span
+                class="ficha-rol__rotulo"
+                [appTooltip]="'Só contam energia; repita para aplicar mais de uma vez'"
+            >
+                Habilidades <span class="ficha-rol__rotulo-aux">({{ sufixo }})</span>
             </span>
-          </div>
-        }
-      </div>
-    </div>
-  }
+            <div class="ficha-rol__hab-lista">
+                @for (habilidade of habilidadesDisponiveis(); track habilidade.nome) {
+                    @let quantidade = contarHabilidade(controle, habilidade.nome);
+                    <div
+                        class="ficha-rol__hab"
+                        [class.ficha-rol__hab--marcada]="quantidade > 0"
+                        [appTooltip]="habilidade.descricao"
+                    >
+                        <span class="ficha-rol__hab-nome">{{ habilidade.nome }}</span>
+                        <span class="ficha-rol__hab-custo"
+                            >{{
+                                habilidade.custoEnergia === null ? "X" : habilidade.custoEnergia
+                            }}
+                            E</span
+                        >
+                        <span class="ficha-rol__hab-stepper">
+                            <button
+                                type="button"
+                                class="ficha-rol__hab-passo"
+                                [disabled]="quantidade === 0"
+                                [attr.aria-label]="'Remover ' + habilidade.nome"
+                                (click)="removerHabilidade(controle, habilidade.nome)"
+                            >
+                                −
+                            </button>
+                            <span class="ficha-rol__hab-qtd">{{ quantidade }}</span>
+                            <button
+                                type="button"
+                                class="ficha-rol__hab-passo"
+                                [attr.aria-label]="'Adicionar ' + habilidade.nome"
+                                (click)="adicionarHabilidade(controle, habilidade.nome)"
+                            >
+                                +
+                            </button>
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </ng-template>

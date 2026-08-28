@@ -1,95 +1,149 @@
 <section class="habilidade-lista">
-  <header class="habilidade-lista__cabecalho">
-    <h3 class="habilidade-lista__titulo">Habilidades</h3>
-    <span class="habilidade-lista__contagem">{{ itens().length }}</span>
-    <span class="habilidade-lista__regua"></span>
-    @if (editavel()) {
-      <button
-        class="habilidade-lista__cabecalho-acao"
-        type="button"
-        [class.habilidade-lista__cabecalho-acao--ativo]="modoEdicao()"
-        [attr.aria-pressed]="modoEdicao()"
-        [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
-        [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
-        (click)="alternarModoEdicao()"
-      >
-        <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
-      </button>
-      <button
-        class="habilidade-lista__cabecalho-acao habilidade-lista__cabecalho-acao--adicionar"
-        type="button"
-        aria-label="Adicionar habilidade"
-        [appTooltip]="'Adicionar habilidade'"
-        (click)="adicionar()"
-      >
-        <app-icone nome="mais" />
-      </button>
-    }
-  </header>
-
-  @if (!itens().length) {
-    <p class="habilidade-lista__vazio">Nenhuma habilidade especial.</p>
-  }
-
-  <ul class="habilidade-lista__itens">
-    @for (item of itens(); track $index) {
-      <li class="habilidade-lista__item" [class.habilidade-lista__item--editando]="editando($index)">
-        @if (editando($index)) {
-          <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }" />
-        } @else {
-          <div class="habilidade-lista__cabecalho-item">
-            <span class="habilidade-lista__nome">{{ item.nome }}</span>
-            <span class="habilidade-lista__chip">{{ rotuloTipo(item.tipo) }}</span>
-          </div>
-          <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
-          @if (item.restricao) { <span class="habilidade-lista__restricao">{{ item.restricao }}</span> }
-          @if (editavel() && modoEdicao()) {
-            <div class="habilidade-lista__acoes">
-              <button class="habilidade-lista__acao" type="button" aria-label="Editar" (click)="editar($index)"><app-icone nome="editar" /></button>
-              @if (indiceRemovendo() === $index) {
-                <button class="habilidade-lista__acao habilidade-lista__acao--confirmar" type="button" (click)="remover($index)">Confirmar remoção</button>
-                <button class="habilidade-lista__acao" type="button" (click)="cancelarRemocao()">Cancelar</button>
-              } @else {
-                <button class="habilidade-lista__acao" type="button" aria-label="Remover" (click)="pedirRemocao($index)"><app-icone nome="excluir" /></button>
-              }
-            </div>
-          }
+    <header class="habilidade-lista__cabecalho">
+        <h3 class="habilidade-lista__titulo">Habilidades</h3>
+        <span class="habilidade-lista__contagem">{{ itens().length }}</span>
+        <span class="habilidade-lista__regua"></span>
+        @if (editavel()) {
+            <button
+                class="habilidade-lista__cabecalho-acao"
+                type="button"
+                [class.habilidade-lista__cabecalho-acao--ativo]="modoEdicao()"
+                [attr.aria-pressed]="modoEdicao()"
+                [attr.aria-label]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
+                [appTooltip]="modoEdicao() ? 'Concluir edição' : 'Editar habilidades'"
+                (click)="alternarModoEdicao()"
+            >
+                <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
+            </button>
+            <button
+                class="habilidade-lista__cabecalho-acao habilidade-lista__cabecalho-acao--adicionar"
+                type="button"
+                aria-label="Adicionar habilidade"
+                [appTooltip]="'Adicionar habilidade'"
+                (click)="adicionar()"
+            >
+                <app-icone nome="mais" />
+            </button>
         }
-      </li>
-    }
-  </ul>
+    </header>
 
-  @if (editando(-1)) {
-    <div class="habilidade-lista__form-novo">
-      <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
-    </div>
-  }
+    @if (!itens().length) {
+        <p class="habilidade-lista__vazio">Nenhuma habilidade especial.</p>
+    }
+
+    <ul class="habilidade-lista__itens">
+        @for (item of itens(); track $index) {
+            <li
+                class="habilidade-lista__item"
+                [class.habilidade-lista__item--editando]="editando($index)"
+            >
+                @if (editando($index)) {
+                    <ng-container
+                        *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
+                    />
+                } @else {
+                    <div class="habilidade-lista__cabecalho-item">
+                        <span class="habilidade-lista__nome">{{ item.nome }}</span>
+                        <span class="habilidade-lista__chip">{{ rotuloTipo(item.tipo) }}</span>
+                    </div>
+                    <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
+                    @if (item.restricao) {
+                        <span class="habilidade-lista__restricao">{{ item.restricao }}</span>
+                    }
+                    @if (editavel() && modoEdicao()) {
+                        <div class="habilidade-lista__acoes">
+                            <button
+                                class="habilidade-lista__acao"
+                                type="button"
+                                aria-label="Editar"
+                                (click)="editar($index)"
+                            >
+                                <app-icone nome="editar" />
+                            </button>
+                            @if (indiceRemovendo() === $index) {
+                                <button
+                                    class="habilidade-lista__acao habilidade-lista__acao--confirmar"
+                                    type="button"
+                                    (click)="remover($index)"
+                                >
+                                    Confirmar remoção
+                                </button>
+                                <button
+                                    class="habilidade-lista__acao"
+                                    type="button"
+                                    (click)="cancelarRemocao()"
+                                >
+                                    Cancelar
+                                </button>
+                            } @else {
+                                <button
+                                    class="habilidade-lista__acao"
+                                    type="button"
+                                    aria-label="Remover"
+                                    (click)="pedirRemocao($index)"
+                                >
+                                    <app-icone nome="excluir" />
+                                </button>
+                            }
+                        </div>
+                    }
+                }
+            </li>
+        }
+    </ul>
+
+    @if (editando(-1)) {
+        <div class="habilidade-lista__form-novo">
+            <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
+        </div>
+    }
 </section>
 
 <!-- Formulário em grade rotulada, no mesmo desenho do de Ataques. -->
 <ng-template #formulario let-rotuloConfirmar>
-  <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-    <label class="habilidade-lista__campo">
-      <span class="habilidade-lista__campo-rotulo">Nome</span>
-      <input class="habilidade-lista__input" formControlName="nome" placeholder="Nome da habilidade" aria-label="Nome da habilidade" />
-    </label>
-    <label class="habilidade-lista__campo">
-      <span class="habilidade-lista__campo-rotulo">Tipo</span>
-      <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
-        @for (t of tipos; track t) { <option [value]="t">{{ rotuloTipo(t) }}</option> }
-      </select>
-    </label>
-    <label class="habilidade-lista__campo habilidade-lista__campo--largo">
-      <span class="habilidade-lista__campo-rotulo">Descrição</span>
-      <textarea class="habilidade-lista__textarea" formControlName="descricao" placeholder="O que a habilidade faz" aria-label="Descrição"></textarea>
-    </label>
-    <label class="habilidade-lista__campo habilidade-lista__campo--largo">
-      <span class="habilidade-lista__campo-rotulo">Restrição</span>
-      <input class="habilidade-lista__input" formControlName="restricao" placeholder="Opcional" aria-label="Restrição" />
-    </label>
-    <div class="habilidade-lista__form-acoes">
-      <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">{{ rotuloConfirmar }}</button>
-      <button class="botao botao--secundario" type="button" (click)="cancelar()">Cancelar</button>
-    </div>
-  </form>
+    <form class="habilidade-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
+        <label class="habilidade-lista__campo">
+            <span class="habilidade-lista__campo-rotulo">Nome</span>
+            <input
+                class="habilidade-lista__input"
+                formControlName="nome"
+                placeholder="Nome da habilidade"
+                aria-label="Nome da habilidade"
+            />
+        </label>
+        <label class="habilidade-lista__campo">
+            <span class="habilidade-lista__campo-rotulo">Tipo</span>
+            <select class="habilidade-lista__select" formControlName="tipo" aria-label="Tipo">
+                @for (t of tipos; track t) {
+                    <option [value]="t">{{ rotuloTipo(t) }}</option>
+                }
+            </select>
+        </label>
+        <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+            <span class="habilidade-lista__campo-rotulo">Descrição</span>
+            <textarea
+                class="habilidade-lista__textarea"
+                formControlName="descricao"
+                placeholder="O que a habilidade faz"
+                aria-label="Descrição"
+            ></textarea>
+        </label>
+        <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+            <span class="habilidade-lista__campo-rotulo">Restrição</span>
+            <input
+                class="habilidade-lista__input"
+                formControlName="restricao"
+                placeholder="Opcional"
+                aria-label="Restrição"
+            />
+        </label>
+        <div class="habilidade-lista__form-acoes">
+            <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">
+                {{ rotuloConfirmar }}
+            </button>
+            <button class="botao botao--secundario" type="button" (click)="cancelar()">
+                Cancelar
+            </button>
+        </div>
+    </form>
 </ng-template>

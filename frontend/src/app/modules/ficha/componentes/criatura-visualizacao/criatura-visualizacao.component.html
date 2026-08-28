@@ -1,1017 +1,1542 @@
-<article
-  class="criatura"
-  [style.--cor-modificador-fraca]="modificadorCorFraca()"
->
-  <!-- Barra superior: rótulo + chip de classificação — mesma estrutura de `ficha-visao__topo`
+<article class="criatura" [style.--cor-modificador-fraca]="modificadorCorFraca()">
+    <!-- Barra superior: rótulo + chip de classificação — mesma estrutura de `ficha-visao__topo`
        (FichaVisualizacao), movida pra dentro do componente (era da página) pra bater exatamente
        com o padrão do jogador, inclusive o traço divisor. -->
-  <header class="criatura__topo">
-    <span class="criatura__rotulo-secao">Ficha de Criatura</span>
-    <span class="criatura__regua"></span>
-    @if (ajustavel()) {
-      <!-- Visibilidade das rolagens desta criatura (Teste/Dano/Crítico) — distinto do toggle
+    <header class="criatura__topo">
+        <span class="criatura__rotulo-secao">Ficha de Criatura</span>
+        <span class="criatura__regua"></span>
+        @if (ajustavel()) {
+            <!-- Visibilidade das rolagens desta criatura (Teste/Dano/Crítico) — distinto do toggle
            "Ocultar ficha" do menu da página, que esconde a ficha inteira. Nasce oculta; revelar
            pede confirmação (ver `alternarRolagemOculta`). -->
-      <button
-        type="button"
-        class="ficha-rolagem-oculta"
-        [class.ficha-rolagem-oculta--ativa]="rolagemOculta()"
-        [attr.aria-pressed]="rolagemOculta()"
-        [appTooltip]="rolagemOculta() ? 'Rolagens da criatura: privadas (só você vê)' : 'Rolagens da criatura: públicas'"
-        (click)="alternarRolagemOculta()"
-      >
-        <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
-        <span>Rolagem oculta</span>
-      </button>
-    }
-    <span class="chip-classificacao">{{ classificacao() }}</span>
-  </header>
+            <button
+                type="button"
+                class="ficha-rolagem-oculta"
+                [class.ficha-rolagem-oculta--ativa]="rolagemOculta()"
+                [attr.aria-pressed]="rolagemOculta()"
+                [appTooltip]="
+                    rolagemOculta()
+                        ? 'Rolagens da criatura: privadas (só você vê)'
+                        : 'Rolagens da criatura: públicas'
+                "
+                (click)="alternarRolagemOculta()"
+            >
+                <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
+                <span>Rolagem oculta</span>
+            </button>
+        }
+        <span class="chip-classificacao">{{ classificacao() }}</span>
+    </header>
 
-  <div class="criatura__linha-colunas">
-    <!-- Coluna 1 — Identidade: avatar/designação, classificação, VD/Tenacidade/Defesa, Vida,
+    <div class="criatura__linha-colunas">
+        <!-- Coluna 1 — Identidade: avatar/designação, classificação, VD/Tenacidade/Defesa, Vida,
          Resistências, Fraquezas. Alvo de fidelidade: docs/design/examples/ficha-de-criatura.html. -->
-    <div class="criatura__coluna criatura__coluna--identidade">
-      <section class="criatura__cartao criatura__cartao--identidade">
-        <div class="criatura__ident">
-          @if (ajustavel()) {
-            <div class="criatura__avatar criatura__avatar--editavel" [style.--cor-ficha]="cor()">
-              @if (imagemUrl(); as urlImagem) {
-                <div class="criatura__avatar-moldura">
-                  <img
-                    class="criatura__avatar-imagem"
-                    [src]="urlImagem"
-                    alt=""
-                    [appFocoImagem]="foco()"
-                  />
+        <div class="criatura__coluna criatura__coluna--identidade">
+            <section class="criatura__cartao criatura__cartao--identidade">
+                <div class="criatura__ident">
+                    @if (ajustavel()) {
+                        <div
+                            class="criatura__avatar criatura__avatar--editavel"
+                            [style.--cor-ficha]="cor()"
+                        >
+                            @if (imagemUrl(); as urlImagem) {
+                                <div class="criatura__avatar-moldura">
+                                    <img
+                                        class="criatura__avatar-imagem"
+                                        [src]="urlImagem"
+                                        alt=""
+                                        [appFocoImagem]="foco()"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    class="criatura__avatar-enquadrar"
+                                    aria-label="Ajustar enquadramento"
+                                    [appTooltip]="'Ajustar enquadramento'"
+                                    (click)="abrirEnquadramentoExistente()"
+                                >
+                                    <app-icone nome="busca" />
+                                </button>
+                                <button
+                                    type="button"
+                                    class="criatura__avatar-remover"
+                                    aria-label="Remover imagem de registro"
+                                    [appTooltip]="'Remover imagem'"
+                                    (click)="removerImagem.emit()"
+                                >
+                                    <app-icone nome="excluir" />
+                                </button>
+                            }
+                            <input
+                                type="color"
+                                class="criatura__cor-entrada"
+                                aria-label="Cor de identidade da ficha"
+                                [formControl]="corCriaturaForm"
+                            />
+                            <label
+                                class="criatura__avatar-upload"
+                                [appTooltip]="'Trocar imagem de registro'"
+                            >
+                                <input
+                                    type="file"
+                                    class="criatura__avatar-upload-entrada"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    aria-label="Trocar imagem de registro"
+                                    (change)="aoSelecionarImagem($event)"
+                                />
+                                <app-icone nome="editar" />
+                            </label>
+
+                            @if (enquadramentoOrigem(); as origemAtual) {
+                                <app-ajuste-enquadramento-imagem
+                                    [origem]="origemAtual"
+                                    [proporcao]="{ largura: 100, altura: 100 }"
+                                    [focoInicial]="arquivoPendente() ? null : foco()"
+                                    (confirmar)="confirmarEnquadramento($event)"
+                                    (cancelar)="fecharEnquadramento()"
+                                />
+                            }
+                        </div>
+                    } @else {
+                        <span
+                            class="criatura__avatar"
+                            aria-hidden="true"
+                            [style.--cor-ficha]="cor()"
+                        >
+                            @if (imagemUrl(); as urlImagem) {
+                                <div class="criatura__avatar-moldura">
+                                    <img
+                                        class="criatura__avatar-imagem"
+                                        [src]="urlImagem"
+                                        alt=""
+                                        [appFocoImagem]="foco()"
+                                    />
+                                </div>
+                            }
+                        </span>
+                    }
+
+                    <div class="criatura__ident-texto">
+                        <span class="criatura__ident-rotulo">Criatura</span>
+                        @if (editando("identidade.designacao")) {
+                            <input
+                                #entradaDesignacao
+                                appAutoFocus
+                                class="criatura__designacao-entrada"
+                                type="text"
+                                [value]="dados().identidade.designacao"
+                                aria-label="Designação"
+                                [disabled]="!ajustavel()"
+                                (keydown.enter)="
+                                    confirmarCampoIdentidade('designacao', entradaDesignacao.value);
+                                    cancelarEdicao()
+                                "
+                                (keydown.escape)="cancelarEdicao()"
+                                (blur)="
+                                    confirmarCampoIdentidade('designacao', entradaDesignacao.value);
+                                    cancelarEdicao()
+                                "
+                            />
+                        } @else if (ajustavel()) {
+                            <button
+                                class="criatura__designacao criatura__designacao--editavel"
+                                type="button"
+                                (click)="editar('identidade.designacao')"
+                            >
+                                {{ dados().identidade.designacao }}
+                            </button>
+                        } @else {
+                            <h1 class="criatura__designacao">
+                                {{ dados().identidade.designacao }}
+                            </h1>
+                        }
+                        <span class="criatura__registro">Registro — {{ fichaId() }}</span>
+                    </div>
                 </div>
-                <button
-                  type="button"
-                  class="criatura__avatar-enquadrar"
-                  aria-label="Ajustar enquadramento"
-                  [appTooltip]="'Ajustar enquadramento'"
-                  (click)="abrirEnquadramentoExistente()"
-                >
-                  <app-icone nome="busca" />
-                </button>
-                <button
-                  type="button"
-                  class="criatura__avatar-remover"
-                  aria-label="Remover imagem de registro"
-                  [appTooltip]="'Remover imagem'"
-                  (click)="removerImagem.emit()"
-                >
-                  <app-icone nome="excluir" />
-                </button>
-              }
-              <input
-                type="color"
-                class="criatura__cor-entrada"
-                aria-label="Cor de identidade da ficha"
-                [formControl]="corCriaturaForm"
-              />
-              <label class="criatura__avatar-upload" [appTooltip]="'Trocar imagem de registro'">
-                <input
-                  type="file"
-                  class="criatura__avatar-upload-entrada"
-                  accept="image/jpeg,image/png,image/webp"
-                  aria-label="Trocar imagem de registro"
-                  (change)="aoSelecionarImagem($event)"
-                />
-                <app-icone nome="editar" />
-              </label>
 
-              @if (enquadramentoOrigem(); as origemAtual) {
-                <app-ajuste-enquadramento-imagem
-                  [origem]="origemAtual"
-                  [proporcao]="{ largura: 100, altura: 100 }"
-                  [focoInicial]="arquivoPendente() ? null : foco()"
-                  (confirmar)="confirmarEnquadramento($event)"
-                  (cancelar)="fecharEnquadramento()"
-                />
-              }
-            </div>
-          } @else {
-            <span class="criatura__avatar" aria-hidden="true" [style.--cor-ficha]="cor()">
-              @if (imagemUrl(); as urlImagem) {
-                <div class="criatura__avatar-moldura">
-                  <img
-                    class="criatura__avatar-imagem"
-                    [src]="urlImagem"
-                    alt=""
-                    [appFocoImagem]="foco()"
-                  />
-                </div>
-              }
-            </span>
-          }
-
-          <div class="criatura__ident-texto">
-            <span class="criatura__ident-rotulo">Criatura</span>
-            @if (editando('identidade.designacao')) {
-              <input
-                #entradaDesignacao
-                appAutoFocus
-                class="criatura__designacao-entrada"
-                type="text"
-                [value]="dados().identidade.designacao"
-                aria-label="Designação"
-                [disabled]="!ajustavel()"
-                (keydown.enter)="confirmarCampoIdentidade('designacao', entradaDesignacao.value); cancelarEdicao()"
-                (keydown.escape)="cancelarEdicao()"
-                (blur)="confirmarCampoIdentidade('designacao', entradaDesignacao.value); cancelarEdicao()"
-              />
-            } @else if (ajustavel()) {
-              <button class="criatura__designacao criatura__designacao--editavel" type="button" (click)="editar('identidade.designacao')">
-                {{ dados().identidade.designacao }}
-              </button>
-            } @else {
-              <h1 class="criatura__designacao">{{ dados().identidade.designacao }}</h1>
-            }
-            <span class="criatura__registro">Registro — {{ fichaId() }}</span>
-          </div>
-        </div>
-
-        <!-- Classificação: em leitura são só chips; o lápis liga o modo de edição e troca os quatro
+                <!-- Classificação: em leitura são só chips; o lápis liga o modo de edição e troca os quatro
              de uma vez por selects rotulados logo abaixo (trocar um chip isolado por um select de
              largura diferente fazia a linha inteira saltar). O botão fica sempre na mesma linha,
              então ligar/desligar o modo não move nada acima dele. -->
-        <div class="criatura__chips">
-          @if (classificacaoEmEdicao()) {
-            <span class="criatura__chips-rotulo">Classificação</span>
-          } @else {
-            <span class="criatura__chip">{{ rotuloOrigemCriatura(dados().identidade.origem) }}</span>
+                <div class="criatura__chips">
+                    @if (classificacaoEmEdicao()) {
+                        <span class="criatura__chips-rotulo">Classificação</span>
+                    } @else {
+                        <span class="criatura__chip">{{
+                            rotuloOrigemCriatura(dados().identidade.origem)
+                        }}</span>
 
-            <span class="criatura__chip">
-              Porte {{ nomePorte(dados().porte) }}
-              @if (dimensaoPorte(dados().porte); as dimensao) {
-                <span class="criatura__chip-info" tabindex="0" [appTooltip]="'Ocupa ' + dimensao" [attr.aria-label]="'Ocupa ' + dimensao">i</span>
-              }
-            </span>
+                        <span class="criatura__chip">
+                            Porte {{ nomePorte(dados().porte) }}
+                            @if (dimensaoPorte(dados().porte); as dimensao) {
+                                <span
+                                    class="criatura__chip-info"
+                                    tabindex="0"
+                                    [appTooltip]="'Ocupa ' + dimensao"
+                                    [attr.aria-label]="'Ocupa ' + dimensao"
+                                    >i</span
+                                >
+                            }
+                        </span>
 
-            <span class="criatura__chip">{{ rotuloComportamento(dados().identidade.comportamento) }}</span>
-            <span class="criatura__chip criatura__chip--ameaca">Ameaça {{ rotuloNivelAmeaca(dados().na) }}</span>
-          }
+                        <span class="criatura__chip">{{
+                            rotuloComportamento(dados().identidade.comportamento)
+                        }}</span>
+                        <span class="criatura__chip criatura__chip--ameaca"
+                            >Ameaça {{ rotuloNivelAmeaca(dados().na) }}</span
+                        >
+                    }
 
-          @if (ajustavel()) {
-            <button
-              class="criatura__lapis"
-              type="button"
-              [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
-              [attr.aria-pressed]="classificacaoEmEdicao()"
-              [attr.aria-label]="classificacaoEmEdicao() ? 'Cancelar edição da classificação' : 'Editar classificação'"
-              [appTooltip]="classificacaoEmEdicao() ? 'Cancelar edição' : 'Editar classificação'"
-              (click)="alternarEdicaoClassificacao()"
-            >
-              @if (classificacaoEmEdicao()) { ✕ } @else { <app-icone nome="editar" /> }
-            </button>
-          }
+                    @if (ajustavel()) {
+                        <button
+                            class="criatura__lapis"
+                            type="button"
+                            [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
+                            [attr.aria-pressed]="classificacaoEmEdicao()"
+                            [attr.aria-label]="
+                                classificacaoEmEdicao()
+                                    ? 'Cancelar edição da classificação'
+                                    : 'Editar classificação'
+                            "
+                            [appTooltip]="
+                                classificacaoEmEdicao() ? 'Cancelar edição' : 'Editar classificação'
+                            "
+                            (click)="alternarEdicaoClassificacao()"
+                        >
+                            @if (classificacaoEmEdicao()) {
+                                ✕
+                            } @else {
+                                <app-icone nome="editar" />
+                            }
+                        </button>
+                    }
+                </div>
+
+                @if (classificacaoEmEdicao()) {
+                    <div class="criatura__classificacao-grade">
+                        <div class="campo">
+                            <span class="campo__rotulo">Origem</span>
+                            <select
+                                #entradaOrigem
+                                class="criatura__select"
+                                aria-label="Origem"
+                                (change)="
+                                    confirmarCampoIdentidade('origem', $any(entradaOrigem.value))
+                                "
+                            >
+                                @for (o of origens; track o) {
+                                    <option
+                                        [value]="o"
+                                        [selected]="o === dados().identidade.origem"
+                                    >
+                                        {{ rotuloOrigemCriatura(o) }}
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="campo">
+                            <span class="campo__rotulo">Porte</span>
+                            <select
+                                #entradaPorte
+                                class="criatura__select"
+                                aria-label="Porte"
+                                (change)="confirmarPorte($any(entradaPorte.value))"
+                            >
+                                @for (p of portes; track p) {
+                                    <option [value]="p" [selected]="p === dados().porte">
+                                        {{ rotuloPorte(p) }}
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="campo">
+                            <span class="campo__rotulo">Comportamento</span>
+                            <select
+                                #entradaComportamento
+                                class="criatura__select"
+                                aria-label="Comportamento"
+                                (change)="
+                                    confirmarCampoIdentidade(
+                                        'comportamento',
+                                        $any(entradaComportamento.value)
+                                    )
+                                "
+                            >
+                                @for (c of comportamentos; track c) {
+                                    <option
+                                        [value]="c"
+                                        [selected]="c === dados().identidade.comportamento"
+                                    >
+                                        {{ rotuloComportamento(c) }}
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="campo">
+                            <span class="campo__rotulo">Nível de Ameaça</span>
+                            <select
+                                #entradaNa
+                                class="criatura__select"
+                                aria-label="Nível de Ameaça"
+                                (change)="confirmarNa($any(entradaNa.value))"
+                            >
+                                @for (na of niveisAmeaca; track na) {
+                                    <option [value]="na" [selected]="na === dados().na">
+                                        {{ rotuloNivelAmeaca(na) }}
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+
+                <div class="criatura__stats">
+                    <div class="stat criatura__stat criatura__stat--vd">
+                        <span class="stat__rotulo">VD</span>
+                        @if (editando("vd")) {
+                            <input
+                                #entradaVd
+                                appAutoFocus
+                                class="criatura__entrada-numero criatura__entrada-numero--stat"
+                                type="number"
+                                [value]="dados().vd"
+                                aria-label="Valor de Desafio"
+                                (keydown.enter)="
+                                    confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()
+                                "
+                                (keydown.escape)="cancelarEdicao()"
+                                (blur)="confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()"
+                            />
+                        } @else {
+                            <button
+                                class="stat__valor criatura__stat-botao"
+                                type="button"
+                                [disabled]="!ajustavel()"
+                                (click)="editar('vd')"
+                            >
+                                {{ dados().vd }}
+                            </button>
+                        }
+                    </div>
+
+                    <div class="stat criatura__stat">
+                        <span class="stat__rotulo">Tenacidade</span>
+                        @if (editando("tenacidade")) {
+                            <select
+                                #entradaTenacidade
+                                appAutoFocus
+                                class="criatura__select criatura__select--stat"
+                                aria-label="Tenacidade"
+                                (change)="
+                                    confirmarTenacidade($any(entradaTenacidade.value));
+                                    cancelarEdicao()
+                                "
+                                (blur)="cancelarEdicao()"
+                            >
+                                @for (t of tenacidades; track t) {
+                                    <option [value]="t" [selected]="t === dados().tenacidade">
+                                        {{ rotuloTenacidade(t) }}
+                                    </option>
+                                }
+                            </select>
+                        } @else {
+                            <button
+                                class="stat__valor criatura__stat-botao criatura__stat-botao--tenacidade"
+                                type="button"
+                                [disabled]="!ajustavel()"
+                                (click)="editar('tenacidade')"
+                            >
+                                {{ nomeTenacidade(dados().tenacidade) }}
+                                @if (
+                                    multiplicadorTenacidade(dados().tenacidade);
+                                    as multiplicador
+                                ) {
+                                    <span class="criatura__stat-sufixo">{{ multiplicador }}</span>
+                                }
+                            </button>
+                        }
+                    </div>
+
+                    <div class="stat criatura__stat">
+                        <span class="stat__rotulo">Defesa</span>
+                        @if (editando("defesa")) {
+                            <input
+                                #entradaDefesa
+                                appAutoFocus
+                                class="criatura__entrada-numero criatura__entrada-numero--stat"
+                                type="number"
+                                [value]="dados().defesa"
+                                aria-label="Defesa"
+                                (keydown.enter)="
+                                    confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()
+                                "
+                                (keydown.escape)="cancelarEdicao()"
+                                (blur)="
+                                    confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()
+                                "
+                            />
+                        } @else {
+                            <button
+                                class="stat__valor criatura__stat-botao"
+                                type="button"
+                                [disabled]="!ajustavel()"
+                                (click)="editar('defesa')"
+                            >
+                                {{ dados().defesa }}
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="criatura__vida">
+                    <span class="criatura__vida-rotulo-linha">
+                        <span class="criatura__vida-rotulo">Vida</span>
+                        @if (ajustavel()) {
+                            <button
+                                class="criatura__receber-dano"
+                                type="button"
+                                aria-label="Receber dano"
+                                [appTooltip]="'Receber dano'"
+                                (click)="receberDanoAberto.set(true)"
+                            >
+                                <app-icone nome="combate" />
+                            </button>
+                        }
+                    </span>
+                    <div class="criatura__vitalidade">
+                        <button
+                            class="criatura__passo"
+                            type="button"
+                            [disabled]="!ajustavel()"
+                            (click)="ajustarVida(-1)"
+                            aria-label="Reduzir vida"
+                        >
+                            −
+                        </button>
+                        @if (editando("vidaAtual")) {
+                            <input
+                                #entradaVidaAtual
+                                appAutoFocus
+                                class="criatura__entrada-numero criatura__entrada-numero--vida"
+                                type="number"
+                                [value]="dados().vidaAtual"
+                                aria-label="Vida atual"
+                                (keydown.enter)="
+                                    confirmarVidaAtual(entradaVidaAtual.valueAsNumber);
+                                    cancelarEdicao()
+                                "
+                                (keydown.escape)="cancelarEdicao()"
+                                (blur)="
+                                    confirmarVidaAtual(entradaVidaAtual.valueAsNumber);
+                                    cancelarEdicao()
+                                "
+                            />
+                        } @else {
+                            <button
+                                class="criatura__vitalidade-valor"
+                                type="button"
+                                [disabled]="!ajustavel()"
+                                (click)="editar('vidaAtual')"
+                            >
+                                {{ dados().vidaAtual }}
+                            </button>
+                        }
+                        @if (editando("vidaMaxima")) {
+                            <input
+                                #entradaVidaMaxima
+                                appAutoFocus
+                                class="criatura__entrada-numero criatura__entrada-numero--vida"
+                                type="number"
+                                [value]="dados().vidaMaxima"
+                                aria-label="Vida máxima"
+                                (keydown.enter)="
+                                    ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber);
+                                    cancelarEdicao()
+                                "
+                                (keydown.escape)="cancelarEdicao()"
+                                (blur)="
+                                    ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber);
+                                    cancelarEdicao()
+                                "
+                            />
+                        } @else {
+                            <button
+                                class="criatura__vitalidade-maxima"
+                                type="button"
+                                [disabled]="!ajustavel()"
+                                (click)="editar('vidaMaxima')"
+                            >
+                                / {{ dados().vidaMaxima }}
+                            </button>
+                        }
+                        <button
+                            class="criatura__passo"
+                            type="button"
+                            [disabled]="!ajustavel()"
+                            (click)="ajustarVida(1)"
+                            aria-label="Aumentar vida"
+                        >
+                            +
+                        </button>
+                    </div>
+                    <div
+                        class="criatura__barra-vida"
+                        role="progressbar"
+                        [attr.aria-valuenow]="dados().vidaAtual"
+                        [attr.aria-valuemax]="dados().vidaMaxima"
+                    >
+                        <div
+                            class="criatura__barra-vida-preenchida"
+                            [style.width.%]="
+                                dados().vidaMaxima > 0
+                                    ? (dados().vidaAtual / dados().vidaMaxima) * 100
+                                    : 0
+                            "
+                        ></div>
+                    </div>
+                </div>
+
+                <app-criatura-resistencia-lista
+                    titulo="Resistências"
+                    variante="resistencia"
+                    [dica]="'Limite ' + limiteResistencias() + ' pts'"
+                    [itens]="dados().resistencias"
+                    [editavel]="ajustavel()"
+                    (itensMudou)="aoResistenciasMudar($event)"
+                />
+
+                <app-criatura-resistencia-lista
+                    titulo="Fraquezas"
+                    variante="fraqueza"
+                    [itens]="dados().fraquezas"
+                    [editavel]="ajustavel()"
+                    (itensMudou)="aoFraquezasMudar($event)"
+                />
+            </section>
         </div>
 
-        @if (classificacaoEmEdicao()) {
-          <div class="criatura__classificacao-grade">
-            <div class="campo">
-              <span class="campo__rotulo">Origem</span>
-              <select
-                #entradaOrigem
-                class="criatura__select"
-                aria-label="Origem"
-                (change)="confirmarCampoIdentidade('origem', $any(entradaOrigem.value))"
-              >
-                @for (o of origens; track o) {
-                  <option [value]="o" [selected]="o === dados().identidade.origem">{{ rotuloOrigemCriatura(o) }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="campo">
-              <span class="campo__rotulo">Porte</span>
-              <select
-                #entradaPorte
-                class="criatura__select"
-                aria-label="Porte"
-                (change)="confirmarPorte($any(entradaPorte.value))"
-              >
-                @for (p of portes; track p) {
-                  <option [value]="p" [selected]="p === dados().porte">{{ rotuloPorte(p) }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="campo">
-              <span class="campo__rotulo">Comportamento</span>
-              <select
-                #entradaComportamento
-                class="criatura__select"
-                aria-label="Comportamento"
-                (change)="confirmarCampoIdentidade('comportamento', $any(entradaComportamento.value))"
-              >
-                @for (c of comportamentos; track c) {
-                  <option [value]="c" [selected]="c === dados().identidade.comportamento">{{ rotuloComportamento(c) }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="campo">
-              <span class="campo__rotulo">Nível de Ameaça</span>
-              <select
-                #entradaNa
-                class="criatura__select"
-                aria-label="Nível de Ameaça"
-                (change)="confirmarNa($any(entradaNa.value))"
-              >
-                @for (na of niveisAmeaca; track na) {
-                  <option [value]="na" [selected]="na === dados().na">{{ rotuloNivelAmeaca(na) }}</option>
-                }
-              </select>
-            </div>
-          </div>
-        }
-
-        <div class="criatura__stats">
-          <div class="stat criatura__stat criatura__stat--vd">
-            <span class="stat__rotulo">VD</span>
-            @if (editando('vd')) {
-              <input
-                #entradaVd
-                appAutoFocus
-                class="criatura__entrada-numero criatura__entrada-numero--stat"
-                type="number"
-                [value]="dados().vd"
-                aria-label="Valor de Desafio"
-                (keydown.enter)="confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()"
-                (keydown.escape)="cancelarEdicao()"
-                (blur)="confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()"
-              />
-            } @else {
-              <button class="stat__valor criatura__stat-botao" type="button" [disabled]="!ajustavel()" (click)="editar('vd')">
-                {{ dados().vd }}
-              </button>
-            }
-          </div>
-
-          <div class="stat criatura__stat">
-            <span class="stat__rotulo">Tenacidade</span>
-            @if (editando('tenacidade')) {
-              <select
-                #entradaTenacidade
-                appAutoFocus
-                class="criatura__select criatura__select--stat"
-                aria-label="Tenacidade"
-                (change)="confirmarTenacidade($any(entradaTenacidade.value)); cancelarEdicao()"
-                (blur)="cancelarEdicao()"
-              >
-                @for (t of tenacidades; track t) {
-                  <option [value]="t" [selected]="t === dados().tenacidade">{{ rotuloTenacidade(t) }}</option>
-                }
-              </select>
-            } @else {
-              <button class="stat__valor criatura__stat-botao criatura__stat-botao--tenacidade" type="button" [disabled]="!ajustavel()" (click)="editar('tenacidade')">
-                {{ nomeTenacidade(dados().tenacidade) }}
-                @if (multiplicadorTenacidade(dados().tenacidade); as multiplicador) {
-                  <span class="criatura__stat-sufixo">{{ multiplicador }}</span>
-                }
-              </button>
-            }
-          </div>
-
-          <div class="stat criatura__stat">
-            <span class="stat__rotulo">Defesa</span>
-            @if (editando('defesa')) {
-              <input
-                #entradaDefesa
-                appAutoFocus
-                class="criatura__entrada-numero criatura__entrada-numero--stat"
-                type="number"
-                [value]="dados().defesa"
-                aria-label="Defesa"
-                (keydown.enter)="confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()"
-                (keydown.escape)="cancelarEdicao()"
-                (blur)="confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()"
-              />
-            } @else {
-              <button class="stat__valor criatura__stat-botao" type="button" [disabled]="!ajustavel()" (click)="editar('defesa')">
-                {{ dados().defesa }}
-              </button>
-            }
-          </div>
-        </div>
-
-        <div class="criatura__vida">
-          <span class="criatura__vida-rotulo-linha">
-            <span class="criatura__vida-rotulo">Vida</span>
-            @if (ajustavel()) {
-              <button
-                class="criatura__receber-dano"
-                type="button"
-                aria-label="Receber dano"
-                [appTooltip]="'Receber dano'"
-                (click)="receberDanoAberto.set(true)"
-              >
-                <app-icone nome="combate" />
-              </button>
-            }
-          </span>
-          <div class="criatura__vitalidade">
-            <button class="criatura__passo" type="button" [disabled]="!ajustavel()" (click)="ajustarVida(-1)" aria-label="Reduzir vida">−</button>
-            @if (editando('vidaAtual')) {
-              <input
-                #entradaVidaAtual
-                appAutoFocus
-                class="criatura__entrada-numero criatura__entrada-numero--vida"
-                type="number"
-                [value]="dados().vidaAtual"
-                aria-label="Vida atual"
-                (keydown.enter)="confirmarVidaAtual(entradaVidaAtual.valueAsNumber); cancelarEdicao()"
-                (keydown.escape)="cancelarEdicao()"
-                (blur)="confirmarVidaAtual(entradaVidaAtual.valueAsNumber); cancelarEdicao()"
-              />
-            } @else {
-              <button class="criatura__vitalidade-valor" type="button" [disabled]="!ajustavel()" (click)="editar('vidaAtual')">
-                {{ dados().vidaAtual }}
-              </button>
-            }
-            @if (editando('vidaMaxima')) {
-              <input
-                #entradaVidaMaxima
-                appAutoFocus
-                class="criatura__entrada-numero criatura__entrada-numero--vida"
-                type="number"
-                [value]="dados().vidaMaxima"
-                aria-label="Vida máxima"
-                (keydown.enter)="ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber); cancelarEdicao()"
-                (keydown.escape)="cancelarEdicao()"
-                (blur)="ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber); cancelarEdicao()"
-              />
-            } @else {
-              <button class="criatura__vitalidade-maxima" type="button" [disabled]="!ajustavel()" (click)="editar('vidaMaxima')">
-                / {{ dados().vidaMaxima }}
-              </button>
-            }
-            <button class="criatura__passo" type="button" [disabled]="!ajustavel()" (click)="ajustarVida(1)" aria-label="Aumentar vida">+</button>
-          </div>
-          <div class="criatura__barra-vida" role="progressbar" [attr.aria-valuenow]="dados().vidaAtual" [attr.aria-valuemax]="dados().vidaMaxima">
-            <div class="criatura__barra-vida-preenchida" [style.width.%]="(dados().vidaMaxima > 0 ? (dados().vidaAtual / dados().vidaMaxima) * 100 : 0)"></div>
-          </div>
-        </div>
-
-        <app-criatura-resistencia-lista
-          titulo="Resistências"
-          variante="resistencia"
-          [dica]="'Limite ' + limiteResistencias() + ' pts'"
-          [itens]="dados().resistencias"
-          [editavel]="ajustavel()"
-          (itensMudou)="aoResistenciasMudar($event)"
-        />
-
-        <app-criatura-resistencia-lista
-          titulo="Fraquezas"
-          variante="fraqueza"
-          [itens]="dados().fraquezas"
-          [editavel]="ajustavel()"
-          (itensMudou)="aoFraquezasMudar($event)"
-        />
-      </section>
-    </div>
-
-    <!-- Coluna 2 — Atributos: em leitura, a grade compacta do mockup (sigla, valor, efetivo, rolar);
+        <!-- Coluna 2 — Atributos: em leitura, a grade compacta do mockup (sigla, valor, efetivo, rolar);
          atrás do lápis, a lista vertical com valor digitável e as barrinhas de Modificador (mesmo
          gatilho do lápis de Atributos da ficha de jogador). Grupos Físicos/Mentais já vêm da ordem
          de `camposAtributo` (`sistema-v4.1.0.md`). -->
-    <div class="criatura__coluna criatura__coluna--atributos">
-      <section class="criatura__cartao criatura__cartao--atributos">
-        <header class="criatura__cartao-cabecalho">
-          <h2 class="criatura__cartao-titulo">Atributos</h2>
-          <span class="criatura__cartao-regua"></span>
-          @if (ajustavel() && !atributosEmEdicao()) {
-            <button
-              class="criatura__lapis"
-              type="button"
-              aria-label="Editar atributos"
-              [appTooltip]="'Editar atributos'"
-              (click)="editarAtributos()"
-            >
-              <app-icone nome="editar" />
-            </button>
-          }
-        </header>
-
-        @if (atributosEmEdicao()) {
-          <div class="criatura__atributos-acoes">
-            <button class="botao botao--primario" type="button" [disabled]="violacoesModificadores().length > 0" (click)="salvarAtributos()">Salvar</button>
-            <button class="botao botao--secundario" type="button" (click)="cancelarAtributos()">Cancelar</button>
-          </div>
-          <!-- A distribuição de Modificadores é uma cota fixa da regra (2 Forte / 3 Médio /
-               3 Fraco / 2 Frágil): enquanto não fechar, o backend recusaria a ficha inteira. -->
-          @for (violacao of violacoesModificadores(); track violacao) {
-            <p class="criatura__atributos-aviso">{{ violacao }}</p>
-          }
-        }
-
-        @for (grupo of gruposAtributos; track grupo.rotulo) {
-          <span class="criatura__atributos-grupo">{{ grupo.rotulo }}</span>
-
-          @if (atributosEmEdicao()) {
-            <div class="criatura__atributos-lista">
-              @for (campo of grupo.campos; track campo.chave) {
-                <div class="criatura__atributo-linha">
-                  <div class="criatura__atributo-linha-topo">
-                    <span class="criatura__atributo-linha-nome">{{ campo.nome }}</span>
-                    <input
-                      class="criatura__entrada-numero criatura__entrada-numero--linha"
-                      type="number"
-                      [value]="atributoRascunho(campo.chave)"
-                      [attr.aria-label]="'Atributo Final — ' + campo.nome"
-                      (input)="definirAtributoRascunho(campo.chave, $any($event.target).valueAsNumber)"
-                    />
-                  </div>
-                  <div class="criatura__atributo-modificadores" role="radiogroup" [attr.aria-label]="'Modificador — ' + campo.nome">
-                    @for (m of modificadoresPorNivel; track m; let iModificador = $index) {
-                      <button
-                        type="button"
-                        class="criatura__atributo-modificador"
-                        [class.criatura__atributo-modificador--ativo]="modificadorRascunho(campo.chave) === m"
-                        [attr.aria-pressed]="modificadorRascunho(campo.chave) === m"
-                        [attr.data-nivel]="iModificador + 1"
-                        [appTooltip]="rotuloModificadorCriatura(m)"
-                        (click)="definirModificadorRascunho(campo.chave, m)"
-                      >
-                        <i></i><i></i><i></i><i></i>
-                      </button>
+        <div class="criatura__coluna criatura__coluna--atributos">
+            <section class="criatura__cartao criatura__cartao--atributos">
+                <header class="criatura__cartao-cabecalho">
+                    <h2 class="criatura__cartao-titulo">Atributos</h2>
+                    <span class="criatura__cartao-regua"></span>
+                    @if (ajustavel() && !atributosEmEdicao()) {
+                        <button
+                            class="criatura__lapis"
+                            type="button"
+                            aria-label="Editar atributos"
+                            [appTooltip]="'Editar atributos'"
+                            (click)="editarAtributos()"
+                        >
+                            <app-icone nome="editar" />
+                        </button>
                     }
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="criatura__atributos-grade">
-              @for (campo of grupo.campos; track campo.chave; let ultimo = $last) {
-                <!-- o 5º de cada grupo não tem par: fica sozinho e centralizado, como no mockup -->
-                <div class="criatura__atributo-card" [class.criatura__atributo-card--sozinho]="ultimo">
-                  @if (ajustavel()) {
-                    <button
-                      class="criatura__atributo-rolar"
-                      type="button"
-                      [attr.aria-label]="'Rolar teste de ' + campo.nome"
-                      [appTooltip]="'Rolar teste de ' + campo.nome"
-                      (click)="rolarTesteAtributo(campo.chave)"
-                    >
-                      <app-icone nome="d20" />
-                    </button>
-                  }
-                  <span class="criatura__atributo-abrev" tabindex="0" [appTooltip]="campo.nome" [attr.aria-label]="campo.nome">{{ campo.abrev }}</span>
-                  <span class="criatura__atributo-valor">{{ dados().atributos[campo.chave] }}</span>
-                  <span
-                    class="criatura__atributo-efetivo"
-                    [attr.data-nivel]="nivelModificador(campo.chave)"
-                    [appTooltip]="'Modificador — ' + rotuloModificadorCriatura(dados().modificadores[campo.chave])"
-                  >
-                    {{ modificadorValor(campo.chave) >= 0 ? '+' : '' }}{{ modificadorValor(campo.chave) }}
-                  </span>
-                </div>
-              }
-            </div>
-          }
-        }
-      </section>
-    </div>
+                </header>
 
-    <!-- Coluna 3 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
-         `.ficha-status__abas` de `FichaVisualizacao`. -->
-    <div class="criatura__coluna criatura__coluna--status">
-      <div class="criatura__abas" role="tablist">
-        <button
-          type="button"
-          class="criatura__aba"
-          role="tab"
-          [class.criatura__aba--ativa]="abaAtiva() === 'geral'"
-          [attr.aria-selected]="abaAtiva() === 'geral'"
-          (click)="selecionarAba('geral')"
-        >
-          <app-icone nome="visao-geral" />
-          <span>Geral</span>
-        </button>
-        <button
-          type="button"
-          class="criatura__aba"
-          role="tab"
-          [class.criatura__aba--ativa]="abaAtiva() === 'descricao'"
-          [attr.aria-selected]="abaAtiva() === 'descricao'"
-          (click)="selecionarAba('descricao')"
-        >
-          <app-icone nome="anotacoes" />
-          <span>Descrição</span>
-        </button>
-        <button
-          type="button"
-          class="criatura__aba"
-          role="tab"
-          [class.criatura__aba--ativa]="abaAtiva() === 'ataques'"
-          [attr.aria-selected]="abaAtiva() === 'ataques'"
-          (click)="selecionarAba('ataques')"
-        >
-          <app-icone nome="d20" />
-          <span>Ataques</span>
-        </button>
-        <button
-          type="button"
-          class="criatura__aba"
-          role="tab"
-          [class.criatura__aba--ativa]="abaAtiva() === 'habilidades'"
-          [attr.aria-selected]="abaAtiva() === 'habilidades'"
-          (click)="selecionarAba('habilidades')"
-        >
-          <app-icone nome="habilidades" />
-          <span>Habilidades</span>
-        </button>
-      </div>
-
-      @switch (abaAtiva()) {
-        @case ('geral') {
-        <section class="criatura__cartao criatura__cartao--painel">
-          <div class="criatura__stats criatura__stats--info">
-            <div class="stat criatura__stat criatura__stat--info">
-              <span class="stat__rotulo">Cadência</span>
-              @if (editando('cadencia')) {
-                <select
-                  #entradaCadencia
-                  appAutoFocus
-                  class="criatura__select criatura__select--stat"
-                  aria-label="Cadência"
-                  (change)="confirmarCadencia($any(entradaCadencia.value)); cancelarEdicao()"
-                  (blur)="cancelarEdicao()"
-                >
-                  @for (c of cadencias; track c) {
-                    <option [value]="c" [selected]="c === dados().cadencia">{{ rotuloCadencia(c) }}</option>
-                  }
-                </select>
-              } @else {
-                <button
-                  class="stat__valor criatura__stat-botao criatura__stat-botao--texto"
-                  type="button"
-                  [disabled]="!ajustavel()"
-                  [appTooltip]="ritmoCadencia(dados().cadencia) ?? 'Cadência'"
-                  (click)="editar('cadencia')"
-                >
-                  {{ nomeCadencia(dados().cadencia) }}
-                </button>
-                @if (dados().cadencia === 'FRENETICA') {
-                  <button
-                    class="stat__valor criatura__stat-botao criatura__stat-botao--texto"
-                    type="button"
-                    [disabled]="!ajustavel()"
-                    appTooltip="Turnos por rodada"
-                    (click)="editar('turnosPorRodada')"
-                  >
-                    {{ dados().turnosPorRodada ?? 4 }} turnos
-                  </button>
+                @if (atributosEmEdicao()) {
+                    <div class="criatura__atributos-acoes">
+                        <button
+                            class="botao botao--primario"
+                            type="button"
+                            [disabled]="violacoesModificadores().length > 0"
+                            (click)="salvarAtributos()"
+                        >
+                            Salvar
+                        </button>
+                        <button
+                            class="botao botao--secundario"
+                            type="button"
+                            (click)="cancelarAtributos()"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                    <!-- A distribuição de Modificadores é uma cota fixa da regra (2 Forte / 3 Médio /
+               3 Fraco / 2 Frágil): enquanto não fechar, o backend recusaria a ficha inteira. -->
+                    @for (violacao of violacoesModificadores(); track violacao) {
+                        <p class="criatura__atributos-aviso">{{ violacao }}</p>
+                    }
                 }
-              }
-              @if (editando('turnosPorRodada')) {
-                <input
-                  #entradaTurnos
-                  appAutoFocus
-                  class="criatura__entrada-numero criatura__entrada-numero--stat"
-                  type="number"
-                  min="4"
-                  step="1"
-                  [value]="dados().turnosPorRodada ?? 4"
-                  aria-label="Turnos por rodada da Cadência Frenética"
-                  (keydown.enter)="confirmarTurnosPorRodada(entradaTurnos.valueAsNumber); cancelarEdicao()"
-                  (blur)="confirmarTurnosPorRodada(entradaTurnos.valueAsNumber); cancelarEdicao()"
-                />
-              }
-            </div>
 
-            <div class="stat criatura__stat criatura__stat--info criatura__stat--flexivel">
-              <span class="stat__rotulo">Bônus de Iniciativa</span>
-              @if (editando('iniciativaBonus')) {
-                <input
-                  #entradaIniciativa
-                  appAutoFocus
-                  class="criatura__entrada-numero criatura__entrada-numero--stat"
-                  type="number"
-                  [value]="dados().iniciativaBonus ?? 0"
-                  aria-label="Bônus de Iniciativa"
-                  (keydown.enter)="confirmarIniciativaBonus(entradaIniciativa.valueAsNumber || undefined); cancelarEdicao()"
-                  (keydown.escape)="cancelarEdicao()"
-                  (blur)="confirmarIniciativaBonus(entradaIniciativa.valueAsNumber || undefined); cancelarEdicao()"
-                />
-              } @else {
-                <button class="stat__valor criatura__stat-botao criatura__stat-botao--texto" type="button" [disabled]="!ajustavel()" (click)="editar('iniciativaBonus')">
-                  {{ dados().iniciativaBonus !== undefined && dados().iniciativaBonus !== null ? (dados().iniciativaBonus! >= 0 ? '+' : '') + dados().iniciativaBonus : '—' }}
-                </button>
-              }
-            </div>
+                @for (grupo of gruposAtributos; track grupo.rotulo) {
+                    <span class="criatura__atributos-grupo">{{ grupo.rotulo }}</span>
 
-            <!-- Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (em vez de card cheio
-                 na linha de baixo) — mesma caixa `.stat` das duas, só com as tags dentro. -->
-            <div class="stat criatura__stat criatura__stat--deslocamento">
-              <span class="stat__rotulo">Deslocamento</span>
-              <div class="criatura__tags">
-              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.terrestre">
-                <span class="criatura__tag-rotulo">Terrestre</span>
-                @if (editando('deslocamento.terrestre')) {
-                  <input
-                    #entradaDeslTerrestre
-                    appAutoFocus
-                    class="criatura__entrada-numero criatura__entrada-numero--tag"
-                    type="number"
-                    [value]="dados().deslocamento.terrestre ?? 0"
-                    aria-label="Deslocamento Terrestre"
-                    (keydown.enter)="confirmarCampoDeslocamento('terrestre', entradaDeslTerrestre.valueAsNumber); cancelarEdicao()"
-                    (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmarCampoDeslocamento('terrestre', entradaDeslTerrestre.valueAsNumber); cancelarEdicao()"
-                  />
-                } @else {
-                  <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.terrestre')">
-                    {{ dados().deslocamento.terrestre ? dados().deslocamento.terrestre + 'm' : '—' }}
-                  </button>
+                    @if (atributosEmEdicao()) {
+                        <div class="criatura__atributos-lista">
+                            @for (campo of grupo.campos; track campo.chave) {
+                                <div class="criatura__atributo-linha">
+                                    <div class="criatura__atributo-linha-topo">
+                                        <span class="criatura__atributo-linha-nome">{{
+                                            campo.nome
+                                        }}</span>
+                                        <input
+                                            class="criatura__entrada-numero criatura__entrada-numero--linha"
+                                            type="number"
+                                            [value]="atributoRascunho(campo.chave)"
+                                            [attr.aria-label]="'Atributo Final — ' + campo.nome"
+                                            (input)="
+                                                definirAtributoRascunho(
+                                                    campo.chave,
+                                                    $any($event.target).valueAsNumber
+                                                )
+                                            "
+                                        />
+                                    </div>
+                                    <div
+                                        class="criatura__atributo-modificadores"
+                                        role="radiogroup"
+                                        [attr.aria-label]="'Modificador — ' + campo.nome"
+                                    >
+                                        @for (
+                                            m of modificadoresPorNivel;
+                                            track m;
+                                            let iModificador = $index
+                                        ) {
+                                            <button
+                                                type="button"
+                                                class="criatura__atributo-modificador"
+                                                [class.criatura__atributo-modificador--ativo]="
+                                                    modificadorRascunho(campo.chave) === m
+                                                "
+                                                [attr.aria-pressed]="
+                                                    modificadorRascunho(campo.chave) === m
+                                                "
+                                                [attr.data-nivel]="iModificador + 1"
+                                                [appTooltip]="rotuloModificadorCriatura(m)"
+                                                (click)="definirModificadorRascunho(campo.chave, m)"
+                                            >
+                                                <i></i><i></i><i></i><i></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    } @else {
+                        <div class="criatura__atributos-grade">
+                            @for (campo of grupo.campos; track campo.chave; let ultimo = $last) {
+                                <!-- o 5º de cada grupo não tem par: fica sozinho e centralizado, como no mockup -->
+                                <div
+                                    class="criatura__atributo-card"
+                                    [class.criatura__atributo-card--sozinho]="ultimo"
+                                >
+                                    @if (ajustavel()) {
+                                        <button
+                                            class="criatura__atributo-rolar"
+                                            type="button"
+                                            [attr.aria-label]="'Rolar teste de ' + campo.nome"
+                                            [appTooltip]="'Rolar teste de ' + campo.nome"
+                                            (click)="rolarTesteAtributo(campo.chave)"
+                                        >
+                                            <app-icone nome="d20" />
+                                        </button>
+                                    }
+                                    <span
+                                        class="criatura__atributo-abrev"
+                                        tabindex="0"
+                                        [appTooltip]="campo.nome"
+                                        [attr.aria-label]="campo.nome"
+                                        >{{ campo.abrev }}</span
+                                    >
+                                    <span class="criatura__atributo-valor">{{
+                                        dados().atributos[campo.chave]
+                                    }}</span>
+                                    <span
+                                        class="criatura__atributo-efetivo"
+                                        [attr.data-nivel]="nivelModificador(campo.chave)"
+                                        [appTooltip]="
+                                            'Modificador — ' +
+                                            rotuloModificadorCriatura(
+                                                dados().modificadores[campo.chave]
+                                            )
+                                        "
+                                    >
+                                        {{ modificadorValor(campo.chave) >= 0 ? "+" : ""
+                                        }}{{ modificadorValor(campo.chave) }}
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
-              </span>
-
-              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.voador">
-                <span class="criatura__tag-rotulo">Voador</span>
-                @if (editando('deslocamento.voador')) {
-                  <input
-                    #entradaDeslVoador
-                    appAutoFocus
-                    class="criatura__entrada-numero criatura__entrada-numero--tag"
-                    type="number"
-                    [value]="dados().deslocamento.voador ?? 0"
-                    aria-label="Deslocamento Voador"
-                    (keydown.enter)="confirmarCampoDeslocamento('voador', entradaDeslVoador.valueAsNumber || undefined); cancelarEdicao()"
-                    (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmarCampoDeslocamento('voador', entradaDeslVoador.valueAsNumber || undefined); cancelarEdicao()"
-                  />
-                } @else {
-                  <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.voador')">
-                    {{ dados().deslocamento.voador ? dados().deslocamento.voador + 'm' : '—' }}
-                  </button>
-                }
-              </span>
-
-              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.aquatico">
-                <span class="criatura__tag-rotulo">Aquático</span>
-                @if (editando('deslocamento.aquatico')) {
-                  <input
-                    #entradaDeslAquatico
-                    appAutoFocus
-                    class="criatura__entrada-numero criatura__entrada-numero--tag"
-                    type="number"
-                    [value]="dados().deslocamento.aquatico ?? 0"
-                    aria-label="Deslocamento Aquático"
-                    (keydown.enter)="confirmarCampoDeslocamento('aquatico', entradaDeslAquatico.valueAsNumber || undefined); cancelarEdicao()"
-                    (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmarCampoDeslocamento('aquatico', entradaDeslAquatico.valueAsNumber || undefined); cancelarEdicao()"
-                  />
-                } @else {
-                  <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.aquatico')">
-                    {{ dados().deslocamento.aquatico ? dados().deslocamento.aquatico + 'm' : '—' }}
-                  </button>
-                }
-              </span>
-
-              <span class="criatura__tag" [class.criatura__tag--vazia]="!dados().deslocamento.sobrenatural">
-                <span class="criatura__tag-rotulo">Sobrenatural</span>
-                @if (editando('deslocamento.sobrenatural')) {
-                  <input
-                    #entradaDeslSobrenatural
-                    appAutoFocus
-                    class="criatura__entrada-numero criatura__entrada-numero--tag"
-                    type="number"
-                    [value]="dados().deslocamento.sobrenatural ?? 0"
-                    aria-label="Deslocamento Sobrenatural"
-                    (keydown.enter)="confirmarCampoDeslocamento('sobrenatural', entradaDeslSobrenatural.valueAsNumber || undefined); cancelarEdicao()"
-                    (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmarCampoDeslocamento('sobrenatural', entradaDeslSobrenatural.valueAsNumber || undefined); cancelarEdicao()"
-                  />
-                } @else {
-                  <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('deslocamento.sobrenatural')">
-                    {{ dados().deslocamento.sobrenatural ? dados().deslocamento.sobrenatural + 'm' : '—' }}
-                  </button>
-                }
-              </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="criatura__info-card">
-            <header class="criatura__info-cabecalho">
-              <h3 class="criatura__info-titulo">Regeneração</h3>
-              <span class="criatura__info-regua"></span>
-              @if (ajustavel()) {
-                @if (!dados().regeneracao) {
-                  <button class="criatura__info-acao" type="button" aria-label="Adicionar regeneração" [appTooltip]="'Adicionar regeneração'" (click)="ativarRegeneracao()">
-                    <app-icone nome="mais" />
-                  </button>
-                } @else {
-                  <button class="criatura__info-acao criatura__info-acao--remover" type="button" aria-label="Remover regeneração" [appTooltip]="'Remover regeneração'" (click)="removerRegeneracao()">
-                    <app-icone nome="excluir" />
-                  </button>
-                }
-              }
-            </header>
-            @if (!dados().regeneracao) {
-              <p class="criatura__vazio">Sem regeneração.</p>
-            } @else {
-              <div class="criatura__tags">
-                <span class="criatura__tag">
-                  <span class="criatura__tag-rotulo">Modo</span>
-                  @if (editando('regeneracao.modo')) {
-                    <select
-                      #entradaModoRegen
-                      appAutoFocus
-                      class="criatura__select criatura__select--tag"
-                      aria-label="Modo de Regeneração"
-                      (change)="confirmarCampoRegeneracao('modo', $any(entradaModoRegen.value)); cancelarEdicao()"
-                      (blur)="cancelarEdicao()"
-                    >
-                      @for (m of modosRegeneracao; track m) {
-                        <option [value]="m" [selected]="m === dados().regeneracao!.modo">{{ rotuloRegeneracaoModo(m) }}</option>
-                      }
-                    </select>
-                  } @else {
-                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.modo')">
-                      {{ rotuloRegeneracaoModo(dados().regeneracao!.modo) }}
-                    </button>
-                  }
-                </span>
-
-                <span class="criatura__tag">
-                  <span class="criatura__tag-rotulo">Intensidade</span>
-                  @if (editando('regeneracao.intensidade')) {
-                    <select
-                      #entradaIntensidadeRegen
-                      appAutoFocus
-                      class="criatura__select criatura__select--tag"
-                      aria-label="Intensidade de Regeneração"
-                      (change)="confirmarCampoRegeneracao('intensidade', $any(entradaIntensidadeRegen.value)); cancelarEdicao()"
-                      (blur)="cancelarEdicao()"
-                    >
-                      @for (i of intensidadesRegeneracao; track i) {
-                        <option [value]="i" [selected]="i === dados().regeneracao!.intensidade">{{ rotuloRegeneracaoIntensidade(i) }}</option>
-                      }
-                    </select>
-                  } @else {
-                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.intensidade')">
-                      {{ rotuloRegeneracaoIntensidade(dados().regeneracao!.intensidade) }}
-                    </button>
-                  }
-                </span>
-
-                <span class="criatura__tag">
-                  <span class="criatura__tag-rotulo">Valor</span>
-                  @if (editando('regeneracao.valor')) {
-                    <input
-                      #entradaValorRegen
-                      appAutoFocus
-                      class="criatura__entrada-numero criatura__entrada-numero--tag"
-                      type="number"
-                      [value]="dados().regeneracao!.valor"
-                      aria-label="Valor de Regeneração"
-                      (keydown.enter)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
-                      (keydown.escape)="cancelarEdicao()"
-                      (blur)="confirmarCampoRegeneracao('valor', entradaValorRegen.valueAsNumber); cancelarEdicao()"
-                    />
-                  } @else {
-                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.valor')">
-                      {{ dados().regeneracao!.valor }}
-                    </button>
-                  }
-                </span>
-
-                <span class="criatura__tag criatura__tag--larga" [class.criatura__tag--vazia]="!dados().regeneracao!.condicao">
-                  <span class="criatura__tag-rotulo">Condição</span>
-                  @if (editando('regeneracao.condicao')) {
-                    <input
-                      #entradaCondicaoRegen
-                      appAutoFocus
-                      class="criatura__entrada-texto criatura__entrada-texto--tag"
-                      type="text"
-                      [value]="dados().regeneracao!.condicao ?? ''"
-                      aria-label="Condição de Regeneração"
-                      (keydown.enter)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
-                      (keydown.escape)="cancelarEdicao()"
-                      (blur)="confirmarCampoRegeneracao('condicao', entradaCondicaoRegen.value || null); cancelarEdicao()"
-                    />
-                  } @else {
-                    <button class="criatura__tag-valor" type="button" [disabled]="!ajustavel()" (click)="editar('regeneracao.condicao')">
-                      {{ dados().regeneracao!.condicao ?? '—' }}
-                    </button>
-                  }
-                </span>
-              </div>
-            }
-          </div>
-
-          <div class="criatura__info-card">
-            <header class="criatura__info-cabecalho">
-              <h3 class="criatura__info-titulo">Anotações</h3>
-              <span class="criatura__info-regua"></span>
-              @if (ajustavel() && !editando('anotacoes')) {
-                <button class="criatura__lapis" type="button" aria-label="Editar anotações" [appTooltip]="'Editar anotações'" (click)="editar('anotacoes')">
-                  <app-icone nome="editar" />
-                </button>
-              }
-            </header>
-            @if (editando('anotacoes')) {
-              <textarea
-                #entradaAnotacoes
-                appAutoFocus
-                class="criatura__anotacoes"
-                aria-label="Anotações"
-                [value]="dados().anotacoes ?? ''"
-                (keydown.escape)="cancelarEdicao()"
-                (blur)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
-              ></textarea>
-            } @else if (dados().anotacoes) {
-              <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
-            } @else {
-              <p class="criatura__vazio">Sem anotações.</p>
-            }
-          </div>
-        </section>
-        }
-
-        @case ('descricao') {
-        <section class="criatura__cartao criatura__cartao--painel">
-          <div class="criatura__info-card">
-            <header class="criatura__info-cabecalho">
-              <h3 class="criatura__info-titulo">Descrição</h3>
-              <span class="criatura__info-regua"></span>
-              @if (ajustavel() && !editando('identidade.conceito')) {
-                <button class="criatura__lapis" type="button" aria-label="Editar descrição" [appTooltip]="'Editar descrição'" (click)="editar('identidade.conceito')">
-                  <app-icone nome="editar" />
-                </button>
-              }
-            </header>
-            @if (editando('identidade.conceito')) {
-              <textarea
-                #entradaConceito
-                appAutoFocus
-                class="criatura__entrada-textarea"
-                aria-label="Conceito"
-                (keydown.escape)="cancelarEdicao()"
-                (blur)="confirmarCampoIdentidade('conceito', entradaConceito.value); cancelarEdicao()"
-              >{{ dados().identidade.conceito }}</textarea>
-            } @else {
-              <p class="criatura__info-texto">{{ dados().identidade.conceito }}</p>
-            }
-
-            <div class="criatura__info-nota">
-              <span class="criatura__info-nota-rotulo criatura__info-nota-rotulo--destaque">Gancho</span>
-              @if (editando('identidade.ganchoUnico')) {
-                <textarea
-                  #entradaGancho
-                  appAutoFocus
-                  class="criatura__entrada-textarea"
-                  aria-label="Gancho Único"
-                  (keydown.escape)="cancelarEdicao()"
-                  (blur)="confirmarCampoIdentidade('ganchoUnico', entradaGancho.value); cancelarEdicao()"
-                >{{ dados().identidade.ganchoUnico }}</textarea>
-              } @else {
-                <button class="criatura__info-nota-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.ganchoUnico')">
-                  {{ dados().identidade.ganchoUnico }}
-                </button>
-              }
-            </div>
-
-            <div class="criatura__info-nota">
-              <span class="criatura__info-nota-rotulo">Motivação</span>
-              @if (editando('identidade.motivacao')) {
-                <textarea
-                  #entradaMotivacao
-                  appAutoFocus
-                  class="criatura__entrada-textarea"
-                  aria-label="Motivação"
-                  (keydown.escape)="cancelarEdicao()"
-                  (blur)="confirmarCampoIdentidade('motivacao', entradaMotivacao.value); cancelarEdicao()"
-                >{{ dados().identidade.motivacao }}</textarea>
-              } @else {
-                <button class="criatura__info-nota-texto" type="button" [disabled]="!ajustavel()" (click)="editar('identidade.motivacao')">
-                  {{ dados().identidade.motivacao }}
-                </button>
-              }
-            </div>
-          </div>
-
-          <div class="criatura__info-duas">
-            <div class="criatura__info-card">
-              <header class="criatura__info-cabecalho">
-                <h3 class="criatura__info-titulo">Natureza</h3>
-                <span class="criatura__info-regua"></span>
-                @if (ajustavel() && !editando('identidade.naturezaFisica')) {
-                  <button class="criatura__lapis" type="button" aria-label="Editar natureza física" [appTooltip]="'Editar natureza física'" (click)="editar('identidade.naturezaFisica')">
-                    <app-icone nome="editar" />
-                  </button>
-                }
-              </header>
-              @if (editando('identidade.naturezaFisica')) {
-                <textarea
-                  #entradaNatureza
-                  appAutoFocus
-                  class="criatura__entrada-textarea"
-                  aria-label="Natureza Física"
-                  (keydown.escape)="cancelarEdicao()"
-                  (blur)="confirmarCampoIdentidade('naturezaFisica', entradaNatureza.value); cancelarEdicao()"
-                >{{ dados().identidade.naturezaFisica }}</textarea>
-              } @else {
-                <p class="criatura__info-texto">{{ dados().identidade.naturezaFisica }}</p>
-              }
-            </div>
-
-            <div class="criatura__info-card">
-              <header class="criatura__info-cabecalho">
-                <h3 class="criatura__info-titulo">Tema de Horror</h3>
-                <span class="criatura__info-regua"></span>
-                @if (ajustavel() && !editando('identidade.temaHorror')) {
-                  <button class="criatura__lapis" type="button" aria-label="Editar tema de horror" [appTooltip]="'Editar tema de horror'" (click)="editar('identidade.temaHorror')">
-                    <app-icone nome="editar" />
-                  </button>
-                }
-              </header>
-              @if (editando('identidade.temaHorror')) {
-                <input
-                  #entradaTema
-                  appAutoFocus
-                  class="criatura__entrada-texto"
-                  type="text"
-                  [value]="dados().identidade.temaHorror ?? ''"
-                  aria-label="Tema de Horror"
-                  (keydown.enter)="confirmarCampoIdentidade('temaHorror', entradaTema.value || undefined); cancelarEdicao()"
-                  (keydown.escape)="cancelarEdicao()"
-                  (blur)="confirmarCampoIdentidade('temaHorror', entradaTema.value || undefined); cancelarEdicao()"
-                />
-              } @else {
-                <p class="criatura__info-texto">{{ dados().identidade.temaHorror ?? '—' }}</p>
-              }
-            </div>
-          </div>
-        </section>
-        }
-
-        @case ('ataques') {
-        <section class="criatura__cartao criatura__cartao--painel">
-          <app-criatura-ataque-lista
-            [itens]="dados().ataques"
-            [editavel]="ajustavel()"
-            (itensMudou)="aoAtaquesMudar($event)"
-            (rolarAtaque)="rolarAtaque($event)"
-            (rolarAtaqueCritico)="rolarAtaque($event, true)"
-            (testarAtaque)="rolarTesteAtaque($event)"
-          />
-        </section>
-        }
-
-        @case ('habilidades') {
-        <section class="criatura__cartao criatura__cartao--painel">
-          <app-criatura-habilidade-lista
-            [itens]="dados().habilidades"
-            [editavel]="ajustavel()"
-            (itensMudou)="aoHabilidadesMudar($event)"
-          />
-        </section>
-        }
-      }
-    </div>
-  </div>
-
-  <app-bandeja-dados />
-
-  @if (confirmandoRevelarRolagem()) {
-    <div class="dialogo" role="dialog" aria-modal="true" aria-label="Tornar rolagens públicas">
-      <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarRevelarRolagem()"></button>
-      <div class="dialogo__painel revelar-rolagem">
-        <header class="criatura__cartao-cabecalho">
-          <app-icone nome="olho" />
-          <h2 class="dialogo__titulo criatura__cartao-titulo">Tornar Rolagens Públicas</h2>
-          <span class="criatura__cartao-regua"></span>
-          <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="cancelarRevelarRolagem()">✕</button>
-        </header>
-
-        <p class="revelar-rolagem__aviso">
-          A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros jogadores.
-          Tem certeza?
-        </p>
-
-        <div class="revelar-rolagem__acoes">
-          <button class="botao botao--primario revelar-rolagem__acao" type="button" (click)="confirmarRevelarRolagem()">
-            <app-icone nome="olho" /> Tornar pública
-          </button>
-          <button class="botao botao--secundario revelar-rolagem__acao" type="button" (click)="cancelarRevelarRolagem()">
-            Cancelar
-          </button>
+            </section>
         </div>
-      </div>
+
+        <!-- Coluna 3 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
+         `.ficha-status__abas` de `FichaVisualizacao`. -->
+        <div class="criatura__coluna criatura__coluna--status">
+            <div class="criatura__abas" role="tablist">
+                <button
+                    type="button"
+                    class="criatura__aba"
+                    role="tab"
+                    [class.criatura__aba--ativa]="abaAtiva() === 'geral'"
+                    [attr.aria-selected]="abaAtiva() === 'geral'"
+                    (click)="selecionarAba('geral')"
+                >
+                    <app-icone nome="visao-geral" />
+                    <span>Geral</span>
+                </button>
+                <button
+                    type="button"
+                    class="criatura__aba"
+                    role="tab"
+                    [class.criatura__aba--ativa]="abaAtiva() === 'descricao'"
+                    [attr.aria-selected]="abaAtiva() === 'descricao'"
+                    (click)="selecionarAba('descricao')"
+                >
+                    <app-icone nome="anotacoes" />
+                    <span>Descrição</span>
+                </button>
+                <button
+                    type="button"
+                    class="criatura__aba"
+                    role="tab"
+                    [class.criatura__aba--ativa]="abaAtiva() === 'ataques'"
+                    [attr.aria-selected]="abaAtiva() === 'ataques'"
+                    (click)="selecionarAba('ataques')"
+                >
+                    <app-icone nome="d20" />
+                    <span>Ataques</span>
+                </button>
+                <button
+                    type="button"
+                    class="criatura__aba"
+                    role="tab"
+                    [class.criatura__aba--ativa]="abaAtiva() === 'habilidades'"
+                    [attr.aria-selected]="abaAtiva() === 'habilidades'"
+                    (click)="selecionarAba('habilidades')"
+                >
+                    <app-icone nome="habilidades" />
+                    <span>Habilidades</span>
+                </button>
+            </div>
+
+            @switch (abaAtiva()) {
+                @case ("geral") {
+                    <section class="criatura__cartao criatura__cartao--painel">
+                        <div class="criatura__stats criatura__stats--info">
+                            <div class="stat criatura__stat criatura__stat--info">
+                                <span class="stat__rotulo">Cadência</span>
+                                @if (editando("cadencia")) {
+                                    <select
+                                        #entradaCadencia
+                                        appAutoFocus
+                                        class="criatura__select criatura__select--stat"
+                                        aria-label="Cadência"
+                                        (change)="
+                                            confirmarCadencia($any(entradaCadencia.value));
+                                            cancelarEdicao()
+                                        "
+                                        (blur)="cancelarEdicao()"
+                                    >
+                                        @for (c of cadencias; track c) {
+                                            <option [value]="c" [selected]="c === dados().cadencia">
+                                                {{ rotuloCadencia(c) }}
+                                            </option>
+                                        }
+                                    </select>
+                                } @else {
+                                    <button
+                                        class="stat__valor criatura__stat-botao criatura__stat-botao--texto"
+                                        type="button"
+                                        [disabled]="!ajustavel()"
+                                        [appTooltip]="ritmoCadencia(dados().cadencia) ?? 'Cadência'"
+                                        (click)="editar('cadencia')"
+                                    >
+                                        {{ nomeCadencia(dados().cadencia) }}
+                                    </button>
+                                    @if (dados().cadencia === "FRENETICA") {
+                                        <button
+                                            class="stat__valor criatura__stat-botao criatura__stat-botao--texto"
+                                            type="button"
+                                            [disabled]="!ajustavel()"
+                                            appTooltip="Turnos por rodada"
+                                            (click)="editar('turnosPorRodada')"
+                                        >
+                                            {{ dados().turnosPorRodada ?? 4 }} turnos
+                                        </button>
+                                    }
+                                }
+                                @if (editando("turnosPorRodada")) {
+                                    <input
+                                        #entradaTurnos
+                                        appAutoFocus
+                                        class="criatura__entrada-numero criatura__entrada-numero--stat"
+                                        type="number"
+                                        min="4"
+                                        step="1"
+                                        [value]="dados().turnosPorRodada ?? 4"
+                                        aria-label="Turnos por rodada da Cadência Frenética"
+                                        (keydown.enter)="
+                                            confirmarTurnosPorRodada(entradaTurnos.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                        (blur)="
+                                            confirmarTurnosPorRodada(entradaTurnos.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                }
+                            </div>
+
+                            <div
+                                class="stat criatura__stat criatura__stat--info criatura__stat--flexivel"
+                            >
+                                <span class="stat__rotulo">Bônus de Iniciativa</span>
+                                @if (editando("iniciativaBonus")) {
+                                    <input
+                                        #entradaIniciativa
+                                        appAutoFocus
+                                        class="criatura__entrada-numero criatura__entrada-numero--stat"
+                                        type="number"
+                                        [value]="dados().iniciativaBonus ?? 0"
+                                        aria-label="Bônus de Iniciativa"
+                                        (keydown.enter)="
+                                            confirmarIniciativaBonus(
+                                                entradaIniciativa.valueAsNumber || undefined
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarIniciativaBonus(
+                                                entradaIniciativa.valueAsNumber || undefined
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                } @else {
+                                    <button
+                                        class="stat__valor criatura__stat-botao criatura__stat-botao--texto"
+                                        type="button"
+                                        [disabled]="!ajustavel()"
+                                        (click)="editar('iniciativaBonus')"
+                                    >
+                                        {{
+                                            dados().iniciativaBonus !== undefined &&
+                                            dados().iniciativaBonus !== null
+                                                ? (dados().iniciativaBonus! >= 0 ? "+" : "") +
+                                                  dados().iniciativaBonus
+                                                : "—"
+                                        }}
+                                    </button>
+                                }
+                            </div>
+
+                            <!-- Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (em vez de card cheio
+                 na linha de baixo) — mesma caixa `.stat` das duas, só com as tags dentro. -->
+                            <div class="stat criatura__stat criatura__stat--deslocamento">
+                                <span class="stat__rotulo">Deslocamento</span>
+                                <div class="criatura__tags">
+                                    <span
+                                        class="criatura__tag"
+                                        [class.criatura__tag--vazia]="
+                                            !dados().deslocamento.terrestre
+                                        "
+                                    >
+                                        <span class="criatura__tag-rotulo">Terrestre</span>
+                                        @if (editando("deslocamento.terrestre")) {
+                                            <input
+                                                #entradaDeslTerrestre
+                                                appAutoFocus
+                                                class="criatura__entrada-numero criatura__entrada-numero--tag"
+                                                type="number"
+                                                [value]="dados().deslocamento.terrestre ?? 0"
+                                                aria-label="Deslocamento Terrestre"
+                                                (keydown.enter)="
+                                                    confirmarCampoDeslocamento(
+                                                        'terrestre',
+                                                        entradaDeslTerrestre.valueAsNumber
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (keydown.escape)="cancelarEdicao()"
+                                                (blur)="
+                                                    confirmarCampoDeslocamento(
+                                                        'terrestre',
+                                                        entradaDeslTerrestre.valueAsNumber
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                            />
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('deslocamento.terrestre')"
+                                            >
+                                                {{
+                                                    dados().deslocamento.terrestre
+                                                        ? dados().deslocamento.terrestre + "m"
+                                                        : "—"
+                                                }}
+                                            </button>
+                                        }
+                                    </span>
+
+                                    <span
+                                        class="criatura__tag"
+                                        [class.criatura__tag--vazia]="!dados().deslocamento.voador"
+                                    >
+                                        <span class="criatura__tag-rotulo">Voador</span>
+                                        @if (editando("deslocamento.voador")) {
+                                            <input
+                                                #entradaDeslVoador
+                                                appAutoFocus
+                                                class="criatura__entrada-numero criatura__entrada-numero--tag"
+                                                type="number"
+                                                [value]="dados().deslocamento.voador ?? 0"
+                                                aria-label="Deslocamento Voador"
+                                                (keydown.enter)="
+                                                    confirmarCampoDeslocamento(
+                                                        'voador',
+                                                        entradaDeslVoador.valueAsNumber || undefined
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (keydown.escape)="cancelarEdicao()"
+                                                (blur)="
+                                                    confirmarCampoDeslocamento(
+                                                        'voador',
+                                                        entradaDeslVoador.valueAsNumber || undefined
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                            />
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('deslocamento.voador')"
+                                            >
+                                                {{
+                                                    dados().deslocamento.voador
+                                                        ? dados().deslocamento.voador + "m"
+                                                        : "—"
+                                                }}
+                                            </button>
+                                        }
+                                    </span>
+
+                                    <span
+                                        class="criatura__tag"
+                                        [class.criatura__tag--vazia]="
+                                            !dados().deslocamento.aquatico
+                                        "
+                                    >
+                                        <span class="criatura__tag-rotulo">Aquático</span>
+                                        @if (editando("deslocamento.aquatico")) {
+                                            <input
+                                                #entradaDeslAquatico
+                                                appAutoFocus
+                                                class="criatura__entrada-numero criatura__entrada-numero--tag"
+                                                type="number"
+                                                [value]="dados().deslocamento.aquatico ?? 0"
+                                                aria-label="Deslocamento Aquático"
+                                                (keydown.enter)="
+                                                    confirmarCampoDeslocamento(
+                                                        'aquatico',
+                                                        entradaDeslAquatico.valueAsNumber ||
+                                                            undefined
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (keydown.escape)="cancelarEdicao()"
+                                                (blur)="
+                                                    confirmarCampoDeslocamento(
+                                                        'aquatico',
+                                                        entradaDeslAquatico.valueAsNumber ||
+                                                            undefined
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                            />
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('deslocamento.aquatico')"
+                                            >
+                                                {{
+                                                    dados().deslocamento.aquatico
+                                                        ? dados().deslocamento.aquatico + "m"
+                                                        : "—"
+                                                }}
+                                            </button>
+                                        }
+                                    </span>
+
+                                    <span
+                                        class="criatura__tag"
+                                        [class.criatura__tag--vazia]="
+                                            !dados().deslocamento.sobrenatural
+                                        "
+                                    >
+                                        <span class="criatura__tag-rotulo">Sobrenatural</span>
+                                        @if (editando("deslocamento.sobrenatural")) {
+                                            <input
+                                                #entradaDeslSobrenatural
+                                                appAutoFocus
+                                                class="criatura__entrada-numero criatura__entrada-numero--tag"
+                                                type="number"
+                                                [value]="dados().deslocamento.sobrenatural ?? 0"
+                                                aria-label="Deslocamento Sobrenatural"
+                                                (keydown.enter)="
+                                                    confirmarCampoDeslocamento(
+                                                        'sobrenatural',
+                                                        entradaDeslSobrenatural.valueAsNumber ||
+                                                            undefined
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (keydown.escape)="cancelarEdicao()"
+                                                (blur)="
+                                                    confirmarCampoDeslocamento(
+                                                        'sobrenatural',
+                                                        entradaDeslSobrenatural.valueAsNumber ||
+                                                            undefined
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                            />
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('deslocamento.sobrenatural')"
+                                            >
+                                                {{
+                                                    dados().deslocamento.sobrenatural
+                                                        ? dados().deslocamento.sobrenatural + "m"
+                                                        : "—"
+                                                }}
+                                            </button>
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="criatura__info-card">
+                            <header class="criatura__info-cabecalho">
+                                <h3 class="criatura__info-titulo">Regeneração</h3>
+                                <span class="criatura__info-regua"></span>
+                                @if (ajustavel()) {
+                                    @if (!dados().regeneracao) {
+                                        <button
+                                            class="criatura__info-acao"
+                                            type="button"
+                                            aria-label="Adicionar regeneração"
+                                            [appTooltip]="'Adicionar regeneração'"
+                                            (click)="ativarRegeneracao()"
+                                        >
+                                            <app-icone nome="mais" />
+                                        </button>
+                                    } @else {
+                                        <button
+                                            class="criatura__info-acao criatura__info-acao--remover"
+                                            type="button"
+                                            aria-label="Remover regeneração"
+                                            [appTooltip]="'Remover regeneração'"
+                                            (click)="removerRegeneracao()"
+                                        >
+                                            <app-icone nome="excluir" />
+                                        </button>
+                                    }
+                                }
+                            </header>
+                            @if (!dados().regeneracao) {
+                                <p class="criatura__vazio">Sem regeneração.</p>
+                            } @else {
+                                <div class="criatura__tags">
+                                    <span class="criatura__tag">
+                                        <span class="criatura__tag-rotulo">Modo</span>
+                                        @if (editando("regeneracao.modo")) {
+                                            <select
+                                                #entradaModoRegen
+                                                appAutoFocus
+                                                class="criatura__select criatura__select--tag"
+                                                aria-label="Modo de Regeneração"
+                                                (change)="
+                                                    confirmarCampoRegeneracao(
+                                                        'modo',
+                                                        $any(entradaModoRegen.value)
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (blur)="cancelarEdicao()"
+                                            >
+                                                @for (m of modosRegeneracao; track m) {
+                                                    <option
+                                                        [value]="m"
+                                                        [selected]="m === dados().regeneracao!.modo"
+                                                    >
+                                                        {{ rotuloRegeneracaoModo(m) }}
+                                                    </option>
+                                                }
+                                            </select>
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('regeneracao.modo')"
+                                            >
+                                                {{
+                                                    rotuloRegeneracaoModo(dados().regeneracao!.modo)
+                                                }}
+                                            </button>
+                                        }
+                                    </span>
+
+                                    <span class="criatura__tag">
+                                        <span class="criatura__tag-rotulo">Intensidade</span>
+                                        @if (editando("regeneracao.intensidade")) {
+                                            <select
+                                                #entradaIntensidadeRegen
+                                                appAutoFocus
+                                                class="criatura__select criatura__select--tag"
+                                                aria-label="Intensidade de Regeneração"
+                                                (change)="
+                                                    confirmarCampoRegeneracao(
+                                                        'intensidade',
+                                                        $any(entradaIntensidadeRegen.value)
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (blur)="cancelarEdicao()"
+                                            >
+                                                @for (i of intensidadesRegeneracao; track i) {
+                                                    <option
+                                                        [value]="i"
+                                                        [selected]="
+                                                            i === dados().regeneracao!.intensidade
+                                                        "
+                                                    >
+                                                        {{ rotuloRegeneracaoIntensidade(i) }}
+                                                    </option>
+                                                }
+                                            </select>
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('regeneracao.intensidade')"
+                                            >
+                                                {{
+                                                    rotuloRegeneracaoIntensidade(
+                                                        dados().regeneracao!.intensidade
+                                                    )
+                                                }}
+                                            </button>
+                                        }
+                                    </span>
+
+                                    <span class="criatura__tag">
+                                        <span class="criatura__tag-rotulo">Valor</span>
+                                        @if (editando("regeneracao.valor")) {
+                                            <input
+                                                #entradaValorRegen
+                                                appAutoFocus
+                                                class="criatura__entrada-numero criatura__entrada-numero--tag"
+                                                type="number"
+                                                [value]="dados().regeneracao!.valor"
+                                                aria-label="Valor de Regeneração"
+                                                (keydown.enter)="
+                                                    confirmarCampoRegeneracao(
+                                                        'valor',
+                                                        entradaValorRegen.valueAsNumber
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (keydown.escape)="cancelarEdicao()"
+                                                (blur)="
+                                                    confirmarCampoRegeneracao(
+                                                        'valor',
+                                                        entradaValorRegen.valueAsNumber
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                            />
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('regeneracao.valor')"
+                                            >
+                                                {{ dados().regeneracao!.valor }}
+                                            </button>
+                                        }
+                                    </span>
+
+                                    <span
+                                        class="criatura__tag criatura__tag--larga"
+                                        [class.criatura__tag--vazia]="
+                                            !dados().regeneracao!.condicao
+                                        "
+                                    >
+                                        <span class="criatura__tag-rotulo">Condição</span>
+                                        @if (editando("regeneracao.condicao")) {
+                                            <input
+                                                #entradaCondicaoRegen
+                                                appAutoFocus
+                                                class="criatura__entrada-texto criatura__entrada-texto--tag"
+                                                type="text"
+                                                [value]="dados().regeneracao!.condicao ?? ''"
+                                                aria-label="Condição de Regeneração"
+                                                (keydown.enter)="
+                                                    confirmarCampoRegeneracao(
+                                                        'condicao',
+                                                        entradaCondicaoRegen.value || null
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                                (keydown.escape)="cancelarEdicao()"
+                                                (blur)="
+                                                    confirmarCampoRegeneracao(
+                                                        'condicao',
+                                                        entradaCondicaoRegen.value || null
+                                                    );
+                                                    cancelarEdicao()
+                                                "
+                                            />
+                                        } @else {
+                                            <button
+                                                class="criatura__tag-valor"
+                                                type="button"
+                                                [disabled]="!ajustavel()"
+                                                (click)="editar('regeneracao.condicao')"
+                                            >
+                                                {{ dados().regeneracao!.condicao ?? "—" }}
+                                            </button>
+                                        }
+                                    </span>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="criatura__info-card">
+                            <header class="criatura__info-cabecalho">
+                                <h3 class="criatura__info-titulo">Anotações</h3>
+                                <span class="criatura__info-regua"></span>
+                                @if (ajustavel() && !editando("anotacoes")) {
+                                    <button
+                                        class="criatura__lapis"
+                                        type="button"
+                                        aria-label="Editar anotações"
+                                        [appTooltip]="'Editar anotações'"
+                                        (click)="editar('anotacoes')"
+                                    >
+                                        <app-icone nome="editar" />
+                                    </button>
+                                }
+                            </header>
+                            @if (editando("anotacoes")) {
+                                <textarea
+                                    #entradaAnotacoes
+                                    appAutoFocus
+                                    class="criatura__anotacoes"
+                                    aria-label="Anotações"
+                                    [value]="dados().anotacoes ?? ''"
+                                    (keydown.escape)="cancelarEdicao()"
+                                    (blur)="
+                                        confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()
+                                    "
+                                ></textarea>
+                            } @else if (dados().anotacoes) {
+                                <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
+                            } @else {
+                                <p class="criatura__vazio">Sem anotações.</p>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @case ("descricao") {
+                    <section class="criatura__cartao criatura__cartao--painel">
+                        <div class="criatura__info-card">
+                            <header class="criatura__info-cabecalho">
+                                <h3 class="criatura__info-titulo">Descrição</h3>
+                                <span class="criatura__info-regua"></span>
+                                @if (ajustavel() && !editando("identidade.conceito")) {
+                                    <button
+                                        class="criatura__lapis"
+                                        type="button"
+                                        aria-label="Editar descrição"
+                                        [appTooltip]="'Editar descrição'"
+                                        (click)="editar('identidade.conceito')"
+                                    >
+                                        <app-icone nome="editar" />
+                                    </button>
+                                }
+                            </header>
+                            @if (editando("identidade.conceito")) {
+                                <textarea
+                                    #entradaConceito
+                                    appAutoFocus
+                                    class="criatura__entrada-textarea"
+                                    aria-label="Conceito"
+                                    (keydown.escape)="cancelarEdicao()"
+                                    (blur)="
+                                        confirmarCampoIdentidade('conceito', entradaConceito.value);
+                                        cancelarEdicao()
+                                    "
+                                    >{{ dados().identidade.conceito }}</textarea>
+                            } @else {
+                                <p class="criatura__info-texto">
+                                    {{ dados().identidade.conceito }}
+                                </p>
+                            }
+
+                            <div class="criatura__info-nota">
+                                <span
+                                    class="criatura__info-nota-rotulo criatura__info-nota-rotulo--destaque"
+                                    >Gancho</span
+                                >
+                                @if (editando("identidade.ganchoUnico")) {
+                                    <textarea
+                                        #entradaGancho
+                                        appAutoFocus
+                                        class="criatura__entrada-textarea"
+                                        aria-label="Gancho Único"
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarCampoIdentidade(
+                                                'ganchoUnico',
+                                                entradaGancho.value
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                        >{{ dados().identidade.ganchoUnico }}</textarea>
+                                } @else {
+                                    <button
+                                        class="criatura__info-nota-texto"
+                                        type="button"
+                                        [disabled]="!ajustavel()"
+                                        (click)="editar('identidade.ganchoUnico')"
+                                    >
+                                        {{ dados().identidade.ganchoUnico }}
+                                    </button>
+                                }
+                            </div>
+
+                            <div class="criatura__info-nota">
+                                <span class="criatura__info-nota-rotulo">Motivação</span>
+                                @if (editando("identidade.motivacao")) {
+                                    <textarea
+                                        #entradaMotivacao
+                                        appAutoFocus
+                                        class="criatura__entrada-textarea"
+                                        aria-label="Motivação"
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarCampoIdentidade(
+                                                'motivacao',
+                                                entradaMotivacao.value
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                        >{{ dados().identidade.motivacao }}</textarea>
+                                } @else {
+                                    <button
+                                        class="criatura__info-nota-texto"
+                                        type="button"
+                                        [disabled]="!ajustavel()"
+                                        (click)="editar('identidade.motivacao')"
+                                    >
+                                        {{ dados().identidade.motivacao }}
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="criatura__info-duas">
+                            <div class="criatura__info-card">
+                                <header class="criatura__info-cabecalho">
+                                    <h3 class="criatura__info-titulo">Natureza</h3>
+                                    <span class="criatura__info-regua"></span>
+                                    @if (ajustavel() && !editando("identidade.naturezaFisica")) {
+                                        <button
+                                            class="criatura__lapis"
+                                            type="button"
+                                            aria-label="Editar natureza física"
+                                            [appTooltip]="'Editar natureza física'"
+                                            (click)="editar('identidade.naturezaFisica')"
+                                        >
+                                            <app-icone nome="editar" />
+                                        </button>
+                                    }
+                                </header>
+                                @if (editando("identidade.naturezaFisica")) {
+                                    <textarea
+                                        #entradaNatureza
+                                        appAutoFocus
+                                        class="criatura__entrada-textarea"
+                                        aria-label="Natureza Física"
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarCampoIdentidade(
+                                                'naturezaFisica',
+                                                entradaNatureza.value
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                        >{{ dados().identidade.naturezaFisica }}</textarea>
+                                } @else {
+                                    <p class="criatura__info-texto">
+                                        {{ dados().identidade.naturezaFisica }}
+                                    </p>
+                                }
+                            </div>
+
+                            <div class="criatura__info-card">
+                                <header class="criatura__info-cabecalho">
+                                    <h3 class="criatura__info-titulo">Tema de Horror</h3>
+                                    <span class="criatura__info-regua"></span>
+                                    @if (ajustavel() && !editando("identidade.temaHorror")) {
+                                        <button
+                                            class="criatura__lapis"
+                                            type="button"
+                                            aria-label="Editar tema de horror"
+                                            [appTooltip]="'Editar tema de horror'"
+                                            (click)="editar('identidade.temaHorror')"
+                                        >
+                                            <app-icone nome="editar" />
+                                        </button>
+                                    }
+                                </header>
+                                @if (editando("identidade.temaHorror")) {
+                                    <input
+                                        #entradaTema
+                                        appAutoFocus
+                                        class="criatura__entrada-texto"
+                                        type="text"
+                                        [value]="dados().identidade.temaHorror ?? ''"
+                                        aria-label="Tema de Horror"
+                                        (keydown.enter)="
+                                            confirmarCampoIdentidade(
+                                                'temaHorror',
+                                                entradaTema.value || undefined
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarCampoIdentidade(
+                                                'temaHorror',
+                                                entradaTema.value || undefined
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                } @else {
+                                    <p class="criatura__info-texto">
+                                        {{ dados().identidade.temaHorror ?? "—" }}
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </section>
+                }
+
+                @case ("ataques") {
+                    <section class="criatura__cartao criatura__cartao--painel">
+                        <app-criatura-ataque-lista
+                            [itens]="dados().ataques"
+                            [editavel]="ajustavel()"
+                            (itensMudou)="aoAtaquesMudar($event)"
+                            (rolarAtaque)="rolarAtaque($event)"
+                            (rolarAtaqueCritico)="rolarAtaque($event, true)"
+                            (testarAtaque)="rolarTesteAtaque($event)"
+                        />
+                    </section>
+                }
+
+                @case ("habilidades") {
+                    <section class="criatura__cartao criatura__cartao--painel">
+                        <app-criatura-habilidade-lista
+                            [itens]="dados().habilidades"
+                            [editavel]="ajustavel()"
+                            (itensMudou)="aoHabilidadesMudar($event)"
+                        />
+                    </section>
+                }
+            }
+        </div>
     </div>
-  }
+
+    <app-bandeja-dados />
+
+    @if (confirmandoRevelarRolagem()) {
+        <div class="dialogo" role="dialog" aria-modal="true" aria-label="Tornar rolagens públicas">
+            <button
+                class="dialogo__fundo"
+                type="button"
+                aria-label="Fechar"
+                (click)="cancelarRevelarRolagem()"
+            ></button>
+            <div class="dialogo__painel revelar-rolagem">
+                <header class="criatura__cartao-cabecalho">
+                    <app-icone nome="olho" />
+                    <h2 class="dialogo__titulo criatura__cartao-titulo">
+                        Tornar Rolagens Públicas
+                    </h2>
+                    <span class="criatura__cartao-regua"></span>
+                    <button
+                        class="dialogo__fechar"
+                        type="button"
+                        aria-label="Fechar"
+                        (click)="cancelarRevelarRolagem()"
+                    >
+                        ✕
+                    </button>
+                </header>
+
+                <p class="revelar-rolagem__aviso">
+                    A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros
+                    jogadores. Tem certeza?
+                </p>
+
+                <div class="revelar-rolagem__acoes">
+                    <button
+                        class="botao botao--primario revelar-rolagem__acao"
+                        type="button"
+                        (click)="confirmarRevelarRolagem()"
+                    >
+                        <app-icone nome="olho" /> Tornar pública
+                    </button>
+                    <button
+                        class="botao botao--secundario revelar-rolagem__acao"
+                        type="button"
+                        (click)="cancelarRevelarRolagem()"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
 </article>
 
 @if (ajustavel()) {
-  <app-receber-dano-dialog
-    [aberto]="receberDanoAberto()"
-    [resistenciasFicha]="resistenciasParaReceberDano()"
-    (danoConfirmado)="receberDano($event)"
-    (fechado)="receberDanoAberto.set(false)"
-  />
+    <app-receber-dano-dialog
+        [aberto]="receberDanoAberto()"
+        [resistenciasFicha]="resistenciasParaReceberDano()"
+        (danoConfirmado)="receberDano($event)"
+        (fechado)="receberDanoAberto.set(false)"
+    />
 }

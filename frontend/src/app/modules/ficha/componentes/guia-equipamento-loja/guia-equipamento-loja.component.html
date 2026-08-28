@@ -1,73 +1,121 @@
 <div class="loja">
-  <section class="loja__catalogo">
-    <div class="loja__busca">
-      <span class="loja__busca-icone" aria-hidden="true">⌕</span>
-      <input class="loja__busca-campo" type="text" [formControl]="busca" placeholder="Buscar item…" aria-label="Buscar item" />
-    </div>
+    <section class="loja__catalogo">
+        <div class="loja__busca">
+            <span class="loja__busca-icone" aria-hidden="true">⌕</span>
+            <input
+                class="loja__busca-campo"
+                type="text"
+                [formControl]="busca"
+                placeholder="Buscar item…"
+                aria-label="Buscar item"
+            />
+        </div>
 
-    <nav class="loja__categorias" role="tablist" aria-label="Categorias do catálogo">
-      @for (categoria of categorias(); track categoria.categoria) {
-        <button
-          class="loja__categoria"
-          type="button"
-          role="tab"
-          [class.loja__categoria--ativa]="!busca.value && categoriaAtiva() === categoria.categoria"
-          [attr.aria-selected]="!busca.value && categoriaAtiva() === categoria.categoria"
-          [disabled]="!!busca.value"
-          (click)="selecionarCategoria(categoria.categoria)"
-        >
-          <app-icone [nome]="iconesCategoria[categoria.categoria]" /> {{ categoria.rotulo }}
-        </button>
-      }
-    </nav>
+        <nav class="loja__categorias" role="tablist" aria-label="Categorias do catálogo">
+            @for (categoria of categorias(); track categoria.categoria) {
+                <button
+                    class="loja__categoria"
+                    type="button"
+                    role="tab"
+                    [class.loja__categoria--ativa]="
+                        !busca.value && categoriaAtiva() === categoria.categoria
+                    "
+                    [attr.aria-selected]="!busca.value && categoriaAtiva() === categoria.categoria"
+                    [disabled]="!!busca.value"
+                    (click)="selecionarCategoria(categoria.categoria)"
+                >
+                    <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+                    {{ categoria.rotulo }}
+                </button>
+            }
+        </nav>
 
-    <ul class="loja__grade" appOverflowFade>
-      @for (cartao of cartoesCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
-        <li class="loja__item">
-          <div class="loja__item-corpo">
-            <span class="loja__item-nome">{{ cartao.item.nome }}</span>
-            @if (cartao.stat) { <span class="loja__item-stat">{{ cartao.stat }}</span> }
-            @if (cartao.bonus) { <span class="loja__item-tag">{{ cartao.bonus }}</span> }
-            @if (cartao.item.descricao) { <span class="loja__item-desc">{{ cartao.item.descricao }}</span> }
-            <div class="loja__item-meta">
-              <span>{{ cartao.custoTexto }}</span>
-              <span>{{ cartao.pesoTexto }}</span>
-            </div>
-          </div>
-          <button class="loja__item-add" type="button" [attr.aria-label]="'Adicionar ' + cartao.item.nome + ' ao kit'" (click)="adicionar(cartao.item, cartao.categoria)">＋</button>
-        </li>
-      } @empty {
-        <li class="loja__vazio">Nenhum item encontrado.</li>
-      }
-    </ul>
-  </section>
+        <ul class="loja__grade" appOverflowFade>
+            @for (cartao of cartoesCatalogo(); track cartao.categoria + "/" + cartao.item.nome) {
+                <li class="loja__item">
+                    <div class="loja__item-corpo">
+                        <span class="loja__item-nome">{{ cartao.item.nome }}</span>
+                        @if (cartao.stat) {
+                            <span class="loja__item-stat">{{ cartao.stat }}</span>
+                        }
+                        @if (cartao.bonus) {
+                            <span class="loja__item-tag">{{ cartao.bonus }}</span>
+                        }
+                        @if (cartao.item.descricao) {
+                            <span class="loja__item-desc">{{ cartao.item.descricao }}</span>
+                        }
+                        <div class="loja__item-meta">
+                            <span>{{ cartao.custoTexto }}</span>
+                            <span>{{ cartao.pesoTexto }}</span>
+                        </div>
+                    </div>
+                    <button
+                        class="loja__item-add"
+                        type="button"
+                        [attr.aria-label]="'Adicionar ' + cartao.item.nome + ' ao kit'"
+                        (click)="adicionar(cartao.item, cartao.categoria)"
+                    >
+                        ＋
+                    </button>
+                </li>
+            } @empty {
+                <li class="loja__vazio">Nenhum item encontrado.</li>
+            }
+        </ul>
+    </section>
 
-  <aside class="loja__carrinho">
-    <header class="loja__carrinho-cabecalho">
-      <span>Kit escolhido</span>
-      <b>{{ itens().length }}</b>
-    </header>
-    @if (!itens().length) {
-      <p class="loja__carrinho-vazio">Nenhum item ainda — o kit é opcional, pode avançar vazio.</p>
-    } @else {
-      <ul class="loja__carrinho-lista">
-        @for (item of itens(); track item.categoria + item.nome + $index) {
-          <li class="loja__carrinho-item">
-            <div class="loja__carrinho-item-identidade">
-              <span class="loja__carrinho-item-nome">{{ item.nome }}</span>
-              <span class="loja__carrinho-item-categoria">{{ rotuloCategoria(item.categoria) }} · {{ formatarDinheiro(item.custo * item.quantidade) }}</span>
-            </div>
-            <div class="loja__carrinho-item-controles">
-              <div class="stepper">
-                <button class="stepper__botao" type="button" [attr.aria-label]="'Diminuir ' + item.nome" (click)="diminuir($index)">−</button>
-                <b class="stepper__valor">{{ item.quantidade }}</b>
-                <button class="stepper__botao" type="button" [attr.aria-label]="'Aumentar ' + item.nome" (click)="aumentar($index)">+</button>
-              </div>
-              <button class="loja__carrinho-item-remover" type="button" [attr.aria-label]="'Remover ' + item.nome + ' do kit'" (click)="remover($index)">✕</button>
-            </div>
-          </li>
+    <aside class="loja__carrinho">
+        <header class="loja__carrinho-cabecalho">
+            <span>Kit escolhido</span>
+            <b>{{ itens().length }}</b>
+        </header>
+        @if (!itens().length) {
+            <p class="loja__carrinho-vazio">
+                Nenhum item ainda — o kit é opcional, pode avançar vazio.
+            </p>
+        } @else {
+            <ul class="loja__carrinho-lista">
+                @for (item of itens(); track item.categoria + item.nome + $index) {
+                    <li class="loja__carrinho-item">
+                        <div class="loja__carrinho-item-identidade">
+                            <span class="loja__carrinho-item-nome">{{ item.nome }}</span>
+                            <span class="loja__carrinho-item-categoria"
+                                >{{ rotuloCategoria(item.categoria) }} ·
+                                {{ formatarDinheiro(item.custo * item.quantidade) }}</span
+                            >
+                        </div>
+                        <div class="loja__carrinho-item-controles">
+                            <div class="stepper">
+                                <button
+                                    class="stepper__botao"
+                                    type="button"
+                                    [attr.aria-label]="'Diminuir ' + item.nome"
+                                    (click)="diminuir($index)"
+                                >
+                                    −
+                                </button>
+                                <b class="stepper__valor">{{ item.quantidade }}</b>
+                                <button
+                                    class="stepper__botao"
+                                    type="button"
+                                    [attr.aria-label]="'Aumentar ' + item.nome"
+                                    (click)="aumentar($index)"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <button
+                                class="loja__carrinho-item-remover"
+                                type="button"
+                                [attr.aria-label]="'Remover ' + item.nome + ' do kit'"
+                                (click)="remover($index)"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </li>
+                }
+            </ul>
         }
-      </ul>
-    }
-  </aside>
+    </aside>
 </div>

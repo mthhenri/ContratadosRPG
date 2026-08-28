@@ -1,625 +1,625 @@
 // Editor da aba Rolagens (m3-15; Rolagem v2 em m3-22) — só tokens do tema "Terminal de
 // Contenção" (proibição #29). Presets Teste/Soma, encadeados e com habilidades anexadas.
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 .ficha-rol {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  // Rolagem avulsa (m3-31): caixa própria no topo, separada dos presets.
-  &__rapida {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 14px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-  }
-  &__rapida-linha {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .ficha-rol__entrada {
-      flex: 1;
-    }
-  }
-
-  &__novo {
-    align-self: flex-start;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 8px 14px;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  &__vazio {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-mute);
-  }
-
-  // Rolada num container próprio (m3-26) — reduz a rolagem da página quando há muitos presets;
-  // o fade topo/base (appOverflowFade) só aparece onde o conteúdo está de fato cortado, mesmo
-  // padrão do `&__grade` do Inventário (m3-14). Grade de 2 colunas (m3-38) — cada item resumido
-  // ao essencial cabe numa coluna estreita sem desperdiçar a largura do cartão de Status.
-  &__lista {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    align-items: start;
-    gap: 10px;
-    max-height: 410px;
-    overflow-y: auto;
-    padding-right: 4px;
-
-    // m3-56: era `max-width: 420px` (número mágico) — não cobria os 430px de teste do passe
-    // mobile (2 colunas de ~185px ficavam apertadas demais pro cartão de preset). Substituído por
-    // `bp.mobile` (560px), mesmo token usado no resto da ficha.
-    // m3-60: além de cair para 1 coluna, o teto sai — no mobile a página inteira rola como uma
-    // coisa só e uma janela de 410px sobre 568px de lista viraria rolagem dentro de rolagem, sem
-    // barra visível. Sem overflow o `appOverflowFade` não marca o host e o fade some junto.
-    @include bp.mobile {
-      grid-template-columns: 1fr;
-      max-height: none;
-      overflow-y: visible;
-    }
-
-    --fade-topo: 0px;
-    --fade-base: 0px;
-
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 24px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 24px;
-    }
-  }
-
-  // === Cartão de preset (m3-38: mais compacto — a grade de 2 colunas reduz a largura útil) ===
-  &__preset {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 9px 10px;
-    background: var(--surface);
-    min-width: 0;
-  }
-  &__preset-topo {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px 10px;
-    flex-wrap: wrap;
-  }
-  &__preset-id {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px 6px;
-    min-width: 0;
-  }
-  &__preset-nome {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  // Marca de preset encadeado (m3-38): ícone só, com dica no hover (era o texto "encadeado").
-  &__cadeia {
-    font-size: 11px;
-    color: var(--text-mute);
-  }
-  &__aviso {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--warning);
-    border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
-    border-radius: 3px;
-    padding: 0 5px;
-  }
-  &__preset-acoes {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex: none;
-  }
-  // Descrição truncada a uma linha (m3-38) — o texto completo fica na dica do hover.
-  &__preset-desc {
-    margin: 6px 0 0;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  // === Habilidades vinculadas + energia (por passo) ===
-  &__vinculo {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 1px 7px;
-  }
-  // Multiplicador de vínculo repetido (m3-31): "×N" em accent.
-  &__vinculo-qtd {
-    color: var(--accent);
-    font-weight: 700;
-  }
-  &__energia {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--energy);
-    margin-left: auto;
-  }
-  &__energia-var {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  &__energia-var-rotulo {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-mute);
-  }
-
-  // === Passos (rolar) ===
-  &__passos {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 8px;
-  }
-  &__passo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 6px 8px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-
-    &--invalido {
-      border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
-    }
-  }
-  &__passo-linha {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  &__passo-vinculos {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  &__passo-nome {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    flex: none;
-  }
-  // Fórmula truncada a uma linha (m3-38) — a dica do hover mostra o texto completo; a grade de 2
-  // colunas deixa pouca largura pra fórmulas longas (ex.: passos com kh/cm/tipo de dano).
-  &__passo-formula {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    flex: 1 1 auto;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    // Passo "só energia" (m3-38, sem fórmula): rótulo mudo em vez da fórmula truncada.
-    &--energia {
-      font-family: var(--font-sans);
-      font-style: italic;
-      color: var(--text-mute);
-    }
-  }
-
-  // === Resultado agora vive na bandeja de dados global (m3-22) — sem detalhamento no cartão. ===
-
-  // === Botões ===
-  &__btn {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: var(--radius-control);
-    padding: 7px 14px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    flex: none;
-
-    &--principal {
-      background: var(--accent);
-      color: var(--bg);
-    }
-    &--secundario {
-      background: transparent;
-      border-color: var(--border-strong);
-      color: var(--text-dim);
-    }
-    &--rolar {
-      background: var(--accent-dim);
-      border-color: var(--accent-border);
-      color: var(--accent);
-      padding: 5px 12px;
-    }
-    // Rolar crítico (m3-30): accent sólido + brilho, para destacar a ação de dobrar o dano.
-    &--critico {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: var(--bg);
-      padding: 5px 12px;
-      box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
-    }
-    // Passo "só energia" (m3-38, sem fórmula): gasta a Energia vinculada de uma vez, sem rolar —
-    // cor de Energia (`--energy`) em vez de accent, pra distinguir claramente de "Rolar".
-    &--gastar {
-      background: color-mix(in srgb, var(--energy) 16%, transparent);
-      border-color: color-mix(in srgb, var(--energy) 45%, transparent);
-      color: var(--energy);
-      padding: 5px 10px;
-      font-size: 11px;
-    }
-    // Botão de rolar só-ícone (m3-38): usado nos passos da grade de 2 colunas — sem o texto
-    // "Rolar"/"Rolar crítico", que não cabia mais junto da fórmula truncada.
-    &--icone {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      padding: 0;
-      font-size: 12px;
-    }
-    &:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    // m3-56: "Rolar"/"Gastar" são a ação primária do card de preset — alvo de toque confortável
-    // no mobile, mesmo com o botão só-ícone (`--icone`) da grade de 2 colunas.
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-
-      &.ficha-rol__btn--icone {
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
-      }
-    }
-  }
-
-  // Checkbox "passo critável" (m3-30).
-  &__critico-check {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    cursor: pointer;
-    white-space: nowrap;
-
-    input {
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-
-    // Variante do passo seguinte (m3-38): encaixa na linha nome + remover, sem quebrar.
-    &--mini {
-      font-size: 10px;
-      flex: none;
-    }
-  }
-  &__mini-btn {
-    // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` aqui encolheria o
-    // ícone em vez de crescer a caixa (diferente do `apelido-lapis` do inventário, que é
-    // sized-to-content). Por isso a área de toque cresce por `::after`, não por padding — mesmo
-    // padrão de `alvo-de-toque` em `ficha-visualizacao.component.scss` (m3-60), duplicado aqui
-    // porque o mixin não é compartilhado entre componentes standalone (encapsulamento do Angular).
-    position: relative;
-    width: 26px;
-    height: 26px;
-    flex: none;
-    font-size: 12px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-
-    @include bp.mobile {
-      &::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
-      }
-    }
-
-    &:hover {
-      color: var(--text);
-      border-color: var(--border-strong);
-    }
-    &--perigo {
-      color: var(--accent);
-      border-color: var(--accent-border);
-    }
-    // Toggle do accordion do preset (fechado por padrão) — sem borda, ícone rotaciona ao abrir.
-    &--chevron {
-      width: 20px;
-      height: 20px;
-      border-color: transparent;
-
-      svg {
-        transition: transform 0.15s ease;
-        transform: rotate(-90deg);
-      }
-    }
-    &--aberto svg {
-      transform: rotate(0deg);
-    }
-
-    // m3-56: editar/duplicar/remover são controles primários repetidos por preset — mesmo padrão
-    // de `.ficha-cartao__lapis` (ficha-visualizacao, m3-26). O chevron de abrir/fechar entra
-    // também (é o toggle principal do card, não um ícone ocasional).
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
-  &__remover {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  // === Formulário (m3-38: abre num `p-dialog` — sem borda/fundo próprios, o dialog já dá o cartão) ===
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  // Nome + "Critável" na mesma linha (m3-38) — economiza uma linha inteira no dialog.
-  &__form-linha {
-    display: flex;
-    align-items: flex-end;
     gap: 12px;
 
-    .ficha-rol__critico-check {
-      padding-bottom: 9px;
+    // Rolagem avulsa (m3-31): caixa própria no topo, separada dos presets.
+    &__rapida {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
     }
-  }
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    &__rapida-linha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
 
-    &--nome {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-  }
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-  }
-  // Linha do rótulo com o gatilho do guia à direita (campo Fórmula).
-  &__rotulo-linha {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  &__rotulo-aux {
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--text-mute);
-  }
-  &__entrada {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    color: var(--text);
-    font-family: var(--font-sans);
-    padding: 9px 10px;
-    font-size: 13px;
-    outline: none;
-
-    &:focus {
-      border-color: var(--accent-border);
-    }
-    &--mono {
-      font-family: var(--font-mono);
-    }
-    &--nome {
-      width: auto;
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-    &--curta {
-      width: 88px;
+        .ficha-rol__entrada {
+            flex: 1;
+        }
     }
 
-    // m3-60: campo de texto também é alvo de toque — a m3-56 só cobriu os botões.
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-  &__dica {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    color: var(--text-mute);
+    &__novo {
+        align-self: flex-start;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 8px 14px;
+        cursor: pointer;
 
-    code {
-      font-family: var(--font-mono);
-      color: var(--text-dim);
-    }
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
 
-    &--erro {
-      color: var(--warning);
-    }
-  }
-
-  // === Editor de passos seguintes ===
-  &__passo-edit {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-  &__passo-edit-linha {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  &__add-passo {
-    align-self: flex-start;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 12px;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
     }
 
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  // === Seletor de habilidades (chips toggle) ===
-  &__hab-lista {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  // Item do seletor de habilidades por passo (m3-31): rótulo + custo + stepper de contagem.
-  &__hab {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 4px 6px 4px 10px;
-
-    &--marcada {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
-    }
-  }
-  &__hab-nome {
-    font-weight: 600;
-  }
-  &__hab-custo {
-    font-size: 10px;
-    color: var(--energy);
-  }
-  &__hab-stepper {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  &__hab-passo {
-    width: 22px;
-    height: 22px;
-    flex: none;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 14px;
-    line-height: 1;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    &__vazio {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text-mute);
     }
 
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-      font-size: 18px;
-    }
-  }
-  &__hab-qtd {
-    min-width: 14px;
-    text-align: center;
-    font-weight: 700;
-    color: var(--text);
-  }
+    // Rolada num container próprio (m3-26) — reduz a rolagem da página quando há muitos presets;
+    // o fade topo/base (appOverflowFade) só aparece onde o conteúdo está de fato cortado, mesmo
+    // padrão do `&__grade` do Inventário (m3-14). Grade de 2 colunas (m3-38) — cada item resumido
+    // ao essencial cabe numa coluna estreita sem desperdiçar a largura do cartão de Status.
+    &__lista {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        align-items: start;
+        gap: 10px;
+        max-height: 410px;
+        overflow-y: auto;
+        padding-right: 4px;
 
-  &__form-acoes {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+        // m3-56: era `max-width: 420px` (número mágico) — não cobria os 430px de teste do passe
+        // mobile (2 colunas de ~185px ficavam apertadas demais pro cartão de preset). Substituído por
+        // `bp.mobile` (560px), mesmo token usado no resto da ficha.
+        // m3-60: além de cair para 1 coluna, o teto sai — no mobile a página inteira rola como uma
+        // coisa só e uma janela de 410px sobre 568px de lista viraria rolagem dentro de rolagem, sem
+        // barra visível. Sem overflow o `appOverflowFade` não marca o host e o fade some junto.
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 24px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 24px;
+        }
+    }
+
+    // === Cartão de preset (m3-38: mais compacto — a grade de 2 colunas reduz a largura útil) ===
+    &__preset {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 9px 10px;
+        background: var(--surface);
+        min-width: 0;
+    }
+    &__preset-topo {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px 10px;
+        flex-wrap: wrap;
+    }
+    &__preset-id {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px 6px;
+        min-width: 0;
+    }
+    &__preset-nome {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+    }
+    // Marca de preset encadeado (m3-38): ícone só, com dica no hover (era o texto "encadeado").
+    &__cadeia {
+        font-size: 11px;
+        color: var(--text-mute);
+    }
+    &__aviso {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--warning);
+        border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+        border-radius: 3px;
+        padding: 0 5px;
+    }
+    &__preset-acoes {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: none;
+    }
+    // Descrição truncada a uma linha (m3-38) — o texto completo fica na dica do hover.
+    &__preset-desc {
+        margin: 6px 0 0;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    // === Habilidades vinculadas + energia (por passo) ===
+    &__vinculo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 1px 7px;
+    }
+    // Multiplicador de vínculo repetido (m3-31): "×N" em accent.
+    &__vinculo-qtd {
+        color: var(--accent);
+        font-weight: 700;
+    }
+    &__energia {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--energy);
+        margin-left: auto;
+    }
+    &__energia-var {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    &__energia-var-rotulo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
+    }
+
+    // === Passos (rolar) ===
+    &__passos {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 8px;
+    }
+    &__passo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 6px 8px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+
+        &--invalido {
+            border-left: 2px solid color-mix(in srgb, var(--warning) 55%, transparent);
+        }
+    }
+    &__passo-linha {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    &__passo-vinculos {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    &__passo-nome {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+        flex: none;
+    }
+    // Fórmula truncada a uma linha (m3-38) — a dica do hover mostra o texto completo; a grade de 2
+    // colunas deixa pouca largura pra fórmulas longas (ex.: passos com kh/cm/tipo de dano).
+    &__passo-formula {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        flex: 1 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        // Passo "só energia" (m3-38, sem fórmula): rótulo mudo em vez da fórmula truncada.
+        &--energia {
+            font-family: var(--font-sans);
+            font-style: italic;
+            color: var(--text-mute);
+        }
+    }
+
+    // === Resultado agora vive na bandeja de dados global (m3-22) — sem detalhamento no cartão. ===
+
+    // === Botões ===
+    &__btn {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: var(--radius-control);
+        padding: 7px 14px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        flex: none;
+
+        &--principal {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        &--secundario {
+            background: transparent;
+            border-color: var(--border-strong);
+            color: var(--text-dim);
+        }
+        &--rolar {
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+            color: var(--accent);
+            padding: 5px 12px;
+        }
+        // Rolar crítico (m3-30): accent sólido + brilho, para destacar a ação de dobrar o dano.
+        &--critico {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+            padding: 5px 12px;
+            box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+        }
+        // Passo "só energia" (m3-38, sem fórmula): gasta a Energia vinculada de uma vez, sem rolar —
+        // cor de Energia (`--energy`) em vez de accent, pra distinguir claramente de "Rolar".
+        &--gastar {
+            background: color-mix(in srgb, var(--energy) 16%, transparent);
+            border-color: color-mix(in srgb, var(--energy) 45%, transparent);
+            color: var(--energy);
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+        // Botão de rolar só-ícone (m3-38): usado nos passos da grade de 2 colunas — sem o texto
+        // "Rolar"/"Rolar crítico", que não cabia mais junto da fórmula truncada.
+        &--icone {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            font-size: 12px;
+        }
+        &:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        // m3-56: "Rolar"/"Gastar" são a ação primária do card de preset — alvo de toque confortável
+        // no mobile, mesmo com o botão só-ícone (`--icone`) da grade de 2 colunas.
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+
+            &.ficha-rol__btn--icone {
+                width: bp.$alvo-toque;
+                height: bp.$alvo-toque;
+            }
+        }
+    }
+
+    // Checkbox "passo critável" (m3-30).
+    &__critico-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        cursor: pointer;
+        white-space: nowrap;
+
+        input {
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        // Variante do passo seguinte (m3-38): encaixa na linha nome + remover, sem quebrar.
+        &--mini {
+            font-size: 10px;
+            flex: none;
+        }
+    }
+    &__mini-btn {
+        // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` aqui encolheria o
+        // ícone em vez de crescer a caixa (diferente do `apelido-lapis` do inventário, que é
+        // sized-to-content). Por isso a área de toque cresce por `::after`, não por padding — mesmo
+        // padrão de `alvo-de-toque` em `ficha-visualizacao.component.scss` (m3-60), duplicado aqui
+        // porque o mixin não é compartilhado entre componentes standalone (encapsulamento do Angular).
+        position: relative;
+        width: 26px;
+        height: 26px;
+        flex: none;
+        font-size: 12px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+
+        @include bp.mobile {
+            &::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: bp.$alvo-toque;
+                height: bp.$alvo-toque;
+            }
+        }
+
+        &:hover {
+            color: var(--text);
+            border-color: var(--border-strong);
+        }
+        &--perigo {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+        // Toggle do accordion do preset (fechado por padrão) — sem borda, ícone rotaciona ao abrir.
+        &--chevron {
+            width: 20px;
+            height: 20px;
+            border-color: transparent;
+
+            svg {
+                transition: transform 0.15s ease;
+                transform: rotate(-90deg);
+            }
+        }
+        &--aberto svg {
+            transform: rotate(0deg);
+        }
+
+        // m3-56: editar/duplicar/remover são controles primários repetidos por preset — mesmo padrão
+        // de `.ficha-cartao__lapis` (ficha-visualizacao, m3-26). O chevron de abrir/fechar entra
+        // também (é o toggle principal do card, não um ícone ocasional).
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+    &__remover {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    // === Formulário (m3-38: abre num `p-dialog` — sem borda/fundo próprios, o dialog já dá o cartão) ===
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    // Nome + "Critável" na mesma linha (m3-38) — economiza uma linha inteira no dialog.
+    &__form-linha {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+
+        .ficha-rol__critico-check {
+            padding-bottom: 9px;
+        }
+    }
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        &--nome {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+    }
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+    // Linha do rótulo com o gatilho do guia à direita (campo Fórmula).
+    &__rotulo-linha {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    &__rotulo-aux {
+        text-transform: none;
+        letter-spacing: 0;
+        color: var(--text-mute);
+    }
+    &__entrada {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        color: var(--text);
+        font-family: var(--font-sans);
+        padding: 9px 10px;
+        font-size: 13px;
+        outline: none;
+
+        &:focus {
+            border-color: var(--accent-border);
+        }
+        &--mono {
+            font-family: var(--font-mono);
+        }
+        &--nome {
+            width: auto;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        &--curta {
+            width: 88px;
+        }
+
+        // m3-60: campo de texto também é alvo de toque — a m3-56 só cobriu os botões.
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+    &__dica {
+        font-family: var(--font-sans);
+        font-size: 11px;
+        color: var(--text-mute);
+
+        code {
+            font-family: var(--font-mono);
+            color: var(--text-dim);
+        }
+
+        &--erro {
+            color: var(--warning);
+        }
+    }
+
+    // === Editor de passos seguintes ===
+    &__passo-edit {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+    &__passo-edit-linha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    &__add-passo {
+        align-self: flex-start;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 12px;
+        cursor: pointer;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // === Seletor de habilidades (chips toggle) ===
+    &__hab-lista {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    // Item do seletor de habilidades por passo (m3-31): rótulo + custo + stepper de contagem.
+    &__hab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-dim);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 4px 6px 4px 10px;
+
+        &--marcada {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+    &__hab-nome {
+        font-weight: 600;
+    }
+    &__hab-custo {
+        font-size: 10px;
+        color: var(--energy);
+    }
+    &__hab-stepper {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    &__hab-passo {
+        width: 22px;
+        height: 22px;
+        flex: none;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        background: transparent;
+        color: var(--text-dim);
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+
+        &:hover:not(:disabled) {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+            font-size: 18px;
+        }
+    }
+    &__hab-qtd {
+        min-width: 14px;
+        text-align: center;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    &__form-acoes {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
 }

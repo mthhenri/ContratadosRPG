@@ -2,788 +2,802 @@
 // "Terminal de Contenção" — nenhum hex/fonte/raio solto (proibição #29). Padrão de card/stepper
 // espelha o FichaSanidade de m3-12.
 
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 .habilidades {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  &__cabecalho {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 10px;
 
-    // m3-56: título + régua + 2 botões "Adicionar" numa linha só passavam da largura da coluna
-    // Status a 360-390px — vazava pra fora do card (escondido pelo `overflow-x: clip` de
-    // segurança do `html`, sem scroll do body mas também sem clique possível na parte cortada).
-    // Quebra em duas linhas: título+régua, depois os botões numa linha própria e cheia.
-    @include bp.mobile {
-      flex-wrap: wrap;
-    }
-  }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 10px;
 
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-  }
-
-  // Resumo por categoria (Arquétipo/Classe/Geral/Outra classe) — acima da busca. Cada contador é
-  // um botão cumulativo (m3-48): clique soma/tira o tipo do filtro (clique direito só tira — ver
-  // `removerFiltroPorContexto`); o glow do tipo ativo usa a MESMA cor semântica do próprio tipo
-  // (`currentColor`, herdada do modificador de cor abaixo), não um accent uniforme — os 4
-  // modificadores usam os 4 tokens semânticos do tema (positive/warning/energy/accent), sem
-  // inventar cor nova (proibição #29).
-  &__resumo {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  &__resumo-item {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 5px;
-    font-family: var(--font-mono);
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 3px 8px;
-    cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-
-    // `:not(--ativo)` de propósito: sem ele, a especificidade de `.item:hover` (2 seletores) vence
-    // a de `.item--ativo` (1 seletor) e o hover apagaria o glow colorido de um tipo já ativo.
-    &:hover:not(.habilidades__resumo-item--ativo) {
-      border-color: var(--accent-border);
+        // m3-56: título + régua + 2 botões "Adicionar" numa linha só passavam da largura da coluna
+        // Status a 360-390px — vazava pra fora do card (escondido pelo `overflow-x: clip` de
+        // segurança do `html`, sem scroll do body mas também sem clique possível na parte cortada).
+        // Quebra em duas linhas: título+régua, depois os botões numa linha própria e cheia.
+        @include bp.mobile {
+            flex-wrap: wrap;
+        }
     }
 
-    &--arquetipo {
-      color: var(--positive);
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
     }
 
-    &--classe {
-      color: var(--warning);
+    // Resumo por categoria (Arquétipo/Classe/Geral/Outra classe) — acima da busca. Cada contador é
+    // um botão cumulativo (m3-48): clique soma/tira o tipo do filtro (clique direito só tira — ver
+    // `removerFiltroPorContexto`); o glow do tipo ativo usa a MESMA cor semântica do próprio tipo
+    // (`currentColor`, herdada do modificador de cor abaixo), não um accent uniforme — os 4
+    // modificadores usam os 4 tokens semânticos do tema (positive/warning/energy/accent), sem
+    // inventar cor nova (proibição #29).
+    &__resumo {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
     }
 
-    &--geral {
-      color: var(--energy);
+    &__resumo-item {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 5px;
+        font-family: var(--font-mono);
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 3px 8px;
+        cursor: pointer;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            box-shadow 0.15s ease;
+
+        // `:not(--ativo)` de propósito: sem ele, a especificidade de `.item:hover` (2 seletores) vence
+        // a de `.item--ativo` (1 seletor) e o hover apagaria o glow colorido de um tipo já ativo.
+        &:hover:not(.habilidades__resumo-item--ativo) {
+            border-color: var(--accent-border);
+        }
+
+        &--arquetipo {
+            color: var(--positive);
+        }
+
+        &--classe {
+            color: var(--warning);
+        }
+
+        &--geral {
+            color: var(--energy);
+        }
+
+        &--outra-classe {
+            color: var(--accent);
+        }
+
+        // Tipo ativo: glow na própria cor do tipo (currentColor dos modificadores acima) — Arquétipo
+        // brilha verde, Classe âmbar, Geral azul, Outra classe/arquétipo accent.
+        &--ativo {
+            background: color-mix(in srgb, currentColor 16%, transparent);
+            border-color: currentColor;
+            box-shadow:
+                0 0 0 1px color-mix(in srgb, currentColor 45%, transparent),
+                0 0 8px color-mix(in srgb, currentColor 55%, transparent);
+        }
     }
 
-    &--outra-classe {
-      color: var(--accent);
+    &__resumo-rotulo {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-mute);
+
+        .habilidades__resumo-item--arquetipo &,
+        .habilidades__resumo-item--classe &,
+        .habilidades__resumo-item--geral &,
+        .habilidades__resumo-item--outra-classe & {
+            color: currentColor;
+            opacity: 0.75;
+        }
+
+        .habilidades__resumo-item--ativo & {
+            color: currentColor;
+            opacity: 1;
+        }
     }
 
-    // Tipo ativo: glow na própria cor do tipo (currentColor dos modificadores acima) — Arquétipo
-    // brilha verde, Classe âmbar, Geral azul, Outra classe/arquétipo accent.
-    &--ativo {
-      background: color-mix(in srgb, currentColor 16%, transparent);
-      border-color: currentColor;
-      box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent),
-        0 0 8px color-mix(in srgb, currentColor 55%, transparent);
-    }
-  }
+    &__resumo-valor {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
 
-  &__resumo-rotulo {
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-mute);
-
-    .habilidades__resumo-item--arquetipo &,
-    .habilidades__resumo-item--classe &,
-    .habilidades__resumo-item--geral &,
-    .habilidades__resumo-item--outra-classe & {
-      color: currentColor;
-      opacity: 0.75;
+        .habilidades__resumo-item--arquetipo &,
+        .habilidades__resumo-item--classe &,
+        .habilidades__resumo-item--geral &,
+        .habilidades__resumo-item--outra-classe &,
+        .habilidades__resumo-item--ativo & {
+            color: currentColor;
+        }
     }
 
-    .habilidades__resumo-item--ativo & {
-      color: currentColor;
-      opacity: 1;
-    }
-  }
-
-  &__resumo-valor {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-
-    .habilidades__resumo-item--arquetipo &,
-    .habilidades__resumo-item--classe &,
-    .habilidades__resumo-item--geral &,
-    .habilidades__resumo-item--outra-classe &,
-    .habilidades__resumo-item--ativo & {
-      color: currentColor;
-    }
-  }
-
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  &__add-grupo {
-    flex: 0 0 auto;
-    display: flex;
-    gap: 6px;
-
-    @include bp.mobile {
-      flex-basis: 100%;
-      flex-wrap: wrap;
-    }
-  }
-
-  &__add {
-    flex: 0 0 auto;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      color: var(--text);
-      border-color: var(--accent-border);
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
     }
 
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
+    &__add-grupo {
+        flex: 0 0 auto;
+        display: flex;
+        gap: 6px;
+
+        @include bp.mobile {
+            flex-basis: 100%;
+            flex-wrap: wrap;
+        }
     }
 
-    // "Do sistema": ação primária em accent sólido.
-    &--primario {
-      color: var(--bg);
-      background: var(--accent);
-      border-color: var(--accent);
+    &__add {
+        flex: 0 0 auto;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 5px 10px;
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease,
+            border-color 0.15s ease;
 
-      &:hover:not(:disabled) {
+        &:hover:not(:disabled) {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        // "Do sistema": ação primária em accent sólido.
+        &--primario {
+            color: var(--bg);
+            background: var(--accent);
+            border-color: var(--accent);
+
+            &:hover:not(:disabled) {
+                color: var(--bg);
+                background: color-mix(in srgb, var(--accent) 86%, black);
+            }
+        }
+    }
+
+    // Campo de busca sobre as habilidades já adicionadas.
+    &__busca {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 0 11px;
+
+        &:focus-within {
+            border-color: var(--accent);
+        }
+    }
+
+    &__busca-icone {
+        color: var(--text-mute);
+        font-size: 14px;
+    }
+
+    &__busca-campo {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        padding: 8px 0;
+
+        &:focus {
+            outline: none;
+        }
+
+        &::placeholder {
+            color: var(--text-mute);
+        }
+    }
+
+    // Lista em 2 colunas fixas (1 no estreito), altura limitada + fade: rola por dentro.
+    &__lista {
+        list-style: none;
+        margin: 0;
+        padding: 0 2px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: start;
+        max-height: 476px;
+        overflow-y: auto;
+
+        @media (max-width: 640px) {
+            grid-template-columns: 1fr;
+        }
+
+        // m3-60: no mobile a página inteira rola como uma coisa só — um teto aqui viraria rolagem
+        // dentro de rolagem (476px de janela para 1001px de lista, medidos com ficha cheia), sem barra
+        // visível. Sem teto não há overflow e o `appOverflowFade` não marca o host, então o fade
+        // some junto (fade sem overflow é só ruído).
+        @include bp.mobile {
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 22px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 22px;
+        }
+    }
+
+    &__item {
+        padding: 9px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-left-width: 3px;
+        border-left-color: var(--text-mute);
+        border-radius: var(--radius-control);
+
+        // Mesma cor do chip da categoria (`&__chip--classe`/`--arquetipo`/... abaixo) — só a cor da
+        // borda muda, sem mexer no `border-left-color` neutro das categorias sem cor própria (Geral,
+        // Outra classe, Personalidade especial à parte etc.).
+        &--classe {
+            border-left-color: var(--warning);
+        }
+
+        &--arquetipo {
+            border-left-color: var(--positive);
+        }
+
+        &--subclasse {
+            border-left-color: var(--energy);
+        }
+
+        // Personalidade segue a cor de identidade da ficha (m3-61); sem cor definida, cai no --accent
+        // de quem visualiza (mesmo fallback do avatar/`--cor-ficha-*`, ver `_tokens.scss`).
+        &--personalidade {
+            border-left-color: var(--cor-ficha, var(--accent));
+        }
+
+        // Editor no próprio lugar: fica só na coluna do item sendo editado (não estica pelas duas).
+        // Depois das cores de categoria acima para vencer o empate de especificidade quando as duas
+        // classes coexistem (editando um item de Classe/Arquétipo/...).
+        &--edicao {
+            border-left-color: var(--accent);
+            background: var(--surface);
+        }
+    }
+
+    &__linha {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 8px;
+    }
+
+    &__chip {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 2px 7px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+
+        // Cores por origem (só tokens do tema). Personalidade segue a cor da ficha, com fallback pro
+        // accent do usuário (`--cor-ficha`/`--cor-ficha-border`, ver `_tokens.scss`).
+        &--classe {
+            color: var(--warning);
+            border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+        }
+
+        &--arquetipo {
+            color: var(--positive);
+            border-color: color-mix(in srgb, var(--positive) 40%, transparent);
+        }
+
+        &--subclasse {
+            color: var(--energy);
+            border-color: color-mix(in srgb, var(--energy) 40%, transparent);
+        }
+
+        &--personalidade {
+            color: var(--cor-ficha, var(--accent));
+            border-color: var(--cor-ficha-border);
+        }
+
+        // Habilidade Inicial (a que vem de graça do arquétipo/subclasse): preenche com a própria cor
+        // de categoria (currentColor) e reforça a borda — destaca-a das demais sem inventar cor nova.
+        &--inicial {
+            background: color-mix(in srgb, currentColor 15%, transparent);
+            border-color: currentColor;
+            font-weight: 700;
+        }
+    }
+
+    &__utilizar {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--energy);
+        background: color-mix(in srgb, var(--energy) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--energy) 45%, transparent);
+        border-radius: var(--radius-control);
+        padding: 4px 9px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--energy) 24%, transparent);
+        }
+
+        // Habilidade sem custo (0 E): nada a gastar, então Utilizar fica inerte. `pointer-events: none`
+        // garante que nem o pointerdown chegue (o atributo `disabled` sozinho só bloqueia o `click`).
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        // Segurar para repetir (gasta a cada 500ms) — `touch-action: none` evita que o toque vire scroll.
+        touch-action: none;
+
+        // Feedback de gasto: pulso de Energia no botão logo após Utilizar.
+        &--gasto {
+            animation: habilidades-gasto-pulso 0.5s ease;
+            border-color: var(--energy);
+        }
+    }
+
+    // "−N E" que sobe e some sobre o botão, confirmando o débito de Energia.
+    &__gasto-flash {
+        position: absolute;
+        top: -9px;
+        right: 4px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--energy);
+        white-space: nowrap;
+        pointer-events: none;
+        animation: habilidades-gasto-flutua 1s ease forwards;
+    }
+
+    &__utilizar-variavel {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+    }
+
+    &__nome {
+        flex: 1 1 auto;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    &__custo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--energy);
+        flex: 0 0 auto;
+
+        &--variavel {
+            color: var(--text-dim);
+        }
+    }
+
+    &__acoes {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+    }
+
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        font-size: 12px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease;
+
+        &:hover {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        &--remover:hover {
+            color: var(--accent);
+        }
+
+        // Confirmação de remover: o próprio ✕ vira ✓ sólido no lugar (sem texto/linha extra); o
+        // rótulo "Remover NOME?" mora no title/aria-label. Perde o foco (clique fora) ou Esc cancela.
+        &--confirmar-remover {
+            color: var(--bg);
+            background: var(--accent);
+            border-color: var(--accent);
+
+            &:hover {
+                color: var(--bg);
+                background: color-mix(in srgb, var(--accent) 86%, black);
+            }
+        }
+    }
+
+    &__descricao {
+        display: block;
+        margin-top: 4px;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    &__vazio {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-style: italic;
+        color: var(--text-mute);
+    }
+
+    // Limpa o filtro cumulativo de tipos (m3-48) — ícone só (↺, glifo mono como os demais botões de
+    // ação do tema — `&__acao` usa ✎/✕, o form usa ＋ — nada de emoji colorido destoando da
+    // identidade visual), na linha do resumo logo depois de "Outras classes/arquétipos", empurrado
+    // pro final da própria linha com `margin-left: auto` (funciona mesmo com `flex-wrap` no
+    // `&__resumo`). Só aparece com algum tipo selecionado; tom accent (não neutro como `&__acao`)
+    // pra não passar despercebido — clique direito num contador continua sendo o jeito de tirar só
+    // UM tipo (`removerFiltroPorContexto`).
+    &__limpar-filtro {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        flex: 0 0 auto;
+        padding: 0;
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--accent);
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+
+        &:hover {
+            background: color-mix(in srgb, var(--accent) 22%, transparent);
+            border-color: var(--accent);
+        }
+    }
+
+    // Ações do mini-campo de custo variável do Utilizar ("Gastar" / "Cancelar") — a confirmação de
+    // remoção não usa mais este bloco: vira o próprio botão ✕ em ✓ no lugar (ver `&--confirmar-remover`).
+    &__confirmar-acoes {
+        display: flex;
+        gap: 8px;
+    }
+
+    // === Formulário inline (adicionar/editar) ===
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__form-linha {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+    }
+
+    &__rotulo-campo {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 120px;
+
+        > span {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-mute);
+        }
+    }
+
+    &__custo-campo {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__campo {
+        width: 100%;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 10px;
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        &--area {
+            resize: vertical;
+            min-height: 40px;
+        }
+    }
+
+    &__stepper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__rotulo-inline {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-mute);
+    }
+
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        min-width: 20px;
+        text-align: center;
+    }
+
+    &__checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text-dim);
+        cursor: pointer;
+        accent-color: var(--accent);
+    }
+
+    &__form-acoes {
+        display: flex;
+        gap: 8px;
+        margin-top: 2px;
+    }
+
+    &__salvar {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
         color: var(--bg);
-        background: color-mix(in srgb, var(--accent) 86%, black);
-      }
-    }
-  }
+        background: var(--accent);
+        border: 0;
+        border-radius: var(--radius-control);
+        padding: 7px 14px;
+        cursor: pointer;
 
-  // Campo de busca sobre as habilidades já adicionadas.
-  &__busca {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 0 11px;
-
-    &:focus-within {
-      border-color: var(--accent);
-    }
-  }
-
-  &__busca-icone {
-    color: var(--text-mute);
-    font-size: 14px;
-  }
-
-  &__busca-campo {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-    background: transparent;
-    border: 0;
-    padding: 8px 0;
-
-    &:focus {
-      outline: none;
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
     }
 
-    &::placeholder {
-      color: var(--text-mute);
-    }
-  }
+    &__cancelar {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 14px;
+        cursor: pointer;
 
-  // Lista em 2 colunas fixas (1 no estreito), altura limitada + fade: rola por dentro.
-  &__lista {
-    list-style: none;
-    margin: 0;
-    padding: 0 2px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    align-items: start;
-    max-height: 476px;
-    overflow-y: auto;
-
-    @media (max-width: 640px) {
-      grid-template-columns: 1fr;
+        &:hover {
+            color: var(--text);
+        }
     }
 
-    // m3-60: no mobile a página inteira rola como uma coisa só — um teto aqui viraria rolagem
-    // dentro de rolagem (476px de janela para 1001px de lista, medidos com ficha cheia), sem barra
-    // visível. Sem teto não há overflow e o `appOverflowFade` não marca o host, então o fade
-    // some junto (fade sem overflow é só ruído).
-    @include bp.mobile {
-      max-height: none;
-      overflow-y: visible;
+    // === Diálogo de adição personalizada (mesmo padrão de modal do seletor) ===
+    &__dialog-fundo {
+        position: fixed;
+        inset: 0;
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 40;
     }
 
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 22px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 22px;
-    }
-  }
+    &__dialog {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 460px;
+        max-height: calc(100dvh - 32px);
+        overflow-y: auto;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
 
-  &__item {
-    padding: 9px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-left-width: 3px;
-    border-left-color: var(--text-mute);
-    border-radius: var(--radius-control);
-
-    // Mesma cor do chip da categoria (`&__chip--classe`/`--arquetipo`/... abaixo) — só a cor da
-    // borda muda, sem mexer no `border-left-color` neutro das categorias sem cor própria (Geral,
-    // Outra classe, Personalidade especial à parte etc.).
-    &--classe {
-      border-left-color: var(--warning);
+        // O formulário compartilhado recebe respiro dentro do diálogo.
+        .habilidades__form {
+            padding: 16px;
+        }
     }
 
-    &--arquetipo {
-      border-left-color: var(--positive);
+    &__dialog-topo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
     }
 
-    &--subclasse {
-      border-left-color: var(--energy);
+    &__dialog-titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
     }
 
-    // Personalidade segue a cor de identidade da ficha (m3-61); sem cor definida, cai no --accent
-    // de quem visualiza (mesmo fallback do avatar/`--cor-ficha-*`, ver `_tokens.scss`).
-    &--personalidade {
-      border-left-color: var(--cor-ficha, var(--accent));
+    &__dialog-fechar {
+        margin-left: auto;
+        background: transparent;
+        border: 0;
+        color: var(--text-mute);
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+
+        &:hover {
+            color: var(--text);
+        }
     }
-
-    // Editor no próprio lugar: fica só na coluna do item sendo editado (não estica pelas duas).
-    // Depois das cores de categoria acima para vencer o empate de especificidade quando as duas
-    // classes coexistem (editando um item de Classe/Arquétipo/...).
-    &--edicao {
-      border-left-color: var(--accent);
-      background: var(--surface);
-    }
-  }
-
-  &__linha {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 8px;
-  }
-
-  &__chip {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 2px 7px;
-    flex: 0 0 auto;
-    white-space: nowrap;
-
-    // Cores por origem (só tokens do tema). Personalidade segue a cor da ficha, com fallback pro
-    // accent do usuário (`--cor-ficha`/`--cor-ficha-border`, ver `_tokens.scss`).
-    &--classe {
-      color: var(--warning);
-      border-color: color-mix(in srgb, var(--warning) 40%, transparent);
-    }
-
-    &--arquetipo {
-      color: var(--positive);
-      border-color: color-mix(in srgb, var(--positive) 40%, transparent);
-    }
-
-    &--subclasse {
-      color: var(--energy);
-      border-color: color-mix(in srgb, var(--energy) 40%, transparent);
-    }
-
-    &--personalidade {
-      color: var(--cor-ficha, var(--accent));
-      border-color: var(--cor-ficha-border);
-    }
-
-    // Habilidade Inicial (a que vem de graça do arquétipo/subclasse): preenche com a própria cor
-    // de categoria (currentColor) e reforça a borda — destaca-a das demais sem inventar cor nova.
-    &--inicial {
-      background: color-mix(in srgb, currentColor 15%, transparent);
-      border-color: currentColor;
-      font-weight: 700;
-    }
-  }
-
-  &__utilizar {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--energy);
-    background: color-mix(in srgb, var(--energy) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--energy) 45%, transparent);
-    border-radius: var(--radius-control);
-    padding: 4px 9px;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--energy) 24%, transparent);
-    }
-
-    // Habilidade sem custo (0 E): nada a gastar, então Utilizar fica inerte. `pointer-events: none`
-    // garante que nem o pointerdown chegue (o atributo `disabled` sozinho só bloqueia o `click`).
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
-      pointer-events: none;
-    }
-
-    // Segurar para repetir (gasta a cada 500ms) — `touch-action: none` evita que o toque vire scroll.
-    touch-action: none;
-
-    // Feedback de gasto: pulso de Energia no botão logo após Utilizar.
-    &--gasto {
-      animation: habilidades-gasto-pulso 0.5s ease;
-      border-color: var(--energy);
-    }
-  }
-
-  // "−N E" que sobe e some sobre o botão, confirmando o débito de Energia.
-  &__gasto-flash {
-    position: absolute;
-    top: -9px;
-    right: 4px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--energy);
-    white-space: nowrap;
-    pointer-events: none;
-    animation: habilidades-gasto-flutua 1s ease forwards;
-  }
-
-  &__utilizar-variavel {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-
-  &__nome {
-    flex: 1 1 auto;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  &__custo {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--energy);
-    flex: 0 0 auto;
-
-    &--variavel {
-      color: var(--text-dim);
-    }
-  }
-
-  &__acoes {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-  }
-
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    font-size: 12px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
-
-    &:hover {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
-
-    &--remover:hover {
-      color: var(--accent);
-    }
-
-    // Confirmação de remover: o próprio ✕ vira ✓ sólido no lugar (sem texto/linha extra); o
-    // rótulo "Remover NOME?" mora no title/aria-label. Perde o foco (clique fora) ou Esc cancela.
-    &--confirmar-remover {
-      color: var(--bg);
-      background: var(--accent);
-      border-color: var(--accent);
-
-      &:hover {
-        color: var(--bg);
-        background: color-mix(in srgb, var(--accent) 86%, black);
-      }
-    }
-  }
-
-  &__descricao {
-    display: block;
-    margin-top: 4px;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  &__vazio {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-mute);
-  }
-
-  // Limpa o filtro cumulativo de tipos (m3-48) — ícone só (↺, glifo mono como os demais botões de
-  // ação do tema — `&__acao` usa ✎/✕, o form usa ＋ — nada de emoji colorido destoando da
-  // identidade visual), na linha do resumo logo depois de "Outras classes/arquétipos", empurrado
-  // pro final da própria linha com `margin-left: auto` (funciona mesmo com `flex-wrap` no
-  // `&__resumo`). Só aparece com algum tipo selecionado; tom accent (não neutro como `&__acao`)
-  // pra não passar despercebido — clique direito num contador continua sendo o jeito de tirar só
-  // UM tipo (`removerFiltroPorContexto`).
-  &__limpar-filtro {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    flex: 0 0 auto;
-    padding: 0;
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--accent);
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-
-    &:hover {
-      background: color-mix(in srgb, var(--accent) 22%, transparent);
-      border-color: var(--accent);
-    }
-  }
-
-  // Ações do mini-campo de custo variável do Utilizar ("Gastar" / "Cancelar") — a confirmação de
-  // remoção não usa mais este bloco: vira o próprio botão ✕ em ✓ no lugar (ver `&--confirmar-remover`).
-  &__confirmar-acoes {
-    display: flex;
-    gap: 8px;
-  }
-
-  // === Formulário inline (adicionar/editar) ===
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__form-linha {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 12px;
-  }
-
-  &__rotulo-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1 1 120px;
-
-    > span {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-mute);
-    }
-  }
-
-  &__custo-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  &__campo {
-    width: 100%;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--text);
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 10px;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    &--area {
-      resize: vertical;
-      min-height: 40px;
-    }
-  }
-
-  &__stepper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  &__rotulo-inline {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-mute);
-  }
-
-  &__valor {
-    font-family: var(--font-mono);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    min-width: 20px;
-    text-align: center;
-  }
-
-  &__checkbox {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-dim);
-    cursor: pointer;
-    accent-color: var(--accent);
-  }
-
-  &__form-acoes {
-    display: flex;
-    gap: 8px;
-    margin-top: 2px;
-  }
-
-  &__salvar {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--bg);
-    background: var(--accent);
-    border: 0;
-    border-radius: var(--radius-control);
-    padding: 7px 14px;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-  }
-
-  &__cancelar {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 14px;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--text);
-    }
-  }
-
-  // === Diálogo de adição personalizada (mesmo padrão de modal do seletor) ===
-  &__dialog-fundo {
-    position: fixed;
-    inset: 0;
-    background: color-mix(in srgb, var(--bg) 72%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 40;
-  }
-
-  &__dialog {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 460px;
-    max-height: calc(100dvh - 32px);
-    overflow-y: auto;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
-
-    // O formulário compartilhado recebe respiro dentro do diálogo.
-    .habilidades__form {
-      padding: 16px;
-    }
-  }
-
-  &__dialog-topo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  &__dialog-titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-  }
-
-  &__dialog-fechar {
-    margin-left: auto;
-    background: transparent;
-    border: 0;
-    color: var(--text-mute);
-    font-size: 20px;
-    line-height: 1;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--text);
-    }
-  }
 }
 
 // Stepper de custo (mesmo padrão do tema — copiado dos steppers da ficha).
 .ficha-passo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-dim);
-  background: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: none;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+    transition:
+        color 0.15s ease,
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 
-  &:hover:not(:disabled) {
-    color: var(--accent);
-    border-color: var(--accent-border);
-    background: var(--surface);
-  }
+    &:hover:not(:disabled) {
+        color: var(--accent);
+        border-color: var(--accent-border);
+        background: var(--surface);
+    }
 
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
+    &:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
 
-  // Alvo de toque confortável no mobile (m3-56) — mesmo padrão do stepper equivalente na Visão
-  // Geral (`ficha-visualizacao.component.scss`, m3-26).
-  @include bp.mobile {
-    width: bp.$alvo-toque;
-    height: bp.$alvo-toque;
-    font-size: 18px;
-  }
+    // Alvo de toque confortável no mobile (m3-56) — mesmo padrão do stepper equivalente na Visão
+    // Geral (`ficha-visualizacao.component.scss`, m3-26).
+    @include bp.mobile {
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+        font-size: 18px;
+    }
 }
 
 // m3-56: alvo de toque ≥44px nos controles primários repetidos da aba — Editar/Remover por
@@ -791,89 +805,89 @@
 // gasto de Energia, a ação mais repetida da aba). Só dentro de `bp.mobile`, sem inchar a
 // densidade do desktop (mesmo racional seletivo da m3-26).
 .habilidades {
-  @include bp.mobile {
-    &__acao {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-
-    &__add {
-      min-height: bp.$alvo-toque;
-    }
-
-    &__utilizar {
-      min-height: bp.$alvo-toque;
-    }
-
-    // m3-60: os que a m3-56 não cobriu — os 4 chips de filtro por tipo (Arquétipo/Classe/Geral/
-    // Outra classe) e o campo de busca. São controles de toque como os demais; o desenho (fonte,
-    // cor, glow do estado ativo) fica igual, só o piso de altura entra.
-    &__resumo-item {
-      min-height: bp.$alvo-toque;
-    }
-
-    &__busca-campo {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
-  // A lista tem teto de 476px por padrão (linha ~230 acima) — até a m2-21 o card compacto usava um
-  // teto bem mais baixo (250px) porque a coluna Status competia de perto com o agrupador
-  // Identidade+Atributos ao lado (esticado por `align-items:stretch` na `&__linha-colunas`). A
-  // m2-21 tirou Atributos desse agrupador (foi pra dentro da aba Informações do card de Status) —
-  // ele agora é só Identidade+Vitalidade+Reações+Resistências, bem mais baixo, e o teto antigo
-  // desperdiçava a maior parte da altura disponível na aba (a pedido do autor, pós-m2-21). 420px é
-  // a mesma régua já usada nos cards da lateral (`detalhe.page.scss`, "lista longa, rola por
-  // dentro") e no teto irmão de `ficha-inv__lista` (mesma restrição, mesmo card).
-  &--compacto {
-    .habilidades__lista {
-      max-height: 490px;
-    }
-
-    // Mesmo raciocínio do teto padrão (m3-60, acima): no mobile não há coluna vizinha, a página
-    // inteira já rola, e um teto aqui vira rolagem aninhada sem barra visível.
     @include bp.mobile {
-      .habilidades__lista {
-        max-height: none;
-      }
+        &__acao {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+
+        &__add {
+            min-height: bp.$alvo-toque;
+        }
+
+        &__utilizar {
+            min-height: bp.$alvo-toque;
+        }
+
+        // m3-60: os que a m3-56 não cobriu — os 4 chips de filtro por tipo (Arquétipo/Classe/Geral/
+        // Outra classe) e o campo de busca. São controles de toque como os demais; o desenho (fonte,
+        // cor, glow do estado ativo) fica igual, só o piso de altura entra.
+        &__resumo-item {
+            min-height: bp.$alvo-toque;
+        }
+
+        &__busca-campo {
+            min-height: bp.$alvo-toque;
+        }
     }
-  }
+
+    // === Card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`) ===
+    // A lista tem teto de 476px por padrão (linha ~230 acima) — até a m2-21 o card compacto usava um
+    // teto bem mais baixo (250px) porque a coluna Status competia de perto com o agrupador
+    // Identidade+Atributos ao lado (esticado por `align-items:stretch` na `&__linha-colunas`). A
+    // m2-21 tirou Atributos desse agrupador (foi pra dentro da aba Informações do card de Status) —
+    // ele agora é só Identidade+Vitalidade+Reações+Resistências, bem mais baixo, e o teto antigo
+    // desperdiçava a maior parte da altura disponível na aba (a pedido do autor, pós-m2-21). 420px é
+    // a mesma régua já usada nos cards da lateral (`detalhe.page.scss`, "lista longa, rola por
+    // dentro") e no teto irmão de `ficha-inv__lista` (mesma restrição, mesmo card).
+    &--compacto {
+        .habilidades__lista {
+            max-height: 490px;
+        }
+
+        // Mesmo raciocínio do teto padrão (m3-60, acima): no mobile não há coluna vizinha, a página
+        // inteira já rola, e um teto aqui vira rolagem aninhada sem barra visível.
+        @include bp.mobile {
+            .habilidades__lista {
+                max-height: none;
+            }
+        }
+    }
 }
 
 // Feedback visual do Utilizar (pulso de cor do botão + "−N E" flutuante). Sem transform de escala:
 // mudar a geometria do botão durante o hold provocava `pointerleave` e cortava a repetição.
 @keyframes habilidades-gasto-pulso {
-  0% {
-    background: color-mix(in srgb, var(--energy) 55%, transparent);
-  }
-  100% {
-    background: color-mix(in srgb, var(--energy) 14%, transparent);
-  }
+    0% {
+        background: color-mix(in srgb, var(--energy) 55%, transparent);
+    }
+    100% {
+        background: color-mix(in srgb, var(--energy) 14%, transparent);
+    }
 }
 
 @keyframes habilidades-gasto-flutua {
-  0% {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-14px);
-  }
+    0% {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-14px);
+    }
 }
 
 // Movimento reduzido: mantém o realce de cor, sem deslize/escala.
 @media (prefers-reduced-motion: reduce) {
-  .habilidades__utilizar--gasto {
-    animation: none;
-    background: color-mix(in srgb, var(--energy) 30%, transparent);
-  }
-  .habilidades__gasto-flash {
-    animation: none;
-    opacity: 1;
-  }
+    .habilidades__utilizar--gasto {
+        animation: none;
+        background: color-mix(in srgb, var(--energy) 30%, transparent);
+    }
+    .habilidades__gasto-flash {
+        animation: none;
+        opacity: 1;
+    }
 }

@@ -1,45 +1,49 @@
 <div class="enquadramento" role="dialog" aria-label="Ajustar enquadramento da imagem">
-  <header class="enquadramento__cabecalho">
-    <span class="enquadramento__titulo">Ajustar enquadramento</span>
-  </header>
+    <header class="enquadramento__cabecalho">
+        <span class="enquadramento__titulo">Ajustar enquadramento</span>
+    </header>
 
-  <div
-    #caixa
-    class="enquadramento__caixa"
-    [style.width.px]="larguraPreVisualizacao()"
-    [style.height.px]="alturaPreVisualizacao"
-    (pointerdown)="aoIniciarArrasto($event)"
-    (pointermove)="aoMoverArrasto($event, caixa)"
-    (pointerup)="aoSoltarArrasto($event)"
-    (pointercancel)="aoSoltarArrasto($event)"
-  >
-    <img
-      #focoImg="appFocoImagem"
-      class="enquadramento__imagem"
-      [src]="previewUrl()"
-      alt=""
-      draggable="false"
-      [appFocoImagem]="{ x: x(), y: y(), escala: escala() }"
-      [appFocoImagemCaixa]="proporcao()"
-    />
-  </div>
+    <div
+        #caixa
+        class="enquadramento__caixa"
+        [style.width.px]="larguraPreVisualizacao()"
+        [style.height.px]="alturaPreVisualizacao"
+        (pointerdown)="aoIniciarArrasto($event)"
+        (pointermove)="aoMoverArrasto($event, caixa)"
+        (pointerup)="aoSoltarArrasto($event)"
+        (pointercancel)="aoSoltarArrasto($event)"
+    >
+        <img
+            #focoImg="appFocoImagem"
+            class="enquadramento__imagem"
+            [src]="previewUrl()"
+            alt=""
+            draggable="false"
+            [appFocoImagem]="{ x: x(), y: y(), escala: escala() }"
+            [appFocoImagemCaixa]="proporcao()"
+        />
+    </div>
 
-  <label class="enquadramento__zoom">
-    <span class="enquadramento__zoom-rotulo">Zoom</span>
-    <input
-      type="range"
-      class="enquadramento__zoom-entrada"
-      [min]="escalaMinima"
-      [max]="escalaMaxima"
-      step="0.05"
-      [value]="escala()"
-      aria-label="Zoom"
-      (input)="aoAjustarEscala($event)"
-    />
-  </label>
+    <label class="enquadramento__zoom">
+        <span class="enquadramento__zoom-rotulo">Zoom</span>
+        <input
+            type="range"
+            class="enquadramento__zoom-entrada"
+            [min]="escalaMinima"
+            [max]="escalaMaxima"
+            step="0.05"
+            [value]="escala()"
+            aria-label="Zoom"
+            (input)="aoAjustarEscala($event)"
+        />
+    </label>
 
-  <div class="enquadramento__acoes">
-    <button class="botao botao--primario" type="button" (click)="confirmarEnquadramento()">Confirmar</button>
-    <button class="botao botao--secundario" type="button" (click)="cancelar.emit()">Cancelar</button>
-  </div>
+    <div class="enquadramento__acoes">
+        <button class="botao botao--primario" type="button" (click)="confirmarEnquadramento()">
+            Confirmar
+        </button>
+        <button class="botao botao--secundario" type="button" (click)="cancelar.emit()">
+            Cancelar
+        </button>
+    </div>
 </div>

@@ -2,559 +2,564 @@
 // "Terminal de Contenção" — nenhum hex/fonte/raio solto (proibição #29). O padrão de "marca"
 // (borda colorida à esquerda por tipo) espelha o read-only de m3-11.
 
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 .sanidade {
-  // Três colunas (Sequelas / Traumas / Lesões) lado a lado; empilha em 1 coluna no estreito.
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  align-items: start;
+    // Três colunas (Sequelas / Traumas / Lesões) lado a lado; empilha em 1 coluna no estreito.
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
 
-  // `minmax(0, 1fr)`, não `1fr`: `1fr` é `minmax(auto, 1fr)` e o piso `auto` deixa a coluna crescer
-  // até o min-content do conteúdo — com o `white-space: nowrap` de `&__descricao` isso media 483px
-  // dentro de uma tela de 390px, e o `overflow-x: clip` do layout escondia o excedente, tornando o
-  // texto da sequela/trauma/lesão **inalcançável** (perda de dado). O piso 0 prende a coluna à
-  // largura da grade; o `min-width: 0` propaga a mesma trava até o texto (grupo → lista → item).
-  @media (max-width: 900px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  // Cada categoria é um painel com um filete de cor no topo (identidade visual da marca). A cor da
-  // marca vive em `--marca` e é herdada por tudo que representa a categoria (topo, botão adicionar,
-  // borda do editor) — assim adicionar a uma seção usa a mesma cor da seção.
-  &__grupo {
-    --marca: var(--border-strong);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    // Piso comum às três colunas (Sequelas/Traumas/Lesões): cobre cabeçalho + lista de 3 itens
-    // compactos mesmo quando a coluna tem 0/1 item, então elas terminam alinhadas em vez de uma
-    // dominar as outras (era o "quebrado visualmente" reportado — Sequelas com 3 itens ficava bem
-    // mais alta que Traumas/Lesões com 1). Também funciona como teto: a lista rola a partir do 4º
-    // item (`&__lista` abaixo), então o grupo nunca cresce além disso — independe da altura da
-    // caixa de Anotações vizinha (fora deste componente).
-    min-height: 260px;
-    min-width: 0;
-    padding: 12px 12px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-top: 2px solid var(--marca);
-    border-radius: var(--radius-card);
-
-    // Empilhado no mobile não há três colunas para alinhar — o piso vira só vazio (medidos 537px
-    // somados nas três seções). Cada grupo passa a ter a altura do próprio conteúdo.
-    @include bp.mobile {
-      min-height: 0;
+    // `minmax(0, 1fr)`, não `1fr`: `1fr` é `minmax(auto, 1fr)` e o piso `auto` deixa a coluna crescer
+    // até o min-content do conteúdo — com o `white-space: nowrap` de `&__descricao` isso media 483px
+    // dentro de uma tela de 390px, e o `overflow-x: clip` do layout escondia o excedente, tornando o
+    // texto da sequela/trauma/lesão **inalcançável** (perda de dado). O piso 0 prende a coluna à
+    // largura da grade; o `min-width: 0` propaga a mesma trava até o texto (grupo → lista → item).
+    @media (max-width: 900px) {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    &--sequela {
-      --marca: var(--text-mute);
-    }
-    &--trauma {
-      --marca: var(--warning);
-    }
-    // `--vida`, não `--accent`: Lesões é sempre vermelho, mesmo que o usuário troque o accent do
-    // tema (preset/color-picker — spec M1) — mesmo racional do `--vida` fixo na stat de Vida.
-    &--lesao {
-      --marca: var(--vida);
-    }
-  }
+    // Cada categoria é um painel com um filete de cor no topo (identidade visual da marca). A cor da
+    // marca vive em `--marca` e é herdada por tudo que representa a categoria (topo, botão adicionar,
+    // borda do editor) — assim adicionar a uma seção usa a mesma cor da seção.
+    &__grupo {
+        --marca: var(--border-strong);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        // Piso comum às três colunas (Sequelas/Traumas/Lesões): cobre cabeçalho + lista de 3 itens
+        // compactos mesmo quando a coluna tem 0/1 item, então elas terminam alinhadas em vez de uma
+        // dominar as outras (era o "quebrado visualmente" reportado — Sequelas com 3 itens ficava bem
+        // mais alta que Traumas/Lesões com 1). Também funciona como teto: a lista rola a partir do 4º
+        // item (`&__lista` abaixo), então o grupo nunca cresce além disso — independe da altura da
+        // caixa de Anotações vizinha (fora deste componente).
+        min-height: 260px;
+        min-width: 0;
+        padding: 12px 12px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-top: 2px solid var(--marca);
+        border-radius: var(--radius-card);
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+        // Empilhado no mobile não há três colunas para alinhar — o piso vira só vazio (medidos 537px
+        // somados nas três seções). Cada grupo passa a ter a altura do próprio conteúdo.
+        @include bp.mobile {
+            min-height: 0;
+        }
 
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-  }
-
-  &__contagem {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-mute);
-  }
-
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  // Botão adicionar: veste a cor da própria seção (herdada via `--marca`) — adicionar a Sequelas
-  // fica cinza, a Traumas âmbar, a Lesões vermelho, casando com o filete do topo.
-  &__add {
-    position: relative;
-    flex: 0 0 auto;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--marca);
-    background: color-mix(in srgb, var(--marca) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--marca) 40%, transparent);
-    border-radius: var(--radius-control);
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-
-    // m3-60: sem alvo de toque mobile — corrigido por `::after` (não por padding) para não
-    // depender do modelo de caixa do conteúdo variável (rótulo "Adicionar sequela/trauma/lesão").
-    @include bp.mobile {
-      &::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
-      }
+        &--sequela {
+            --marca: var(--text-mute);
+        }
+        &--trauma {
+            --marca: var(--warning);
+        }
+        // `--vida`, não `--accent`: Lesões é sempre vermelho, mesmo que o usuário troque o accent do
+        // tema (preset/color-picker — spec M1) — mesmo racional do `--vida` fixo na stat de Vida.
+        &--lesao {
+            --marca: var(--vida);
+        }
     }
 
-    &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--marca) 24%, transparent);
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
     }
 
-    // m3-60: a m3-56 só cobriu a variante `--compacto`; o botão com o texto "＋ Adicionar" ficava
-    // com ~26px de altura, abaixo do alvo de toque.
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-      padding: 5px 14px;
+    &__contagem {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
     }
 
-    // `apresentacao="dialog"` (coluna estreita, ex.: card de Status): só o "+", sem o texto
-    // "Adicionar" — o cabeçalho (título + contagem + régua + botão) não tem espaço pra frase.
-    &--compacto {
-      width: 22px;
-      height: 22px;
-      padding: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 
-      @include bp.mobile {
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
+    // Botão adicionar: veste a cor da própria seção (herdada via `--marca`) — adicionar a Sequelas
+    // fica cinza, a Traumas âmbar, a Lesões vermelho, casando com o filete do topo.
+    &__add {
+        position: relative;
+        flex: 0 0 auto;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--marca);
+        background: color-mix(in srgb, var(--marca) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--marca) 40%, transparent);
+        border-radius: var(--radius-control);
+        padding: 5px 10px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+
+        // m3-60: sem alvo de toque mobile — corrigido por `::after` (não por padding) para não
+        // depender do modelo de caixa do conteúdo variável (rótulo "Adicionar sequela/trauma/lesão").
+        @include bp.mobile {
+            &::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: bp.$alvo-toque;
+                height: bp.$alvo-toque;
+            }
+        }
+
+        &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--marca) 24%, transparent);
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        // m3-60: a m3-56 só cobriu a variante `--compacto`; o botão com o texto "＋ Adicionar" ficava
+        // com ~26px de altura, abaixo do alvo de toque.
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+            padding: 5px 14px;
+        }
+
+        // `apresentacao="dialog"` (coluna estreita, ex.: card de Status): só o "+", sem o texto
+        // "Adicionar" — o cabeçalho (título + contagem + régua + botão) não tem espaço pra frase.
+        &--compacto {
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+
+            @include bp.mobile {
+                width: bp.$alvo-toque;
+                height: bp.$alvo-toque;
+                font-size: 16px;
+            }
+        }
+    }
+
+    // Lista rolável por dentro (altura limitada, ~3 itens compactos) com fade nas bordas — não
+    // estica a coluna além do piso de `&__grupo` acima.
+    &__lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+        max-height: 200px;
+        overflow-y: auto;
+
+        // No mobile a página inteira já rola como uma coisa só (m3-60): um teto aqui produziria
+        // rolagem dentro de rolagem, sem barra visível (o tema esconde a nativa por design). Sem teto
+        // não há overflow, e o `appOverflowFade` — que só marca o host quando há corte de verdade —
+        // deixa de aplicar a máscara sozinho, sem fade fantasma.
+        @include bp.mobile {
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 20px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 20px;
+        }
+    }
+
+    &__item {
+        min-width: 0;
+        padding: 7px 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-left-width: 3px;
+        border-radius: var(--radius-control);
+
+        &--sequela {
+            border-left-color: var(--text-mute);
+        }
+
+        &--trauma {
+            border-left-color: var(--warning);
+        }
+
+        &--lesao {
+            border-left-color: var(--vida);
+        }
+
+        &--edicao {
+            border-left-color: var(--marca);
+            background: var(--surface);
+        }
+    }
+
+    &__linha {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    // Severidade da Lesão (Leve/Grave/Mortal) — sempre vermelho (`--vida`, fixo — mesma identidade
+    // da borda esquerda do item), independente da severidade E do accent do tema escolhido.
+    &__tag {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--vida);
+        flex: 0 0 auto;
+    }
+
+    &__nome {
+        flex: 1 1 auto;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    // Marca de lesão permanente (substitui o texto "(permanente)" — mantém o nome numa linha só).
+    &__permanente {
+        font-size: 11px;
+        color: var(--vida);
+        vertical-align: -1px;
+        margin-left: 3px;
+    }
+
+    // Marca de trauma tratado — só leitura, fora do `@if (editavel())` (mesmo padrão de `&__permanente`);
+    // o estado só muda dentro do formulário de editar trauma (m3-51, item 2).
+    &__tratado {
+        font-size: 11px;
+        color: var(--positive);
+        vertical-align: -1px;
+        margin-left: 3px;
+    }
+
+    &__acoes {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+    }
+
+    &__acao {
+        // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` encolheria o ícone
+        // em vez de crescer a caixa, então a área de toque cresce por `::after` (m3-60) — mesmo padrão
+        // de `alvo-de-toque` em `ficha-visualizacao.component.scss`, duplicado aqui porque o mixin não
+        // é compartilhado entre componentes standalone (encapsulamento do Angular).
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        font-size: 12px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease;
+
+        @include bp.mobile {
+            &::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: bp.$alvo-toque;
+                height: bp.$alvo-toque;
+            }
+        }
+
+        &:hover {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        &--remover:hover {
+            color: var(--accent);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    // Trunca numa linha só (visual "sumarizado" — item compacto de altura previsível, necessário
+    // pro piso/teto fixos de `&__grupo`/`&__lista` acima). Texto completo continua acessível via
+    // `title` (tooltip nativo) e no formulário de edição.
+    &__descricao {
+        display: block;
+        min-width: 0;
+        margin-top: 3px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-dim);
+
+        // No mobile o item não precisa mais ter altura previsível (o piso/teto de `&__grupo`/`&__lista`
+        // saem acima), então o texto quebra e é lido por inteiro — a reticência dependia de hover
+        // (`title`/tooltip) para revelar o resto, o que no toque não existe.
+        @include bp.mobile {
+            overflow: visible;
+            white-space: normal;
+            text-overflow: clip;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    &__vazio {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-style: italic;
+        color: var(--text-mute);
+    }
+
+    // === Confirmação de remoção (inline) ===
+    &__confirmar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+    }
+
+    &__confirmar-texto {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text-dim);
+    }
+
+    &__confirmar-acoes {
+        display: flex;
+        gap: 8px;
+    }
+
+    // === Formulário inline (adicionar/editar) ===
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__form-linha {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+    }
+
+    &__rotulo-campo {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 120px;
+
+        > span {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-mute);
+        }
+    }
+
+    &__campo {
+        width: 100%;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 10px;
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+    }
+
+    &__stepper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__rotulo-inline {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-mute);
+    }
+
+    &__pontos {
+        font-family: var(--font-mono);
         font-size: 16px;
-      }
-    }
-  }
-
-  // Lista rolável por dentro (altura limitada, ~3 itens compactos) com fade nas bordas — não
-  // estica a coluna além do piso de `&__grupo` acima.
-  &__lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-    max-height: 200px;
-    overflow-y: auto;
-
-    // No mobile a página inteira já rola como uma coisa só (m3-60): um teto aqui produziria
-    // rolagem dentro de rolagem, sem barra visível (o tema esconde a nativa por design). Sem teto
-    // não há overflow, e o `appOverflowFade` — que só marca o host quando há corte de verdade —
-    // deixa de aplicar a máscara sozinho, sem fade fantasma.
-    @include bp.mobile {
-      max-height: none;
-      overflow-y: visible;
+        font-weight: 700;
+        color: var(--text);
+        min-width: 20px;
+        text-align: center;
     }
 
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 20px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 20px;
-    }
-  }
-
-  &__item {
-    min-width: 0;
-    padding: 7px 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-left-width: 3px;
-    border-radius: var(--radius-control);
-
-    &--sequela {
-      border-left-color: var(--text-mute);
+    &__checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text-dim);
+        cursor: pointer;
+        accent-color: var(--accent);
     }
 
-    &--trauma {
-      border-left-color: var(--warning);
+    &__form-acoes {
+        display: flex;
+        gap: 8px;
+        margin-top: 2px;
     }
 
-    &--lesao {
-      border-left-color: var(--vida);
+    &__salvar {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--bg);
+        background: var(--accent);
+        border: 0;
+        border-radius: var(--radius-control);
+        padding: 7px 14px;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
     }
 
-    &--edicao {
-      border-left-color: var(--marca);
-      background: var(--surface);
+    &__cancelar {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 14px;
+        cursor: pointer;
+
+        &:hover {
+            color: var(--text);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
     }
-  }
-
-  &__linha {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  // Severidade da Lesão (Leve/Grave/Mortal) — sempre vermelho (`--vida`, fixo — mesma identidade
-  // da borda esquerda do item), independente da severidade E do accent do tema escolhido.
-  &__tag {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--vida);
-    flex: 0 0 auto;
-  }
-
-  &__nome {
-    flex: 1 1 auto;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  // Marca de lesão permanente (substitui o texto "(permanente)" — mantém o nome numa linha só).
-  &__permanente {
-    font-size: 11px;
-    color: var(--vida);
-    vertical-align: -1px;
-    margin-left: 3px;
-  }
-
-  // Marca de trauma tratado — só leitura, fora do `@if (editavel())` (mesmo padrão de `&__permanente`);
-  // o estado só muda dentro do formulário de editar trauma (m3-51, item 2).
-  &__tratado {
-    font-size: 11px;
-    color: var(--positive);
-    vertical-align: -1px;
-    margin-left: 3px;
-  }
-
-  &__acoes {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-  }
-
-  &__acao {
-    // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` encolheria o ícone
-    // em vez de crescer a caixa, então a área de toque cresce por `::after` (m3-60) — mesmo padrão
-    // de `alvo-de-toque` em `ficha-visualizacao.component.scss`, duplicado aqui porque o mixin não
-    // é compartilhado entre componentes standalone (encapsulamento do Angular).
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    font-size: 12px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
-
-    @include bp.mobile {
-      &::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
-      }
-    }
-
-    &:hover {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
-
-    &--remover:hover {
-      color: var(--accent);
-    }
-
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
-
-  // Trunca numa linha só (visual "sumarizado" — item compacto de altura previsível, necessário
-  // pro piso/teto fixos de `&__grupo`/`&__lista` acima). Texto completo continua acessível via
-  // `title` (tooltip nativo) e no formulário de edição.
-  &__descricao {
-    display: block;
-    min-width: 0;
-    margin-top: 3px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    color: var(--text-dim);
-
-    // No mobile o item não precisa mais ter altura previsível (o piso/teto de `&__grupo`/`&__lista`
-    // saem acima), então o texto quebra e é lido por inteiro — a reticência dependia de hover
-    // (`title`/tooltip) para revelar o resto, o que no toque não existe.
-    @include bp.mobile {
-      overflow: visible;
-      white-space: normal;
-      text-overflow: clip;
-      overflow-wrap: anywhere;
-    }
-  }
-
-  &__vazio {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-mute);
-  }
-
-  // === Confirmação de remoção (inline) ===
-  &__confirmar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-
-  &__confirmar-texto {
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-dim);
-  }
-
-  &__confirmar-acoes {
-    display: flex;
-    gap: 8px;
-  }
-
-  // === Formulário inline (adicionar/editar) ===
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__form-linha {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 12px;
-  }
-
-  &__rotulo-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1 1 120px;
-
-    > span {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-mute);
-    }
-  }
-
-  &__campo {
-    width: 100%;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--text);
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 10px;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-  }
-
-  &__stepper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  &__rotulo-inline {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-mute);
-  }
-
-  &__pontos {
-    font-family: var(--font-mono);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    min-width: 20px;
-    text-align: center;
-  }
-
-  &__checkbox {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-dim);
-    cursor: pointer;
-    accent-color: var(--accent);
-  }
-
-  &__form-acoes {
-    display: flex;
-    gap: 8px;
-    margin-top: 2px;
-  }
-
-  &__salvar {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--bg);
-    background: var(--accent);
-    border: 0;
-    border-radius: var(--radius-control);
-    padding: 7px 14px;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  &__cancelar {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 14px;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--text);
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
 }
 
 // Stepper de pontos (mesmo padrão do tema — copiado dos steppers da ficha).
 .ficha-passo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-dim);
-  background: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: none;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+    transition:
+        color 0.15s ease,
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 
-  &:hover:not(:disabled) {
-    color: var(--accent);
-    border-color: var(--accent-border);
-    background: var(--surface);
-  }
+    &:hover:not(:disabled) {
+        color: var(--accent);
+        border-color: var(--accent-border);
+        background: var(--surface);
+    }
 
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
+    &:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
 
-  @include bp.mobile {
-    width: bp.$alvo-toque;
-    height: bp.$alvo-toque;
-    font-size: 18px;
-  }
+    @include bp.mobile {
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+        font-size: 18px;
+    }
 }

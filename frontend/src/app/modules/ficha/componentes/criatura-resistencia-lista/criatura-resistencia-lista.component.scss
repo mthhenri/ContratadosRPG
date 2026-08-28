@@ -1,101 +1,296 @@
-:host { display: block; }
+:host {
+    display: block;
+}
 
 // `.botao` canônico (`_componentes.scss`) copiado pra cá: a definição que existe no SCSS da página
 // (`visualizar-criatura.page.scss`) fica presa ao encapsulamento dela, então os botões do
 // formulário deste componente apareciam como texto cru, sem pele nenhuma.
 .botao {
-  padding: 7px 12px;
-  font: 600 11px var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+    padding: 7px 12px;
+    font: 600 11px var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+        filter 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 
-  &:disabled { opacity: .55; cursor: default; }
-  &--primario { background: var(--accent); color: var(--bg); border: 0; &:hover:not(:disabled) { filter: brightness(1.08); } }
-  &--secundario { background: transparent; color: var(--text); border: 1px solid var(--border-strong); &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } }
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
+    }
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+    }
+    &--secundario {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
 }
 
 // Resistências/Fraquezas da ficha de criatura — alvo de fidelidade
 // docs/design/examples/ficha-de-criatura.html: cabeçalho "rótulo + régua + ações", boxes compactos
 // pras Resistências e cards com tom de aviso pras Fraquezas. Só tokens do tema (proibição #29).
 .resistencia-lista {
-  &__cabecalho { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
-  &__titulo { margin: 0; font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-dim); }
-  &__regua { flex: 1 1 0; height: 1px; background: var(--border); }
-  &__dica { font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text-mute); }
-  &__adicionar {
-    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none;
-    color: var(--accent); background: transparent; border: 1px solid var(--accent-border); border-radius: 3px;
-    cursor: pointer; &:hover { background: var(--accent-dim); }
-  }
-  // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
-  // (`__grade-acoes`/`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível.
-  &__alternar-edicao {
-    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none;
-    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: 3px;
-    cursor: pointer; &:hover { color: var(--accent); border-color: var(--accent-border); }
-    &--ativo { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
-  }
-  &__vazio { margin: 0; font: 12px var(--font-sans); color: var(--text-mute); }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 10px;
+    }
+    &__titulo {
+        margin: 0;
+        font: 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+    }
+    &__regua {
+        flex: 1 1 0;
+        height: 1px;
+        background: var(--border);
+    }
+    &__dica {
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-mute);
+    }
+    &__adicionar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        flex: none;
+        color: var(--accent);
+        background: transparent;
+        border: 1px solid var(--accent-border);
+        border-radius: 3px;
+        cursor: pointer;
+        &:hover {
+            background: var(--accent-dim);
+        }
+    }
+    // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
+    // (`__grade-acoes`/`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível.
+    &__alternar-edicao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        flex: none;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: 3px;
+        cursor: pointer;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+        &--ativo {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+    }
+    &__vazio {
+        margin: 0;
+        font: 12px var(--font-sans);
+        color: var(--text-mute);
+    }
 
-  // Fraquezas: o rótulo e a régua ganham o tom de perigo do mockup.
-  &--fraqueza {
-    .resistencia-lista__titulo { color: var(--accent); }
-    .resistencia-lista__regua { background: var(--accent-border); }
-  }
+    // Fraquezas: o rótulo e a régua ganham o tom de perigo do mockup.
+    &--fraqueza {
+        .resistencia-lista__titulo {
+            color: var(--accent);
+        }
+        .resistencia-lista__regua {
+            background: var(--accent-border);
+        }
+    }
 
-  // --- Variante "resistencia": boxes compactos (abreviação em cima, valor embaixo) ---
-  &__grade {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px;
-    margin: 0; padding: 0; list-style: none;
-  }
-  &__grade-item {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 9px 8px;
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-control);
-    // Em edição o formulário não cabe num box: o item ocupa a linha inteira.
-    &--editando { grid-column: 1 / -1; background: transparent; border: 1px dashed var(--border-strong); }
-  }
-  &__grade-tipo {
-    font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--text-mute);
-    border-bottom: 1px dotted var(--border-strong); cursor: help;
-  }
-  &__grade-valor { font: 700 16px var(--font-mono); color: var(--text); line-height: 1; }
-  &__grade-acoes { display: flex; gap: 4px; }
+    // --- Variante "resistencia": boxes compactos (abreviação em cima, valor embaixo) ---
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    &__grade-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 9px 8px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        // Em edição o formulário não cabe num box: o item ocupa a linha inteira.
+        &--editando {
+            grid-column: 1 / -1;
+            background: transparent;
+            border: 1px dashed var(--border-strong);
+        }
+    }
+    &__grade-tipo {
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--text-mute);
+        border-bottom: 1px dotted var(--border-strong);
+        cursor: help;
+    }
+    &__grade-valor {
+        font: 700 16px var(--font-mono);
+        color: var(--text);
+        line-height: 1;
+    }
+    &__grade-acoes {
+        display: flex;
+        gap: 4px;
+    }
 
-  // --- Variante "fraqueza": linhas com tom de aviso, em grade de 2 colunas (divergência
-  // deliberada do mockup, que mostra uma coluna só — ver docs/context/CONTEXT.md) ---
-  &__itens { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-  &__item {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-    padding: 9px 12px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-    // Em edição o formulário (2 colunas próprias) não cabe numa célula: ocupa a linha inteira.
-    &--editando { grid-column: 1 / -1; background: transparent; border-style: dashed; border-color: var(--border-strong); }
-  }
-  &__item-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  &__tipo { font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .11em; color: var(--text-mute); }
-  &__subtipo { font: 600 13px var(--font-mono); color: var(--text); }
-  &__valor { margin-left: auto; font: 700 16px var(--font-mono); color: var(--accent); }
+    // --- Variante "fraqueza": linhas com tom de aviso, em grade de 2 colunas (divergência
+    // deliberada do mockup, que mostra uma coluna só — ver docs/context/CONTEXT.md) ---
+    &__itens {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    &__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 9px 12px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        // Em edição o formulário (2 colunas próprias) não cabe numa célula: ocupa a linha inteira.
+        &--editando {
+            grid-column: 1 / -1;
+            background: transparent;
+            border-style: dashed;
+            border-color: var(--border-strong);
+        }
+    }
+    &__item-texto {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+    }
+    &__tipo {
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        color: var(--text-mute);
+    }
+    &__subtipo {
+        font: 600 13px var(--font-mono);
+        color: var(--text);
+    }
+    &__valor {
+        margin-left: auto;
+        font: 700 16px var(--font-mono);
+        color: var(--accent);
+    }
 
-  &__acoes { display: flex; gap: 4px; }
-  &__acao { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; &:hover { color: var(--accent); border-color: var(--accent-border); } }
-  // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
-  // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
-  &__acao--confirmar { width: auto; padding: 0 8px; color: var(--vida); }
+    &__acoes {
+        display: flex;
+        gap: 4px;
+    }
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+    }
+    // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
+    // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
+    &__acao--confirmar {
+        width: auto;
+        padding: 0 8px;
+        color: var(--vida);
+    }
 
-  // --- Formulário (mesmo nos dois modos): grade rotulada em vez de linha de flex-wrap ---
-  &__form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: 100%; }
-  &__form-novo { margin-top: 8px; padding: 10px; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: var(--radius-control); }
-  &__campo { display: grid; gap: 4px; min-width: 0; &--largo { grid-column: 1 / -1; } }
-  &__campo-rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); }
-  &__form-acoes { grid-column: 1 / -1; display: flex; gap: 6px; }
-  &__select, &__input {
-    width: 100%; min-width: 0; padding: 6px 8px; font: 12px var(--font-sans); color: var(--text);
-    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); outline: 0;
-    &:focus { border-color: var(--accent); }
-  }
+    // --- Formulário (mesmo nos dois modos): grade rotulada em vez de linha de flex-wrap ---
+    &__form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        width: 100%;
+    }
+    &__form-novo {
+        margin-top: 8px;
+        padding: 10px;
+        background: var(--surface-2);
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-control);
+    }
+    &__campo {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        &--largo {
+            grid-column: 1 / -1;
+        }
+    }
+    &__campo-rotulo {
+        font: 600 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+    &__form-acoes {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 6px;
+    }
+    &__select,
+    &__input {
+        width: 100%;
+        min-width: 0;
+        padding: 6px 8px;
+        font: 12px var(--font-sans);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        outline: 0;
+        &:focus {
+            border-color: var(--accent);
+        }
+    }
 }

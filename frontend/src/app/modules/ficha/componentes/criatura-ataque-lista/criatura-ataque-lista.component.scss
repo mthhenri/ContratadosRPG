@@ -1,114 +1,318 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
-:host { display: block; }
+:host {
+    display: block;
+}
 
 // `.botao` canônico (`_componentes.scss`) copiado pra cá: a definição que existe no SCSS da página
 // (`visualizar-criatura.page.scss`) fica presa ao encapsulamento dela, então os botões do
 // formulário deste componente apareciam como texto cru, sem pele nenhuma.
 .botao {
-  padding: 7px 12px;
-  font: 600 11px var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+    padding: 7px 12px;
+    font: 600 11px var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+        filter 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 
-  &:disabled { opacity: .55; cursor: default; }
-  &--primario { background: var(--accent); color: var(--bg); border: 0; &:hover:not(:disabled) { filter: brightness(1.08); } }
-  &--secundario { background: transparent; color: var(--text); border: 1px solid var(--border-strong); &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); } }
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
+    }
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+    }
+    &--secundario {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
 }
 
 // Ataques da ficha de criatura — alvo de fidelidade docs/design/examples/ficha-de-criatura.html:
 // cabeçalho "rótulo + contagem + régua + ações", cards em auto-fit de 300px com nome/dano na mesma
 // linha, marcas do ataque em selos e o rodapé Teste/Dano separado por uma linha.
 .ataque-lista {
-  // Cabeçalho de seção canônico (título + contagem + régua), mesmo bloco de `.card__cabecalho`
-  // (`_componentes.scss`) — replicado aqui porque o encapsulamento de estilos do Angular não
-  // deixa a definição de outro componente vazar pra este.
-  &__cabecalho { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  &__titulo { margin: 0; font: 700 11px var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text); }
-  &__contagem { font: 11px var(--font-mono); color: var(--text-mute); }
-  &__regua { flex: 1; height: 1px; background: var(--border); }
-  &__vazio { margin: 0; font: 12px var(--font-sans); color: var(--text-mute); }
-
-  // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
-  // (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível na tela.
-  &__cabecalho-acao {
-    display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none;
-    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: 3px;
-    cursor: pointer; transition: .15s ease;
-    &:hover { color: var(--accent); border-color: var(--accent-border); }
-    &--ativo { color: var(--accent); background: var(--accent-dim); border-color: var(--accent); }
-    &--adicionar { color: var(--accent); border-color: var(--accent-border); &:hover { background: var(--accent-dim); } }
-  }
-
-  &__itens {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 11px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    @include bp.mobile { grid-template-columns: 1fr; }
-  }
-  &__item {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    padding: 13px 15px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    // O formulário é bem mais largo que um card — abre mão da grade nesse item.
-    &--editando { grid-column: 1 / -1; background: transparent; border-style: dashed; border-color: var(--border-strong); }
-  }
-  &__cabecalho-item { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-  &__nome { font: 600 14px var(--font-sans); color: var(--text); }
-  &__dano { font: 700 13px var(--font-mono); color: var(--text); white-space: nowrap; }
-
-  &__marcas { display: flex; gap: 7px; flex-wrap: wrap; }
-  &__marca {
-    padding: 3px 7px; font: 9px var(--font-mono); text-transform: uppercase; letter-spacing: .09em;
-    color: var(--text-dim); border: 1px solid var(--border-strong); border-radius: 3px;
-  }
-  &__efeito { margin: 0; font: 13px/1.55 var(--font-sans); color: var(--text-dim); }
-
-  &__rodape { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
-  &__rolar {
-    display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px;
-    font: 10px var(--font-mono); text-transform: uppercase; letter-spacing: .1em;
-    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control);
-    color: var(--text-dim); cursor: pointer; transition: .15s ease;
-    &:hover:not(:disabled) { border-color: var(--accent-border); color: var(--text); }
-    &:disabled { cursor: not-allowed; opacity: .5; }
-    // Teste fica no tom neutro e Dano no accent — mesma hierarquia dos dois botões do mockup.
-    &--teste { color: var(--text-dim); }
-    &--dano { color: var(--accent); background: var(--accent-dim); border-color: var(--accent-border); &:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); } }
-    // Rolar crítico (m3-30, ajuste pós-mockup) — mesmo tratamento de destaque do botão análogo em
-    // `FichaRolagens` (`.ficha-rol__btn--critico`): accent sólido + brilho.
-    &--critico {
-      color: var(--bg); background: var(--accent); border-color: var(--accent);
-      box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
-      &:hover:not(:disabled) { filter: brightness(1.08); }
+    // Cabeçalho de seção canônico (título + contagem + régua), mesmo bloco de `.card__cabecalho`
+    // (`_componentes.scss`) — replicado aqui porque o encapsulamento de estilos do Angular não
+    // deixa a definição de outro componente vazar pra este.
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
     }
-  }
-  &__acoes { display: flex; gap: 4px; margin-left: auto; }
-  &__acao { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); cursor: pointer; &:hover { color: var(--accent); border-color: var(--accent-border); } }
-  // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
-  // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
-  &__acao--confirmar { width: auto; padding: 0 8px; color: var(--vida); }
+    &__titulo {
+        margin: 0;
+        font: 700 11px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+    }
+    &__contagem {
+        font: 11px var(--font-mono);
+        color: var(--text-mute);
+    }
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+    &__vazio {
+        margin: 0;
+        font: 12px var(--font-sans);
+        color: var(--text-mute);
+    }
 
-  // --- Formulário: grade rotulada (não uma linha de flex-wrap de controles sem rótulo) ---
-  &__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; width: 100%; }
-  &__form-novo { margin-top: 11px; padding: 12px 14px; background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: 5px; }
-  &__campo { display: grid; gap: 4px; min-width: 0; &--largo { grid-column: 1 / -1; } }
-  &__campo-rotulo { font: 600 9px var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text-mute); }
-  &__form-acoes { grid-column: 1 / -1; display: flex; gap: 6px; }
-  &__select, &__input {
-    width: 100%; min-width: 0; padding: 6px 8px; font: 12px var(--font-sans); color: var(--text);
-    background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); outline: 0;
-    &:focus { border-color: var(--accent); }
-  }
-  &__checkbox { display: inline-flex; align-items: center; gap: 6px; align-self: end; padding-bottom: 6px; font: 12px var(--font-sans); color: var(--text-dim); }
+    // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
+    // (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível na tela.
+    &__cabecalho-acao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        flex: none;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: 3px;
+        cursor: pointer;
+        transition: 0.15s ease;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+        &--ativo {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+        &--adicionar {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            &:hover {
+                background: var(--accent-dim);
+            }
+        }
+    }
+
+    &__itens {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 11px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        padding: 13px 15px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        // O formulário é bem mais largo que um card — abre mão da grade nesse item.
+        &--editando {
+            grid-column: 1 / -1;
+            background: transparent;
+            border-style: dashed;
+            border-color: var(--border-strong);
+        }
+    }
+    &__cabecalho-item {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    &__nome {
+        font: 600 14px var(--font-sans);
+        color: var(--text);
+    }
+    &__dano {
+        font: 700 13px var(--font-mono);
+        color: var(--text);
+        white-space: nowrap;
+    }
+
+    &__marcas {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+    }
+    &__marca {
+        padding: 3px 7px;
+        font: 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: var(--text-dim);
+        border: 1px solid var(--border-strong);
+        border-radius: 3px;
+    }
+    &__efeito {
+        margin: 0;
+        font: 13px/1.55 var(--font-sans);
+        color: var(--text-dim);
+    }
+
+    &__rodape {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: auto;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+    }
+    &__rolar {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 11px;
+        font: 10px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: 0.15s ease;
+        &:hover:not(:disabled) {
+            border-color: var(--accent-border);
+            color: var(--text);
+        }
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        // Teste fica no tom neutro e Dano no accent — mesma hierarquia dos dois botões do mockup.
+        &--teste {
+            color: var(--text-dim);
+        }
+        &--dano {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+            &:hover:not(:disabled) {
+                color: var(--accent);
+                border-color: var(--accent);
+            }
+        }
+        // Rolar crítico (m3-30, ajuste pós-mockup) — mesmo tratamento de destaque do botão análogo em
+        // `FichaRolagens` (`.ficha-rol__btn--critico`): accent sólido + brilho.
+        &--critico {
+            color: var(--bg);
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+            &:hover:not(:disabled) {
+                filter: brightness(1.08);
+            }
+        }
+    }
+    &__acoes {
+        display: flex;
+        gap: 4px;
+        margin-left: auto;
+    }
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+    }
+    // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
+    // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
+    &__acao--confirmar {
+        width: auto;
+        padding: 0 8px;
+        color: var(--vida);
+    }
+
+    // --- Formulário: grade rotulada (não uma linha de flex-wrap de controles sem rótulo) ---
+    &__form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        width: 100%;
+    }
+    &__form-novo {
+        margin-top: 11px;
+        padding: 12px 14px;
+        background: var(--surface-2);
+        border: 1px dashed var(--border-strong);
+        border-radius: 5px;
+    }
+    &__campo {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        &--largo {
+            grid-column: 1 / -1;
+        }
+    }
+    &__campo-rotulo {
+        font: 600 9px var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+    &__form-acoes {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 6px;
+    }
+    &__select,
+    &__input {
+        width: 100%;
+        min-width: 0;
+        padding: 6px 8px;
+        font: 12px var(--font-sans);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        outline: 0;
+        &:focus {
+            border-color: var(--accent);
+        }
+    }
+    &__checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        align-self: end;
+        padding-bottom: 6px;
+        font: 12px var(--font-sans);
+        color: var(--text-dim);
+    }
 }

@@ -1,337 +1,385 @@
 <div class="habilidades" [class.habilidades--compacto]="compacto()" [style.--cor-ficha]="cor()">
-  <header class="habilidades__cabecalho">
-    <h4 class="habilidades__titulo">Habilidades</h4>
-    <span class="habilidades__regua"></span>
-    @if (editavel()) {
-      <div class="habilidades__add-grupo">
-        <button
-          class="habilidades__add habilidades__add--primario"
-          type="button"
-          (click)="abrirSeletor()"
-        >
-          ＋ Do sistema
-        </button>
-        <button
-          class="habilidades__add"
-          type="button"
-          (click)="adicionar()"
-          [disabled]="editando(-1)"
-        >
-          ＋ Personalizada
-        </button>
-      </div>
-    }
-  </header>
-
-  @if (habilidades().length > 0) {
-    <div class="habilidades__resumo" role="group" aria-label="Filtrar habilidades por tipo (soma vários)">
-      <button
-        type="button"
-        class="habilidades__resumo-item habilidades__resumo-item--arquetipo"
-        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('arquetipo')"
-        [attr.aria-pressed]="filtroCategoria().has('arquetipo')"
-        [appTooltip]="'Clique direito remove só este filtro'"
-        (click)="alternarFiltro('arquetipo')"
-        (contextmenu)="removerFiltroPorContexto('arquetipo', $event)"
-      >
-        <span class="habilidades__resumo-rotulo">{{ rotuloResumoArquetipo() }}</span>
-        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().arquetipo }}</span>
-      </button>
-      <button
-        type="button"
-        class="habilidades__resumo-item habilidades__resumo-item--classe"
-        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('classe')"
-        [attr.aria-pressed]="filtroCategoria().has('classe')"
-        [appTooltip]="'Clique direito remove só este filtro'"
-        (click)="alternarFiltro('classe')"
-        (contextmenu)="removerFiltroPorContexto('classe', $event)"
-      >
-        <span class="habilidades__resumo-rotulo">Classe</span>
-        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().classe }}</span>
-      </button>
-      <button
-        type="button"
-        class="habilidades__resumo-item habilidades__resumo-item--geral"
-        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('geral')"
-        [attr.aria-pressed]="filtroCategoria().has('geral')"
-        [appTooltip]="'Clique direito remove só este filtro'"
-        (click)="alternarFiltro('geral')"
-        (contextmenu)="removerFiltroPorContexto('geral', $event)"
-      >
-        <span class="habilidades__resumo-rotulo">Geral</span>
-        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().geral }}</span>
-      </button>
-      <button
-        type="button"
-        class="habilidades__resumo-item habilidades__resumo-item--outra-classe"
-        [class.habilidades__resumo-item--ativo]="filtroCategoria().has('outraClasse')"
-        [attr.aria-pressed]="filtroCategoria().has('outraClasse')"
-        [appTooltip]="'Clique direito remove só este filtro'"
-        (click)="alternarFiltro('outraClasse')"
-        (contextmenu)="removerFiltroPorContexto('outraClasse', $event)"
-      >
-        <span class="habilidades__resumo-rotulo">Outras classes/arquétipos</span>
-        <span class="habilidades__resumo-valor">{{ contagemPorCategoria().outraClasse }}</span>
-      </button>
-      @if (filtroCategoria().size > 0) {
-        <button
-          type="button"
-          class="habilidades__limpar-filtro"
-          aria-label="Limpar filtro de tipos"
-          [appTooltip]="'Limpar filtro (clique direito num contador remove só aquele tipo)'"
-          (click)="limparFiltroCategoria()"
-        >
-          ↺
-        </button>
-      }
-    </div>
-  }
-
-  @if (mostrarBusca()) {
-    <div class="habilidades__busca">
-      <span class="habilidades__busca-icone" aria-hidden="true">⌕</span>
-      <input
-        class="habilidades__busca-campo"
-        type="text"
-        [formControl]="busca"
-        placeholder="Buscar nas suas habilidades…"
-        aria-label="Buscar habilidade adicionada"
-      />
-    </div>
-  }
-
-  <ul class="habilidades__lista" appOverflowFade>
-    @for (item of habilidadesFiltradas(); track item.indice) {
-      @let habilidade = item.habilidade;
-      @let idx = item.indice;
-      @if (editando(idx)) {
-        <li class="habilidades__item habilidades__item--edicao">
-          <ng-container [ngTemplateOutlet]="editor" />
-        </li>
-      } @else {
-        <li
-          class="habilidades__item"
-          [class.habilidades__item--classe]="habilidade.categoria === Categoria.CLASSE"
-          [class.habilidades__item--arquetipo]="habilidade.categoria === Categoria.ARQUETIPO"
-          [class.habilidades__item--subclasse]="habilidade.categoria === Categoria.SUBCLASSE"
-          [class.habilidades__item--personalidade]="habilidade.categoria === Categoria.PERSONALIDADE"
-        >
-          <div class="habilidades__linha">
-            <span
-              class="habilidades__chip"
-              [class.habilidades__chip--classe]="habilidade.categoria === Categoria.CLASSE"
-              [class.habilidades__chip--arquetipo]="habilidade.categoria === Categoria.ARQUETIPO"
-              [class.habilidades__chip--subclasse]="habilidade.categoria === Categoria.SUBCLASSE"
-              [class.habilidades__chip--personalidade]="habilidade.categoria === Categoria.PERSONALIDADE"
-              [class.habilidades__chip--inicial]="ehInicial(habilidade)"
-            >
-              {{ rotuloChip(habilidade) }}
-            </span>
-            <span class="habilidades__nome">{{ habilidade.nome }}</span>
-            <span class="habilidades__custo">{{ rotuloCusto(custoExibido(habilidade.custoEnergia)) }}</span>
-            @if (editavel()) {
-              <div class="habilidades__acoes">
+    <header class="habilidades__cabecalho">
+        <h4 class="habilidades__titulo">Habilidades</h4>
+        <span class="habilidades__regua"></span>
+        @if (editavel()) {
+            <div class="habilidades__add-grupo">
                 <button
-                  class="habilidades__utilizar"
-                  [class.habilidades__utilizar--gasto]="gastoRecente()?.indice === idx"
-                  type="button"
-                  [attr.aria-label]="'Utilizar ' + habilidade.nome"
-                  [disabled]="habilidade.custoEnergia === 0"
-                  [appTooltip]="habilidade.custoEnergia === 0 ? 'Habilidade sem custo de Energia' : null"
-                  (pointerdown)="aoPressionarUtilizar(idx, habilidade, $event)"
-                  (click)="aoClicarUtilizar(idx, habilidade, $event)"
-                >
-                  ⚡ Utilizar
-                  @if (gastoRecente()?.indice === idx) {
-                    <span class="habilidades__gasto-flash" aria-hidden="true">
-                      −{{ gastoRecente()!.valor }} E
-                    </span>
-                  }
-                </button>
-                <button
-                  class="habilidades__acao"
-                  type="button"
-                  aria-label="Editar habilidade"
-                  (click)="editar(idx)"
-                >
-                  ✎
-                </button>
-                @if (indiceRemovendo() === idx) {
-                  <button
-                    class="habilidades__acao habilidades__acao--confirmar-remover"
+                    class="habilidades__add habilidades__add--primario"
                     type="button"
-                    appAutoFocus
-                    [attr.aria-label]="'Remover ' + habilidade.nome + '?'"
-                    [appTooltip]="'Remover ' + habilidade.nome + '?'"
-                    (click)="remover(idx)"
-                    (blur)="cancelarRemocao()"
-                    (keydown.escape)="cancelarRemocao()"
-                  >
-                    ✓
-                  </button>
-                } @else {
-                  <button
-                    class="habilidades__acao habilidades__acao--remover"
+                    (click)="abrirSeletor()"
+                >
+                    ＋ Do sistema
+                </button>
+                <button
+                    class="habilidades__add"
                     type="button"
-                    aria-label="Remover habilidade"
-                    (click)="pedirRemocao(idx)"
-                  >
-                    ✕
-                  </button>
-                }
-              </div>
-            }
-          </div>
-          @if (habilidade.descricao) {
-            <span class="habilidades__descricao">{{ habilidade.descricao }}</span>
-          }
-          @if (indiceUtilizando() === idx) {
-            <div class="habilidades__utilizar-variavel">
-              <span class="habilidades__rotulo-inline">Gastar quanto de Energia?</span>
-              <div class="habilidades__stepper">
-                <button
-                  class="ficha-passo"
-                  type="button"
-                  appHoldRepeat
-                  aria-label="Reduzir gasto"
-                  [disabled]="custoVariavel.value <= 0"
-                  (passo)="ajustarCustoVariavel(-1)"
+                    (click)="adicionar()"
+                    [disabled]="editando(-1)"
                 >
-                  −
+                    ＋ Personalizada
                 </button>
-                <span class="habilidades__valor">{{ custoVariavel.value }}</span>
-                <button
-                  class="ficha-passo"
-                  type="button"
-                  appHoldRepeat
-                  aria-label="Aumentar gasto"
-                  (passo)="ajustarCustoVariavel(1)"
-                >
-                  +
-                </button>
-              </div>
-              <div class="habilidades__confirmar-acoes">
-                <button class="habilidades__salvar" type="button" (click)="confirmarUtilizarVariavel()">
-                  Gastar
-                </button>
-                <button class="habilidades__cancelar" type="button" (click)="cancelarUtilizar()">
-                  Cancelar
-                </button>
-              </div>
             </div>
-          }
-        </li>
-      }
+        }
+    </header>
+
+    @if (habilidades().length > 0) {
+        <div
+            class="habilidades__resumo"
+            role="group"
+            aria-label="Filtrar habilidades por tipo (soma vários)"
+        >
+            <button
+                type="button"
+                class="habilidades__resumo-item habilidades__resumo-item--arquetipo"
+                [class.habilidades__resumo-item--ativo]="filtroCategoria().has('arquetipo')"
+                [attr.aria-pressed]="filtroCategoria().has('arquetipo')"
+                [appTooltip]="'Clique direito remove só este filtro'"
+                (click)="alternarFiltro('arquetipo')"
+                (contextmenu)="removerFiltroPorContexto('arquetipo', $event)"
+            >
+                <span class="habilidades__resumo-rotulo">{{ rotuloResumoArquetipo() }}</span>
+                <span class="habilidades__resumo-valor">{{
+                    contagemPorCategoria().arquetipo
+                }}</span>
+            </button>
+            <button
+                type="button"
+                class="habilidades__resumo-item habilidades__resumo-item--classe"
+                [class.habilidades__resumo-item--ativo]="filtroCategoria().has('classe')"
+                [attr.aria-pressed]="filtroCategoria().has('classe')"
+                [appTooltip]="'Clique direito remove só este filtro'"
+                (click)="alternarFiltro('classe')"
+                (contextmenu)="removerFiltroPorContexto('classe', $event)"
+            >
+                <span class="habilidades__resumo-rotulo">Classe</span>
+                <span class="habilidades__resumo-valor">{{ contagemPorCategoria().classe }}</span>
+            </button>
+            <button
+                type="button"
+                class="habilidades__resumo-item habilidades__resumo-item--geral"
+                [class.habilidades__resumo-item--ativo]="filtroCategoria().has('geral')"
+                [attr.aria-pressed]="filtroCategoria().has('geral')"
+                [appTooltip]="'Clique direito remove só este filtro'"
+                (click)="alternarFiltro('geral')"
+                (contextmenu)="removerFiltroPorContexto('geral', $event)"
+            >
+                <span class="habilidades__resumo-rotulo">Geral</span>
+                <span class="habilidades__resumo-valor">{{ contagemPorCategoria().geral }}</span>
+            </button>
+            <button
+                type="button"
+                class="habilidades__resumo-item habilidades__resumo-item--outra-classe"
+                [class.habilidades__resumo-item--ativo]="filtroCategoria().has('outraClasse')"
+                [attr.aria-pressed]="filtroCategoria().has('outraClasse')"
+                [appTooltip]="'Clique direito remove só este filtro'"
+                (click)="alternarFiltro('outraClasse')"
+                (contextmenu)="removerFiltroPorContexto('outraClasse', $event)"
+            >
+                <span class="habilidades__resumo-rotulo">Outras classes/arquétipos</span>
+                <span class="habilidades__resumo-valor">{{
+                    contagemPorCategoria().outraClasse
+                }}</span>
+            </button>
+            @if (filtroCategoria().size > 0) {
+                <button
+                    type="button"
+                    class="habilidades__limpar-filtro"
+                    aria-label="Limpar filtro de tipos"
+                    [appTooltip]="'Limpar filtro (clique direito num contador remove só aquele tipo)'"
+                    (click)="limparFiltroCategoria()"
+                >
+                    ↺
+                </button>
+            }
+        </div>
     }
-  </ul>
-  @if (!habilidades().length && !editando(-1)) {
-    <p class="habilidades__vazio">Nenhuma habilidade cadastrada.</p>
-  } @else if (habilidades().length && !habilidadesFiltradas().length) {
-    <p class="habilidades__vazio">{{ mensagemListaVazia() }}</p>
-  }
+
+    @if (mostrarBusca()) {
+        <div class="habilidades__busca">
+            <span class="habilidades__busca-icone" aria-hidden="true">⌕</span>
+            <input
+                class="habilidades__busca-campo"
+                type="text"
+                [formControl]="busca"
+                placeholder="Buscar nas suas habilidades…"
+                aria-label="Buscar habilidade adicionada"
+            />
+        </div>
+    }
+
+    <ul class="habilidades__lista" appOverflowFade>
+        @for (item of habilidadesFiltradas(); track item.indice) {
+            @let habilidade = item.habilidade;
+            @let idx = item.indice;
+            @if (editando(idx)) {
+                <li class="habilidades__item habilidades__item--edicao">
+                    <ng-container [ngTemplateOutlet]="editor" />
+                </li>
+            } @else {
+                <li
+                    class="habilidades__item"
+                    [class.habilidades__item--classe]="habilidade.categoria === Categoria.CLASSE"
+                    [class.habilidades__item--arquetipo]="
+                        habilidade.categoria === Categoria.ARQUETIPO
+                    "
+                    [class.habilidades__item--subclasse]="
+                        habilidade.categoria === Categoria.SUBCLASSE
+                    "
+                    [class.habilidades__item--personalidade]="
+                        habilidade.categoria === Categoria.PERSONALIDADE
+                    "
+                >
+                    <div class="habilidades__linha">
+                        <span
+                            class="habilidades__chip"
+                            [class.habilidades__chip--classe]="
+                                habilidade.categoria === Categoria.CLASSE
+                            "
+                            [class.habilidades__chip--arquetipo]="
+                                habilidade.categoria === Categoria.ARQUETIPO
+                            "
+                            [class.habilidades__chip--subclasse]="
+                                habilidade.categoria === Categoria.SUBCLASSE
+                            "
+                            [class.habilidades__chip--personalidade]="
+                                habilidade.categoria === Categoria.PERSONALIDADE
+                            "
+                            [class.habilidades__chip--inicial]="ehInicial(habilidade)"
+                        >
+                            {{ rotuloChip(habilidade) }}
+                        </span>
+                        <span class="habilidades__nome">{{ habilidade.nome }}</span>
+                        <span class="habilidades__custo">{{
+                            rotuloCusto(custoExibido(habilidade.custoEnergia))
+                        }}</span>
+                        @if (editavel()) {
+                            <div class="habilidades__acoes">
+                                <button
+                                    class="habilidades__utilizar"
+                                    [class.habilidades__utilizar--gasto]="
+                                        gastoRecente()?.indice === idx
+                                    "
+                                    type="button"
+                                    [attr.aria-label]="'Utilizar ' + habilidade.nome"
+                                    [disabled]="habilidade.custoEnergia === 0"
+                                    [appTooltip]="
+                                        habilidade.custoEnergia === 0
+                                            ? 'Habilidade sem custo de Energia'
+                                            : null
+                                    "
+                                    (pointerdown)="aoPressionarUtilizar(idx, habilidade, $event)"
+                                    (click)="aoClicarUtilizar(idx, habilidade, $event)"
+                                >
+                                    ⚡ Utilizar
+                                    @if (gastoRecente()?.indice === idx) {
+                                        <span class="habilidades__gasto-flash" aria-hidden="true">
+                                            −{{ gastoRecente()!.valor }} E
+                                        </span>
+                                    }
+                                </button>
+                                <button
+                                    class="habilidades__acao"
+                                    type="button"
+                                    aria-label="Editar habilidade"
+                                    (click)="editar(idx)"
+                                >
+                                    ✎
+                                </button>
+                                @if (indiceRemovendo() === idx) {
+                                    <button
+                                        class="habilidades__acao habilidades__acao--confirmar-remover"
+                                        type="button"
+                                        appAutoFocus
+                                        [attr.aria-label]="'Remover ' + habilidade.nome + '?'"
+                                        [appTooltip]="'Remover ' + habilidade.nome + '?'"
+                                        (click)="remover(idx)"
+                                        (blur)="cancelarRemocao()"
+                                        (keydown.escape)="cancelarRemocao()"
+                                    >
+                                        ✓
+                                    </button>
+                                } @else {
+                                    <button
+                                        class="habilidades__acao habilidades__acao--remover"
+                                        type="button"
+                                        aria-label="Remover habilidade"
+                                        (click)="pedirRemocao(idx)"
+                                    >
+                                        ✕
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                    @if (habilidade.descricao) {
+                        <span class="habilidades__descricao">{{ habilidade.descricao }}</span>
+                    }
+                    @if (indiceUtilizando() === idx) {
+                        <div class="habilidades__utilizar-variavel">
+                            <span class="habilidades__rotulo-inline"
+                                >Gastar quanto de Energia?</span
+                            >
+                            <div class="habilidades__stepper">
+                                <button
+                                    class="ficha-passo"
+                                    type="button"
+                                    appHoldRepeat
+                                    aria-label="Reduzir gasto"
+                                    [disabled]="custoVariavel.value <= 0"
+                                    (passo)="ajustarCustoVariavel(-1)"
+                                >
+                                    −
+                                </button>
+                                <span class="habilidades__valor">{{ custoVariavel.value }}</span>
+                                <button
+                                    class="ficha-passo"
+                                    type="button"
+                                    appHoldRepeat
+                                    aria-label="Aumentar gasto"
+                                    (passo)="ajustarCustoVariavel(1)"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <div class="habilidades__confirmar-acoes">
+                                <button
+                                    class="habilidades__salvar"
+                                    type="button"
+                                    (click)="confirmarUtilizarVariavel()"
+                                >
+                                    Gastar
+                                </button>
+                                <button
+                                    class="habilidades__cancelar"
+                                    type="button"
+                                    (click)="cancelarUtilizar()"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </li>
+            }
+        }
+    </ul>
+    @if (!habilidades().length && !editando(-1)) {
+        <p class="habilidades__vazio">Nenhuma habilidade cadastrada.</p>
+    } @else if (habilidades().length && !habilidadesFiltradas().length) {
+        <p class="habilidades__vazio">{{ mensagemListaVazia() }}</p>
+    }
 </div>
 
 <!-- Adição personalizada em diálogo (o editar existente segue no próprio lugar). -->
 @if (editando(-1)) {
-  <div class="habilidades__dialog-fundo">
-    <div
-      class="habilidades__dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Nova habilidade personalizada"
-    >
-      <header class="habilidades__dialog-topo">
-        <h3 class="habilidades__dialog-titulo">Nova habilidade</h3>
-        <button
-          class="habilidades__dialog-fechar"
-          type="button"
-          aria-label="Fechar"
-          (click)="cancelar()"
+    <div class="habilidades__dialog-fundo">
+        <div
+            class="habilidades__dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Nova habilidade personalizada"
         >
-          ×
-        </button>
-      </header>
-      <ng-container [ngTemplateOutlet]="editor" />
+            <header class="habilidades__dialog-topo">
+                <h3 class="habilidades__dialog-titulo">Nova habilidade</h3>
+                <button
+                    class="habilidades__dialog-fechar"
+                    type="button"
+                    aria-label="Fechar"
+                    (click)="cancelar()"
+                >
+                    ×
+                </button>
+            </header>
+            <ng-container [ngTemplateOutlet]="editor" />
+        </div>
     </div>
-  </div>
 }
 
 @if (seletorAberto()) {
-  <app-ficha-habilidade-seletor
-    [grupos]="grupos()"
-    [nomesNaFicha]="nomesNaFicha()"
-    (adicionar)="aoAdicionarDoCatalogo($event)"
-    (remover)="aoRemoverDoCatalogo($event)"
-    (fechar)="fecharSeletor()"
-  />
+    <app-ficha-habilidade-seletor
+        [grupos]="grupos()"
+        [nomesNaFicha]="nomesNaFicha()"
+        (adicionar)="aoAdicionarDoCatalogo($event)"
+        (remover)="aoRemoverDoCatalogo($event)"
+        (fechar)="fecharSeletor()"
+    />
 }
 
 <!-- ===== Editor (compartilhado entre adicionar e editar) ===== -->
 <ng-template #editor>
-  <form class="habilidades__form" [formGroup]="habilidadeForm" (ngSubmit)="confirmar()">
-    <input
-      class="habilidades__campo"
-      type="text"
-      formControlName="nome"
-      placeholder="Nome da habilidade"
-      aria-label="Nome da habilidade"
-      required
-    />
-    <div class="habilidades__form-linha">
-      <label class="habilidades__rotulo-campo">
-        <span>Categoria</span>
-        <select class="habilidades__campo" formControlName="categoria" aria-label="Categoria">
-          @for (opcao of categorias; track opcao.valor) {
-            <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
-          }
-        </select>
-      </label>
-      <div class="habilidades__custo-campo">
-        <span class="habilidades__rotulo-inline">Custo de Energia</span>
-        @if (habilidadeForm.controls.variavel.value) {
-          <span class="habilidades__custo habilidades__custo--variavel">[X E]</span>
-        } @else {
-          <div class="habilidades__stepper">
-            <button
-              class="ficha-passo"
-              type="button"
-              appHoldRepeat
-              aria-label="Reduzir custo"
-              [disabled]="habilidadeForm.controls.custoEnergia.value <= 0"
-              (passo)="ajustarCusto(-1)"
-            >
-              −
+    <form class="habilidades__form" [formGroup]="habilidadeForm" (ngSubmit)="confirmar()">
+        <input
+            class="habilidades__campo"
+            type="text"
+            formControlName="nome"
+            placeholder="Nome da habilidade"
+            aria-label="Nome da habilidade"
+            required
+        />
+        <div class="habilidades__form-linha">
+            <label class="habilidades__rotulo-campo">
+                <span>Categoria</span>
+                <select
+                    class="habilidades__campo"
+                    formControlName="categoria"
+                    aria-label="Categoria"
+                >
+                    @for (opcao of categorias; track opcao.valor) {
+                        <option [value]="opcao.valor">{{ opcao.rotulo }}</option>
+                    }
+                </select>
+            </label>
+            <div class="habilidades__custo-campo">
+                <span class="habilidades__rotulo-inline">Custo de Energia</span>
+                @if (habilidadeForm.controls.variavel.value) {
+                    <span class="habilidades__custo habilidades__custo--variavel">[X E]</span>
+                } @else {
+                    <div class="habilidades__stepper">
+                        <button
+                            class="ficha-passo"
+                            type="button"
+                            appHoldRepeat
+                            aria-label="Reduzir custo"
+                            [disabled]="habilidadeForm.controls.custoEnergia.value <= 0"
+                            (passo)="ajustarCusto(-1)"
+                        >
+                            −
+                        </button>
+                        <span class="habilidades__valor">{{
+                            habilidadeForm.controls.custoEnergia.value
+                        }}</span>
+                        <button
+                            class="ficha-passo"
+                            type="button"
+                            appHoldRepeat
+                            aria-label="Aumentar custo"
+                            (passo)="ajustarCusto(1)"
+                        >
+                            +
+                        </button>
+                    </div>
+                }
+            </div>
+            <label class="habilidades__checkbox">
+                <input type="checkbox" formControlName="variavel" />
+                <span>Variável</span>
+            </label>
+        </div>
+        <textarea
+            class="habilidades__campo habilidades__campo--area"
+            formControlName="descricao"
+            rows="2"
+            placeholder="Descrição do efeito (opcional)"
+            aria-label="Descrição da habilidade"
+        ></textarea>
+        <div class="habilidades__form-acoes">
+            <button class="habilidades__salvar" type="submit" [disabled]="habilidadeForm.invalid">
+                Salvar
             </button>
-            <span class="habilidades__valor">{{ habilidadeForm.controls.custoEnergia.value }}</span>
-            <button
-              class="ficha-passo"
-              type="button"
-              appHoldRepeat
-              aria-label="Aumentar custo"
-              (passo)="ajustarCusto(1)"
-            >
-              +
+            <button class="habilidades__cancelar" type="button" (click)="cancelar()">
+                Cancelar
             </button>
-          </div>
-        }
-      </div>
-      <label class="habilidades__checkbox">
-        <input type="checkbox" formControlName="variavel" />
-        <span>Variável</span>
-      </label>
-    </div>
-    <textarea
-      class="habilidades__campo habilidades__campo--area"
-      formControlName="descricao"
-      rows="2"
-      placeholder="Descrição do efeito (opcional)"
-      aria-label="Descrição da habilidade"
-    ></textarea>
-    <div class="habilidades__form-acoes">
-      <button class="habilidades__salvar" type="submit" [disabled]="habilidadeForm.invalid">
-        Salvar
-      </button>
-      <button class="habilidades__cancelar" type="button" (click)="cancelar()">Cancelar</button>
-    </div>
-  </form>
+        </div>
+    </form>
 </ng-template>
