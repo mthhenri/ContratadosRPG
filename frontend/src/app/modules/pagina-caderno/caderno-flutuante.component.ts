@@ -634,11 +634,11 @@ function reduzirGeometriaRestaurada(
   geometria: CadernoGeometria,
   viewport: { largura: number; altura: number },
 ): CadernoGeometria {
-  if (geometria.largura < viewport.largura * 0.8 && geometria.altura < viewport.altura * 0.8) {
+  if (geometria.largura < viewport.largura * 0.9 && geometria.altura < viewport.altura * 0.9) {
     return geometria;
   }
-  const largura = Math.round(viewport.largura * 0.6);
-  const altura = Math.round(viewport.altura * 0.6);
+  const largura = 800;
+  const altura = 800;
   return {
     x: Math.round((viewport.largura - largura) / 2),
     y: Math.round((viewport.altura - altura) / 2),
