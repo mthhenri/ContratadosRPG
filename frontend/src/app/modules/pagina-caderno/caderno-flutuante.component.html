@@ -29,6 +29,7 @@
     #janela
     class="caderno__janela"
     [class.caderno__janela--mobile]="ehMobile()"
+    [class.caderno__janela--maximizada]="maximizada()"
     [style.left.px]="ehMobile() ? null : estado().geometria.x"
     [style.top.px]="ehMobile() ? null : estado().geometria.y"
     [style.width.px]="ehMobile() ? null : estado().geometria.largura"
@@ -71,6 +72,16 @@
         <button type="button" aria-label="Minimizar caderno" (click)="minimizar()">
           <span aria-hidden="true">−</span>
         </button>
+        @if (!ehMobile()) {
+          <button
+            type="button"
+            [attr.aria-label]="maximizada() ? 'Restaurar tamanho do caderno' : 'Maximizar caderno'"
+            [appTooltip]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+            (click)="alternarMaximizacao()"
+          >
+            <span aria-hidden="true">{{ maximizada() ? '❐' : '□' }}</span>
+          </button>
+        }
         <button type="button" aria-label="Fechar caderno" (click)="fechar()">
           <span aria-hidden="true">×</span>
         </button>
@@ -92,7 +103,7 @@
             [attr.aria-pressed]="modoCaderno() === 'ESQUADRAO'"
             aria-label="Selecionar caderno do esquadrão"
             (click)="selecionarModo('ESQUADRAO')"
-          >Caderno do esquadrão</button>
+          >Esquadrão</button>
           @if (ehMestre()) {
           <button
             type="button"
@@ -100,7 +111,7 @@
             [attr.aria-pressed]="modoCaderno() === 'JOGADORES'"
             aria-label="Selecionar cadernos dos jogadores"
             (click)="selecionarModo('JOGADORES')"
-          >Cadernos dos jogadores</button>
+          >Jogadores</button>
           }
       </div>
       @if (modoCaderno() === 'JOGADORES') {
@@ -353,7 +364,7 @@
     </div>
     }
 
-    @if (!ehMobile()) {
+    @if (!ehMobile() && !maximizada()) {
       <span class="caderno__redimensionar" aria-hidden="true" (pointerdown)="iniciarRedimensionamento($event)"></span>
     }
   </section>

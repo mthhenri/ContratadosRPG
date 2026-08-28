@@ -27,6 +27,7 @@ import {
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 
 import { Icone } from '../../shared/icone/icone.component';
+import { Tooltip } from '../../shared/tooltip/tooltip.directive';
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import type { CadernoGeometria } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
@@ -53,7 +54,7 @@ interface TrocaPaginaPendente {
 @Component({
   selector: 'app-caderno-flutuante',
   standalone: true,
-  imports: [DatePipe, EditorMarkdown, Icone, ReactiveFormsModule],
+  imports: [DatePipe, EditorMarkdown, Icone, ReactiveFormsModule, Tooltip],
   providers: [CadernoFlutuanteStore, CadernoEsquadraoColaborativoService],
   templateUrl: './caderno-flutuante.component.html',
   styleUrl: './caderno-flutuante.component.scss',
@@ -97,6 +98,7 @@ export class CadernoFlutuante implements OnDestroy {
   protected readonly avisoImportacao = signal<{ texto: string; erro: boolean } | null>(null);
   private readonly termoBuscaAtual = signal('');
   protected readonly ehMobile = signal(this.verificarMobile());
+  protected readonly maximizada = signal(false);
   protected readonly nivelJanela = signal(proximoNivelJanela);
   protected readonly semVagaInventario = computed(() => !this.ehMestre() || !this.temInventario());
   protected readonly jogadores = computed(() =>
@@ -145,6 +147,7 @@ export class CadernoFlutuante implements OnDestroy {
   private readonly cabecalho = viewChild<ElementRef<HTMLElement>>('cabecalho');
   private readonly gatilho = viewChild<ElementRef<HTMLButtonElement>>('gatilho');
   private abridorOriginal: HTMLElement | null = null;
+  private geometriaAntesDeMaximizar: CadernoGeometria | null = null;
   private arrastando = false;
   private redimensionando = false;
   private origemArraste = { ponteiroX: 0, ponteiroY: 0, janelaX: 0, janelaY: 0 };
@@ -285,6 +288,25 @@ export class CadernoFlutuante implements OnDestroy {
     setTimeout(() => this.gatilho()?.nativeElement.focus());
   }
 
+  protected alternarMaximizacao(): void {
+    if (this.ehMobile()) return;
+    if (this.maximizada()) {
+      if (this.geometriaAntesDeMaximizar) {
+        this.store.alterarGeometria(this.geometriaAntesDeMaximizar, this.viewport());
+      }
+      this.geometriaAntesDeMaximizar = null;
+      this.maximizada.set(false);
+      return;
+    }
+    this.geometriaAntesDeMaximizar = this.estado().geometria;
+    const viewport = this.viewport();
+    this.store.alterarGeometria(
+      { x: 0, y: 0, largura: viewport.largura, altura: viewport.altura },
+      viewport,
+    );
+    this.maximizada.set(true);
+  }
+
   protected restaurar(): void {
     this.store.restaurar();
     this.trazerParaFrente();
@@ -293,6 +315,8 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected fechar(): void {
     this.exclusaoPendente.set(false);
+    this.maximizada.set(false);
+    this.geometriaAntesDeMaximizar = null;
     this.store.fechar();
     const destino = this.abridorOriginal;
     setTimeout(() => destino?.isConnected && destino.focus());
@@ -505,7 +529,12 @@ export class CadernoFlutuante implements OnDestroy {
   }
 
   protected iniciarArraste(evento: PointerEvent): void {
-    if (this.ehMobile() || evento.button !== 0 || this.alvoEhControle(evento.target)) return;
+    if (
+      this.ehMobile() ||
+      this.maximizada() ||
+      evento.button !== 0 ||
+      this.alvoEhControle(evento.target)
+    ) return;
     const retangulo = this.janela()?.nativeElement.getBoundingClientRect();
     if (!retangulo) return;
     evento.preventDefault();
@@ -519,7 +548,7 @@ export class CadernoFlutuante implements OnDestroy {
   }
 
   protected iniciarRedimensionamento(evento: PointerEvent): void {
-    if (this.ehMobile() || evento.button !== 0) return;
+    if (this.ehMobile() || this.maximizada() || evento.button !== 0) return;
     evento.preventDefault();
     this.redimensionando = true;
     this.origemRedimensionamento = {
@@ -564,7 +593,15 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected aoRedimensionarViewport(): void {
     this.ehMobile.set(this.verificarMobile());
-    if (!this.ehMobile()) this.store.alterarGeometria(this.estado().geometria, this.viewport());
+    if (this.maximizada() && !this.ehMobile()) {
+      const viewport = this.viewport();
+      this.store.alterarGeometria(
+        { x: 0, y: 0, largura: viewport.largura, altura: viewport.altura },
+        viewport,
+      );
+    } else if (!this.ehMobile()) {
+      this.store.alterarGeometria(this.estado().geometria, this.viewport());
+    }
   }
 
   protected aoTecladoJanela(evento: KeyboardEvent): void {

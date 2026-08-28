@@ -54,6 +54,8 @@ $largura-caderno-sobreposicao: 640px;
       width: auto;
       height: auto;
     }
+
+    &--maximizada { border-radius: 0; }
   }
 
   &__cabecalho {
