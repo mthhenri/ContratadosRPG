@@ -27,10 +27,12 @@ import {
 import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 
 import { Icone } from '../../shared/icone/icone.component';
+import { TempoRealService } from '../../core/services/tempo-real.service';
 import type { CadernoGeometria } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
 import { EditorMarkdown } from './editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
+import { CadernoEsquadraoColaborativoService } from './caderno-esquadrao-colaborativo.service';
 import {
   derivarTituloDeArquivo,
   normalizarMarkdownImportado,
@@ -42,7 +44,7 @@ const BREAKPOINT_MOBILE = 560;
 const TAMANHO_MAXIMO_IMPORTACAO_BYTES = 1_000_000;
 let proximoNivelJanela = 1210;
 
-type ModoCaderno = 'MEU' | 'JOGADORES';
+type ModoCaderno = 'MEU' | 'ESQUADRAO' | 'JOGADORES';
 
 interface TrocaPaginaPendente {
   readonly paginaId: number | null;
@@ -52,7 +54,7 @@ interface TrocaPaginaPendente {
   selector: 'app-caderno-flutuante',
   standalone: true,
   imports: [DatePipe, EditorMarkdown, Icone, ReactiveFormsModule],
-  providers: [CadernoFlutuanteStore],
+  providers: [CadernoFlutuanteStore, CadernoEsquadraoColaborativoService],
   templateUrl: './caderno-flutuante.component.html',
   styleUrl: './caderno-flutuante.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,6 +81,8 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected readonly store = inject(CadernoFlutuanteStore);
   private readonly api = inject(PaginaCadernoService);
+  private readonly tempoReal = inject(TempoRealService);
+  protected readonly colaboracaoEsquadrao = inject(CadernoEsquadraoColaborativoService);
   private readonly documento = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly estado = this.store.estado;
@@ -104,6 +108,7 @@ export class CadernoFlutuante implements OnDestroy {
     this.ehMestre()
       ? [
           { valor: BuscaCampanhaFonteEnum.MEU_CADERNO, rotulo: 'Meu caderno' },
+          { valor: BuscaCampanhaFonteEnum.CADERNO_ESQUADRAO, rotulo: 'Caderno do esquadrão' },
           {
             valor: BuscaCampanhaFonteEnum.CADERNOS_JOGADORES,
             rotulo: 'Cadernos dos jogadores',
@@ -112,6 +117,7 @@ export class CadernoFlutuante implements OnDestroy {
         ]
       : [
           { valor: BuscaCampanhaFonteEnum.MEU_CADERNO, rotulo: 'Meu caderno' },
+          { valor: BuscaCampanhaFonteEnum.CADERNO_ESQUADRAO, rotulo: 'Caderno do esquadrão' },
           { valor: BuscaCampanhaFonteEnum.MINHAS_FICHAS, rotulo: 'Minhas fichas' },
         ],
   );
@@ -159,6 +165,28 @@ export class CadernoFlutuante implements OnDestroy {
       untracked(() => this.formulario.setValue(rascunho, { emitEvent: false }));
     });
     effect(() => {
+      const pagina = this.colaboracaoEsquadrao.pagina();
+      if (pagina) untracked(() => this.store.refletirPaginaColaborativa(pagina));
+    });
+    effect(() => {
+      const titulo = this.colaboracaoEsquadrao.titulo();
+      const pagina = this.colaboracaoEsquadrao.pagina();
+      if (!pagina) return;
+      untracked(() => {
+        this.formulario.controls.titulo.setValue(titulo, { emitEvent: false });
+        this.store.refletirPaginaColaborativa({ ...pagina, titulo });
+      });
+    });
+    effect(() => {
+      const titulo = this.colaboracaoEsquadrao.titulo();
+      const pagina = this.colaboracaoEsquadrao.pagina();
+      if (!pagina) return;
+      untracked(() => {
+        this.formulario.controls.titulo.setValue(titulo, { emitEvent: false });
+        this.store.refletirPaginaColaborativa({ ...pagina, titulo });
+      });
+    });
+    effect(() => {
       const fontes = this.fontesPermitidas().map((fonte) => fonte.valor);
       untracked(() => this.fontesSelecionadas.set(fontes));
     });
@@ -176,10 +204,12 @@ export class CadernoFlutuante implements OnDestroy {
     this.formulario.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((rascunho) =>
-        this.store.alterarRascunho({
-          titulo: rascunho.titulo ?? '',
-          conteudoMarkdown: rascunho.conteudoMarkdown ?? '',
-        }),
+        this.modoCaderno() === 'ESQUADRAO'
+          ? this.colaboracaoEsquadrao.definirTitulo(rascunho.titulo ?? '')
+          : this.store.alterarRascunho({
+              titulo: rascunho.titulo ?? '',
+              conteudoMarkdown: rascunho.conteudoMarkdown ?? '',
+            }),
       );
     this.termoBusca.valueChanges
       .pipe(
@@ -215,9 +245,31 @@ export class CadernoFlutuante implements OnDestroy {
         this.buscando.set(false);
         this.store.definirResultados(resultado);
       });
+    this.tempoReal.paginaEsquadraoCriada$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((pagina) => {
+        if (this.modoCaderno() === 'ESQUADRAO' && pagina.campanhaId === this.campanhaId()) {
+          this.store.refletirResumoColaborativo(pagina);
+        }
+      });
+    this.tempoReal.paginaEsquadraoAtualizada$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => {
+        if (this.modoCaderno() === 'ESQUADRAO' && evento.campanhaId === this.campanhaId()) {
+          this.store.refletirResumoColaborativo(evento.pagina);
+        }
+      });
+    this.tempoReal.paginaEsquadraoExcluida$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => {
+        if (this.modoCaderno() === 'ESQUADRAO' && evento.campanhaId === this.campanhaId()) {
+          this.store.removerPaginaColaborativa(evento.paginaId);
+        }
+      });
   }
 
   ngOnDestroy(): void {
+    this.colaboracaoEsquadrao.fechar();
     this.store.descartarCampanha();
   }
 
@@ -254,7 +306,9 @@ export class CadernoFlutuante implements OnDestroy {
     this.jogadorSelecionadoId.set(null);
     this.exclusaoPendente.set(false);
     this.avisoImportacao.set(null);
+    this.colaboracaoEsquadrao.fechar();
     if (modo === 'MEU') this.store.carregarMeuCaderno();
+    else if (modo === 'ESQUADRAO') this.carregarCadernoEsquadrao();
     else this.store.iniciarNovaPagina();
     this.store.definirVistaMobile('LISTA');
   }
@@ -287,7 +341,8 @@ export class CadernoFlutuante implements OnDestroy {
     this.exclusaoPendente.set(false);
     this.avisoImportacao.set(null);
     this.listaRecolhida.set(true);
-    this.store.iniciarNovaPagina();
+    if (this.modoCaderno() === 'ESQUADRAO') this.colaboracaoEsquadrao.criar(this.campanhaId());
+    else this.store.iniciarNovaPagina();
     setTimeout(() => this.documento.querySelector<HTMLInputElement>('.caderno__titulo-input')?.focus());
   }
 
@@ -337,11 +392,17 @@ export class CadernoFlutuante implements OnDestroy {
   }
 
   protected alterarConteudoMarkdown(conteudoMarkdown: string): void {
+    if (this.modoCaderno() === 'ESQUADRAO') {
+      this.colaboracaoEsquadrao.definirConteudoMarkdown(conteudoMarkdown);
+      const pagina = this.store.paginaAtiva();
+      if (pagina) this.store.refletirPaginaColaborativa({ ...pagina, conteudoMarkdown });
+      return;
+    }
     this.formulario.controls.conteudoMarkdown.setValue(conteudoMarkdown);
   }
 
   protected salvar(): void {
-    this.store.salvarAgora();
+    if (this.modoCaderno() !== 'ESQUADRAO') this.store.salvarAgora();
   }
 
   protected recarregarVersao(): void {
@@ -370,6 +431,16 @@ export class CadernoFlutuante implements OnDestroy {
 
   protected confirmarExclusao(): void {
     this.exclusaoPendente.set(false);
+    const pagina = this.store.paginaAtiva();
+    if (this.modoCaderno() === 'ESQUADRAO' && pagina) {
+      this.api.excluirPaginaEsquadrao(pagina.id).subscribe({
+        next: () => {
+          this.colaboracaoEsquadrao.fechar();
+          this.store.removerPaginaColaborativa(pagina.id);
+        },
+      });
+      return;
+    }
     this.store.excluirPaginaAtiva();
   }
 
@@ -378,8 +449,17 @@ export class CadernoFlutuante implements OnDestroy {
   }
 
   private executarTrocaPagina(paginaId: number | null): void {
-    if (paginaId === null) this.store.desselecionarPagina();
+    if (paginaId === null) {
+      this.colaboracaoEsquadrao.fechar();
+      this.store.desselecionarPagina();
+    } else if (this.modoCaderno() === 'ESQUADRAO') this.colaboracaoEsquadrao.abrir(paginaId);
     else this.store.recuperarPagina(paginaId);
+  }
+
+  private carregarCadernoEsquadrao(): void {
+    this.api.listarPaginasEsquadrao(this.campanhaId()).subscribe({
+      next: (paginas) => this.store.definirPaginasColaborativas(paginas),
+    });
   }
 
   protected fonteSelecionada(fonte: BuscaCampanhaFonteEnum): boolean {

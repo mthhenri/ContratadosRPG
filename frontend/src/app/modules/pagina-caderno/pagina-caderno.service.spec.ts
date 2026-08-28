@@ -9,6 +9,7 @@ import type {
 import {
   BuscaCampanhaFonteEnum,
   BuscaCampanhaResultadoTipoEnum,
+  TipoPaginaCadernoEnum,
 } from '@contratados-rpg/shared/enums';
 import type { PaginatedResult, StandardResponse } from '@contratados-rpg/shared/interfaces';
 
@@ -19,6 +20,7 @@ const pagina: PaginaCadernoDto = {
   campanhaId: 3,
   usuarioAutorId: 7,
   autorNome: 'Agente',
+  tipo: TipoPaginaCadernoEnum.PRIVADA,
   titulo: 'Relatório',
   conteudoMarkdown: 'Texto',
   somenteLeitura: false,
@@ -30,6 +32,7 @@ const resumo: PaginaCadernoResumoDto = {
   campanhaId: 3,
   usuarioAutorId: 7,
   autorNome: 'Agente',
+  tipo: TipoPaginaCadernoEnum.PRIVADA,
   titulo: 'Relatório',
   updatedDate: '2026-08-14T12:00:00.000Z',
 };

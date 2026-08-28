@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   BuscaCampanhaResultadoTipoEnum,
   TipoCampanhaMembroPapelEnum,
+  TipoPaginaCadernoEnum,
 } from '@contratados-rpg/shared/enums';
 import type { PaginaCadernoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import { Subject, of, throwError } from 'rxjs';
@@ -11,12 +12,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CadernoFlutuante } from './caderno-flutuante.component';
 import { EDITOR_MARKDOWN_FACTORY } from './editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
+import { TempoRealService } from '../../core/services/tempo-real.service';
 
 const pagina: PaginaCadernoDto = {
   id: 11,
   campanhaId: 3,
   usuarioAutorId: 7,
   autorNome: 'Lia',
+  tipo: TipoPaginaCadernoEnum.PRIVADA,
   titulo: 'Primeira sessão',
   conteudoMarkdown: '# Pista\n\nTexto **importante**',
   somenteLeitura: false,
@@ -33,6 +36,11 @@ describe('CadernoFlutuante', () => {
     criarPagina: ReturnType<typeof vi.fn>;
     alterarPagina: ReturnType<typeof vi.fn>;
     excluirPagina: ReturnType<typeof vi.fn>;
+    listarPaginasEsquadrao: ReturnType<typeof vi.fn>;
+    recuperarEstadoPaginaEsquadrao: ReturnType<typeof vi.fn>;
+    criarPaginaEsquadrao: ReturnType<typeof vi.fn>;
+    alterarPaginaEsquadrao: ReturnType<typeof vi.fn>;
+    excluirPaginaEsquadrao: ReturnType<typeof vi.fn>;
     buscarCampanha: ReturnType<typeof vi.fn>;
   };
   let aoAlterarEditor: (markdown: string) => void;
@@ -47,6 +55,11 @@ describe('CadernoFlutuante', () => {
       criarPagina: vi.fn(() => of(pagina)),
       alterarPagina: vi.fn(() => of(pagina)),
       excluirPagina: vi.fn(() => of(undefined)),
+      listarPaginasEsquadrao: vi.fn(() => of([])),
+      recuperarEstadoPaginaEsquadrao: vi.fn(),
+      criarPaginaEsquadrao: vi.fn(),
+      alterarPaginaEsquadrao: vi.fn(),
+      excluirPaginaEsquadrao: vi.fn(() => of(undefined)),
       buscarCampanha: vi.fn(() =>
         of({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
       ),
@@ -55,6 +68,16 @@ describe('CadernoFlutuante', () => {
       imports: [CadernoFlutuante],
       providers: [
         { provide: PaginaCadernoService, useValue: api },
+        {
+          provide: TempoRealService,
+          useValue: {
+            paginaEsquadraoCriada$: new Subject(),
+            paginaEsquadraoAtualizada$: new Subject(),
+            paginaEsquadraoExcluida$: new Subject(),
+            conectar: vi.fn(),
+            entrarSalaCampanha: vi.fn(),
+          },
+        },
         {
           provide: EDITOR_MARKDOWN_FACTORY,
           useValue: (opcoes: { aoAlterar: (markdown: string) => void }) => {
@@ -391,7 +414,7 @@ describe('CadernoFlutuante', () => {
         }),
       );
       clicar('[aria-label="Abrir caderno"]');
-      expect(rotulosFontes()).toEqual(['Meu caderno', 'Minhas fichas']);
+      expect(rotulosFontes()).toEqual(['Meu caderno', 'Caderno do esquadrão', 'Minhas fichas']);
       const busca = obter<HTMLInputElement>('[aria-label="Buscar na campanha"]');
       busca.value = 'pista';
       busca.dispatchEvent(new Event('input'));
@@ -412,6 +435,7 @@ describe('CadernoFlutuante', () => {
     clicar('[aria-label="Abrir caderno"]');
     expect(rotulosFontes()).toEqual([
       'Meu caderno',
+      'Caderno do esquadrão',
       'Cadernos dos jogadores',
       'Fichas da campanha',
     ]);

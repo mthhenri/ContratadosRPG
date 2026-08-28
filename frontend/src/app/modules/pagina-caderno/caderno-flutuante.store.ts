@@ -104,6 +104,39 @@ export class CadernoFlutuanteStore {
     this.definirVistaMobile('CONTEUDO');
   }
 
+  /** Reflete uma página do esquadrão sem acionar o autosave do caderno privado. */
+  selecionarPaginaColaborativa(pagina: PaginaCadernoDto): void {
+    this.selecionarPagina(pagina);
+  }
+
+  definirPaginasColaborativas(paginas: PaginaCadernoResumoDto[]): void {
+    this.limparPaginaSelecionada();
+    this.paginasInternas.set(paginas);
+  }
+
+  refletirPaginaColaborativa(pagina: PaginaCadernoDto): void {
+    this.paginaAtivaInterna.set(pagina);
+    this.rascunhoInterno.set({ titulo: pagina.titulo, conteudoMarkdown: pagina.conteudoMarkdown });
+    this.paginasInternas.update((paginas) => {
+      const indice = paginas.findIndex((item) => item.id === pagina.id);
+      if (indice < 0) return [pagina, ...paginas];
+      return paginas.map((item) => (item.id === pagina.id ? { ...item, ...pagina } : item));
+    });
+  }
+
+  removerPaginaColaborativa(id: number): void {
+    this.paginasInternas.update((paginas) => paginas.filter((pagina) => pagina.id !== id));
+    if (this.paginaAtivaInterna()?.id === id) this.desselecionarPagina();
+  }
+
+  refletirResumoColaborativo(pagina: PaginaCadernoResumoDto): void {
+    this.paginasInternas.update((paginas) => {
+      const indice = paginas.findIndex((item) => item.id === pagina.id);
+      if (indice < 0) return [pagina, ...paginas];
+      return paginas.map((item) => (item.id === pagina.id ? pagina : item));
+    });
+  }
+
   recuperarPagina(id: number): void {
     const escopo = this.escopoCampanha;
     this.definirVistaMobile('CONTEUDO');

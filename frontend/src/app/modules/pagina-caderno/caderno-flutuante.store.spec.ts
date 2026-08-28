@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import type { PaginaCadernoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
+import { TipoPaginaCadernoEnum } from '@contratados-rpg/shared/enums';
 import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,6 +13,7 @@ const pagina: PaginaCadernoDto = {
   campanhaId: 3,
   usuarioAutorId: 7,
   autorNome: 'Lia',
+  tipo: TipoPaginaCadernoEnum.PRIVADA,
   titulo: 'Primeira sessão',
   conteudoMarkdown: 'Uma pista',
   somenteLeitura: false,

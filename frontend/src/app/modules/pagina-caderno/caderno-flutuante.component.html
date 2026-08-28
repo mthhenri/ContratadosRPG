@@ -77,9 +77,8 @@
       </div>
     </header>
 
-    @if (ehMestre()) {
-      <div class="caderno__escopo">
-        <div class="caderno__segmentado" role="group" aria-label="Caderno consultado">
+    <div class="caderno__escopo">
+      <div class="caderno__segmentado" role="group" aria-label="Caderno consultado">
           <button
             type="button"
             [class.caderno__segmentado-item--ativo]="modoCaderno() === 'MEU'"
@@ -89,13 +88,22 @@
           >Meu caderno</button>
           <button
             type="button"
+            [class.caderno__segmentado-item--ativo]="modoCaderno() === 'ESQUADRAO'"
+            [attr.aria-pressed]="modoCaderno() === 'ESQUADRAO'"
+            aria-label="Selecionar caderno do esquadrão"
+            (click)="selecionarModo('ESQUADRAO')"
+          >Caderno do esquadrão</button>
+          @if (ehMestre()) {
+          <button
+            type="button"
             [class.caderno__segmentado-item--ativo]="modoCaderno() === 'JOGADORES'"
             [attr.aria-pressed]="modoCaderno() === 'JOGADORES'"
             aria-label="Selecionar cadernos dos jogadores"
             (click)="selecionarModo('JOGADORES')"
           >Cadernos dos jogadores</button>
-        </div>
-        @if (modoCaderno() === 'JOGADORES') {
+          }
+      </div>
+      @if (modoCaderno() === 'JOGADORES') {
           <label class="caderno__jogador">
             <span>Jogador</span>
             <select aria-label="Escolher jogador" (change)="selecionarJogador($event)">
@@ -105,9 +113,8 @@
               }
             </select>
           </label>
-        }
-      </div>
-    }
+      }
+    </div>
 
     <div class="caderno__busca">
       <label class="caderno__busca-campo">
@@ -183,10 +190,12 @@
             <strong>{{ store.paginas().length }}</strong>
           </div>
           <div class="caderno__lista-acoes">
-            @if (modoCaderno() === 'MEU') {
+            @if (modoCaderno() !== 'JOGADORES') {
               <button class="caderno__acao-icone" type="button" aria-label="Criar página" (click)="iniciarNovaPagina()">
                 <app-icone nome="mais" />
               </button>
+            }
+            @if (modoCaderno() === 'MEU') {
               <button
                 class="caderno__acao-icone"
                 type="button"
@@ -236,7 +245,7 @@
                 (click)="selecionarPagina(pagina.id)"
               >
                 <strong>{{ pagina.titulo }}</strong>
-                <span>{{ pagina.autorNome }} · {{ pagina.updatedDate | date: 'dd/MM/yy HH:mm' }}</span>
+            <span>{{ pagina.autorNome ?? (modoCaderno() === 'ESQUADRAO' ? 'Esquadrão' : 'Caderno') }} · {{ pagina.updatedDate | date: 'dd/MM/yy HH:mm' }}</span>
               </button>
             }
           </nav>
@@ -261,7 +270,7 @@
 
         @if (estado().carregando && store.paginaAtiva() === null) {
           <p class="caderno__estado">Carregando página…</p>
-        } @else if (store.paginaAtiva() !== null || (modoCaderno() === 'MEU' && estado().vistaMobile === 'CONTEUDO')) {
+        } @else if (store.paginaAtiva() !== null || ((modoCaderno() === 'MEU' || modoCaderno() === 'ESQUADRAO') && estado().vistaMobile === 'CONTEUDO')) {
           <div class="caderno__editor-cabecalho">
             <input
               class="caderno__titulo-input"
@@ -276,27 +285,40 @@
             }
           </div>
 
-          <app-editor-markdown
-            [valor]="store.rascunho().conteudoMarkdown"
-            [somenteLeitura]="somenteLeitura()"
-            (valorChange)="alterarConteudoMarkdown($event)"
-          />
+          @if (modoCaderno() === 'ESQUADRAO' && colaboracaoEsquadrao.documento(); as documento) {
+            <app-editor-markdown
+              [valor]="store.rascunho().conteudoMarkdown"
+              [documentoColaborativo]="documento"
+              [somenteLeitura]="false"
+              (valorChange)="alterarConteudoMarkdown($event)"
+            />
+          } @else {
+            <app-editor-markdown
+              [valor]="store.rascunho().conteudoMarkdown"
+              [somenteLeitura]="somenteLeitura()"
+              (valorChange)="alterarConteudoMarkdown($event)"
+            />
+          }
 
           @if (!somenteLeitura()) {
             <footer class="caderno__editor-acoes">
-              @if (store.paginaAtiva()) {
+              @if (store.paginaAtiva() && (modoCaderno() !== 'ESQUADRAO' || ehMestre())) {
                 <button class="caderno__botao caderno__botao--perigo" type="button" data-acao="excluir" (click)="pedirExclusao()">
                   <app-icone nome="excluir" /> Excluir
                 </button>
               }
               <span>
-                @if (store.estadoSalvamento() === 'CONFLITO') {
+                @if (modoCaderno() === 'ESQUADRAO') {
+                  {{ colaboracaoEsquadrao.estado() === 'SINCRONIZANDO' ? 'Sincronizando com o esquadrão…' : colaboracaoEsquadrao.estado() === 'FALHA' ? 'Falha ao sincronizar. A próxima edição tentará novamente.' : 'Alterações sincronizadas com o esquadrão.' }}
+                } @else if (store.estadoSalvamento() === 'CONFLITO') {
                   Conflito de versão · <button type="button" (click)="recarregarVersao()">Recarregar versão</button>
                 } @else {
                   Salvamento automático após uma pausa.
                 }
               </span>
-              <button class="caderno__botao caderno__botao--primario" type="button" data-acao="salvar" (click)="salvar()">Salvar agora</button>
+              @if (modoCaderno() !== 'ESQUADRAO') {
+                <button class="caderno__botao caderno__botao--primario" type="button" data-acao="salvar" (click)="salvar()">Salvar agora</button>
+              }
             </footer>
           }
 

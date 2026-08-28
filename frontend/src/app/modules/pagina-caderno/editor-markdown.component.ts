@@ -19,6 +19,7 @@ import {
   rootCtx,
 } from '@milkdown/kit/core';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
+import { collab, collabServiceCtx } from '@milkdown/plugin-collab';
 import {
   addColAfterCommand,
   addRowAfterCommand,
@@ -42,6 +43,7 @@ import {
   wrapInOrderedListCommand,
 } from '@milkdown/kit/preset/commonmark';
 import { callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
+import type { Doc } from 'yjs';
 
 import { Icone } from '../../shared/icone/icone.component';
 import { Tooltip } from '../../shared/tooltip/tooltip.directive';
@@ -67,6 +69,7 @@ const LIMITE_MARKDOWN = 100_000;
 interface EditorMarkdownOpcoes {
   readonly raiz: HTMLElement;
   readonly valorInicial: string;
+  readonly documentoColaborativo: Doc | null;
   readonly aoAlterar: (markdown: string) => void;
 }
 
@@ -86,7 +89,7 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
   'EDITOR_MARKDOWN_FACTORY',
   {
     providedIn: 'root',
-    factory: () => ({ raiz, valorInicial, aoAlterar }) => {
+    factory: () => ({ raiz, valorInicial, documentoColaborativo, aoAlterar }) => {
       let editor: Editor | null = null;
       const aplicarFormato = (formato: FormatoMarkdown): void => {
         if (!editor) return;
@@ -132,6 +135,13 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
             .config((contexto) => {
               contexto.set(rootCtx, raiz);
               contexto.set(defaultValueCtx, valorInicial);
+              if (documentoColaborativo) {
+                contexto
+                  .get(collabServiceCtx)
+                  .bindDoc(documentoColaborativo)
+                  .bindXmlFragment(documentoColaborativo.getXmlFragment('prosemirror'))
+                  .connect();
+              }
               contexto.get(listenerCtx).markdownUpdated((_contexto, markdown, anterior) => {
                 if (markdown === anterior) return;
                 if (markdown.length > LIMITE_MARKDOWN) {
@@ -144,6 +154,7 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
             .use(commonmark)
             .use(gfm)
             .use(listener)
+            .use(collab)
             .create();
         },
         destruir: () => { editor?.destroy(); },
@@ -209,6 +220,8 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
 })
 export class EditorMarkdown implements AfterViewInit, OnDestroy {
   readonly valor = input('');
+  /** Documento Yjs da página do esquadrão; ausente no caderno privado. */
+  readonly documentoColaborativo = input<Doc | null>(null);
   readonly somenteLeitura = input(false);
   readonly valorChange = output<string>();
   protected readonly emTabela = signal(false);
@@ -240,6 +253,7 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
     const instancia = this.criarEditor({
       raiz: this.raiz().nativeElement,
       valorInicial: this.valor(),
+      documentoColaborativo: this.documentoColaborativo(),
       aoAlterar: (markdown) => {
         if (
           !this.sincronizando &&
