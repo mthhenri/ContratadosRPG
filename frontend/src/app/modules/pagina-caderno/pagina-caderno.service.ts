@@ -6,6 +6,10 @@ import type {
   PaginaCadernoAlterarDto,
   PaginaCadernoCriarDto,
   PaginaCadernoDto,
+  PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoEsquadraoAlterarDto,
+  PaginaCadernoEsquadraoCriarDto,
+  PaginaCadernoEsquadraoEstadoDto,
   PaginaCadernoResumoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import type { PaginatedResult, StandardResponse } from '@contratados-rpg/shared/interfaces';
@@ -36,6 +40,52 @@ export class PaginaCadernoService {
         `${this.base}/campanha/${campanhaId}/caderno/membros/${usuarioId}/paginas`,
       )
       .pipe(map((resposta) => resposta.dados as PaginaCadernoResumoDto[]));
+  }
+
+  listarPaginasEsquadrao(campanhaId: number): Observable<PaginaCadernoResumoDto[]> {
+    return this.httpClient
+      .get<StandardResponse<PaginaCadernoResumoDto[]>>(
+        `${this.base}/campanha/${campanhaId}/caderno/esquadrao/paginas`,
+      )
+      .pipe(map((resposta) => resposta.dados as PaginaCadernoResumoDto[]));
+  }
+
+  recuperarEstadoPaginaEsquadrao(id: number): Observable<PaginaCadernoEsquadraoEstadoDto> {
+    return this.httpClient
+      .get<StandardResponse<PaginaCadernoEsquadraoEstadoDto>>(
+        `${this.base}/pagina-caderno/${id}/esquadrao/estado`,
+      )
+      .pipe(map((resposta) => resposta.dados as PaginaCadernoEsquadraoEstadoDto));
+  }
+
+  criarPaginaEsquadrao(
+    campanhaId: number,
+    dto: Omit<PaginaCadernoEsquadraoCriarDto, 'campanhaId'>,
+  ): Observable<PaginaCadernoEsquadraoEstadoDto> {
+    return this.httpClient
+      .post<StandardResponse<PaginaCadernoEsquadraoEstadoDto>>(
+        `${this.base}/campanha/${campanhaId}/caderno/esquadrao/paginas`,
+        dto,
+      )
+      .pipe(map((resposta) => resposta.dados as PaginaCadernoEsquadraoEstadoDto));
+  }
+
+  alterarPaginaEsquadrao(
+    id: number,
+    dto: Omit<PaginaCadernoEsquadraoAlterarDto, 'id'>,
+  ): Observable<PaginaCadernoEsquadraoAlteradaDto> {
+    return this.httpClient
+      .put<StandardResponse<PaginaCadernoEsquadraoAlteradaDto>>(
+        `${this.base}/pagina-caderno/${id}/esquadrao/atualizacoes`,
+        dto,
+      )
+      .pipe(map((resposta) => resposta.dados as PaginaCadernoEsquadraoAlteradaDto));
+  }
+
+  excluirPaginaEsquadrao(id: number): Observable<void> {
+    return this.httpClient
+      .delete<StandardResponse<null>>(`${this.base}/pagina-caderno/${id}/esquadrao`)
+      .pipe(map(() => undefined));
   }
 
   recuperarPagina(id: number): Observable<PaginaCadernoDto> {

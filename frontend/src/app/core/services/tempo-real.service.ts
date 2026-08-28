@@ -18,6 +18,10 @@ import type {
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type {
+  PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoResumoDto,
+} from '@contratados-rpg/shared/dtos/pagina-caderno';
 
 import { environment } from '../../../environments/environment';
 import { SessaoService } from './sessao.service';
@@ -79,6 +83,12 @@ export class TempoRealService {
   private readonly encontroIniciativaPedidoSubject = new Subject<
     EncontroIniciativaPedidoDto & { campanhaId: number }
   >();
+  private readonly paginaEsquadraoCriadaSubject = new Subject<PaginaCadernoResumoDto>();
+  private readonly paginaEsquadraoAtualizadaSubject = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
+  private readonly paginaEsquadraoExcluidaSubject = new Subject<{
+    readonly campanhaId: number;
+    readonly paginaId: number;
+  }>();
 
   /** Uma ficha da campanha foi alterada (na sala `ficha:<id>` em que o cliente está). */
   readonly fichaAlterada$: Observable<FichaAlteradaDto> = this.fichaAlteradaSubject.asObservable();
@@ -122,6 +132,9 @@ export class TempoRealService {
   readonly encontroIniciativaPedido$: Observable<
     EncontroIniciativaPedidoDto & { campanhaId: number }
   > = this.encontroIniciativaPedidoSubject.asObservable();
+  readonly paginaEsquadraoCriada$ = this.paginaEsquadraoCriadaSubject.asObservable();
+  readonly paginaEsquadraoAtualizada$ = this.paginaEsquadraoAtualizadaSubject.asObservable();
+  readonly paginaEsquadraoExcluida$ = this.paginaEsquadraoExcluidaSubject.asObservable();
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -168,6 +181,17 @@ export class TempoRealService {
       'ficha:visibilidade-alterada',
       (evento: FichaVisibilidadeAlteradaDto) =>
         this.fichaVisibilidadeAlteradaSubject.next(evento),
+    );
+    this.socket.on('caderno-esquadrao:pagina-criada', (pagina: PaginaCadernoResumoDto) =>
+      this.paginaEsquadraoCriadaSubject.next(pagina),
+    );
+    this.socket.on('caderno-esquadrao:atualizado', (evento: PaginaCadernoEsquadraoAlteradaDto) =>
+      this.paginaEsquadraoAtualizadaSubject.next(evento),
+    );
+    this.socket.on(
+      'caderno-esquadrao:pagina-excluida',
+      (evento: { readonly campanhaId: number; readonly paginaId: number }) =>
+        this.paginaEsquadraoExcluidaSubject.next(evento),
     );
     this.socket.on('membro:entrou', (evento: CampanhaMembroEntradaDto) =>
       this.membroEntrouSubject.next(evento),
