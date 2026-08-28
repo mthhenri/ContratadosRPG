@@ -49,7 +49,7 @@ import {
 const ITENS_POR_PAGINA_HISTORICO = 20;
 
 /**
- * A **ficha** de jogador numa tela só — montada em **duas rotas** (`/painel/:campanhaId/ficha/:id`,
+ * A **ficha** de jogador numa tela só — montada em **duas rotas** (`/campanhas/:campanhaId/ficha/:id`,
  * m3-10, e `/fichas/:id`, o acervo campanha-agnóstico, m3-28): **edição no próprio lugar, campo a
  * campo** — cada trecho tem seu lápis no `FichaVisualizacao` (identidade, classe, atributos+
  * Maestria, Vida/Energia atual e máxima, derivados). **Não há botão global de editar nem
@@ -60,7 +60,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
  *
  * **Duas rotas, um componente (m3-28).** A spec `m3-28` aceita a duplicação das *rotas* como
  * dívida temporária (até a `m3-26` aposentar a tela campanha-scoped), mas não exige duplicar o
- * *componente* — `campanhaId` é opcional: sob `/painel/:campanhaId/ficha/:id` vem do parâmetro de
+ * *componente* — `campanhaId` é opcional: sob `/campanhas/:campanhaId/ficha/:id` vem do parâmetro de
  * rota (síncrono); sob `/fichas/:id` (sem `:campanhaId` na URL) só se resolve **depois** da ficha
  * carregar, lendo `ficha.campanhaId` do próprio payload (`null` para uma ficha solta no acervo).
  * Enquanto não há campanha (ficha solta, ou ainda carregando sob `/fichas/:id`), não há membros
@@ -105,7 +105,7 @@ export class FichaVisualizar {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** `campanhaId` da rota-pai (`/painel/:campanhaId/ficha/:id`), ou `null` sob `/fichas/:id`. */
+  /** `campanhaId` da rota-pai (`/campanhas/:campanhaId/ficha/:id`), ou `null` sob `/fichas/:id`. */
   private readonly campanhaIdRota = lerParamRota(this.rotaAtiva, 'campanhaId');
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
 
@@ -481,7 +481,7 @@ export class FichaVisualizar {
   /** Rota de saída da tela (excluir/expulsão, m3-28): a campanha atual, ou o acervo sem ela. */
   private rotaDeSaida(): (string | number)[] {
     const campanhaId = this.campanhaId();
-    return campanhaId !== null ? ['/painel', campanhaId] : ['/fichas'];
+    return campanhaId !== null ? ['/campanhas', campanhaId] : ['/fichas'];
   }
 
   /**

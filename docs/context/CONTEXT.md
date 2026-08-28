@@ -643,7 +643,7 @@ iframe não funciona no Edge mobile — a condição que a própria `m3-72` prev
 trazer o PDF.js de volta.
 
 `m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
-`/painel/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
+`/campanhas/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
 autor**: um recorte de UI pensado especificamente para o **mobile** da visão do jogador (a `m2-21`
 só adaptou o visual de desktop).
 
@@ -653,7 +653,6 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `renomear-painel-para-campanhas` | layout/navegação/rotas | rota `/painel`→`/campanhas` (nav, redirects, guards, todo `routerLink`/`navigate`), ícone próprio de Fichas, limpar menu de perfil (`IDEAS.md` `I-019`; escopo ampliado em 2026-08-25) |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
@@ -757,19 +756,19 @@ alvo, aviso de que a sessão administrativa será encerrada); confirmar chama
 `POST /usuario/admin/impersonar` (`@TiposPermitidos(ADMIN)`, recusa conta excluída/inexistente e
 autoimpersonação) e o `SessaoTokenService` — o mesmo emissor do login — devolve um JWT com id,
 login, tipo e `tokenVersao` atuais do alvo, nunca senha/hash. O frontend **substitui** a sessão
-inteira (`SessaoService`, sem sessão dupla nem "voltar ao admin") e navega a `/painel`; recuperar o
+inteira (`SessaoService`, sem sessão dupla nem "voltar ao admin") e navega a `/campanhas`; recuperar o
 admin exige logar de novo. A migration `0016` grava `usuario_impersonacao` (origem, alvo, data) só
 após a validação bem-sucedida.
 
 ### Campanhas — `backend/campanha`, `frontend/campanha`
 
 CRUD de campanha com papéis (mestre/jogador), entrada por `codigo_convite` com regeneração pelo
-mestre, listagem de membros, remoção de jogador e transferência de mestre. UI sob `/painel`
-(guardada): lista de campanhas (`/painel`) é um **painel de controle** (m2-18) — linhas densas por
+mestre, listagem de membros, remoção de jogador e transferência de mestre. UI sob `/campanhas`
+(guardada): lista de campanhas (`/campanhas`) é um **painel de controle** (m2-18) — linhas densas por
 campanha com tira de 4 estatísticas agregadas no topo (Campanhas/Você mestra/Fichas em
 campo/Alertas), alerta visual + nome da ficha crítica por linha, resumo da própria ficha
 (Vida atual/máxima, jogador) e convite copiável direto na linha (mestre), sem abrir o detalhe. O
-detalhe (`/painel/:id`) tem banner de alerta condicional no topo (ficha crítica, com link direto
+detalhe (`/campanhas/:id`) tem banner de alerta condicional no topo (ficha crítica, com link direto
 pra ela), tira de estatísticas — só o tile **Convite** (só mestre; ajuste pós-m4-04b: Membros/
 Fichas/Alertas saíram da tira — a contagem de cada um já aparece no cabeçalho da própria coluna, e
 o alerta crítico já tem o banner acima) — e tira horizontal rolável de rolagens da última hora (sem limite fixo de itens — a lista completa/sem limite de

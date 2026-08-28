@@ -2,7 +2,7 @@ import { ActivatedRoute } from '@angular/router';
 
 /**
  * Lê um parâmetro de rota subindo pela cadeia de rotas ativas — necessário porque as telas de
- * ficha são carregadas via `loadChildren` sob `/painel/:campanhaId/ficha`, então o `campanhaId`
+ * ficha são carregadas via `loadChildren` sob `/campanhas/:campanhaId/ficha`, então o `campanhaId`
  * mora na rota-pai (a estratégia de herança padrão do router, `emptyOnly`, não o propaga para
  * rotas-filhas de caminho não-vazio). Devolve o primeiro valor encontrado ou `null`.
  */

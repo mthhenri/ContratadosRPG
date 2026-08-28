@@ -29,6 +29,14 @@
 
 ## Ativos
 
+### P-033 — Suíte de `PainelEncontro` não monta o serviço colaborativo recém-injetado · `ABERTO` · frontend/testes
+
+- **Sintoma:** os 53 casos de `frontend/src/app/modules/encontro/paginas/painel/painel-encontro.page.spec.ts` falham antes das asserções ao montar o componente.
+- **Causa:** o `CadernoEsquadraoColaborativoService`, transitivamente criado por `CadernoFlutuante`, lê `TempoRealService.paginaEsquadraoAtualizada$`, mas o double de `TempoRealService` desse spec não fornece os novos observables de página de esquadrão; o construtor lança `TypeError: Cannot read properties of undefined (reading 'pipe')`.
+- **Contorno:** validar os recortes afetados por outros testes/build enquanto o spec do Encontro não receber o double atualizado.
+- **Correção:** estender o mock de `TempoRealService` do spec com `paginaEsquadraoAtualizada$` e `paginaEsquadraoExcluida$` (observables) e rodar a suíte do frontend.
+- **Desde:** reencontrado ao validar `renomear-painel-para-campanhas` em 2026-08-28.
+
 ### P-032 — Convenção `alterar`/`alterado` ainda violada em identificadores existentes · `ABERTO` · compartilhado/frontend
 
 - **Sintoma:** identificadores de produção ainda usam `atualizar`/`atualizado`, contrariando a proibição explícita de `CONVENTIONS.md`. O passe de `skills-08` reencontrou ao menos `shared/src/dtos/campanha/campanha.dtos.ts:67` (`atualizadoEm`) e `frontend/src/app/modules/ficha/ficha-edicao-criatura.service.ts:110` (`atualizarDados`); a auditoria também mostra outros pontos, portanto não é defeito isolado.
@@ -213,62 +221,3 @@
   de Civil levantadas na mesma investigação (passo // Recursos, progressão pós-criação) ficaram
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
-
-## Resolvidos
-
-- **P-020** — HTML/SCSS de `frontend/src` formatados com Prettier e o script
-  `npm run format:html-scss --workspace=frontend`; TypeScript permanece excluído. Resolvido em
-  2026-08-28, ver `HISTORY.md`.
-
-- **P-022** — lint do backend falhava em 2 specs preexistentes (`no-unnecessary-type-assertion` em
-  `campanha.service.spec.ts`/`ficha.service.spec.ts`). O alvo real era o `!` (non-null assertion),
-  não o `as {...}` de shape. Resolvido em 2026-08-24, ver `HISTORY.md`.
-
-- **P-023** — `npm run db:seed:dev` quebrado desde a coluna `tipo_usuario_id` (M6). O `INSERT` de
-  `seed-dev.ts` passou a resolver `tipo_usuario_id`/`token_versao` do mesmo jeito que
-  `UsuarioRepository.criarUsuario`. Resolvido em 2026-08-24, ver `HISTORY.md`.
-
-- **P-024** — `typecheck -w shared` falhava em `a-estatua.spec.ts` (campo `atributo` obsoleto no
-  fixture de ataques da criatura). Migrado para `teste`/`danoCritico`. Resolvido em 2026-08-24, ver
-  `HISTORY.md`.
-
-- **P-021** — calculadora e histórico não abriam juntos no mobile da ficha (um bloqueava o
-  clique no gatilho do outro). Resolvido em 2026-08-24, ver `HISTORY.md`.
-
-- **P-025** — editor de Origem (`p-dialog` sem `appendTo="body"`) não abria no mobile. Auditados
-  e corrigidos todos os 6 `p-dialog` do frontend (mais 2 achados sem o atributo:
-  `ficha-sanidade`/`receber-dano-dialog`). Resolvido em 2026-08-24, ver `HISTORY.md`.
-
-Itens resolvidos **saem daqui**. O relato da correção fica no [`HISTORY.md`](HISTORY.md), junto da
-task que a fez.
-
-- **P-026** — Fallback do mestre na Iniciativa ignorava o amplificador Atento. Resolvido em
-  2026-08-23 (ajuste avulso pós-`m7-18`, pedido direto do autor), ver `HISTORY.md`.
-
-- **P-019** — Seletor de Classe não seguia o padrão de dois passos (base → arquétipo/subclasse).
-  Resolvido em 2026-08-11, ver `HISTORY.md`.
-- **P-017** — migration `0012` (coluna `cor`) nunca rodou em produção. Resolvido em 2026-08-09,
-  ver `HISTORY.md`.
-- **P-013** — habilidade "Anomalia" não dobrava custo/efeito de Fragmentos. Resolvido em
-  2026-08-10, ver `HISTORY.md`.
-- **P-001** — teste de "apelido de equipamento" quebrado em `master`. Já corrigido pelo commit
-  `0aa92c2` (2026-08-08), que só nunca chegou a ser refletido aqui; achado e fechado em 2026-08-11,
-  ver `HISTORY.md`.
-- **P-010** — teste do link "Voltar" quebrado em `visualizar.page.spec.ts`. Mesma causa e mesmo
-  commit de correção do `P-001` (`0aa92c2`, 2026-08-08); achado e fechado em 2026-08-11, ver
-  `HISTORY.md`.
-- **P-011** — suíte de `shared` coletava specs compiladas de `dist/`. Já corrigido pelo
-  `shared/tsconfig.build.json` (`8e3b757`, 2026-08-08), que passou a excluir `src/**/*.spec.ts` da
-  build; nunca chegou a ser refletido aqui; achado e fechado em 2026-08-11, ver `HISTORY.md`.
-- **P-009** — `npm run lint` não fechava limpo em `frontend`/`backend` (8 erros: `autofocus`,
-  variáveis não usadas em specs, acessibilidade de clique em `criar.page.html`). Corrigido em
-  2026-08-11, ver `HISTORY.md`.
-- **P-012** — descrição de habilidade cortava sem aviso no seletor (`-webkit-line-clamp: 2` sem
-  `text-overflow: ellipsis`). Corrigido em 2026-08-11, ver `HISTORY.md`.
-- **P-015** — fragmento consumido sumia da Afinidade (e da redução de Energia que ela dá).
-  Corrigido em 2026-08-11, ver `HISTORY.md`.
-- **P-016** — fragmento Potencializador solto no inventário drenava Energia sem estar aplicado;
-  revisão de regra autorizada pelo dono. Corrigido em 2026-08-11, ver `HISTORY.md`.
-- **P-014** — rótulo "Arquétipo" ficava fixo (seletor de habilidades, resumo da aba Habilidades,
-  guia de criação) mesmo numa ficha de subclasse de Experimento. Corrigido em 2026-08-11, ver
-  `HISTORY.md`.

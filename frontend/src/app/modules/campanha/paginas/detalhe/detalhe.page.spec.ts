@@ -38,7 +38,7 @@ import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.comp
 import { PaginaCadernoService } from '../../../pagina-caderno/pagina-caderno.service';
 
 /**
- * Prova o redesenho m2-19 da visão do mestre em `/painel/:id`: banner de alerta condicional,
+ * Prova o redesenho m2-19 da visão do mestre em `/campanhas/:id`: banner de alerta condicional,
  * tira de estatísticas (só "Convite"), tira de rolagens recentes com "Ver tudo", coluna "Membros"
  * simplificada (sem fichas) e coluna "Esquadrão" (grid achatado das fichas de jogador, com o nome
  * do dono em cada card, mais a subseção "Criaturas") — mais o menu kebab de ações da campanha no
@@ -297,7 +297,7 @@ describe('CampanhaDetalhe', () => {
 
     caderno.abrirFicha.emit(42);
 
-    expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 42], {
+    expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'ficha', 42], {
       fragment: 'anotacoes',
     });
   });
@@ -326,11 +326,11 @@ describe('CampanhaDetalhe', () => {
     return item;
   }
 
-  it('mostra o botão "Voltar às campanhas" no cabeçalho, apontando para /painel', () => {
+  it('mostra o botão "Voltar às campanhas" no cabeçalho, apontando para /campanhas', () => {
     const { raiz } = montar(mestre());
     const voltar = raiz.querySelector('.detalhe__cabecalho-voltar');
     expect(voltar).not.toBeNull();
-    expect(voltar?.getAttribute('href')).toBe('/painel');
+    expect(voltar?.getAttribute('href')).toBe('/campanhas');
   });
 
   it('ordena a coluna "Membros" com o mestre primeiro, depois jogadores em ordem alfabética', () => {
@@ -382,7 +382,7 @@ describe('CampanhaDetalhe', () => {
       const acessoIniciativa = raiz.querySelector('.detalhe__sessao-iniciativa');
       expect(acessoIniciativa?.closest('.detalhe__sessao')).not.toBeNull();
       expect(acessoIniciativa?.textContent?.trim()).toBe('Iniciativa');
-      expect(acessoIniciativa?.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/iniciativa`);
+      expect(acessoIniciativa?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/iniciativa`);
 
       abrirMenuCampanha(raiz, fixture);
       const iniciativaNoMenu = Array.from(
@@ -453,7 +453,7 @@ describe('CampanhaDetalhe', () => {
       fixture.detectChanges();
 
       expect(campanhaService.excluirCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
-      expect(navegar).toHaveBeenCalledWith(['/painel']);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas']);
     });
 
     it('cancela a exclusão sem chamar o backend', () => {
@@ -621,7 +621,7 @@ describe('CampanhaDetalhe', () => {
       expect(banner).not.toBeNull();
       expect(banner?.textContent).toContain('Kane');
       const link = banner?.querySelector('.detalhe__banner-link') as HTMLAnchorElement;
-      expect(link.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/3`);
+      expect(link.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/ficha/3`);
     });
 
     it('some quando nenhuma ficha está crítica', () => {
@@ -814,7 +814,7 @@ describe('CampanhaDetalhe', () => {
       expect(tile?.querySelector('.detalhe__encontro-meta')?.textContent?.replace(/\s+/g, ' ').trim())
         .toBe('Em combate · Rodada 4');
       expect(tile?.querySelector('.detalhe__encontro-acao')?.getAttribute('href')).toBe(
-        `/painel/${CAMPANHA_ID}/iniciativa`,
+        `/campanhas/${CAMPANHA_ID}/iniciativa`,
       );
     });
 
@@ -1137,7 +1137,7 @@ describe('CampanhaDetalhe', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
       const primeiraFichaLink = raiz.querySelector('.detalhe__ficha-link') as HTMLAnchorElement;
-      expect(primeiraFichaLink.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/3`);
+      expect(primeiraFichaLink.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/ficha/3`);
     });
 
     it('duplo clique no cartão abre a ficha', () => {
@@ -1146,7 +1146,7 @@ describe('CampanhaDetalhe', () => {
       const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
       cartao.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 
-      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 3]);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'ficha', 3]);
     });
 
     it('duplo clique num controle próprio (passo de Vida/Energia) não navega', () => {
@@ -1167,7 +1167,7 @@ describe('CampanhaDetalhe', () => {
         const cartao = raiz.querySelector('.detalhe__ficha-card') as HTMLElement;
         cartao.dispatchEvent(new MouseEvent('auxclick', { bubbles: true, button: 1 }));
 
-        expect(abrirNovaAba).toHaveBeenCalledWith(`/painel/${CAMPANHA_ID}/ficha/3`, '_blank', 'noopener');
+        expect(abrirNovaAba).toHaveBeenCalledWith(`/campanhas/${CAMPANHA_ID}/ficha/3`, '_blank', 'noopener');
       } finally {
         abrirNovaAba.mockRestore();
       }
@@ -1287,7 +1287,7 @@ describe('CampanhaDetalhe', () => {
       const botaoNovoAgente = botoes.find((botao) => botao.textContent?.includes('Novo Agente')) as HTMLButtonElement;
       botaoNovoAgente.click();
       expect(fichaService.criarFicha).not.toHaveBeenCalled();
-      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'ficha', 'nova']);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'ficha', 'nova']);
     });
 
     it('"Nova Criatura" navega para o assistente de criação de criatura', () => {
@@ -1296,7 +1296,7 @@ describe('CampanhaDetalhe', () => {
       const botoes = Array.from(raiz.querySelectorAll('.detalhe__nova-ficha'));
       const botaoNovaCriatura = botoes.find((botao) => botao.textContent?.includes('Nova Criatura')) as HTMLButtonElement;
       botaoNovaCriatura.click();
-      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'criatura', 'nova']);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'criatura', 'nova']);
     });
 
     // "Criaturas" divide a coluna "Esquadrão" com as fichas de jogador (m4-04+) — mesma fila de
@@ -1371,7 +1371,7 @@ describe('CampanhaDetalhe', () => {
 
         const listaCriaturas = raiz.querySelector('.detalhe__secao--criaturas')?.nextElementSibling as HTMLElement;
         const link = listaCriaturas.querySelector('.detalhe__ficha-link') as HTMLAnchorElement;
-        expect(link.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/criatura/9`);
+        expect(link.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/criatura/9`);
       });
 
       it('duplo clique no cartão da criatura abre a ficha de criatura', () => {
@@ -1381,7 +1381,7 @@ describe('CampanhaDetalhe', () => {
         const cartao = listaCriaturas.querySelector('.detalhe__ficha-card') as HTMLElement;
         cartao.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
 
-        expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'criatura', 9]);
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'criatura', 9]);
       });
 
       // `window.open` é global — restaura o spy no fim, senão o próximo teste que o usar herdaria
@@ -1394,7 +1394,7 @@ describe('CampanhaDetalhe', () => {
           const cartao = listaCriaturas.querySelector('.detalhe__ficha-card') as HTMLElement;
           cartao.dispatchEvent(new MouseEvent('auxclick', { bubbles: true, button: 1 }));
 
-          expect(abrirNovaAba).toHaveBeenCalledWith(`/painel/${CAMPANHA_ID}/criatura/9`, '_blank', 'noopener');
+          expect(abrirNovaAba).toHaveBeenCalledWith(`/campanhas/${CAMPANHA_ID}/criatura/9`, '_blank', 'noopener');
         } finally {
           abrirNovaAba.mockRestore();
         }
@@ -1778,7 +1778,7 @@ describe('CampanhaDetalhe', () => {
       fixture.detectChanges();
 
       const link = raiz.querySelector('.detalhe__abrir-completa-rodape');
-      expect(link?.getAttribute('href')).toBe(`/painel/${CAMPANHA_ID}/ficha/5`);
+      expect(link?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/ficha/5`);
     });
   });
 

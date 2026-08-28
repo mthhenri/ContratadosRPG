@@ -282,7 +282,7 @@ describe('FichaVisualizar', () => {
       fixture.componentInstance['confirmarExclusao']();
 
       expect(fichaService.excluirFicha).toHaveBeenCalledWith(42);
-      expect(navegarEspiao).toHaveBeenCalledWith(['/painel', 9]);
+      expect(navegarEspiao).toHaveBeenCalledWith(['/campanhas', 9]);
     });
   });
 
@@ -327,7 +327,7 @@ describe('FichaVisualizar', () => {
       expect(messageService.add).toHaveBeenCalledWith(
         expect.objectContaining({ severity: 'warn' }),
       );
-      expect(navegarEspiao).toHaveBeenCalledWith(['/painel', 9]);
+      expect(navegarEspiao).toHaveBeenCalledWith(['/campanhas', 9]);
     });
 
     it('ignora a revogação de outro usuário (não é o próprio acesso)', () => {
@@ -1344,7 +1344,7 @@ describe('FichaVisualizar', () => {
       expect(voltar?.getAttribute('href')).toBe('/fichas');
     });
 
-    it('exclusão de uma ficha solta redireciona ao acervo (/fichas), não a /painel', () => {
+    it('exclusão de uma ficha solta redireciona ao acervo (/fichas), não a /campanhas', () => {
       const { fixture, navegarEspiao } = montar({
         usuarioLogadoId: 7,
         semCampanhaNaRota: true,

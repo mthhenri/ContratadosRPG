@@ -24,9 +24,9 @@ interface EstatisticasCampanhas {
 }
 
 /**
- * Landing privada do usuário (rota `/painel`) — lista as campanhas de que ele é membro, cada
+ * Landing privada do usuário (rota `/campanhas`) — lista as campanhas de que ele é membro, cada
  * uma com o papel (`MESTRE`/`JOGADOR`), e dá acesso a criar uma campanha ou entrar por código.
- * Cada item liga ao detalhe (`/painel/:id`). Estado em Signals; os dados vêm do backend
+ * Cada item liga ao detalhe (`/campanhas/:id`). Estado em Signals; os dados vêm do backend
  * (m2-04) via `CampanhaService`. Substitui a casca semente do painel da m2-06.
  *
  * **Redesenho m2-17 → m2-18:** de grade de cartões (m2-17) para **painel de controle**: linhas

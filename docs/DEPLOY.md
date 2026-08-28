@@ -189,7 +189,7 @@ conecta ao Git e reimplanta no push.
 ## 5. Pós-deploy
 
 - Abra `https://<seu-projeto>.pages.dev`: a rota raiz redireciona ao `/login` (destino padrão
-  é o `/painel`, guardado). Registre uma conta de teste — completar sem erro de CORS prova a
+  é o `/campanhas`, guardado). Registre uma conta de teste — completar sem erro de CORS prova a
   cadeia **Cloudflare → Render → Supabase**. Para checar só o backend, `GET
   https://<seu-servico>.onrender.com/health` deve responder `ok` isoladamente.
 - A partir daqui, todo push para `master` reimplanta as duas plataformas automaticamente.

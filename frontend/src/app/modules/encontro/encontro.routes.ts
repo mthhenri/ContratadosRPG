@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 /**
- * Rotas do módulo `encontro`, montadas sob `/painel/:campanhaId/iniciativa` pelo `app.routes.ts`.
+ * Rotas do módulo `encontro`, montadas sob `/campanhas/:campanhaId/iniciativa` pelo `app.routes.ts`.
  *
  * **Sem guarda de papel (m7-06).** A rota é a mesma para mestre e jogador — é uma tela só, com duas
  * leituras (`PainelEncontro.ehMestre`), como o mockup previu no `visaoJogador`. Quem barra é o

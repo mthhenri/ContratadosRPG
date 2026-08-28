@@ -72,7 +72,7 @@
                 <app-indicador-tempo-real />
                 <a
                     class="detalhe__cabecalho-voltar"
-                    routerLink="/painel"
+                    routerLink="/campanhas"
                     aria-label="Voltar às campanhas"
                     [appTooltip]="'Voltar às campanhas'"
                 >
@@ -128,7 +128,7 @@
                         <a
                             class="detalhe__cabecalho-menu-item"
                             role="menuitem"
-                            [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                            [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
                         >
                             <app-icone nome="combate" />
                             <span>Iniciativa</span>
@@ -344,7 +344,7 @@
             >
             <a
                 class="detalhe__banner-link"
-                [routerLink]="['/painel', campanhaAtual.id, 'ficha', critica.id]"
+                [routerLink]="['/campanhas', campanhaAtual.id, 'ficha', critica.id]"
             >
                 Ver ficha →
             </a>
@@ -401,7 +401,7 @@
                     </span>
                     <a
                         class="botao botao--primario detalhe__encontro-acao"
-                        [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                        [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
                         [appTooltip]="
                 encontroAberto()
                   ? 'Abrir a tela de Iniciativa'
@@ -619,7 +619,7 @@
                             <div class="detalhe__ficha-conteudo">
                                 <a
                                     class="detalhe__ficha-link"
-                                    [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
+                                    [routerLink]="['/campanhas', campanhaAtual.id, 'ficha', ficha.id]"
                                 >
                                     <div class="detalhe__ficha-topo">
                                         <div class="detalhe__ficha-topo-texto">
@@ -764,7 +764,7 @@
 
                 <!-- Criaturas (m4-04+) — mesma coluna do Esquadrão, seção própria abaixo (item pedido pelo
              autor: "o Esquadrão dividir uma coluna com as criaturas", não uma 3ª coluna). Card
-             clicável desde a m4-04b — abre `/painel/:campanhaId/criatura/:id`, mesmo padrão de
+             clicável desde a m4-04b — abre `/campanhas/:campanhaId/criatura/:id`, mesmo padrão de
              navegação (link no nome/meta + duplo clique + clique do meio) do card de ficha. -->
                 <header class="detalhe__secao detalhe__secao--criaturas">
                     <h2 class="detalhe__secao-titulo">Criaturas</h2>
@@ -803,7 +803,7 @@
                             <div class="detalhe__ficha-conteudo">
                                 <a
                                     class="detalhe__ficha-link"
-                                    [routerLink]="['/painel', campanhaAtual.id, 'criatura', criatura.id]"
+                                    [routerLink]="['/campanhas', campanhaAtual.id, 'criatura', criatura.id]"
                                 >
                                     <div class="detalhe__ficha-topo">
                                         <div class="detalhe__ficha-topo-texto">
@@ -857,7 +857,7 @@
                         </button>
                         <a
                             class="botao botao--secundario detalhe__abrir-completa"
-                            [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
+                            [routerLink]="['/campanhas', campanhaAtual.id, 'ficha', fichaExibida.id]"
                         >
                             <app-icone nome="visao-geral" />
                             Abrir completa
@@ -903,7 +903,7 @@
 
                     <a
                         class="botao botao--secundario detalhe__abrir-completa-rodape"
-                        [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
+                        [routerLink]="['/campanhas', campanhaAtual.id, 'ficha', fichaExibida.id]"
                     >
                         Abrir ficha completa
                     </a>
@@ -1082,7 +1082,7 @@
                  continuam os mesmos; saiu apenas do menu de manutenção da ficha. -->
                         <a
                             class="botao botao--secundario detalhe__sessao-iniciativa"
-                            [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                            [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
                             [appTooltip]="'Abrir a tela de Iniciativa'"
                         >
                             <app-icone nome="combate" />

@@ -37,7 +37,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
  * documento cabe numa coluna rolável).
  *
  * **Duas rotas, um componente (m4-11).** Como `FichaVisualizar`: sob
- * `/painel/:campanhaId/criatura/:id`, `campanhaId` vem do parâmetro de rota (síncrono); sob
+ * `/campanhas/:campanhaId/criatura/:id`, `campanhaId` vem do parâmetro de rota (síncrono); sob
  * `/fichas/criatura/:id` (acervo, sem `:campanhaId` na URL) só se resolve **depois** da ficha
  * carregar, lendo `ficha.campanhaId` do próprio payload (`null` para uma criatura solta). Sem
  * campanha (solta, ou ainda carregando sob a rota do acervo) não há membros a buscar —
@@ -73,7 +73,7 @@ export class CriaturaVisualizar {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** `campanhaId` da rota-pai (`/painel/:campanhaId/criatura/:id`), ou `null` sob `/fichas/criatura/:id`. */
+  /** `campanhaId` da rota-pai (`/campanhas/:campanhaId/criatura/:id`), ou `null` sob `/fichas/criatura/:id`. */
   private readonly campanhaIdRota = lerParamRota(this.rotaAtiva, 'campanhaId');
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
 
@@ -280,7 +280,7 @@ export class CriaturaVisualizar {
   /** Rota de saída da tela (expulsão/exclusão, m4-11): a campanha atual, ou o acervo sem ela. */
   private rotaDeSaida(): (string | number)[] {
     const campanhaId = this.campanhaId();
-    return campanhaId !== null ? ['/painel', campanhaId] : ['/fichas'];
+    return campanhaId !== null ? ['/campanhas', campanhaId] : ['/fichas'];
   }
 
   /** Abre/fecha o menu de ações do cabeçalho. */

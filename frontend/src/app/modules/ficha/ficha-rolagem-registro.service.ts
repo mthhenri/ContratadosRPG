@@ -11,7 +11,7 @@ import type { RolagemRealizadaDto } from './rolagem-realizada';
  * Visibilidade das próximas rolagens (`oculta`) + o registro em si (`registrar`) da ficha aberta na
  * página — extraídos de `FichaVisualizacao` na m2-21 (item 5).
  *
- * **Por que virou serviço:** no `modo="compacto"` (visão do jogador de `/painel/:id`) o painel de
+ * **Por que virou serviço:** no `modo="compacto"` (visão do jogador de `/campanhas/:id`) o painel de
  * Rolagens saiu do card e foi morar na **coluna lateral** da página (`CampanhaDetalhe`), enquanto o
  * teste de atributo e o dano continuam sendo rolados de **dentro** do card. Os dois lugares
  * precisam ler a mesma flag e postar pelo mesmo caminho — com o toggle preso ao componente, marcar

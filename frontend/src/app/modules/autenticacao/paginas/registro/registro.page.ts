@@ -26,7 +26,7 @@ function senhasCoincidem(grupo: AbstractControl): ValidationErrors | null {
 /**
  * Tela pública de registro. Reactive Forms coleta `nome`/`login`/`senha` (+ confirmação local),
  * cria a conta via `SessaoService.registrar` e encadeia um `logar` para já abrir a sessão do
- * usuário recém-criado, indo ao `/painel`. Erros do backend (ex.: login duplicado) aparecem via
+ * usuário recém-criado, indo ao `/campanhas`. Erros do backend (ex.: login duplicado) aparecem via
  * `error-handler.interceptor`.
  */
 @Component({
@@ -79,7 +79,7 @@ export class Registro {
       )
       .subscribe({
         next: () => {
-          void this.router.navigateByUrl('/painel');
+          void this.router.navigateByUrl('/campanhas');
         },
       });
   }

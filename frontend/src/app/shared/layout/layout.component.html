@@ -17,12 +17,12 @@
 
         <nav class="topbar__nav" aria-label="Navegação principal">
             @if (sessaoService.autenticado()) {
-                <a class="topbar__item" routerLink="/painel" routerLinkActive="topbar__item--ativo">
+                <a class="topbar__item" routerLink="/campanhas" routerLinkActive="topbar__item--ativo">
                     <app-icone nome="campanhas" />
-                    <span>Painel</span>
+                    <span>Campanhas</span>
                 </a>
                 <a class="topbar__item" routerLink="/fichas" routerLinkActive="topbar__item--ativo">
-                    <app-icone nome="agente" />
+                    <app-icone nome="ficha" />
                     <span>Fichas</span>
                 </a>
                 @if (sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN) {
@@ -89,15 +89,6 @@
                             >
                                 <app-icone nome="agente" />
                                 <span>Perfil</span>
-                            </a>
-                            <a
-                                class="topbar__perfil-item"
-                                routerLink="/painel"
-                                role="menuitem"
-                                (click)="fecharPerfil()"
-                            >
-                                <app-icone nome="campanhas" />
-                                <span>Campanhas</span>
                             </a>
                             <!-- No mobile o Tema mora aqui dentro (libera a largura da topbar); no desktop ele fica
                  na barra, ao lado do perfil. -->

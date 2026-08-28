@@ -228,7 +228,7 @@ describe('FichaCriar', () => {
       componente['confirmarSaida']();
       fixture.detectChanges();
       expect(componente['confirmandoSaida']()).toBe(false);
-      expect(navegar).toHaveBeenCalledWith(['/painel', CAMPANHA_ID]);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID]);
     });
   });
 

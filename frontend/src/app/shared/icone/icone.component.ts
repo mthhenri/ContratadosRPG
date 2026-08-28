@@ -42,6 +42,7 @@ export type IconeNome =
   | 'amplificador'
   | 'sem-categoria'
   | 'campanhas'
+  | 'ficha'
   | 'simulacao'
   | 'calculadora'
   | 'documentos'

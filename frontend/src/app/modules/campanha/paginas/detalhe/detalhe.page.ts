@@ -129,7 +129,7 @@ interface ItemFicha {
  * Uma criatura na subseção "Criaturas" do Esquadrão (m4-04+) — recorte enxuto de `FichaResumoDto`
  * (`tipo === CRIATURA`), sem os campos jogador-específicos de {@link ItemFicha} (`classe`/
  * `arquetipo`/energia/condições/patente não existem numa criatura). Clicável desde a m4-04b —
- * abre `/painel/:campanhaId/criatura/:id` (`CriaturaVisualizar`), mesmo padrão de navegação do
+ * abre `/campanhas/:campanhaId/criatura/:id` (`CriaturaVisualizar`), mesmo padrão de navegação do
  * card de ficha de jogador.
  */
 interface ItemCriatura {
@@ -156,7 +156,7 @@ type EquipeFichaExibicao =
     };
 
 /**
- * Detalhe de uma campanha (`/painel/:id`): nome/descrição, membros com o papel e — só para o
+ * Detalhe de uma campanha (`/campanhas/:id`): nome/descrição, membros com o papel e — só para o
  * mestre — o `codigoConvite` com o botão de regenerar. O papel do usuário atual é derivado da
  * lista de membros (não é regra de segurança, só apresentação: a autoridade é sempre o backend,
  * §14 — a regeneração por um jogador seria barrada com 403 e tratada pelo `error-handler`).
@@ -223,7 +223,7 @@ export class CampanhaDetalhe {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** `id` da campanha, lido do parâmetro de rota (`/painel/:id`). */
+  /** `id` da campanha, lido do parâmetro de rota (`/campanhas/:id`). */
   private readonly id = Number(this.rotaAtiva.snapshot.paramMap.get('id'));
 
   /** Exposto ao template só para escolher o ícone do `chip-papel` (coroa/protecoes). */
@@ -1122,7 +1122,7 @@ export class CampanhaDetalhe {
     this.confirmandoExclusao.set(false);
   }
 
-  /** Exclui a campanha (soft delete) e navega de volta à lista (`/painel`). */
+  /** Exclui a campanha (soft delete) e navega de volta à lista (`/campanhas`). */
   protected confirmarExclusao(): void {
     if (this.excluindo()) {
       return;
@@ -1133,7 +1133,7 @@ export class CampanhaDetalhe {
       .pipe(finalize(() => this.excluindo.set(false)))
       .subscribe({
         next: () => {
-          void this.router.navigate(['/painel']);
+          void this.router.navigate(['/campanhas']);
         },
       });
   }
@@ -1280,13 +1280,13 @@ export class CampanhaDetalhe {
   /** Abre o assistente de criação de ficha (m3-16), agora disparado do detalhe (m2-16). */
   protected abrirCriarFicha(): void {
     this.fecharMenuCampanha();
-    void this.router.navigate(['/painel', this.id, 'ficha', 'nova']);
+    void this.router.navigate(['/campanhas', this.id, 'ficha', 'nova']);
   }
 
   /** Abre o assistente de criação de criatura (m4-04) — só o mestre vê o botão que dispara isto. */
   protected abrirCriarCriatura(): void {
     this.fecharMenuCampanha();
-    void this.router.navigate(['/painel', this.id, 'criatura', 'nova']);
+    void this.router.navigate(['/campanhas', this.id, 'criatura', 'nova']);
   }
 
   // === Vincular ficha existente (m2-21, itens 6-8) — o jogador que chega numa campanha sem ficha
@@ -1394,12 +1394,12 @@ export class CampanhaDetalhe {
 
   /** Rota da ficha — reusada pelo duplo clique (mesma aba) e pelo clique do meio (nova aba). */
   private caminhoFicha(campanhaId: number, fichaId: number): (string | number)[] {
-    return ['/painel', campanhaId, 'ficha', fichaId];
+    return ['/campanhas', campanhaId, 'ficha', fichaId];
   }
 
   /** Rota da ficha de criatura — mesmo papel de {@link caminhoFicha}, segmento `criatura`. */
   private caminhoCriatura(campanhaId: number, criaturaId: number): (string | number)[] {
-    return ['/painel', campanhaId, 'criatura', criaturaId];
+    return ['/campanhas', campanhaId, 'criatura', criaturaId];
   }
 
   protected abrirAnotacoesFicha(fichaId: number): void {

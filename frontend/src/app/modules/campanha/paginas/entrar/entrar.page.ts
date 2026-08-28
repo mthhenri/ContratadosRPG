@@ -8,7 +8,7 @@ import { CampanhaService } from '../../campanha.service';
 /**
  * Dialog de entrada em campanha por código, aberto a partir do painel (`CampanhaLista`).
  * Reactive Forms coleta o `codigoConvite`; ao entrar, o usuário vira `JOGADOR` e a navegação
- * segue ao detalhe (`/painel/:id`), o que já fecha o dialog (sai de `/painel`). Código
+ * segue ao detalhe (`/campanhas/:id`), o que já fecha o dialog (sai de `/campanhas`). Código
  * inexistente (404) ou já-membro (400) chegam como toast pelo `error-handler.interceptor` — a
  * autoridade é o backend (§14); aqui só destravamos o botão ao fim da chamada.
  */
@@ -43,7 +43,7 @@ export class CampanhaEntrar {
       .pipe(finalize(() => this.enviando.set(false)))
       .subscribe({
         next: (campanhaEntrada) => {
-          void this.router.navigate(['/painel', campanhaEntrada.id]);
+          void this.router.navigate(['/campanhas', campanhaEntrada.id]);
         },
       });
   }

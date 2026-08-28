@@ -247,7 +247,7 @@ export class CriaturaCriar {
   private readonly campanhaIdRota = lerParamRota(this.rota, 'campanhaId');
   /**
    * `null` sob `/fichas/criatura/nova` (m4-11, criatura avulsa) — sob
-   * `/painel/:campanhaId/criatura/nova` vem do parâmetro de rota, como sempre. O backend decide
+   * `/campanhas/:campanhaId/criatura/nova` vem do parâmetro de rota, como sempre. O backend decide
    * quem pode criar sem campanha (mestre de alguma — `FichaService.criarFichaCriatura`); aqui só
    * muda o destino de saída/pós-criação (mesmo padrão de `FichaCriar.campanhaId`, `criar.page.ts`).
    */
@@ -640,7 +640,7 @@ export class CriaturaCriar {
   protected sair(): void { this.confirmandoSaida.set(true); }
   protected confirmarSaida(): void {
     this.confirmandoSaida.set(false);
-    void this.router.navigate(this.campanhaId !== null ? ['/painel', this.campanhaId] : ['/fichas']);
+    void this.router.navigate(this.campanhaId !== null ? ['/campanhas', this.campanhaId] : ['/fichas']);
   }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */
@@ -659,7 +659,7 @@ export class CriaturaCriar {
           this.rascunhos.limpar(this.campanhaId, 'criatura');
           const destino =
             this.campanhaId !== null
-              ? ['/painel', this.campanhaId, 'criatura', ficha.id]
+              ? ['/campanhas', this.campanhaId, 'criatura', ficha.id]
               : ['/fichas', 'criatura', ficha.id];
           const arquivo = this.imagemArquivo();
           // Imagem (mesmo padrão do guia de jogador, m3-62): a ficha já existe — segundo request,

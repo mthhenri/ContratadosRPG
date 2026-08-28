@@ -11,5 +11,5 @@ export const adminGuard: CanActivateFn = () => {
 
   return sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN
     ? true
-    : router.createUrlTree(['/painel']);
+    : router.createUrlTree(['/campanhas']);
 };

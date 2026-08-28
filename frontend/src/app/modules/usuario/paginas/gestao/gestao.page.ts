@@ -117,7 +117,7 @@ export class UsuarioGestao {
     ).subscribe((sessao) => {
       this.sessaoService.substituirSessao(sessao);
       this.tempoRealService.conectar();
-      void this.router.navigateByUrl('/painel');
+      void this.router.navigateByUrl('/campanhas');
     });
   }
   protected limparFiltros(): void {

@@ -12,12 +12,12 @@ export const routes: Routes = [
         (pagina) => pagina.AcessoNegadoPage,
       ),
   },
-  // Rota raiz leva direto ao painel (destino padrão pós-login); sem sessão, o
-  // `autenticacaoGuard` de `/painel` redireciona ao `/login` guardando o retorno.
+  // Rota raiz leva direto a campanhas (destino padrão pós-login); sem sessão, o
+  // `autenticacaoGuard` de `/campanhas` redireciona ao `/login` guardando o retorno.
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: '/painel',
+    redirectTo: '/campanhas',
   },
   {
     path: 'simulacao',
@@ -33,17 +33,18 @@ export const routes: Routes = [
       ),
   },
   // Criação/edição de ficha de jogador (guardada) — m3-06. Montada sob
-  // `/painel/:campanhaId/ficha` (nova / :id/editar). Precede a rota `painel` genérica para ser
-  // casada antes do prefixo mais curto (o router não voltaria à irmã após consumir só `painel`).
+  // `/campanhas/:campanhaId/ficha` (nova / :id/editar). Precede a rota `campanhas` genérica para
+  // ser casada antes do prefixo mais curto (o router não voltaria à irmã após consumir só
+  // `campanhas`).
   {
-    path: 'painel/:campanhaId/ficha',
+    path: 'campanhas/:campanhaId/ficha',
     canActivate: [autenticacaoGuard],
     loadChildren: () => import('./modules/ficha/ficha.routes').then((modulo) => modulo.fichaRoutes),
   },
   // Criação de ficha de criatura (Ameaça) — só o mestre da campanha (m4-04). Mesma convenção de
-  // `/painel/:campanhaId/ficha`, em módulo próprio (`criaturaRoutes`) — ver comentário lá.
+  // `/campanhas/:campanhaId/ficha`, em módulo próprio (`criaturaRoutes`) — ver comentário lá.
   {
-    path: 'painel/:campanhaId/criatura',
+    path: 'campanhas/:campanhaId/criatura',
     canActivate: [autenticacaoGuard, mestreCampanhaGuard],
     loadChildren: () =>
       import('./modules/ficha/criatura.routes').then((modulo) => modulo.criaturaRoutes),
@@ -53,21 +54,21 @@ export const routes: Routes = [
   // Só `autenticacaoGuard`: mestre e jogador entram pela mesma rota e a tela bifurca por papel —
   // o recorte de verdade é do backend (ver `encontro.routes.ts`).
   {
-    path: 'painel/:campanhaId/iniciativa',
+    path: 'campanhas/:campanhaId/iniciativa',
     canActivate: [autenticacaoGuard],
     loadChildren: () =>
       import('./modules/encontro/encontro.routes').then((modulo) => modulo.encontroRoutes),
   },
-  // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/painel`
+  // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/campanhas`
   // (listar/criar/entrar/detalhe), consumindo o backend fechado nas m2-04/m2-05 — m2-07.
   {
-    path: 'painel',
+    path: 'campanhas',
     canActivate: [autenticacaoGuard],
     loadChildren: () =>
       import('./modules/campanha/campanha.routes').then((modulo) => modulo.campanhaRoutes),
   },
   // Acervo de fichas do usuário (guardada) — m3-28: a ficha deixa de ser filha obrigatória da
-  // campanha. Montada sob `/fichas` (acervo / :id), ao lado de `/painel`.
+  // campanha. Montada sob `/fichas` (acervo / :id), ao lado de `/campanhas`.
   {
     path: 'fichas',
     canActivate: [autenticacaoGuard],

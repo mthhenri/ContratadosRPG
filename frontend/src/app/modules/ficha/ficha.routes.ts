@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 /**
- * Rotas privadas do módulo `ficha` (m3-07/m3-10), montadas sob `/painel/:campanhaId/ficha` pelo
+ * Rotas privadas do módulo `ficha` (m3-07/m3-10), montadas sob `/campanhas/:campanhaId/ficha` pelo
  * `app.routes.ts` atrás do `autenticacaoGuard` (m2-06). Cada tela é standalone e carregada de
  * forma lazy (`loadComponent`). O `campanhaId` mora na rota-pai (lido por `lerParamRota`).
  *

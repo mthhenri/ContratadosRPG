@@ -286,21 +286,6 @@
 
 ---
 
-## Promovidas
-
-Ideias que viraram spec. Ficam aqui só para não serem reinventadas.
-
-| Ideia | Virou | Quando |
-|---|---|---|
-| I-011 — Colorir os dadinhos do pool por tipo de dano | implementado direto (pedido pequeno o bastante pra pular a spec formal) — ver `HISTORY.md` | 2026-08-11 |
-| I-013 — M7 sugerido: cenas e controle de combate | milestone **M7 — Encontro de Combate**, concluído (`m7-01`…`m7-20`, `docs/specs/done/`; `docs/specs/backlog/m7-encontro-combate.spec.md`) | 2026-08-24 |
-| I-018 — Inventário de esquadrão sem esperar o módulo de Base | implementado (`docs/superpowers/specs/2026-08-12-inventario-de-esquadrao-design.md`; componentes `inventario-esquadrao`/`inventario-esquadrao-sidebar`) | 2026-08-24 |
-| I-019 — Topbar: renomear "Painel", ícone próprio de Fichas, limpar menu de perfil | `docs/specs/backlog/renomear-painel-para-campanhas.spec.md` (escopo ampliado em 2026-08-25 para incluir a rota `/painel`→`/campanhas`, não só o rótulo) | 2026-08-24 |
-| I-020 — Preservar itens modificados no inventário de esquadrão | implementado (`docs/specs/done/preservar-modificacoes-inventario-esquadrao.spec.md`) | 2026-08-26 |
-| I-021 — Descrição textual das modificações no item do inventário | implementado (`docs/specs/done/descricao-modificacoes-item-inventario.spec.md`) | 2026-08-24 |
-
----
-
 ## Descartadas
 
 Ideias consideradas e recusadas, com o motivo. Serve para não voltarem sozinhas.

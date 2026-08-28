@@ -10,7 +10,7 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 /**
  * Tela pública de login. Reactive Forms (sem `ngModel`) coleta `login`/`senha`, delega ao
  * `SessaoService.logar` e, ao autenticar, retoma o destino guardado em `retorno` (posto pelo
- * `autenticacaoGuard`/`error-handler`) ou cai no `/painel`. O toast de erro do backend vem do
+ * `autenticacaoGuard`/`error-handler`) ou cai no `/campanhas`. O toast de erro do backend vem do
  * `error-handler.interceptor`; aqui só destravamos o botão ao fim da chamada.
  */
 @Component({
@@ -50,7 +50,7 @@ export class Login {
       .pipe(finalize(() => this.enviando.set(false)))
       .subscribe({
         next: () => {
-          const retorno = this.rotaAtiva.snapshot.queryParamMap.get('retorno') ?? '/painel';
+          const retorno = this.rotaAtiva.snapshot.queryParamMap.get('retorno') ?? '/campanhas';
           void this.router.navigateByUrl(retorno);
         },
       });

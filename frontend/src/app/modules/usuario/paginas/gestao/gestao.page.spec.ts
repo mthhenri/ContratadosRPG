@@ -166,6 +166,6 @@ describe('UsuarioGestao', () => {
     expect(servico.impersonarUsuario).toHaveBeenCalledWith({ id: 8 });
     expect(sessao.usuario()).toEqual(expect.objectContaining({ token: 'token-bia', id: 8 }));
     expect(conectar).toHaveBeenCalled();
-    expect(navegar).toHaveBeenCalledWith('/painel');
+    expect(navegar).toHaveBeenCalledWith('/campanhas');
   });
 });

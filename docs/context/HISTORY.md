@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-28 — `renomear-painel-para-campanhas`: URL e topbar passam a chamar a área pelo nome correto
+
+A rota privada de campanhas, suas filhas de ficha, criatura e iniciativa, todos os destinos de
+navegação, guards, fallbacks de login/cadastro e seus testes migraram de `/painel` para
+`/campanhas`, sem rota legada nem redirect de compatibilidade. A topbar passou a expor
+**Campanhas** como item principal; o acervo de Fichas recebeu o novo ícone SVG de cartão de
+identificação, e o atalho duplicado foi removido do menu de perfil. Os usos genéricos de
+`PainelEncontro`, seus arquivos e seletores permaneceram intactos.
+
+Também foram limpos os registros já resolvidos de `PROBLEMS.md` e as ideias já implementadas de
+`IDEAS.md`, preservando apenas pendências e possibilidades futuras. A referência operacional de
+deploy e o estado corrente foram atualizados para a URL nova.
+
+Verificado: `git diff --check`; testes focados de `app.routes.spec.ts` (10/10) e
+`layout.component.spec.ts` (12/12); lint do frontend sem erros (avisos preexistentes); build de
+produção concluído, com os dois budgets preexistentes. A suíte ampla do frontend continua bloqueada
+por `P-033`: o mock de tempo real do spec de `PainelEncontro` não fornece os observables do serviço
+colaborativo recém-injetado e derruba 53 casos antes das asserções. Ao vivo, com uma conta temporária
+local, a aplicação foi inspecionada em `1920×1080` e `360×800`: a rota `/campanhas`, o item ativo,
+o novo ícone de Fichas, o menu sem duplicata e o comportamento responsivo não apresentaram overflow.
+
 ## 2026-08-28 — `formatacao-legibilidade-frontend`: HTML e SCSS do frontend legíveis por leitura direta
 
 O frontend passou a ter Prettier como dependência de desenvolvimento, com configuração local de

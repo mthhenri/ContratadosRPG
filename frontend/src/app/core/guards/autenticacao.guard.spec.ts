@@ -37,14 +37,14 @@ describe('autenticacaoGuard', () => {
       CHAVE_SESSAO,
       JSON.stringify({ token: 't', id: 1, login: 'a', nome: 'A' }),
     );
-    expect(executar('/painel')).toBe(true);
+    expect(executar('/campanhas')).toBe(true);
   });
 
   it('redireciona ao login guardando o destino em retorno', () => {
-    const resultado = executar('/painel');
+    const resultado = executar('/campanhas');
     expect(resultado).toBeInstanceOf(UrlTree);
     const arvore = resultado as UrlTree;
     expect(arvore.root.children['primary'].segments[0].path).toBe('login');
-    expect(arvore.queryParams['retorno']).toBe('/painel');
+    expect(arvore.queryParams['retorno']).toBe('/campanhas');
   });
 });

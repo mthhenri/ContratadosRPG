@@ -28,7 +28,7 @@ describe('AcessoNegadoPage', () => {
     expect(raiz.textContent).toContain('████');
     expect(raiz.textContent).toContain('DADOS EXPURGADOS');
     expect(raiz.textContent).toContain('REDACTED');
-    expect(raiz.querySelector<HTMLAnchorElement>('a[href="/painel"]')?.textContent)
+    expect(raiz.querySelector<HTMLAnchorElement>('a[href="/campanhas"]')?.textContent)
       .toContain('Retornar ao painel');
   });
 

@@ -162,7 +162,7 @@ export class PainelEncontro {
    *  revelado) — aberta imperativamente por `abrirFichaFlutuante`. */
   private readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
 
-  /** `campanhaId` da rota — sempre presente (a rota só existe sob `/painel/:campanhaId`). */
+  /** `campanhaId` da rota — sempre presente (a rota só existe sob `/campanhas/:campanhaId`). */
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
 
   /**
@@ -1128,12 +1128,12 @@ export class PainelEncontro {
    * está na tela — o combate encerrado é um documento, e um documento tem endereço.
    */
   protected abrirDoHistorico(resumo: EncontroResumoDto): void {
-    void this.roteador.navigate(['/painel', this.campanhaId, 'iniciativa', resumo.id]);
+    void this.roteador.navigate(['/campanhas', this.campanhaId, 'iniciativa', resumo.id]);
   }
 
   /** Volta do histórico para o combate corrente da campanha. */
   protected voltarAoCorrente(): void {
-    void this.roteador.navigate(['/painel', this.campanhaId, 'iniciativa']);
+    void this.roteador.navigate(['/campanhas', this.campanhaId, 'iniciativa']);
   }
 
   // ── Plumbing ───────────────────────────────────────────────────────────────

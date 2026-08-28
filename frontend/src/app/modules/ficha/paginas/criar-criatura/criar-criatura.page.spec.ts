@@ -249,7 +249,7 @@ describe('CriaturaCriar', () => {
       ],
     } satisfies FichaCriaturaDadosDto);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/painel', CAMPANHA_ID, 'criatura', 99]);
+    expect(router.navigate).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'criatura', 99]);
   });
 
   it('bloqueia o passo Resistências sem ao menos uma fraqueza', () => {
@@ -331,7 +331,7 @@ describe('CriaturaCriar', () => {
     componente['sair']();
     componente['confirmarSaida']();
     expect(componente['confirmandoSaida']()).toBe(false);
-    expect(router.navigate).toHaveBeenCalledWith(['/painel', CAMPANHA_ID]);
+    expect(router.navigate).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID]);
   });
 
   describe('rascunho salvo neste dispositivo', () => {

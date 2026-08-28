@@ -124,7 +124,7 @@ export class FichaCriar {
   private readonly sessaoService = inject(SessaoService); private readonly rascunhos = inject(GuiaCriacaoRascunhoService);
   private readonly campanhaIdRota = lerParamRota(this.rota, 'campanhaId');
   /**
-   * `null` sob `/fichas/nova` (m3-28, ficha avulsa) — sob `/painel/:campanhaId/ficha/nova` vem do
+   * `null` sob `/fichas/nova` (m3-28, ficha avulsa) — sob `/campanhas/:campanhaId/ficha/nova` vem do
    * parâmetro de rota, como sempre. Sem campanha não há esquadrão: o construtor pula
    * `listarMembros`/`calcularMediasEsquadrao` e o guia sempre segue o caminho "primeiro agente"
    * (Nível 0, Prestígio 0, sem bônus monetário) — não existe média para calcular sem fichas de
@@ -671,7 +671,7 @@ export class FichaCriar {
   /** `true` quando o dinheiro inicial foi resolvido por "ignorar" em vez de rolagem (`dados` vazio). */
   protected readonly recursosIgnorados = computed(() => this.estado().dinheiro.rolado && this.estado().dinheiro.dados.length === 0);
   protected sair(): void { this.confirmandoSaida.set(true); }
-  protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(this.campanhaId !== null ? ['/painel', this.campanhaId] : ['/fichas']); }
+  protected confirmarSaida(): void { this.confirmandoSaida.set(false); void this.router.navigate(this.campanhaId !== null ? ['/campanhas', this.campanhaId] : ['/fichas']); }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */
   protected fecharAoClicarFora(evento: MouseEvent): void { if (evento.target === evento.currentTarget) this.cancelarSaida(); }
@@ -710,7 +710,7 @@ export class FichaCriar {
       .subscribe({
         next: (ficha) => {
           this.rascunhos.limpar(campanhaId, 'agente');
-          const destino = campanhaId !== null ? ['/painel', campanhaId, 'ficha', ficha.id] : ['/fichas', ficha.id];
+          const destino = campanhaId !== null ? ['/campanhas', campanhaId, 'ficha', ficha.id] : ['/fichas', ficha.id];
           const arquivo = this.imagemArquivo();
           // Avatar (m3-62): a ficha já existe — segundo request, em sequência. Falha no upload não
           // desfaz a ficha criada nem trava a navegação; só fica sem avatar, subível depois pelo cabeçalho.

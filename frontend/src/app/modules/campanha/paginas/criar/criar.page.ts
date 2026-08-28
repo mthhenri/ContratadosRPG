@@ -8,8 +8,8 @@ import { CampanhaService } from '../../campanha.service';
 /**
  * Dialog de criação de campanha, aberto a partir do painel (`CampanhaLista`). Reactive Forms
  * (sem `ngModel`) coleta `nome` e `descricao` (opcional); ao criar, o usuário vira `MESTRE` e
- * recebe o `codigoConvite` — a navegação segue direto ao detalhe (`/painel/:id`), onde o mestre
- * vê o código (o que já fecha o dialog, ao sair de `/painel`). Erros do backend chegam via
+ * recebe o `codigoConvite` — a navegação segue direto ao detalhe (`/campanhas/:id`), onde o mestre
+ * vê o código (o que já fecha o dialog, ao sair de `/campanhas`). Erros do backend chegam via
  * `error-handler.interceptor`; aqui só destravamos o botão ao fim.
  */
 @Component({
@@ -45,7 +45,7 @@ export class CampanhaCriar {
       .pipe(finalize(() => this.enviando.set(false)))
       .subscribe({
         next: (campanhaCriada) => {
-          void this.router.navigate(['/painel', campanhaCriada.id]);
+          void this.router.navigate(['/campanhas', campanhaCriada.id]);
         },
       });
   }

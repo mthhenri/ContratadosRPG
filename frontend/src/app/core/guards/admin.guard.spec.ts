@@ -39,7 +39,7 @@ describe('adminGuard', () => {
     'redireciona %s ao painel',
     (tipo) => {
       const resultado = executar(tipo);
-      expect(TestBed.inject(Router).serializeUrl(resultado as UrlTree)).toBe('/painel');
+      expect(TestBed.inject(Router).serializeUrl(resultado as UrlTree)).toBe('/campanhas');
     },
   );
 });

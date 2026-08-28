@@ -69,7 +69,7 @@
                     class="campanhas__linha"
                     [class.campanhas__linha--critico]="campanha.temFichaCritica"
                 >
-                    <a class="campanhas__linha-principal" [routerLink]="['/painel', campanha.id]">
+                    <a class="campanhas__linha-principal" [routerLink]="['/campanhas', campanha.id]">
                         <div class="campanhas__linha-identidade">
                             <span class="campanhas__avatar" aria-hidden="true"></span>
                             <div class="campanhas__linha-identidade-texto">
@@ -125,7 +125,7 @@
                         }
                         <a
                             class="botao botao--secundario campanhas__linha-abrir"
-                            [routerLink]="['/painel', campanha.id]"
+                            [routerLink]="['/campanhas', campanha.id]"
                         >
                             Abrir
                             <app-icone nome="entrar" />

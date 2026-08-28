@@ -36,7 +36,7 @@ import { RolagemService } from '../../rolagem.service';
 /**
  * Prova a página que junta rota/WS/acesso/exclusão em torno de `CriaturaVisualizacao` (m4-04b) —
  * mesmo contrato de `FichaVisualizar` (m3-07), incluindo a ramificação `campanhaId` opcional
- * (m4-11): sob `/painel/:campanhaId/criatura/:id` vem da rota; sob `/fichas/criatura/:id`
+ * (m4-11): sob `/campanhas/:campanhaId/criatura/:id` vem da rota; sob `/fichas/criatura/:id`
  * (acervo) se resolve do payload da criatura carregada.
  */
 describe('CriaturaVisualizar', () => {
@@ -264,7 +264,7 @@ describe('CriaturaVisualizar', () => {
     const { fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
     fixture.componentInstance['confirmarExclusao']();
     expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
-    expect(navegarEspiao).toHaveBeenCalledWith(['/painel', 9]);
+    expect(navegarEspiao).toHaveBeenCalledWith(['/campanhas', 9]);
   });
 
   describe('criatura solta (m4-11)', () => {
@@ -289,7 +289,7 @@ describe('CriaturaVisualizar', () => {
       expect(voltar?.getAttribute('href')).toBe('/fichas');
     });
 
-    it('exclusão de uma criatura solta redireciona ao acervo (/fichas), não a /painel', () => {
+    it('exclusão de uma criatura solta redireciona ao acervo (/fichas), não a /campanhas', () => {
       const { fixture, navegarEspiao } = montar({
         usuarioLogadoId: 7,
         semCampanhaNaRota: true,

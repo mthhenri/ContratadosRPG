@@ -80,6 +80,20 @@ describe('Layout — leitor global de documentos', () => {
     expect(raiz.querySelector('.topbar__item--admin')).toBeNull();
   });
 
+  it('mostra Campanhas e Fichas com ícones distintos, sem duplicata no perfil', async () => {
+    const { fixture, raiz } = await montar(true);
+    const campanhas = raiz.querySelector<HTMLAnchorElement>('nav a[href="/campanhas"]');
+    const fichas = raiz.querySelector<HTMLAnchorElement>('nav a[href="/fichas"]');
+
+    expect(campanhas?.textContent).toContain('Campanhas');
+    expect(campanhas?.querySelector('app-icone')?.getAttribute('nome')).toBe('campanhas');
+    expect(fichas?.querySelector('app-icone')?.getAttribute('nome')).toBe('ficha');
+
+    raiz.querySelector<HTMLButtonElement>('.topbar__perfil-gatilho')!.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.topbar__perfil-menu a[href="/campanhas"]')).toBeNull();
+  });
+
   it('mostra selo no gatilho para administrador e tester, mas não para normal', async () => {
     const admin = await montar(true, TipoUsuarioEnum.ADMIN);
     expect(admin.raiz.querySelector('.topbar__tipo--admin')).not.toBeNull();

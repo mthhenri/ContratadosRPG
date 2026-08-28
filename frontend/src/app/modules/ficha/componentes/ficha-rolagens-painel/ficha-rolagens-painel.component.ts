@@ -28,7 +28,7 @@ import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
  *
  * Existe porque o painel passou a ter **dois lugares**: a aba Rolagens da ficha completa
  * (`modo="padrao"` de `FichaVisualizacao`, que delega pra cá) e a coluna lateral da visão do
- * jogador de `/painel/:id` (`CampanhaDetalhe`), onde ele vive **fora** do card da ficha, ao lado do
+ * jogador de `/campanhas/:id` (`CampanhaDetalhe`), onde ele vive **fora** do card da ficha, ao lado do
  * histórico da sessão. Sem este componente, os três `computed` derivados teriam de ser duplicados
  * na página.
  *
