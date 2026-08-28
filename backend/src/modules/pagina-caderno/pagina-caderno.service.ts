@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
   BuscaCampanhaDto,
   BuscaCampanhaResultadoDto,
   PaginaCadernoAlterarDto,
   PaginaCadernoCriarDto,
   PaginaCadernoDto,
+  PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoEsquadraoAlterarDto,
+  PaginaCadernoEsquadraoCriarDto,
+  PaginaCadernoEsquadraoEstadoDto,
   PaginaCadernoExcluirDto,
   PaginaCadernoInternoRecuperadaDto,
   PaginaCadernoListarDto,
@@ -12,7 +16,10 @@ import type {
   PaginaCadernoRecuperarDto,
   PaginaCadernoResumoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
-import { BuscaCampanhaFonteEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import {
+  BuscaCampanhaFonteEnum,
+  TipoCampanhaMembroPapelEnum,
+} from '@contratados-rpg/shared/enums';
 import { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import {
   BUSCA_CAMPANHA_LIMITE_MAXIMO,
@@ -27,9 +34,11 @@ import {
   ResourceNotFoundException,
   UnauthorizedAccessException,
 } from '../../core/exceptions';
+import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { PaginaCadernoRepository } from './pagina-caderno.repository';
+import * as Y from 'yjs';
 
 /** Regras de autoria, leitura do mestre, validação e concorrência das páginas de caderno. */
 @Injectable()
@@ -37,6 +46,8 @@ export class PaginaCadernoService {
   constructor(
     private readonly paginaCadernoRepositorio: PaginaCadernoRepository,
     private readonly campanhaRepositorio: CampanhaRepository,
+    @Inject(forwardRef(() => CampanhaGateway))
+    private readonly campanhaGateway: CampanhaGateway,
   ) {}
 
   async criarPagina(dto: PaginaCadernoCriarDto, usuarioAtivo: JwtPayload): Promise<PaginaCadernoDto> {
@@ -139,6 +150,100 @@ export class PaginaCadernoService {
     await this.paginaCadernoRepositorio.excluirPagina(dto);
   }
 
+  async criarPaginaEsquadrao(
+    dto: PaginaCadernoEsquadraoCriarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoEsquadraoEstadoDto> {
+    const conteudoValidado = this.validarConteudo(dto.titulo, '');
+    await this.recuperarPapelMembro({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    const documento = new Y.Doc();
+    documento.getText('titulo').insert(0, conteudoValidado.titulo);
+    const paginaCriada = await this.paginaCadernoRepositorio.criarPaginaEsquadrao({
+      campanhaId: dto.campanhaId,
+      ...conteudoValidado,
+      estadoColaborativo: Y.encodeStateAsUpdate(documento),
+    });
+    if (!paginaCriada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+    const pagina = this.mapearPagina(paginaCriada, false);
+    this.campanhaGateway.emitirPaginaEsquadraoCriada(this.mapearResumo(paginaCriada));
+    return { pagina, estado: Buffer.from(paginaCriada.estadoColaborativo ?? []).toString('base64') };
+  }
+
+  async listarPaginasEsquadrao(
+    dto: PaginaCadernoListarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoResumoDto[]> {
+    await this.recuperarPapelMembro({ campanhaId: dto.campanhaId, usuarioId: usuarioAtivo.sub });
+    return this.paginaCadernoRepositorio.listarPaginasEsquadrao(dto.campanhaId);
+  }
+
+  async recuperarEstadoPaginaEsquadrao(
+    dto: PaginaCadernoRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoEsquadraoEstadoDto> {
+    const pagina = await this.recuperarPaginaEsquadraoPersistida(dto);
+    await this.recuperarPapelMembro({ campanhaId: pagina.campanhaId, usuarioId: usuarioAtivo.sub });
+    return {
+      pagina: this.mapearPagina(pagina, false),
+      estado: Buffer.from(pagina.estadoColaborativo ?? []).toString('base64'),
+    };
+  }
+
+  async alterarPaginaEsquadrao(
+    dto: PaginaCadernoEsquadraoAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoEsquadraoAlteradaDto> {
+    const pagina = await this.recuperarPaginaEsquadraoPersistida({ id: dto.id });
+    await this.recuperarPapelMembro({ campanhaId: pagina.campanhaId, usuarioId: usuarioAtivo.sub });
+    const conteudoValidado = this.validarConteudo(dto.titulo, dto.conteudoMarkdown);
+    const atualizacao = this.decodificarAtualizacao(dto.atualizacao);
+    const documento = new Y.Doc();
+    try {
+      Y.applyUpdate(documento, pagina.estadoColaborativo ?? new Uint8Array());
+      Y.applyUpdate(documento, atualizacao);
+    } catch {
+      throw new BusinessException('Atualização colaborativa inválida');
+    }
+    const estadoColaborativo = Y.encodeStateAsUpdate(documento);
+    if (estadoColaborativo.byteLength > 1_000_000) {
+      throw new BusinessException('Estado colaborativo excede o limite permitido');
+    }
+    const paginaAlterada = await this.paginaCadernoRepositorio.alterarPaginaEsquadrao({
+      id: dto.id,
+      ...conteudoValidado,
+      estadoColaborativo,
+    });
+    if (!paginaAlterada) {
+      throw new ResourceNotFoundException('Página do caderno do Esquadrão');
+    }
+    const evento: PaginaCadernoEsquadraoAlteradaDto = {
+      campanhaId: paginaAlterada.campanhaId,
+      paginaId: paginaAlterada.id,
+      atualizacao: dto.atualizacao,
+      pagina: this.mapearResumo(paginaAlterada),
+    };
+    this.campanhaGateway.emitirPaginaEsquadraoAtualizada(evento);
+    return evento;
+  }
+
+  async excluirPaginaEsquadrao(dto: PaginaCadernoExcluirDto, usuarioAtivo: JwtPayload): Promise<void> {
+    const pagina = await this.recuperarPaginaEsquadraoPersistida(dto);
+    const papel = await this.recuperarPapelMembro({
+      campanhaId: pagina.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+      throw new UnauthorizedAccessException();
+    }
+    await this.paginaCadernoRepositorio.excluirPaginaEsquadrao(dto);
+    this.campanhaGateway.emitirPaginaEsquadraoExcluida({
+      campanhaId: pagina.campanhaId,
+      paginaId: pagina.id,
+    });
+  }
+
   async buscarCampanha(
     dto: BuscaCampanhaDto,
     usuarioAtivo: JwtPayload,
@@ -220,9 +325,14 @@ export class PaginaCadernoService {
       ? [
           BuscaCampanhaFonteEnum.MEU_CADERNO,
           BuscaCampanhaFonteEnum.CADERNOS_JOGADORES,
+          BuscaCampanhaFonteEnum.CADERNO_ESQUADRAO,
           BuscaCampanhaFonteEnum.FICHAS_CAMPANHA,
         ]
-      : [BuscaCampanhaFonteEnum.MEU_CADERNO, BuscaCampanhaFonteEnum.MINHAS_FICHAS];
+      : [
+          BuscaCampanhaFonteEnum.MEU_CADERNO,
+          BuscaCampanhaFonteEnum.CADERNO_ESQUADRAO,
+          BuscaCampanhaFonteEnum.MINHAS_FICHAS,
+        ];
   }
 
   private async recuperarPapelMembro(dto: {
@@ -246,6 +356,27 @@ export class PaginaCadernoService {
     return pagina;
   }
 
+  private async recuperarPaginaEsquadraoPersistida(
+    dto: PaginaCadernoRecuperarDto,
+  ): Promise<PaginaCadernoInternoRecuperadaDto> {
+    const pagina = await this.paginaCadernoRepositorio.recuperarPaginaEsquadrao(dto.id);
+    if (!pagina) {
+      throw new ResourceNotFoundException('Página do caderno do Esquadrão');
+    }
+    return pagina;
+  }
+
+  private decodificarAtualizacao(valor: string): Uint8Array {
+    if (!valor || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(valor)) {
+      throw new BusinessException('Atualização colaborativa inválida');
+    }
+    const atualizacao = Buffer.from(valor, 'base64');
+    if (atualizacao.byteLength === 0 || atualizacao.byteLength > 1_000_000) {
+      throw new BusinessException('Atualização colaborativa inválida');
+    }
+    return atualizacao;
+  }
+
   private validarAutoria(pagina: PaginaCadernoInternoRecuperadaDto, usuarioAtivoId: number): void {
     if (pagina.usuarioAutorId !== usuarioAtivoId) {
       throw new UnauthorizedAccessException();
@@ -256,6 +387,29 @@ export class PaginaCadernoService {
     pagina: PaginaCadernoInternoRecuperadaDto,
     somenteLeitura: boolean,
   ): PaginaCadernoDto {
-    return { ...pagina, somenteLeitura };
+    return {
+      id: pagina.id,
+      campanhaId: pagina.campanhaId,
+      usuarioAutorId: pagina.usuarioAutorId,
+      autorNome: pagina.autorNome,
+      tipo: pagina.tipo,
+      titulo: pagina.titulo,
+      conteudoMarkdown: pagina.conteudoMarkdown,
+      somenteLeitura,
+      createdDate: pagina.createdDate,
+      updatedDate: pagina.updatedDate,
+    };
+  }
+
+  private mapearResumo(pagina: PaginaCadernoInternoRecuperadaDto): PaginaCadernoResumoDto {
+    return {
+      id: pagina.id,
+      campanhaId: pagina.campanhaId,
+      usuarioAutorId: pagina.usuarioAutorId,
+      autorNome: pagina.autorNome,
+      tipo: pagina.tipo,
+      titulo: pagina.titulo,
+      updatedDate: pagina.updatedDate,
+    };
   }
 }

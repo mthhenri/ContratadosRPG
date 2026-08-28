@@ -26,6 +26,17 @@ describe('PaginaCadernoController', () => {
     );
   });
 
+  it('mescla campanha da rota ao criar página do Esquadrão', async () => {
+    const criarPaginaEsquadrao = vi.fn().mockResolvedValue({ id: 9 });
+    const controller = new PaginaCadernoController({
+      criarPaginaEsquadrao,
+    } as unknown as PaginaCadernoService);
+
+    await controller.criarEsquadrao(3, { campanhaId: 999, titulo: 'Plano' }, usuario);
+
+    expect(criarPaginaEsquadrao).toHaveBeenCalledWith({ campanhaId: 3, titulo: 'Plano' }, usuario);
+  });
+
   it('mescla id da rota na alteração', async () => {
     const alterarPagina = vi.fn().mockResolvedValue({ id: 9 });
     const controller = new PaginaCadernoController({ alterarPagina } as unknown as PaginaCadernoService);

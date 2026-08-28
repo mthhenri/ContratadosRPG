@@ -27,6 +27,10 @@ import type {
   EncontroIniciativaPedidoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type {
+  PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoResumoDto,
+} from '@contratados-rpg/shared/dtos/pagina-caderno';
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import { CampanhaService } from '../../modules/campanha/campanha.service';
@@ -249,6 +253,23 @@ export class CampanhaGateway implements OnGatewayConnection {
    */
   emitirAcessoRevogado(evento: FichaAcessoRevogadoDto): void {
     this.servidor.to(this.salaFicha(evento.fichaId)).emit('ficha:acesso-revogado', evento);
+  }
+
+  /** Propaga a criação já persistida de uma página colaborativa à campanha. */
+  emitirPaginaEsquadraoCriada(pagina: PaginaCadernoResumoDto): void {
+    this.servidor.to(this.salaCampanha(pagina.campanhaId)).emit('caderno-esquadrao:pagina-criada', pagina);
+  }
+
+  /** Propaga uma atualização CRDT já persistida; escrita nunca entra pelo gateway. */
+  emitirPaginaEsquadraoAtualizada(evento: PaginaCadernoEsquadraoAlteradaDto): void {
+    this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('caderno-esquadrao:atualizado', evento);
+  }
+
+  /** Invalida a página removida para os membros que mantêm a lista aberta. */
+  emitirPaginaEsquadraoExcluida(evento: { readonly campanhaId: number; readonly paginaId: number }): void {
+    this.servidor
+      .to(this.salaCampanha(evento.campanhaId))
+      .emit('caderno-esquadrao:pagina-excluida', evento);
   }
 
   /**

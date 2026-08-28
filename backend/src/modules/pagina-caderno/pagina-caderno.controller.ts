@@ -15,6 +15,10 @@ import type {
   PaginaCadernoAlterarDto,
   PaginaCadernoCriarDto,
   PaginaCadernoDto,
+  PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoEsquadraoAlterarDto,
+  PaginaCadernoEsquadraoCriarDto,
+  PaginaCadernoEsquadraoEstadoDto,
   PaginaCadernoResumoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import { BuscaCampanhaFonteEnum } from '@contratados-rpg/shared/enums';
@@ -36,6 +40,14 @@ export class PaginaCadernoController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<PaginaCadernoResumoDto[]> {
     return this.service.listarPaginas({ campanhaId }, usuarioAtivo);
+  }
+
+  @Get('campanha/:campanhaId/caderno/esquadrao/paginas')
+  listarEsquadrao(
+    @Param('campanhaId', ParseIntPipe) campanhaId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoResumoDto[]> {
+    return this.service.listarPaginasEsquadrao({ campanhaId }, usuarioAtivo);
   }
 
   @Get('campanha/:campanhaId/caderno/membros/:usuarioId/paginas')
@@ -62,6 +74,40 @@ export class PaginaCadernoController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<PaginaCadernoDto> {
     return this.service.criarPagina({ ...dto, campanhaId }, usuarioAtivo);
+  }
+
+  @Post('campanha/:campanhaId/caderno/esquadrao/paginas')
+  criarEsquadrao(
+    @Param('campanhaId', ParseIntPipe) campanhaId: number,
+    @Body() dto: PaginaCadernoEsquadraoCriarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoEsquadraoEstadoDto> {
+    return this.service.criarPaginaEsquadrao({ ...dto, campanhaId }, usuarioAtivo);
+  }
+
+  @Get('pagina-caderno/:id/esquadrao/estado')
+  recuperarEstadoEsquadrao(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoEsquadraoEstadoDto> {
+    return this.service.recuperarEstadoPaginaEsquadrao({ id }, usuarioAtivo);
+  }
+
+  @Put('pagina-caderno/:id/esquadrao/atualizacoes')
+  alterarEsquadrao(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: PaginaCadernoEsquadraoAlterarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<PaginaCadernoEsquadraoAlteradaDto> {
+    return this.service.alterarPaginaEsquadrao({ ...dto, id }, usuarioAtivo);
+  }
+
+  @Delete('pagina-caderno/:id/esquadrao')
+  excluirEsquadrao(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<void> {
+    return this.service.excluirPaginaEsquadrao({ id }, usuarioAtivo);
   }
 
   @Put('pagina-caderno/:id')

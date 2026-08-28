@@ -181,6 +181,20 @@ describe('CampanhaGateway', () => {
       expect(emitir).toHaveBeenCalledWith('ficha:alterada', ficha);
     });
 
+    it('emite atualização do Esquadrão somente na sala da campanha', () => {
+      const evento = {
+        campanhaId: 3,
+        paginaId: 9,
+        atualizacao: 'AQI=',
+        pagina: { id: 9, campanhaId: 3, usuarioAutorId: null, autorNome: null, tipo: 'ESQUADRAO' },
+      };
+
+      gateway.emitirPaginaEsquadraoAtualizada(evento as never);
+
+      expect(paraSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitir).toHaveBeenCalledWith('caderno-esquadrao:atualizado', evento);
+    });
+
     it('pede ao EncontroService para resincronizar a Iniciativa após ficha:alterada (m7-17, correção)', () => {
       const ficha = { id: 5, campanhaId: 3, usuarioId: 10, nome: 'Agente Alfa', dados: {} };
 

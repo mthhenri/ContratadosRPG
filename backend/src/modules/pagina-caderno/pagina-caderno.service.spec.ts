@@ -25,6 +25,17 @@ interface PaginaRepositorioDublado {
   alterarPagina: ReturnType<typeof vi.fn>;
   excluirPagina: ReturnType<typeof vi.fn>;
   buscarCampanha: ReturnType<typeof vi.fn>;
+  criarPaginaEsquadrao: ReturnType<typeof vi.fn>;
+  listarPaginasEsquadrao: ReturnType<typeof vi.fn>;
+  recuperarPaginaEsquadrao: ReturnType<typeof vi.fn>;
+  alterarPaginaEsquadrao: ReturnType<typeof vi.fn>;
+  excluirPaginaEsquadrao: ReturnType<typeof vi.fn>;
+}
+
+interface CampanhaGatewayDublado {
+  emitirPaginaEsquadraoCriada: ReturnType<typeof vi.fn>;
+  emitirPaginaEsquadraoAtualizada: ReturnType<typeof vi.fn>;
+  emitirPaginaEsquadraoExcluida: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaRepositorioDublado {
@@ -54,6 +65,8 @@ const paginaPersistida: PaginaCadernoInternoRecuperadaDto = {
   campanhaId: 3,
   usuarioAutorId: 7,
   autorNome: 'Agente Autor',
+  tipo: 'PRIVADA' as never,
+  estadoColaborativo: null,
   titulo: 'Relatório',
   conteudoMarkdown: 'Texto',
   createdDate: '2026-08-14T12:00:00.000Z',
@@ -64,6 +77,7 @@ describe('PaginaCadernoService', () => {
   let paginaRepositorio: PaginaRepositorioDublado;
   let campanhaRepositorio: CampanhaRepositorioDublado;
   let service: PaginaCadernoService;
+  let campanhaGateway: CampanhaGatewayDublado;
 
   beforeEach(() => {
     paginaRepositorio = {
@@ -73,12 +87,75 @@ describe('PaginaCadernoService', () => {
       alterarPagina: vi.fn(),
       excluirPagina: vi.fn(),
       buscarCampanha: vi.fn(),
+      criarPaginaEsquadrao: vi.fn(),
+      listarPaginasEsquadrao: vi.fn(),
+      recuperarPaginaEsquadrao: vi.fn(),
+      alterarPaginaEsquadrao: vi.fn(),
+      excluirPaginaEsquadrao: vi.fn(),
     };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
+    campanhaGateway = {
+      emitirPaginaEsquadraoCriada: vi.fn(),
+      emitirPaginaEsquadraoAtualizada: vi.fn(),
+      emitirPaginaEsquadraoExcluida: vi.fn(),
+    };
     service = new PaginaCadernoService(
       paginaRepositorio as unknown as PaginaCadernoRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
+      campanhaGateway as never,
     );
+  });
+
+  it('membro cria a página do Esquadrão e só emite após persistir', async () => {
+    const paginaEsquadrao = {
+      ...paginaPersistida,
+      usuarioAutorId: null,
+      autorNome: null,
+      tipo: 'ESQUADRAO' as never,
+      estadoColaborativo: new Uint8Array([1]),
+    };
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    });
+    paginaRepositorio.criarPaginaEsquadrao.mockResolvedValue(paginaEsquadrao);
+
+    const resultado = await service.criarPaginaEsquadrao(
+      { campanhaId: 3, titulo: 'Plano compartilhado' },
+      usuarioAutor,
+    );
+
+    expect(resultado.pagina.tipo).toBe('ESQUADRAO');
+    expect(paginaRepositorio.criarPaginaEsquadrao).toHaveBeenCalledWith(
+      expect.objectContaining({ campanhaId: 3, titulo: 'Plano compartilhado' }),
+    );
+    expect(campanhaGateway.emitirPaginaEsquadraoCriada).toHaveBeenCalledWith(
+      expect.objectContaining({ campanhaId: 3, id: 9 }),
+    );
+  });
+
+  it('recusa a exclusão do Esquadrão por jogador e aceita pelo mestre', async () => {
+    const paginaEsquadrao = {
+      ...paginaPersistida,
+      usuarioAutorId: null,
+      autorNome: null,
+      tipo: 'ESQUADRAO' as never,
+      estadoColaborativo: new Uint8Array([1]),
+    };
+    paginaRepositorio.recuperarPaginaEsquadrao.mockResolvedValue(paginaEsquadrao);
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    });
+
+    await expect(service.excluirPaginaEsquadrao({ id: 9 }, usuarioAutor)).rejects.toBeInstanceOf(
+      UnauthorizedAccessException,
+    );
+    expect(paginaRepositorio.excluirPaginaEsquadrao).not.toHaveBeenCalled();
+
+    campanhaRepositorio.recuperarMembro.mockResolvedValue({
+      papel: TipoCampanhaMembroPapelEnum.MESTRE,
+    });
+    await service.excluirPaginaEsquadrao({ id: 9 }, usuarioMestre);
+    expect(paginaRepositorio.excluirPaginaEsquadrao).toHaveBeenCalledWith({ id: 9 });
   });
 
   it('cria página para o próprio membro e a devolve editável', async () => {
@@ -92,7 +169,18 @@ describe('PaginaCadernoService', () => {
       usuarioAutor,
     );
 
-    expect(resultado).toEqual({ ...paginaPersistida, somenteLeitura: false });
+    expect(resultado).toEqual({
+      id: 9,
+      campanhaId: 3,
+      usuarioAutorId: 7,
+      autorNome: 'Agente Autor',
+      tipo: 'PRIVADA',
+      titulo: 'Relatório',
+      conteudoMarkdown: 'Texto',
+      somenteLeitura: false,
+      createdDate: '2026-08-14T12:00:00.000Z',
+      updatedDate: '2026-08-14T12:00:00.000Z',
+    });
     expect(paginaRepositorio.criarPagina).toHaveBeenCalledWith({
       campanhaId: 3,
       usuarioAutorId: 7,
@@ -265,7 +353,11 @@ describe('PaginaCadernoService', () => {
       campanhaId: 3,
       usuarioAtivoId: 7,
       termo: 'contenção',
-      fontes: [BuscaCampanhaFonteEnum.MEU_CADERNO, BuscaCampanhaFonteEnum.MINHAS_FICHAS],
+      fontes: [
+        BuscaCampanhaFonteEnum.MEU_CADERNO,
+        BuscaCampanhaFonteEnum.CADERNO_ESQUADRAO,
+        BuscaCampanhaFonteEnum.MINHAS_FICHAS,
+      ],
       pagina: 1,
       limite: 20,
     });
@@ -286,6 +378,7 @@ describe('PaginaCadernoService', () => {
         fontes: [
           BuscaCampanhaFonteEnum.MEU_CADERNO,
           BuscaCampanhaFonteEnum.CADERNOS_JOGADORES,
+          BuscaCampanhaFonteEnum.CADERNO_ESQUADRAO,
           BuscaCampanhaFonteEnum.FICHAS_CAMPANHA,
         ],
       }),
