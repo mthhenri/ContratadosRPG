@@ -353,6 +353,12 @@
             <circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
         }
+        @case ("carregando") {
+            <!-- Giro de carregamento do primitivo de botão (ui-01b): aro apagado + arco em
+           destaque, que o `.botao__carregando` rotaciona. Não havia spinner no projeto. -->
+            <circle cx="12" cy="12" r="8.5" opacity="0.25" />
+            <path d="M20.5 12a8.5 8.5 0 0 0-8.5-8.5" />
+        }
         @case ("modificador") {
             <!-- ± : rótulo do stepper de modificador de teste (soma/subtrai no resultado da rolagem,
            ao contrário do `dado`, que ajusta a CONTAGEM de dados). -->

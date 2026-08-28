@@ -1244,9 +1244,9 @@ somente em `docs/core/` e o build os publica em `/documentos/`.
 ### Biblioteca de componentes própria — `frontend/src/app/shared/ui/`
 
 Camada de primitivos criada pela `ui-01` para acabar com o bloco BEM copiado (`P-034`). Hoje tem
-dois: **`app-botao`** (seletor de atributo — `<button app-botao variante="primario">`, variantes
-`primario`/`secundario`/`perigo`/`positivo`, com a fresta `--botao-opacidade-desabilitado` para a
-tela que ainda diverge do 0.55 canônico) e **`app-campo`** (invólucro de campo com rótulo, dica e
+dois: **`app-botao`** (seletor de atributo — `<button app-botao variante="primario">`, com a
+fresta `--botao-opacidade-desabilitado` para a tela que ainda diverge do 0.55 canônico) e
+**`app-campo`** (invólucro de campo com rótulo, dica e
 erro em volta do controle projetado, `[tamanho]` em `compacto`/`padrao`/`amplo`). Ambos consumidos
 por `login` e `registro`, que perderam suas cópias locais. O `app-campo` é invólucro, **não**
 `ControlValueAccessor`: o consumidor continua escrevendo o controle nativo com `formControlName`,
@@ -1254,6 +1254,17 @@ e ele tem de ficar filho DIRETO do `<label>`, senão a regra global de asterisco
 (`styles/tema/_base.scss`) para de casar — contrato travado em `campo.component.spec.ts`.
 `docs/design/tema/_componentes.scss` marca com "→ PRIMITIVO" o bloco que já migrou; o resto ainda
 se copia até a `ui-03`/`ui-04`.
+
+A `ui-01b` completou o `app-botao` até a paridade com o `p-button` do PrimeNG, a pedido do autor,
+para que a `ui-05` não empobreça a biblioteca: **8 severidades** (`primario`, `secundario`,
+`positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste`) × **4 estilos** (`preenchido`,
+`contorno`, `texto`, `link`, com um padrão por severidade), mais `[tamanho]`, `[posicaoIcone]`,
+`[fluido]` e `[carregando]`. Tudo o que a `ui-01` não tinha é **opt-in**: sem `[tamanho]` o
+primitivo continua sem definir dimensão, e a base segue exatamente como estava — é o que mantém
+`login`/`registro` sem mover um pixel. Ficaram deliberadamente de fora `rounded` e `raised`
+(contrariam o raio máximo e a regra de sombra do `DESIGN.md`) e `badge` (é outro componente, não
+uma variante). As cores `--help` e `--contrast` nasceram aqui e são as duas únicas da paleta sem
+papel de domínio.
 
 ### Tema — `frontend/tema`
 

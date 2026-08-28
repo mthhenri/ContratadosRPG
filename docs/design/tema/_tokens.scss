@@ -42,6 +42,19 @@
   --positive: #4a9d6b;  /* dano furtivo / ganho */
   --warning: #d9a441;   /* aviso / prestígio */
 
+  /* --- Cores de severidade sem papel de domínio (ui-01b) — existem só para o primitivo de botão
+     cobrir as oito severidades que o `p-button` do PrimeNG oferecia, sem que a saída do PrimeNG
+     (ui-05) empobreça a biblioteca. Mesma receita dim/border (12%/40%) das demais. `--help` foi
+     escolhido com a luminância entre --positive e --energy, para não destoar da família; o
+     `--contrast` é o quase-branco deliberado do botão de contraste, mais claro que --text
+     (que é cor de TEXTO, não de superfície) e que --dano-geral (que é chip de dano). */
+  --help: #9b78d0;
+  --help-dim: color-mix(in srgb, var(--help) 12%, transparent);
+  --help-border: color-mix(in srgb, var(--help) 40%, transparent);
+  --contrast: #f4f6f8;
+  --contrast-dim: color-mix(in srgb, var(--contrast) 12%, transparent);
+  --contrast-border: color-mix(in srgb, var(--contrast) 40%, transparent);
+
   /* --- Cores por tipo de dano — só o "quadradinho" de resumo por tipo num resultado de
      rolagem (`resultado-rolagem__grupo`), NUNCA a rolagem inteira. Independentes de --vida/--energy/
      --positive/--warning (mesmo quando o matiz é próximo) porque o domínio é outro: tipo de dano

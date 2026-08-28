@@ -48,10 +48,20 @@ o preset PrimeNG apenas *apontam* para essas vars — nunca redeclaram hex. Troc
 | `--dano-explosao` | `#f97316` | `249, 115, 22` | Chip de dano — Explosão |
 | `--dano-quimico` | `#22c55e` | `34, 197, 94` | Chip de dano — Químico |
 | `--dano-geral` | `#e5e7eb` | `229, 231, 235` | Chip de dano — Geral (irredutível) |
+| `--help` | `#9b78d0` | `155, 120, 208` | Severidade `ajuda` do botão — **sem papel de domínio** (ui-01b) |
+| `--contrast` | `#f4f6f8` | `244, 246, 248` | Severidade `contraste` do botão — quase-branco de superfície, não de texto (ui-01b) |
 
-Cada cor semântica (`--vida`, `--energy`, `--positive`, `--warning`, `--dano-*`) tem variantes
-`-dim` (12%) e `-border` (40%) via `color-mix()`, mesma receita do `--accent` — não recalcule a
-fórmula por componente. Ver `--cor-ficha` (identidade por personagem) na seção dedicada abaixo.
+Cada cor semântica (`--vida`, `--energy`, `--positive`, `--warning`, `--dano-*`, `--help`,
+`--contrast`) tem variantes `-dim` (12%) e `-border` (40%) via `color-mix()`, mesma receita do
+`--accent` — não recalcule a fórmula por componente. Ver `--cor-ficha` (identidade por
+personagem) na seção dedicada abaixo.
+
+`--help` e `--contrast` são as duas únicas cores da paleta **sem papel de domínio**: existem
+porque o primitivo de botão cobre as oito severidades que o `p-button` do PrimeNG oferecia
+(`ui-01b`), para que a saída do PrimeNG na `ui-05` não empobreça a biblioteca. `--help` foi
+escolhido pela luminância, não pelo matiz — 5,59:1 contra o `--bg`, entre `--energy` (5,62) e
+`--positive` (5,90) —, para entrar na família em vez de destoar dela. Não use nenhum dos dois
+para representar conceito de jogo: para isso existem as cores de domínio acima.
 
 ## Tipografia
 
@@ -125,7 +135,7 @@ inteiro.
 | `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | — | — (`ui-03`) |
 | `.stat` | Caixa de estatística (rótulo + valor grande) | `--vida` (borda/valor em `--accent`), `--energia` (em `--energy`) | — (`ui-03`) |
 | `.stepper` | Input numérico com botões `−`/`+` | — | — (`ui-03`) |
-| `.botao` | Botão de ação | `--primario` (fundo `--accent`), `--secundario` (borda, transparente), `--perigo` (accent no texto/borda), `--positivo` (fundo `--positive`) | **`<button app-botao variante="…">`** |
+| `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho`, `posicaoIcone`, `fluido` e `carregando`. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
 | `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
 | `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | — | — (`ui-03`) |
 | `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |

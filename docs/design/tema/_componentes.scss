@@ -110,9 +110,11 @@
 }
 
 // === Botões → PRIMITIVO: `frontend/src/app/shared/ui/botao/` ===
-// Use `<button app-botao variante="primario">` (ou `secundario`/`perigo`/`positivo`) e deixe no
-// SCSS do seu componente só o tamanho e o layout. O bloco abaixo fica como referência do que o
-// primitivo entrega — não copie.
+// Use `<button app-botao variante="…">` e deixe no SCSS do seu componente só o tamanho e o
+// layout. O primitivo cobre 8 severidades (`primario`, `secundario`, `positivo`, `info`, `aviso`,
+// `perigo`, `ajuda`, `contraste`) x 4 estilos (`preenchido`, `contorno`, `texto`, `link`), mais
+// `[tamanho]`, `[posicaoIcone]`, `[fluido]` e `[carregando]` — a paridade com o `p-button` do
+// PrimeNG (ui-01b). O bloco abaixo é só a referência histórica do que era copiado — não copie.
 .botao {
   border-radius: var(--radius-control);
   font-family: var(--font-mono);

@@ -1,7 +1,112 @@
-// Primitivo de botão (ui-01). Destilado das 20 cópias de `.botao` que existiam nos SCSS de
-// página/componente — a base e as quatro variantes são a interseção medida, não uma releitura.
-// Só identidade mora aqui: tamanho (padding, font-size/weight, min-height, alvo de toque) segue
-// sendo do consumidor, via a classe-companheira que ele já aplica no mesmo elemento.
+@use "sass:map";
+
+// Primitivo de botão (ui-01, completado na ui-01b). A base e as cores saem das 20 cópias de
+// `.botao` que existiam nos SCSS de página/componente — interseção medida, não releitura. As
+// severidades e estilos que o produto ainda não usava vêm da paridade com o `p-button` do
+// PrimeNG 21, pedida pelo autor, para que a `ui-05` não empobreça a biblioteca.
+//
+// Só identidade mora na base: tamanho e layout seguem sendo do consumidor, a menos que ele peça
+// `[tamanho]`/`[posicaoIcone]`/`[fluido]` — tudo opt-in, para não mover nenhuma tela existente.
+
+// Cor de cada severidade. `cor` é o matiz; `dim` o preenchimento suave (12%); `borda` o contorno
+// (40%) — mesma receita das cores semânticas do tema.
+$variantes: (
+    "primario": (
+        cor: var(--accent),
+        dim: var(--accent-dim),
+        borda: var(--accent-border),
+    ),
+    "secundario": (
+        cor: var(--text),
+        dim: var(--surface-2),
+        borda: var(--border-strong),
+    ),
+    "positivo": (
+        cor: var(--positive),
+        dim: color-mix(in srgb, var(--positive) 12%, transparent),
+        borda: color-mix(in srgb, var(--positive) 40%, transparent),
+    ),
+    "info": (
+        cor: var(--energy),
+        dim: color-mix(in srgb, var(--energy) 12%, transparent),
+        borda: color-mix(in srgb, var(--energy) 40%, transparent),
+    ),
+    "aviso": (
+        cor: var(--warning),
+        dim: color-mix(in srgb, var(--warning) 12%, transparent),
+        borda: color-mix(in srgb, var(--warning) 40%, transparent),
+    ),
+    "perigo": (
+        cor: var(--accent),
+        dim: var(--accent-dim),
+        borda: var(--accent-border),
+    ),
+    "ajuda": (
+        cor: var(--help),
+        dim: var(--help-dim),
+        borda: var(--help-border),
+    ),
+    "contraste": (
+        cor: var(--contrast),
+        dim: var(--contrast-dim),
+        borda: var(--contrast-border),
+    ),
+);
+
+// Estilo padrão de cada variante — o que o produto já pratica. `secundario` e `perigo` nascem
+// contornados; as demais, preenchidas. Informar `[estilo]` sobrescreve.
+$estilo-padrao: (
+    "primario": "preenchido",
+    "secundario": "contorno",
+    "positivo": "preenchido",
+    "info": "preenchido",
+    "aviso": "preenchido",
+    "perigo": "contorno",
+    "ajuda": "preenchido",
+    "contraste": "preenchido",
+);
+
+@mixin pintar($estilo, $cor, $dim, $borda) {
+    @if $estilo == "preenchido" {
+        background: $cor;
+        color: var(--bg);
+        border: 0;
+
+        // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+    } @else if $estilo == "contorno" {
+        background: transparent;
+        color: $cor;
+        border: 1px solid $borda;
+
+        &:hover:not(:disabled) {
+            background: $dim;
+        }
+    } @else if $estilo == "texto" {
+        background: transparent;
+        color: $cor;
+        border: 0;
+
+        &:hover:not(:disabled) {
+            background: $dim;
+        }
+    } @else if $estilo == "link" {
+        background: transparent;
+        color: $cor;
+        border: 0;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+
+        &:hover:not(:disabled) {
+            filter: brightness(1.12);
+        }
+    }
+}
+
+// Base — exatamente o que a ui-01 entregou. Não acrescentar dimensão aqui: `login`/`registro`
+// dependem de a base continuar sem `display`, `padding` ou `font-size`.
 :host {
     border-radius: var(--radius-control);
     font-family: var(--font-mono);
@@ -20,52 +125,124 @@
     cursor: default;
 }
 
-:host(.botao--primario) {
-    background: var(--accent);
-    color: var(--bg);
-    border: 0;
+@each $nome, $paleta in $variantes {
+    $cor: map.get($paleta, cor);
+    $dim: map.get($paleta, dim);
+    $borda: map.get($paleta, borda);
 
-    // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-    &:hover:not(:disabled) {
-        filter: brightness(1.08);
+    // Estilo padrão da variante, sem classe de estilo no host.
+    :host(.botao--#{$nome}) {
+        @include pintar(map.get($estilo-padrao, $nome), $cor, $dim, $borda);
+    }
+
+    // Estilo explícito — dois seletores de classe, então sempre vence o padrão acima,
+    // independente da ordem em que o navegador leu as regras.
+    @each $estilo in ("preenchido", "contorno", "texto", "link") {
+        :host(.botao--#{$nome}.botao--estilo-#{$estilo}) {
+            @include pintar($estilo, $cor, $dim, $borda);
+        }
     }
 }
 
-:host(.botao--secundario) {
-    background: transparent;
+// `secundario` é neutro, não um matiz: preenchê-lo com `--text` daria um botão branco, que é
+// justamente o `contraste`. Preenchido aqui é a caixa cinza sobre a superfície.
+:host(.botao--secundario.botao--estilo-preenchido) {
+    background: var(--surface-2);
     color: var(--text);
     border: 1px solid var(--border-strong);
 
     &:hover:not(:disabled) {
-        background: var(--surface-2);
+        filter: none;
         border-color: var(--accent-border);
     }
 }
 
-// Ação destrutiva/terminal (Encerrar, Excluir) — accent no texto e na borda, nunca preenchido,
-// para não competir com o `--primario`, que também é accent.
-//
-// As duas cópias existentes divergem: `painel-encontro` deixa o fundo transparente e só usa
-// `--accent-dim` no hover; `gestao` já nasce com `--accent-dim` e não define hover. Fica a de
-// `painel-encontro`, que é a que tem estado de hover e cujo repouso não compete com o botão
-// preenchido — a diferença aparece no pixel diff de `gestao` quando a ui-04 chegar lá.
-:host(.botao--perigo) {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent-border);
-
+// Contorno secundário puxa a borda para o accent no hover — comportamento que as 20 cópias já
+// tinham e que o formulário genérico do mixin não expressa.
+:host(.botao--secundario),
+:host(.botao--secundario.botao--estilo-contorno) {
     &:hover:not(:disabled) {
-        background: var(--accent-dim);
+        border-color: var(--accent-border);
     }
 }
 
-// Convite ao outro jogador (rolar a própria iniciativa) — verde por não ser risco nem conclusão.
-:host(.botao--positivo) {
-    background: var(--positive);
-    color: var(--bg);
-    border: 0;
+// === Tamanho (opt-in) ===
+// Degraus medidos nos agrupamentos reais do frontend na auditoria da ui-01.
+:host(.botao--pequeno),
+:host(.botao--medio),
+:host(.botao--grande) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+}
 
-    &:hover:not(:disabled) {
-        filter: brightness(1.08);
+:host(.botao--pequeno) {
+    gap: 6px;
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+:host(.botao--medio) {
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+}
+
+:host(.botao--grande) {
+    gap: 8px;
+    min-height: 48px;
+    padding: 11px 22px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+}
+
+// === Posição do ícone (opt-in) ===
+:host(.botao--icone-esquerda),
+:host(.botao--icone-direita),
+:host(.botao--icone-acima),
+:host(.botao--icone-abaixo) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:host(.botao--icone-esquerda) {
+    flex-direction: row;
+}
+:host(.botao--icone-direita) {
+    flex-direction: row-reverse;
+}
+:host(.botao--icone-acima) {
+    flex-direction: column;
+}
+:host(.botao--icone-abaixo) {
+    flex-direction: column-reverse;
+}
+
+// === Largura cheia (opt-in) ===
+:host(.botao--fluido) {
+    width: 100%;
+}
+
+// === Carregando (opt-in) ===
+// Barra o ponteiro e sinaliza `aria-busy`; desabilitar de fato continua sendo `[disabled]` do
+// consumidor, para as duas fontes não brigarem pelo mesmo atributo.
+:host(.botao--carregando) {
+    pointer-events: none;
+}
+
+.botao__carregando {
+    animation: botao-girar 0.7s linear infinite;
+}
+
+@keyframes botao-girar {
+    to {
+        transform: rotate(360deg);
     }
 }

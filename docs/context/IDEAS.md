@@ -268,6 +268,22 @@
   M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
 
+### I-023 — `perigo` e `primario` são a mesma cor, e ela é trocável pelo usuário · frontend/design system
+
+- **Ideia:** desacoplar a severidade `perigo` do `--accent`, provavelmente apontando para `--vida`
+  (vermelho **fixo** da identidade, que já existe justamente por não acompanhar a troca de tema).
+- **Origem:** ficou visível na matriz 8×4 renderizada no gate visual da `ui-01b` (2026-08-28): as
+  linhas `primario` e `perigo` são pixel a pixel a mesma coisa nos estilos preenchido, texto e
+  link — só o estilo **padrão** difere (preenchido vs. contorno).
+- **Por quê:** com o accent padrão (vermelho) a ação destrutiva não se distingue da ação primária;
+  e com um accent azul ou verde escolhido pelo usuário, um botão de "Excluir" fica azul ou verde,
+  que é o oposto do sinal que ele deve dar. O `--vida` foi criado exatamente para o caso de "esta
+  cor não pode acompanhar o tema".
+- **Custo aparente:** baixo em código (uma entrada no mapa `$variantes` de
+  `botao.component.scss`), mas **muda o visual** dos 3 usos atuais de `.botao--perigo`
+  (`usuario/gestao` ×2, `encontro/painel` ×1) e das cópias locais que ainda não migraram — logo,
+  decidir junto com a `ui-04`, que é quando essas telas passam pelo pixel diff de qualquer forma.
+
 ### I-022 — Caderno: importar em lote, arrastar-e-soltar e exportar `.md` · campanha/caderno
 
 - **Ideia:** depois da importação de **um** arquivo Markdown por vez

@@ -1,5 +1,68 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-28 — ui-01b: o `app-botao` alcança a paridade com o `p-button`, e o tema ganha duas cores sem papel de domínio
+
+Pedido direto do autor logo depois do fecho da `ui-01`: "eu queria que o botão tivesse todas as
+variantes que o PrimeNG tem". A `ui-01` tinha implementado só o que a auditoria media **em uso** —
+quatro variantes —, o que é a regra certa para não inventar API, mas deixava a `ui-05` (saída do
+PrimeNG) com um saldo negativo: o projeto perderia opções que tinha à disposição.
+
+A API de referência foi lida de `node_modules/primeng/types/primeng-button.d.ts` e
+`primeng-types-button.d.ts` (`primeng@21.1.9`), não de memória: **8 severidades** (`primary`,
+`secondary`, `success`, `info`, `warn`, `danger`, `help`, `contrast`), **4 estilos** (preenchido,
+`outlined`, `text`, `link`), **3 tamanhos**, `rounded`, `raised`, `loading`, `fluid`, `iconPos` e
+`badge`.
+
+**Duas decisões do autor destravaram o resto.** `help` (roxo) e `contrast` (branco) não existiam
+no tema, e a saída foi **criar os dois tokens** — `--help: #9b78d0` e `--contrast: #f4f6f8`, com
+as variantes `-dim`/`-border` pela mesma receita `color-mix` das demais —, em
+`docs/design/tema/_tokens.scss` e no espelho `frontend/src/styles/tema/`. O roxo foi escolhido
+pela **luminância**, não pelo matiz: medido no DOM real, dá 5,59:1 contra o `--bg`, entre
+`--energy` (5,62) e `--positive` (5,90), então entra na família em vez de destoar dela. São as
+duas únicas cores da paleta sem papel de domínio, e o `DESIGN.md` diz isso explicitamente. Já
+`rounded` e `raised` **ficaram de fora**: contrariam "sem raio maior que 6px em nenhum lugar do
+sistema" e "sem sombra pesada", e as regras do documento valem mais que a paridade.
+
+**O desenho que fez as duas coisas caberem juntas: tudo o que é novo é opt-in.** Severidade e
+estilo são eixos ortogonais como no PrimeNG (`variante` escolhe a cor, `estilo` escolhe como ela é
+aplicada), mas **cada severidade tem um estilo padrão** — `secundario` e `perigo` nascem em
+contorno, as demais em preenchido —, que é o que o produto já pratica. Sem isso,
+`variante="secundario"` passaria a significar "preenchido cinza" e brigaria com as 20 cópias de
+`.botao--secundario` que ainda vivem nos SCSS de módulo até a `ui-04`. Pelo mesmo motivo, a classe
+`botao--estilo-*` só é emitida quando o estilo é **explícito**: nenhum SCSS legado usa esse nome,
+então não há empate de especificidade durante a migração. E `[tamanho]` é opcional — sem ele o
+primitivo não define dimensão nenhuma, preservando a divisão que a `ui-01` estabeleceu (primitivo
+é dono da identidade, consumidor é dono do tamanho); os três degraus (`pequeno`/`medio`/`grande`)
+saem dos agrupamentos medidos na auditoria da `ui-01`, não de conversão das medidas do PrimeNG.
+
+`[carregando]` trouxe o **primeiro spinner do projeto** (`IconeNome` ganhou `carregando`, com o
+giro no SCSS do primitivo). Ele mostra o giro, marca `aria-busy` e barra o ponteiro, mas
+deliberadamente **não** mexe em `disabled`: esse atributo continua sendo do consumidor — que é
+como `login`/`registro` já fazem —, porque duas fontes disputando o mesmo atributo (propriedade
+IDL vs. atributo de conteúdo) é bug garantido.
+
+**Gates.** Spec do botão 12/12; suíte do frontend 1239 passando contra 1234 do fecho da `ui-01`,
+com as mesmas 169 falhas em 2 arquivos (`P-033`, preexistente). `npm run lint` (raiz) 0 erros nos
+três workspaces.
+
+**Gate visual.** A matriz 8×4 foi renderizada **dentro da aplicação real**, reusando o CSS
+compilado do primitivo (o atributo `_nghost` foi copiado do botão de submit do login, que já é uma
+instância de `app-botao`) — nada de HTML solto com CSS reescrito à mão. Conferida em `1920×1080` e
+`360×800`, com hover, foco de teclado, desabilitado, os três tamanhos, o caso "sem tamanho" e o
+contraste de cada severidade medido no DOM. E o que importava tanto quanto: **pixel diff contra as
+22 capturas da `ui-01`** — 20 idênticas byte a byte e as 2 já conhecidas com os mesmos 50 px de
+ruído de rasterização, mesma assinatura do A/A do fecho anterior. Nenhuma variante nova tocou o
+que está em produção, que é exatamente o que "tudo opt-in" tinha de garantir.
+
+**Dois achados que só a medição produziu**, ambos registrados sem correção oportunista:
+`PROBLEMS.md` `P-035` — o botão primário preenchido dá **4,00:1** entre o accent e o texto, abaixo
+do 4,5:1 que o WCAG AA pede para texto normal (a trava do `TemaService` é deliberadamente 3:1, o
+piso de componente de interface, e valida contra a superfície, não contra este par); e `IDEAS.md`
+`I-023` — `perigo` e `primario` são a **mesma cor**, porque ambos usam o `--accent`, que é
+trocável pelo usuário: com accent azul, um botão de "Excluir" fica azul. Ficou visível lado a lado
+na matriz. A decisão de apontar `perigo` para `--vida` cabe na `ui-04`, quando essas telas passam
+pelo pixel diff de qualquer forma.
+
 ## 2026-08-28 — ui-01: os dois primeiros primitivos próprios (`app-botao`, `app-campo`) e o piloto em autenticacao
 
 Primeira task da série `ui-01`…`ui-05` que responde ao `P-034`. Objetivo: sair do catálogo

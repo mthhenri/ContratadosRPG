@@ -29,6 +29,27 @@
 
 ## Ativos
 
+### P-035 — Botão preenchido com o accent fica abaixo de 4,5:1 para texto normal · `ABERTO` · frontend/acessibilidade
+
+- **Sintoma:** medido no DOM real em 2026-08-28, durante o gate visual da `ui-01b`: o botão
+  `variante="primario"` preenchido dá **4,00:1** entre o fundo (`--accent` `#d53030`, base padrão)
+  e o texto (`--bg`). O rótulo desses botões é texto normal (12–13px), para o qual o WCAG AA pede
+  **4,5:1**. As demais severidades preenchidas passam com folga — `positivo` 5,90, `info` 5,62,
+  `ajuda` 5,59, `aviso` 8,71, `secundario` 13,63, `contraste` 18,08. `perigo` empata com
+  `primario` porque usa o mesmo `--accent`.
+- **Causa:** a trava de contraste do `TemaService` (`CONTRASTE_MINIMO = 3`, em
+  `frontend/src/app/core/services/tema.service.ts`) é deliberadamente o piso de 3:1 do AA para
+  **componentes de interface e texto grande**, e valida o accent contra a **superfície** — não o
+  caso "texto de `--bg` sobre preenchimento de accent", que é o do botão primário. O accent também
+  é trocável em runtime, então o número varia por usuário; 4,00 é o da base padrão.
+- **Contorno:** nenhum. O botão é legível na prática (falha por 0,5 ponto, não por ordem de
+  grandeza), só não atinge o piso de texto normal.
+- **Correção:** decidir entre escurecer o texto do botão preenchido, clarear o accent da base
+  padrão, ou subir `CONTRASTE_MINIMO` para 4,5 com uma segunda checagem no par accent×`--bg`. É
+  decisão de identidade visual, não de implementação — precisa passar pelo autor e por
+  `docs/design/`.
+- **Desde:** existe desde o botão primário original; medido e registrado na `ui-01b` (2026-08-28).
+
 ### P-034 — Biblioteca de componentes existe como catálogo copiado, não como código · `ABERTO` · frontend/design system
 
 - **Sintoma:** o mesmo bloco visual é declarado em dezenas de lugares. Medido em 2026-08-28:
