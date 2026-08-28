@@ -114,19 +114,23 @@ sem largura máxima fixa — cada tela decide sua própria grade de colunas.
 
 ## Componentes visuais base
 
-Blocos BEM canônicos, prontos pra copiar de `tema/_componentes.scss` para o SCSS scoped do
-componente que estiver construindo — não importe o arquivo inteiro.
+A biblioteca está migrando de **catálogo para copiar** para **código para importar**
+(`PROBLEMS.md` `P-034`, série `ui-01`…`ui-05`). Onde já existe primitivo em
+`frontend/src/app/shared/ui/`, **consuma o primitivo**; onde ainda não existe, copie o bloco
+canônico de `tema/_componentes.scss` para o SCSS scoped do componente — não importe o arquivo
+inteiro.
 
-| Bloco | O que é | Variantes |
-|---|---|---|
-| `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | — |
-| `.stat` | Caixa de estatística (rótulo + valor grande) | `--vida` (borda/valor em `--accent`), `--energia` (em `--energy`) |
-| `.stepper` | Input numérico com botões `−`/`+` | — |
-| `.botao` | Botão de ação | `--primario` (fundo `--accent`), `--secundario` (borda, transparente) |
-| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | — |
-| `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — |
-| `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) |
-| `.abas` | Barra de abas dentro de um card (ficha, calculadora) | `__item--ativa` |
+| Bloco | O que é | Variantes | Primitivo |
+|---|---|---|---|
+| `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | — | — (`ui-03`) |
+| `.stat` | Caixa de estatística (rótulo + valor grande) | `--vida` (borda/valor em `--accent`), `--energia` (em `--energy`) | — (`ui-03`) |
+| `.stepper` | Input numérico com botões `−`/`+` | — | — (`ui-03`) |
+| `.botao` | Botão de ação | `--primario` (fundo `--accent`), `--secundario` (borda, transparente), `--perigo` (accent no texto/borda), `--positivo` (fundo `--positive`) | **`<button app-botao variante="…">`** |
+| `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
+| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | — | — (`ui-03`) |
+| `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |
+| `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) | — (consumidor único) |
+| `.abas` | Barra de abas dentro de um card (ficha, calculadora) | `__item--ativa` | — (`ui-03`) |
 
 Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.component.scss` e
 `ficha-visualizacao.component.scss` nesta atualização — existiam como padrão real no app, mas

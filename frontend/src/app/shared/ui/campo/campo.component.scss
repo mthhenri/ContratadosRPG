@@ -1,0 +1,54 @@
+// Primitivo de campo (ui-01). Destilado dos invólucros de campo que existiam sob nomes locais
+// (`autenticacao__campo`, `.campo`, `perfil__campo`…) — 40 blocos `&__rotulo`, todos mono +
+// UPPERCASE + `--text-mute`, variando só de tamanho.
+//
+// O controle em si continua sendo do consumidor (entra por `<ng-content>` e mantém o SCSS da
+// página); aqui moram só o rótulo, a dica, o erro e o respiro entre eles.
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    margin: 0;
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__dica {
+        font: 10px var(--font-sans);
+        color: var(--text-mute);
+    }
+
+    &__erro {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--accent);
+    }
+
+    // Grades densas (ficha, criatura): rótulo menor e respiro mais curto.
+    &--compacto {
+        gap: 5px;
+
+        .campo__rotulo {
+            font-size: 9px;
+        }
+    }
+
+    // Formulários de tela cheia (login, registro, criar campanha, perfil).
+    &--amplo {
+        .campo__rotulo {
+            font-size: 11px;
+            letter-spacing: var(--tracking-label);
+        }
+    }
+}

@@ -367,8 +367,17 @@ fechar) para o histórico da decisão.
 **Identidade visual:** tema "Terminal de Contenção" — **fonte da verdade em `docs/design/`**
 (tokens em `docs/design/tema/_tokens.scss`). Estilos de componente **consomem os tokens**
 (`var(--surface)`, `var(--accent)`, `var(--font-mono)`, `var(--positive)`…) — **nunca hex
-solto**. Copie o bloco BEM necessário de `docs/design/tema/_componentes.scss` para o `.scss`
-scoped do componente. **Leia `docs/design/DESIGN.md` antes de qualquer trabalho de UI.**
+solto**. **Leia `docs/design/DESIGN.md` antes de qualquer trabalho de UI.**
+
+**Primitivo em vez de cópia (ui-01, `PROBLEMS.md` `P-034`):** onde existe primitivo em
+`frontend/src/app/shared/ui/`, **consuma o primitivo** — copiar o bloco BEM de um componente
+para outro é defeito, não atalho. Hoje existem `app-botao` (`<button app-botao
+variante="primario">`) e `app-campo`; `docs/design/tema/_componentes.scss` aponta qual bloco já
+virou primitivo. O primitivo é dono da **identidade** (cor, raio, fonte, estado); o consumidor
+continua dono do **tamanho e do layout**, na sua própria classe BEM aplicada no mesmo elemento.
+Para o que ainda **não** tem primitivo, siga copiando o bloco canônico de `_componentes.scss` —
+a migração dos módulos que já existem é a `ui-04`, e código antigo pode conviver com sua cópia
+até lá.
 
 ---
 
@@ -394,6 +403,7 @@ scoped do componente. **Leia `docs/design/DESIGN.md` antes de qualquer trabalho 
 | Extrapolar escopo da task | Implementar exatamente o que a spec define |
 | DTO dentro de `backend/` ou `frontend/` | Sempre em `shared/src/dtos/` |
 | NgModule / `.css` / `style=""` / seletor de ID | standalone / `.scss` / Tailwind+BEM |
+| Copiar bloco BEM que já virou primitivo em `shared/ui/` | Consumir o primitivo (`app-botao`, `app-campo`) |
 | Atributo `title` nativo do HTML para tooltip | Diretiva `[appTooltip]` (`shared/tooltip/`) |
 | Hex/cor/fonte/raio hardcoded em SCSS | Consumir tokens do tema (`var(--accent)`, `var(--font-mono)`… de `docs/design/`) |
 | Primitivo em service/repository | DTO, mesmo com um único campo |

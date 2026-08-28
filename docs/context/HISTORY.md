@@ -1,5 +1,74 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-28 — ui-01: os dois primeiros primitivos próprios (`app-botao`, `app-campo`) e o piloto em autenticacao
+
+Primeira task da série `ui-01`…`ui-05` que responde ao `P-034`. Objetivo: sair do catálogo
+copiado e ter primitivo de verdade, provado por consumidor real, sem mover um pixel.
+
+**A auditoria veio antes do código e mudou três decisões da spec.** Medido sobre
+`frontend/src/app`: 20 blocos `.botao` de topo em SCSS, 142 chamadas em template (136 `<button>`,
+6 `<a>`), e as variantes reais são só quatro — `--secundario` (62), `--primario` (59), `--perigo`
+(3), `--positivo` (1). Nenhum `--texto`/`--ativa`/`--tenacidade`: o grep inicial casava com
+`caderno__botao--perigo` e `criatura__stat-botao--texto`, que são outros blocos. O achado
+estrutural foi outro: **o tamanho do botão não está no `.botao`** — vem da classe-companheira do
+consumidor (`autenticacao__enviar`, `detalhe__acao`, `dialogo__acao`…), em mais de dez formas
+distintas. E do lado do campo, os blocos `.campo` de topo são **4**, não 17 (o número da spec
+contava ocorrências do texto); a duplicação real do invólucro vive sob nomes locais — **40**
+blocos `&__rotulo`, todos mono + UPPERCASE + `--text-mute`, variando só entre 9, 10 e 11px.
+
+Daí as três correções de rumo, as duas primeiras decididas com o autor:
+
+1. **`Botao` é componente de seletor de atributo** (`<button app-botao variante="primario">`), não
+   `<app-botao>`. O host é o próprio `<button>`/`<a>`: nenhum nó novo dentro dos containers
+   flex/grid com `gap` onde os 142 botões vivem, `type`/`disabled`/foco/semântica continuam
+   nativos, e a classe-companheira de tamanho continua valendo — o que torna o pixel diff zero
+   alcançável na `ui-04`. Custo: `@angular-eslint/component-selector` passou de `type: 'element'`
+   para `['element', 'attribute']`; o prefixo `app` continua exigido. A divisão que saiu disso é a
+   regra da biblioteca: **primitivo é dono da identidade, consumidor é dono do tamanho** — não
+   havia padding "padrão" a extrair, e inventar uma taxonomia de `[tamanho]` seria criar variante
+   sem duplicação medida atrás.
+2. **`Selecao` saiu da `ui-01` e foi para a `ui-03`**: `autenticacao` não tem um `<select>` sequer
+   (os 71 estão em ficha, simulacao, campanha e encontro), então o primitivo fecharia sem
+   consumidor, contra o próprio critério da spec.
+3. **`Campo` não recebeu `[control]`.** O portão genérico `touched && invalid` que a spec previa
+   mudaria o comportamento nos dois únicos consumidores reais: em `registro`, `senha` também é
+   inválida por `required` (hoje campo vazio e tocado não mostra mensagem), e a divergência de
+   senhas é erro **do formulário**, não do controle. Ficou `[erro]`, com a mensagem já filtrada
+   pelo consumidor — `erroSenha()` e `erroConfirmacaoSenha()` em `Registro`.
+
+**Duas armadilhas resolvidas na implementação.** A regra global de asterisco obrigatório
+(`label:has(> input:required)`, em `styles/tema/_base.scss`) só funciona se o controle for filho
+DIRETO do `<label>` — o `app-campo` projeta por `<ng-content>` dentro do próprio `<label>` e
+`campo.component.spec.ts` trava esse contrato, porque quebrá-lo apagaria silenciosamente os
+asteriscos de todo formulário. E o `@angular-eslint/template/label-has-associated-control` não
+enxerga através da projeção: a exceção ficou inline e justificada no template do primitivo, em vez
+de afrouxar `controlComponents` para o projeto inteiro. Já a opacidade de desabilitado divergia
+(0.55 em 11 das 20 cópias, 0.6 em `autenticacao`); o primitivo usa
+`var(--botao-opacidade-desabilitado, 0.55)` e a tela declara a diferença como dado — o que mantém
+o pixel diff zero e deixa a `ui-04` enxergar por grep quantas telas ainda divergem do canônico.
+
+**Gates.** Specs novas 14/14 verdes. Suíte do frontend: 1234 passando contra 1220 do baseline, com
+as mesmas 169 falhas em 2 arquivos (`painel-encontro`, `detalhe`) — é o `P-033`, preexistente e
+idêntico com e sem a task. `npm run lint` (raiz) 0 erros nos três workspaces; os +104 warnings
+novos são o ruído de `quotes` que todo arquivo do projeto já produz. `autenticacao` perdeu 72
+linhas de SCSS (714 → 642).
+
+**Gate visual (proibição #31), por pixel diff.** 22 capturas — `login` e `registro`, `1920×1080` e
+`360×800`, percorrendo vazio, foco, preenchido, senha revelada, inválido com as duas mensagens,
+desabilitado durante o envio e erro 401 do backend. Análogos aprovados: `docs/design/examples/
+login.html` e `cadastro.html`, conferidos lado a lado — mesma densidade, hierarquia, controles e
+iconografia; sem overflow; alvo de toque preservado no mobile. A primeira rodada deu **zero pixel
+em 22/22**. Uma segunda rodada acusou 50 px (delta ≤ 9 de 765) em duas capturas de
+`registro-desktop`, na faixa dos dois campos de senha; um A/A — duas capturas do **mesmo código** —
+reproduziu exatamente os mesmos 50 px, provando ruído de rasterização do Chromium e não regressão.
+É o risco que a própria spec antecipou, e o método fica registrado: quando o diff não zera, provar
+com A/A antes de acusar a mudança.
+
+O que ficou de fora, de propósito: adotar os primitivos em qualquer outro módulo (`ui-04`) e
+promover `Cartao`/`Stat`/`Stepper`/`Chip`/`Abas`/`Selecao` (`ui-03`). O backend não subiu nesta
+verificação — `docker pull postgres:16` é bloqueado pelo proxy do ambiente —, o que não afetou o
+gate: login e registro são públicos, e o erro do backend foi reproduzido interceptando a rota.
+
 ## 2026-08-28 — Auditoria de UI: o PrimeNG praticamente não é usado, a biblioteca própria é catálogo copiado, e a decisão de assumi-la
 
 A sessão começou por outra pergunta — **qual seria o esforço de migrar o frontend de Angular para

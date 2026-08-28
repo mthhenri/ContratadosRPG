@@ -43,10 +43,15 @@
   BEM necessário para o `.scss` scoped do componente". O catálogo é fonte de cópia, não código.
   A biblioteca de fato do projeto (`shared/`, 18 componentes + 6 diretivas) é a camada **composta**;
   a camada de primitivos nunca foi construída.
-- **Contorno:** nenhum. Convive-se copiando o bloco e conferindo a olho no gate visual.
+- **Contorno:** nenhum. Convive-se copiando o bloco onde ainda não há primitivo, e conferindo a
+  olho no gate visual.
 - **Correção:** a série `ui-01`…`ui-05` (`docs/specs/backlog/ui-biblioteca-componentes.spec.md`):
   criar `frontend/src/app/shared/ui/`, adotar os primitivos módulo a módulo e remover o PrimeNG,
   que hoje entrega só `p-dialog` (14 tags), `p-toast`/`MessageService` e o preset de tema.
+  **`ui-01` fechou em 2026-08-28**: `shared/ui/` existe com `app-botao` e `app-campo`, adotados
+  em `autenticacao`; a auditoria corrigiu dois números do Sintoma acima — os blocos `.campo` de
+  topo são **4** (o "17" contava ocorrências do texto, não declarações), e a duplicação do campo
+  vive sob nomes locais (40 blocos `&__rotulo`). Falta o resto: `ui-02`…`ui-05`.
 - **Desde:** desde sempre — a instrução de copiar está no handoff de design original. Medido e
   registrado na auditoria de 2026-08-28.
 

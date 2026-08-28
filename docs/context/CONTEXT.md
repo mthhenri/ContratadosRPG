@@ -653,6 +653,7 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
+| `ui-02`…`ui-05` | design system | biblioteca própria e saída do PrimeNG (`P-034`); a `ui-01` já fechou. Ordem obrigatória: (`ui-02` ∥ `ui-03`) → `ui-04` → `ui-05` |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
@@ -1240,6 +1241,20 @@ nativo do navegador para nitidez, busca, seleção, páginas e zoom. O leitor pr
 foi removido após a validação visual revelar baixa nitidez e texto duplicado. Os PDFs canônicos vivem
 somente em `docs/core/` e o build os publica em `/documentos/`.
 
+### Biblioteca de componentes própria — `frontend/src/app/shared/ui/`
+
+Camada de primitivos criada pela `ui-01` para acabar com o bloco BEM copiado (`P-034`). Hoje tem
+dois: **`app-botao`** (seletor de atributo — `<button app-botao variante="primario">`, variantes
+`primario`/`secundario`/`perigo`/`positivo`, com a fresta `--botao-opacidade-desabilitado` para a
+tela que ainda diverge do 0.55 canônico) e **`app-campo`** (invólucro de campo com rótulo, dica e
+erro em volta do controle projetado, `[tamanho]` em `compacto`/`padrao`/`amplo`). Ambos consumidos
+por `login` e `registro`, que perderam suas cópias locais. O `app-campo` é invólucro, **não**
+`ControlValueAccessor`: o consumidor continua escrevendo o controle nativo com `formControlName`,
+e ele tem de ficar filho DIRETO do `<label>`, senão a regra global de asterisco obrigatório
+(`styles/tema/_base.scss`) para de casar — contrato travado em `campo.component.spec.ts`.
+`docs/design/tema/_componentes.scss` marca com "→ PRIMITIVO" o bloco que já migrou; o resto ainda
+se copia até a `ui-03`/`ui-04`.
+
 ### Tema — `frontend/tema`
 
 "Terminal de Contenção" dark-first com **troca em runtime** (`TemaService`: presets + color picker
@@ -1296,9 +1311,18 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   controles são nativos (723 `<button>`, 219 `<input>`, 71 `<select>`, 31 `<textarea>`)
   estilizados à mão. A biblioteca própria passa a existir como **código** em
   `frontend/src/app/shared/ui/`, não como blocos copiados de `_componentes.scss` (`P-034`). Série
-  `ui-01`…`ui-05` em `docs/specs/backlog/`. Decisão associada: **não** migrar para React — o
-  estudo de esforço (6–9 meses-dev) está no `HISTORY.md` de 2026-08-28 e concluiu que o problema
-  real é o design system, não o framework.
+  `ui-01`…`ui-05`; a `ui-01` fechou (ver abaixo), as demais seguem em `docs/specs/backlog/`.
+  Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
+  `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
+- **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**
+  (`ui-01`, 2026-08-28). O primitivo carrega cor, raio, fonte, transição e estado; padding,
+  `font-size`/`weight`, `min-height` e alvo de toque continuam na classe BEM do consumidor,
+  aplicada no **mesmo elemento**. Por isso o `Botao` é componente de **seletor de atributo**
+  (`<button app-botao variante="primario">`, no padrão do `<button matButton>`): o host é o
+  próprio `<button>`/`<a>`, sem nó novo em container flex/grid e sem perder a classe-companheira
+  que dimensiona. `@angular-eslint/component-selector` aceita `['element', 'attribute']` por causa
+  disso; o prefixo `app` continua obrigatório. Invólucros que acrescentam DOM (`app-campo`)
+  seguem sendo elemento. Não inventar `[tamanho]` sem duplicação medida atrás.
 - **PrimeNG 21 sem `@angular/animations`** — o pacote não está instalado e o PrimeNG 21 usa
   animações CSS próprias. Não wirar `provideAnimationsAsync()`; o build quebra. Perde o objeto
   quando a `ui-05` desinstalar o PrimeNG.

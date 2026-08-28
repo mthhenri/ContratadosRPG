@@ -1,0 +1,22 @@
+<!--
+  A associação existe: o controle do consumidor entra pelo <ng-content> abaixo e vira filho
+  DIRETO deste <label> em runtime — é o contrato que `campo.component.spec.ts` trava e de que a
+  regra global de asterisco obrigatório (`label:has(> input:required)`) depende. A regra do lint
+  não enxerga através da projeção, então a exceção é local e justificada, em vez de afrouxar
+  `controlComponents` para o projeto inteiro.
+-->
+<!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -->
+<label
+    class="campo"
+    [class.campo--compacto]="tamanho() === 'compacto'"
+    [class.campo--amplo]="tamanho() === 'amplo'"
+>
+    <span class="campo__rotulo">{{ rotulo() }}</span>
+    <ng-content />
+    @if (dica()) {
+        <span class="campo__dica">{{ dica() }}</span>
+    }
+    @if (erro()) {
+        <span class="campo__erro">{{ erro() }}</span>
+    }
+</label>
