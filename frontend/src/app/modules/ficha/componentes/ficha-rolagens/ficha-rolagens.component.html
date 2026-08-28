@@ -288,25 +288,18 @@
         }
     </div>
 
-    <!-- Formulário de novo/editar preset (m3-38): abre num dialog — a coluna de Status é estreita
+    <!-- Formulário de novo/editar preset (m3-38): abre num modal — a coluna de Status é estreita
        demais pro formulário completo (nome, fórmula, habilidades por passo, encadeamento). -->
-    <p-dialog
-        [visible]="indiceEmEdicao() !== null"
-        [modal]="true"
-        [draggable]="false"
-        [resizable]="false"
-        [dismissableMask]="true"
-        [appendTo]="'body'"
-        [style]="{ width: '560px' }"
-        [breakpoints]="{ '600px': '95vw' }"
-        [header]="indiceEmEdicao() === -1 ? 'Novo preset' : 'Editar preset'"
-        styleClass="ficha-rol__dialogo"
-        (onHide)="cancelarEdicao()"
+    <app-modal
+        [aberto]="indiceEmEdicao() !== null"
+        [titulo]="indiceEmEdicao() === -1 ? 'Novo preset' : 'Editar preset'"
+        [largura]="'560px'"
+        (fechou)="cancelarEdicao()"
     >
         @if (indiceEmEdicao() !== null) {
             <ng-container [ngTemplateOutlet]="formTpl" />
         }
-    </p-dialog>
+    </app-modal>
 </div>
 
 <ng-template #formTpl>
@@ -334,7 +327,7 @@
         <div class="ficha-rol__campo">
             <span class="ficha-rol__rotulo-linha">
                 <span class="ficha-rol__rotulo">Fórmula</span>
-                <app-guia-formula [aoClicar]="abrirGuiaExterna" />
+                <app-guia-formula />
             </span>
             <input
                 class="ficha-rol__entrada ficha-rol__entrada--mono"

@@ -1,10 +1,10 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
 
 import { TIPOS_DANO_BLOQUEAVEIS, TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import { calcularDanoRecebido, type DanoRecebidoResultadoDto } from '@contratados-rpg/shared/regras/encontro';
 
+import { Modal } from '../ui/modal/modal.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 
 /** Descrição de cada tipo bloqueável — texto do documento, para o `appTooltip` do rótulo. */
@@ -59,7 +59,7 @@ function grupoTipo(): FormGroup<{ bruto: FormControl<number>; custom: FormContro
  */
 @Component({
   selector: 'app-receber-dano-dialog',
-  imports: [ReactiveFormsModule, Dialog, Tooltip],
+  imports: [ReactiveFormsModule, Modal, Tooltip],
   templateUrl: './receber-dano-dialog.component.html',
   styleUrl: './receber-dano-dialog.component.scss',
 })

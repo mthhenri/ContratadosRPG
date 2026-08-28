@@ -2,7 +2,6 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Dialog } from 'primeng/dialog';
 
 import {
   FragmentoModuloEnum,
@@ -79,6 +78,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { rotuloItem } from '../../rotulos-ficha';
@@ -447,7 +447,7 @@ interface AmpInventarioVM {
  */
 @Component({
   selector: 'app-ficha-inventario',
-  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Dialog, NgTemplateOutlet, AutoFocus],
+  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Modal, NgTemplateOutlet, AutoFocus],
   templateUrl: './ficha-inventario.component.html',
   styleUrl: './ficha-inventario.component.scss',
 })
@@ -466,7 +466,7 @@ export class FichaInventario {
    * `'inline'` (padrão, aba Inventário completa): catálogo, item/mod custom e aplicar Fragmento abrem
    * dentro da própria lista, como sempre foi. `'dialog'`: a lista de itens fica compacta e essas quatro
    * superfícies (catálogo+amplificadores, item custom, painel "Modificar" e "Aplicar em...") abrem cada
-   * uma num `p-dialog` — pro card de Status (redesenho de comparação visual), cuja coluna não tem espaço
+   * uma num `app-modal` — pro card de Status (redesenho de comparação visual), cuja coluna não tem espaço
    * pra tudo isso inline sem quebrar. Mesmo estado/lógica dos dois modos; só a moldura muda (mesmo padrão
    * de `FichaSanidade.apresentacao`).
    */
@@ -475,7 +475,7 @@ export class FichaInventario {
    * `true` no card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`): a toolbar
    * (Adicionar itens/Item custom/filtro) fica resumida (só ícone, sem Esvaziar/Custos) e a lista
    * ganha um teto mais baixo — ver SCSS. Independente de `apresentacao`: esta aqui é sempre
-   * `'dialog'` na visualização (padrão/embutido/compacto usam o mesmo `p-dialog` pro catálogo),
+   * `'dialog'` na visualização (padrão/embutido/compacto usam o mesmo `app-modal` pro catálogo),
    * então não dá pra reaproveitá-la pra diferenciar só o card compacto dos outros dois modos.
    */
   readonly compacto = input(false);
@@ -2270,7 +2270,7 @@ export class FichaInventario {
   /**
    * Abre/fecha o painel "Modificar" de um item. No modo `inline` vários itens podem ficar abertos ao
    * mesmo tempo (cada um expande na própria lista); no modo `dialog` só um por vez faz sentido (um
-   * `p-dialog` só mostra um item), então abrir um novo fecha o anterior.
+   * `app-modal` só mostra um item), então abrir um novo fecha o anterior.
    */
   protected alternarPainel(indice: number): void {
     const abertos = new Set(this.painelAbertos());

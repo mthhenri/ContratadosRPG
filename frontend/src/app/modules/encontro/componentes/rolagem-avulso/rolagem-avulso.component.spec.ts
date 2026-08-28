@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import { CadenciaEnum, CombatenteOrigemEnum } from '@contratados-rpg/shared/enums';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { RolagemAvulso } from './rolagem-avulso.component';
 
@@ -65,10 +65,7 @@ describe('RolagemAvulso', () => {
       registrarAvulso: vi.fn(() => of(registrada)),
     };
     TestBed.configureTestingModule({
-      providers: [
-        MessageService,
-        { provide: RolagemService, useValue: rolagemService },
-      ],
+      providers: [{ provide: RolagemService, useValue: rolagemService }],
     });
     const fixture = TestBed.createComponent(RolagemAvulso);
     fixture.componentRef.setInput('combatente', combatente);
@@ -77,7 +74,7 @@ describe('RolagemAvulso', () => {
       fixture,
       elemento: fixture.nativeElement as HTMLElement,
       rolagemService,
-      messageService: TestBed.inject(MessageService),
+      notificacaoService: TestBed.inject(NotificacaoService),
     };
   }
 
@@ -166,15 +163,15 @@ describe('RolagemAvulso', () => {
   });
 
   it('rejeita referências de ficha, porque o avulso não possui atributos, PROF ou NIV', () => {
-    const { elemento, rolagemService, messageService } = montar();
-    const avisos: unknown[] = [];
-    messageService.messageObserver.subscribe((aviso) => avisos.push(aviso));
+    const { elemento, rolagemService, notificacaoService } = montar();
     const campo = elemento.querySelector<HTMLInputElement>('.rolagem-avulso__expressao')!;
     campo.value = '1d20+FOR';
     campo.dispatchEvent(new Event('input'));
     elemento.querySelector<HTMLFormElement>('.rolagem-avulso__formulario')?.dispatchEvent(new Event('submit'));
 
     expect(rolagemService.registrarAvulso).not.toHaveBeenCalled();
-    expect(avisos).toEqual([expect.objectContaining({ summary: 'Expressão sem ficha' })]);
+    expect(notificacaoService.fila()).toEqual([
+      expect.objectContaining({ resumo: 'Expressão sem ficha' }),
+    ]);
   });
 });

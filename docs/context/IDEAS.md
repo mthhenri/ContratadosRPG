@@ -268,7 +268,7 @@
   M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
 
-### I-023 — `perigo` e `primario` são a mesma cor, e ela é trocável pelo usuário · frontend/design system
+### I-024 — `perigo` e `primario` são a mesma cor, e ela é trocável pelo usuário · frontend/design system
 
 - **Ideia:** desacoplar a severidade `perigo` do `--accent`, provavelmente apontando para `--vida`
   (vermelho **fixo** da identidade, que já existe justamente por não acompanhar a troca de tema).

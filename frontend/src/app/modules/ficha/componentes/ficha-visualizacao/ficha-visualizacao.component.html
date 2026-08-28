@@ -353,16 +353,10 @@
                             </div>
                         </div>
 
-                        <p-dialog
-                            [visible]="confirmandoVisibilidade()"
-                            [modal]="true"
-                            [draggable]="false"
-                            [resizable]="false"
-                            [dismissableMask]="true"
-                            [appendTo]="'body'"
-                            [header]="oculta() ? 'Exibir ficha?' : 'Ocultar ficha?'"
-                            styleClass="ficha-ident__dialogo-visibilidade"
-                            (onHide)="cancelarAlteracaoVisibilidade()"
+                        <app-modal
+                            [aberto]="confirmandoVisibilidade()"
+                            [titulo]="oculta() ? 'Exibir ficha?' : 'Ocultar ficha?'"
+                            (fechou)="cancelarAlteracaoVisibilidade()"
                         >
                             <p>
                                 @if (oculta()) {
@@ -391,25 +385,20 @@
                                     Cancelar
                                 </button>
                             </div>
-                        </p-dialog>
+                        </app-modal>
 
                         <!-- Editor de Origem (m3-23): nome/descrição/Saber de Campo + Especialidade + 2 linhas de
              Formação. Reusa o mesmo mini-editor da Classe/Arquétipo (`ficha-ident__classe-editor`).
-             Abre num `p-dialog` (não mais inline): o formulário é grande — Nome/Descrição/Saber de
+             Abre num modal (não mais inline): o formulário é grande — Nome/Descrição/Saber de
              Campo + Especialidade + 2 caixas de Formação — e inflava demais o card de Identidade.
-             `[appendTo]="'body'"` (fix do P-025): sem ele, o CDK overlay não assume `position:
-             fixed` corretamente dentro da `.ficha-status__conteudo` rolável, e no mobile (360px) o
-             diálogo ficava com `position: static` e altura zero, inacessível. -->
-                        <p-dialog
-                            [visible]="editandoOrigem()"
-                            [modal]="true"
-                            [draggable]="false"
-                            [resizable]="false"
-                            [dismissableMask]="true"
-                            [appendTo]="'body'"
-                            header="Origem"
-                            styleClass="ficha-ident__dialogo-origem"
-                            (onHide)="cancelarOrigem()"
+             O `<dialog>` nativo do `app-modal` (ui-02) resolveu o `P-025` de origem: o overlay do
+             PrimeNG não assumia `position: fixed` dentro da `.ficha-status__conteudo` rolável sem
+             `[appendTo]="'body'"`, e no mobile (360px) ficava com `position: static` e altura
+             zero — o top layer do `<dialog>` não depende de `position`/contexto de empilhamento. -->
+                        <app-modal
+                            [aberto]="editandoOrigem()"
+                            [titulo]="'Origem'"
+                            (fechou)="cancelarOrigem()"
                         >
                             @if (rascunhoOrigem(); as rascunho) {
                                 <div class="ficha-ident__classe-editor">
@@ -648,176 +637,7 @@
                                     </div>
                                 </div>
                             }
-                        </p-dialog>
-
-                        <!-- Editor da Habilidade de Personalidade (m3-78): os 3 estágios (Base/1ª/2ª Fortificação)
-             lado a lado, mesmo mini-editor em `p-dialog` do editor de Origem. `[appendTo]="'body'"`
-             (mesmo fix do editor de Origem, ver acima, P-025): sem ele, o `<p-dialog>` renderiza
-             preso à árvore do componente e o CDK overlay não assume `position: fixed` corretamente
-             dentro da `.ficha-status__conteudo` rolável — no mobile (360px) o diálogo fica com
-             `position: static` e altura zero, inacessível. -->
-                        <p-dialog
-                            [visible]="editandoPersonalidadeHabilidade()"
-                            [modal]="true"
-                            [draggable]="false"
-                            [resizable]="false"
-                            [dismissableMask]="true"
-                            [appendTo]="'body'"
-                            [style]="{ width: '640px' }"
-                            [breakpoints]="{ '680px': '95vw' }"
-                            header="Habilidade de Personalidade"
-                            styleClass="ficha-ident__dialogo-origem"
-                            (onHide)="cancelarPersonalidadeHabilidade()"
-                        >
-                            @if (rascunhoPersonalidadeHabilidade(); as rascunho) {
-                                <div class="ficha-ident__classe-editor">
-                                    <div class="ficha-ident__caixa">
-                                        <span class="ficha-ident__meta-rotulo"
-                                            >Base — {{ identidade().personalidade }}</span
-                                        >
-                                        <textarea
-                                            class="ficha-ident__select ficha-ident__select--area"
-                                            rows="4"
-                                            placeholder="Combinado com o Mestre"
-                                            [value]="rascunho.base?.descricao ?? ''"
-                                            (input)="
-                                                mudarBaseRascunhoPersonalidade(
-                                                    'descricao',
-                                                    $any($event.target).value
-                                                )
-                                            "
-                                        ></textarea>
-                                        <input
-                                            class="ficha-ident__select"
-                                            type="number"
-                                            min="0"
-                                            placeholder="Custo em Energia"
-                                            [value]="rascunho.base?.custoEnergia ?? ''"
-                                            (input)="
-                                                mudarBaseRascunhoPersonalidade(
-                                                    'custoEnergia',
-                                                    $any($event.target).value
-                                                )
-                                            "
-                                        />
-                                    </div>
-                                    <div class="ficha-ident__caixa">
-                                        <span class="ficha-ident__meta-rotulo"
-                                            >1ª Fortificação —
-                                            {{ identidade().personalidade }}</span
-                                        >
-                                        <textarea
-                                            class="ficha-ident__select ficha-ident__select--area"
-                                            rows="4"
-                                            placeholder="Combinado com o Mestre"
-                                            [value]="rascunho.fortificacao1?.descricao ?? ''"
-                                            (input)="
-                                                mudarFortificacaoRascunhoPersonalidade(
-                                                    'fortificacao1',
-                                                    'descricao',
-                                                    $any($event.target).value
-                                                )
-                                            "
-                                        ></textarea>
-                                        <input
-                                            class="ficha-ident__select"
-                                            type="number"
-                                            min="0"
-                                            placeholder="Custo em Energia"
-                                            [value]="rascunho.fortificacao1?.custoEnergia ?? ''"
-                                            (input)="
-                                                mudarFortificacaoRascunhoPersonalidade(
-                                                    'fortificacao1',
-                                                    'custoEnergia',
-                                                    $any($event.target).value
-                                                )
-                                            "
-                                        />
-                                    </div>
-                                    <div class="ficha-ident__caixa">
-                                        <span class="ficha-ident__meta-rotulo"
-                                            >2ª Fortificação —
-                                            {{ identidade().personalidade }}</span
-                                        >
-                                        <textarea
-                                            class="ficha-ident__select ficha-ident__select--area"
-                                            rows="4"
-                                            placeholder="Combinado com o Mestre"
-                                            [value]="rascunho.fortificacao2?.descricao ?? ''"
-                                            (input)="
-                                                mudarFortificacaoRascunhoPersonalidade(
-                                                    'fortificacao2',
-                                                    'descricao',
-                                                    $any($event.target).value
-                                                )
-                                            "
-                                        ></textarea>
-                                        <input
-                                            class="ficha-ident__select"
-                                            type="number"
-                                            min="0"
-                                            placeholder="Custo em Energia"
-                                            [value]="rascunho.fortificacao2?.custoEnergia ?? ''"
-                                            (input)="
-                                                mudarFortificacaoRascunhoPersonalidade(
-                                                    'fortificacao2',
-                                                    'custoEnergia',
-                                                    $any($event.target).value
-                                                )
-                                            "
-                                        />
-                                    </div>
-
-                                    <div class="ficha-ident__classe-acoes">
-                                        <button
-                                            class="ficha-cartao__acao ficha-cartao__acao--confirmar"
-                                            type="button"
-                                            (click)="confirmarPersonalidadeHabilidade()"
-                                        >
-                                            Salvar
-                                        </button>
-                                        <button
-                                            class="ficha-cartao__acao"
-                                            type="button"
-                                            (click)="cancelarPersonalidadeHabilidade()"
-                                        >
-                                            Cancelar
-                                        </button>
-                                    </div>
-                                </div>
-                            }
-                        </p-dialog>
-
-                        <p-dialog
-                            [visible]="habilidadesPendentesPeculiaridade() !== null"
-                            [modal]="true"
-                            [draggable]="false"
-                            [resizable]="false"
-                            [dismissableMask]="true"
-                            [appendTo]="'body'"
-                            header="Confirmar Peculiaridade"
-                            styleClass="ficha-ident__aviso-peculiaridade"
-                            (onHide)="cancelarLimparOrigem()"
-                        >
-                            <p>Isso vai substituir a Origem atual, que será apagada. Confirma?</p>
-                            <div class="ficha-ident__classe-acoes">
-                                <button
-                                    class="ficha-cartao__acao ficha-cartao__acao--confirmar"
-                                    type="button"
-                                    data-testid="confirmar-limpar-origem"
-                                    (click)="confirmarLimparOrigemEHabilidade()"
-                                >
-                                    Confirmar
-                                </button>
-                                <button
-                                    class="ficha-cartao__acao"
-                                    type="button"
-                                    (click)="cancelarLimparOrigem()"
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                        </p-dialog>
+                        </app-modal>
 
                         @if (ajustavelAmplo() && editandoClasse()) {
                             <div class="ficha-ident__classe-editor">
@@ -2016,7 +1836,7 @@
             <!-- Status — terceira coluna (redesenho de comparação visual): Informações (glance de
          Deslocamento/Dano C. a C./Dano Furtivo/Percepção + Sequelas/Traumas/Lesões, editável via
          `FichaSanidade`, + Anotações), Inventário (editor completo, `FichaInventario` em modo
-         `dialog` — lista compacta aqui, catálogo/mods/fragmento em `p-dialog`) e Habilidades
+         `dialog` — lista compacta aqui, catálogo/mods/fragmento em `app-modal`) e Habilidades
          (`FichaHabilidades`, m3-13, reencaixada aqui — as 3 posições da barra em uso). -->
             <div class="ficha-visao__coluna ficha-visao__coluna--status">
                 <!-- m3-56.1: rola horizontalmente (mobile e desktop — os 6 rótulos completos nem sempre
@@ -2870,6 +2690,154 @@
 
     <app-bandeja-dados />
 </div>
+
+<!-- Editor da Habilidade de Personalidade (m3-78) e o aviso de Confirmar Peculiaridade: fora da
+     `.ficha-visao__coluna--identidade` de propósito. O gatilho de cada um vive numa aba diferente
+     dessa coluna (Extras e Habilidades) — se o modal ficasse dentro dela, no mobile ele herdaria o
+     `display: none` que a coluna recebe sempre que `destinoMobile()` não é "agente" (achado ao
+     vivo no gate visual da ui-02: o `<dialog>` abria com `open=true`, mas com bounding box 0x0,
+     porque `showModal()` não resgata um descendente de ancestral `display:none` — o top layer
+     decide empilhamento/z-order, não geração de caixa). O dialog do PrimeNG antigo escapava disso
+     porque `[appendTo]="'body'"` portava o DOM inteiro pra fora da árvore do componente; o
+     `app-modal` não porta nada, então quem poderia abrir de mais de um lugar mora fora de toda
+     coluna, junto do `app-receber-dano-dialog` abaixo, que já seguia esse padrão. -->
+<!-- Editor da Habilidade de Personalidade (m3-78): os 3 estágios (Base/1ª/2ª Fortificação)
+     lado a lado, mesmo mini-editor do editor de Origem. -->
+<app-modal
+    [aberto]="editandoPersonalidadeHabilidade()"
+    [titulo]="'Habilidade de Personalidade'"
+    [largura]="'640px'"
+    (fechou)="cancelarPersonalidadeHabilidade()"
+>
+    @if (rascunhoPersonalidadeHabilidade(); as rascunho) {
+        <div class="ficha-ident__classe-editor">
+            <div class="ficha-ident__caixa">
+                <span class="ficha-ident__meta-rotulo"
+                    >Base — {{ identidade().personalidade }}</span
+                >
+                <textarea
+                    class="ficha-ident__select ficha-ident__select--area"
+                    rows="4"
+                    placeholder="Combinado com o Mestre"
+                    [value]="rascunho.base?.descricao ?? ''"
+                    (input)="mudarBaseRascunhoPersonalidade('descricao', $any($event.target).value)"
+                ></textarea>
+                <input
+                    class="ficha-ident__select"
+                    type="number"
+                    min="0"
+                    placeholder="Custo em Energia"
+                    [value]="rascunho.base?.custoEnergia ?? ''"
+                    (input)="
+                        mudarBaseRascunhoPersonalidade('custoEnergia', $any($event.target).value)
+                    "
+                />
+            </div>
+            <div class="ficha-ident__caixa">
+                <span class="ficha-ident__meta-rotulo"
+                    >1ª Fortificação — {{ identidade().personalidade }}</span
+                >
+                <textarea
+                    class="ficha-ident__select ficha-ident__select--area"
+                    rows="4"
+                    placeholder="Combinado com o Mestre"
+                    [value]="rascunho.fortificacao1?.descricao ?? ''"
+                    (input)="
+                        mudarFortificacaoRascunhoPersonalidade(
+                            'fortificacao1',
+                            'descricao',
+                            $any($event.target).value
+                        )
+                    "
+                ></textarea>
+                <input
+                    class="ficha-ident__select"
+                    type="number"
+                    min="0"
+                    placeholder="Custo em Energia"
+                    [value]="rascunho.fortificacao1?.custoEnergia ?? ''"
+                    (input)="
+                        mudarFortificacaoRascunhoPersonalidade(
+                            'fortificacao1',
+                            'custoEnergia',
+                            $any($event.target).value
+                        )
+                    "
+                />
+            </div>
+            <div class="ficha-ident__caixa">
+                <span class="ficha-ident__meta-rotulo"
+                    >2ª Fortificação — {{ identidade().personalidade }}</span
+                >
+                <textarea
+                    class="ficha-ident__select ficha-ident__select--area"
+                    rows="4"
+                    placeholder="Combinado com o Mestre"
+                    [value]="rascunho.fortificacao2?.descricao ?? ''"
+                    (input)="
+                        mudarFortificacaoRascunhoPersonalidade(
+                            'fortificacao2',
+                            'descricao',
+                            $any($event.target).value
+                        )
+                    "
+                ></textarea>
+                <input
+                    class="ficha-ident__select"
+                    type="number"
+                    min="0"
+                    placeholder="Custo em Energia"
+                    [value]="rascunho.fortificacao2?.custoEnergia ?? ''"
+                    (input)="
+                        mudarFortificacaoRascunhoPersonalidade(
+                            'fortificacao2',
+                            'custoEnergia',
+                            $any($event.target).value
+                        )
+                    "
+                />
+            </div>
+
+            <div class="ficha-ident__classe-acoes">
+                <button
+                    class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+                    type="button"
+                    (click)="confirmarPersonalidadeHabilidade()"
+                >
+                    Salvar
+                </button>
+                <button
+                    class="ficha-cartao__acao"
+                    type="button"
+                    (click)="cancelarPersonalidadeHabilidade()"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    }
+</app-modal>
+
+<app-modal
+    [aberto]="habilidadesPendentesPeculiaridade() !== null"
+    [titulo]="'Confirmar Peculiaridade'"
+    (fechou)="cancelarLimparOrigem()"
+>
+    <p>Isso vai substituir a Origem atual, que será apagada. Confirma?</p>
+    <div class="ficha-ident__classe-acoes">
+        <button
+            class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+            type="button"
+            data-testid="confirmar-limpar-origem"
+            (click)="confirmarLimparOrigemEHabilidade()"
+        >
+            Confirmar
+        </button>
+        <button class="ficha-cartao__acao" type="button" (click)="cancelarLimparOrigem()">
+            Cancelar
+        </button>
+    </div>
+</app-modal>
 
 @if (ajustavel()) {
     <app-receber-dano-dialog

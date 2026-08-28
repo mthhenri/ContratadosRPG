@@ -1,5 +1,121 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-28 — ui-02: `app-modal` sobre `<dialog>` nativo e `Notificacao` substituem o `p-dialog`/toast do PrimeNG
+
+Pedido direto do autor logo depois da `ui-01b`: "bora com a ui-02". A spec já vinha com a decisão
+de arquitetura tomada (`<dialog>` nativo no lugar do `p-dialog`), motivada pelo `P-025` (overlay
+do PrimeNG preso a `position: static` dentro de um container rolável, sem `[appendTo]="'body'"`)
+e por um `z-index` hard-coded em `guia-formula.component.scss` só para vencer o `p-dialog`.
+
+**Auditoria corrigiu o número da spec antes de implementar** — mesma disciplina da `ui-01`: a spec
+falava em "14 `p-dialog`", mas um deles era uma menção em comentário (`ficha-visualizacao`); o
+real são **13**, distribuídos em `ficha-inventario` (6), `ficha-visualizacao` (4), `ficha-rolagens`
+(1), `ficha-sanidade` (1) e `receber-dano-dialog` (1). Os 12 `messageService.add()` bateram exato
+com a spec, em 5 arquivos (`visualizar.page`, `visualizar-criatura.page`, `painel-encontro.page`
+×7, `rolagem-avulso.component` ×2, `error-handler.interceptor`).
+
+**`Modal` (`shared/ui/modal/`) — API mínima derivada dos 13 usos**: `[aberto]`, `[titulo]`
+(ambos obrigatórios — todo uso real tinha os dois), `[largura]` opcional (CSS livre: `'640px'`,
+`'50vw'`) e `(fechou)`, unificando Escape (`cancel`), clique no `::backdrop` e o botão "×" no mesmo
+destino que os `(onHide)` do PrimeNG já tinham. Sem `draggable`/`resizable`/`appendTo`/
+`[breakpoints]` — recursos que só existiam para desligar o que o projeto nunca usou, ou para
+contornar o `P-025`, que o top layer do `<dialog>` elimina de fábrica. Um input a mais que a
+auditoria pediu: `[fechavelPeloFundo]` (default `true`), porque `ReceberDanoDialog` já não tinha
+`dismissableMask` no PrimeNG — formulário com dado digitado, risco de perda ao clicar fora.
+
+**Três defeitos, todos achados só ao vivo — nenhum pego por teste unitário, nenhum visível no
+código à primeira leitura:**
+
+1. **Todo `<dialog>` fechado renderizava visível e sobreposto.** O SCSS tinha `.modal { display:
+   flex; ... }` com um comentário confiante dizendo que `dialog:not([open]) { display: none }` do
+   UA stylesheet venceria por especificidade. Mentira: a encapsulação de view do Angular acrescenta
+   `[_ngcontent-xxx]` a `.modal`, subindo a especificidade para (0,2,0) — maior que a do UA
+   (0,1,1). Screenshot do gate mostrava até 8 modais empilhados ao mesmo tempo, todos "fechados"
+   (`.open === false`), só a abertura real de um deles é que estava correta. Fix: mover `display`
+   para `&[open] { display: flex; ... }` — sem `[open]`, a regra simplesmente não bate, e não há
+   mais queda de braço de especificidade nenhuma.
+2. **`[largura]` travava em telas estreitas.** `[style.max-width]="largura()"` é um `style`
+   inline, e um `style` inline vence **qualquer** regra de folha de estilo, inclusive a media query
+   `bp.mobile` que deveria reduzir a largura no celular. O catálogo do inventário (`[largura]=
+   '50vw'`) virava **180px de largura numa tela de 360px** — os botões de categoria empilhavam
+   numa coluna estreita, cortando texto. Fix: `[largura]` passou a setar `--modal-largura` (custom
+   property) via `[style.--modal-largura]`, consumida por `max-width: var(--modal-largura, ...)`
+   no SCSS — agora a cascata normal decide, e a regra de `bp.mobile`, escrita depois no arquivo,
+   vence licitamente.
+3. **Um dialog `open=true` com bounding box 0×0 no mobile.** O editor de "Habilidade de
+   Personalidade" mora fisicamente dentro de `.ficha-visao__coluna--identidade` — mas seu **gatilho**
+   vive na aba "Extras", uma aba diferente. No mobile, essa coluna leva `display: none` sempre que
+   `destinoMobile()` não é `"agente"`. `showModal()` promove o `<dialog>` ao top layer para fins de
+   **empilhamento**, não de **geração de caixa** — um `display: none` em qualquer ancestral ainda
+   suprime a caixa inteira, mesmo com `.open === true`. O `p-dialog` antigo escapava disso porque
+   `[appendTo]="'body'"` **portava o DOM inteiro** para fora da árvore do componente; `app-modal`
+   não porta nada. O mesmo problema, por extensão, afetava "Confirmar Peculiaridade" (gatilho na
+   aba Habilidades). Fix: os dois `<app-modal>` saíram de dentro da coluna e foram para o mesmo
+   "porto seguro" que `<app-receber-dano-dialog>` já usava — fora de toda coluna/aba, direto como
+   irmãos do `<div class="ficha-visao">` raiz. Puramente estrutural: nenhum texto, ordem de botão
+   ou aparência mudou, só onde o bloco vive na árvore.
+
+**GuiaFormula também virou consumidor de `app-modal`**, e isso matou uma ginástica: antes, o guia
+de fórmula era um overlay `position: fixed` próprio com `z-index: 1200` só para renderizar por
+cima do `p-dialog` do preset de `FichaRolagens` (comentário: "acima do p-dialog do PrimeNG, modal
+em 1100"). Como o top layer empilha por ordem de `showModal()` sem depender de `z-index`, um
+`<app-guia-formula>` aninhado dentro de outro `app-modal` já abre por cima sozinho — verificado ao
+vivo (`Novo preset` aberto, guia aberto por cima, `Escape` fecha só o guia, preset continua aberto
+embaixo). A antiga delegação `aoClicar`/`viewChild` (uma cópia externa do guia, fora do dialog, só
+para vencer o `z-index`) não tinha mais função e foi removida; `ficha-rolagens` ganhou uma segunda
+instância normal do guia, dentro do próprio formulário.
+
+**Notificacao (`shared/ui/notificacao/`)** segue o mesmo padrão de fila em Signals de
+`BandejaDadosService` (timer de auto-sumir por entrada, `saindo` antes de remover de fato, sem
+RxJS) — quatro severidades (`sucesso`/`informacao`/`aviso`/`erro`, tipo local, não enum de
+`shared/enums`, mesmo padrão de `BotaoVariante`), cada uma com sua janela de auto-sumir (`erro`
+mais longa, 8s). Cor por severidade usa `--positive`/`--energy`/`--warning` normalmente, mas
+`erro` foi para `--vida` (vermelho **fixo**) em vez de `--accent` — decisão deliberada para não
+nascer com o mesmo problema do `I-024` (`perigo`/`primario` do botão são a mesma cor trocável).
+Achado nessa pesquisa de tokens, sem relação com o resto da task: `--danger`, usado em
+`bandeja-dados.component.scss` para o badge "Privada", **não existe em nenhum token** — registrado
+como `PROBLEMS.md` `P-036`, não corrigido (fora do escopo, arquivo não tocado por esta task).
+
+`error-handler.interceptor` (o consumidor mais crítico, todo erro HTTP do app) foi migrado por
+último, como o risco da spec pedia — mas só depois de confirmar que o próprio `MessageService`
+precisava sair de `app.config.ts` para não deixar o app com duas fontes de toast simultâneas.
+`app.config.ts`, `layout.component`, `styles.scss` (a regra `!important` de `m3-56` para o
+`.p-toast` no mobile — o `Notificacao` já nasce responsivo, sem precisar vencer CSS de terceiro) e
+sete arquivos de spec (`app.spec`, `app.routes.spec`, `layout.component.spec`,
+`visualizar.page.spec`, `visualizar-criatura.page.spec`, `painel-encontro.page.spec`,
+`rolagem-avulso.component.spec`, `receber-dano-dialog.component.spec`) foram atualizados junto.
+
+**Ambiente**: o `docker pull postgres:16` seguiu bloqueado pela política de rede do proxy (mesmo
+limite relatado na `ui-01b`), mas desta vez havia um **PostgreSQL 16 nativo** já instalado no
+container (`apt`, cluster `main`) — usado no lugar do Docker: `.env` copiado do `.env.example`,
+cluster iniciado via `pg_ctlcluster`, `npm run db:migrate` (26 migrations) e `npm run db:seed:dev`
+rodaram normalmente contra ele. Isso permitiu rodar o stack **real** completo
+(Postgres + backend + frontend), login real (`codex.dev`/`contratados.dev`, seed padrão), sessão
+real via `localStorage`, e todos os 13 dialogs + a fila de notificação verificados ao vivo — inclusive
+o erro end-to-end (navegar para uma ficha inexistente, `HttpClient` real, 404 real, interceptor
+real, notificação real), não um mock.
+
+**Testado:** shared 742/742 (sem mudança), backend 469/469 (sem mudança), frontend 1258 passando
+(era 1239 no fecho da `ui-01b`, +19 líquido de specs novas de `Modal`/`Notificacao` e ajustes nos 8
+specs atualizados), com as mesmas 169 falhas pré-existentes de `P-033` — confirmadas idênticas
+rodando a suíte no branch limpo, antes de qualquer mudança desta task; lint da raiz sem erro nos
+três workspaces. `grep -rn "p-dialog\|p-toast\|MessageService" frontend/src` vazio;
+`ng-deep` continua só nos 11 usos preexistentes e não relacionados de `editor-markdown.component.
+scss` (Milkdown) — nenhum novo, nenhum para vencer CSS do PrimeNG.
+
+**Verificado ao vivo** (`1920×1080` e `360×800`, stack real, Playwright): os 13 dialogs migrados
+abrem com bounding box real (não 0×0) nos dois viewports; fecham por Escape, clique no backdrop e
+"×"; o catálogo do inventário e o painel de mods (920px) colapsam corretamente no mobile depois do
+fix de `--modal-largura`; o dropdown de categoria do "Item custom" (`.ficha-inv__categoria-select-
+lista`, o caso que forçava o antigo `::ng-deep .p-dialog-content { overflow-y: visible }`) abre sem
+disparar rolagem interna nenhuma, nos dois viewports; o guia de fórmula empilha corretamente sobre
+o dialog de preset; a fila de notificação empilha, é clicável e cabe inteira em 360px. **O caso do
+`P-025` reproduzido de propósito**: o editor de Origem e o de Habilidade de Personalidade abrem
+com bounding box real em `360×800`, sem nenhum equivalente de `[appendTo]="'body'"` — o segundo só
+depois do fix #3 acima, que era necessário justamente para reproduzir esse caso com sucesso.
+`IDEAS.md` `I-023` foi renumerada para `I-024` neste fecho: já existia um `I-023` (Gate automático
+de convenções no CI) de antes da `ui-01b`, que reaproveitou o número por engano.
+
 ## 2026-08-28 — ui-01b: o `app-botao` alcança a paridade com o `p-button`, e o tema ganha duas cores sem papel de domínio
 
 Pedido direto do autor logo depois do fecho da `ui-01`: "eu queria que o botão tivesse todas as
@@ -58,7 +174,7 @@ que está em produção, que é exatamente o que "tudo opt-in" tinha de garantir
 `PROBLEMS.md` `P-035` — o botão primário preenchido dá **4,00:1** entre o accent e o texto, abaixo
 do 4,5:1 que o WCAG AA pede para texto normal (a trava do `TemaService` é deliberadamente 3:1, o
 piso de componente de interface, e valida contra a superfície, não contra este par); e `IDEAS.md`
-`I-023` — `perigo` e `primario` são a **mesma cor**, porque ambos usam o `--accent`, que é
+`I-024` — `perigo` e `primario` são a **mesma cor**, porque ambos usam o `--accent`, que é
 trocável pelo usuário: com accent azul, um botão de "Excluir" fica azul. Ficou visível lado a lado
 na matriz. A decisão de apontar `perigo` para `--vida` cabe na `ui-04`, quando essas telas passam
 pelo pixel diff de qualquer forma.

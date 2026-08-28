@@ -29,6 +29,25 @@
 
 ## Ativos
 
+### P-036 — `var(--danger)` não existe em nenhum token — badge "Privada" da bandeja de dados sem cor · `ABERTO` · frontend/tema
+
+- **Sintoma:** `bandeja-dados.component.scss` (`&__visibilidade--privada`) usa `var(--danger)` em
+  três declarações (`color`, `border-color` via `color-mix`, `background` via `color-mix`) — mas
+  `--danger` não é definido em `_tokens.scss` nem em nenhum outro parcial do tema. O valor
+  computado é inválido; o navegador ignora as três declarações e o badge "Privada" fica sem o
+  destaque vermelho pretendido, herdando `color`/`background` do contexto (`--text-mute`/
+  `transparent`) e o `border-color` genérico já presente logo acima na cascata.
+- **Causa:** não investigada — provavelmente um token planejado (`--danger`) que nunca chegou a
+  ser criado em `_tokens.scss`; o projeto usa `--vida` (vermelho fixo) para esse mesmo papel em
+  outros lugares (ver `IDEAS.md` `I-024`).
+- **Contorno:** nenhum — o badge continua funcional (o ícone e o texto "Privada" identificam a
+  rolagem), só sem o destaque de cor.
+- **Correção:** trocar as três ocorrências de `var(--danger)` por `var(--vida)` (mesmo papel
+  semântico de vermelho fixo, independente do accent) — mudança de uma linha, fora do escopo desta
+  task por não tocar `bandeja-dados`.
+- **Desde:** achado ao pesquisar tokens de cor fixa para a severidade `erro` de `Notificacao`
+  (ui-02, 2026-08-28) — não investigado há quanto tempo o token está quebrado.
+
 ### P-035 — Botão preenchido com o accent fica abaixo de 4,5:1 para texto normal · `ABERTO` · frontend/acessibilidade
 
 - **Sintoma:** medido no DOM real em 2026-08-28, durante o gate visual da `ui-01b`: o botão
@@ -68,11 +87,16 @@
   olho no gate visual.
 - **Correção:** a série `ui-01`…`ui-05` (`docs/specs/backlog/ui-biblioteca-componentes.spec.md`):
   criar `frontend/src/app/shared/ui/`, adotar os primitivos módulo a módulo e remover o PrimeNG,
-  que hoje entrega só `p-dialog` (14 tags), `p-toast`/`MessageService` e o preset de tema.
+  que hoje entrega só `p-dialog`/`p-toast`/`MessageService` e o preset de tema.
   **`ui-01` fechou em 2026-08-28**: `shared/ui/` existe com `app-botao` e `app-campo`, adotados
   em `autenticacao`; a auditoria corrigiu dois números do Sintoma acima — os blocos `.campo` de
   topo são **4** (o "17" contava ocorrências do texto, não declarações), e a duplicação do campo
-  vive sob nomes locais (40 blocos `&__rotulo`). Falta o resto: `ui-02`…`ui-05`.
+  vive sob nomes locais (40 blocos `&__rotulo`). **`ui-02` fechou em 2026-08-28**: `shared/ui/`
+  ganhou `app-modal` (sobre `<dialog>` nativo) e `Notificacao`/`app-notificacoes`; os 13 `p-dialog`
+  reais (a auditoria corrigiu o número — 14 incluía uma menção em comentário) e os 12
+  `messageService.add()` foram migrados, e `p-dialog`/`p-toast`/`MessageService` saem do grep de
+  `frontend/src`. PrimeNG segue instalado (só `providePrimeNG`/preset de tema, sem componente
+  consumido) — remover a dependência é a `ui-05`. Falta o resto: `ui-03`…`ui-05`.
 - **Desde:** desde sempre — a instrução de copiar está no handoff de design original. Medido e
   registrado na auditoria de 2026-08-28.
 

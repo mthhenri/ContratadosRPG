@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { Subject, of } from 'rxjs';
 
 import type {
@@ -28,6 +27,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { EncontroService } from '../../encontro.service';
 import { PainelEncontro } from './painel-encontro.page';
 
@@ -259,7 +259,6 @@ describe('PainelEncontro', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        MessageService,
         { provide: EncontroService, useValue: encontroService },
         {
           provide: RolagemService,
@@ -767,44 +766,44 @@ describe('PainelEncontro', () => {
       expect(doMestre.querySelector('.painel__bloco--vez')).not.toBeNull();
     });
 
-    it('avisa o jogador com um toast quando chega a vez do combatente dele', () => {
+    it('avisa o jogador com uma notificação quando chega a vez do combatente dele', () => {
       const { fixture, encontroAlterado$ } = montar(encontroAtivo, USUARIO_JOGADOR);
-      const addEspiao = vi.spyOn(TestBed.inject(MessageService), 'add').mockClear();
+      const notificarEspiao = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar').mockClear();
 
       // Slot 1 da `ordemRodada` de `encontroAtivo` é o combatenteId 2 — K. Amaral, ficha da Bia.
       encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
       fixture.detectChanges();
 
-      expect(addEspiao).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'info', summary: 'Sua vez!' }),
+      expect(notificarEspiao).toHaveBeenCalledWith(
+        expect.objectContaining({ severidade: 'informacao', resumo: 'Sua vez!' }),
       );
     });
 
-    it('não repete o toast de "sua vez" a cada broadcast — só quando o slot muda de fato', () => {
+    it('não repete a notificação de "sua vez" a cada broadcast — só quando o slot muda de fato', () => {
       const { fixture, encontroAlterado$ } = montar(encontroAtivo, USUARIO_JOGADOR);
-      const addEspiao = vi.spyOn(TestBed.inject(MessageService), 'add').mockClear();
+      const notificarEspiao = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar').mockClear();
 
       encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
       fixture.detectChanges();
-      expect(addEspiao).toHaveBeenCalledTimes(1);
+      expect(notificarEspiao).toHaveBeenCalledTimes(1);
 
       // Outro broadcast qualquer, mesmo slot (ex.: alguém tomou dano) — não deve reavisar.
       encontroAlterado$.next({
         encontro: { ...encontroAtivo, turnoIndice: 1, nome: 'Contenção no Setor 12 (dano)' },
       });
       fixture.detectChanges();
-      expect(addEspiao).toHaveBeenCalledTimes(1);
+      expect(notificarEspiao).toHaveBeenCalledTimes(1);
     });
 
     it('não avisa o mestre quando chega a vez de alguém', () => {
       const { fixture, encontroAlterado$ } = montar(encontroAtivo, USUARIO_MESTRE);
-      const addEspiao = vi.spyOn(TestBed.inject(MessageService), 'add').mockClear();
+      const notificarEspiao = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar').mockClear();
 
       encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
       fixture.detectChanges();
 
-      expect(addEspiao).not.toHaveBeenCalledWith(
-        expect.objectContaining({ summary: 'Sua vez!' }),
+      expect(notificarEspiao).not.toHaveBeenCalledWith(
+        expect.objectContaining({ resumo: 'Sua vez!' }),
       );
     });
   });

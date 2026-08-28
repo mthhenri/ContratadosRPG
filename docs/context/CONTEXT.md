@@ -653,7 +653,7 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `ui-02`…`ui-05` | design system | biblioteca própria e saída do PrimeNG (`P-034`); a `ui-01` já fechou. Ordem obrigatória: (`ui-02` ∥ `ui-03`) → `ui-04` → `ui-05` |
+| `ui-03`…`ui-05` | design system | biblioteca própria e saída do PrimeNG (`P-034`); `ui-01` e `ui-02` já fecharam. `ui-04` → `ui-05` |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
@@ -1244,7 +1244,7 @@ somente em `docs/core/` e o build os publica em `/documentos/`.
 ### Biblioteca de componentes própria — `frontend/src/app/shared/ui/`
 
 Camada de primitivos criada pela `ui-01` para acabar com o bloco BEM copiado (`P-034`). Hoje tem
-dois: **`app-botao`** (seletor de atributo — `<button app-botao variante="primario">`, com a
+quatro: **`app-botao`** (seletor de atributo — `<button app-botao variante="primario">`, com a
 fresta `--botao-opacidade-desabilitado` para a tela que ainda diverge do 0.55 canônico) e
 **`app-campo`** (invólucro de campo com rótulo, dica e
 erro em volta do controle projetado, `[tamanho]` em `compacto`/`padrao`/`amplo`). Ambos consumidos
@@ -1265,6 +1265,25 @@ primitivo continua sem definir dimensão, e a base segue exatamente como estava 
 (contrariam o raio máximo e a regra de sombra do `DESIGN.md`) e `badge` (é outro componente, não
 uma variante). As cores `--help` e `--contrast` nasceram aqui e são as duas únicas da paleta sem
 papel de domínio.
+
+A `ui-02` (2026-08-28) acrescentou **`app-modal`** e **`Notificacao`**/`app-notificacoes`, no lugar
+do `p-dialog`/toast do PrimeNG. `app-modal` é elemento (não atributo, como o `Botao`) sobre o
+`<dialog>` nativo — `[aberto]`/`[titulo]` obrigatórios, `[largura]` opcional (CSS livre) e
+`(fechou)` unificando Escape, clique no `::backdrop` e o "×". O top layer do `<dialog>` elimina o
+`P-025` (overlay preso a `position: static` num container rolável) e qualquer `z-index` só para
+vencer CSS de terceiro — inclusive o de `GuiaFormula`, que virou consumidor do primitivo e perdeu
+o overlay próprio. Três armadilhas relevantes para o próximo primitivo a construir sobre
+`<dialog>` (ver `HISTORY.md` do dia para o relato completo): (1) `.modal { display: flex }` puro
+perde para `dialog:not([open]) { display: none }` do UA stylesheet **só depois** que a
+encapsulação de view do Angular acrescenta `[_ngcontent-xxx]` — o `display` tem que morar em
+`&[open] { ... }`; (2) `[largura]` nunca deve virar `[style.max-width]` inline — um `style` inline
+vence qualquer media query de responsividade; vira `[style.--modal-largura]` consumida via `var()`
+no SCSS; (3) o `<dialog>` só ganha caixa se **nenhum ancestral** tiver `display: none` — `showModal()`
+resolve empilhamento (top layer), não geração de caixa —, então um modal cujo gatilho vive numa
+aba/rota diferente de onde o modal está fisicamente declarado precisa morar fora de qualquer
+container de aba, como `app-receber-dano-dialog` já fazia. `Notificacao` segue o mesmo padrão de
+fila em Signals de `BandejaDadosService` (sem RxJS); a severidade `erro` usa `--vida` (fixo), não
+`--accent`, para não repetir o `I-024`.
 
 ### Tema — `frontend/tema`
 
@@ -1317,12 +1336,14 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
 - **Rolagem `PRIVADA` nunca trafega por WebSocket** — o gateway só emite `rolagem:registrada` para
   rolagens públicas. A privada só chega por REST, a quem tem permissão.
 - **A UI é de componentes próprios, e o PrimeNG sai** (decisão do autor, 2026-08-28). A auditoria
-  mediu o uso real: `p-dialog` (14 tags em 5 arquivos), `p-toast`/`MessageService` e o preset de
-  tema — nenhum `pButton`, `p-select`, `p-inputtext`, `p-table`, `p-tabs`, `p-tooltip`. Os
-  controles são nativos (723 `<button>`, 219 `<input>`, 71 `<select>`, 31 `<textarea>`)
-  estilizados à mão. A biblioteca própria passa a existir como **código** em
-  `frontend/src/app/shared/ui/`, não como blocos copiados de `_componentes.scss` (`P-034`). Série
-  `ui-01`…`ui-05`; a `ui-01` fechou (ver abaixo), as demais seguem em `docs/specs/backlog/`.
+  mediu o uso real: `p-dialog` (13 tags reais em 5 arquivos — a spec original contava 14 por
+  incluir uma menção em comentário), `p-toast`/`MessageService` e o preset de tema — nenhum
+  `pButton`, `p-select`, `p-inputtext`, `p-table`, `p-tabs`, `p-tooltip`. Os controles são nativos
+  (723 `<button>`, 219 `<input>`, 71 `<select>`, 31 `<textarea>`) estilizados à mão. A biblioteca
+  própria passa a existir como **código** em `frontend/src/app/shared/ui/`, não como blocos
+  copiados de `_componentes.scss` (`P-034`). Série `ui-01`…`ui-05`; `ui-01` e `ui-02` fecharam (ver
+  acima), `ui-03`…`ui-05` seguem em `docs/specs/backlog/`. `p-dialog`/`p-toast`/`MessageService` já
+  saem do grep de `frontend/src` desde a `ui-02` — falta só o preset de tema para a `ui-05`.
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**

@@ -379,6 +379,16 @@ Para o que ainda **não** tem primitivo, siga copiando o bloco canônico de `_co
 a migração dos módulos que já existem é a `ui-04`, e código antigo pode conviver com sua cópia
 até lá.
 
+**Modal e notificação (ui-02):** nunca escreva um overlay/dialog próprio nem um `<p-dialog>` — use
+`<app-modal [aberto] [titulo]>…</app-modal>` (`frontend/src/app/shared/ui/modal/`), sobre o
+`<dialog>` nativo. Para avisos transitórios, use `NotificacaoService.notificar({ severidade,
+resumo, detalhe })`, nunca `MessageService`/toast próprio — o `<app-notificacoes />` já vive uma
+única vez no `layout`. Se o **gatilho** de um `app-modal` mora numa aba/rota diferente de onde o
+próprio `<app-modal>` está declarado, declare o modal **fora** de qualquer container de
+aba/visibilidade condicional (mesmo padrão de `app-receber-dano-dialog` em
+`ficha-visualizacao`) — um ancestral `display: none` esconde o `<dialog>` mesmo com `showModal()`
+já chamado, porque o top layer resolve empilhamento, não geração de caixa.
+
 ---
 
 ## Proibições — Resumo Rápido
@@ -404,6 +414,7 @@ até lá.
 | DTO dentro de `backend/` ou `frontend/` | Sempre em `shared/src/dtos/` |
 | NgModule / `.css` / `style=""` / seletor de ID | standalone / `.scss` / Tailwind+BEM |
 | Copiar bloco BEM que já virou primitivo em `shared/ui/` | Consumir o primitivo (`app-botao`, `app-campo`) |
+| `p-dialog`/overlay próprio/`MessageService` | `app-modal` / `NotificacaoService` |
 | Atributo `title` nativo do HTML para tooltip | Diretiva `[appTooltip]` (`shared/tooltip/`) |
 | Hex/cor/fonte/raio hardcoded em SCSS | Consumir tokens do tema (`var(--accent)`, `var(--font-mono)`… de `docs/design/`) |
 | Primitivo em service/repository | DTO, mesmo com um único campo |

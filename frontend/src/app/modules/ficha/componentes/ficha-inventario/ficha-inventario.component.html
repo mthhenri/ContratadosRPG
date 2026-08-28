@@ -284,7 +284,7 @@
         </ng-template>
 
         <!-- Formulário de item custom (nome obrigatório; categoria/custo/peso) — no modo `inline` abre na
-         própria lista (aqui embaixo); no modo `dialog` o mesmo template abre num `p-dialog` (fim do
+         própria lista (aqui embaixo); no modo `dialog` o mesmo template abre num `app-modal` (fim do
          arquivo) — a coluna de Status não tem espaço pro formulário inteiro sem quebrar. -->
         <ng-template #formItemCustomTemplate>
             <form
@@ -576,23 +576,17 @@
             <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
         }
 
-        <p-dialog
-            [visible]="editandoItemIndice() !== null"
-            [modal]="true"
-            [draggable]="false"
-            [resizable]="false"
-            [dismissableMask]="true"
-            [style]="{ width: '640px' }"
-            [breakpoints]="{ '680px': '90vw', '480px': '95vw' }"
-            header="Editar item custom"
-            styleClass="ficha-inv__dialogo"
-            (onHide)="cancelarEdicaoItem()"
+        <app-modal
+            [aberto]="editandoItemIndice() !== null"
+            [titulo]="'Editar item custom'"
+            [largura]="'640px'"
+            (fechou)="cancelarEdicaoItem()"
         >
             <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
-        </p-dialog>
+        </app-modal>
 
         <!-- Catálogo (busca + categorias + grade de itens/amplificadores) — mesmo racional do form acima:
-         `catalogoTemplate` abre inline aqui no modo `inline`, ou num `p-dialog` maior no modo `dialog`. -->
+         `catalogoTemplate` abre inline aqui no modo `inline`, ou num `app-modal` maior no modo `dialog`. -->
         <ng-template #catalogoTemplate>
             <section class="ficha-inv__catalogo">
                 <input
@@ -838,35 +832,23 @@
         }
 
         @if (apresentacao() === "dialog") {
-            <p-dialog
-                [visible]="catalogoAberto()"
-                [modal]="true"
-                [draggable]="false"
-                [resizable]="false"
-                [dismissableMask]="true"
-                [style]="{ width: '50vw' }"
-                [breakpoints]="{ '560px': '95vw' }"
-                header="Adicionar itens"
-                styleClass="ficha-inv__dialogo ficha-inv__dialogo--catalogo"
-                (onHide)="fecharCatalogo()"
+            <app-modal
+                [aberto]="catalogoAberto()"
+                [titulo]="'Adicionar itens'"
+                [largura]="'50vw'"
+                (fechou)="fecharCatalogo()"
             >
                 <ng-container [ngTemplateOutlet]="catalogoTemplate" />
-            </p-dialog>
+            </app-modal>
 
-            <p-dialog
-                [visible]="criandoItem()"
-                [modal]="true"
-                [draggable]="false"
-                [resizable]="false"
-                [dismissableMask]="true"
-                [style]="{ width: '640px' }"
-                [breakpoints]="{ '680px': '90vw', '480px': '95vw' }"
-                header="Item custom"
-                styleClass="ficha-inv__dialogo ficha-inv__dialogo--item-custom"
-                (onHide)="cancelarCriarItem()"
+            <app-modal
+                [aberto]="criandoItem()"
+                [titulo]="'Item custom'"
+                [largura]="'640px'"
+                (fechou)="cancelarCriarItem()"
             >
                 <ng-container [ngTemplateOutlet]="formItemCustomTemplate" />
-            </p-dialog>
+            </app-modal>
         }
     }
 
@@ -1474,7 +1456,7 @@
 
                 @if (editavel() && item.fragmentoPotencializador) {
                     <!-- "Aplicar em..." — modo `inline`: abre na própria lista. Modo `dialog`: mesmo template
-             (`painelFragmentoTemplate`) abre num `p-dialog` — só um item por vez (`alternarPainel`/
+             (`painelFragmentoTemplate`) abre num `app-modal` — só um item por vez (`alternarPainel`/
              `aplicandoFragmentoIndice` já garantem isso). -->
                     <ng-template #painelFragmentoTemplate>
                         <div class="ficha-inv__mod-painel">
@@ -1556,21 +1538,14 @@
                             <ng-container [ngTemplateOutlet]="painelFragmentoTemplate" />
                         }
                     } @else {
-                        <p-dialog
-                            [visible]="aplicandoFragmentoIndice() === item.indice"
-                            [modal]="true"
-                            [draggable]="false"
-                            [resizable]="false"
-                            [dismissableMask]="true"
-                            [appendTo]="'body'"
-                            [style]="{ width: '460px' }"
-                            [breakpoints]="{ '560px': '95vw' }"
-                            header="Aplicar Fragmento"
-                            styleClass="ficha-inv__dialogo"
-                            (onHide)="cancelarAplicarFragmento()"
+                        <app-modal
+                            [aberto]="aplicandoFragmentoIndice() === item.indice"
+                            [titulo]="'Aplicar Fragmento'"
+                            [largura]="'460px'"
+                            (fechou)="cancelarAplicarFragmento()"
                         >
                             <ng-container [ngTemplateOutlet]="painelFragmentoTemplate" />
-                        </p-dialog>
+                        </app-modal>
                     }
                 }
 
@@ -1688,28 +1663,21 @@
                             <ng-container [ngTemplateOutlet]="painelConsumirFragmentoTemplate" />
                         }
                     } @else {
-                        <p-dialog
-                            [visible]="consumindoFragmentoIndice() === item.indice"
-                            [modal]="true"
-                            [draggable]="false"
-                            [resizable]="false"
-                            [dismissableMask]="true"
-                            [appendTo]="'body'"
-                            [style]="{ width: '460px' }"
-                            [breakpoints]="{ '560px': '95vw' }"
-                            header="Consumir Fragmento"
-                            styleClass="ficha-inv__dialogo"
-                            (onHide)="cancelarConsumirFragmento()"
+                        <app-modal
+                            [aberto]="consumindoFragmentoIndice() === item.indice"
+                            [titulo]="'Consumir Fragmento'"
+                            [largura]="'460px'"
+                            (fechou)="cancelarConsumirFragmento()"
                         >
                             <ng-container [ngTemplateOutlet]="painelConsumirFragmentoTemplate" />
-                        </p-dialog>
+                        </app-modal>
                     }
                 }
 
                 @if (editavel()) {
                     @if (item.modificavel) {
                         <!-- Painel "Modificar" — modo `inline`: expande na própria lista. Modo `dialog`: mesmo
-               template (`painelModTemplate`) abre num `p-dialog` — a grade de mods + o form de mod
+               template (`painelModTemplate`) abre num `app-modal` — a grade de mods + o form de mod
                custom não cabem inline na coluna de Status sem quebrar. -->
                         <ng-template #painelModTemplate>
                             <div class="ficha-inv__mod-painel">
@@ -2223,21 +2191,14 @@
                                 <ng-container [ngTemplateOutlet]="painelModTemplate" />
                             }
                         } @else {
-                            <p-dialog
-                                [visible]="item.painelAberto"
-                                [modal]="true"
-                                [draggable]="false"
-                                [resizable]="false"
-                                [dismissableMask]="true"
-                                [appendTo]="'body'"
-                                [style]="{ width: '920px' }"
-                                [breakpoints]="{ '1000px': '90vw', '560px': '95vw' }"
-                                [header]="'Modificar — ' + item.nomeExibido"
-                                styleClass="ficha-inv__dialogo"
-                                (onHide)="fecharPainelDialog()"
+                            <app-modal
+                                [aberto]="item.painelAberto"
+                                [titulo]="'Modificar — ' + item.nomeExibido"
+                                [largura]="'920px'"
+                                (fechou)="fecharPainelDialog()"
                             >
                                 <ng-container [ngTemplateOutlet]="painelModTemplate" />
-                            </p-dialog>
+                            </app-modal>
                         }
                     }
                 } @else if (item.ehArmazenamento) {

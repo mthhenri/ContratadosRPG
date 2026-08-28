@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Dialog } from 'primeng/dialog';
 
 import { SeveridadeLesaoEnum } from '@contratados-rpg/shared/enums';
 import type {
@@ -15,6 +14,7 @@ import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** As três listas de Sanidade do `estado`, emitidas juntas a cada mutação (a página persiste o trio). */
 export interface EstadoSanidade {
@@ -77,7 +77,7 @@ const ROTULO_LISTA: Record<ListaSanidade, string> = {
  */
 @Component({
   selector: 'app-ficha-sanidade',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, Icone, OverflowFade, Tooltip, Dialog],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, Icone, OverflowFade, Tooltip, Modal],
   templateUrl: './ficha-sanidade.component.html',
   styleUrl: './ficha-sanidade.component.scss',
 })
@@ -89,7 +89,7 @@ export class FichaSanidade {
   readonly editavel = input(false);
   /**
    * `'inline'` (padrão, aba Sanidade & Lesões): o formulário abre dentro da própria lista, como
-   * sempre foi. `'dialog'`: abre num `p-dialog` centralizado — pro card de Status (redesenho de
+   * sempre foi. `'dialog'`: abre num modal centralizado (`app-modal`) — pro card de Status (redesenho de
    * comparação visual), cuja coluna é estreita demais pro formulário/botão "+ Adicionar" caber
    * inline sem quebrar. Mesmo estado/lógica dos dois modos; só a moldura do editor muda.
    */
@@ -132,7 +132,7 @@ export class FichaSanidade {
     () => this.sequelas().length + this.traumas().length + this.lesoes().length,
   );
 
-  /** Título do `p-dialog` (`apresentacao="dialog"`) — "Adicionar"/"Editar" + o nome da lista. */
+  /** Título do modal (`apresentacao="dialog"`) — "Adicionar"/"Editar" + o nome da lista. */
   protected readonly tituloEditor = computed(() => {
     const lista = this.listaEmEdicao();
     if (lista === null) {

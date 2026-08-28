@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Dialog } from 'primeng/dialog';
 
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
+
+import { Modal } from '../ui/modal/modal.component';
 
 import { ReceberDanoDialog } from './receber-dano-dialog.component';
 
@@ -81,8 +82,8 @@ describe('ReceberDanoDialog', () => {
 
   it('não fecha ao clicar fora (máscara não dispensável) — só o Cancelar fecha', () => {
     const fixture = montar();
-    const dialog = fixture.debugElement.query(By.directive(Dialog)).componentInstance as Dialog;
-    expect(dialog.dismissableMask).toBe(false);
+    const modal = fixture.debugElement.query(By.directive(Modal)).componentInstance as Modal;
+    expect(modal.fechavelPeloFundo()).toBe(false);
   });
 
   it('cancelar não emite dano', () => {

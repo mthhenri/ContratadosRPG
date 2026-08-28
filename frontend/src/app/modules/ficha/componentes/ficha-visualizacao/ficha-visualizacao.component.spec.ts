@@ -758,8 +758,8 @@ describe('FichaVisualizacao', () => {
       (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
       fixture.detectChanges();
 
-      expect(document.body.textContent).toContain('Ocultar ficha?');
-      expect(document.body.textContent).toContain(
+      expect(raiz.textContent).toContain('Ocultar ficha?');
+      expect(raiz.textContent).toContain(
         'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
       );
       expect(emitidos).toEqual([]);
@@ -773,8 +773,8 @@ describe('FichaVisualizacao', () => {
       (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
       fixture.detectChanges();
 
-      expect(document.body.textContent).toContain('Exibir ficha?');
-      expect(document.body.textContent).toContain(
+      expect(raiz.textContent).toContain('Exibir ficha?');
+      expect(raiz.textContent).toContain(
         'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
       );
     });
@@ -786,11 +786,13 @@ describe('FichaVisualizacao', () => {
 
       (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
       fixture.detectChanges();
-      (document.body.querySelector('[data-testid="cancelar-visibilidade"]') as HTMLButtonElement).click();
+      (raiz.querySelector('[data-testid="cancelar-visibilidade"]') as HTMLButtonElement).click();
       fixture.detectChanges();
       fixture.componentInstance['cancelarAlteracaoVisibilidade']();
 
-      expect(document.body.querySelector('[data-testid="confirmar-visibilidade"]')).toBeNull();
+      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
+        false,
+      );
       expect(emitidos).toEqual([]);
     });
 
@@ -806,11 +808,13 @@ describe('FichaVisualizacao', () => {
 
       (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
       fixture.detectChanges();
-      (document.body.querySelector('[data-testid="confirmar-visibilidade"]') as HTMLButtonElement).click();
+      (raiz.querySelector('[data-testid="confirmar-visibilidade"]') as HTMLButtonElement).click();
       fixture.detectChanges();
 
       expect(emitidos).toEqual([esperado]);
-      expect(document.body.querySelector('[data-testid="confirmar-visibilidade"]')).toBeNull();
+      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
+        false,
+      );
     });
 
     it('não mostra o toggle quando não é ajustável (só leitura)', () => {
@@ -1405,13 +1409,10 @@ describe('FichaVisualizacao', () => {
         alvo.fixture.componentInstance['habilidadesPendentesPeculiaridade'].set([peculiaridade]);
         alvo.fixture.detectChanges();
 
-        // [appendTo]="'body'" tira o diálogo da subárvore de `alvo.raiz` (necessário para não ficar
-        // preso num painel `display: none` no mobile) — por isso a busca é em `document.body`.
-        const dialogo = document.body.querySelector('.ficha-ident__aviso-peculiaridade');
-        expect(dialogo?.textContent).toContain('substituir a Origem atual');
+        expect(alvo.raiz.textContent).toContain('substituir a Origem atual');
 
         const confirmar = vi.spyOn(alvo.fixture.componentInstance as unknown as { confirmarLimparOrigemEHabilidade: () => void }, 'confirmarLimparOrigemEHabilidade');
-        (document.body.querySelector('[data-testid="confirmar-limpar-origem"]') as HTMLButtonElement).click();
+        (alvo.raiz.querySelector('[data-testid="confirmar-limpar-origem"]') as HTMLButtonElement).click();
         expect(confirmar).toHaveBeenCalled();
       });
 

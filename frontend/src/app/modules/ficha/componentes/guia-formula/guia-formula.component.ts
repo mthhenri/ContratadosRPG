@@ -1,4 +1,6 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
+
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Uma linha do guia: um trecho de fórmula + o que ele significa. */
 interface LinhaGuia {
@@ -123,26 +125,23 @@ const SECOES: readonly SecaoGuia[] = [
  * ensinando a sintaxe (dados, atributo-como-dado, `× ÷`, tipos de dano, Composto, Teste × Soma).
  *
  * **Componente autocontido** — gerencia o próprio estado de aberto/fechado e não recebe inputs; o
- * conteúdo é estático (a gramática do motor). Reusa o padrão `.ajuda-modal` da calculadora (m1-12):
- * fecha **só por botão** (o "×" ou "Fechar"), sem clique-fora, para não acionar as regras de
- * acessibilidade do lint. Consome apenas os tokens do tema "Terminal de Contenção" (proibição #29).
+ * conteúdo é estático (a gramática do motor). Sobre `app-modal` (ui-02) desde que o `<dialog>`
+ * nativo passou a existir: antes disso, este era um overlay `position: fixed` com
+ * `z-index: 1200` (comentado "acima do dialog do PrimeNG") só para renderizar por cima do
+ * dialog do preset de `FichaRolagens` — e mesmo esse número era um empate perdido contra
+ * qualquer conteúdo `position: fixed` mais alto ainda. Como cada `showModal()` empilha no *top
+ * layer* do navegador (acima de toda a árvore normal, sem depender de `z-index`), um
+ * `<app-guia-formula>` aninhado dentro de outro `app-modal` já abre por cima dele sozinho — a
+ * antiga ginástica de delegar pra uma cópia externa via `aoClicar`/`viewChild` deixou de ter
+ * função (ver `HISTORY.md`, ui-02).
  */
 @Component({
   selector: 'app-guia-formula',
-  imports: [],
+  imports: [Modal],
   templateUrl: './guia-formula.component.html',
   styleUrl: './guia-formula.component.scss',
 })
 export class GuiaFormula {
-  /**
-   * Quando definido, o clique no gatilho chama este callback em vez de abrir o próprio modal —
-   * usado quando há mais de um gatilho na tela (ex.: rolagem rápida + formulário de preset no
-   * dialog) e todos devem abrir o **mesmo** guia já renderizado fora do dialog, em vez de cada um
-   * abrir sua própria cópia (o modal de um `<app-guia-formula>` aninhado dentro do `p-dialog` do
-   * preset ficaria atrás do dialog, cujo z-index é maior).
-   */
-  readonly aoClicar = input<(() => void) | null>(null);
-
   /** Se o modal está aberto. */
   protected readonly aberto = signal(false);
 
@@ -155,13 +154,7 @@ export class GuiaFormula {
   /** Segunda linha da nota final — fontes escalares extras (PROF/NIV/CORPO/FURTIVO). */
   protected readonly notaExtra = NOTA_EXTRA;
 
-  /** Público: outro componente pode chamar `abrir()` num gatilho externo (`viewChild`). */
-  abrir(): void {
-    const externo = this.aoClicar();
-    if (externo) {
-      externo();
-      return;
-    }
+  protected abrir(): void {
     this.aberto.set(true);
   }
 

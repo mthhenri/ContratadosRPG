@@ -1,0 +1,30 @@
+<!--
+  O clique no fundo (`::backdrop`, chega como clique no próprio <dialog>, ver
+  `onCliqueNoFundo` em modal.component.ts) é uma conveniência de mouse/toque — não existe um
+  jeito de "focar o fundo" para um handler de teclado agir sobre ele, e quem usa teclado já tem
+  Escape (evento `cancel`, tratado abaixo) para fechar. Mesma exceção local e justificada que
+  `campo.component.html` já usa para `label-has-associated-control`.
+-->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -->
+<dialog
+    #dialogo
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="tituloId"
+    [style.--modal-largura]="largura()"
+    (cancel)="fechar()"
+    (close)="onFechado()"
+    (click)="onCliqueNoFundo($event)"
+>
+    <header class="modal__cabecalho">
+        <h2 class="modal__titulo" [id]="tituloId">{{ titulo() }}</h2>
+        <button type="button" class="modal__fechar" aria-label="Fechar" (click)="fechar()">
+            ×
+        </button>
+    </header>
+
+    <div class="modal__corpo">
+        <ng-content />
+    </div>
+</dialog>

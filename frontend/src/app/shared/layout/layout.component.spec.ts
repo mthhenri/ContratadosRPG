@@ -3,7 +3,6 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { TemaService } from '../../core/services/tema.service';
@@ -38,7 +37,6 @@ describe('Layout — leitor global de documentos', () => {
           { path: 'conteudo-b', component: RotaLayoutTesteB },
           { path: 'acesso-negado', component: RotaLayoutTesteB },
         ]),
-        MessageService,
       ],
     });
     await TestBed.compileComponents();

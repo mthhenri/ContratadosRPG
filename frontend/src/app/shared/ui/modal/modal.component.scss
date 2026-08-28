@@ -1,0 +1,99 @@
+@use "tema/breakpoints" as bp;
+
+// Primitivo de modal (ui-02) sobre o `<dialog>` nativo. Sem `overflow` no `&__corpo` — ver o
+// comentário da classe em `modal.component.ts` sobre por que um wrapper com `overflow-y: auto`
+// recriaria o defeito que forçava um seletor de encapsulamento vazado sobre o wrapper de
+// conteúdo do `Dialog` do PrimeNG em `ficha-inventario`.
+
+.modal {
+    // O `display` mora em `&[open]`, não aqui: a encapsulação de view do Angular acrescenta um
+    // atributo `[_ngcontent-xxx]` a todo seletor deste arquivo, o que dá a `.modal[_ngcontent-xxx]`
+    // especificidade (0,2,0) — maior que o `dialog:not([open]) { display: none }` do UA stylesheet
+    // (0,1,1). Um `.modal { display: flex }` simples venceria a regra do navegador e deixaria TODO
+    // `<dialog>` fechado visível e sobreposto (achado ao vivo no gate visual da ui-02, com vários
+    // `app-modal` na mesma tela). Casar no atributo `[open]` evita a queda de braço de
+    // especificidade por completo: sem `[open]`, esta regra simplesmente não bate.
+    width: 100%;
+    // `--modal-largura` (de `[largura]`) mora em custom property, não em `[style.max-width]`
+    // direto: um `style` inline tem prioridade sobre QUALQUER regra de folha de estilo, inclusive
+    // a media query de `bp.mobile` abaixo — um `[largura]="'50vw'"` travaria em 180px numa tela de
+    // 360px, sem meio de a media query vencer (achado ao vivo no gate visual da ui-02, no
+    // catálogo do inventário). Consumida via `var()` aqui, a cascata normal decide: a regra de
+    // `bp.mobile`, mais abaixo no arquivo, vence a esta na mesma origem.
+    max-width: var(--modal-largura, min(92vw, 480px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+
+    margin: auto;
+    padding: var(--pad-card);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+
+    &[open] {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    // O fundo é o `::backdrop` nativo (top layer) — mesma opacidade dos overlays hand-rolled do
+    // projeto (`guia-modal-fundo`), sem depender de `z-index` para ficar acima do conteúdo.
+    &::backdrop {
+        background: color-mix(in srgb, var(--bg) 70%, transparent);
+    }
+
+    @include bp.mobile {
+        max-width: calc(100vw - 24px);
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex: 0 0 auto;
+    }
+
+    &__titulo {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+        margin: 0;
+    }
+
+    &__fechar {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 18px;
+        line-height: 1;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+
+        &:hover {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-width: bp.$alvo-toque;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__corpo {
+        min-height: 0;
+    }
+}

@@ -2,7 +2,6 @@ import { Component, DestroyRef, computed, effect, inject, signal, untracked } fr
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
@@ -16,6 +15,7 @@ import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -68,7 +68,7 @@ export class CriaturaVisualizar {
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly bandejaDados = inject(BandejaDadosService);
-  private readonly messageService = inject(MessageService);
+  private readonly notificacaoService = inject(NotificacaoService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -269,10 +269,10 @@ export class CriaturaVisualizar {
 
   /** Redireciona pra fora da tela após a revogação do próprio acesso, com um toast avisando o motivo. */
   private expulsar(): void {
-    this.messageService.add({
-      severity: 'warn',
-      summary: 'Acesso revogado',
-      detail: 'Seu acesso a esta ficha foi revogado.',
+    this.notificacaoService.notificar({
+      severidade: 'aviso',
+      resumo: 'Acesso revogado',
+      detalhe: 'Seu acesso a esta ficha foi revogado.',
     });
     void this.router.navigate(this.rotaDeSaida());
   }

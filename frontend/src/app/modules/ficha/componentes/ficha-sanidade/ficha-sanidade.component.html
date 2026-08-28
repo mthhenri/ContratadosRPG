@@ -308,18 +308,11 @@
 <!-- Diálogo do editor (`apresentacao="dialog"`) — mesmo formulário/estado dos `<ng-template>`
      abaixo, só numa moldura flutuante em vez de inline na lista (colunas estreitas, ex.: card de
      Status do redesenho de comparação visual, não têm espaço pro formulário/botão "+ Adicionar"). -->
-<p-dialog
-    [visible]="apresentacao() === 'dialog' && listaEmEdicao() !== null"
-    [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
-    [dismissableMask]="true"
-    [appendTo]="'body'"
-    [style]="{ width: '520px' }"
-    [breakpoints]="{ '560px': '95vw' }"
-    [header]="tituloEditor()"
-    styleClass="sanidade__dialogo"
-    (onHide)="cancelar()"
+<app-modal
+    [aberto]="apresentacao() === 'dialog' && listaEmEdicao() !== null"
+    [titulo]="tituloEditor()"
+    [largura]="'520px'"
+    (fechou)="cancelar()"
 >
     @switch (listaEmEdicao()) {
         @case ("sequela") {
@@ -332,7 +325,7 @@
             <ng-container [ngTemplateOutlet]="editorLesao" />
         }
     }
-</p-dialog>
+</app-modal>
 
 <!-- ===== Editores (compartilhados entre adicionar e editar) ===== -->
 <ng-template #editorSequela>
