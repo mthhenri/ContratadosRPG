@@ -171,6 +171,24 @@ describe('CadernoFlutuante', () => {
     expect(fixture.componentInstance['estado']().geometria).toEqual(geometriaAntes);
   });
 
+  it('restaura em tamanho confortável quando a geometria anterior já ocupava quase toda a tela', () => {
+    const store = fixture.componentInstance['store'];
+    store.alterarGeometria(
+      { x: 0, y: 0, largura: 1_700, altura: 920 },
+      { largura: window.innerWidth, altura: window.innerHeight },
+    );
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Maximizar caderno"]');
+    clicar('[aria-label="Restaurar tamanho do caderno"]');
+
+    expect(fixture.componentInstance['estado']().geometria).toEqual({
+      x: 384,
+      y: 216,
+      largura: 1_152,
+      altura: 648,
+    });
+  });
+
   it('recolhe a lista aberta ao criar uma página para revelar o editor', () => {
     clicar('[aria-label="Abrir caderno"]');
     clicar('[aria-label="Criar página"]');

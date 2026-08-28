@@ -292,7 +292,10 @@ export class CadernoFlutuante implements OnDestroy {
     if (this.ehMobile()) return;
     if (this.maximizada()) {
       if (this.geometriaAntesDeMaximizar) {
-        this.store.alterarGeometria(this.geometriaAntesDeMaximizar, this.viewport());
+        this.store.alterarGeometria(
+          reduzirGeometriaRestaurada(this.geometriaAntesDeMaximizar, this.viewport()),
+          this.viewport(),
+        );
       }
       this.geometriaAntesDeMaximizar = null;
       this.maximizada.set(false);
@@ -625,4 +628,21 @@ export class CadernoFlutuante implements OnDestroy {
   private viewport(): { largura: number; altura: number } {
     return { largura: window.innerWidth, altura: window.innerHeight };
   }
+}
+
+function reduzirGeometriaRestaurada(
+  geometria: CadernoGeometria,
+  viewport: { largura: number; altura: number },
+): CadernoGeometria {
+  if (geometria.largura < viewport.largura * 0.8 && geometria.altura < viewport.altura * 0.8) {
+    return geometria;
+  }
+  const largura = Math.round(viewport.largura * 0.6);
+  const altura = Math.round(viewport.altura * 0.6);
+  return {
+    x: Math.round((viewport.largura - largura) / 2),
+    y: Math.round((viewport.altura - altura) / 2),
+    largura,
+    altura,
+  };
 }
