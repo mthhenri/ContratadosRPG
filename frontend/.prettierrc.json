@@ -1,0 +1,14 @@
+{
+    "printWidth": 100,
+    "tabWidth": 4,
+    "useTabs": false,
+    "htmlWhitespaceSensitivity": "css",
+    "overrides": [
+        {
+            "files": ["*.ts", "*.tsx"],
+            "options": {
+                "requirePragma": true
+            }
+        }
+    ]
+}
