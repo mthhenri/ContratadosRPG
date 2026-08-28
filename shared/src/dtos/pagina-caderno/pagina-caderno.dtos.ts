@@ -1,4 +1,36 @@
-import type { BuscaCampanhaFonteEnum, BuscaCampanhaResultadoTipoEnum } from '../../enums';
+import type {
+  BuscaCampanhaFonteEnum,
+  BuscaCampanhaResultadoTipoEnum,
+  TipoPaginaCadernoEnum,
+} from '../../enums';
+
+/** Entrada da criação de uma página colaborativa do Esquadrão. */
+export interface PaginaCadernoEsquadraoCriarDto {
+  readonly campanhaId: number;
+  readonly titulo: string;
+}
+
+/** Entrada de uma atualização CRDT serializada em base64. */
+export interface PaginaCadernoEsquadraoAlterarDto {
+  readonly id: number;
+  readonly atualizacao: string;
+  readonly titulo: string;
+  readonly conteudoMarkdown: string;
+}
+
+/** Estado inicial de uma página colaborativa, com snapshot serializado em base64. */
+export interface PaginaCadernoEsquadraoEstadoDto {
+  readonly pagina: PaginaCadernoDto;
+  readonly estado: string;
+}
+
+/** Evento emitido depois de uma atualização colaborativa persistida. */
+export interface PaginaCadernoEsquadraoAlteradaDto {
+  readonly campanhaId: number;
+  readonly paginaId: number;
+  readonly atualizacao: string;
+  readonly pagina: PaginaCadernoResumoDto;
+}
 
 /** Entrada da criação de uma página no caderno do usuário autenticado. */
 export interface PaginaCadernoCriarDto {
@@ -40,8 +72,9 @@ export interface PaginaCadernoMembroListarDto {
 export interface PaginaCadernoResumoDto {
   readonly id: number;
   readonly campanhaId: number;
-  readonly usuarioAutorId: number;
-  readonly autorNome: string;
+  readonly usuarioAutorId: number | null;
+  readonly autorNome: string | null;
+  readonly tipo: TipoPaginaCadernoEnum;
   readonly titulo: string;
   readonly updatedDate: string;
 }
@@ -50,8 +83,9 @@ export interface PaginaCadernoResumoDto {
 export interface PaginaCadernoDto {
   readonly id: number;
   readonly campanhaId: number;
-  readonly usuarioAutorId: number;
-  readonly autorNome: string;
+  readonly usuarioAutorId: number | null;
+  readonly autorNome: string | null;
+  readonly tipo: TipoPaginaCadernoEnum;
   readonly titulo: string;
   readonly conteudoMarkdown: string;
   readonly somenteLeitura: boolean;

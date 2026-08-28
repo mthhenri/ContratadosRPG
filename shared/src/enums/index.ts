@@ -21,6 +21,7 @@ export * from './rolagem-visibilidade.enum';
 export * from './tipo-usuario.enum';
 export * from './usuario-situacao.enum';
 export * from './busca-campanha-fonte.enum';
+export * from './tipo-pagina-caderno.enum';
 export * from './busca-campanha-resultado-tipo.enum';
 export * from './nivel-ameaca.enum';
 export * from './origem-criatura.enum';

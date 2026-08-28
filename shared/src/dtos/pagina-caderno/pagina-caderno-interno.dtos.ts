@@ -1,4 +1,20 @@
-import type { BuscaCampanhaFonteEnum } from '../../enums';
+import type { BuscaCampanhaFonteEnum, TipoPaginaCadernoEnum } from '../../enums';
+
+/** Entrada interna para criar uma página colaborativa sem autor individual. */
+export interface PaginaCadernoEsquadraoInternoCriarDto {
+  readonly campanhaId: number;
+  readonly titulo: string;
+  readonly conteudoMarkdown: string;
+  readonly estadoColaborativo: Uint8Array;
+}
+
+/** Entrada interna de atualização CRDT e de sua projeção pesquisável. */
+export interface PaginaCadernoEsquadraoInternoAlterarDto {
+  readonly id: number;
+  readonly titulo: string;
+  readonly conteudoMarkdown: string;
+  readonly estadoColaborativo: Uint8Array;
+}
 
 /** Entrada interna da criação após autoria e campanha serem resolvidas pela service. */
 export interface PaginaCadernoInternoCriarDto {
@@ -32,10 +48,12 @@ export interface PaginaCadernoInternoAlterarDto {
 export interface PaginaCadernoInternoRecuperadaDto {
   readonly id: number;
   readonly campanhaId: number;
-  readonly usuarioAutorId: number;
-  readonly autorNome: string;
+  readonly usuarioAutorId: number | null;
+  readonly autorNome: string | null;
+  readonly tipo: TipoPaginaCadernoEnum;
   readonly titulo: string;
   readonly conteudoMarkdown: string;
+  readonly estadoColaborativo: Uint8Array | null;
   readonly createdDate: string;
   readonly updatedDate: string;
 }

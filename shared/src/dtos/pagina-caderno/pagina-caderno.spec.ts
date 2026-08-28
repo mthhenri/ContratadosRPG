@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BuscaCampanhaFonteEnum, BuscaCampanhaResultadoTipoEnum } from '../../enums';
+import { BuscaCampanhaFonteEnum, BuscaCampanhaResultadoTipoEnum, TipoPaginaCadernoEnum } from '../../enums';
 import {
   BUSCA_CAMPANHA_LIMITE_MAXIMO,
   BUSCA_CAMPANHA_TERMO_MAXIMO,
@@ -13,9 +13,11 @@ describe('contratos de página de caderno', () => {
     expect(Object.values(BuscaCampanhaFonteEnum)).toEqual([
       'MEU_CADERNO',
       'CADERNOS_JOGADORES',
+      'CADERNO_ESQUADRAO',
       'MINHAS_FICHAS',
       'FICHAS_CAMPANHA',
     ]);
+    expect(Object.values(TipoPaginaCadernoEnum)).toEqual(['PRIVADA', 'ESQUADRAO']);
     expect(Object.values(BuscaCampanhaResultadoTipoEnum)).toEqual([
       'PAGINA_CADERNO',
       'ANOTACAO_FICHA',
