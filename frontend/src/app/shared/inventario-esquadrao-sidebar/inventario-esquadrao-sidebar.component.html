@@ -1,24 +1,51 @@
-<button type="button"
-  class="inventario-sidebar__gatilho utilitario-flutuante utilitario-flutuante--inline-mobile"
-  [class.inventario-sidebar__gatilho--ativo]="aberto()"
-  [attr.aria-expanded]="aberto()" aria-label="Abrir inventário de esquadrão"
-  [appTooltip]="'Inventário de esquadrão'" (click)="aberto.set(!aberto())">
-  <app-icone nome="inventario" />
+<button
+    type="button"
+    class="inventario-sidebar__gatilho utilitario-flutuante utilitario-flutuante--inline-mobile"
+    [class.inventario-sidebar__gatilho--ativo]="aberto()"
+    [attr.aria-expanded]="aberto()"
+    aria-label="Abrir inventário de esquadrão"
+    [appTooltip]="'Inventário de esquadrão'"
+    (click)="aberto.set(!aberto())"
+>
+    <app-icone nome="inventario" />
 </button>
 
 @if (aberto()) {
-  <button class="inventario-sidebar__fundo" type="button" aria-label="Fechar inventário" (click)="fechar()"></button>
-  <aside class="inventario-sidebar__painel" role="dialog" aria-modal="true" aria-label="Inventário de esquadrão"
-    tabindex="-1" appAutoFocus (keydown.escape)="fechar()">
-    <header class="inventario-sidebar__cabecalho">
-      <app-icone nome="inventario" />
-      <h2 class="inventario-sidebar__titulo">Inventário de Esquadrão</h2>
-      <span class="inventario-sidebar__regua"></span>
-      <button class="inventario-sidebar__fechar" type="button" aria-label="Fechar inventário" (click)="fechar()">×</button>
-    </header>
-    <div class="inventario-sidebar__corpo">
-      <app-inventario-esquadrao [campanhaId]="campanhaId()" [itens]="itens()" [fichas]="fichas()"
-        (atualizado)="atualizado.emit($event)" />
-    </div>
-  </aside>
+    <button
+        class="inventario-sidebar__fundo"
+        type="button"
+        aria-label="Fechar inventário"
+        (click)="fechar()"
+    ></button>
+    <aside
+        class="inventario-sidebar__painel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Inventário de esquadrão"
+        tabindex="-1"
+        appAutoFocus
+        (keydown.escape)="fechar()"
+    >
+        <header class="inventario-sidebar__cabecalho">
+            <app-icone nome="inventario" />
+            <h2 class="inventario-sidebar__titulo">Inventário de Esquadrão</h2>
+            <span class="inventario-sidebar__regua"></span>
+            <button
+                class="inventario-sidebar__fechar"
+                type="button"
+                aria-label="Fechar inventário"
+                (click)="fechar()"
+            >
+                ×
+            </button>
+        </header>
+        <div class="inventario-sidebar__corpo">
+            <app-inventario-esquadrao
+                [campanhaId]="campanhaId()"
+                [itens]="itens()"
+                [fichas]="fichas()"
+                (atualizado)="atualizado.emit($event)"
+            />
+        </div>
+    </aside>
 }

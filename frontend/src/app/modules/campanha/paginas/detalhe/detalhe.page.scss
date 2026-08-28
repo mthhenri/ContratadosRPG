@@ -1,4 +1,4 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 // Piso reservado no rodapé (mesmo problema do m3-60 em `visualizar.page.scss`, só que chegou aqui
 // depois, no m2-20): a visão do JOGADOR embute `<app-ficha-visualizacao modo="compacto">`, que tem
@@ -12,2196 +12,2272 @@
 // efeito ali é a bandeja flutuar 57px acima do canto — inofensivo, e mais simples que sinalizar a
 // visão ativa só para isto.
 :host {
-  --piso-flutuante: 0px;
+    --piso-flutuante: 0px;
 
-  @include bp.mobile {
-    --piso-flutuante: 57px;
-  }
+    @include bp.mobile {
+        --piso-flutuante: 57px;
+    }
 }
 
 .detalhe {
-  &__estado-operacional {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 28px;
-    padding: 4px 8px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    background: var(--surface-2);
-    color: var(--text);
-    font: 600 0.66rem var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-  }
+    &__estado-operacional {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 28px;
+        padding: 4px 8px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        background: var(--surface-2);
+        color: var(--text);
+        font: 600 0.66rem var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+    }
 
-  &__estado-operacional app-icone {
-    display: inline-flex;
-    width: 12px;
-    height: 12px;
-  }
+    &__estado-operacional app-icone {
+        display: inline-flex;
+        width: 12px;
+        height: 12px;
+    }
 
-  &__estado-operacional--base { color: var(--text); }
-  &__estado-operacional--missao {
-    color: var(--vida);
-    border-color: var(--vida-border);
-    background: color-mix(in srgb, var(--vida) 12%, transparent);
-  }
+    &__estado-operacional--base {
+        color: var(--text);
+    }
+    &__estado-operacional--missao {
+        color: var(--vida);
+        border-color: var(--vida-border);
+        background: color-mix(in srgb, var(--vida) 12%, transparent);
+    }
 
-  &__estado-operacional--leitura { cursor: default; }
-  &__inventario-jogador { min-height: 0; overflow: auto; }
-  // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
-  // (m2-18), que aproveita mais a tela que o teto fixo.
-  max-width: 85vw;
-  margin: 0 auto;
-
-  @include bp.mobile {
-    max-width: 100%;
-  }
-
-  // === Cabeçalho da página (m2-19, item 6; reflow mobile do "1"/próxima leva) — substitui o antigo
-  // `card__cabecalho` dentro do card "Identidade", que deixou de existir. Duas linhas lógicas:
-  // título (índice+nome+régua) e ações (tempo real, voltar, histórico, kebab). No desktop ficam
-  // lado a lado numa linha só; no mobile a linha de ações quebra pra baixo do nome, que fica com
-  // a linha só pra si — dá mais destaque ao nome da campanha numa tela estreita.
-  &__cabecalho {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 16px;
+    &__estado-operacional--leitura {
+        cursor: default;
+    }
+    &__inventario-jogador {
+        min-height: 0;
+        overflow: auto;
+    }
+    // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
+    // (m2-18), que aproveita mais a tela que o teto fixo.
+    max-width: 85vw;
+    margin: 0 auto;
 
     @include bp.mobile {
-      flex-wrap: wrap;
-      row-gap: 10px;
-    }
-  }
-
-  &__cabecalho-titulo-linha {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    flex: 1;
-    min-width: 0;
-
-    @include bp.mobile {
-      flex-basis: 100%;
-    }
-  }
-
-  &__cabecalho-acoes {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: none;
-
-    @include bp.mobile {
-      flex-basis: 100%;
-    }
-  }
-
-  // Botão quadrado "Voltar às campanhas" — substitui o antigo link de rodapé (`&__voltar`/
-  // `&__link`), agora ao lado do gatilho de histórico de rolagens no cabeçalho.
-  &__cabecalho-voltar {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 22px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
-    }
-
-    app-icone {
-      font-size: 13px;
-    }
-
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
-
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-  }
-
-  &__cabecalho-menu-envoltorio {
-    position: relative;
-    flex: none;
-  }
-
-  &__cabecalho-menu-botao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 22px;
-    font-size: 15px;
-    line-height: 1;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
-    }
-
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
-
-  // Fundo transparente pra fechar o menu com um clique fora — sem clipping ancestral aqui (o
-  // cabeçalho não vive dentro de nenhum `overflow`+`mask-image`), então não precisa do truque de
-  // `position: fixed` calculado no clique que o menu de ficha (`&__ficha-menu*`) usa.
-  &__cabecalho-menu-fundo {
-    position: fixed;
-    inset: 0;
-    z-index: 30;
-    background: transparent;
-    border: 0;
-    cursor: default;
-  }
-
-  &__cabecalho-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    z-index: 31;
-    min-width: 160px;
-    padding: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
-  }
-
-  &__cabecalho-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    width: 100%;
-    padding: 9px 10px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text);
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease, color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      background: var(--surface-2);
-      color: var(--accent);
-    }
-
-    &:disabled {
-      opacity: 0.55;
-      cursor: default;
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  &__cabecalho-menu-contagem {
-    margin-left: auto;
-    font-size: 11px;
-    color: var(--text-mute);
-  }
-
-  &__descricao {
-    margin: 0 0 16px;
-    font-family: var(--font-sans);
-    color: var(--text-dim);
-  }
-
-  // === Banner de alerta (item 1) — só aparece quando há ficha com Vida ≤ 0 na campanha. Mesmo
-  // tratamento de "crítico" já usado em `&__ficha-card--critico`/`.campanhas__linha--critico`
-  // (m2-18): tokens fixos `--vida`/`--vida-border`, não `--accent` (trocável em runtime).
-  &__banner-alerta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-    padding: 12px 16px;
-    background: color-mix(in srgb, var(--vida) 10%, var(--surface));
-    border: 1px solid var(--vida-border);
-    border-radius: var(--radius-control);
-    color: var(--vida);
-
-    app-icone {
-      flex: none;
-      font-size: 15px;
-    }
-  }
-
-  &__banner-texto {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  &__banner-link {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--vida);
-    text-decoration: none;
-    white-space: nowrap;
-
-    &:hover {
-      text-decoration: underline;
-    }
-
-    @include bp.mobile {
-      display: inline-flex;
-      align-items: center;
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  // === "Ver como jogador" (preview do mestre) — barra fixa fora do container travado (continua
-  // clicável) + o container em si, que trava toda a interação (`pointer-events: none`) enquanto
-  // o preview está ativo. Puro CSS: nenhum handler precisa checar o preview individualmente.
-  &__preview-barra {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-    padding: 10px 16px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-    color: var(--accent);
-  }
-
-  &__preview-texto {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  &__preview-sair {
-    flex: none;
-  }
-
-  &__conteudo--bloqueado {
-    pointer-events: none;
-    opacity: 0.92;
-  }
-
-  // === Tira de estatísticas (item 2) — só o tile "Convite" (Membros/Fichas/Alertas removidos: a
-  // contagem de membros/fichas já aparece nos cabeçalhos das colunas ao lado, e o alerta de ficha
-  // crítica já tem o banner próprio acima). Mesmo bloco `.stat` canônico (abaixo).
-  &__estatisticas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  // Tile "Convite" — o código + copiar/regenerar (antes uma caixa própria `&__convite`, agora
-  // dentro da tira de estatísticas). Largura contida no desktop; linha inteira no mobile.
-  &__stat-convite {
-    min-width: 0;
-    flex: 0 1 340px;
-
-    @include bp.mobile {
-      flex-basis: 100%;
-    }
-  }
-
-  // Tile "Combate" (m7-06) — a porta de entrada da tela "Iniciativa", ao lado do Convite. Antes o
-  // único caminho até ela era o menu "⋯" do cabeçalho, invisível para quem não o abre.
-  &__stat-encontro {
-    min-width: 0;
-    flex: 0 1 340px;
-
-    @include bp.mobile {
-      flex-basis: 100%;
-    }
-  }
-
-  &__encontro-linha {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  &__encontro-estado {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  &__encontro-nome {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__encontro-meta {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-  }
-
-  &__encontro-acao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    text-decoration: none;
-
-    app-icone { font-size: 13px; }
-
-    @include bp.mobile { min-height: bp.$alvo-toque; }
-  }
-
-  &__convite-linha {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 2px;
-  }
-
-  &__codigo {
-    flex: 1;
-    min-width: 0;
-    padding: 5px 8px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--accent);
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__copiar,
-  &__regenerar {
-    position: relative;
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      color: var(--text);
-      background: var(--surface-2);
-      border-color: var(--accent-border);
-    }
-
-    &:disabled {
-      opacity: 0.55;
-      cursor: default;
-    }
-
-    @include bp.mobile {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-  }
-
-  &__copiar--copiado,
-  &__copiar--copiado:hover,
-  &__regenerar--confirmado,
-  &__regenerar--confirmado:hover {
-    color: var(--bg);
-    background: var(--accent);
-    border-color: var(--accent);
-  }
-
-  // Tooltip efêmero "COPIADO" acima do botão de copiar — surge só no estado copiado.
-  &__copiado-tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
-    padding: 4px 8px;
-    background: var(--surface-2);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--accent);
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.15s ease;
-  }
-
-  &__copiar--copiado &__copiado-tooltip {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  // === Tira horizontal de rolagens recentes (item 3) — teaser do feed já buscado; a lista
-  // completa continua só na sidebar de histórico (`HistoricoRolagensSidebar`, "Ver tudo").
-  &__rolagens {
-    margin-bottom: 16px;
-  }
-
-  &__rolagens-tira {
-    list-style: none;
-    margin: 8px 0 0;
-    padding: 2px;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-
-    --fade-esquerda: 0px;
-    --fade-direita: 0px;
-    &.overflow-fade--esquerda,
-    &.overflow-fade--direita {
-      -webkit-mask-image: linear-gradient(
-        to right,
-        transparent 0,
-        #000 var(--fade-esquerda),
-        #000 calc(100% - var(--fade-direita)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to right,
-        transparent 0,
-        #000 var(--fade-esquerda),
-        #000 calc(100% - var(--fade-direita)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--esquerda {
-      --fade-esquerda: 18px;
-    }
-    &.overflow-fade--direita {
-      --fade-direita: 18px;
-    }
-  }
-
-  // === Grade de duas colunas: Membros | Esquadrão (item 5). Empilha abaixo do breakpoint de
-  // tablet (item 8) — colunas de ~450px+grid de fichas ficariam espremidas antes disso.
-  // Membros a 450px (era 300px) — +50% a pedido do autor, mais espaço pro nome/chip-papel/ações.
-  &__grade {
-    display: grid;
-    grid-template-columns: minmax(0, 450px) minmax(0, 1fr);
-    gap: var(--gap-grid);
-    align-items: start;
-
-    @include bp.tablet {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  &__coluna {
-    min-width: 0;
-
-    // Empilhado (abaixo de `bp.tablet`), Esquadrão sobe pra antes de Membros — mesmo breakpoint
-    // em que a grade já virou 1 coluna (`order` não muda nada nas 2 colunas do desktop).
-    &--esquadrao {
-      @include bp.tablet {
-        order: -1;
-      }
-    }
-  }
-
-  // === Visão do JOGADOR (m2-20) — a irmã de `&__grade` acima (só mestre): coluna principal com a
-  // ficha embutida (sem largura fixa aqui, o `<app-ficha-visualizacao modo="compacto">` já trava
-  // as próprias colunas internas, sempre — própria ficha ou de colega) e uma lateral larga de
-  // 450px (era 260px, depois 500px, ~10% mais estreita a pedido do autor) com Equipe + Sessão.
-  // Empilha abaixo de `bp.tablet` — mesma ficha primeiro (ordem do DOM, sem `order`), lateral
-  // depois (item 10).
-  &__jogador {
-    display: flex;
-    align-items: start;
-    gap: var(--gap-grid);
-
-    @include bp.tablet {
-      flex-direction: column;
-    }
-
-    // m2-20: a ficha embutida (`modo="compacto"`) tem sua própria `.ficha-nav` fixa no rodapé no
-    // mobile (herdada de `FichaVisualizacao`) — sem este respiro, o fim da coluna lateral (Sessão)
-    // ficava por baixo da barra ao rolar até o final da página.
-    @include bp.mobile {
-      padding-bottom: calc(var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
-    }
-  }
-
-  &__jogador-principal {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  &__jogador-lateral {
-    flex: 0 0 450px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-grid);
-    min-width: 0;
-
-    @include bp.tablet {
-      flex-basis: auto;
-      width: 100%;
-    }
-  }
-
-  // Estado vazio da coluna principal (m2-21, item 8) — "você ainda não tem ficha" + os dois
-  // atalhos do menu "⋯". Os botões empilham no mobile, onde 2 rótulos longos não cabem lado a lado.
-  &__jogador-vazio {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-
-  &__jogador-vazio-acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-
-    @include bp.mobile {
-      width: 100%;
-      flex-direction: column;
-    }
-  }
-
-  // Card da ficha embutida — cabeçalho próprio (nome + "Abrir completa") no topo do
-  // `<app-ficha-visualizacao modo="compacto">` (item 6); o card canônico já dá fundo/borda/padding.
-  &__ficha-embutida {
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__abrir-completa,
-  &__alternar-inventario {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 12px;
-    font-size: 10px;
-    line-height: 1;
-    text-decoration: none;
-
-    app-icone {
-      display: inline-flex;
-      flex: none;
-      width: 12px;
-      height: 12px;
-    }
-  }
-
-  &__abrir-completa-rodape {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    margin-top: 16px;
-    padding: 9px 16px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    text-decoration: none;
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  // === "Equipe" (item 8) — roster compacto da lateral: por colega com ficha visível, um item por
-  // ficha (item 7 — "Ver ficha"); colega sem nenhuma ficha visível nem entra na lista.
-  &__equipe-lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 420px;
-    overflow-y: auto;
-
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 16px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 16px;
-    }
-  }
-
-  &__equipe-membro {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__equipe-membro-corpo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__equipe-nome {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    overflow-wrap: anywhere;
-  }
-
-  // Cabeçalho do mestre na Equipe (m3-65) — chip "Mestre" antes do nome, lado a lado (o resto da
-  // lista só tem o nome sozinho, sem precisar desse wrapper em linha).
-  &__equipe-cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  // Botão "Ver ficha" (item 7) — um por ficha visível do colega; destaque de borda/accent na que
-  // está exibida agora na coluna principal.
-  &__equipe-ficha {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 6px 8px;
-    background: var(--surface);
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-    app-icone {
-      flex: none;
-      font-size: 12px;
-    }
-
-    &:hover {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
-
-    &--ativa {
-      color: var(--accent);
-      background: var(--accent-dim);
-      border-color: var(--accent-border);
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  &__equipe-ficha-corpo {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__equipe-ficha-nome {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__equipe-ficha-vitais {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-mute);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__equipe-ficha-avatar {
-    position: relative;
-    width: 28px;
-    height: 28px;
-    flex: none;
-    // Cursor de mão só nele (não no card inteiro): é o gatilho do preview ampliado no hover
-    // sustentado (`agendarPreviewAvatar`) — sinaliza que dá pra "ficar em cima" e ver a imagem.
-    cursor: pointer;
-    border-radius: var(--radius-control);
-    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
-    background-image: repeating-linear-gradient(
-      135deg,
-      color-mix(
-          in srgb,
-          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
-          transparent
-        )
-        0 2px,
-      transparent 2px 6px
-    );
-    border: 1px solid var(--cor-ficha, var(--border-strong));
-    overflow: hidden;
-  }
-
-  &__equipe-ficha-avatar-imagem {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  // Carteirinha (m3-65) — mesmo layout de `&__equipe-ficha`, mas `<span>` sem interação: borda
-  // tracejada e texto mais apagado sinalizam "sem acesso" sem precisar de rótulo extra.
-  &__equipe-carteirinha {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 6px 8px;
-    background: var(--surface);
-    color: var(--text-mute);
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__equipe-vazio {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-mute);
-    font-style: italic;
-  }
-
-  // === "Rolagens" (m2-21, item 3) — o painel de presets/rolagem avulsa que era a aba "Rolagens"
-  // do card compacto, agora entre Equipe e Sessão: rolar e ler o histórico recente na mesma coluna.
-  // Nome com sufixo `-painel` de propósito — `&__rolagens` (bem acima) já é a tira horizontal do
-  // topo, compartilhada pelos dois papéis.
-  //
-  // O corpo rola por dentro pelo mesmo motivo (e com a mesma receita) de Equipe/Sessão: com os três
-  // cards empilhados, um painel de presets alto empurraria Sessão pra fora da tela. 420px é a régua
-  // que os dois vizinhos já usam.
-  &__rolagens-painel-corpo {
-    max-height: 420px;
-    overflow-y: auto;
-    padding: 2px;
-
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 16px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 16px;
-    }
-  }
-
-  // === "Sessão" (item 8) — mesmas rolagens da última hora da tira do topo (`rolagensRecentes()`),
-  // reaproveitando o `.rolagem-pill` canônico (abaixo), só empilhado em vez de rolar na horizontal
-  // (a lateral é estreita demais para uma tira).
-  //
-  // Teto de 3 pills (a pedido do autor — antes 420px, ~8 pills, empurrava a lateral pra baixo e
-  // exagerava o scroll da página). `.rolagem-pill` mede 53px de altura (medido ao vivo, sempre
-  // igual — 2 linhas de texto fixas: rótulo + meta); com `gap: 8px` entre eles e os 4px de
-  // `padding` do container, 3 pills fecham em 53×3 + 8×2 + 4 = 179px. Mais rolagens continuam
-  // alcançáveis pelo scroll (fade + `appOverflowFade`, sem mudar).
-  &__sessao-lista {
-    list-style: none;
-    margin: 0;
-    padding: 2px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 179px;
-    overflow-y: auto;
-
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 16px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 16px;
-    }
-
-    .rolagem-pill {
-      min-width: 0;
-      max-width: none;
-      width: 100%;
-    }
-  }
-
-  &__sessao-iniciativa {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 10px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    text-decoration: none;
-
-    app-icone { font-size: 13px; }
-
-    @include bp.mobile { min-height: bp.$alvo-toque; }
-  }
-
-  // Cabeçalho de seção — rótulo mono uppercase + régua fina + contagem, mesmo tratamento em
-  // Membros/Esquadrão/Rolagens. Esquadrão ganha também "Nova ficha" (a régua flex:1 empurra
-  // contagem+botão pra direita).
-  &__secao {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 11px;
-    margin: 0 0 12px;
-  }
-
-  &__secao-titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-  }
-
-  &__secao-regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  &__secao-contagem {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-mute);
-  }
-
-  &__nova-ficha {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-  }
-
-  // "Atualizado há Xs" (item 9, m2-16) — legenda discreta na própria linha, abaixo do cabeçalho.
-  &__secao-atualizado {
-    flex-basis: 100%;
-    text-align: right;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-mute);
-  }
-
-  &__estado {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-mute);
-  }
-
-  // === Coluna "Membros" (item 4) — simplificada: nome + chip-papel + ações de gestão. As fichas
-  // saíram desta coluna (foram pro "Esquadrão", ao lado).
-  &__membros {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 640px;
-    overflow-y: auto;
-
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 22px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 22px;
-    }
-  }
-
-  &__membro {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__membro-linha {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  &__membro-identidade {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__membro-acoes {
-    flex: none;
-    display: inline-flex;
-    gap: 8px;
-  }
-
-  &__membro-acao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-    &:hover {
-      color: var(--text);
-      background: var(--surface);
-      border-color: var(--accent-border);
-    }
-
-    app-icone {
-      font-size: 13px;
-    }
-  }
-
-  &__membro-confirmacao {
-    padding: 12px 14px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-  }
-
-  &__membro-aviso {
-    margin: 0 0 12px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  &__membro-confirmacao-acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  &__avatar {
-    width: 32px;
-    height: 32px;
-    flex: none;
-    border-radius: var(--radius-control);
-    background-color: var(--surface-2);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
-  }
-
-  &__membro-nome {
-    min-width: 0;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text);
-    overflow-wrap: anywhere;
-  }
-
-  // === Coluna "Esquadrão" (item 5) — grid FIXO de 2 colunas (não `auto-fill`, decisão do autor:
-  // o protótipo com `auto-fill` rendia 3-4 colunas no desktop). 1 coluna abaixo de `bp.mobile`.
-  &__esquadrao-grid {
-    list-style: none;
-    margin: 0;
-    padding: 2px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    align-items: start;
-    max-height: 640px;
-    overflow-y: auto;
-
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 16px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 16px;
-    }
-
-    @include bp.mobile {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  // Cabeçalho "Criaturas" — mesma coluna do Esquadrão, seção própria abaixo do grid (m4-04+):
-  // respiro do que está acima (grid de fichas ou o estado vazio), sem virar uma 3ª coluna.
-  &__secao--criaturas {
-    margin-top: 18px;
-  }
-
-  // Card de ficha do Esquadrão — mesma receita da m2-16b/m2-16g/m3-52 (agora fora do agrupamento
-  // por dono, direto no grid): topo (dono+nome / condições), meta (classe/nível/patente),
-  // identidade, vitais com passos −/+ e rodapé (reações + kebab).
-  &__ficha-card {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    gap: 10px;
-    padding: 8px 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-
-    &:hover {
-      background: var(--accent-dim);
-      border-color: var(--border-strong);
-    }
-  }
-
-  // Avatar à esquerda do card (mesmo padrão visual da tela de Acervo, m3-62) — placeholder
-  // listrado quando a ficha não tem `imagemUrl`, esticado pra acompanhar a altura do card
-  // inteiro (que varia com a quantidade de reações/identidade exibidas). Borda/fundo seguem a cor
-  // de identidade da ficha (m3-61, `--cor-ficha` setada inline no template) — mesmo `color-mix`
-  // de `ficha-ident__avatar`; sem cor definida, o fallback pra `--border-strong` mantém o visual
-  // neutro de sempre.
-  &__ficha-avatar {
-    position: relative;
-    width: 60px;
-    flex: none;
-    align-self: stretch;
-    border-radius: var(--radius-control);
-    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
-    // Listras a 20% de opacidade — mesmo ajuste de `ficha-ident__avatar` (ficha-visualizacao).
-    background-image: repeating-linear-gradient(
-      135deg,
-      color-mix(
-          in srgb,
-          color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%,
-          transparent
-        )
-        0 3px,
-      transparent 3px 9px
-    );
-    border: 1px solid var(--cor-ficha, var(--border-strong));
-    overflow: hidden;
-  }
-
-  &__ficha-avatar-imagem {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  &__ficha-conteudo {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  &__ficha-link {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    color: inherit;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  // Vida ≤ 0 (item 4 da m2-16b, mantido) — tingido com o token fixo da stat Vida.
-  &__ficha-card--critico {
-    background: color-mix(in srgb, var(--vida) 8%, var(--surface));
-    border-color: var(--vida-border);
-
-    &:hover {
-      background: color-mix(in srgb, var(--vida) 14%, var(--surface));
-    }
-
-    .detalhe__ficha-avatar {
-      border-color: var(--vida-border);
-    }
-  }
-
-  &__ficha-topo {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  // Dono + nome empilhados (m2-19 — o card deixou de viver sob um cabeçalho de grupo por dono no
-  // grid achatado do Esquadrão, então o nome do dono precisa aparecer no próprio card).
-  &__ficha-topo-texto {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  &__ficha-dono {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__ficha-nome {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    overflow-wrap: anywhere;
-  }
-
-  &__ficha-condicoes {
-    flex: none;
-    display: inline-flex;
-    gap: 4px;
-  }
-
-  &__ficha-condicao {
-    font-size: 13px;
-    color: var(--text-mute);
-    opacity: 0.35;
-  }
-
-  &__ficha-condicao--ativa {
-    opacity: 1;
-
-    &[data-condicao='morrendo'] {
-      color: var(--vida);
-    }
-
-    &[data-condicao='machucado'] {
-      color: var(--warning);
-    }
-
-    &[data-condicao='inconsciente'] {
-      color: var(--text);
-    }
-
-    &[data-condicao='sobrecarregado'] {
-      color: var(--warning);
-    }
-  }
-
-  &__ficha-meta {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  &__ficha-identidade {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-style: italic;
-    color: var(--text-mute);
-  }
-
-  &__ficha-rodape {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    min-height: 22px;
-    margin-top: 2px;
-  }
-
-  &__ficha-reacoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px 10px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-mute);
-  }
-
-  &__ficha-vitais {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 10px;
-  }
-
-  &__ficha-vital {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-mute);
-
-    &--vida {
-      color: var(--vida);
-    }
-
-    &--energia {
-      color: var(--energy);
-    }
-  }
-
-  &__ficha-passo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: 18px;
-    height: 18px;
-    padding: 0;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    touch-action: none;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface);
-    }
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-  }
-
-  &__ficha-menu-botao {
-    flex: none;
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 22px;
-    font-size: 15px;
-    line-height: 1;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
-    }
-  }
-
-  &__ficha-menu-fundo {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    background: transparent;
-    border: 0;
-    cursor: default;
-  }
-
-  // `fixed` (não `absolute`) — os mini-cards vivem dentro do `&__esquadrao-grid`, que tem
-  // `overflow-y: auto` (m2-16/m2-19), que cortaria um dropdown `absolute` comum contra o próprio
-  // scroll. `top`/`right` chegam via `[style]`, calculados no clique do botão (`alternarMenuFicha`).
-  &__ficha-menu {
-    position: fixed;
-    z-index: 21;
-    min-width: 170px;
-    padding: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
-  }
-
-  &__ficha-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    width: 100%;
-    padding: 9px 10px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text);
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease, color 0.15s ease;
-
-    &:hover {
-      background: var(--surface-2);
-      color: var(--accent);
-    }
-  }
-
-  // Preview ampliado do avatar do Esquadrão (hover sustentado, `agendarPreviewAvatar`) — `fixed`
-  // pela mesma razão de `&__ficha-menu` (grid com `overflow`/`mask-image` cortaria na pintura).
-  // `pointer-events: none`: é só apresentação, não deve roubar o `mouseleave` do card por baixo.
-  // `object-fit: contain` (não `cover`, como o mini-card 60×60) — o pedido era ver a foto inteira,
-  // sem recorte.
-  &__avatar-preview {
-    position: fixed;
-    z-index: 22;
-    width: 200px;
-    height: 200px;
-    padding: 4px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
-    pointer-events: none;
-  }
-
-  &__avatar-preview-imagem {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: calc(var(--radius-card) - 4px);
-  }
-
-  // === Edição inline de nome/descrição (só mestre, aberta pelo kebab do cabeçalho) — ganhou uma
-  // caixa própria (fundo+borda) desde o m2-19: antes vivia dentro do card "Identidade", que
-  // deixou de existir.
-  &__edicao {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-bottom: 16px;
-    padding: 16px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  &__entrada {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text);
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-border);
-    }
-
-    &--area {
-      resize: vertical;
-      font-family: var(--font-sans);
-    }
-  }
-
-  &__edicao-acoes,
-  &__exclusao-acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 16px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-  }
-
-  // Caixa de confirmação de exclusão — realce com a borda accent (ação destrutiva pendente).
-  &__exclusao {
-    margin-bottom: 16px;
-    padding: 14px 16px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-control);
-  }
-
-  &__exclusao-aviso {
-    margin: 0 0 12px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  // === Esqueleto de carregamento — mimetiza a silhueta real: cabeçalho, tira de 4 estatísticas
-  // e a grade de duas colunas (linhas de membro + cards de ficha).
-  &__esqueleto {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  &__esqueleto-cabecalho {
-    display: flex;
-  }
-
-  &__esqueleto-estatisticas {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-
-    @include bp.mobile {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  &__esqueleto-membros {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__esqueleto-membro {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__esqueleto-esquadrao {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-
-    @include bp.mobile {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
-  @include bp.mobile {
-    &__entrada {
-      min-height: bp.$alvo-toque;
-    }
-
-    &__acao {
-      min-height: bp.$alvo-toque;
-    }
-
-    &__membro-acao {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-
-    &__ficha-menu-botao {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-    }
-
-    &__ficha-passo {
-      width: bp.$alvo-toque;
-      height: bp.$alvo-toque;
-      font-size: 18px;
-    }
-
-    &__ficha-vital {
-      font-size: 13px;
+        max-width: 100%;
+    }
+
+    // === Cabeçalho da página (m2-19, item 6; reflow mobile do "1"/próxima leva) — substitui o antigo
+    // `card__cabecalho` dentro do card "Identidade", que deixou de existir. Duas linhas lógicas:
+    // título (índice+nome+régua) e ações (tempo real, voltar, histórico, kebab). No desktop ficam
+    // lado a lado numa linha só; no mobile a linha de ações quebra pra baixo do nome, que fica com
+    // a linha só pra si — dá mais destaque ao nome da campanha numa tela estreita.
+    &__cabecalho {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 16px;
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+            row-gap: 10px;
+        }
+    }
+
+    &__cabecalho-titulo-linha {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        flex: 1;
+        min-width: 0;
+
+        @include bp.mobile {
+            flex-basis: 100%;
+        }
+    }
+
+    &__cabecalho-acoes {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: none;
+
+        @include bp.mobile {
+            flex-basis: 100%;
+        }
+    }
+
+    // Botão quadrado "Voltar às campanhas" — substitui o antigo link de rodapé (`&__voltar`/
+    // `&__link`), agora ao lado do gatilho de histórico de rolagens no cabeçalho.
+    &__cabecalho-voltar {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 22px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        app-icone {
+            font-size: 13px;
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+    }
+
+    &__cabecalho-menu-envoltorio {
+        position: relative;
+        flex: none;
+    }
+
+    &__cabecalho-menu-botao {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 22px;
+        font-size: 15px;
+        line-height: 1;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    // Fundo transparente pra fechar o menu com um clique fora — sem clipping ancestral aqui (o
+    // cabeçalho não vive dentro de nenhum `overflow`+`mask-image`), então não precisa do truque de
+    // `position: fixed` calculado no clique que o menu de ficha (`&__ficha-menu*`) usa.
+    &__cabecalho-menu-fundo {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        background: transparent;
+        border: 0;
+        cursor: default;
+    }
+
+    &__cabecalho-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 31;
+        min-width: 160px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    }
+
+    &__cabecalho-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        padding: 9px 10px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        text-align: left;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            color: var(--accent);
+        }
+
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__cabecalho-menu-contagem {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--text-mute);
+    }
+
+    &__descricao {
+        margin: 0 0 16px;
+        font-family: var(--font-sans);
+        color: var(--text-dim);
+    }
+
+    // === Banner de alerta (item 1) — só aparece quando há ficha com Vida ≤ 0 na campanha. Mesmo
+    // tratamento de "crítico" já usado em `&__ficha-card--critico`/`.campanhas__linha--critico`
+    // (m2-18): tokens fixos `--vida`/`--vida-border`, não `--accent` (trocável em runtime).
+    &__banner-alerta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 12px 16px;
+        background: color-mix(in srgb, var(--vida) 10%, var(--surface));
+        border: 1px solid var(--vida-border);
+        border-radius: var(--radius-control);
+        color: var(--vida);
+
+        app-icone {
+            flex: none;
+            font-size: 15px;
+        }
+    }
+
+    &__banner-texto {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__banner-link {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--vida);
+        text-decoration: none;
+        white-space: nowrap;
+
+        &:hover {
+            text-decoration: underline;
+        }
+
+        @include bp.mobile {
+            display: inline-flex;
+            align-items: center;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // === "Ver como jogador" (preview do mestre) — barra fixa fora do container travado (continua
+    // clicável) + o container em si, que trava toda a interação (`pointer-events: none`) enquanto
+    // o preview está ativo. Puro CSS: nenhum handler precisa checar o preview individualmente.
+    &__preview-barra {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 10px 16px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        color: var(--accent);
+    }
+
+    &__preview-texto {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__preview-sair {
+        flex: none;
+    }
+
+    &__conteudo--bloqueado {
+        pointer-events: none;
+        opacity: 0.92;
+    }
+
+    // === Tira de estatísticas (item 2) — só o tile "Convite" (Membros/Fichas/Alertas removidos: a
+    // contagem de membros/fichas já aparece nos cabeçalhos das colunas ao lado, e o alerta de ficha
+    // crítica já tem o banner próprio acima). Mesmo bloco `.stat` canônico (abaixo).
+    &__estatisticas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    // Tile "Convite" — o código + copiar/regenerar (antes uma caixa própria `&__convite`, agora
+    // dentro da tira de estatísticas). Largura contida no desktop; linha inteira no mobile.
+    &__stat-convite {
+        min-width: 0;
+        flex: 0 1 340px;
+
+        @include bp.mobile {
+            flex-basis: 100%;
+        }
+    }
+
+    // Tile "Combate" (m7-06) — a porta de entrada da tela "Iniciativa", ao lado do Convite. Antes o
+    // único caminho até ela era o menu "⋯" do cabeçalho, invisível para quem não o abre.
+    &__stat-encontro {
+        min-width: 0;
+        flex: 0 1 340px;
+
+        @include bp.mobile {
+            flex-basis: 100%;
+        }
+    }
+
+    &__encontro-linha {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    &__encontro-estado {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    &__encontro-nome {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__encontro-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__encontro-acao {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        text-decoration: none;
+
+        app-icone {
+            font-size: 13px;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__convite-linha {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+    }
+
+    &__codigo {
+        flex: 1;
+        min-width: 0;
+        padding: 5px 8px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__copiar,
+    &__regenerar {
+        position: relative;
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            color: var(--text);
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    &__copiar--copiado,
+    &__copiar--copiado:hover,
+    &__regenerar--confirmado,
+    &__regenerar--confirmado:hover {
+        color: var(--bg);
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+
+    // Tooltip efêmero "COPIADO" acima do botão de copiar — surge só no estado copiado.
+    &__copiado-tooltip {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%) translateY(4px);
+        padding: 4px 8px;
+        background: var(--surface-2);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--accent);
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+            opacity 0.15s ease,
+            transform 0.15s ease;
+    }
+
+    &__copiar--copiado &__copiado-tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    // === Tira horizontal de rolagens recentes (item 3) — teaser do feed já buscado; a lista
+    // completa continua só na sidebar de histórico (`HistoricoRolagensSidebar`, "Ver tudo").
+    &__rolagens {
+        margin-bottom: 16px;
+    }
+
+    &__rolagens-tira {
+        list-style: none;
+        margin: 8px 0 0;
+        padding: 2px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+
+        --fade-esquerda: 0px;
+        --fade-direita: 0px;
+        &.overflow-fade--esquerda,
+        &.overflow-fade--direita {
+            -webkit-mask-image: linear-gradient(
+                to right,
+                transparent 0,
+                #000 var(--fade-esquerda),
+                #000 calc(100% - var(--fade-direita)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to right,
+                transparent 0,
+                #000 var(--fade-esquerda),
+                #000 calc(100% - var(--fade-direita)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--esquerda {
+            --fade-esquerda: 18px;
+        }
+        &.overflow-fade--direita {
+            --fade-direita: 18px;
+        }
+    }
+
+    // === Grade de duas colunas: Membros | Esquadrão (item 5). Empilha abaixo do breakpoint de
+    // tablet (item 8) — colunas de ~450px+grid de fichas ficariam espremidas antes disso.
+    // Membros a 450px (era 300px) — +50% a pedido do autor, mais espaço pro nome/chip-papel/ações.
+    &__grade {
+        display: grid;
+        grid-template-columns: minmax(0, 450px) minmax(0, 1fr);
+        gap: var(--gap-grid);
+        align-items: start;
+
+        @include bp.tablet {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    &__coluna {
+        min-width: 0;
+
+        // Empilhado (abaixo de `bp.tablet`), Esquadrão sobe pra antes de Membros — mesmo breakpoint
+        // em que a grade já virou 1 coluna (`order` não muda nada nas 2 colunas do desktop).
+        &--esquadrao {
+            @include bp.tablet {
+                order: -1;
+            }
+        }
+    }
+
+    // === Visão do JOGADOR (m2-20) — a irmã de `&__grade` acima (só mestre): coluna principal com a
+    // ficha embutida (sem largura fixa aqui, o `<app-ficha-visualizacao modo="compacto">` já trava
+    // as próprias colunas internas, sempre — própria ficha ou de colega) e uma lateral larga de
+    // 450px (era 260px, depois 500px, ~10% mais estreita a pedido do autor) com Equipe + Sessão.
+    // Empilha abaixo de `bp.tablet` — mesma ficha primeiro (ordem do DOM, sem `order`), lateral
+    // depois (item 10).
+    &__jogador {
+        display: flex;
+        align-items: start;
+        gap: var(--gap-grid);
+
+        @include bp.tablet {
+            flex-direction: column;
+        }
+
+        // m2-20: a ficha embutida (`modo="compacto"`) tem sua própria `.ficha-nav` fixa no rodapé no
+        // mobile (herdada de `FichaVisualizacao`) — sem este respiro, o fim da coluna lateral (Sessão)
+        // ficava por baixo da barra ao rolar até o final da página.
+        @include bp.mobile {
+            padding-bottom: calc(var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+        }
+    }
+
+    &__jogador-principal {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    &__jogador-lateral {
+        flex: 0 0 450px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap-grid);
+        min-width: 0;
+
+        @include bp.tablet {
+            flex-basis: auto;
+            width: 100%;
+        }
+    }
+
+    // Estado vazio da coluna principal (m2-21, item 8) — "você ainda não tem ficha" + os dois
+    // atalhos do menu "⋯". Os botões empilham no mobile, onde 2 rótulos longos não cabem lado a lado.
+    &__jogador-vazio {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    &__jogador-vazio-acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        @include bp.mobile {
+            width: 100%;
+            flex-direction: column;
+        }
+    }
+
+    // Card da ficha embutida — cabeçalho próprio (nome + "Abrir completa") no topo do
+    // `<app-ficha-visualizacao modo="compacto">` (item 6); o card canônico já dá fundo/borda/padding.
+    &__ficha-embutida {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__abrir-completa,
+    &__alternar-inventario {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 12px;
+        font-size: 10px;
+        line-height: 1;
+        text-decoration: none;
+
+        app-icone {
+            display: inline-flex;
+            flex: none;
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    &__abrir-completa-rodape {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 16px;
+        padding: 9px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        text-decoration: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // === "Equipe" (item 8) — roster compacto da lateral: por colega com ficha visível, um item por
+    // ficha (item 7 — "Ver ficha"); colega sem nenhuma ficha visível nem entra na lista.
+    &__equipe-lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 420px;
+        overflow-y: auto;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 16px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 16px;
+        }
+    }
+
+    &__equipe-membro {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__equipe-membro-corpo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__equipe-nome {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    // Cabeçalho do mestre na Equipe (m3-65) — chip "Mestre" antes do nome, lado a lado (o resto da
+    // lista só tem o nome sozinho, sem precisar desse wrapper em linha).
+    &__equipe-cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    // Botão "Ver ficha" (item 7) — um por ficha visível do colega; destaque de borda/accent na que
+    // está exibida agora na coluna principal.
+    &__equipe-ficha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 6px 8px;
+        background: var(--surface);
+        color: var(--text-dim);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        text-align: left;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+
+        app-icone {
+            flex: none;
+            font-size: 12px;
+        }
+
+        &:hover {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        &--ativa {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__equipe-ficha-corpo {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    &__equipe-ficha-nome {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__equipe-ficha-vitais {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__equipe-ficha-avatar {
+        position: relative;
+        width: 28px;
+        height: 28px;
+        flex: none;
+        // Cursor de mão só nele (não no card inteiro): é o gatilho do preview ampliado no hover
+        // sustentado (`agendarPreviewAvatar`) — sinaliza que dá pra "ficar em cima" e ver a imagem.
+        cursor: pointer;
+        border-radius: var(--radius-control);
+        background-color: color-mix(
+            in srgb,
+            var(--cor-ficha, var(--border-strong)) 14%,
+            var(--surface)
+        );
+        background-image: repeating-linear-gradient(
+            135deg,
+            color-mix(
+                    in srgb,
+                    color-mix(
+                            in srgb,
+                            var(--cor-ficha, var(--border-strong)) 60%,
+                            var(--border-strong)
+                        )
+                        20%,
+                    transparent
+                )
+                0 2px,
+            transparent 2px 6px
+        );
+        border: 1px solid var(--cor-ficha, var(--border-strong));
+        overflow: hidden;
+    }
+
+    &__equipe-ficha-avatar-imagem {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    // Carteirinha (m3-65) — mesmo layout de `&__equipe-ficha`, mas `<span>` sem interação: borda
+    // tracejada e texto mais apagado sinalizam "sem acesso" sem precisar de rótulo extra.
+    &__equipe-carteirinha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 6px 8px;
+        background: var(--surface);
+        color: var(--text-mute);
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__equipe-vazio {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
+        font-style: italic;
+    }
+
+    // === "Rolagens" (m2-21, item 3) — o painel de presets/rolagem avulsa que era a aba "Rolagens"
+    // do card compacto, agora entre Equipe e Sessão: rolar e ler o histórico recente na mesma coluna.
+    // Nome com sufixo `-painel` de propósito — `&__rolagens` (bem acima) já é a tira horizontal do
+    // topo, compartilhada pelos dois papéis.
+    //
+    // O corpo rola por dentro pelo mesmo motivo (e com a mesma receita) de Equipe/Sessão: com os três
+    // cards empilhados, um painel de presets alto empurraria Sessão pra fora da tela. 420px é a régua
+    // que os dois vizinhos já usam.
+    &__rolagens-painel-corpo {
+        max-height: 420px;
+        overflow-y: auto;
+        padding: 2px;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 16px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 16px;
+        }
+    }
+
+    // === "Sessão" (item 8) — mesmas rolagens da última hora da tira do topo (`rolagensRecentes()`),
+    // reaproveitando o `.rolagem-pill` canônico (abaixo), só empilhado em vez de rolar na horizontal
+    // (a lateral é estreita demais para uma tira).
+    //
+    // Teto de 3 pills (a pedido do autor — antes 420px, ~8 pills, empurrava a lateral pra baixo e
+    // exagerava o scroll da página). `.rolagem-pill` mede 53px de altura (medido ao vivo, sempre
+    // igual — 2 linhas de texto fixas: rótulo + meta); com `gap: 8px` entre eles e os 4px de
+    // `padding` do container, 3 pills fecham em 53×3 + 8×2 + 4 = 179px. Mais rolagens continuam
+    // alcançáveis pelo scroll (fade + `appOverflowFade`, sem mudar).
+    &__sessao-lista {
+        list-style: none;
+        margin: 0;
+        padding: 2px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 179px;
+        overflow-y: auto;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 16px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 16px;
+        }
+
+        .rolagem-pill {
+            min-width: 0;
+            max-width: none;
+            width: 100%;
+        }
+    }
+
+    &__sessao-iniciativa {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        text-decoration: none;
+
+        app-icone {
+            font-size: 13px;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Cabeçalho de seção — rótulo mono uppercase + régua fina + contagem, mesmo tratamento em
+    // Membros/Esquadrão/Rolagens. Esquadrão ganha também "Nova ficha" (a régua flex:1 empurra
+    // contagem+botão pra direita).
+    &__secao {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 11px;
+        margin: 0 0 12px;
+    }
+
+    &__secao-titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__secao-regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__secao-contagem {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
     }
 
     &__nova-ficha {
-      flex: 1 1 100%;
-      justify-content: center;
-      min-height: bp.$alvo-toque;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
     }
 
-    &__ficha-embutida .card__cabecalho {
-      flex-wrap: wrap;
-
-      .card__regua {
+    // "Atualizado há Xs" (item 9, m2-16) — legenda discreta na própria linha, abaixo do cabeçalho.
+    &__secao-atualizado {
         flex-basis: 100%;
-      }
+        text-align: right;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
     }
 
-    &__alternar-inventario,
-    &__abrir-completa {
-      flex: 1 1 calc(50% - 6px);
-      min-width: 0;
-      min-height: bp.$alvo-toque;
-      justify-content: center;
+    &__estado {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-style: italic;
+        color: var(--text-mute);
     }
-  }
+
+    // === Coluna "Membros" (item 4) — simplificada: nome + chip-papel + ações de gestão. As fichas
+    // saíram desta coluna (foram pro "Esquadrão", ao lado).
+    &__membros {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 640px;
+        overflow-y: auto;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 22px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 22px;
+        }
+    }
+
+    &__membro {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__membro-linha {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    &__membro-identidade {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__membro-acoes {
+        flex: none;
+        display: inline-flex;
+        gap: 8px;
+    }
+
+    &__membro-acao {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover {
+            color: var(--text);
+            background: var(--surface);
+            border-color: var(--accent-border);
+        }
+
+        app-icone {
+            font-size: 13px;
+        }
+    }
+
+    &__membro-confirmacao {
+        padding: 12px 14px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+    }
+
+    &__membro-aviso {
+        margin: 0 0 12px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__membro-confirmacao-acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    &__avatar {
+        width: 32px;
+        height: 32px;
+        flex: none;
+        border-radius: var(--radius-control);
+        background-color: var(--surface-2);
+        background-image: repeating-linear-gradient(
+            135deg,
+            var(--border-strong) 0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--border-strong);
+    }
+
+    &__membro-nome {
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    // === Coluna "Esquadrão" (item 5) — grid FIXO de 2 colunas (não `auto-fill`, decisão do autor:
+    // o protótipo com `auto-fill` rendia 3-4 colunas no desktop). 1 coluna abaixo de `bp.mobile`.
+    &__esquadrao-grid {
+        list-style: none;
+        margin: 0;
+        padding: 2px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: start;
+        max-height: 640px;
+        overflow-y: auto;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 16px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 16px;
+        }
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    // Cabeçalho "Criaturas" — mesma coluna do Esquadrão, seção própria abaixo do grid (m4-04+):
+    // respiro do que está acima (grid de fichas ou o estado vazio), sem virar uma 3ª coluna.
+    &__secao--criaturas {
+        margin-top: 18px;
+    }
+
+    // Card de ficha do Esquadrão — mesma receita da m2-16b/m2-16g/m3-52 (agora fora do agrupamento
+    // por dono, direto no grid): topo (dono+nome / condições), meta (classe/nível/patente),
+    // identidade, vitais com passos −/+ e rodapé (reações + kebab).
+    &__ficha-card {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 10px;
+        padding: 8px 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+
+        &:hover {
+            background: var(--accent-dim);
+            border-color: var(--border-strong);
+        }
+    }
+
+    // Avatar à esquerda do card (mesmo padrão visual da tela de Acervo, m3-62) — placeholder
+    // listrado quando a ficha não tem `imagemUrl`, esticado pra acompanhar a altura do card
+    // inteiro (que varia com a quantidade de reações/identidade exibidas). Borda/fundo seguem a cor
+    // de identidade da ficha (m3-61, `--cor-ficha` setada inline no template) — mesmo `color-mix`
+    // de `ficha-ident__avatar`; sem cor definida, o fallback pra `--border-strong` mantém o visual
+    // neutro de sempre.
+    &__ficha-avatar {
+        position: relative;
+        width: 60px;
+        flex: none;
+        align-self: stretch;
+        border-radius: var(--radius-control);
+        background-color: color-mix(
+            in srgb,
+            var(--cor-ficha, var(--border-strong)) 14%,
+            var(--surface)
+        );
+        // Listras a 20% de opacidade — mesmo ajuste de `ficha-ident__avatar` (ficha-visualizacao).
+        background-image: repeating-linear-gradient(
+            135deg,
+            color-mix(
+                    in srgb,
+                    color-mix(
+                            in srgb,
+                            var(--cor-ficha, var(--border-strong)) 60%,
+                            var(--border-strong)
+                        )
+                        20%,
+                    transparent
+                )
+                0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--cor-ficha, var(--border-strong));
+        overflow: hidden;
+    }
+
+    &__ficha-avatar-imagem {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &__ficha-conteudo {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__ficha-link {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        color: inherit;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    // Vida ≤ 0 (item 4 da m2-16b, mantido) — tingido com o token fixo da stat Vida.
+    &__ficha-card--critico {
+        background: color-mix(in srgb, var(--vida) 8%, var(--surface));
+        border-color: var(--vida-border);
+
+        &:hover {
+            background: color-mix(in srgb, var(--vida) 14%, var(--surface));
+        }
+
+        .detalhe__ficha-avatar {
+            border-color: var(--vida-border);
+        }
+    }
+
+    &__ficha-topo {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    // Dono + nome empilhados (m2-19 — o card deixou de viver sob um cabeçalho de grupo por dono no
+    // grid achatado do Esquadrão, então o nome do dono precisa aparecer no próprio card).
+    &__ficha-topo-texto {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    &__ficha-dono {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__ficha-nome {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__ficha-condicoes {
+        flex: none;
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    &__ficha-condicao {
+        font-size: 13px;
+        color: var(--text-mute);
+        opacity: 0.35;
+    }
+
+    &__ficha-condicao--ativa {
+        opacity: 1;
+
+        &[data-condicao="morrendo"] {
+            color: var(--vida);
+        }
+
+        &[data-condicao="machucado"] {
+            color: var(--warning);
+        }
+
+        &[data-condicao="inconsciente"] {
+            color: var(--text);
+        }
+
+        &[data-condicao="sobrecarregado"] {
+            color: var(--warning);
+        }
+    }
+
+    &__ficha-meta {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+    }
+
+    &__ficha-identidade {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-sans);
+        font-size: 11px;
+        font-style: italic;
+        color: var(--text-mute);
+    }
+
+    &__ficha-rodape {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 22px;
+        margin-top: 2px;
+    }
+
+    &__ficha-reacoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 10px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+    }
+
+    &__ficha-vitais {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+    }
+
+    &__ficha-vital {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-mute);
+
+        &--vida {
+            color: var(--vida);
+        }
+
+        &--energia {
+            color: var(--energy);
+        }
+    }
+
+    &__ficha-passo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover:not(:disabled) {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface);
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+    }
+
+    &__ficha-menu-botao {
+        flex: none;
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 22px;
+        font-size: 15px;
+        line-height: 1;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+    }
+
+    &__ficha-menu-fundo {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: transparent;
+        border: 0;
+        cursor: default;
+    }
+
+    // `fixed` (não `absolute`) — os mini-cards vivem dentro do `&__esquadrao-grid`, que tem
+    // `overflow-y: auto` (m2-16/m2-19), que cortaria um dropdown `absolute` comum contra o próprio
+    // scroll. `top`/`right` chegam via `[style]`, calculados no clique do botão (`alternarMenuFicha`).
+    &__ficha-menu {
+        position: fixed;
+        z-index: 21;
+        min-width: 170px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    }
+
+    &__ficha-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        padding: 9px 10px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        text-align: left;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover {
+            background: var(--surface-2);
+            color: var(--accent);
+        }
+    }
+
+    // Preview ampliado do avatar do Esquadrão (hover sustentado, `agendarPreviewAvatar`) — `fixed`
+    // pela mesma razão de `&__ficha-menu` (grid com `overflow`/`mask-image` cortaria na pintura).
+    // `pointer-events: none`: é só apresentação, não deve roubar o `mouseleave` do card por baixo.
+    // `object-fit: contain` (não `cover`, como o mini-card 60×60) — o pedido era ver a foto inteira,
+    // sem recorte.
+    &__avatar-preview {
+        position: fixed;
+        z-index: 22;
+        width: 200px;
+        height: 200px;
+        padding: 4px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+        pointer-events: none;
+    }
+
+    &__avatar-preview-imagem {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: calc(var(--radius-card) - 4px);
+    }
+
+    // === Edição inline de nome/descrição (só mestre, aberta pelo kebab do cabeçalho) — ganhou uma
+    // caixa própria (fundo+borda) desde o m2-19: antes vivia dentro do card "Identidade", que
+    // deixou de existir.
+    &__edicao {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 16px;
+        padding: 16px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    &__entrada {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent-border);
+        }
+
+        &--area {
+            resize: vertical;
+            font-family: var(--font-sans);
+        }
+    }
+
+    &__edicao-acoes,
+    &__exclusao-acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+    }
+
+    // Caixa de confirmação de exclusão — realce com a borda accent (ação destrutiva pendente).
+    &__exclusao {
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+    }
+
+    &__exclusao-aviso {
+        margin: 0 0 12px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    // === Esqueleto de carregamento — mimetiza a silhueta real: cabeçalho, tira de 4 estatísticas
+    // e a grade de duas colunas (linhas de membro + cards de ficha).
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    &__esqueleto-cabecalho {
+        display: flex;
+    }
+
+    &__esqueleto-estatisticas {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+
+        @include bp.mobile {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    &__esqueleto-membros {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__esqueleto-membro {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__esqueleto-esquadrao {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
+    @include bp.mobile {
+        &__entrada {
+            min-height: bp.$alvo-toque;
+        }
+
+        &__acao {
+            min-height: bp.$alvo-toque;
+        }
+
+        &__membro-acao {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+
+        &__ficha-menu-botao {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+
+        &__ficha-passo {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+            font-size: 18px;
+        }
+
+        &__ficha-vital {
+            font-size: 13px;
+        }
+
+        &__nova-ficha {
+            flex: 1 1 100%;
+            justify-content: center;
+            min-height: bp.$alvo-toque;
+        }
+
+        &__ficha-embutida .card__cabecalho {
+            flex-wrap: wrap;
+
+            .card__regua {
+                flex-basis: 100%;
+            }
+        }
+
+        &__alternar-inventario,
+        &__abrir-completa {
+            flex: 1 1 calc(50% - 6px);
+            min-width: 0;
+            min-height: bp.$alvo-toque;
+            justify-content: center;
+        }
+    }
 }
 
 // Chip de papel (MESTRE / JOGADOR) — variação do chip de classificação do tema.
 .chip-papel {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  border: 1px solid var(--accent-border);
-  border-radius: 3px;
-  padding: 4px 8px;
-  width: fit-content;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    border-radius: 3px;
+    padding: 4px 8px;
+    width: fit-content;
 
-  app-icone {
-    font-size: 11px;
-  }
+    app-icone {
+        font-size: 11px;
+    }
 }
 
 // Pill de rolagem (item 3, nome sancionado pela spec) — item da tira horizontal de rolagens
 // recentes do cabeçalho. Não segue o BEM `.detalhe__*` porque é o nome que a própria spec exige.
 .rolagem-pill {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 140px;
-  max-width: 220px;
-  padding: 8px 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-
-  // Linha do topo: rótulo + dadinho d20 lado a lado — `align-items: center` alinha o centro vertical
-  // dos dois (o d20 sozinho como `position: absolute` desalinhava do texto por alguns px, dependendo
-  // da métrica da fonte; numa linha flex comum os dois compartilham o mesmo eixo cruzado).
-  &__topo {
+    flex: none;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-  }
+    flex-direction: column;
+    gap: 2px;
+    min-width: 140px;
+    max-width: 220px;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
 
-  // Dadinho d20 (item 3, ajuste pós-m2-19): hover/foco mostra o resultado completo da rolagem na
-  // bandeja de dados flutuante (`BandejaDadosService`, o mesmo container das rolagens ao vivo).
-  &__d20 {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    padding: 0;
-    font-size: 12px;
-    line-height: 1;
-    color: var(--text-dim);
-    background: transparent;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: color 0.15s ease;
-
-    &:hover,
-    &:focus-visible {
-      color: var(--accent);
+    // Linha do topo: rótulo + dadinho d20 lado a lado — `align-items: center` alinha o centro vertical
+    // dos dois (o d20 sozinho como `position: absolute` desalinhava do texto por alguns px, dependendo
+    // da métrica da fonte; numa linha flex comum os dois compartilham o mesmo eixo cruzado).
+    &__topo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
     }
-  }
 
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+    // Dadinho d20 (item 3, ajuste pós-m2-19): hover/foco mostra o resultado completo da rolagem na
+    // bandeja de dados flutuante (`BandejaDadosService`, o mesmo container das rolagens ao vivo).
+    &__d20 {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        font-size: 12px;
+        line-height: 1;
+        color: var(--text-dim);
+        background: transparent;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: color 0.15s ease;
 
-  &__meta {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-mute);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+        &:hover,
+        &:focus-visible {
+            color: var(--accent);
+        }
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 // Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 18px;
-  }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 18px;
+    }
 
-  &__indice {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 3px;
-  }
+    &__indice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+    }
 
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-  }
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+    }
 
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 }
 
 // Stat box — bloco sancionado copiado de docs/design/tema/_componentes.scss (m2-18/m2-19).
 .stat {
-  min-width: 0;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  padding: 13px 14px;
+    min-width: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 13px 14px;
 
-  &__rotulo {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-    margin-bottom: 7px;
-  }
-
-  &__valor {
-    font-family: var(--font-mono);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text);
-    line-height: 1;
-  }
-
-  // Alertas > 0 (item 2) — mesmo token fixo `--vida` do card/linha/banner crítico, não `--accent`.
-  &--alerta {
-    border-color: var(--vida-border);
-
-    .stat__valor {
-      color: var(--vida);
+    &__rotulo {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        margin-bottom: 7px;
     }
-  }
+
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    // Alertas > 0 (item 2) — mesmo token fixo `--vida` do card/linha/banner crítico, não `--accent`.
+    &--alerta {
+        border-color: var(--vida-border);
+
+        .stat__valor {
+            color: var(--vida);
+        }
+    }
 }
 
 // Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .botao {
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        filter 0.15s ease;
 
-  &:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
-
-  &--primario {
-    background: var(--accent);
-    color: var(--bg);
-    border: 0;
-
-    &:hover:not(:disabled) {
-      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-      filter: brightness(1.08);
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
     }
-  }
 
-  &--secundario {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border-strong);
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
 
-    &:hover:not(:disabled) {
-      background: var(--surface-2);
-      border-color: var(--accent-border);
+        &:hover:not(:disabled) {
+            // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+            filter: brightness(1.08);
+        }
     }
-  }
+
+    &--secundario {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
 }
 
 // === Dialog de confirmação (m3-52) — Duplicar/Excluir ficha a partir do menu do mini-card.
 // Mesmo padrão `.dialogo` genérico já usado por `FichaVisualizar` (m3-10/m3-52), copiado aqui
 // (view encapsulation não deixa reusar o `.scss` de outro componente). ===
 .dialogo {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 60px 20px;
-  overflow-y: auto;
-
-  &__fundo {
     position: fixed;
     inset: 0;
-    background: rgb(0 0 0 / 55%);
-    border: 0;
-    cursor: default;
-  }
-
-  &__painel {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 420px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-  }
-
-  &__cabecalho {
+    z-index: 40;
     display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 16px;
-  }
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+    overflow-y: auto;
 
-  &__titulo {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0;
-  }
-
-  &__fechar {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
+    &__fundo {
+        position: fixed;
+        inset: 0;
+        background: rgb(0 0 0 / 55%);
+        border: 0;
+        cursor: default;
     }
 
-    &:disabled {
-      opacity: 0.55;
-      cursor: default;
+    &__painel {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 420px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
+        box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
     }
-  }
 
-  &__aviso {
-    margin: 0 0 16px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-  }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 16px;
+    }
 
-  &__acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+    &__titulo {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
 
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    &__fechar {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+    }
+
+    &__aviso {
+        margin: 0 0 16px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 }
 
 // === Painel "Acesso de visualização" (dentro de `.dialogo__painel.acesso`) — mesmo bloco de
 // `visualizar.page.scss`, copiado aqui (view encapsulation não deixa reusar o `.scss` de outro
 // componente). ===
 .acesso {
-  &__ajuda {
-    font-family: var(--font-sans);
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-dim);
-    margin: 0 0 16px;
-  }
-
-  &__conceder {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-
-  &__select {
-    flex: 1;
-    min-width: 200px;
-    background: var(--surface-2);
-    color: var(--text);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 11px 12px;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    outline: none;
-
-    &:focus {
-      border-color: var(--accent-border);
+    &__ajuda {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+        margin: 0 0 16px;
     }
-  }
 
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    &__conceder {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
 
-  &__vazio-elegiveis,
-  &__vazio {
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-mute);
-    margin: 12px 0 0;
-  }
+    &__select {
+        flex: 1;
+        min-width: 200px;
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 11px 12px;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        outline: none;
 
-  &__lista {
-    list-style: none;
-    margin: 16px 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+        &:focus {
+            border-color: var(--accent-border);
+        }
+    }
 
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 
-  &__avatar {
-    width: 30px;
-    height: 30px;
-    flex: none;
-    border-radius: var(--radius-control);
-    background-color: var(--surface-2);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
-  }
+    &__vazio-elegiveis,
+    &__vazio {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-style: italic;
+        color: var(--text-mute);
+        margin: 12px 0 0;
+    }
 
-  &__nome {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
+    &__lista {
+        list-style: none;
+        margin: 16px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-  &__revogar {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    flex: none;
-  }
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__avatar {
+        width: 30px;
+        height: 30px;
+        flex: none;
+        border-radius: var(--radius-control);
+        background-color: var(--surface-2);
+        background-image: repeating-linear-gradient(
+            135deg,
+            var(--border-strong) 0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--border-strong);
+    }
+
+    &__nome {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    &__revogar {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        flex: none;
+    }
 }
 
 // Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
 .esqueleto-bloco {
-  display: block;
-  border-radius: var(--radius-control);
-  background: var(--border-strong);
-  animation: esqueleto-pulso 1.4s ease-in-out infinite;
+    display: block;
+    border-radius: var(--radius-control);
+    background: var(--border-strong);
+    animation: esqueleto-pulso 1.4s ease-in-out infinite;
 
-  &--titulo {
-    width: 240px;
-    height: 20px;
-  }
+    &--titulo {
+        width: 240px;
+        height: 20px;
+    }
 
-  &--stat {
-    height: 64px;
-  }
+    &--stat {
+        height: 64px;
+    }
 
-  &--ficha {
-    height: 96px;
-  }
+    &--ficha {
+        height: 96px;
+    }
 
-  &--avatar {
-    width: 32px;
-    height: 32px;
-    flex: none;
-  }
+    &--avatar {
+        width: 32px;
+        height: 32px;
+        flex: none;
+    }
 
-  &--nome {
-    flex: 1;
-    max-width: 160px;
-    height: 14px;
-  }
+    &--nome {
+        flex: 1;
+        max-width: 160px;
+        height: 14px;
+    }
 }
 
 @keyframes esqueleto-pulso {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .esqueleto-bloco {
-    animation: none;
-  }
+    .esqueleto-bloco {
+        animation: none;
+    }
 }

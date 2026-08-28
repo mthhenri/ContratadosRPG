@@ -1,216 +1,218 @@
 // Dialog "Receber dano" (m7-17) — só tokens do tema "Terminal de Contenção", nenhum hex/fonte/raio
 // solto (proibição #29). Cor por tipo é a mesma paleta `--dano-*` do chip de `resultado-rolagem`.
 
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 .receber-dano {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  &__grade {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-  }
+    gap: 12px;
 
-  &__cabecalho,
-  &__linha {
-    display: grid;
-    grid-template-columns: 60px 1fr 40px 1fr;
-    align-items: center;
-    gap: 8px;
-  }
-
-  &__cabecalho {
-    padding: 0 0 2px;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 600;
-    color: var(--text-mute);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    span:nth-child(3) { text-align: center; }
-  }
-
-  &__linha {
-    padding: 3px 0;
-
-    &--geral {
-      margin-top: 4px;
-      padding-top: 7px;
-      border-top: 1px solid var(--border);
-    }
-  }
-
-  &__tipo {
-    overflow: hidden;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-
-    @each $tipo in fisico, balistico, explosao, quimico, geral {
-      &--#{$tipo} {
-        color: var(--dano-#{$tipo});
-      }
-    }
-  }
-
-  &__entrada {
-    width: 100%;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text);
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 5px 7px;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-border);
-    }
-  }
-
-  &__resistencia-ficha {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-dim);
-    text-align: center;
-
-    &--ausente {
-      color: var(--text-mute);
-    }
-  }
-
-  &__resumo {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 9px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-  }
-
-  &__resumo-vazio {
-    font-size: 12px;
-    color: var(--text-mute);
-  }
-
-  &__resumo-linhas {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px 10px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-
-    span {
-      white-space: nowrap;
-    }
-  }
-
-  &__resumo-total {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    white-space: nowrap;
-
-    strong {
-      margin-left: 4px;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--vida);
-    }
-  }
-
-  &__acoes {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-  }
-
-  &__confirmar {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--bg);
-    background: var(--accent);
-    border: 0;
-    border-radius: var(--radius-control);
-    padding: 7px 14px;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
+    &__grade {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
 
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  &__cancelar {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 7px 14px;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--text);
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  // Mobile: continua tabela, só mais estreita — nunca empilha (empilhar quebrava a relação
-  // coluna↔coluna e alongava o dialog demais pra caber na tela sem rolar).
-  @include bp.mobile {
     &__cabecalho,
     &__linha {
-      grid-template-columns: 46px 1fr 32px 1fr;
-      gap: 5px;
+        display: grid;
+        grid-template-columns: 60px 1fr 40px 1fr;
+        align-items: center;
+        gap: 8px;
     }
 
     &__cabecalho {
-      font-size: 8px;
+        padding: 0 0 2px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        color: var(--text-mute);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        span:nth-child(3) {
+            text-align: center;
+        }
+    }
+
+    &__linha {
+        padding: 3px 0;
+
+        &--geral {
+            margin-top: 4px;
+            padding-top: 7px;
+            border-top: 1px solid var(--border);
+        }
     }
 
     &__tipo {
-      font-size: 9px;
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        @each $tipo in fisico, balistico, explosao, quimico, geral {
+            &--#{$tipo} {
+                color: var(--dano-#{$tipo});
+            }
+        }
     }
 
     &__entrada {
-      font-size: 12px;
-      padding: 5px 4px;
+        width: 100%;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 5px 7px;
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent-border);
+        }
     }
 
     &__resistencia-ficha {
-      font-size: 12px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--text-dim);
+        text-align: center;
+
+        &--ausente {
+            color: var(--text-mute);
+        }
     }
 
     &__resumo {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
     }
-  }
+
+    &__resumo-vazio {
+        font-size: 12px;
+        color: var(--text-mute);
+    }
+
+    &__resumo-linhas {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 10px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+
+        span {
+            white-space: nowrap;
+        }
+    }
+
+    &__resumo-total {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-dim);
+        white-space: nowrap;
+
+        strong {
+            margin-left: 4px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--vida);
+        }
+    }
+
+    &__acoes {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    &__confirmar {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--bg);
+        background: var(--accent);
+        border: 0;
+        border-radius: var(--radius-control);
+        padding: 7px 14px;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__cancelar {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 7px 14px;
+        cursor: pointer;
+
+        &:hover {
+            color: var(--text);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Mobile: continua tabela, só mais estreita — nunca empilha (empilhar quebrava a relação
+    // coluna↔coluna e alongava o dialog demais pra caber na tela sem rolar).
+    @include bp.mobile {
+        &__cabecalho,
+        &__linha {
+            grid-template-columns: 46px 1fr 32px 1fr;
+            gap: 5px;
+        }
+
+        &__cabecalho {
+            font-size: 8px;
+        }
+
+        &__tipo {
+            font-size: 9px;
+        }
+
+        &__entrada {
+            font-size: 12px;
+            padding: 5px 4px;
+        }
+
+        &__resistencia-ficha {
+            font-size: 12px;
+        }
+
+        &__resumo {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
 }

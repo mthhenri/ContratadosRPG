@@ -1,101 +1,101 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 :host {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
 }
 
 .leitor-pdf-mobile {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-
-  &__area {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     min-height: 0;
-    display: flex;
-    justify-content: center;
-    overflow: auto;
-    background: var(--bg);
-    padding: 12px;
-  }
 
-  &__tela {
-    display: block;
-    height: fit-content;
-    box-shadow: 0 4px 18px color-mix(in srgb, var(--bg) 70%, transparent);
-
-    &[hidden] {
-      display: none;
-    }
-  }
-
-  &__estado {
-    margin: auto;
-    padding: 0 20px;
-    color: var(--text-mute);
-    font: 600 11px/1.4 var(--font-mono);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    text-align: center;
-
-    &--erro {
-      color: var(--vida);
-    }
-  }
-
-  &__barra {
-    min-height: bp.$alvo-toque;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px max(8px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom))
-      max(8px, env(safe-area-inset-right));
-    background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
-    border-top: 1px solid var(--border);
-  }
-
-  &__botao {
-    width: bp.$alvo-toque;
-    height: bp.$alvo-toque;
-    flex: none;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    font: 600 17px/1 var(--font-mono);
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
+    &__area {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        justify-content: center;
+        overflow: auto;
+        background: var(--bg);
+        padding: 12px;
     }
 
-    &:not(:disabled):hover {
-      color: var(--accent);
-      background: var(--surface-2);
-      border-color: var(--accent-border);
+    &__tela {
+        display: block;
+        height: fit-content;
+        box-shadow: 0 4px 18px color-mix(in srgb, var(--bg) 70%, transparent);
+
+        &[hidden] {
+            display: none;
+        }
     }
-  }
 
-  &__pagina {
-    flex: 1;
-    text-align: center;
-    color: var(--text-mute);
-    font: 600 11px/1 var(--font-mono);
-    letter-spacing: 0.04em;
-  }
+    &__estado {
+        margin: auto;
+        padding: 0 20px;
+        color: var(--text-mute);
+        font: 600 11px/1.4 var(--font-mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-align: center;
 
-  &__separador {
-    width: 1px;
-    align-self: stretch;
-    background: var(--border);
-  }
+        &--erro {
+            color: var(--vida);
+        }
+    }
+
+    &__barra {
+        min-height: bp.$alvo-toque;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px max(8px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom))
+            max(8px, env(safe-area-inset-right));
+        background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
+        border-top: 1px solid var(--border);
+    }
+
+    &__botao {
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
+        flex: none;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        font: 600 17px/1 var(--font-mono);
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        &:not(:disabled):hover {
+            color: var(--accent);
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
+
+    &__pagina {
+        flex: 1;
+        text-align: center;
+        color: var(--text-mute);
+        font: 600 11px/1 var(--font-mono);
+        letter-spacing: 0.04em;
+    }
+
+    &__separador {
+        width: 1px;
+        align-self: stretch;
+        background: var(--border);
+    }
 }

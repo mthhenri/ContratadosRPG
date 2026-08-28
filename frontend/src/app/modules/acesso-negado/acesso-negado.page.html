@@ -1,53 +1,55 @@
 <main class="acesso-negado">
-  <article class="acesso-negado__documento" aria-labelledby="acesso-negado-titulo">
-    <header class="acesso-negado__cabecalho">
-      <span class="acesso-negado__indice" aria-hidden="true">//</span>
-      <span class="acesso-negado__protocolo">PROTOCOLO DE CONTENÇÃO</span>
-      <span class="acesso-negado__regua" aria-hidden="true"></span>
-      <span class="acesso-negado__codigo">403</span>
-    </header>
+    <article class="acesso-negado__documento" aria-labelledby="acesso-negado-titulo">
+        <header class="acesso-negado__cabecalho">
+            <span class="acesso-negado__indice" aria-hidden="true">//</span>
+            <span class="acesso-negado__protocolo">PROTOCOLO DE CONTENÇÃO</span>
+            <span class="acesso-negado__regua" aria-hidden="true"></span>
+            <span class="acesso-negado__codigo">403</span>
+        </header>
 
-    <div class="acesso-negado__classificacao">CLASSE-██ // CONFIDENCIAL</div>
+        <div class="acesso-negado__classificacao">CLASSE-██ // CONFIDENCIAL</div>
 
-    <section class="acesso-negado__conteudo">
-      <div class="acesso-negado__fundacao">
-        <app-marca class="acesso-negado__marca" />
-        <div>
-          <span>FUNDAÇÃO // ARQUIVO CENTRAL</span>
-          <strong>CONTROLE DE ACESSO INSTITUCIONAL</strong>
-        </div>
-      </div>
+        <section class="acesso-negado__conteudo">
+            <div class="acesso-negado__fundacao">
+                <app-marca class="acesso-negado__marca" />
+                <div>
+                    <span>FUNDAÇÃO // ARQUIVO CENTRAL</span>
+                    <strong>CONTROLE DE ACESSO INSTITUCIONAL</strong>
+                </div>
+            </div>
 
-      <p class="acesso-negado__rotulo">AUTORIZAÇÃO INSUFICIENTE</p>
-      <h1 id="acesso-negado-titulo">Acesso restrito</h1>
-      <p class="acesso-negado__mensagem">{{ mensagemSelecionada }}</p>
-      <p>
-        Sua credencial atual não possui a classificação necessária. A ████████, a ██████ e a
-        ███████████ do ███████ permanecem protegidas.
-      </p>
+            <p class="acesso-negado__rotulo">AUTORIZAÇÃO INSUFICIENTE</p>
+            <h1 id="acesso-negado-titulo">Acesso restrito</h1>
+            <p class="acesso-negado__mensagem">{{ mensagemSelecionada }}</p>
+            <p>
+                Sua credencial atual não possui a classificação necessária. A ████████, a ██████ e a
+                ███████████ do ███████ permanecem protegidas.
+            </p>
 
-      <div class="acesso-negado__registro" aria-label="Trecho confidencial censurado">
-        <span>REGISTRO:</span>
-        <span class="acesso-negado__censura" aria-hidden="true">
-          {{ registroExpurgadoSelecionado }}
-        </span>
-        <strong>[████ DADOS EXPURGADOS ████]</strong>
-      </div>
+            <div class="acesso-negado__registro" aria-label="Trecho confidencial censurado">
+                <span>REGISTRO:</span>
+                <span class="acesso-negado__censura" aria-hidden="true">
+                    {{ registroExpurgadoSelecionado }}
+                </span>
+                <strong>[████ DADOS EXPURGADOS ████]</strong>
+            </div>
 
-      <p class="acesso-negado__aviso">
-        Tentativas adicionais poderão ser registradas para análise pela administração do sistema.
-      </p>
-      <p class="acesso-negado__aviso">
-        Dentre as medidas tomadas pode haver: █████, ███████████, ███████████, ██████████ ou ███████ ██ ███████ █ █████ █████.
-      </p>
-    </section>
+            <p class="acesso-negado__aviso">
+                Tentativas adicionais poderão ser registradas para análise pela administração do
+                sistema.
+            </p>
+            <p class="acesso-negado__aviso">
+                Dentre as medidas tomadas pode haver: █████, ███████████, ███████████, ██████████ ou
+                ███████ ██ ███████ █ █████ █████.
+            </p>
+        </section>
 
-    <footer class="acesso-negado__rodape">
-      <span>DOCUMENTO █████ ████████████ REDACTED █████</span>
-      <a class="botao botao--primario" routerLink="/painel">
-        <app-icone nome="voltar" />
-        Retornar ao painel
-      </a>
-    </footer>
-  </article>
+        <footer class="acesso-negado__rodape">
+            <span>DOCUMENTO █████ ████████████ REDACTED █████</span>
+            <a class="botao botao--primario" routerLink="/painel">
+                <app-icone nome="voltar" />
+                Retornar ao painel
+            </a>
+        </footer>
+    </article>
 </main>

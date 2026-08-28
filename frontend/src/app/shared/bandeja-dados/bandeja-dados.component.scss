@@ -1,196 +1,196 @@
 // Bandeja de dados flutuante (m3-22) — fixa na base central, acúmulo horizontal (histórico à
 // esquerda, esmaecendo), auto-sumir com fade. Só tokens do tema (proibição #29).
 
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 :host {
-  display: contents;
+    display: contents;
 }
 
 @keyframes bandeja-entra {
-  from {
-    transform: translateX(18px);
-  }
+    from {
+        transform: translateX(18px);
+    }
 
-  to {
-    transform: translateX(0);
-  }
+    to {
+        transform: translateX(0);
+    }
 }
 
 @keyframes bandeja-esvazia {
-  from {
-    transform: scaleX(1);
-  }
+    from {
+        transform: scaleX(1);
+    }
 
-  to {
-    transform: scaleX(0);
-  }
+    to {
+        transform: scaleX(0);
+    }
 }
 
 .bandeja {
-  position: fixed;
-  left: 0;
-  right: 0;
-  // `--piso-flutuante` (m3-60) sobe a bandeja acima da barra de navegação da ficha no mobile.
-  // Fallback `0px` mantém o comportamento original em toda tela que não a declara.
-  bottom: calc(20px + var(--piso-flutuante, 0px));
-  z-index: 50;
-  overflow-x: clip; // corta o histórico que sai pela esquerda — sem scroll horizontal da página
-  overflow-y: visible; // preserva a sombra das cartas (clip permite o eixo perpendicular visível)
-  pointer-events: none; // o container não intercepta cliques; as cartas reativam
-
-  // Ponto de ancoragem no centro da tela: a carta mais nova é centralizada nele.
-  &__ancora {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-  }
-
-  &__pilha {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: row-reverse; // a mais nova (índice 0) à direita; o transform a traz ao centro
-    align-items: flex-end;
-    gap: 12px;
-    transition: transform 0.35s ease;
-    // transform inline: translateX(-50%) centraliza a mais nova + offset desliza o histórico p/ a esquerda
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
-  }
-
-  &__carta {
-    position: relative; // ancora a barra de tempo no rodapé
-    overflow: hidden; // a barra respeita o raio da carta + o colapso de saída não vaza conteúdo
-    pointer-events: auto;
-    // Largura total = `--bandeja-carta-largura` (casa com `larguraCarta()` do componente, que
-    // encolhe a carta em telas de 360-430px — m3-56 — mantendo os 640px de m3-55 em telas largas).
-    box-sizing: border-box;
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: var(--bandeja-carta-largura, 640px);
-    width: var(--bandeja-carta-largura, 640px);
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: 15px 21px;
-    box-shadow: 0 12px 30px rgb(0 0 0 / 42%);
-    animation: bandeja-entra 0.22s ease;
-    // Saída (m3-55): fade + colapso de largura/padding acontecem juntos, na mesma transição — a
-    // carta "fecha" como uma cortina em vez de sumir seca e empurrar as vizinhas de repente (o
-    // "bounce" antigo). Duração casa com `DURACAO_SAIDA_MS` do serviço; `ease-out` não tem overshoot.
-    transition:
-      opacity 0.28s ease-out,
-      flex-basis 0.28s ease-out,
-      width 0.28s ease-out,
-      padding-left 0.28s ease-out,
-      padding-right 0.28s ease-out;
-
-    &--saindo {
-      flex-basis: 0;
-      width: 0;
-      min-width: 0;
-      padding-left: 0;
-      padding-right: 0;
-      pointer-events: none;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      animation: none;
-      transition: none;
-    }
-
-    // m3-56: com a carta encolhida (`--bandeja-carta-largura`), o padding lateral original
-    // (21px) sobra menos espaço útil pro conteúdo — reduzido, sem mudar o card no desktop.
-    @include bp.mobile {
-      padding: 12px 14px;
-    }
-  }
-
-  // Barra de tempo no rodapé: esvazia em 7s (casa com duracaoMs); no hover volta cheia e pausa.
-  &__barra {
-    position: absolute;
+    position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
-    height: 3px;
-    background: var(--accent);
-    transform-origin: left;
-    animation: bandeja-esvazia 7s linear forwards;
-  }
+    // `--piso-flutuante` (m3-60) sobe a bandeja acima da barra de navegação da ficha no mobile.
+    // Fallback `0px` mantém o comportamento original em toda tela que não a declara.
+    bottom: calc(20px + var(--piso-flutuante, 0px));
+    z-index: 50;
+    overflow-x: clip; // corta o histórico que sai pela esquerda — sem scroll horizontal da página
+    overflow-y: visible; // preserva a sombra das cartas (clip permite o eixo perpendicular visível)
+    pointer-events: none; // o container não intercepta cliques; as cartas reativam
 
-  &__carta:hover &__barra {
-    animation: none; // pausa
-    transform: scaleX(1); // e volta ao máximo
-  }
-
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 16px;
-  }
-
-  &__visibilidade {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-left: auto;
-    padding: 3px 7px;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    font: 700 9px var(--font-mono);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-
-    &--privada {
-      color: var(--danger);
-      border-color: color-mix(in srgb, var(--danger) 45%, transparent);
-      background: color-mix(in srgb, var(--danger) 10%, transparent);
-    }
-  }
-
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  &__fechar {
-    border: 0;
-    background: transparent;
-    color: var(--text-mute);
-    font-size: 22px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 0 3px;
-
-    &:hover {
-      color: var(--text);
+    // Ponto de ancoragem no centro da tela: a carta mais nova é centralizada nele.
+    &__ancora {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
     }
 
-    @include bp.mobile {
-      min-width: bp.$alvo-toque;
-      min-height: bp.$alvo-toque;
-    }
-  }
+    &__pilha {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: row-reverse; // a mais nova (índice 0) à direita; o transform a traz ao centro
+        align-items: flex-end;
+        gap: 12px;
+        transition: transform 0.35s ease;
+        // transform inline: translateX(-50%) centraliza a mais nova + offset desliza o histórico p/ a esquerda
 
-  // Fórmula executada (m3-30): legenda mono discreta logo abaixo do rótulo.
-  &__formula {
-    display: block;
-    margin-top: 4px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-mute);
-    overflow-wrap: anywhere;
-    text-align: center; // carta larga (m3-55): centraliza em vez de grudar na esquerda
-  }
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
+    }
+
+    &__carta {
+        position: relative; // ancora a barra de tempo no rodapé
+        overflow: hidden; // a barra respeita o raio da carta + o colapso de saída não vaza conteúdo
+        pointer-events: auto;
+        // Largura total = `--bandeja-carta-largura` (casa com `larguraCarta()` do componente, que
+        // encolhe a carta em telas de 360-430px — m3-56 — mantendo os 640px de m3-55 em telas largas).
+        box-sizing: border-box;
+        flex-grow: 0;
+        flex-shrink: 0;
+        flex-basis: var(--bandeja-carta-largura, 640px);
+        width: var(--bandeja-carta-largura, 640px);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        padding: 15px 21px;
+        box-shadow: 0 12px 30px rgb(0 0 0 / 42%);
+        animation: bandeja-entra 0.22s ease;
+        // Saída (m3-55): fade + colapso de largura/padding acontecem juntos, na mesma transição — a
+        // carta "fecha" como uma cortina em vez de sumir seca e empurrar as vizinhas de repente (o
+        // "bounce" antigo). Duração casa com `DURACAO_SAIDA_MS` do serviço; `ease-out` não tem overshoot.
+        transition:
+            opacity 0.28s ease-out,
+            flex-basis 0.28s ease-out,
+            width 0.28s ease-out,
+            padding-left 0.28s ease-out,
+            padding-right 0.28s ease-out;
+
+        &--saindo {
+            flex-basis: 0;
+            width: 0;
+            min-width: 0;
+            padding-left: 0;
+            padding-right: 0;
+            pointer-events: none;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+            transition: none;
+        }
+
+        // m3-56: com a carta encolhida (`--bandeja-carta-largura`), o padding lateral original
+        // (21px) sobra menos espaço útil pro conteúdo — reduzido, sem mudar o card no desktop.
+        @include bp.mobile {
+            padding: 12px 14px;
+        }
+    }
+
+    // Barra de tempo no rodapé: esvazia em 7s (casa com duracaoMs); no hover volta cheia e pausa.
+    &__barra {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: var(--accent);
+        transform-origin: left;
+        animation: bandeja-esvazia 7s linear forwards;
+    }
+
+    &__carta:hover &__barra {
+        animation: none; // pausa
+        transform: scaleX(1); // e volta ao máximo
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 16px;
+    }
+
+    &__visibilidade {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-left: auto;
+        padding: 3px 7px;
+        color: var(--text-dim);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        font: 700 9px var(--font-mono);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+
+        &--privada {
+            color: var(--danger);
+            border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+            background: color-mix(in srgb, var(--danger) 10%, transparent);
+        }
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-dim);
+    }
+
+    &__fechar {
+        border: 0;
+        background: transparent;
+        color: var(--text-mute);
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 3px;
+
+        &:hover {
+            color: var(--text);
+        }
+
+        @include bp.mobile {
+            min-width: bp.$alvo-toque;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Fórmula executada (m3-30): legenda mono discreta logo abaixo do rótulo.
+    &__formula {
+        display: block;
+        margin-top: 4px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-mute);
+        overflow-wrap: anywhere;
+        text-align: center; // carta larga (m3-55): centraliza em vez de grudar na esquerda
+    }
 }

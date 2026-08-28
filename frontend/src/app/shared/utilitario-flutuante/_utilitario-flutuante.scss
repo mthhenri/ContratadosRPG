@@ -1,4 +1,4 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 $tamanho-desktop: 48px;
 $tamanho-mobile: bp.$alvo-toque;
@@ -14,96 +14,96 @@ $passo-mobile: $tamanho-mobile + $vao;
 // quando o leitor é reaberto/fechado. O valor é comprimento (não flag numérica) para manter o
 // `calc()` compatível sem depender da multiplicação tipada ainda recente do CSS Values 4.
 @mixin registrar-estado-documentos() {
-  :root {
-    --documentos-recolhidos: 0px;
-  }
+    :root {
+        --documentos-recolhidos: 0px;
+    }
 
-  :root:has(.utilitario-flutuante--documentos) {
-    --documentos-recolhidos: #{$passo-desktop};
-  }
-
-  // O próprio Documentos ocupa a primeira vaga; os demais herdam o passo acima.
-  .utilitario-flutuante--documentos {
-    --documentos-recolhidos: 0px;
-  }
-
-  @include bp.mobile {
     :root:has(.utilitario-flutuante--documentos) {
-      --documentos-recolhidos: #{$passo-mobile};
+        --documentos-recolhidos: #{$passo-desktop};
     }
 
-    // O leitor global é irmão do `router-outlet`, portanto não herda o piso declarado no host
-    // da página. A presença da navegação fixa transporta o mesmo piso para o gatilho sem acoplar
-    // a regra a uma relação específica de ancestrais/irmãos.
-    :root:has(.ficha-nav) .utilitario-flutuante--documentos {
-      --piso-flutuante: 57px;
+    // O próprio Documentos ocupa a primeira vaga; os demais herdam o passo acima.
+    .utilitario-flutuante--documentos {
+        --documentos-recolhidos: 0px;
     }
 
-    // Sem Anchor Positioning, CSS não consegue ler a altura variável da carta irmã. Enquanto ela
-    // existir, oculta somente este atalho recolhido para não cobrir a bandeja; o controle global
-    // de Documentos na topbar permanece disponível e o atalho reaparece quando a carta sai do DOM.
-    :root:has(.bandeja__carta) .utilitario-flutuante--documentos {
-      display: none;
-    }
+    @include bp.mobile {
+        :root:has(.utilitario-flutuante--documentos) {
+            --documentos-recolhidos: #{$passo-mobile};
+        }
 
-    // A bandeja nasce e some dinamicamente. Ancorar Documentos na borda superior da pilha evita
-    // cobrir qualquer carta sem estimar a altura (variável pelo conteúdo) e sem exigir wrapper
-    // comum entre os utilitários. Dentro de `@supports`, o gatilho é restaurado e recebe a posição
-    // precisa; a Task 8 confirma o navegador-alvo real.
-    .bandeja__pilha {
-      anchor-name: --bandeja-dados;
-    }
+        // O leitor global é irmão do `router-outlet`, portanto não herda o piso declarado no host
+        // da página. A presença da navegação fixa transporta o mesmo piso para o gatilho sem acoplar
+        // a regra a uma relação específica de ancestrais/irmãos.
+        :root:has(.ficha-nav) .utilitario-flutuante--documentos {
+            --piso-flutuante: 57px;
+        }
 
-    @supports (bottom: anchor(top)) {
-      :root:has(.bandeja__carta) .utilitario-flutuante--documentos {
-        display: flex;
-        position-anchor: --bandeja-dados;
-        bottom: calc(anchor(top) + #{$vao});
-      }
+        // Sem Anchor Positioning, CSS não consegue ler a altura variável da carta irmã. Enquanto ela
+        // existir, oculta somente este atalho recolhido para não cobrir a bandeja; o controle global
+        // de Documentos na topbar permanece disponível e o atalho reaparece quando a carta sai do DOM.
+        :root:has(.bandeja__carta) .utilitario-flutuante--documentos {
+            display: none;
+        }
+
+        // A bandeja nasce e some dinamicamente. Ancorar Documentos na borda superior da pilha evita
+        // cobrir qualquer carta sem estimar a altura (variável pelo conteúdo) e sem exigir wrapper
+        // comum entre os utilitários. Dentro de `@supports`, o gatilho é restaurado e recebe a posição
+        // precisa; a Task 8 confirma o navegador-alvo real.
+        .bandeja__pilha {
+            anchor-name: --bandeja-dados;
+        }
+
+        @supports (bottom: anchor(top)) {
+            :root:has(.bandeja__carta) .utilitario-flutuante--documentos {
+                display: flex;
+                position-anchor: --bandeja-dados;
+                bottom: calc(anchor(top) + #{$vao});
+            }
+        }
     }
-  }
 }
 
 @mixin gatilho-utilitario-flutuante() {
-  position: fixed;
-  width: $tamanho-desktop;
-  height: $tamanho-desktop;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+    position: fixed;
+    width: $tamanho-desktop;
+    height: $tamanho-desktop;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 
-  @include bp.mobile {
-    width: $tamanho-mobile;
-    height: $tamanho-mobile;
-  }
+    @include bp.mobile {
+        width: $tamanho-mobile;
+        height: $tamanho-mobile;
+    }
 }
 
 @mixin posicionar-utilitario-flutuante($ordem: 0, $compactar-no-mobile: true) {
-  left: $esquerda-desktop;
-  bottom: calc(
-    #{$base-desktop} + var(--piso-flutuante, 0px) + var(--documentos-recolhidos, 0px) +
-      #{$ordem * $passo-desktop}
-  );
+    left: $esquerda-desktop;
+    bottom: calc(
+        #{$base-desktop} + var(--piso-flutuante, 0px) + var(--documentos-recolhidos, 0px) +
+            #{$ordem * $passo-desktop}
+    );
 
-  @if $compactar-no-mobile {
-    @include bp.mobile {
-      left: auto;
-      right: max(#{$base-mobile}, env(safe-area-inset-right));
-      bottom: calc(
-        #{$base-mobile} + env(safe-area-inset-bottom) + var(--piso-flutuante, 0px) +
-          var(--documentos-recolhidos, 0px) + #{$ordem * $passo-mobile}
-      );
+    @if $compactar-no-mobile {
+        @include bp.mobile {
+            left: auto;
+            right: max(#{$base-mobile}, env(safe-area-inset-right));
+            bottom: calc(
+                #{$base-mobile} + env(safe-area-inset-bottom) + var(--piso-flutuante, 0px) +
+                    var(--documentos-recolhidos, 0px) + #{$ordem * $passo-mobile}
+            );
+        }
     }
-  }
 }
 
 @mixin utilitario-inline-mobile() {
-  @include bp.mobile {
-    position: static;
-    left: auto;
-    bottom: auto;
-    width: $tamanho-mobile;
-    height: $tamanho-mobile;
-  }
+    @include bp.mobile {
+        position: static;
+        left: auto;
+        bottom: auto;
+        width: $tamanho-mobile;
+        height: $tamanho-mobile;
+    }
 }

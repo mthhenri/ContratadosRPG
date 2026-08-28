@@ -2,336 +2,345 @@
 // Autocontida (:host display:contents, mesmo padrão de CalculadoraFlutuante/BandejaDados). Só
 // tokens do tema "Terminal de Contenção" (proibição #29).
 
-@use 'tema/breakpoints' as bp;
-@use '../utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
+@use "tema/breakpoints" as bp;
+@use "../utilitario-flutuante/utilitario-flutuante" as utilitario-flutuante;
 
 :host {
-  display: contents;
+    display: contents;
 }
 
 .historico-rolagens {
-  // Gatilho (m3-61): no desktop é flutuante, mesmo tipo do gatilho de `CalculadoraFlutuante`
-  // (círculo fixo no canto inferior esquerdo) — no rodapé por padrão (painel da campanha, sem
-  // calculadora ali pra dar espaço); `--empilhado` (só a ficha, `acimaDaCalculadora`) sobe 60px
-  // (48px de altura do botão da calculadora + 12px de vão) pra ficar acima dela, no mesmo ritmo
-  // vertical que o popup dela já usa. No mobile volta a ser um botão inline no cabeçalho — ver
-  // `@include bp.mobile` abaixo.
-  &__gatilho {
-    @include utilitario-flutuante.gatilho-utilitario-flutuante();
-    @include utilitario-flutuante.posicionar-utilitario-flutuante();
-    @include utilitario-flutuante.utilitario-inline-mobile();
+    // Gatilho (m3-61): no desktop é flutuante, mesmo tipo do gatilho de `CalculadoraFlutuante`
+    // (círculo fixo no canto inferior esquerdo) — no rodapé por padrão (painel da campanha, sem
+    // calculadora ali pra dar espaço); `--empilhado` (só a ficha, `acimaDaCalculadora`) sobe 60px
+    // (48px de altura do botão da calculadora + 12px de vão) pra ficar acima dela, no mesmo ritmo
+    // vertical que o popup dela já usa. No mobile volta a ser um botão inline no cabeçalho — ver
+    // `@include bp.mobile` abaixo.
+    &__gatilho {
+        @include utilitario-flutuante.gatilho-utilitario-flutuante();
+        @include utilitario-flutuante.posicionar-utilitario-flutuante();
+        @include utilitario-flutuante.utilitario-inline-mobile();
 
-    z-index: 55;
-    background: var(--surface);
-    color: var(--accent);
-    border: 1px solid var(--border-strong);
-    border-radius: 50%;
-    box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
-    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-
-    &:hover {
-      border-color: var(--accent-border);
-      background: var(--surface-2);
-    }
-
-    &--ativo {
-      color: var(--accent);
-      background: var(--accent-dim);
-      border-color: var(--accent-border);
-    }
-
-    &--empilhado {
-      @include utilitario-flutuante.posicionar-utilitario-flutuante(1);
-    }
-
-    // Mobile: inline no cabeçalho (mesma receita de `.detalhe__membro-acao`/
-    // `.ficha-pagina__menu-botao`) — flutuante nessa faixa colidiria com a barra de navegação
-    // inferior da ficha (m3-60) e com a bandeja de dados.
-    @include bp.mobile {
-      z-index: auto;
-      flex: none;
-      font-size: 15px;
-      color: var(--text-dim);
-      background: transparent;
-      border-radius: var(--radius-control);
-      box-shadow: none;
-
-      &:hover {
-        color: var(--text);
-      }
-    }
-  }
-
-  &__fundo {
-    position: fixed;
-    inset: 0;
-    z-index: 64;
-    background: rgb(0 0 0 / 55%);
-    border: 0;
-    cursor: default;
-  }
-
-  &__painel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 65;
-    width: min(500px, 100vw);
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    border-left: 1px solid var(--border-strong);
-    box-shadow: -16px 0 40px rgb(0 0 0 / 45%);
-    outline: none;
-    animation: historico-rolagens-desliza 0.22s ease;
-
-    @media (prefers-reduced-motion: reduce) {
-      animation: none;
-    }
-  }
-
-  &__cabecalho {
-    flex: none;
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--border);
-
-    app-icone {
-      flex: none;
-      font-size: 16px;
-      color: var(--accent);
-    }
-  }
-
-  // P-021: atalho pra abrir a calculadora de dentro do painel — só existe no mobile, onde o
-  // gatilho normal dela (no cabeçalho da página) fica coberto por este painel full-bleed. No
-  // desktop a calculadora já tem gatilho próprio sempre visível (círculo flutuante fora deste
-  // painel), então o botão nem entra no layout.
-  &__abrir-calculadora {
-    display: none;
-
-    @include bp.mobile {
-      flex: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin: 12px 18px 0;
-      padding: 10px 14px;
-      min-height: bp.$alvo-toque;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: var(--tracking-label);
-      color: var(--text-dim);
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-control);
-      cursor: pointer;
-      transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-      app-icone {
-        font-size: 14px;
-      }
-
-      &:hover {
+        z-index: 55;
+        background: var(--surface);
         color: var(--accent);
-        border-color: var(--accent-border);
-      }
-    }
-  }
+        border: 1px solid var(--border-strong);
+        border-radius: 50%;
+        box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
 
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-    white-space: nowrap;
-  }
+        &:hover {
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
 
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+        &--ativo {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
 
-  &__contagem {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-mute);
-  }
+        &--empilhado {
+            @include utilitario-flutuante.posicionar-utilitario-flutuante(1);
+        }
 
-  &__fechar {
-    flex: none;
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+        // Mobile: inline no cabeçalho (mesma receita de `.detalhe__membro-acao`/
+        // `.ficha-pagina__menu-botao`) — flutuante nessa faixa colidiria com a barra de navegação
+        // inferior da ficha (m3-60) e com a bandeja de dados.
+        @include bp.mobile {
+            z-index: auto;
+            flex: none;
+            font-size: 15px;
+            color: var(--text-dim);
+            background: transparent;
+            border-radius: var(--radius-control);
+            box-shadow: none;
 
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
-    }
-  }
-
-  &__corpo {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 16px 18px;
-
-    --fade-topo: 0px;
-    --fade-base: 0px;
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        #000 var(--fade-topo),
-        #000 calc(100% - var(--fade-base)),
-        transparent 100%
-      );
-    }
-    &.overflow-fade--topo {
-      --fade-topo: 22px;
-    }
-    &.overflow-fade--base {
-      --fade-base: 22px;
-    }
-  }
-
-  &__vazio {
-    margin: 0;
-    padding: 24px 0;
-    color: var(--text-mute);
-    font-size: 13px;
-    text-align: center;
-  }
-
-  &__lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  &__item {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 12px 14px;
-  }
-
-  &__item-cabecalho {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  &__data {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-mute);
-    white-space: nowrap;
-  }
-
-  &__meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 2px 0 8px;
-  }
-
-  &__autor {
-    font-size: 12px;
-    color: var(--text-dim);
-    overflow-wrap: anywhere;
-  }
-
-  &__privada {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--warning);
-    border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
-    border-radius: var(--radius-control);
-    padding: 1px 6px;
-  }
-
-  &__mais {
-    display: block;
-    margin: 4px auto 0;
-    padding: 8px 16px;
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      color: var(--text);
-      border-color: var(--accent-border);
+            &:hover {
+                color: var(--text);
+            }
+        }
     }
 
-    &:disabled {
-      cursor: default;
-      opacity: 0.6;
+    &__fundo {
+        position: fixed;
+        inset: 0;
+        z-index: 64;
+        background: rgb(0 0 0 / 55%);
+        border: 0;
+        cursor: default;
     }
-  }
 
-  @include bp.mobile {
     &__painel {
-      width: 100vw;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 65;
+        width: min(500px, 100vw);
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border-left: 1px solid var(--border-strong);
+        box-shadow: -16px 0 40px rgb(0 0 0 / 45%);
+        outline: none;
+        animation: historico-rolagens-desliza 0.22s ease;
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
     }
-  }
+
+    &__cabecalho {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border);
+
+        app-icone {
+            flex: none;
+            font-size: 16px;
+            color: var(--accent);
+        }
+    }
+
+    // P-021: atalho pra abrir a calculadora de dentro do painel — só existe no mobile, onde o
+    // gatilho normal dela (no cabeçalho da página) fica coberto por este painel full-bleed. No
+    // desktop a calculadora já tem gatilho próprio sempre visível (círculo flutuante fora deste
+    // painel), então o botão nem entra no layout.
+    &__abrir-calculadora {
+        display: none;
+
+        @include bp.mobile {
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 18px 0;
+            padding: 10px 14px;
+            min-height: bp.$alvo-toque;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-label);
+            color: var(--text-dim);
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            transition:
+                color 0.15s ease,
+                border-color 0.15s ease,
+                background-color 0.15s ease;
+
+            app-icone {
+                font-size: 14px;
+            }
+
+            &:hover {
+                color: var(--accent);
+                border-color: var(--accent-border);
+            }
+        }
+    }
+
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+        white-space: nowrap;
+    }
+
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__contagem {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
+
+    &__fechar {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+    }
+
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 16px 18px;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 22px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 22px;
+        }
+    }
+
+    &__vazio {
+        margin: 0;
+        padding: 24px 0;
+        color: var(--text-mute);
+        font-size: 13px;
+        text-align: center;
+    }
+
+    &__lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__item {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 12px 14px;
+    }
+
+    &__item-cabecalho {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__data {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
+        white-space: nowrap;
+    }
+
+    &__meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 2px 0 8px;
+    }
+
+    &__autor {
+        font-size: 12px;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    &__privada {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--warning);
+        border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+        border-radius: var(--radius-control);
+        padding: 1px 6px;
+    }
+
+    &__mais {
+        display: block;
+        margin: 4px auto 0;
+        padding: 8px 16px;
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        cursor: pointer;
+
+        &:hover:not(:disabled) {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        &:disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+    }
+
+    @include bp.mobile {
+        &__painel {
+            width: 100vw;
+        }
+    }
 }
 
 @keyframes historico-rolagens-desliza {
-  from {
-    transform: translateX(100%);
-  }
+    from {
+        transform: translateX(100%);
+    }
 
-  to {
-    transform: translateX(0);
-  }
+    to {
+        transform: translateX(0);
+    }
 }

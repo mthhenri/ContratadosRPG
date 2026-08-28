@@ -1,114 +1,136 @@
 <p-dialog
-  [visible]="aberto()"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [dismissableMask]="false"
-  [appendTo]="'body'"
-  [style]="{ width: '440px' }"
-  [breakpoints]="{ '520px': '95vw' }"
-  header="Receber dano"
-  styleClass="receber-dano__dialogo"
-  (onHide)="cancelar()"
+    [visible]="aberto()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [dismissableMask]="false"
+    [appendTo]="'body'"
+    [style]="{ width: '440px' }"
+    [breakpoints]="{ '520px': '95vw' }"
+    header="Receber dano"
+    styleClass="receber-dano__dialogo"
+    (onHide)="cancelar()"
 >
-  <form class="receber-dano" [formGroup]="formulario" (ngSubmit)="confirmar()">
-    <div class="receber-dano__grade">
-      <div class="receber-dano__cabecalho" aria-hidden="true">
-        <span></span>
-        <span>Dano</span>
-        <span [appTooltip]="'Resistência da ficha'">Ficha</span>
-        <span [appTooltip]="'Ajuste de resistência para esta cena'">Custom</span>
-      </div>
+    <form class="receber-dano" [formGroup]="formulario" (ngSubmit)="confirmar()">
+        <div class="receber-dano__grade">
+            <div class="receber-dano__cabecalho" aria-hidden="true">
+                <span></span>
+                <span>Dano</span>
+                <span [appTooltip]="'Resistência da ficha'">Ficha</span>
+                <span [appTooltip]="'Ajuste de resistência para esta cena'">Custom</span>
+            </div>
 
-      @for (tipo of TIPOS_DANO_BLOQUEAVEIS; track tipo) {
-        <div class="receber-dano__linha" [formGroupName]="tipo">
-          <span [class]="classeTipo(tipo)" [appTooltip]="DESCRICAO_TIPO[tipo]">{{ ABREVIACAO_TIPO[tipo] }}</span>
+            @for (tipo of TIPOS_DANO_BLOQUEAVEIS; track tipo) {
+                <div class="receber-dano__linha" [formGroupName]="tipo">
+                    <span [class]="classeTipo(tipo)" [appTooltip]="DESCRICAO_TIPO[tipo]">{{
+                        ABREVIACAO_TIPO[tipo]
+                    }}</span>
 
-          <input
-            class="receber-dano__entrada"
-            type="number"
-            inputmode="numeric"
-            min="0"
-            formControlName="bruto"
-            [attr.aria-label]="'Dano ' + tipo + ' bruto'"
-          />
+                    <input
+                        class="receber-dano__entrada"
+                        type="number"
+                        inputmode="numeric"
+                        min="0"
+                        formControlName="bruto"
+                        [attr.aria-label]="'Dano ' + tipo + ' bruto'"
+                    />
 
-          @if (resistenciaFichaDe(tipo); as resistenciaFicha) {
-            <span class="receber-dano__resistencia-ficha">{{ resistenciaFicha.valor }}</span>
-          } @else {
-            <span class="receber-dano__resistencia-ficha receber-dano__resistencia-ficha--ausente">—</span>
-          }
+                    @if (resistenciaFichaDe(tipo); as resistenciaFicha) {
+                        <span class="receber-dano__resistencia-ficha">{{
+                            resistenciaFicha.valor
+                        }}</span>
+                    } @else {
+                        <span
+                            class="receber-dano__resistencia-ficha receber-dano__resistencia-ficha--ausente"
+                            >—</span
+                        >
+                    }
 
-          <input
-            class="receber-dano__entrada"
-            type="number"
-            inputmode="numeric"
-            formControlName="custom"
-            [attr.aria-label]="'Resistência customizada de ' + tipo"
-          />
+                    <input
+                        class="receber-dano__entrada"
+                        type="number"
+                        inputmode="numeric"
+                        formControlName="custom"
+                        [attr.aria-label]="'Resistência customizada de ' + tipo"
+                    />
+                </div>
+            }
+
+            <div class="receber-dano__linha receber-dano__linha--geral" formGroupName="geral">
+                <span
+                    class="receber-dano__tipo receber-dano__tipo--geral"
+                    [appTooltip]="DESCRICAO_TIPO[TipoDanoEnum.GERAL]"
+                >
+                    Geral
+                </span>
+
+                <input
+                    class="receber-dano__entrada"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    formControlName="bruto"
+                    aria-label="Dano Geral bruto, irredutível"
+                    [appTooltip]="'Irredutível'"
+                />
+
+                @if (resistenciaFichaDe(TipoDanoEnum.GERAL); as resistenciaFicha) {
+                    <span class="receber-dano__resistencia-ficha">{{
+                        resistenciaFicha.valor
+                    }}</span>
+                } @else {
+                    <span
+                        class="receber-dano__resistencia-ficha receber-dano__resistencia-ficha--ausente"
+                        >—</span
+                    >
+                }
+
+                <input
+                    class="receber-dano__entrada"
+                    type="number"
+                    inputmode="numeric"
+                    formControlName="custom"
+                    aria-label="Resistência Geral customizada"
+                    [appTooltip]="'Reduz o total de todos os outros tipos'"
+                />
+            </div>
         </div>
-      }
 
-      <div class="receber-dano__linha receber-dano__linha--geral" formGroupName="geral">
-        <span
-          class="receber-dano__tipo receber-dano__tipo--geral"
-          [appTooltip]="DESCRICAO_TIPO[TipoDanoEnum.GERAL]"
-        >
-          Geral
-        </span>
+        <div class="receber-dano__resumo">
+            @if (linhasResumo().length === 0 && !danoGeralInformado()) {
+                <p class="receber-dano__resumo-vazio">Informe ao menos um tipo de dano.</p>
+            } @else {
+                <p class="receber-dano__resumo-linhas">
+                    @for (linha of linhasResumo(); track linha.tipo) {
+                        <span [class]="classeTipo(linha.tipo)"
+                            >{{ linha.tipo }} {{ linha.efetivo }}</span
+                        >
+                    }
+                    @if (danoGeralInformado()) {
+                        <span class="receber-dano__tipo receber-dano__tipo--geral"
+                            >Geral {{ resultado().danoGeral }}</span
+                        >
+                    }
+                </p>
+            }
+            <p class="receber-dano__resumo-total">
+                Total <strong>{{ resultado().total }}</strong>
+            </p>
+        </div>
 
-        <input
-          class="receber-dano__entrada"
-          type="number"
-          inputmode="numeric"
-          min="0"
-          formControlName="bruto"
-          aria-label="Dano Geral bruto, irredutível"
-          [appTooltip]="'Irredutível'"
-        />
-
-        @if (resistenciaFichaDe(TipoDanoEnum.GERAL); as resistenciaFicha) {
-          <span class="receber-dano__resistencia-ficha">{{ resistenciaFicha.valor }}</span>
-        } @else {
-          <span class="receber-dano__resistencia-ficha receber-dano__resistencia-ficha--ausente">—</span>
-        }
-
-        <input
-          class="receber-dano__entrada"
-          type="number"
-          inputmode="numeric"
-          formControlName="custom"
-          aria-label="Resistência Geral customizada"
-          [appTooltip]="'Reduz o total de todos os outros tipos'"
-        />
-      </div>
-    </div>
-
-    <div class="receber-dano__resumo">
-      @if (linhasResumo().length === 0 && !danoGeralInformado()) {
-        <p class="receber-dano__resumo-vazio">Informe ao menos um tipo de dano.</p>
-      } @else {
-        <p class="receber-dano__resumo-linhas">
-          @for (linha of linhasResumo(); track linha.tipo) {
-            <span [class]="classeTipo(linha.tipo)">{{ linha.tipo }} {{ linha.efetivo }}</span>
-          }
-          @if (danoGeralInformado()) {
-            <span class="receber-dano__tipo receber-dano__tipo--geral">Geral {{ resultado().danoGeral }}</span>
-          }
-        </p>
-      }
-      <p class="receber-dano__resumo-total">Total <strong>{{ resultado().total }}</strong></p>
-    </div>
-
-    <div class="receber-dano__acoes">
-      <button class="receber-dano__cancelar" type="button" (click)="cancelar()">Cancelar</button>
-      <button
-        class="receber-dano__confirmar"
-        type="submit"
-        [disabled]="resultado().total <= 0 && linhasResumo().length === 0 && !danoGeralInformado()"
-      >
-        Receber dano
-      </button>
-    </div>
-  </form>
+        <div class="receber-dano__acoes">
+            <button class="receber-dano__cancelar" type="button" (click)="cancelar()">
+                Cancelar
+            </button>
+            <button
+                class="receber-dano__confirmar"
+                type="submit"
+                [disabled]="
+                    resultado().total <= 0 && linhasResumo().length === 0 && !danoGeralInformado()
+                "
+            >
+                Receber dano
+            </button>
+        </div>
+    </form>
 </p-dialog>

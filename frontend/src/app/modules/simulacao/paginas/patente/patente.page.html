@@ -1,83 +1,89 @@
 <app-ajuda-simulacao aba="patente" (limpar)="limpar()" />
 
 <form class="calc patente" [formGroup]="formulario">
-  <!-- CARD 1: CONSULTA -->
-  <section class="calc-cartao">
-    <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">1</span>
-      <h2 class="calc-cartao__titulo">Consulta por Prestígio</h2>
-      <span class="calc-cartao__regua"></span>
-    </header>
+    <!-- CARD 1: CONSULTA -->
+    <section class="calc-cartao">
+        <header class="calc-cartao__cabecalho">
+            <span class="calc-cartao__indice">1</span>
+            <h2 class="calc-cartao__titulo">Consulta por Prestígio</h2>
+            <span class="calc-cartao__regua"></span>
+        </header>
 
-    <div class="calc-config">
-      <div class="calc-campo">
-        <span class="calc-campo__rotulo">Prestígio atual</span>
-        <app-step-input formControlName="prestigio" [min]="0" ariaRotulo="Prestígio atual" />
-      </div>
-    </div>
-
-    <div class="patente-destaque">
-      <div class="patente-destaque__nome">{{ atual().nome }}</div>
-      <div class="patente-destaque__faixa">{{ atual().faixa }} Prestígio</div>
-    </div>
-
-    <div class="calc-stats">
-      <div class="calc-stat calc-stat--positivo">
-        <div class="calc-stat__rotulo">Salário / Missão</div>
-        <div class="calc-stat__valor">{{ atual().salario }}</div>
-      </div>
-      <div class="calc-stat">
-        <div class="calc-stat__rotulo">Limite de Modificações</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().modificacoes }}</div>
-      </div>
-      <div class="calc-stat">
-        <div class="calc-stat__rotulo-linha">
-          <span class="calc-stat__rotulo">Limite de Crédito</span>
-          <button
-            type="button"
-            class="calc-stat__info"
-            aria-label="Descrição do Limite de Crédito"
-            [appTooltip]="atual().creditoDescricao"
-          >
-            ⓘ
-          </button>
+        <div class="calc-config">
+            <div class="calc-campo">
+                <span class="calc-campo__rotulo">Prestígio atual</span>
+                <app-step-input
+                    formControlName="prestigio"
+                    [min]="0"
+                    ariaRotulo="Prestígio atual"
+                />
+            </div>
         </div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().credito }}</div>
-      </div>
-    </div>
-  </section>
 
-  <!-- CARD 2: REFERÊNCIA COMPLETA -->
-  <section class="calc-cartao">
-    <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">2</span>
-      <h2 class="calc-cartao__titulo">Referência Completa de Patentes</h2>
-      <span class="calc-cartao__regua"></span>
-    </header>
+        <div class="patente-destaque">
+            <div class="patente-destaque__nome">{{ atual().nome }}</div>
+            <div class="patente-destaque__faixa">{{ atual().faixa }} Prestígio</div>
+        </div>
 
-    <div class="calc-tabela-wrap">
-      <table class="calc-tabela">
-        <thead>
-          <tr>
-            <th class="calc-tabela__celula-rotulo">Patente</th>
-            <th>Prestígio</th>
-            <th>Salário</th>
-            <th>Mods</th>
-            <th>Crédito</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (linha of linhas(); track linha.patente) {
-            <tr [class.calc-tabela__linha--atual]="linha.atual">
-              <th class="calc-tabela__celula-rotulo">{{ linha.nome }}</th>
-              <td>{{ linha.faixa }}</td>
-              <td class="calc-tabela__celula-valor">{{ linha.salario }}</td>
-              <td>{{ linha.modificacoes }}</td>
-              <td>{{ linha.credito }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
+        <div class="calc-stats">
+            <div class="calc-stat calc-stat--positivo">
+                <div class="calc-stat__rotulo">Salário / Missão</div>
+                <div class="calc-stat__valor">{{ atual().salario }}</div>
+            </div>
+            <div class="calc-stat">
+                <div class="calc-stat__rotulo">Limite de Modificações</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">
+                    {{ atual().modificacoes }}
+                </div>
+            </div>
+            <div class="calc-stat">
+                <div class="calc-stat__rotulo-linha">
+                    <span class="calc-stat__rotulo">Limite de Crédito</span>
+                    <button
+                        type="button"
+                        class="calc-stat__info"
+                        aria-label="Descrição do Limite de Crédito"
+                        [appTooltip]="atual().creditoDescricao"
+                    >
+                        ⓘ
+                    </button>
+                </div>
+                <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().credito }}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CARD 2: REFERÊNCIA COMPLETA -->
+    <section class="calc-cartao">
+        <header class="calc-cartao__cabecalho">
+            <span class="calc-cartao__indice">2</span>
+            <h2 class="calc-cartao__titulo">Referência Completa de Patentes</h2>
+            <span class="calc-cartao__regua"></span>
+        </header>
+
+        <div class="calc-tabela-wrap">
+            <table class="calc-tabela">
+                <thead>
+                    <tr>
+                        <th class="calc-tabela__celula-rotulo">Patente</th>
+                        <th>Prestígio</th>
+                        <th>Salário</th>
+                        <th>Mods</th>
+                        <th>Crédito</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (linha of linhas(); track linha.patente) {
+                    <tr [class.calc-tabela__linha--atual]="linha.atual">
+                        <th class="calc-tabela__celula-rotulo">{{ linha.nome }}</th>
+                        <td>{{ linha.faixa }}</td>
+                        <td class="calc-tabela__celula-valor">{{ linha.salario }}</td>
+                        <td>{{ linha.modificacoes }}</td>
+                        <td>{{ linha.credito }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
 </form>

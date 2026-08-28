@@ -1,56 +1,64 @@
 <div class="leitor-pdf-mobile">
-  <div #area class="leitor-pdf-mobile__area">
-    @if (carregando()) {
-      <p class="leitor-pdf-mobile__estado">Carregando documento…</p>
-    } @else if (erro()) {
-      <p class="leitor-pdf-mobile__estado leitor-pdf-mobile__estado--erro">
-        Não foi possível carregar {{ titulo() }}.
-      </p>
-    }
-    <canvas #tela class="leitor-pdf-mobile__tela" [hidden]="carregando() || erro()"></canvas>
-  </div>
+    <div #area class="leitor-pdf-mobile__area">
+        @if (carregando()) {
+            <p class="leitor-pdf-mobile__estado">Carregando documento…</p>
+        } @else if (erro()) {
+            <p class="leitor-pdf-mobile__estado leitor-pdf-mobile__estado--erro">
+                Não foi possível carregar {{ titulo() }}.
+            </p>
+        }
+        <canvas #tela class="leitor-pdf-mobile__tela" [hidden]="carregando() || erro()"></canvas>
+    </div>
 
-  <div
-    class="leitor-pdf-mobile__barra"
-    role="toolbar"
-    [attr.aria-label]="'Navegação de ' + titulo()"
-  >
-    <button
-      type="button"
-      class="leitor-pdf-mobile__botao"
-      aria-label="Página anterior"
-      [disabled]="carregando() || erro() || pagina() <= 1"
-      (click)="paginaAnterior()"
-    >‹</button>
+    <div
+        class="leitor-pdf-mobile__barra"
+        role="toolbar"
+        [attr.aria-label]="'Navegação de ' + titulo()"
+    >
+        <button
+            type="button"
+            class="leitor-pdf-mobile__botao"
+            aria-label="Página anterior"
+            [disabled]="carregando() || erro() || pagina() <= 1"
+            (click)="paginaAnterior()"
+        >
+            ‹
+        </button>
 
-    <span class="leitor-pdf-mobile__pagina">
-      {{ carregando() || erro() ? '—' : pagina() + ' / ' + totalPaginas() }}
-    </span>
+        <span class="leitor-pdf-mobile__pagina">
+            {{ carregando() || erro() ? "—" : pagina() + " / " + totalPaginas() }}
+        </span>
 
-    <button
-      type="button"
-      class="leitor-pdf-mobile__botao"
-      aria-label="Próxima página"
-      [disabled]="carregando() || erro() || pagina() >= totalPaginas()"
-      (click)="proximaPagina()"
-    >›</button>
+        <button
+            type="button"
+            class="leitor-pdf-mobile__botao"
+            aria-label="Próxima página"
+            [disabled]="carregando() || erro() || pagina() >= totalPaginas()"
+            (click)="proximaPagina()"
+        >
+            ›
+        </button>
 
-    <span class="leitor-pdf-mobile__separador" aria-hidden="true"></span>
+        <span class="leitor-pdf-mobile__separador" aria-hidden="true"></span>
 
-    <button
-      type="button"
-      class="leitor-pdf-mobile__botao"
-      aria-label="Diminuir zoom"
-      [disabled]="carregando() || erro() || zoomFator() <= zoomMinimo"
-      (click)="diminuirZoom()"
-    >−</button>
+        <button
+            type="button"
+            class="leitor-pdf-mobile__botao"
+            aria-label="Diminuir zoom"
+            [disabled]="carregando() || erro() || zoomFator() <= zoomMinimo"
+            (click)="diminuirZoom()"
+        >
+            −
+        </button>
 
-    <button
-      type="button"
-      class="leitor-pdf-mobile__botao"
-      aria-label="Aumentar zoom"
-      [disabled]="carregando() || erro() || zoomFator() >= zoomMaximo"
-      (click)="aumentarZoom()"
-    >+</button>
-  </div>
+        <button
+            type="button"
+            class="leitor-pdf-mobile__botao"
+            aria-label="Aumentar zoom"
+            [disabled]="carregando() || erro() || zoomFator() >= zoomMaximo"
+            (click)="aumentarZoom()"
+        >
+            +
+        </button>
+    </div>
 </div>

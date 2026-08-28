@@ -1,297 +1,628 @@
 <section class="inventario-esquadrao" aria-label="Inventário de esquadrão">
-  @if (somenteLeitura()) {
-    <p class="inventario-esquadrao__somente-leitura" role="status">Consulta disponível durante a missão.</p>
-  }
-  <ng-container>
-    @if (!somenteLeitura()) {
-    <header class="inventario-esquadrao__acoes" aria-label="Ações do inventário">
-      <span class="inventario-esquadrao__contagem">{{ itens().length }} {{ itens().length === 1 ? 'registro' : 'registros' }}</span>
-      <div class="inventario-esquadrao__acoes-controles">
-        <button class="inventario-esquadrao__item-custom" type="button"
-          [attr.aria-expanded]="criandoItem()" [disabled]="!!editandoItemId()" (click)="alternarCriarItem()">
-          <app-icone nome="editar" />
-          {{ criandoItem() ? 'Fechar formulário' : 'Item custom' }}
-        </button>
-        <button class="inventario-esquadrao__adicionar" type="button"
-          [attr.aria-expanded]="catalogoAberto()" [disabled]="!!editandoItemId()"
-          (click)="alternarCatalogo()">
-          <app-icone nome="mais" />
-          {{ catalogoAberto() ? 'Fechar catálogo' : 'Adicionar itens' }}
-        </button>
-      </div>
-    </header>
+    @if (somenteLeitura()) {
+        <p class="inventario-esquadrao__somente-leitura" role="status">
+            Consulta disponível durante a missão.
+        </p>
     }
-
-    @if (!somenteLeitura() && (criandoItem() || editandoItemId())) {
-      <form class="inventario-esquadrao__form" [formGroup]="itemCustomForm"
-        (ngSubmit)="editandoItemId() ? confirmarEdicaoItem() : confirmarCriarItem()">
-        <div class="inventario-esquadrao__form-linha">
-          <label class="inventario-esquadrao__campo">
-            <span class="inventario-esquadrao__campo-rotulo">Nome</span>
-            <input class="inventario-esquadrao__entrada" type="text" formControlName="nome" placeholder="Nome do item" required />
-          </label>
-          <div class="inventario-esquadrao__campo">
-            <span class="inventario-esquadrao__campo-rotulo">Categoria</span>
-            <div class="inventario-esquadrao__categoria-select">
-              <button type="button" class="inventario-esquadrao__categoria-select-gatilho"
-                [attr.aria-expanded]="categoriaItemSelectAberta()" [disabled]="!!editandoItemId()"
-                (click)="alternarCategoriaItemSelect()">
-                <app-icone [nome]="iconesCategoria[categoriaCustom()]" />
-                <span>{{ rotuloCategoria(categoriaCustom()) }}</span>
-                <app-icone nome="chevron" class="inventario-esquadrao__categoria-select-chevron" />
-              </button>
-              @if (categoriaItemSelectAberta()) {
-                <div class="inventario-esquadrao__categoria-select-lista" role="listbox" aria-label="Categoria">
-                  @for (categoria of categoriasItem; track categoria.categoria) {
-                    <button type="button" class="inventario-esquadrao__categoria-select-opcao"
-                      [class.inventario-esquadrao__categoria-select-opcao--ativa]="categoriaCustom() === categoria.categoria"
-                      role="option" [attr.aria-selected]="categoriaCustom() === categoria.categoria"
-                      (click)="escolherCategoriaItem(categoria.categoria)">
-                      <app-icone [nome]="iconesCategoria[categoria.categoria]" />
-                      <span>{{ categoria.rotulo }}</span>
+    <ng-container>
+        @if (!somenteLeitura()) {
+            <header class="inventario-esquadrao__acoes" aria-label="Ações do inventário">
+                <span class="inventario-esquadrao__contagem"
+                    >{{ itens().length }}
+                    {{ itens().length === 1 ? "registro" : "registros" }}</span
+                >
+                <div class="inventario-esquadrao__acoes-controles">
+                    <button
+                        class="inventario-esquadrao__item-custom"
+                        type="button"
+                        [attr.aria-expanded]="criandoItem()"
+                        [disabled]="!!editandoItemId()"
+                        (click)="alternarCriarItem()"
+                    >
+                        <app-icone nome="editar" />
+                        {{ criandoItem() ? "Fechar formulário" : "Item custom" }}
                     </button>
-                  }
+                    <button
+                        class="inventario-esquadrao__adicionar"
+                        type="button"
+                        [attr.aria-expanded]="catalogoAberto()"
+                        [disabled]="!!editandoItemId()"
+                        (click)="alternarCatalogo()"
+                    >
+                        <app-icone nome="mais" />
+                        {{ catalogoAberto() ? "Fechar catálogo" : "Adicionar itens" }}
+                    </button>
                 </div>
-              }
-            </div>
-          </div>
-        </div>
-        <div class="inventario-esquadrao__form-linha inventario-esquadrao__form-linha--numeros">
-          @for (campo of (editandoItemId() ? [{ nome: 'custo', rotulo: 'Custo ($)', passo: 100 }, { nome: 'peso', rotulo: 'Peso (slots)', passo: 1 }] : [{ nome: 'custo', rotulo: 'Custo ($)', passo: 100 }, { nome: 'peso', rotulo: 'Peso (slots)', passo: 1 }, { nome: 'quantidade', rotulo: 'Quantidade', passo: 1 }]); track campo.nome) {
-            <div class="inventario-esquadrao__campo">
-              <span class="inventario-esquadrao__campo-rotulo">{{ campo.rotulo }}</span>
-              <div class="inventario-esquadrao__stepper">
-                <button type="button" class="inventario-esquadrao__mini-btn" [attr.aria-label]="'Diminuir ' + campo.nome"
-                  (click)="ajustarCampoItem($any(campo.nome), -campo.passo)">−</button>
-                <input class="inventario-esquadrao__entrada inventario-esquadrao__entrada--num" type="number"
-                  [formControlName]="$any(campo.nome)" />
-                <button type="button" class="inventario-esquadrao__mini-btn" [attr.aria-label]="'Aumentar ' + campo.nome"
-                  (click)="ajustarCampoItem($any(campo.nome), campo.passo)">+</button>
-              </div>
-            </div>
-          }
-        </div>
-        @if (mostraDano()) {
-          <div class="inventario-esquadrao__form-linha">
-            <label class="inventario-esquadrao__campo">
-              <span class="inventario-esquadrao__campo-rotulo">Dano</span>
-              <input class="inventario-esquadrao__entrada" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]"
-                [readonly]="!!editandoItemId()" />
-            </label>
-            <label class="inventario-esquadrao__campo">
-              <span class="inventario-esquadrao__campo-rotulo">Informação (alcance / área / munição)</span>
-              <input class="inventario-esquadrao__entrada" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m"
-                [readonly]="!!editandoItemId()" />
-            </label>
-          </div>
+            </header>
         }
-        @if (mostraResistencia() || mostraBonus()) {
-          <div class="inventario-esquadrao__form-linha">
-            @if (mostraResistencia()) {
-              <label class="inventario-esquadrao__campo">
-                <span class="inventario-esquadrao__campo-rotulo">Resistência</span>
-                <input class="inventario-esquadrao__entrada" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]"
-                  [readonly]="!!editandoItemId()" />
-              </label>
-            }
-            @if (mostraBonus()) {
-              <label class="inventario-esquadrao__campo">
-                <span class="inventario-esquadrao__campo-rotulo">Bônus de inventário</span>
-                <input class="inventario-esquadrao__entrada" type="text" formControlName="bonus" placeholder="Ex.: +6 inv."
-                  [readonly]="!!editandoItemId()" />
-              </label>
-            }
-          </div>
-        }
-        <label class="inventario-esquadrao__campo">
-          <span class="inventario-esquadrao__campo-rotulo">Descrição / efeito (opcional)</span>
-          <textarea class="inventario-esquadrao__entrada inventario-esquadrao__entrada--area" rows="2"
-            formControlName="descricao" placeholder="O que o item é ou faz…"></textarea>
-        </label>
-        @if (!editandoItemId() && modificacoesItemCustom().length) {
-          <div class="inventario-esquadrao__mods-ativas" aria-label="Modificações configuradas">
-            @for (modificacao of modificacoesItemCustom(); track modificacao.nome) {
-              <div class="inventario-esquadrao__mod-tag">
-                <strong>{{ modificacao.nome }} ×{{ modificacao.empilhamentos }}</strong>
-                @if (descricaoModificacao(modificacao, { nome: itemCustomForm.controls.nome.value, categoria: categoriaCustom(), custo: itemCustomForm.controls.custo.value, peso: itemCustomForm.controls.peso.value, quantidade: itemCustomForm.controls.quantidade.value, modificacoes: modificacoesItemCustom() }); as descricao) {
-                  <span>{{ descricao }}</span>
-                }
-              </div>
-            }
-          </div>
-        }
-        <div class="inventario-esquadrao__form-acoes">
-          @if (!editandoItemId()) {
-            <button type="button" class="inventario-esquadrao__form-btn inventario-esquadrao__abrir-modificacoes-custom"
-              [disabled]="itemCustomForm.invalid || operando()" (click)="abrirConfiguracaoItemCustom()">Modificações</button>
-          }
-          <button type="submit" class="inventario-esquadrao__form-btn inventario-esquadrao__form-btn--principal"
-            [disabled]="itemCustomForm.invalid || operando()">{{ editandoItemId() ? 'Salvar alterações' : 'Adicionar item' }}</button>
-          <button type="button" class="inventario-esquadrao__form-btn"
-            (click)="editandoItemId() ? cancelarEdicaoItem() : cancelarCriarItem()">Cancelar</button>
-        </div>
-      </form>
-    }
 
-    @if (!somenteLeitura() && catalogoAberto()) {
-      <div class="inventario-esquadrao__catalogo">
-        <input class="inventario-esquadrao__busca" type="search" aria-label="Buscar itens"
-          placeholder="Pesquisar item…" autocomplete="off" [formControl]="busca" />
-        <nav class="inventario-esquadrao__categorias" aria-label="Categorias do catálogo">
-          @for (categoria of categorias; track categoria.categoria) {
-            <button type="button" class="inventario-esquadrao__categoria-opcao"
-              [class.inventario-esquadrao__categoria-opcao--ativa]="categoriaAtiva.value === categoria.categoria"
-              (click)="categoriaAtiva.setValue(categoria.categoria)">
-              <app-icone [nome]="iconesCategoria[categoria.categoria]" />
-              <span>{{ categoria.rotulo }}</span>
-            </button>
-          }
-        </nav>
-        <div class="inventario-esquadrao__catalogo-lista">
-          @for (item of itensCatalogo(); track item.nome) {
-            <article class="inventario-esquadrao__catalogo-item">
-              <header class="inventario-esquadrao__catalogo-item-cabecalho">
-                <strong>{{ item.nome }}</strong>
-              </header>
-              @if (resumoMecanico(item); as resumo) {
-                <span class="inventario-esquadrao__catalogo-item-stat">{{ resumo }}</span>
-              }
-              @if (item.descricao) {
-                <p>{{ item.descricao }}</p>
-              }
-              <div class="inventario-esquadrao__catalogo-item-meta">
-                <span class="inventario-esquadrao__catalogo-item-custo">${{ item.custo }}</span>
-                <span>{{ item.peso }} {{ item.peso === 1 ? 'slot' : 'slots' }}</span>
-              </div>
-              <div class="inventario-esquadrao__catalogo-item-acoes">
-                <button class="inventario-esquadrao__catalogo-adicionar" type="button"
-                  [class.inventario-esquadrao__catalogo-adicionar--feito]="itemAdicionado() === item.nome"
-                  (click)="adicionar(item)" [disabled]="operando()">
-                  <app-icone [nome]="itemAdicionado() === item.nome ? 'check' : 'mais'" />
-                  {{ itemAdicionado() === item.nome ? 'Adicionado' : 'Adicionar' }}
-                </button>
-                <button class="inventario-esquadrao__catalogo-modificar" type="button" [disabled]="operando()"
-                  (click)="abrirConfiguracaoCatalogo(item)">Modificar</button>
-              </div>
-            </article>
-          } @empty {
-            <p class="inventario-esquadrao__catalogo-vazio">Nenhum item encontrado nesta categoria.</p>
-          }
-        </div>
-      </div>
-    }
-
-    @if (itens().length === 0) {
-      <p class="inventario-esquadrao__vazio">Nenhum item armazenado. Adicione equipamento para preparar o esquadrão.</p>
-    } @else {
-      <ul class="inventario-esquadrao__lista">
-        @for (item of itens(); track item.id) {
-          <li class="inventario-esquadrao__item">
-            <div class="inventario-esquadrao__item-identidade">
-              <span class="inventario-esquadrao__categoria">{{ rotuloCategoria(item.categoria) }}</span>
-              <strong>
-                {{ item.nome }}
-                @if (!somenteLeitura() && ehItemCustom(item) && !editandoItemId()) {
-                  <button type="button" class="inventario-esquadrao__item-editar"
-                    [attr.aria-label]="'Editar informações de ' + item.nome" (click)="abrirEdicaoItem(item)">
-                    <app-icone nome="editar" />
-                  </button>
-                }
-              </strong>
-              <small>{{ item.peso }} {{ item.peso === 1 ? 'slot' : 'slots' }} · ${{ item.custo }}</small>
-              @if (item.modificacoes?.length) {
-                <div class="inventario-esquadrao__mods-ativas">
-                  @for (modificacao of item.modificacoes; track $index) {
-                    <div class="inventario-esquadrao__mod-tag">
-                      <strong>{{ modificacao.nome }} ×{{ modificacao.empilhamentos }}</strong>
-                      @if (descricaoModificacao(modificacao, item); as descricao) {
-                        <span>{{ descricao }}</span>
-                      }
+        @if (!somenteLeitura() && (criandoItem() || editandoItemId())) {
+            <form
+                class="inventario-esquadrao__form"
+                [formGroup]="itemCustomForm"
+                (ngSubmit)="editandoItemId() ? confirmarEdicaoItem() : confirmarCriarItem()"
+            >
+                <div class="inventario-esquadrao__form-linha">
+                    <label class="inventario-esquadrao__campo">
+                        <span class="inventario-esquadrao__campo-rotulo">Nome</span>
+                        <input
+                            class="inventario-esquadrao__entrada"
+                            type="text"
+                            formControlName="nome"
+                            placeholder="Nome do item"
+                            required
+                        />
+                    </label>
+                    <div class="inventario-esquadrao__campo">
+                        <span class="inventario-esquadrao__campo-rotulo">Categoria</span>
+                        <div class="inventario-esquadrao__categoria-select">
+                            <button
+                                type="button"
+                                class="inventario-esquadrao__categoria-select-gatilho"
+                                [attr.aria-expanded]="categoriaItemSelectAberta()"
+                                [disabled]="!!editandoItemId()"
+                                (click)="alternarCategoriaItemSelect()"
+                            >
+                                <app-icone [nome]="iconesCategoria[categoriaCustom()]" />
+                                <span>{{ rotuloCategoria(categoriaCustom()) }}</span>
+                                <app-icone
+                                    nome="chevron"
+                                    class="inventario-esquadrao__categoria-select-chevron"
+                                />
+                            </button>
+                            @if (categoriaItemSelectAberta()) {
+                                <div
+                                    class="inventario-esquadrao__categoria-select-lista"
+                                    role="listbox"
+                                    aria-label="Categoria"
+                                >
+                                    @for (categoria of categoriasItem; track categoria.categoria) {
+                                        <button
+                                            type="button"
+                                            class="inventario-esquadrao__categoria-select-opcao"
+                                            [class.inventario-esquadrao__categoria-select-opcao--ativa]="
+                                                categoriaCustom() === categoria.categoria
+                                            "
+                                            role="option"
+                                            [attr.aria-selected]="
+                                                categoriaCustom() === categoria.categoria
+                                            "
+                                            (click)="escolherCategoriaItem(categoria.categoria)"
+                                        >
+                                            <app-icone
+                                                [nome]="iconesCategoria[categoria.categoria]"
+                                            />
+                                            <span>{{ categoria.rotulo }}</span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
-                  }
                 </div>
-              }
-            </div>
-            @if (!somenteLeitura()) {
-            <div class="inventario-esquadrao__item-acoes">
-              <div class="inventario-esquadrao__quantidade" aria-label="Quantidade">
-                <button type="button" [disabled]="!!editandoItemId()" [attr.aria-label]="'Diminuir quantidade de ' + item.nome" (click)="ajustar(item.id, -1)">−</button>
-                <output>{{ item.quantidade }}</output>
-                <button type="button" [disabled]="!!editandoItemId()" [attr.aria-label]="'Aumentar quantidade de ' + item.nome" (click)="ajustar(item.id, 1)">+</button>
-              </div>
-              <button class="inventario-esquadrao__pegar" type="button"
-                [disabled]="fichas().length === 0 || !!editandoItemId()" (click)="abrirTransferencia(item)">Pegar <span aria-hidden="true">→</span></button>
-              @if (itemConfirmandoRemocao() === item.id) {
-                <span class="inventario-esquadrao__remocao-confirmacao" role="group" [attr.aria-label]="'Remoção de ' + item.nome">
-                  <span class="inventario-esquadrao__remocao-texto">Remover item?</span>
-                  <button class="inventario-esquadrao__remover inventario-esquadrao__remover--confirmar" type="button"
-                    [disabled]="!!editandoItemId()" [attr.aria-label]="'Confirmar remoção de ' + item.nome" (click)="confirmarRemocao(item.id)">
-                    <app-icone nome="check" />
-                  </button>
-                  <button class="inventario-esquadrao__remover" type="button"
-                    [disabled]="!!editandoItemId()" [attr.aria-label]="'Cancelar remoção de ' + item.nome" (click)="cancelarRemocao()">×</button>
-                </span>
-              } @else {
-                <button class="inventario-esquadrao__remover" type="button" [disabled]="!!editandoItemId()" [attr.aria-label]="'Remover ' + item.nome" (click)="solicitarRemocao(item.id)">×</button>
-              }
-            </div>
-            }
-          </li>
+                <div
+                    class="inventario-esquadrao__form-linha inventario-esquadrao__form-linha--numeros"
+                >
+                    @for (
+                        campo of editandoItemId()
+                            ? [
+                                  { nome: "custo", rotulo: "Custo ($)", passo: 100 },
+                                  { nome: "peso", rotulo: "Peso (slots)", passo: 1 },
+                              ]
+                            : [
+                                  { nome: "custo", rotulo: "Custo ($)", passo: 100 },
+                                  { nome: "peso", rotulo: "Peso (slots)", passo: 1 },
+                                  { nome: "quantidade", rotulo: "Quantidade", passo: 1 },
+                              ];
+                        track campo.nome
+                    ) {
+                        <div class="inventario-esquadrao__campo">
+                            <span class="inventario-esquadrao__campo-rotulo">{{
+                                campo.rotulo
+                            }}</span>
+                            <div class="inventario-esquadrao__stepper">
+                                <button
+                                    type="button"
+                                    class="inventario-esquadrao__mini-btn"
+                                    [attr.aria-label]="'Diminuir ' + campo.nome"
+                                    (click)="ajustarCampoItem($any(campo.nome), -campo.passo)"
+                                >
+                                    −
+                                </button>
+                                <input
+                                    class="inventario-esquadrao__entrada inventario-esquadrao__entrada--num"
+                                    type="number"
+                                    [formControlName]="$any(campo.nome)"
+                                />
+                                <button
+                                    type="button"
+                                    class="inventario-esquadrao__mini-btn"
+                                    [attr.aria-label]="'Aumentar ' + campo.nome"
+                                    (click)="ajustarCampoItem($any(campo.nome), campo.passo)"
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if (mostraDano()) {
+                    <div class="inventario-esquadrao__form-linha">
+                        <label class="inventario-esquadrao__campo">
+                            <span class="inventario-esquadrao__campo-rotulo">Dano</span>
+                            <input
+                                class="inventario-esquadrao__entrada"
+                                type="text"
+                                formControlName="dano"
+                                placeholder="Ex.: 3D6+FOR [Físico]"
+                                [readonly]="!!editandoItemId()"
+                            />
+                        </label>
+                        <label class="inventario-esquadrao__campo">
+                            <span class="inventario-esquadrao__campo-rotulo"
+                                >Informação (alcance / área / munição)</span
+                            >
+                            <input
+                                class="inventario-esquadrao__entrada"
+                                type="text"
+                                formControlName="informacao"
+                                placeholder="Ex.: Médio · 3m"
+                                [readonly]="!!editandoItemId()"
+                            />
+                        </label>
+                    </div>
+                }
+                @if (mostraResistencia() || mostraBonus()) {
+                    <div class="inventario-esquadrao__form-linha">
+                        @if (mostraResistencia()) {
+                            <label class="inventario-esquadrao__campo">
+                                <span class="inventario-esquadrao__campo-rotulo">Resistência</span>
+                                <input
+                                    class="inventario-esquadrao__entrada"
+                                    type="text"
+                                    formControlName="resistencia"
+                                    placeholder="Ex.: 14 [Físico], 3 [Balístico]"
+                                    [readonly]="!!editandoItemId()"
+                                />
+                            </label>
+                        }
+                        @if (mostraBonus()) {
+                            <label class="inventario-esquadrao__campo">
+                                <span class="inventario-esquadrao__campo-rotulo"
+                                    >Bônus de inventário</span
+                                >
+                                <input
+                                    class="inventario-esquadrao__entrada"
+                                    type="text"
+                                    formControlName="bonus"
+                                    placeholder="Ex.: +6 inv."
+                                    [readonly]="!!editandoItemId()"
+                                />
+                            </label>
+                        }
+                    </div>
+                }
+                <label class="inventario-esquadrao__campo">
+                    <span class="inventario-esquadrao__campo-rotulo"
+                        >Descrição / efeito (opcional)</span
+                    >
+                    <textarea
+                        class="inventario-esquadrao__entrada inventario-esquadrao__entrada--area"
+                        rows="2"
+                        formControlName="descricao"
+                        placeholder="O que o item é ou faz…"
+                    ></textarea>
+                </label>
+                @if (!editandoItemId() && modificacoesItemCustom().length) {
+                    <div
+                        class="inventario-esquadrao__mods-ativas"
+                        aria-label="Modificações configuradas"
+                    >
+                        @for (modificacao of modificacoesItemCustom(); track modificacao.nome) {
+                            <div class="inventario-esquadrao__mod-tag">
+                                <strong
+                                    >{{ modificacao.nome }} ×{{ modificacao.empilhamentos }}</strong
+                                >
+                                @if (
+                                    descricaoModificacao(modificacao, {
+                                        nome: itemCustomForm.controls.nome.value,
+                                        categoria: categoriaCustom(),
+                                        custo: itemCustomForm.controls.custo.value,
+                                        peso: itemCustomForm.controls.peso.value,
+                                        quantidade: itemCustomForm.controls.quantidade.value,
+                                        modificacoes: modificacoesItemCustom(),
+                                    });
+                                    as descricao
+                                ) {
+                                    <span>{{ descricao }}</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                <div class="inventario-esquadrao__form-acoes">
+                    @if (!editandoItemId()) {
+                        <button
+                            type="button"
+                            class="inventario-esquadrao__form-btn inventario-esquadrao__abrir-modificacoes-custom"
+                            [disabled]="itemCustomForm.invalid || operando()"
+                            (click)="abrirConfiguracaoItemCustom()"
+                        >
+                            Modificações
+                        </button>
+                    }
+                    <button
+                        type="submit"
+                        class="inventario-esquadrao__form-btn inventario-esquadrao__form-btn--principal"
+                        [disabled]="itemCustomForm.invalid || operando()"
+                    >
+                        {{ editandoItemId() ? "Salvar alterações" : "Adicionar item" }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inventario-esquadrao__form-btn"
+                        (click)="editandoItemId() ? cancelarEdicaoItem() : cancelarCriarItem()"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         }
-      </ul>
-    }
-  </ng-container>
+
+        @if (!somenteLeitura() && catalogoAberto()) {
+            <div class="inventario-esquadrao__catalogo">
+                <input
+                    class="inventario-esquadrao__busca"
+                    type="search"
+                    aria-label="Buscar itens"
+                    placeholder="Pesquisar item…"
+                    autocomplete="off"
+                    [formControl]="busca"
+                />
+                <nav class="inventario-esquadrao__categorias" aria-label="Categorias do catálogo">
+                    @for (categoria of categorias; track categoria.categoria) {
+                        <button
+                            type="button"
+                            class="inventario-esquadrao__categoria-opcao"
+                            [class.inventario-esquadrao__categoria-opcao--ativa]="
+                                categoriaAtiva.value === categoria.categoria
+                            "
+                            (click)="categoriaAtiva.setValue(categoria.categoria)"
+                        >
+                            <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+                            <span>{{ categoria.rotulo }}</span>
+                        </button>
+                    }
+                </nav>
+                <div class="inventario-esquadrao__catalogo-lista">
+                    @for (item of itensCatalogo(); track item.nome) {
+                        <article class="inventario-esquadrao__catalogo-item">
+                            <header class="inventario-esquadrao__catalogo-item-cabecalho">
+                                <strong>{{ item.nome }}</strong>
+                            </header>
+                            @if (resumoMecanico(item); as resumo) {
+                                <span class="inventario-esquadrao__catalogo-item-stat">{{
+                                    resumo
+                                }}</span>
+                            }
+                            @if (item.descricao) {
+                                <p>{{ item.descricao }}</p>
+                            }
+                            <div class="inventario-esquadrao__catalogo-item-meta">
+                                <span class="inventario-esquadrao__catalogo-item-custo"
+                                    >${{ item.custo }}</span
+                                >
+                                <span
+                                    >{{ item.peso }} {{ item.peso === 1 ? "slot" : "slots" }}</span
+                                >
+                            </div>
+                            <div class="inventario-esquadrao__catalogo-item-acoes">
+                                <button
+                                    class="inventario-esquadrao__catalogo-adicionar"
+                                    type="button"
+                                    [class.inventario-esquadrao__catalogo-adicionar--feito]="
+                                        itemAdicionado() === item.nome
+                                    "
+                                    (click)="adicionar(item)"
+                                    [disabled]="operando()"
+                                >
+                                    <app-icone
+                                        [nome]="itemAdicionado() === item.nome ? 'check' : 'mais'"
+                                    />
+                                    {{
+                                        itemAdicionado() === item.nome ? "Adicionado" : "Adicionar"
+                                    }}
+                                </button>
+                                <button
+                                    class="inventario-esquadrao__catalogo-modificar"
+                                    type="button"
+                                    [disabled]="operando()"
+                                    (click)="abrirConfiguracaoCatalogo(item)"
+                                >
+                                    Modificar
+                                </button>
+                            </div>
+                        </article>
+                    } @empty {
+                        <p class="inventario-esquadrao__catalogo-vazio">
+                            Nenhum item encontrado nesta categoria.
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (itens().length === 0) {
+            <p class="inventario-esquadrao__vazio">
+                Nenhum item armazenado. Adicione equipamento para preparar o esquadrão.
+            </p>
+        } @else {
+            <ul class="inventario-esquadrao__lista">
+                @for (item of itens(); track item.id) {
+                    <li class="inventario-esquadrao__item">
+                        <div class="inventario-esquadrao__item-identidade">
+                            <span class="inventario-esquadrao__categoria">{{
+                                rotuloCategoria(item.categoria)
+                            }}</span>
+                            <strong>
+                                {{ item.nome }}
+                                @if (!somenteLeitura() && ehItemCustom(item) && !editandoItemId()) {
+                                    <button
+                                        type="button"
+                                        class="inventario-esquadrao__item-editar"
+                                        [attr.aria-label]="'Editar informações de ' + item.nome"
+                                        (click)="abrirEdicaoItem(item)"
+                                    >
+                                        <app-icone nome="editar" />
+                                    </button>
+                                }
+                            </strong>
+                            <small
+                                >{{ item.peso }} {{ item.peso === 1 ? "slot" : "slots" }} · ${{
+                                    item.custo
+                                }}</small
+                            >
+                            @if (item.modificacoes?.length) {
+                                <div class="inventario-esquadrao__mods-ativas">
+                                    @for (modificacao of item.modificacoes; track $index) {
+                                        <div class="inventario-esquadrao__mod-tag">
+                                            <strong
+                                                >{{ modificacao.nome }} ×{{
+                                                    modificacao.empilhamentos
+                                                }}</strong
+                                            >
+                                            @if (
+                                                descricaoModificacao(modificacao, item);
+                                                as descricao
+                                            ) {
+                                                <span>{{ descricao }}</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        @if (!somenteLeitura()) {
+                            <div class="inventario-esquadrao__item-acoes">
+                                <div
+                                    class="inventario-esquadrao__quantidade"
+                                    aria-label="Quantidade"
+                                >
+                                    <button
+                                        type="button"
+                                        [disabled]="!!editandoItemId()"
+                                        [attr.aria-label]="'Diminuir quantidade de ' + item.nome"
+                                        (click)="ajustar(item.id, -1)"
+                                    >
+                                        −
+                                    </button>
+                                    <output>{{ item.quantidade }}</output>
+                                    <button
+                                        type="button"
+                                        [disabled]="!!editandoItemId()"
+                                        [attr.aria-label]="'Aumentar quantidade de ' + item.nome"
+                                        (click)="ajustar(item.id, 1)"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                                <button
+                                    class="inventario-esquadrao__pegar"
+                                    type="button"
+                                    [disabled]="fichas().length === 0 || !!editandoItemId()"
+                                    (click)="abrirTransferencia(item)"
+                                >
+                                    Pegar <span aria-hidden="true">→</span>
+                                </button>
+                                @if (itemConfirmandoRemocao() === item.id) {
+                                    <span
+                                        class="inventario-esquadrao__remocao-confirmacao"
+                                        role="group"
+                                        [attr.aria-label]="'Remoção de ' + item.nome"
+                                    >
+                                        <span class="inventario-esquadrao__remocao-texto"
+                                            >Remover item?</span
+                                        >
+                                        <button
+                                            class="inventario-esquadrao__remover inventario-esquadrao__remover--confirmar"
+                                            type="button"
+                                            [disabled]="!!editandoItemId()"
+                                            [attr.aria-label]="'Confirmar remoção de ' + item.nome"
+                                            (click)="confirmarRemocao(item.id)"
+                                        >
+                                            <app-icone nome="check" />
+                                        </button>
+                                        <button
+                                            class="inventario-esquadrao__remover"
+                                            type="button"
+                                            [disabled]="!!editandoItemId()"
+                                            [attr.aria-label]="'Cancelar remoção de ' + item.nome"
+                                            (click)="cancelarRemocao()"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                } @else {
+                                    <button
+                                        class="inventario-esquadrao__remover"
+                                        type="button"
+                                        [disabled]="!!editandoItemId()"
+                                        [attr.aria-label]="'Remover ' + item.nome"
+                                        (click)="solicitarRemocao(item.id)"
+                                    >
+                                        ×
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </ng-container>
 </section>
 
 @if (!somenteLeitura()) {
-  @if (transferencia(); as item) {
-  <button class="dialogo__fundo" type="button" aria-label="Cancelar transferência" (click)="transferencia.set(null)"></button>
-  <section class="dialogo inventario-esquadrao__dialogo" role="dialog" aria-modal="true" aria-label="Pegar item">
-    <header class="dialogo__cabecalho"><h2>Pegar {{ item.nome }}</h2></header>
-    <label>Ficha<select [formControl]="fichaDestino">@for (ficha of fichas(); track ficha.id) {<option [ngValue]="ficha.id">{{ ficha.nome }}</option>}</select></label>
-    <label>Quantidade<input type="number" min="1" [max]="item.quantidade" [formControl]="quantidade" /></label>
-    <footer class="dialogo__acoes">
-      <button class="botao botao--secundario" type="button" (click)="transferencia.set(null)">Cancelar</button>
-      <button class="botao botao--primario inventario-esquadrao__confirmar" type="button" [disabled]="operando()" (click)="confirmarTransferencia()">Confirmar</button>
-    </footer>
-  </section>
-  }
-  @if (configuracaoModificacoes(); as configuracao) {
-  <button class="dialogo__fundo" type="button" aria-label="Cancelar modificações" (click)="cancelarConfiguracaoModificacoes()"></button>
-  <section class="dialogo inventario-esquadrao__dialogo inventario-esquadrao__dialogo--modificacoes" role="dialog" aria-modal="true" aria-label="Modificar item">
-    <header class="dialogo__cabecalho"><h2>Modificar item</h2><p>{{ configuracao.item.nome }}</p></header>
-    <p class="inventario-esquadrao__modificacoes-ajuda">Selecione as modificações compatíveis. A base não usa prestígio ou custo pessoal.</p>
-    <div class="inventario-esquadrao__modificacoes-lista">
-      @for (modificacao of modificacoesDisponiveis(); track modificacao.nome) {
-        <article class="inventario-esquadrao__modificacao">
-          <div>
-            <strong>{{ modificacao.nome }}</strong>
-            <span>{{ escalarDescricaoCatalogoPorCompras(modificacao.nome, modificacao.descricao, quantidadeModificacao(modificacao) || modificacao.empilhamentosIniciais) }}</span>
-          </div>
-          <div class="inventario-esquadrao__modificacao-acoes">
-            @if (quantidadeModificacao(modificacao)) {
-              <button type="button" class="inventario-esquadrao__modificacao-remover" [attr.aria-label]="'Remover ' + modificacao.nome"
-                (click)="removerModificacao(modificacao)">−</button>
-              <output>{{ quantidadeModificacao(modificacao) }}×</output>
-            }
-            <button type="button" class="inventario-esquadrao__modificacao-adicionar" [disabled]="conflitoModificacao(modificacao) || quantidadeModificacao(modificacao) >= modificacao.empilhamentoMaximo"
-              (click)="adicionarModificacao(modificacao)">
-              {{ quantidadeModificacao(modificacao) ? '+' : 'Adicionar' }} {{ modificacao.nome }}
-            </button>
-          </div>
-        </article>
-      } @empty {
-        <p class="inventario-esquadrao__catalogo-vazio">Não há modificações para esta categoria.</p>
-      }
-    </div>
-    <footer class="dialogo__acoes">
-      <button class="botao botao--secundario" type="button" (click)="cancelarConfiguracaoModificacoes()">Cancelar</button>
-      <button class="botao botao--primario inventario-esquadrao__confirmar-modificacoes"
-        [class.inventario-esquadrao__concluir-modificacoes-custom]="configuracao.origem === 'custom'"
-        type="button" [disabled]="operando()" (click)="confirmarModificacoes()">
-        {{ configuracao.origem === 'catalogo' ? 'Adicionar item' : 'Concluir modificações' }}
-      </button>
-    </footer>
-  </section>
-  }
+    @if (transferencia(); as item) {
+        <button
+            class="dialogo__fundo"
+            type="button"
+            aria-label="Cancelar transferência"
+            (click)="transferencia.set(null)"
+        ></button>
+        <section
+            class="dialogo inventario-esquadrao__dialogo"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Pegar item"
+        >
+            <header class="dialogo__cabecalho">
+                <h2>Pegar {{ item.nome }}</h2>
+            </header>
+            <label
+                >Ficha<select [formControl]="fichaDestino">
+                    @for (ficha of fichas(); track ficha.id) {
+                        <option [ngValue]="ficha.id">{{ ficha.nome }}</option>
+                    }
+                </select></label
+            >
+            <label
+                >Quantidade<input
+                    type="number"
+                    min="1"
+                    [max]="item.quantidade"
+                    [formControl]="quantidade"
+            /></label>
+            <footer class="dialogo__acoes">
+                <button
+                    class="botao botao--secundario"
+                    type="button"
+                    (click)="transferencia.set(null)"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="botao botao--primario inventario-esquadrao__confirmar"
+                    type="button"
+                    [disabled]="operando()"
+                    (click)="confirmarTransferencia()"
+                >
+                    Confirmar
+                </button>
+            </footer>
+        </section>
+    }
+    @if (configuracaoModificacoes(); as configuracao) {
+        <button
+            class="dialogo__fundo"
+            type="button"
+            aria-label="Cancelar modificações"
+            (click)="cancelarConfiguracaoModificacoes()"
+        ></button>
+        <section
+            class="dialogo inventario-esquadrao__dialogo inventario-esquadrao__dialogo--modificacoes"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Modificar item"
+        >
+            <header class="dialogo__cabecalho">
+                <h2>Modificar item</h2>
+                <p>{{ configuracao.item.nome }}</p>
+            </header>
+            <p class="inventario-esquadrao__modificacoes-ajuda">
+                Selecione as modificações compatíveis. A base não usa prestígio ou custo pessoal.
+            </p>
+            <div class="inventario-esquadrao__modificacoes-lista">
+                @for (modificacao of modificacoesDisponiveis(); track modificacao.nome) {
+                    <article class="inventario-esquadrao__modificacao">
+                        <div>
+                            <strong>{{ modificacao.nome }}</strong>
+                            <span>{{
+                                escalarDescricaoCatalogoPorCompras(
+                                    modificacao.nome,
+                                    modificacao.descricao,
+                                    quantidadeModificacao(modificacao) ||
+                                        modificacao.empilhamentosIniciais
+                                )
+                            }}</span>
+                        </div>
+                        <div class="inventario-esquadrao__modificacao-acoes">
+                            @if (quantidadeModificacao(modificacao)) {
+                                <button
+                                    type="button"
+                                    class="inventario-esquadrao__modificacao-remover"
+                                    [attr.aria-label]="'Remover ' + modificacao.nome"
+                                    (click)="removerModificacao(modificacao)"
+                                >
+                                    −
+                                </button>
+                                <output>{{ quantidadeModificacao(modificacao) }}×</output>
+                            }
+                            <button
+                                type="button"
+                                class="inventario-esquadrao__modificacao-adicionar"
+                                [disabled]="
+                                    conflitoModificacao(modificacao) ||
+                                    quantidadeModificacao(modificacao) >=
+                                        modificacao.empilhamentoMaximo
+                                "
+                                (click)="adicionarModificacao(modificacao)"
+                            >
+                                {{ quantidadeModificacao(modificacao) ? "+" : "Adicionar" }}
+                                {{ modificacao.nome }}
+                            </button>
+                        </div>
+                    </article>
+                } @empty {
+                    <p class="inventario-esquadrao__catalogo-vazio">
+                        Não há modificações para esta categoria.
+                    </p>
+                }
+            </div>
+            <footer class="dialogo__acoes">
+                <button
+                    class="botao botao--secundario"
+                    type="button"
+                    (click)="cancelarConfiguracaoModificacoes()"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="botao botao--primario inventario-esquadrao__confirmar-modificacoes"
+                    [class.inventario-esquadrao__concluir-modificacoes-custom]="
+                        configuracao.origem === 'custom'
+                    "
+                    type="button"
+                    [disabled]="operando()"
+                    (click)="confirmarModificacoes()"
+                >
+                    {{
+                        configuracao.origem === "catalogo"
+                            ? "Adicionar item"
+                            : "Concluir modificações"
+                    }}
+                </button>
+            </footer>
+        </section>
+    }
 }

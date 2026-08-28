@@ -23,13 +23,13 @@ $bp-tablet: 1080px;
 $alvo-toque: 44px;
 
 @mixin mobile {
-  @media (max-width: $bp-mobile) {
-    @content;
-  }
+    @media (max-width: $bp-mobile) {
+        @content;
+    }
 }
 
 @mixin tablet {
-  @media (max-width: $bp-tablet) {
-    @content;
-  }
+    @media (max-width: $bp-tablet) {
+        @content;
+    }
 }

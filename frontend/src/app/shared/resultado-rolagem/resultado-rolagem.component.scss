@@ -1,196 +1,196 @@
 // Detalhamento do resultado de uma rolagem — extraído da bandeja de dados (m3-22) em m3-27 para
 // reuso no histórico da ficha e no feed da campanha. Só tokens do tema (proibição #29).
 
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 :host {
-  display: contents;
+    display: contents;
 }
 
 // Container dos blocos de resultado (m3-46): 1 bloco sem repetição; N blocos empilhados com
 // `(<fórmula>)#N` — tudo numa carta só, em vez de uma carta por repetição.
 .resultado-rolagem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 9px;
-
-  &__corpo {
-    display: flex;
-    align-items: baseline;
-    gap: 20px;
-
-    // A partir do 2º bloco (repetição), uma régua fina separa uma rolagem da outra.
-    &:not(:first-child) {
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-    }
-
-    @include bp.mobile {
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-  }
-
-  // Total/crítico usam a cor de identidade da FICHA (m3-61), não o accent do viewer — cai no
-  // accent (`var(--accent)`) quando a ficha não tem `--cor-ficha` definida (fallback explícito,
-  // fichas antigas sem quebra). Não confundir com `--accent` puro: os dados escolhidos/pool
-  // continuam no accent do viewer (o "tema" da mesa), só total/crítico ganham a cor da ficha.
-  &__total {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 44px;
-    line-height: 1;
-    color: var(--cor-ficha, var(--accent));
-    display: inline-flex;
-    flex-direction: column;
-    gap: 5px;
-
-    // Crítico (m3-30): brilho no número — destaque maior quando bate crítico ou dobra o dano.
-    &--critico {
-      text-shadow:
-        0 0 16px color-mix(in srgb, var(--cor-ficha, var(--accent)) 80%, transparent),
-        0 0 5px color-mix(in srgb, var(--cor-ficha, var(--accent)) 60%, transparent);
-    }
-  }
-
-  // Selo "crítico ×2" abaixo do total, na rolagem de crítico (dano dobrado).
-  &__critico-badge {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--cor-ficha, var(--accent));
-    text-shadow: none;
-  }
-
-  // Selo "N/total" abaixo do total, num bloco de repetição `(<fórmula>)#N` (m3-46).
-  &__indice-badge {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-dim);
-    text-shadow: none;
-  }
-
-  &__detalhe {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-width: 0; // permite os dados quebrarem em vez de estourar o container
-  }
-
-  &__pool {
-    display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 5px 10px;
-  }
+    gap: 10px;
+    margin-top: 9px;
 
-  // Um termo de dado (m3-22): o rótulo NdM + os valores rolados em chips. Quebra em várias linhas
-  // quando há muitos dados (ex.: 6d6, 10d10 crítico).
-  &__dado-termo {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 5px;
-  }
+    &__corpo {
+        display: flex;
+        align-items: baseline;
+        gap: 20px;
 
-  &__dado-nota {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-mute);
-  }
+        // A partir do 2º bloco (repetição), uma régua fina separa uma rolagem da outra.
+        &:not(:first-child) {
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
 
-  &__dado {
-    font-family: var(--font-mono);
-    font-size: 16px;
-    color: var(--text-mute);
-    min-width: 28px;
-    text-align: center;
-    padding: 2px 6px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-
-    // Cor por tipo de dano (I-011) — mesma paleta do chip de resumo (`__grupo`), aplicada ao
-    // dadinho individual do pool, pra dar pista visual de qual `NdM` é qual tipo numa fórmula com
-    // vários (ex.: `4d6[F] + 4d6[Q]`). Declarado antes de `--escolhido`/`--descartado`: quando um
-    // dado é mantido, a cor de "escolhido" continua prevalecendo (mesma prioridade de sempre); a
-    // cor de tipo some do texto/borda, mas o dado ainda existe visualmente no grupo certo pela
-    // posição. Descartado só mexe em opacidade/risco, então a cor de tipo continua visível por trás.
-    @each $tipo in fisico, balistico, explosao, quimico, geral {
-      &--#{$tipo} {
-        color: var(--dano-#{$tipo});
-        border-color: var(--dano-#{$tipo}-border);
-        background: var(--dano-#{$tipo}-dim);
-      }
+        @include bp.mobile {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
     }
 
-    &--escolhido {
-      color: var(--text);
-      border-color: var(--accent-border);
-      background: var(--accent-dim);
+    // Total/crítico usam a cor de identidade da FICHA (m3-61), não o accent do viewer — cai no
+    // accent (`var(--accent)`) quando a ficha não tem `--cor-ficha` definida (fallback explícito,
+    // fichas antigas sem quebra). Não confundir com `--accent` puro: os dados escolhidos/pool
+    // continuam no accent do viewer (o "tema" da mesa), só total/crítico ganham a cor da ficha.
+    &__total {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 44px;
+        line-height: 1;
+        color: var(--cor-ficha, var(--accent));
+        display: inline-flex;
+        flex-direction: column;
+        gap: 5px;
+
+        // Crítico (m3-30): brilho no número — destaque maior quando bate crítico ou dobra o dano.
+        &--critico {
+            text-shadow:
+                0 0 16px color-mix(in srgb, var(--cor-ficha, var(--accent)) 80%, transparent),
+                0 0 5px color-mix(in srgb, var(--cor-ficha, var(--accent)) 60%, transparent);
+        }
     }
 
-    // Dado descartado pelo keep (kh/kl) — esmaecido e riscado (m3-29).
-    &--descartado {
-      opacity: 0.45;
-      text-decoration: line-through;
+    // Selo "crítico ×2" abaixo do total, na rolagem de crítico (dano dobrado).
+    &__critico-badge {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--cor-ficha, var(--accent));
+        text-shadow: none;
     }
-  }
 
-  // Contagem de crítico (margem `cm`) de um termo (m3-29; realçada em m3-30 — maior + glow).
-  &__critico {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--cor-ficha, var(--accent));
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    text-shadow: 0 0 10px color-mix(in srgb, var(--cor-ficha, var(--accent)) 70%, transparent);
-  }
-
-  &__legenda {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    color: var(--text-dim);
-  }
-
-  &__desvantagem {
-    color: var(--warning);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    font-size: 12px;
-  }
-
-  &__grupos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  // Chip de resumo por tipo de dano ("Físico 12", "Balístico 6"...) — cor dedicada por tipo
-  // (`--dano-*` em _tokens.scss), com glow sutil pra realçar sem competir com o total da rolagem
-  // (que continua na cor de identidade da ficha, `--cor-ficha`). Só o chip muda de cor — o resto
-  // do resultado (pool de dados, total) não é afetado pelo tipo de dano.
-  &__grupo {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 2px 9px;
-
-    @each $tipo in fisico, balistico, explosao, quimico, geral {
-      &--#{$tipo} {
-        color: var(--dano-#{$tipo});
-        border-color: var(--dano-#{$tipo}-border);
-        background: var(--dano-#{$tipo}-dim);
-        text-shadow: 0 0 8px color-mix(in srgb, var(--dano-#{$tipo}) 55%, transparent);
-      }
+    // Selo "N/total" abaixo do total, num bloco de repetição `(<fórmula>)#N` (m3-46).
+    &__indice-badge {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-dim);
+        text-shadow: none;
     }
-  }
+
+    &__detalhe {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0; // permite os dados quebrarem em vez de estourar o container
+    }
+
+    &__pool {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px 10px;
+    }
+
+    // Um termo de dado (m3-22): o rótulo NdM + os valores rolados em chips. Quebra em várias linhas
+    // quando há muitos dados (ex.: 6d6, 10d10 crítico).
+    &__dado-termo {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px;
+    }
+
+    &__dado-nota {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-mute);
+    }
+
+    &__dado {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        color: var(--text-mute);
+        min-width: 28px;
+        text-align: center;
+        padding: 2px 6px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+
+        // Cor por tipo de dano (I-011) — mesma paleta do chip de resumo (`__grupo`), aplicada ao
+        // dadinho individual do pool, pra dar pista visual de qual `NdM` é qual tipo numa fórmula com
+        // vários (ex.: `4d6[F] + 4d6[Q]`). Declarado antes de `--escolhido`/`--descartado`: quando um
+        // dado é mantido, a cor de "escolhido" continua prevalecendo (mesma prioridade de sempre); a
+        // cor de tipo some do texto/borda, mas o dado ainda existe visualmente no grupo certo pela
+        // posição. Descartado só mexe em opacidade/risco, então a cor de tipo continua visível por trás.
+        @each $tipo in fisico, balistico, explosao, quimico, geral {
+            &--#{$tipo} {
+                color: var(--dano-#{$tipo});
+                border-color: var(--dano-#{$tipo}-border);
+                background: var(--dano-#{$tipo}-dim);
+            }
+        }
+
+        &--escolhido {
+            color: var(--text);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+
+        // Dado descartado pelo keep (kh/kl) — esmaecido e riscado (m3-29).
+        &--descartado {
+            opacity: 0.45;
+            text-decoration: line-through;
+        }
+    }
+
+    // Contagem de crítico (margem `cm`) de um termo (m3-29; realçada em m3-30 — maior + glow).
+    &__critico {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--cor-ficha, var(--accent));
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        text-shadow: 0 0 10px color-mix(in srgb, var(--cor-ficha, var(--accent)) 70%, transparent);
+    }
+
+    &__legenda {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        color: var(--text-dim);
+    }
+
+    &__desvantagem {
+        color: var(--warning);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 12px;
+    }
+
+    &__grupos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    // Chip de resumo por tipo de dano ("Físico 12", "Balístico 6"...) — cor dedicada por tipo
+    // (`--dano-*` em _tokens.scss), com glow sutil pra realçar sem competir com o total da rolagem
+    // (que continua na cor de identidade da ficha, `--cor-ficha`). Só o chip muda de cor — o resto
+    // do resultado (pool de dados, total) não é afetado pelo tipo de dano.
+    &__grupo {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-dim);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 2px 9px;
+
+        @each $tipo in fisico, balistico, explosao, quimico, geral {
+            &--#{$tipo} {
+                color: var(--dano-#{$tipo});
+                border-color: var(--dano-#{$tipo}-border);
+                background: var(--dano-#{$tipo}-dim);
+                text-shadow: 0 0 8px color-mix(in srgb, var(--dano-#{$tipo}) 55%, transparent);
+            }
+        }
+    }
 }

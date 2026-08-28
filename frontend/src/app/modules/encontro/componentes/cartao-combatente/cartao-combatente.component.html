@@ -1,294 +1,306 @@
 <article
-  class="combatente"
-  [class.combatente--ativo]="ehTurnoAtual()"
-  [class.combatente--morrendo]="combatente().morrendo"
-  [class.combatente--agiu]="jaAgiu() && !ehTurnoAtual()"
-  [class.combatente--ajustando]="ajustando()"
-  [class.combatente--editando]="emEdicao()"
-  [style.--cor-ficha]="combatente().corFicha"
+    class="combatente"
+    [class.combatente--ativo]="ehTurnoAtual()"
+    [class.combatente--morrendo]="combatente().morrendo"
+    [class.combatente--agiu]="jaAgiu() && !ehTurnoAtual()"
+    [class.combatente--ajustando]="ajustando()"
+    [class.combatente--editando]="emEdicao()"
+    [style.--cor-ficha]="combatente().corFicha"
 >
-  <div class="combatente__identidade">
-    <div class="combatente__retrato">
-      <span class="combatente__avatar" aria-hidden="true">
-        @if (combatente().imagemUrl; as urlImagem) {
-          <img
-            class="combatente__avatar-imagem"
-            [src]="urlImagem"
-            alt=""
-            [appFocoImagem]="combatente().imagemFoco"
-          />
+    <div class="combatente__identidade">
+        <div class="combatente__retrato">
+            <span class="combatente__avatar" aria-hidden="true">
+                @if (combatente().imagemUrl; as urlImagem) {
+                    <img
+                        class="combatente__avatar-imagem"
+                        [src]="urlImagem"
+                        alt=""
+                        [appFocoImagem]="combatente().imagemFoco"
+                    />
+                }
+            </span>
+            <span class="combatente__iniciativa">
+                @if (emEdicao()) {
+                    <input
+                        class="combatente__iniciativa-campo"
+                        type="number"
+                        inputmode="numeric"
+                        placeholder="—"
+                        [attr.aria-label]="'Iniciativa de ' + combatente().nome"
+                        [appTooltip]="'Iniciativa de ' + combatente().nome"
+                        [value]="combatente().iniciativa"
+                        (change)="confirmarIniciativa($any($event.target).value)"
+                    />
+                } @else {
+                    <span class="combatente__iniciativa-valor">{{
+                        combatente().iniciativa ?? "—"
+                    }}</span>
+                }
+                <span class="combatente__iniciativa-rotulo">inic</span>
+            </span>
+        </div>
+
+        @if (emEdicao() && combatente().origem === CombatenteOrigemEnum.AVULSO) {
+            <span class="combatente__identidade-edicao">
+                <span class="combatente__identidade-linha">
+                    <label class="combatente__identidade-acao" [appTooltip]="'Trocar imagem'">
+                        <input
+                            class="combatente__arquivo-entrada"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            [attr.aria-label]="'Trocar imagem de ' + combatente().nome"
+                            (change)="selecionarImagemAvulso($event)"
+                        />
+                        <app-icone nome="editar" />
+                    </label>
+                    @if (combatente().imagemUrl) {
+                        <button
+                            class="combatente__identidade-acao"
+                            type="button"
+                            [attr.aria-label]="'Remover imagem de ' + combatente().nome"
+                            [appTooltip]="'Remover imagem'"
+                            (click)="imagemAvulsoRemovida.emit()"
+                        >
+                            <app-icone nome="excluir" />
+                        </button>
+                    }
+                </span>
+                <span class="combatente__identidade-linha">
+                    <label class="combatente__identidade-acao" [appTooltip]="'Trocar cor'">
+                        <input
+                            class="combatente__cor-entrada"
+                            type="color"
+                            [attr.aria-label]="'Cor de ' + combatente().nome"
+                            [value]="combatente().corFicha"
+                            (change)="corAvulsoAlterada.emit($any($event.target).value)"
+                        />
+                        <span aria-hidden="true">●</span>
+                    </label>
+                </span>
+            </span>
         }
-      </span>
-      <span class="combatente__iniciativa">
-        @if (emEdicao()) {
-          <input
-            class="combatente__iniciativa-campo"
-            type="number"
-            inputmode="numeric"
-            placeholder="—"
-            [attr.aria-label]="'Iniciativa de ' + combatente().nome"
-            [appTooltip]="'Iniciativa de ' + combatente().nome"
-            [value]="combatente().iniciativa"
-            (change)="confirmarIniciativa($any($event.target).value)"
-          />
-        } @else {
-          <span class="combatente__iniciativa-valor">{{ combatente().iniciativa ?? '—' }}</span>
-        }
-        <span class="combatente__iniciativa-rotulo">inic</span>
-      </span>
     </div>
 
-    @if (emEdicao() && combatente().origem === CombatenteOrigemEnum.AVULSO) {
-      <span class="combatente__identidade-edicao">
-        <span class="combatente__identidade-linha">
-          <label class="combatente__identidade-acao" [appTooltip]="'Trocar imagem'">
-            <input
-              class="combatente__arquivo-entrada"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              [attr.aria-label]="'Trocar imagem de ' + combatente().nome"
-              (change)="selecionarImagemAvulso($event)"
-            />
-            <app-icone nome="editar" />
-          </label>
-          @if (combatente().imagemUrl) {
-            <button
-              class="combatente__identidade-acao"
-              type="button"
-              [attr.aria-label]="'Remover imagem de ' + combatente().nome"
-              [appTooltip]="'Remover imagem'"
-              (click)="imagemAvulsoRemovida.emit()"
-            >
-              <app-icone nome="excluir" />
-            </button>
-          }
-        </span>
-        <span class="combatente__identidade-linha">
-          <label class="combatente__identidade-acao" [appTooltip]="'Trocar cor'">
-            <input
-              class="combatente__cor-entrada"
-              type="color"
-              [attr.aria-label]="'Cor de ' + combatente().nome"
-              [value]="combatente().corFicha"
-              (change)="corAvulsoAlterada.emit($any($event.target).value)"
-            />
-            <span aria-hidden="true">●</span>
-          </label>
-        </span>
-      </span>
-    }
-  </div>
-
-  <div class="combatente__corpo">
-    @if (etiqueta(); as marca) {
-      <span class="combatente__etiqueta" [class]="'combatente__etiqueta--' + marca.variante">
-        @if (marca.variante === 'perigo') {
-          <app-icone nome="morrendo" />
+    <div class="combatente__corpo">
+        @if (etiqueta(); as marca) {
+            <span class="combatente__etiqueta" [class]="'combatente__etiqueta--' + marca.variante">
+                @if (marca.variante === "perigo") {
+                    <app-icone nome="morrendo" />
+                }
+                {{ marca.texto }}
+            </span>
         }
-        {{ marca.texto }}
-      </span>
-    }
 
-    <span class="combatente__origem">{{ linhaOrigem() }}</span>
+        <span class="combatente__origem">{{ linhaOrigem() }}</span>
 
-    @if (totalOcorrencias() > 1) {
-      <span class="combatente__turno">Turno {{ ocorrencia() }} de {{ totalOcorrencias() }}</span>
-    }
+        @if (totalOcorrencias() > 1) {
+            <span class="combatente__turno"
+                >Turno {{ ocorrencia() }} de {{ totalOcorrencias() }}</span
+            >
+        }
 
-    <span class="combatente__nome-linha">
-      <span class="combatente__nome">{{ combatente().nome }}</span>
-      @if (combatente().machucado) {
-        <span class="combatente__marca combatente__marca--machucado" [appTooltip]="'Machucado'">
-          <app-icone nome="machucado" />
-        </span>
-      }
-      @if (combatente().inconsciente) {
-        <span class="combatente__marca" [appTooltip]="'Inconsciente · perde o turno'">
-          <app-icone nome="inconsciente" />
-        </span>
-      }
-      @if (combatente().fichaId !== null && (revelado() || ehMestre())) {
-        <button
-          class="combatente__abrir-ficha"
-          type="button"
-          [attr.aria-label]="'Abrir ficha de ' + combatente().nome"
-          [appTooltip]="'Abrir ficha'"
-          (click)="abrirFicha.emit()"
-        >
-          <app-icone nome="visao-geral" />
-        </button>
-      }
-      @if (combatente().origem === CombatenteOrigemEnum.AVULSO && podeAjustar() && !emEdicao()) {
-        <button
-          class="combatente__rolar-avulso"
-          type="button"
-          [attr.aria-label]="'Rolar como ' + combatente().nome"
-          [appTooltip]="'Rolar como avulso'"
-          (click)="rolagemAvulsoAberta.emit()"
-        >
-          <app-icone nome="dado" />
-        </button>
-      }
-      @if (podeAjustar()) {
-        <button
-          class="combatente__receber-dano"
-          type="button"
-          [attr.aria-label]="'Receber dano — ' + combatente().nome"
-          [appTooltip]="'Receber dano'"
-          (click)="receberDanoAberto.set(true)"
-        >
-          <app-icone nome="combate" />
-        </button>
-      }
-      @if (emEdicao()) {
-        <button
-          class="combatente__remover"
-          type="button"
-          [attr.aria-label]="'Remover ' + combatente().nome + ' do combate'"
-          [appTooltip]="'Remover do combate'"
-          (click)="removido.emit()"
-        >
-          <app-icone nome="excluir" />
-        </button>
-      }
+        <span class="combatente__nome-linha">
+            <span class="combatente__nome">{{ combatente().nome }}</span>
+            @if (combatente().machucado) {
+                <span
+                    class="combatente__marca combatente__marca--machucado"
+                    [appTooltip]="'Machucado'"
+                >
+                    <app-icone nome="machucado" />
+                </span>
+            }
+            @if (combatente().inconsciente) {
+                <span class="combatente__marca" [appTooltip]="'Inconsciente · perde o turno'">
+                    <app-icone nome="inconsciente" />
+                </span>
+            }
+            @if (combatente().fichaId !== null && (revelado() || ehMestre())) {
+                <button
+                    class="combatente__abrir-ficha"
+                    type="button"
+                    [attr.aria-label]="'Abrir ficha de ' + combatente().nome"
+                    [appTooltip]="'Abrir ficha'"
+                    (click)="abrirFicha.emit()"
+                >
+                    <app-icone nome="visao-geral" />
+                </button>
+            }
+            @if (
+                combatente().origem === CombatenteOrigemEnum.AVULSO && podeAjustar() && !emEdicao()
+            ) {
+                <button
+                    class="combatente__rolar-avulso"
+                    type="button"
+                    [attr.aria-label]="'Rolar como ' + combatente().nome"
+                    [appTooltip]="'Rolar como avulso'"
+                    (click)="rolagemAvulsoAberta.emit()"
+                >
+                    <app-icone nome="dado" />
+                </button>
+            }
+            @if (podeAjustar()) {
+                <button
+                    class="combatente__receber-dano"
+                    type="button"
+                    [attr.aria-label]="'Receber dano — ' + combatente().nome"
+                    [appTooltip]="'Receber dano'"
+                    (click)="receberDanoAberto.set(true)"
+                >
+                    <app-icone nome="combate" />
+                </button>
+            }
+            @if (emEdicao()) {
+                <button
+                    class="combatente__remover"
+                    type="button"
+                    [attr.aria-label]="'Remover ' + combatente().nome + ' do combate'"
+                    [appTooltip]="'Remover do combate'"
+                    (click)="removido.emit()"
+                >
+                    <app-icone nome="excluir" />
+                </button>
+            }
 
-      <!-- Gatilho dos steppers — só existe no mobile (m7-08), onde o cartão nasce enxuto como no
+            <!-- Gatilho dos steppers — só existe no mobile (m7-08), onde o cartão nasce enxuto como no
            mockup de 360px. Mora na linha do nome, que tem folga, em vez de abrir uma linha só
            para ele: o ganho de altura é justamente o que a task persegue. -->
-      @if (podeAjustar() && revelado()) {
-        <button
-          class="combatente__ajustar"
-          type="button"
-          [attr.aria-expanded]="ajustando()"
-          [attr.aria-label]="
-            (ajustando() ? 'Fechar ajustes de ' : 'Ajustar Vida e Energia de ') + combatente().nome
-          "
-          (click)="alternarAjuste()"
-        >
-          {{ ajustando() ? 'Fechar' : 'Ajustar' }}
-        </button>
-      }
-    </span>
-
-    @if (emEdicao()) {
-      <label class="combatente__formula">
-        <span class="combatente__formula-rotulo">Fórmula de Iniciativa</span>
-        <input
-          class="combatente__formula-campo"
-          type="text"
-          placeholder="Padrão do sistema"
-          [attr.aria-label]="'Fórmula customizada de Iniciativa de ' + combatente().nome"
-          [appTooltip]="'Sobrescreve a expressão de dados de Iniciativa deste combatente neste encontro — em branco volta ao cálculo padrão'"
-          [value]="combatente().iniciativaFormulaCustom ?? ''"
-          (change)="confirmarFormulaIniciativa($any($event.target).value)"
-        />
-      </label>
-    }
-
-    @if (revelado()) {
-      <span class="combatente__recursos">
-        <span class="combatente__recurso combatente__recurso--vida">
-          @if (podeAjustar()) {
-            <button
-              class="combatente__stepper"
-              type="button"
-              [attr.aria-label]="'Tirar 1 de Vida de ' + combatente().nome"
-              [appTooltip]="'Dano de 1'"
-              (click)="vidaAjustada.emit(-1)"
-            >
-              −
-            </button>
-          }
-          Vida {{ combatente().vidaAtual }}/{{ combatente().vidaMaxima }}
-          @if (podeAjustar()) {
-            <button
-              class="combatente__stepper"
-              type="button"
-              [attr.aria-label]="'Curar 1 de Vida de ' + combatente().nome"
-              [appTooltip]="'Cura de 1'"
-              (click)="vidaAjustada.emit(1)"
-            >
-              +
-            </button>
-          }
+            @if (podeAjustar() && revelado()) {
+                <button
+                    class="combatente__ajustar"
+                    type="button"
+                    [attr.aria-expanded]="ajustando()"
+                    [attr.aria-label]="
+                        (ajustando() ? 'Fechar ajustes de ' : 'Ajustar Vida e Energia de ') +
+                        combatente().nome
+                    "
+                    (click)="alternarAjuste()"
+                >
+                    {{ ajustando() ? "Fechar" : "Ajustar" }}
+                </button>
+            }
         </span>
 
-        @if (temEnergia()) {
-          <span class="combatente__recurso combatente__recurso--energia">
-            @if (podeAjustar()) {
-              <button
-                class="combatente__stepper"
-                type="button"
-                [attr.aria-label]="'Gastar 1 de Energia de ' + combatente().nome"
-                [appTooltip]="'Gasto de 1'"
-                (click)="energiaAjustada.emit(-1)"
-              >
-                −
-              </button>
-            }
-            <span class="combatente__rotulo-longo">Energia</span>
-            <span class="combatente__rotulo-curto">En</span>
-            {{ combatente().energiaAtual }}/{{ combatente().energiaMaxima }}
-            @if (podeAjustar()) {
-              <button
-                class="combatente__stepper"
-                type="button"
-                [attr.aria-label]="'Recuperar 1 de Energia de ' + combatente().nome"
-                [appTooltip]="'Recuperação de 1'"
-                (click)="energiaAjustada.emit(1)"
-              >
-                +
-              </button>
-            }
-          </span>
+        @if (emEdicao()) {
+            <label class="combatente__formula">
+                <span class="combatente__formula-rotulo">Fórmula de Iniciativa</span>
+                <input
+                    class="combatente__formula-campo"
+                    type="text"
+                    placeholder="Padrão do sistema"
+                    [attr.aria-label]="'Fórmula customizada de Iniciativa de ' + combatente().nome"
+                    [appTooltip]="'Sobrescreve a expressão de dados de Iniciativa deste combatente neste encontro — em branco volta ao cálculo padrão'"
+                    [value]="combatente().iniciativaFormulaCustom ?? ''"
+                    (change)="confirmarFormulaIniciativa($any($event.target).value)"
+                />
+            </label>
         }
-      </span>
-    }
 
-    @if (defesas().length) {
-      <span class="combatente__defesas">
-        @for (defesa of defesas(); track defesa.rotulo) {
-          <span class="combatente__defesa">
-            <span class="combatente__rotulo-longo">{{ defesa.rotulo }}</span>
-            <span class="combatente__rotulo-curto">{{ defesa.rotuloCurto }}</span>
-            {{ defesa.valor }}
-          </span>
+        @if (revelado()) {
+            <span class="combatente__recursos">
+                <span class="combatente__recurso combatente__recurso--vida">
+                    @if (podeAjustar()) {
+                        <button
+                            class="combatente__stepper"
+                            type="button"
+                            [attr.aria-label]="'Tirar 1 de Vida de ' + combatente().nome"
+                            [appTooltip]="'Dano de 1'"
+                            (click)="vidaAjustada.emit(-1)"
+                        >
+                            −
+                        </button>
+                    }
+                    Vida {{ combatente().vidaAtual }}/{{ combatente().vidaMaxima }}
+                    @if (podeAjustar()) {
+                        <button
+                            class="combatente__stepper"
+                            type="button"
+                            [attr.aria-label]="'Curar 1 de Vida de ' + combatente().nome"
+                            [appTooltip]="'Cura de 1'"
+                            (click)="vidaAjustada.emit(1)"
+                        >
+                            +
+                        </button>
+                    }
+                </span>
+
+                @if (temEnergia()) {
+                    <span class="combatente__recurso combatente__recurso--energia">
+                        @if (podeAjustar()) {
+                            <button
+                                class="combatente__stepper"
+                                type="button"
+                                [attr.aria-label]="'Gastar 1 de Energia de ' + combatente().nome"
+                                [appTooltip]="'Gasto de 1'"
+                                (click)="energiaAjustada.emit(-1)"
+                            >
+                                −
+                            </button>
+                        }
+                        <span class="combatente__rotulo-longo">Energia</span>
+                        <span class="combatente__rotulo-curto">En</span>
+                        {{ combatente().energiaAtual }}/{{ combatente().energiaMaxima }}
+                        @if (podeAjustar()) {
+                            <button
+                                class="combatente__stepper"
+                                type="button"
+                                [attr.aria-label]="'Recuperar 1 de Energia de ' + combatente().nome"
+                                [appTooltip]="'Recuperação de 1'"
+                                (click)="energiaAjustada.emit(1)"
+                            >
+                                +
+                            </button>
+                        }
+                    </span>
+                }
+            </span>
         }
-      </span>
-    }
 
-    @if (resistenciasExibidas().length) {
-      <span class="combatente__resistencias" [appTooltip]="'Resistência a dano'">
-        @for (resistencia of resistenciasExibidas(); track resistencia.rotulo) {
-          <span class="combatente__resistencia">{{ resistencia.rotulo }} {{ resistencia.valor }}</span>
+        @if (defesas().length) {
+            <span class="combatente__defesas">
+                @for (defesa of defesas(); track defesa.rotulo) {
+                    <span class="combatente__defesa">
+                        <span class="combatente__rotulo-longo">{{ defesa.rotulo }}</span>
+                        <span class="combatente__rotulo-curto">{{ defesa.rotuloCurto }}</span>
+                        {{ defesa.valor }}
+                    </span>
+                }
+            </span>
         }
-      </span>
-    }
 
-    @for (condicao of combatente().condicoes; track condicao.nome) {
-      <span
-        class="combatente__condicao"
-        [class.combatente__condicao--perde-turno]="condicao.perdeTurno"
-      >
-        {{ condicao.nome }}
-        @if (condicao.rodadasRestantes !== null) {
-          · {{ condicao.rodadasRestantes }}
-          {{ condicao.rodadasRestantes === 1 ? 'rodada' : 'rodadas' }}
+        @if (resistenciasExibidas().length) {
+            <span class="combatente__resistencias" [appTooltip]="'Resistência a dano'">
+                @for (resistencia of resistenciasExibidas(); track resistencia.rotulo) {
+                    <span class="combatente__resistencia"
+                        >{{ resistencia.rotulo }} {{ resistencia.valor }}</span
+                    >
+                }
+            </span>
         }
-      </span>
-    }
 
-    @if (estadoNarrativo(); as narrativo) {
-      <span class="combatente__narrativo">{{ narrativo }}</span>
-    }
-  </div>
+        @for (condicao of combatente().condicoes; track condicao.nome) {
+            <span
+                class="combatente__condicao"
+                [class.combatente__condicao--perde-turno]="condicao.perdeTurno"
+            >
+                {{ condicao.nome }}
+                @if (condicao.rodadasRestantes !== null) {
+                    · {{ condicao.rodadasRestantes }}
+                    {{ condicao.rodadasRestantes === 1 ? "rodada" : "rodadas" }}
+                }
+            </span>
+        }
+
+        @if (estadoNarrativo(); as narrativo) {
+            <span class="combatente__narrativo">{{ narrativo }}</span>
+        }
+    </div>
 </article>
 
 @if (podeAjustar()) {
-  <app-receber-dano-dialog
-    [aberto]="receberDanoAberto()"
-    [resistenciasFicha]="combatente().resistencias"
-    (danoConfirmado)="receberDano($event)"
-    (fechado)="receberDanoAberto.set(false)"
-  />
+    <app-receber-dano-dialog
+        [aberto]="receberDanoAberto()"
+        [resistenciasFicha]="combatente().resistencias"
+        (danoConfirmado)="receberDano($event)"
+        (fechado)="receberDanoAberto.set(false)"
+    />
 }

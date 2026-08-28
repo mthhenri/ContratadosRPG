@@ -1,1111 +1,1205 @@
 <section class="detalhe">
-  @if (carregando()) {
+    @if (carregando()) {
     <div class="detalhe__esqueleto" role="status" aria-label="Carregando campanha">
-      <div class="detalhe__esqueleto-cabecalho">
-        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-      </div>
-      <div class="detalhe__esqueleto-estatisticas">
-        @for (i of [0, 1, 2, 3]; track i) {
-          <span class="esqueleto-bloco esqueleto-bloco--stat"></span>
-        }
-      </div>
-      <div class="detalhe__grade">
-        <article class="card detalhe__esqueleto-membros">
-          @for (i of [0, 1, 2]; track i) {
-            <div class="detalhe__esqueleto-membro">
-              <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
-              <span class="esqueleto-bloco esqueleto-bloco--nome"></span>
-            </div>
-          }
-        </article>
-        <article class="card detalhe__esqueleto-esquadrao">
-          @for (i of [0, 1, 2, 3]; track i) {
-            <span class="esqueleto-bloco esqueleto-bloco--ficha"></span>
-          }
-        </article>
-      </div>
+        <div class="detalhe__esqueleto-cabecalho">
+            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        </div>
+        <div class="detalhe__esqueleto-estatisticas">
+            @for (i of [0, 1, 2, 3]; track i) {
+            <span class="esqueleto-bloco esqueleto-bloco--stat"></span>
+            }
+        </div>
+        <div class="detalhe__grade">
+            <article class="card detalhe__esqueleto-membros">
+                @for (i of [0, 1, 2]; track i) {
+                <div class="detalhe__esqueleto-membro">
+                    <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+                    <span class="esqueleto-bloco esqueleto-bloco--nome"></span>
+                </div>
+                }
+            </article>
+            <article class="card detalhe__esqueleto-esquadrao">
+                @for (i of [0, 1, 2, 3]; track i) {
+                <span class="esqueleto-bloco esqueleto-bloco--ficha"></span>
+                }
+            </article>
+        </div>
     </div>
-  } @else if (campanha(); as campanhaAtual) {
-    @if (previewJogador(); as jogadorPreview) {
-      <div class="detalhe__preview-barra" role="status">
+    } @else if (campanha(); as campanhaAtual) { @if (previewJogador(); as jogadorPreview) {
+    <div class="detalhe__preview-barra" role="status">
         <app-icone nome="olho" />
         <span class="detalhe__preview-texto">
-          Visualizando como <strong>{{ jogadorPreview.nome }}</strong> · somente leitura
+            Visualizando como <strong>{{ jogadorPreview.nome }}</strong> · somente leitura
         </span>
         <button
-          class="botao botao--secundario detalhe__acao detalhe__preview-sair"
-          type="button"
-          (click)="sairPreviewJogador()"
+            class="botao botao--secundario detalhe__acao detalhe__preview-sair"
+            type="button"
+            (click)="sairPreviewJogador()"
         >
-          Sair da visualização
+            Sair da visualização
         </button>
-      </div>
+    </div>
     }
     <div class="detalhe__conteudo" [class.detalhe__conteudo--bloqueado]="previewJogador() !== null">
-    <header class="detalhe__cabecalho">
-      <div class="detalhe__cabecalho-titulo-linha">
-        <span class="card__indice">//</span>
-        <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
-        @if (exibirComoMestre()) {
-          <button class="detalhe__estado-operacional" type="button"
-            [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
-            [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase"
-            (click)="alterarEstadoCampanha()">
-            <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
-            {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
-          </button>
-        } @else {
-          <span class="detalhe__estado-operacional detalhe__estado-operacional--leitura"
-            [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
-            [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase">
-            <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
-            {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
-          </span>
-        }
-        <span class="card__regua"></span>
-      </div>
-      <div class="detalhe__cabecalho-acoes">
-        <app-indicador-tempo-real />
-        <a
-          class="detalhe__cabecalho-voltar"
-          routerLink="/painel"
-          aria-label="Voltar às campanhas"
-          [appTooltip]="'Voltar às campanhas'"
-        >
-          <app-icone nome="voltar" />
-        </a>
-        <app-historico-rolagens-sidebar
-          #historicoSidebar
-          titulo="Rolagens da Campanha"
-          [itens]="rolagensFeed()"
-          [carregando]="carregandoRolagens()"
-          [acimaDaCalculadora]="true"
-          (abrirCalculadora)="calculadoraAberta.set(true)"
-        />
-        @if (exibirComoMestre()) {
-          <app-inventario-esquadrao-sidebar
-            [campanhaId]="campanhaAtual.id" [itens]="inventarioEsquadrao()"
-            [fichas]="fichasDestinoInventario()" (atualizado)="inventarioEsquadrao.set($event)" />
-        }
-        <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
-        @if (usuarioAtivoId(); as usuarioId) {
-          <app-caderno-flutuante
-            [campanhaId]="campanhaAtual.id"
-            [campanhaNome]="campanhaAtual.nome"
-            [usuarioAtivoId]="usuarioId"
-            [ehMestre]="ehMestre()"
-            [membros]="membros()"
-            (abrirFicha)="abrirAnotacoesFicha($event)"
-          />
-        }
-        @if (exibirComoMestre()) {
-          <div class="detalhe__cabecalho-menu-envoltorio">
-            <button
-              class="detalhe__cabecalho-menu-botao"
-              type="button"
-              aria-haspopup="menu"
-              [attr.aria-expanded]="menuCampanhaAberto()"
-              aria-label="Ações da campanha"
-              (click)="alternarMenuCampanha()"
-            >
-              ⋯
-            </button>
-            @if (menuCampanhaAberto()) {
-              <button
-                class="detalhe__cabecalho-menu-fundo"
-                type="button"
-                aria-label="Fechar menu"
-                (click)="fecharMenuCampanha()"
-              ></button>
-              <div class="detalhe__cabecalho-menu" role="menu">
-                @if (!escolhendoPreviewJogador()) {
-                  <a
-                    class="detalhe__cabecalho-menu-item"
-                    role="menuitem"
-                    [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
-                  >
-                    <app-icone nome="combate" />
-                    <span>Iniciativa</span>
-                  </a>
-                  <button class="detalhe__cabecalho-menu-item" type="button" role="menuitem" (click)="abrirEdicao()">
-                    <app-icone nome="editar" />
-                    <span>Editar</span>
-                  </button>
-                  <button class="detalhe__cabecalho-menu-item" type="button" role="menuitem" (click)="pedirExclusao()">
-                    <app-icone nome="excluir" />
-                    <span>Excluir</span>
-                  </button>
-                  @if (jogadoresDaCampanha().length) {
-                    <button
-                      class="detalhe__cabecalho-menu-item"
-                      type="button"
-                      role="menuitem"
-                      (click)="abrirEscolhaPreviewJogador()"
-                    >
-                      <app-icone nome="olho" />
-                      <span>Ver como jogador</span>
-                    </button>
-                  }
-                } @else {
-                  @for (jogadorPreview of jogadoresDaCampanha(); track jogadorPreview.usuarioId) {
-                    <button
-                      class="detalhe__cabecalho-menu-item"
-                      type="button"
-                      role="menuitem"
-                      (click)="iniciarPreviewJogador(jogadorPreview)"
-                    >
-                      <app-icone nome="protecoes" />
-                      <span>{{ jogadorPreview.nome }}</span>
-                    </button>
-                  }
-                  <button
-                    class="detalhe__cabecalho-menu-item"
+        <header class="detalhe__cabecalho">
+            <div class="detalhe__cabecalho-titulo-linha">
+                <span class="card__indice">//</span>
+                <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
+                @if (exibirComoMestre()) {
+                <button
+                    class="detalhe__estado-operacional"
                     type="button"
-                    role="menuitem"
-                    (click)="escolhendoPreviewJogador.set(false)"
-                  >
-                    <app-icone nome="voltar" />
-                    <span>Voltar</span>
-                  </button>
+                    [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
+                    [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase"
+                    (click)="alterarEstadoCampanha()"
+                >
+                    <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
+                    {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
+                </button>
+                } @else {
+                <span
+                    class="detalhe__estado-operacional detalhe__estado-operacional--leitura"
+                    [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
+                    [class.detalhe__estado-operacional--missao]="!campanhaAtual.naBase"
+                >
+                    <app-icone [nome]="campanhaAtual.naBase ? 'guardada' : 'combate'" />
+                    {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
+                </span>
                 }
-              </div>
-            }
-          </div>
-        } @else {
-          <!-- m2-21 (item 6): o jogador ganha o mesmo "⋯" do mestre, no mesmo lugar (ao lado do
+                <span class="card__regua"></span>
+            </div>
+            <div class="detalhe__cabecalho-acoes">
+                <app-indicador-tempo-real />
+                <a
+                    class="detalhe__cabecalho-voltar"
+                    routerLink="/painel"
+                    aria-label="Voltar às campanhas"
+                    [appTooltip]="'Voltar às campanhas'"
+                >
+                    <app-icone nome="voltar" />
+                </a>
+                <app-historico-rolagens-sidebar
+                    #historicoSidebar
+                    titulo="Rolagens da Campanha"
+                    [itens]="rolagensFeed()"
+                    [carregando]="carregandoRolagens()"
+                    [acimaDaCalculadora]="true"
+                    (abrirCalculadora)="calculadoraAberta.set(true)"
+                />
+                @if (exibirComoMestre()) {
+                <app-inventario-esquadrao-sidebar
+                    [campanhaId]="campanhaAtual.id"
+                    [itens]="inventarioEsquadrao()"
+                    [fichas]="fichasDestinoInventario()"
+                    (atualizado)="inventarioEsquadrao.set($event)"
+                />
+                }
+                <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
+                @if (usuarioAtivoId(); as usuarioId) {
+                <app-caderno-flutuante
+                    [campanhaId]="campanhaAtual.id"
+                    [campanhaNome]="campanhaAtual.nome"
+                    [usuarioAtivoId]="usuarioId"
+                    [ehMestre]="ehMestre()"
+                    [membros]="membros()"
+                    (abrirFicha)="abrirAnotacoesFicha($event)"
+                />
+                } @if (exibirComoMestre()) {
+                <div class="detalhe__cabecalho-menu-envoltorio">
+                    <button
+                        class="detalhe__cabecalho-menu-botao"
+                        type="button"
+                        aria-haspopup="menu"
+                        [attr.aria-expanded]="menuCampanhaAberto()"
+                        aria-label="Ações da campanha"
+                        (click)="alternarMenuCampanha()"
+                    >
+                        ⋯
+                    </button>
+                    @if (menuCampanhaAberto()) {
+                    <button
+                        class="detalhe__cabecalho-menu-fundo"
+                        type="button"
+                        aria-label="Fechar menu"
+                        (click)="fecharMenuCampanha()"
+                    ></button>
+                    <div class="detalhe__cabecalho-menu" role="menu">
+                        @if (!escolhendoPreviewJogador()) {
+                        <a
+                            class="detalhe__cabecalho-menu-item"
+                            role="menuitem"
+                            [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                        >
+                            <app-icone nome="combate" />
+                            <span>Iniciativa</span>
+                        </a>
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="abrirEdicao()"
+                        >
+                            <app-icone nome="editar" />
+                            <span>Editar</span>
+                        </button>
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="pedirExclusao()"
+                        >
+                            <app-icone nome="excluir" />
+                            <span>Excluir</span>
+                        </button>
+                        @if (jogadoresDaCampanha().length) {
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="abrirEscolhaPreviewJogador()"
+                        >
+                            <app-icone nome="olho" />
+                            <span>Ver como jogador</span>
+                        </button>
+                        } } @else { @for (jogadorPreview of jogadoresDaCampanha(); track
+                        jogadorPreview.usuarioId) {
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="iniciarPreviewJogador(jogadorPreview)"
+                        >
+                            <app-icone nome="protecoes" />
+                            <span>{{ jogadorPreview.nome }}</span>
+                        </button>
+                        }
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="escolhendoPreviewJogador.set(false)"
+                        >
+                            <app-icone nome="voltar" />
+                            <span>Voltar</span>
+                        </button>
+                        }
+                    </div>
+                    }
+                </div>
+                } @else {
+                <!-- m2-21 (item 6): o jogador ganha o mesmo "⋯" do mestre, no mesmo lugar (ao lado do
                voltar), com as ações que faltavam pra ele resolver a própria ficha sem sair da
                página. Aparece sempre, não só quando ele está sem ficha — trazer uma segunda ficha
                do acervo é legítimo (a Equipe já suporta várias por membro desde a m2-20). Reusa o
                `menuCampanhaAberto` porque os dois menus são mutuamente exclusivos (`ehMestre()`). -->
-          <div class="detalhe__cabecalho-menu-envoltorio">
-            <button
-              class="detalhe__cabecalho-menu-botao"
-              type="button"
-              aria-haspopup="menu"
-              [attr.aria-expanded]="menuCampanhaAberto()"
-              aria-label="Ações de ficha"
-              (click)="alternarMenuCampanha()"
-            >
-              ⋯
-            </button>
-            @if (menuCampanhaAberto()) {
-              <button
-                class="detalhe__cabecalho-menu-fundo"
-                type="button"
-                aria-label="Fechar menu"
-                (click)="fecharMenuCampanha()"
-              ></button>
-              <div class="detalhe__cabecalho-menu" role="menu">
-                <button
-                  class="detalhe__cabecalho-menu-item"
-                  type="button"
-                  role="menuitem"
-                  (click)="abrirCriarFicha()"
-                >
-                  <app-icone nome="agente" />
-                  <span>Criar nova ficha</span>
-                </button>
-                <button
-                  class="detalhe__cabecalho-menu-item"
-                  type="button"
-                  role="menuitem"
-                  (click)="abrirVincularFicha()"
-                >
-                  <app-icone nome="duplicar" />
-                  <span>Vincular ficha existente</span>
-                </button>
-                <button
-                  class="detalhe__cabecalho-menu-item"
-                  type="button"
-                  role="menuitem"
-                  [disabled]="!minhaFichaExibida()"
-                  (click)="abrirAcessoFicha()"
-                >
-                  <app-icone nome="olho" />
-                  <span>Acesso de visualização</span>
-                  @if (acessosFichaExibida().length) {
-                    <span class="detalhe__cabecalho-menu-contagem">{{ acessosFichaExibida().length }}</span>
-                  }
-                </button>
-                <button
-                  class="detalhe__cabecalho-menu-item"
-                  type="button"
-                  role="menuitem"
-                  [disabled]="!minhaFichaExibida() || removendo() === minhaFichaExibida()?.id"
-                  (click)="removerDaCampanha(minhaFichaExibida()!.id)"
-                >
-                  <app-icone nome="voltar" />
-                  <span>
-                    {{ rotuloRemoverDaCampanha() }}
-                  </span>
-                </button>
-                <button
-                  class="detalhe__cabecalho-menu-item"
-                  type="button"
-                  role="menuitem"
-                  [disabled]="!minhaFichaExibida()"
-                  (click)="pedirExcluirFicha(minhaFichaExibida()!.id, minhaFichaExibida()!.nome)"
-                >
-                  <app-icone nome="excluir" />
-                  <span>Excluir ficha</span>
-                </button>
-              </div>
-            }
-          </div>
-        }
-      </div>
-    </header>
+                <div class="detalhe__cabecalho-menu-envoltorio">
+                    <button
+                        class="detalhe__cabecalho-menu-botao"
+                        type="button"
+                        aria-haspopup="menu"
+                        [attr.aria-expanded]="menuCampanhaAberto()"
+                        aria-label="Ações de ficha"
+                        (click)="alternarMenuCampanha()"
+                    >
+                        ⋯
+                    </button>
+                    @if (menuCampanhaAberto()) {
+                    <button
+                        class="detalhe__cabecalho-menu-fundo"
+                        type="button"
+                        aria-label="Fechar menu"
+                        (click)="fecharMenuCampanha()"
+                    ></button>
+                    <div class="detalhe__cabecalho-menu" role="menu">
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="abrirCriarFicha()"
+                        >
+                            <app-icone nome="agente" />
+                            <span>Criar nova ficha</span>
+                        </button>
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="abrirVincularFicha()"
+                        >
+                            <app-icone nome="duplicar" />
+                            <span>Vincular ficha existente</span>
+                        </button>
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            [disabled]="!minhaFichaExibida()"
+                            (click)="abrirAcessoFicha()"
+                        >
+                            <app-icone nome="olho" />
+                            <span>Acesso de visualização</span>
+                            @if (acessosFichaExibida().length) {
+                            <span class="detalhe__cabecalho-menu-contagem"
+                                >{{ acessosFichaExibida().length }}</span
+                            >
+                            }
+                        </button>
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            [disabled]="!minhaFichaExibida() || removendo() === minhaFichaExibida()?.id"
+                            (click)="removerDaCampanha(minhaFichaExibida()!.id)"
+                        >
+                            <app-icone nome="voltar" />
+                            <span> {{ rotuloRemoverDaCampanha() }} </span>
+                        </button>
+                        <button
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            [disabled]="!minhaFichaExibida()"
+                            (click)="pedirExcluirFicha(minhaFichaExibida()!.id, minhaFichaExibida()!.nome)"
+                        >
+                            <app-icone nome="excluir" />
+                            <span>Excluir ficha</span>
+                        </button>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </header>
 
-    @if (campanhaAtual.descricao && !editando()) {
-      <p class="detalhe__descricao">{{ campanhaAtual.descricao }}</p>
-    }
+        @if (campanhaAtual.descricao && !editando()) {
+        <p class="detalhe__descricao">{{ campanhaAtual.descricao }}</p>
+        } @if (editando()) {
+        <form class="detalhe__edicao" [formGroup]="formularioEdicao" (ngSubmit)="salvarEdicao()">
+            <label class="detalhe__campo">
+                <span class="detalhe__rotulo">Nome</span>
+                <input class="detalhe__entrada" type="text" formControlName="nome" required />
+            </label>
 
-    @if (editando()) {
-      <form class="detalhe__edicao" [formGroup]="formularioEdicao" (ngSubmit)="salvarEdicao()">
-        <label class="detalhe__campo">
-          <span class="detalhe__rotulo">Nome</span>
-          <input class="detalhe__entrada" type="text" formControlName="nome" required />
-        </label>
+            <label class="detalhe__campo">
+                <span class="detalhe__rotulo">Descrição (opcional)</span>
+                <textarea
+                    class="detalhe__entrada detalhe__entrada--area"
+                    formControlName="descricao"
+                    rows="3"
+                ></textarea>
+            </label>
 
-        <label class="detalhe__campo">
-          <span class="detalhe__rotulo">Descrição (opcional)</span>
-          <textarea
-            class="detalhe__entrada detalhe__entrada--area"
-            formControlName="descricao"
-            rows="3"
-          ></textarea>
-        </label>
-
-        <div class="detalhe__edicao-acoes">
-          <button class="botao botao--primario detalhe__acao" type="submit" [disabled]="salvando()">
-            {{ salvando() ? 'Salvando…' : 'Salvar' }}
-          </button>
-          <button
-            class="botao botao--secundario detalhe__acao"
-            type="button"
-            [disabled]="salvando()"
-            (click)="cancelarEdicao()"
-          >
-            Cancelar
-          </button>
+            <div class="detalhe__edicao-acoes">
+                <button
+                    class="botao botao--primario detalhe__acao"
+                    type="submit"
+                    [disabled]="salvando()"
+                >
+                    {{ salvando() ? 'Salvando…' : 'Salvar' }}
+                </button>
+                <button
+                    class="botao botao--secundario detalhe__acao"
+                    type="button"
+                    [disabled]="salvando()"
+                    (click)="cancelarEdicao()"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </form>
+        } @if (confirmandoExclusao()) {
+        <div
+            class="detalhe__exclusao"
+            role="alertdialog"
+            aria-label="Confirmar exclusão da campanha"
+        >
+            <p class="detalhe__exclusao-aviso">
+                Excluir <strong>{{ campanhaAtual.nome }}</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div class="detalhe__exclusao-acoes">
+                <button
+                    class="botao botao--primario detalhe__acao"
+                    type="button"
+                    [disabled]="excluindo()"
+                    (click)="confirmarExclusao()"
+                >
+                    <app-icone nome="excluir" />
+                    {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
+                </button>
+                <button
+                    class="botao botao--secundario detalhe__acao"
+                    type="button"
+                    [disabled]="excluindo()"
+                    (click)="cancelarExclusao()"
+                >
+                    Cancelar
+                </button>
+            </div>
         </div>
-      </form>
-    }
-
-    @if (confirmandoExclusao()) {
-      <div class="detalhe__exclusao" role="alertdialog" aria-label="Confirmar exclusão da campanha">
-        <p class="detalhe__exclusao-aviso">
-          Excluir <strong>{{ campanhaAtual.nome }}</strong>? Esta ação não pode ser desfeita.
-        </p>
-        <div class="detalhe__exclusao-acoes">
-          <button
-            class="botao botao--primario detalhe__acao"
-            type="button"
-            [disabled]="excluindo()"
-            (click)="confirmarExclusao()"
-          >
-            <app-icone nome="excluir" />
-            {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
-          </button>
-          <button
-            class="botao botao--secundario detalhe__acao"
-            type="button"
-            [disabled]="excluindo()"
-            (click)="cancelarExclusao()"
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
-    }
-
-    @if (fichaCritica(); as critica) {
-      <div class="detalhe__banner-alerta" role="alert">
-        <app-icone nome="alerta" />
-        <span class="detalhe__banner-texto"><strong>{{ critica.nome }}</strong> está crítica (Vida ≤ 0).</span>
-        <a class="detalhe__banner-link" [routerLink]="['/painel', campanhaAtual.id, 'ficha', critica.id]">
-          Ver ficha →
-        </a>
-      </div>
-    }
-
-    @if (exibirComoMestre()) {
-      <div class="detalhe__estatisticas">
-        <div class="stat detalhe__stat-convite">
-          <span class="stat__rotulo">Convite</span>
-          <div class="detalhe__convite-linha">
-            <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
-            <button
-              class="detalhe__copiar"
-              type="button"
-              [class.detalhe__copiar--copiado]="copiado()"
-              [attr.aria-label]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
-              [appTooltip]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
-              (click)="copiarConvite()"
+        } @if (fichaCritica(); as critica) {
+        <div class="detalhe__banner-alerta" role="alert">
+            <app-icone nome="alerta" />
+            <span class="detalhe__banner-texto"
+                ><strong>{{ critica.nome }}</strong> está crítica (Vida ≤ 0).</span
             >
-              <app-icone [nome]="copiado() ? 'check' : 'copiar'" />
-              <span class="detalhe__copiado-tooltip" role="status">Copiado</span>
-            </button>
-            <button
-              class="detalhe__regenerar"
-              type="button"
-              [class.detalhe__regenerar--confirmado]="regenerado()"
-              [disabled]="regenerando()"
-              [attr.aria-label]="regenerando() ? 'Regenerando código de convite' : 'Regenerar código de convite'"
-              [appTooltip]="'Regenerar convite'"
-              (click)="regenerarConvite()"
-            >
-              <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
-            </button>
-          </div>
-        </div>
-
-        <div class="stat detalhe__stat-encontro">
-          <span class="stat__rotulo">Combate</span>
-          <div class="detalhe__encontro-linha">
-            <span class="detalhe__encontro-estado">
-              @if (encontroAberto(); as aberto) {
-                <strong class="detalhe__encontro-nome">{{ aberto.nome }}</strong>
-                <span class="detalhe__encontro-meta">
-                  {{ rotuloStatusEncontro(aberto.status) }}
-                  @if (aberto.status === EncontroStatusEnum.ATIVO) {
-                    · Rodada {{ aberto.rodadaAtual }}
-                  }
-                </span>
-              } @else {
-                <strong class="detalhe__encontro-nome">Nenhum em andamento</strong>
-                <span class="detalhe__encontro-meta">
-                  @if (encontrosEncerrados()) {
-                    {{ encontrosEncerrados() }}
-                    {{ encontrosEncerrados() === 1 ? 'encerrado' : 'encerrados' }}
-                  } @else {
-                    Nenhum combate registrado
-                  }
-                </span>
-              }
-            </span>
             <a
-              class="botao botao--primario detalhe__encontro-acao"
-              [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
-              [appTooltip]="
+                class="detalhe__banner-link"
+                [routerLink]="['/painel', campanhaAtual.id, 'ficha', critica.id]"
+            >
+                Ver ficha →
+            </a>
+        </div>
+        } @if (exibirComoMestre()) {
+        <div class="detalhe__estatisticas">
+            <div class="stat detalhe__stat-convite">
+                <span class="stat__rotulo">Convite</span>
+                <div class="detalhe__convite-linha">
+                    <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
+                    <button
+                        class="detalhe__copiar"
+                        type="button"
+                        [class.detalhe__copiar--copiado]="copiado()"
+                        [attr.aria-label]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
+                        [appTooltip]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
+                        (click)="copiarConvite()"
+                    >
+                        <app-icone [nome]="copiado() ? 'check' : 'copiar'" />
+                        <span class="detalhe__copiado-tooltip" role="status">Copiado</span>
+                    </button>
+                    <button
+                        class="detalhe__regenerar"
+                        type="button"
+                        [class.detalhe__regenerar--confirmado]="regenerado()"
+                        [disabled]="regenerando()"
+                        [attr.aria-label]="regenerando() ? 'Regenerando código de convite' : 'Regenerar código de convite'"
+                        [appTooltip]="'Regenerar convite'"
+                        (click)="regenerarConvite()"
+                    >
+                        <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
+                    </button>
+                </div>
+            </div>
+
+            <div class="stat detalhe__stat-encontro">
+                <span class="stat__rotulo">Combate</span>
+                <div class="detalhe__encontro-linha">
+                    <span class="detalhe__encontro-estado">
+                        @if (encontroAberto(); as aberto) {
+                        <strong class="detalhe__encontro-nome">{{ aberto.nome }}</strong>
+                        <span class="detalhe__encontro-meta">
+                            {{ rotuloStatusEncontro(aberto.status) }} @if (aberto.status ===
+                            EncontroStatusEnum.ATIVO) { · Rodada {{ aberto.rodadaAtual }} }
+                        </span>
+                        } @else {
+                        <strong class="detalhe__encontro-nome">Nenhum em andamento</strong>
+                        <span class="detalhe__encontro-meta">
+                            @if (encontrosEncerrados()) { {{ encontrosEncerrados() }} {{
+                            encontrosEncerrados() === 1 ? 'encerrado' : 'encerrados' }} } @else {
+                            Nenhum combate registrado }
+                        </span>
+                        }
+                    </span>
+                    <a
+                        class="botao botao--primario detalhe__encontro-acao"
+                        [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                        [appTooltip]="
                 encontroAberto()
                   ? 'Abrir a tela de Iniciativa'
                   : 'Iniciar um combate ou ver os anteriores'
               "
-            >
-              <app-icone nome="combate" />
-              {{ encontroAberto() ? 'Abrir' : 'Iniciar' }}
-            </a>
-          </div>
+                    >
+                        <app-icone nome="combate" />
+                        {{ encontroAberto() ? 'Abrir' : 'Iniciar' }}
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
 
-      @if (rolagensRecentes().length) {
+        @if (rolagensRecentes().length) {
         <section class="detalhe__rolagens">
-          <header class="detalhe__secao">
-            <h2 class="detalhe__secao-titulo">Rolagens Recentes</h2>
-            <span class="detalhe__secao-regua"></span>
-          </header>
-          <ul class="detalhe__rolagens-tira" appOverflowFade>
-            @for (item of rolagensRecentes(); track item.id) {
-              <li class="rolagem-pill">
-                <div class="rolagem-pill__topo">
-                  <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
-                  <button
-                    type="button"
-                    class="rolagem-pill__d20"
-                    [attr.aria-label]="'Ver resultado de ' + item.rotulo"
-                    (mouseenter)="mostrarPreviaRolagem(item)"
-                    (mouseleave)="esconderPreviaRolagem()"
-                    (focus)="mostrarPreviaRolagem(item)"
-                    (blur)="esconderPreviaRolagem()"
-                  >
-                    <app-icone nome="d20" />
-                  </button>
-                </div>
-                <span class="rolagem-pill__meta">{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span>
-              </li>
-            }
-          </ul>
-        </section>
-      }
-    }
-
-    @if (exibirComoMestre()) {
-    <div class="detalhe__grade">
-      <article class="card detalhe__coluna detalhe__coluna--membros">
-        <header class="detalhe__secao">
-          <h2 class="detalhe__secao-titulo">Membros</h2>
-          <span class="detalhe__secao-regua"></span>
-          <span class="detalhe__secao-contagem" aria-hidden="true">{{ membros().length }}</span>
-        </header>
-        <ul class="detalhe__membros" appOverflowFade>
-          @for (membro of membrosOrdenados(); track membro.usuarioId) {
-            <li class="detalhe__membro">
-              <div class="detalhe__membro-linha">
-                <span class="detalhe__avatar" aria-hidden="true"></span>
-                <div class="detalhe__membro-identidade">
-                  <span class="detalhe__membro-nome">{{ membro.nome }}</span>
-                  <span class="chip-papel">
-                    <app-icone
-                      [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'"
-                    />
-                    {{ membro.papel }}
-                  </span>
-                </div>
-
-                @if (podeGerenciarMembro(membro) && acaoMembro()?.usuarioId !== membro.usuarioId) {
-                  <div class="detalhe__membro-acoes">
-                    <button
-                      class="detalhe__membro-acao"
-                      type="button"
-                      [attr.aria-label]="'Transferir o papel de mestre para ' + membro.nome"
-                      [appTooltip]="'Transferir mestre'"
-                      (click)="pedirTransferenciaMestre(membro)"
+            <header class="detalhe__secao">
+                <h2 class="detalhe__secao-titulo">Rolagens Recentes</h2>
+                <span class="detalhe__secao-regua"></span>
+            </header>
+            <ul class="detalhe__rolagens-tira" appOverflowFade>
+                @for (item of rolagensRecentes(); track item.id) {
+                <li class="rolagem-pill">
+                    <div class="rolagem-pill__topo">
+                        <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
+                        <button
+                            type="button"
+                            class="rolagem-pill__d20"
+                            [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                            (mouseenter)="mostrarPreviaRolagem(item)"
+                            (mouseleave)="esconderPreviaRolagem()"
+                            (focus)="mostrarPreviaRolagem(item)"
+                            (blur)="esconderPreviaRolagem()"
+                        >
+                            <app-icone nome="d20" />
+                        </button>
+                    </div>
+                    <span class="rolagem-pill__meta"
+                        >{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span
                     >
-                      <app-icone nome="coroa" />
-                    </button>
-                    <button
-                      class="detalhe__membro-acao"
-                      type="button"
-                      [attr.aria-label]="'Remover ' + membro.nome + ' da campanha'"
-                      [appTooltip]="'Remover'"
-                      (click)="pedirRemocaoMembro(membro)"
-                    >
-                      <app-icone nome="excluir" />
-                    </button>
-                  </div>
+                </li>
                 }
-              </div>
+            </ul>
+        </section>
+        } } @if (exibirComoMestre()) {
+        <div class="detalhe__grade">
+            <article class="card detalhe__coluna detalhe__coluna--membros">
+                <header class="detalhe__secao">
+                    <h2 class="detalhe__secao-titulo">Membros</h2>
+                    <span class="detalhe__secao-regua"></span>
+                    <span class="detalhe__secao-contagem" aria-hidden="true"
+                        >{{ membros().length }}</span
+                    >
+                </header>
+                <ul class="detalhe__membros" appOverflowFade>
+                    @for (membro of membrosOrdenados(); track membro.usuarioId) {
+                    <li class="detalhe__membro">
+                        <div class="detalhe__membro-linha">
+                            <span class="detalhe__avatar" aria-hidden="true"></span>
+                            <div class="detalhe__membro-identidade">
+                                <span class="detalhe__membro-nome">{{ membro.nome }}</span>
+                                <span class="chip-papel">
+                                    <app-icone
+                                        [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'"
+                                    />
+                                    {{ membro.papel }}
+                                </span>
+                            </div>
 
-              @if (acaoMembro()?.usuarioId === membro.usuarioId) {
-                <div
-                  class="detalhe__membro-confirmacao"
-                  role="alertdialog"
-                  [attr.aria-label]="
+                            @if (podeGerenciarMembro(membro) && acaoMembro()?.usuarioId !==
+                            membro.usuarioId) {
+                            <div class="detalhe__membro-acoes">
+                                <button
+                                    class="detalhe__membro-acao"
+                                    type="button"
+                                    [attr.aria-label]="'Transferir o papel de mestre para ' + membro.nome"
+                                    [appTooltip]="'Transferir mestre'"
+                                    (click)="pedirTransferenciaMestre(membro)"
+                                >
+                                    <app-icone nome="coroa" />
+                                </button>
+                                <button
+                                    class="detalhe__membro-acao"
+                                    type="button"
+                                    [attr.aria-label]="'Remover ' + membro.nome + ' da campanha'"
+                                    [appTooltip]="'Remover'"
+                                    (click)="pedirRemocaoMembro(membro)"
+                                >
+                                    <app-icone nome="excluir" />
+                                </button>
+                            </div>
+                            }
+                        </div>
+
+                        @if (acaoMembro()?.usuarioId === membro.usuarioId) {
+                        <div
+                            class="detalhe__membro-confirmacao"
+                            role="alertdialog"
+                            [attr.aria-label]="
                     acaoMembro()?.tipo === 'transferir'
                       ? 'Confirmar transferência do papel de mestre'
                       : 'Confirmar remoção do membro'
                   "
-                >
-                  @if (acaoMembro()?.tipo === 'transferir') {
-                    <p class="detalhe__membro-aviso">
-                      Passar o papel de mestre para <strong>{{ membro.nome }}</strong>? Você deixará de
-                      ser o mestre e passará a jogador.
-                    </p>
-                    <div class="detalhe__membro-confirmacao-acoes">
-                      <button
-                        class="botao botao--primario detalhe__acao"
-                        type="button"
-                        [disabled]="processandoMembro()"
-                        (click)="confirmarTransferenciaMestre(membro.usuarioId)"
-                      >
-                        <app-icone nome="coroa" />
-                        {{ processandoMembro() ? 'Transferindo…' : 'Confirmar transferência' }}
-                      </button>
-                      <button
-                        class="botao botao--secundario detalhe__acao"
-                        type="button"
-                        [disabled]="processandoMembro()"
-                        (click)="cancelarAcaoMembro()"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  } @else {
-                    <p class="detalhe__membro-aviso">
-                      Remover <strong>{{ membro.nome }}</strong> da campanha?
-                    </p>
-                    <div class="detalhe__membro-confirmacao-acoes">
-                      <button
-                        class="botao botao--primario detalhe__acao"
-                        type="button"
-                        [disabled]="processandoMembro()"
-                        (click)="confirmarRemocaoMembro(membro.usuarioId)"
-                      >
-                        <app-icone nome="excluir" />
-                        {{ processandoMembro() ? 'Removendo…' : 'Confirmar remoção' }}
-                      </button>
-                      <button
-                        class="botao botao--secundario detalhe__acao"
-                        type="button"
-                        [disabled]="processandoMembro()"
-                        (click)="cancelarAcaoMembro()"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-            </li>
-          }
-        </ul>
-      </article>
-
-      <article class="card detalhe__coluna detalhe__coluna--esquadrao">
-        <header class="detalhe__secao">
-          <h2 class="detalhe__secao-titulo">Esquadrão</h2>
-          <span class="detalhe__secao-regua"></span>
-          <span class="detalhe__secao-contagem" aria-hidden="true">{{ fichasEsquadrao().length }}</span>
-          <button
-            class="botao botao--secundario detalhe__nova-ficha"
-            type="button"
-            (click)="abrirCriarCriatura()"
-          >
-            <app-icone nome="alerta" />
-            Nova Criatura
-          </button>
-          <button
-            class="botao botao--primario detalhe__nova-ficha"
-            type="button"
-            (click)="abrirCriarFicha()"
-          >
-            <app-icone nome="novo-agente" />
-            Novo Agente
-          </button>
-          @if (textoAtualizacao(); as texto) {
-            <span class="detalhe__secao-atualizado">{{ texto }}</span>
-          }
-        </header>
-
-        @if (fichasEsquadrao().length === 0) {
-          <p class="detalhe__estado">Nenhuma ficha na campanha ainda.</p>
-        } @else {
-          <ul class="detalhe__esquadrao-grid" appOverflowFade>
-            @for (ficha of fichasEsquadrao(); track ficha.id) {
-              <li>
-                <div
-                  class="detalhe__ficha-card"
-                  [class.detalhe__ficha-card--critico]="ficha.critico"
-                  (dblclick)="abrirFichaDuploClique(campanhaAtual.id, ficha.id, $event)"
-                  (auxclick)="abrirFichaCliqueDoMeio(campanhaAtual.id, ficha.id, $event)"
-                >
-                  <span
-                    class="detalhe__ficha-avatar"
-                    aria-hidden="true"
-                    [style.--cor-ficha]="ficha.cor"
-                    (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
-                    (mouseleave)="cancelarPreviewAvatar()"
-                  >
-                    @if (ficha.imagemUrl; as urlImagem) {
-                      <img class="detalhe__ficha-avatar-imagem" [src]="urlImagem" alt="" />
-                    }
-                  </span>
-                  <div class="detalhe__ficha-conteudo">
-                  <a
-                    class="detalhe__ficha-link"
-                    [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
-                  >
-                    <div class="detalhe__ficha-topo">
-                      <div class="detalhe__ficha-topo-texto">
-                        <span class="detalhe__ficha-dono">{{ ficha.donoNome }}</span>
-                        <span class="detalhe__ficha-nome">{{ ficha.nome }}</span>
-                      </div>
-                      <span class="detalhe__ficha-condicoes">
-                        @if (ficha.sobrecarregado) {
-                          <app-icone
-                            nome="alerta"
-                            class="detalhe__ficha-condicao detalhe__ficha-condicao--ativa"
-                            data-condicao="sobrecarregado"
-                            aria-label="Sobrecarregado (inventário acima do máximo)"
-                            [appTooltip]="'Sobrecarregado'"
-                          />
-                        }
-                        @for (condicao of ficha.condicoes; track condicao.chave) {
-                          <app-icone
-                            [nome]="condicao.icone"
-                            class="detalhe__ficha-condicao"
-                            [class.detalhe__ficha-condicao--ativa]="condicao.ativa"
-                            [attr.data-condicao]="condicao.chave"
-                            [attr.aria-label]="condicao.rotulo + (condicao.ativa ? ' (ativa)' : ' (inativa)')"
-                            [appTooltip]="condicao.rotulo"
-                          />
-                        }
-                      </span>
-                    </div>
-                    <span class="detalhe__ficha-meta">
-                      {{ ficha.classeTexto }} · Nível {{ ficha.nivel }} · {{ ficha.patenteTexto }}
-                    </span>
-                    @if (ficha.identidadeTexto) {
-                      <span class="detalhe__ficha-identidade">{{ ficha.identidadeTexto }}</span>
-                    }
-                  </a>
-                  <div class="detalhe__ficha-vitais">
-                    <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
-                      @if (podeAjustarFicha(ficha.usuarioId)) {
-                        <button
-                          class="detalhe__ficha-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Reduzir Vida de ' + ficha.nome"
-                          [disabled]="ficha.vidaAtual <= 0"
-                          (passo)="ajustarVitalidade(ficha, 'vidaAtual', -1)"
-                        >−</button>
-                      }
-                      <span>Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }}</span>
-                      @if (podeAjustarFicha(ficha.usuarioId)) {
-                        <button
-                          class="detalhe__ficha-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Aumentar Vida de ' + ficha.nome"
-                          (passo)="ajustarVitalidade(ficha, 'vidaAtual', 1)"
-                        >+</button>
-                      }
-                    </span>
-                    <span class="detalhe__ficha-vital detalhe__ficha-vital--energia">
-                      @if (podeAjustarFicha(ficha.usuarioId)) {
-                        <button
-                          class="detalhe__ficha-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Reduzir Energia de ' + ficha.nome"
-                          (passo)="ajustarVitalidade(ficha, 'energiaAtual', -1)"
-                        >−</button>
-                      }
-                      <span>Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}</span>
-                      @if (podeAjustarFicha(ficha.usuarioId)) {
-                        <button
-                          class="detalhe__ficha-passo"
-                          type="button"
-                          appHoldRepeat
-                          [attr.aria-label]="'Aumentar Energia de ' + ficha.nome"
-                          (passo)="ajustarVitalidade(ficha, 'energiaAtual', 1)"
-                        >+</button>
-                      }
-                    </span>
-                  </div>
-                  @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined || ficha.contraAtaque !== undefined || podeAjustarFicha(ficha.usuarioId)) {
-                    <div class="detalhe__ficha-rodape">
-                      @if (ficha.defesa !== undefined || ficha.esquiva !== undefined || ficha.bloqueio !== undefined || ficha.contraAtaque !== undefined) {
-                        <div class="detalhe__ficha-reacoes">
-                          @if (ficha.defesa !== undefined) {
-                            <span>Defesa {{ ficha.defesa }}</span>
-                          }
-                          @if (ficha.esquiva !== undefined) {
-                            <span>Esquiva {{ ficha.esquiva }}</span>
-                          }
-                          @if (ficha.bloqueio !== undefined) {
-                            <span>Bloqueio {{ ficha.bloqueio }}</span>
-                          }
-                          @if (ficha.contraAtaque !== undefined) {
-                            <span>Contra-ataque {{ ficha.contraAtaque }}</span>
-                          }
-                        </div>
-                      }
-                      @if (podeAjustarFicha(ficha.usuarioId)) {
-                        <button
-                          class="detalhe__ficha-menu-botao"
-                          type="button"
-                          [attr.aria-label]="'Ações de ' + ficha.nome"
-                          aria-haspopup="menu"
-                          [attr.aria-expanded]="menuFichaAberto()?.id === ficha.id"
-                          (click)="alternarMenuFicha(ficha, $event)"
                         >
-                          ⋯
-                        </button>
-                      }
-                    </div>
-                  }
-                  </div>
-                </div>
-              </li>
-            }
-          </ul>
-        }
+                            @if (acaoMembro()?.tipo === 'transferir') {
+                            <p class="detalhe__membro-aviso">
+                                Passar o papel de mestre para <strong>{{ membro.nome }}</strong>?
+                                Você deixará de ser o mestre e passará a jogador.
+                            </p>
+                            <div class="detalhe__membro-confirmacao-acoes">
+                                <button
+                                    class="botao botao--primario detalhe__acao"
+                                    type="button"
+                                    [disabled]="processandoMembro()"
+                                    (click)="confirmarTransferenciaMestre(membro.usuarioId)"
+                                >
+                                    <app-icone nome="coroa" />
+                                    {{ processandoMembro() ? 'Transferindo…' : 'Confirmar
+                                    transferência' }}
+                                </button>
+                                <button
+                                    class="botao botao--secundario detalhe__acao"
+                                    type="button"
+                                    [disabled]="processandoMembro()"
+                                    (click)="cancelarAcaoMembro()"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                            } @else {
+                            <p class="detalhe__membro-aviso">
+                                Remover <strong>{{ membro.nome }}</strong> da campanha?
+                            </p>
+                            <div class="detalhe__membro-confirmacao-acoes">
+                                <button
+                                    class="botao botao--primario detalhe__acao"
+                                    type="button"
+                                    [disabled]="processandoMembro()"
+                                    (click)="confirmarRemocaoMembro(membro.usuarioId)"
+                                >
+                                    <app-icone nome="excluir" />
+                                    {{ processandoMembro() ? 'Removendo…' : 'Confirmar remoção' }}
+                                </button>
+                                <button
+                                    class="botao botao--secundario detalhe__acao"
+                                    type="button"
+                                    [disabled]="processandoMembro()"
+                                    (click)="cancelarAcaoMembro()"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                            }
+                        </div>
+                        }
+                    </li>
+                    }
+                </ul>
+            </article>
 
-        <!-- Criaturas (m4-04+) — mesma coluna do Esquadrão, seção própria abaixo (item pedido pelo
+            <article class="card detalhe__coluna detalhe__coluna--esquadrao">
+                <header class="detalhe__secao">
+                    <h2 class="detalhe__secao-titulo">Esquadrão</h2>
+                    <span class="detalhe__secao-regua"></span>
+                    <span class="detalhe__secao-contagem" aria-hidden="true"
+                        >{{ fichasEsquadrao().length }}</span
+                    >
+                    <button
+                        class="botao botao--secundario detalhe__nova-ficha"
+                        type="button"
+                        (click)="abrirCriarCriatura()"
+                    >
+                        <app-icone nome="alerta" />
+                        Nova Criatura
+                    </button>
+                    <button
+                        class="botao botao--primario detalhe__nova-ficha"
+                        type="button"
+                        (click)="abrirCriarFicha()"
+                    >
+                        <app-icone nome="novo-agente" />
+                        Novo Agente
+                    </button>
+                    @if (textoAtualizacao(); as texto) {
+                    <span class="detalhe__secao-atualizado">{{ texto }}</span>
+                    }
+                </header>
+
+                @if (fichasEsquadrao().length === 0) {
+                <p class="detalhe__estado">Nenhuma ficha na campanha ainda.</p>
+                } @else {
+                <ul class="detalhe__esquadrao-grid" appOverflowFade>
+                    @for (ficha of fichasEsquadrao(); track ficha.id) {
+                    <li>
+                        <div
+                            class="detalhe__ficha-card"
+                            [class.detalhe__ficha-card--critico]="ficha.critico"
+                            (dblclick)="abrirFichaDuploClique(campanhaAtual.id, ficha.id, $event)"
+                            (auxclick)="abrirFichaCliqueDoMeio(campanhaAtual.id, ficha.id, $event)"
+                        >
+                            <span
+                                class="detalhe__ficha-avatar"
+                                aria-hidden="true"
+                                [style.--cor-ficha]="ficha.cor"
+                                (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
+                                (mouseleave)="cancelarPreviewAvatar()"
+                            >
+                                @if (ficha.imagemUrl; as urlImagem) {
+                                <img
+                                    class="detalhe__ficha-avatar-imagem"
+                                    [src]="urlImagem"
+                                    alt=""
+                                />
+                                }
+                            </span>
+                            <div class="detalhe__ficha-conteudo">
+                                <a
+                                    class="detalhe__ficha-link"
+                                    [routerLink]="['/painel', campanhaAtual.id, 'ficha', ficha.id]"
+                                >
+                                    <div class="detalhe__ficha-topo">
+                                        <div class="detalhe__ficha-topo-texto">
+                                            <span class="detalhe__ficha-dono"
+                                                >{{ ficha.donoNome }}</span
+                                            >
+                                            <span class="detalhe__ficha-nome"
+                                                >{{ ficha.nome }}</span
+                                            >
+                                        </div>
+                                        <span class="detalhe__ficha-condicoes">
+                                            @if (ficha.sobrecarregado) {
+                                            <app-icone
+                                                nome="alerta"
+                                                class="detalhe__ficha-condicao detalhe__ficha-condicao--ativa"
+                                                data-condicao="sobrecarregado"
+                                                aria-label="Sobrecarregado (inventário acima do máximo)"
+                                                [appTooltip]="'Sobrecarregado'"
+                                            />
+                                            } @for (condicao of ficha.condicoes; track
+                                            condicao.chave) {
+                                            <app-icone
+                                                [nome]="condicao.icone"
+                                                class="detalhe__ficha-condicao"
+                                                [class.detalhe__ficha-condicao--ativa]="condicao.ativa"
+                                                [attr.data-condicao]="condicao.chave"
+                                                [attr.aria-label]="condicao.rotulo + (condicao.ativa ? ' (ativa)' : ' (inativa)')"
+                                                [appTooltip]="condicao.rotulo"
+                                            />
+                                            }
+                                        </span>
+                                    </div>
+                                    <span class="detalhe__ficha-meta">
+                                        {{ ficha.classeTexto }} · Nível {{ ficha.nivel }} · {{
+                                        ficha.patenteTexto }}
+                                    </span>
+                                    @if (ficha.identidadeTexto) {
+                                    <span class="detalhe__ficha-identidade"
+                                        >{{ ficha.identidadeTexto }}</span
+                                    >
+                                    }
+                                </a>
+                                <div class="detalhe__ficha-vitais">
+                                    <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
+                                        @if (podeAjustarFicha(ficha.usuarioId)) {
+                                        <button
+                                            class="detalhe__ficha-passo"
+                                            type="button"
+                                            appHoldRepeat
+                                            [attr.aria-label]="'Reduzir Vida de ' + ficha.nome"
+                                            [disabled]="ficha.vidaAtual <= 0"
+                                            (passo)="ajustarVitalidade(ficha, 'vidaAtual', -1)"
+                                        >
+                                            −
+                                        </button>
+                                        }
+                                        <span
+                                            >Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—'
+                                            }}</span
+                                        >
+                                        @if (podeAjustarFicha(ficha.usuarioId)) {
+                                        <button
+                                            class="detalhe__ficha-passo"
+                                            type="button"
+                                            appHoldRepeat
+                                            [attr.aria-label]="'Aumentar Vida de ' + ficha.nome"
+                                            (passo)="ajustarVitalidade(ficha, 'vidaAtual', 1)"
+                                        >
+                                            +
+                                        </button>
+                                        }
+                                    </span>
+                                    <span
+                                        class="detalhe__ficha-vital detalhe__ficha-vital--energia"
+                                    >
+                                        @if (podeAjustarFicha(ficha.usuarioId)) {
+                                        <button
+                                            class="detalhe__ficha-passo"
+                                            type="button"
+                                            appHoldRepeat
+                                            [attr.aria-label]="'Reduzir Energia de ' + ficha.nome"
+                                            (passo)="ajustarVitalidade(ficha, 'energiaAtual', -1)"
+                                        >
+                                            −
+                                        </button>
+                                        }
+                                        <span
+                                            >Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima
+                                            ?? '—' }}</span
+                                        >
+                                        @if (podeAjustarFicha(ficha.usuarioId)) {
+                                        <button
+                                            class="detalhe__ficha-passo"
+                                            type="button"
+                                            appHoldRepeat
+                                            [attr.aria-label]="'Aumentar Energia de ' + ficha.nome"
+                                            (passo)="ajustarVitalidade(ficha, 'energiaAtual', 1)"
+                                        >
+                                            +
+                                        </button>
+                                        }
+                                    </span>
+                                </div>
+                                @if (ficha.defesa !== undefined || ficha.esquiva !== undefined ||
+                                ficha.bloqueio !== undefined || ficha.contraAtaque !== undefined ||
+                                podeAjustarFicha(ficha.usuarioId)) {
+                                <div class="detalhe__ficha-rodape">
+                                    @if (ficha.defesa !== undefined || ficha.esquiva !== undefined
+                                    || ficha.bloqueio !== undefined || ficha.contraAtaque !==
+                                    undefined) {
+                                    <div class="detalhe__ficha-reacoes">
+                                        @if (ficha.defesa !== undefined) {
+                                        <span>Defesa {{ ficha.defesa }}</span>
+                                        } @if (ficha.esquiva !== undefined) {
+                                        <span>Esquiva {{ ficha.esquiva }}</span>
+                                        } @if (ficha.bloqueio !== undefined) {
+                                        <span>Bloqueio {{ ficha.bloqueio }}</span>
+                                        } @if (ficha.contraAtaque !== undefined) {
+                                        <span>Contra-ataque {{ ficha.contraAtaque }}</span>
+                                        }
+                                    </div>
+                                    } @if (podeAjustarFicha(ficha.usuarioId)) {
+                                    <button
+                                        class="detalhe__ficha-menu-botao"
+                                        type="button"
+                                        [attr.aria-label]="'Ações de ' + ficha.nome"
+                                        aria-haspopup="menu"
+                                        [attr.aria-expanded]="menuFichaAberto()?.id === ficha.id"
+                                        (click)="alternarMenuFicha(ficha, $event)"
+                                    >
+                                        ⋯
+                                    </button>
+                                    }
+                                </div>
+                                }
+                            </div>
+                        </div>
+                    </li>
+                    }
+                </ul>
+                }
+
+                <!-- Criaturas (m4-04+) — mesma coluna do Esquadrão, seção própria abaixo (item pedido pelo
              autor: "o Esquadrão dividir uma coluna com as criaturas", não uma 3ª coluna). Card
              clicável desde a m4-04b — abre `/painel/:campanhaId/criatura/:id`, mesmo padrão de
              navegação (link no nome/meta + duplo clique + clique do meio) do card de ficha. -->
-        <header class="detalhe__secao detalhe__secao--criaturas">
-          <h2 class="detalhe__secao-titulo">Criaturas</h2>
-          <span class="detalhe__secao-regua"></span>
-          <span class="detalhe__secao-contagem" aria-hidden="true">{{ criaturasEsquadrao().length }}</span>
-        </header>
-
-        @if (criaturasEsquadrao().length === 0) {
-          <p class="detalhe__estado">Nenhuma criatura registrada ainda.</p>
-        } @else {
-          <ul class="detalhe__esquadrao-grid" appOverflowFade>
-            @for (criatura of criaturasEsquadrao(); track criatura.id) {
-              <li>
-                <div
-                  class="detalhe__ficha-card"
-                  (dblclick)="abrirCriaturaDuploClique(campanhaAtual.id, criatura.id, $event)"
-                  (auxclick)="abrirCriaturaCliqueDoMeio(campanhaAtual.id, criatura.id, $event)"
-                >
-                  <span
-                    class="detalhe__ficha-avatar"
-                    aria-hidden="true"
-                    [style.--cor-ficha]="criatura.cor"
-                    (mouseenter)="agendarPreviewAvatar($event, criatura.imagemUrl)"
-                    (mouseleave)="cancelarPreviewAvatar()"
-                  >
-                    @if (criatura.imagemUrl; as urlImagem) {
-                      <img class="detalhe__ficha-avatar-imagem" [src]="urlImagem" alt="" />
-                    }
-                  </span>
-                  <div class="detalhe__ficha-conteudo">
-                    <a
-                      class="detalhe__ficha-link"
-                      [routerLink]="['/painel', campanhaAtual.id, 'criatura', criatura.id]"
+                <header class="detalhe__secao detalhe__secao--criaturas">
+                    <h2 class="detalhe__secao-titulo">Criaturas</h2>
+                    <span class="detalhe__secao-regua"></span>
+                    <span class="detalhe__secao-contagem" aria-hidden="true"
+                        >{{ criaturasEsquadrao().length }}</span
                     >
-                      <div class="detalhe__ficha-topo">
-                        <div class="detalhe__ficha-topo-texto">
-                          <span class="detalhe__ficha-dono">Ameaça</span>
-                          <span class="detalhe__ficha-nome">{{ criatura.nome }}</span>
-                        </div>
-                      </div>
-                      <span class="detalhe__ficha-meta">NA {{ criatura.naTexto }}</span>
-                    </a>
-                    <div class="detalhe__ficha-vitais">
-                      <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
-                        Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—' }}
-                      </span>
-                      @if (criatura.defesa !== undefined) {
-                        <span class="detalhe__ficha-vital">Defesa {{ criatura.defesa }}</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </li>
-            }
-          </ul>
-        }
-      </article>
-    </div>
-    } @else {
-    <div class="detalhe__jogador">
-      <div class="detalhe__jogador-principal">
-        @if (fichaExibidaDados(); as fichaExibida) {
-          <article class="card detalhe__ficha-embutida">
-            <header class="card__cabecalho">
-              <span class="card__indice"><app-icone nome="agente" /></span>
-              <h2 class="card__titulo">{{ fichaExibida.nome }}</h2>
-              <span class="card__regua"></span>
-              <button class="botao botao--secundario detalhe__alternar-inventario" type="button"
-                [attr.aria-pressed]="exibindoInventarioJogador()"
-                (click)="exibindoInventarioJogador.set(!exibindoInventarioJogador())">
-                <app-icone nome="inventario" />
-                {{ exibindoInventarioJogador() ? 'Voltar ao painel' : 'Inventário do esquadrão' }}
-              </button>
-              <a
-                class="botao botao--secundario detalhe__abrir-completa"
-                [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
-              >
-                <app-icone nome="visao-geral" />
-                Abrir completa
-              </a>
-            </header>
+                </header>
 
-            <app-ficha-visualizacao
-              [fichaId]="fichaExibida.id"
-              [nome]="fichaExibida.nome"
-              [cor]="fichaExibida.cor"
-              [imagemUrl]="fichaExibida.imagemUrl"
-              [dados]="fichaExibida.dados"
-              [ajustavel]="podeAjustarFichaExibida()"
-              [podeRolar]="podeAjustarFichaExibida()"
-              [ehMestre]="false"
-              [podeMandarParaBase]="campanhaAtual.naBase && podeAjustarFichaExibida()"
-              modo="compacto"
-              (abaStatusMudou)="aoMudarDestinoFicha($event)"
-              (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
-              (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
-              (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
-              (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
-              (ajusteNome)="fichaEdicao.ajustarNome($event)"
-              (ajusteCor)="fichaEdicao.ajustarCor($event)"
-              (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
-              (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
-              (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
-              (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
-              (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
-              (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
-              (mandarParaBase)="mandarItemFichaParaBase(fichaExibida.id, $event)"
-              (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
-              (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
-              (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
-              (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
-              (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
-              (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
-              (ajusteHabilidadePersonalidade)="fichaEdicao.ajustarHabilidadePersonalidade($event)"
-              (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
-              (origemLimpa)="fichaEdicao.limparOrigem()"
-              (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
-            />
-
-            <a
-              class="botao botao--secundario detalhe__abrir-completa-rodape"
-              [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
-            >
-              Abrir ficha completa
-            </a>
-          </article>
-        } @else if (carregandoFichaExibida()) {
-          <p class="detalhe__estado">Carregando ficha…</p>
-        } @else {
-          <!-- m2-21 (item 8): o estado vazio deixou de ser um beco — repete as duas ações do menu
-               "⋯" do cabeçalho, que é onde elas moram. -->
-          <div class="detalhe__jogador-vazio">
-            <p class="detalhe__estado">Você ainda não tem uma ficha nesta campanha.</p>
-            <div class="detalhe__jogador-vazio-acoes">
-              <button class="botao botao--primario detalhe__acao" type="button" (click)="abrirCriarFicha()">
-                <app-icone nome="agente" />
-                Criar nova ficha
-              </button>
-              <button class="botao botao--secundario detalhe__acao" type="button" (click)="abrirVincularFicha()">
-                <app-icone nome="duplicar" />
-                Vincular ficha existente
-              </button>
-            </div>
-          </div>
-        }
-      </div>
-
-      <div class="detalhe__jogador-lateral">
-        @if (exibindoInventarioJogador()) {
-          <article class="card detalhe__inventario-jogador">
-            <header class="detalhe__secao">
-              <h2 class="detalhe__secao-titulo">Inventário de Esquadrão</h2>
-              <span class="detalhe__secao-regua"></span>
-            </header>
-            <app-inventario-esquadrao [campanhaId]="campanhaAtual.id" [itens]="inventarioEsquadrao()"
-              [fichas]="fichasDestinoInventario()" [somenteLeitura]="!campanhaAtual.naBase"
-              (atualizado)="inventarioEsquadrao.set($event)" />
-          </article>
-        } @else {
-        <article class="card detalhe__equipe">
-          <header class="detalhe__secao">
-            <h2 class="detalhe__secao-titulo">Equipe</h2>
-            <span class="detalhe__secao-regua"></span>
-          </header>
-          <ul class="detalhe__equipe-lista" appOverflowFade>
-            @for (item of equipeExibicao(); track item.membro.usuarioId) {
-              <li class="detalhe__equipe-membro">
-                <div class="detalhe__equipe-membro-corpo">
-                  @if (item.membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
-                    <div class="detalhe__equipe-cabecalho">
-                      <span class="chip-papel">
-                        <app-icone nome="coroa" />
-                        Mestre
-                      </span>
-                      <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
-                    </div>
-                  } @else {
-                    <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
-                    @if (item.fichas.length) {
-                    @for (ficha of item.fichas; track ficha.id) {
-                      @if (ficha.tipo === 'completa') {
-                        <button
-                          type="button"
-                          class="detalhe__equipe-ficha"
-                          [class.detalhe__equipe-ficha--ativa]="fichaExibidaId() === ficha.id"
-                          [attr.aria-pressed]="fichaExibidaId() === ficha.id"
-                          [attr.aria-label]="'Ver ficha de ' + ficha.nome + ' (' + item.membro.nome + ')'"
-                          (click)="selecionarFichaExibida(ficha.id)"
+                @if (criaturasEsquadrao().length === 0) {
+                <p class="detalhe__estado">Nenhuma criatura registrada ainda.</p>
+                } @else {
+                <ul class="detalhe__esquadrao-grid" appOverflowFade>
+                    @for (criatura of criaturasEsquadrao(); track criatura.id) {
+                    <li>
+                        <div
+                            class="detalhe__ficha-card"
+                            (dblclick)="abrirCriaturaDuploClique(campanhaAtual.id, criatura.id, $event)"
+                            (auxclick)="abrirCriaturaCliqueDoMeio(campanhaAtual.id, criatura.id, $event)"
                         >
-                          <span
-                            class="detalhe__equipe-ficha-avatar"
-                            aria-hidden="true"
-                            [style.--cor-ficha]="ficha.cor"
-                            (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
-                            (mouseleave)="cancelarPreviewAvatar()"
-                          >
-                            @if (ficha.imagemUrl; as urlImagem) {
-                              <img class="detalhe__equipe-ficha-avatar-imagem" [src]="urlImagem" alt="" />
-                            }
-                          </span>
-                          <app-icone nome="olho" />
-                          <span class="detalhe__equipe-ficha-corpo">
-                            <span class="detalhe__equipe-ficha-nome">{{ ficha.nome }}</span>
-                            <span class="detalhe__equipe-ficha-vitais">
-                              Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }} · Energia
-                              {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ?? '—' }}
+                            <span
+                                class="detalhe__ficha-avatar"
+                                aria-hidden="true"
+                                [style.--cor-ficha]="criatura.cor"
+                                (mouseenter)="agendarPreviewAvatar($event, criatura.imagemUrl)"
+                                (mouseleave)="cancelarPreviewAvatar()"
+                            >
+                                @if (criatura.imagemUrl; as urlImagem) {
+                                <img
+                                    class="detalhe__ficha-avatar-imagem"
+                                    [src]="urlImagem"
+                                    alt=""
+                                />
+                                }
                             </span>
-                          </span>
-                        </button>
-                      } @else {
-                        <span
-                          class="detalhe__equipe-carteirinha"
-                          [attr.aria-label]="'Ficha de ' + ficha.nome + ' (' + item.membro.nome + ') — sem acesso'"
+                            <div class="detalhe__ficha-conteudo">
+                                <a
+                                    class="detalhe__ficha-link"
+                                    [routerLink]="['/painel', campanhaAtual.id, 'criatura', criatura.id]"
+                                >
+                                    <div class="detalhe__ficha-topo">
+                                        <div class="detalhe__ficha-topo-texto">
+                                            <span class="detalhe__ficha-dono">Ameaça</span>
+                                            <span class="detalhe__ficha-nome"
+                                                >{{ criatura.nome }}</span
+                                            >
+                                        </div>
+                                    </div>
+                                    <span class="detalhe__ficha-meta"
+                                        >NA {{ criatura.naTexto }}</span
+                                    >
+                                </a>
+                                <div class="detalhe__ficha-vitais">
+                                    <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
+                                        Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—'
+                                        }}
+                                    </span>
+                                    @if (criatura.defesa !== undefined) {
+                                    <span class="detalhe__ficha-vital"
+                                        >Defesa {{ criatura.defesa }}</span
+                                    >
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    }
+                </ul>
+                }
+            </article>
+        </div>
+        } @else {
+        <div class="detalhe__jogador">
+            <div class="detalhe__jogador-principal">
+                @if (fichaExibidaDados(); as fichaExibida) {
+                <article class="card detalhe__ficha-embutida">
+                    <header class="card__cabecalho">
+                        <span class="card__indice"><app-icone nome="agente" /></span>
+                        <h2 class="card__titulo">{{ fichaExibida.nome }}</h2>
+                        <span class="card__regua"></span>
+                        <button
+                            class="botao botao--secundario detalhe__alternar-inventario"
+                            type="button"
+                            [attr.aria-pressed]="exibindoInventarioJogador()"
+                            (click)="exibindoInventarioJogador.set(!exibindoInventarioJogador())"
                         >
-                          <span
-                            class="detalhe__equipe-ficha-avatar"
-                            aria-hidden="true"
-                            [style.--cor-ficha]="ficha.cor"
-                            (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
-                            (mouseleave)="cancelarPreviewAvatar()"
-                          >
-                            @if (ficha.imagemUrl; as urlImagem) {
-                              <img class="detalhe__equipe-ficha-avatar-imagem" [src]="urlImagem" alt="" />
-                            }
-                          </span>
-                          <span class="detalhe__equipe-ficha-corpo">
-                            <span class="detalhe__equipe-ficha-nome">{{ ficha.nome }}</span>
-                            <span class="detalhe__equipe-ficha-vitais">{{ ficha.classeTexto }}</span>
-                          </span>
-                        </span>
-                      }
-                    }
-                    } @else {
-                      <span class="detalhe__equipe-vazio">Sem ficha nesta campanha</span>
-                    }
-                  }
-                </div>
-              </li>
-            }
-          </ul>
-        </article>
+                            <app-icone nome="inventario" />
+                            {{ exibindoInventarioJogador() ? 'Voltar ao painel' : 'Inventário do
+                            esquadrão' }}
+                        </button>
+                        <a
+                            class="botao botao--secundario detalhe__abrir-completa"
+                            [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
+                        >
+                            <app-icone nome="visao-geral" />
+                            Abrir completa
+                        </a>
+                    </header>
 
-        <!-- Rolagens (m2-21, item 3) — entre Equipe e Sessão de propósito: rolar e ler o histórico
+                    <app-ficha-visualizacao
+                        [fichaId]="fichaExibida.id"
+                        [nome]="fichaExibida.nome"
+                        [cor]="fichaExibida.cor"
+                        [imagemUrl]="fichaExibida.imagemUrl"
+                        [dados]="fichaExibida.dados"
+                        [ajustavel]="podeAjustarFichaExibida()"
+                        [podeRolar]="podeAjustarFichaExibida()"
+                        [ehMestre]="false"
+                        [podeMandarParaBase]="campanhaAtual.naBase && podeAjustarFichaExibida()"
+                        modo="compacto"
+                        (abaStatusMudou)="aoMudarDestinoFicha($event)"
+                        (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+                        (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+                        (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+                        (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+                        (ajusteNome)="fichaEdicao.ajustarNome($event)"
+                        (ajusteCor)="fichaEdicao.ajustarCor($event)"
+                        (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+                        (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+                        (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+                        (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+                        (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+                        (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+                        (mandarParaBase)="mandarItemFichaParaBase(fichaExibida.id, $event)"
+                        (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+                        (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+                        (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
+                        (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+                        (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+                        (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+                        (ajusteHabilidadePersonalidade)="fichaEdicao.ajustarHabilidadePersonalidade($event)"
+                        (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+                        (origemLimpa)="fichaEdicao.limparOrigem()"
+                        (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
+                    />
+
+                    <a
+                        class="botao botao--secundario detalhe__abrir-completa-rodape"
+                        [routerLink]="['/painel', campanhaAtual.id, 'ficha', fichaExibida.id]"
+                    >
+                        Abrir ficha completa
+                    </a>
+                </article>
+                } @else if (carregandoFichaExibida()) {
+                <p class="detalhe__estado">Carregando ficha…</p>
+                } @else {
+                <!-- m2-21 (item 8): o estado vazio deixou de ser um beco — repete as duas ações do menu
+               "⋯" do cabeçalho, que é onde elas moram. -->
+                <div class="detalhe__jogador-vazio">
+                    <p class="detalhe__estado">Você ainda não tem uma ficha nesta campanha.</p>
+                    <div class="detalhe__jogador-vazio-acoes">
+                        <button
+                            class="botao botao--primario detalhe__acao"
+                            type="button"
+                            (click)="abrirCriarFicha()"
+                        >
+                            <app-icone nome="agente" />
+                            Criar nova ficha
+                        </button>
+                        <button
+                            class="botao botao--secundario detalhe__acao"
+                            type="button"
+                            (click)="abrirVincularFicha()"
+                        >
+                            <app-icone nome="duplicar" />
+                            Vincular ficha existente
+                        </button>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <div class="detalhe__jogador-lateral">
+                @if (exibindoInventarioJogador()) {
+                <article class="card detalhe__inventario-jogador">
+                    <header class="detalhe__secao">
+                        <h2 class="detalhe__secao-titulo">Inventário de Esquadrão</h2>
+                        <span class="detalhe__secao-regua"></span>
+                    </header>
+                    <app-inventario-esquadrao
+                        [campanhaId]="campanhaAtual.id"
+                        [itens]="inventarioEsquadrao()"
+                        [fichas]="fichasDestinoInventario()"
+                        [somenteLeitura]="!campanhaAtual.naBase"
+                        (atualizado)="inventarioEsquadrao.set($event)"
+                    />
+                </article>
+                } @else {
+                <article class="card detalhe__equipe">
+                    <header class="detalhe__secao">
+                        <h2 class="detalhe__secao-titulo">Equipe</h2>
+                        <span class="detalhe__secao-regua"></span>
+                    </header>
+                    <ul class="detalhe__equipe-lista" appOverflowFade>
+                        @for (item of equipeExibicao(); track item.membro.usuarioId) {
+                        <li class="detalhe__equipe-membro">
+                            <div class="detalhe__equipe-membro-corpo">
+                                @if (item.membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+                                <div class="detalhe__equipe-cabecalho">
+                                    <span class="chip-papel">
+                                        <app-icone nome="coroa" />
+                                        Mestre
+                                    </span>
+                                    <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
+                                </div>
+                                } @else {
+                                <span class="detalhe__equipe-nome">{{ item.membro.nome }}</span>
+                                @if (item.fichas.length) { @for (ficha of item.fichas; track
+                                ficha.id) { @if (ficha.tipo === 'completa') {
+                                <button
+                                    type="button"
+                                    class="detalhe__equipe-ficha"
+                                    [class.detalhe__equipe-ficha--ativa]="fichaExibidaId() === ficha.id"
+                                    [attr.aria-pressed]="fichaExibidaId() === ficha.id"
+                                    [attr.aria-label]="'Ver ficha de ' + ficha.nome + ' (' + item.membro.nome + ')'"
+                                    (click)="selecionarFichaExibida(ficha.id)"
+                                >
+                                    <span
+                                        class="detalhe__equipe-ficha-avatar"
+                                        aria-hidden="true"
+                                        [style.--cor-ficha]="ficha.cor"
+                                        (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
+                                        (mouseleave)="cancelarPreviewAvatar()"
+                                    >
+                                        @if (ficha.imagemUrl; as urlImagem) {
+                                        <img
+                                            class="detalhe__equipe-ficha-avatar-imagem"
+                                            [src]="urlImagem"
+                                            alt=""
+                                        />
+                                        }
+                                    </span>
+                                    <app-icone nome="olho" />
+                                    <span class="detalhe__equipe-ficha-corpo">
+                                        <span class="detalhe__equipe-ficha-nome"
+                                            >{{ ficha.nome }}</span
+                                        >
+                                        <span class="detalhe__equipe-ficha-vitais">
+                                            Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }}
+                                            · Energia {{ ficha.energiaAtual }}/{{
+                                            ficha.energiaMaxima ?? '—' }}
+                                        </span>
+                                    </span>
+                                </button>
+                                } @else {
+                                <span
+                                    class="detalhe__equipe-carteirinha"
+                                    [attr.aria-label]="'Ficha de ' + ficha.nome + ' (' + item.membro.nome + ') — sem acesso'"
+                                >
+                                    <span
+                                        class="detalhe__equipe-ficha-avatar"
+                                        aria-hidden="true"
+                                        [style.--cor-ficha]="ficha.cor"
+                                        (mouseenter)="agendarPreviewAvatar($event, ficha.imagemUrl)"
+                                        (mouseleave)="cancelarPreviewAvatar()"
+                                    >
+                                        @if (ficha.imagemUrl; as urlImagem) {
+                                        <img
+                                            class="detalhe__equipe-ficha-avatar-imagem"
+                                            [src]="urlImagem"
+                                            alt=""
+                                        />
+                                        }
+                                    </span>
+                                    <span class="detalhe__equipe-ficha-corpo">
+                                        <span class="detalhe__equipe-ficha-nome"
+                                            >{{ ficha.nome }}</span
+                                        >
+                                        <span class="detalhe__equipe-ficha-vitais"
+                                            >{{ ficha.classeTexto }}</span
+                                        >
+                                    </span>
+                                </span>
+                                } } } @else {
+                                <span class="detalhe__equipe-vazio">Sem ficha nesta campanha</span>
+                                } }
+                            </div>
+                        </li>
+                        }
+                    </ul>
+                </article>
+
+                <!-- Rolagens (m2-21, item 3) — entre Equipe e Sessão de propósito: rolar e ler o histórico
              recente ficam lado a lado, na mesma coluna. Saiu de dentro do card da ficha (era a aba
              "Rolagens" do compacto), então o toggle "Rolagem oculta" mora aqui — mas continua sendo
              a MESMA flag do teste de atributo/dano rolados lá dentro (`FichaRolagemRegistroService`,
              provido pela página). Só existe quando há ficha exibida: sem ficha, não há o que rolar. -->
-        @if (fichaExibidaDados(); as fichaParaRolar) {
-          <article class="card detalhe__rolagens-painel" #cardRolagens>
-            <header class="detalhe__secao">
-              <h2 class="detalhe__secao-titulo">Rolagens</h2>
-              <span class="detalhe__secao-regua"></span>
-            </header>
-            <div class="detalhe__rolagens-painel-corpo" appOverflowFade>
-              <!-- `editavel` fixo em `false` (a pedido do autor): a lateral é só pra ROLAR os
+                @if (fichaExibidaDados(); as fichaParaRolar) {
+                <article class="card detalhe__rolagens-painel" #cardRolagens>
+                    <header class="detalhe__secao">
+                        <h2 class="detalhe__secao-titulo">Rolagens</h2>
+                        <span class="detalhe__secao-regua"></span>
+                    </header>
+                    <div class="detalhe__rolagens-painel-corpo" appOverflowFade>
+                        <!-- `editavel` fixo em `false` (a pedido do autor): a lateral é só pra ROLAR os
                    presets que a ficha já tem + a rolagem rápida — criar/duplicar/editar/remover
                    preset continua exclusivo da ficha completa (`FichaVisualizacao`, que passa
                    `ajustavelAmplo()`). `podeRolar` segue a permissão normal. -->
-              <app-ficha-rolagens-painel
-                [dados]="fichaParaRolar.dados"
-                [editavel]="false"
-                [podeRolar]="podeAjustarFichaExibida()"
-                (rolagensMudou)="fichaEdicao.ajustarRolagens($event)"
-                (energiaGasta)="gastarEnergiaFichaExibida($event)"
-              />
-            </div>
-          </article>
-        }
+                        <app-ficha-rolagens-painel
+                            [dados]="fichaParaRolar.dados"
+                            [editavel]="false"
+                            [podeRolar]="podeAjustarFichaExibida()"
+                            (rolagensMudou)="fichaEdicao.ajustarRolagens($event)"
+                            (energiaGasta)="gastarEnergiaFichaExibida($event)"
+                        />
+                    </div>
+                </article>
+                }
 
-        <article class="card detalhe__sessao">
-          <header class="detalhe__secao">
-            <h2 class="detalhe__secao-titulo">Sessão</h2>
-            <span class="detalhe__secao-regua"></span>
-            <!-- m7-13: acesso de sessão do jogador. A rota e o estado vazio da tela de Iniciativa
+                <article class="card detalhe__sessao">
+                    <header class="detalhe__secao">
+                        <h2 class="detalhe__secao-titulo">Sessão</h2>
+                        <span class="detalhe__secao-regua"></span>
+                        <!-- m7-13: acesso de sessão do jogador. A rota e o estado vazio da tela de Iniciativa
                  continuam os mesmos; saiu apenas do menu de manutenção da ficha. -->
-            <a
-              class="botao botao--secundario detalhe__sessao-iniciativa"
-              [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
-              [appTooltip]="'Abrir a tela de Iniciativa'"
-            >
-              <app-icone nome="combate" />
-              Iniciativa
-            </a>
-          </header>
-          @if (rolagensRecentes().length === 0) {
-            <p class="detalhe__estado">Nenhuma rolagem na última hora.</p>
-          } @else {
-            <ul class="detalhe__sessao-lista" appOverflowFade>
-              @for (item of rolagensRecentes(); track item.id) {
-                <li class="rolagem-pill">
-                  <div class="rolagem-pill__topo">
-                    <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
-                    <button
-                      type="button"
-                      class="rolagem-pill__d20"
-                      [attr.aria-label]="'Ver resultado de ' + item.rotulo"
-                      (mouseenter)="mostrarPreviaRolagem(item)"
-                      (mouseleave)="esconderPreviaRolagem()"
-                      (focus)="mostrarPreviaRolagem(item)"
-                      (blur)="esconderPreviaRolagem()"
-                    >
-                      <app-icone nome="d20" />
-                    </button>
-                  </div>
-                  <span class="rolagem-pill__meta">{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span>
-                </li>
-              }
-            </ul>
-          }
-        </article>
+                        <a
+                            class="botao botao--secundario detalhe__sessao-iniciativa"
+                            [routerLink]="['/painel', campanhaAtual.id, 'iniciativa']"
+                            [appTooltip]="'Abrir a tela de Iniciativa'"
+                        >
+                            <app-icone nome="combate" />
+                            Iniciativa
+                        </a>
+                    </header>
+                    @if (rolagensRecentes().length === 0) {
+                    <p class="detalhe__estado">Nenhuma rolagem na última hora.</p>
+                    } @else {
+                    <ul class="detalhe__sessao-lista" appOverflowFade>
+                        @for (item of rolagensRecentes(); track item.id) {
+                        <li class="rolagem-pill">
+                            <div class="rolagem-pill__topo">
+                                <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
+                                <button
+                                    type="button"
+                                    class="rolagem-pill__d20"
+                                    [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                                    (mouseenter)="mostrarPreviaRolagem(item)"
+                                    (mouseleave)="esconderPreviaRolagem()"
+                                    (focus)="mostrarPreviaRolagem(item)"
+                                    (blur)="esconderPreviaRolagem()"
+                                >
+                                    <app-icone nome="d20" />
+                                </button>
+                            </div>
+                            <span class="rolagem-pill__meta"
+                                >{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span
+                            >
+                        </li>
+                        }
+                    </ul>
+                    }
+                </article>
+                }
+            </div>
+        </div>
         }
-      </div>
     </div>
     }
-    </div>
-  }
 </section>
 
 <app-bandeja-dados />
 
 @if (dialogVincular()) {
-  <!-- Vincular ficha existente (m2-21, item 7) — só fichas do acervo **sem campanha** (m3-28). Sem
+<!-- Vincular ficha existente (m2-21, item 7) — só fichas do acervo **sem campanha** (m3-28). Sem
        endpoint novo: `listarMinhasFichas` + `atribuirCampanha`. Acervo vazio mostra estado vazio,
        não um `<select>` sem opções. -->
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Vincular ficha existente">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharVincularFicha()"></button>
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Vincular ficha existente">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="fecharVincularFicha()"
+    ></button>
     <div class="dialogo__painel">
-      <header class="dialogo__cabecalho">
-        <span class="card__indice"><app-icone nome="duplicar" /></span>
-        <h2 class="dialogo__titulo">Vincular Ficha</h2>
-        <span class="card__regua"></span>
-        <button
-          class="dialogo__fechar"
-          type="button"
-          aria-label="Fechar"
-          [disabled]="vinculando()"
-          (click)="fecharVincularFicha()"
-        >
-          ✕
-        </button>
-      </header>
+        <header class="dialogo__cabecalho">
+            <span class="card__indice"><app-icone nome="duplicar" /></span>
+            <h2 class="dialogo__titulo">Vincular Ficha</h2>
+            <span class="card__regua"></span>
+            <button
+                class="dialogo__fechar"
+                type="button"
+                aria-label="Fechar"
+                [disabled]="vinculando()"
+                (click)="fecharVincularFicha()"
+            >
+                ✕
+            </button>
+        </header>
 
-      @if (carregandoFichasSoltas()) {
+        @if (carregandoFichasSoltas()) {
         <p class="detalhe__estado">Carregando seu acervo…</p>
-      } @else if (fichasSoltas().length === 0) {
+        } @else if (fichasSoltas().length === 0) {
         <p class="dialogo__aviso">
-          Você não tem fichas fora de campanha. Crie uma nova por aqui, ou libere uma no
-          <a routerLink="/fichas">seu acervo</a>.
+            Você não tem fichas fora de campanha. Crie uma nova por aqui, ou libere uma no
+            <a routerLink="/fichas">seu acervo</a>.
         </p>
-      } @else {
+        } @else {
         <label class="detalhe__campo">
-          <span class="detalhe__rotulo">Ficha do acervo</span>
-          <select
-            class="detalhe__entrada"
-            #seletorFicha
-            [disabled]="vinculando()"
-            required
-            (change)="escolherFichaParaVincular(seletorFicha.value)"
-          >
-            <option value="">Escolha uma ficha…</option>
-            @for (ficha of fichasSoltas(); track ficha.id) {
-              <option [value]="ficha.id">{{ ficha.nome }}</option>
-            }
-          </select>
+            <span class="detalhe__rotulo">Ficha do acervo</span>
+            <select
+                class="detalhe__entrada"
+                #seletorFicha
+                [disabled]="vinculando()"
+                required
+                (change)="escolherFichaParaVincular(seletorFicha.value)"
+            >
+                <option value="">Escolha uma ficha…</option>
+                @for (ficha of fichasSoltas(); track ficha.id) {
+                <option [value]="ficha.id">{{ ficha.nome }}</option>
+                }
+            </select>
         </label>
-      }
+        }
 
-      <div class="dialogo__acoes">
-        <button
-          class="botao botao--primario dialogo__acao"
-          type="button"
-          [disabled]="vinculando() || fichaParaVincular() === null"
-          (click)="confirmarVincularFicha()"
-        >
-          <app-icone nome="duplicar" />
-          {{ vinculando() ? 'Vinculando…' : 'Vincular à campanha' }}
-        </button>
-        <button
-          class="botao botao--secundario dialogo__acao"
-          type="button"
-          [disabled]="vinculando()"
-          (click)="fecharVincularFicha()"
-        >
-          Cancelar
-        </button>
-      </div>
+        <div class="dialogo__acoes">
+            <button
+                class="botao botao--primario dialogo__acao"
+                type="button"
+                [disabled]="vinculando() || fichaParaVincular() === null"
+                (click)="confirmarVincularFicha()"
+            >
+                <app-icone nome="duplicar" />
+                {{ vinculando() ? 'Vinculando…' : 'Vincular à campanha' }}
+            </button>
+            <button
+                class="botao botao--secundario dialogo__acao"
+                type="button"
+                [disabled]="vinculando()"
+                (click)="fecharVincularFicha()"
+            >
+                Cancelar
+            </button>
+        </div>
     </div>
-  </div>
+</div>
 }
 
 <!--
@@ -1115,43 +1209,48 @@
   lugar das dialogs abaixo, que já não sofrem esse corte.
 -->
 @if (menuFichaAberto(); as menuAberto) {
-  <button class="detalhe__ficha-menu-fundo" type="button" aria-label="Fechar menu" (click)="fecharMenuFicha()"></button>
-  <div
+<button
+    class="detalhe__ficha-menu-fundo"
+    type="button"
+    aria-label="Fechar menu"
+    (click)="fecharMenuFicha()"
+></button>
+<div
     class="detalhe__ficha-menu"
     role="menu"
     [style.top.px]="menuFichaPosicao()?.top"
     [style.bottom.px]="menuFichaPosicao()?.bottom"
     [style.right.px]="menuFichaPosicao()?.right"
-  >
+>
     <button
-      class="detalhe__ficha-menu-item"
-      type="button"
-      role="menuitem"
-      (click)="pedirDuplicar(menuAberto.id, menuAberto.nome, menuAberto.donoNome)"
+        class="detalhe__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        (click)="pedirDuplicar(menuAberto.id, menuAberto.nome, menuAberto.donoNome)"
     >
-      <app-icone nome="duplicar" />
-      <span>Duplicar ficha</span>
+        <app-icone nome="duplicar" />
+        <span>Duplicar ficha</span>
     </button>
     <button
-      class="detalhe__ficha-menu-item"
-      type="button"
-      role="menuitem"
-      [disabled]="removendo() === menuAberto.id"
-      (click)="removerDaCampanha(menuAberto.id)"
+        class="detalhe__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        [disabled]="removendo() === menuAberto.id"
+        (click)="removerDaCampanha(menuAberto.id)"
     >
-      <app-icone nome="voltar" />
-      <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
+        <app-icone nome="voltar" />
+        <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
     </button>
     <button
-      class="detalhe__ficha-menu-item"
-      type="button"
-      role="menuitem"
-      (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
+        class="detalhe__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
     >
-      <app-icone nome="excluir" />
-      <span>Excluir ficha</span>
+        <app-icone nome="excluir" />
+        <span>Excluir ficha</span>
     </button>
-  </div>
+</div>
 }
 
 <!--
@@ -1159,175 +1258,187 @@
   acima (o grid tem overflow/mask-image, corta um `position: fixed` filho na pintura).
 -->
 @if (previewAvatar(); as preview) {
-  <div
+<div
     class="detalhe__avatar-preview"
     [style.top.px]="preview.top"
     [style.left.px]="preview.left"
     aria-hidden="true"
-  >
+>
     <img class="detalhe__avatar-preview-imagem" [src]="preview.url" alt="" />
-  </div>
-}
-
-@if (confirmandoDuplicar(); as pendenteDuplicar) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarDuplicar()"></button>
+</div>
+} @if (confirmandoDuplicar(); as pendenteDuplicar) {
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="cancelarDuplicar()"
+    ></button>
     <div class="dialogo__painel">
-      <header class="dialogo__cabecalho">
-        <span class="card__indice"><app-icone nome="duplicar" /></span>
-        <h2 class="dialogo__titulo">Duplicar Ficha</h2>
-        <span class="card__regua"></span>
-        <button
-          class="dialogo__fechar"
-          type="button"
-          aria-label="Fechar"
-          [disabled]="duplicando() === pendenteDuplicar.id"
-          (click)="cancelarDuplicar()"
-        >
-          ✕
-        </button>
-      </header>
-
-      <p class="dialogo__aviso">
-        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong
-          >{{ pendenteDuplicar.donoNome }}</strong
-        >"?
-      </p>
-
-      <div class="dialogo__acoes">
-        <button
-          class="botao botao--primario dialogo__acao"
-          type="button"
-          [disabled]="duplicando() === pendenteDuplicar.id"
-          (click)="confirmarDuplicar()"
-        >
-          <app-icone nome="duplicar" />
-          {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
-        </button>
-        <button
-          class="botao botao--secundario dialogo__acao"
-          type="button"
-          [disabled]="duplicando() === pendenteDuplicar.id"
-          (click)="cancelarDuplicar()"
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (confirmandoExcluirFicha(); as pendenteExcluir) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="cancelarExcluirFicha()"></button>
-    <div class="dialogo__painel">
-      <header class="dialogo__cabecalho">
-        <span class="card__indice"><app-icone nome="excluir" /></span>
-        <h2 class="dialogo__titulo">Excluir Ficha</h2>
-        <span class="card__regua"></span>
-        <button
-          class="dialogo__fechar"
-          type="button"
-          aria-label="Fechar"
-          [disabled]="excluindoFicha() === pendenteExcluir.id"
-          (click)="cancelarExcluirFicha()"
-        >
-          ✕
-        </button>
-      </header>
-
-      <p class="dialogo__aviso">
-        Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
-      </p>
-
-      <div class="dialogo__acoes">
-        <button
-          class="botao botao--primario dialogo__acao"
-          type="button"
-          [disabled]="excluindoFicha() === pendenteExcluir.id"
-          (click)="confirmarExcluirFicha()"
-        >
-          <app-icone nome="excluir" />
-          {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
-        </button>
-        <button
-          class="botao botao--secundario dialogo__acao"
-          type="button"
-          [disabled]="excluindoFicha() === pendenteExcluir.id"
-          (click)="cancelarExcluirFicha()"
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (dialogAcessoFicha()) {
-  <div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
-    <button class="dialogo__fundo" type="button" aria-label="Fechar" (click)="fecharAcessoFicha()"></button>
-    <div class="dialogo__painel acesso">
-      <header class="dialogo__cabecalho">
-        <span class="card__indice"><app-icone nome="olho" /></span>
-        <h2 class="dialogo__titulo">Acesso de Visualização</h2>
-        <span class="card__regua"></span>
-        <button class="dialogo__fechar" type="button" aria-label="Fechar" (click)="fecharAcessoFicha()">
-          ✕
-        </button>
-      </header>
-
-      <p class="acesso__ajuda">
-        Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas não
-        editá-la; você pode revogar a qualquer momento.
-      </p>
-
-      <div class="acesso__conceder">
-        <select
-          class="acesso__select"
-          aria-label="Membro para conceder acesso"
-          [formControl]="membroParaConcederAcesso"
-        >
-          <option [ngValue]="null" disabled>Selecione um membro…</option>
-          @for (membro of membrosElegiveisAcesso(); track membro.usuarioId) {
-            <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
-          }
-        </select>
-        <button
-          class="botao botao--primario acesso__acao"
-          type="button"
-          [disabled]="membroParaConcederAcesso.value === null || concedendoAcesso()"
-          (click)="concederAcessoFicha()"
-        >
-          <app-icone nome="mais" />
-          {{ concedendoAcesso() ? 'Concedendo…' : 'Conceder' }}
-        </button>
-      </div>
-
-      @if (membrosElegiveisAcesso().length === 0) {
-        <p class="acesso__vazio-elegiveis">Nenhum outro membro disponível para conceder acesso.</p>
-      }
-
-      @if (acessosFichaExibida().length) {
-        <ul class="acesso__lista">
-          @for (acesso of acessosFichaExibida(); track acesso.usuarioId) {
-            <li class="acesso__item">
-              <span class="acesso__avatar" aria-hidden="true"></span>
-              <span class="acesso__nome">{{ acesso.nome }}</span>
-              <button
-                class="botao botao--secundario acesso__revogar"
+        <header class="dialogo__cabecalho">
+            <span class="card__indice"><app-icone nome="duplicar" /></span>
+            <h2 class="dialogo__titulo">Duplicar Ficha</h2>
+            <span class="card__regua"></span>
+            <button
+                class="dialogo__fechar"
                 type="button"
-                [disabled]="revogandoAcesso() !== null"
-                (click)="revogarAcessoFicha(acesso.usuarioId)"
-              >
-                <app-icone nome="excluir" />
-                {{ revogandoAcesso() === acesso.usuarioId ? 'Revogando…' : 'Revogar' }}
-              </button>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
-      }
+                aria-label="Fechar"
+                [disabled]="duplicando() === pendenteDuplicar.id"
+                (click)="cancelarDuplicar()"
+            >
+                ✕
+            </button>
+        </header>
+
+        <p class="dialogo__aviso">
+            Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong
+                >{{ pendenteDuplicar.donoNome }}</strong
+            >"?
+        </p>
+
+        <div class="dialogo__acoes">
+            <button
+                class="botao botao--primario dialogo__acao"
+                type="button"
+                [disabled]="duplicando() === pendenteDuplicar.id"
+                (click)="confirmarDuplicar()"
+            >
+                <app-icone nome="duplicar" />
+                {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
+            </button>
+            <button
+                class="botao botao--secundario dialogo__acao"
+                type="button"
+                [disabled]="duplicando() === pendenteDuplicar.id"
+                (click)="cancelarDuplicar()"
+            >
+                Cancelar
+            </button>
+        </div>
     </div>
-  </div>
+</div>
+} @if (confirmandoExcluirFicha(); as pendenteExcluir) {
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="cancelarExcluirFicha()"
+    ></button>
+    <div class="dialogo__painel">
+        <header class="dialogo__cabecalho">
+            <span class="card__indice"><app-icone nome="excluir" /></span>
+            <h2 class="dialogo__titulo">Excluir Ficha</h2>
+            <span class="card__regua"></span>
+            <button
+                class="dialogo__fechar"
+                type="button"
+                aria-label="Fechar"
+                [disabled]="excluindoFicha() === pendenteExcluir.id"
+                (click)="cancelarExcluirFicha()"
+            >
+                ✕
+            </button>
+        </header>
+
+        <p class="dialogo__aviso">
+            Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
+        </p>
+
+        <div class="dialogo__acoes">
+            <button
+                class="botao botao--primario dialogo__acao"
+                type="button"
+                [disabled]="excluindoFicha() === pendenteExcluir.id"
+                (click)="confirmarExcluirFicha()"
+            >
+                <app-icone nome="excluir" />
+                {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
+            </button>
+            <button
+                class="botao botao--secundario dialogo__acao"
+                type="button"
+                [disabled]="excluindoFicha() === pendenteExcluir.id"
+                (click)="cancelarExcluirFicha()"
+            >
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+} @if (dialogAcessoFicha()) {
+<div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
+    <button
+        class="dialogo__fundo"
+        type="button"
+        aria-label="Fechar"
+        (click)="fecharAcessoFicha()"
+    ></button>
+    <div class="dialogo__painel acesso">
+        <header class="dialogo__cabecalho">
+            <span class="card__indice"><app-icone nome="olho" /></span>
+            <h2 class="dialogo__titulo">Acesso de Visualização</h2>
+            <span class="card__regua"></span>
+            <button
+                class="dialogo__fechar"
+                type="button"
+                aria-label="Fechar"
+                (click)="fecharAcessoFicha()"
+            >
+                ✕
+            </button>
+        </header>
+
+        <p class="acesso__ajuda">
+            Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas
+            não editá-la; você pode revogar a qualquer momento.
+        </p>
+
+        <div class="acesso__conceder">
+            <select
+                class="acesso__select"
+                aria-label="Membro para conceder acesso"
+                [formControl]="membroParaConcederAcesso"
+            >
+                <option [ngValue]="null" disabled>Selecione um membro…</option>
+                @for (membro of membrosElegiveisAcesso(); track membro.usuarioId) {
+                <option [ngValue]="membro.usuarioId">{{ membro.nome }}</option>
+                }
+            </select>
+            <button
+                class="botao botao--primario acesso__acao"
+                type="button"
+                [disabled]="membroParaConcederAcesso.value === null || concedendoAcesso()"
+                (click)="concederAcessoFicha()"
+            >
+                <app-icone nome="mais" />
+                {{ concedendoAcesso() ? 'Concedendo…' : 'Conceder' }}
+            </button>
+        </div>
+
+        @if (membrosElegiveisAcesso().length === 0) {
+        <p class="acesso__vazio-elegiveis">Nenhum outro membro disponível para conceder acesso.</p>
+        } @if (acessosFichaExibida().length) {
+        <ul class="acesso__lista">
+            @for (acesso of acessosFichaExibida(); track acesso.usuarioId) {
+            <li class="acesso__item">
+                <span class="acesso__avatar" aria-hidden="true"></span>
+                <span class="acesso__nome">{{ acesso.nome }}</span>
+                <button
+                    class="botao botao--secundario acesso__revogar"
+                    type="button"
+                    [disabled]="revogandoAcesso() !== null"
+                    (click)="revogarAcessoFicha(acesso.usuarioId)"
+                >
+                    <app-icone nome="excluir" />
+                    {{ revogandoAcesso() === acesso.usuarioId ? 'Revogando…' : 'Revogar' }}
+                </button>
+            </li>
+            }
+        </ul>
+        } @else {
+        <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
+        }
+    </div>
+</div>
 }

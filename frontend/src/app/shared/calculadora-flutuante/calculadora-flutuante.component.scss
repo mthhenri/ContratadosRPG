@@ -2,293 +2,296 @@
 // Só tokens do tema "Terminal de Contenção" (proibição #29); scrollbar do histórico herda o
 // tratamento global de `tema/_base.scss` (não restilizada aqui).
 
-@use 'tema/breakpoints' as bp;
-@use '../utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
+@use "tema/breakpoints" as bp;
+@use "../utilitario-flutuante/utilitario-flutuante" as utilitario-flutuante;
 
 :host {
-  display: contents;
+    display: contents;
 }
 
 .calc-flutuante {
-  // Gatilho (m3-61): no desktop é flutuante — círculo fixo no canto inferior esquerdo, com o
-  // gatilho do histórico de rolagens (`HistoricoRolagensSidebar`) empilhado logo acima. No
-  // mobile volta a ser um botão inline no cabeçalho da ficha, ao lado daquele (ver
-  // `@include bp.mobile` abaixo). O empilhamento global não depende de os componentes serem irmãos.
-  &__gatilho {
-    @include utilitario-flutuante.gatilho-utilitario-flutuante();
-    @include utilitario-flutuante.posicionar-utilitario-flutuante();
-    @include utilitario-flutuante.utilitario-inline-mobile();
+    // Gatilho (m3-61): no desktop é flutuante — círculo fixo no canto inferior esquerdo, com o
+    // gatilho do histórico de rolagens (`HistoricoRolagensSidebar`) empilhado logo acima. No
+    // mobile volta a ser um botão inline no cabeçalho da ficha, ao lado daquele (ver
+    // `@include bp.mobile` abaixo). O empilhamento global não depende de os componentes serem irmãos.
+    &__gatilho {
+        @include utilitario-flutuante.gatilho-utilitario-flutuante();
+        @include utilitario-flutuante.posicionar-utilitario-flutuante();
+        @include utilitario-flutuante.utilitario-inline-mobile();
 
-    // Abaixo do popup próprio (66), mas segue o mesmo raciocínio: fica acima do backdrop do
-    // histórico (64) para não desaparecer atrás do véu quando o histórico abre por cima.
-    z-index: 66;
-    background: var(--surface);
-    color: var(--accent);
-    border: 1px solid var(--border-strong);
-    border-radius: 50%;
-    box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
-    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+        // Abaixo do popup próprio (66), mas segue o mesmo raciocínio: fica acima do backdrop do
+        // histórico (64) para não desaparecer atrás do véu quando o histórico abre por cima.
+        z-index: 66;
+        background: var(--surface);
+        color: var(--accent);
+        border: 1px solid var(--border-strong);
+        border-radius: 50%;
+        box-shadow: 0 8px 20px rgb(0 0 0 / 40%);
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
 
-    &:hover {
-      border-color: var(--accent-border);
-      background: var(--surface-2);
+        &:hover {
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        // Mobile: inline no cabeçalho, ao lado do gatilho do histórico — flutuante nessa faixa
+        // colidiria com a barra de navegação inferior (m3-60) e com a bandeja de dados.
+        @include bp.mobile {
+            z-index: auto;
+            flex: none;
+            font-size: 15px;
+            color: var(--text-dim);
+            background: transparent;
+            border-radius: var(--radius-control);
+            box-shadow: none;
+
+            &:hover {
+                color: var(--text);
+                background: var(--surface-2);
+            }
+        }
     }
 
-    // Mobile: inline no cabeçalho, ao lado do gatilho do histórico — flutuante nessa faixa
-    // colidiria com a barra de navegação inferior (m3-60) e com a bandeja de dados.
-    @include bp.mobile {
-      z-index: auto;
-      flex: none;
-      font-size: 15px;
-      color: var(--text-dim);
-      background: transparent;
-      border-radius: var(--radius-control);
-      box-shadow: none;
+    &__popup {
+        position: fixed;
+        // Mantém a métrica desktop original no popup também em viewport estreito; somente os
+        // gatilhos viram controles inline de 44px no cabeçalho.
+        @include utilitario-flutuante.posicionar-utilitario-flutuante(1, false);
 
-      &:hover {
-        color: var(--text);
+        // Acima do backdrop (64) e do painel (65) de `HistoricoRolagensSidebar` — abrir o histórico com
+        // a calculadora já aberta não pode escondê-la atrás do véu escuro nem do painel deslizante.
+        z-index: 66;
+        width: 280px;
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 16px 40px rgb(0 0 0 / 45%);
+        outline: none;
+        overflow: hidden; // clipa o corpo/histórico no raio do card quando redimensionado
+
+        &--posicionado {
+            right: auto;
+            bottom: auto;
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        cursor: grab;
+        touch-action: none;
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    &__titulo {
+        font-family: var(--font-mono);
+        font-size: calc(12px * var(--calc-escala, 1));
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-dim);
+    }
+
+    &__fechar {
+        border: 0;
+        background: transparent;
+        color: var(--text-mute);
+        font-size: 15px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px 4px;
+
+        &:hover {
+            color: var(--text);
+        }
+
+        @include bp.mobile {
+            min-width: bp.$alvo-toque;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__corpo {
+        padding: calc(14px * var(--calc-escala, 1));
+        display: flex;
+        flex-direction: column;
+        gap: calc(12px * var(--calc-escala, 1));
+        flex: 1;
+        min-height: 0; // permite encolher e rolar em vez de estourar quando a altura é reduzida
+        overflow-y: auto;
+    }
+
+    &__visor {
         background: var(--surface-2);
-      }
-    }
-  }
-
-  &__popup {
-    position: fixed;
-    // Mantém a métrica desktop original no popup também em viewport estreito; somente os
-    // gatilhos viram controles inline de 44px no cabeçalho.
-    @include utilitario-flutuante.posicionar-utilitario-flutuante(1, false);
-
-    // Acima do backdrop (64) e do painel (65) de `HistoricoRolagensSidebar` — abrir o histórico com
-    // a calculadora já aberta não pode escondê-la atrás do véu escuro nem do painel deslizante.
-    z-index: 66;
-    width: 280px;
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 16px 40px rgb(0 0 0 / 45%);
-    outline: none;
-    overflow: hidden; // clipa o corpo/histórico no raio do card quando redimensionado
-
-    &--posicionado {
-      right: auto;
-      bottom: auto;
-    }
-  }
-
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-    cursor: grab;
-    touch-action: none;
-
-    &:active {
-      cursor: grabbing;
-    }
-  }
-
-  &__titulo {
-    font-family: var(--font-mono);
-    font-size: calc(12px * var(--calc-escala, 1));
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  &__fechar {
-    border: 0;
-    background: transparent;
-    color: var(--text-mute);
-    font-size: 15px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 2px 4px;
-
-    &:hover {
-      color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: calc(12px * var(--calc-escala, 1));
+        font-family: var(--font-mono);
+        font-size: calc(22px * var(--calc-escala, 1));
+        font-weight: 700;
+        color: var(--text);
+        text-align: right;
+        overflow-x: auto;
+        white-space: nowrap;
     }
 
-    @include bp.mobile {
-      min-width: bp.$alvo-toque;
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  &__corpo {
-    padding: calc(14px * var(--calc-escala, 1));
-    display: flex;
-    flex-direction: column;
-    gap: calc(12px * var(--calc-escala, 1));
-    flex: 1;
-    min-height: 0; // permite encolher e rolar em vez de estourar quando a altura é reduzida
-    overflow-y: auto;
-  }
-
-  &__visor {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: calc(12px * var(--calc-escala, 1));
-    font-family: var(--font-mono);
-    font-size: calc(22px * var(--calc-escala, 1));
-    font-weight: 700;
-    color: var(--text);
-    text-align: right;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  &__teclado {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: calc(8px * var(--calc-escala, 1));
-  }
-
-  &__tecla {
-    height: calc(40px * var(--calc-escala, 1));
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    background: var(--surface-2);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: calc(15px * var(--calc-escala, 1));
-    font-weight: 600;
-    cursor: pointer;
-
-    // m3-56: 40px de altura padrão (escala 1×) fica abaixo do alvo de toque — medido ao vivo em
-    // 360-430px (o popup nasce na escala padrão, sem redimensionar). Piso de 44px só no mobile,
-    // sem mudar a altura "desenhada" em telas maiores nem interferir no redimensionamento manual
-    // (que já pode crescer a tecla além de 44px via `--calc-escala`).
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
+    &__teclado {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: calc(8px * var(--calc-escala, 1));
     }
 
-    &:hover {
-      border-color: var(--accent-border);
-      background: rgba(255, 255, 255, 0.05);
+    &__tecla {
+        height: calc(40px * var(--calc-escala, 1));
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        background: var(--surface-2);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: calc(15px * var(--calc-escala, 1));
+        font-weight: 600;
+        cursor: pointer;
+
+        // m3-56: 40px de altura padrão (escala 1×) fica abaixo do alvo de toque — medido ao vivo em
+        // 360-430px (o popup nasce na escala padrão, sem redimensionar). Piso de 44px só no mobile,
+        // sem mudar a altura "desenhada" em telas maiores nem interferir no redimensionamento manual
+        // (que já pode crescer a tecla além de 44px via `--calc-escala`).
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+
+        &:hover {
+            border-color: var(--accent-border);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        &--funcao {
+            color: var(--text-dim);
+        }
+
+        &--operador {
+            color: var(--accent);
+        }
+
+        &--igual {
+            background: var(--accent);
+            color: var(--bg);
+            border: 0;
+
+            &:hover {
+                filter: brightness(1.08);
+            }
+        }
     }
 
-    &--funcao {
-      color: var(--text-dim);
+    &__historico {
+        border-top: 1px solid var(--border);
+        padding-top: 10px;
     }
 
-    &--operador {
-      color: var(--accent);
+    &__historico-cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
     }
 
-    &--igual {
-      background: var(--accent);
-      color: var(--bg);
-      border: 0;
-
-      &:hover {
-        filter: brightness(1.08);
-      }
+    &__historico-titulo {
+        font-family: var(--font-mono);
+        font-size: calc(10px * var(--calc-escala, 1));
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
     }
-  }
 
-  &__historico {
-    border-top: 1px solid var(--border);
-    padding-top: 10px;
-  }
+    &__historico-limpar {
+        font-family: var(--font-mono);
+        font-size: calc(10px * var(--calc-escala, 1));
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        padding: 2px 4px;
 
-  &__historico-cabecalho {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  &__historico-titulo {
-    font-family: var(--font-mono);
-    font-size: calc(10px * var(--calc-escala, 1));
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-mute);
-  }
-
-  &__historico-limpar {
-    font-family: var(--font-mono);
-    font-size: calc(10px * var(--calc-escala, 1));
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--text-mute);
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    padding: 2px 4px;
-
-    &:hover {
-      color: var(--accent);
+        &:hover {
+            color: var(--accent);
+        }
     }
-  }
 
-  &__historico-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    max-height: 120px;
-    overflow-y: auto;
-  }
-
-  &__historico-item {
-    display: flex;
-    flex-direction: column;
-    font-family: var(--font-mono);
-    font-size: calc(12px * var(--calc-escala, 1));
-    padding: 4px 0;
-
-    &:not(:last-child) {
-      border-bottom: 1px solid var(--border);
+    &__historico-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 120px;
+        overflow-y: auto;
     }
-  }
 
-  &__historico-expressao {
-    color: var(--text-mute);
-    overflow-wrap: anywhere;
-  }
+    &__historico-item {
+        display: flex;
+        flex-direction: column;
+        font-family: var(--font-mono);
+        font-size: calc(12px * var(--calc-escala, 1));
+        padding: 4px 0;
 
-  &__historico-resultado {
-    color: var(--text-dim);
-    font-weight: 600;
-  }
-
-  // Alça de redimensionamento — canto inferior direito, por cima do `overflow:hidden` do popup.
-  &__redimensionar {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 16px;
-    height: 16px;
-    cursor: nwse-resize;
-    touch-action: none;
-    background: repeating-linear-gradient(
-      135deg,
-      var(--border-strong) 0,
-      var(--border-strong) 1.5px,
-      transparent 1.5px,
-      transparent 4px
-    );
-    // Recorta o miolo em triângulo (só o canto fica com as listras) via clip-path.
-    clip-path: polygon(100% 0, 100% 100%, 0 100%);
-
-    &:hover {
-      background: repeating-linear-gradient(
-        135deg,
-        var(--accent-border) 0,
-        var(--accent-border) 1.5px,
-        transparent 1.5px,
-        transparent 4px
-      );
+        &:not(:last-child) {
+            border-bottom: 1px solid var(--border);
+        }
     }
-  }
+
+    &__historico-expressao {
+        color: var(--text-mute);
+        overflow-wrap: anywhere;
+    }
+
+    &__historico-resultado {
+        color: var(--text-dim);
+        font-weight: 600;
+    }
+
+    // Alça de redimensionamento — canto inferior direito, por cima do `overflow:hidden` do popup.
+    &__redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 16px;
+        height: 16px;
+        cursor: nwse-resize;
+        touch-action: none;
+        background: repeating-linear-gradient(
+            135deg,
+            var(--border-strong) 0,
+            var(--border-strong) 1.5px,
+            transparent 1.5px,
+            transparent 4px
+        );
+        // Recorta o miolo em triângulo (só o canto fica com as listras) via clip-path.
+        clip-path: polygon(100% 0, 100% 100%, 0 100%);
+
+        &:hover {
+            background: repeating-linear-gradient(
+                135deg,
+                var(--accent-border) 0,
+                var(--accent-border) 1.5px,
+                transparent 1.5px,
+                transparent 4px
+            );
+        }
+    }
 }

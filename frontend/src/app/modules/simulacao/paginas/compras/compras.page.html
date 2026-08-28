@@ -1,907 +1,1146 @@
 <app-ajuda-simulacao aba="compras" (limpar)="limpar()" />
 
 <div class="calc compras">
-  <!-- CARD 1: CONFIGURAÇÃO — só em Compras (o modo Vender não usa dinheiro/limites) -->
-  @if (modo() === 'comprar') {
-  <section class="calc-cartao">
-    <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">1</span>
-      <h2 class="calc-cartao__titulo">Configuração do Agente</h2>
-      <span class="calc-cartao__regua"></span>
-    </header>
+    <!-- CARD 1: CONFIGURAÇÃO — só em Compras (o modo Vender não usa dinheiro/limites) -->
+    @if (modo() === 'comprar') {
+    <section class="calc-cartao">
+        <header class="calc-cartao__cabecalho">
+            <span class="calc-cartao__indice">1</span>
+            <h2 class="calc-cartao__titulo">Configuração do Agente</h2>
+            <span class="calc-cartao__regua"></span>
+        </header>
 
-    <div class="calc-config" [formGroup]="formulario">
-      <div class="calc-campo">
-        <span class="calc-campo__rotulo">Dinheiro Disponível <span class="calc-campo__auxiliar">($)</span></span>
-        <app-step-input formControlName="dinheiro" [min]="0" [passo]="100" ariaRotulo="Dinheiro disponível" />
-      </div>
-      <div class="calc-campo">
-        <span class="calc-campo__rotulo">Prestígio Atual</span>
-        <app-step-input formControlName="prestigio" [min]="0" ariaRotulo="Prestígio atual" />
-      </div>
-      <div class="calc-campo">
-        <span class="calc-campo__rotulo">Inventário Máximo <span class="calc-campo__auxiliar">(slots)</span></span>
-        <app-step-input formControlName="inventario" [min]="0" [passo]="0.5" ariaRotulo="Inventário máximo" />
-      </div>
-      <div class="calc-campo">
-        <span class="calc-campo__rotulo">Vontade <span class="calc-campo__auxiliar">(limite de amplificadores)</span></span>
-        <app-step-input formControlName="vontade" [min]="0" [max]="12" ariaRotulo="Vontade" />
-      </div>
-    </div>
-  </section>
-
-  <!-- CARD 2: RESUMO -->
-  <section class="calc-cartao">
-    <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">2</span>
-      <h2 class="calc-cartao__titulo">Resumo de Limites e Gastos</h2>
-      <span class="calc-cartao__regua"></span>
-    </header>
-
-    <div class="calc-stats compras-resumo">
-      <div class="calc-stat">
-        <div class="calc-stat__rotulo">Patente</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ patenteTexto() }}</div>
-      </div>
-      <div class="calc-stat" [class.compras-negativo]="semDinheiro()" [class.compras-positivo]="!semDinheiro()">
-        <div class="calc-stat__rotulo">Dinheiro Restante</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ dinheiroRestanteTexto() }}</div>
-      </div>
-      <div class="calc-stat compras-negativo">
-        <div class="calc-stat__rotulo">Gasto Total</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ gastoTexto() }}</div>
-      </div>
-      <div class="calc-stat" [class.compras-negativo]="excedeInventario()">
-        <div class="calc-stat__rotulo">Inventário Usado</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ inventarioTexto() }}</div>
-      </div>
-      <div class="calc-stat" [class.compras-negativo]="excedeAmplificadores()">
-        <div class="calc-stat__rotulo">Amplificadores</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ amplificadoresTexto() }}</div>
-      </div>
-      <div class="calc-stat">
-        <div class="calc-stat__rotulo">Mods por Item</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ limiteModsTexto() }}</div>
-      </div>
-      <div class="calc-stat" [class.compras-negativo]="resumo().penalidadeVontade > 0">
-        <div class="calc-stat__rotulo">Penalidade Amps</div>
-        <div class="calc-stat__valor calc-stat__valor--texto">{{ penalidadeVontadeTexto() }}</div>
-      </div>
-    </div>
-  </section>
-  }
-
-  <!-- CARD 3: CATÁLOGO -->
-  <section class="calc-cartao">
-    <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">{{ modo() === 'vender' ? 1 : 3 }}</span>
-      <h2 class="calc-cartao__titulo">Catálogo de Equipamentos</h2>
-      <span class="calc-cartao__regua"></span>
-    </header>
-
-    <input
-      class="calc-texto compras-busca"
-      type="search"
-      placeholder="Pesquisar item…"
-      autocomplete="off"
-      [value]="busca()"
-      (input)="aoBuscar($event)"
-    />
-
-    <div class="compras-custom-barra">
-      <button
-        type="button"
-        class="compras-limpar"
-        [class.selecionavel--ativo]="criandoItem()"
-        [attr.aria-expanded]="criandoItem()"
-        (click)="alternarCriarItem()"
-      >
-        + Item custom
-      </button>
-    </div>
-
-    @if (criandoItem()) {
-      <form class="compras-custom-form" [formGroup]="itemCustomForm" (ngSubmit)="confirmarCriarItem()">
-        <div class="calc-config">
-          <div class="calc-campo">
-            <span class="calc-campo__rotulo">Nome</span>
-            <input class="calc-texto" type="text" formControlName="nome" placeholder="Nome do item" required />
-          </div>
-          <div class="calc-campo">
-            <span class="calc-campo__rotulo">Categoria</span>
-            <select class="calc-texto" formControlName="categoria">
-              @for (categoria of categoriasItem; track categoria.categoria) {
-                <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
-              }
-            </select>
-          </div>
-        </div>
-        <div class="calc-config">
-          <div class="calc-campo">
-            <span class="calc-campo__rotulo">Custo <span class="calc-campo__auxiliar">($)</span></span>
-            <app-step-input formControlName="custo" [min]="0" [passo]="100" ariaRotulo="Custo do item custom" />
-          </div>
-          <div class="calc-campo">
-            <span class="calc-campo__rotulo">Peso <span class="calc-campo__auxiliar">(slots)</span></span>
-            <app-step-input formControlName="peso" [min]="0" [passo]="0.5" ariaRotulo="Peso do item custom" />
-          </div>
-        </div>
-        @if (mostraEmprestimo() || mostraModulo()) {
-          <div class="calc-config">
-            @if (mostraEmprestimo()) {
-              <div class="calc-campo">
-                <span class="calc-campo__rotulo">Encaixa em (recebe mods de)</span>
-                <select class="calc-texto" formControlName="categoriaEmprestada">
-                  <option value="">— nenhuma —</option>
-                  @for (cat of categoriasEmprestaveis; track cat) {
-                    <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
-                  }
-                </select>
-              </div>
-            }
-            @if (mostraModulo()) {
-              <div class="calc-campo">
-                <span class="calc-campo__rotulo">Módulo do fragmento</span>
-                <select class="calc-texto" formControlName="modulo">
-                  <option value="">—</option>
-                  @for (m of modulosFragmento; track m) {
-                    <option [value]="m">Módulo {{ m }}</option>
-                  }
-                </select>
-              </div>
-            }
-          </div>
-        }
-        @if (mostraDano()) {
-          <div class="calc-campo compras-custom-desc">
-            <span class="calc-campo__rotulo">Dano</span>
-            <input class="calc-texto" type="text" formControlName="dano" placeholder="Ex.: 3D6+FOR [Físico]" />
-          </div>
-          <div class="calc-campo compras-custom-desc">
-            <span class="calc-campo__rotulo">Informação <span class="calc-campo__auxiliar">(alcance / área / munição)</span></span>
-            <input class="calc-texto" type="text" formControlName="informacao" placeholder="Ex.: Médio · 3m" />
-          </div>
-        }
-        @if (mostraResistencia()) {
-          <div class="calc-campo compras-custom-desc">
-            <span class="calc-campo__rotulo">Resistência</span>
-            <input class="calc-texto" type="text" formControlName="resistencia" placeholder="Ex.: 14 [Físico], 3 [Balístico]" />
-          </div>
-        }
-        @if (mostraBonus()) {
-          <div class="calc-campo compras-custom-desc">
-            <span class="calc-campo__rotulo">Bônus de inventário</span>
-            <input class="calc-texto" type="text" formControlName="bonus" placeholder="Ex.: +6 inv." />
-          </div>
-        }
-        <div class="calc-campo compras-custom-desc">
-          <span class="calc-campo__rotulo">Descrição / efeito <span class="calc-campo__auxiliar">(opcional)</span></span>
-          <textarea class="calc-texto compras-textarea" rows="2" formControlName="descricao" placeholder="O que o item é ou faz…"></textarea>
-        </div>
-        <div class="compras-custom-acoes">
-          <button type="submit" class="compras-btn compras-btn--adicionar" [disabled]="itemCustomForm.invalid">
-            Adicionar item
-          </button>
-          <button type="button" class="compras-btn compras-btn--remover" (click)="cancelarCriarItem()">
-            Cancelar
-          </button>
-        </div>
-      </form>
-    }
-
-    <nav class="compras-categorias" aria-label="Categorias do catálogo">
-      @for (categoria of categorias; track categoria.categoria) {
-        <button
-          type="button"
-          class="compras-categoria"
-          [class.selecionavel--ativo]="!busca() && categoriaAtiva() === categoria.categoria"
-          [disabled]="!!busca()"
-          (click)="definirCategoria(categoria.categoria)"
-        >
-          <app-icone [nome]="iconesCategoria[categoria.categoria]" />
-          <span>{{ categoria.rotulo }}</span>
-        </button>
-      }
-    </nav>
-
-    @if (catalogoVazio()) {
-      <p class="compras-vazio">Nenhum item encontrado.</p>
-    }
-
-    @if (itensCatalogo().length > 0) {
-      <div class="compras-grade" appOverflowFade>
-        @for (cartao of itensCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
-          <article class="compras-item">
-            <div class="compras-item__nome">
-              {{ cartao.item.nome }}
-              @if (cartao.bonus) {
-                <span class="compras-tag">{{ cartao.bonus }}</span>
-              }
+        <div class="calc-config" [formGroup]="formulario">
+            <div class="calc-campo">
+                <span class="calc-campo__rotulo"
+                    >Dinheiro Disponível <span class="calc-campo__auxiliar">($)</span></span
+                >
+                <app-step-input
+                    formControlName="dinheiro"
+                    [min]="0"
+                    [passo]="100"
+                    ariaRotulo="Dinheiro disponível"
+                />
             </div>
-            @if (cartao.stat) {
-              <div class="compras-item__stat">{{ cartao.stat }}</div>
-            }
-            @if (cartao.descricao) {
-              <div class="compras-item__desc">{{ cartao.descricao }}</div>
-            }
-            <div class="compras-item__meta">
-              <span class="compras-item__custo">{{ cartao.custoTexto }}</span>
-              <span class="compras-item__peso">{{ cartao.pesoTexto }}</span>
+            <div class="calc-campo">
+                <span class="calc-campo__rotulo">Prestígio Atual</span>
+                <app-step-input
+                    formControlName="prestigio"
+                    [min]="0"
+                    ariaRotulo="Prestígio atual"
+                />
             </div>
-            <button
-              type="button"
-              class="compras-btn compras-btn--adicionar"
-              [class.compras-btn--feito]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome)"
-              (click)="adicionarItem(cartao)"
+            <div class="calc-campo">
+                <span class="calc-campo__rotulo"
+                    >Inventário Máximo <span class="calc-campo__auxiliar">(slots)</span></span
+                >
+                <app-step-input
+                    formControlName="inventario"
+                    [min]="0"
+                    [passo]="0.5"
+                    ariaRotulo="Inventário máximo"
+                />
+            </div>
+            <div class="calc-campo">
+                <span class="calc-campo__rotulo"
+                    >Vontade
+                    <span class="calc-campo__auxiliar">(limite de amplificadores)</span></span
+                >
+                <app-step-input
+                    formControlName="vontade"
+                    [min]="0"
+                    [max]="12"
+                    ariaRotulo="Vontade"
+                />
+            </div>
+        </div>
+    </section>
+
+    <!-- CARD 2: RESUMO -->
+    <section class="calc-cartao">
+        <header class="calc-cartao__cabecalho">
+            <span class="calc-cartao__indice">2</span>
+            <h2 class="calc-cartao__titulo">Resumo de Limites e Gastos</h2>
+            <span class="calc-cartao__regua"></span>
+        </header>
+
+        <div class="calc-stats compras-resumo">
+            <div class="calc-stat">
+                <div class="calc-stat__rotulo">Patente</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">{{ patenteTexto() }}</div>
+            </div>
+            <div
+                class="calc-stat"
+                [class.compras-negativo]="semDinheiro()"
+                [class.compras-positivo]="!semDinheiro()"
             >
-              {{ adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome) ? '✓ Adicionado' : '+ Adicionar' }}
-            </button>
-          </article>
-        }
-      </div>
+                <div class="calc-stat__rotulo">Dinheiro Restante</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">
+                    {{ dinheiroRestanteTexto() }}
+                </div>
+            </div>
+            <div class="calc-stat compras-negativo">
+                <div class="calc-stat__rotulo">Gasto Total</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">{{ gastoTexto() }}</div>
+            </div>
+            <div class="calc-stat" [class.compras-negativo]="excedeInventario()">
+                <div class="calc-stat__rotulo">Inventário Usado</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">{{ inventarioTexto() }}</div>
+            </div>
+            <div class="calc-stat" [class.compras-negativo]="excedeAmplificadores()">
+                <div class="calc-stat__rotulo">Amplificadores</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">
+                    {{ amplificadoresTexto() }}
+                </div>
+            </div>
+            <div class="calc-stat">
+                <div class="calc-stat__rotulo">Mods por Item</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">{{ limiteModsTexto() }}</div>
+            </div>
+            <div class="calc-stat" [class.compras-negativo]="resumo().penalidadeVontade > 0">
+                <div class="calc-stat__rotulo">Penalidade Amps</div>
+                <div class="calc-stat__valor calc-stat__valor--texto">
+                    {{ penalidadeVontadeTexto() }}
+                </div>
+            </div>
+        </div>
+    </section>
     }
 
-    @if (mostrarAmplificadores()) {
-      <div class="compras-info">
-        Limite: <strong>Vontade × 3 = {{ resumo().limiteAmplificadores }} stacks</strong> totais ·
-        máx. <strong>{{ resumo().limiteModificacoes.maxEmpilhamentos }} stack/amp</strong>
-        ({{ patenteTexto() }}) · Primeiro empilhamento: $3.000 · Adicionais: $1.000
-      </div>
-      <div class="compras-grade" appOverflowFade>
-        @for (amp of amplificadoresCatalogo(); track amp.nome) {
-          <article class="compras-item">
-            <div class="compras-item__nome">{{ amp.nome }}</div>
-            <div class="compras-item__desc">{{ amp.efeito }}</div>
-            <div class="compras-item__meta">
-              <span class="compras-item__custo">{{ amp.custoTexto }}</span>
-              <span class="compras-item__peso">máx. {{ amp.maximoEfetivo }} stacks</span>
-            </div>
-            @if (amp.empilhamentosAtuais > 0) {
-              <div class="compras-item__ativo">
-                Ativo: {{ amp.empilhamentosAtuais }}/{{ amp.maximoEfetivo }} stack{{ amp.empilhamentosAtuais > 1 ? 's' : '' }}
-                @if (amp.empilhamentosAtuais >= 2) {
-                  <span class="compras-tag compras-tag--penalidade">−2 Vontade</span>
-                }
-              </div>
-            }
-            <div class="compras-item__acoes">
-              @if (amp.empilhamentosAtuais > 0) {
-                <button type="button" class="compras-btn compras-btn--remover" (click)="removerAmplificador(amp.nome)">
-                  −
-                </button>
-              }
-              <button
+    <!-- CARD 3: CATÁLOGO -->
+    <section class="calc-cartao">
+        <header class="calc-cartao__cabecalho">
+            <span class="calc-cartao__indice">{{ modo() === 'vender' ? 1 : 3 }}</span>
+            <h2 class="calc-cartao__titulo">Catálogo de Equipamentos</h2>
+            <span class="calc-cartao__regua"></span>
+        </header>
+
+        <input
+            class="calc-texto compras-busca"
+            type="search"
+            placeholder="Pesquisar item…"
+            autocomplete="off"
+            [value]="busca()"
+            (input)="aoBuscar($event)"
+        />
+
+        <div class="compras-custom-barra">
+            <button
                 type="button"
-                class="compras-btn compras-btn--adicionar"
-                [class.compras-btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
-                [disabled]="!amp.podeAdicionar"
-                (click)="adicionarAmplificador(amp.nome)"
-              >
-                @if (adicionadoRecente() === 'amp:' + amp.nome) {
-                  ✓ Adicionado
-                } @else {
-                  {{ amp.empilhamentosAtuais === 0 ? '+ Adquirir ($3.000)' : '+ Stack ($1.000)' }}
-                }
-              </button>
-            </div>
-          </article>
-        }
-      </div>
-    }
-  </section>
-
-  <!-- CARD 4: CARRINHO -->
-  <section class="calc-cartao">
-    <header class="calc-cartao__cabecalho">
-      <span class="calc-cartao__indice">{{ modo() === 'vender' ? 2 : 4 }}</span>
-      <h2 class="calc-cartao__titulo">{{ modo() === 'vender' ? 'Carrinho de Venda' : 'Carrinho' }}</h2>
-      <span class="calc-cartao__regua"></span>
-      <div class="compras-carrinho-acoes">
-        @if (modo() === 'comprar') {
-          <button type="button" class="compras-limpar" (click)="abrirModalImportar()">Importar</button>
-          <button
-            type="button"
-            class="compras-limpar"
-            [disabled]="carrinhoVazio()"
-            (click)="abrirModalExportarCodigo()"
-          >
-            Exportar
-          </button>
-        }
-        @if (confirmandoEsvaziar()) {
-          <button type="button" class="compras-limpar compras-limpar--perigo" (click)="confirmarEsvaziar()">
-            Confirmar
-          </button>
-          <button type="button" class="compras-limpar" (click)="cancelarEsvaziar()">Cancelar</button>
-        } @else {
-          <button type="button" class="compras-limpar" [disabled]="carrinhoVazio()" (click)="esvaziarCarrinho()">
-            Esvaziar
-          </button>
-        }
-      </div>
-    </header>
-
-    @if (carrinhoVazio()) {
-      <p class="compras-vazio">Nenhum item adicionado ainda.</p>
-    }
-
-    @for (item of itensCarrinho(); track item.uid) {
-      <div class="compras-carrinho-item">
-        <div class="compras-carrinho-item__cabecalho">
-          <div class="compras-carrinho-item__identidade">
-            <span class="compras-carrinho-item__nome">
-              {{ item.nome }}
-              @if (item.quantidade > 1) {
-                <span class="compras-tag">×{{ item.quantidade }}</span>
-              }
-            </span>
-            <span class="compras-carrinho-item__categoria">{{ item.categoriaRotulo }}</span>
-          </div>
-          <div class="compras-carrinho-item__controles">
-            <!-- Ações (Modificar / Vestir-Guardar) → meta ($ e peso) → X de remover, por último. -->
-            <div class="compras-item-acoes">
-              @if (item.modificavel) {
-                <button
-                  type="button"
-                  class="compras-modificar"
-                  [class.selecionavel--ativo]="item.painelAberto"
-                  [attr.aria-expanded]="item.painelAberto"
-                  (click)="alternarPainel(item.uid)"
-                >
-                  <app-icone nome="editar" />
-                  <span>Modificar</span>
-                  @if (item.modsUsados > 0) {
-                    <span
-                      class="compras-modificar__contagem"
-                      [class.compras-modificar__contagem--excede]="item.excedeModsLimite"
-                      [appTooltip]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : null"
-                    >{{ item.modsUsados }}/{{ item.maxModificacoes }}</span>
-                  }
-                  <span class="compras-modificar__chevron">{{ item.painelAberto ? '▴' : '▾' }}</span>
-                </button>
-              }
-
-              @if (item.ehArmazenamento) {
-                <button
-                  type="button"
-                  class="compras-porte"
-                  [class.compras-porte--vestida]="!item.guardada"
-                  [appTooltip]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
-                  (click)="alternarGuardada(item.uid)"
-                >
-                  <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
-                  <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
-                </button>
-              }
-            </div>
-            <div class="compras-carrinho-item__meta">
-              <span class="compras-item__custo">{{ item.custoTotalTexto }}</span>
-              <span class="compras-item__peso">{{ item.pesoTexto }}</span>
-            </div>
-            <!-- Remover por último: a confirmação acontece no próprio X (troca in-place). -->
-            <span class="compras-item-remover">
-              @if (uidConfirmandoRemocao() === item.uid) {
-                <span class="compras-remover-texto">Remover item?</span>
-                <button
-                  type="button"
-                  class="compras-btn compras-btn--adicionar compras-btn--icone"
-                  [appTooltip]="'Confirmar remoção'"
-                  aria-label="Confirmar remoção"
-                  (click)="confirmarRemocaoItem(item.uid)"
-                >
-                  <app-icone nome="check" />
-                </button>
-                <button
-                  type="button"
-                  class="compras-btn compras-btn--remover compras-btn--icone"
-                  [appTooltip]="'Cancelar'"
-                  aria-label="Cancelar remoção"
-                  (click)="cancelarRemocao()"
-                >
-                  ✕
-                </button>
-              } @else {
-                <button
-                  type="button"
-                  class="compras-btn compras-btn--remover compras-btn--icone"
-                  [appTooltip]="'Remover'"
-                  aria-label="Remover item"
-                  (click)="removerItem(item.uid)"
-                >
-                  ✕
-                </button>
-              }
-            </span>
-          </div>
+                class="compras-limpar"
+                [class.selecionavel--ativo]="criandoItem()"
+                [attr.aria-expanded]="criandoItem()"
+                (click)="alternarCriarItem()"
+            >
+                + Item custom
+            </button>
         </div>
 
-        @if (item.stat) {
-          <div class="compras-carrinho-item__stat">{{ item.stat }}</div>
-        }
-        @if (item.descricao) {
-          <div class="compras-carrinho-item__desc">{{ item.descricao }}</div>
+        @if (criandoItem()) {
+        <form
+            class="compras-custom-form"
+            [formGroup]="itemCustomForm"
+            (ngSubmit)="confirmarCriarItem()"
+        >
+            <div class="calc-config">
+                <div class="calc-campo">
+                    <span class="calc-campo__rotulo">Nome</span>
+                    <input
+                        class="calc-texto"
+                        type="text"
+                        formControlName="nome"
+                        placeholder="Nome do item"
+                        required
+                    />
+                </div>
+                <div class="calc-campo">
+                    <span class="calc-campo__rotulo">Categoria</span>
+                    <select class="calc-texto" formControlName="categoria">
+                        @for (categoria of categoriasItem; track categoria.categoria) {
+                        <option [value]="categoria.categoria">{{ categoria.rotulo }}</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="calc-config">
+                <div class="calc-campo">
+                    <span class="calc-campo__rotulo"
+                        >Custo <span class="calc-campo__auxiliar">($)</span></span
+                    >
+                    <app-step-input
+                        formControlName="custo"
+                        [min]="0"
+                        [passo]="100"
+                        ariaRotulo="Custo do item custom"
+                    />
+                </div>
+                <div class="calc-campo">
+                    <span class="calc-campo__rotulo"
+                        >Peso <span class="calc-campo__auxiliar">(slots)</span></span
+                    >
+                    <app-step-input
+                        formControlName="peso"
+                        [min]="0"
+                        [passo]="0.5"
+                        ariaRotulo="Peso do item custom"
+                    />
+                </div>
+            </div>
+            @if (mostraEmprestimo() || mostraModulo()) {
+            <div class="calc-config">
+                @if (mostraEmprestimo()) {
+                <div class="calc-campo">
+                    <span class="calc-campo__rotulo">Encaixa em (recebe mods de)</span>
+                    <select class="calc-texto" formControlName="categoriaEmprestada">
+                        <option value="">— nenhuma —</option>
+                        @for (cat of categoriasEmprestaveis; track cat) {
+                        <option [value]="cat">{{ rotuloCategoria(cat) }}</option>
+                        }
+                    </select>
+                </div>
+                } @if (mostraModulo()) {
+                <div class="calc-campo">
+                    <span class="calc-campo__rotulo">Módulo do fragmento</span>
+                    <select class="calc-texto" formControlName="modulo">
+                        <option value="">—</option>
+                        @for (m of modulosFragmento; track m) {
+                        <option [value]="m">Módulo {{ m }}</option>
+                        }
+                    </select>
+                </div>
+                }
+            </div>
+            } @if (mostraDano()) {
+            <div class="calc-campo compras-custom-desc">
+                <span class="calc-campo__rotulo">Dano</span>
+                <input
+                    class="calc-texto"
+                    type="text"
+                    formControlName="dano"
+                    placeholder="Ex.: 3D6+FOR [Físico]"
+                />
+            </div>
+            <div class="calc-campo compras-custom-desc">
+                <span class="calc-campo__rotulo"
+                    >Informação
+                    <span class="calc-campo__auxiliar">(alcance / área / munição)</span></span
+                >
+                <input
+                    class="calc-texto"
+                    type="text"
+                    formControlName="informacao"
+                    placeholder="Ex.: Médio · 3m"
+                />
+            </div>
+            } @if (mostraResistencia()) {
+            <div class="calc-campo compras-custom-desc">
+                <span class="calc-campo__rotulo">Resistência</span>
+                <input
+                    class="calc-texto"
+                    type="text"
+                    formControlName="resistencia"
+                    placeholder="Ex.: 14 [Físico], 3 [Balístico]"
+                />
+            </div>
+            } @if (mostraBonus()) {
+            <div class="calc-campo compras-custom-desc">
+                <span class="calc-campo__rotulo">Bônus de inventário</span>
+                <input
+                    class="calc-texto"
+                    type="text"
+                    formControlName="bonus"
+                    placeholder="Ex.: +6 inv."
+                />
+            </div>
+            }
+            <div class="calc-campo compras-custom-desc">
+                <span class="calc-campo__rotulo"
+                    >Descrição / efeito <span class="calc-campo__auxiliar">(opcional)</span></span
+                >
+                <textarea
+                    class="calc-texto compras-textarea"
+                    rows="2"
+                    formControlName="descricao"
+                    placeholder="O que o item é ou faz…"
+                ></textarea>
+            </div>
+            <div class="compras-custom-acoes">
+                <button
+                    type="submit"
+                    class="compras-btn compras-btn--adicionar"
+                    [disabled]="itemCustomForm.invalid"
+                >
+                    Adicionar item
+                </button>
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--remover"
+                    (click)="cancelarCriarItem()"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </form>
         }
 
-        @if (item.modsAtivas.length > 0) {
-          <div class="compras-mods-ativas">
-            @for (mod of item.modsAtivas; track mod.nome) {
-              <div class="compras-mod-tag" [class.compras-mod-tag--excede]="mod.excedente">
-                <div class="compras-mod-tag__info">
-                  <span>
-                    {{ mod.nome }} ×{{ mod.empilhamentos }}
-                    @if (mod.excedente) {
-                      <span class="compras-excede-tag" [appTooltip]="'Além do limite da patente'">Excedente</span>
+        <nav class="compras-categorias" aria-label="Categorias do catálogo">
+            @for (categoria of categorias; track categoria.categoria) {
+            <button
+                type="button"
+                class="compras-categoria"
+                [class.selecionavel--ativo]="!busca() && categoriaAtiva() === categoria.categoria"
+                [disabled]="!!busca()"
+                (click)="definirCategoria(categoria.categoria)"
+            >
+                <app-icone [nome]="iconesCategoria[categoria.categoria]" />
+                <span>{{ categoria.rotulo }}</span>
+            </button>
+            }
+        </nav>
+
+        @if (catalogoVazio()) {
+        <p class="compras-vazio">Nenhum item encontrado.</p>
+        } @if (itensCatalogo().length > 0) {
+        <div class="compras-grade" appOverflowFade>
+            @for (cartao of itensCatalogo(); track cartao.categoria + '/' + cartao.item.nome) {
+            <article class="compras-item">
+                <div class="compras-item__nome">
+                    {{ cartao.item.nome }} @if (cartao.bonus) {
+                    <span class="compras-tag">{{ cartao.bonus }}</span>
                     }
-                  </span>
-                  <span class="compras-mod-tag__custo">{{ mod.custoTexto }}</span>
-                  @if (mod.descricao) {
-                    <span class="compras-mod-tag__desc">{{ mod.descricao }}</span>
-                  }
-                  <div class="compras-mod-flags">
+                </div>
+                @if (cartao.stat) {
+                <div class="compras-item__stat">{{ cartao.stat }}</div>
+                } @if (cartao.descricao) {
+                <div class="compras-item__desc">{{ cartao.descricao }}</div>
+                }
+                <div class="compras-item__meta">
+                    <span class="compras-item__custo">{{ cartao.custoTexto }}</span>
+                    <span class="compras-item__peso">{{ cartao.pesoTexto }}</span>
+                </div>
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--adicionar"
+                    [class.compras-btn--feito]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome)"
+                    (click)="adicionarItem(cartao)"
+                >
+                    {{ adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome) ? '✓
+                    Adicionado' : '+ Adicionar' }}
+                </button>
+            </article>
+            }
+        </div>
+        } @if (mostrarAmplificadores()) {
+        <div class="compras-info">
+            Limite: <strong>Vontade × 3 = {{ resumo().limiteAmplificadores }} stacks</strong> totais
+            · máx. <strong>{{ resumo().limiteModificacoes.maxEmpilhamentos }} stack/amp</strong>
+            ({{ patenteTexto() }}) · Primeiro empilhamento: $3.000 · Adicionais: $1.000
+        </div>
+        <div class="compras-grade" appOverflowFade>
+            @for (amp of amplificadoresCatalogo(); track amp.nome) {
+            <article class="compras-item">
+                <div class="compras-item__nome">{{ amp.nome }}</div>
+                <div class="compras-item__desc">{{ amp.efeito }}</div>
+                <div class="compras-item__meta">
+                    <span class="compras-item__custo">{{ amp.custoTexto }}</span>
+                    <span class="compras-item__peso">máx. {{ amp.maximoEfetivo }} stacks</span>
+                </div>
+                @if (amp.empilhamentosAtuais > 0) {
+                <div class="compras-item__ativo">
+                    Ativo: {{ amp.empilhamentosAtuais }}/{{ amp.maximoEfetivo }} stack{{
+                    amp.empilhamentosAtuais > 1 ? 's' : '' }} @if (amp.empilhamentosAtuais >= 2) {
+                    <span class="compras-tag compras-tag--penalidade">−2 Vontade</span>
+                    }
+                </div>
+                }
+                <div class="compras-item__acoes">
+                    @if (amp.empilhamentosAtuais > 0) {
                     <button
-                      type="button"
-                      class="compras-mod-flag"
-                      role="checkbox"
-                      [class.compras-mod-flag--ativo]="mod.ignoraTotal"
-                      [attr.aria-checked]="mod.ignoraTotal"
-                      [appTooltip]="
+                        type="button"
+                        class="compras-btn compras-btn--remover"
+                        (click)="removerAmplificador(amp.nome)"
+                    >
+                        −
+                    </button>
+                    }
+                    <button
+                        type="button"
+                        class="compras-btn compras-btn--adicionar"
+                        [class.compras-btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
+                        [disabled]="!amp.podeAdicionar"
+                        (click)="adicionarAmplificador(amp.nome)"
+                    >
+                        @if (adicionadoRecente() === 'amp:' + amp.nome) { ✓ Adicionado } @else { {{
+                        amp.empilhamentosAtuais === 0 ? '+ Adquirir ($3.000)' : '+ Stack ($1.000)'
+                        }} }
+                    </button>
+                </div>
+            </article>
+            }
+        </div>
+        }
+    </section>
+
+    <!-- CARD 4: CARRINHO -->
+    <section class="calc-cartao">
+        <header class="calc-cartao__cabecalho">
+            <span class="calc-cartao__indice">{{ modo() === 'vender' ? 2 : 4 }}</span>
+            <h2 class="calc-cartao__titulo">
+                {{ modo() === 'vender' ? 'Carrinho de Venda' : 'Carrinho' }}
+            </h2>
+            <span class="calc-cartao__regua"></span>
+            <div class="compras-carrinho-acoes">
+                @if (modo() === 'comprar') {
+                <button type="button" class="compras-limpar" (click)="abrirModalImportar()">
+                    Importar
+                </button>
+                <button
+                    type="button"
+                    class="compras-limpar"
+                    [disabled]="carrinhoVazio()"
+                    (click)="abrirModalExportarCodigo()"
+                >
+                    Exportar
+                </button>
+                } @if (confirmandoEsvaziar()) {
+                <button
+                    type="button"
+                    class="compras-limpar compras-limpar--perigo"
+                    (click)="confirmarEsvaziar()"
+                >
+                    Confirmar
+                </button>
+                <button type="button" class="compras-limpar" (click)="cancelarEsvaziar()">
+                    Cancelar
+                </button>
+                } @else {
+                <button
+                    type="button"
+                    class="compras-limpar"
+                    [disabled]="carrinhoVazio()"
+                    (click)="esvaziarCarrinho()"
+                >
+                    Esvaziar
+                </button>
+                }
+            </div>
+        </header>
+
+        @if (carrinhoVazio()) {
+        <p class="compras-vazio">Nenhum item adicionado ainda.</p>
+        } @for (item of itensCarrinho(); track item.uid) {
+        <div class="compras-carrinho-item">
+            <div class="compras-carrinho-item__cabecalho">
+                <div class="compras-carrinho-item__identidade">
+                    <span class="compras-carrinho-item__nome">
+                        {{ item.nome }} @if (item.quantidade > 1) {
+                        <span class="compras-tag">×{{ item.quantidade }}</span>
+                        }
+                    </span>
+                    <span class="compras-carrinho-item__categoria">{{ item.categoriaRotulo }}</span>
+                </div>
+                <div class="compras-carrinho-item__controles">
+                    <!-- Ações (Modificar / Vestir-Guardar) → meta ($ e peso) → X de remover, por último. -->
+                    <div class="compras-item-acoes">
+                        @if (item.modificavel) {
+                        <button
+                            type="button"
+                            class="compras-modificar"
+                            [class.selecionavel--ativo]="item.painelAberto"
+                            [attr.aria-expanded]="item.painelAberto"
+                            (click)="alternarPainel(item.uid)"
+                        >
+                            <app-icone nome="editar" />
+                            <span>Modificar</span>
+                            @if (item.modsUsados > 0) {
+                            <span
+                                class="compras-modificar__contagem"
+                                [class.compras-modificar__contagem--excede]="item.excedeModsLimite"
+                                [appTooltip]="item.excedeModsLimite ? 'Além do limite da patente (excedente)' : null"
+                                >{{ item.modsUsados }}/{{ item.maxModificacoes }}</span
+                            >
+                            }
+                            <span class="compras-modificar__chevron"
+                                >{{ item.painelAberto ? '▴' : '▾' }}</span
+                            >
+                        </button>
+                        } @if (item.ehArmazenamento) {
+                        <button
+                            type="button"
+                            class="compras-porte"
+                            [class.compras-porte--vestida]="!item.guardada"
+                            [appTooltip]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
+                            (click)="alternarGuardada(item.uid)"
+                        >
+                            <app-icone [nome]="item.guardada ? 'guardada' : 'vestida'" />
+                            <span>{{ item.guardada ? 'Guardada' : 'Vestida' }}</span>
+                        </button>
+                        }
+                    </div>
+                    <div class="compras-carrinho-item__meta">
+                        <span class="compras-item__custo">{{ item.custoTotalTexto }}</span>
+                        <span class="compras-item__peso">{{ item.pesoTexto }}</span>
+                    </div>
+                    <!-- Remover por último: a confirmação acontece no próprio X (troca in-place). -->
+                    <span class="compras-item-remover">
+                        @if (uidConfirmandoRemocao() === item.uid) {
+                        <span class="compras-remover-texto">Remover item?</span>
+                        <button
+                            type="button"
+                            class="compras-btn compras-btn--adicionar compras-btn--icone"
+                            [appTooltip]="'Confirmar remoção'"
+                            aria-label="Confirmar remoção"
+                            (click)="confirmarRemocaoItem(item.uid)"
+                        >
+                            <app-icone nome="check" />
+                        </button>
+                        <button
+                            type="button"
+                            class="compras-btn compras-btn--remover compras-btn--icone"
+                            [appTooltip]="'Cancelar'"
+                            aria-label="Cancelar remoção"
+                            (click)="cancelarRemocao()"
+                        >
+                            ✕
+                        </button>
+                        } @else {
+                        <button
+                            type="button"
+                            class="compras-btn compras-btn--remover compras-btn--icone"
+                            [appTooltip]="'Remover'"
+                            aria-label="Remover item"
+                            (click)="removerItem(item.uid)"
+                        >
+                            ✕
+                        </button>
+                        }
+                    </span>
+                </div>
+            </div>
+
+            @if (item.stat) {
+            <div class="compras-carrinho-item__stat">{{ item.stat }}</div>
+            } @if (item.descricao) {
+            <div class="compras-carrinho-item__desc">{{ item.descricao }}</div>
+            } @if (item.modsAtivas.length > 0) {
+            <div class="compras-mods-ativas">
+                @for (mod of item.modsAtivas; track mod.nome) {
+                <div class="compras-mod-tag" [class.compras-mod-tag--excede]="mod.excedente">
+                    <div class="compras-mod-tag__info">
+                        <span>
+                            {{ mod.nome }} ×{{ mod.empilhamentos }} @if (mod.excedente) {
+                            <span
+                                class="compras-excede-tag"
+                                [appTooltip]="'Além do limite da patente'"
+                                >Excedente</span
+                            >
+                            }
+                        </span>
+                        <span class="compras-mod-tag__custo">{{ mod.custoTexto }}</span>
+                        @if (mod.descricao) {
+                        <span class="compras-mod-tag__desc">{{ mod.descricao }}</span>
+                        }
+                        <div class="compras-mod-flags">
+                            <button
+                                type="button"
+                                class="compras-mod-flag"
+                                role="checkbox"
+                                [class.compras-mod-flag--ativo]="mod.ignoraTotal"
+                                [attr.aria-checked]="mod.ignoraTotal"
+                                [appTooltip]="
                         'Quando marcada, esta mod não conta no limite total de empilhamentos da arma'
                       "
-                      (click)="alternarIgnoraTotal(item.uid, mod.nome)"
-                    >
-                      <span class="compras-mod-flag__caixa" aria-hidden="true"></span>
-                      <span>Não conta no total</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="compras-mod-flag"
-                      role="checkbox"
-                      [class.compras-mod-flag--ativo]="mod.ignoraProprio"
-                      [attr.aria-checked]="mod.ignoraProprio"
-                      [appTooltip]="'Quando marcada, esta mod pode empilhar além do próprio teto'"
-                      (click)="alternarIgnoraProprio(item.uid, mod.nome)"
-                    >
-                      <span class="compras-mod-flag__caixa" aria-hidden="true"></span>
-                      <span>Não conta no teto</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="compras-mod-tag__botoes">
-                  <button type="button" class="compras-mini-btn" aria-label="Remover empilhamento" (click)="removerModificacao(item.uid, mod.nome)">−</button>
-                  <button
-                    type="button"
-                    class="compras-mini-btn"
-                    aria-label="Adicionar empilhamento"
-                    [disabled]="!mod.podeAumentar"
-                    (click)="adicionarModificacao(item.uid, mod.nome)"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        }
-
-        @if (item.modificavel && item.painelAberto) {
-          <div class="compras-mod-painel">
-            <!-- Modificação custom -->
-            <div class="compras-mod-custom">
-              @if (criandoModUid() === item.uid) {
-                <form class="compras-custom-form" [formGroup]="modCustomForm" (ngSubmit)="confirmarCriarMod(item.uid)">
-                  <div class="calc-config">
-                    <div class="calc-campo">
-                      <span class="calc-campo__rotulo">Nome da modificação</span>
-                      <input class="calc-texto" type="text" formControlName="nome" placeholder="Ex.: Encantada" required />
-                    </div>
-                    <div class="calc-campo">
-                      <span class="calc-campo__rotulo">Limite de empilhamentos</span>
-                      <app-step-input formControlName="empilhamentoMaximo" [min]="1" ariaRotulo="Limite de empilhamentos da modificação custom" />
-                    </div>
-                  </div>
-                  <div class="compras-custom-checks">
-                    <label class="compras-check">
-                      <input type="checkbox" formControlName="ignoraLimiteTotal" />
-                      <span>Não conta no limite total de empilhamentos da arma</span>
-                    </label>
-                    <label class="compras-check">
-                      <input type="checkbox" formControlName="ignoraLimiteProprio" />
-                      <span>Não conta no próprio teto (pode passar do limite da mod)</span>
-                    </label>
-                  </div>
-                  <div class="compras-efeito">
-                    <span class="compras-efeito__titulo">Efeitos mecânicos (por empilhamento)</span>
-                    @if (efeitosMod.length === 0) {
-                      <p class="compras-efeito__vazio">
-                        Sem efeito mecânico — a mod fica só descritiva. Adicione um efeito para ela funcionar (dano, resistência,
-                        perfuração, condição, alcance…).
-                      </p>
-                    }
-                    <div formArrayName="efeitos" class="compras-efeito__lista">
-                      @for (grupo of efeitosMod.controls; track $index) {
-                        <div class="compras-efeito__linha" [formGroupName]="$index">
-                          @let meta = metaEfeito(grupo.controls.tipo.value);
-                          <div class="compras-efeito__topo">
-                            <span class="compras-efeito__indice" aria-hidden="true">{{ $index + 1 }}</span>
-                            <select
-                              class="calc-texto compras-efeito__tipo"
-                              formControlName="tipo"
-                              (change)="aoTrocarTipoEfeito($index)"
-                              aria-label="Tipo de efeito"
+                                (click)="alternarIgnoraTotal(item.uid, mod.nome)"
                             >
-                              @for (tipoMeta of efeitoTipos; track tipoMeta.tipo) {
-                                <option [value]="tipoMeta.tipo">{{ tipoMeta.rotulo }}</option>
-                              }
-                            </select>
-                            <button
-                              type="button"
-                              class="compras-efeito__remover"
-                              aria-label="Remover efeito"
-                              [appTooltip]="'Remover efeito'"
-                              (click)="removerEfeitoMod($index)"
-                            >
-                              ×
+                                <span class="compras-mod-flag__caixa" aria-hidden="true"></span>
+                                <span>Não conta no total</span>
                             </button>
-                          </div>
-                          <div class="calc-config compras-efeito__campos">
-                            @if (meta.valorRotulo) {
-                              <div class="calc-campo">
-                                <span class="calc-campo__rotulo">{{ meta.valorRotulo }}</span>
-                                <app-step-input formControlName="valor" [min]="meta.valorNegativo ? -99 : 0" ariaRotulo="Valor do efeito" />
-                              </div>
-                            }
-                            @if (meta.faces) {
-                              <div class="calc-campo">
-                                <span class="calc-campo__rotulo">Faces (D)</span>
-                                <app-step-input formControlName="faces" [min]="0" ariaRotulo="Faces dos dados extras" />
-                              </div>
-                            }
-                            @if (meta.variantes) {
-                              <div class="calc-campo">
-                                <span class="calc-campo__rotulo">{{ meta.varianteRotulo }}</span>
-                                <select class="calc-texto" formControlName="variante">
-                                  @for (variante of meta.variantes; track variante.valor) {
-                                    <option [value]="variante.valor">{{ variante.rotulo }}</option>
-                                  }
-                                </select>
-                              </div>
-                            }
-                            @if (meta.tipoDano) {
-                              <div class="calc-campo compras-efeito__campo--largo">
-                                <span class="calc-campo__rotulo">{{ meta.tipoDanoRotulo }}</span>
-                                <input class="calc-texto" type="text" formControlName="tipoDano" [placeholder]="meta.tipoDanoPlaceholder" />
-                              </div>
-                            }
-                            @if (meta.condicao) {
-                              <div class="calc-campo compras-efeito__campo--largo">
-                                <span class="calc-campo__rotulo">Condição</span>
-                                <input class="calc-texto" type="text" formControlName="condicao" placeholder="Ex.: Sangramento" />
-                              </div>
-                              <div class="calc-campo">
-                                <span class="calc-campo__rotulo">DT (atributo)</span>
-                                <input class="calc-texto" type="text" formControlName="atributoDt" placeholder="Ex.: Força" />
-                              </div>
-                              <div class="calc-campo">
-                                <span class="calc-campo__rotulo">Turnos</span>
-                                <app-step-input formControlName="duracaoTurnos" [min]="0" ariaRotulo="Duração em turnos" />
-                              </div>
-                            }
-                          </div>
+                            <button
+                                type="button"
+                                class="compras-mod-flag"
+                                role="checkbox"
+                                [class.compras-mod-flag--ativo]="mod.ignoraProprio"
+                                [attr.aria-checked]="mod.ignoraProprio"
+                                [appTooltip]="'Quando marcada, esta mod pode empilhar além do próprio teto'"
+                                (click)="alternarIgnoraProprio(item.uid, mod.nome)"
+                            >
+                                <span class="compras-mod-flag__caixa" aria-hidden="true"></span>
+                                <span>Não conta no teto</span>
+                            </button>
                         </div>
-                      }
                     </div>
-                    <button type="button" class="compras-efeito__adicionar" (click)="adicionarEfeitoMod()">
-                      + Adicionar efeito
-                    </button>
-                  </div>
-                  <div class="calc-campo compras-custom-desc">
-                    <span class="calc-campo__rotulo">Descrição <span class="calc-campo__auxiliar">(opcional)</span></span>
-                    <textarea class="calc-texto compras-textarea" rows="2" formControlName="descricao" placeholder="Notas sobre a modificação…"></textarea>
-                  </div>
-                  <div class="compras-custom-acoes">
-                    <button type="submit" class="compras-btn compras-btn--adicionar" [disabled]="modCustomForm.invalid">
-                      Aplicar modificação
-                    </button>
-                    <button type="button" class="compras-btn compras-btn--remover" (click)="cancelarCriarMod()">
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              } @else {
-                <button type="button" class="compras-btn compras-btn--remover compras-btn--pequeno" (click)="alternarCriarMod(item.uid)">
-                  + Modificação custom
-                </button>
-              }
+                    <div class="compras-mod-tag__botoes">
+                        <button
+                            type="button"
+                            class="compras-mini-btn"
+                            aria-label="Remover empilhamento"
+                            (click)="removerModificacao(item.uid, mod.nome)"
+                        >
+                            −
+                        </button>
+                        <button
+                            type="button"
+                            class="compras-mini-btn"
+                            aria-label="Adicionar empilhamento"
+                            [disabled]="!mod.podeAumentar"
+                            (click)="adicionarModificacao(item.uid, mod.nome)"
+                        >
+                            +
+                        </button>
+                    </div>
+                </div>
+                }
             </div>
+            } @if (item.modificavel && item.painelAberto) {
+            <div class="compras-mod-painel">
+                <!-- Modificação custom -->
+                <div class="compras-mod-custom">
+                    @if (criandoModUid() === item.uid) {
+                    <form
+                        class="compras-custom-form"
+                        [formGroup]="modCustomForm"
+                        (ngSubmit)="confirmarCriarMod(item.uid)"
+                    >
+                        <div class="calc-config">
+                            <div class="calc-campo">
+                                <span class="calc-campo__rotulo">Nome da modificação</span>
+                                <input
+                                    class="calc-texto"
+                                    type="text"
+                                    formControlName="nome"
+                                    placeholder="Ex.: Encantada"
+                                    required
+                                />
+                            </div>
+                            <div class="calc-campo">
+                                <span class="calc-campo__rotulo">Limite de empilhamentos</span>
+                                <app-step-input
+                                    formControlName="empilhamentoMaximo"
+                                    [min]="1"
+                                    ariaRotulo="Limite de empilhamentos da modificação custom"
+                                />
+                            </div>
+                        </div>
+                        <div class="compras-custom-checks">
+                            <label class="compras-check">
+                                <input type="checkbox" formControlName="ignoraLimiteTotal" />
+                                <span>Não conta no limite total de empilhamentos da arma</span>
+                            </label>
+                            <label class="compras-check">
+                                <input type="checkbox" formControlName="ignoraLimiteProprio" />
+                                <span
+                                    >Não conta no próprio teto (pode passar do limite da mod)</span
+                                >
+                            </label>
+                        </div>
+                        <div class="compras-efeito">
+                            <span class="compras-efeito__titulo"
+                                >Efeitos mecânicos (por empilhamento)</span
+                            >
+                            @if (efeitosMod.length === 0) {
+                            <p class="compras-efeito__vazio">
+                                Sem efeito mecânico — a mod fica só descritiva. Adicione um efeito
+                                para ela funcionar (dano, resistência, perfuração, condição,
+                                alcance…).
+                            </p>
+                            }
+                            <div formArrayName="efeitos" class="compras-efeito__lista">
+                                @for (grupo of efeitosMod.controls; track $index) {
+                                <div class="compras-efeito__linha" [formGroupName]="$index">
+                                    @let meta = metaEfeito(grupo.controls.tipo.value);
+                                    <div class="compras-efeito__topo">
+                                        <span class="compras-efeito__indice" aria-hidden="true"
+                                            >{{ $index + 1 }}</span
+                                        >
+                                        <select
+                                            class="calc-texto compras-efeito__tipo"
+                                            formControlName="tipo"
+                                            (change)="aoTrocarTipoEfeito($index)"
+                                            aria-label="Tipo de efeito"
+                                        >
+                                            @for (tipoMeta of efeitoTipos; track tipoMeta.tipo) {
+                                            <option [value]="tipoMeta.tipo">
+                                                {{ tipoMeta.rotulo }}
+                                            </option>
+                                            }
+                                        </select>
+                                        <button
+                                            type="button"
+                                            class="compras-efeito__remover"
+                                            aria-label="Remover efeito"
+                                            [appTooltip]="'Remover efeito'"
+                                            (click)="removerEfeitoMod($index)"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                    <div class="calc-config compras-efeito__campos">
+                                        @if (meta.valorRotulo) {
+                                        <div class="calc-campo">
+                                            <span class="calc-campo__rotulo"
+                                                >{{ meta.valorRotulo }}</span
+                                            >
+                                            <app-step-input
+                                                formControlName="valor"
+                                                [min]="meta.valorNegativo ? -99 : 0"
+                                                ariaRotulo="Valor do efeito"
+                                            />
+                                        </div>
+                                        } @if (meta.faces) {
+                                        <div class="calc-campo">
+                                            <span class="calc-campo__rotulo">Faces (D)</span>
+                                            <app-step-input
+                                                formControlName="faces"
+                                                [min]="0"
+                                                ariaRotulo="Faces dos dados extras"
+                                            />
+                                        </div>
+                                        } @if (meta.variantes) {
+                                        <div class="calc-campo">
+                                            <span class="calc-campo__rotulo"
+                                                >{{ meta.varianteRotulo }}</span
+                                            >
+                                            <select class="calc-texto" formControlName="variante">
+                                                @for (variante of meta.variantes; track
+                                                variante.valor) {
+                                                <option [value]="variante.valor">
+                                                    {{ variante.rotulo }}
+                                                </option>
+                                                }
+                                            </select>
+                                        </div>
+                                        } @if (meta.tipoDano) {
+                                        <div class="calc-campo compras-efeito__campo--largo">
+                                            <span class="calc-campo__rotulo"
+                                                >{{ meta.tipoDanoRotulo }}</span
+                                            >
+                                            <input
+                                                class="calc-texto"
+                                                type="text"
+                                                formControlName="tipoDano"
+                                                [placeholder]="meta.tipoDanoPlaceholder"
+                                            />
+                                        </div>
+                                        } @if (meta.condicao) {
+                                        <div class="calc-campo compras-efeito__campo--largo">
+                                            <span class="calc-campo__rotulo">Condição</span>
+                                            <input
+                                                class="calc-texto"
+                                                type="text"
+                                                formControlName="condicao"
+                                                placeholder="Ex.: Sangramento"
+                                            />
+                                        </div>
+                                        <div class="calc-campo">
+                                            <span class="calc-campo__rotulo">DT (atributo)</span>
+                                            <input
+                                                class="calc-texto"
+                                                type="text"
+                                                formControlName="atributoDt"
+                                                placeholder="Ex.: Força"
+                                            />
+                                        </div>
+                                        <div class="calc-campo">
+                                            <span class="calc-campo__rotulo">Turnos</span>
+                                            <app-step-input
+                                                formControlName="duracaoTurnos"
+                                                [min]="0"
+                                                ariaRotulo="Duração em turnos"
+                                            />
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                            <button
+                                type="button"
+                                class="compras-efeito__adicionar"
+                                (click)="adicionarEfeitoMod()"
+                            >
+                                + Adicionar efeito
+                            </button>
+                        </div>
+                        <div class="calc-campo compras-custom-desc">
+                            <span class="calc-campo__rotulo"
+                                >Descrição
+                                <span class="calc-campo__auxiliar">(opcional)</span></span
+                            >
+                            <textarea
+                                class="calc-texto compras-textarea"
+                                rows="2"
+                                formControlName="descricao"
+                                placeholder="Notas sobre a modificação…"
+                            ></textarea>
+                        </div>
+                        <div class="compras-custom-acoes">
+                            <button
+                                type="submit"
+                                class="compras-btn compras-btn--adicionar"
+                                [disabled]="modCustomForm.invalid"
+                            >
+                                Aplicar modificação
+                            </button>
+                            <button
+                                type="button"
+                                class="compras-btn compras-btn--remover"
+                                (click)="cancelarCriarMod()"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                    } @else {
+                    <button
+                        type="button"
+                        class="compras-btn compras-btn--remover compras-btn--pequeno"
+                        (click)="alternarCriarMod(item.uid)"
+                    >
+                        + Modificação custom
+                    </button>
+                    }
+                </div>
 
-            @for (secao of item.secoes; track secao.titulo) {
-                @if (secao.titulo) {
-                  <div class="compras-mod-secao">{{ secao.titulo }}</div>
+                @for (secao of item.secoes; track secao.titulo) { @if (secao.titulo) {
+                <div class="compras-mod-secao">{{ secao.titulo }}</div>
                 }
                 <div class="compras-mod-grade" appOverflowFade>
-                  @for (entrada of secao.entradas; track entrada.nome) {
+                    @for (entrada of secao.entradas; track entrada.nome) {
                     <div
-                      class="compras-mod-entrada"
-                      [class.compras-mod-entrada--bloqueada]="entrada.bloqueada"
-                      [class.compras-mod-entrada--ativa]="entrada.ativa"
+                        class="compras-mod-entrada"
+                        [class.compras-mod-entrada--bloqueada]="entrada.bloqueada"
+                        [class.compras-mod-entrada--ativa]="entrada.ativa"
                     >
-                      <div class="compras-mod-entrada__topo">
-                        <span class="compras-mod-entrada__nome">{{ entrada.nome }}</span>
-                        <div class="compras-mod-entrada__pontos">
-                          @for (preenchido of entrada.pontos; track $index) {
-                            <span class="compras-ponto" [class.compras-ponto--cheio]="preenchido"></span>
-                          }
+                        <div class="compras-mod-entrada__topo">
+                            <span class="compras-mod-entrada__nome">{{ entrada.nome }}</span>
+                            <div class="compras-mod-entrada__pontos">
+                                @for (preenchido of entrada.pontos; track $index) {
+                                <span
+                                    class="compras-ponto"
+                                    [class.compras-ponto--cheio]="preenchido"
+                                ></span>
+                                }
+                            </div>
                         </div>
-                      </div>
-                      <div class="compras-mod-entrada__desc">{{ entrada.descricao }}</div>
-                      @if (entrada.motivo) {
+                        <div class="compras-mod-entrada__desc">{{ entrada.descricao }}</div>
+                        @if (entrada.motivo) {
                         <div
-                          class="compras-mod-entrada__motivo"
-                          [class.compras-mod-entrada__motivo--excede]="entrada.excedente"
-                        >{{ entrada.motivo }}</div>
-                      }
-                      @if (entrada.bloqueia.length > 0) {
-                        <div class="compras-mod-entrada__bloqueia">Bloqueia: {{ entrada.bloqueia.join(', ') }}</div>
-                      }
-                      <div class="compras-mod-entrada__custo">{{ entrada.custoTexto }}</div>
-                      <button
-                        type="button"
-                        class="compras-btn compras-btn--adicionar compras-btn--pequeno"
-                        [disabled]="!entrada.podeAdicionar"
-                        (click)="adicionarModificacao(item.uid, entrada.nome)"
-                      >
-                        {{ entrada.ativa ? '+ Stack' : '+ Aplicar' }}
-                      </button>
+                            class="compras-mod-entrada__motivo"
+                            [class.compras-mod-entrada__motivo--excede]="entrada.excedente"
+                        >
+                            {{ entrada.motivo }}
+                        </div>
+                        } @if (entrada.bloqueia.length > 0) {
+                        <div class="compras-mod-entrada__bloqueia">
+                            Bloqueia: {{ entrada.bloqueia.join(', ') }}
+                        </div>
+                        }
+                        <div class="compras-mod-entrada__custo">{{ entrada.custoTexto }}</div>
+                        <button
+                            type="button"
+                            class="compras-btn compras-btn--adicionar compras-btn--pequeno"
+                            [disabled]="!entrada.podeAdicionar"
+                            (click)="adicionarModificacao(item.uid, entrada.nome)"
+                        >
+                            {{ entrada.ativa ? '+ Stack' : '+ Aplicar' }}
+                        </button>
                     </div>
-                  }
+                    }
                 </div>
-              }
-            </div>
-          }
-      </div>
-    }
-
-    @if (amplificadoresCarrinho().length > 0) {
-      <div class="compras-amps-carrinho">
-        <div class="compras-amps-carrinho__cabecalho">
-          Amplificadores ({{ resumo().empilhamentosAmplificador }}/{{ resumo().limiteAmplificadores }} stacks)
-          @if (resumo().penalidadeVontade > 0) {
-            <span class="compras-tag compras-tag--penalidade">−{{ resumo().penalidadeVontade }} Vontade total</span>
-          }
-        </div>
-        @for (amp of amplificadoresCarrinho(); track amp.nome) {
-          <div class="compras-carrinho-item compras-carrinho-item--amp">
-            <div class="compras-carrinho-item__cabecalho">
-              <div>
-                <span class="compras-carrinho-item__nome">{{ amp.nome }}</span>
-                @if (amp.penalidade > 0) {
-                  <span class="compras-tag compras-tag--penalidade">−{{ amp.penalidade }} Vontade</span>
                 }
-              </div>
-              <div class="compras-carrinho-item__meta">
-                <span class="compras-item__custo">{{ amp.custoTexto }}</span>
-                <span class="compras-item__peso">{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span>
-              </div>
             </div>
-            <div class="compras-carrinho-item__stat">{{ amp.efeito }}</div>
-            <div class="compras-item__acoes">
-              <button type="button" class="compras-btn compras-btn--remover" (click)="removerAmplificador(amp.nome)">
-                − Stack
-              </button>
-              <button
-                type="button"
-                class="compras-btn compras-btn--adicionar"
-                [class.compras-btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
-                [disabled]="!amp.podeAumentar"
-                (click)="adicionarAmplificador(amp.nome)"
-              >
-                {{ adicionadoRecente() === 'amp:' + amp.nome ? '✓ Adicionado' : '+ Stack ($1.000)' }}
-              </button>
-            </div>
-          </div>
-        }
-      </div>
-    }
-  </section>
-
-  <!-- CARD 3: VENDA (m1-20) — só na aba Vendas -->
-  @if (modo() === 'vender') {
-    <section class="calc-cartao">
-      <header class="calc-cartao__cabecalho">
-        <span class="calc-cartao__indice">3</span>
-        <h2 class="calc-cartao__titulo">Venda</h2>
-        <span class="calc-cartao__regua"></span>
-      </header>
-
-      <!-- Fragmentos: grade de contadores por módulo × tipo -->
-      <div class="compras-venda-bloco">
-        <div class="compras-venda-bloco__cabecalho">
-          <span class="compras-venda-bloco__titulo">Fragmentos</span>
-          <span class="compras-venda-bloco__nota">Módulo ∅ é negociado com o Mestre — fora da tabela.</span>
-        </div>
-
-        <div class="compras-fragmentos" appOverflowFade>
-          @for (linha of linhasFragmentos(); track linha.modulo) {
-            <div class="compras-fragmentos__linha">
-              <span class="compras-fragmentos__modulo">{{ linha.rotulo }}</span>
-
-              <div class="compras-fragmentos__celula">
-                <span class="compras-fragmentos__tipo-rotulo">Potencializador</span>
-                <span class="compras-fragmentos__valor-unit">{{ linha.valorPotencializadorTexto }}</span>
-                <div class="compras-fragmentos__contador">
-                  <button
-                    type="button"
-                    class="compras-mini-btn"
-                    [disabled]="linha.qtdePotencializador === 0"
-                    [attr.aria-label]="'Remover Potencializador ' + linha.rotulo"
-                    (click)="decrementarFragmento(linha.modulo, tipoPotencializador)"
-                  >
-                    −
-                  </button>
-                  <span class="compras-fragmentos__qtde">{{ linha.qtdePotencializador }}</span>
-                  <button
-                    type="button"
-                    class="compras-mini-btn"
-                    [attr.aria-label]="'Adicionar Potencializador ' + linha.rotulo"
-                    (click)="incrementarFragmento(linha.modulo, tipoPotencializador)"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div class="compras-fragmentos__celula">
-                <span class="compras-fragmentos__tipo-rotulo">Construtor</span>
-                <span class="compras-fragmentos__valor-unit">{{ linha.valorConstrutorTexto }}</span>
-                <div class="compras-fragmentos__contador">
-                  <button
-                    type="button"
-                    class="compras-mini-btn"
-                    [disabled]="linha.qtdeConstrutor === 0"
-                    [attr.aria-label]="'Remover Construtor ' + linha.rotulo"
-                    (click)="decrementarFragmento(linha.modulo, tipoConstrutor)"
-                  >
-                    −
-                  </button>
-                  <span class="compras-fragmentos__qtde">{{ linha.qtdeConstrutor }}</span>
-                  <button
-                    type="button"
-                    class="compras-mini-btn"
-                    [attr.aria-label]="'Adicionar Construtor ' + linha.rotulo"
-                    (click)="incrementarFragmento(linha.modulo, tipoConstrutor)"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <span class="compras-fragmentos__subtotal">{{ linha.subtotalTexto }}</span>
-            </div>
-          }
-        </div>
-      </div>
-
-      <!-- Valores da venda (no fim, abaixo dos fragmentos): taxa + totais -->
-      <div class="compras-venda-bloco">
-        <div class="compras-venda-bloco__cabecalho">
-          <span class="compras-venda-bloco__titulo">Valores da venda</span>
-          <div class="compras-taxa" role="group" aria-label="Taxa de venda dos itens">
-            @for (opcao of opcoesTaxa; track opcao.taxa) {
-              <button
-                type="button"
-                class="compras-categoria compras-taxa__opcao"
-                [class.selecionavel--ativo]="taxaVenda() === opcao.taxa"
-                [attr.aria-pressed]="taxaVenda() === opcao.taxa"
-                (click)="definirTaxa(opcao.taxa)"
-              >
-                {{ opcao.rotulo }}
-              </button>
             }
-          </div>
         </div>
-
-        <div class="calc-stats">
-          <div class="calc-stat compras-positivo">
-            <div class="calc-stat__rotulo">Valor de Venda dos Itens</div>
-            <div class="calc-stat__valor calc-stat__valor--texto">{{ valorVendaItensTexto() }}</div>
-          </div>
-          <div class="calc-stat compras-positivo">
-            <div class="calc-stat__rotulo">Total de Fragmentos</div>
-            <div class="calc-stat__valor calc-stat__valor--texto">{{ totalFragmentosTexto() }}</div>
-          </div>
+        } @if (amplificadoresCarrinho().length > 0) {
+        <div class="compras-amps-carrinho">
+            <div class="compras-amps-carrinho__cabecalho">
+                Amplificadores ({{ resumo().empilhamentosAmplificador }}/{{
+                resumo().limiteAmplificadores }} stacks) @if (resumo().penalidadeVontade > 0) {
+                <span class="compras-tag compras-tag--penalidade"
+                    >−{{ resumo().penalidadeVontade }} Vontade total</span
+                >
+                }
+            </div>
+            @for (amp of amplificadoresCarrinho(); track amp.nome) {
+            <div class="compras-carrinho-item compras-carrinho-item--amp">
+                <div class="compras-carrinho-item__cabecalho">
+                    <div>
+                        <span class="compras-carrinho-item__nome">{{ amp.nome }}</span>
+                        @if (amp.penalidade > 0) {
+                        <span class="compras-tag compras-tag--penalidade"
+                            >−{{ amp.penalidade }} Vontade</span
+                        >
+                        }
+                    </div>
+                    <div class="compras-carrinho-item__meta">
+                        <span class="compras-item__custo">{{ amp.custoTexto }}</span>
+                        <span class="compras-item__peso"
+                            >{{ amp.empilhamentos }}/{{ amp.maximoEfetivo }} stacks</span
+                        >
+                    </div>
+                </div>
+                <div class="compras-carrinho-item__stat">{{ amp.efeito }}</div>
+                <div class="compras-item__acoes">
+                    <button
+                        type="button"
+                        class="compras-btn compras-btn--remover"
+                        (click)="removerAmplificador(amp.nome)"
+                    >
+                        − Stack
+                    </button>
+                    <button
+                        type="button"
+                        class="compras-btn compras-btn--adicionar"
+                        [class.compras-btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
+                        [disabled]="!amp.podeAumentar"
+                        (click)="adicionarAmplificador(amp.nome)"
+                    >
+                        {{ adicionadoRecente() === 'amp:' + amp.nome ? '✓ Adicionado' : '+ Stack
+                        ($1.000)' }}
+                    </button>
+                </div>
+            </div>
+            }
         </div>
-
-        <div class="calc-stats">
-          <div class="calc-stat compras-venda-total">
-            <div class="calc-stat__rotulo">Total de Venda</div>
-            <div class="calc-stat__valor calc-stat__valor--texto">{{ totalVendaTexto() }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  }
-
-  <!-- DIALOG: QUANTOS REMOVER (stack de itens, quantidade > 1) -->
-  @if (uidRemovendoStack() !== null) {
-    <div class="compras-modal-fundo">
-      <div class="compras-modal compras-modal--estreito">
-        <h3 class="compras-modal__titulo">Remover "{{ nomeRemovendoStack() }}"</h3>
-        <p class="compras-modal__texto">
-          Quantas unidades remover? (1–{{ quantidadeMaximaRemover() }})
-        </p>
-        <div class="compras-remover-stack">
-          <app-step-input
-            [formControl]="quantidadeRemover"
-            [min]="1"
-            [max]="quantidadeMaximaRemover()"
-            ariaRotulo="Quantidade a remover"
-          />
-        </div>
-        <div class="compras-modal__acoes">
-          <button type="button" class="compras-btn compras-btn--adicionar" (click)="confirmarRemoverStack()">
-            Remover
-          </button>
-          <button type="button" class="compras-btn compras-btn--remover" (click)="cancelarRemocao()">
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- MODAL: EXPORTAR CÓDIGO -->
-  @if (modalExportarAberto()) {
-    <div class="compras-modal-fundo">
-      <div class="compras-modal">
-        <h3 class="compras-modal__titulo">Exportar Carrinho</h3>
-        <p class="compras-modal__texto">
-          Copie o código abaixo para importar este carrinho depois ou em outro dispositivo.
-        </p>
-        <textarea
-          class="compras-modal__codigo"
-          readonly
-          aria-label="Código do carrinho exportado"
-          [value]="codigoExportado()"
-        ></textarea>
-        <div class="compras-modal__acoes">
-          <button type="button" class="compras-btn compras-btn--adicionar" (click)="copiarCodigoCarrinho()">
-            {{ copiadoComSucesso() ? 'Copiado!' : 'Copiar Código' }}
-          </button>
-          <button type="button" class="compras-btn compras-btn--remover" (click)="fecharModalExportar()">
-            Fechar
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- MODAL: IMPORTAR CÓDIGO -->
-  @if (modalImportarAberto()) {
-    <div class="compras-modal-fundo">
-      <div class="compras-modal">
-        <h3 class="compras-modal__titulo">Importar Carrinho</h3>
-        <p class="compras-modal__texto">
-          Cole abaixo um código exportado por esta simulacao. Códigos do site antigo
-          (contratados-calculadora) não são compatíveis com este formato.
-        </p>
-        <textarea
-          class="compras-modal__codigo"
-          placeholder="Cole o código aqui…"
-          [value]="codigoImportarTexto()"
-          (input)="aoDigitarCodigoImportar($event)"
-        ></textarea>
-        @if (erroImportar()) {
-          <p class="compras-modal__erro">{{ erroImportar() }}</p>
         }
-        <div class="compras-modal__acoes">
-          <button type="button" class="compras-btn compras-btn--adicionar" (click)="confirmarImportarCarrinho()">
-            Importar
-          </button>
-          <button type="button" class="compras-btn compras-btn--remover" (click)="fecharModalImportar()">
-            Cancelar
-          </button>
+    </section>
+
+    <!-- CARD 3: VENDA (m1-20) — só na aba Vendas -->
+    @if (modo() === 'vender') {
+    <section class="calc-cartao">
+        <header class="calc-cartao__cabecalho">
+            <span class="calc-cartao__indice">3</span>
+            <h2 class="calc-cartao__titulo">Venda</h2>
+            <span class="calc-cartao__regua"></span>
+        </header>
+
+        <!-- Fragmentos: grade de contadores por módulo × tipo -->
+        <div class="compras-venda-bloco">
+            <div class="compras-venda-bloco__cabecalho">
+                <span class="compras-venda-bloco__titulo">Fragmentos</span>
+                <span class="compras-venda-bloco__nota"
+                    >Módulo ∅ é negociado com o Mestre — fora da tabela.</span
+                >
+            </div>
+
+            <div class="compras-fragmentos" appOverflowFade>
+                @for (linha of linhasFragmentos(); track linha.modulo) {
+                <div class="compras-fragmentos__linha">
+                    <span class="compras-fragmentos__modulo">{{ linha.rotulo }}</span>
+
+                    <div class="compras-fragmentos__celula">
+                        <span class="compras-fragmentos__tipo-rotulo">Potencializador</span>
+                        <span class="compras-fragmentos__valor-unit"
+                            >{{ linha.valorPotencializadorTexto }}</span
+                        >
+                        <div class="compras-fragmentos__contador">
+                            <button
+                                type="button"
+                                class="compras-mini-btn"
+                                [disabled]="linha.qtdePotencializador === 0"
+                                [attr.aria-label]="'Remover Potencializador ' + linha.rotulo"
+                                (click)="decrementarFragmento(linha.modulo, tipoPotencializador)"
+                            >
+                                −
+                            </button>
+                            <span class="compras-fragmentos__qtde"
+                                >{{ linha.qtdePotencializador }}</span
+                            >
+                            <button
+                                type="button"
+                                class="compras-mini-btn"
+                                [attr.aria-label]="'Adicionar Potencializador ' + linha.rotulo"
+                                (click)="incrementarFragmento(linha.modulo, tipoPotencializador)"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="compras-fragmentos__celula">
+                        <span class="compras-fragmentos__tipo-rotulo">Construtor</span>
+                        <span class="compras-fragmentos__valor-unit"
+                            >{{ linha.valorConstrutorTexto }}</span
+                        >
+                        <div class="compras-fragmentos__contador">
+                            <button
+                                type="button"
+                                class="compras-mini-btn"
+                                [disabled]="linha.qtdeConstrutor === 0"
+                                [attr.aria-label]="'Remover Construtor ' + linha.rotulo"
+                                (click)="decrementarFragmento(linha.modulo, tipoConstrutor)"
+                            >
+                                −
+                            </button>
+                            <span class="compras-fragmentos__qtde">{{ linha.qtdeConstrutor }}</span>
+                            <button
+                                type="button"
+                                class="compras-mini-btn"
+                                [attr.aria-label]="'Adicionar Construtor ' + linha.rotulo"
+                                (click)="incrementarFragmento(linha.modulo, tipoConstrutor)"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+
+                    <span class="compras-fragmentos__subtotal">{{ linha.subtotalTexto }}</span>
+                </div>
+                }
+            </div>
         </div>
-      </div>
+
+        <!-- Valores da venda (no fim, abaixo dos fragmentos): taxa + totais -->
+        <div class="compras-venda-bloco">
+            <div class="compras-venda-bloco__cabecalho">
+                <span class="compras-venda-bloco__titulo">Valores da venda</span>
+                <div class="compras-taxa" role="group" aria-label="Taxa de venda dos itens">
+                    @for (opcao of opcoesTaxa; track opcao.taxa) {
+                    <button
+                        type="button"
+                        class="compras-categoria compras-taxa__opcao"
+                        [class.selecionavel--ativo]="taxaVenda() === opcao.taxa"
+                        [attr.aria-pressed]="taxaVenda() === opcao.taxa"
+                        (click)="definirTaxa(opcao.taxa)"
+                    >
+                        {{ opcao.rotulo }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <div class="calc-stats">
+                <div class="calc-stat compras-positivo">
+                    <div class="calc-stat__rotulo">Valor de Venda dos Itens</div>
+                    <div class="calc-stat__valor calc-stat__valor--texto">
+                        {{ valorVendaItensTexto() }}
+                    </div>
+                </div>
+                <div class="calc-stat compras-positivo">
+                    <div class="calc-stat__rotulo">Total de Fragmentos</div>
+                    <div class="calc-stat__valor calc-stat__valor--texto">
+                        {{ totalFragmentosTexto() }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="calc-stats">
+                <div class="calc-stat compras-venda-total">
+                    <div class="calc-stat__rotulo">Total de Venda</div>
+                    <div class="calc-stat__valor calc-stat__valor--texto">
+                        {{ totalVendaTexto() }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    }
+
+    <!-- DIALOG: QUANTOS REMOVER (stack de itens, quantidade > 1) -->
+    @if (uidRemovendoStack() !== null) {
+    <div class="compras-modal-fundo">
+        <div class="compras-modal compras-modal--estreito">
+            <h3 class="compras-modal__titulo">Remover "{{ nomeRemovendoStack() }}"</h3>
+            <p class="compras-modal__texto">
+                Quantas unidades remover? (1–{{ quantidadeMaximaRemover() }})
+            </p>
+            <div class="compras-remover-stack">
+                <app-step-input
+                    [formControl]="quantidadeRemover"
+                    [min]="1"
+                    [max]="quantidadeMaximaRemover()"
+                    ariaRotulo="Quantidade a remover"
+                />
+            </div>
+            <div class="compras-modal__acoes">
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--adicionar"
+                    (click)="confirmarRemoverStack()"
+                >
+                    Remover
+                </button>
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--remover"
+                    (click)="cancelarRemocao()"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </div>
     </div>
-  }
+    }
+
+    <!-- MODAL: EXPORTAR CÓDIGO -->
+    @if (modalExportarAberto()) {
+    <div class="compras-modal-fundo">
+        <div class="compras-modal">
+            <h3 class="compras-modal__titulo">Exportar Carrinho</h3>
+            <p class="compras-modal__texto">
+                Copie o código abaixo para importar este carrinho depois ou em outro dispositivo.
+            </p>
+            <textarea
+                class="compras-modal__codigo"
+                readonly
+                aria-label="Código do carrinho exportado"
+                [value]="codigoExportado()"
+            ></textarea>
+            <div class="compras-modal__acoes">
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--adicionar"
+                    (click)="copiarCodigoCarrinho()"
+                >
+                    {{ copiadoComSucesso() ? 'Copiado!' : 'Copiar Código' }}
+                </button>
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--remover"
+                    (click)="fecharModalExportar()"
+                >
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- MODAL: IMPORTAR CÓDIGO -->
+    @if (modalImportarAberto()) {
+    <div class="compras-modal-fundo">
+        <div class="compras-modal">
+            <h3 class="compras-modal__titulo">Importar Carrinho</h3>
+            <p class="compras-modal__texto">
+                Cole abaixo um código exportado por esta simulacao. Códigos do site antigo
+                (contratados-calculadora) não são compatíveis com este formato.
+            </p>
+            <textarea
+                class="compras-modal__codigo"
+                placeholder="Cole o código aqui…"
+                [value]="codigoImportarTexto()"
+                (input)="aoDigitarCodigoImportar($event)"
+            ></textarea>
+            @if (erroImportar()) {
+            <p class="compras-modal__erro">{{ erroImportar() }}</p>
+            }
+            <div class="compras-modal__acoes">
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--adicionar"
+                    (click)="confirmarImportarCarrinho()"
+                >
+                    Importar
+                </button>
+                <button
+                    type="button"
+                    class="compras-btn compras-btn--remover"
+                    (click)="fecharModalImportar()"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+    }
 </div>

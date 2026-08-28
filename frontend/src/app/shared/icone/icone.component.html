@@ -1,407 +1,439 @@
 <svg
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
-  stroke-width="1.75"
-  stroke-linecap="round"
-  stroke-linejoin="round"
-  aria-hidden="true"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.75"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
 >
-  @switch (nome()) {
-    @case ('agente') {
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
-    }
-    @case ('dt') {
-      <circle cx="12" cy="12" r="7" />
-      <circle cx="12" cy="12" r="2.5" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-    }
-    @case ('novo-agente') {
-      <circle cx="10" cy="8" r="3.3" />
-      <path d="M4 20a6 6 0 0 1 12 0" />
-      <path d="M19 7v5M16.5 9.5h5" />
-    }
-    @case ('patente') {
-      <circle cx="12" cy="9" r="5" />
-      <path d="M8.5 13 7 21l5-2.5L17 21l-1.5-8" />
-    }
-    @case ('descanso') {
-      <path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5Z" />
-    }
-    @case ('compras') {
-      <circle cx="9.5" cy="20" r="1.3" />
-      <circle cx="17" cy="20" r="1.3" />
-      <path d="M3 4h2l2.2 11h10l2-8H6.2" />
-    }
-    @case ('vendas') {
-      <path d="M3 12.5 11 4.5a1.9 1.9 0 0 1 1.4-.6H19a2 2 0 0 1 2 2v6.6a1.9 1.9 0 0 1-.6 1.4l-8 8a1.9 1.9 0 0 1-2.7 0l-6.7-6.7a1.9 1.9 0 0 1 0-2.7Z" />
-      <circle cx="16" cy="8" r="1.3" />
-    }
-    @case ('corpo-a-corpo') {
-      <!-- Espada — recorte do ícone "sword" da Tabler Icons (MIT), tabler.io/icons. -->
-      <path d="M20 4v5l-9 7l-4 4l-3 -3l4 -4l7 -9l5 0" />
-      <path d="M6.5 11.5l6 6" />
-    }
-    @case ('explosivos') {
-      <!-- Granada "abacaxi" (corpo estriado + capuz da espoleta + anel do pino + alavanca):
+    @switch (nome()) {
+        @case ("agente") {
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+        }
+        @case ("dt") {
+            <circle cx="12" cy="12" r="7" />
+            <circle cx="12" cy="12" r="2.5" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+        }
+        @case ("novo-agente") {
+            <circle cx="10" cy="8" r="3.3" />
+            <path d="M4 20a6 6 0 0 1 12 0" />
+            <path d="M19 7v5M16.5 9.5h5" />
+        }
+        @case ("patente") {
+            <circle cx="12" cy="9" r="5" />
+            <path d="M8.5 13 7 21l5-2.5L17 21l-1.5-8" />
+        }
+        @case ("descanso") {
+            <path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5Z" />
+        }
+        @case ("compras") {
+            <circle cx="9.5" cy="20" r="1.3" />
+            <circle cx="17" cy="20" r="1.3" />
+            <path d="M3 4h2l2.2 11h10l2-8H6.2" />
+        }
+        @case ("vendas") {
+            <path
+                d="M3 12.5 11 4.5a1.9 1.9 0 0 1 1.4-.6H19a2 2 0 0 1 2 2v6.6a1.9 1.9 0 0 1-.6 1.4l-8 8a1.9 1.9 0 0 1-2.7 0l-6.7-6.7a1.9 1.9 0 0 1 0-2.7Z"
+            />
+            <circle cx="16" cy="8" r="1.3" />
+        }
+        @case ("corpo-a-corpo") {
+            <!-- Espada — recorte do ícone "sword" da Tabler Icons (MIT), tabler.io/icons. -->
+            <path d="M20 4v5l-9 7l-4 4l-3 -3l4 -4l7 -9l5 0" />
+            <path d="M6.5 11.5l6 6" />
+        }
+        @case ("explosivos") {
+            <!-- Granada "abacaxi" (corpo estriado + capuz da espoleta + anel do pino + alavanca):
            desenhado à mão no mesmo traço/peso das outras — nenhuma biblioteca de linha
            open-source pesquisada tem granada. -->
-      <rect x="7" y="10" width="10" height="11" rx="5" />
-      <path d="M7 13.7h10M7 17.3h10M10.3 10.3v10.4M13.7 10.3v10.4" />
-      <rect x="10" y="6.5" width="4" height="3" rx="0.5" />
-      <circle cx="12" cy="4.3" r="1.5" />
-      <path d="M14 7l3-1.8" />
-    }
-    @case ('armas-de-fogo') {
-      <!-- Revólver (tambor + cão + cano + guarda-mato + cabo curvo): nenhuma biblioteca de
+            <rect x="7" y="10" width="10" height="11" rx="5" />
+            <path d="M7 13.7h10M7 17.3h10M10.3 10.3v10.4M13.7 10.3v10.4" />
+            <rect x="10" y="6.5" width="4" height="3" rx="0.5" />
+            <circle cx="12" cy="4.3" r="1.5" />
+            <path d="M14 7l3-1.8" />
+        }
+        @case ("armas-de-fogo") {
+            <!-- Revólver (tambor + cão + cano + guarda-mato + cabo curvo): nenhuma biblioteca de
            ícones de linha open-source pesquisada (Tabler, Iconoir, Phosphor, Solar) tem arma de
            fogo — exclusão deliberada dessas bibliotecas. Desenhado à mão no mesmo traço/peso. -->
-      <circle cx="8" cy="11" r="2.6" />
-      <rect x="10.4" y="10" width="10.6" height="2" rx="0.8" />
-      <path d="M6.3 8.7l-1-1.6" />
-      <path d="M8.5 13.3a1.4 1.4 0 1 0 .3 2.7" />
-      <path d="M6.8 13.6c-.2 1.3-1.7 2-2.1 3.4c-.4 1.4.2 3 1.9 3c1.3 0 1.9-.9 1.9-2v-2.3" />
-    }
-    @case ('municoes') {
-      <!-- Caixa de munições (case + trava frontal + costura da tampa) — mesmo motivo do ícone
+            <circle cx="8" cy="11" r="2.6" />
+            <rect x="10.4" y="10" width="10.6" height="2" rx="0.8" />
+            <path d="M6.3 8.7l-1-1.6" />
+            <path d="M8.5 13.3a1.4 1.4 0 1 0 .3 2.7" />
+            <path d="M6.8 13.6c-.2 1.3-1.7 2-2.1 3.4c-.4 1.4.2 3 1.9 3c1.3 0 1.9-.9 1.9-2v-2.3" />
+        }
+        @case ("municoes") {
+            <!-- Caixa de munições (case + trava frontal + costura da tampa) — mesmo motivo do ícone
            anterior: sem equivalente em biblioteca de linha open-source, desenhado à mão. -->
-      <rect x="4" y="8" width="16" height="12" rx="1.5" />
-      <path d="M4 11.5h16" />
-      <path d="M9 8V6.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V8" />
-      <rect x="10.5" y="14.5" width="3" height="2.5" rx="0.5" />
-    }
-    @case ('protecoes') {
-      <!-- Escudo — recorte do ícone "shield" da Tabler Icons (MIT), tabler.io/icons. -->
-      <path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3" />
-    }
-    @case ('exoticos') {
-      <!-- Arma de plasma (corpo blocado + cabo angular + célula de energia irradiando):
+            <rect x="4" y="8" width="16" height="12" rx="1.5" />
+            <path d="M4 11.5h16" />
+            <path d="M9 8V6.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V8" />
+            <rect x="10.5" y="14.5" width="3" height="2.5" rx="0.5" />
+        }
+        @case ("protecoes") {
+            <!-- Escudo — recorte do ícone "shield" da Tabler Icons (MIT), tabler.io/icons. -->
+            <path
+                d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"
+            />
+        }
+        @case ("exoticos") {
+            <!-- Arma de plasma (corpo blocado + cabo angular + célula de energia irradiando):
            desenhado à mão no mesmo traço/peso — nenhuma biblioteca de linha open-source
            pesquisada tem arma de energia/plasma. -->
-      <rect x="8" y="9" width="12" height="4" rx="1" />
-      <path d="M9 13h4v8h-2l-2-2z" />
-      <circle cx="16" cy="7" r="2" />
-      <path d="M16 3.3v1M12.3 7h1M19.7 7h1M13.3 4.3l.7.7M18.7 4.3l-.7.7" />
-    }
-    @case ('armazenamento') {
-      <!-- Mochila — recorte do ícone "backpack" da Tabler Icons (MIT), tabler.io/icons. -->
-      <path d="M5 18v-6a6 6 0 0 1 6 -6h2a6 6 0 0 1 6 6v6a3 3 0 0 1 -3 3h-8a3 3 0 0 1 -3 -3" />
-      <path d="M10 6v-1a2 2 0 1 1 4 0v1" />
-      <path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" />
-      <path d="M11 10h2" />
-    }
-    @case ('operacional') {
-      <!-- Martelo (gear/utilidade de campo) — recorte do ícone "hammer" da Tabler Icons (MIT),
+            <rect x="8" y="9" width="12" height="4" rx="1" />
+            <path d="M9 13h4v8h-2l-2-2z" />
+            <circle cx="16" cy="7" r="2" />
+            <path d="M16 3.3v1M12.3 7h1M19.7 7h1M13.3 4.3l.7.7M18.7 4.3l-.7.7" />
+        }
+        @case ("armazenamento") {
+            <!-- Mochila — recorte do ícone "backpack" da Tabler Icons (MIT), tabler.io/icons. -->
+            <path d="M5 18v-6a6 6 0 0 1 6 -6h2a6 6 0 0 1 6 6v6a3 3 0 0 1 -3 3h-8a3 3 0 0 1 -3 -3" />
+            <path d="M10 6v-1a2 2 0 1 1 4 0v1" />
+            <path d="M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4" />
+            <path d="M11 10h2" />
+        }
+        @case ("operacional") {
+            <!-- Martelo (gear/utilidade de campo) — recorte do ícone "hammer" da Tabler Icons (MIT),
            tabler.io/icons. -->
-      <path d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385" />
-      <path d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0" />
-    }
-    @case ('medicinal') {
-      <!-- Maleta de primeiros socorros — recorte do ícone "first-aid-kit" da Tabler Icons (MIT),
+            <path
+                d="M11.414 10l-7.383 7.418a2.091 2.091 0 0 0 0 2.967a2.11 2.11 0 0 0 2.976 0l7.407 -7.385"
+            />
+            <path
+                d="M18.121 15.293l2.586 -2.586a1 1 0 0 0 0 -1.414l-7.586 -7.586a1 1 0 0 0 -1.414 0l-2.586 2.586a1 1 0 0 0 0 1.414l7.586 7.586a1 1 0 0 0 1.414 0"
+            />
+        }
+        @case ("medicinal") {
+            <!-- Maleta de primeiros socorros — recorte do ícone "first-aid-kit" da Tabler Icons (MIT),
            tabler.io/icons. -->
-      <path d="M8 8v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2" />
-      <path d="M4 10a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -8" />
-      <path d="M10 14h4" />
-      <path d="M12 12v4" />
-    }
-    @case ('amplificador') {
-      <!-- Frasco de laboratório — recorte do ícone "flask" da Tabler Icons (MIT), tabler.io/icons. -->
-      <path d="M9 3l6 0" />
-      <path d="M10 9l4 0" />
-      <path d="M10 3v6l-4 11a.7 .7 0 0 0 .5 1h11a.7 .7 0 0 0 .5 -1l-4 -11v-6" />
-    }
-    @case ('sem-categoria') {
-      <!-- Etiqueta — recorte do ícone "tag" da Tabler Icons (MIT), tabler.io/icons. -->
-      <path d="M7.859 6h-2.834a2.025 2.025 0 0 0 -2.025 2.025v2.834c0 .537 .213 1.052 .593 1.432l6.116 6.116a2.025 2.025 0 0 0 2.864 0l4.834 -4.834a2.025 2.025 0 0 0 0 -2.864l-6.117 -6.116a2.025 2.025 0 0 0 -1.431 -.593z" />
-      <path d="M6 9h-.01" />
-    }
-    @case ('campanhas') {
-      <path d="M4 6h16M4 12h16M4 18h16" />
-    }
-    @case ('simulacao') {
-      <circle cx="12" cy="20" r="1.4" />
-      <circle cx="8" cy="14" r="1.4" />
-      <circle cx="16" cy="14" r="1.4" />
-      <circle cx="5" cy="6" r="1.4" />
-      <circle cx="9" cy="4" r="1.4" />
-      <circle cx="15" cy="4" r="1.4" />
-      <circle cx="19" cy="6" r="1.4" />
-      <path d="m11.2 18.8-2.4-3.6m4 3.6 2.4-3.6M7.4 12.7 5.6 7.3m3.1 5.2.2-6.9m6.4 6.9-.2-6.9m2.9 7.1 1.8-5.4" />
-    }
-    @case ('calculadora') {
-      <rect x="5" y="3" width="14" height="18" rx="2" />
-      <path d="M8 7h8M8 11h2M12 15h2" />
-    }
-    @case ('documentos') {
-      <!-- Livro aberto: acesso único ao Sistema e ao Guia do Mestre no leitor global. -->
-      <path d="M3.5 5.5A8.5 8.5 0 0 1 12 7v13a8.5 8.5 0 0 0-8.5-1.5Z" />
-      <path d="M20.5 5.5A8.5 8.5 0 0 0 12 7v13a8.5 8.5 0 0 1 8.5-1.5Z" />
-    }
-    @case ('sair') {
-      <path d="M16 17l5-5-5-5M21 12H9M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3" />
-    }
-    @case ('entrar') {
-      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
-    }
-    @case ('chevron') {
-      <path d="m6 9 6 6 6-6" />
-    }
-    @case ('copiar') {
-      <rect x="9" y="9" width="11" height="11" rx="2" />
-      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-    }
-    @case ('check') {
-      <path d="M20 6 9 17l-5-5" />
-    }
-    @case ('mais') {
-      <path d="M12 5v14M5 12h14" />
-    }
-    @case ('convite') {
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3 7 9 6 9-6" />
-    }
-    @case ('coroa') {
-      <path d="M4 18h16M5 18 3 7l5 4 4-6 4 6 5-4-2 11" />
-    }
-    @case ('atualizar') {
-      <path d="M20 11a8 8 0 1 0-1.5 5.5" />
-      <path d="M20 7v5h-5" />
-    }
-    @case ('voltar') {
-      <path d="M19 12H5M11 18l-6-6 6-6" />
-    }
-    @case ('editar') {
-      <path d="M4 20h4l10-10-4-4L4 16z" />
-      <path d="m14 6 4 4" />
-    }
-    @case ('excluir') {
-      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
-      <path d="M10 11v6M14 11v6" />
-    }
-    @case ('olho') {
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
-      <circle cx="12" cy="12" r="3" />
-    }
-    @case ('olho-fechado') {
-      <path
-        d="M17.94 17.94A10.07 10.07 0 0 1 12 20C5 20 1 12 1 12a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-      />
-      <path d="M1 1 23 23" />
-    }
-    @case ('tema') {
-      <path d="M5 21v-8M5 9V3M12 21v-7M12 10V3M19 21v-4M19 13V3" />
-      <path d="M3 13h4M10 10h4M17 13h4" />
-    }
-    @case ('visao-geral') {
-      <rect x="3" y="3" width="8" height="8" rx="1.5" />
-      <rect x="13" y="3" width="8" height="8" rx="1.5" />
-      <rect x="3" y="13" width="8" height="8" rx="1.5" />
-      <rect x="13" y="13" width="8" height="8" rx="1.5" />
-    }
-    @case ('combate') {
-      <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
-      <path d="M13 19l6-6" />
-      <path d="M16 16l4 4" />
-      <path d="M19 21l2-2" />
-      <path d="M14.5 6.5 18 3h3v3l-3.5 3.5" />
-      <path d="M5 14l4 4" />
-      <path d="M7 17l-3 3" />
-      <path d="M3 19l2 2" />
-    }
-    @case ('inventario') {
-      <path d="M5 9a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
-      <path d="M9 4.5V3.5a3 3 0 0 1 6 0v1" />
-      <path d="M8 20v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v5" />
-      <path d="M8 11h8" />
-    }
-    @case ('habilidades') {
-      <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" />
-    }
-    @case ('sanidade') {
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M12 7.5a2.25 2.25 0 0 0 0 4.5 2.25 2.25 0 0 1 0 4.5" />
-    }
-    @case ('rolagens') {
-      <rect x="4" y="4" width="16" height="16" rx="3" />
-      <circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none" />
-    }
-    @case ('anotacoes') {
-      <!-- Folha com linhas de texto: aba de Anotações (m3-32). -->
-      <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-      <path d="M15 3v5h5" />
-      <path d="M8 12h8M8 15.5h8M8 19h5" />
-    }
-    @case ('importar') {
-      <!-- Arquivo com seta de entrada — recorte de "file-import" da Tabler Icons (MIT). -->
-      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-      <path d="M5 13V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2h-5" />
-      <path d="M2 19h7" />
-      <path d="m6 15 4 4-4 4" />
-    }
-    @case ('tabela') {
-      <!-- Grade de tabela: a mesma metáfora usada nas planilhas. -->
-      <rect x="3" y="4" width="18" height="16" rx="1" />
-      <path d="M3 10h18M3 15h18M9 4v16M15 4v16" />
-    }
-    @case ('linha-adicionar') {
-      <!-- Tabela + sinal abaixo: inserir linha. -->
-      <rect x="3" y="3" width="18" height="12" rx="1" />
-      <path d="M3 9h18M9 3v12M15 3v12M12 17v4M10 19h4" />
-    }
-    @case ('linha-remover') {
-      <!-- Tabela + sinal abaixo: remover a linha atual. -->
-      <rect x="3" y="3" width="18" height="12" rx="1" />
-      <path d="M3 9h18M9 3v12M15 3v12M10 19h4" />
-    }
-    @case ('coluna-adicionar') {
-      <!-- Tabela + sinal à direita: inserir coluna. -->
-      <rect x="3" y="3" width="12" height="18" rx="1" />
-      <path d="M3 9h12M3 15h12M9 3v18M19 10v4M17 12h4" />
-    }
-    @case ('coluna-remover') {
-      <!-- Tabela + sinal à direita: remover a coluna atual. -->
-      <rect x="3" y="3" width="12" height="18" rx="1" />
-      <path d="M3 9h12M3 15h12M9 3v18M17 12h4" />
-    }
-    @case ('vestida') {
-      <!-- Camiseta/colete: armazenamento "vestido" (equipado no corpo). -->
-      <path d="M8.5 4 4 6.5 6 10l2-1v11h8V9l2 1 2-3.5L15.5 4c-.4 1.8-6.6 1.8-7 0Z" />
-    }
-    @case ('guardada') {
-      <!-- Caixa/arquivo: item "guardado" (ocupa espaço no inventário). -->
-      <rect x="4" y="7.5" width="16" height="12.5" rx="1" />
-      <path d="M3 4h18v3.5H3z" />
-      <path d="M10 11.5h4" />
-    }
-    @case ('fragmento') {
-      <!-- Diamante/cristal (resto mortal anômalo) — recorte do ícone "diamond" da Tabler Icons
+            <path d="M8 8v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2" />
+            <path
+                d="M4 10a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -8"
+            />
+            <path d="M10 14h4" />
+            <path d="M12 12v4" />
+        }
+        @case ("amplificador") {
+            <!-- Frasco de laboratório — recorte do ícone "flask" da Tabler Icons (MIT), tabler.io/icons. -->
+            <path d="M9 3l6 0" />
+            <path d="M10 9l4 0" />
+            <path d="M10 3v6l-4 11a.7 .7 0 0 0 .5 1h11a.7 .7 0 0 0 .5 -1l-4 -11v-6" />
+        }
+        @case ("sem-categoria") {
+            <!-- Etiqueta — recorte do ícone "tag" da Tabler Icons (MIT), tabler.io/icons. -->
+            <path
+                d="M7.859 6h-2.834a2.025 2.025 0 0 0 -2.025 2.025v2.834c0 .537 .213 1.052 .593 1.432l6.116 6.116a2.025 2.025 0 0 0 2.864 0l4.834 -4.834a2.025 2.025 0 0 0 0 -2.864l-6.117 -6.116a2.025 2.025 0 0 0 -1.431 -.593z"
+            />
+            <path d="M6 9h-.01" />
+        }
+        @case ("campanhas") {
+            <path d="M4 6h16M4 12h16M4 18h16" />
+        }
+        @case ("simulacao") {
+            <circle cx="12" cy="20" r="1.4" />
+            <circle cx="8" cy="14" r="1.4" />
+            <circle cx="16" cy="14" r="1.4" />
+            <circle cx="5" cy="6" r="1.4" />
+            <circle cx="9" cy="4" r="1.4" />
+            <circle cx="15" cy="4" r="1.4" />
+            <circle cx="19" cy="6" r="1.4" />
+            <path
+                d="m11.2 18.8-2.4-3.6m4 3.6 2.4-3.6M7.4 12.7 5.6 7.3m3.1 5.2.2-6.9m6.4 6.9-.2-6.9m2.9 7.1 1.8-5.4"
+            />
+        }
+        @case ("calculadora") {
+            <rect x="5" y="3" width="14" height="18" rx="2" />
+            <path d="M8 7h8M8 11h2M12 15h2" />
+        }
+        @case ("documentos") {
+            <!-- Livro aberto: acesso único ao Sistema e ao Guia do Mestre no leitor global. -->
+            <path d="M3.5 5.5A8.5 8.5 0 0 1 12 7v13a8.5 8.5 0 0 0-8.5-1.5Z" />
+            <path d="M20.5 5.5A8.5 8.5 0 0 0 12 7v13a8.5 8.5 0 0 1 8.5-1.5Z" />
+        }
+        @case ("sair") {
+            <path d="M16 17l5-5-5-5M21 12H9M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3" />
+        }
+        @case ("entrar") {
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+        }
+        @case ("chevron") {
+            <path d="m6 9 6 6 6-6" />
+        }
+        @case ("copiar") {
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+        }
+        @case ("check") {
+            <path d="M20 6 9 17l-5-5" />
+        }
+        @case ("mais") {
+            <path d="M12 5v14M5 12h14" />
+        }
+        @case ("convite") {
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m3 7 9 6 9-6" />
+        }
+        @case ("coroa") {
+            <path d="M4 18h16M5 18 3 7l5 4 4-6 4 6 5-4-2 11" />
+        }
+        @case ("atualizar") {
+            <path d="M20 11a8 8 0 1 0-1.5 5.5" />
+            <path d="M20 7v5h-5" />
+        }
+        @case ("voltar") {
+            <path d="M19 12H5M11 18l-6-6 6-6" />
+        }
+        @case ("editar") {
+            <path d="M4 20h4l10-10-4-4L4 16z" />
+            <path d="m14 6 4 4" />
+        }
+        @case ("excluir") {
+            <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+            <path d="M10 11v6M14 11v6" />
+        }
+        @case ("olho") {
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+            <circle cx="12" cy="12" r="3" />
+        }
+        @case ("olho-fechado") {
+            <path
+                d="M17.94 17.94A10.07 10.07 0 0 1 12 20C5 20 1 12 1 12a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+            />
+            <path d="M1 1 23 23" />
+        }
+        @case ("tema") {
+            <path d="M5 21v-8M5 9V3M12 21v-7M12 10V3M19 21v-4M19 13V3" />
+            <path d="M3 13h4M10 10h4M17 13h4" />
+        }
+        @case ("visao-geral") {
+            <rect x="3" y="3" width="8" height="8" rx="1.5" />
+            <rect x="13" y="3" width="8" height="8" rx="1.5" />
+            <rect x="3" y="13" width="8" height="8" rx="1.5" />
+            <rect x="13" y="13" width="8" height="8" rx="1.5" />
+        }
+        @case ("combate") {
+            <path d="M14.5 17.5 3 6V3h3l11.5 11.5" />
+            <path d="M13 19l6-6" />
+            <path d="M16 16l4 4" />
+            <path d="M19 21l2-2" />
+            <path d="M14.5 6.5 18 3h3v3l-3.5 3.5" />
+            <path d="M5 14l4 4" />
+            <path d="M7 17l-3 3" />
+            <path d="M3 19l2 2" />
+        }
+        @case ("inventario") {
+            <path d="M5 9a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
+            <path d="M9 4.5V3.5a3 3 0 0 1 6 0v1" />
+            <path d="M8 20v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v5" />
+            <path d="M8 11h8" />
+        }
+        @case ("habilidades") {
+            <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" />
+        }
+        @case ("sanidade") {
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 7.5a2.25 2.25 0 0 0 0 4.5 2.25 2.25 0 0 1 0 4.5" />
+        }
+        @case ("rolagens") {
+            <rect x="4" y="4" width="16" height="16" rx="3" />
+            <circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none" />
+        }
+        @case ("anotacoes") {
+            <!-- Folha com linhas de texto: aba de Anotações (m3-32). -->
+            <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+            <path d="M15 3v5h5" />
+            <path d="M8 12h8M8 15.5h8M8 19h5" />
+        }
+        @case ("importar") {
+            <!-- Arquivo com seta de entrada — recorte de "file-import" da Tabler Icons (MIT). -->
+            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+            <path d="M5 13V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2h-5" />
+            <path d="M2 19h7" />
+            <path d="m6 15 4 4-4 4" />
+        }
+        @case ("tabela") {
+            <!-- Grade de tabela: a mesma metáfora usada nas planilhas. -->
+            <rect x="3" y="4" width="18" height="16" rx="1" />
+            <path d="M3 10h18M3 15h18M9 4v16M15 4v16" />
+        }
+        @case ("linha-adicionar") {
+            <!-- Tabela + sinal abaixo: inserir linha. -->
+            <rect x="3" y="3" width="18" height="12" rx="1" />
+            <path d="M3 9h18M9 3v12M15 3v12M12 17v4M10 19h4" />
+        }
+        @case ("linha-remover") {
+            <!-- Tabela + sinal abaixo: remover a linha atual. -->
+            <rect x="3" y="3" width="18" height="12" rx="1" />
+            <path d="M3 9h18M9 3v12M15 3v12M10 19h4" />
+        }
+        @case ("coluna-adicionar") {
+            <!-- Tabela + sinal à direita: inserir coluna. -->
+            <rect x="3" y="3" width="12" height="18" rx="1" />
+            <path d="M3 9h12M3 15h12M9 3v18M19 10v4M17 12h4" />
+        }
+        @case ("coluna-remover") {
+            <!-- Tabela + sinal à direita: remover a coluna atual. -->
+            <rect x="3" y="3" width="12" height="18" rx="1" />
+            <path d="M3 9h12M3 15h12M9 3v18M17 12h4" />
+        }
+        @case ("vestida") {
+            <!-- Camiseta/colete: armazenamento "vestido" (equipado no corpo). -->
+            <path d="M8.5 4 4 6.5 6 10l2-1v11h8V9l2 1 2-3.5L15.5 4c-.4 1.8-6.6 1.8-7 0Z" />
+        }
+        @case ("guardada") {
+            <!-- Caixa/arquivo: item "guardado" (ocupa espaço no inventário). -->
+            <rect x="4" y="7.5" width="16" height="12.5" rx="1" />
+            <path d="M3 4h18v3.5H3z" />
+            <path d="M10 11.5h4" />
+        }
+        @case ("fragmento") {
+            <!-- Diamante/cristal (resto mortal anômalo) — recorte do ícone "diamond" da Tabler Icons
            (MIT), tabler.io/icons. -->
-      <path d="M6 5h12l3 5l-8.5 9.5a.7 .7 0 0 1 -1 0l-8.5 -9.5l3 -5" />
-      <path d="M10 12l-2 -2.2l.6 -1" />
-    }
-    @case ('fragmento-construtor') {
-      <!-- Diamante menor (canto superior esquerdo) + selo de martelo (canto inferior direito) —
+            <path d="M6 5h12l3 5l-8.5 9.5a.7 .7 0 0 1 -1 0l-8.5 -9.5l3 -5" />
+            <path d="M10 12l-2 -2.2l.6 -1" />
+        }
+        @case ("fragmento-construtor") {
+            <!-- Diamante menor (canto superior esquerdo) + selo de martelo (canto inferior direito) —
            distingue Fragmento Construtor do Potencializador nas abas/select de categoria. Martelo
            desenhado à mão (2 traços cruzados, mesma redução da Tabler pro "hammer" cheio, só que
            em miniatura — não existe ícone de martelo em miniatura pronto pra reaproveitar). -->
-      <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
-      <path d="M6 8.5l1.3 1.8l-.4.7" />
-      <path d="M15.3 21.8l4.5-4.5" />
-      <path d="M17.6 15.9l3 3" />
-    }
-    @case ('fragmento-potencializador') {
-      <!-- Diamante menor + selo de estrela (canto inferior direito) — o selo é o recorte exato do
+            <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
+            <path d="M6 8.5l1.3 1.8l-.4.7" />
+            <path d="M15.3 21.8l4.5-4.5" />
+            <path d="M17.6 15.9l3 3" />
+        }
+        @case ("fragmento-potencializador") {
+            <!-- Diamante menor + selo de estrela (canto inferior direito) — o selo é o recorte exato do
            badge de estrela usado nos combos "shield-star"/"folder-star" etc. da Tabler Icons
            (MIT), só reaproveitado aqui sobre o diamante em vez do escudo/pasta original. -->
-      <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
-      <path d="M6 8.5l1.3 1.8l-.4.7" />
-      <path
-        d="M17.8 20.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138"
-      />
-    }
-    @case ('link') {
-      <!-- Mesmo par diamante-menor + selo de `fragmento-construtor`/`fragmento-potencializador`,
+            <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
+            <path d="M6 8.5l1.3 1.8l-.4.7" />
+            <path
+                d="M17.8 20.817l-2.172 1.138a.392 .392 0 0 1 -.568 -.41l.415 -2.411l-1.757 -1.707a.389 .389 0 0 1 .217 -.665l2.428 -.352l1.086 -2.193a.392 .392 0 0 1 .702 0l1.086 2.193l2.428 .352a.39 .39 0 0 1 .217 .665l-1.757 1.707l.414 2.41a.39 .39 0 0 1 -.567 .411l-2.172 -1.138"
+            />
+        }
+        @case ("link") {
+            <!-- Mesmo par diamante-menor + selo de `fragmento-construtor`/`fragmento-potencializador`,
            com o selo de elo de corrente (recorte reduzido do ícone "link" da Tabler Icons, MIT) no
            canto inferior direito — ação "Aplicar em..." do fragmento Potencializador (acoplar a
            outro item), distinta do diamante `fragmento` do item puro. -->
-      <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
-      <path d="M6 8.5l1.3 1.8l-.4.7" />
-      <path d="M15 21.5l2-2" />
-      <path d="M15.8 16.3a2 2 0 0 1 2.9 2.9" />
-      <path d="M18.3 20.7a2 2 0 0 1-2.9-2.9" />
-    }
-    @case ('chama') {
-      <!-- Mesmo par diamante-menor + selo de `fragmento-construtor`/`fragmento-potencializador`,
+            <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
+            <path d="M6 8.5l1.3 1.8l-.4.7" />
+            <path d="M15 21.5l2-2" />
+            <path d="M15.8 16.3a2 2 0 0 1 2.9 2.9" />
+            <path d="M18.3 20.7a2 2 0 0 1-2.9-2.9" />
+        }
+        @case ("chama") {
+            <!-- Mesmo par diamante-menor + selo de `fragmento-construtor`/`fragmento-potencializador`,
            com o selo de chama (desenhado à mão, mesma redução dos demais selos) no canto inferior
            direito — ação "Consumir" do fragmento Potencializador (destruído para um benefício
            pessoal), distinta do diamante `fragmento` do item puro. -->
-      <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
-      <path d="M6 8.5l1.3 1.8l-.4.7" />
-      <path d="M17.3 13.3c1.9 2.1 3.2 4 3.2 6a3.2 3.2 0 0 1-6.4 0c0-1 .3-1.7.9-2.4c.2.9.6 1.2 1 1.2c-.2-1.9.3-3.4 1.3-4.8Z" />
-    }
-    @case ('dado') {
-      <!-- Dado d6 (face 5): gatilho de rolagem (distinto do glifo da aba "rolagens"). -->
-      <rect x="4" y="4" width="16" height="16" rx="3" />
-      <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
-    }
-    @case ('modificador') {
-      <!-- ± : rótulo do stepper de modificador de teste (soma/subtrai no resultado da rolagem,
+            <path d="M4 3h9l3.5 4.5l-8 9.5l-8-9.5Z" />
+            <path d="M6 8.5l1.3 1.8l-.4.7" />
+            <path
+                d="M17.3 13.3c1.9 2.1 3.2 4 3.2 6a3.2 3.2 0 0 1-6.4 0c0-1 .3-1.7.9-2.4c.2.9.6 1.2 1 1.2c-.2-1.9.3-3.4 1.3-4.8Z"
+            />
+        }
+        @case ("dado") {
+            <!-- Dado d6 (face 5): gatilho de rolagem (distinto do glifo da aba "rolagens"). -->
+            <rect x="4" y="4" width="16" height="16" rx="3" />
+            <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
+        }
+        @case ("modificador") {
+            <!-- ± : rótulo do stepper de modificador de teste (soma/subtrai no resultado da rolagem,
            ao contrário do `dado`, que ajusta a CONTAGEM de dados). -->
-      <path d="M12 3v8M8 7h8" />
-      <path d="M6 17h12" />
-    }
-    @case ('morrendo') {
-      <!-- Caveira: condição Morrendo (sistema-v4.1.0.md — "Condições"). -->
-      <path
-        d="M12 3a7 7 0 0 0-7 7c0 2.8 1.5 4.6 2.5 5.6.3.3.5.7.5 1.1V18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1.3c0-.4.2-.8.5-1.1 1-1 2.5-2.8 2.5-5.6a7 7 0 0 0-7-7Z"
-      />
-      <circle cx="9" cy="10.5" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="10.5" r="1.4" fill="currentColor" stroke="none" />
-      <path d="M12 11.5v2M9.5 17h5" />
-    }
-    @case ('machucado') {
-      <!-- Coração com rachadura: condição Machucado (sistema-v4.1.0.md — "Condições"). -->
-      <path d="M12 20s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5c-2.3 4.6-9.3 9-9.3 9Z" />
-      <path d="M12 8l-1.5 3 2 2-1.5 3" />
-    }
-    @case ('inconsciente') {
-      <!-- Rosto com olhos em "×": condição Inconsciente (sistema-v4.1.0.md — "Condições"). -->
-      <circle cx="12" cy="12" r="9" />
-      <path d="M7.5 9l2.5 2.5M10 9l-2.5 2.5" />
-      <path d="M14 9l2.5 2.5M16.5 9l-2.5 2.5" />
-      <path d="M9 16h6" />
-    }
-    @case ('infinito') {
-      <!-- Laço de infinito: marca "permanente" (lesão) — substitui o texto "(permanente)". -->
-      <path d="M18.2 8c5.1 0 5.1 8 0 8-5.1 0-7.1-8-12.7-8-4.6 0-4.6 8 0 8 5.6 0 7.6-8 12.7-8Z" />
-    }
-    @case ('alerta') {
-      <!-- Triângulo de alerta: sobrecarga na linha "Inventário". -->
-      <path d="M12 3 2 20h20L12 3Z" />
-      <path d="M12 9.5v4.5" />
-      <circle cx="12" cy="17" r="0.1" fill="currentColor" stroke="currentColor" stroke-width="2.2" />
-    }
-    @case ('camadas') {
-      <!-- Camadas empilhadas: toggle "não conta no total" (limite somado de empilhamentos). -->
-      <path d="M12 3 3 8l9 5 9-5z" />
-      <path d="M3 13.5 12 18.5l9-5" />
-    }
-    @case ('teto') {
-      <!-- Seta batendo num teto: toggle "não conta no teto" (limite próprio da mod). -->
-      <path d="M4 4h16" />
-      <path d="M12 20V8" />
-      <path d="M8 12l4-4 4 4" />
-    }
-    @case ('busca') {
-      <!-- Lupa: busca de itens na aba Inventário. -->
-      <circle cx="10.5" cy="10.5" r="6.5" />
-      <path d="m20 20-4.8-4.8" />
-    }
-    @case ('vassoura') {
-      <path d="m10 14 7.5-10.5" />
-      <path d="m9 13 4 4" />
-      <path d="M8 12 3 17l4 4 5-5" />
-      <path d="M4.5 18.5 7 21" />
-    }
-    @case ('duplicar') {
-      <!-- Dois retângulos sobrepostos: duplicar ficha no painel da campanha (m3-52). -->
-      <rect x="3" y="3" width="13" height="13" rx="2" />
-      <path d="M8 21h10a2 2 0 0 0 2-2V9" />
-    }
-    @case ('d20') {
-      <!-- d20 (icosaedro) preenchido — recorte de `shared/src/icons/d20.svg` (glifo de terceiros,
+            <path d="M12 3v8M8 7h8" />
+            <path d="M6 17h12" />
+        }
+        @case ("morrendo") {
+            <!-- Caveira: condição Morrendo (sistema-v4.1.0.md — "Condições"). -->
+            <path
+                d="M12 3a7 7 0 0 0-7 7c0 2.8 1.5 4.6 2.5 5.6.3.3.5.7.5 1.1V18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1.3c0-.4.2-.8.5-1.1 1-1 2.5-2.8 2.5-5.6a7 7 0 0 0-7-7Z"
+            />
+            <circle cx="9" cy="10.5" r="1.4" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="10.5" r="1.4" fill="currentColor" stroke="none" />
+            <path d="M12 11.5v2M9.5 17h5" />
+        }
+        @case ("machucado") {
+            <!-- Coração com rachadura: condição Machucado (sistema-v4.1.0.md — "Condições"). -->
+            <path d="M12 20s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5c-2.3 4.6-9.3 9-9.3 9Z" />
+            <path d="M12 8l-1.5 3 2 2-1.5 3" />
+        }
+        @case ("inconsciente") {
+            <!-- Rosto com olhos em "×": condição Inconsciente (sistema-v4.1.0.md — "Condições"). -->
+            <circle cx="12" cy="12" r="9" />
+            <path d="M7.5 9l2.5 2.5M10 9l-2.5 2.5" />
+            <path d="M14 9l2.5 2.5M16.5 9l-2.5 2.5" />
+            <path d="M9 16h6" />
+        }
+        @case ("infinito") {
+            <!-- Laço de infinito: marca "permanente" (lesão) — substitui o texto "(permanente)". -->
+            <path
+                d="M18.2 8c5.1 0 5.1 8 0 8-5.1 0-7.1-8-12.7-8-4.6 0-4.6 8 0 8 5.6 0 7.6-8 12.7-8Z"
+            />
+        }
+        @case ("alerta") {
+            <!-- Triângulo de alerta: sobrecarga na linha "Inventário". -->
+            <path d="M12 3 2 20h20L12 3Z" />
+            <path d="M12 9.5v4.5" />
+            <circle
+                cx="12"
+                cy="17"
+                r="0.1"
+                fill="currentColor"
+                stroke="currentColor"
+                stroke-width="2.2"
+            />
+        }
+        @case ("camadas") {
+            <!-- Camadas empilhadas: toggle "não conta no total" (limite somado de empilhamentos). -->
+            <path d="M12 3 3 8l9 5 9-5z" />
+            <path d="M3 13.5 12 18.5l9-5" />
+        }
+        @case ("teto") {
+            <!-- Seta batendo num teto: toggle "não conta no teto" (limite próprio da mod). -->
+            <path d="M4 4h16" />
+            <path d="M12 20V8" />
+            <path d="M8 12l4-4 4 4" />
+        }
+        @case ("busca") {
+            <!-- Lupa: busca de itens na aba Inventário. -->
+            <circle cx="10.5" cy="10.5" r="6.5" />
+            <path d="m20 20-4.8-4.8" />
+        }
+        @case ("vassoura") {
+            <path d="m10 14 7.5-10.5" />
+            <path d="m9 13 4 4" />
+            <path d="M8 12 3 17l4 4 5-5" />
+            <path d="M4.5 18.5 7 21" />
+        }
+        @case ("duplicar") {
+            <!-- Dois retângulos sobrepostos: duplicar ficha no painel da campanha (m3-52). -->
+            <rect x="3" y="3" width="13" height="13" rx="2" />
+            <path d="M8 21h10a2 2 0 0 0 2-2V9" />
+        }
+        @case ("d20") {
+            <!-- d20 (icosaedro) preenchido — recorte de `shared/src/icons/d20.svg` (glifo de terceiros,
            fill sólido em `currentColor`; svg aninhado remapeia o viewBox original 512×512 para os
            24×24 dos demais ícones, sem herdar `fill="none"`/`stroke` da linha fina deles).
            Gatilho da barra lateral de histórico de rolagens. -->
-      <svg viewBox="0 0 512.021 512.021" width="24" height="24" fill="currentColor" stroke="none">
-        <path d="M490.421,137.707c-0.085-1.003-0.149-2.005-0.555-2.987c-0.107-0.256-0.32-0.427-0.448-0.683
+            <svg
+                viewBox="0 0 512.021 512.021"
+                width="24"
+                height="24"
+                fill="currentColor"
+                stroke="none"
+            >
+                <path
+                    d="M490.421,137.707c-0.085-1.003-0.149-2.005-0.555-2.987c-0.107-0.256-0.32-0.427-0.448-0.683
           c-0.277-0.533-0.597-0.981-0.96-1.472c-0.725-1.003-1.536-1.835-2.517-2.517c-0.256-0.171-0.363-0.491-0.64-0.64l-224-128
           c-3.285-1.877-7.296-1.877-10.581,0l-224,128c-0.256,0.171-0.363,0.469-0.619,0.64c-1.024,0.704-1.899,1.557-2.645,2.624
           c-0.299,0.427-0.597,0.811-0.832,1.28c-0.149,0.277-0.384,0.469-0.512,0.768c-0.469,1.173-0.619,2.389-0.661,3.584
@@ -416,8 +448,9 @@
           M42.677,154.432l80.768,32.32L42.677,332.16V154.432z M138.635,203.392l98.325,178.773L49.248,364.288L138.635,203.392z
           M245.344,482.965l-165.12-94.336l165.12,15.573V482.965z M256.011,372.544l-99.285-180.523h198.571L256.011,372.544z
           M266.677,482.965v-78.571l165.035-15.723L266.677,482.965z M274.997,382.357l98.411-178.901l89.365,160.853L274.997,382.357z
-          M469.344,332.203l-80.811-145.451l80.811-32.32V332.203z" />
-      </svg>
+          M469.344,332.203l-80.811-145.451l80.811-32.32V332.203z"
+                />
+            </svg>
+        }
     }
-  }
 </svg>

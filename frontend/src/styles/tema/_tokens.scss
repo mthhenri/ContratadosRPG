@@ -5,80 +5,80 @@
 // português). Importado UMA vez, no topo de styles.scss.
 
 :root {
-  /* --- Superfícies (dark base — identidade, não trocar) --- */
-  --bg: #0a0c0f;
-  --surface: #13161b;
-  --surface-2: #1a1e24;
+    /* --- Superfícies (dark base — identidade, não trocar) --- */
+    --bg: #0a0c0f;
+    --surface: #13161b;
+    --surface-2: #1a1e24;
 
-  /* --- Bordas (hairline; nunca sombras pesadas) --- */
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.12);
+    /* --- Bordas (hairline; nunca sombras pesadas) --- */
+    --border: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.12);
 
-  /* --- Texto --- */
-  --text: #e6e8eb;
-  --text-dim: #969ba3;
-  --text-mute: #656a72;
+    /* --- Texto --- */
+    --text: #e6e8eb;
+    --text-dim: #969ba3;
+    --text-mute: #656a72;
 
-  /* --- Accent (TROCÁVEL via preset/color-picker — spec M1) --- */
-  --accent: #d53030;
-  --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
-  --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
+    /* --- Accent (TROCÁVEL via preset/color-picker — spec M1) --- */
+    --accent: #d53030;
+    --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
 
-  /* --- Cor de ficha (identidade visual POR PERSONAGEM — m3-61) ---
+    /* --- Cor de ficha (identidade visual POR PERSONAGEM — m3-61) ---
      Independente do --accent (que é a cor de tema por USUÁRIO, TemaService): `--cor-ficha` NUNCA
      ganha valor aqui — é sempre setada inline por instância ([style.--cor-ficha], nunca style=""
      solto fora desse padrão), no componente que já tem a ficha em escopo. As variantes dim/border
      seguem a mesma receita do accent, mas seu fallback (`var(--cor-ficha, var(--accent))`) cai no
      accent de quem visualiza quando a ficha não tem cor definida — comportamento de hoje, sem
      quebra para fichas existentes. */
-  --cor-ficha-dim: color-mix(in srgb, var(--cor-ficha, var(--accent)) 12%, transparent);
-  --cor-ficha-border: color-mix(in srgb, var(--cor-ficha, var(--accent)) 40%, transparent);
+    --cor-ficha-dim: color-mix(in srgb, var(--cor-ficha, var(--accent)) 12%, transparent);
+    --cor-ficha-border: color-mix(in srgb, var(--cor-ficha, var(--accent)) 40%, transparent);
 
-  /* --- Cores semânticas de domínio (mesma chroma/lightness, só varia o matiz) --- */
-  /* Vida é vermelho FIXO da identidade — não acompanha a troca de `--accent` (que só
+    /* --- Cores semânticas de domínio (mesma chroma/lightness, só varia o matiz) --- */
+    /* Vida é vermelho FIXO da identidade — não acompanha a troca de `--accent` (que só
      coincide com este valor na base padrão). Usado pela stat Vida nas abas agente/descanso. */
-  --vida: #d53030;      /* stat Vida (vermelho fixo) */
-  --vida-border: color-mix(in srgb, var(--vida) 40%, transparent);
-  --energy: #4c8dd0;    /* Energia */
-  --positive: #4a9d6b;  /* dano furtivo / ganho */
-  --warning: #d9a441;   /* aviso / prestígio */
+    --vida: #d53030; /* stat Vida (vermelho fixo) */
+    --vida-border: color-mix(in srgb, var(--vida) 40%, transparent);
+    --energy: #4c8dd0; /* Energia */
+    --positive: #4a9d6b; /* dano furtivo / ganho */
+    --warning: #d9a441; /* aviso / prestígio */
 
-  /* --- Cores por tipo de dano — só o "quadradinho" de resumo por tipo num resultado de
+    /* --- Cores por tipo de dano — só o "quadradinho" de resumo por tipo num resultado de
      rolagem (`resultado-rolagem__grupo`), NUNCA a rolagem inteira. Independentes de --vida/--energy/
      --positive/--warning (mesmo quando o matiz é próximo) porque o domínio é outro: tipo de dano
      causado, não stat do agente — trocar um não deve mexer no outro. Mesma receita dim/border (12%/
      40%) do --accent para o preenchimento/borda do chip; o glow (text-shadow/box-shadow) é calculado
      inline no SCSS do componente, igual ao --cor-ficha do crítico, sem token dedicado. */
-  --dano-fisico: #ef4444;      /* Físico */
-  --dano-fisico-border: color-mix(in srgb, var(--dano-fisico) 40%, transparent);
-  --dano-fisico-dim: color-mix(in srgb, var(--dano-fisico) 12%, transparent);
-  --dano-balistico: #3b82f6;   /* Balístico */
-  --dano-balistico-border: color-mix(in srgb, var(--dano-balistico) 40%, transparent);
-  --dano-balistico-dim: color-mix(in srgb, var(--dano-balistico) 12%, transparent);
-  --dano-explosao: #f97316;    /* Explosão */
-  --dano-explosao-border: color-mix(in srgb, var(--dano-explosao) 40%, transparent);
-  --dano-explosao-dim: color-mix(in srgb, var(--dano-explosao) 12%, transparent);
-  --dano-quimico: #22c55e;     /* Químico */
-  --dano-quimico-border: color-mix(in srgb, var(--dano-quimico) 40%, transparent);
-  --dano-quimico-dim: color-mix(in srgb, var(--dano-quimico) 12%, transparent);
-  --dano-geral: #e5e7eb;       /* Geral (irredutível) — quase branco, não confundir com --text */
-  --dano-geral-border: color-mix(in srgb, var(--dano-geral) 40%, transparent);
-  --dano-geral-dim: color-mix(in srgb, var(--dano-geral) 12%, transparent);
+    --dano-fisico: #ef4444; /* Físico */
+    --dano-fisico-border: color-mix(in srgb, var(--dano-fisico) 40%, transparent);
+    --dano-fisico-dim: color-mix(in srgb, var(--dano-fisico) 12%, transparent);
+    --dano-balistico: #3b82f6; /* Balístico */
+    --dano-balistico-border: color-mix(in srgb, var(--dano-balistico) 40%, transparent);
+    --dano-balistico-dim: color-mix(in srgb, var(--dano-balistico) 12%, transparent);
+    --dano-explosao: #f97316; /* Explosão */
+    --dano-explosao-border: color-mix(in srgb, var(--dano-explosao) 40%, transparent);
+    --dano-explosao-dim: color-mix(in srgb, var(--dano-explosao) 12%, transparent);
+    --dano-quimico: #22c55e; /* Químico */
+    --dano-quimico-border: color-mix(in srgb, var(--dano-quimico) 40%, transparent);
+    --dano-quimico-dim: color-mix(in srgb, var(--dano-quimico) 12%, transparent);
+    --dano-geral: #e5e7eb; /* Geral (irredutível) — quase branco, não confundir com --text */
+    --dano-geral-border: color-mix(in srgb, var(--dano-geral) 40%, transparent);
+    --dano-geral-dim: color-mix(in srgb, var(--dano-geral) 12%, transparent);
 
-  /* --- Tipografia --- */
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace; /* dados, títulos, rótulos, números */
-  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;    /* corpo, textos longos */
-  --tracking-label: 0.12em; /* rótulos UPPERCASE */
+    /* --- Tipografia --- */
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace; /* dados, títulos, rótulos, números */
+    --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* corpo, textos longos */
+    --tracking-label: 0.12em; /* rótulos UPPERCASE */
 
-  /* --- Forma (levemente arredondado) --- */
-  --radius-card: 6px;
-  --radius-control: 4px;
+    /* --- Forma (levemente arredondado) --- */
+    --radius-card: 6px;
+    --radius-control: 4px;
 
-  /* --- Espaço (densidade confortável) --- */
-  --pad-card: 20px;
-  --gap-grid: 16px;
+    /* --- Espaço (densidade confortável) --- */
+    --pad-card: 20px;
+    --gap-grid: 16px;
 
-  /* --- Textura sutil --- */
-  --grid-line: rgba(255, 255, 255, 0.02);
-  --grid-cell: 32px;
+    /* --- Textura sutil --- */
+    --grid-line: rgba(255, 255, 255, 0.02);
+    --grid-cell: 32px;
 }

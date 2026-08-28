@@ -1,50 +1,74 @@
 @if (bandeja.entradas().length > 0) {
-  <div class="bandeja" role="status" aria-live="polite" [style.--bandeja-carta-largura.px]="larguraCarta()">
-    <div class="bandeja__ancora">
-      <div
-        class="bandeja__pilha"
-        [style.transform]="'translateX(-50%) translateX(' + deslocamento() + 'px)'"
-      >
-        @for (entrada of bandeja.entradas(); track entrada.id) {
-          <article
-            class="bandeja__carta"
-            [class.bandeja__carta--saindo]="entrada.saindo"
-            [style.opacity]="entrada.saindo ? 0 : opacidade($index)"
-            (mouseenter)="bandeja.pausar(entrada.id)"
-            (mouseleave)="bandeja.retomar(entrada.id)"
-          >
-            <header class="bandeja__cabecalho">
-              <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
-              <span
-                class="bandeja__visibilidade"
-                [class.bandeja__visibilidade--privada]="entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA"
-                [attr.data-icone]="entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA ? 'olho-fechado' : 'olho'"
-              >
-                <app-icone [nome]="entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA ? 'olho-fechado' : 'olho'" />
-                {{ entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA ? 'Privada' : 'Pública' }}
-              </span>
-              <button
-                class="bandeja__fechar"
-                type="button"
-                aria-label="Fechar rolagem"
-                (click)="bandeja.fechar(entrada.id)"
-              >
-                ×
-              </button>
-            </header>
+    <div
+        class="bandeja"
+        role="status"
+        aria-live="polite"
+        [style.--bandeja-carta-largura.px]="larguraCarta()"
+    >
+        <div class="bandeja__ancora">
+            <div
+                class="bandeja__pilha"
+                [style.transform]="'translateX(-50%) translateX(' + deslocamento() + 'px)'"
+            >
+                @for (entrada of bandeja.entradas(); track entrada.id) {
+                    <article
+                        class="bandeja__carta"
+                        [class.bandeja__carta--saindo]="entrada.saindo"
+                        [style.opacity]="entrada.saindo ? 0 : opacidade($index)"
+                        (mouseenter)="bandeja.pausar(entrada.id)"
+                        (mouseleave)="bandeja.retomar(entrada.id)"
+                    >
+                        <header class="bandeja__cabecalho">
+                            <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
+                            <span
+                                class="bandeja__visibilidade"
+                                [class.bandeja__visibilidade--privada]="
+                                    entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA
+                                "
+                                [attr.data-icone]="
+                                    entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA
+                                        ? 'olho-fechado'
+                                        : 'olho'
+                                "
+                            >
+                                <app-icone
+                                    [nome]="
+                                        entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA
+                                            ? 'olho-fechado'
+                                            : 'olho'
+                                    "
+                                />
+                                {{
+                                    entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA
+                                        ? "Privada"
+                                        : "Pública"
+                                }}
+                            </span>
+                            <button
+                                class="bandeja__fechar"
+                                type="button"
+                                aria-label="Fechar rolagem"
+                                (click)="bandeja.fechar(entrada.id)"
+                            >
+                                ×
+                            </button>
+                        </header>
 
-            @if (entrada.formula) {
-              <code class="bandeja__formula">{{ entrada.formula }}</code>
-            }
+                        @if (entrada.formula) {
+                            <code class="bandeja__formula">{{ entrada.formula }}</code>
+                        }
 
-            <app-resultado-rolagem [resultado]="entrada.resultado" [corFicha]="entrada.corFicha" />
+                        <app-resultado-rolagem
+                            [resultado]="entrada.resultado"
+                            [corFicha]="entrada.corFicha"
+                        />
 
-            @if (!entrada.semAutoSumir) {
-              <span class="bandeja__barra" aria-hidden="true"></span>
-            }
-          </article>
-        }
-      </div>
+                        @if (!entrada.semAutoSumir) {
+                            <span class="bandeja__barra" aria-hidden="true"></span>
+                        }
+                    </article>
+                }
+            </div>
+        </div>
     </div>
-  </div>
 }

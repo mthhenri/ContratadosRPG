@@ -4,619 +4,746 @@
 // encapsulamento de estilo do Angular não compartilha `.scss` entre componentes — só tokens do
 // tema "Terminal de Contenção" (proibição #29).
 
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 // ── Divisão do jogador: ficha à direita, Iniciativa à esquerda (item novo) ───
 // O jogador com combatente em campo vê a própria ficha sempre aberta, ocupando 70% da tela, para
 // acompanhar o combate sem largar a ficha de vista. `.iniciativa` não muda por dentro — só encolhe.
 .iniciativa-tela {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--gap-grid);
-  width: 85vw;
-  margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-grid);
+    width: 85vw;
+    margin: 0 auto;
 
-  &--dividida {
-    .iniciativa { flex: 0 0 30%; max-width: 30%; margin: 0; }
-  }
-
-  &__ficha {
-    flex: 1 1 70%;
-    min-width: 0;
-    align-self: stretch;
-  }
-
-  &__ficha-carregando {
-    margin: 0;
-    padding: var(--pad-card);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-mute);
-  }
-
-  // A divisão encolhe `.iniciativa` sem encolher a **viewport** — os grids internos não cairiam
-  // sozinhos pro modo 1-coluna via media query (ela olha a tela inteira, não o container). Então
-  // a classe de estado força o mesmo `1fr` que `bp.mobile`/`bp.tablet` já usam, só que disparado
-  // pela divisão em vez da largura da tela — mesmo truque de `secundarias--abertas` neste arquivo.
-  &--dividida .iniciativa {
-    .painel,
-    .historico__lista { grid-template-columns: 1fr; }
-
-    .grade--compacta {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      max-height: 444px;
-      padding-right: 4px;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-gutter: stable;
+    &--dividida {
+        .iniciativa {
+            flex: 0 0 30%;
+            max-width: 30%;
+            margin: 0;
+        }
     }
-  }
 
-  // No celular a divisão nunca se aplica — a tela volta a ser só a Iniciativa, como antes desta
-  // mudança (sem regressão do recorte mobile da m7-08).
-  @include bp.mobile {
-    display: block;
+    &__ficha {
+        flex: 1 1 70%;
+        min-width: 0;
+        align-self: stretch;
+    }
 
+    &__ficha-carregando {
+        margin: 0;
+        padding: var(--pad-card);
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-style: italic;
+        color: var(--text-mute);
+    }
+
+    // A divisão encolhe `.iniciativa` sem encolher a **viewport** — os grids internos não cairiam
+    // sozinhos pro modo 1-coluna via media query (ela olha a tela inteira, não o container). Então
+    // a classe de estado força o mesmo `1fr` que `bp.mobile`/`bp.tablet` já usam, só que disparado
+    // pela divisão em vez da largura da tela — mesmo truque de `secundarias--abertas` neste arquivo.
     &--dividida .iniciativa {
-      flex: initial;
-      max-width: 100%;
+        .painel,
+        .historico__lista {
+            grid-template-columns: 1fr;
+        }
 
-      .grade--compacta {
-        grid-template-columns: 1fr;
-        max-height: none;
-        padding-right: 0;
-        overflow-y: visible;
-        scrollbar-gutter: auto;
-      }
+        .grade--compacta {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            max-height: 444px;
+            padding-right: 4px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
     }
 
-    &__ficha { display: none; }
-  }
+    // No celular a divisão nunca se aplica — a tela volta a ser só a Iniciativa, como antes desta
+    // mudança (sem regressão do recorte mobile da m7-08).
+    @include bp.mobile {
+        display: block;
+
+        &--dividida .iniciativa {
+            flex: initial;
+            max-width: 100%;
+
+            .grade--compacta {
+                grid-template-columns: 1fr;
+                max-height: none;
+                padding-right: 0;
+                overflow-y: visible;
+                scrollbar-gutter: auto;
+            }
+        }
+
+        &__ficha {
+            display: none;
+        }
+    }
 }
 
 .iniciativa {
-  width: 85vw;
-  margin: 0 auto;
-  padding: 12px 20px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-grid);
-
-  @include bp.mobile {
-    max-width: 100%;
-    // O rodapé fixo da condução (m7-08) cobre o fim da página; o piso extra devolve o espaço para
-    // que o último cartão e o log continuem alcançáveis. `has()` porque o rodapé só existe para o
-    // mestre com o encontro mutável — o jogador não paga por um piso que não tem barra em cima.
-    padding: 10px 12px 28px;
-
-    &:has(.painel__bloco--conducao) {
-      padding-bottom: calc(72px + env(safe-area-inset-bottom));
-    }
-  }
-
-  &__topo {
+    width: 85vw;
+    margin: 0 auto;
+    padding: 12px 20px 40px;
     display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  // Dois grupos — status/navegação do encontro e utilitários da sessão (item de UI m7-16). No
-  // desktop os dois ficam numa linha só, como sempre (o `gap` entre grupos iguala o `gap` interno,
-  // então a costura é invisível); no mobile cada grupo vira sua própria linha, na mesma ordem
-  // sempre — nada salta de posição conforme o que está visível naquele momento.
-  &__acoes {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto;
-
-    @include bp.mobile { flex-direction: column; align-items: flex-end; gap: 8px; }
-  }
-
-  &__acoes-grupo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    // Mestre vendo o histórico pode acumular "Combate atual" + "N encerrados" — em 360px isso não
-    // cabe numa linha só.
-    @include bp.mobile { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-
-    // Sem filhos renderizados (ex.: mestre fora do histórico), o grupo não deve custar o `gap` da
-    // coluna — some do fluxo em vez de abrir uma linha vazia.
-    &:empty { display: none; }
-  }
-
-  &__voltar {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 26px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    text-decoration: none;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    app-icone { font-size: 13px; }
-
-    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
-
-    @include bp.mobile { width: bp.$alvo-toque; height: bp.$alvo-toque; }
-  }
-
-  // Chip de espectador (m7-06) — o jogador precisa saber por que a barra de condução não existe
-  // para ele. Sem isso a tela parece quebrada, não restrita.
-  &__papel {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 9px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-
-    app-icone { font-size: 12px; }
-  }
-
-  // Link discreto do histórico no cabeçalho ("Encontros anteriores" saiu do rodapé) — mesma
-  // receita de chip do `&__papel`, mas clicável: acende accent no hover, como `&__voltar`.
-  &__historico {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 9px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    app-icone { font-size: 12px; }
-
-    &:hover { color: var(--accent); border-color: var(--accent-border); background: var(--surface-2); }
-  }
-
-  // A ficha lateral só existe no desktop. No telefone este atalho entra no fluxo do cabeçalho,
-  // junto dos demais controles do jogador — nunca flutua sobre os cartões do encontro (a versão
-  // `position: fixed` anterior sobrepunha o cartão que estivesse embaixo dela ao rolar a lista).
-  &__minha-ficha {
-    display: none;
+    flex-direction: column;
+    gap: var(--gap-grid);
 
     @include bp.mobile {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      flex: none;
-      min-height: bp.$alvo-toque;
-      padding: 0 14px;
-      border: 1px solid var(--accent-border);
-      border-radius: var(--radius-control);
-      background: var(--surface);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: var(--tracking-label);
-      text-transform: uppercase;
-      cursor: pointer;
+        max-width: 100%;
+        // O rodapé fixo da condução (m7-08) cobre o fim da página; o piso extra devolve o espaço para
+        // que o último cartão e o log continuem alcançáveis. `has()` porque o rodapé só existe para o
+        // mestre com o encontro mutável — o jogador não paga por um piso que não tem barra em cima.
+        padding: 10px 12px 28px;
 
-      app-icone { font-size: 14px; color: var(--accent); }
-
-      &:hover { border-color: var(--accent); background: var(--surface-2); }
+        &:has(.painel__bloco--conducao) {
+            padding-bottom: calc(72px + env(safe-area-inset-bottom));
+        }
     }
-  }
 
-  &__carregando,
-  &__vazio {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-style: italic;
-    color: var(--text-mute);
-  }
+    &__topo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    // Dois grupos — status/navegação do encontro e utilitários da sessão (item de UI m7-16). No
+    // desktop os dois ficam numa linha só, como sempre (o `gap` entre grupos iguala o `gap` interno,
+    // então a costura é invisível); no mobile cada grupo vira sua própria linha, na mesma ordem
+    // sempre — nada salta de posição conforme o que está visível naquele momento.
+    &__acoes {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+
+        @include bp.mobile {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+    }
+
+    &__acoes-grupo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        // Mestre vendo o histórico pode acumular "Combate atual" + "N encerrados" — em 360px isso não
+        // cabe numa linha só.
+        @include bp.mobile {
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        // Sem filhos renderizados (ex.: mestre fora do histórico), o grupo não deve custar o `gap` da
+        // coluna — some do fluxo em vez de abrir uma linha vazia.
+        &:empty {
+            display: none;
+        }
+    }
+
+    &__voltar {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 26px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        text-decoration: none;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        app-icone {
+            font-size: 13px;
+        }
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    // Chip de espectador (m7-06) — o jogador precisa saber por que a barra de condução não existe
+    // para ele. Sem isso a tela parece quebrada, não restrita.
+    &__papel {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+
+        app-icone {
+            font-size: 12px;
+        }
+    }
+
+    // Link discreto do histórico no cabeçalho ("Encontros anteriores" saiu do rodapé) — mesma
+    // receita de chip do `&__papel`, mas clicável: acende accent no hover, como `&__voltar`.
+    &__historico {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        app-icone {
+            font-size: 12px;
+        }
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+    }
+
+    // A ficha lateral só existe no desktop. No telefone este atalho entra no fluxo do cabeçalho,
+    // junto dos demais controles do jogador — nunca flutua sobre os cartões do encontro (a versão
+    // `position: fixed` anterior sobrepunha o cartão que estivesse embaixo dela ao rolar a lista).
+    &__minha-ficha {
+        display: none;
+
+        @include bp.mobile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            flex: none;
+            min-height: bp.$alvo-toque;
+            padding: 0 14px;
+            border: 1px solid var(--accent-border);
+            border-radius: var(--radius-control);
+            background: var(--surface);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: var(--tracking-label);
+            text-transform: uppercase;
+            cursor: pointer;
+
+            app-icone {
+                font-size: 14px;
+                color: var(--accent);
+            }
+
+            &:hover {
+                border-color: var(--accent);
+                background: var(--surface-2);
+            }
+        }
+    }
+
+    &__carregando,
+    &__vazio {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-style: italic;
+        color: var(--text-mute);
+    }
 }
 
 // ── Cabeçalho de seção (mesmo par índice + régua da ficha de criatura) ───────
 .cartao {
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-  }
-
-  &__indice {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 3px;
-  }
-
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-
-    // 13px é o tamanho do mockup mobile — em 360px o nome do encontro cabe em menos linhas sem
-    // deixar de ser o título da tela.
-    @include bp.mobile { font-size: 13px; }
-  }
-
-  &__regua { flex: 1; height: 1px; background: var(--border); }
-
-  &__meta {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-mute);
-
-    // `4 participantes` é a leitura de desktop; no mobile o cabeçalho vira o contador `R3 · T3/6`
-    // do mockup, que é o que a mesa consulta a cada turno.
-    @include bp.mobile { display: none; }
-
-    &--compacta {
-      display: none;
-
-      @include bp.mobile { display: inline; }
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
     }
-  }
+
+    &__indice {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+    }
+
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+
+        // 13px é o tamanho do mockup mobile — em 360px o nome do encontro cabe em menos linhas sem
+        // deixar de ser o título da tela.
+        @include bp.mobile {
+            font-size: 13px;
+        }
+    }
+
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__meta {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
+
+        // `4 participantes` é a leitura de desktop; no mobile o cabeçalho vira o contador `R3 · T3/6`
+        // do mockup, que é o que a mesa consulta a cada turno.
+        @include bp.mobile {
+            display: none;
+        }
+
+        &--compacta {
+            display: none;
+
+            @include bp.mobile {
+                display: inline;
+            }
+        }
+    }
 }
 
 // ── Faixa de condução ───────────────────────────────────────────────────────
 .painel {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
 
-  @include bp.tablet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @include bp.mobile { grid-template-columns: 1fr; }
-
-  &__bloco {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-
-    &--contadores { gap: 14px; }
-
-    &--vez {
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      gap: 5px;
+    @include bp.tablet {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    // Tem alguém agindo: a moldura acende, como no mockup.
-    &--acesa { border-color: var(--accent-border); }
-
-    &--controles { flex-wrap: wrap; }
-
-    // Bloco cuja informação o cabeçalho compacto do mobile já entrega (Rodada/Turno).
-    &--redundante-mobile {
-      @include bp.mobile { display: none; }
-    }
-
-    // Ação primária do mestre. No mobile vira a barra fixa do rodapé do mockup de 360px — a
-    // mesma receita do rodapé do guia de criação de ficha, inclusive o `z-index`.
-    &--conducao {
-      @include bp.mobile {
-        position: fixed;
-        z-index: 20;
-        inset: auto 0 0;
-        gap: 8px;
-        padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
-        background: var(--surface);
-        border: 0;
-        border-top: 1px solid var(--border);
-        border-radius: 0;
-      }
-    }
-  }
-
-  &__contador { flex: 1; min-width: 0; }
-
-  &__rotulo {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-    margin-bottom: 7px;
-  }
-
-  &__numero {
-    font-family: var(--font-mono);
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--text);
-
-    &--destaque { color: var(--accent); }
-    &--texto { font-size: 15px; }
-  }
-
-  &__fracao { font-size: 13px; color: var(--text-mute); }
-
-  &__vez {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-    overflow-wrap: anywhere;
-
-    &--vazia { font-size: 12px; font-weight: 600; color: var(--text-mute); }
-  }
-
-  &__vez-detalhe { font-size: 11px; font-weight: 600; color: var(--text-mute); }
-
-  &__acao {
-    flex: 1;
-    min-width: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 10px 12px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    app-icone { font-size: 13px; }
-  }
-
-  // "Avançar" reaproveita o path de `voltar` espelhado (proibição #29 não cobre ícone — evita
-  // duplicar um SVG quase idêntico só pela direção da seta).
-  &__acao-icone--avancar { transform: scaleX(-1); }
-
-  // O rótulo do bloco "Age agora" não recebe a margem dos contadores (ali ele é a 1ª de duas linhas).
-  &__bloco--vez &__rotulo { margin-bottom: 0; }
-
-  // Na barra do rodapé, o `Voltar` encolhe para o ícone de 44px do mockup e o `Avançar turno`
-  // fica com todo o resto da largura — a ação repetida é a que ganha o polegar.
-  &__acao--recuo {
     @include bp.mobile {
-      flex: none;
-      width: bp.$alvo-toque;
-      padding: 0;
+        grid-template-columns: 1fr;
     }
-  }
 
-  &__acao-texto {
-    @include bp.mobile { display: none; }
-  }
+    &__bloco {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
 
-  // "Avançar" no desktop (a faixa é estreita), "Avançar turno" no mobile (a barra é larga e o
-  // botão precisa dizer sozinho o que faz, longe do contador).
-  &__acao-complemento {
-    display: none;
+        &--contadores {
+            gap: 14px;
+        }
 
-    @include bp.mobile { display: inline; }
-  }
+        &--vez {
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        // Tem alguém agindo: a moldura acende, como no mockup.
+        &--acesa {
+            border-color: var(--accent-border);
+        }
+
+        &--controles {
+            flex-wrap: wrap;
+        }
+
+        // Bloco cuja informação o cabeçalho compacto do mobile já entrega (Rodada/Turno).
+        &--redundante-mobile {
+            @include bp.mobile {
+                display: none;
+            }
+        }
+
+        // Ação primária do mestre. No mobile vira a barra fixa do rodapé do mockup de 360px — a
+        // mesma receita do rodapé do guia de criação de ficha, inclusive o `z-index`.
+        &--conducao {
+            @include bp.mobile {
+                position: fixed;
+                z-index: 20;
+                inset: auto 0 0;
+                gap: 8px;
+                padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+                background: var(--surface);
+                border: 0;
+                border-top: 1px solid var(--border);
+                border-radius: 0;
+            }
+        }
+    }
+
+    &__contador {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__rotulo {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        margin-bottom: 7px;
+    }
+
+    &__numero {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--text);
+
+        &--destaque {
+            color: var(--accent);
+        }
+        &--texto {
+            font-size: 15px;
+        }
+    }
+
+    &__fracao {
+        font-size: 13px;
+        color: var(--text-mute);
+    }
+
+    &__vez {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+
+        &--vazia {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-mute);
+        }
+    }
+
+    &__vez-detalhe {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
+
+    &__acao {
+        flex: 1;
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 10px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        app-icone {
+            font-size: 13px;
+        }
+    }
+
+    // "Avançar" reaproveita o path de `voltar` espelhado (proibição #29 não cobre ícone — evita
+    // duplicar um SVG quase idêntico só pela direção da seta).
+    &__acao-icone--avancar {
+        transform: scaleX(-1);
+    }
+
+    // O rótulo do bloco "Age agora" não recebe a margem dos contadores (ali ele é a 1ª de duas linhas).
+    &__bloco--vez &__rotulo {
+        margin-bottom: 0;
+    }
+
+    // Na barra do rodapé, o `Voltar` encolhe para o ícone de 44px do mockup e o `Avançar turno`
+    // fica com todo o resto da largura — a ação repetida é a que ganha o polegar.
+    &__acao--recuo {
+        @include bp.mobile {
+            flex: none;
+            width: bp.$alvo-toque;
+            padding: 0;
+        }
+    }
+
+    &__acao-texto {
+        @include bp.mobile {
+            display: none;
+        }
+    }
+
+    // "Avançar" no desktop (a faixa é estreita), "Avançar turno" no mobile (a barra é larga e o
+    // botão precisa dizer sozinho o que faz, longe do contador).
+    &__acao-complemento {
+        display: none;
+
+        @include bp.mobile {
+            display: inline;
+        }
+    }
 }
 
 // ── Ações secundárias do mestre (m7-08) ─────────────────────────────────────
 .secundarias {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-
-  &__grupo {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 
-    // Recolhidas por padrão no mobile; o gatilho as abre.
-    @include bp.mobile {
-      display: none;
-      width: 100%;
-      flex-direction: column;
+    &__grupo {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
 
-      .secundarias--abertas & { display: flex; }
+        // Recolhidas por padrão no mobile; o gatilho as abre.
+        @include bp.mobile {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+
+            .secundarias--abertas & {
+                display: flex;
+            }
+        }
     }
-  }
 
-  // O gatilho não existe no desktop: lá as ações já estão todas na tela.
-  &__gatilho {
-    display: none;
-    padding: 10px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
+    // O gatilho não existe no desktop: lá as ações já estão todas na tela.
+    &__gatilho {
+        display: none;
+        padding: 10px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
 
-    @include bp.mobile { display: inline-flex; width: 100%; justify-content: center; }
-  }
+        @include bp.mobile {
+            display: inline-flex;
+            width: 100%;
+            justify-content: center;
+        }
+    }
 
-  &__acao {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 10px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 10px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
 
-    app-icone { font-size: 13px; }
-  }
+        app-icone {
+            font-size: 13px;
+        }
+    }
 }
 
 .adicionar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-  padding: var(--pad-card);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-
-  &__campo {
-    flex: 1 1 200px;
-    min-width: 0;
     display: flex;
-    flex-direction: column;
-    gap: 7px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
 
-    &--curto { flex: 0 1 130px; }
-    &--identidade { flex: 0 1 118px; }
-    &--imagem { position: relative; flex: 1 1 190px; cursor: pointer; }
-  }
+    &__campo {
+        flex: 1 1 200px;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
 
-  &__identidade {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+        &--curto {
+            flex: 0 1 130px;
+        }
+        &--identidade {
+            flex: 0 1 118px;
+        }
+        &--imagem {
+            position: relative;
+            flex: 1 1 190px;
+            cursor: pointer;
+        }
+    }
 
-  &__preview {
-    width: 44px;
-    height: 44px;
-    overflow: hidden;
-    flex: none;
-    background-color: color-mix(in srgb, var(--cor-avulso) 14%, var(--surface));
-    background-image: repeating-linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--cor-avulso) 30%, transparent) 0 3px,
-      transparent 3px 9px
-    );
-    border: 1px solid var(--cor-avulso);
-    border-radius: var(--radius-control);
-  }
+    &__identidade {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-  &__preview-imagem { width: 100%; height: 100%; display: block; object-fit: cover; }
+    &__preview {
+        width: 44px;
+        height: 44px;
+        overflow: hidden;
+        flex: none;
+        background-color: color-mix(in srgb, var(--cor-avulso) 14%, var(--surface));
+        background-image: repeating-linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--cor-avulso) 30%, transparent) 0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--cor-avulso);
+        border-radius: var(--radius-control);
+    }
 
-  &__cor {
-    width: 44px;
-    height: 44px;
-    padding: 3px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-  }
+    &__preview-imagem {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+    }
 
-  &__arquivo { display: flex; align-items: center; min-height: 44px; color: var(--text-dim); }
+    &__cor {
+        width: 44px;
+        height: 44px;
+        padding: 3px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+    }
 
-  &__arquivo-entrada {
-    position: absolute;
-    inset: 20px 0 0;
-    width: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
+    &__arquivo {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        color: var(--text-dim);
+    }
 
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-  }
+    &__arquivo-entrada {
+        position: absolute;
+        inset: 20px 0 0;
+        width: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
 
-  &__acao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__acao {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 }
 
 .abertura {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: var(--pad-card);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-
-  &__ajuda {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-dim);
-  }
-
-  &__linha {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
+    flex-direction: column;
+    gap: 12px;
+    padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
 
-  &__acao {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+    &__ajuda {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+
+    &__linha {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    &__acao {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
 }
 
 // Campo de texto/número/seleção — mesma receita do `.acesso__select` da ficha de criatura.
 .campo {
-  flex: 1;
-  min-width: 0;
-  padding: 11px 12px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--text);
-  background: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  outline: none;
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    outline: none;
 
-  &:focus { border-color: var(--accent-border); }
+    &:focus {
+        border-color: var(--accent-border);
+    }
 
-  @include bp.mobile { min-height: bp.$alvo-toque; }
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
 }
 
 // ── Grade de cartões ────────────────────────────────────────────────────────
@@ -624,121 +751,150 @@
 // grupos grandes não fiquem espremidos em 3 colunas fixas; o cartão compacto (m7-05) absorve a
 // coluna extra sem truncar. Tablet/mobile ignoram a variável e mantêm a contagem fixa de sempre.
 .grade {
-  display: grid;
-  grid-template-columns: repeat(var(--grade-colunas, 3), minmax(0, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(var(--grade-colunas, 3), minmax(0, 1fr));
+    gap: 12px;
 
-  @include bp.tablet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @include bp.mobile {
-    grid-template-columns: 1fr;
-    max-height: none;
-    padding-right: 0;
-    overflow-y: visible;
-    scrollbar-gutter: auto;
-  }
-
+    @include bp.tablet {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @include bp.mobile {
+        grid-template-columns: 1fr;
+        max-height: none;
+        padding-right: 0;
+        overflow-y: visible;
+        scrollbar-gutter: auto;
+    }
 }
 
 // ── Botões (encapsulados por componente — ver comentário do topo) ────────────
 .botao {
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  cursor: pointer;
-  transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition:
+        filter 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 
-  @include bp.mobile { min-height: bp.$alvo-toque; }
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
 
-  &:disabled { opacity: 0.55; cursor: default; }
+    &:disabled {
+        opacity: 0.55;
+        cursor: default;
+    }
 
-  &--primario {
-    background: var(--accent);
-    color: var(--bg);
-    border: 0;
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
 
-    &:hover:not(:disabled) { filter: brightness(1.08); }
-  }
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+    }
 
-  // Chamado do mestre para os jogadores rolarem a própria iniciativa — verde por ser um convite,
-  // não uma ação de risco/conclusão (que já usam --primario/--perigo, ambos na cor de accent).
-  &--positivo {
-    background: var(--positive);
-    color: var(--bg);
-    border: 0;
+    // Chamado do mestre para os jogadores rolarem a própria iniciativa — verde por ser um convite,
+    // não uma ação de risco/conclusão (que já usam --primario/--perigo, ambos na cor de accent).
+    &--positivo {
+        background: var(--positive);
+        color: var(--bg);
+        border: 0;
 
-    &:hover:not(:disabled) { filter: brightness(1.08); }
-  }
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+    }
 
-  &--secundario {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border-strong);
+    &--secundario {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border-strong);
 
-    &:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-border); }
-  }
+        &:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
 
-  // Ação destrutiva/terminal (Encerrar) — accent no texto e na borda, nunca preenchido.
-  &--perigo {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent-border);
+    // Ação destrutiva/terminal (Encerrar) — accent no texto e na borda, nunca preenchido.
+    &--perigo {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--accent-border);
 
-    &:hover:not(:disabled) { background: var(--accent-dim); }
-  }
+        &:hover:not(:disabled) {
+            background: var(--accent-dim);
+        }
+    }
 }
 
 // ── Histórico de encontros (complemento da m7-06; gatilho no cabeçalho) ──────
 .historico {
-  // O painel que abre sob o cabeçalho quando `&historico` (no `.iniciativa__acoes`) é clicado.
-  &__painel {
-    padding: var(--pad-card);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-  }
+    // O painel que abre sob o cabeçalho quando `&historico` (no `.iniciativa__acoes`) é clicado.
+    &__painel {
+        padding: var(--pad-card);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+    }
 
-  &__lista {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    &__lista {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
 
-    @include bp.tablet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    @include bp.mobile { grid-template-columns: 1fr; }
-  }
+        @include bp.tablet {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
 
-  &__botao {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: var(--pad-card);
-    text-align: left;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+    &__botao {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: var(--pad-card);
+        text-align: left;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        cursor: pointer;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease;
 
-    &:hover { border-color: var(--accent-border); background: var(--surface-2); }
+        &:hover {
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
 
-    @include bp.mobile { min-height: bp.$alvo-toque; }
-  }
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
 
-  &__nome {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    overflow-wrap: anywhere;
-  }
+    &__nome {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
 
-  &__meta {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-mute);
-  }
+    &__meta {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
 }

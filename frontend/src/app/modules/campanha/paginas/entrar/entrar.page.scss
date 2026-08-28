@@ -1,172 +1,175 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 .campanha-formulario {
-  &__corpo {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-  }
-
-  &__entrada {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text);
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-border);
+    &__corpo {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
-  }
 
-  &__enviar {
-    margin-top: 4px;
-    padding: 11px 16px;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
     }
-  }
 
-  // Alvo de toque confortável (m1-15 / WCAG 2.5.5) nos controles do formulário.
-  @include bp.mobile {
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
     &__entrada {
-      min-height: bp.$alvo-toque;
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent-border);
+        }
     }
 
     &__enviar {
-      min-height: bp.$alvo-toque;
+        margin-top: 4px;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
     }
-  }
+
+    // Alvo de toque confortável (m1-15 / WCAG 2.5.5) nos controles do formulário.
+    @include bp.mobile {
+        &__entrada {
+            min-height: bp.$alvo-toque;
+        }
+
+        &__enviar {
+            min-height: bp.$alvo-toque;
+        }
+    }
 }
 
 // Botão — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .botao {
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  cursor: pointer;
-  transition: filter 0.15s ease;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: filter 0.15s ease;
 
-  &--primario {
-    background: var(--accent);
-    color: var(--bg);
-    border: 0;
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
 
-    &:hover:not(:disabled) {
-      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-      filter: brightness(1.08);
+        &:hover:not(:disabled) {
+            // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+            filter: brightness(1.08);
+        }
     }
-  }
 }
 
 // Dialog — mesmo padrão `.dialogo` genérico já usado por `FichaAcervo`/`FichaVisualizar`,
 // copiado aqui (view encapsulation não deixa reusar o `.scss` de outro componente).
 .dialogo {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 60px 20px;
-  overflow-y: auto;
-
-  &__fundo {
     position: fixed;
     inset: 0;
-    background: rgb(0 0 0 / 55%);
-    border: 0;
-    cursor: default;
-  }
-
-  &__painel {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 480px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-  }
-
-  &__cabecalho {
+    z-index: 40;
     display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 18px;
-  }
-
-  &__indice {
-    display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    width: 22px;
-    height: 22px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 3px;
-  }
+    padding: 60px 20px;
+    overflow-y: auto;
 
-  &__titulo {
-    margin: 0;
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  &__fechar {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--accent);
-      border-color: var(--accent-border);
-      background: var(--surface-2);
+    &__fundo {
+        position: fixed;
+        inset: 0;
+        background: rgb(0 0 0 / 55%);
+        border: 0;
+        cursor: default;
     }
-  }
+
+    &__painel {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 480px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
+        box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 18px;
+    }
+
+    &__indice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+    }
+
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__fechar {
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+    }
 }

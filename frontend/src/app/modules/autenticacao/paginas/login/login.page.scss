@@ -1,357 +1,357 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 .autenticacao {
-  display: flex;
-  justify-content: center;
-  padding: 6vh 0;
-
-  &__moldura {
-    width: 100%;
-    max-width: 900px;
     display: flex;
-    flex-wrap: wrap;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    overflow: hidden;
-  }
-
-  // Painel de marca — mesma identidade dos protótipos (docs/design/examples/login.html):
-  // detalhes de canto, eyebrow em accent, slogan mono e destaques com ícone ancorados embaixo.
-  &__marca {
-    position: relative;
-    flex: 1 1 320px;
-    background: var(--bg);
-    border-right: 1px solid var(--border);
-    padding: 34px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  // Marca d'água — mesmo tratamento do painel de marca dos protótipos (opacity .04, canto
-  // inferior direito, atrás do conteúdo).
-  &__marca-agua {
-    position: absolute;
-    right: -50px;
-    bottom: -40px;
-    z-index: 0;
-    font-size: 220px;
-    opacity: 0.04;
-    pointer-events: none;
-  }
-
-  &__canto {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border-top: 1px solid var(--border-strong);
-
-    &--esquerda {
-      top: 14px;
-      left: 14px;
-      border-left: 1px solid var(--border-strong);
-    }
-
-    &--direita {
-      top: 14px;
-      right: 14px;
-      border-right: 1px solid var(--border-strong);
-    }
-  }
-
-  &__marca-linha {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  &__logo {
-    font-size: 26px;
-  }
-
-  &__marca-texto {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 16px;
-    letter-spacing: 0.02em;
-    color: var(--text);
-  }
-
-  &__marca-sufixo {
-    margin-left: 0.35em;
-    color: var(--accent);
-  }
-
-  &__eyebrow {
-    margin-top: 30px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  &__slogan {
-    margin: 12px 0 0;
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 22px;
-    line-height: 1.25;
-    color: var(--text);
-    max-width: 30ch;
-  }
-
-  &__descricao {
-    margin: 12px 0 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text-dim);
-    max-width: 34ch;
-  }
-
-  &__destaques {
-    list-style: none;
-    margin: auto 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  &__destaque {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    font-size: 12.5px;
-    color: var(--text-dim);
-
-    app-icone {
-      flex: none;
-      width: 26px;
-      height: 26px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent);
-      border: 1px solid var(--accent-border);
-      border-radius: var(--radius-control);
-    }
-  }
-
-  &__nota {
-    margin-top: auto;
-    display: flex;
-    align-items: flex-start;
-    gap: 11px;
-    padding: 13px 15px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    font-size: 11.5px;
-    line-height: 1.5;
-    color: var(--text-dim);
-
-    app-icone {
-      flex: none;
-      margin-top: 1px;
-      color: var(--text-mute);
-    }
-  }
-
-  &__painel {
-    flex: 1 1 340px;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
     justify-content: center;
-  }
+    padding: 6vh 0;
 
-  &__titulo {
-    margin: 8px 0 0;
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 24px;
-    color: var(--text);
-  }
-
-  &__formulario {
-    margin-top: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  &__campo {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-mute);
-  }
-
-  &__entrada {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text);
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-border);
+    &__moldura {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        flex-wrap: wrap;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        overflow: hidden;
     }
 
-    // Abre espaço à direita para o botão de revelar a senha não cobrir o texto digitado.
-    &--senha {
-      padding-right: 44px;
-    }
-  }
-
-  // Campo de senha com o botão "olhinho" (revelar/ocultar) sobreposto à direita.
-  &__campo-senha {
-    position: relative;
-  }
-
-  &__olho {
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: 0;
-    border-radius: var(--radius-control);
-    color: var(--text-mute);
-    cursor: pointer;
-
-    app-icone {
-      font-size: 17px;
-    }
-
-    &:hover {
-      color: var(--text);
-    }
-  }
-
-  &__erro {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--accent);
-  }
-
-  &__enviar {
-    margin-top: 4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 11px 16px;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-  }
-
-  &__alternativa {
-    margin: 18px 0 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-dim);
-    text-align: center;
-  }
-
-  &__link {
-    color: var(--accent);
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  @include bp.mobile {
-    padding: 0;
-
-    // Painel de marca empilha inteiro acima do formulário — apertar o padding evita empurrar o
-    // formulário pra muito abaixo da dobra em ~360px.
+    // Painel de marca — mesma identidade dos protótipos (docs/design/examples/login.html):
+    // detalhes de canto, eyebrow em accent, slogan mono e destaques com ícone ancorados embaixo.
     &__marca {
-      border-right: 0;
-      border-bottom: 1px solid var(--border);
-      padding: 22px;
-
-      // Enxugar a marca no mobile: mantém logo + eyebrow + slogan (identidade) e esconde o
-      // conteúdo decorativo secundário, trazendo o formulário pra cima da dobra. Escopado ao
-      // painel de marca porque --descricao também existe no painel do formulário.
-      .autenticacao__descricao,
-      .autenticacao__destaques,
-      .autenticacao__nota {
-        display: none;
-      }
+        position: relative;
+        flex: 1 1 320px;
+        background: var(--bg);
+        border-right: 1px solid var(--border);
+        padding: 34px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
 
-    &__painel {
-      padding: 26px 20px;
+    // Marca d'água — mesmo tratamento do painel de marca dos protótipos (opacity .04, canto
+    // inferior direito, atrás do conteúdo).
+    &__marca-agua {
+        position: absolute;
+        right: -50px;
+        bottom: -40px;
+        z-index: 0;
+        font-size: 220px;
+        opacity: 0.04;
+        pointer-events: none;
+    }
+
+    &__canto {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-top: 1px solid var(--border-strong);
+
+        &--esquerda {
+            top: 14px;
+            left: 14px;
+            border-left: 1px solid var(--border-strong);
+        }
+
+        &--direita {
+            top: 14px;
+            right: 14px;
+            border-right: 1px solid var(--border-strong);
+        }
+    }
+
+    &__marca-linha {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    &__logo {
+        font-size: 26px;
+    }
+
+    &__marca-texto {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: 0.02em;
+        color: var(--text);
+    }
+
+    &__marca-sufixo {
+        margin-left: 0.35em;
+        color: var(--accent);
+    }
+
+    &__eyebrow {
+        margin-top: 30px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
     }
 
     &__slogan {
-      font-size: 19px;
+        margin: 12px 0 0;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 1.25;
+        color: var(--text);
+        max-width: 30ch;
     }
 
-    // Alvo de toque confortável (m1-15 / WCAG 2.5.5) nos controles do formulário.
+    &__descricao {
+        margin: 12px 0 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--text-dim);
+        max-width: 34ch;
+    }
+
+    &__destaques {
+        list-style: none;
+        margin: auto 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    &__destaque {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 12.5px;
+        color: var(--text-dim);
+
+        app-icone {
+            flex: none;
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            border: 1px solid var(--accent-border);
+            border-radius: var(--radius-control);
+        }
+    }
+
+    &__nota {
+        margin-top: auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 13px 15px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: var(--text-dim);
+
+        app-icone {
+            flex: none;
+            margin-top: 1px;
+            color: var(--text-mute);
+        }
+    }
+
+    &__painel {
+        flex: 1 1 340px;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    &__titulo {
+        margin: 8px 0 0;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 24px;
+        color: var(--text);
+    }
+
+    &__formulario {
+        margin-top: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    &__campo {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
     &__entrada {
-      min-height: bp.$alvo-toque;
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent-border);
+        }
+
+        // Abre espaço à direita para o botão de revelar a senha não cobrir o texto digitado.
+        &--senha {
+            padding-right: 44px;
+        }
+    }
+
+    // Campo de senha com o botão "olhinho" (revelar/ocultar) sobreposto à direita.
+    &__campo-senha {
+        position: relative;
+    }
+
+    &__olho {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 0;
+        border-radius: var(--radius-control);
+        color: var(--text-mute);
+        cursor: pointer;
+
+        app-icone {
+            font-size: 17px;
+        }
+
+        &:hover {
+            color: var(--text);
+        }
+    }
+
+    &__erro {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--accent);
     }
 
     &__enviar {
-      min-height: bp.$alvo-toque;
+        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
     }
 
-    // Link de navegação entre telas (login → registro) — mesma trava de 44px (m2-08).
-    &__link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: bp.$alvo-toque;
-      padding: 4px 6px;
+    &__alternativa {
+        margin: 18px 0 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text-dim);
+        text-align: center;
     }
-  }
+
+    &__link {
+        color: var(--accent);
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    @include bp.mobile {
+        padding: 0;
+
+        // Painel de marca empilha inteiro acima do formulário — apertar o padding evita empurrar o
+        // formulário pra muito abaixo da dobra em ~360px.
+        &__marca {
+            border-right: 0;
+            border-bottom: 1px solid var(--border);
+            padding: 22px;
+
+            // Enxugar a marca no mobile: mantém logo + eyebrow + slogan (identidade) e esconde o
+            // conteúdo decorativo secundário, trazendo o formulário pra cima da dobra. Escopado ao
+            // painel de marca porque --descricao também existe no painel do formulário.
+            .autenticacao__descricao,
+            .autenticacao__destaques,
+            .autenticacao__nota {
+                display: none;
+            }
+        }
+
+        &__painel {
+            padding: 26px 20px;
+        }
+
+        &__slogan {
+            font-size: 19px;
+        }
+
+        // Alvo de toque confortável (m1-15 / WCAG 2.5.5) nos controles do formulário.
+        &__entrada {
+            min-height: bp.$alvo-toque;
+        }
+
+        &__enviar {
+            min-height: bp.$alvo-toque;
+        }
+
+        // Link de navegação entre telas (login → registro) — mesma trava de 44px (m2-08).
+        &__link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: bp.$alvo-toque;
+            padding: 4px 6px;
+        }
+    }
 }
 
 // Botão — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .botao {
-  border-radius: var(--radius-control);
-  font-family: var(--font-mono);
-  cursor: pointer;
-  transition: filter 0.15s ease;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: filter 0.15s ease;
 
-  &--primario {
-    background: var(--accent);
-    color: var(--bg);
-    border: 0;
+    &--primario {
+        background: var(--accent);
+        color: var(--bg);
+        border: 0;
 
-    &:hover:not(:disabled) {
-      // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-      filter: brightness(1.08);
+        &:hover:not(:disabled) {
+            // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+            filter: brightness(1.08);
+        }
     }
-  }
 }

@@ -1,52 +1,70 @@
 <div class="resultado-rolagem" [style.--cor-ficha]="corFicha()">
-  @for (resultado of resultadosExibidos(); track $index) {
-    <div class="resultado-rolagem__corpo">
-      <span class="resultado-rolagem__total" [class.resultado-rolagem__total--critico]="ehCritico(resultado)">
-        {{ resultado.total }}
-        @if ($count > 1) {
-          <span class="resultado-rolagem__indice-badge">{{ $index + 1 }}/{{ $count }}</span>
-        }
-        @if (resultado.critico) {
-          <span class="resultado-rolagem__critico-badge">crítico ×2</span>
-        }
-      </span>
+    @for (resultado of resultadosExibidos(); track $index) {
+        <div class="resultado-rolagem__corpo">
+            <span
+                class="resultado-rolagem__total"
+                [class.resultado-rolagem__total--critico]="ehCritico(resultado)"
+            >
+                {{ resultado.total }}
+                @if ($count > 1) {
+                    <span class="resultado-rolagem__indice-badge"
+                        >{{ $index + 1 }}/{{ $count }}</span
+                    >
+                }
+                @if (resultado.critico) {
+                    <span class="resultado-rolagem__critico-badge">crítico ×2</span>
+                }
+            </span>
 
-      <div class="resultado-rolagem__detalhe">
-        @if (resultado.dados.length) {
-          <div class="resultado-rolagem__pool">
-            @for (dado of resultado.dados; track $index) {
-              <span class="resultado-rolagem__dado-termo">
-                <span class="resultado-rolagem__dado-nota">{{ (dado.sinal < 0 ? '−' : '') + dado.valores.length + 'D' + dado.faces }}</span>
-                @for (marcado of dadosMarcados(dado); track $index) {
-                  <span
-                    [class]="classeDado(dado)"
-                    [class.resultado-rolagem__dado--escolhido]="dado.mantidos && marcado.mantido"
-                    [class.resultado-rolagem__dado--descartado]="dado.mantidos && !marcado.mantido"
-                  >
-                    {{ marcado.valor }}
-                  </span>
+            <div class="resultado-rolagem__detalhe">
+                @if (resultado.dados.length) {
+                    <div class="resultado-rolagem__pool">
+                        @for (dado of resultado.dados; track $index) {
+                            <span class="resultado-rolagem__dado-termo">
+                                <span class="resultado-rolagem__dado-nota">{{
+                                    (dado.sinal < 0 ? "−" : "") +
+                                        dado.valores.length +
+                                        "D" +
+                                        dado.faces
+                                }}</span>
+                                @for (marcado of dadosMarcados(dado); track $index) {
+                                    <span
+                                        [class]="classeDado(dado)"
+                                        [class.resultado-rolagem__dado--escolhido]="
+                                            dado.mantidos && marcado.mantido
+                                        "
+                                        [class.resultado-rolagem__dado--descartado]="
+                                            dado.mantidos && !marcado.mantido
+                                        "
+                                    >
+                                        {{ marcado.valor }}
+                                    </span>
+                                }
+                                @if (dado.desvantagem) {
+                                    <span class="resultado-rolagem__desvantagem">desvantagem</span>
+                                }
+                                @if (dado.criticos) {
+                                    <span class="resultado-rolagem__critico"
+                                        >◆ {{ dado.criticos }}</span
+                                    >
+                                }
+                            </span>
+                        }
+                    </div>
                 }
-                @if (dado.desvantagem) {
-                  <span class="resultado-rolagem__desvantagem">desvantagem</span>
+                @if (resultado.grupos; as grupos) {
+                    <div class="resultado-rolagem__grupos">
+                        @for (grupo of grupos; track grupo.tipoDano) {
+                            <span [class]="classeGrupo(grupo.tipoDano)"
+                                >{{ grupo.tipoDano }} {{ grupo.total }}</span
+                            >
+                        }
+                    </div>
                 }
-                @if (dado.criticos) {
-                  <span class="resultado-rolagem__critico">◆ {{ dado.criticos }}</span>
+                @if (modificadoresSoma(resultado); as mods) {
+                    <span class="resultado-rolagem__legenda">{{ mods }}</span>
                 }
-              </span>
-            }
-          </div>
-        }
-        @if (resultado.grupos; as grupos) {
-          <div class="resultado-rolagem__grupos">
-            @for (grupo of grupos; track grupo.tipoDano) {
-              <span [class]="classeGrupo(grupo.tipoDano)">{{ grupo.tipoDano }} {{ grupo.total }}</span>
-            }
-          </div>
-        }
-        @if (modificadoresSoma(resultado); as mods) {
-          <span class="resultado-rolagem__legenda">{{ mods }}</span>
-        }
-      </div>
-    </div>
-  }
+            </div>
+        </div>
+    }
 </div>

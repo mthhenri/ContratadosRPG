@@ -1,9 +1,9 @@
 // Estilos globais. Tema "Terminal de Contenção" — ver docs/design/DESIGN.md.
 // Ordem obrigatória: tokens (CSS custom properties) primeiro, depois o reset/base.
-@use './styles/tema/tokens';
-@use './styles/tema/base';
-@use './styles/tema/breakpoints' as bp;
-@use './app/shared/utilitario-flutuante/utilitario-flutuante' as utilitario-flutuante;
+@use "./styles/tema/tokens";
+@use "./styles/tema/base";
+@use "./styles/tema/breakpoints" as bp;
+@use "./app/shared/utilitario-flutuante/utilitario-flutuante" as utilitario-flutuante;
 
 // Contrato global dos utilitários que atravessam o encapsulamento dos componentes standalone.
 // A presença de Documentos recolhido abre uma vaga; aberto/fechado remove-a sem depender do DOM.
@@ -22,17 +22,17 @@
 // grid nos próprios tokens reflui TODOS os cards/grids da simulacao de uma vez (eles
 // consomem var(--pad-card)/var(--gap-grid)), sem tocar em cada componente nem repetir valores.
 @include bp.mobile {
-  :root {
-    --pad-card: 15px;
-    --gap-grid: 12px;
-  }
+    :root {
+        --pad-card: 15px;
+        --gap-grid: 12px;
+    }
 }
 
 // Trava de segurança contra scroll horizontal do body: conteúdo largo (tabelas, código de
 // exportar) rola no próprio container (overflow-x: auto local); aqui só impedimos que algo
 // estoure a largura da página. `clip` não cria contexto de rolagem no eixo vertical.
 html {
-  overflow-x: clip;
+    overflow-x: clip;
 }
 
 // Mídia nunca estoura a largura do container.
@@ -40,7 +40,7 @@ img,
 svg,
 video,
 canvas {
-  max-width: 100%;
+    max-width: 100%;
 }
 
 // m3-56: `p-toast` (`app-layout`, global) tem `--p-toast-width: 25rem` (400px) fixo — centralizado
@@ -53,7 +53,7 @@ canvas {
 // mesma especificidade; a centralização por `transform: translateX(-50%)` recalcula sozinha
 // sobre a largura nova (só a largura muda aqui).
 @include bp.mobile {
-  .p-toast {
-    width: calc(100vw - 32px) !important;
-  }
+    .p-toast {
+        width: calc(100vw - 32px) !important;
+    }
 }

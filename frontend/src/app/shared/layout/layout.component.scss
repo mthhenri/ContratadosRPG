@@ -1,296 +1,295 @@
-@use 'tema/breakpoints' as bp;
+@use "tema/breakpoints" as bp;
 
 :host {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
 }
 
 .topbar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  height: 3.25rem;
-  padding: 0 20px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-
-  @include bp.mobile {
-    padding: 0 12px;
-    gap: 0.5rem;
-  }
-
-  // O `app-marca` dimensiona a imagem em `em` (1.4em), então a escala da logo é o font-size do host.
-  // Ampliada (a pedido do autor) nas duas larguras: ~39px de imagem no desktop e ~42px no mobile,
-  // onde o wordmark textual não aparece e a logo carrega sozinha a identidade. A topbar
-  // (3.25rem = 52px) comporta as duas sem esticar.
-  &__logo {
-    font-size: 28px;
-
-    @include bp.mobile {
-      font-size: 30px;
-    }
-  }
-
-  &__marca {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-    white-space: nowrap;
-
-    // No mobile o logo (app-marca) já ancora a identidade — esconder o wordmark textual libera
-    // espaço. 900px (não `bp.mobile`/560px) porque "Simulacao" passa a colidir com o perfil a
-    // partir de ~870px (achado ao vivo, m2-16f). 900px já cobre o 560px de sempre (é um limiar
-    // mais largo, não um segundo breakpoint) — mesmo valor usado em `ficha-sanidade.component.scss`.
-    @media (max-width: 900px) {
-      display: none;
-    }
-  }
-
-  &__marca-sufixo {
-    margin-left: 0.35em;
-    color: var(--accent);
-  }
-
-  // Nav central (Painel/Simulacao) — mesmo padrão de routerLinkActive do SimulacaoShell.
-  &__nav {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 11px;
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    color: var(--text-dim);
-    text-decoration: none;
-    white-space: nowrap;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-
-    app-icone {
-      font-size: 15px;
-    }
-
-    &:hover {
-      color: var(--text);
-    }
-
-    &--ativo {
-      color: var(--text);
-      background: var(--surface-2);
-    }
-
-    @include bp.mobile {
-      min-width: bp.$alvo-toque;
-      min-height: bp.$alvo-toque;
-      justify-content: center;
-
-      span {
-        display: none;
-      }
-    }
-  }
-
-  &__acoes {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-left: auto;
-  }
-
-  &__identidade {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-
-    // 900px (m2-16f, mesmo racional do `&__marca` acima) — o nome continua acessível dentro do
-    // dropdown do perfil (`__perfil-usuario`, ajustado ao mesmo limiar logo abaixo).
-    @media (max-width: 900px) {
-      display: none;
-    }
-  }
-
-  // Perfil (m2-09) — botão-gatilho com identidade e tipo da conta + dropdown que fecha só por
-  // ação (mesmo padrão de acessibilidade do painel de tema: sem clique-fora).
-  &__perfil {
-    position: relative;
-  }
-
-  &__perfil-gatilho {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 6px 4px 10px;
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    color: var(--text-dim);
-    cursor: pointer;
-
-    app-icone {
-      color: var(--text-mute);
-    }
-
-    &:hover {
-      color: var(--text);
-      border-color: var(--accent-border);
-    }
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
-    }
-  }
-
-  &__tipo {
-    font-size: 15px;
-
-    &--normal {
-      color: var(--accent) !important;
-    }
-
-    &--admin {
-      color: var(--text) !important;
-    }
-
-    &--tester {
-      color: var(--energy) !important;
-    }
-  }
-
-  &__perfil-menu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    width: 200px;
-    padding: 5px;
+    height: 3.25rem;
+    padding: 0 20px;
     background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
-    z-index: 30;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  // Cabeçalho do dropdown com o nome do usuário — some da barra (`__identidade`) a partir de
-  // 900px (m2-16f, mesmo limiar), então reaparece aqui dentro do menu.
-  // Rótulo mono/uppercase da identidade "Terminal de Contenção", com régua hairline separando as ações.
-  &__perfil-usuario {
-    display: none;
-
-    @media (max-width: 900px) {
-      display: block;
-      padding: 8px 10px 10px;
-      margin-bottom: 3px;
-      border-bottom: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: var(--tracking-label);
-      color: var(--text-dim);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  &__perfil-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 10px;
-    border-radius: 4px;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text);
-    background: transparent;
-    border: 0;
-    text-decoration: none;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-
-    app-icone {
-      color: var(--text-mute);
-    }
-
-    &:hover {
-      background: var(--surface-2);
-    }
+    border-bottom: 1px solid var(--border);
 
     @include bp.mobile {
-      min-height: bp.$alvo-toque;
+        padding: 0 12px;
+        gap: 0.5rem;
     }
 
-    &--sair {
-      color: var(--accent);
+    // O `app-marca` dimensiona a imagem em `em` (1.4em), então a escala da logo é o font-size do host.
+    // Ampliada (a pedido do autor) nas duas larguras: ~39px de imagem no desktop e ~42px no mobile,
+    // onde o wordmark textual não aparece e a logo carrega sozinha a identidade. A topbar
+    // (3.25rem = 52px) comporta as duas sem esticar.
+    &__logo {
+        font-size: 28px;
 
-      app-icone {
+        @include bp.mobile {
+            font-size: 30px;
+        }
+    }
+
+    &__marca {
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+        white-space: nowrap;
+
+        // No mobile o logo (app-marca) já ancora a identidade — esconder o wordmark textual libera
+        // espaço. 900px (não `bp.mobile`/560px) porque "Simulacao" passa a colidir com o perfil a
+        // partir de ~870px (achado ao vivo, m2-16f). 900px já cobre o 560px de sempre (é um limiar
+        // mais largo, não um segundo breakpoint) — mesmo valor usado em `ficha-sanidade.component.scss`.
+        @media (max-width: 900px) {
+            display: none;
+        }
+    }
+
+    &__marca-sufixo {
+        margin-left: 0.35em;
         color: var(--accent);
-      }
-    }
-  }
-
-  // Tema — duas montagens do MESMO componente: a da barra (desktop) e a de dentro do menu de perfil
-  // (mobile). Só uma está visível por vez; cada uma abre o mesmo painel (o estado vive no TemaService).
-  &__tema--so-desktop {
-    @include bp.mobile {
-      display: none;
-    }
-  }
-
-  &__perfil-tema {
-    display: none;
-
-    @include bp.mobile {
-      display: block;
-      width: 100%;
-    }
-  }
-
-  // Deslogado: só "Entrar" (o Registrar saiu da topbar — segue acessível pelo link "Criar agora"
-  // da própria tela de login). Ícone + texto sempre visíveis, mobile e desktop — sem o colapso
-  // pra só-ícone que os outros botões da topbar têm, já que é o único item aqui.
-  &__sessao {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text-dim);
-    background: transparent;
-    border: 0;
-    padding: 4px 6px;
-    cursor: pointer;
-    text-decoration: none;
-
-    @include bp.mobile {
-      min-height: bp.$alvo-toque;
     }
 
-    &:hover {
-      color: var(--text);
+    // Nav central (Painel/Simulacao) — mesmo padrão de routerLinkActive do SimulacaoShell.
+    &__nav {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        gap: 2px;
+        min-width: 0;
     }
-  }
 
+    &__item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 11px;
+        border-radius: var(--radius-control);
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: var(--text-dim);
+        text-decoration: none;
+        white-space: nowrap;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+
+        app-icone {
+            font-size: 15px;
+        }
+
+        &:hover {
+            color: var(--text);
+        }
+
+        &--ativo {
+            color: var(--text);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            min-width: bp.$alvo-toque;
+            min-height: bp.$alvo-toque;
+            justify-content: center;
+
+            span {
+                display: none;
+            }
+        }
+    }
+
+    &__acoes {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-left: auto;
+    }
+
+    &__identidade {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-dim);
+
+        // 900px (m2-16f, mesmo racional do `&__marca` acima) — o nome continua acessível dentro do
+        // dropdown do perfil (`__perfil-usuario`, ajustado ao mesmo limiar logo abaixo).
+        @media (max-width: 900px) {
+            display: none;
+        }
+    }
+
+    // Perfil (m2-09) — botão-gatilho com identidade e tipo da conta + dropdown que fecha só por
+    // ação (mesmo padrão de acessibilidade do painel de tema: sem clique-fora).
+    &__perfil {
+        position: relative;
+    }
+
+    &__perfil-gatilho {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 6px 4px 10px;
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        color: var(--text-dim);
+        cursor: pointer;
+
+        app-icone {
+            color: var(--text-mute);
+        }
+
+        &:hover {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__tipo {
+        font-size: 15px;
+
+        &--normal {
+            color: var(--accent) !important;
+        }
+
+        &--admin {
+            color: var(--text) !important;
+        }
+
+        &--tester {
+            color: var(--energy) !important;
+        }
+    }
+
+    &__perfil-menu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 200px;
+        padding: 5px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    // Cabeçalho do dropdown com o nome do usuário — some da barra (`__identidade`) a partir de
+    // 900px (m2-16f, mesmo limiar), então reaparece aqui dentro do menu.
+    // Rótulo mono/uppercase da identidade "Terminal de Contenção", com régua hairline separando as ações.
+    &__perfil-usuario {
+        display: none;
+
+        @media (max-width: 900px) {
+            display: block;
+            padding: 8px 10px 10px;
+            margin-bottom: 3px;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-label);
+            color: var(--text-dim);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    &__perfil-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 4px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+        background: transparent;
+        border: 0;
+        text-decoration: none;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+
+        app-icone {
+            color: var(--text-mute);
+        }
+
+        &:hover {
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+
+        &--sair {
+            color: var(--accent);
+
+            app-icone {
+                color: var(--accent);
+            }
+        }
+    }
+
+    // Tema — duas montagens do MESMO componente: a da barra (desktop) e a de dentro do menu de perfil
+    // (mobile). Só uma está visível por vez; cada uma abre o mesmo painel (o estado vive no TemaService).
+    &__tema--so-desktop {
+        @include bp.mobile {
+            display: none;
+        }
+    }
+
+    &__perfil-tema {
+        display: none;
+
+        @include bp.mobile {
+            display: block;
+            width: 100%;
+        }
+    }
+
+    // Deslogado: só "Entrar" (o Registrar saiu da topbar — segue acessível pelo link "Criar agora"
+    // da própria tela de login). Ícone + texto sempre visíveis, mobile e desktop — sem o colapso
+    // pra só-ícone que os outros botões da topbar têm, já que é o único item aqui.
+    &__sessao {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-dim);
+        background: transparent;
+        border: 0;
+        padding: 4px 6px;
+        cursor: pointer;
+        text-decoration: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+
+        &:hover {
+            color: var(--text);
+        }
+    }
 }
 
 // Indicador de carregamento global (ux-loading). Antes vivia dentro de `.topbar__acoes`, no
@@ -300,72 +299,72 @@
 // "Terminal de Contenção" (sem spinner/gradiente). Só apresentação — a contagem de requests
 // (`LoadingService`) segue intacta.
 .carregando-global {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  z-index: 50; // acima da topbar e do dropdown de perfil (z-index 30)
-  overflow: hidden;
-  pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 50; // acima da topbar e do dropdown de perfil (z-index 30)
+    overflow: hidden;
+    pointer-events: none;
 
-  // Fade-in atrasado = debounce visual: fica invisível nos primeiros ~180ms, então requisições
-  // instantâneas desmontam a barra antes de ela sequer aparecer (não pisca), sem tocar na
-  // semântica de contagem do LoadingService.
-  opacity: 0;
-  animation: carregando-global-surgir 0.24s ease-out 0.18s forwards;
+    // Fade-in atrasado = debounce visual: fica invisível nos primeiros ~180ms, então requisições
+    // instantâneas desmontam a barra antes de ela sequer aparecer (não pisca), sem tocar na
+    // semântica de contagem do LoadingService.
+    opacity: 0;
+    animation: carregando-global-surgir 0.24s ease-out 0.18s forwards;
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    width: 35%;
-    background: var(--accent);
-    animation: carregando-global-desliza 1s infinite linear;
-  }
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 35%;
+        background: var(--accent);
+        animation: carregando-global-desliza 1s infinite linear;
+    }
 }
 
 @keyframes carregando-global-surgir {
-  to {
-    opacity: 1;
-  }
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes carregando-global-desliza {
-  0% {
-    transform: translateX(-120%);
-  }
-  100% {
-    transform: translateX(400%);
-  }
+    0% {
+        transform: translateX(-120%);
+    }
+    100% {
+        transform: translateX(400%);
+    }
 }
 
 // Movimento reduzido: sem deslize nem fade atrasado — a barra aparece de imediato como uma linha
 // accent estática (o estado de carregamento continua sinalizado, só que sem animação).
 @media (prefers-reduced-motion: reduce) {
-  .carregando-global {
-    opacity: 1;
-    animation: none;
+    .carregando-global {
+        opacity: 1;
+        animation: none;
 
-    &::after {
-      width: 100%;
-      opacity: 0.65;
-      animation: none;
+        &::after {
+            width: 100%;
+            opacity: 0.65;
+            animation: none;
+        }
     }
-  }
 }
 
 .conteudo {
-  flex: 1;
-  padding: 24px 20px;
-  // Wide content scrolls inside its own container; the page itself never scrolls sideways.
-  overflow-x: clip;
+    flex: 1;
+    padding: 24px 20px;
+    // Wide content scrolls inside its own container; the page itself never scrolls sideways.
+    overflow-x: clip;
 
-  @include bp.mobile {
-    padding: 16px 12px;
-  }
+    @include bp.mobile {
+        padding: 16px 12px;
+    }
 
-  &--isolado {
-    padding: 0;
-  }
+    &--isolado {
+        padding: 0;
+    }
 }

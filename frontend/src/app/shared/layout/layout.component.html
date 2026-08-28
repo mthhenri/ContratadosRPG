@@ -5,125 +5,138 @@
      elemento renderizado nesta versão (21.2.13) — sem efeito. Fix real em `styles.scss`
      (`.p-toast`, `@include bp.mobile`). -->
 @if (!rotaIsolada()) {
-<p-toast position="bottom-center" />
+    <p-toast position="bottom-center" />
 
-@if (loadingService.isLoading()) {
-  <span class="carregando-global" role="status" aria-label="Carregando"></span>
-}
-
-<header class="topbar">
-  <app-marca class="topbar__logo" />
-  <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
-
-  <nav class="topbar__nav" aria-label="Navegação principal">
-    @if (sessaoService.autenticado()) {
-      <a class="topbar__item" routerLink="/painel" routerLinkActive="topbar__item--ativo">
-        <app-icone nome="campanhas" />
-        <span>Painel</span>
-      </a>
-      <a class="topbar__item" routerLink="/fichas" routerLinkActive="topbar__item--ativo">
-        <app-icone nome="agente" />
-        <span>Fichas</span>
-      </a>
-      @if (sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN) {
-        <a class="topbar__item topbar__item--admin" routerLink="/admin/usuarios" routerLinkActive="topbar__item--ativo">
-          <app-icone nome="protecoes" />
-          <span>Admin</span>
-        </a>
-      }
+    @if (loadingService.isLoading()) {
+        <span class="carregando-global" role="status" aria-label="Carregando"></span>
     }
-    <a class="topbar__item" routerLink="/simulacao" routerLinkActive="topbar__item--ativo">
-      <app-icone nome="simulacao" />
-      <span>Simulação</span>
-    </a>
-    <button
-      class="topbar__item"
-      type="button"
-      aria-label="Abrir documentos"
-      (click)="abrirDocumentos()"
-    >
-      <app-icone nome="documentos" />
-      <span>Documentos</span>
-    </button>
-  </nav>
 
-  <div class="topbar__acoes">
-    @if (sessaoService.usuario(); as usuarioAtual) {
-      <div class="topbar__perfil">
-        <button
-          class="topbar__perfil-gatilho"
-          type="button"
-          [attr.aria-expanded]="perfilAberto()"
-          (click)="alternarPerfil()"
-        >
-          <span class="topbar__identidade">{{ usuarioAtual.nome }}</span>
-          @if (usuarioAtual.tipo === TipoUsuarioEnum.ADMIN) {
-            <app-icone class="topbar__tipo topbar__tipo--admin" nome="protecoes" />
-          } @else if (usuarioAtual.tipo === TipoUsuarioEnum.TESTER) {
-            <app-icone class="topbar__tipo topbar__tipo--tester" nome="amplificador" />
-          } @else {
-            <app-icone class="topbar__tipo topbar__tipo--normal" nome="agente" />
-          }
-          <app-icone nome="chevron" />
-        </button>
+    <header class="topbar">
+        <app-marca class="topbar__logo" />
+        <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
 
-        @if (perfilAberto()) {
-          <div class="topbar__perfil-menu" role="menu">
-            <!-- No mobile o nome sai da barra (`topbar__identidade` some) — o menu o reapresenta
-                 como cabeçalho, dizendo de quem é a sessão antes das ações. -->
-            <span class="topbar__perfil-usuario" role="presentation">{{ usuarioAtual.nome }}</span>
-            <a
-              class="topbar__perfil-item"
-              routerLink="/perfil"
-              role="menuitem"
-              (click)="fecharPerfil()"
-            >
-              <app-icone nome="agente" />
-              <span>Perfil</span>
+        <nav class="topbar__nav" aria-label="Navegação principal">
+            @if (sessaoService.autenticado()) {
+                <a class="topbar__item" routerLink="/painel" routerLinkActive="topbar__item--ativo">
+                    <app-icone nome="campanhas" />
+                    <span>Painel</span>
+                </a>
+                <a class="topbar__item" routerLink="/fichas" routerLinkActive="topbar__item--ativo">
+                    <app-icone nome="agente" />
+                    <span>Fichas</span>
+                </a>
+                @if (sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN) {
+                    <a
+                        class="topbar__item topbar__item--admin"
+                        routerLink="/admin/usuarios"
+                        routerLinkActive="topbar__item--ativo"
+                    >
+                        <app-icone nome="protecoes" />
+                        <span>Admin</span>
+                    </a>
+                }
+            }
+            <a class="topbar__item" routerLink="/simulacao" routerLinkActive="topbar__item--ativo">
+                <app-icone nome="simulacao" />
+                <span>Simulação</span>
             </a>
-            <a
-              class="topbar__perfil-item"
-              routerLink="/painel"
-              role="menuitem"
-              (click)="fecharPerfil()"
-            >
-              <app-icone nome="campanhas" />
-              <span>Campanhas</span>
-            </a>
-            <!-- No mobile o Tema mora aqui dentro (libera a largura da topbar); no desktop ele fica
-                 na barra, ao lado do perfil. -->
-            <app-configuracoes-tema class="topbar__perfil-tema" variante="menu" role="none" />
             <button
-              class="topbar__perfil-item topbar__perfil-item--sair"
-              type="button"
-              role="menuitem"
-              (click)="sair()"
+                class="topbar__item"
+                type="button"
+                aria-label="Abrir documentos"
+                (click)="abrirDocumentos()"
             >
-              <app-icone nome="sair" />
-              <span>Encerrar sessão</span>
+                <app-icone nome="documentos" />
+                <span>Documentos</span>
             </button>
-          </div>
-        }
-      </div>
-    } @else {
-      <a class="topbar__sessao" routerLink="/login">
-        <app-icone nome="entrar" />
-        <span>Entrar</span>
-      </a>
-    }
+        </nav>
 
-    <!-- Autenticado no mobile: o gatilho da barra sai (o Tema está no menu de perfil). Deslogado
+        <div class="topbar__acoes">
+            @if (sessaoService.usuario(); as usuarioAtual) {
+                <div class="topbar__perfil">
+                    <button
+                        class="topbar__perfil-gatilho"
+                        type="button"
+                        [attr.aria-expanded]="perfilAberto()"
+                        (click)="alternarPerfil()"
+                    >
+                        <span class="topbar__identidade">{{ usuarioAtual.nome }}</span>
+                        @if (usuarioAtual.tipo === TipoUsuarioEnum.ADMIN) {
+                            <app-icone class="topbar__tipo topbar__tipo--admin" nome="protecoes" />
+                        } @else if (usuarioAtual.tipo === TipoUsuarioEnum.TESTER) {
+                            <app-icone
+                                class="topbar__tipo topbar__tipo--tester"
+                                nome="amplificador"
+                            />
+                        } @else {
+                            <app-icone class="topbar__tipo topbar__tipo--normal" nome="agente" />
+                        }
+                        <app-icone nome="chevron" />
+                    </button>
+
+                    @if (perfilAberto()) {
+                        <div class="topbar__perfil-menu" role="menu">
+                            <!-- No mobile o nome sai da barra (`topbar__identidade` some) — o menu o reapresenta
+                 como cabeçalho, dizendo de quem é a sessão antes das ações. -->
+                            <span class="topbar__perfil-usuario" role="presentation">{{
+                                usuarioAtual.nome
+                            }}</span>
+                            <a
+                                class="topbar__perfil-item"
+                                routerLink="/perfil"
+                                role="menuitem"
+                                (click)="fecharPerfil()"
+                            >
+                                <app-icone nome="agente" />
+                                <span>Perfil</span>
+                            </a>
+                            <a
+                                class="topbar__perfil-item"
+                                routerLink="/painel"
+                                role="menuitem"
+                                (click)="fecharPerfil()"
+                            >
+                                <app-icone nome="campanhas" />
+                                <span>Campanhas</span>
+                            </a>
+                            <!-- No mobile o Tema mora aqui dentro (libera a largura da topbar); no desktop ele fica
+                 na barra, ao lado do perfil. -->
+                            <app-configuracoes-tema
+                                class="topbar__perfil-tema"
+                                variante="menu"
+                                role="none"
+                            />
+                            <button
+                                class="topbar__perfil-item topbar__perfil-item--sair"
+                                type="button"
+                                role="menuitem"
+                                (click)="sair()"
+                            >
+                                <app-icone nome="sair" />
+                                <span>Encerrar sessão</span>
+                            </button>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <a class="topbar__sessao" routerLink="/login">
+                    <app-icone nome="entrar" />
+                    <span>Entrar</span>
+                </a>
+            }
+
+            <!-- Autenticado no mobile: o gatilho da barra sai (o Tema está no menu de perfil). Deslogado
          não há menu, então ele permanece na barra em qualquer largura. -->
-    <app-configuracoes-tema
-      class="topbar__tema"
-      [class.topbar__tema--so-desktop]="sessaoService.autenticado()"
-    />
-  </div>
-</header>
+            <app-configuracoes-tema
+                class="topbar__tema"
+                [class.topbar__tema--so-desktop]="sessaoService.autenticado()"
+            />
+        </div>
+    </header>
 }
 
 <main class="conteudo" [class.conteudo--isolado]="rotaIsolada()">
-  <router-outlet />
+    <router-outlet />
 </main>
 
 <ng-container #leitorDocumentosContainer />

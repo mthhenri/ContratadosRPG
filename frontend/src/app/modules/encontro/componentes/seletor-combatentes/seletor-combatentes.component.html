@@ -1,109 +1,121 @@
 <div class="seletor">
-  <section class="seletor__linha">
-    <h3 class="seletor__titulo">Agentes</h3>
-    @if (agentes().length) {
-      <ul class="seletor__grade">
-        @for (ficha of agentes(); track ficha.id) {
-          <li>
-            <button
-              type="button"
-              class="seletor__cartao"
-              [class.seletor__cartao--marcado]="marcada(ficha)"
-              [style.--cor-ficha]="ficha.cor"
-              [disabled]="desabilitado()"
-              [attr.aria-pressed]="marcada(ficha)"
-              [appTooltip]="marcada(ficha) ? 'Remover do encontro' : 'Adicionar ao encontro'"
-              (click)="alternar(ficha)"
-            >
-              <span class="seletor__avatar" aria-hidden="true">
-                @if (ficha.imagemUrl; as urlImagem) {
-                  <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
-                }
-              </span>
-              <span class="seletor__texto">
-                <span class="seletor__nome">{{ ficha.nome }}</span>
-                <span class="seletor__meta">{{ metaAgente(ficha) }}</span>
-              </span>
-              @if (marcada(ficha)) {
-                <app-icone nome="check" class="seletor__marca" />
-              }
-            </button>
-          </li>
-        }
-      </ul>
-    } @else {
-      <p class="seletor__vazio">Nenhum agente na campanha ainda.</p>
-    }
-  </section>
-
-  <section class="seletor__linha">
-    <h3 class="seletor__titulo">Criaturas</h3>
-    @if (criaturas().length) {
-      <ul class="seletor__grade">
-        @for (ficha of criaturas(); track ficha.id) {
-          <li>
-            <button
-              type="button"
-              class="seletor__cartao"
-              [class.seletor__cartao--marcado]="marcada(ficha)"
-              [style.--cor-ficha]="ficha.cor"
-              [disabled]="desabilitado()"
-              [attr.aria-pressed]="marcada(ficha)"
-              [appTooltip]="marcada(ficha) ? 'Remover do encontro' : 'Adicionar ao encontro'"
-              (click)="alternar(ficha)"
-            >
-              <span class="seletor__avatar seletor__avatar--criatura" aria-hidden="true">
-                @if (ficha.imagemUrl; as urlImagem) {
-                  <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
-                }
-              </span>
-              <span class="seletor__texto">
-                <span class="seletor__nome">{{ ficha.nome }}</span>
-                <span class="seletor__meta">{{ metaCriatura(ficha) }}</span>
-              </span>
-              @if (marcada(ficha)) {
-                <app-icone nome="check" class="seletor__marca" />
-              }
-            </button>
-          </li>
-        }
-      </ul>
-    } @else {
-      <p class="seletor__vazio">Nenhuma criatura na campanha ainda.</p>
-    }
-  </section>
-
-  @if (npcs().length) {
     <section class="seletor__linha">
-      <h3 class="seletor__titulo">NPCs</h3>
-      <ul class="seletor__grade">
-        @for (ficha of npcs(); track ficha.id) {
-          <li>
-            <button
-              type="button"
-              class="seletor__cartao"
-              [class.seletor__cartao--marcado]="marcada(ficha)"
-              [style.--cor-ficha]="ficha.cor"
-              [disabled]="desabilitado()"
-              [attr.aria-pressed]="marcada(ficha)"
-              [appTooltip]="marcada(ficha) ? 'Remover do encontro' : 'Adicionar ao encontro'"
-              (click)="alternar(ficha)"
-            >
-              <span class="seletor__avatar seletor__avatar--criatura" aria-hidden="true">
-                @if (ficha.imagemUrl; as urlImagem) {
-                  <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
+        <h3 class="seletor__titulo">Agentes</h3>
+        @if (agentes().length) {
+            <ul class="seletor__grade">
+                @for (ficha of agentes(); track ficha.id) {
+                    <li>
+                        <button
+                            type="button"
+                            class="seletor__cartao"
+                            [class.seletor__cartao--marcado]="marcada(ficha)"
+                            [style.--cor-ficha]="ficha.cor"
+                            [disabled]="desabilitado()"
+                            [attr.aria-pressed]="marcada(ficha)"
+                            [appTooltip]="
+                                marcada(ficha) ? 'Remover do encontro' : 'Adicionar ao encontro'
+                            "
+                            (click)="alternar(ficha)"
+                        >
+                            <span class="seletor__avatar" aria-hidden="true">
+                                @if (ficha.imagemUrl; as urlImagem) {
+                                    <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
+                                }
+                            </span>
+                            <span class="seletor__texto">
+                                <span class="seletor__nome">{{ ficha.nome }}</span>
+                                <span class="seletor__meta">{{ metaAgente(ficha) }}</span>
+                            </span>
+                            @if (marcada(ficha)) {
+                                <app-icone nome="check" class="seletor__marca" />
+                            }
+                        </button>
+                    </li>
                 }
-              </span>
-              <span class="seletor__texto">
-                <span class="seletor__nome">{{ ficha.nome }}</span>
-              </span>
-              @if (marcada(ficha)) {
-                <app-icone nome="check" class="seletor__marca" />
-              }
-            </button>
-          </li>
+            </ul>
+        } @else {
+            <p class="seletor__vazio">Nenhum agente na campanha ainda.</p>
         }
-      </ul>
     </section>
-  }
+
+    <section class="seletor__linha">
+        <h3 class="seletor__titulo">Criaturas</h3>
+        @if (criaturas().length) {
+            <ul class="seletor__grade">
+                @for (ficha of criaturas(); track ficha.id) {
+                    <li>
+                        <button
+                            type="button"
+                            class="seletor__cartao"
+                            [class.seletor__cartao--marcado]="marcada(ficha)"
+                            [style.--cor-ficha]="ficha.cor"
+                            [disabled]="desabilitado()"
+                            [attr.aria-pressed]="marcada(ficha)"
+                            [appTooltip]="
+                                marcada(ficha) ? 'Remover do encontro' : 'Adicionar ao encontro'
+                            "
+                            (click)="alternar(ficha)"
+                        >
+                            <span
+                                class="seletor__avatar seletor__avatar--criatura"
+                                aria-hidden="true"
+                            >
+                                @if (ficha.imagemUrl; as urlImagem) {
+                                    <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
+                                }
+                            </span>
+                            <span class="seletor__texto">
+                                <span class="seletor__nome">{{ ficha.nome }}</span>
+                                <span class="seletor__meta">{{ metaCriatura(ficha) }}</span>
+                            </span>
+                            @if (marcada(ficha)) {
+                                <app-icone nome="check" class="seletor__marca" />
+                            }
+                        </button>
+                    </li>
+                }
+            </ul>
+        } @else {
+            <p class="seletor__vazio">Nenhuma criatura na campanha ainda.</p>
+        }
+    </section>
+
+    @if (npcs().length) {
+        <section class="seletor__linha">
+            <h3 class="seletor__titulo">NPCs</h3>
+            <ul class="seletor__grade">
+                @for (ficha of npcs(); track ficha.id) {
+                    <li>
+                        <button
+                            type="button"
+                            class="seletor__cartao"
+                            [class.seletor__cartao--marcado]="marcada(ficha)"
+                            [style.--cor-ficha]="ficha.cor"
+                            [disabled]="desabilitado()"
+                            [attr.aria-pressed]="marcada(ficha)"
+                            [appTooltip]="
+                                marcada(ficha) ? 'Remover do encontro' : 'Adicionar ao encontro'
+                            "
+                            (click)="alternar(ficha)"
+                        >
+                            <span
+                                class="seletor__avatar seletor__avatar--criatura"
+                                aria-hidden="true"
+                            >
+                                @if (ficha.imagemUrl; as urlImagem) {
+                                    <img class="seletor__avatar-imagem" [src]="urlImagem" alt="" />
+                                }
+                            </span>
+                            <span class="seletor__texto">
+                                <span class="seletor__nome">{{ ficha.nome }}</span>
+                            </span>
+                            @if (marcada(ficha)) {
+                                <app-icone nome="check" class="seletor__marca" />
+                            }
+                        </button>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
 </div>
