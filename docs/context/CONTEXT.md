@@ -1243,7 +1243,10 @@ somente em `docs/core/` e o build os publica em `/documentos/`.
 ### Tema — `frontend/tema`
 
 "Terminal de Contenção" dark-first com **troca em runtime** (`TemaService`: presets + color picker
-com trava de contraste). Tokens CSS + preset PrimeNG + Tailwind apontando para os tokens.
+com trava de contraste). Tokens CSS + Tailwind apontando para os tokens; o preset PrimeNG
+(`contencao.preset.ts` + `updatePrimaryPalette`) ainda existe, mas sincroniza componentes que o
+projeto praticamente não usa e sai na `ui-05` — a fonte de verdade em runtime são as CSS custom
+properties, não o preset.
 `--cor-ficha` (`m3-61`) é um token **separado**, por personagem, não por usuário — nunca ganha
 valor fixo em `_tokens.scss`, sempre `[style.--cor-ficha]` inline por instância; ver "Ficha de
 jogador" acima e `docs/design/DESIGN.md`.
@@ -1287,8 +1290,18 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   `tipo_rolagem_visibilidade` na `m3-27`.
 - **Rolagem `PRIVADA` nunca trafega por WebSocket** — o gateway só emite `rolagem:registrada` para
   rolagens públicas. A privada só chega por REST, a quem tem permissão.
+- **A UI é de componentes próprios, e o PrimeNG sai** (decisão do autor, 2026-08-28). A auditoria
+  mediu o uso real: `p-dialog` (14 tags em 5 arquivos), `p-toast`/`MessageService` e o preset de
+  tema — nenhum `pButton`, `p-select`, `p-inputtext`, `p-table`, `p-tabs`, `p-tooltip`. Os
+  controles são nativos (723 `<button>`, 219 `<input>`, 71 `<select>`, 31 `<textarea>`)
+  estilizados à mão. A biblioteca própria passa a existir como **código** em
+  `frontend/src/app/shared/ui/`, não como blocos copiados de `_componentes.scss` (`P-034`). Série
+  `ui-01`…`ui-05` em `docs/specs/backlog/`. Decisão associada: **não** migrar para React — o
+  estudo de esforço (6–9 meses-dev) está no `HISTORY.md` de 2026-08-28 e concluiu que o problema
+  real é o design system, não o framework.
 - **PrimeNG 21 sem `@angular/animations`** — o pacote não está instalado e o PrimeNG 21 usa
-  animações CSS próprias. Não wirar `provideAnimationsAsync()`; o build quebra.
+  animações CSS próprias. Não wirar `provideAnimationsAsync()`; o build quebra. Perde o objeto
+  quando a `ui-05` desinstalar o PrimeNG.
 - **A ficha aposentou o sistema de abas de página inteira da `m3-11`** (substituído pelas 3 colunas
   da `m3-38`). `AbaFicha`/`ABAS_FICHA`/`ehAbaFicha` ainda existem no código mas estão **fora do
   template** — não estenda esse sistema, mesmo que uma spec antiga peça.

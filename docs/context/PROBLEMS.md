@@ -29,6 +29,27 @@
 
 ## Ativos
 
+### P-034 — Biblioteca de componentes existe como catálogo copiado, não como código · `ABERTO` · frontend/design system
+
+- **Sintoma:** o mesmo bloco visual é declarado em dezenas de lugares. Medido em 2026-08-28:
+  `.botao` em **20** arquivos `.scss` (24 telas), `.campo` em 17 componentes (uma versão cada),
+  `.stat` em 5 (13 telas), `.card` em 5, `.stepper` em 4, `.chip-classificacao` em 3. O frontend
+  tem **32.393 linhas de SCSS para 21.681 de template** — mais estilo do que marcação. Vinte
+  implementações de botão só coincidem enquanto ninguém mexer, e o gate visual da proibição #31
+  precisa provar à mão, tela a tela, o que deveria ser garantido por construção.
+- **Causa:** a convenção manda copiar. `docs/design/tema/_componentes.scss` (292 linhas, 8 blocos)
+  **não entra no build** — `styles.scss` importa `tokens`, `base`, `breakpoints`,
+  `utilitario-flutuante` e o Tailwind —, e `DESIGN.md`/`CONVENTIONS.md` instruem "copie o bloco
+  BEM necessário para o `.scss` scoped do componente". O catálogo é fonte de cópia, não código.
+  A biblioteca de fato do projeto (`shared/`, 18 componentes + 6 diretivas) é a camada **composta**;
+  a camada de primitivos nunca foi construída.
+- **Contorno:** nenhum. Convive-se copiando o bloco e conferindo a olho no gate visual.
+- **Correção:** a série `ui-01`…`ui-05` (`docs/specs/backlog/ui-biblioteca-componentes.spec.md`):
+  criar `frontend/src/app/shared/ui/`, adotar os primitivos módulo a módulo e remover o PrimeNG,
+  que hoje entrega só `p-dialog` (14 tags), `p-toast`/`MessageService` e o preset de tema.
+- **Desde:** desde sempre — a instrução de copiar está no handoff de design original. Medido e
+  registrado na auditoria de 2026-08-28.
+
 ### P-033 — Suíte de `PainelEncontro` não monta o serviço colaborativo recém-injetado · `ABERTO` · frontend/testes
 
 - **Sintoma:** os 53 casos de `frontend/src/app/modules/encontro/paginas/painel/painel-encontro.page.spec.ts` falham antes das asserções ao montar o componente.

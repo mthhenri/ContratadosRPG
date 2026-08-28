@@ -1,5 +1,52 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-28 — Auditoria de UI: o PrimeNG praticamente não é usado, a biblioteca própria é catálogo copiado, e a decisão de assumi-la
+
+A sessão começou por outra pergunta — **qual seria o esforço de migrar o frontend de Angular para
+React** preservando as estruturas e controles do projeto. O levantamento mediu o frontend inteiro:
+140 arquivos `.ts` (30.905 linhas), 63 templates (21.681), 69 SCSS (32.393) e 93 specs (24.771);
+69 componentes, 21 services, 4 guards, 3 interceptors, 6 diretivas, 1 pipe, 10 arquivos de rota;
+nos templates, 783 `@if`, 235 `@for`, ~1.3k property bindings, ~1.2k event bindings, 156
+`formControlName` e 223 `appTooltip`. A estimativa da migração ficou em **115–175 dias-dev (6 a 9
+meses de uma pessoa)**, dominada por volume e pelo fato de o gate visual da proibição #31 ter de
+ser refeito para 100% das telas. Três achados baratearam a conta — `shared/` (12.801 linhas) não
+tem uma linha de Angular, o runner já é o Vitest, e os specs asseguram por classe BEM em vez de
+API do framework —, mas a conclusão foi que **nada no projeto está travado pelo Angular**: o
+código já é standalone, já é signal-based e já tem a regra de domínio fora do framework. O estudo
+fica registrado aqui; não virou spec.
+
+O que a auditoria encontrou de fato foi outra coisa, e o autor puxou o fio: **o PrimeNG, descrito
+no `SYSTEM.SPEC.md` como a UI do projeto, entrega hoje `p-dialog` (14 tags em 5 arquivos),
+`p-toast`/`MessageService` (12 chamadas em 5 arquivos) e o preset de tema.** Nenhum `pButton`,
+`p-select`, `p-inputtext`, `p-table`, `p-tabs`, `p-checkbox`, `p-tooltip`, `p-menu` — nenhuma
+diretiva `p*` em template nenhum. Os controles são nativos: 723 `<button>`, 219 `<input>`, 71
+`<select>`, 31 `<textarea>`, todos estilizados à mão. O Tailwind aparece em 3 dos 63 templates.
+
+A biblioteca própria, portanto, existe — mas por cópia. `docs/design/tema/_componentes.scss` (292
+linhas, 8 blocos BEM) **não entra no build**, e `DESIGN.md`/`CONVENTIONS.md` mandam copiar o bloco
+para o SCSS scoped de cada componente. Medido: `.botao` declarado em 20 arquivos `.scss`, `.campo`
+em 17, `.stat` em 5, `.card` em 5, `.stepper` em 4, `.chip-classificacao` em 3 — 32.393 linhas de
+SCSS para 21.681 de template. A camada composta do projeto (`shared/`, 18 componentes + 6
+diretivas) é sólida; a camada de primitivos nunca foi construída. Os dois componentes PrimeNG
+remanescentes já custaram `P-025` (`<p-dialog>` inacessível no mobile sem `[appendTo]="'body'"`),
+o `::ng-deep` no `.p-dialog-content` e o `!important` no `.p-toast` — e **3 dos 14 `p-dialog`
+seguem sem `[appendTo]`** (`ficha-inventario.component.html:579,841,856`), sobrevivendo só por não
+estarem, hoje, dentro de um container rolável.
+
+**Decisão do autor:** assumir a biblioteca própria e remover o PrimeNG, **em Angular mesmo** — a
+migração para React fica descartada, porque a decisão real nunca foi de framework. Registrado:
+`P-034` em `PROBLEMS.md`; a série `ui-01`…`ui-05` sob o guarda-chuva
+`docs/specs/backlog/ui-biblioteca-componentes.spec.md` (primitivos base → `Modal`/`Notificacao`
+sobre `<dialog>` nativo → primitivos de composição → adoção por módulo → remoção do PrimeNG); a
+linha "UI: PrimeNG 21" do `SYSTEM.SPEC.md` corrigida para descrever o que existe; e a decisão
+acrescentada a `CONTEXT.md` §5, junto do ajuste da seção "Tema".
+
+Esta entrada é de **registro**, não de implementação: nenhum código foi alterado, e por isso não
+houve build, suíte nem gate visual — a verificação foi a auditoria por leitura e `grep` cujos
+números estão acima, cada um reproduzível sobre `frontend/src`. O gate visual pertence a cada task
+da série `ui-*`, que o exige por módulo, com captura de referência antes da mudança e pixel diff
+depois — a técnica que a `formatacao-legibilidade-frontend` já provou no repositório.
+
 ## 2026-08-28 — `renomear-painel-para-campanhas`: URL e topbar passam a chamar a área pelo nome correto
 
 A rota privada de campanhas, suas filhas de ficha, criatura e iniciativa, todos os destinos de

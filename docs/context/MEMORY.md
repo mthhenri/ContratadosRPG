@@ -23,7 +23,7 @@ Estas são as fontes da verdade. Em conflito entre código e documento, **o docu
 | **Identidade visual** — guia e mapa de tokens | [`docs/design/DESIGN.md`](../design/DESIGN.md) | **qualquer** trabalho de frontend/UI/estilo |
 | Gate visual e qualidade acima de velocidade | [`AGENTS.md`](../../AGENTS.md) “Gate obrigatório de qualidade e conclusão” + [`SYSTEM.SPEC.md`](../SYSTEM.SPEC.md) §8/§16.31 — execução dos seis passos e o checklist acionável na skill `design-fidelity` | planejar, implementar ou concluir **qualquer** UI/estilo |
 | Tokens CSS (fonte da verdade em runtime) | [`docs/design/tema/_tokens.scss`](../design/tema/_tokens.scss) | escolher cor, fonte, raio ou espaçamento |
-| Padrões BEM canônicos de componente | [`docs/design/tema/_componentes.scss`](../design/tema/_componentes.scss) | criar um card, stat, stepper, chip… |
+| Padrões BEM canônicos de componente | [`docs/design/tema/_componentes.scss`](../design/tema/_componentes.scss) — hoje é **catálogo para copiar** e não entra no build; vira ponteiro para `frontend/src/app/shared/ui/` na série `ui-01`…`ui-05` ([`ui-biblioteca-componentes.spec.md`](../specs/backlog/ui-biblioteca-componentes.spec.md), `PROBLEMS.md` `P-034`) | criar um card, stat, stepper, chip… |
 | Protótipos aprovados (fidelidade 1:1) | [`docs/design/examples/`](../design/examples/) | montar uma tela nova |
 | Schema SQL + forma dos documentos JSONB | [`docs/SCHEMA.md`](../SCHEMA.md) | escrever migration ou mexer em `ficha.dados` |
 | Nomenclatura de DTO | skill `dto-conventions` + `SYSTEM.SPEC.md` | nomear qualquer classe de entrada/saída |
