@@ -29,23 +29,27 @@
 
 ## Ativos
 
-### P-037 — Proxy do dev server intercepta `/campanhas` como se fosse `/campanha` · `ABERTO` · frontend/ferramental
+### P-039 — Caderno do Esquadrão sem presença nem cursores remotos · `ABERTO` · frontend/pagina-caderno
 
-- **Sintoma:** navegar direto para `http://localhost:4300/campanhas` (nova aba, refresh, link
-  externo) devolve o 404 JSON do NestJS (`{"mensagem":"Cannot GET /campanhas"}`) em vez da SPA.
-  Navegação client-side (clicar no link "Campanhas" da topbar, já dentro do app) funciona normal.
-- **Causa:** `frontend/proxy.conf.json` declara `"/campanha"` como contexto de **prefixo simples**
-  para a API. O proxy do Vite casa por `url.startsWith(context)`, e `"/campanhas".startsWith("/campanha")`
-  é verdadeiro — a rota de app (plural) vira prefixo da rota de API (singular) e a navegação de
-  documento inteira vai pro backend em vez de cair no fallback de `index.html`. O arquivo já tem a
-  correção certa para o par `/ficha`/`/fichas` (regex `^/ficha(?:$|[/?])`, com comentário
-  explicando exatamente esse risco) — só não foi replicada para `/campanha`/`/campanhas`.
-- **Contorno:** nenhum para navegação de documento nova; client-side (SPA já carregada) não é
-  afetado. Achado ao vivo no gate visual da `ui-03` ao abrir `/campanhas` direto para verificar o
-  piloto do `app-stat` — contornado ali navegando pela topbar em vez de `page.goto`.
-- **Correção:** trocar `"/campanha"` por um regex com o mesmo boundary do `/ficha`, ex.
-  `^/campanha(?:$|[/?])`, em `frontend/proxy.conf.json`.
-- **Desde:** não investigado quando entrou; encontrado em 2026-08-29 verificando a `ui-03`.
+- **Sintoma:** `caderno-esquadrao-colaborativo.spec.md` (entregável 2) pede sincronização Yjs "incluindo
+  reconexão, presença e cursores remotos no editor Milkdown". A reconexão/sincronização de conteúdo
+  funciona (confirmado ao vivo, dois usuários editando a mesma página simultaneamente e reconectando
+  sem perder texto), mas não existe em lugar nenhum do repositório nenhum uso de `y-protocols/awareness`
+  nem qualquer indicador visual de "quem mais está editando" ou cursor remoto — busca por
+  `awareness`/`presença`/`cursorRemoto` em `frontend/src` e `backend/src` não encontra nada.
+- **Causa:** a implementação (commits `a7304ec`…`ca37bdd`) cobriu a persistência CRDT, o broadcast
+  Socket.IO pós-gravação e o terceiro modo do Caderno, mas nunca chegou a implementar o protocolo de
+  `awareness` do Yjs; o trabalho nunca foi registrado em `HISTORY.md`, então esse recorte pendente
+  também nunca tinha sido escrito em lugar nenhum.
+- **Contorno:** edição concorrente funciona e mescla corretamente sem indicador de presença — o
+  usuário só não vê, em tempo real, quem mais está na mesma página nem onde está o cursor de outro
+  colaborador.
+- **Correção:** implementar `y-protocols/awareness` sobre o mesmo `Y.Doc`/canal Socket.IO já
+  existente e um indicador visual no editor Milkdown (o plugin `@milkdown/plugin-collab` já expõe
+  binding para isso).
+- **Desde:** `caderno-esquadrao-colaborativo.spec.md`, entregável nunca fechado — achado ao
+  verificar a spec ao vivo em 2026-08-29 antes de movê-la para `done/` (ela permanece em `active/`
+  por causa deste item).
 
 ### P-038 — Suíte do frontend tem expectativas anteriores à UI-04 e um foco assíncrono órfão · `ABERTO` · frontend/testes
 
@@ -140,55 +144,6 @@
 - **Desde:** achado durante `skills-05` (criação da skill `sql-migrations`, 2026-08-27) ao
   conferir se `0021` exemplifica bem os prefixos do `CONVENTIONS.md` antes de citá-la como
   referência.
-
-### P-030 — Vida/Energia/Defesa/Esquiva/Bloqueio divergem entre a ficha e o painel do mestre · `ABERTO` · backend/ficha/encontro
-
-- **Sintoma:** o mini-card do Esquadrão (painel do mestre, `campanha/detalhe`) e o cartão de
-  combatente da Iniciativa mostram números menores de Vida máxima e Esquiva (e, pela mesma causa,
-  potencialmente Energia máxima/Defesa/Bloqueio) do que a ficha do mesmo agente aberta ao lado —
-  exemplo real do autor: `128`/`24` no painel contra `135`/`32` na ficha.
-- **Causa:** esses stats têm um valor **stored/calculado** persistido no JSONB (`dados.derivados`/
-  `dados.estado`) e um valor **efetivo** que a ficha soma por cima só na leitura (bônus de
-  amplificadores portados e de itens de Proteção equipados, nunca persistido de volta — filosofia
-  intencional, m3-10/m3-43). `FichaService.paraResumoPublico` e o mapper do Encontro
-  (`encontro-combatente.mapper.ts`) leem só o stored, sem aplicar esse "por cima" — mesma lacuna que
-  `contraAtaque` já teve parcialmente corrigida (`calcularContraAtaqueAoVivo`, m3-39), mas para um
-  problema diferente e sem cobrir amplificador/equipamento.
-- **Contorno:** nenhum — reabrir a ficha do agente mostra o valor correto; o painel do mestre e a
-  Iniciativa continuam desatualizados até a correção.
-- **Correção:** executar `docs/specs/backlog/ficha-resumo-stats-efetivos.spec.md`, que centraliza o
-  cálculo "efetivo" numa função pura compartilhada e a aplica nos dois consumidores de backend.
-- **Desde:** reportado pelo autor em 2026-08-27.
-
-### P-029 — Bônus de Maestria de Vigor e Tanque alcançam resistência criada por modificação · `ABERTO` · regras/inventário
-
-- **Sintoma:** em uma Proteção com tipo de resistência criado por modificação — por exemplo,
-  Armadura Pesada + Hazmat — o cálculo atual soma indevidamente a Maestria de Vigor e Tanque ao
-  novo tipo Químico, embora ele não exista na Proteção-base da loja.
-- **Causa:** `montarResistencias` e a formatação do Inventário aplicam os bônus sobre o stat final
-  já fundido com modificações, sem distinguir os tipos de dano nativos da Proteção.
-- **Contorno:** não aplicar Hazmat, Antibombas ou uma modificação `RESISTENCIA` que crie tipo novo
-  enquanto a ficha tiver Maestria de Vigor ou Tanque, caso se queira evitar o valor incorreto.
-- **Correção:** executar `docs/specs/backlog/resistencia-protecao-base-bonus.spec.md`, aplicando os
-  dois bônus somente aos tipos da resistência-base da Proteção e mantendo o mesmo recorte na ficha,
-  no catálogo e no Encontro.
-- **Desde:** refinamento solicitado pelo autor em 2026-08-26, após `maestrias-efeitos.spec.md`.
-
-### P-028 — Maestria de Vigor sem verificação visual ao vivo · `CONTORNADO` · processo/frontend
-
-- **Sintoma:** o commit `0e439b0` aplica a Maestria de Vigor às resistências das Proteções, no
-  Inventário, no catálogo "Adicionar itens" e no Encontro, mas ainda não há evidência visual na
-  aplicação real de que `3 [Balístico]` vira `9 [Balístico]` com Vigor 6, sem overflow nem
-  regressão de responsividade.
-- **Causa:** a implementação foi commitada antes da sessão autenticada necessária para observar a
-  ficha real e o catálogo nos dois viewports obrigatórios.
-- **Contorno:** testes unitários focados, lint e builds estão verdes; eles cobrem o cálculo e a
-  renderização estrutural, mas não substituem a inspeção ao vivo.
-- **Correção:** iniciar a aplicação local, entrar com o cenário de desenvolvimento, ativar Maestria
-  de Vigor numa ficha com uma Proteção e conferir Inventário + "Adicionar itens" em `1920×1080` e
-  `360×800`; então remover este item, mover a spec para `done/` e registrar o fecho em
-  `HISTORY.md`/`CONTEXT.md`.
-- **Desde:** `maestrias-efeitos.spec.md` / commit `0e439b0` (2026-08-25).
 
 ### P-002 — `HISTORY.md` sem registro desde a `m3-27` · `ABERTO` · processo
 

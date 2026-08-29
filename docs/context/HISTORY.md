@@ -1,5 +1,107 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-29 — fecho de 5 specs avulsas pendentes + 2 bugs achados no Caderno do Esquadrão
+
+Pedido direto do autor: várias specs em `docs/specs/active/` pareciam já concluídas — conferir e
+mover para `done/` as que realmente estivessem. Six specs estavam em `active/`
+(`ui-04-adocao-por-modulo` foi excluída do escopo a pedido, por já estar sendo trabalhada por outra
+sessão). Auditoria inicial do código confirmou que 5 delas já tinham a implementação certa, só sem
+o registro de fechamento nem a verificação ao vivo obrigatória; a sexta (`caderno-esquadrao-
+colaborativo`) tinha dois defeitos reais.
+
+**Sessão concorrente.** No meio da verificação, apareceu um diff de 108 arquivos não commitados,
+batendo exatamente no escopo de `ui-04-adocao-por-modulo` — evidência de outra sessão editando o
+mesmo repositório ao vivo. A tarefa pausou: sem mexer em `docs/context/` nem mover spec nenhuma
+para `done/`, só os 3 arquivos isolados desta task foram fechados (fix de mock do `P-033` em
+`painel-encontro.page.spec.ts`/`detalhe.page.spec.ts` + fix do Milkdown em
+`editor-markdown.component.ts`, ver abaixo). A outra sessão terminou e commitou
+(`a352406`…`0263689`, `ui-03`/`ui-04`/`ui-05`, incluindo a saída do PrimeNG); os 3 arquivos isolados
+foram incluídos sem intenção no commit `a352406` (mesma árvore de trabalho), mas o conteúdo saiu
+intacto — confirmado via `git diff --ignore-space-at-eol` e leitura integral dos 3 arquivos.
+Retomada desta task: stack real subido de novo, suítes rodadas de novo do zero.
+
+**Achado ao subir o stack de novo:** o dev server do frontend, rodando havia várias horas, mostrava
+uma tela de erro do Vite (`TS2307: Cannot find module '@primeuix/themes'`) numa referência que já
+não existe em nenhum arquivo do HEAD atual — o processo nunca tinha sido reiniciado depois que a
+outra sessão removeu o PrimeNG e rodou `npm install`, então seu cache de compilação ainda apontava
+para um arquivo já apagado. Matar o processo (`taskkill`) e subir `npm run frontend:dev` de novo
+resolveu — não era regressão de código, só processo obsoleto.
+
+**`P-033` (crash, não a expectativa de modal que ocupa o número hoje):** `painel-encontro.page.spec.ts`
+e `detalhe.page.spec.ts` mockavam `TempoRealService` sem os 3 observables novos do Caderno do
+Esquadrão (`paginaEsquadraoCriada$`/`paginaEsquadraoAtualizada$`/`paginaEsquadraoExcluida$`),
+causando `TypeError: Cannot read properties of undefined (reading 'pipe')` em
+`CadernoEsquadraoColaborativoService`/`CadernoFlutuante` — 55+ testes crashavam antes de qualquer
+asserção. Adicionados os 3 `Subject`s aos dois mocks; suíte destravada (o `P-033` que sobra hoje em
+`PROBLEMS.md` é uma expectativa de teste desatualizada sobre o `<dialog>` nativo, gate diferente,
+já existia antes desta task).
+
+**Caderno do Esquadrão — dois bugs reais, achados só ao testar dois usuários editando ao vivo:**
+(1) o pipeline do Milkdown conectava o plugin `@milkdown/plugin-collab`
+(`.get(collabServiceCtx).bindDoc(...).bindXmlFragment(...).connect()`) dentro do `.config()`,
+**antes** de `.use(collab)` rodar e registrar `collabServiceCtx` no contexto — `MilkdownError:
+Context not bind`, o editor colaborativo nunca terminava de montar. Corrigido movendo essa chamada
+para uma `editor.action(...)` depois do `.create()`. (2) o `effect()` que sincroniza `[valor]` para
+o editor (e o mesmo código em `ngAfterViewInit`) rodava também no modo colaborativo, sobrescrevendo
+(`replaceAll`) o `Y.Doc` já sincronizado com um eco desatualizado da própria digitação local do
+usuário — dois usuários editando a mesma página ao mesmo tempo terminavam com a página **vazia**
+nos dois lados. Corrigido guardando os dois pontos com `this.documentoColaborativo()`. Confirmado
+ao vivo com dois `BrowserContext` do Playwright (mestre + jogador) editando a mesma página da
+campanha de QA simultaneamente: antes do fix, ambos terminavam vazios; depois, os dois lados
+convergem para `"MESTRE-A  JOGADOR-B"`. Suíte focada de `pagina-caderno/**` 73/73.
+
+**`renomear-calculadora-para-simulacao` — confirmado ao vivo.** `frontend/src/app/modules/
+calculadora/` já tinha virado `modules/simulacao/` por completo (rota `/simulacao`, classe
+`SimulacaoShell`, `EstadoAbasSimulacaoService`, `AjudaSimulacao`); a calculadora aritmética real
+(`shared/calculadora-flutuante/`) manteve o próprio ícone/rótulo `"calculadora"` (o `IconeNome`
+agora tem as duas chaves, `simulacao` e `calculadora`, cada uma com seu `<svg>`, sem ambiguidade).
+Sem residual de `modules/calculadora` em lugar nenhum (`grep -r` vazio). Verificado ao vivo em
+`1920×1080` e `360×800`: topbar mostra "Simulação" apontando para `/simulacao`, a tela
+`/simulacao/agente` abre com cabeçalho "Simulação". Testes focados do módulo + `layout`/`icone`:
+75/75.
+
+**`maestrias-efeitos` + `resistencia-protecao-base-bonus` (`P-028`/`P-029`) — confirmado ao vivo.**
+Cenário: ficha "QA Lutador" com Vigor 6, Maestria de Vigor, habilidade Tanque e uma Armadura Pesada
+(resistência nativa Físico/Balístico) com a modificação Hazmat ×1 (Químico) e Flexível ×2. Na ficha
+real, Inventário mostra "Resist. 19 [Físico], 15 [Balístico], 2 [Químico]" — Químico com só o bônus
+do próprio Hazmat (+2/stack), sem a Maestria de Vigor nem o Tanque somando num tipo que a Proteção-
+base não tem; Físico/Balístico (nativos) já incluem os dois bônus. O catálogo "Adicionar itens"
+mostra a mesma Armadura Pesada com "Resist. 19 [Físico], 15 [Balístico]" pré-calculado para esta
+ficha. Verificado em `1920×1080` (aba Inventário + catálogo) e `360×800` (mesmas duas telas).
+
+**`ficha-resumo-stats-efetivos` (`P-030`) — confirmado ao vivo.** Mesma ficha QA: Vida 68/74,
+Energia 35/31, Defesa 12, Esquiva 12, Bloqueio 15 na ficha. O mini-card do Esquadrão
+(`campanha/detalhe`) mostra exatamente os mesmos números; o cartão de combatente da Iniciativa
+mostra os mesmos números **mais** o resumo de resistência ("Fís 19 Bal 15 Qui 2"), também idêntico
+à ficha. Os três consumidores (ficha, resumo público, mapper do Encontro) aplicam a mesma soma
+"efetiva" hoje — nenhuma divergência entre eles.
+
+**`formatacao-legibilidade-frontend` — último gate fechado.** O único item pendente da spec era a
+verificação ao vivo da tela Gestão de Usuários (`/admin/usuarios`), que não tinha sido observada
+porque a única conta ADMIN local (`codex.dev`) não tinha credencial disponível na sessão anterior.
+Elevada temporariamente via SQL direto (`UPDATE usuario SET tipo_usuario_id = 2 WHERE login =
+'codex.dev'`) só para a captura, revertida para `NORMAL` (`tipo_usuario_id = 1`) logo depois.
+Verificado em `1920×1080` e `360×800`, já contra a UI sem PrimeNG (`ui-05`): lista, busca, filtros
+por tipo/situação, ações por linha (Logar como/Editar/Redefinir senha/Excluir) e paginação mantêm a
+hierarquia e densidade esperadas nos dois viewports, sem overflow horizontal.
+
+**`caderno-esquadrao-colaborativo` — não fechada, registrado `PROBLEMS.md` `P-039`.** Os dois bugs
+acima (crash de inicialização + perda de texto concorrente) estão corrigidos e verificados, e os
+entregáveis 1 e 3 (contratos/persistência/busca, terceiro modo do Caderno) estão implementados e
+confirmados. Mas o entregável 2 pede explicitamente "presença e cursores remotos no editor
+Milkdown" — nenhuma ocorrência de `y-protocols/awareness` existe em `frontend/src` nem
+`backend/src`; esse recorte nunca foi implementado e nunca tinha sido registrado em lugar nenhum
+(a feature inteira também nunca tinha ganhado entrada própria neste arquivo). A spec permanece em
+`docs/specs/active/` até esse entregável existir.
+
+**Gates:** shared 742/742, backend 469/469, frontend 1440/1443 (as 3 falhas restantes são
+preexistentes — `P-033`/`P-038`, sem relação com o diff desta task); `npm run lint` nos três
+workspaces sem erro novo (frontend mantém os 14.534 warnings preexistentes). `docker exec ...
+tipo_usuario_id` revertido e confirmado por `RETURNING`. Fixture de QA (campanha 216, ficha 40238,
+encontro 62, página de Caderno 40065) e a ficha de seed padrão 8 ("Lutador Stub 2", mutada em
+sessão anterior para montar o cenário) permanecem no banco de desenvolvimento local — não fazem
+parte de nenhuma migration nem seed versionado, mas não foram revertidas nesta task.
+
 ## 2026-08-29 — ui-05: saída do PrimeNG e tema puramente em CSS custom properties
 
 `primeng` e `@primeuix/themes` saíram do frontend, junto do preset de contenção e do provider de
