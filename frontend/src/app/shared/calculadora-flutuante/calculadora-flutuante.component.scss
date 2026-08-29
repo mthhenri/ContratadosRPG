@@ -191,6 +191,7 @@
             border: 0;
 
             &:hover {
+                background: var(--accent);
                 filter: brightness(1.08);
             }
         }
