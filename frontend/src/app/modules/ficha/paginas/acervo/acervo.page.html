@@ -1,18 +1,16 @@
 <section class="acervo">
-    <article class="card">
-        <header class="card__cabecalho">
-            <span class="card__indice">//</span>
-            <h1 class="card__titulo">Fichas</h1>
-            <span class="card__regua"></span>
-            @if (!carregando() && itens().length) {
-            <span class="card__contagem" aria-hidden="true">{{ itens().length }}</span>
-            }
-        </header>
+    <app-cartao titulo="Fichas" nivelTitulo="h1">
+        <span cartaoIndice>//</span>
+        @if (!carregando() && itens().length) {
+        <span cartaoFim class="acervo__contagem" aria-hidden="true">{{ itens().length }}</span>
+        }
 
         <div class="acervo__acoes">
             <div class="acervo__acoes-criar">
                 <button
-                    class="botao botao--primario acervo__acao"
+                    app-botao
+                    variante="primario"
+                    class="acervo__acao"
                     type="button"
                     (click)="abrirCriarFicha()"
                 >
@@ -21,7 +19,9 @@
                 </button>
                 @if (podeCriarCriatura()) {
                 <button
-                    class="botao botao--secundario acervo__acao"
+                    app-botao
+                    variante="secundario"
+                    class="acervo__acao"
                     type="button"
                     (click)="abrirCriarCriatura()"
                 >
@@ -93,7 +93,7 @@
             }
         </ul>
         } } } }
-    </article>
+    </app-cartao>
 </section>
 
 <!--
@@ -182,9 +182,9 @@
     ></button>
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
-            <span class="card__indice"><app-icone nome="duplicar" /></span>
+            <span class="dialogo__indice"><app-icone nome="duplicar" /></span>
             <h2 class="dialogo__titulo">Duplicar Ficha</h2>
-            <span class="card__regua"></span>
+            <span class="dialogo__regua"></span>
             <button
                 class="dialogo__fechar"
                 type="button"
@@ -202,7 +202,9 @@
 
         <div class="dialogo__acoes">
             <button
-                class="botao botao--primario dialogo__acao"
+                app-botao
+                variante="primario"
+                class="dialogo__acao"
                 type="button"
                 [disabled]="duplicando() === pendenteDuplicar.id"
                 (click)="confirmarDuplicar()"
@@ -211,7 +213,9 @@
                 {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
             </button>
             <button
-                class="botao botao--secundario dialogo__acao"
+                app-botao
+                variante="secundario"
+                class="dialogo__acao"
                 type="button"
                 [disabled]="duplicando() === pendenteDuplicar.id"
                 (click)="cancelarDuplicar()"
@@ -231,9 +235,9 @@
     ></button>
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
-            <span class="card__indice"><app-icone nome="excluir" /></span>
+            <span class="dialogo__indice"><app-icone nome="excluir" /></span>
             <h2 class="dialogo__titulo">Excluir Ficha</h2>
-            <span class="card__regua"></span>
+            <span class="dialogo__regua"></span>
             <button
                 class="dialogo__fechar"
                 type="button"
@@ -251,7 +255,9 @@
 
         <div class="dialogo__acoes">
             <button
-                class="botao botao--primario dialogo__acao"
+                app-botao
+                variante="primario"
+                class="dialogo__acao"
                 type="button"
                 [disabled]="excluindoFicha() === pendenteExcluir.id"
                 (click)="confirmarExcluirFicha()"
@@ -260,7 +266,9 @@
                 {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
             </button>
             <button
-                class="botao botao--secundario dialogo__acao"
+                app-botao
+                variante="secundario"
+                class="dialogo__acao"
                 type="button"
                 [disabled]="excluindoFicha() === pendenteExcluir.id"
                 (click)="cancelarExcluirFicha()"
@@ -280,9 +288,9 @@
     ></button>
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
-            <span class="card__indice"><app-icone nome="campanhas" /></span>
+            <span class="dialogo__indice"><app-icone nome="campanhas" /></span>
             <h2 class="dialogo__titulo">Atribuir a Campanha</h2>
-            <span class="card__regua"></span>
+            <span class="dialogo__regua"></span>
             <button
                 class="dialogo__fechar"
                 type="button"
@@ -311,7 +319,9 @@
 
         <div class="dialogo__acoes">
             <button
-                class="botao botao--primario dialogo__acao"
+                app-botao
+                variante="primario"
+                class="dialogo__acao"
                 type="button"
                 [disabled]="atribuindo() === pendenteAtribuir.id"
                 (click)="confirmarAtribuir()"
@@ -320,7 +330,9 @@
                 {{ atribuindo() === pendenteAtribuir.id ? 'Atribuindo…' : 'Confirmar' }}
             </button>
             <button
-                class="botao botao--secundario dialogo__acao"
+                app-botao
+                variante="secundario"
+                class="dialogo__acao"
                 type="button"
                 [disabled]="atribuindo() === pendenteAtribuir.id"
                 (click)="cancelarAtribuir()"

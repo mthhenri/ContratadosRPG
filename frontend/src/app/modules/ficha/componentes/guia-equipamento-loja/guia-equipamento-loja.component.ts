@@ -6,6 +6,7 @@ import { CATALOGO_CATEGORIAS, CATALOGO_ITENS, type CarrinhoItemDto, type ItemCat
 
 import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 
 /** Categorias com item comprável separadamente empilhável (mesmo critério de `ComprasPage`, m1-10). */
 const CATEGORIAS_EMPILHAVEIS: readonly ItemCategoriaEnum[] = [ItemCategoriaEnum.OPERACIONAL, ItemCategoriaEnum.MEDICINAL];
@@ -63,7 +64,7 @@ interface CartaoItemVM {
  */
 @Component({
   selector: 'app-guia-equipamento-loja',
-  imports: [ReactiveFormsModule, OverflowFade, Icone],
+  imports: [ReactiveFormsModule, OverflowFade, Icone, StepInput],
   templateUrl: './guia-equipamento-loja.component.html',
   styleUrl: './guia-equipamento-loja.component.scss',
 })
@@ -150,6 +151,16 @@ export class GuiaEquipamentoLoja {
       return;
     }
     this.remover(indice);
+  }
+
+  protected definirQuantidade(indice: number, quantidade: number): void {
+    if (quantidade <= 0) {
+      this.remover(indice);
+      return;
+    }
+    this.itensMudaram.emit(
+      this.itens().map((item, atual) => atual === indice ? { ...item, quantidade } : item),
+    );
   }
 
   protected remover(indice: number): void {

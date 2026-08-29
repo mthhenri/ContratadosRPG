@@ -1,4 +1,4 @@
-import { Component, forwardRef, input, signal } from '@angular/core';
+import { Component, effect, forwardRef, input, output, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
@@ -34,17 +34,35 @@ export class StepInput implements ControlValueAccessor {
   readonly max = input<number>(Number.POSITIVE_INFINITY);
   /** Incremento aplicado pelos botões − / +. */
   readonly passo = input<number>(1);
+  /** Densidade do controle, sem duplicar a estrutura de botões e valor. */
+  readonly tamanho = input<'padrao' | 'compacto' | 'mini'>('padrao');
   /** Rótulo acessível do campo (`aria-label`), já que o stepper não tem `<label>` próprio. */
   readonly ariaRotulo = input<string>('');
+  /** Valor para uso fora de formulários reativos (por exemplo, estado em Signals). */
+  readonly valorExterno = input<number | null>(null);
+  /** Notifica consumidores que não usam `ControlValueAccessor`. */
+  readonly valorAlterado = output<number>();
+  /** Mantém estados de limite já decididos pelo consumidor. */
+  readonly bloquearDiminuir = input(false);
+  readonly bloquearAumentar = input(false);
 
-  protected readonly valor = signal<number>(0);
+  protected readonly valorAtual = signal<number>(0);
   protected readonly desabilitado = signal<boolean>(false);
+
+  protected readonly classeTamanho = () => `stepper stepper--${this.tamanho()}`;
 
   private aoAlterar: (valor: number) => void = () => {};
   private aoTocar: () => void = () => {};
 
+  constructor() {
+    effect(() => {
+      const valor = this.valorExterno();
+      if (valor !== null) this.valorAtual.set(this.normalizar(valor));
+    });
+  }
+
   writeValue(valor: number | null): void {
-    this.valor.set(this.normalizar(valor ?? 0));
+    this.valorAtual.set(this.normalizar(valor ?? 0));
   }
 
   registerOnChange(callback: (valor: number) => void): void {
@@ -60,11 +78,11 @@ export class StepInput implements ControlValueAccessor {
   }
 
   protected incrementar(): void {
-    this.definir(this.valor() + this.passo());
+    this.definir(this.valorAtual() + this.passo());
   }
 
   protected decrementar(): void {
-    this.definir(this.valor() - this.passo());
+    this.definir(this.valorAtual() - this.passo());
   }
 
   protected aoDigitar(evento: Event): void {
@@ -85,10 +103,19 @@ export class StepInput implements ControlValueAccessor {
     return this.max() === Number.POSITIVE_INFINITY ? null : this.max();
   }
 
+  protected get rotuloDiminuir(): string {
+    return this.ariaRotulo() ? `Diminuir ${this.ariaRotulo()}` : 'Diminuir';
+  }
+
+  protected get rotuloAumentar(): string {
+    return this.ariaRotulo() ? `Aumentar ${this.ariaRotulo()}` : 'Aumentar';
+  }
+
   private definir(candidato: number): void {
     const normalizado = this.normalizar(candidato);
-    this.valor.set(normalizado);
+    this.valorAtual.set(normalizado);
     this.aoAlterar(normalizado);
+    this.valorAlterado.emit(normalizado);
   }
 
   /**

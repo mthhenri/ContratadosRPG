@@ -61,6 +61,7 @@ describe('ComprasPage', () => {
 
   it('exibe o resumo padrão (Prestígio 0 → Agente, $1.000, carrinho vazio)', async () => {
     const { raiz } = await montar();
+    expect(raiz.querySelectorAll('app-cartao').length).toBe(4);
     expect(statResumo(raiz, 'Patente')).toBe('Agente');
     expect(statResumo(raiz, 'Dinheiro Restante')).toBe('$1.000');
     expect(statResumo(raiz, 'Gasto Total')).toBe('$0');

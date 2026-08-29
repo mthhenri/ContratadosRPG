@@ -22,6 +22,7 @@ describe('PatentePage', () => {
 
   it('resolve a patente do Prestígio padrão (0 → Agente)', async () => {
     const { raiz } = await montar();
+    expect(raiz.querySelectorAll('app-cartao')).toHaveLength(2);
     expect(raiz.querySelector('.patente-destaque__nome')?.textContent?.trim()).toBe('Agente');
     expect(raiz.querySelector('.patente-destaque__faixa')?.textContent?.trim()).toBe('0–2 Prestígio');
     // A linha correspondente fica marcada na tabela completa.

@@ -4,6 +4,11 @@
 // Consome apenas tokens do tema; as sobreposições rgba(255,255,255,…) vêm do bloco canônico.
 @use "tema/breakpoints" as bp;
 
+:host {
+    display: block;
+    min-width: 0;
+}
+
 .stepper {
     display: flex;
     align-items: stretch;
@@ -69,6 +74,58 @@
 
         &:disabled {
             color: var(--text-mute);
+        }
+    }
+
+    &--compacto {
+        background: var(--surface);
+
+        .stepper__botao {
+            width: 34px;
+            font-size: 18px;
+        }
+
+        .stepper__valor {
+            padding: 8px 0;
+            font-size: 17px;
+        }
+
+        @include bp.mobile {
+            .stepper__botao {
+                width: bp.$alvo-toque;
+                font-size: 20px;
+            }
+
+            .stepper__valor {
+                padding: 12px 0;
+                font-size: 20px;
+            }
+        }
+    }
+
+    &--mini {
+        background: var(--surface);
+
+        .stepper__botao {
+            width: 26px;
+            font-size: 14px;
+        }
+
+        .stepper__valor {
+            padding: 4px 0;
+            font-size: 12px;
+        }
+
+        @include bp.mobile {
+            .stepper__botao {
+                width: bp.$alvo-toque;
+                font-size: 20px;
+            }
+
+            .stepper__valor {
+                padding: 12px 0;
+                font-size: 20px;
+            }
         }
     }
 }

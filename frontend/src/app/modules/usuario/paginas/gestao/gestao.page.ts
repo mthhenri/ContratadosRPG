@@ -11,6 +11,8 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { UsuarioAdminService } from '../../usuario-admin.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 
 type ModoEditor = 'perfil' | 'senha' | 'tipo';
 interface EditorUsuario { readonly usuarioId: number; readonly modo: ModoEditor }
@@ -24,7 +26,7 @@ export class TipoRotuloPipe implements PipeTransform {
 
 @Component({
   selector: 'app-usuario-gestao',
-  imports: [ReactiveFormsModule, Icone, TipoRotuloPipe, Tooltip],
+  imports: [ReactiveFormsModule, Icone, TipoRotuloPipe, Tooltip, Botao, Cartao],
   templateUrl: './gestao.page.html',
   styleUrl: './gestao.page.scss',
 })

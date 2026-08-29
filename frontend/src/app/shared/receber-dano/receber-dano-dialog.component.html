@@ -113,10 +113,11 @@
         </div>
 
         <div class="receber-dano__acoes">
-            <button class="receber-dano__cancelar" type="button" (click)="cancelar()">
+            <button app-botao class="receber-dano__cancelar" type="button" (click)="cancelar()">
                 Cancelar
             </button>
             <button
+                app-botao
                 class="receber-dano__confirmar"
                 type="submit"
                 [disabled]="

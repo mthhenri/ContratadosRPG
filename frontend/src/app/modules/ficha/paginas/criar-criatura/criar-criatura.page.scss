@@ -376,15 +376,15 @@
             grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
         }
     }
-    &__campos + .campo {
+    &__campos + label[app-campo] {
         margin-top: 16px;
     }
-    .campo + &__campos {
+    label[app-campo] + &__campos {
         margin-top: 16px;
     }
     // Espaçamento entre campos empilhados fora de um `&__campos` (ex.: Identidade, Ataques,
     // Habilidades) — sem esta regra, `<label class="campo">` consecutivos (sem wrapper com `gap`)
-    // encostam um no outro (`margin: 0` do `.campo`, ver abaixo).
+    // encostam um no outro (`margin: 0` do campo compartilhado, ver abaixo).
 
     // Botão "+ Adicionar X" logo após o grid de cards (Resistências/Fraquezas/Ataques/Habilidades)
     // — sem esta regra ele encostava direto no grid acima.
@@ -547,7 +547,7 @@
     // Cada card empilhava TODO campo (Nome/Atributo/Custo/Dano/Tipo/checkbox/Efeito…) em 1 coluna
     // só — com 6-7 campos por Ataque/Habilidade o card ficava gigantesco e "ruim de mexer" (m4-05).
     // Agora os campos curtos (select/input de 1 linha) correm 2 por linha; só o que precisa de
-    // largura total (textarea, checkbox `.guia__modo-livre`, `.campo--largo`) quebra a coluna.
+    // largura total (textarea, checkbox `.guia__modo-livre`, `.guia__campo--largo`) quebra a coluna.
     &__formacao {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -558,7 +558,7 @@
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
-        .campo--largo,
+        .guia__campo--largo,
         .guia__modo-livre {
             grid-column: 1 / -1;
         }
@@ -946,55 +946,10 @@
     }
 }
 
-.campo {
-    display: grid;
-    gap: 7px;
-    min-width: 0;
-    margin: 0;
-    &__rotulo {
-        font: 600 9px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.11em;
-        color: var(--text-dim);
-    }
-    &__controle {
-        width: 100%;
-        height: 42px;
-        padding: 9px 11px;
-        font: 13px var(--font-sans);
-        color: var(--text);
-        background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        outline: 0;
-        transition: 0.15s ease;
-        &:hover {
-            border-color: var(--accent-border);
-        }
-        &:focus {
-            border-color: var(--accent);
-            background: var(--surface);
-        }
-        &--numero {
-            font-family: var(--font-mono);
-            font-weight: 700;
-        }
-        &--area {
-            height: auto;
-            min-height: 78px;
-            resize: vertical;
-        }
-    }
-    &__ajuda {
-        font: 10px var(--font-sans);
-        color: var(--text-mute);
-    }
-}
-
 // Designação + cor de identidade — mesmo par visual "caixa de texto + quadradinho de cor" do
 // Codinome do guia de jogador (m3-61): no desktop a cor é um quadradinho colado no fim da caixa;
 // no mobile vira uma barra colorida abaixo do campo.
-.campo--codinome {
+.guia__campo--codinome {
     .campo__codinome-linha {
         display: flex;
         align-items: stretch;
@@ -1059,6 +1014,8 @@
 // Imagem de registro + Designação/Origem empilhadas (mesmo layout "Base" do guia de jogador,
 // m3-62) — caixa de foto à esquerda, campos à direita.
 .guia__avatar-campo {
+    display: grid;
+    gap: 7px;
     min-width: 0;
 }
 .guia__base-direita {
@@ -1212,45 +1169,13 @@
         }
     }
 }
-.stepper {
-    display: grid;
-    grid-template-columns: 34px 48px 34px;
-    min-height: 36px;
-    overflow: hidden;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    &__botao {
-        padding: 0;
-        font: 18px var(--font-mono);
-        color: var(--text-dim);
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        &:hover {
-            color: var(--text);
-            background: var(--accent-dim);
-        }
-        &:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-    }
-    &__valor {
-        display: grid;
-        place-items: center;
-        font: 700 17px var(--font-mono);
-        color: var(--text);
-        border-inline: 1px solid var(--border);
-    }
-}
-.stat {
+.guia__stat {
     min-width: 0;
     padding: 10px 11px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
-    &__rotulo {
+    &-rotulo {
         display: block;
         margin-bottom: 5px;
         font: 9px var(--font-mono);
@@ -1258,46 +1183,10 @@
         letter-spacing: 0.1em;
         color: var(--text-mute);
     }
-    &__valor {
+    &-valor {
         font: 700 19px/1 var(--font-mono);
     }
-    &--vida {
-        border-color: var(--vida-border);
-        .stat__valor {
-            color: var(--vida);
-        }
-    }
-    &--alerta {
-        border-color: var(--accent-border);
-        .stat__valor {
-            color: var(--accent);
-        }
-    }
 }
-.botao {
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition: 0.15s ease;
-    &--primario {
-        color: var(--bg);
-        background: var(--accent);
-        border: 1px solid var(--accent);
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-    &--secundario {
-        color: var(--text);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-    }
-}
-
 @include bp.tablet {
     .guia {
         max-width: 100%;
@@ -1365,6 +1254,21 @@
         &__classificacao,
         &__kicker {
             display: none;
+        }
+        &__retomar {
+            align-items: flex-start;
+            flex-wrap: wrap;
+            padding: 12px;
+        }
+        &__retomar-texto {
+            flex-basis: calc(100% - 54px);
+        }
+        &__retomar-acoes {
+            width: 100%;
+            .botao {
+                flex: 1;
+                min-height: bp.$alvo-toque;
+            }
         }
         &__titulo-grupo h1 {
             font-size: 14px;
@@ -1576,13 +1480,6 @@
     // estreita que o stepper mobile (2×44px + 48px = 136px), que fica cortado (m4-04c).
     .atributo {
         grid-template-columns: minmax(0, 1fr) 136px;
-        min-height: bp.$alvo-toque;
-    }
-    .stepper {
-        grid-template-columns: bp.$alvo-toque 48px bp.$alvo-toque;
-        min-height: calc(bp.$alvo-toque + 2px);
-    }
-    .stepper__botao {
         min-height: bp.$alvo-toque;
     }
     .guia__vaga-escolher {

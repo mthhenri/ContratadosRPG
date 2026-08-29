@@ -7,6 +7,7 @@ import type { FichaCriaturaHabilidadeDto } from '@contratados-rpg/shared/dtos/fi
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
 
 const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTipoCriaturaEnum) as HabilidadeTipoCriaturaEnum[];
@@ -14,7 +15,7 @@ const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTip
 /** Editor no próprio lugar da lista `habilidades` (Habilidades Especiais) da ficha de criatura (m4-04b). */
 @Component({
   selector: 'app-criatura-habilidade-lista',
-  imports: [ReactiveFormsModule, Icone, Tooltip, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, Botao, Icone, Tooltip, NgTemplateOutlet],
   templateUrl: './criatura-habilidade-lista.component.html',
   styleUrl: './criatura-habilidade-lista.component.scss',
 })

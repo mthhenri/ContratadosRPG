@@ -1,9 +1,9 @@
-<div class="stepper" [class.stepper--desabilitado]="desabilitado()">
+<div class="stepper" [class.stepper--desabilitado]="desabilitado()" [class]="classeTamanho()">
     <button
         type="button"
         class="stepper__botao"
-        aria-label="Diminuir"
-        [disabled]="desabilitado()"
+        [attr.aria-label]="rotuloDiminuir"
+        [disabled]="desabilitado() || bloquearDiminuir()"
         (click)="decrementar()"
     >
         −
@@ -12,7 +12,7 @@
     <input
         class="stepper__valor"
         type="number"
-        [value]="valor()"
+        [value]="valorAtual()"
         [attr.min]="minAtributo"
         [attr.max]="maxAtributo"
         [step]="passo()"
@@ -25,8 +25,8 @@
     <button
         type="button"
         class="stepper__botao"
-        aria-label="Aumentar"
-        [disabled]="desabilitado()"
+        [attr.aria-label]="rotuloAumentar"
+        [disabled]="desabilitado() || bloquearAumentar()"
         (click)="incrementar()"
     >
         +

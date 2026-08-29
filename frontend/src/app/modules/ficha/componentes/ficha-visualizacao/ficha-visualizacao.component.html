@@ -7,7 +7,7 @@
     <header class="ficha-visao__topo">
         <span class="ficha-visao__rotulo-secao">Ficha de Jogador</span>
         <span class="ficha-visao__regua"></span>
-        <span class="chip-classificacao">{{ classificacao() }}</span>
+        <app-chip variante="sutil">{{ classificacao() }}</app-chip>
     </header>
 
     <!-- HUD de vitais (m3-60) — só no mobile (`display: none` acima de `$bp-mobile`, ver SCSS) e só

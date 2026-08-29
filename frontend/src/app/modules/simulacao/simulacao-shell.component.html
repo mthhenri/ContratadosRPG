@@ -4,11 +4,15 @@
         <app-chip>Acesso Livre</app-chip>
     </header>
 
-    <nav class="abas" aria-label="Abas da simulação">
+    <nav class="simulacao__abas" aria-label="Navegação da simulação">
         @for (aba of abas; track aba.caminho) {
-            <a class="abas__item" [routerLink]="aba.caminho" routerLinkActive="abas__item--ativo">
+            <a
+                class="simulacao__aba abas__item"
+                [routerLink]="aba.caminho"
+                routerLinkActive="simulacao__aba--ativa abas__item--ativo"
+            >
                 <app-icone [nome]="aba.icone" />
-                <span class="abas__rotulo">{{ aba.rotulo }}</span>
+                <span class="simulacao__aba-rotulo">{{ aba.rotulo }}</span>
             </a>
         }
     </nav>

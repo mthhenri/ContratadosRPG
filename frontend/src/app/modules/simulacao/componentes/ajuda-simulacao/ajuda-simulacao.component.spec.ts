@@ -28,18 +28,18 @@ describe('AjudaSimulacao', () => {
   it('exibe o gatilho e mantém o modal fechado por padrão', async () => {
     const { raiz } = await montar('dt');
     expect(raiz.querySelector('.ajuda-gatilho')).not.toBeNull();
-    expect(raiz.querySelector('.ajuda-modal')).toBeNull();
+    expect(raiz.querySelector('app-modal')).toBeNull();
   });
 
   it('abre o modal com o título e todos os passos da aba ao clicar no gatilho', async () => {
     const { raiz, abrir } = await montar('dt');
     abrir();
 
-    expect(raiz.querySelector('.ajuda-modal')).not.toBeNull();
-    expect(raiz.querySelector('.ajuda-modal__titulo')?.textContent?.trim()).toBe(
+    expect(raiz.querySelector('app-modal')).not.toBeNull();
+    expect(raiz.querySelector('.modal__titulo')?.textContent?.trim()).toBe(
       CONTEUDO_AJUDA.dt.titulo,
     );
-    expect(raiz.querySelectorAll('.ajuda-modal__item').length).toBe(
+    expect(raiz.querySelectorAll('.ajuda__item').length).toBe(
       CONTEUDO_AJUDA.dt.passos.length,
     );
   });
@@ -47,7 +47,7 @@ describe('AjudaSimulacao', () => {
   it('seleciona o conteúdo pela aba informada (não duplica por aba)', async () => {
     const { raiz, abrir } = await montar('compras');
     abrir();
-    expect(raiz.querySelector('.ajuda-modal__titulo')?.textContent?.trim()).toBe(
+    expect(raiz.querySelector('.modal__titulo')?.textContent?.trim()).toBe(
       CONTEUDO_AJUDA.compras.titulo,
     );
   });
@@ -66,7 +66,7 @@ describe('AjudaSimulacao', () => {
     expect(emitido).toBe(0);
     expect(botao.textContent?.trim()).toContain('Tem certeza?');
     expect(botao.classList.contains('ajuda-limpar--confirmando')).toBe(true);
-    expect(raiz.querySelector('.ajuda-modal')).toBeNull();
+    expect(raiz.querySelector('app-modal')).toBeNull();
 
     // 2º clique: confirma, emite e o rótulo volta a "Limpar".
     botao.click();
@@ -100,10 +100,12 @@ describe('AjudaSimulacao', () => {
   it('fecha o modal ao clicar em Fechar', async () => {
     const { fixture, raiz, abrir } = await montar('descanso');
     abrir();
-    expect(raiz.querySelector('.ajuda-modal')).not.toBeNull();
+    expect(raiz.querySelector('app-modal')).not.toBeNull();
 
-    raiz.querySelector<HTMLButtonElement>('.ajuda-btn')!.click();
+    Array.from(raiz.querySelectorAll<HTMLButtonElement>('button'))
+      .find((botao) => botao.textContent?.trim() === 'Fechar')!
+      .click();
     fixture.detectChanges();
-    expect(raiz.querySelector('.ajuda-modal')).toBeNull();
+    expect(raiz.querySelector('app-modal')).toBeNull();
   });
 });

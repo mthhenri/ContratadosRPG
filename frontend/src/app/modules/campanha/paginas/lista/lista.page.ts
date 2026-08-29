@@ -9,6 +9,8 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Stat } from '../../../../shared/ui/stat/stat.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { CampanhaService } from '../../campanha.service';
 import { CampanhaCriar } from '../criar/criar.page';
 import { CampanhaEntrar } from '../entrar/entrar.page';
@@ -40,7 +42,7 @@ interface EstatisticasCampanhas {
  */
 @Component({
   selector: 'app-campanha-lista',
-  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar, Tooltip, Stat],
+  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar, Tooltip, Stat, Botao, Cartao],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })

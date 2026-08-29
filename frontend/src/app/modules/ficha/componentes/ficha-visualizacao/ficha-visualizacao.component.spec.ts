@@ -102,10 +102,12 @@ describe('FichaVisualizacao', () => {
   it('exibe codinome, classe/arquétipo e classificação, e é somente leitura quando não ajustável', () => {
     const { raiz } = montar(dados);
     expect(raiz.querySelector('.ficha-ident__nome')?.textContent?.trim()).toBe('Corvo');
-    const chips = Array.from(raiz.querySelectorAll('.chip')).map((c) => c.textContent?.trim());
+    const chips = Array.from(raiz.querySelectorAll('.ficha-ident__chips .chip')).map((c) =>
+      c.textContent?.trim(),
+    );
     expect(chips).toContain('Combatente');
     expect(chips).toContain('Mercenário');
-    expect(raiz.querySelector('.chip-classificacao')?.textContent?.trim()).toBe('FICHA-JGD-0042');
+    expect(raiz.querySelector('app-chip')?.textContent?.trim()).toBe('FICHA-JGD-0042');
     expect(raiz.querySelector('input')).toBeNull();
     expect(raiz.querySelector('select')).toBeNull();
   });
@@ -182,7 +184,9 @@ describe('FichaVisualizacao', () => {
 
   it('omite o chip de arquétipo quando a ficha não tem (Experimento/Civil)', () => {
     const { raiz } = montar({ ...dados, classe: ClasseEnum.CIVIL, arquetipo: null });
-    const chips = Array.from(raiz.querySelectorAll('.chip')).map((c) => c.textContent?.trim());
+    const chips = Array.from(raiz.querySelectorAll('.chip'))
+      .filter((chip) => !chip.closest('app-chip'))
+      .map((chip) => chip.textContent?.trim());
     expect(chips).toContain('Civil');
     // Só o chip de classe; nenhum chip extra de arquétipo.
     expect(chips.length).toBe(1);

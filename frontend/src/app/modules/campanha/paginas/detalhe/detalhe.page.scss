@@ -68,7 +68,7 @@
     }
 
     // === Cabeçalho da página (m2-19, item 6; reflow mobile do "1"/próxima leva) — substitui o antigo
-    // `card__cabecalho` dentro do card "Identidade", que deixou de existir. Duas linhas lógicas:
+    // do cabeçalho do antigo cartão "Identidade", que deixou de existir. Duas linhas lógicas:
     // título (índice+nome+régua) e ações (tempo real, voltar, histórico, kebab). No desktop ficam
     // lado a lado numa linha só; no mobile a linha de ações quebra pra baixo do nome, que fica com
     // a linha só pra si — dá mais destaque ao nome da campanha numa tela estreita.
@@ -95,6 +95,26 @@
         @include bp.mobile {
             flex-basis: 100%;
         }
+    }
+
+    &__cabecalho-indice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+    }
+
+    &__cabecalho-regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
     }
 
     &__cabecalho-acoes {
@@ -1792,12 +1812,10 @@
             min-height: bp.$alvo-toque;
         }
 
-        &__ficha-embutida .card__cabecalho {
-            flex-wrap: wrap;
-
-            .card__regua {
-                flex-basis: 100%;
-            }
+        &__ficha-embutida-acoes {
+            display: flex;
+            flex-basis: 100%;
+            gap: 12px;
         }
 
         &__alternar-inventario,
@@ -1901,60 +1919,15 @@
     }
 }
 
-// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 18px;
-    }
-
-    &__indice {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: 3px;
-    }
-
-    &__titulo {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text);
-    }
-
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
-}
-
-// Stat box — bloco sancionado copiado de docs/design/tema/_componentes.scss (m2-18/m2-19).
-.stat {
+// Estatísticas interativas do lobby. Não usam `app-stat`: ambas combinam um valor com ações.
+.detalhe__estatistica {
     min-width: 0;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
     padding: 13px 14px;
 
-    &__rotulo {
+    &-rotulo {
         display: block;
         font-family: var(--font-mono);
         font-size: 10px;
@@ -1964,60 +1937,6 @@
         margin-bottom: 7px;
     }
 
-    &__valor {
-        font-family: var(--font-mono);
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1;
-    }
-
-    // Alertas > 0 (item 2) — mesmo token fixo `--vida` do card/linha/banner crítico, não `--accent`.
-    &--alerta {
-        border-color: var(--vida-border);
-
-        .stat__valor {
-            color: var(--vida);
-        }
-    }
-}
-
-// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.botao {
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease,
-        filter 0.15s ease;
-
-    &:disabled {
-        opacity: 0.55;
-        cursor: default;
-    }
-
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-
-        &:hover:not(:disabled) {
-            // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-            filter: brightness(1.08);
-        }
-    }
-
-    &--secundario {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border-strong);
-
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-    }
 }
 
 // === Dialog de confirmação (m3-52) — Duplicar/Excluir ficha a partir do menu do mini-card.
@@ -2058,6 +1977,26 @@
         align-items: center;
         gap: 11px;
         margin-bottom: 16px;
+    }
+
+    &__indice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+    }
+
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
     }
 
     &__titulo {

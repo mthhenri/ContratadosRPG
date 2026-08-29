@@ -131,7 +131,10 @@
   valor mostrado na caixa (`criar.page`/`criar-criatura.page` mostram o atributo **já somado ao
   bônus**; digitação direta editaria o número errado) ou um `[tamanho]` compacto que o `StepInput`
   ainda não tem (`guia-equipamento-loja`, `ficha-visualizacao`) — decisão registrada, não resolvida
-  no improviso; fica para a `ui-04`. Falta o resto: `ui-04`…`ui-05`.
+  no improviso; fica para a `ui-04`. **`ui-04` fechou em 2026-08-29**: todos os módulos adotaram
+  os primitivos e o scan dos seletores-base agora retorna apenas `shared/ui/`; `CampoRotulado`
+  manteve os formulários densos em `<label>` e `StepInput` ganhou variantes opt-in
+  `compacto`/`mini`. Falta apenas a `ui-05` (remoção do PrimeNG).
 - **Desde:** desde sempre — a instrução de copiar está no handoff de design original. Medido e
   registrado na auditoria de 2026-08-28.
 

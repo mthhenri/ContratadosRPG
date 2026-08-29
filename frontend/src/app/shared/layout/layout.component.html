@@ -12,6 +12,7 @@
         <nav class="topbar__nav" aria-label="Navegação principal">
             @if (sessaoService.autenticado()) {
                 <a
+                    app-botao
                     class="topbar__item"
                     routerLink="/campanhas"
                     routerLinkActive="topbar__item--ativo"
@@ -19,12 +20,18 @@
                     <app-icone nome="campanhas" />
                     <span>Campanhas</span>
                 </a>
-                <a class="topbar__item" routerLink="/fichas" routerLinkActive="topbar__item--ativo">
+                <a
+                    app-botao
+                    class="topbar__item"
+                    routerLink="/fichas"
+                    routerLinkActive="topbar__item--ativo"
+                >
                     <app-icone nome="ficha" />
                     <span>Fichas</span>
                 </a>
                 @if (sessaoService.usuario()?.tipo === TipoUsuarioEnum.ADMIN) {
                     <a
+                        app-botao
                         class="topbar__item topbar__item--admin"
                         routerLink="/admin/usuarios"
                         routerLinkActive="topbar__item--ativo"
@@ -34,11 +41,17 @@
                     </a>
                 }
             }
-            <a class="topbar__item" routerLink="/simulacao" routerLinkActive="topbar__item--ativo">
+            <a
+                app-botao
+                class="topbar__item"
+                routerLink="/simulacao"
+                routerLinkActive="topbar__item--ativo"
+            >
                 <app-icone nome="simulacao" />
                 <span>Simulação</span>
             </a>
             <button
+                app-botao
                 class="topbar__item"
                 type="button"
                 aria-label="Abrir documentos"

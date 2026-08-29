@@ -3,12 +3,8 @@
 <div class="calc compras">
     <!-- CARD 1: CONFIGURAÇÃO — só em Compras (o modo Vender não usa dinheiro/limites) -->
     @if (modo() === 'comprar') {
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">1</span>
-            <h2 class="calc-cartao__titulo">Configuração do Agente</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Configuração do Agente">
+        <span cartaoIndice>1</span>
 
         <div class="calc-config" [formGroup]="formulario">
             <div class="calc-campo">
@@ -54,15 +50,11 @@
                 />
             </div>
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 2: RESUMO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">2</span>
-            <h2 class="calc-cartao__titulo">Resumo de Limites e Gastos</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Resumo de Limites e Gastos">
+        <span cartaoIndice>2</span>
 
         <div class="calc-stats compras-resumo">
             <div class="calc-stat">
@@ -104,16 +96,12 @@
                 </div>
             </div>
         </div>
-    </section>
+    </app-cartao>
     }
 
     <!-- CARD 3: CATÁLOGO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">{{ modo() === 'vender' ? 1 : 3 }}</span>
-            <h2 class="calc-cartao__titulo">Catálogo de Equipamentos</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Catálogo de Equipamentos">
+        <span cartaoIndice>{{ modo() === 'vender' ? 1 : 3 }}</span>
 
         <input
             class="calc-texto compras-busca"
@@ -379,17 +367,15 @@
             }
         </div>
         }
-    </section>
+    </app-cartao>
 
     <!-- CARD 4: CARRINHO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">{{ modo() === 'vender' ? 2 : 4 }}</span>
-            <h2 class="calc-cartao__titulo">
-                {{ modo() === 'vender' ? 'Carrinho de Venda' : 'Carrinho' }}
-            </h2>
-            <span class="calc-cartao__regua"></span>
-            <div class="compras-carrinho-acoes">
+    <app-cartao
+        [titulo]="modo() === 'vender' ? 'Carrinho de Venda' : 'Carrinho'"
+        [cabecalhoQuebravel]="true"
+    >
+        <span cartaoIndice>{{ modo() === 'vender' ? 2 : 4 }}</span>
+        <div cartaoFim class="compras-carrinho-acoes">
                 @if (modo() === 'comprar') {
                 <button type="button" class="compras-limpar" (click)="abrirModalImportar()">
                     Importar
@@ -423,8 +409,7 @@
                     Esvaziar
                 </button>
                 }
-            </div>
-        </header>
+        </div>
 
         @if (carrinhoVazio()) {
         <p class="compras-vazio">Nenhum item adicionado ainda.</p>
@@ -903,16 +888,12 @@
             }
         </div>
         }
-    </section>
+    </app-cartao>
 
     <!-- CARD 3: VENDA (m1-20) — só na aba Vendas -->
     @if (modo() === 'vender') {
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">3</span>
-            <h2 class="calc-cartao__titulo">Venda</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Venda">
+        <span cartaoIndice>3</span>
 
         <!-- Fragmentos: grade de contadores por módulo × tipo -->
         <div class="compras-venda-bloco">
@@ -1033,7 +1014,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </app-cartao>
     }
 
     <!-- DIALOG: QUANTOS REMOVER (stack de itens, quantidade > 1) -->

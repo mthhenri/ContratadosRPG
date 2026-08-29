@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { Icone } from '../../shared/icone/icone.component';
 import { Marca } from '../../shared/marca/marca.component';
+import { Botao } from '../../shared/ui/botao/botao.component';
 
 export const MENSAGENS_ACESSO_NEGADO = [
   'O artefato requisitado foi removido do índice operacional. Toda referência correlata permanece retida sob protocolo de contenção administrativa.',
@@ -73,7 +74,7 @@ function selecionarAleatorio<T>(itens: readonly T[]): T {
 /** Destino genérico de uma tentativa autenticada sem a classificação exigida. */
 @Component({
   selector: 'app-acesso-negado-page',
-  imports: [RouterLink, Icone, Marca],
+  imports: [RouterLink, Icone, Marca, Botao],
   templateUrl: './acesso-negado.page.html',
   styleUrl: './acesso-negado.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

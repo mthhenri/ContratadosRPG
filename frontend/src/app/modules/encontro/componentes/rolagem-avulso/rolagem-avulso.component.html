@@ -55,7 +55,9 @@
         </button>
 
         <button
-            class="botao botao--primario rolagem-avulso__rolar"
+            app-botao
+            variante="secundario"
+            class="rolagem-avulso__rolar"
             type="submit"
             [class.rolagem-avulso__rolar--confirmada]="rolagemConfirmada()"
             [disabled]="!expressao().trim()"
@@ -96,14 +98,18 @@
             </p>
             <div class="revelar-rolagem__acoes">
                 <button
-                    class="botao botao--primario revelar-rolagem__acao rolagem-avulso__confirmar-publica"
+                    app-botao
+                    variante="primario"
+                    class="revelar-rolagem__acao rolagem-avulso__confirmar-publica"
                     type="button"
                     (click)="confirmarPublica()"
                 >
                     <app-icone nome="olho" /> Tornar pública
                 </button>
                 <button
-                    class="botao botao--secundario revelar-rolagem__acao"
+                    app-botao
+                    variante="secundario"
+                    class="revelar-rolagem__acao"
                     type="button"
                     (click)="confirmandoPublica.set(false)"
                 >

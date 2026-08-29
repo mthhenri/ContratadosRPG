@@ -44,6 +44,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -128,6 +129,7 @@ interface CombatenteVisualDto extends EncontroCombatenteResumoDto {
     SeletorCombatentes,
     RolagemAvulso,
     BandejaDados,
+    Botao,
   ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',

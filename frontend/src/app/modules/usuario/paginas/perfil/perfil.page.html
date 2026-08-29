@@ -32,8 +32,7 @@
                 </div>
             </div>
 
-            <label class="perfil__campo">
-                <span class="perfil__rotulo">Nome</span>
+            <app-campo rotulo="Nome" tamanho="amplo">
                 <input
                     class="perfil__entrada"
                     type="text"
@@ -41,10 +40,9 @@
                     autocomplete="name"
                     required
                 />
-            </label>
+            </app-campo>
 
-            <label class="perfil__campo">
-                <span class="perfil__rotulo">Login</span>
+            <app-campo rotulo="Login" tamanho="amplo">
                 <input
                     class="perfil__entrada"
                     type="text"
@@ -54,11 +52,13 @@
                     spellcheck="false"
                     required
                 />
-            </label>
+            </app-campo>
 
             <div class="perfil__acoes">
                 <button
-                    class="botao botao--primario perfil__acao"
+                    app-botao
+                    variante="primario"
+                    class="perfil__acao"
                     type="submit"
                     [disabled]="salvandoPerfil()"
                 >
@@ -76,8 +76,7 @@
         <span cartaoIndice>//</span>
 
         <form class="perfil__formulario" [formGroup]="formularioSenha" (ngSubmit)="salvarSenha()">
-            <label class="perfil__campo">
-                <span class="perfil__rotulo">Senha atual</span>
+            <app-campo rotulo="Senha atual" tamanho="amplo">
                 <div class="perfil__campo-senha">
                     <input
                         class="perfil__entrada perfil__entrada--senha"
@@ -96,10 +95,13 @@
                         <app-icone [nome]="senhaAtualVisivel() ? 'olho-fechado' : 'olho'" />
                     </button>
                 </div>
-            </label>
+            </app-campo>
 
-            <label class="perfil__campo">
-                <span class="perfil__rotulo">Nova senha</span>
+            <app-campo
+                rotulo="Nova senha"
+                tamanho="amplo"
+                [erro]="formularioSenha.controls.novaSenha.touched && formularioSenha.controls.novaSenha.hasError('minlength') ? 'Mínimo de 6 caracteres.' : ''"
+            >
                 <div class="perfil__campo-senha">
                     <input
                         class="perfil__entrada perfil__entrada--senha"
@@ -118,15 +120,13 @@
                         <app-icone [nome]="novaSenhaVisivel() ? 'olho-fechado' : 'olho'" />
                     </button>
                 </div>
-                @if (formularioSenha.controls.novaSenha.touched &&
-                formularioSenha.controls.novaSenha.hasError('minlength')) {
-                <span class="perfil__erro">Mínimo de 6 caracteres.</span>
-                }
-            </label>
+            </app-campo>
 
             <div class="perfil__acoes">
                 <button
-                    class="botao botao--primario perfil__acao"
+                    app-botao
+                    variante="primario"
+                    class="perfil__acao"
                     type="submit"
                     [disabled]="salvandoSenha()"
                 >
@@ -155,7 +155,9 @@
             </p>
             <div class="perfil__acoes">
                 <button
-                    class="botao botao--primario perfil__acao"
+                    app-botao
+                    variante="primario"
+                    class="perfil__acao"
                     type="button"
                     [disabled]="excluindo()"
                     (click)="confirmarExclusao()"
@@ -164,7 +166,9 @@
                     {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
                 </button>
                 <button
-                    class="botao botao--secundario perfil__acao"
+                    app-botao
+                    variante="secundario"
+                    class="perfil__acao"
                     type="button"
                     [disabled]="excluindo()"
                     (click)="cancelarExclusao()"
@@ -176,7 +180,9 @@
         } @else {
         <div class="perfil__acoes">
             <button
-                class="botao botao--secundario perfil__acao"
+                app-botao
+                variante="secundario"
+                class="perfil__acao"
                 type="button"
                 (click)="pedirExclusao()"
             >

@@ -15,43 +15,6 @@
     }
 }
 
-// Botões canônicos copiados do tema para dentro do encapsulamento deste componente, como no
-// diálogo análogo de `CriaturaVisualizacao`.
-.botao {
-    padding: 7px 12px;
-    font: 600 11px var(--font-mono);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition:
-        filter 0.15s ease,
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-
-    &:disabled {
-        cursor: default;
-        opacity: 0.55;
-    }
-    &--primario {
-        color: var(--bg);
-        background: var(--accent);
-        border: 0;
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-    &--secundario {
-        color: var(--text);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-    }
-}
-
 .rolagem-avulso {
     position: fixed;
     z-index: 35;

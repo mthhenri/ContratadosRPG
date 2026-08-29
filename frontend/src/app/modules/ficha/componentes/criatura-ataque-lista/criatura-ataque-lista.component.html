@@ -195,10 +195,10 @@
             <input type="checkbox" formControlName="area" /> Atinge área
         </label>
         <div class="ataque-lista__form-acoes">
-            <button class="botao botao--primario" type="submit" [disabled]="itemForm.invalid">
+            <button app-botao variante="primario" type="submit" [disabled]="itemForm.invalid">
                 {{ rotuloConfirmar }}
             </button>
-            <button class="botao botao--secundario" type="button" (click)="cancelar()">
+            <button app-botao variante="secundario" type="button" (click)="cancelar()">
                 Cancelar
             </button>
         </div>

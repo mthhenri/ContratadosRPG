@@ -11,6 +11,7 @@ import {
 } from '@contratados-rpg/shared/regras/novo-agente';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
+import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 import { ROTULOS_MOTIVO_ENTRADA, ROTULOS_PATENTE } from '../../rotulos';
@@ -40,7 +41,7 @@ interface NovoAgenteEstadoBruto {
  */
 @Component({
   selector: 'app-novo-agente-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao],
+  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Cartao],
   templateUrl: './novo-agente.page.html',
   styleUrl: './novo-agente.page.scss',
 })

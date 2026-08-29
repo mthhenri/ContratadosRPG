@@ -136,14 +136,16 @@
             </p>
             <div class="abertura__linha">
                 <input
-                    class="campo"
+                    class="painel__controle"
                     type="text"
                     formControlName="nome"
                     placeholder="Ex.: Contenção no Setor 12"
                     aria-label="Nome do encontro"
                 />
                 <button
-                    class="botao botao--primario abertura__acao"
+                    app-botao
+                    variante="primario"
+                    class="abertura__acao"
                     type="submit"
                     [disabled]="formularioCriacao.invalid || emOperacao()"
                 >
@@ -229,7 +231,9 @@
             @if (emCombate() && ehMestre()) {
             <div class="painel__bloco painel__bloco--controles painel__bloco--conducao">
                 <button
-                    class="botao botao--secundario painel__acao painel__acao--recuo"
+                    app-botao
+                    variante="secundario"
+                    class="painel__acao painel__acao--recuo"
                     type="button"
                     [disabled]="emOperacao()"
                     [attr.aria-label]="'Voltar ao turno anterior'"
@@ -240,7 +244,9 @@
                     <span class="painel__acao-texto">Voltar</span>
                 </button>
                 <button
-                    class="botao botao--primario painel__acao"
+                    app-botao
+                    variante="primario"
+                    class="painel__acao"
                     type="button"
                     [disabled]="emOperacao()"
                     [appTooltip]="'Passar ao próximo turno'"
@@ -252,7 +258,9 @@
             </div>
             <div class="painel__bloco painel__bloco--controles">
                 <button
-                    class="botao botao--perigo painel__acao"
+                    app-botao
+                    variante="perigo"
+                    class="painel__acao"
                     type="button"
                     [disabled]="emOperacao()"
                     [appTooltip]="'Encerrar o combate — depois disso ele fica só de leitura'"
@@ -264,7 +272,9 @@
             } @else if (emMontagem() && ehMestre()) {
             <div class="painel__bloco painel__bloco--controles">
                 <button
-                    class="botao botao--positivo painel__acao"
+                    app-botao
+                    variante="positivo"
+                    class="painel__acao"
                     type="button"
                     [disabled]="emOperacao() || !combatentes().length"
                     [appTooltip]="'Chamar os jogadores a rolar a própria iniciativa'"
@@ -273,7 +283,9 @@
                     Pedir iniciativa
                 </button>
                 <button
-                    class="botao botao--secundario painel__acao"
+                    app-botao
+                    variante="secundario"
+                    class="painel__acao"
                     type="button"
                     [disabled]="emOperacao() || !faltamIniciativas()"
                     [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
@@ -285,7 +297,9 @@
             </div>
             <div class="painel__bloco painel__bloco--controles painel__bloco--conducao">
                 <button
-                    class="botao botao--primario painel__acao"
+                    app-botao
+                    variante="primario"
+                    class="painel__acao"
                     type="button"
                     [disabled]="emOperacao() || !combatentes().length || faltamIniciativas()"
                     [appTooltip]="
@@ -308,7 +322,9 @@
             >
                 @if (possoRolarIniciativa()) {
                 <button
-                    class="botao botao--primario painel__acao"
+                    app-botao
+                    variante="primario"
+                    class="painel__acao"
                     type="button"
                     [disabled]="emOperacao()"
                     [appTooltip]="'Rolar a Iniciativa da sua ficha e entrar na ordem'"
@@ -319,7 +335,9 @@
                 </button>
                 } @else if (ehMinhaVez()) {
                 <button
-                    class="botao botao--primario painel__acao"
+                    app-botao
+                    variante="primario"
+                    class="painel__acao"
                     type="button"
                     [disabled]="emOperacao()"
                     [appTooltip]="'Encerrar sua vez e passar ao próximo turno'"
@@ -342,7 +360,9 @@
         @if (mutavel() && ehMestre()) {
         <div class="secundarias" [class.secundarias--abertas]="acoesAbertas()">
             <button
-                class="botao botao--secundario secundarias__gatilho"
+                app-botao
+                variante="secundario"
+                class="secundarias__gatilho"
                 type="button"
                 [attr.aria-expanded]="acoesAbertas()"
                 (click)="alternarAcoes()"
@@ -352,9 +372,9 @@
 
             <div class="secundarias__grupo">
                 <button
-                    class="botao secundarias__acao"
-                    [class.botao--secundario]="!selecionandoCombatentes()"
-                    [class.botao--primario]="selecionandoCombatentes()"
+                    app-botao
+                    [variante]="selecionandoCombatentes() ? 'primario' : 'secundario'"
+                    class="secundarias__acao"
                     type="button"
                     [disabled]="emOperacao()"
                     [attr.aria-pressed]="selecionandoCombatentes()"
@@ -365,9 +385,9 @@
                     Selecionar combatentes
                 </button>
                 <button
-                    class="botao secundarias__acao"
-                    [class.botao--secundario]="!adicionandoAvulso()"
-                    [class.botao--primario]="adicionandoAvulso()"
+                    app-botao
+                    [variante]="adicionandoAvulso() ? 'primario' : 'secundario'"
+                    class="secundarias__acao"
                     type="button"
                     [disabled]="emOperacao()"
                     [attr.aria-pressed]="adicionandoAvulso()"
@@ -378,9 +398,9 @@
                     Adicionar avulso
                 </button>
                 <button
-                    class="botao secundarias__acao"
-                    [class.botao--secundario]="!modoEdicao()"
-                    [class.botao--primario]="modoEdicao()"
+                    app-botao
+                    [variante]="modoEdicao() ? 'primario' : 'secundario'"
+                    class="secundarias__acao"
                     type="button"
                     [disabled]="emOperacao() || !combatentes().length"
                     [attr.aria-pressed]="modoEdicao()"
@@ -408,7 +428,7 @@
             <label class="adicionar__campo">
                 <span class="adicionar__rotulo">Nome do avulso</span>
                 <input
-                    class="campo"
+                    class="painel__controle"
                     type="text"
                     formControlName="nomeAvulso"
                     placeholder="Ex.: Sujeito Contido"
@@ -417,12 +437,12 @@
 
             <label class="adicionar__campo adicionar__campo--curto">
                 <span class="adicionar__rotulo">Vida do avulso</span>
-                <input class="campo" type="number" formControlName="vidaMaximaAvulso" min="1" />
+                <input class="painel__controle" type="number" formControlName="vidaMaximaAvulso" min="1" />
             </label>
 
             <label class="adicionar__campo">
                 <span class="adicionar__rotulo">Cadência do avulso</span>
-                <select class="campo" formControlName="cadencia">
+                <select class="painel__controle" formControlName="cadencia">
                     @for (opcao of cadencias; track opcao) {
                     <option [value]="opcao">{{ nomeCadencia(opcao) }}</option>
                     }
@@ -433,7 +453,7 @@
             <label class="adicionar__campo adicionar__campo--curto">
                 <span class="adicionar__rotulo">Turnos por rodada</span>
                 <input
-                    class="campo"
+                    class="painel__controle"
                     type="number"
                     formControlName="turnosPorRodada"
                     min="4"
@@ -464,7 +484,7 @@
 
             <label class="adicionar__campo adicionar__campo--imagem">
                 <span class="adicionar__rotulo">Imagem opcional</span>
-                <span class="campo adicionar__arquivo"
+                <span class="painel__controle adicionar__arquivo"
                     >{{ imagemAvulsoArquivo()?.name ?? 'Escolher imagem' }}</span
                 >
                 <input
@@ -477,14 +497,18 @@
             </label>
 
             <button
-                class="botao botao--primario adicionar__acao"
+                app-botao
+                variante="primario"
+                class="adicionar__acao"
                 type="submit"
                 [disabled]="emOperacao() || formularioAvulso.invalid"
             >
                 Adicionar
             </button>
             <button
-                class="botao botao--secundario adicionar__acao"
+                app-botao
+                variante="secundario"
+                class="adicionar__acao"
                 type="button"
                 [disabled]="emOperacao()"
                 (click)="cancelarAvulso()"

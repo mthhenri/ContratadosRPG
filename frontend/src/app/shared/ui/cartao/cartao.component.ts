@@ -30,4 +30,7 @@ export class Cartao {
 
   /** Nível do heading do título. */
   readonly nivelTitulo = input<CartaoNivelTitulo>('h2');
+
+  /** Permite que conteúdo projetado no fim do cabeçalho ocupe uma segunda linha no mobile. */
+  readonly cabecalhoQuebravel = input(false);
 }

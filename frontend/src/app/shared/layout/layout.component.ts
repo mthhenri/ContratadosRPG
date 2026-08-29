@@ -9,6 +9,7 @@ import { SessaoService } from '../../core/services/sessao.service';
 import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.component';
 import { Icone } from '../icone/icone.component';
 import { Marca } from '../marca/marca.component';
+import { Botao } from '../ui/botao/botao.component';
 import { Notificacoes } from '../ui/notificacao/notificacao.component';
 
 /**
@@ -29,6 +30,7 @@ import { Notificacoes } from '../ui/notificacao/notificacao.component';
     ConfiguracoesTema,
     Icone,
     Marca,
+    Botao,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',

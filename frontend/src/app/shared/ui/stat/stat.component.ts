@@ -15,7 +15,8 @@ import { Component, computed, input } from '@angular/core';
  * `--vida` corretamente; as outras duas (`criar.page`, `criar-criatura.page`) copiaram o exemplo
  * desatualizado. O primitivo fixa a variante no valor correto.
  */
-export type StatVariante = 'vida' | 'energia' | 'positivo';
+export type StatVariante = 'vida' | 'energia' | 'positivo' | 'alerta';
+export type StatTamanho = 'compacto' | 'padrao';
 
 /**
  * Primitivo de caixa de estatística (`ui-03` · `P-034`): rótulo pequeno uppercase + valor grande,
@@ -33,11 +34,18 @@ export class Stat {
   /** Valor a destacar. Aceita número ou texto já formatado pelo consumidor. */
   readonly valor = input.required<string | number>();
 
+  /** Complemento curto abaixo do valor, usado em resumos de progressão. */
+  readonly nota = input('');
+
   /** Cor semântica. Sem valor, o valor usa a cor de texto neutra. */
   readonly variante = input<StatVariante>();
 
+  /** Densidade compacta usada nos resumos dos guias de criação. */
+  readonly tamanho = input<StatTamanho>('padrao');
+
   protected readonly classes = computed(() => {
     const variante = this.variante();
-    return variante ? `stat stat--${variante}` : 'stat';
+    const tamanho = this.tamanho() === 'compacto' ? ' stat--compacto' : '';
+    return `${variante ? `stat stat--${variante}` : 'stat'}${tamanho}`;
   });
 }

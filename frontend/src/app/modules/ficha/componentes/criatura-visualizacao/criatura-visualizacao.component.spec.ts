@@ -299,7 +299,7 @@ describe('CriaturaVisualizacao', () => {
     const { fixture } = montar();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelector('.criatura__rotulo-secao')?.textContent?.trim()).toBe('Ficha de Criatura');
-    expect(raiz.querySelector('.chip-classificacao')?.textContent?.trim()).toBe('FICHA-CRT-0004');
+    expect(raiz.querySelector('app-chip')?.textContent?.trim()).toBe('FICHA-CRT-0004');
   });
 
   it('o <input type=color> emite corMudou quando a cor muda', () => {

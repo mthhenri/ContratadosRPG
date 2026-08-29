@@ -42,6 +42,9 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { AbaPainel } from '../../../../shared/ui/abas/aba-painel.directive';
 import { Aba } from '../../../../shared/ui/abas/aba.component';
 import { Abas } from '../../../../shared/ui/abas/abas.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
+import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -120,6 +123,9 @@ const COR_FICHA_PADRAO = '#d53030';
 @Component({
   selector: 'app-criatura-visualizacao',
   imports: [
+    Botao,
+    Campo,
+    Chip,
     Icone,
     Tooltip,
     AutoFocus,

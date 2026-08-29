@@ -9,6 +9,7 @@ import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 
@@ -30,7 +31,7 @@ const FONTE_DE_FICHA = /\b(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFIC
 /** Painel compacto de rolagem livre atribuído a um combatente avulso. */
 @Component({
   selector: 'app-rolagem-avulso',
-  imports: [Icone, Tooltip],
+  imports: [Icone, Tooltip, Botao],
   templateUrl: './rolagem-avulso.component.html',
   styleUrl: './rolagem-avulso.component.scss',
 })

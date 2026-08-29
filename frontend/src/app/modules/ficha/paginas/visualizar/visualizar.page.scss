@@ -332,6 +332,10 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
     }
 
     &__vazio-elegiveis,
@@ -385,8 +389,6 @@
         color: var(--text);
     }
 
-    // `botao botao--secundario acesso__revogar` no template — já herda `min-height: bp.$alvo-toque`
-    // do `.botao` (mobile) acima; sem override próprio necessário aqui.
     &__revogar {
         display: inline-flex;
         align-items: center;
@@ -397,6 +399,10 @@
         text-transform: uppercase;
         letter-spacing: 0.06em;
         flex: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
     }
 }
 
@@ -425,46 +431,9 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-    }
-}
 
-// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.botao {
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition:
-        filter 0.15s ease,
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-
-    @include bp.mobile {
-        min-height: bp.$alvo-toque;
-    }
-
-    &:disabled {
-        opacity: 0.55;
-        cursor: default;
-    }
-
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-
-    &--secundario {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border-strong);
-
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
         }
     }
 }

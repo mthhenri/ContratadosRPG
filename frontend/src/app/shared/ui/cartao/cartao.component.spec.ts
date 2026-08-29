@@ -11,8 +11,13 @@ import { Cartao, CartaoNivelTitulo } from './cartao.component';
 @Component({
   imports: [Cartao],
   template: `
-    <app-cartao [titulo]="titulo()" [nivelTitulo]="nivelTitulo()">
+    <app-cartao
+      [titulo]="titulo()"
+      [nivelTitulo]="nivelTitulo()"
+      [cabecalhoQuebravel]="cabecalhoQuebravel()"
+    >
       <span cartaoIndice>{{ indice() }}</span>
+      <span cartaoFim class="fim">{{ fim() }}</span>
       <p class="conteudo">Corpo do cartão</p>
     </app-cartao>
   `,
@@ -20,7 +25,9 @@ import { Cartao, CartaoNivelTitulo } from './cartao.component';
 class Hospedeiro {
   readonly titulo = signal<string | undefined>(undefined);
   readonly nivelTitulo = signal<CartaoNivelTitulo>('h2');
+  readonly cabecalhoQuebravel = signal(false);
   readonly indice = signal('1');
+  readonly fim = signal('12');
 }
 
 describe('Cartao', () => {
@@ -64,6 +71,7 @@ describe('Cartao', () => {
       'Consulta por Prestígio',
     );
     expect(elemento.querySelector('.cartao__regua')).not.toBeNull();
+    expect(elemento.querySelector('.cartao__cabecalho > .fim')?.textContent?.trim()).toBe('12');
   });
 
   it('usa <h2> por padrão e <h1> quando nivelTitulo é h1', () => {
@@ -79,5 +87,14 @@ describe('Cartao', () => {
 
     expect(raiz(fixture).querySelector('h1.cartao__titulo')).not.toBeNull();
     expect(raiz(fixture).querySelector('h2.cartao__titulo')).toBeNull();
+  });
+
+  it('habilita a quebra de linha do cabeçalho somente quando solicitada', () => {
+    const fixture = montar();
+    fixture.componentInstance.titulo.set('Carrinho');
+    fixture.componentInstance.cabecalhoQuebravel.set(true);
+    fixture.detectChanges();
+
+    expect(raiz(fixture).querySelector('.cartao__cabecalho--quebravel')).not.toBeNull();
   });
 });

@@ -2365,19 +2365,6 @@
     }
 }
 
-// Chip de classificação (mono, borda accent) — padrão do tema "CLASSE-E // CONFIDENCIAL".
-.chip-classificacao {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    padding: 4px 9px;
-    flex: 0 0 auto;
-}
-
 // Chip informativo da fórmula da DT (no cabeçalho de Atributos).
 .chip-formula {
     font-family: var(--font-mono);

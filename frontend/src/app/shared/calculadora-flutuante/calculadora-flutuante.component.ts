@@ -2,6 +2,7 @@ import { Component, ElementRef, computed, model, signal, viewChild } from '@angu
 
 import { Icone } from '../icone/icone.component';
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
+import { Botao } from '../ui/botao/botao.component';
 import {
   avaliarExpressao,
   formatarResultado,
@@ -33,7 +34,7 @@ function limitar(valor: number, minimo: number, maximo: number): number {
  */
 @Component({
   selector: 'app-calculadora-flutuante',
-  imports: [Icone, AutoFocus],
+  imports: [Icone, AutoFocus, Botao],
   templateUrl: './calculadora-flutuante.component.html',
   styleUrl: './calculadora-flutuante.component.scss',
   host: {

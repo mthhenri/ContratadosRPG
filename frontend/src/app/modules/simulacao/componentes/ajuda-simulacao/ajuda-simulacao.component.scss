@@ -17,36 +17,13 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 7px 12px;
-    cursor: pointer;
 
-    &:hover {
-        color: var(--text);
-        border-color: var(--accent-border);
-    }
-
-    // Passo de confirmação ("Tem certeza?"): botão invertido/filled (fundo accent, texto escuro),
-    // mesma linguagem do `.botao--primario` do tema — sinaliza a ação destrutiva iminente.
     &--confirmando {
-        color: var(--bg);
-        background: var(--accent);
-        border-color: var(--accent);
-
-        &:hover {
-            color: var(--bg);
-            // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-            filter: brightness(1.08);
-        }
-
         .ajuda-limpar__marca {
             color: var(--bg);
         }
@@ -64,22 +41,11 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 7px 12px;
-    cursor: pointer;
-
-    &:hover {
-        color: var(--text);
-        border-color: var(--accent-border);
-    }
 
     &__marca {
         color: var(--accent);
@@ -90,111 +56,46 @@
     }
 }
 
-// === Modal (fundo + caixa) — adaptado de .compras-modal (m1-11) ===
-.ajuda-modal-fundo {
-    position: fixed;
-    inset: 0;
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 20;
-}
-
-.ajuda-modal {
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    max-width: 480px;
-    width: 100%;
-    // O guia pode ser longo: nunca ultrapassar a viewport — rolar por dentro da caixa.
-    max-height: calc(100dvh - 32px);
-    overflow-y: auto;
-
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-
-    &__titulo {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text);
-        margin: 0;
-    }
-
-    &__fechar {
-        flex: 0 0 auto;
-        width: 26px;
-        height: 26px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: var(--font-mono);
-        font-size: 18px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-
-        &:hover {
-            color: var(--text);
-            border-color: var(--accent-border);
-        }
-    }
-
+// O contêiner, o cabeçalho, o backdrop e o botão × pertencem ao `app-modal`.
+.ajuda {
     &__resumo {
-        font-family: var(--font-sans);
-        font-size: 13px;
-        color: var(--text-dim);
         margin: 0 0 14px;
+        font: 13px var(--font-sans);
+        color: var(--text-dim);
     }
 
     &__lista {
-        list-style: none;
-        margin: 0;
-        padding: 0;
         display: flex;
         flex-direction: column;
         gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
     }
 
     &__item {
         position: relative;
-        font-family: var(--font-sans);
-        font-size: 13px;
-        line-height: 1.5;
-        color: var(--text);
         padding-left: 18px;
+        font: 13px/1.5 var(--font-sans);
+        color: var(--text);
 
         &::before {
-            content: "›";
             position: absolute;
-            left: 0;
             top: 0;
+            left: 0;
+            color: var(--accent);
             font-family: var(--font-mono);
             font-weight: 700;
-            color: var(--accent);
+            content: "›";
         }
     }
 
     &__nota {
-        font-family: var(--font-sans);
-        font-size: 12px;
-        color: var(--text-mute);
-        border-top: 1px solid var(--border);
         margin: 14px 0 0;
         padding-top: 12px;
+        border-top: 1px solid var(--border);
+        color: var(--text-mute);
+        font: 12px var(--font-sans);
     }
 
     &__acoes {
@@ -202,23 +103,12 @@
         justify-content: flex-end;
         margin-top: 16px;
     }
-}
 
-// Botão "Fechar" — linguagem do botão secundário do tema.
-.ajuda-btn {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    color: var(--text);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    padding: 8px 16px;
-    cursor: pointer;
-
-    &:hover {
-        border-color: var(--accent-border);
+    &__fechar {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
     }
 }

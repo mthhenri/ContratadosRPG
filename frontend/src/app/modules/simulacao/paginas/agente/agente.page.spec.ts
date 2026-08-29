@@ -35,6 +35,7 @@ describe('AgentePage', () => {
 
   it('calcula Vida e Energia do preset padrão (Combatente Nível 0, atributos 1)', async () => {
     const { raiz } = await montar();
+    expect(raiz.querySelectorAll('app-cartao').length).toBe(5);
     // Vida = (30 + 1×4) + 0×(…) = 34; Energia = (15 + 1×2) + 0×(…) = 17.
     expect(valor(raiz, 'vida')).toBe('34');
     expect(valor(raiz, 'energia')).toBe('17');

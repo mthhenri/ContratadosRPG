@@ -2,12 +2,8 @@
 
 <form class="calc descanso" [formGroup]="formulario">
     <!-- CARD 1: CONFIGURAÇÃO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">1</span>
-            <h2 class="calc-cartao__titulo">Configuração do Descanso</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Configuração do Descanso">
+        <span cartaoIndice>1</span>
 
         <div class="calc-config">
             <div class="calc-campo">
@@ -119,15 +115,11 @@
                 </label>
             </div>
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 2: RESULTADO DETERMINÍSTICO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">2</span>
-            <h2 class="calc-cartao__titulo">Resultado</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Resultado">
+        <span cartaoIndice>2</span>
 
         <div class="calc-stats descanso-faixas">
             <div class="calc-stat calc-stat--destaque">
@@ -150,15 +142,11 @@
             </div>
             }
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 3: ROLAR DADOS -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">3</span>
-            <h2 class="calc-cartao__titulo">Rolar Dados</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Rolar Dados">
+        <span cartaoIndice>3</span>
 
         <div class="calc-config">
             <div class="calc-campo">
@@ -190,6 +178,8 @@
         </div>
 
         <button
+            app-botao
+            variante="primario"
             type="button"
             class="descanso-rolar"
             [class.descanso-rolar--rolando]="rolando()"
@@ -217,5 +207,5 @@
             </div>
         </div>
         }
-    </section>
+    </app-cartao>
 </form>

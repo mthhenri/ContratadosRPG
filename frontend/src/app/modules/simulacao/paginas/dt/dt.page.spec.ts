@@ -16,6 +16,7 @@ describe('DtPage', () => {
 
   it('calcula a DT do preset padrão (Nível 0, Atributo 1)', async () => {
     const { raiz } = await montar();
+    expect(raiz.querySelectorAll('app-cartao')).toHaveLength(2);
     // DT = 10 + 0 + 1×2 = 12.
     expect(raiz.querySelector('.calc-resultado')?.textContent?.trim()).toBe('12');
   });

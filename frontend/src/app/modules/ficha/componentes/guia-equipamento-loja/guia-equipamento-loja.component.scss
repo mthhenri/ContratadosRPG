@@ -1,6 +1,6 @@
 // Catálogo + carrinho do Equipamento Inicial (m3-59). Componente embutido no passo do guia — sem
 // modal, sem backdrop (contraste com `ficha-habilidade-seletor`, que é overlay). Só tokens do tema
-// "Terminal de Contenção" (proibição #29); `.stepper` espelha o bloco já em uso no passo Atributos.
+// "Terminal de Contenção" (proibição #29); o stepper compartilhado é usado no passo Atributos.
 
 @use "tema/breakpoints" as bp;
 
@@ -280,35 +280,6 @@
     }
 }
 
-.stepper {
-    display: grid;
-    grid-template-columns: 26px 32px 26px;
-    min-height: 28px;
-    overflow: hidden;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    &__botao {
-        padding: 0;
-        font: 14px var(--font-mono);
-        color: var(--text-dim);
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        &:hover {
-            color: var(--text);
-            background: var(--accent-dim);
-        }
-    }
-    &__valor {
-        display: grid;
-        place-items: center;
-        font: 700 12px var(--font-mono);
-        color: var(--text);
-        border-inline: 1px solid var(--border);
-    }
-}
-
 @include bp.mobile {
     .loja {
         grid-template-columns: 1fr;
@@ -326,11 +297,7 @@
         min-height: bp.$alvo-toque;
         padding: 0;
     }
-    .stepper {
-        grid-template-columns: bp.$alvo-toque 40px bp.$alvo-toque;
-        min-height: bp.$alvo-toque;
-    }
-    .stepper__botao {
-        min-height: bp.$alvo-toque;
+    app-step-input {
+        width: 128px;
     }
 }

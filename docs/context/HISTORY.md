@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-29 — ui-04: primitivos próprios adotados por todo o frontend
+
+Os módulos `usuario`/`acesso-negado`, `simulacao`, `shared`, `campanha`, `encontro`,
+`pagina-caderno` e `ficha` passaram a consumir os primitivos de `shared/ui/`, removendo as cópias
+locais de botão, campo, cartão, estatística, stepper, chip e abas. Os casos que mantêm edição
+inline continuam scoped ao domínio (`criatura__stat`), em vez de alargar um primitivo de leitura.
+Para os guias densos, `CampoRotulado` permite a forma `<label app-campo>` sem nó intermediário;
+`Stat` ganhou a variante compacta e `StepInput` as densidades `compacto` e `mini` com valor externo
+por Signals, preservando os controles já existentes.
+
+**Medição:** SCSS de `frontend/src/app` em 28.465 linhas, 3.928 abaixo da partida da spec
+(32.393). Contra o `HEAD` de abertura, os recortes foram: usuario/acesso −93, simulacao −356,
+shared +61, campanha −153, encontro −78, pagina-caderno −43 e ficha −595 (total −1.257).
+O scan dos oito seletores-base encontra somente `campo`, `stat` e `stepper` sob `shared/ui/`.
+
+**Gate visual:** aplicação real observada em 1920×1080 e 360×800, comparada aos guias e fichas
+aprovados do produto. Foram percorridos criação de agente/criatura, atributos compactos, ficha de
+criatura e controles de status; sem overflow horizontal. A inspeção encontrou o aviso de rascunho
+de criatura estreito demais no mobile; o layout agora quebra o texto e as ações em linhas próprias,
+com largura útil de 326px no viewport de 360px.
+
+**Gates:** build de produção concluído (mantém o aviso preexistente de budget da ficha de jogador,
+47,86 kB contra 45 kB); `npm run lint` terminou sem erros, só os warnings já presentes. A suíte
+completa do frontend compilou e rodou; permanece uma falha preexistente em
+`painel-encontro.page.spec.ts` (`P-033`), acompanhada dos logs conhecidos de `ResizeObserver` no
+ambiente de teste. `git diff --check` limpo e revisão de convenções sem violação nova.
+
 ## 2026-08-29 — ui-03: `Cartao`, `Stat`, `Chip`, `Abas` e `Stepper` fecham o conjunto de primitivos de composição
 
 Pedido direto do autor: "vamos fazer a ui-03". Cinco entregáveis na mesma task —

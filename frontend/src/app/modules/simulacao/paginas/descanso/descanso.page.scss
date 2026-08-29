@@ -9,52 +9,6 @@
     gap: var(--gap-grid);
 }
 
-// === Card ===
-.calc-cartao {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 18px;
-    }
-
-    &__indice {
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: 3px;
-        width: 22px;
-        height: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-    }
-
-    &__titulo {
-        font-family: var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-        margin: 0;
-    }
-
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
-}
-
 // === Configuração ===
 .calc-config {
     display: grid;
@@ -243,20 +197,10 @@
 .descanso-rolar {
     margin: 16px 0;
     padding: 12px 24px;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
     font-size: 13px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-        filter: brightness(1.08);
-    }
 
     &--rolando {
         cursor: progress;

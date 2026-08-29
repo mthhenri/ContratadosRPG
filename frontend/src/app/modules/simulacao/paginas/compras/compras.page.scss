@@ -1,6 +1,7 @@
 // Aba "Compras" da simulacao (m1-10). Consome só os tokens do tema "Terminal de Contenção"
-// (proibição #29). Blocos .calc-cartao/.calc-config/.calc-campo/.calc-stat adaptados de
-// docs/design/tema/_componentes.scss. Para caber no budget de estilo por componente, o SCSS é
+// (proibição #29). O cartão vem de shared/ui; .calc-config/.calc-campo/.calc-stat continuam locais
+// porque o campo é composto e as estatísticas têm variantes além da exibição pura. Para caber no
+// budget de estilo por componente, o SCSS é
 // enxuto: a fonte mono é herdada do container (a maioria dos textos é mono; só o corpo reabre
 // --font-sans) e os padrões repetidos (caixa em surface-2, controle com borda forte, estado
 // desabilitado) são agrupados em listas de seletores em vez de redeclarados por bloco.
@@ -53,47 +54,6 @@
 .compras-mini-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-}
-
-// === Card ===
-.calc-cartao {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 18px;
-    }
-    &__indice {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: 3px;
-        width: 22px;
-        height: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-    }
-    &__titulo {
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-        margin: 0;
-    }
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
 }
 
 // === Configuração ===
@@ -1140,12 +1100,7 @@
         flex-wrap: wrap;
     }
 
-    // Cabeçalho do card do carrinho: as ações (Importar/Exportar/Esvaziar) caem para a própria
-    // linha, abaixo do título/régua, e se distribuem por igual (antes quebravam espremidas).
-    .calc-cartao__cabecalho {
-        flex-wrap: wrap;
-        row-gap: 10px;
-    }
+    // As ações do carrinho ocupam a própria linha do cabeçalho flexível compartilhado.
     .compras-carrinho-acoes {
         flex-basis: 100%;
 

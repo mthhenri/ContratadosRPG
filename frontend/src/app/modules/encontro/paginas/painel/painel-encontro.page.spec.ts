@@ -10,6 +10,10 @@ import type {
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type {
+  PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoResumoDto,
+} from '@contratados-rpg/shared/dtos/pagina-caderno';
 import {
   ArquetipoEnum,
   CadenciaEnum,
@@ -222,6 +226,9 @@ describe('PainelEncontro', () => {
     const encontroAlterado$ = new Subject<EncontroAlteradoDto>();
     const encontroIniciativaPedido$ = new Subject<{ id: number; campanhaId: number }>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
+    const paginaEsquadraoCriada$ = new Subject<PaginaCadernoResumoDto>();
+    const paginaEsquadraoAtualizada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
+    const paginaEsquadraoExcluida$ = new Subject<{ campanhaId: number; paginaId: number }>();
     const encontroService = {
       listarPorCampanha: vi.fn(() =>
         of([
@@ -302,6 +309,9 @@ describe('PainelEncontro', () => {
             encontroAlterado$,
             encontroIniciativaPedido$,
             rolagemRegistrada$,
+            paginaEsquadraoCriada$,
+            paginaEsquadraoAtualizada$,
+            paginaEsquadraoExcluida$,
           },
         },
         {

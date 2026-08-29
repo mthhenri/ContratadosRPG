@@ -5,6 +5,7 @@ import { TIPOS_DANO_BLOQUEAVEIS, TipoDanoEnum } from '@contratados-rpg/shared/en
 import { calcularDanoRecebido, type DanoRecebidoResultadoDto } from '@contratados-rpg/shared/regras/encontro';
 
 import { Modal } from '../ui/modal/modal.component';
+import { Botao } from '../ui/botao/botao.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 
 /** Descrição de cada tipo bloqueável — texto do documento, para o `appTooltip` do rótulo. */
@@ -59,7 +60,7 @@ function grupoTipo(): FormGroup<{ bruto: FormControl<number>; custom: FormContro
  */
 @Component({
   selector: 'app-receber-dano-dialog',
-  imports: [ReactiveFormsModule, Modal, Tooltip],
+  imports: [ReactiveFormsModule, Modal, Botao, Tooltip],
   templateUrl: './receber-dano-dialog.component.html',
   styleUrl: './receber-dano-dialog.component.scss',
 })

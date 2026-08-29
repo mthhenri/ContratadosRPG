@@ -1,4 +1,6 @@
 <button
+    app-botao
+    [variante]="confirmandoLimpeza() ? 'primario' : 'secundario'"
     type="button"
     class="ajuda-limpar"
     [class.ajuda-limpar--confirmando]="confirmandoLimpeza()"
@@ -16,6 +18,8 @@
 </button>
 
 <button
+    app-botao
+    variante="secundario"
     type="button"
     class="ajuda-gatilho"
     [attr.aria-label]="'Ajuda: como usar ' + conteudo().titulo"
@@ -26,40 +30,34 @@
 </button>
 
 @if (aberto()) {
-    <div class="ajuda-modal-fundo">
-        <div
-            class="ajuda-modal"
-            role="dialog"
-            aria-modal="true"
-            [attr.aria-label]="conteudo().titulo"
-        >
-            <header class="ajuda-modal__cabecalho">
-                <h3 class="ajuda-modal__titulo">{{ conteudo().titulo }}</h3>
-                <button
-                    type="button"
-                    class="ajuda-modal__fechar"
-                    aria-label="Fechar ajuda"
-                    (click)="fechar()"
-                >
-                    ×
-                </button>
-            </header>
+    <app-modal
+        [aberto]="aberto()"
+        [titulo]="conteudo().titulo"
+        [fechavelPeloFundo]="false"
+        (fechou)="fechar()"
+    >
+        <p class="ajuda__resumo">{{ conteudo().resumo }}</p>
 
-            <p class="ajuda-modal__resumo">{{ conteudo().resumo }}</p>
-
-            <ul class="ajuda-modal__lista">
-                @for (passo of conteudo().passos; track $index) {
-                    <li class="ajuda-modal__item">{{ passo }}</li>
-                }
-            </ul>
-
-            @if (conteudo().nota; as nota) {
-                <p class="ajuda-modal__nota">{{ nota }}</p>
+        <ul class="ajuda__lista">
+            @for (passo of conteudo().passos; track $index) {
+                <li class="ajuda__item">{{ passo }}</li>
             }
+        </ul>
 
-            <div class="ajuda-modal__acoes">
-                <button type="button" class="ajuda-btn" (click)="fechar()">Fechar</button>
-            </div>
+        @if (conteudo().nota; as nota) {
+            <p class="ajuda__nota">{{ nota }}</p>
+        }
+
+        <div class="ajuda__acoes">
+            <button
+                app-botao
+                variante="secundario"
+                class="ajuda__fechar"
+                type="button"
+                (click)="fechar()"
+            >
+                Fechar
+            </button>
         </div>
-    </div>
+    </app-modal>
 }

@@ -3,7 +3,7 @@
 .simulacao {
     // No mobile o menu de abas vira uma barra flutuante fixa no rodapé (removida do fluxo):
     // reservar espaço para o conteúdo não ficar escondido atrás dela (altura da barra + folga +
-    // área segura do iOS). Ver o bloco `.abas` mobile abaixo.
+    // área segura do iOS). Ver o bloco `&__abas` mobile abaixo.
     @include bp.mobile {
         padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
     }
@@ -27,9 +27,9 @@
     }
 }
 
-// Navegação de abas com deep-link por rota. O estado ativo reusa o padrão .selecionavel--ativo
-// de docs/design/tema/_componentes.scss (accent no texto + borda + fundo accent-dim).
-.abas {
+// Navegação de rota: visualmente parece uma barra de abas, mas não usa `app-abas` porque os itens
+// são links com deep-link, não controles ARIA que alternam um painel no mesmo documento.
+.simulacao__abas {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -56,7 +56,7 @@
         box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
     }
 
-    &__item {
+    > .simulacao__aba {
         display: inline-flex;
         align-items: center;
         gap: 7px;
@@ -106,7 +106,7 @@
             @include bp.mobile {
                 flex: 2 1 0;
 
-                .abas__rotulo {
+                .simulacao__aba-rotulo {
                     display: block;
                 }
             }
@@ -115,7 +115,7 @@
 
     // Rótulo da aba: no desktop segue ao lado do ícone; no mobile é escondido (barra só de ícones) e
     // reaparece só na aba ativa (regra em `&__item--ativo` acima).
-    &__rotulo {
+    .simulacao__aba-rotulo {
         @include bp.mobile {
             display: none;
             font-size: 9px;

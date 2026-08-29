@@ -1,3 +1,5 @@
+@use "tema/breakpoints" as bp;
+
 .cartao {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -9,6 +11,13 @@
     align-items: center;
     gap: 11px;
     margin-bottom: 18px;
+
+    &--quebravel {
+      @include bp.mobile {
+        flex-wrap: wrap;
+        row-gap: 10px;
+      }
+    }
   }
 
   &__indice {

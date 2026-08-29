@@ -32,6 +32,7 @@ describe('DescansoPage', () => {
 
   it('exibe a faixa determinística do preset padrão (Curto, Adequado, atributos 1, Nível 0)', async () => {
     const { raiz } = await montar();
+    expect(raiz.querySelectorAll('app-cartao')).toHaveLength(3);
     // Energia: 1D4 + (0×2) → mín 1, máx 4. Vida: Descanso Curto não recupera.
     expect(valorFaixa(raiz, 'energia')).toBe('1–4');
     expect(valorFaixa(raiz, 'destaque')).toBe('Não recupera Vida');

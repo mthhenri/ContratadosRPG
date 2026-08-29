@@ -1,12 +1,9 @@
 <section class="gestao">
-    <article class="card">
-        <header class="card__cabecalho">
-            <span class="card__indice">//</span>
-            <h1 class="card__titulo">Gestão de Usuários</h1>
-            <span class="card__regua"></span><span class="card__contagem">{{ totalItens() }}</span>
-        </header>
+    <app-cartao titulo="Gestão de Usuários" nivelTitulo="h1">
+        <span cartaoIndice>//</span>
+        <span cartaoFim class="gestao__contagem">{{ totalItens() }}</span>
         <div class="gestao__comandos">
-            <button class="botao botao--primario" type="button" (click)="alternarCriacao()">
+            <button app-botao variante="primario" type="button" (click)="alternarCriacao()">
                 <app-icone nome="mais" /> Criar conta
             </button>
         </div>
@@ -31,8 +28,8 @@
                 >
             </div>
             <div class="gestao__acoes">
-                <button class="botao botao--primario" type="submit">Criar conta</button
-                ><button class="botao botao--secundario" type="button" (click)="alternarCriacao()">
+                <button app-botao variante="primario" type="submit">Criar conta</button
+                ><button app-botao variante="secundario" type="button" (click)="alternarCriacao()">
                     Cancelar
                 </button>
             </div>
@@ -124,7 +121,8 @@
                     </div>
                     <div class="gestao__acoes">
                         @if (usuario.isDeleted) {<button
-                            class="botao botao--primario"
+                            app-botao
+                            variante="primario"
                             type="button"
                             (click)="reativar(usuario)"
                         >
@@ -132,26 +130,31 @@
                         >} @else {@if (podeImpersonar(usuario)) {<span
                             class="gestao__impersonacao-contexto"
                             ><button
-                                class="botao botao--secundario"
+                                app-botao
+                                variante="secundario"
                                 type="button"
                                 (click)="pedirImpersonacao(usuario)"
                             >
                                 <app-icone nome="entrar" /> Logar como
                             </button></span
                         >}<button
-                            class="botao botao--secundario"
+                            app-botao
+                            variante="secundario"
                             type="button"
                             (click)="abrirEditor(usuario, 'perfil')"
                         >
                             Editar</button
                         ><button
-                            class="botao botao--secundario"
+                            app-botao
+                            variante="secundario"
                             type="button"
                             (click)="abrirEditor(usuario, 'senha')"
                         >
                             Redefinir senha</button
                         ><button
-                            class="botao botao--perigo"
+                            app-botao
+                            variante="perigo"
+                            class="gestao__acao--perigo"
                             type="button"
                             (click)="pedirExclusao(usuario)"
                         >
@@ -168,9 +171,10 @@
                             ><label>Login<input formControlName="login" required /></label>
                         </div>
                         <div class="gestao__acoes">
-                            <button class="botao botao--primario">Salvar alterações</button
+                            <button app-botao variante="primario">Salvar alterações</button
                             ><button
-                                class="botao botao--secundario"
+                                app-botao
+                                variante="secundario"
                                 type="button"
                                 (click)="fecharEdicao()"
                             >
@@ -197,9 +201,10 @@
                                 </button></div
                         ></label>
                         <div class="gestao__acoes">
-                            <button class="botao botao--primario">Salvar nova senha</button
+                            <button app-botao variante="primario">Salvar nova senha</button
                             ><button
-                                class="botao botao--secundario"
+                                app-botao
+                                variante="secundario"
                                 type="button"
                                 (click)="fecharEdicao()"
                             >
@@ -215,13 +220,16 @@
                     <p>A conta será desativada e só poderá voltar pela lixeira.</p>
                     <div class="gestao__acoes">
                         <button
-                            class="botao botao--perigo"
+                            app-botao
+                            variante="perigo"
+                            class="gestao__acao--perigo"
                             type="button"
                             (click)="confirmarExclusao(usuario)"
                         >
                             Confirmar exclusão</button
                         ><button
-                            class="botao botao--secundario"
+                            app-botao
+                            variante="secundario"
                             type="button"
                             (click)="fecharEdicao()"
                         >
@@ -242,14 +250,16 @@
                     </p>
                     <div class="gestao__acoes">
                         <button
-                            class="botao botao--primario"
+                            app-botao
+                            variante="primario"
                             type="button"
                             [disabled]="impersonandoId() !== null"
                             (click)="confirmarImpersonacao(usuario)"
                         >
                             Confirmar login</button
                         ><button
-                            class="botao botao--secundario"
+                            app-botao
+                            variante="secundario"
                             type="button"
                             [disabled]="impersonandoId() !== null"
                             (click)="cancelarImpersonacao()"
@@ -265,14 +275,16 @@
         } @if (totalPaginas() > 1) {
         <nav class="gestao__paginacao" aria-label="Paginação">
             <button
-                class="botao botao--secundario"
+                app-botao
+                variante="secundario"
                 [disabled]="pagina() === 1"
                 (click)="mudarPagina(-1)"
             >
                 Anterior</button
             ><span>Página {{ pagina() }} de {{ totalPaginas() }}</span
             ><button
-                class="botao botao--secundario"
+                app-botao
+                variante="secundario"
                 [disabled]="pagina() === totalPaginas()"
                 (click)="mudarPagina(1)"
             >
@@ -280,5 +292,5 @@
             </button>
         </nav>
         }
-    </article>
+    </app-cartao>
 </section>

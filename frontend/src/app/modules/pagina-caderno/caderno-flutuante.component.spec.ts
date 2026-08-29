@@ -291,6 +291,8 @@ describe('CadernoFlutuante', () => {
 
   it('pede confirmação antes de excluir uma página editável', () => {
     abrirPagina();
+    expect(obter('[data-acao="excluir"]').classList).toContain('botao--perigo');
+    expect(obter('[data-acao="salvar"]').classList).toContain('botao--primario');
     clicar('[data-acao="excluir"]');
     expect(obter('[role="alertdialog"]').textContent).toContain('Excluir “Primeira sessão”?');
     expect(api.excluirPagina).not.toHaveBeenCalled();

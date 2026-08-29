@@ -436,7 +436,9 @@
                                     (modoCaderno() !== "ESQUADRAO" || ehMestre())
                                 ) {
                                     <button
-                                        class="caderno__botao caderno__botao--perigo"
+                                        app-botao
+                                        variante="perigo"
+                                        class="caderno__acao"
                                         type="button"
                                         data-acao="excluir"
                                         (click)="pedirExclusao()"
@@ -464,7 +466,9 @@
                                 </span>
                                 @if (modoCaderno() !== "ESQUADRAO") {
                                     <button
-                                        class="caderno__botao caderno__botao--primario"
+                                        app-botao
+                                        variante="primario"
+                                        class="caderno__acao"
                                         type="button"
                                         data-acao="salvar"
                                         (click)="salvar()"
@@ -485,7 +489,9 @@
                                 <span>A página será removida do caderno.</span>
                                 <div>
                                     <button
-                                        class="caderno__botao caderno__botao--perigo"
+                                        app-botao
+                                        variante="perigo"
+                                        class="caderno__acao"
                                         type="button"
                                         data-acao="confirmar-exclusao"
                                         (click)="confirmarExclusao()"
@@ -493,7 +499,9 @@
                                         Confirmar exclusão
                                     </button>
                                     <button
-                                        class="caderno__botao"
+                                        app-botao
+                                        variante="secundario"
+                                        class="caderno__acao"
                                         type="button"
                                         (click)="cancelarExclusao()"
                                     >
@@ -512,7 +520,9 @@
                                 <span>Descartar e continuar sem salvar esta versão?</span>
                                 <div>
                                     <button
-                                        class="caderno__botao caderno__botao--perigo"
+                                        app-botao
+                                        variante="perigo"
+                                        class="caderno__acao"
                                         type="button"
                                         data-acao="confirmar-descartar-rascunho"
                                         (click)="confirmarDescarteDeRascunho()"
@@ -520,7 +530,9 @@
                                         Descartar e continuar
                                     </button>
                                     <button
-                                        class="caderno__botao"
+                                        app-botao
+                                        variante="secundario"
+                                        class="caderno__acao"
                                         type="button"
                                         data-acao="cancelar-descartar-rascunho"
                                         (click)="cancelarDescarteDeRascunho()"

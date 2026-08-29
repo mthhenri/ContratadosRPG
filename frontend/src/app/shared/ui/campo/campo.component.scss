@@ -4,9 +4,24 @@
 //
 // O controle em si continua sendo do consumidor (entra por `<ng-content>` e mantém o SCSS da
 // página); aqui moram só o rótulo, a dica, o erro e o respiro entre eles.
-:host {
+app-campo,
+label[app-campo] {
     display: block;
     min-width: 0;
+}
+
+label[app-campo] {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin: 0;
+}
+
+// Os guias de ficha já têm uma grade de alta densidade: preservam o degrau visual de 9px que
+// existia nos seus rótulos locais, usando a mesma estrutura e os mesmos controles compartilhados.
+label[app-campo] .campo__rotulo {
+    font: 600 9px var(--font-mono);
+    letter-spacing: 0.11em;
 }
 
 .campo {
@@ -33,6 +48,39 @@
         font-family: var(--font-mono);
         font-size: 11px;
         color: var(--accent);
+    }
+
+    &__controle {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        font: 13px var(--font-sans);
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        outline: 0;
+        transition: 0.15s ease;
+        &:hover {
+            border-color: var(--accent-border);
+        }
+        &:focus {
+            border-color: var(--accent);
+            background: var(--surface);
+        }
+        &--numero {
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+        &--area {
+            min-height: 78px;
+            resize: vertical;
+        }
+    }
+
+    &__ajuda {
+        font: 10px var(--font-sans);
+        color: var(--text-mute);
     }
 
     // Grades densas (ficha, criatura): rótulo menor e respiro mais curto.

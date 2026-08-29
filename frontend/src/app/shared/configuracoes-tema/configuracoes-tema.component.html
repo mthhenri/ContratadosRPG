@@ -1,4 +1,5 @@
 <button
+    app-botao
     type="button"
     class="config-gatilho"
     [class.config-gatilho--menu]="variante() === 'menu'"
@@ -21,6 +22,7 @@
             <header class="config-modal__cabecalho">
                 <h3 class="config-modal__titulo">Tema</h3>
                 <button
+                    app-botao
                     type="button"
                     class="config-modal__fechar"
                     aria-label="Fechar configurações"
@@ -34,6 +36,7 @@
                 <span class="config-secao__rotulo">Base</span>
                 <div class="config-opcoes" role="group" aria-label="Base do tema">
                     <button
+                        app-botao
                         type="button"
                         class="config-opcao"
                         [class.config-opcao--ativa]="tema.base() === 'escuro'"
@@ -43,6 +46,7 @@
                         Escuro
                     </button>
                     <button
+                        app-botao
                         type="button"
                         class="config-opcao"
                         [class.config-opcao--ativa]="tema.base() === 'claro'"
@@ -59,6 +63,7 @@
                 <div class="config-swatches" role="group" aria-label="Preset de cor">
                     @for (preset of tema.presetsExibicao(); track preset.id) {
                         <button
+                            app-botao
                             type="button"
                             class="config-swatch"
                             [class.config-swatch--ativo]="
@@ -88,6 +93,7 @@
                     @if (tema.accentCustomSalvo(); as corSalva) {
                         <div class="config-swatch-slot">
                             <button
+                                app-botao
                                 type="button"
                                 class="config-swatch config-swatch--salvo"
                                 [class.config-swatch--ativo]="tema.salvoAtivo()"
@@ -128,7 +134,12 @@
                         [formControl]="corCustom"
                     />
                     <span class="config-custom__valor">{{ corCustom.value }}</span>
-                    <button type="button" class="config-custom__salvar" (click)="salvarCor()">
+                    <button
+                        app-botao
+                        type="button"
+                        class="config-custom__salvar"
+                        (click)="salvarCor()"
+                    >
                         Salvar cor
                     </button>
                 </div>
@@ -148,7 +159,9 @@
             </section>
 
             <div class="config-modal__acoes">
-                <button type="button" class="config-btn" (click)="fechar()">Fechar</button>
+                <button app-botao type="button" class="config-btn" (click)="fechar()">
+                    Fechar
+                </button>
             </div>
         </div>
     </div>

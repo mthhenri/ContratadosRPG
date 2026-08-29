@@ -724,8 +724,8 @@
     }
 }
 
-// Campo de texto/número/seleção — mesma receita do `.acesso__select` da ficha de criatura.
-.campo {
+// Controle compacto do painel: sem rótulo próprio, por isso não é um `app-campo`.
+.painel__controle {
     flex: 1;
     min-width: 0;
     padding: 11px 12px;
@@ -767,67 +767,14 @@
     }
 }
 
-// ── Botões (encapsulados por componente — ver comentário do topo) ────────────
-.botao {
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition:
-        filter 0.15s ease,
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-
+// Os botões usam `app-botao`; só a altura de toque é responsabilidade do painel.
+.abertura__acao,
+.painel__acao,
+.secundarias__gatilho,
+.secundarias__acao,
+.adicionar__acao {
     @include bp.mobile {
         min-height: bp.$alvo-toque;
-    }
-
-    &:disabled {
-        opacity: 0.55;
-        cursor: default;
-    }
-
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-
-    // Chamado do mestre para os jogadores rolarem a própria iniciativa — verde por ser um convite,
-    // não uma ação de risco/conclusão (que já usam --primario/--perigo, ambos na cor de accent).
-    &--positivo {
-        background: var(--positive);
-        color: var(--bg);
-        border: 0;
-
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-
-    &--secundario {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border-strong);
-
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-    }
-
-    // Ação destrutiva/terminal (Encerrar) — accent no texto e na borda, nunca preenchido.
-    &--perigo {
-        background: transparent;
-        color: var(--accent);
-        border: 1px solid var(--accent-border);
-
-        &:hover:not(:disabled) {
-            background: var(--accent-dim);
-        }
     }
 }
 

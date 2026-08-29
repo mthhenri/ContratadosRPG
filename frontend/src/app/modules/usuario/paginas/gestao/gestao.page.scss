@@ -8,43 +8,9 @@
         max-width: 100%;
     }
 }
-.card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 18px;
-    }
-    &__indice {
-        display: grid;
-        place-items: center;
-        width: 22px;
-        height: 22px;
-        font: 700 12px var(--font-mono);
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: 3px;
-    }
-    &__titulo {
-        margin: 0;
-        font: 600 13px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text);
-    }
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
-    &__contagem {
-        font: 600 12px var(--font-mono);
-        color: var(--text-mute);
-    }
+.gestao__contagem {
+    font: 600 12px var(--font-mono);
+    color: var(--text-mute);
 }
 .gestao__comandos {
     margin-bottom: 16px;
@@ -173,33 +139,22 @@
     font: 11px var(--font-mono);
     color: var(--text-dim);
 }
-.botao {
+.gestao__comandos .botao,
+.gestao__acoes .botao,
+.gestao__paginacao .botao {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 7px;
     min-height: 38px;
     padding: 8px 12px;
-    border-radius: var(--radius-control);
-    font: 700 10px var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: var(--tracking-label);
-    cursor: pointer;
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-    }
-    &--secundario {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border-strong);
-    }
-    &--perigo {
-        background: var(--accent-dim);
-        color: var(--accent);
-        border: 1px solid var(--accent-border);
-    }
+}
+.gestao__acao--perigo {
+    background: var(--accent-dim);
 }
 @include bp.mobile {
     .gestao__filtros,
@@ -436,10 +391,10 @@
 
         > .gestao__acoes {
             flex-direction: column;
+        }
 
-            .botao {
-                width: 100%;
-            }
+        > .gestao__acoes .botao {
+            width: 100%;
         }
     }
 
@@ -461,19 +416,19 @@
 
         > .gestao__acoes {
             flex-direction: column;
+        }
 
-            .botao {
-                width: 100%;
-            }
+        > .gestao__acoes .botao {
+            width: 100%;
         }
     }
 
     .gestao__confirmacao > .gestao__acoes {
         flex-direction: column;
+    }
 
-        .botao {
-            width: 100%;
-        }
+    .gestao__confirmacao > .gestao__acoes .botao {
+        width: 100%;
     }
 }
 

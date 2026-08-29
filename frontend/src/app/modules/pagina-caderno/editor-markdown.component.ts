@@ -135,13 +135,6 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
             .config((contexto) => {
               contexto.set(rootCtx, raiz);
               contexto.set(defaultValueCtx, valorInicial);
-              if (documentoColaborativo) {
-                contexto
-                  .get(collabServiceCtx)
-                  .bindDoc(documentoColaborativo)
-                  .bindXmlFragment(documentoColaborativo.getXmlFragment('prosemirror'))
-                  .connect();
-              }
               contexto.get(listenerCtx).markdownUpdated((_contexto, markdown, anterior) => {
                 if (markdown === anterior) return;
                 if (markdown.length > LIMITE_MARKDOWN) {
@@ -156,6 +149,18 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
             .use(listener)
             .use(collab)
             .create();
+          // `collabServiceCtx` só é registrado pelo pipeline depois que `.use(collab)` roda —
+          // chamar `bindDoc`/`connect` dentro do `.config()` acima (antes do pipeline existir)
+          // lança `MilkdownError: Context not bind`. Precisa ser uma ação pós-`create()`.
+          if (documentoColaborativo) {
+            editor.action((contexto) =>
+              contexto
+                .get(collabServiceCtx)
+                .bindDoc(documentoColaborativo)
+                .bindXmlFragment(documentoColaborativo.getXmlFragment('prosemirror'))
+                .connect(),
+            );
+          }
         },
         destruir: () => { editor?.destroy(); },
         obterMarkdown: () => editor?.action(getMarkdown()) ?? valorInicial,
@@ -238,7 +243,19 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
     effect(() => {
       const valor = this.valor();
       const instancia = this.instancia;
-      if (!instancia || this.sincronizando || instancia.obterMarkdown() === valor) return;
+      // No modo colaborativo o Y.Doc já está vinculado ao ProseMirror (bindXmlFragment) e é a
+      // única fonte de verdade do conteúdo — `[valor]` aqui só ecoa o próprio `markdownUpdated`
+      // do usuário local (`alterarConteudoMarkdown`), sempre um passo atrás do doc remoto que
+      // acabou de chegar por Yjs. Aplicar `definirMarkdown` mesmo assim substitui (replaceAll) o
+      // texto já sincronizado por esse eco desatualizado — apagando a edição concorrente.
+      if (
+        !instancia ||
+        this.sincronizando ||
+        this.documentoColaborativo() ||
+        instancia.obterMarkdown() === valor
+      ) {
+        return;
+      }
       this.sincronizando = true;
       instancia.definirMarkdown(valor);
       this.sincronizando = false;
@@ -270,7 +287,13 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
       instancia.destruir();
       return;
     }
-    if (instancia.obterMarkdown() !== this.valor()) instancia.definirMarkdown(this.valor());
+    // Mesmo cuidado do effect acima: no modo colaborativo o `.criar()` já deixou o Y.Doc
+    // (com o conteúdo remoto que outros colaboradores já tenham escrito) vinculado ao
+    // ProseMirror — sobrescrever aqui com `valorInicial` (o rascunho local, possivelmente
+    // desatualizado) apagaria essa sincronização inicial.
+    if (!this.documentoColaborativo() && instancia.obterMarkdown() !== this.valor()) {
+      instancia.definirMarkdown(this.valor());
+    }
     instancia.definirSomenteLeitura(this.somenteLeitura());
   }
 

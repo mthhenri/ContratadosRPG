@@ -24,6 +24,7 @@ describe('NovoAgentePage', () => {
 
   it('exibe Nível, Prestígio e Patente iniciais do preset padrão', async () => {
     const { raiz } = await montar();
+    expect(raiz.querySelectorAll('app-cartao')).toHaveLength(3);
     expect(valorStat(raiz, 'destaque')).toBe('4');
     expect(valorStat(raiz, 'energia')).toBe('9');
     expect(valorStat(raiz, 'positivo')).toBe('Experiente');

@@ -1,5 +1,6 @@
 # ui-04-adocao-por-modulo.spec.md
 
+
 > Task 4/5 do guarda-chuva `ui-biblioteca-componentes.spec.md`. É a maior da série — pode ser
 > quebrada em `ui-04a`…`ui-04g` (uma por módulo) se o gate visual de um módulo não couber numa
 > sessão. Origem: `PROBLEMS.md` `P-034`.

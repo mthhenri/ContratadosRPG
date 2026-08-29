@@ -25,6 +25,10 @@ import { lerParamRota } from '../../ler-param-rota';
 import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { CampoRotulado } from '../../../../shared/ui/campo/campo.component';
+import { Stat } from '../../../../shared/ui/stat/stat.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { FichaHabilidadeSeletor } from '../../componentes/ficha-habilidade-seletor/ficha-habilidade-seletor.component';
 import { GuiaEquipamentoLoja } from '../../componentes/guia-equipamento-loja/guia-equipamento-loja.component';
 
@@ -116,7 +120,7 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   };
 }
 
-@Component({ selector: 'app-ficha-criar', imports: [CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja, Tooltip], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
+@Component({ selector: 'app-ficha-criar', imports: [Botao, CampoRotulado, Stat, StepInput, CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja, Tooltip], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
 export class FichaCriar {
   private readonly destroyRef = inject(DestroyRef);
   private readonly rota = inject(ActivatedRoute); private readonly router = inject(Router);
@@ -542,6 +546,10 @@ export class FichaCriar {
     const valorFinal = valor + (this.bonusAtributos()[chave] ?? 0);
     const maestria = atual.maestria === chave && !maestriaAtingivel(valorFinal) ? null : atual.maestria;
     this.atualizar({ atributos: { ...atual.atributos, [chave]: valor }, maestria });
+  }
+
+  protected definirAtributo(chave: ChaveAtributo, valor: number): void {
+    this.passoAtributo(chave, valor - this.atributosFinais()[chave]);
   }
   /** `true` se o atributo já tem os 6 pontos exigidos para receber a Maestria (doc — "⬥ Maestrias") no valor **final** (com o bônus fixo já somado — mesmo valor que `construirFichaInicial` valida). */
   protected maestriaHabilitada(chave: ChaveAtributo): boolean { return maestriaAtingivel(this.atributosFinais()[chave]); }

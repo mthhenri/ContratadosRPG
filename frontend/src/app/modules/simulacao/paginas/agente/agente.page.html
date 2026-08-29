@@ -2,12 +2,8 @@
 
 <form class="agente" [formGroup]="formulario">
     <!-- CARD 1: CLASSE & NÍVEL -->
-    <section class="agente-cartao">
-        <header class="agente-cartao__cabecalho">
-            <span class="agente-cartao__indice">1</span>
-            <h2 class="agente-cartao__titulo">Classe &amp; Nível</h2>
-            <span class="agente-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Classe & Nível">
+        <span cartaoIndice>1</span>
 
         <div class="agente-config">
             <div class="agente-campo">
@@ -45,16 +41,12 @@
                 </div>
             </div>
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 2: ATRIBUTOS -->
-    <section class="agente-cartao">
-        <header class="agente-cartao__cabecalho">
-            <span class="agente-cartao__indice">2</span>
-            <h2 class="agente-cartao__titulo">Atributos</h2>
-            <span class="agente-cartao__regua"></span>
-            <span class="agente-cartao__meta">máx {{ limites().atributoMaximo }}</span>
-        </header>
+    <app-cartao titulo="Atributos">
+        <span cartaoIndice>2</span>
+        <span cartaoFim class="agente-cartao__meta">máx {{ limites().atributoMaximo }}</span>
 
         <div class="agente-atributos">
             @for (campo of campos; track campo.chave) {
@@ -69,15 +61,11 @@
             </div>
             }
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 3: STATUS DO PERSONAGEM -->
-    <section class="agente-cartao">
-        <header class="agente-cartao__cabecalho">
-            <span class="agente-cartao__indice">3</span>
-            <h2 class="agente-cartao__titulo">Status do Personagem</h2>
-            <span class="agente-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Status do Personagem">
+        <span cartaoIndice>3</span>
 
         <div class="agente-hero">
             <div class="agente-stat agente-stat--hero agente-stat--vida">
@@ -111,15 +99,11 @@
             </div>
             }
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 4: BENEFÍCIOS -->
-    <section class="agente-cartao">
-        <header class="agente-cartao__cabecalho">
-            <span class="agente-cartao__indice">4</span>
-            <h2 class="agente-cartao__titulo">{{ tituloBeneficios() }}</h2>
-            <span class="agente-cartao__regua"></span>
-        </header>
+    <app-cartao [titulo]="tituloBeneficios()">
+        <span cartaoIndice>4</span>
 
         @if (beneficios().length > 0) {
         <div class="agente-lista">
@@ -133,18 +117,14 @@
         } @else {
         <p class="agente-nota">Nível inicial — sem ganhos além do setup base.</p>
         }
-    </section>
+    </app-cartao>
 
     <!-- CARD 5: PROGRESSÃO ACUMULADA -->
-    <section class="agente-cartao">
-        <header class="agente-cartao__cabecalho">
-            <span class="agente-cartao__indice">5</span>
-            <h2 class="agente-cartao__titulo">Progressão Acumulada</h2>
-            <span class="agente-cartao__regua"></span>
-            <span class="agente-cartao__meta"
-                >até o {{ rotuloProgressao() }} {{ nivelAtual() }}</span
-            >
-        </header>
+    <app-cartao titulo="Progressão Acumulada">
+        <span cartaoIndice>5</span>
+        <span cartaoFim class="agente-cartao__meta"
+            >até o {{ rotuloProgressao() }} {{ nivelAtual() }}</span
+        >
 
         @if (progressaoAcumulada().length > 0) {
         <div class="agente-secundarios">
@@ -158,5 +138,5 @@
         } @else {
         <p class="agente-nota">Sem ganhos acumulados até aqui.</p>
         }
-    </section>
+    </app-cartao>
 </form>

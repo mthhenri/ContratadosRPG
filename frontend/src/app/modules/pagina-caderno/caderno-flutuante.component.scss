@@ -638,66 +638,17 @@ $largura-caderno-sobreposicao: 640px;
             }
         }
     }
-    &__botao {
+    // Layout próprio das ações do caderno; cor, borda, foco e estados vêm de `app-botao`.
+    &__acao {
         min-height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
         padding: 7px 10px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         font: 700 9px var(--font-mono);
         letter-spacing: var(--tracking-label);
         text-transform: uppercase;
-        cursor: pointer;
-        transform: translateY(0);
-        transition:
-            transform 120ms ease,
-            filter 150ms ease,
-            background-color 150ms ease,
-            border-color 150ms ease,
-            box-shadow 150ms ease;
-
-        &:hover:not(:disabled) {
-            color: var(--text);
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-
-        &:active:not(:disabled) {
-            transform: translateY(1px) scale(0.98);
-            box-shadow: inset 0 1px 2px color-mix(in srgb, var(--bg) 55%, transparent);
-        }
-
-        &--primario {
-            color: var(--bg);
-            background: var(--accent);
-            border-color: var(--accent);
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 22%, transparent);
-
-            &:hover:not(:disabled) {
-                color: var(--bg);
-                background: var(--accent);
-                border-color: var(--accent);
-                filter: brightness(1.08);
-                box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 32%, transparent);
-            }
-        }
-
-        &--perigo {
-            color: var(--vida);
-            border-color: var(--vida-border);
-
-            &:hover:not(:disabled) {
-                color: var(--vida);
-                background: color-mix(in srgb, var(--vida) 12%, transparent);
-                border-color: var(--vida);
-                box-shadow: 0 3px 10px color-mix(in srgb, var(--vida) 18%, transparent);
-            }
-        }
     }
     &__confirmacao {
         position: absolute;
@@ -752,7 +703,7 @@ $largura-caderno-sobreposicao: 640px;
 // sobre o editor. Assim a janela pode ficar compacta sem transformar a área de escrita em uma
 // faixa estreita; no mobile, a navegação própria lista↔conteúdo continua sendo a regra.
 @media (prefers-reduced-motion: reduce) {
-    .caderno__botao {
+    .caderno__acao {
         transition: none;
     }
 }
@@ -948,7 +899,7 @@ $largura-caderno-sobreposicao: 640px;
                 order: 3;
                 flex-basis: 100%;
             }
-            .caderno__botao {
+            .caderno__acao {
                 min-height: bp.$alvo-toque;
             }
         }
@@ -957,7 +908,7 @@ $largura-caderno-sobreposicao: 640px;
             > div {
                 flex-direction: column;
             }
-            .caderno__botao {
+            .caderno__acao {
                 min-height: bp.$alvo-toque;
             }
         }

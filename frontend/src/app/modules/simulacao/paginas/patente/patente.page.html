@@ -2,12 +2,8 @@
 
 <form class="calc patente" [formGroup]="formulario">
     <!-- CARD 1: CONSULTA -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">1</span>
-            <h2 class="calc-cartao__titulo">Consulta por Prestígio</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Consulta por Prestígio">
+        <span cartaoIndice>1</span>
 
         <div class="calc-config">
             <div class="calc-campo">
@@ -51,15 +47,11 @@
                 <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().credito }}</div>
             </div>
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 2: REFERÊNCIA COMPLETA -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">2</span>
-            <h2 class="calc-cartao__titulo">Referência Completa de Patentes</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Referência Completa de Patentes">
+        <span cartaoIndice>2</span>
 
         <div class="calc-tabela-wrap">
             <table class="calc-tabela">
@@ -85,5 +77,5 @@
                 </tbody>
             </table>
         </div>
-    </section>
+    </app-cartao>
 </form>

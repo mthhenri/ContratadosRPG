@@ -23,6 +23,10 @@ import type {
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type {
+  PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoResumoDto,
+} from '@contratados-rpg/shared/dtos/pagina-caderno';
 
 import { CampanhaDetalhe } from './detalhe.page';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -30,9 +34,9 @@ import { CampanhaService } from '../../campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
-import { TempoRealService } from '../../../../core/services/tempo-real.service';
-import { EncontroService } from '../../../encontro/encontro.service';
-import type { EncontroResumoDto } from '@contratados-rpg/shared/dtos/encontro';
+import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { EncontroService } from '../../../encontro/encontro.service';
+import type { EncontroResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { PaginaCadernoService } from '../../../pagina-caderno/pagina-caderno.service';
@@ -205,10 +209,10 @@ describe('CampanhaDetalhe', () => {
       ),
     };
 
-    // Tile "Combate" (m7-06): a listagem de encontros da campanha alimenta o atalho da tira de
-    // estatísticas. Vazia por padrão — os testes que precisam de um combate aberto sobrescrevem.
-    const encontroService = { listarPorCampanha: vi.fn(() => of(opts.encontros ?? [])) };
-
+    // Tile "Combate" (m7-06): a listagem de encontros da campanha alimenta o atalho da tira de
+    // estatísticas. Vazia por padrão — os testes que precisam de um combate aberto sobrescrevem.
+    const encontroService = { listarPorCampanha: vi.fn(() => of(opts.encontros ?? [])) };
+
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn(() => Promise.resolve()) },
       configurable: true,
@@ -222,8 +226,11 @@ describe('CampanhaDetalhe', () => {
     const fichaVisibilidadeAlterada$ = new Subject<FichaVisibilidadeAlteradaDto>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
-    const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
+    const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
+    const paginaEsquadraoCriada$ = new Subject<PaginaCadernoResumoDto>();
+    const paginaEsquadraoAtualizada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
+    const paginaEsquadraoExcluida$ = new Subject<{ campanhaId: number; paginaId: number }>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
@@ -237,8 +244,11 @@ describe('CampanhaDetalhe', () => {
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       estadoAlterado$: estadoAlterado$.asObservable(),
-      inventarioAlterado$: inventarioAlterado$.asObservable(),
-      encontroAlterado$: encontroAlterado$.asObservable(),
+      inventarioAlterado$: inventarioAlterado$.asObservable(),
+      encontroAlterado$: encontroAlterado$.asObservable(),
+      paginaEsquadraoCriada$: paginaEsquadraoCriada$.asObservable(),
+      paginaEsquadraoAtualizada$: paginaEsquadraoAtualizada$.asObservable(),
+      paginaEsquadraoExcluida$: paginaEsquadraoExcluida$.asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -252,7 +262,7 @@ describe('CampanhaDetalhe', () => {
         { provide: FichaService, useValue: fichaService },
         { provide: RolagemService, useValue: rolagemService },
         { provide: SessaoService, useValue: sessaoService },
-        { provide: TempoRealService, useValue: tempoRealService },
+        { provide: TempoRealService, useValue: tempoRealService },
         { provide: EncontroService, useValue: encontroService },
         { provide: PaginaCadernoService, useValue: paginaCadernoService },
       ],
@@ -268,8 +278,8 @@ describe('CampanhaDetalhe', () => {
       raiz: fixture.nativeElement as HTMLElement,
       campanhaService,
       fichaService,
-      rolagemService,
-      tempoRealService,
+      rolagemService,
+      tempoRealService,
       encontroService,
       fichaCriada$,
       membroEntrou$,

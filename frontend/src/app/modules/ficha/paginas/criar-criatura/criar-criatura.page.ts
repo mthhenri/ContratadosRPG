@@ -45,6 +45,10 @@ import { lerParamRota } from '../../ler-param-rota';
 import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { CampoRotulado } from '../../../../shared/ui/campo/campo.component';
+import { Stat } from '../../../../shared/ui/stat/stat.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import {
   rotuloCadencia,
   rotuloComportamento,
@@ -233,7 +237,7 @@ const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto =
  */
 @Component({
   selector: 'app-criatura-criar',
-  imports: [CommonModule, Icone, Tooltip],
+  imports: [Botao, CampoRotulado, Stat, StepInput, CommonModule, Icone, Tooltip],
   templateUrl: './criar-criatura.page.html',
   styleUrl: './criar-criatura.page.scss',
 })
@@ -641,6 +645,10 @@ export class CriaturaCriar {
   protected confirmarSaida(): void {
     this.confirmandoSaida.set(false);
     void this.router.navigate(this.campanhaId !== null ? ['/campanhas', this.campanhaId] : ['/fichas']);
+  }
+
+  protected definirAtributo(chave: ChaveAtributo, valor: number): void {
+    this.passoAtributo(chave, valor - this.estado().atributos[chave]);
   }
   protected cancelarSaida(): void { this.confirmandoSaida.set(false); }
   /** Clique no `::backdrop` do `<dialog>` cai no próprio elemento (não num filho) — fecha como "Continuar aqui". */

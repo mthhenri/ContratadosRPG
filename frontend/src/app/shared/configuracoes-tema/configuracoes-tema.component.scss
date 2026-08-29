@@ -13,7 +13,6 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -21,9 +20,7 @@
     color: var(--text-dim);
     background: transparent;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 6px 12px;
-    cursor: pointer;
 
     &:hover {
         color: var(--text);
@@ -116,14 +113,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: var(--font-mono);
         font-size: 18px;
         line-height: 1;
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
 
         &:hover {
             color: var(--text);
@@ -161,7 +155,6 @@
 
 .config-opcao {
     flex: 1;
-    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -169,9 +162,7 @@
     color: var(--text-dim);
     background: var(--surface-2);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 8px 12px;
-    cursor: pointer;
 
     &:hover {
         color: var(--text);
@@ -197,15 +188,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
     color: var(--text-dim);
     background: var(--surface-2);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 8px 12px;
-    cursor: pointer;
     text-align: left;
 
     &:hover {
@@ -304,7 +292,6 @@
 
     &__salvar {
         margin-left: auto;
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
@@ -312,9 +299,7 @@
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 8px 12px;
-        cursor: pointer;
 
         &:hover {
             color: var(--text);
@@ -361,7 +346,6 @@
 
 // === Botão "Fechar" — linguagem do botão secundário do tema ===
 .config-btn {
-    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -369,9 +353,7 @@
     color: var(--text);
     background: transparent;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 8px 16px;
-    cursor: pointer;
 
     &:hover {
         border-color: var(--accent-border);

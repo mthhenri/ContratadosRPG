@@ -39,6 +39,7 @@
             <button
                 class="historico-rolagens__fechar"
                 type="button"
+                app-botao
                 aria-label="Fechar histórico de rolagens"
                 (click)="fechar()"
             >
@@ -52,6 +53,7 @@
         @if (acimaDaCalculadora()) {
             <button
                 type="button"
+                app-botao
                 class="historico-rolagens__abrir-calculadora"
                 (click)="abrirCalculadora.emit()"
             >
@@ -92,6 +94,7 @@
                 @if (temMais()) {
                     <button
                         type="button"
+                        app-botao
                         class="historico-rolagens__mais"
                         [disabled]="carregandoMais()"
                         (click)="carregarMais.emit()"

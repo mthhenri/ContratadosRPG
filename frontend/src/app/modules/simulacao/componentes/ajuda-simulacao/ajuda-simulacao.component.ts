@@ -1,6 +1,8 @@
 import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 
 import { AbaAjuda, CONTEUDO_AJUDA } from './conteudo-ajuda';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Janela em que o "Tem certeza?" aceita o 2º clique antes de reverter sozinho para "Limpar". */
 const JANELA_CONFIRMACAO_MS = 3000;
@@ -30,7 +32,7 @@ const JANELA_CONFIRMACAO_MS = 3000;
  */
 @Component({
   selector: 'app-ajuda-simulacao',
-  imports: [],
+  imports: [Botao, Modal],
   templateUrl: './ajuda-simulacao.component.html',
   styleUrl: './ajuda-simulacao.component.scss',
 })

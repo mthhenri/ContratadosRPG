@@ -40,10 +40,10 @@
                 esta tela, pode continuar exatamente de onde parou.
             </p>
             <div class="guia__sair-dialog-acoes">
-                <button class="botao botao--primario" type="button" (click)="confirmarSaida()">
+                <button app-botao variante="primario" type="button" (click)="confirmarSaida()">
                     Sair
                 </button>
-                <button class="botao botao--secundario" type="button" (click)="cancelarSaida()">
+                <button app-botao variante="secundario" type="button" (click)="cancelarSaida()">
                     Continuar aqui
                 </button>
             </div>
@@ -60,8 +60,8 @@
             </p>
         </div>
         <div class="guia__retomar-acoes">
-            <button class="botao botao--primario" type="button" (click)="retomar()">Retomar</button>
-            <button class="botao botao--secundario" type="button" (click)="recomecar()">
+            <button app-botao variante="primario" type="button" (click)="retomar()">Retomar</button>
+            <button app-botao variante="secundario" type="button" (click)="recomecar()">
                 Começar do zero
             </button>
         </div>
@@ -148,7 +148,7 @@
                      ficha só existe de fato após "Criar ficha"; o upload real é um segundo request,
                      em sequência, logo depois do POST /ficha. O `<label>` embrulha só a caixa da
                      foto (não o rótulo/ajuda) para o alvo de clique ser exatamente o tamanho dela. -->
-                    <div class="campo guia__avatar-campo">
+                    <div class="guia__avatar-campo">
                         <span class="campo__rotulo">Foto de registro</span>
                         <label class="guia__avatar-caixa">
                             @if (imagemPreviewUrl(); as previewUrl) {
@@ -172,7 +172,7 @@
 
                     <div class="guia__base-direita">
                         @if (ehMestre()) {
-                        <label class="campo">
+                        <label app-campo>
                             <span class="campo__rotulo">Operador responsável</span>
                             <select
                                 class="campo__controle"
@@ -189,7 +189,7 @@
                             >
                         </label>
                         }
-                        <label class="campo campo--codinome">
+                        <label app-campo class="guia__campo--codinome">
                             <span class="campo__rotulo">Codinome / Agente</span>
                             <span class="campo__codinome-linha">
                                 <input
@@ -222,7 +222,7 @@
                     <p>A classe define progressão, recursos e o teto operacional do agente.</p>
                 </div>
                 <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Classe</span>
                         <select
                             class="campo__controle"
@@ -240,7 +240,7 @@
                         </select>
                     </label>
                     @if (gruposPerfil().length) {
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Arquétipo ou Subclasse</span>
                         <select
                             class="campo__controle"
@@ -258,7 +258,7 @@
                         </select>
                     </label>
                     } @for (slot of slotsEscolhaBonus(); track $index) {
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo"
                             >{{ slotsEscolhaBonus().length > 1 ? ($index + 1 === 1 ? '1ª' : '2ª') +
                             ' escolha de bônus' : 'Bônus à escolha' }}</span
@@ -315,22 +315,26 @@
                         <div class="guia__briefing-bloco">
                             <span>Saúde base (antes dos Atributos)</span>
                             <div class="guia__briefing-saude">
-                                <div class="stat stat--vida">
-                                    <span class="stat__rotulo">Vida</span>
-                                    <span class="stat__valor">{{ saudeClasse().vidaBase }}</span>
-                                    <small class="stat__nota"
-                                        >+{{ saudeClasse().vidaPorNivel }}/nível, +{{
-                                        saudeClasse().vidaPorVigor }} por Vigor</small
-                                    >
-                                </div>
-                                <div class="stat stat--energia">
-                                    <span class="stat__rotulo">Energia</span>
-                                    <span class="stat__valor">{{ saudeClasse().energiaBase }}</span>
-                                    <small class="stat__nota"
-                                        >+{{ saudeClasse().energiaPorNivel }}/nível, +{{
-                                        saudeClasse().energiaPorDestreza }} por Destreza</small
-                                    >
-                                </div>
+                                <app-stat
+                                    tamanho="compacto"
+                                    rotulo="Vida"
+                                    [valor]="saudeClasse().vidaBase"
+                                    variante="vida"
+                                    [nota]="
+                                        '+' + saudeClasse().vidaPorNivel + '/nível, +' +
+                                        saudeClasse().vidaPorVigor + ' por Vigor'
+                                    "
+                                />
+                                <app-stat
+                                    tamanho="compacto"
+                                    rotulo="Energia"
+                                    [valor]="saudeClasse().energiaBase"
+                                    variante="energia"
+                                    [nota]="
+                                        '+' + saudeClasse().energiaPorNivel + '/nível, +' +
+                                        saudeClasse().energiaPorDestreza + ' por Destreza'
+                                    "
+                                />
                             </div>
                         </div>
 
@@ -368,7 +372,7 @@
                     }
                 </div>
                 } @if (campanhaId !== null && mediasEsquadrao()?.quantidade) {
-                <label class="campo">
+                <label app-campo>
                     <span class="campo__rotulo">Motivo de entrada</span>
                     <select
                         class="campo__controle"
@@ -403,7 +407,7 @@
                 } @if (campanhaId !== null && mediasEsquadrao()?.quantidade &&
                 !estado().sobrescreverProgressao) {
                 <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Média de nível</span
                         ><input
                             class="campo__controle campo__controle--numero"
@@ -412,7 +416,7 @@
                             [value]="estado().mediaNivel"
                             (input)="atualizar({ mediaNivel: numero($event) })"
                     /></label>
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Média de prestígio</span
                         ><input
                             class="campo__controle campo__controle--numero"
@@ -443,7 +447,7 @@
                 </div>
                 } @else if (estado().sobrescreverProgressao) {
                 <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Nível inicial exato</span
                         ><input
                             data-testid="nivel-inicial-exato"
@@ -455,7 +459,7 @@
                             (input)="atualizar({ nivelManual: numero($event) })"
                         /><small class="campo__ajuda">De 0 a 20.</small></label
                     >
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Prestígio inicial exato</span
                         ><input
                             data-testid="prestigio-inicial-exato"
@@ -517,26 +521,13 @@
                             } @if (estado().atributos[campo.chave] === 0) {
                             <small>Base zerada · 2D20, menor</small> }
                         </div>
-                        <div class="stepper">
-                            <button
-                                class="stepper__botao"
-                                type="button"
-                                [attr.aria-label]="'Diminuir ' + campo.nome"
-                                (click)="passoAtributo(campo.chave, -1)"
-                            >
-                                −
-                            </button>
-                            <b class="stepper__valor">{{ atributosFinais()[campo.chave] }}</b>
-                            <button
-                                class="stepper__botao"
-                                type="button"
-                                [attr.aria-label]="'Aumentar ' + campo.nome"
-                                [disabled]="estado().atributos[campo.chave] >= limiteAtributo(campo.chave)"
-                                (click)="passoAtributo(campo.chave, 1)"
-                            >
-                                +
-                            </button>
-                        </div>
+                        <app-step-input
+                            tamanho="compacto"
+                            [valorExterno]="atributosFinais()[campo.chave]"
+                            [ariaRotulo]="campo.nome"
+                            [bloquearAumentar]="estado().atributos[campo.chave] >= limiteAtributo(campo.chave)"
+                            (valorAlterado)="definirAtributo(campo.chave, $event)"
+                        />
                     </div>
                     }
                 </div>
@@ -564,7 +555,7 @@
                             ><small>O traço que define como o agente age sob pressão.</small>
                         </div>
                     </header>
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Traço de personalidade</span>
                         <input
                             data-testid="personalidade"
@@ -592,7 +583,7 @@
                             <span class="campo__rotulo"
                                 >Base — {{ estado().personalidade || 'sua Personalidade' }}</span
                             >
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Efeito</span>
                                 <textarea
                                     class="campo__controle campo__controle--area"
@@ -602,7 +593,7 @@
                                     placeholder="Descreva a Habilidade de Personalidade combinada com o Mestre"
                                 ></textarea>
                             </label>
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Custo em Energia</span>
                                 <input
                                     class="campo__controle campo__controle--numero"
@@ -618,7 +609,7 @@
                                 >1ª Fortificação — {{ estado().personalidade || 'sua Personalidade'
                                 }}</span
                             >
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Efeito</span>
                                 <textarea
                                     class="campo__controle campo__controle--area"
@@ -628,7 +619,7 @@
                                     placeholder="Descreva a melhoria combinada com o Mestre"
                                 ></textarea>
                             </label>
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Custo em Energia</span>
                                 <input
                                     class="campo__controle campo__controle--numero"
@@ -644,7 +635,7 @@
                                 >2ª Fortificação — {{ estado().personalidade || 'sua Personalidade'
                                 }}</span
                             >
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Efeito</span>
                                 <textarea
                                     class="campo__controle campo__controle--area"
@@ -654,7 +645,7 @@
                                     placeholder="Descreva a melhoria combinada com o Mestre"
                                 ></textarea>
                             </label>
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Custo em Energia</span>
                                 <input
                                     class="campo__controle campo__controle--numero"
@@ -681,7 +672,7 @@
                         </div>
                     </header>
                     <div class="guia__campos guia__campos--duas-colunas">
-                        <label class="campo">
+                        <label app-campo>
                             <span class="campo__rotulo">Nome da origem</span>
                             <input
                                 class="campo__controle"
@@ -691,7 +682,7 @@
                                 required
                             />
                         </label>
-                        <label class="campo">
+                        <label app-campo>
                             <span class="campo__rotulo">Descrição da origem (opcional)</span>
                             <textarea
                                 class="campo__controle campo__controle--area"
@@ -710,7 +701,7 @@
                     <div class="guia__formacoes">
                         @for (linha of estado().origem.formacao; track $index) {
                         <div class="guia__formacao">
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo"
                                     >Formação {{ $index + 1 | number: '2.0-0' }}</span
                                 >
@@ -736,7 +727,7 @@
                             </label>
                             @if (definicaoFormacao($index); as definicao) { @if (definicao.parametro
                             === parametroEsquivaOuBloqueio) {
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Escolha o benefício</span>
                                 <select
                                     class="campo__controle"
@@ -750,7 +741,7 @@
                                 </select>
                             </label>
                             } @else if (definicao.parametro) {
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo"
                                     >{{ rotuloParametroFormacao(definicao.parametro) }}</span
                                 >
@@ -762,7 +753,7 @@
                                 />
                             </label>
                             } }
-                            <label class="campo">
+                            <label app-campo>
                                 <span class="campo__rotulo">Texto registrado</span>
                                 <input
                                     class="campo__controle"
@@ -782,7 +773,7 @@
                         mecânico ela concede.
                     </p>
                     <div class="guia__campos guia__campos--duas-colunas">
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Gatilho</span
                             ><input
                                 class="campo__controle"
@@ -791,7 +782,7 @@
                                 placeholder="Ex.: Ao agir sob fogo direto"
                                 required
                         /></label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Efeito</span
                             ><input
                                 class="campo__controle"
@@ -801,7 +792,7 @@
                                 required
                         /></label>
                     </div>
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Saber de campo</span
                         ><textarea
                             class="campo__controle campo__controle--area"
@@ -921,7 +912,9 @@
                         </ul>
                         } @if (preenchidasNaVaga(vaga.tipo) < vaga.alvo) {
                         <button
-                            class="botao botao--secundario guia__vaga-escolher"
+                            app-botao
+                            variante="secundario"
+                            class="guia__vaga-escolher"
                             type="button"
                             (click)="abrirSeletorMelhoria(vaga.tipo)"
                         >
@@ -974,7 +967,9 @@
                     <div class="guia__recursos-acoes">
                         <button
                             data-testid="rolar-recursos"
-                            class="botao botao--primario guia__rolar"
+                            app-botao
+                            variante="primario"
+                            class="guia__rolar"
                             type="button"
                             [disabled]="rolandoRecursos()"
                             (click)="iniciarRolagemRecursos()"
@@ -984,7 +979,9 @@
                         </button>
                         <button
                             data-testid="ignorar-recursos"
-                            class="botao botao--secundario guia__ignorar-recursos"
+                            app-botao
+                            variante="secundario"
+                            class="guia__ignorar-recursos"
                             type="button"
                             [disabled]="rolandoRecursos()"
                             (click)="ignorarRecursos()"
@@ -1250,22 +1247,15 @@
                 </div>
                 } } @if (estado().passo >= 3 || visitado() >= 3) {
                 <div class="guia__stats">
-                    <div class="stat stat--vida">
-                        <span class="stat__rotulo">Vida</span
-                        ><span class="stat__valor">{{ vida() }}</span>
-                    </div>
-                    <div class="stat stat--energia">
-                        <span class="stat__rotulo">Energia</span
-                        ><span class="stat__valor">{{ energia() }}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat__rotulo">Defesa</span
-                        ><span class="stat__valor">{{ nivelInicial() + 10 }}</span>
-                    </div>
-                    <div class="stat" [class.stat--alerta]="distribuicao().saldo !== 0">
-                        <span class="stat__rotulo">Saldo</span
-                        ><span class="stat__valor">{{ distribuicao().saldo }}</span>
-                    </div>
+                    <app-stat tamanho="compacto" rotulo="Vida" [valor]="vida()" variante="vida" />
+                    <app-stat tamanho="compacto" rotulo="Energia" [valor]="energia()" variante="energia" />
+                    <app-stat tamanho="compacto" rotulo="Defesa" [valor]="nivelInicial() + 10" />
+                    <app-stat
+                        tamanho="compacto"
+                        rotulo="Saldo"
+                        [valor]="distribuicao().saldo"
+                        [variante]="distribuicao().saldo !== 0 ? 'alerta' : undefined"
+                    />
                 </div>
                 @if (atributosDestaque().length) {
                 <div class="guia__destaques">
@@ -1322,7 +1312,9 @@
 
     <footer class="guia__rodape">
         <button
-            class="botao botao--secundario guia__acao"
+            app-botao
+            variante="secundario"
+            class="guia__acao"
             type="button"
             [disabled]="estado().passo === 0"
             (click)="voltar()"
@@ -1335,7 +1327,9 @@
         >
         @if (estado().passo < passos().length - 1) {
         <button
-            class="botao botao--primario guia__acao"
+            app-botao
+            variante="primario"
+            class="guia__acao"
             type="button"
             [disabled]="!passoValido()"
             (click)="avancar()"
@@ -1344,7 +1338,9 @@
         </button>
         } @else {
         <button
-            class="botao botao--primario guia__acao"
+            app-botao
+            variante="primario"
+            class="guia__acao"
             type="button"
             [disabled]="criando()"
             (click)="criar()"

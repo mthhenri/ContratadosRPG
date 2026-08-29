@@ -7,6 +7,8 @@ import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { UsuarioService } from '../../usuario.service';
 
 /**
@@ -23,7 +25,7 @@ import { UsuarioService } from '../../usuario.service';
  */
 @Component({
   selector: 'app-perfil',
-  imports: [ReactiveFormsModule, Icone, Cartao],
+  imports: [ReactiveFormsModule, Icone, Botao, Campo, Cartao],
   templateUrl: './perfil.page.html',
   styleUrl: './perfil.page.scss',
 })

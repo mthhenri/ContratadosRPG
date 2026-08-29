@@ -219,7 +219,6 @@
     }
 
     &__historico-limpar {
-        font-family: var(--font-mono);
         font-size: calc(10px * var(--calc-escala, 1));
         font-weight: 600;
         letter-spacing: var(--tracking-label);
@@ -227,7 +226,6 @@
         color: var(--text-mute);
         border: 0;
         background: transparent;
-        cursor: pointer;
         padding: 2px 4px;
 
         &:hover {

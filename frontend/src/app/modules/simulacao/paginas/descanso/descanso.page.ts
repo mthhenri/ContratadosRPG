@@ -19,6 +19,8 @@ import {
 } from '@contratados-rpg/shared/regras/descanso';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 
@@ -71,7 +73,7 @@ const DURACAO_SCRAMBLE_MS = 650;
  */
 @Component({
   selector: 'app-descanso-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao],
+  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Botao, Cartao],
   templateUrl: './descanso.page.html',
   styleUrl: './descanso.page.scss',
 })

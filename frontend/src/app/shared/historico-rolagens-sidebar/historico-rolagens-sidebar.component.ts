@@ -9,6 +9,7 @@ import { Icone } from '../icone/icone.component';
 import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
 import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
+import { Botao } from '../ui/botao/botao.component';
 
 /**
  * Barra lateral de histórico de rolagens — substitui a antiga listagem embutida no painel da
@@ -27,7 +28,7 @@ import { Tooltip } from '../tooltip/tooltip.directive';
  */
 @Component({
   selector: 'app-historico-rolagens-sidebar',
-  imports: [Icone, ResultadoRolagem, OverflowFade, DatePipe, AutoFocus, Tooltip],
+  imports: [Icone, ResultadoRolagem, OverflowFade, DatePipe, AutoFocus, Tooltip, Botao],
   templateUrl: './historico-rolagens-sidebar.component.html',
   styleUrl: './historico-rolagens-sidebar.component.scss',
 })

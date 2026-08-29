@@ -39,10 +39,10 @@
     </label>
 
     <div class="enquadramento__acoes">
-        <button class="botao botao--primario" type="button" (click)="confirmarEnquadramento()">
+        <button app-botao variante="primario" type="button" (click)="confirmarEnquadramento()">
             Confirmar
         </button>
-        <button class="botao botao--secundario" type="button" (click)="cancelar.emit()">
+        <button app-botao variante="secundario" type="button" (click)="cancelar.emit()">
             Cancelar
         </button>
     </div>

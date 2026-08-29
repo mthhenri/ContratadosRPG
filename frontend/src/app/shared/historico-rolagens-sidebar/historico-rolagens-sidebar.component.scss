@@ -125,7 +125,6 @@
             margin: 12px 18px 0;
             padding: 10px 14px;
             min-height: bp.$alvo-toque;
-            font-family: var(--font-mono);
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
@@ -133,8 +132,6 @@
             color: var(--text-dim);
             background: var(--surface-2);
             border: 1px solid var(--border-strong);
-            border-radius: var(--radius-control);
-            cursor: pointer;
             transition:
                 color 0.15s ease,
                 border-color 0.15s ease,
@@ -184,8 +181,6 @@
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
         transition:
             color 0.15s ease,
             border-color 0.15s ease,
@@ -310,22 +305,16 @@
         background: transparent;
         color: var(--text-dim);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        font-family: var(--font-mono);
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
-        cursor: pointer;
+        --botao-opacidade-desabilitado: 0.6;
 
         &:hover:not(:disabled) {
             color: var(--text);
             border-color: var(--accent-border);
         }
 
-        &:disabled {
-            cursor: default;
-            opacity: 0.6;
-        }
     }
 
     @include bp.mobile {

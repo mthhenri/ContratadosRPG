@@ -1,14 +1,18 @@
 <div class="cartao">
-  @if (titulo(); as tituloTexto) {
-    <div class="cartao__cabecalho">
-      <span class="cartao__indice"><ng-content select="[cartaoIndice]" /></span>
-      @if (nivelTitulo() === 'h1') {
-        <h1 class="cartao__titulo">{{ tituloTexto }}</h1>
-      } @else {
-        <h2 class="cartao__titulo">{{ tituloTexto }}</h2>
-      }
-      <span class="cartao__regua"></span>
-    </div>
-  }
-  <ng-content />
+    @if (titulo(); as tituloTexto) {
+        <div
+            class="cartao__cabecalho"
+            [class.cartao__cabecalho--quebravel]="cabecalhoQuebravel()"
+        >
+            <span class="cartao__indice"><ng-content select="[cartaoIndice]" /></span>
+            @if (nivelTitulo() === "h1") {
+                <h1 class="cartao__titulo">{{ tituloTexto }}</h1>
+            } @else {
+                <h2 class="cartao__titulo">{{ tituloTexto }}</h2>
+            }
+            <span class="cartao__regua"></span>
+            <ng-content select="[cartaoFim]" />
+        </div>
+    }
+    <ng-content />
 </div>

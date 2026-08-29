@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { CampanhaService } from '../../campanha.service';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 
 /**
  * Dialog de criação de campanha, aberto a partir do painel (`CampanhaLista`). Reactive Forms
@@ -14,7 +15,7 @@ import { CampanhaService } from '../../campanha.service';
  */
 @Component({
   selector: 'app-campanha-criar',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Botao],
   templateUrl: './criar.page.html',
   styleUrl: './criar.page.scss',
 })

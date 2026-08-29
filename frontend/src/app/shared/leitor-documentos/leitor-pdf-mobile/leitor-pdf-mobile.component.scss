@@ -69,14 +69,10 @@
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        font: 600 17px/1 var(--font-mono);
-        cursor: pointer;
-
-        &:disabled {
-            opacity: 0.4;
-            cursor: default;
-        }
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1;
+        --botao-opacidade-desabilitado: 0.4;
 
         &:not(:disabled):hover {
             color: var(--accent);

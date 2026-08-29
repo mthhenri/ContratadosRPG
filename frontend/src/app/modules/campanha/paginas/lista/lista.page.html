@@ -1,17 +1,15 @@
 <section class="campanhas">
-    <article class="card">
-        <header class="card__cabecalho">
-            <span class="card__indice">//</span>
-            <h1 class="card__titulo">Campanhas</h1>
-            <span class="card__regua"></span>
-            @if (!carregando() && campanhas().length) {
-            <span class="card__contagem" aria-hidden="true">{{ campanhas().length }}</span>
-            }
-        </header>
+    <app-cartao titulo="Campanhas" nivelTitulo="h1">
+        <span cartaoIndice>//</span>
+        @if (!carregando() && campanhas().length) {
+        <span cartaoFim class="campanhas__contagem" aria-hidden="true">{{ campanhas().length }}</span>
+        }
 
         <div class="campanhas__acoes">
             <button
-                class="botao botao--primario campanhas__acao"
+                app-botao
+                variante="primario"
+                class="campanhas__acao"
                 type="button"
                 (click)="abrirCriar()"
             >
@@ -19,7 +17,9 @@
                 Criar campanha
             </button>
             <button
-                class="botao botao--secundario campanhas__acao"
+                app-botao
+                variante="secundario"
+                class="campanhas__acao"
                 type="button"
                 (click)="abrirEntrar()"
             >
@@ -116,7 +116,9 @@
                         </button>
                         }
                         <a
-                            class="botao botao--secundario campanhas__linha-abrir"
+                            app-botao
+                            variante="secundario"
+                            class="campanhas__linha-abrir"
                             [routerLink]="['/campanhas', campanha.id]"
                         >
                             Abrir
@@ -128,7 +130,7 @@
             }
         </ul>
         }
-    </article>
+    </app-cartao>
 
     @if (dialogoAberto() === 'criar') {
     <app-campanha-criar (fechar)="fecharDialogo()" />

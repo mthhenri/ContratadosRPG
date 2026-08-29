@@ -2,12 +2,8 @@
 
 <form class="calc novo-agente" [formGroup]="formulario">
     <!-- CARD 1: CONFIGURAÇÃO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">1</span>
-            <h2 class="calc-cartao__titulo">Configuração</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Configuração">
+        <span cartaoIndice>1</span>
 
         <div class="calc-config">
             <div class="calc-campo">
@@ -45,15 +41,11 @@
                 />
             </div>
         </div>
-    </section>
+    </app-cartao>
 
     <!-- CARD 2: RESULTADO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">2</span>
-            <h2 class="calc-cartao__titulo">Resultado</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Resultado">
+        <span cartaoIndice>2</span>
 
         <div class="calc-stats">
             <div class="calc-stat calc-stat--destaque">
@@ -92,15 +84,11 @@
             >
         </p>
         }
-    </section>
+    </app-cartao>
 
     <!-- CARD 3: BÔNUS MONETÁRIO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">3</span>
-            <h2 class="calc-cartao__titulo">Bônus Monetário Inicial</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Bônus Monetário Inicial">
+        <span cartaoIndice>3</span>
 
         <div class="calc-config">
             <div class="calc-campo">
@@ -123,5 +111,5 @@
             Some ao total o dinheiro inicial padrão (1.000 + 4D4 × 250), calculado à parte por ser
             aleatório.
         </p>
-    </section>
+    </app-cartao>
 </form>

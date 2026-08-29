@@ -139,7 +139,6 @@
     }
 
     &__confirmar {
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -147,14 +146,8 @@
         color: var(--bg);
         background: var(--accent);
         border: 0;
-        border-radius: var(--radius-control);
         padding: 7px 14px;
-        cursor: pointer;
-
-        &:disabled {
-            opacity: 0.4;
-            cursor: default;
-        }
+        --botao-opacidade-desabilitado: 0.4;
 
         @include bp.mobile {
             min-height: bp.$alvo-toque;
@@ -162,7 +155,6 @@
     }
 
     &__cancelar {
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
@@ -170,9 +162,7 @@
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 7px 14px;
-        cursor: pointer;
 
         &:hover {
             color: var(--text);

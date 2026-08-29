@@ -172,7 +172,7 @@
     letter-spacing: var(--tracking-label);
 }
 
-.acesso-negado__rodape .botao {
+.acesso-negado__rodape .acesso-negado__retorno.acesso-negado__retorno {
     display: flex;
     align-items: center;
     column-gap: 8px;
@@ -192,7 +192,7 @@
         filter 0.15s ease;
 }
 
-.acesso-negado__rodape .botao:hover {
+.acesso-negado__rodape .acesso-negado__retorno.acesso-negado__retorno:hover:not(:disabled) {
     color: var(--bg);
     background-color: var(--accent);
     border-color: var(--accent);
@@ -243,7 +243,7 @@
         flex-direction: column;
     }
 
-    .acesso-negado__rodape .botao {
+    .acesso-negado__rodape .acesso-negado__retorno.acesso-negado__retorno {
         width: 100%;
         min-width: 0;
         min-height: 44px;

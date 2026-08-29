@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
+import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 
@@ -35,7 +36,7 @@ const ATRIBUTOS_REFERENCIA: readonly number[] = [1, 2, 3, 4, 5, 6];
  */
 @Component({
   selector: 'app-dt-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao],
+  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Cartao],
   templateUrl: './dt.page.html',
   styleUrl: './dt.page.scss',
 })

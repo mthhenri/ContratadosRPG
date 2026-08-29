@@ -6,65 +6,13 @@
 // aprovado de UI/UX: `FichaVisualizacao` (ficha de jogador) — shell de colunas, cabeçalho com
 // avatar, barra de abas e o lápis que troca a grade de Atributos por uma lista em edição são
 // blocos copiados e adaptados de lá (o encapsulamento de estilos do Angular não deixa a definição
-// de outro componente vazar pra este). Blocos genéricos (`.card`, `.stat`, `.abas`) copiados do
-// canônico `docs/design/tema/_componentes.scss`. Só tokens do tema "Terminal de Contenção" —
+// de outro componente vazar pra este). O card e as abas seguem o canônico
+// `docs/design/tema/_componentes.scss`; a caixa de status é local pois permite edição inline.
+// Só tokens do tema "Terminal de Contenção" —
 // nenhum hex/fonte/raio solto (proibição #29).
 
 :host {
     display: block;
-}
-
-// `.botao` canônico (`_componentes.scss`) copiado pra cá: a definição que existe no SCSS da página
-// (`visualizar-criatura.page.scss`) fica presa ao encapsulamento dela e não alcança este componente.
-.botao {
-    padding: 7px 12px;
-    font: 600 11px var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition:
-        filter 0.15s ease,
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-
-    &:disabled {
-        opacity: 0.55;
-        cursor: default;
-    }
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-    &--secundario {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border-strong);
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-    }
-}
-
-// Campo genérico "rótulo + controle" (mesmo vocabulário de `criar-criatura.page.scss`), usado pela
-// grade de edição da Classificação.
-.campo {
-    display: grid;
-    gap: 5px;
-    min-width: 0;
-    margin: 0;
-
-    &__rotulo {
-        font: 600 9px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.11em;
-        color: var(--text-mute);
-    }
 }
 
 // === Card (copiado de `_componentes.scss` `.card`) ===
@@ -93,15 +41,17 @@
     }
 }
 
-// === Stat box (copiado de `_componentes.scss` `.stat`, com o valor no corpo de 16px do mockup) ===
-.stat {
+// === Caixa interativa de status da criatura (valor de 16px do mockup) ===
+// Ela preserva os campos editáveis inline deste painel; `app-stat` atende casos
+// de somente leitura e não deve receber essa responsabilidade de edição.
+.criatura__stat {
     min-width: 0;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
     padding: 9px 12px;
 
-    &__rotulo {
+    &-rotulo {
         display: block;
         font-family: var(--font-mono);
         font-size: 9px;
@@ -110,27 +60,13 @@
         color: var(--text-mute);
         margin-bottom: 6px;
     }
-    &__valor {
+    &-valor {
         font-family: var(--font-mono);
         font-size: 16px;
         font-weight: 700;
         color: var(--text);
         line-height: 1.2;
     }
-}
-
-// Chip de classificação canônico (`docs/design/tema/_componentes.scss`) — copiado pra cá pelo
-// mesmo motivo do `.botao` acima (encapsulamento de estilo).
-.chip-classificacao {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: var(--text-mute);
-    border: 1px solid var(--border-strong);
-    border-radius: 3px;
-    padding: 4px 9px;
-    flex: 0 0 auto;
 }
 
 .criatura {

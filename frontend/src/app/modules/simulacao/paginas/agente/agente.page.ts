@@ -24,6 +24,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
+import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 
@@ -84,7 +85,7 @@ const INDISPONIVEL = 'N/A';
  */
 @Component({
   selector: 'app-agente-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao],
+  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Cartao],
   templateUrl: './agente.page.html',
   styleUrl: './agente.page.scss',
 })

@@ -4,6 +4,7 @@ import type { FichaImagemFocoDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { deslocarPan, escalaMinimaPorEixo, type Proporcao } from '../../../../shared/enquadramento-imagem.util';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 
 /** Proporção real do avatar que está sendo enquadrado (jogador 100×100, criatura 86×96). */
 export type ProporcaoAvatar = Proporcao;
@@ -27,7 +28,7 @@ const ALTURA_PRE_VISUALIZACAO_PX = 220;
  */
 @Component({
   selector: 'app-ajuste-enquadramento-imagem',
-  imports: [FocoImagem],
+  imports: [Botao, FocoImagem],
   templateUrl: './ajuste-enquadramento-imagem.component.html',
   styleUrl: './ajuste-enquadramento-imagem.component.scss',
 })

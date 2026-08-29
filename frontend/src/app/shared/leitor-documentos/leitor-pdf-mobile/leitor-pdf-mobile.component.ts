@@ -12,6 +12,8 @@ import {
 } from "@angular/core";
 import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 
+import { Botao } from "../../ui/botao/botao.component";
+
 const ZOOM_MINIMO = 0.5;
 const ZOOM_MAXIMO = 3;
 const ZOOM_PASSO = 0.25;
@@ -29,7 +31,7 @@ let workerConfigurado = false;
 @Component({
     selector: "app-leitor-pdf-mobile",
     standalone: true,
-    imports: [],
+    imports: [Botao],
     templateUrl: "./leitor-pdf-mobile.component.html",
     styleUrl: "./leitor-pdf-mobile.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,

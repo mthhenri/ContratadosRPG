@@ -278,7 +278,9 @@
                 }
             </select>
             <button
-                class="botao botao--primario acesso__acao"
+                app-botao
+                variante="primario"
+                class="acesso__acao"
                 type="button"
                 [disabled]="membroParaConceder.value === null || concedendo()"
                 (click)="conceder()"
@@ -297,7 +299,9 @@
                 <span class="acesso__avatar" aria-hidden="true"></span>
                 <span class="acesso__nome">{{ acesso.nome }}</span>
                 <button
-                    class="botao botao--secundario acesso__revogar"
+                    app-botao
+                    variante="secundario"
+                    class="acesso__revogar"
                     type="button"
                     [disabled]="revogando() !== null"
                     (click)="revogar(acesso.usuarioId)"
@@ -343,7 +347,9 @@
 
         <div class="exclusao__acoes">
             <button
-                class="botao botao--primario exclusao__acao"
+                app-botao
+                variante="primario"
+                class="exclusao__acao"
                 type="button"
                 [disabled]="excluindo()"
                 (click)="confirmarExclusao()"
@@ -352,7 +358,9 @@
                 {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
             </button>
             <button
-                class="botao botao--secundario exclusao__acao"
+                app-botao
+                variante="secundario"
+                class="exclusao__acao"
                 type="button"
                 [disabled]="excluindo()"
                 (click)="fecharExclusao()"

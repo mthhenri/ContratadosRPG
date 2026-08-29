@@ -4,44 +4,6 @@
     display: block;
 }
 
-// `.botao` canônico (`_componentes.scss`) copiado pra cá: a definição que existe no SCSS da página
-// (`visualizar-criatura.page.scss`) fica presa ao encapsulamento dela, então os botões do
-// formulário deste componente apareciam como texto cru, sem pele nenhuma.
-.botao {
-    padding: 7px 12px;
-    font: 600 11px var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition:
-        filter 0.15s ease,
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-
-    &:disabled {
-        opacity: 0.55;
-        cursor: default;
-    }
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-    &--secundario {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border-strong);
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-    }
-}
-
 // Ataques da ficha de criatura — alvo de fidelidade docs/design/examples/ficha-de-criatura.html:
 // cabeçalho "rótulo + contagem + régua + ações", cards em auto-fit de 300px com nome/dano na mesma
 // linha, marcas do ataque em selos e o rodapé Teste/Dano separado por uma linha.

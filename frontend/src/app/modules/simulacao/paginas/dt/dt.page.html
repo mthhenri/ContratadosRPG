@@ -2,12 +2,8 @@
 
 <form class="calc dt" [formGroup]="formulario">
     <!-- CARD 1: CÁLCULO -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">1</span>
-            <h2 class="calc-cartao__titulo">Simulacao de DT</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Simulacao de DT">
+        <span cartaoIndice>1</span>
 
         <p class="calc-descricao">
             Calcula a DT que aliados e inimigos precisam superar para resistir às suas ações.
@@ -37,15 +33,11 @@
 
         <div class="calc-resultado">{{ dt() }}</div>
         <p class="calc-formula">Fórmula: 10 + Nível + (Atributo × 2)</p>
-    </section>
+    </app-cartao>
 
     <!-- CARD 2: TABELA DE REFERÊNCIA -->
-    <section class="calc-cartao">
-        <header class="calc-cartao__cabecalho">
-            <span class="calc-cartao__indice">2</span>
-            <h2 class="calc-cartao__titulo">Tabela de Referência Rápida</h2>
-            <span class="calc-cartao__regua"></span>
-        </header>
+    <app-cartao titulo="Tabela de Referência Rápida">
+        <span cartaoIndice>2</span>
 
         <div class="calc-tabela-wrap">
             <table class="calc-tabela">
@@ -69,5 +61,5 @@
                 </tbody>
             </table>
         </div>
-    </section>
+    </app-cartao>
 </form>

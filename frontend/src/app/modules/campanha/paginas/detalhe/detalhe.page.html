@@ -10,19 +10,19 @@
             }
         </div>
         <div class="detalhe__grade">
-            <article class="card detalhe__esqueleto-membros">
+            <app-cartao class="detalhe__esqueleto-membros">
                 @for (i of [0, 1, 2]; track i) {
                 <div class="detalhe__esqueleto-membro">
                     <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
                     <span class="esqueleto-bloco esqueleto-bloco--nome"></span>
                 </div>
                 }
-            </article>
-            <article class="card detalhe__esqueleto-esquadrao">
+            </app-cartao>
+            <app-cartao class="detalhe__esqueleto-esquadrao">
                 @for (i of [0, 1, 2, 3]; track i) {
                 <span class="esqueleto-bloco esqueleto-bloco--ficha"></span>
                 }
-            </article>
+            </app-cartao>
         </div>
     </div>
     } @else if (campanha(); as campanhaAtual) { @if (previewJogador(); as jogadorPreview) {
@@ -32,6 +32,8 @@
             Visualizando como <strong>{{ jogadorPreview.nome }}</strong> · somente leitura
         </span>
         <button
+            app-botao
+            variante="secundario"
             class="botao botao--secundario detalhe__acao detalhe__preview-sair"
             type="button"
             (click)="sairPreviewJogador()"
@@ -43,7 +45,7 @@
     <div class="detalhe__conteudo" [class.detalhe__conteudo--bloqueado]="previewJogador() !== null">
         <header class="detalhe__cabecalho">
             <div class="detalhe__cabecalho-titulo-linha">
-                <span class="card__indice">//</span>
+                <span class="detalhe__cabecalho-indice">//</span>
                 <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
                 @if (exibirComoMestre()) {
                 <button
@@ -66,7 +68,7 @@
                     {{ campanhaAtual.naBase ? 'Na Base' : 'Em Missão' }}
                 </span>
                 }
-                <span class="card__regua"></span>
+                <span class="detalhe__cabecalho-regua"></span>
             </div>
             <div class="detalhe__cabecalho-acoes">
                 <app-indicador-tempo-real />
@@ -291,6 +293,8 @@
 
             <div class="detalhe__edicao-acoes">
                 <button
+                    app-botao
+                    variante="primario"
                     class="botao botao--primario detalhe__acao"
                     type="submit"
                     [disabled]="salvando()"
@@ -298,6 +302,8 @@
                     {{ salvando() ? 'Salvando…' : 'Salvar' }}
                 </button>
                 <button
+                    app-botao
+                    variante="secundario"
                     class="botao botao--secundario detalhe__acao"
                     type="button"
                     [disabled]="salvando()"
@@ -318,6 +324,8 @@
             </p>
             <div class="detalhe__exclusao-acoes">
                 <button
+                    app-botao
+                    variante="primario"
                     class="botao botao--primario detalhe__acao"
                     type="button"
                     [disabled]="excluindo()"
@@ -327,6 +335,8 @@
                     {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
                 </button>
                 <button
+                    app-botao
+                    variante="secundario"
                     class="botao botao--secundario detalhe__acao"
                     type="button"
                     [disabled]="excluindo()"
@@ -351,8 +361,8 @@
         </div>
         } @if (exibirComoMestre()) {
         <div class="detalhe__estatisticas">
-            <div class="stat detalhe__stat-convite">
-                <span class="stat__rotulo">Convite</span>
+            <div class="detalhe__estatistica detalhe__stat-convite">
+                <span class="detalhe__estatistica-rotulo">Convite</span>
                 <div class="detalhe__convite-linha">
                     <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
                     <button
@@ -380,8 +390,8 @@
                 </div>
             </div>
 
-            <div class="stat detalhe__stat-encontro">
-                <span class="stat__rotulo">Combate</span>
+            <div class="detalhe__estatistica detalhe__stat-encontro">
+                <span class="detalhe__estatistica-rotulo">Combate</span>
                 <div class="detalhe__encontro-linha">
                     <span class="detalhe__encontro-estado">
                         @if (encontroAberto(); as aberto) {
@@ -400,6 +410,8 @@
                         }
                     </span>
                     <a
+                        app-botao
+                        variante="primario"
                         class="botao botao--primario detalhe__encontro-acao"
                         [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
                         [appTooltip]="
@@ -447,7 +459,7 @@
         </section>
         } } @if (exibirComoMestre()) {
         <div class="detalhe__grade">
-            <article class="card detalhe__coluna detalhe__coluna--membros">
+            <app-cartao class="detalhe__coluna detalhe__coluna--membros">
                 <header class="detalhe__secao">
                     <h2 class="detalhe__secao-titulo">Membros</h2>
                     <span class="detalhe__secao-regua"></span>
@@ -512,6 +524,8 @@
                             </p>
                             <div class="detalhe__membro-confirmacao-acoes">
                                 <button
+                                    app-botao
+                                    variante="primario"
                                     class="botao botao--primario detalhe__acao"
                                     type="button"
                                     [disabled]="processandoMembro()"
@@ -522,6 +536,8 @@
                                     transferência' }}
                                 </button>
                                 <button
+                                    app-botao
+                                    variante="secundario"
                                     class="botao botao--secundario detalhe__acao"
                                     type="button"
                                     [disabled]="processandoMembro()"
@@ -536,6 +552,8 @@
                             </p>
                             <div class="detalhe__membro-confirmacao-acoes">
                                 <button
+                                    app-botao
+                                    variante="primario"
                                     class="botao botao--primario detalhe__acao"
                                     type="button"
                                     [disabled]="processandoMembro()"
@@ -545,6 +563,8 @@
                                     {{ processandoMembro() ? 'Removendo…' : 'Confirmar remoção' }}
                                 </button>
                                 <button
+                                    app-botao
+                                    variante="secundario"
                                     class="botao botao--secundario detalhe__acao"
                                     type="button"
                                     [disabled]="processandoMembro()"
@@ -559,9 +579,9 @@
                     </li>
                     }
                 </ul>
-            </article>
+            </app-cartao>
 
-            <article class="card detalhe__coluna detalhe__coluna--esquadrao">
+            <app-cartao class="detalhe__coluna detalhe__coluna--esquadrao">
                 <header class="detalhe__secao">
                     <h2 class="detalhe__secao-titulo">Esquadrão</h2>
                     <span class="detalhe__secao-regua"></span>
@@ -569,6 +589,8 @@
                         >{{ fichasEsquadrao().length }}</span
                     >
                     <button
+                        app-botao
+                        variante="secundario"
                         class="botao botao--secundario detalhe__nova-ficha"
                         type="button"
                         (click)="abrirCriarCriatura()"
@@ -577,6 +599,8 @@
                         Nova Criatura
                     </button>
                     <button
+                        app-botao
+                        variante="primario"
                         class="botao botao--primario detalhe__nova-ficha"
                         type="button"
                         (click)="abrirCriarFicha()"
@@ -834,18 +858,22 @@
                     }
                 </ul>
                 }
-            </article>
+            </app-cartao>
         </div>
         } @else {
         <div class="detalhe__jogador">
             <div class="detalhe__jogador-principal">
                 @if (fichaExibidaDados(); as fichaExibida) {
-                <article class="card detalhe__ficha-embutida">
-                    <header class="card__cabecalho">
-                        <span class="card__indice"><app-icone nome="agente" /></span>
-                        <h2 class="card__titulo">{{ fichaExibida.nome }}</h2>
-                        <span class="card__regua"></span>
+                <app-cartao
+                    class="detalhe__ficha-embutida"
+                    [titulo]="fichaExibida.nome"
+                    [cabecalhoQuebravel]="true"
+                >
+                    <span cartaoIndice><app-icone nome="agente" /></span>
+                    <span cartaoFim class="detalhe__ficha-embutida-acoes">
                         <button
+                            app-botao
+                            variante="secundario"
                             class="botao botao--secundario detalhe__alternar-inventario"
                             type="button"
                             [attr.aria-pressed]="exibindoInventarioJogador()"
@@ -856,13 +884,15 @@
                             esquadrão' }}
                         </button>
                         <a
+                            app-botao
+                            variante="secundario"
                             class="botao botao--secundario detalhe__abrir-completa"
                             [routerLink]="['/campanhas', campanhaAtual.id, 'ficha', fichaExibida.id]"
                         >
                             <app-icone nome="visao-geral" />
                             Abrir completa
                         </a>
-                    </header>
+                    </span>
 
                     <app-ficha-visualizacao
                         [fichaId]="fichaExibida.id"
@@ -902,12 +932,14 @@
                     />
 
                     <a
+                        app-botao
+                        variante="secundario"
                         class="botao botao--secundario detalhe__abrir-completa-rodape"
                         [routerLink]="['/campanhas', campanhaAtual.id, 'ficha', fichaExibida.id]"
                     >
                         Abrir ficha completa
                     </a>
-                </article>
+                </app-cartao>
                 } @else if (carregandoFichaExibida()) {
                 <p class="detalhe__estado">Carregando ficha…</p>
                 } @else {
@@ -917,6 +949,8 @@
                     <p class="detalhe__estado">Você ainda não tem uma ficha nesta campanha.</p>
                     <div class="detalhe__jogador-vazio-acoes">
                         <button
+                            app-botao
+                            variante="primario"
                             class="botao botao--primario detalhe__acao"
                             type="button"
                             (click)="abrirCriarFicha()"
@@ -925,6 +959,8 @@
                             Criar nova ficha
                         </button>
                         <button
+                            app-botao
+                            variante="secundario"
                             class="botao botao--secundario detalhe__acao"
                             type="button"
                             (click)="abrirVincularFicha()"
@@ -939,7 +975,7 @@
 
             <div class="detalhe__jogador-lateral">
                 @if (exibindoInventarioJogador()) {
-                <article class="card detalhe__inventario-jogador">
+                <app-cartao class="detalhe__inventario-jogador">
                     <header class="detalhe__secao">
                         <h2 class="detalhe__secao-titulo">Inventário de Esquadrão</h2>
                         <span class="detalhe__secao-regua"></span>
@@ -951,9 +987,9 @@
                         [somenteLeitura]="!campanhaAtual.naBase"
                         (atualizado)="inventarioEsquadrao.set($event)"
                     />
-                </article>
+                </app-cartao>
                 } @else {
-                <article class="card detalhe__equipe">
+                <app-cartao class="detalhe__equipe">
                     <header class="detalhe__secao">
                         <h2 class="detalhe__secao-titulo">Equipe</h2>
                         <span class="detalhe__secao-regua"></span>
@@ -1045,7 +1081,7 @@
                         </li>
                         }
                     </ul>
-                </article>
+                </app-cartao>
 
                 <!-- Rolagens (m2-21, item 3) — entre Equipe e Sessão de propósito: rolar e ler o histórico
              recente ficam lado a lado, na mesma coluna. Saiu de dentro do card da ficha (era a aba
@@ -1053,7 +1089,7 @@
              a MESMA flag do teste de atributo/dano rolados lá dentro (`FichaRolagemRegistroService`,
              provido pela página). Só existe quando há ficha exibida: sem ficha, não há o que rolar. -->
                 @if (fichaExibidaDados(); as fichaParaRolar) {
-                <article class="card detalhe__rolagens-painel" #cardRolagens>
+                <app-cartao class="detalhe__rolagens-painel" #cardRolagens>
                     <header class="detalhe__secao">
                         <h2 class="detalhe__secao-titulo">Rolagens</h2>
                         <span class="detalhe__secao-regua"></span>
@@ -1071,16 +1107,18 @@
                             (energiaGasta)="gastarEnergiaFichaExibida($event)"
                         />
                     </div>
-                </article>
+                </app-cartao>
                 }
 
-                <article class="card detalhe__sessao">
+                <app-cartao class="detalhe__sessao">
                     <header class="detalhe__secao">
                         <h2 class="detalhe__secao-titulo">Sessão</h2>
                         <span class="detalhe__secao-regua"></span>
                         <!-- m7-13: acesso de sessão do jogador. A rota e o estado vazio da tela de Iniciativa
                  continuam os mesmos; saiu apenas do menu de manutenção da ficha. -->
                         <a
+                            app-botao
+                            variante="secundario"
                             class="botao botao--secundario detalhe__sessao-iniciativa"
                             [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
                             [appTooltip]="'Abrir a tela de Iniciativa'"
@@ -1116,7 +1154,7 @@
                         }
                     </ul>
                     }
-                </article>
+                </app-cartao>
                 }
             </div>
         </div>
@@ -1140,9 +1178,9 @@
     ></button>
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
-            <span class="card__indice"><app-icone nome="duplicar" /></span>
+            <span class="dialogo__indice"><app-icone nome="duplicar" /></span>
             <h2 class="dialogo__titulo">Vincular Ficha</h2>
-            <span class="card__regua"></span>
+            <span class="dialogo__regua"></span>
             <button
                 class="dialogo__fechar"
                 type="button"
@@ -1181,6 +1219,8 @@
 
         <div class="dialogo__acoes">
             <button
+                app-botao
+                variante="primario"
                 class="botao botao--primario dialogo__acao"
                 type="button"
                 [disabled]="vinculando() || fichaParaVincular() === null"
@@ -1190,6 +1230,8 @@
                 {{ vinculando() ? 'Vinculando…' : 'Vincular à campanha' }}
             </button>
             <button
+                app-botao
+                variante="secundario"
                 class="botao botao--secundario dialogo__acao"
                 type="button"
                 [disabled]="vinculando()"
@@ -1276,9 +1318,9 @@
     ></button>
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
-            <span class="card__indice"><app-icone nome="duplicar" /></span>
+            <span class="dialogo__indice"><app-icone nome="duplicar" /></span>
             <h2 class="dialogo__titulo">Duplicar Ficha</h2>
-            <span class="card__regua"></span>
+            <span class="dialogo__regua"></span>
             <button
                 class="dialogo__fechar"
                 type="button"
@@ -1298,6 +1340,8 @@
 
         <div class="dialogo__acoes">
             <button
+                app-botao
+                variante="primario"
                 class="botao botao--primario dialogo__acao"
                 type="button"
                 [disabled]="duplicando() === pendenteDuplicar.id"
@@ -1307,6 +1351,8 @@
                 {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
             </button>
             <button
+                app-botao
+                variante="secundario"
                 class="botao botao--secundario dialogo__acao"
                 type="button"
                 [disabled]="duplicando() === pendenteDuplicar.id"
@@ -1327,9 +1373,9 @@
     ></button>
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
-            <span class="card__indice"><app-icone nome="excluir" /></span>
+            <span class="dialogo__indice"><app-icone nome="excluir" /></span>
             <h2 class="dialogo__titulo">Excluir Ficha</h2>
-            <span class="card__regua"></span>
+            <span class="dialogo__regua"></span>
             <button
                 class="dialogo__fechar"
                 type="button"
@@ -1347,6 +1393,8 @@
 
         <div class="dialogo__acoes">
             <button
+                app-botao
+                variante="primario"
                 class="botao botao--primario dialogo__acao"
                 type="button"
                 [disabled]="excluindoFicha() === pendenteExcluir.id"
@@ -1356,6 +1404,8 @@
                 {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
             </button>
             <button
+                app-botao
+                variante="secundario"
                 class="botao botao--secundario dialogo__acao"
                 type="button"
                 [disabled]="excluindoFicha() === pendenteExcluir.id"
@@ -1376,9 +1426,9 @@
     ></button>
     <div class="dialogo__painel acesso">
         <header class="dialogo__cabecalho">
-            <span class="card__indice"><app-icone nome="olho" /></span>
+            <span class="dialogo__indice"><app-icone nome="olho" /></span>
             <h2 class="dialogo__titulo">Acesso de Visualização</h2>
-            <span class="card__regua"></span>
+            <span class="dialogo__regua"></span>
             <button
                 class="dialogo__fechar"
                 type="button"
@@ -1406,6 +1456,8 @@
                 }
             </select>
             <button
+                app-botao
+                variante="primario"
                 class="botao botao--primario acesso__acao"
                 type="button"
                 [disabled]="membroParaConcederAcesso.value === null || concedendoAcesso()"
@@ -1425,6 +1477,8 @@
                 <span class="acesso__avatar" aria-hidden="true"></span>
                 <span class="acesso__nome">{{ acesso.nome }}</span>
                 <button
+                    app-botao
+                    variante="secundario"
                     class="botao botao--secundario acesso__revogar"
                     type="button"
                     [disabled]="revogandoAcesso() !== null"

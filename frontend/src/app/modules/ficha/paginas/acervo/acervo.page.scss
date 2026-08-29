@@ -395,93 +395,11 @@
     }
 }
 
-// Card + cabeçalho de seção — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 18px;
-    }
-
-    &__indice {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: 3px;
-    }
-
-    &__titulo {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text);
-    }
-
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
-
-    &__contagem {
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-mute);
-    }
-}
-
-// Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.botao {
-    border-radius: var(--radius-control);
+.acervo__contagem {
     font-family: var(--font-mono);
-    cursor: pointer;
-    transition:
-        filter 0.15s ease,
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-    }
-
-    &--secundario {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border-strong);
-
-        &:hover:not(:disabled) {
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
-    }
-
-    &:disabled {
-        opacity: 0.55;
-        cursor: default;
-    }
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mute);
 }
 
 // Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
@@ -575,6 +493,23 @@
         font-weight: 600;
         color: var(--text);
         margin: 0;
+    }
+
+    &__indice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+    }
+
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
     }
 
     &__fechar {

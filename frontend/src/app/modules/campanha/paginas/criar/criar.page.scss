@@ -68,25 +68,6 @@
     }
 }
 
-// Botão — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.botao {
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition: filter 0.15s ease;
-
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-
-        &:hover:not(:disabled) {
-            // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-            filter: brightness(1.08);
-        }
-    }
-}
-
 // Dialog — mesmo padrão `.dialogo` genérico já usado por `FichaAcervo`/`FichaVisualizar`,
 // copiado aqui (view encapsulation não deixa reusar o `.scss` de outro componente).
 .dialogo {

@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, ViewEncapsulation, input } from '@angular/core';
 
 /**
  * Degraus do rótulo. Saem da auditoria da ui-01 sobre os 40 blocos `&__rotulo` do frontend, que
@@ -29,6 +29,7 @@ export type CampoTamanho = 'compacto' | 'padrao' | 'amplo';
   selector: 'app-campo',
   templateUrl: './campo.component.html',
   styleUrl: './campo.component.scss',
+  encapsulation: ViewEncapsulation.None,
 })
 export class Campo {
   /** Texto do rótulo, renderizado em `campo__rotulo`. */
@@ -43,3 +44,13 @@ export class Campo {
   /** Mensagem de erro já decidida pelo consumidor. Vazia esconde o elemento. */
   readonly erro = input('');
 }
+
+/** Mantém os formulários legados em um `<label>` usando a mesma receita do `app-campo`. */
+@Component({
+  selector: 'label[app-campo]',
+  template: '<ng-content />',
+  styleUrl: './campo.component.scss',
+  encapsulation: ViewEncapsulation.None,
+  host: { class: 'campo' },
+})
+export class CampoRotulado {}

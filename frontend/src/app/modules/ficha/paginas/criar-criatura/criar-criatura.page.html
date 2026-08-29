@@ -45,10 +45,10 @@
                 esta tela, pode continuar exatamente de onde parou.
             </p>
             <div class="guia__sair-dialog-acoes">
-                <button class="botao botao--primario" type="button" (click)="confirmarSaida()">
+                <button app-botao variante="primario" type="button" (click)="confirmarSaida()">
                     Sair
                 </button>
-                <button class="botao botao--secundario" type="button" (click)="cancelarSaida()">
+                <button app-botao variante="secundario" type="button" (click)="cancelarSaida()">
                     Continuar aqui
                 </button>
             </div>
@@ -63,8 +63,8 @@
             <p>Continue da última criatura salva ou descarte os dados locais para começar outra.</p>
         </div>
         <div class="guia__retomar-acoes">
-            <button class="botao botao--primario" type="button" (click)="retomar()">Retomar</button>
-            <button class="botao botao--secundario" type="button" (click)="recomecar()">
+            <button app-botao variante="primario" type="button" (click)="retomar()">Retomar</button>
+            <button app-botao variante="secundario" type="button" (click)="recomecar()">
                 Começar do zero
             </button>
         </div>
@@ -148,7 +148,7 @@
                    ficha só existe de fato após "Registrar criatura"; o upload real é um segundo
                    request, em sequência, logo depois do POST. O `<label>` embrulha só a caixa da
                    foto (não o rótulo/ajuda) para o alvo de clique ser exatamente o tamanho dela. -->
-                    <div class="campo guia__avatar-campo">
+                    <div class="guia__avatar-campo">
                         <span class="campo__rotulo">Imagem de registro</span>
                         <label class="guia__avatar-caixa">
                             @if (imagemPreviewUrl(); as previewUrl) {
@@ -170,7 +170,7 @@
                         >
                     </div>
                     <div class="guia__base-direita">
-                        <label class="campo campo--codinome">
+                        <label app-campo class="guia__campo--codinome">
                             <span class="campo__rotulo">Designação</span>
                             <span class="campo__codinome-linha">
                                 <input
@@ -192,7 +192,7 @@
                                 >Um nome lembrável, direto. Vira também o nome da ficha.</small
                             >
                         </label>
-                        <label class="campo">
+                        <label app-campo>
                             <span class="campo__rotulo">Origem</span>
                             <select
                                 class="campo__controle"
@@ -207,7 +207,7 @@
                     </div>
                 </div>
                 <div class="guia__campos">
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Linha de conceito</span
                         ><textarea
                             class="campo__controle campo__controle--area"
@@ -220,7 +220,7 @@
                     </label>
                 </div>
                 <div class="guia__campos">
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Natureza física</span
                         ><textarea
                             class="campo__controle campo__controle--area"
@@ -233,7 +233,7 @@
                     </label>
                 </div>
                 <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Comportamento</span>
                         <select
                             class="campo__controle"
@@ -245,7 +245,7 @@
                             }
                         </select>
                     </label>
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Motivação</span
                         ><input
                             class="campo__controle"
@@ -256,7 +256,7 @@
                     /></label>
                 </div>
                 <div class="guia__campos">
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Gancho único</span
                         ><textarea
                             class="campo__controle campo__controle--area"
@@ -269,7 +269,7 @@
                     </label>
                 </div>
                 <div class="guia__campos">
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Tema de horror (opcional)</span
                         ><input
                             class="campo__controle"
@@ -287,7 +287,7 @@
                     </p>
                 </div>
                 <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Nível de Ameaça (NA)</span>
                         <select
                             class="campo__controle"
@@ -303,7 +303,7 @@
                             trava).</small
                         >
                     </label>
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Valor de Desafio (VD)</span>
                         <input
                             class="campo__controle campo__controle--numero"
@@ -330,20 +330,14 @@
                 </div>
                 } } @case ('Atributos') {
                 <div class="guia__metricas">
-                    <div class="stat">
-                        <span class="stat__rotulo">Base</span
-                        ><span class="stat__valor">{{ baseLimite().base }}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat__rotulo">Limite</span
-                        ><span class="stat__valor">{{ baseLimite().limite }}</span>
-                    </div>
-                    <div class="stat" [class.stat--alerta]="pontosAjuste().saldo !== 0">
-                        <span class="stat__rotulo">Pontos de Ajuste</span
-                        ><span class="stat__valor"
-                            >{{ pontosAjuste().gastos }}/{{ pontosAjuste().total }}</span
-                        >
-                    </div>
+                    <app-stat tamanho="compacto" rotulo="Base" [valor]="baseLimite().base" />
+                    <app-stat tamanho="compacto" rotulo="Limite" [valor]="baseLimite().limite" />
+                    <app-stat
+                        tamanho="compacto"
+                        rotulo="Pontos de Ajuste"
+                        [valor]="pontosAjuste().gastos + '/' + pontosAjuste().total"
+                        [variante]="pontosAjuste().saldo !== 0 ? 'alerta' : undefined"
+                    />
                 </div>
                 <small class="guia__metricas-ajuda"
                     >Realocação de até 3 pontos por atributo permite cair abaixo da base, até
@@ -360,26 +354,13 @@
                             @if (estado().atributos[campo.chave] < baseLimite().base) {
                             <small>Realocado abaixo da base</small> }
                         </div>
-                        <div class="stepper">
-                            <button
-                                class="stepper__botao"
-                                type="button"
-                                [attr.aria-label]="'Diminuir ' + campo.nome"
-                                (click)="passoAtributo(campo.chave, -1)"
-                            >
-                                −
-                            </button>
-                            <b class="stepper__valor">{{ estado().atributos[campo.chave] }}</b>
-                            <button
-                                class="stepper__botao"
-                                type="button"
-                                [attr.aria-label]="'Aumentar ' + campo.nome"
-                                [disabled]="estado().atributos[campo.chave] >= baseLimite().limite"
-                                (click)="passoAtributo(campo.chave, 1)"
-                            >
-                                +
-                            </button>
-                        </div>
+                        <app-step-input
+                            tamanho="compacto"
+                            [valorExterno]="estado().atributos[campo.chave]"
+                            [ariaRotulo]="campo.nome"
+                            [bloquearAumentar]="estado().atributos[campo.chave] >= baseLimite().limite"
+                            (valorAlterado)="definirAtributo(campo.chave, $event)"
+                        />
                     </div>
                     }
                 </div>
@@ -451,7 +432,7 @@
                         definidos.
                     </p>
                 </div>
-                <label class="campo">
+                <label app-campo>
                     <span class="campo__rotulo">Tenacidade</span>
                     <select
                         class="campo__controle"
@@ -467,12 +448,9 @@
                 </label>
                 @if (estado().tenacidade) {
                 <div class="guia__stats" style="margin-top: 16px">
-                    <div class="stat stat--vida">
-                        <span class="stat__rotulo">Vida Máxima</span
-                        ><span class="stat__valor">{{ vidaMaxima() }}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat__rotulo">Vida atual</span>
+                    <app-stat tamanho="compacto" rotulo="Vida Máxima" [valor]="vidaMaxima()" variante="vida" />
+                    <div class="guia__stat">
+                        <span class="guia__stat-rotulo">Vida atual</span>
                         <input
                             class="campo__controle campo__controle--numero"
                             type="number"
@@ -490,16 +468,13 @@
                     </p>
                 </div>
                 <div class="guia__stats">
-                    <div class="stat">
-                        <span class="stat__rotulo">Defesa</span
-                        ><span class="stat__valor">{{ defesaBase() }}</span>
-                    </div>
-                    <div class="stat" [class.stat--alerta]="contraAtaque()">
-                        <span class="stat__rotulo">Contra-Ataque</span
-                        ><span class="stat__valor"
-                            >{{ contraAtaque() ? 'Disponível' : 'Indisponível' }}</span
-                        >
-                    </div>
+                    <app-stat tamanho="compacto" rotulo="Defesa" [valor]="defesaBase()" />
+                    <app-stat
+                        tamanho="compacto"
+                        rotulo="Contra-Ataque"
+                        [valor]="contraAtaque() ? 'Disponível' : 'Indisponível'"
+                        [variante]="contraAtaque() ? 'alerta' : undefined"
+                    />
                 </div>
                 } @case ('Resistências') {
                 <div class="guia__introducao">
@@ -541,7 +516,7 @@
                                 <app-icone nome="excluir" />
                             </button>
                         </div>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Tipo</span>
                             <select
                                 class="campo__controle"
@@ -553,7 +528,7 @@
                                 }
                             </select>
                         </label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Subtipo (opcional)</span
                             ><input
                                 class="campo__controle"
@@ -561,7 +536,7 @@
                                 (input)="atualizarResistencia($index, 'subtipo', valor($event))"
                                 placeholder="Ex.: Cortante"
                         /></label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Valor</span
                             ><input
                                 class="campo__controle campo__controle--numero"
@@ -574,7 +549,9 @@
                     }
                 </div>
                 <button
-                    class="botao botao--secundario guia__vaga-escolher"
+                    app-botao
+                    variante="secundario"
+                    class="guia__vaga-escolher"
                     type="button"
                     (click)="adicionarResistencia()"
                 >
@@ -597,7 +574,7 @@
                                 <app-icone nome="excluir" />
                             </button>
                         </div>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Tipo</span>
                             <select
                                 class="campo__controle"
@@ -609,7 +586,7 @@
                                 }
                             </select>
                         </label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Subtipo (opcional)</span
                             ><input
                                 class="campo__controle"
@@ -617,7 +594,7 @@
                                 (input)="atualizarFraqueza($index, 'subtipo', valor($event))"
                                 placeholder="Ex.: Cortante"
                         /></label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Valor</span
                             ><input
                                 class="campo__controle campo__controle--numero"
@@ -627,7 +604,7 @@
                                 (input)="atualizarFraqueza($index, 'valor', numero($event))"
                         /></label>
                         @if (!fraquezaValida(linha)) {
-                        <small class="campo__ajuda campo--largo"
+                        <small class="campo__ajuda guia__campo--largo"
                             >Abaixo do mínimo ({{ fraquezaMinima() }}).</small
                         >
                         }
@@ -635,7 +612,9 @@
                     }
                 </div>
                 <button
-                    class="botao botao--secundario guia__vaga-escolher"
+                    app-botao
+                    variante="secundario"
+                    class="guia__vaga-escolher"
                     type="button"
                     (click)="adicionarFraqueza()"
                 >
@@ -669,7 +648,7 @@
                 </label>
                 @if (estado().regeneracao.ativa) {
                 <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Modo</span>
                         <select
                             class="campo__controle"
@@ -681,7 +660,7 @@
                             }
                         </select>
                     </label>
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Intensidade</span>
                         <select
                             class="campo__controle"
@@ -697,7 +676,7 @@
                     </label>
                 </div>
                 @if (estado().regeneracao.modo === 'CONDICIONAL') {
-                <label class="campo"
+                <label app-campo
                     ><span class="campo__rotulo">Condição</span
                     ><input
                         class="campo__controle"
@@ -713,7 +692,7 @@
                     <small>% da Vida Máxima, calculado uma vez e fixado na ficha.</small>
                 </div>
                 } } @case ('Porte e Deslocamento') {
-                <label class="campo">
+                <label app-campo>
                     <span class="campo__rotulo">Porte</span>
                     <select
                         class="campo__controle"
@@ -736,7 +715,7 @@
                     o valor final é sempre declarado livremente.
                 </p>
                 <div class="guia__campos guia__campos--quatro-colunas">
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Terrestre (m)</span
                         ><input
                             class="campo__controle campo__controle--numero"
@@ -745,7 +724,7 @@
                             [value]="estado().deslocamento.terrestre ?? ''"
                             (input)="atualizarDeslocamento('terrestre', valor($event) ? numero($event) : null)"
                     /></label>
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Voador (m)</span
                         ><input
                             class="campo__controle campo__controle--numero"
@@ -754,7 +733,7 @@
                             [value]="estado().deslocamento.voador ?? ''"
                             (input)="atualizarDeslocamento('voador', valor($event) ? numero($event) : null)"
                     /></label>
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Aquático (m)</span
                         ><input
                             class="campo__controle campo__controle--numero"
@@ -763,7 +742,7 @@
                             [value]="estado().deslocamento.aquatico ?? ''"
                             (input)="atualizarDeslocamento('aquatico', valor($event) ? numero($event) : null)"
                     /></label>
-                    <label class="campo"
+                    <label app-campo
                         ><span class="campo__rotulo">Sobrenatural (m)</span
                         ><input
                             class="campo__controle campo__controle--numero"
@@ -775,7 +754,7 @@
                 </div>
                 } @case ('Ataques') {
                 <div class="guia__campos guia__campos--duas-colunas">
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Cadência</span>
                         <select
                             class="campo__controle"
@@ -788,7 +767,7 @@
                         </select>
                     </label>
                     @if (estado().cadencia === 'FRENETICA') {
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Turnos por rodada</span>
                         <input
                             class="campo__controle campo__controle--numero"
@@ -803,7 +782,7 @@
                         >
                     </label>
                     }
-                    <label class="campo">
+                    <label app-campo>
                         <span class="campo__rotulo">Bônus de Iniciativa (opcional)</span>
                         <input
                             class="campo__controle campo__controle--numero"
@@ -833,7 +812,7 @@
                                 <app-icone nome="excluir" />
                             </button>
                         </div>
-                        <label class="campo"
+                    <label app-campo
                             ><span class="campo__rotulo">Nome</span
                             ><input
                                 class="campo__controle"
@@ -841,7 +820,7 @@
                                 (input)="atualizarAtaque($index, 'nome', valor($event))"
                                 placeholder="Ex.: Esmagamento"
                         /></label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Teste (fórmula)</span
                             ><input
                                 class="campo__controle"
@@ -849,7 +828,7 @@
                                 (input)="atualizarAtaque($index, 'teste', valor($event))"
                                 placeholder="ex.: lutad20kh1+3"
                         /></label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Custo de ação</span>
                             <select
                                 class="campo__controle"
@@ -861,7 +840,7 @@
                                 }
                             </select>
                         </label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Dano</span
                             ><input
                                 class="campo__controle"
@@ -869,7 +848,7 @@
                                 (input)="atualizarAtaque($index, 'dano', valor($event))"
                                 [placeholder]="'Referência: ' + danoReferencia(linha.custoAcao)"
                         /></label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Dano crítico (fórmula)</span
                             ><input
                                 class="campo__controle"
@@ -877,7 +856,7 @@
                                 (input)="atualizarAtaque($index, 'danoCritico', valor($event))"
                                 placeholder="ex.: 8D12+20"
                         /></label>
-                        <label class="campo campo--largo"
+                        <label app-campo class="guia__campo--largo"
                             ><span class="campo__rotulo">Efeito adicional (opcional)</span
                             ><input
                                 class="campo__controle"
@@ -901,7 +880,9 @@
                     }
                 </div>
                 <button
-                    class="botao botao--secundario guia__vaga-escolher"
+                    app-botao
+                    variante="secundario"
+                    class="guia__vaga-escolher"
                     type="button"
                     (click)="adicionarAtaque()"
                 >
@@ -930,14 +911,14 @@
                                 <app-icone nome="excluir" />
                             </button>
                         </div>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Nome</span
                             ><input
                                 class="campo__controle"
                                 [value]="linha.nome"
                                 (input)="atualizarHabilidade($index, 'nome', valor($event))"
                         /></label>
-                        <label class="campo"
+                        <label app-campo
                             ><span class="campo__rotulo">Tipo</span>
                             <select
                                 class="campo__controle"
@@ -951,7 +932,7 @@
                                 }
                             </select>
                         </label>
-                        <label class="campo campo--largo"
+                        <label app-campo class="guia__campo--largo"
                             ><span class="campo__rotulo">Descrição</span
                             ><textarea
                                 class="campo__controle campo__controle--area"
@@ -960,7 +941,7 @@
                                 (input)="atualizarHabilidade($index, 'descricao', valor($event))"
                             ></textarea>
                         </label>
-                        <label class="campo campo--largo"
+                        <label app-campo class="guia__campo--largo"
                             ><span class="campo__rotulo">Restrição (opcional)</span
                             ><input
                                 class="campo__controle"
@@ -972,7 +953,9 @@
                     }
                 </div>
                 <button
-                    class="botao botao--secundario guia__vaga-escolher"
+                    app-botao
+                    variante="secundario"
+                    class="guia__vaga-escolher"
                     type="button"
                     (click)="adicionarHabilidade()"
                 >
@@ -1038,7 +1021,7 @@
                         <dd>{{ estado().ataques.length }} / {{ estado().habilidades.length }}</dd>
                     </div>
                 </dl>
-                <label class="campo"
+                <label app-campo
                     ><span class="campo__rotulo">Anotações (opcional)</span
                     ><textarea
                         class="campo__controle campo__controle--area"
@@ -1116,14 +1099,8 @@
                 </div>
                 } @if (estado().tenacidade) {
                 <div class="guia__stats">
-                    <div class="stat stat--vida">
-                        <span class="stat__rotulo">Vida</span
-                        ><span class="stat__valor">{{ vidaMaxima() }}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat__rotulo">Defesa</span
-                        ><span class="stat__valor">{{ defesaBase() }}</span>
-                    </div>
+                    <app-stat tamanho="compacto" rotulo="Vida" [valor]="vidaMaxima()" variante="vida" />
+                    <app-stat tamanho="compacto" rotulo="Defesa" [valor]="defesaBase()" />
                 </div>
                 } @if (estado().resistencias.length || estado().fraquezas.length) {
                 <div class="guia__resumo-linha">
@@ -1149,7 +1126,9 @@
 
     <footer class="guia__rodape">
         <button
-            class="botao botao--secundario guia__acao"
+            app-botao
+            variante="secundario"
+            class="guia__acao"
             type="button"
             [disabled]="estado().passo === 0"
             (click)="voltar()"
@@ -1162,7 +1141,9 @@
         >
         @if (estado().passo < passos.length - 1) {
         <button
-            class="botao botao--primario guia__acao"
+            app-botao
+            variante="primario"
+            class="guia__acao"
             type="button"
             [disabled]="!passoValido()"
             (click)="avancar()"
@@ -1171,7 +1152,9 @@
         </button>
         } @else {
         <button
-            class="botao botao--primario guia__acao"
+            app-botao
+            variante="primario"
+            class="guia__acao"
             type="button"
             [disabled]="criando() || violacoesFinais().length > 0"
             (click)="criar()"
