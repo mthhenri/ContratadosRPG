@@ -2,11 +2,9 @@
 // Padrões de componente do tema, em SCSS + BEM (português). Regra: sem inline, sem seletor de
 // ID. Consome os tokens de _tokens.scss.
 //
-// ATENÇÃO — este arquivo está deixando de ser catálogo para copiar (`PROBLEMS.md` `P-034`,
-// série `ui-01`…`ui-05`). Bloco que já virou primitivo em `frontend/src/app/shared/ui/` **não
-// se copia mais**: consuma o componente. Os que já migraram estão marcados abaixo com
-// "→ PRIMITIVO". Os demais continuam valendo como exemplo canônico para copiar até a task que
-// os promover.
+// ATENÇÃO — este arquivo é o mapa histórico de `shared/ui/` (`PROBLEMS.md` `P-034`). Bloco
+// marcado com "→ PRIMITIVO" não se copia: consuma o componente indicado. Topbar e estado ativo
+// permanecem padrões do seu consumidor único, não uma biblioteca para replicar.
 
 // === Card → PRIMITIVO: `frontend/src/app/shared/ui/cartao/` ===
 // Use `<app-cartao [titulo]="…">`; o índice do cabeçalho entra por projeção (`[cartaoIndice]`),
@@ -128,8 +126,8 @@
 // Use `<button app-botao variante="…">` e deixe no SCSS do seu componente só o tamanho e o
 // layout. O primitivo cobre 8 severidades (`primario`, `secundario`, `positivo`, `info`, `aviso`,
 // `perigo`, `ajuda`, `contraste`) x 4 estilos (`preenchido`, `contorno`, `texto`, `link`), mais
-// `[tamanho]`, `[posicaoIcone]`, `[fluido]` e `[carregando]` — a paridade com o `p-button` do
-// PrimeNG (ui-01b). O bloco abaixo é só a referência histórica do que era copiado — não copie.
+// `[tamanho]`, `[posicaoIcone]`, `[fluido]` e `[carregando]`. O bloco abaixo é só a referência
+// histórica do que era copiado — não copie.
 .botao {
   border-radius: var(--radius-control);
   font-family: var(--font-mono);

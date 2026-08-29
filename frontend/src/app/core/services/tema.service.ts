@@ -1,5 +1,4 @@
 import { DOCUMENT, Injectable, computed, inject, signal } from '@angular/core';
-import { palette, updatePrimaryPalette } from '@primeuix/themes';
 
 /**
  * Base do tema — claro ou escuro. O dark base é a identidade do tema "Terminal de Contenção"
@@ -259,8 +258,8 @@ export function nomearCor(hex: string): string {
 /**
  * Sistema de troca de tema em runtime (m1-13) — a contraparte em runtime de `_tokens.scss` para
  * a parte trocável do tema. Aplica preset de accent, base clara/escura e accent custom (com
- * **trava de contraste**) escrevendo as CSS custom properties do tema em `<html>`, alternando a
- * classe `.dark` do PrimeNG e regenerando a paleta primária do `ContencaoPreset`. A escolha é
+ * **trava de contraste**) escrevendo as CSS custom properties e o `color-scheme` da base em
+ * `<html>`. A escolha é
  * persistida (localStorage) e restaurada no boot (`iniciar`).
  *
  * Mapa de paridade com o site antigo (`applyTheme`): `selecionarPreset`≈`setAccent`,
@@ -479,8 +478,8 @@ export class TemaService {
 
   /**
    * Escreve o tema no DOM: overrides de base (só na base clara), o token `--accent` (dispara
-   * `--accent-dim`/`--accent-border` via `color-mix`), a classe `.dark` do PrimeNG e a paleta
-   * primária do preset PrimeNG regenerada a partir do accent.
+   * `--accent-dim`/`--accent-border` via `color-mix`) e `color-scheme` para controles nativos
+   * acompanharem a base escolhida.
    */
   private aplicar(): void {
     const raiz = this.documento.documentElement;
@@ -496,17 +495,7 @@ export class TemaService {
     }
 
     raiz.style.setProperty('--accent', accent);
-    raiz.classList.toggle('dark', base === 'escuro');
-
-    // Mantém a paleta primária do preset PrimeNG (`ContencaoPreset`) em sincronia com o accent —
-    // é o que faz os componentes PrimeNG seguirem o preset trocado (deliverable 1). Isolado: uma
-    // falha aqui não impede o tema, que já vale pelas CSS custom properties escritas acima.
-    try {
-      // `palette` gera a escala 50–950 a partir do hex; o retorno é uma união larga, daí o cast.
-      updatePrimaryPalette(palette(accent) as Parameters<typeof updatePrimaryPalette>[0]);
-    } catch {
-      /* paleta PrimeNG é sincronização opcional — o tema já vale pelas CSS custom properties */
-    }
+    raiz.style.setProperty('color-scheme', base === 'escuro' ? 'dark' : 'light');
   }
 
   private restaurar(): void {

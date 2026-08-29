@@ -1,6 +1,6 @@
 # DESIGN.md — Tema "Terminal de Contenção"
 
-Especificação do sistema visual do ContratadosRPG (Angular 21 · PrimeNG 21 · Tailwind ·
+Especificação do sistema visual do ContratadosRPG (Angular 21 · Tailwind ·
 SCSS + BEM em português), auditada contra o app real (`frontend/`) e as capturas de
 [`examples/`](examples/README.md). **Nenhum valor é inventado** — todo token e toda medida abaixo
 existe hoje em `docs/design/tema/` (espelhado 1:1 em `frontend/src/styles/tema/`) ou em um
@@ -15,14 +15,13 @@ componente Angular já implementado.
 
 ## Princípio
 
-`tema/_tokens.scss` (CSS custom properties) é a **única fonte de verdade em runtime**. Tailwind e
-o preset PrimeNG apenas *apontam* para essas vars — nunca redeclaram hex. Trocar o `--accent`
-(seletor de tema, spec M1) muda tudo de uma vez.
+`tema/_tokens.scss` (CSS custom properties) é a **única fonte de verdade em runtime**. Tailwind
+aponta para essas vars — nunca redeclara hex. Trocar o `--accent` (seletor de tema, spec M1) muda
+tudo de uma vez.
 
-> **Identidade x trocável:** o *dark base* e a família *IBM Plex* são a identidade e não mudam. Só
-> o `--accent` é trocável (com trava de contraste, spec M1). **Não existe modo claro hoje** — o
-> app é dark-only (`color-scheme: dark` fixo); se isso mudar, esta seção precisa ser reescrita, não
-> só emendada.
+> **Identidade x trocável:** o *dark base* e a família *IBM Plex* são a identidade. O `--accent`
+> e a base clara/escura são trocáveis em runtime pelo `TemaService`, com trava de contraste. O
+> serviço também escreve `color-scheme` no `<html>` para os controles nativos acompanharem a base.
 
 ## Paleta de cores oficial
 
@@ -57,8 +56,7 @@ Cada cor semântica (`--vida`, `--energy`, `--positive`, `--warning`, `--dano-*`
 personagem) na seção dedicada abaixo.
 
 `--help` e `--contrast` são as duas únicas cores da paleta **sem papel de domínio**: existem
-porque o primitivo de botão cobre as oito severidades que o `p-button` do PrimeNG oferecia
-(`ui-01b`), para que a saída do PrimeNG na `ui-05` não empobreça a biblioteca. `--help` foi
+porque o primitivo de botão cobre as oito severidades da API própria (`ui-01b`). `--help` foi
 escolhido pela luminância, não pelo matiz — 5,59:1 contra o `--bg`, entre `--energy` (5,62) e
 `--positive` (5,90) —, para entrar na família em vez de destoar dela. Não use nenhum dos dois
 para representar conceito de jogo: para isso existem as cores de domínio acima.
@@ -124,11 +122,9 @@ sem largura máxima fixa — cada tela decide sua própria grade de colunas.
 
 ## Componentes visuais base
 
-A biblioteca está migrando de **catálogo para copiar** para **código para importar**
-(`PROBLEMS.md` `P-034`, série `ui-01`…`ui-05`). Onde já existe primitivo em
-`frontend/src/app/shared/ui/`, **consuma o primitivo**; onde ainda não existe, copie o bloco
-canônico de `tema/_componentes.scss` para o SCSS scoped do componente — não importe o arquivo
-inteiro.
+A biblioteca é código em `frontend/src/app/shared/ui/` (`PROBLEMS.md` `P-034`). Consuma o
+primitivo canônico; não copie seu bloco BEM. `tema/_componentes.scss` preserva o mapa histórico e
+aponta, bloco a bloco, para a implementação correspondente.
 
 | Bloco | O que é | Variantes | Primitivo |
 |---|---|---|---|
@@ -187,9 +183,9 @@ precisar ser repetido por componente.
   duas bases (clara/escura) do tema em runtime, que sobrescrevem esses tokens. Nenhum hex solto
   (proibição #29).
 
-`:root { color-scheme: dark; }`, também em `_base.scss`, avisa o navegador que o app é dark-only:
-controles nativos sem CSS próprio (popup de `<select>`, date/time picker, autofill) usam a
-variante escura do SO em vez do branco padrão.
+`:root { color-scheme: dark; }`, em `_base.scss`, é o fallback inicial. Antes da renderização, o
+`TemaService` aplica no `<html>` o `color-scheme` claro ou escuro persistido; assim os controles
+nativos (popup de `<select>`, date/time picker e autofill) acompanham a base efetiva.
 
 ## Foco de teclado (padrão global)
 
@@ -207,23 +203,14 @@ base ou preset precisa ser feita **nos dois lugares** (ou extraída pra um só, 
 automatizado). Hoje são arquivos irmãos mantidos manualmente em sincronia.
 
 - **`tema/_tokens.scss`** — as CSS custom properties. Importado primeiro em `styles.scss`.
-- **`tema/_base.scss`** — reset de body, fontes IBM Plex, textura de grid, `color-scheme: dark`,
-  scrollbar customizada global, foco de teclado, indicador de campo obrigatório.
+- **`tema/_base.scss`** — reset de body, fontes IBM Plex, textura de grid, fallback de
+  `color-scheme`, scrollbar customizada global, foco de teclado, indicador de campo obrigatório.
 - **`tema/_breakpoints.scss`** — `$bp-mobile`/`$bp-tablet`/`$alvo-toque` + mixins `bp.mobile`/
   `bp.tablet`, usados via `@use 'tema/breakpoints' as bp;`.
-- **`tema/_componentes.scss`** — biblioteca de referência. Copie o bloco BEM que precisar
-  (`.card`, `.stat`, `.stepper`, `.topbar`, `.abas`…) para o SCSS do componente standalone
-  correspondente.
+- **`tema/_componentes.scss`** — mapa histórico dos blocos BEM e de seus primitivos em
+  `shared/ui/`; não é arquivo de cópia.
 - **`tema/tailwind.config.ts`** — o `theme.extend` que o `tailwind.config.ts` real do frontend usa
   (cores, fontes, radius, tracking apontando pras mesmas vars de `_tokens.scss`).
-- **`tema/contencao.preset.ts`** — preset PrimeNG (base Aura), registrado em `app.config.ts`:
-  ```ts
-  providePrimeNG({
-    theme: { preset: ContencaoPreset, options: { darkModeSelector: '.dark' } }
-  });
-  ```
-  Importa de `@primeuix/themes` (nome do pacote no PrimeNG 21) — não `@primeng/themes`, que não
-  está instalado.
 
 ## Referência visual
 

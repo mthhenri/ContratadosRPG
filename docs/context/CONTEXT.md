@@ -653,7 +653,6 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `ui-05` | design system | saída do PrimeNG (`P-034`); `ui-01`…`ui-04` já fecharam. |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
@@ -1256,8 +1255,7 @@ senão a regra global de asterisco obrigatório (`styles/tema/_base.scss`) para 
 travado em `campo.component.spec.ts`. `Stat` ganhou a densidade `compacto` e `StepInput` as
 variações `compacto`/`mini`, para preservar os guias de criação e a loja sem cópia local.
 
-A `ui-01b` completou o `app-botao` até a paridade com o `p-button` do PrimeNG, a pedido do autor,
-para que a `ui-05` não empobreça a biblioteca: **8 severidades** (`primario`, `secundario`,
+A `ui-01b` completou a API de `app-botao` com **8 severidades** (`primario`, `secundario`,
 `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste`) × **4 estilos** (`preenchido`,
 `contorno`, `texto`, `link`, com um padrão por severidade), mais `[tamanho]`, `[posicaoIcone]`,
 `[fluido]` e `[carregando]`. Tudo o que a `ui-01` não tinha é **opt-in**: sem `[tamanho]` o
@@ -1267,8 +1265,8 @@ primitivo continua sem definir dimensão, e a base segue exatamente como estava 
 uma variante). As cores `--help` e `--contrast` nasceram aqui e são as duas únicas da paleta sem
 papel de domínio.
 
-A `ui-02` (2026-08-28) acrescentou **`app-modal`** e **`Notificacao`**/`app-notificacoes`, no lugar
-do `p-dialog`/toast do PrimeNG. `app-modal` é elemento (não atributo, como o `Botao`) sobre o
+A `ui-02` (2026-08-28) acrescentou **`app-modal`** e **`Notificacao`**/`app-notificacoes`.
+`app-modal` é elemento (não atributo, como o `Botao`) sobre o
 `<dialog>` nativo — `[aberto]`/`[titulo]` obrigatórios, `[largura]` opcional (CSS livre) e
 `(fechou)` unificando Escape, clique no `::backdrop` e o "×". O top layer do `<dialog>` elimina o
 `P-025` (overlay preso a `position: static` num container rolável) e qualquer `z-index` só para
@@ -1309,10 +1307,9 @@ de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 ### Tema — `frontend/tema`
 
 "Terminal de Contenção" dark-first com **troca em runtime** (`TemaService`: presets + color picker
-com trava de contraste). Tokens CSS + Tailwind apontando para os tokens; o preset PrimeNG
-(`contencao.preset.ts` + `updatePrimaryPalette`) ainda existe, mas sincroniza componentes que o
-projeto praticamente não usa e sai na `ui-05` — a fonte de verdade em runtime são as CSS custom
-properties, não o preset.
+com trava de contraste). Tokens CSS + Tailwind apontam para as CSS custom properties, única fonte
+de verdade em runtime; o serviço aplica também `color-scheme` no `<html>` para controles nativos
+acompanharem a base clara/escura.
 `--cor-ficha` (`m3-61`) é um token **separado**, por personagem, não por usuário — nunca ganha
 valor fixo em `_tokens.scss`, sempre `[style.--cor-ficha]` inline por instância; ver "Ficha de
 jogador" acima e `docs/design/DESIGN.md`.
@@ -1356,16 +1353,15 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   `tipo_rolagem_visibilidade` na `m3-27`.
 - **Rolagem `PRIVADA` nunca trafega por WebSocket** — o gateway só emite `rolagem:registrada` para
   rolagens públicas. A privada só chega por REST, a quem tem permissão.
-- **A UI é de componentes próprios, e o PrimeNG sai** (decisão do autor, 2026-08-28). A auditoria
+- **A UI é de componentes próprios** (decisão do autor, 2026-08-28). A auditoria
   mediu o uso real: `p-dialog` (13 tags reais em 5 arquivos — a spec original contava 14 por
   incluir uma menção em comentário), `p-toast`/`MessageService` e o preset de tema — nenhum
   `pButton`, `p-select`, `p-inputtext`, `p-table`, `p-tabs`, `p-tooltip`. Os controles são nativos
   (723 `<button>`, 219 `<input>`, 71 `<select>`, 31 `<textarea>`) estilizados à mão. A biblioteca
   própria passa a existir como **código** em `frontend/src/app/shared/ui/`, não como blocos
   copiados de `_componentes.scss` (`P-034`). Série `ui-01`…`ui-05`; `ui-01`…`ui-04`
-  fecharam (ver acima), e só a `ui-05` segue no backlog. `p-dialog`/`p-toast`/
-  `MessageService` já saem do grep de `frontend/src` desde a `ui-02` — falta só o preset de tema
-  para a `ui-05`.
+  fecharam (ver acima). A `ui-05` removeu a última dependência de biblioteca de componentes e o
+  tema segue exclusivamente pelas CSS custom properties.
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**
@@ -1377,9 +1373,6 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   que dimensiona. `@angular-eslint/component-selector` aceita `['element', 'attribute']` por causa
   disso; o prefixo `app` continua obrigatório. Invólucros que acrescentam DOM (`app-campo`)
   seguem sendo elemento. Não inventar `[tamanho]` sem duplicação medida atrás.
-- **PrimeNG 21 sem `@angular/animations`** — o pacote não está instalado e o PrimeNG 21 usa
-  animações CSS próprias. Não wirar `provideAnimationsAsync()`; o build quebra. Perde o objeto
-  quando a `ui-05` desinstalar o PrimeNG.
 - **A ficha aposentou o sistema de abas de página inteira da `m3-11`** (substituído pelas 3 colunas
   da `m3-38`). `AbaFicha`/`ABAS_FICHA`/`ehAbaFicha` ainda existem no código mas estão **fora do
   template** — não estenda esse sistema, mesmo que uma spec antiga peça.

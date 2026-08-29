@@ -17,7 +17,7 @@ O análogo visual do controle será o toggle compacto "Rolagem oculta". O análo
 
 ## Confirmações
 
-Clicar no botão não altera o estado imediatamente. A ação abre uma `p-dialog` modal com foco gerenciado pelo PrimeNG, opção de cancelar e uma ação primária coerente com o estado.
+Clicar no botão não altera o estado imediatamente. A ação abre um modal nativo com foco gerenciado, opção de cancelar e uma ação primária coerente com o estado.
 
 ### Ocultar
 

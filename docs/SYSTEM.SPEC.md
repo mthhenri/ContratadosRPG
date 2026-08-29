@@ -44,9 +44,8 @@ Consulte-os antes de alterar qualquer fórmula, tabela de progressão ou regra d
 
 ### Frontend
 - **Framework:** Angular 21 — standalone components obrigatório
-- **UI:** componentes próprios (HTML nativo + SCSS/BEM sobre os tokens do tema). O PrimeNG 21
-  entrega hoje apenas `p-dialog`, `p-toast`/`MessageService` e o preset de tema — **em remoção**,
-  ver `docs/specs/backlog/ui-biblioteca-componentes.spec.md` e `PROBLEMS.md` `P-034`
+- **UI:** componentes próprios (HTML nativo + SCSS/BEM sobre os tokens do tema), reunidos em
+  `frontend/src/app/shared/ui/`; não há biblioteca de componentes de terceiros.
 - **Estado:** Angular Signals (signal, computed, effect)
 - **Formulários:** Reactive Forms
 - **HTTP:** Angular HttpClient com interceptores
@@ -123,7 +122,7 @@ contratados-rpg/
       IDEAS.md                  → ideias que ainda não viraram spec
     design/                     → fonte da verdade VISUAL (tema "Terminal de Contenção")
       DESIGN.md                 → guia do tema + mapa de tokens + como ligar
-      tema/                     → _tokens/_base/_componentes.scss + contencao.preset.ts
+      tema/                     → _tokens/_base/_componentes.scss
       examples/                 → protótipos aprovados (fidelidade visual 1:1)
     core/
       sistema-v4.1.0.md         → fonte da verdade do jogo (jogador)
@@ -262,13 +261,13 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
 
 - **Standalone components** sempre; **Signals** para estado; **Reactive Forms** em todo
   formulário (sem `ngModel`, mesmo dentro de CVA); **lazy loading** via `loadComponent`.
-- Interceptors: `auth-token` (JWT no header), `error-handler` (toast PrimeNG), `loading`.
+- Interceptors: `auth-token` (JWT no header), `error-handler` (notificação de falhas), `loading`.
 - Estilos: `.scss` sempre, Tailwind para utilitários, BEM em português para classes
   customizadas. Sem `style=""` inline, sem seletor de ID.
 - **Calculadora** (`modules/calculadora/`): páginas públicas, 100% client-side, consumindo
   `shared/regras` diretamente — funcionam sem backend.
 - **Identidade visual:** **definida** — tema "Terminal de Contenção" (dark-first, IBM Plex),
-  com handoff completo em `docs/design/` (tokens, base, preset PrimeNG, componentes, exemplos).
+  com handoff completo em `docs/design/` (tokens, base, componentes, exemplos).
   **Leia `docs/design/DESIGN.md` antes de qualquer trabalho de UI**; estilos de componente
   consomem os tokens de `docs/design/tema/_tokens.scss` (nunca hex solto). A spec de M1 cobre
   a troca de tema em **runtime** (presets + color picker com trava de contraste), não a
@@ -596,3 +595,4 @@ Inegociáveis independente do contexto:
 | 29 | **Nunca hardcodar** cor, fonte ou raio em SCSS/template — todo estilo consome os tokens do tema em `docs/design/tema/` (`var(--surface)`, `var(--accent)`, `var(--font-mono)`…); leia `docs/design/DESIGN.md` antes de qualquer UI |
 | 30 | **Nunca usar o atributo `title` nativo do HTML** para tooltip — sempre a diretiva `appTooltip` (`frontend/src/app/shared/tooltip/tooltip.directive.ts`), que já resolve hover/toque/teclado e usa os tokens do tema |
 | 31 | **Nunca declarar UI pronta sem verificação visual ao vivo** — comparar pessoalmente com um componente análogo aprovado em `1920×1080` e `360×800` (mais os cenários da spec) usando `verify`; build, testes, tokens, pressa ou relato de subagente não substituem esse gate |
+| 32 | **Nunca copiar bloco BEM de um primitivo** em `frontend/src/app/shared/ui/` — consumir o componente/diretiva canônico; o consumidor define apenas tamanho e layout locais |

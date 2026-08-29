@@ -47,6 +47,20 @@
   `^/campanha(?:$|[/?])`, em `frontend/proxy.conf.json`.
 - **Desde:** não investigado quando entrou; encontrado em 2026-08-29 verificando a `ui-03`.
 
+### P-038 — Suíte do frontend tem expectativas anteriores à UI-04 e um foco assíncrono órfão · `ABERTO` · frontend/testes
+
+- **Sintoma:** a suíte completa termina com 3 falhas em 2 arquivos: dois casos de
+  `campanha/paginas/detalhe` esperam dados que não aparecem no fixture atual, e
+  `painel-encontro.page.spec.ts` espera que o modal não exista no DOM. Há ainda um erro não
+  tratado de `leitor-documentos.component.ts:206` tentando chamar `focus()` depois do teardown.
+- **Causa:** os doubles/assertivas dos recortes de campanha e encontro não acompanharam a adoção
+  dos primitivos da UI-04; o timeout do leitor de documentos não verifica a existência do alvo.
+- **Contorno:** build, lint e os testes focados continuam utilizáveis; a suíte ampla fica vermelha
+  até os três recortes receberem fixtures/assertivas e cleanup atualizados.
+- **Correção:** atualizar os doubles de `CampanhaDetalhe` e a expectativa do modal no
+  `PainelEncontro`; cancelar ou proteger o timeout de foco em `LeitorDocumentos`.
+- **Desde:** reencontrado no gate da `ui-05`, em 2026-08-29.
+
 ### P-036 — `var(--danger)` não existe em nenhum token — badge "Privada" da bandeja de dados sem cor · `ABERTO` · frontend/tema
 
 - **Sintoma:** `bandeja-dados.component.scss` (`&__visibilidade--privada`) usa `var(--danger)` em
@@ -87,64 +101,18 @@
   `docs/design/`.
 - **Desde:** existe desde o botão primário original; medido e registrado na `ui-01b` (2026-08-28).
 
-### P-034 — Biblioteca de componentes existe como catálogo copiado, não como código · `ABERTO` · frontend/design system
+### P-033 — Expectativa de modal em `PainelEncontro` não acompanha o primitivo nativo · `ABERTO` · frontend/testes
 
-- **Sintoma:** o mesmo bloco visual é declarado em dezenas de lugares. Medido em 2026-08-28:
-  `.botao` em **20** arquivos `.scss` (24 telas), `.campo` em 17 componentes (uma versão cada),
-  `.stat` em 5 famílias/10 cópias (12 telas), `.card` em **15** (não 5 — número corrigido pela
-  auditoria da `ui-03`), `.stepper` em 4, `.chip-classificacao` em 3. O frontend
-  tem **32.393 linhas de SCSS para 21.681 de template** — mais estilo do que marcação. Vinte
-  implementações de botão só coincidem enquanto ninguém mexer, e o gate visual da proibição #31
-  precisa provar à mão, tela a tela, o que deveria ser garantido por construção.
-- **Causa:** a convenção manda copiar. `docs/design/tema/_componentes.scss` (292 linhas, 8 blocos)
-  **não entra no build** — `styles.scss` importa `tokens`, `base`, `breakpoints`,
-  `utilitario-flutuante` e o Tailwind —, e `DESIGN.md`/`CONVENTIONS.md` instruem "copie o bloco
-  BEM necessário para o `.scss` scoped do componente". O catálogo é fonte de cópia, não código.
-  A biblioteca de fato do projeto (`shared/`, 18 componentes + 6 diretivas) é a camada **composta**;
-  a camada de primitivos nunca foi construída.
-- **Contorno:** nenhum. Convive-se copiando o bloco onde ainda não há primitivo, e conferindo a
-  olho no gate visual.
-- **Correção:** a série `ui-01`…`ui-05` (`docs/specs/backlog/ui-biblioteca-componentes.spec.md`):
-  criar `frontend/src/app/shared/ui/`, adotar os primitivos módulo a módulo e remover o PrimeNG,
-  que hoje entrega só `p-dialog`/`p-toast`/`MessageService` e o preset de tema.
-  **`ui-01` fechou em 2026-08-28**: `shared/ui/` existe com `app-botao` e `app-campo`, adotados
-  em `autenticacao`; a auditoria corrigiu dois números do Sintoma acima — os blocos `.campo` de
-  topo são **4** (o "17" contava ocorrências do texto, não declarações), e a duplicação do campo
-  vive sob nomes locais (40 blocos `&__rotulo`). **`ui-02` fechou em 2026-08-28**: `shared/ui/`
-  ganhou `app-modal` (sobre `<dialog>` nativo) e `Notificacao`/`app-notificacoes`; os 13 `p-dialog`
-  reais (a auditoria corrigiu o número — 14 incluía uma menção em comentário) e os 12
-  `messageService.add()` foram migrados, e `p-dialog`/`p-toast`/`MessageService` saem do grep de
-  `frontend/src`. PrimeNG segue instalado (só `providePrimeNG`/preset de tema, sem componente
-  consumido) — remover a dependência é a `ui-05`.
-  **`ui-03` fechou em 2026-08-29**: `shared/ui/` ganhou `app-cartao`, `app-stat`, `app-chip` e
-  `app-abas`/`app-aba`/`AbaPainel`; `StepInput` foi promovido para `shared/ui/stepper/` com o
-  contrato intocado (seletor `app-step-input` mantido — task de mover, não de melhorar). A
-  auditoria também corrigiu os dois números do Sintoma acima (`.card` 15, não 5; `.stat` 12 telas,
-  não 13) e apurou que 2 das "5 declarações" de `.stat` (`ficha-mini`/`ficha-atributo`) são na
-  verdade um campo editável com rolagem de dado, não o display puro do `.stat` canônico — ficam de
-  fora do `app-stat`, registradas como ideia de primitivo próprio (`IDEAS.md`). Piloto adotado em
-  4 dos 5 primitivos — `app-cartao` em `perfil.page`, `app-stat` em `campanha/lista`, `app-chip`
-  em `simulacao-shell`, `app-abas` em `criatura-visualizacao` — cada um com o gate visual em
-  `1920×1080`/`360×800` e dois bugs achados só ao vivo (ver `HISTORY.md`: navegação por teclado
-  usando `ativa()` em vez do foco real de DOM, e `.abas__rotulo` sem `::ng-deep` não alcançava o
-  conteúdo projetado). **`Stepper` sem piloto**: as 4 cópias locais restantes exigiriam ou mudar o
-  valor mostrado na caixa (`criar.page`/`criar-criatura.page` mostram o atributo **já somado ao
-  bônus**; digitação direta editaria o número errado) ou um `[tamanho]` compacto que o `StepInput`
-  ainda não tem (`guia-equipamento-loja`, `ficha-visualizacao`) — decisão registrada, não resolvida
-  no improviso; fica para a `ui-04`. **`ui-04` fechou em 2026-08-29**: todos os módulos adotaram
-  os primitivos e o scan dos seletores-base agora retorna apenas `shared/ui/`; `CampoRotulado`
-  manteve os formulários densos em `<label>` e `StepInput` ganhou variantes opt-in
-  `compacto`/`mini`. Falta apenas a `ui-05` (remoção do PrimeNG).
-- **Desde:** desde sempre — a instrução de copiar está no handoff de design original. Medido e
-  registrado na auditoria de 2026-08-28.
-
-### P-033 — Suíte de `PainelEncontro` não monta o serviço colaborativo recém-injetado · `ABERTO` · frontend/testes
-
-- **Sintoma:** os 53 casos de `frontend/src/app/modules/encontro/paginas/painel/painel-encontro.page.spec.ts` falham antes das asserções ao montar o componente.
-- **Causa:** o `CadernoEsquadraoColaborativoService`, transitivamente criado por `CadernoFlutuante`, lê `TempoRealService.paginaEsquadraoAtualizada$`, mas o double de `TempoRealService` desse spec não fornece os novos observables de página de esquadrão; o construtor lança `TypeError: Cannot read properties of undefined (reading 'pipe')`.
-- **Contorno:** validar os recortes afetados por outros testes/build enquanto o spec do Encontro não receber o double atualizado.
-- **Correção:** estender o mock de `TempoRealService` do spec com `paginaEsquadraoAtualizada$` e `paginaEsquadraoExcluida$` (observables) e rodar a suíte do frontend.
-- **Desde:** reencontrado ao validar `renomear-painel-para-campanhas` em 2026-08-28.
+- **Sintoma:** o caso de visão do jogador em
+  `painel-encontro.page.spec.ts:654` espera não encontrar `[role="dialog"]`, mas o `app-modal`
+  nativo permanece no DOM fechado.
+- **Causa:** a asserção foi escrita para o ciclo do dialog anterior, no qual o overlay não existia
+  quando fechado; o primitivo atual preserva a semântica nativa de `<dialog>`.
+- **Contorno:** validar o recorte por build e pelos testes focados enquanto a asserção não é
+  atualizada.
+- **Correção:** trocar a expectativa de ausência pela de modal fechado (`open = false`) e rodar a
+  suíte do frontend.
+- **Desde:** reencontrado ao validar a `ui-05`, em 2026-08-29.
 
 ### P-032 — Convenção `alterar`/`alterado` ainda violada em identificadores existentes · `ABERTO` · compartilhado/frontend
 

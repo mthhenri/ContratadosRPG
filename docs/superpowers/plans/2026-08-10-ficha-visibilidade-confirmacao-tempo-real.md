@@ -6,7 +6,7 @@
 
 **Architecture:** The ficha component owns only the pending confirmation UI and emits the chosen boolean after confirmation. The existing edit service persists through REST. After a real `oculta` transition, the backend emits a payload-minimal `ficha:visibilidade-alterada` event to `campanha:<id>`; campaign clients invalidate and refetch the authorized list instead of trusting event data.
 
-**Tech Stack:** Angular 21 standalone components and Signals, PrimeNG 21 `p-dialog`, NestJS, Socket.IO, Vitest, SCSS/BEM theme tokens.
+**Tech Stack:** Angular 21 standalone components and Signals, native dialog component, NestJS, Socket.IO, Vitest, SCSS/BEM theme tokens.
 
 ## Global Constraints
 

@@ -1,8 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 /**
- * As quatro severidades em uso no projeto (`success`/`info`/`warn`/`error` do serviço de toast do
- * PrimeNG, `primeng/api`). Tipo local, não enum de `shared/enums` — mesmo padrão de
+ * As quatro severidades de notificação do projeto. Tipo local, não enum de `shared/enums` — mesmo padrão de
  * `BotaoVariante`/`BotaoEstilo` (ui-01b): é vocabulário de UI, não conceito de domínio do jogo.
  */
 export type NotificacaoSeveridade = 'sucesso' | 'informacao' | 'aviso' | 'erro';
@@ -31,7 +30,7 @@ export interface NotificacaoEntrada {
 }
 
 /**
- * Fila de notificações (ui-02 · `P-034`), no lugar do serviço de toast do PrimeNG — mesmo padrão
+ * Fila de notificações (ui-02 · `P-034`), no lugar do serviço de toast anterior — mesmo padrão
  * de fila em Signals de `BandejaDadosService` (timer de auto-sumir por entrada, transição de saída
  * antes de remover de fato, sem RxJS). `Notificacoes` (`app-notificacoes`) só apresenta.
  */

@@ -11,11 +11,8 @@
     box-sizing: border-box;
 }
 
-// O tema é dark-only por enquanto (`<html class="dark">` fixo, sem toggle de tema claro em
-// runtime ainda — só o `--accent` é trocável, ver DESIGN.md). `color-scheme: dark` avisa o
-// navegador disso: controles nativos sem CSS próprio (popup de `<select>`, date/time picker,
-// autofill) passam a usar a variante escura do próprio SO em vez do branco padrão — sem isso,
-// abrir um `<select>` (ex.: `.ficha-inv__mover-entrada`) destoa feio do resto, todo escuro.
+// A base escura é o fallback inicial. Antes da primeira renderização, `TemaService` escreve no
+// `<html>` o `color-scheme` da base persistida, para controles nativos acompanharem claro/escuro.
 :root {
     color-scheme: dark;
 }

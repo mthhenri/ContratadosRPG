@@ -90,7 +90,7 @@ Fluxo obrigatório: **controller (burro) → service (regra) → repository (só
 | Resistência a dano por tipo do cartão da Iniciativa (`EncontroCombatenteResumoDto.resistencias`) | calculada em `backend/src/modules/encontro/encontro-combatente.mapper.ts` (`resolverResistencias` — `montarResistencias` pro agente, `somarResistenciasCriaturaPorTipo` pra criatura, `shared/src/regras/criatura/resistencia.ts`), zerada em `encontro-revelacao.ts` junto das demais defesas |
 | Expressão de dados customizada de Iniciativa por combatente/encontro (m7-19, `iniciativaFormulaCustom`) | coluna `encontro_combatente.iniciativa_formula_custom` (migration 0025); `EncontroService.alterarFormulaIniciativa` (mestre-only, valida com `validarFormula` de `shared/regras/rolagem`); consumida em `rolarTudo()`/`rolarMinhaIniciativa()` (`painel-encontro.page.ts`, helper `concluirRolagemDeIniciativa`), com prioridade total sobre a fórmula padrão |
 | Services, guards, interceptors | `frontend/src/app/core/` |
-| **Tokens e tema em runtime** | `frontend/src/styles/tema/` — `_tokens.scss`, `_base.scss`, `_breakpoints.scss`, `contencao.preset.ts` |
+| **Tokens e tema em runtime** | `frontend/src/styles/tema/` — `_tokens.scss`, `_base.scss`, `_breakpoints.scss` |
 | Rotas raiz | `frontend/src/app/app.routes.ts` · config em `app.config.ts` |
 
 O espelho canônico do tema é `docs/design/tema/`; `frontend/src/styles/tema/` é a cópia viva. Ao

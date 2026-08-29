@@ -43,9 +43,8 @@
     --positive: #4a9d6b; /* dano furtivo / ganho */
     --warning: #d9a441; /* aviso / prestígio */
 
-    /* --- Cores de severidade sem papel de domínio (ui-01b) — existem só para o primitivo de
-     botão cobrir as oito severidades que o `p-button` do PrimeNG oferecia, sem que a saída do
-     PrimeNG (ui-05) empobreça a biblioteca. Mesma receita dim/border (12%/40%) das demais.
+    /* --- Cores de severidade sem papel de domínio (ui-01b) — existem para o primitivo de botão
+     cobrir as oito severidades da API própria. Mesma receita dim/border (12%/40%) das demais.
      `--help` foi escolhido com a luminância entre --positive e --energy, para não destoar da
      família; o `--contrast` é o quase-branco deliberado do botão de contraste, mais claro que
      --text (que é cor de TEXTO, não de superfície) e que --dano-geral (chip de dano). */

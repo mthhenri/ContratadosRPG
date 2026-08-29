@@ -127,7 +127,7 @@ const SECOES: readonly SecaoGuia[] = [
  * **Componente autocontido** — gerencia o próprio estado de aberto/fechado e não recebe inputs; o
  * conteúdo é estático (a gramática do motor). Sobre `app-modal` (ui-02) desde que o `<dialog>`
  * nativo passou a existir: antes disso, este era um overlay `position: fixed` com
- * `z-index: 1200` (comentado "acima do dialog do PrimeNG") só para renderizar por cima do
+ * `z-index: 1200` só para renderizar por cima do
  * dialog do preset de `FichaRolagens` — e mesmo esse número era um empate perdido contra
  * qualquer conteúdo `position: fixed` mais alto ainda. Como cada `showModal()` empilha no *top
  * layer* do navegador (acima de toda a árvore normal, sem depender de `z-index`), um

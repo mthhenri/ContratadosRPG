@@ -42,7 +42,9 @@ resultado é o esperado, mas resultado exige classificação, não correção au
    listada ou falso positivo explicado.
 2. Se houver alteração visual, use também `design-fidelity` e o gate ao vivo `verify`; esta skill
    não observa a tela renderizada.
-3. Se houver SQL, DTO ou fórmula, as skills `sql-migrations`, `dto-conventions` e
+3. Se o diff criar UI, confira que ele consome o primitivo de `shared/ui/` aplicável; copiar seu
+   bloco BEM é violação, e `_componentes.scss` não é fonte de cópia.
+4. Se houver SQL, DTO ou fórmula, as skills `sql-migrations`, `dto-conventions` e
    `regras-do-jogo` continuam sendo as instruções especializadas — este é apenas o check final.
 
 ## 3. Leitura manual obrigatória

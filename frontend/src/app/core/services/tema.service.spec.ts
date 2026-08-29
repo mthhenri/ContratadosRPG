@@ -29,7 +29,7 @@ describe('TemaService', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('style');
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
   });
 
   afterEach(() => {
@@ -86,10 +86,12 @@ describe('TemaService', () => {
       tema.definirBase('claro');
       expect(raiz.style.getPropertyValue('--surface').trim()).toBe('#ffffff');
       expect(raiz.classList.contains('dark')).toBe(false);
+      expect(raiz.style.getPropertyValue('color-scheme')).toBe('light');
 
       tema.definirBase('escuro');
       expect(raiz.style.getPropertyValue('--surface').trim()).toBe('');
-      expect(raiz.classList.contains('dark')).toBe(true);
+      expect(raiz.classList.contains('dark')).toBe(false);
+      expect(raiz.style.getPropertyValue('color-scheme')).toBe('dark');
     });
   });
 

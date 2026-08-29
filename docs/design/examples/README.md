@@ -88,4 +88,4 @@ Sem script fixo no repo — a receita:
 ## Relação com o resto do handoff
 
 - `../DESIGN.md` — guia do tema e mapa de tokens
-- `../tema/` — tokens SCSS, base, breakpoints, componentes de referência, preset PrimeNG, trecho Tailwind
+- `../tema/` — tokens SCSS, base, breakpoints, mapa de componentes e trecho Tailwind

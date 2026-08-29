@@ -3,7 +3,7 @@ import { Component, inject } from '@angular/core';
 import { NotificacaoService } from './notificacao.service';
 
 /**
- * Renderiza a fila de `NotificacaoService` (ui-02 · `P-034`), no lugar do toast do PrimeNG —
+ * Renderiza a fila de `NotificacaoService` (ui-02 · `P-034`) —
  * posição fixa `bottom-center`, mesmo padrão de apresentar-sem-decidir de `BandejaDados`. Um único
  * `<app-notificacoes>` vive no `layout` (fora de `rotaIsolada()`, como o toast antes).
  */

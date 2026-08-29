@@ -6,7 +6,7 @@
 
 **Architecture:** `CampanhaService` recebe o contrato REST já entregue pelo backend; `TempoRealService` expõe os dois broadcasts para a tela buscar novamente o estado autorizado. Um `InventarioEsquadrao` apresentacional e reutilizável atende tanto o drawer do Mestre quanto a lateral do Jogador. A página de detalhe preserva a decisão de visibilidade e coordena a ficha escolhida para transferências.
 
-**Tech Stack:** Angular 21 standalone, Signals, Reactive Forms, RxJS, PrimeNG/SCSS BEM e DTOs de `@contratados-rpg/shared`.
+**Tech Stack:** Angular 21 standalone, Signals, Reactive Forms, RxJS, SCSS BEM e DTOs de `@contratados-rpg/shared`.
 
 ## Global Constraints
 

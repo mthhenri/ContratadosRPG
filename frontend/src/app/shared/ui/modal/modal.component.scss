@@ -3,7 +3,7 @@
 // Primitivo de modal (ui-02) sobre o `<dialog>` nativo. Sem `overflow` no `&__corpo` — ver o
 // comentário da classe em `modal.component.ts` sobre por que um wrapper com `overflow-y: auto`
 // recriaria o defeito que forçava um seletor de encapsulamento vazado sobre o wrapper de
-// conteúdo do `Dialog` do PrimeNG em `ficha-inventario`.
+// conteúdo do dialog anterior em `ficha-inventario`.
 
 .modal {
     // O `display` mora em `&[open]`, não aqui: a encapsulação de view do Angular acrescenta um

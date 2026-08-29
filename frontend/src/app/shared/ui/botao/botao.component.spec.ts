@@ -12,7 +12,7 @@ import {
 /**
  * Prova o primitivo de botão: veste o elemento nativo do consumidor (sem embrulhá-lo), emite as
  * classes BEM canônicas que os seletores contextuais do produto ainda usam, cobre as oito
- * severidades e os quatro estilos que o `p-button` do PrimeNG oferecia (ui-01b), e não engole nem
+ * severidades e os quatro estilos da API própria (ui-01b), e não engole nem
  * a classe-companheira de tamanho nem o conteúdo projetado.
  */
 @Component({
@@ -47,7 +47,7 @@ class Hospedeiro {
   readonly cliques = signal(0);
 }
 
-/** As oito severidades do `ButtonSeverity` do PrimeNG, na nomenclatura do projeto. */
+/** As oito severidades na nomenclatura do projeto. */
 const VARIANTES: BotaoVariante[] = [
   'primario',
   'secundario',

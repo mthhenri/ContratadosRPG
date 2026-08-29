@@ -332,6 +332,9 @@ DTOs e enums **nunca** são redefinidos dentro de `backend/` ou `frontend/`.
 - Calculadora: páginas públicas, 100% client-side via `shared/regras`
 - **Tooltip:** nunca o atributo `title` nativo do HTML — sempre `[appTooltip]="'texto'"`
   (`shared/tooltip/tooltip.directive.ts`), que já resolve hover/toque/teclado com os tokens do tema
+- **Primitivos visuais:** consumir `shared/ui/` (`app-botao`, `app-campo`, `app-cartao`,
+  `app-stat`, `app-chip`, `app-abas`, `app-step-input`, `app-modal`, `NotificacaoService`) em vez
+  de copiar sua identidade BEM; o consumidor mantém apenas tamanho e layout.
 
 ---
 
@@ -369,15 +372,11 @@ fechar) para o histórico da decisão.
 (`var(--surface)`, `var(--accent)`, `var(--font-mono)`, `var(--positive)`…) — **nunca hex
 solto**. **Leia `docs/design/DESIGN.md` antes de qualquer trabalho de UI.**
 
-**Primitivo em vez de cópia (ui-01, `PROBLEMS.md` `P-034`):** onde existe primitivo em
-`frontend/src/app/shared/ui/`, **consuma o primitivo** — copiar o bloco BEM de um componente
-para outro é defeito, não atalho. Hoje existem `app-botao` (`<button app-botao
-variante="primario">`) e `app-campo`; `docs/design/tema/_componentes.scss` aponta qual bloco já
-virou primitivo. O primitivo é dono da **identidade** (cor, raio, fonte, estado); o consumidor
-continua dono do **tamanho e do layout**, na sua própria classe BEM aplicada no mesmo elemento.
-Para o que ainda **não** tem primitivo, siga copiando o bloco canônico de `_componentes.scss` —
-a migração dos módulos que já existem é a `ui-04`, e código antigo pode conviver com sua cópia
-até lá.
+**Primitivo em vez de cópia (`P-034`):** onde existe primitivo em `frontend/src/app/shared/ui/`,
+**consuma o primitivo** — copiar seu bloco BEM é defeito, não atalho. O primitivo é dono da
+**identidade** (cor, raio, fonte, estado); o consumidor continua dono do **tamanho e do layout**,
+na sua própria classe BEM aplicada no mesmo elemento. `docs/design/tema/_componentes.scss` é mapa
+histórico e aponta, bloco a bloco, para a implementação canônica.
 
 **Modal e notificação (ui-02):** nunca escreva um overlay/dialog próprio nem um `<p-dialog>` — use
 `<app-modal [aberto] [titulo]>…</app-modal>` (`frontend/src/app/shared/ui/modal/`), sobre o

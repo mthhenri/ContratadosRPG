@@ -6,7 +6,7 @@
 
 **Architecture:** O `adminGuard` e o layout consomem o tipo persistido pelo `SessaoService`. Um `UsuarioAdminService` isolado transporta os DTOs do shared, enquanto a página standalone mantém filtros, paginação e o único editor inline aberto em Signals e usa Reactive Forms para todas as mutações.
 
-**Tech Stack:** Angular 21 standalone, Signals, Reactive Forms, PrimeNG 21, Vitest, SCSS/BEM e DTOs de `@contratados-rpg/shared`.
+**Tech Stack:** Angular 21 standalone, Signals, Reactive Forms, componentes próprios, Vitest, SCSS/BEM e DTOs de `@contratados-rpg/shared`.
 
 ## Global Constraints
 

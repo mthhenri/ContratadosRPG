@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-29 — ui-05: saída do PrimeNG e tema puramente em CSS custom properties
+
+`primeng` e `@primeuix/themes` saíram do frontend, junto do preset de contenção e do provider de
+bootstrap. O `TemaService` continua responsável por preset, base, contraste e persistência, mas
+agora aplica somente os tokens do tema e o `color-scheme` da base no `<html>`; a classe `.dark`
+não participa mais do contrato. O budget inicial foi reduzido de 630 kB para 450 kB.
+
+**Bundle:** uma cópia temporária da mesma árvore antes da mudança mediu **573,66 kB**; o build final
+mede **433,69 kB** — redução de **139,97 kB (24,4%)**. O único aviso do build é preexistente:
+`ficha-visualizacao.component.scss` com 47,94 kB contra o budget de 45 kB.
+
+**Gate visual:** o análogo foi a tela de Configurações de tema (`m1-13`/`m1-16`). Na aplicação real,
+em 1920×1080 e 360×800, percorri as bases escura/clara, todos os presets liberados, as opções
+travadas por contraste, a cor personalizada salva e sua adaptação na base clara. A tela manteve a
+hierarquia e os controles canônicos, sem overflow horizontal; `color-scheme` passou a `dark`/`light`
+conforme a base e `.dark` permaneceu ausente.
+
+**Gates:** teste focado do `TemaService` verde (21/21); `npm install`, build de produção e lint
+completo sem erros novos (o lint mantém 14.534 warnings existentes). A suíte ampla do frontend
+executou 1.443 casos, com 1.440 verdes e 3 falhas preexistentes, registradas/atualizadas em
+`P-033` e `P-038`; há também o erro assíncrono já registrado no `P-038`.
+
 ## 2026-08-29 — ui-04: primitivos próprios adotados por todo o frontend
 
 Os módulos `usuario`/`acesso-negado`, `simulacao`, `shared`, `campanha`, `encontro`,

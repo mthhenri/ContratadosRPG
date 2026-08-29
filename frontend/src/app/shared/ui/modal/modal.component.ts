@@ -24,24 +24,24 @@ function destravarRolagemDoBody(): void {
 
 /**
  * Primitivo de modal (ui-02 · `P-034`) sobre o `<dialog>` nativo (`showModal()`/`close()`), no
- * lugar do `Dialog` do PrimeNG. API mínima, derivada dos 13 usos reais do projeto (a auditoria
+ * lugar da implementação anterior. API mínima, derivada dos 13 usos reais do projeto (a auditoria
  * corrigiu o número: a spec original contava 14 por incluir uma menção em comentário) — sem
  * `draggable`, `resizable`, `appendTo` nem `[breakpoints]`, que só existiam para desligar recurso
- * do PrimeNG que o projeto nunca usou ou para contornar o `position: static` do overlay preso a um
+ * anterior que o projeto nunca usou ou para contornar o `position: static` do overlay preso a um
  * container rolável (`P-025`). O top layer do `<dialog>` nativo elimina as duas classes de bug de
  * uma vez: não depende de `position`/`z-index`/contexto de empilhamento, e por isso vários modais
  * aninhados (`GuiaFormula` aberto de dentro de outro `app-modal`) empilham corretamente sem
  * precisar da ginástica de delegar para uma cópia externa.
  *
  * Fechar por Escape (`cancel`), clique no `::backdrop` (fora da caixa) e o botão "×" caem todos no
- * mesmo `(fechou)` — o destino atual dos `(onHide)` do PrimeNG: quem hospeda decide o que fazer,
+ * mesmo `(fechou)`: quem hospeda decide o que fazer,
  * tipicamente voltar o próprio `[aberto]` para `false`. O componente não lê o próprio fechamento
  * de volta; é controlado, como o resto da biblioteca (`Botao`, `Campo`).
  *
  * O corpo (`<ng-content>`) não define `overflow` — só o `<dialog>` raiz limita altura e rola, se
  * precisar (`max-height` no SCSS). Colocar `overflow-y: auto` num wrapper interno era exatamente
  * o defeito que forçava um seletor de encapsulamento vazado sobre o wrapper de conteúdo do
- * `Dialog` do PrimeNG em `ficha-inventario`: um dropdown absoluto
+ * dialog anterior em `ficha-inventario`: um dropdown absoluto
  * (`.ficha-inv__categoria-select-lista`) que ultrapassa a altura do formulário curto disparava
  * rolagem interna à toa, mesmo sem precisar de nenhuma. Sem esse wrapper, o formulário curto
  * nunca aciona rolagem alguma; um modal genuinamente alto (raro — todo bloco extenso do projeto
@@ -59,7 +59,7 @@ export class Modal {
   /** Largura CSS (ex.: `'640px'`, `'50vw'`). Sem valor, usa o padrão do primitivo. */
   readonly largura = input<string | null>(null);
   /** `false` desliga o fechar por clique no fundo — usado por `ReceberDanoDialog`, que já não
-   *  tinha `dismissableMask` no PrimeNG (formulário com dado digitado, risco de perda). */
+   *  preserva um formulário com dado digitado, evitando perda acidental. */
   readonly fechavelPeloFundo = input(true);
 
   readonly fechou = output<void>();

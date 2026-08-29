@@ -1,8 +1,8 @@
 @use "tema/breakpoints" as bp;
 
-// Fila de notificações (ui-02), no lugar do toast do PrimeNG (posição `bottom-center`).
+// Fila de notificações (ui-02), em `bottom-center`.
 // Largura fixa com teto responsivo — sem isso o card estoura os dois lados em 360-390px (m3-56,
-// medido ao vivo no toast original do PrimeNG: sua largura fixa de 400px escondia 20px do card
+// medido ao vivo no toast anterior: sua largura fixa de 400px escondia 20px do card
 // fora do viewport, inclicável). Aqui a largura já nasce responsiva, sem precisar de `!important`
 // sobre CSS de terceiro.
 

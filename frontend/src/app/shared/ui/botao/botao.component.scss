@@ -2,8 +2,7 @@
 
 // Primitivo de botão (ui-01, completado na ui-01b). A base e as cores saem das 20 cópias de
 // `.botao` que existiam nos SCSS de página/componente — interseção medida, não releitura. As
-// severidades e estilos que o produto ainda não usava vêm da paridade com o `p-button` do
-// PrimeNG 21, pedida pelo autor, para que a `ui-05` não empobreça a biblioteca.
+// severidades e estilos que o produto ainda não usava foram incorporados à API própria.
 //
 // Só identidade mora na base: tamanho e layout seguem sendo do consumidor, a menos que ele peça
 // `[tamanho]`/`[posicaoIcone]`/`[fluido]` — tudo opt-in, para não mover nenhuma tela existente.
