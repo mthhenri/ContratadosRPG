@@ -9,7 +9,12 @@
     "secure": false,
     "changeOrigin": true
   },
-  "/campanha": {
+  // Regex (não prefixo simples) — mesma colisão do /ficha acima: rota de app
+  // "/campanhas" (plural) é prefixo-matchada por engano pela API "/campanha"
+  // (singular) em contextos de string simples (Vite: doesProxyContextMatchUrl
+  // faz url.startsWith(context)). O boundary [/?] cobre "/campanha/:id..." e
+  // "/campanha?..." sem capturar "/campanhas".
+  "^/campanha(?:$|[/?])": {
     "target": "http://localhost:3100",
     "secure": false,
     "changeOrigin": true
