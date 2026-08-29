@@ -27,6 +27,35 @@
 
 ## Abertas
 
+### I-026 — `[tamanho]` compacto opt-in no `StepInput` · frontend/design system
+
+- **Ideia:** dar ao `app-step-input` (`shared/ui/stepper/`) um `[tamanho]="'compacto'"` opcional,
+  mesmo padrão do `[tamanho]` do `Botao` (`ui-01b`) — sem valor, o primitivo continua do tamanho
+  atual (30px/19px, usado pelas 6 páginas da simulação).
+- **Origem:** auditoria da `ui-03` sobre as 4 cópias locais de `.stepper` fora do `StepInput`:
+  `guia-equipamento-loja` (28px/14px) e a variante `.ficha-passo` de `ficha-visualizacao` são
+  visivelmente menores que o canônico — adotar o primitivo ali sem essa variante estufaria a
+  densidade de um carrinho de compras/tabela de atributos.
+- **Por quê:** sem essa variante, esses dois consumidores não têm como adotar `app-step-input` sem
+  regressão visual — a `ui-04` (migração módulo a módulo) vai bater nisso de qualquer forma.
+- **Custo aparente:** só CSS (dois degraus de padding/font-size, como o `Botao` já faz) — não
+  toca no contrato `ControlValueAccessor`/clamp/digitação direta.
+
+### I-025 — Primitivo de "stat editável" para `ficha-mini`/`ficha-atributo` · frontend/design system
+
+- **Ideia:** um segundo primitivo (ou uma variante bem mais rica do `app-stat`) que cubra rótulo +
+  valor **editável in-line** + botão de rolagem de dado — o padrão de `ficha-mini`/`ficha-atributo`
+  em `ficha-visualizacao.component.scss`.
+- **Origem:** auditoria da `ui-03` sobre as "5 declarações" de `.stat` da spec original: 3 delas
+  (`.stat`, `.agente-stat`, `.calc-stat`) são display puro e viraram `app-stat`; as outras 2
+  (`ficha-mini`, `ficha-atributo`) têm `__entrada` (edição) e `__rolar` (dado) — um componente
+  estruturalmente diferente, não uma variante de estilo.
+- **Por quê:** forçar essas duas dentro do `app-stat` misturaria uma caixa de exibição com um
+  campo de formulário + ação de jogo, contrariando "não crie primitivo pra bloco sem duplicação
+  medida" — mas a duplicação existe (é o controle mais repetido da ficha em mesa) e fica sem dono.
+- **Custo aparente:** desenho de API novo (não é só CSS): estado de edição, `ControlValueAccessor`
+  ou output de alteração, e a integração com `appHoldRepeat` que `ficha-atributo` já usa.
+
 ### I-023 — Gate automático de convenções no CI · processo/qualidade
 
 - **Ideia:** executar o passe mecânico de `convencoes-check` automaticamente no CI para avisar sobre violações novas antes do merge, preservando a classificação manual para falsos positivos e regras semânticas.
@@ -267,6 +296,22 @@
   tratada como uma ampliação tardia da M2. A numeração indica agrupamento de escopo, não dependência:
   M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
+
+### I-024 — `perigo` e `primario` são a mesma cor, e ela é trocável pelo usuário · frontend/design system
+
+- **Ideia:** desacoplar a severidade `perigo` do `--accent`, provavelmente apontando para `--vida`
+  (vermelho **fixo** da identidade, que já existe justamente por não acompanhar a troca de tema).
+- **Origem:** ficou visível na matriz 8×4 renderizada no gate visual da `ui-01b` (2026-08-28): as
+  linhas `primario` e `perigo` são pixel a pixel a mesma coisa nos estilos preenchido, texto e
+  link — só o estilo **padrão** difere (preenchido vs. contorno).
+- **Por quê:** com o accent padrão (vermelho) a ação destrutiva não se distingue da ação primária;
+  e com um accent azul ou verde escolhido pelo usuário, um botão de "Excluir" fica azul ou verde,
+  que é o oposto do sinal que ele deve dar. O `--vida` foi criado exatamente para o caso de "esta
+  cor não pode acompanhar o tema".
+- **Custo aparente:** baixo em código (uma entrada no mapa `$variantes` de
+  `botao.component.scss`), mas **muda o visual** dos 3 usos atuais de `.botao--perigo`
+  (`usuario/gestao` ×2, `encontro/painel` ×1) e das cópias locais que ainda não migraram — logo,
+  decidir junto com a `ui-04`, que é quando essas telas passam pelo pixel diff de qualquer forma.
 
 ### I-022 — Caderno: importar em lote, arrastar-e-soltar e exportar `.md` · campanha/caderno
 

@@ -417,7 +417,7 @@
         gap: 4px;
     }
 
-    // === Formulário (m3-38: abre num `p-dialog` — sem borda/fundo próprios, o dialog já dá o cartão) ===
+    // === Formulário (m3-38: abre num `app-modal` — sem borda/fundo próprios, o modal já dá o cartão) ===
     &__form {
         display: flex;
         flex-direction: column;

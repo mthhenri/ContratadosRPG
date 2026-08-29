@@ -30,22 +30,14 @@
 
         @if (!carregando() && campanhas().length) {
         <div class="campanhas__estatisticas">
-            <div class="stat">
-                <span class="stat__rotulo">Campanhas</span>
-                <span class="stat__valor">{{ estatisticas().totalCampanhas }}</span>
-            </div>
-            <div class="stat">
-                <span class="stat__rotulo">Você mestra</span>
-                <span class="stat__valor">{{ estatisticas().vocesMestra }}</span>
-            </div>
-            <div class="stat">
-                <span class="stat__rotulo">Fichas em campo</span>
-                <span class="stat__valor">{{ estatisticas().fichasEmCampo }}</span>
-            </div>
-            <div class="stat" [class.stat--alerta]="estatisticas().alertas > 0">
-                <span class="stat__rotulo">Alertas</span>
-                <span class="stat__valor">{{ estatisticas().alertas }}</span>
-            </div>
+            <app-stat rotulo="Campanhas" [valor]="estatisticas().totalCampanhas" />
+            <app-stat rotulo="Você mestra" [valor]="estatisticas().vocesMestra" />
+            <app-stat rotulo="Fichas em campo" [valor]="estatisticas().fichasEmCampo" />
+            <app-stat
+                rotulo="Alertas"
+                [valor]="estatisticas().alertas"
+                [variante]="estatisticas().alertas > 0 ? 'vida' : undefined"
+            />
         </div>
         } @if (carregando()) {
         <div class="campanhas__esqueleto" role="status" aria-label="Carregando campanhas">

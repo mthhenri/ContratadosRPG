@@ -11,6 +11,8 @@ import { finalize, switchMap } from 'rxjs';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Marca } from '../../../../shared/marca/marca.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 
 /**
@@ -31,7 +33,7 @@ function senhasCoincidem(grupo: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-registro',
-  imports: [ReactiveFormsModule, RouterLink, Icone, Marca],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Marca, Botao, Campo],
   templateUrl: './registro.page.html',
   styleUrl: './registro.page.scss',
 })
@@ -55,6 +57,24 @@ export class Registro {
     },
     { validators: senhasCoincidem },
   );
+
+  /**
+   * Mensagem do campo Senha. O `app-campo` recebe o erro já filtrado porque o portão genérico
+   * `touched && invalid` mostraria esta mensagem também para o campo vazio, que erra por
+   * `required` — e a tela nunca mostrou mensagem nesse caso.
+   */
+  protected erroSenha(): string {
+    const senha = this.formulario.controls.senha;
+    return senha.touched && senha.hasError('minlength') ? 'Mínimo de 6 caracteres.' : '';
+  }
+
+  /** Mensagem da confirmação. O erro é do formulário (`senhasDivergentes`), não do controle. */
+  protected erroConfirmacaoSenha(): string {
+    const confirmacao = this.formulario.controls.confirmacaoSenha;
+    return confirmacao.touched && this.formulario.hasError('senhasDivergentes')
+      ? 'As senhas não coincidem.'
+      : '';
+  }
 
   protected alternarSenha(): void {
     this.senhaVisivel.update((visivel) => !visivel);

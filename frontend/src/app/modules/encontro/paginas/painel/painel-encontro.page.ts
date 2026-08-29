@@ -11,7 +11,6 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { Observable, filter, finalize, of, switchMap } from 'rxjs';
 
 import type {
@@ -44,6 +43,7 @@ import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -145,7 +145,7 @@ export class PainelEncontro {
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
   private readonly tempoRealService = inject(TempoRealService);
-  private readonly messageService = inject(MessageService);
+  private readonly notificacaoService = inject(NotificacaoService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly roteador = inject(Router);
@@ -532,10 +532,10 @@ export class PainelEncontro {
             return;
           }
           this.iniciativaPedida.set(true);
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Role sua iniciativa',
-            detail: 'O mestre pediu a iniciativa do esquadrão.',
+          this.notificacaoService.notificar({
+            severidade: 'informacao',
+            resumo: 'Role sua iniciativa',
+            detalhe: 'O mestre pediu a iniciativa do esquadrão.',
           });
         },
       });
@@ -595,10 +595,10 @@ export class PainelEncontro {
         daVezId !== this.ultimoAvisoDeVezId
       ) {
         this.ultimoAvisoDeVezId = daVezId;
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Sua vez!',
-          detail: 'É a sua vez de agir no combate.',
+        this.notificacaoService.notificar({
+          severidade: 'informacao',
+          resumo: 'Sua vez!',
+          detalhe: 'É a sua vez de agir no combate.',
         });
       }
     });
@@ -857,7 +857,7 @@ export class PainelEncontro {
     if (!arquivo) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(arquivo.type) || arquivo.size > 2 * 1024 * 1024) {
       entrada.value = '';
-      this.messageService.add({ severity: 'warn', summary: 'Imagem inválida', detail: 'Use JPEG, PNG ou WEBP de até 2MB.' });
+      this.notificacaoService.notificar({ severidade: 'aviso', resumo: 'Imagem inválida', detalhe: 'Use JPEG, PNG ou WEBP de até 2MB.' });
       return;
     }
     this.imagemAvulsoArquivo.set(arquivo);
@@ -874,7 +874,7 @@ export class PainelEncontro {
   /** Valida e substitui a imagem do cartão editável do avulso. */
   protected alterarImagemAvulso(combatente: EncontroCombatenteResumoDto, arquivo: File): void {
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(arquivo.type) || arquivo.size > 2 * 1024 * 1024) {
-      this.messageService.add({ severity: 'warn', summary: 'Imagem inválida', detail: 'Use JPEG, PNG ou WEBP de até 2MB.' });
+      this.notificacaoService.notificar({ severidade: 'aviso', resumo: 'Imagem inválida', detalhe: 'Use JPEG, PNG ou WEBP de até 2MB.' });
       return;
     }
     this.executarNoEncontro(this.encontroService.alterarImagemAvulso(combatente.id, arquivo));
@@ -951,10 +951,10 @@ export class PainelEncontro {
       }
     }
     if (Object.keys(iniciativaPorCombatente).length === 0) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Nada a rolar',
-        detail: 'Todo mundo já tem iniciativa.',
+      this.notificacaoService.notificar({
+        severidade: 'informacao',
+        resumo: 'Nada a rolar',
+        detalhe: 'Todo mundo já tem iniciativa.',
       });
       return;
     }
@@ -970,10 +970,10 @@ export class PainelEncontro {
       return;
     }
     this.executarNoEncontro(this.encontroService.pedirIniciativa(encontroAtual.id), () =>
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Iniciativa pedida',
-        detail: 'Os jogadores foram chamados a rolar a própria iniciativa.',
+      this.notificacaoService.notificar({
+        severidade: 'sucesso',
+        resumo: 'Iniciativa pedida',
+        detalhe: 'Os jogadores foram chamados a rolar a própria iniciativa.',
       }),
     );
   }
@@ -1074,10 +1074,10 @@ export class PainelEncontro {
         next: (ficha) => {
           const executado = rolarIniciativaDaFicha(ficha.dados);
           if (!executado) {
-            this.messageService.add({
-              severity: 'warn',
-              summary: 'Sem preset de Iniciativa',
-              detail: 'Sua ficha não tem a rolagem "Iniciativa" — peça ao mestre para atribuí-la.',
+            this.notificacaoService.notificar({
+              severidade: 'aviso',
+              resumo: 'Sem preset de Iniciativa',
+              detalhe: 'Sua ficha não tem a rolagem "Iniciativa" — peça ao mestre para atribuí-la.',
             });
             return;
           }

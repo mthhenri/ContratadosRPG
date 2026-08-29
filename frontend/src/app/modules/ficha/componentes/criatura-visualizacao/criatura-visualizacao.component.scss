@@ -119,49 +119,6 @@
     }
 }
 
-// === Abas (copiado de `_componentes.scss` `.abas`) ===
-// Divergência deliberada do canônico: aqui cada `.criatura__aba` ganha `flex: 1 1 0` pra sempre
-// ocupar o máximo da barra (2 abas = metade cada), a pedido do autor — o `.abas` canônico deixa
-// os itens do tamanho do conteúdo.
-.criatura__abas {
-    display: flex;
-    gap: 5px;
-    padding: 4px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    overflow-x: auto;
-}
-.criatura__aba {
-    display: inline-flex;
-    flex: 1 1 0;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    line-height: 1;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    white-space: nowrap;
-    color: var(--text-dim);
-    background: transparent;
-    border: 0;
-    padding: 6px 10px;
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition:
-        color 0.12s ease,
-        background 0.12s ease;
-
-    &--ativa {
-        font-weight: 700;
-        color: var(--bg);
-        background: var(--accent);
-    }
-}
-
 // Chip de classificação canônico (`docs/design/tema/_componentes.scss`) — copiado pra cá pelo
 // mesmo motivo do `.botao` acima (encapsulamento de estilo).
 .chip-classificacao {

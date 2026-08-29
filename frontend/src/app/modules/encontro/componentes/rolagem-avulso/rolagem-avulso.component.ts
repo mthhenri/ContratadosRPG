@@ -1,5 +1,4 @@
 import { Component, ElementRef, HostListener, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
-import { MessageService } from 'primeng/api';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
@@ -10,6 +9,7 @@ import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 
 const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
@@ -37,7 +37,7 @@ const FONTE_DE_FICHA = /\b(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFIC
 export class RolagemAvulso implements OnInit {
   private readonly rolagemService = inject(RolagemService);
   private readonly bandeja = inject(BandejaDadosService);
-  private readonly messageService = inject(MessageService);
+  private readonly notificacaoService = inject(NotificacaoService);
 
   readonly combatente = input.required<EncontroCombatenteResumoDto>();
   readonly ocultaInicial = input(true);
@@ -117,19 +117,19 @@ export class RolagemAvulso implements OnInit {
     const formula = this.expressao().trim();
     if (!formula) return;
     if (FONTE_DE_FICHA.test(formula)) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Expressão sem ficha',
-        detail: 'Avulsos não possuem atributos, PROF ou NIV. Use apenas dados, números e operações.',
+      this.notificacaoService.notificar({
+        severidade: 'aviso',
+        resumo: 'Expressão sem ficha',
+        detalhe: 'Avulsos não possuem atributos, PROF ou NIV. Use apenas dados, números e operações.',
       });
       return;
     }
     const resultado = rolarFormula({ formula, atributos: ATRIBUTOS_NEUTROS });
     if (!resultado) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Expressão inválida',
-        detail: 'Use dados, números e operações. Avulsos não possuem atributos, PROF ou NIV.',
+      this.notificacaoService.notificar({
+        severidade: 'aviso',
+        resumo: 'Expressão inválida',
+        detalhe: 'Use dados, números e operações. Avulsos não possuem atributos, PROF ou NIV.',
       });
       return;
     }

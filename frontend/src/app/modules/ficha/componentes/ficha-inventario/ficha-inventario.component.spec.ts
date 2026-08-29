@@ -175,7 +175,7 @@ describe('FichaInventario', () => {
     botao.click();
     alvo.fixture.detectChanges();
 
-    const dialogo = alvo.raiz.querySelector('.p-dialog') as HTMLElement;
+    const dialogo = alvo.raiz.querySelector('.modal') as HTMLElement;
     expect(dialogo).toBeTruthy();
     expect(dialogo.textContent).toContain('Editar item custom');
     expect(alvo.raiz.querySelector('.ficha-inv__form--edicao')).toBeNull();
@@ -199,7 +199,7 @@ describe('FichaInventario', () => {
       '[aria-label="Editar informações Amuleto Caseiro"]',
     ) as HTMLButtonElement).click();
     alvo.fixture.detectChanges();
-    const dialogo = alvo.raiz.querySelector('.p-dialog') as HTMLElement;
+    const dialogo = alvo.raiz.querySelector('.modal') as HTMLElement;
     const nome = dialogo.querySelector('[formControlName="nome"]') as HTMLInputElement;
     nome.value = '  Amuleto Revisado  ';
     nome.dispatchEvent(new Event('input'));
@@ -2460,7 +2460,7 @@ describe('FichaInventario', () => {
       expect(alvo.componentInstance['itensInventario']()[1].painelAberto).toBe(true);
     });
 
-    it('fecharCatalogo/fecharPainelDialog fecham o estado usado pelo `onHide` dos p-dialogs', () => {
+    it('fecharCatalogo/fecharPainelDialog fecham o estado usado pelo `(fechou)` dos app-modal', () => {
       const alvo = montar({ itens: [itemLeve], amplificadores: [] });
       alvo.componentInstance['alternarCatalogo']();
       expect(alvo.componentInstance['catalogoAberto']()).toBe(true);

@@ -39,6 +39,9 @@ import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { AbaPainel } from '../../../../shared/ui/abas/aba-painel.directive';
+import { Aba } from '../../../../shared/ui/abas/aba.component';
+import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -98,6 +101,8 @@ const GRUPOS_ATRIBUTO = [
  * Habilidades) virou `'ataques'` + `'habilidades'`, um componente autocontido por aba. */
 type AbaCriatura = 'geral' | 'descricao' | 'ataques' | 'habilidades';
 
+const ABAS_CRIATURA: readonly AbaCriatura[] = ['geral', 'descricao', 'ataques', 'habilidades'];
+
 /**
  * Valor exibido no `<input type="color">` do avatar enquanto a ficha não tem `cor` definida —
  * mesmo hex/racional de `FichaVisualizacao`'s `COR_FICHA_PADRAO` (não importado de lá de
@@ -126,6 +131,9 @@ const COR_FICHA_PADRAO = '#d53030';
     AjusteEnquadramentoImagem,
     FocoImagem,
     ReceberDanoDialog,
+    Abas,
+    Aba,
+    AbaPainel,
   ],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',
@@ -230,6 +238,12 @@ export class CriaturaVisualizacao {
 
   protected selecionarAba(aba: AbaCriatura): void {
     this.abaSelecionada.set(aba);
+  }
+
+  /** `(navegou)` do `app-abas`: setas/Home/End já ativam a aba, como o clique. */
+  protected aoNavegarAba(valor: string): void {
+    const aba = ABAS_CRIATURA.find((candidata) => candidata === valor);
+    if (aba) this.selecionarAba(aba);
   }
 
   /**

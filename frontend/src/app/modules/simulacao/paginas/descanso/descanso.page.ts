@@ -19,7 +19,7 @@ import {
 } from '@contratados-rpg/shared/regras/descanso';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
-import { StepInput } from '../../componentes/step-input/step-input.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 
 /** Opção de um `<select>` da configuração (o rótulo carrega texto descritivo de UI). */

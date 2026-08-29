@@ -27,9 +27,13 @@ responsivo. "Vou usar os tokens" não é escolher análogo. Tabela de partida po
 ## 2. Construir
 
 Consumir tokens (`var(--surface)`, `var(--accent)`, `var(--font-mono)`...) — nunca hex, fonte ou
-raio hardcoded. Copiar o bloco BEM canônico de `docs/design/tema/_componentes.scss` (`.card`,
-`.stat`, `.stepper`, `.botao`, `.chip-classificacao`, `.topbar`, `.abas`...) para o `.scss`
-scoped do componente — nunca importar o arquivo inteiro. BEM em português. Tailwind para
+raio hardcoded. **Onde já existe primitivo em `frontend/src/app/shared/ui/`, consumir o
+primitivo** — hoje `<button app-botao variante="…">` e `<app-campo rotulo="…">`; copiar o bloco
+BEM desses dois passou a ser defeito (`PROBLEMS.md` `P-034`). O primitivo é dono da identidade
+(cor, raio, fonte, estado); o tamanho e o layout ficam na sua classe BEM, no mesmo elemento.
+Para o que ainda não tem primitivo (`.card`, `.stat`, `.stepper`, `.chip-classificacao`,
+`.topbar`, `.abas`...), copiar o bloco canônico de `docs/design/tema/_componentes.scss` para o
+`.scss` scoped do componente — nunca importar o arquivo inteiro. BEM em português. Tailwind para
 layout/espaçamento/tipografia. `[appTooltip]` em vez do `title` nativo do browser. Primeiro um
 corte visual representativo — não um formulário HTML genérico coberto de tokens por cima.
 

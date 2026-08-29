@@ -20,9 +20,13 @@ export default tseslint.config(
         'error',
         { type: 'attribute', prefix: 'app', style: 'camelCase' },
       ],
+      // `attribute` liberado (ui-01) só para os primitivos de `shared/ui` que precisam vestir o
+      // elemento nativo do consumidor em vez de embrulhá-lo — `<button app-botao>`, no padrão do
+      // `<button matButton>`. Sem isso, cada botão ganharia um nó a mais dentro de containers
+      // flex/grid com `gap`. O prefixo `app` continua obrigatório nos dois tipos.
       '@angular-eslint/component-selector': [
         'error',
-        { type: 'element', prefix: 'app', style: 'kebab-case' },
+        { type: ['element', 'attribute'], prefix: 'app', style: 'kebab-case' },
       ],
       quotes: ['warn', 'double', { avoidEscape: true }],
       semi: ['warn', 'always'],

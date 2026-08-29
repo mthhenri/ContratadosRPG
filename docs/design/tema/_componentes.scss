@@ -1,9 +1,17 @@
 // _componentes.scss
-// Padrões de componente do tema, em SCSS + BEM (português). Exemplos canônicos —
-// copie o bloco que precisar para o SCSS do seu componente standalone.
-// Regra: sem inline, sem seletor de ID. Consome os tokens de _tokens.scss.
+// Padrões de componente do tema, em SCSS + BEM (português). Regra: sem inline, sem seletor de
+// ID. Consome os tokens de _tokens.scss.
+//
+// ATENÇÃO — este arquivo está deixando de ser catálogo para copiar (`PROBLEMS.md` `P-034`,
+// série `ui-01`…`ui-05`). Bloco que já virou primitivo em `frontend/src/app/shared/ui/` **não
+// se copia mais**: consuma o componente. Os que já migraram estão marcados abaixo com
+// "→ PRIMITIVO". Os demais continuam valendo como exemplo canônico para copiar até a task que
+// os promover.
 
-// === Card ===
+// === Card → PRIMITIVO: `frontend/src/app/shared/ui/cartao/` ===
+// Use `<app-cartao [titulo]="…">`; o índice do cabeçalho entra por projeção (`[cartaoIndice]`),
+// não por input — cobre tanto texto/número quanto `<app-icone>`. Sem `[titulo]`, é só a caixa. O
+// bloco abaixo é a referência histórica das 15 cópias auditadas (`ui-03`) — não copie mais.
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -45,7 +53,13 @@
   }
 }
 
-// === Stat box ===
+// === Stat box → PRIMITIVO: `frontend/src/app/shared/ui/stat/` ===
+// Use `<app-stat rotulo="…" [valor]="…" variante="vida|energia|positivo">`. Cobre só a exibição
+// pura (rótulo + valor) das 3 famílias auditadas na `ui-03` (`.stat`, `.agente-stat`,
+// `.calc-stat`) — `--vida` usa o token fixo `var(--vida)`, não `var(--accent)` como este exemplo
+// congelado abaixo mostra (esse exemplo ficou desatualizado; ver `PROBLEMS.md` `P-034`). Um
+// campo editável com rolagem de dado (`ficha-mini`/`ficha-atributo`) é outro primitivo, ainda não
+// construído (`IDEAS.md` `I-025`) — não force esse caso aqui.
 .stat {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -73,7 +87,13 @@
   &--energia { border-color: color-mix(in srgb, var(--energy) 35%, transparent); .stat__valor { color: var(--energy); } }
 }
 
-// === Stepper / input numérico ===
+// === Stepper / input numérico → PRIMITIVO: `frontend/src/app/shared/ui/stepper/` ===
+// Use `<app-step-input [formControl]="…" [min] [max] [passo] ariaRotulo>` (`ControlValueAccessor`,
+// sem `ngModel`) — mesmo componente que já existia como `StepInput` em
+// `modules/simulacao/componentes/step-input/`, só promovido de pasta na `ui-03` (contrato
+// intocado). Digitação direta + clamp + botões `−`/`+`. Ainda sem `[tamanho]` compacto
+// (`IDEAS.md` `I-026`) — as cópias locais menores (`guia-equipamento-loja`, `ficha-visualizacao`)
+// seguem copiando o bloco abaixo até essa variante existir.
 .stepper {
   display: flex;
   align-items: stretch;
@@ -104,7 +124,12 @@
   }
 }
 
-// === Botões ===
+// === Botões → PRIMITIVO: `frontend/src/app/shared/ui/botao/` ===
+// Use `<button app-botao variante="…">` e deixe no SCSS do seu componente só o tamanho e o
+// layout. O primitivo cobre 8 severidades (`primario`, `secundario`, `positivo`, `info`, `aviso`,
+// `perigo`, `ajuda`, `contraste`) x 4 estilos (`preenchido`, `contorno`, `texto`, `link`), mais
+// `[tamanho]`, `[posicaoIcone]`, `[fluido]` e `[carregando]` — a paridade com o `p-button` do
+// PrimeNG (ui-01b). O bloco abaixo é só a referência histórica do que era copiado — não copie.
 .botao {
   border-radius: var(--radius-control);
   font-family: var(--font-mono);
@@ -133,7 +158,11 @@
   }
 }
 
-// === Chip de classificação (ex.: CLASSE-E // CONFIDENCIAL) ===
+// === Chip de classificação → PRIMITIVO: `frontend/src/app/shared/ui/chip/` ===
+// Use `<app-chip>…</app-chip>` (variante `padrao`, o bloco abaixo) ou `<app-chip
+// variante="sutil">` para o desenho mais discreto (`--text-mute`/`--border-strong`) que 2 das 3
+// cópias auditadas na `ui-03` já usavam. "CLASSE-E // CONFIDENCIAL" é um USO do chip, não a
+// identidade do componente — o nome é só "chip".
 .chip-classificacao {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -249,7 +278,14 @@
   }
 }
 
-// === Abas (tabs) ===
+// === Abas (tabs) → PRIMITIVO: `frontend/src/app/shared/ui/abas/` ===
+// Use `<app-abas rotulo="…">` (tablist) + `<button app-aba valor="…" [ativa]="…">` (tab) +
+// `[appAbaPainel]` no container de conteúdo (tabpanel) — só para troca de painel NO LUGAR. A
+// barra da Simulação abaixo é navegação de rota (`routerLink`), não essa semântica — fica de
+// fora do primitivo por decisão da `ui-03` (ver `CONTEXT.md`). Desktop: item de largura igual
+// (diverge deste exemplo, que é conteúdo-só — as origens reais medidas usam `flex: 1 1 0`).
+// Mobile: colapsa pra só-ícone, rótulo só na aba ativa.
+//
 // Destilado de `ficha-visualizacao.component.scss` (`&__abas`/`&__aba`) — mesmo padrão usado
 // pela simulacao (AGENTE/CIVIL · DT · NOVO AGENTE · PATENTES · DESCANSO · COMPRAS · VENDAS,
 // ver `calculadora-de-atributos.html`) e pela ficha (INFORMAÇÕES · INVENTÁRIO · HABILIDADES ·

@@ -1,0 +1,120 @@
+@use "tema/breakpoints" as bp;
+
+// Fila de notificações (ui-02), no lugar do toast do PrimeNG (posição `bottom-center`).
+// Largura fixa com teto responsivo — sem isso o card estoura os dois lados em 360-390px (m3-56,
+// medido ao vivo no toast original do PrimeNG: sua largura fixa de 400px escondia 20px do card
+// fora do viewport, inclicável). Aqui a largura já nasce responsiva, sem precisar de `!important`
+// sobre CSS de terceiro.
+
+:host {
+    display: contents;
+}
+
+@keyframes notificacoes-entra {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notificacoes {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(20px + var(--piso-flutuante, 0px));
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(400px, calc(100vw - 32px));
+
+    @include bp.mobile {
+        width: calc(100vw - 32px);
+    }
+
+    &__item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 13px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-left: 3px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        box-shadow: 0 12px 30px rgb(0 0 0 / 42%);
+        animation: notificacoes-entra 0.2s ease;
+        transition:
+            opacity 0.2s ease-out,
+            transform 0.2s ease-out;
+
+        &--saindo {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+            transition: none;
+        }
+
+        &--sucesso {
+            border-left-color: var(--positive);
+        }
+        &--informacao {
+            border-left-color: var(--energy);
+        }
+        &--aviso {
+            border-left-color: var(--warning);
+        }
+        &--erro {
+            border-left-color: var(--vida);
+        }
+    }
+
+    &__texto {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+    }
+
+    &__resumo {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+    }
+
+    &__detalhe {
+        font-family: var(--font-sans);
+        font-size: 12.5px;
+        line-height: 1.4;
+        color: var(--text-dim);
+    }
+
+    &__fechar {
+        flex: 0 0 auto;
+        margin-left: auto;
+        border: 0;
+        background: transparent;
+        color: var(--text-mute);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 2px;
+
+        &:hover {
+            color: var(--text);
+        }
+
+        @include bp.mobile {
+            min-width: bp.$alvo-toque;
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

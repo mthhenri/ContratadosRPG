@@ -3,7 +3,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 
@@ -21,7 +20,6 @@ describe('Rotas — autenticação', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter(routes),
-        MessageService,
       ],
     });
     const harness = await RouterTestingHarness.create();

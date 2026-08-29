@@ -44,7 +44,9 @@ Consulte-os antes de alterar qualquer fórmula, tabela de progressão ou regra d
 
 ### Frontend
 - **Framework:** Angular 21 — standalone components obrigatório
-- **UI:** PrimeNG 21
+- **UI:** componentes próprios (HTML nativo + SCSS/BEM sobre os tokens do tema). O PrimeNG 21
+  entrega hoje apenas `p-dialog`, `p-toast`/`MessageService` e o preset de tema — **em remoção**,
+  ver `docs/specs/backlog/ui-biblioteca-componentes.spec.md` e `PROBLEMS.md` `P-034`
 - **Estado:** Angular Signals (signal, computed, effect)
 - **Formulários:** Reactive Forms
 - **HTTP:** Angular HttpClient com interceptores

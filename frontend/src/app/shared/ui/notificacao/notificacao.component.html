@@ -1,0 +1,29 @@
+@if (servico.fila().length > 0) {
+    <div class="notificacoes" role="status" aria-live="polite">
+        @for (entrada of servico.fila(); track entrada.id) {
+            <article
+                class="notificacoes__item"
+                [class.notificacoes__item--sucesso]="entrada.severidade === 'sucesso'"
+                [class.notificacoes__item--informacao]="entrada.severidade === 'informacao'"
+                [class.notificacoes__item--aviso]="entrada.severidade === 'aviso'"
+                [class.notificacoes__item--erro]="entrada.severidade === 'erro'"
+                [class.notificacoes__item--saindo]="entrada.saindo"
+            >
+                <div class="notificacoes__texto">
+                    <span class="notificacoes__resumo">{{ entrada.resumo }}</span>
+                    @if (entrada.detalhe) {
+                        <span class="notificacoes__detalhe">{{ entrada.detalhe }}</span>
+                    }
+                </div>
+                <button
+                    type="button"
+                    class="notificacoes__fechar"
+                    aria-label="Fechar notificação"
+                    (click)="servico.fechar(entrada.id)"
+                >
+                    ×
+                </button>
+            </article>
+        }
+    </div>
+}

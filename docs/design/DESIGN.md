@@ -48,10 +48,20 @@ o preset PrimeNG apenas *apontam* para essas vars — nunca redeclaram hex. Troc
 | `--dano-explosao` | `#f97316` | `249, 115, 22` | Chip de dano — Explosão |
 | `--dano-quimico` | `#22c55e` | `34, 197, 94` | Chip de dano — Químico |
 | `--dano-geral` | `#e5e7eb` | `229, 231, 235` | Chip de dano — Geral (irredutível) |
+| `--help` | `#9b78d0` | `155, 120, 208` | Severidade `ajuda` do botão — **sem papel de domínio** (ui-01b) |
+| `--contrast` | `#f4f6f8` | `244, 246, 248` | Severidade `contraste` do botão — quase-branco de superfície, não de texto (ui-01b) |
 
-Cada cor semântica (`--vida`, `--energy`, `--positive`, `--warning`, `--dano-*`) tem variantes
-`-dim` (12%) e `-border` (40%) via `color-mix()`, mesma receita do `--accent` — não recalcule a
-fórmula por componente. Ver `--cor-ficha` (identidade por personagem) na seção dedicada abaixo.
+Cada cor semântica (`--vida`, `--energy`, `--positive`, `--warning`, `--dano-*`, `--help`,
+`--contrast`) tem variantes `-dim` (12%) e `-border` (40%) via `color-mix()`, mesma receita do
+`--accent` — não recalcule a fórmula por componente. Ver `--cor-ficha` (identidade por
+personagem) na seção dedicada abaixo.
+
+`--help` e `--contrast` são as duas únicas cores da paleta **sem papel de domínio**: existem
+porque o primitivo de botão cobre as oito severidades que o `p-button` do PrimeNG oferecia
+(`ui-01b`), para que a saída do PrimeNG na `ui-05` não empobreça a biblioteca. `--help` foi
+escolhido pela luminância, não pelo matiz — 5,59:1 contra o `--bg`, entre `--energy` (5,62) e
+`--positive` (5,90) —, para entrar na família em vez de destoar dela. Não use nenhum dos dois
+para representar conceito de jogo: para isso existem as cores de domínio acima.
 
 ## Tipografia
 
@@ -114,19 +124,25 @@ sem largura máxima fixa — cada tela decide sua própria grade de colunas.
 
 ## Componentes visuais base
 
-Blocos BEM canônicos, prontos pra copiar de `tema/_componentes.scss` para o SCSS scoped do
-componente que estiver construindo — não importe o arquivo inteiro.
+A biblioteca está migrando de **catálogo para copiar** para **código para importar**
+(`PROBLEMS.md` `P-034`, série `ui-01`…`ui-05`). Onde já existe primitivo em
+`frontend/src/app/shared/ui/`, **consuma o primitivo**; onde ainda não existe, copie o bloco
+canônico de `tema/_componentes.scss` para o SCSS scoped do componente — não importe o arquivo
+inteiro.
 
-| Bloco | O que é | Variantes |
-|---|---|---|
-| `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | — |
-| `.stat` | Caixa de estatística (rótulo + valor grande) | `--vida` (borda/valor em `--accent`), `--energia` (em `--energy`) |
-| `.stepper` | Input numérico com botões `−`/`+` | — |
-| `.botao` | Botão de ação | `--primario` (fundo `--accent`), `--secundario` (borda, transparente) |
-| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | — |
-| `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — |
-| `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) |
-| `.abas` | Barra de abas dentro de um card (ficha, calculadora) | `__item--ativa` |
+| Bloco | O que é | Variantes | Primitivo |
+|---|---|---|---|
+| `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | `[titulo]`/`[nivelTitulo]` (`h1`/`h2`), índice por `[cartaoIndice]` projetado | **`<app-cartao titulo="…">`** |
+| `.stat` | Caixa de estatística (rótulo + valor grande) | `vida` (`--vida`, fixo — não `--accent`), `energia` (`--energy`), `positivo` (`--positive`) | **`<app-stat rotulo="…" [valor]="…">`** |
+| `.stepper` | Input numérico com botões `−`/`+` | — | **`<app-step-input [formControl]="…">`** (`shared/ui/stepper/`) |
+| `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho`, `posicaoIcone`, `fluido` e `carregando`. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
+| `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
+| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | `padrao` (`--accent`), `sutil` (`--text-mute`/`--border-strong`) | **`<app-chip variante="…">`** |
+| `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |
+| `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) | — (consumidor único) |
+| `.abas` | Barra de abas — troca de painel no lugar (`tablist`/`tab`/`tabpanel`), não navegação de rota | `__item--ativa`, colapso mobile só-ícone | **`<app-abas rotulo="…">` + `<button app-aba valor="…">` + `[appAbaPainel]`** |
+| `.modal` | Caixa de diálogo modal, sobre `<dialog>` nativo — cabeçalho com título + "×", corpo projetado | `[largura]` (CSS livre), `[fechavelPeloFundo]` (default `true`) | **`<app-modal aberto titulo>…</app-modal>`** |
+| `.notificacoes` | Fila de notificações flutuante, `bottom-center` | 4 severidades — `sucesso`, `informacao`, `aviso`, `erro` (`--vida` fixo, não `--accent`) | **`NotificacaoService.notificar(...)`** + `<app-notificacoes />` (um único, no `layout`) |
 
 Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.component.scss` e
 `ficha-visualizacao.component.scss` nesta atualização — existiam como padrão real no app, mas

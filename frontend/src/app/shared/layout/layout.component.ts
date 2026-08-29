@@ -2,7 +2,6 @@ import { Component, Injector, ViewContainerRef, computed, inject, signal, viewCh
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { Toast } from 'primeng/toast';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { LoadingService } from '../../core/services/loading.service';
@@ -10,14 +9,15 @@ import { SessaoService } from '../../core/services/sessao.service';
 import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.component';
 import { Icone } from '../icone/icone.component';
 import { Marca } from '../marca/marca.component';
+import { Notificacoes } from '../ui/notificacao/notificacao.component';
 
 /**
  * Shell visual da aplicação: topbar institucional (direção "Barra de Comando" do handoff —
  * m2-09), indicador de carregamento global (alimentado pelo `loading.interceptor` via
- * `LoadingService`), área de toasts PrimeNG (alimentada pelo `error-handler.interceptor`) e o
- * `router-outlet` onde as páginas são renderizadas. A topbar reflete o estado de sessão
- * (`SessaoService`, m2-06): entrar/registrar quando deslogado; nav (Campanhas/Simulação) +
- * dropdown de perfil quando logado. A simulacao permanece pública.
+ * `LoadingService`), fila de notificações (`app-notificacoes`, ui-02 — alimentada pelo
+ * `error-handler.interceptor`) e o `router-outlet` onde as páginas são renderizadas. A topbar
+ * reflete o estado de sessão (`SessaoService`, m2-06): entrar/registrar quando deslogado; nav
+ * (Campanhas/Simulação) + dropdown de perfil quando logado. A simulacao permanece pública.
  */
 @Component({
   selector: 'app-layout',
@@ -25,7 +25,7 @@ import { Marca } from '../marca/marca.component';
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    Toast,
+    Notificacoes,
     ConfiguracoesTema,
     Icone,
     Marca,

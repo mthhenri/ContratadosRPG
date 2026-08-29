@@ -89,14 +89,13 @@ import {
   type FormacaoDefinicaoDto,
 } from '@contratados-rpg/shared/regras/identidade';
 
-import { Dialog } from 'primeng/dialog';
-
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
@@ -401,7 +400,7 @@ export interface AjusteClasse {
     BandejaDados,
     OverflowFade,
     Tooltip,
-    Dialog,
+    Modal,
     AjusteEnquadramentoImagem,
     FocoImagem,
     ReceberDanoDialog,

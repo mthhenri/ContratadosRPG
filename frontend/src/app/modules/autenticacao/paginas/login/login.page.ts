@@ -5,6 +5,8 @@ import { finalize } from 'rxjs';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Marca } from '../../../../shared/marca/marca.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 
 /**
@@ -15,7 +17,7 @@ import { SessaoService } from '../../../../core/services/sessao.service';
  */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, Icone, Marca],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Marca, Botao, Campo],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
 })

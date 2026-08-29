@@ -29,6 +29,112 @@
 
 ## Ativos
 
+### P-037 — Proxy do dev server intercepta `/campanhas` como se fosse `/campanha` · `ABERTO` · frontend/ferramental
+
+- **Sintoma:** navegar direto para `http://localhost:4300/campanhas` (nova aba, refresh, link
+  externo) devolve o 404 JSON do NestJS (`{"mensagem":"Cannot GET /campanhas"}`) em vez da SPA.
+  Navegação client-side (clicar no link "Campanhas" da topbar, já dentro do app) funciona normal.
+- **Causa:** `frontend/proxy.conf.json` declara `"/campanha"` como contexto de **prefixo simples**
+  para a API. O proxy do Vite casa por `url.startsWith(context)`, e `"/campanhas".startsWith("/campanha")`
+  é verdadeiro — a rota de app (plural) vira prefixo da rota de API (singular) e a navegação de
+  documento inteira vai pro backend em vez de cair no fallback de `index.html`. O arquivo já tem a
+  correção certa para o par `/ficha`/`/fichas` (regex `^/ficha(?:$|[/?])`, com comentário
+  explicando exatamente esse risco) — só não foi replicada para `/campanha`/`/campanhas`.
+- **Contorno:** nenhum para navegação de documento nova; client-side (SPA já carregada) não é
+  afetado. Achado ao vivo no gate visual da `ui-03` ao abrir `/campanhas` direto para verificar o
+  piloto do `app-stat` — contornado ali navegando pela topbar em vez de `page.goto`.
+- **Correção:** trocar `"/campanha"` por um regex com o mesmo boundary do `/ficha`, ex.
+  `^/campanha(?:$|[/?])`, em `frontend/proxy.conf.json`.
+- **Desde:** não investigado quando entrou; encontrado em 2026-08-29 verificando a `ui-03`.
+
+### P-036 — `var(--danger)` não existe em nenhum token — badge "Privada" da bandeja de dados sem cor · `ABERTO` · frontend/tema
+
+- **Sintoma:** `bandeja-dados.component.scss` (`&__visibilidade--privada`) usa `var(--danger)` em
+  três declarações (`color`, `border-color` via `color-mix`, `background` via `color-mix`) — mas
+  `--danger` não é definido em `_tokens.scss` nem em nenhum outro parcial do tema. O valor
+  computado é inválido; o navegador ignora as três declarações e o badge "Privada" fica sem o
+  destaque vermelho pretendido, herdando `color`/`background` do contexto (`--text-mute`/
+  `transparent`) e o `border-color` genérico já presente logo acima na cascata.
+- **Causa:** não investigada — provavelmente um token planejado (`--danger`) que nunca chegou a
+  ser criado em `_tokens.scss`; o projeto usa `--vida` (vermelho fixo) para esse mesmo papel em
+  outros lugares (ver `IDEAS.md` `I-024`).
+- **Contorno:** nenhum — o badge continua funcional (o ícone e o texto "Privada" identificam a
+  rolagem), só sem o destaque de cor.
+- **Correção:** trocar as três ocorrências de `var(--danger)` por `var(--vida)` (mesmo papel
+  semântico de vermelho fixo, independente do accent) — mudança de uma linha, fora do escopo desta
+  task por não tocar `bandeja-dados`.
+- **Desde:** achado ao pesquisar tokens de cor fixa para a severidade `erro` de `Notificacao`
+  (ui-02, 2026-08-28) — não investigado há quanto tempo o token está quebrado.
+
+### P-035 — Botão preenchido com o accent fica abaixo de 4,5:1 para texto normal · `ABERTO` · frontend/acessibilidade
+
+- **Sintoma:** medido no DOM real em 2026-08-28, durante o gate visual da `ui-01b`: o botão
+  `variante="primario"` preenchido dá **4,00:1** entre o fundo (`--accent` `#d53030`, base padrão)
+  e o texto (`--bg`). O rótulo desses botões é texto normal (12–13px), para o qual o WCAG AA pede
+  **4,5:1**. As demais severidades preenchidas passam com folga — `positivo` 5,90, `info` 5,62,
+  `ajuda` 5,59, `aviso` 8,71, `secundario` 13,63, `contraste` 18,08. `perigo` empata com
+  `primario` porque usa o mesmo `--accent`.
+- **Causa:** a trava de contraste do `TemaService` (`CONTRASTE_MINIMO = 3`, em
+  `frontend/src/app/core/services/tema.service.ts`) é deliberadamente o piso de 3:1 do AA para
+  **componentes de interface e texto grande**, e valida o accent contra a **superfície** — não o
+  caso "texto de `--bg` sobre preenchimento de accent", que é o do botão primário. O accent também
+  é trocável em runtime, então o número varia por usuário; 4,00 é o da base padrão.
+- **Contorno:** nenhum. O botão é legível na prática (falha por 0,5 ponto, não por ordem de
+  grandeza), só não atinge o piso de texto normal.
+- **Correção:** decidir entre escurecer o texto do botão preenchido, clarear o accent da base
+  padrão, ou subir `CONTRASTE_MINIMO` para 4,5 com uma segunda checagem no par accent×`--bg`. É
+  decisão de identidade visual, não de implementação — precisa passar pelo autor e por
+  `docs/design/`.
+- **Desde:** existe desde o botão primário original; medido e registrado na `ui-01b` (2026-08-28).
+
+### P-034 — Biblioteca de componentes existe como catálogo copiado, não como código · `ABERTO` · frontend/design system
+
+- **Sintoma:** o mesmo bloco visual é declarado em dezenas de lugares. Medido em 2026-08-28:
+  `.botao` em **20** arquivos `.scss` (24 telas), `.campo` em 17 componentes (uma versão cada),
+  `.stat` em 5 famílias/10 cópias (12 telas), `.card` em **15** (não 5 — número corrigido pela
+  auditoria da `ui-03`), `.stepper` em 4, `.chip-classificacao` em 3. O frontend
+  tem **32.393 linhas de SCSS para 21.681 de template** — mais estilo do que marcação. Vinte
+  implementações de botão só coincidem enquanto ninguém mexer, e o gate visual da proibição #31
+  precisa provar à mão, tela a tela, o que deveria ser garantido por construção.
+- **Causa:** a convenção manda copiar. `docs/design/tema/_componentes.scss` (292 linhas, 8 blocos)
+  **não entra no build** — `styles.scss` importa `tokens`, `base`, `breakpoints`,
+  `utilitario-flutuante` e o Tailwind —, e `DESIGN.md`/`CONVENTIONS.md` instruem "copie o bloco
+  BEM necessário para o `.scss` scoped do componente". O catálogo é fonte de cópia, não código.
+  A biblioteca de fato do projeto (`shared/`, 18 componentes + 6 diretivas) é a camada **composta**;
+  a camada de primitivos nunca foi construída.
+- **Contorno:** nenhum. Convive-se copiando o bloco onde ainda não há primitivo, e conferindo a
+  olho no gate visual.
+- **Correção:** a série `ui-01`…`ui-05` (`docs/specs/backlog/ui-biblioteca-componentes.spec.md`):
+  criar `frontend/src/app/shared/ui/`, adotar os primitivos módulo a módulo e remover o PrimeNG,
+  que hoje entrega só `p-dialog`/`p-toast`/`MessageService` e o preset de tema.
+  **`ui-01` fechou em 2026-08-28**: `shared/ui/` existe com `app-botao` e `app-campo`, adotados
+  em `autenticacao`; a auditoria corrigiu dois números do Sintoma acima — os blocos `.campo` de
+  topo são **4** (o "17" contava ocorrências do texto, não declarações), e a duplicação do campo
+  vive sob nomes locais (40 blocos `&__rotulo`). **`ui-02` fechou em 2026-08-28**: `shared/ui/`
+  ganhou `app-modal` (sobre `<dialog>` nativo) e `Notificacao`/`app-notificacoes`; os 13 `p-dialog`
+  reais (a auditoria corrigiu o número — 14 incluía uma menção em comentário) e os 12
+  `messageService.add()` foram migrados, e `p-dialog`/`p-toast`/`MessageService` saem do grep de
+  `frontend/src`. PrimeNG segue instalado (só `providePrimeNG`/preset de tema, sem componente
+  consumido) — remover a dependência é a `ui-05`.
+  **`ui-03` fechou em 2026-08-29**: `shared/ui/` ganhou `app-cartao`, `app-stat`, `app-chip` e
+  `app-abas`/`app-aba`/`AbaPainel`; `StepInput` foi promovido para `shared/ui/stepper/` com o
+  contrato intocado (seletor `app-step-input` mantido — task de mover, não de melhorar). A
+  auditoria também corrigiu os dois números do Sintoma acima (`.card` 15, não 5; `.stat` 12 telas,
+  não 13) e apurou que 2 das "5 declarações" de `.stat` (`ficha-mini`/`ficha-atributo`) são na
+  verdade um campo editável com rolagem de dado, não o display puro do `.stat` canônico — ficam de
+  fora do `app-stat`, registradas como ideia de primitivo próprio (`IDEAS.md`). Piloto adotado em
+  4 dos 5 primitivos — `app-cartao` em `perfil.page`, `app-stat` em `campanha/lista`, `app-chip`
+  em `simulacao-shell`, `app-abas` em `criatura-visualizacao` — cada um com o gate visual em
+  `1920×1080`/`360×800` e dois bugs achados só ao vivo (ver `HISTORY.md`: navegação por teclado
+  usando `ativa()` em vez do foco real de DOM, e `.abas__rotulo` sem `::ng-deep` não alcançava o
+  conteúdo projetado). **`Stepper` sem piloto**: as 4 cópias locais restantes exigiriam ou mudar o
+  valor mostrado na caixa (`criar.page`/`criar-criatura.page` mostram o atributo **já somado ao
+  bônus**; digitação direta editaria o número errado) ou um `[tamanho]` compacto que o `StepInput`
+  ainda não tem (`guia-equipamento-loja`, `ficha-visualizacao`) — decisão registrada, não resolvida
+  no improviso; fica para a `ui-04`. Falta o resto: `ui-04`…`ui-05`.
+- **Desde:** desde sempre — a instrução de copiar está no handoff de design original. Medido e
+  registrado na auditoria de 2026-08-28.
+
 ### P-033 — Suíte de `PainelEncontro` não monta o serviço colaborativo recém-injetado · `ABERTO` · frontend/testes
 
 - **Sintoma:** os 53 casos de `frontend/src/app/modules/encontro/paginas/painel/painel-encontro.page.spec.ts` falham antes das asserções ao montar o componente.

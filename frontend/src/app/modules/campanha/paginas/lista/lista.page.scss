@@ -472,41 +472,6 @@
     }
 }
 
-// Stat box — bloco sancionado copiado de docs/design/tema/_componentes.scss (m2-18).
-.stat {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 13px 14px;
-
-    &__rotulo {
-        display: block;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
-        margin-bottom: 7px;
-    }
-
-    &__valor {
-        font-family: var(--font-mono);
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1;
-    }
-
-    // Alertas > 0 (item 4) — mesmo token fixo `--vida` do card/linha crítica, não `--accent`
-    // (trocável em runtime — mesmo racional da m3-38 item 7).
-    &--alerta {
-        border-color: var(--vida-border);
-
-        .stat__valor {
-            color: var(--vida);
-        }
-    }
-}
 
 // Botões — bloco sancionado copiado de docs/design/tema/_componentes.scss.
 .botao {

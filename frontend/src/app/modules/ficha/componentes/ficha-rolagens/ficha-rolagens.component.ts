@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -20,12 +20,11 @@ import {
   type PlanoPresetDto,
 } from '@contratados-rpg/shared/regras/rolagem';
 
-import { Dialog } from 'primeng/dialog';
-
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
@@ -61,7 +60,7 @@ interface RolagemVM {
  * rolar) e **anexar habilidades por passo** (m3-31): cada passo escolhe quais habilidades usa **só para a
  * Energia** (a fusão de efeitos foi aposentada); a mesma habilidade pode ser aplicada mais de uma vez
  * (multiconjunto — soma energia por ocorrência). Um passo pode ser marcado **critável** (dobra o dano).
- * O formulário de novo/editar preset abre num `p-dialog` (não mais inline na lista) — o cartão da
+ * O formulário de novo/editar preset abre num `app-modal` (não mais inline na lista) — o cartão da
  * coluna de Status é estreito demais pro formulário completo (nome, fórmula, habilidades por passo);
  * a lista de presets em si é uma grade de 2 colunas, cada item resumido ao essencial pra rolar.
  * "Duplicar" copia um preset inteiro (nome + " (cópia)", evitando colidir com um nome existente).
@@ -80,7 +79,7 @@ interface RolagemVM {
  */
 @Component({
   selector: 'app-ficha-rolagens',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Icone, Tooltip, OverflowFade, Dialog],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Icone, Tooltip, OverflowFade, Modal],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',
 })
@@ -130,11 +129,6 @@ export class FichaRolagens {
 
   /** Bandeja de dados global — onde cada passo rolado aqui aparece. */
   private readonly bandeja = inject(BandejaDadosService);
-
-  /** Guia de fórmula da rolagem rápida (`#guiaExterna`) — o gatilho do dialog de preset abre este
-   *  mesmo, em vez de uma cópia própria (`aoClicar`, ver `GuiaFormula`). */
-  private readonly guiaExterna = viewChild.required<GuiaFormula>('guiaExterna');
-  protected readonly abrirGuiaExterna = (): void => this.guiaExterna().abrir();
 
   /** Abreviações de atributo aceitas nas fórmulas (para a dica do formulário). */
   protected readonly abreviaturas = Object.keys(ABREVIACOES_ATRIBUTO).join(' ');

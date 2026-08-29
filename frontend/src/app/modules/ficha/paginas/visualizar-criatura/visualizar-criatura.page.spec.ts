@@ -1,7 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { Subject, of } from 'rxjs';
 import {
   CadenciaEnum,
@@ -27,6 +26,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CriaturaVisualizar } from './visualizar-criatura.page';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -106,7 +106,7 @@ describe('CriaturaVisualizar', () => {
       reconexao,
       conectado: signal(true),
     };
-    const messageService = { add: vi.fn() };
+    const notificacaoService = { notificar: vi.fn() };
     const rolagemService = { listarPorFicha: vi.fn(() => of({ itens: [], paginaAtual: 1, totalPaginas: 1 })) };
 
     TestBed.configureTestingModule({
@@ -117,7 +117,7 @@ describe('CriaturaVisualizar', () => {
         { provide: CampanhaService, useValue: campanhaService },
         { provide: SessaoService, useValue: sessaoService },
         { provide: TempoRealService, useValue: tempoRealService },
-        { provide: MessageService, useValue: messageService },
+        { provide: NotificacaoService, useValue: notificacaoService },
         { provide: RolagemService, useValue: rolagemService },
         {
           provide: ActivatedRoute,
@@ -153,7 +153,7 @@ describe('CriaturaVisualizar', () => {
       acessoRevogado$,
       rolagemRegistrada$,
       reconexao,
-      messageService,
+      notificacaoService,
       navegarEspiao,
     };
   }

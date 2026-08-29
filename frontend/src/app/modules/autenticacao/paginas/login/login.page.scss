@@ -184,20 +184,8 @@
         gap: 16px;
     }
 
-    &__campo {
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
-    }
-
-    &__rotulo {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-mute);
-    }
-
+    // Invólucro, rótulo e mensagem de erro do campo vêm do primitivo `app-campo`
+    // (`shared/ui/campo`), no degrau `amplo` — que É a tipografia que estava aqui.
     &__entrada {
         width: 100%;
         padding: 10px 12px;
@@ -248,12 +236,8 @@
         }
     }
 
-    &__erro {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--accent);
-    }
-
+    // Tamanho e layout do botão continuam aqui: o primitivo `app-botao` é dono só da identidade
+    // (raio, fonte mono, cursor, transição, cores da variante, estado desabilitado).
     &__enviar {
         margin-top: 4px;
         display: inline-flex;
@@ -266,10 +250,9 @@
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
 
-        &:disabled {
-            opacity: 0.6;
-            cursor: default;
-        }
+        // Esta tela sempre usou 0.6, e o canônico do primitivo é 0.55. A diferença fica
+        // declarada como dado até a ui-04 decidir convergir — não como uma regra repetida.
+        --botao-opacidade-desabilitado: 0.6;
     }
 
     &__alternativa {
@@ -333,25 +316,6 @@
             justify-content: center;
             min-height: bp.$alvo-toque;
             padding: 4px 6px;
-        }
-    }
-}
-
-// Botão — bloco sancionado copiado de docs/design/tema/_componentes.scss.
-.botao {
-    border-radius: var(--radius-control);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition: filter 0.15s ease;
-
-    &--primario {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-
-        &:hover:not(:disabled) {
-            // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
-            filter: brightness(1.08);
         }
     }
 }

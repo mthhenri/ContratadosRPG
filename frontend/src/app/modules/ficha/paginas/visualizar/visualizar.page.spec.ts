@@ -1,7 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
-import { MessageService } from 'primeng/api';
 import { NEVER, Subject, of, throwError } from 'rxjs';
 import {
   ArquetipoEnum,
@@ -36,6 +35,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { FichaVisualizar } from './visualizar.page';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import type { AjusteAtributos } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -133,7 +133,7 @@ describe('FichaVisualizar', () => {
       reconexao,
       conectado: signal(true),
     };
-    const messageService = { add: vi.fn() };
+    const notificacaoService = { notificar: vi.fn() };
 
     TestBed.configureTestingModule({
       imports: [FichaVisualizar],
@@ -143,7 +143,7 @@ describe('FichaVisualizar', () => {
         { provide: CampanhaService, useValue: campanhaService },
         { provide: SessaoService, useValue: sessaoService },
         { provide: TempoRealService, useValue: tempoRealService },
-        { provide: MessageService, useValue: messageService },
+        { provide: NotificacaoService, useValue: notificacaoService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -180,7 +180,7 @@ describe('FichaVisualizar', () => {
       acessoRevogado$,
       rolagemRegistrada$,
       reconexao,
-      messageService,
+      notificacaoService,
       navegarEspiao,
     };
   }
@@ -317,15 +317,15 @@ describe('FichaVisualizar', () => {
 
   describe('expulsão em tempo real ao revogar acesso (m3-51, item 27)', () => {
     it('redireciona pra fora da tela quando o próprio acesso é revogado', () => {
-      const { fixture, acessoRevogado$, messageService, navegarEspiao } = montar({
+      const { fixture, acessoRevogado$, notificacaoService, navegarEspiao } = montar({
         usuarioLogadoId: 11,
       });
       expect(fixture.componentInstance['podeGerenciar']()).toBe(false);
 
       acessoRevogado$.next({ fichaId: 42, usuarioId: 11 });
 
-      expect(messageService.add).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'warn' }),
+      expect(notificacaoService.notificar).toHaveBeenCalledWith(
+        expect.objectContaining({ severidade: 'aviso' }),
       );
       expect(navegarEspiao).toHaveBeenCalledWith(['/campanhas', 9]);
     });

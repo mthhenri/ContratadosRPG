@@ -1,11 +1,5 @@
-<!-- m3-56: largura fixa (400px, --p-toast-width) estourava viewports de 360-390px (medido ao
-     vivo — `overflow-x: clip` do `html` escondia sem virar scroll do body, mas o toast ficava
-     parcialmente fora e inclicável). O input `[breakpoints]` do PrimeNG (mesma API do
-     `p-dialog`) gera a media query mas mira um atributo `pn_id` que não chega a existir no
-     elemento renderizado nesta versão (21.2.13) — sem efeito. Fix real em `styles.scss`
-     (`.p-toast`, `@include bp.mobile`). -->
 @if (!rotaIsolada()) {
-    <p-toast position="bottom-center" />
+    <app-notificacoes />
 
     @if (loadingService.isLoading()) {
         <span class="carregando-global" role="status" aria-label="Carregando"></span>
@@ -17,7 +11,11 @@
 
         <nav class="topbar__nav" aria-label="Navegação principal">
             @if (sessaoService.autenticado()) {
-                <a class="topbar__item" routerLink="/campanhas" routerLinkActive="topbar__item--ativo">
+                <a
+                    class="topbar__item"
+                    routerLink="/campanhas"
+                    routerLinkActive="topbar__item--ativo"
+                >
                     <app-icone nome="campanhas" />
                     <span>Campanhas</span>
                 </a>

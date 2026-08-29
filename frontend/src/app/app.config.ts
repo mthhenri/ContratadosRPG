@@ -8,7 +8,6 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { Title } from '@angular/platform-browser';
 import { providePrimeNG } from 'primeng/config';
-import { MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
@@ -39,6 +38,5 @@ export const appConfig: ApplicationConfig = {
         inject(Title).setTitle('Contratados RPG - DEV');
       }
     }),
-    MessageService,
   ],
 };

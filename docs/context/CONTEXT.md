@@ -653,6 +653,7 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
+| `ui-04`…`ui-05` | design system | biblioteca própria e saída do PrimeNG (`P-034`); `ui-01`, `ui-02` e `ui-03` já fecharam. `ui-04` → `ui-05` |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
@@ -1240,10 +1241,76 @@ nativo do navegador para nitidez, busca, seleção, páginas e zoom. O leitor pr
 foi removido após a validação visual revelar baixa nitidez e texto duplicado. Os PDFs canônicos vivem
 somente em `docs/core/` e o build os publica em `/documentos/`.
 
+### Biblioteca de componentes própria — `frontend/src/app/shared/ui/`
+
+Camada de primitivos criada pela `ui-01` para acabar com o bloco BEM copiado (`P-034`). **`app-botao`**
+(seletor de atributo — `<button app-botao variante="primario">`, com a fresta
+`--botao-opacidade-desabilitado` para a tela que ainda diverge do 0.55 canônico) e **`app-campo`**
+(invólucro de campo com rótulo, dica e erro em volta do controle projetado, `[tamanho]` em
+`compacto`/`padrao`/`amplo`). Ambos consumidos por `login` e `registro`, que perderam suas cópias
+locais. O `app-campo` é invólucro, **não** `ControlValueAccessor`: o consumidor continua
+escrevendo o controle nativo com `formControlName`, e ele tem de ficar filho DIRETO do `<label>`,
+senão a regra global de asterisco obrigatório (`styles/tema/_base.scss`) para de casar — contrato
+travado em `campo.component.spec.ts`. `docs/design/tema/_componentes.scss` marca com "→ PRIMITIVO"
+o bloco que já migrou; o resto ainda se copia até a `ui-04`.
+
+A `ui-01b` completou o `app-botao` até a paridade com o `p-button` do PrimeNG, a pedido do autor,
+para que a `ui-05` não empobreça a biblioteca: **8 severidades** (`primario`, `secundario`,
+`positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste`) × **4 estilos** (`preenchido`,
+`contorno`, `texto`, `link`, com um padrão por severidade), mais `[tamanho]`, `[posicaoIcone]`,
+`[fluido]` e `[carregando]`. Tudo o que a `ui-01` não tinha é **opt-in**: sem `[tamanho]` o
+primitivo continua sem definir dimensão, e a base segue exatamente como estava — é o que mantém
+`login`/`registro` sem mover um pixel. Ficaram deliberadamente de fora `rounded` e `raised`
+(contrariam o raio máximo e a regra de sombra do `DESIGN.md`) e `badge` (é outro componente, não
+uma variante). As cores `--help` e `--contrast` nasceram aqui e são as duas únicas da paleta sem
+papel de domínio.
+
+A `ui-02` (2026-08-28) acrescentou **`app-modal`** e **`Notificacao`**/`app-notificacoes`, no lugar
+do `p-dialog`/toast do PrimeNG. `app-modal` é elemento (não atributo, como o `Botao`) sobre o
+`<dialog>` nativo — `[aberto]`/`[titulo]` obrigatórios, `[largura]` opcional (CSS livre) e
+`(fechou)` unificando Escape, clique no `::backdrop` e o "×". O top layer do `<dialog>` elimina o
+`P-025` (overlay preso a `position: static` num container rolável) e qualquer `z-index` só para
+vencer CSS de terceiro — inclusive o de `GuiaFormula`, que virou consumidor do primitivo e perdeu
+o overlay próprio. Três armadilhas relevantes para o próximo primitivo a construir sobre
+`<dialog>` (ver `HISTORY.md` do dia para o relato completo): (1) `.modal { display: flex }` puro
+perde para `dialog:not([open]) { display: none }` do UA stylesheet **só depois** que a
+encapsulação de view do Angular acrescenta `[_ngcontent-xxx]` — o `display` tem que morar em
+`&[open] { ... }`; (2) `[largura]` nunca deve virar `[style.max-width]` inline — um `style` inline
+vence qualquer media query de responsividade; vira `[style.--modal-largura]` consumida via `var()`
+no SCSS; (3) o `<dialog>` só ganha caixa se **nenhum ancestral** tiver `display: none` — `showModal()`
+resolve empilhamento (top layer), não geração de caixa —, então um modal cujo gatilho vive numa
+aba/rota diferente de onde o modal está fisicamente declarado precisa morar fora de qualquer
+container de aba, como `app-receber-dano-dialog` já fazia. `Notificacao` segue o mesmo padrão de
+fila em Signals de `BandejaDadosService` (sem RxJS); a severidade `erro` usa `--vida` (fixo), não
+`--accent`, para não repetir o `I-024`.
+
+A `ui-03` (2026-08-29) fechou o conjunto de composição visual: **`app-cartao`** (`[titulo]`
+opcional — sem ele é só a caixa; índice do cabeçalho por projeção `[cartaoIndice]`, cobre texto e
+ícone com um mecanismo só), **`app-stat`** (`[rotulo]`/`[valor]`/`variante` em
+`vida`/`energia`/`positivo` — só exibição pura; um campo editável com rolagem de dado é outro
+primitivo, ainda não construído, `IDEAS.md` `I-025`), **`app-chip`** (`variante` `padrao`/`sutil`)
+e **`app-abas`**/**`app-aba`**/**`AbaPainel`** (tablist/tab/tabpanel — só para troca de painel no
+lugar, não navegação de rota; setas/Home/End com ativação automática, recuperado de um algoritmo
+que já existia **escrito e correto** mas nunca ligado a nenhum template em
+`ficha-visualizacao.component.ts`, m3-11). O `StepInput` (`app-step-input`) foi promovido de
+`modules/simulacao/componentes/step-input/` para `shared/ui/stepper/` com o contrato intocado —
+mesmo seletor, sem piloto novo (as 4 cópias locais restantes têm obstáculo real: duas mostram um
+valor **derivado** — atributo + bônus — que digitação direta editaria errado, duas outras
+precisam de um `[tamanho]` compacto que o primitivo ainda não tem, `IDEAS.md` `I-026`).
+Dois bugs só apareceram na verificação ao vivo, nenhum pego por teste unitário isolado: a
+navegação por teclado usava o sinal `ativa()` do consumidor (atualiza só no próximo ciclo do
+Angular) em vez do foco real de DOM, perdendo passos em setas rápidas; e `.abas__rotulo`, sendo
+conteúdo **projetado** pelo consumidor, precisa de `:host ::ng-deep` para o colapso mobile
+alcançá-lo — um seletor simples no `.scss` do `Aba` nunca bate no `<span>` de fora (encapsulamento
+de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
+
 ### Tema — `frontend/tema`
 
 "Terminal de Contenção" dark-first com **troca em runtime** (`TemaService`: presets + color picker
-com trava de contraste). Tokens CSS + preset PrimeNG + Tailwind apontando para os tokens.
+com trava de contraste). Tokens CSS + Tailwind apontando para os tokens; o preset PrimeNG
+(`contencao.preset.ts` + `updatePrimaryPalette`) ainda existe, mas sincroniza componentes que o
+projeto praticamente não usa e sai na `ui-05` — a fonte de verdade em runtime são as CSS custom
+properties, não o preset.
 `--cor-ficha` (`m3-61`) é um token **separado**, por personagem, não por usuário — nunca ganha
 valor fixo em `_tokens.scss`, sempre `[style.--cor-ficha]` inline por instância; ver "Ficha de
 jogador" acima e `docs/design/DESIGN.md`.
@@ -1287,8 +1354,30 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   `tipo_rolagem_visibilidade` na `m3-27`.
 - **Rolagem `PRIVADA` nunca trafega por WebSocket** — o gateway só emite `rolagem:registrada` para
   rolagens públicas. A privada só chega por REST, a quem tem permissão.
+- **A UI é de componentes próprios, e o PrimeNG sai** (decisão do autor, 2026-08-28). A auditoria
+  mediu o uso real: `p-dialog` (13 tags reais em 5 arquivos — a spec original contava 14 por
+  incluir uma menção em comentário), `p-toast`/`MessageService` e o preset de tema — nenhum
+  `pButton`, `p-select`, `p-inputtext`, `p-table`, `p-tabs`, `p-tooltip`. Os controles são nativos
+  (723 `<button>`, 219 `<input>`, 71 `<select>`, 31 `<textarea>`) estilizados à mão. A biblioteca
+  própria passa a existir como **código** em `frontend/src/app/shared/ui/`, não como blocos
+  copiados de `_componentes.scss` (`P-034`). Série `ui-01`…`ui-05`; `ui-01`, `ui-02` e `ui-03`
+  fecharam (ver acima), `ui-04`…`ui-05` seguem em `docs/specs/backlog/`. `p-dialog`/`p-toast`/
+  `MessageService` já saem do grep de `frontend/src` desde a `ui-02` — falta só o preset de tema
+  para a `ui-05`.
+  Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
+  `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
+- **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**
+  (`ui-01`, 2026-08-28). O primitivo carrega cor, raio, fonte, transição e estado; padding,
+  `font-size`/`weight`, `min-height` e alvo de toque continuam na classe BEM do consumidor,
+  aplicada no **mesmo elemento**. Por isso o `Botao` é componente de **seletor de atributo**
+  (`<button app-botao variante="primario">`, no padrão do `<button matButton>`): o host é o
+  próprio `<button>`/`<a>`, sem nó novo em container flex/grid e sem perder a classe-companheira
+  que dimensiona. `@angular-eslint/component-selector` aceita `['element', 'attribute']` por causa
+  disso; o prefixo `app` continua obrigatório. Invólucros que acrescentam DOM (`app-campo`)
+  seguem sendo elemento. Não inventar `[tamanho]` sem duplicação medida atrás.
 - **PrimeNG 21 sem `@angular/animations`** — o pacote não está instalado e o PrimeNG 21 usa
-  animações CSS próprias. Não wirar `provideAnimationsAsync()`; o build quebra.
+  animações CSS próprias. Não wirar `provideAnimationsAsync()`; o build quebra. Perde o objeto
+  quando a `ui-05` desinstalar o PrimeNG.
 - **A ficha aposentou o sistema de abas de página inteira da `m3-11`** (substituído pelas 3 colunas
   da `m3-38`). `AbaFicha`/`ABAS_FICHA`/`ehAbaFicha` ainda existem no código mas estão **fora do
   template** — não estenda esse sistema, mesmo que uma spec antiga peça.

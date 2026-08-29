@@ -1,15 +1,9 @@
-<p-dialog
-    [visible]="aberto()"
-    [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
-    [dismissableMask]="false"
-    [appendTo]="'body'"
-    [style]="{ width: '440px' }"
-    [breakpoints]="{ '520px': '95vw' }"
-    header="Receber dano"
-    styleClass="receber-dano__dialogo"
-    (onHide)="cancelar()"
+<app-modal
+    [aberto]="aberto()"
+    [titulo]="'Receber dano'"
+    [largura]="'440px'"
+    [fechavelPeloFundo]="false"
+    (fechou)="cancelar()"
 >
     <form class="receber-dano" [formGroup]="formulario" (ngSubmit)="confirmar()">
         <div class="receber-dano__grade">
@@ -133,4 +127,4 @@
             </button>
         </div>
     </form>
-</p-dialog>
+</app-modal>
