@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { Icone, IconeNome } from '../../shared/icone/icone.component';
+import { Chip } from '../../shared/ui/chip/chip.component';
 
 interface AbaSimulacao {
   readonly caminho: string;
@@ -18,7 +19,7 @@ interface AbaSimulacao {
  */
 @Component({
   selector: 'app-simulacao-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, Icone],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, Icone, Chip],
   templateUrl: './simulacao-shell.component.html',
   styleUrl: './simulacao-shell.component.scss',
 })

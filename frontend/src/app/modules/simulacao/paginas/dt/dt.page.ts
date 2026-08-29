@@ -6,7 +6,7 @@ import { map } from 'rxjs';
 import { calcularDtAtributo } from '@contratados-rpg/shared/regras/dt';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
-import { StepInput } from '../../componentes/step-input/step-input.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 
 /** Valor bruto do formulário da aba — o que o singleton preserva entre navegações (m1-17). */

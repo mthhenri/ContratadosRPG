@@ -165,7 +165,7 @@ describe('CriaturaVisualizacao', () => {
     const { fixture } = montar();
     expect(fixture.componentInstance['abaAtiva']()).toBe('geral');
     const rotulos = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.criatura__aba span'),
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button[app-aba] .abas__rotulo'),
     ).map((el) => el.textContent?.trim());
     expect(rotulos).toEqual(['Geral', 'Descrição', 'Ataques', 'Habilidades']);
   });

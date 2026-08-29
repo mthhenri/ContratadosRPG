@@ -8,7 +8,7 @@ import { calcularPatente } from '@contratados-rpg/shared/regras/patente';
 
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
-import { StepInput } from '../../componentes/step-input/step-input.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 import { ROTULOS_PATENTE } from '../../rotulos';
 

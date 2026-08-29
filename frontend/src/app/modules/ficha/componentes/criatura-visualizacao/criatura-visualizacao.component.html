@@ -672,56 +672,61 @@
         <!-- Coluna 3 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
          `.ficha-status__abas` de `FichaVisualizacao`. -->
         <div class="criatura__coluna criatura__coluna--status">
-            <div class="criatura__abas" role="tablist">
+            <app-abas rotulo="Abas de status da criatura" (navegou)="aoNavegarAba($event)">
                 <button
-                    type="button"
-                    class="criatura__aba"
-                    role="tab"
-                    [class.criatura__aba--ativa]="abaAtiva() === 'geral'"
-                    [attr.aria-selected]="abaAtiva() === 'geral'"
+                    app-aba
+                    valor="geral"
+                    [ativa]="abaAtiva() === 'geral'"
+                    id="criatura-aba-geral"
+                    aria-controls="criatura-painel-geral"
                     (click)="selecionarAba('geral')"
                 >
                     <app-icone nome="visao-geral" />
-                    <span>Geral</span>
+                    <span class="abas__rotulo">Geral</span>
                 </button>
                 <button
-                    type="button"
-                    class="criatura__aba"
-                    role="tab"
-                    [class.criatura__aba--ativa]="abaAtiva() === 'descricao'"
-                    [attr.aria-selected]="abaAtiva() === 'descricao'"
+                    app-aba
+                    valor="descricao"
+                    [ativa]="abaAtiva() === 'descricao'"
+                    id="criatura-aba-descricao"
+                    aria-controls="criatura-painel-descricao"
                     (click)="selecionarAba('descricao')"
                 >
                     <app-icone nome="anotacoes" />
-                    <span>Descrição</span>
+                    <span class="abas__rotulo">Descrição</span>
                 </button>
                 <button
-                    type="button"
-                    class="criatura__aba"
-                    role="tab"
-                    [class.criatura__aba--ativa]="abaAtiva() === 'ataques'"
-                    [attr.aria-selected]="abaAtiva() === 'ataques'"
+                    app-aba
+                    valor="ataques"
+                    [ativa]="abaAtiva() === 'ataques'"
+                    id="criatura-aba-ataques"
+                    aria-controls="criatura-painel-ataques"
                     (click)="selecionarAba('ataques')"
                 >
                     <app-icone nome="d20" />
-                    <span>Ataques</span>
+                    <span class="abas__rotulo">Ataques</span>
                 </button>
                 <button
-                    type="button"
-                    class="criatura__aba"
-                    role="tab"
-                    [class.criatura__aba--ativa]="abaAtiva() === 'habilidades'"
-                    [attr.aria-selected]="abaAtiva() === 'habilidades'"
+                    app-aba
+                    valor="habilidades"
+                    [ativa]="abaAtiva() === 'habilidades'"
+                    id="criatura-aba-habilidades"
+                    aria-controls="criatura-painel-habilidades"
                     (click)="selecionarAba('habilidades')"
                 >
                     <app-icone nome="habilidades" />
-                    <span>Habilidades</span>
+                    <span class="abas__rotulo">Habilidades</span>
                 </button>
-            </div>
+            </app-abas>
 
             @switch (abaAtiva()) {
                 @case ("geral") {
-                    <section class="criatura__cartao criatura__cartao--painel">
+                    <section
+                        class="criatura__cartao criatura__cartao--painel"
+                        appAbaPainel
+                        id="criatura-painel-geral"
+                        aria-labelledby="criatura-aba-geral"
+                    >
                         <div class="criatura__stats criatura__stats--info">
                             <div class="stat criatura__stat criatura__stat--info">
                                 <span class="stat__rotulo">Cadência</span>
@@ -1267,7 +1272,12 @@
                 }
 
                 @case ("descricao") {
-                    <section class="criatura__cartao criatura__cartao--painel">
+                    <section
+                        class="criatura__cartao criatura__cartao--painel"
+                        appAbaPainel
+                        id="criatura-painel-descricao"
+                        aria-labelledby="criatura-aba-descricao"
+                    >
                         <div class="criatura__info-card">
                             <header class="criatura__info-cabecalho">
                                 <h3 class="criatura__info-titulo">Descrição</h3>
@@ -1454,7 +1464,12 @@
                 }
 
                 @case ("ataques") {
-                    <section class="criatura__cartao criatura__cartao--painel">
+                    <section
+                        class="criatura__cartao criatura__cartao--painel"
+                        appAbaPainel
+                        id="criatura-painel-ataques"
+                        aria-labelledby="criatura-aba-ataques"
+                    >
                         <app-criatura-ataque-lista
                             [itens]="dados().ataques"
                             [editavel]="ajustavel()"
@@ -1467,7 +1482,12 @@
                 }
 
                 @case ("habilidades") {
-                    <section class="criatura__cartao criatura__cartao--painel">
+                    <section
+                        class="criatura__cartao criatura__cartao--painel"
+                        appAbaPainel
+                        id="criatura-painel-habilidades"
+                        aria-labelledby="criatura-aba-habilidades"
+                    >
                         <app-criatura-habilidade-lista
                             [itens]="dados().habilidades"
                             [editavel]="ajustavel()"

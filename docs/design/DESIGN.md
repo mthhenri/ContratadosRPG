@@ -132,15 +132,15 @@ inteiro.
 
 | Bloco | O que é | Variantes | Primitivo |
 |---|---|---|---|
-| `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | — | — (`ui-03`) |
-| `.stat` | Caixa de estatística (rótulo + valor grande) | `--vida` (borda/valor em `--accent`), `--energia` (em `--energy`) | — (`ui-03`) |
-| `.stepper` | Input numérico com botões `−`/`+` | — | — (`ui-03`) |
+| `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | `[titulo]`/`[nivelTitulo]` (`h1`/`h2`), índice por `[cartaoIndice]` projetado | **`<app-cartao titulo="…">`** |
+| `.stat` | Caixa de estatística (rótulo + valor grande) | `vida` (`--vida`, fixo — não `--accent`), `energia` (`--energy`), `positivo` (`--positive`) | **`<app-stat rotulo="…" [valor]="…">`** |
+| `.stepper` | Input numérico com botões `−`/`+` | — | **`<app-step-input [formControl]="…">`** (`shared/ui/stepper/`) |
 | `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho`, `posicaoIcone`, `fluido` e `carregando`. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
 | `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
-| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | — | — (`ui-03`) |
+| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | `padrao` (`--accent`), `sutil` (`--text-mute`/`--border-strong`) | **`<app-chip variante="…">`** |
 | `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |
 | `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) | — (consumidor único) |
-| `.abas` | Barra de abas dentro de um card (ficha, calculadora) | `__item--ativa` | — (`ui-03`) |
+| `.abas` | Barra de abas — troca de painel no lugar (`tablist`/`tab`/`tabpanel`), não navegação de rota | `__item--ativa`, colapso mobile só-ícone | **`<app-abas rotulo="…">` + `<button app-aba valor="…">` + `[appAbaPainel]`** |
 | `.modal` | Caixa de diálogo modal, sobre `<dialog>` nativo — cabeçalho com título + "×", corpo projetado | `[largura]` (CSS livre), `[fechavelPeloFundo]` (default `true`) | **`<app-modal aberto titulo>…</app-modal>`** |
 | `.notificacoes` | Fila de notificações flutuante, `bottom-center` | 4 severidades — `sucesso`, `informacao`, `aviso`, `erro` (`--vida` fixo, não `--accent`) | **`NotificacaoService.notificar(...)`** + `<app-notificacoes />` (um único, no `layout`) |
 

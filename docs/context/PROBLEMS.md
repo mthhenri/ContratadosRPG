@@ -29,6 +29,24 @@
 
 ## Ativos
 
+### P-037 — Proxy do dev server intercepta `/campanhas` como se fosse `/campanha` · `ABERTO` · frontend/ferramental
+
+- **Sintoma:** navegar direto para `http://localhost:4300/campanhas` (nova aba, refresh, link
+  externo) devolve o 404 JSON do NestJS (`{"mensagem":"Cannot GET /campanhas"}`) em vez da SPA.
+  Navegação client-side (clicar no link "Campanhas" da topbar, já dentro do app) funciona normal.
+- **Causa:** `frontend/proxy.conf.json` declara `"/campanha"` como contexto de **prefixo simples**
+  para a API. O proxy do Vite casa por `url.startsWith(context)`, e `"/campanhas".startsWith("/campanha")`
+  é verdadeiro — a rota de app (plural) vira prefixo da rota de API (singular) e a navegação de
+  documento inteira vai pro backend em vez de cair no fallback de `index.html`. O arquivo já tem a
+  correção certa para o par `/ficha`/`/fichas` (regex `^/ficha(?:$|[/?])`, com comentário
+  explicando exatamente esse risco) — só não foi replicada para `/campanha`/`/campanhas`.
+- **Contorno:** nenhum para navegação de documento nova; client-side (SPA já carregada) não é
+  afetado. Achado ao vivo no gate visual da `ui-03` ao abrir `/campanhas` direto para verificar o
+  piloto do `app-stat` — contornado ali navegando pela topbar em vez de `page.goto`.
+- **Correção:** trocar `"/campanha"` por um regex com o mesmo boundary do `/ficha`, ex.
+  `^/campanha(?:$|[/?])`, em `frontend/proxy.conf.json`.
+- **Desde:** não investigado quando entrou; encontrado em 2026-08-29 verificando a `ui-03`.
+
 ### P-036 — `var(--danger)` não existe em nenhum token — badge "Privada" da bandeja de dados sem cor · `ABERTO` · frontend/tema
 
 - **Sintoma:** `bandeja-dados.component.scss` (`&__visibilidade--privada`) usa `var(--danger)` em
@@ -73,7 +91,8 @@
 
 - **Sintoma:** o mesmo bloco visual é declarado em dezenas de lugares. Medido em 2026-08-28:
   `.botao` em **20** arquivos `.scss` (24 telas), `.campo` em 17 componentes (uma versão cada),
-  `.stat` em 5 (13 telas), `.card` em 5, `.stepper` em 4, `.chip-classificacao` em 3. O frontend
+  `.stat` em 5 famílias/10 cópias (12 telas), `.card` em **15** (não 5 — número corrigido pela
+  auditoria da `ui-03`), `.stepper` em 4, `.chip-classificacao` em 3. O frontend
   tem **32.393 linhas de SCSS para 21.681 de template** — mais estilo do que marcação. Vinte
   implementações de botão só coincidem enquanto ninguém mexer, e o gate visual da proibição #31
   precisa provar à mão, tela a tela, o que deveria ser garantido por construção.
@@ -96,7 +115,23 @@
   reais (a auditoria corrigiu o número — 14 incluía uma menção em comentário) e os 12
   `messageService.add()` foram migrados, e `p-dialog`/`p-toast`/`MessageService` saem do grep de
   `frontend/src`. PrimeNG segue instalado (só `providePrimeNG`/preset de tema, sem componente
-  consumido) — remover a dependência é a `ui-05`. Falta o resto: `ui-03`…`ui-05`.
+  consumido) — remover a dependência é a `ui-05`.
+  **`ui-03` fechou em 2026-08-29**: `shared/ui/` ganhou `app-cartao`, `app-stat`, `app-chip` e
+  `app-abas`/`app-aba`/`AbaPainel`; `StepInput` foi promovido para `shared/ui/stepper/` com o
+  contrato intocado (seletor `app-step-input` mantido — task de mover, não de melhorar). A
+  auditoria também corrigiu os dois números do Sintoma acima (`.card` 15, não 5; `.stat` 12 telas,
+  não 13) e apurou que 2 das "5 declarações" de `.stat` (`ficha-mini`/`ficha-atributo`) são na
+  verdade um campo editável com rolagem de dado, não o display puro do `.stat` canônico — ficam de
+  fora do `app-stat`, registradas como ideia de primitivo próprio (`IDEAS.md`). Piloto adotado em
+  4 dos 5 primitivos — `app-cartao` em `perfil.page`, `app-stat` em `campanha/lista`, `app-chip`
+  em `simulacao-shell`, `app-abas` em `criatura-visualizacao` — cada um com o gate visual em
+  `1920×1080`/`360×800` e dois bugs achados só ao vivo (ver `HISTORY.md`: navegação por teclado
+  usando `ativa()` em vez do foco real de DOM, e `.abas__rotulo` sem `::ng-deep` não alcançava o
+  conteúdo projetado). **`Stepper` sem piloto**: as 4 cópias locais restantes exigiriam ou mudar o
+  valor mostrado na caixa (`criar.page`/`criar-criatura.page` mostram o atributo **já somado ao
+  bônus**; digitação direta editaria o número errado) ou um `[tamanho]` compacto que o `StepInput`
+  ainda não tem (`guia-equipamento-loja`, `ficha-visualizacao`) — decisão registrada, não resolvida
+  no improviso; fica para a `ui-04`. Falta o resto: `ui-04`…`ui-05`.
 - **Desde:** desde sempre — a instrução de copiar está no handoff de design original. Medido e
   registrado na auditoria de 2026-08-28.
 

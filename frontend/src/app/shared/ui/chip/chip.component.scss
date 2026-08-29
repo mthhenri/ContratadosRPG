@@ -1,0 +1,19 @@
+.chip {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 6px 10px;
+
+  &--sutil {
+    letter-spacing: 0.12em;
+    color: var(--text-mute);
+    border-color: var(--border-strong);
+    padding: 4px 9px;
+  }
+}

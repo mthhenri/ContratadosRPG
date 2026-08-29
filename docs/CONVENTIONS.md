@@ -389,6 +389,16 @@ aba/visibilidade condicional (mesmo padrão de `app-receber-dano-dialog` em
 `ficha-visualizacao`) — um ancestral `display: none` esconde o `<dialog>` mesmo com `showModal()`
 já chamado, porque o top layer resolve empilhamento, não geração de caixa.
 
+**Composição visual (ui-03):** `app-cartao` (`[titulo]` opcional + `[cartaoIndice]` projetado)
+substitui o bloco `.card`/cabeçalho copiado; `app-stat` (`[rotulo]`/`[valor]`/`[variante]` —
+`vida`/`energia`/`positivo`) substitui `.stat`/`.calc-stat`/`.agente-stat` de exibição pura —
+não force um campo editável ou com rolagem de dado nele, isso é outro primitivo (`IDEAS.md`
+`I-025`); `app-chip` substitui `.chip-classificacao`; `app-abas`/`app-aba`/`[appAbaPainel]`
+substituem uma barra de abas própria — só para troca de painel no lugar (`role="tablist"`), não
+para navegação de rota (`routerLink`/`routerLinkActive` continua sendo nav comum, sem esses
+papéis ARIA). `StepInput` (`app-step-input`, `shared/ui/stepper/`) continua o primitivo de
+stepper — mesmo contrato de antes, só mudou de pasta.
+
 ---
 
 ## Proibições — Resumo Rápido
@@ -415,6 +425,7 @@ já chamado, porque o top layer resolve empilhamento, não geração de caixa.
 | NgModule / `.css` / `style=""` / seletor de ID | standalone / `.scss` / Tailwind+BEM |
 | Copiar bloco BEM que já virou primitivo em `shared/ui/` | Consumir o primitivo (`app-botao`, `app-campo`) |
 | `p-dialog`/overlay próprio/`MessageService` | `app-modal` / `NotificacaoService` |
+| Copiar `.card`/`.stat`/`.chip-classificacao`/barra de abas | `app-cartao`/`app-stat`/`app-chip`/`app-abas`+`app-aba` (`shared/ui/`) |
 | Atributo `title` nativo do HTML para tooltip | Diretiva `[appTooltip]` (`shared/tooltip/`) |
 | Hex/cor/fonte/raio hardcoded em SCSS | Consumir tokens do tema (`var(--accent)`, `var(--font-mono)`… de `docs/design/`) |
 | Primitivo em service/repository | DTO, mesmo com um único campo |

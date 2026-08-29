@@ -653,7 +653,7 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `ui-03`…`ui-05` | design system | biblioteca própria e saída do PrimeNG (`P-034`); `ui-01` e `ui-02` já fecharam. `ui-04` → `ui-05` |
+| `ui-04`…`ui-05` | design system | biblioteca própria e saída do PrimeNG (`P-034`); `ui-01`, `ui-02` e `ui-03` já fecharam. `ui-04` → `ui-05` |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
@@ -1243,17 +1243,16 @@ somente em `docs/core/` e o build os publica em `/documentos/`.
 
 ### Biblioteca de componentes própria — `frontend/src/app/shared/ui/`
 
-Camada de primitivos criada pela `ui-01` para acabar com o bloco BEM copiado (`P-034`). Hoje tem
-quatro: **`app-botao`** (seletor de atributo — `<button app-botao variante="primario">`, com a
-fresta `--botao-opacidade-desabilitado` para a tela que ainda diverge do 0.55 canônico) e
-**`app-campo`** (invólucro de campo com rótulo, dica e
-erro em volta do controle projetado, `[tamanho]` em `compacto`/`padrao`/`amplo`). Ambos consumidos
-por `login` e `registro`, que perderam suas cópias locais. O `app-campo` é invólucro, **não**
-`ControlValueAccessor`: o consumidor continua escrevendo o controle nativo com `formControlName`,
-e ele tem de ficar filho DIRETO do `<label>`, senão a regra global de asterisco obrigatório
-(`styles/tema/_base.scss`) para de casar — contrato travado em `campo.component.spec.ts`.
-`docs/design/tema/_componentes.scss` marca com "→ PRIMITIVO" o bloco que já migrou; o resto ainda
-se copia até a `ui-03`/`ui-04`.
+Camada de primitivos criada pela `ui-01` para acabar com o bloco BEM copiado (`P-034`). **`app-botao`**
+(seletor de atributo — `<button app-botao variante="primario">`, com a fresta
+`--botao-opacidade-desabilitado` para a tela que ainda diverge do 0.55 canônico) e **`app-campo`**
+(invólucro de campo com rótulo, dica e erro em volta do controle projetado, `[tamanho]` em
+`compacto`/`padrao`/`amplo`). Ambos consumidos por `login` e `registro`, que perderam suas cópias
+locais. O `app-campo` é invólucro, **não** `ControlValueAccessor`: o consumidor continua
+escrevendo o controle nativo com `formControlName`, e ele tem de ficar filho DIRETO do `<label>`,
+senão a regra global de asterisco obrigatório (`styles/tema/_base.scss`) para de casar — contrato
+travado em `campo.component.spec.ts`. `docs/design/tema/_componentes.scss` marca com "→ PRIMITIVO"
+o bloco que já migrou; o resto ainda se copia até a `ui-04`.
 
 A `ui-01b` completou o `app-botao` até a paridade com o `p-button` do PrimeNG, a pedido do autor,
 para que a `ui-05` não empobreça a biblioteca: **8 severidades** (`primario`, `secundario`,
@@ -1284,6 +1283,26 @@ aba/rota diferente de onde o modal está fisicamente declarado precisa morar for
 container de aba, como `app-receber-dano-dialog` já fazia. `Notificacao` segue o mesmo padrão de
 fila em Signals de `BandejaDadosService` (sem RxJS); a severidade `erro` usa `--vida` (fixo), não
 `--accent`, para não repetir o `I-024`.
+
+A `ui-03` (2026-08-29) fechou o conjunto de composição visual: **`app-cartao`** (`[titulo]`
+opcional — sem ele é só a caixa; índice do cabeçalho por projeção `[cartaoIndice]`, cobre texto e
+ícone com um mecanismo só), **`app-stat`** (`[rotulo]`/`[valor]`/`variante` em
+`vida`/`energia`/`positivo` — só exibição pura; um campo editável com rolagem de dado é outro
+primitivo, ainda não construído, `IDEAS.md` `I-025`), **`app-chip`** (`variante` `padrao`/`sutil`)
+e **`app-abas`**/**`app-aba`**/**`AbaPainel`** (tablist/tab/tabpanel — só para troca de painel no
+lugar, não navegação de rota; setas/Home/End com ativação automática, recuperado de um algoritmo
+que já existia **escrito e correto** mas nunca ligado a nenhum template em
+`ficha-visualizacao.component.ts`, m3-11). O `StepInput` (`app-step-input`) foi promovido de
+`modules/simulacao/componentes/step-input/` para `shared/ui/stepper/` com o contrato intocado —
+mesmo seletor, sem piloto novo (as 4 cópias locais restantes têm obstáculo real: duas mostram um
+valor **derivado** — atributo + bônus — que digitação direta editaria errado, duas outras
+precisam de um `[tamanho]` compacto que o primitivo ainda não tem, `IDEAS.md` `I-026`).
+Dois bugs só apareceram na verificação ao vivo, nenhum pego por teste unitário isolado: a
+navegação por teclado usava o sinal `ativa()` do consumidor (atualiza só no próximo ciclo do
+Angular) em vez do foco real de DOM, perdendo passos em setas rápidas; e `.abas__rotulo`, sendo
+conteúdo **projetado** pelo consumidor, precisa de `:host ::ng-deep` para o colapso mobile
+alcançá-lo — um seletor simples no `.scss` do `Aba` nunca bate no `<span>` de fora (encapsulamento
+de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 
 ### Tema — `frontend/tema`
 
@@ -1341,9 +1360,10 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   `pButton`, `p-select`, `p-inputtext`, `p-table`, `p-tabs`, `p-tooltip`. Os controles são nativos
   (723 `<button>`, 219 `<input>`, 71 `<select>`, 31 `<textarea>`) estilizados à mão. A biblioteca
   própria passa a existir como **código** em `frontend/src/app/shared/ui/`, não como blocos
-  copiados de `_componentes.scss` (`P-034`). Série `ui-01`…`ui-05`; `ui-01` e `ui-02` fecharam (ver
-  acima), `ui-03`…`ui-05` seguem em `docs/specs/backlog/`. `p-dialog`/`p-toast`/`MessageService` já
-  saem do grep de `frontend/src` desde a `ui-02` — falta só o preset de tema para a `ui-05`.
+  copiados de `_componentes.scss` (`P-034`). Série `ui-01`…`ui-05`; `ui-01`, `ui-02` e `ui-03`
+  fecharam (ver acima), `ui-04`…`ui-05` seguem em `docs/specs/backlog/`. `p-dialog`/`p-toast`/
+  `MessageService` já saem do grep de `frontend/src` desde a `ui-02` — falta só o preset de tema
+  para a `ui-05`.
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**

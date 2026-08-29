@@ -40,7 +40,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
-import { StepInput } from '../../componentes/step-input/step-input.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ICONES_CATEGORIA, ROTULOS_PATENTE } from '../../rotulos';
 
 /** Uma modificação aplicada a um item do carrinho (estado da página). */

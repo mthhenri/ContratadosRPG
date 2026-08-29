@@ -24,7 +24,7 @@ import {
 } from '@contratados-rpg/shared/regras/agente';
 
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
-import { StepInput } from '../../componentes/step-input/step-input.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 
 /** Nome de cada `FormControl` numérico de atributo (chave do `FormGroup`). */

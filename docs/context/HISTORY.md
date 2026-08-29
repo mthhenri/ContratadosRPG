@@ -1,5 +1,128 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-29 — ui-03: `Cartao`, `Stat`, `Chip`, `Abas` e `Stepper` fecham o conjunto de primitivos de composição
+
+Pedido direto do autor: "vamos fazer a ui-03". Cinco entregáveis na mesma task —
+`app-cartao`/`app-stat`/`app-chip`/`app-abas`+`app-aba`+`AbaPainel`, mais a promoção do
+`StepInput` (já existente em `modules/simulacao/componentes/step-input/`) para `shared/ui/`.
+
+**Auditoria antes de implementar, delegada a 5 agentes `Explore` em paralelo** (uma pergunta
+autocontida por bloco, contra `docs/design/tema/_componentes.scss`) — mesma disciplina de
+`ui-01`/`ui-02`, mas o volume de arquivos a varrer (frontend inteiro, 5 blocos) tornou a
+paralelização o caminho eficiente em vez de um custo. Dois números da spec original estavam
+errados, na mesma direção de sempre (estimativa por leitura, não por grep):
+
+- **`.card`: 15 cópias reais, não 5.** O agente confirmou container completo
+  (`background`/`border`/`radius`/`padding`) + cabeçalho (`__cabecalho`/`__indice`/`__titulo`/
+  `__regua`) em 15 arquivos (`.calc-cartao` ×5 na simulação, `.card` ×6, `.dialogo`/`.ficha-cartao`
+  ×4), mais uma 16ª cópia órfã sem consumidor (`_stub-pagina.scss`) que não entrou na contagem.
+  Near-misses descartados (têm o trio índice/título/régua, mas não o container `.card` inteiro):
+  `painel-encontro`, `acesso-negado`, `criar`/`criar-criatura` (`.guia`), `app-modal` (usa só os
+  tokens `--radius-card`/`--pad-card`, sem `__indice`/`__regua`).
+- **`.stat`: 5 famílias de classe batem, mas cobrem 12 telas, não 13.** E duas das cinco
+  (`ficha-mini`, `ficha-atributo` em `ficha-visualizacao`) não são o `.stat` de exibição pura do
+  catálogo — têm `__entrada` (edição inline) e `__rolar` (dado), um componente estruturalmente
+  mais rico. Ficam de fora do `app-stat` (registrado em `IDEAS.md` `I-025` como primitivo próprio
+  a construir depois) — forçá-las dentro misturaria display com formulário e ação de jogo.
+- **`.stepper`: 4 cópias locais fora do `StepInput`, confirmado exato.** `criar.page`/
+  `criar-criatura.page` (cópia byte-a-byte uma da outra), `guia-equipamento-loja` (variante
+  compacta) e `.ficha-passo`/`ficha-atributo__stepper` em `ficha-visualizacao` — esta última é a
+  única que já usa `appHoldRepeat`; o próprio `StepInput` não usa (a doc-comment antiga já
+  adiantava uma integração que nunca foi escrita).
+- **`.chip-classificacao`: 3 cópias / 3 telas, exato.** Mas só 1 (`simulacao-shell`, "Acesso
+  Livre") reproduz o bloco canônico à risca (`--accent`); as outras 2 (`ficha-visualizacao`,
+  `criatura-visualizacao`, ambas exibindo `FICHA-JGD-####`/`FICHA-CRT-####`) usam um desenho mais
+  discreto (`--text-mute`/`--border-strong`). Virou a variante `sutil` do primitivo.
+- **`.abas`: duas origens reais divergem uma da outra E do catálogo congelado.** Ficha
+  (`ficha-status__abas`) e Criatura (`criatura__abas`) batem quase 1:1 entre si — inclusive a
+  mesma divergência do catálogo (item de largura **igual** no desktop, `width:100%`/`flex:1 1 0`,
+  não do tamanho do conteúdo como o exemplo em `_componentes.scss`). A Simulação diverge das
+  outras duas: é feita de `<a routerLink>` (navegação de rota, não troca de painel no lugar — não
+  é semântica de `tablist`/`tab` da WAI-ARIA) e usa outro estado ativo (`.selecionavel--ativo`,
+  sem moldura no container). Por isso o primitivo segue o par Ficha/Criatura; a barra da Simulação
+  fica fora da adoção desta task — decisão registrada, não resolvida no improviso, como o risco da
+  spec pedia. A auditoria também achou: `criatura-visualizacao` já tinha `role="tablist"`/
+  `role="tab"`/`aria-selected` corretos, mas nenhuma das barras reais tinha navegação por teclado
+  — ela só existia, **escrita e correta**, porém nunca ligada a nenhum template, em
+  `ficha-visualizacao.component.ts` (`navegarAbas`/`focarAba`, m3-11, código morto confirmado por
+  grep). O `app-abas` recupera esse algoritmo (ativação automática: mover o foco com as setas já
+  seleciona) em vez de reescrevê-lo.
+
+**Decisão de correção deliberada em `app-stat--vida`:** o bloco `.stat--vida` "congelado" em
+`_componentes.scss` aponta para `var(--accent)`/`var(--accent-border)`, mas `_tokens.scss` diz
+explicitamente que `--vida` é "vermelho FIXO da identidade — não acompanha a troca de `--accent`"
+(que é por-usuário). Duas das cinco cópias auditadas (`campanha/detalhe`, `campanha/lista`) já
+usavam `var(--vida)`/`var(--vida-border)` corretamente; as outras duas (`criar.page`,
+`criar-criatura.page`) copiaram o exemplo desatualizado. O primitivo fixa a variante no valor
+correto (`--vida`), não no exemplo congelado — decisão central da identidade da variante, não
+"aproveitar pra melhorar" de passagem.
+
+**Piloto adotado em 4 dos 5 primitivos**, um consumidor real cada, cópia local apagada:
+`app-cartao` em `usuario/paginas/perfil` (as 3 seções da página, incluindo o esqueleto de
+carregamento sem cabeçalho — prova o caso "`[titulo]` opcional"); `app-stat` em
+`campanha/paginas/lista` (as 4 caixas da tira de estatísticas, incluindo o `[variante]="'vida'"`
+condicional de Alertas); `app-chip` em `simulacao-shell` ("Acesso Livre", variante `padrao`);
+`app-abas` em `ficha/componentes/criatura-visualizacao` (as 4 abas Geral/Descrição/Ataques/
+Habilidades, com `AbaPainel` nos 4 `<section>` de conteúdo).
+
+**`Stepper` sem piloto — decisão registrada, não forçada.** As 4 cópias locais restantes têm cada
+uma um obstáculo real, achado ao auditar antes de mexer: `criar.page`/`criar-criatura.page`
+mostram dentro da caixa o atributo **já somado ao bônus** (`atributosFinais()`), não o valor base
+editável — trocar por `app-step-input` (que permite digitação direta) deixaria o usuário editando
+um número que não é o que está de fato armazenado. `guia-equipamento-loja` e `ficha-visualizacao`
+usam uma variante visivelmente menor (28px/14px contra 30px/19px do canônico) que o `StepInput`
+ainda não oferece como opção — e o risco da própria spec pedia explicitamente para **não**
+melhorar o `StepInput` de passagem só por estar movendo de pasta ("muda o endereço... nada mais").
+Registrado em `IDEAS.md` (`I-026`, um `[tamanho]` compacto opt-in) para a `ui-04` resolver quando
+migrar esses módulos.
+
+**Dois bugs achados só na verificação ao vivo** (stack real: Postgres 16 nativo via `apt`, mesmo
+contorno da `ui-02` para o Docker bloqueado; backend/frontend `dev`; Playwright dirigindo
+`1920×1080` e `360×800` com sessão real via `localStorage`):
+
+1. **Navegação por teclado do `app-abas` "engolia" a segunda seta.** `Aba.ativa()` é um sinal do
+   consumidor que só reflete a seleção anterior depois do próximo ciclo de detecção de mudanças do
+   Angular — em duas setas disparadas em sequência rápida (achado com Playwright, mas reproduzível
+   por qualquer usuário segurando a tecla), a segunda leitura de `ativa()` ainda via o estado de
+   ANTES da primeira seta ter sido processado, e repetia o primeiro passo em vez de avançar
+   (`ArrowRight` `ArrowRight` a partir de "Geral" parava em "Descrição", não "Ataques"). **Fix:**
+   `Aba` ganhou `estaFocado()` (compara `document.activeElement`, síncrono e sempre atual — o
+   padrão recomendado pelo WAI-ARIA APG pra "roving tabindex"), e `Abas.onTeclado` passou a usar
+   isso como fonte de verdade do índice atual, caindo em `ativa()` só como reserva.
+2. **`.abas__rotulo` nunca escondia no mobile.** O `<span class="abas__rotulo">` é projetado pelo
+   consumidor via `<ng-content>` — carrega o atributo de encapsulamento do TEMPLATE DO CONSUMIDOR,
+   não o do `Aba`. Um `.abas__rotulo { @include bp.mobile { display: none } }` simples em
+   `aba.component.scss` compila pra `.abas__rotulo[_ngcontent-abaX]`, que nunca bate no `<span>`
+   projetado (ele carrega `_ngcontent` do consumidor). Resultado ao vivo: as 4 abas mostravam
+   ícone+texto completos em `360×800`, nenhuma colapsava — `scrollWidth` (356px) > `clientWidth`
+   (310px) no `app-abas`, confirmado por `evaluate()` antes do fix. **Fix:** `:host ::ng-deep
+   .abas__rotulo` — alcança o DOM light projetado, mas só dentro de instâncias deste componente,
+   sem vazar globalmente. Depois do fix, `scrollWidth === clientWidth` (310px) e só a aba ativa
+   mostra o rótulo.
+
+Os dois seriam invisíveis a teste unitário isolado (o spec de `Abas` sempre chama
+`fixture.detectChanges()` entre teclas, mascarando o timing do primeiro; JSDOM não gera o atributo
+`_ngcontent` real do encapsulamento do segundo) — confirma de novo a exigência do projeto de
+verificação ao vivo antes de declarar uma UI pronta.
+
+**Achado incidental, registrado e não corrigido aqui (fora de escopo):** `frontend/proxy.conf.json`
+intercepta `/campanhas` (rota de app) como prefixo de `/campanha` (rota de API) — `page.goto` direto
+pra `/campanhas` devolve 404 JSON do Nest em vez da SPA; navegação client-side (clicar no link da
+topbar) não é afetada. O arquivo já tem a correção certa pro par `/ficha`/`/fichas` (regex com
+boundary) — só não foi replicada pro par `/campanha`/`/campanhas`. Registrado como `P-037`.
+
+**Gates:** shared 742/742 (não tocado, conferido); frontend 1273 passando (1258 da `ui-02` + 15
+specs novos: `Cartao` 4, `Stat` 3, `Chip` 2, `Abas` 6), mesmas 169 falhas pré-existentes do `P-033`
+(`painel-encontro`/`caderno-flutuante`, confirmado idêntico ao baseline); `npm run lint` (raiz) 0
+erros nos três workspaces (só warnings pré-existentes, em arquivos não tocados). `StepInput` movido
+de pasta sem alterar asserção do spec — os 5 testes originais continuam passando.
+
+**Fecho auditável:** `app-cartao`/`app-stat`/`app-chip`/`app-abas` — implementados, especificados,
+com piloto adotado e gate visual em 1920×1080/360×800, dois bugs achados e corrigidos ao vivo.
+`StepInput` — movido, contrato intocado, 6 consumidores confirmados órfãos-zero, sem piloto novo
+(decisão registrada acima, não pendência silenciosa). Migração geral dos módulos restantes
+(4 cópias `.stat`, 14 `.card`, 3 `.abas`-like, 4 `.stepper`) é `ui-04`, como a spec já delimitava.
+
 ## 2026-08-28 — ui-02: `app-modal` sobre `<dialog>` nativo e `Notificacao` substituem o `p-dialog`/toast do PrimeNG
 
 Pedido direto do autor logo depois da `ui-01b`: "bora com a ui-02". A spec já vinha com a decisão

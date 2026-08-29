@@ -1,0 +1,38 @@
+.stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 13px 14px;
+
+  &__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    margin-bottom: 7px;
+  }
+
+  &__valor {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  &--vida {
+    border-color: var(--vida-border);
+    .stat__valor { color: var(--vida); }
+  }
+
+  &--energia {
+    border-color: color-mix(in srgb, var(--energy) 35%, transparent);
+    .stat__valor { color: var(--energy); }
+  }
+
+  &--positivo {
+    border-color: color-mix(in srgb, var(--positive) 35%, transparent);
+    .stat__valor { color: var(--positive); }
+  }
+}

@@ -1,0 +1,70 @@
+@use "tema/breakpoints" as bp;
+
+// Desktop: item de largura igual (`flex: 1 1 0`), não do tamanho do conteúdo como o `.abas__item`
+// congelado em `_componentes.scss`. As duas origens reais auditadas (`ficha-status__aba`,
+// `criatura__aba`) divergem do catálogo do mesmo jeito — `width: 100%` numa, `flex: 1 1 0` na
+// outra, mesmo efeito visual — então o primitivo segue as origens de verdade, não o exemplo
+// congelado (que o próprio comentário do catálogo já avisa: "o mais simples, não o único").
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  gap: 6px;
+  line-height: 1;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  white-space: nowrap;
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
+
+  // Colapso mobile para só-ícone, com alvo de toque mínimo — reproduz `ficha-status__aba`, a
+  // origem mais madura (chegou a esse desenho depois do achado ao vivo do corte de rótulo hoje
+  // registrado em `P-005`). Item do tamanho do conteúdo (não mais igual), a barra rola em vez de
+  // espremer alguma aba abaixo do alvo de toque.
+  @include bp.mobile {
+    flex: 0 0 auto;
+    min-width: bp.$alvo-toque;
+    min-height: bp.$alvo-toque;
+    padding: 6px 4px;
+  }
+}
+
+:host(.abas__item--ativa) {
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--accent);
+}
+
+// Rótulo de texto do item (ícone + `<span class="abas__rotulo">`) — projetado pelo consumidor via
+// `<ng-content>`, então carrega o atributo de encapsulamento do TEMPLATE DO CONSUMIDOR, não o
+// deste componente: um `.abas__rotulo { }` simples aqui viraria `.abas__rotulo[_ngcontent-abaX]`
+// e nunca bateria no `<span>` de fora (achado ao vivo no gate visual da `ui-03` — o rótulo de
+// todo item aparecia no mobile, nenhum colapsava). `:host ::ng-deep` alcança o DOM light
+// projetado, mas só dentro de instâncias deste componente — não vaza pra fora dele.
+//
+// Some no mobile — a Simulação ainda alarga a aba ativa com `flex-grow` pra reencaixar o rótulo
+// (decisão anterior, fora do escopo desta task); o primitivo segue a Ficha: nenhum item ganha
+// mais espaço, só o item ativo reexibe o próprio rótulo, com reticências se não couber.
+:host ::ng-deep .abas__rotulo {
+  @include bp.mobile {
+    display: none;
+  }
+}
+
+:host(.abas__item--ativa) ::ng-deep .abas__rotulo {
+  @include bp.mobile {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
