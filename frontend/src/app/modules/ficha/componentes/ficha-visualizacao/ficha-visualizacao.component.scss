@@ -902,10 +902,14 @@
         border: 0;
         padding: 6px 10px;
         border-radius: var(--radius-control);
-        cursor: default;
+        cursor: pointer;
         transition:
             color 0.12s ease,
             background 0.12s ease;
+
+        &:hover:not(&--ativa) {
+            color: var(--text);
+        }
 
         // m3-56: seis abas com ícone+rótulo não cabem lado a lado abaixo de `$bp-mobile` (o texto
         // "Informações" sozinho já passa da largura que sobra por aba) — mesmo padrão já usado na
