@@ -29,6 +29,22 @@
 
 ## Ativos
 
+### P-040 — Inventário do Esquadrão depende de `var(--danger)` inexistente · `ABERTO` · frontend/inventario-esquadrao
+
+- **Sintoma:** cinco declarações de cor em
+  `inventario-esquadrao.component.scss` (ações de remover e quantidade negativa)
+  usam `var(--danger)`, token que não é declarado em nenhum parcial do tema.
+  Como no antigo badge de rolagem privada, o navegador descarta essas
+  declarações e o estado perde o destaque vermelho pretendido.
+- **Causa:** o mesmo token planejado, mas nunca definido, que causava `P-036`;
+  o inventário ficou fora do recorte daquela correção.
+- **Contorno:** as ações continuam disponíveis e identificadas por ícone/texto,
+  mas não recebem a cor de severidade.
+- **Correção:** abrir uma spec própria e substituir os usos pelo token semântico
+  apropriado, provavelmente `--vida` para as ações destrutivas, após conferir os
+  estados do Inventário do Esquadrão ao vivo.
+- **Desde:** encontrado durante a investigação de `P-036`, em 2026-08-29.
+
 ### P-039 — Caderno do Esquadrão sem presença nem cursores remotos · `ABERTO` · frontend/pagina-caderno
 
 - **Sintoma:** `caderno-esquadrao-colaborativo.spec.md` (entregável 2) pede sincronização Yjs "incluindo
@@ -50,25 +66,6 @@
 - **Desde:** `caderno-esquadrao-colaborativo.spec.md`, entregável nunca fechado — achado ao
   verificar a spec ao vivo em 2026-08-29 antes de movê-la para `done/` (ela permanece em `active/`
   por causa deste item).
-
-### P-036 — `var(--danger)` não existe em nenhum token — badge "Privada" da bandeja de dados sem cor · `ABERTO` · frontend/tema
-
-- **Sintoma:** `bandeja-dados.component.scss` (`&__visibilidade--privada`) usa `var(--danger)` em
-  três declarações (`color`, `border-color` via `color-mix`, `background` via `color-mix`) — mas
-  `--danger` não é definido em `_tokens.scss` nem em nenhum outro parcial do tema. O valor
-  computado é inválido; o navegador ignora as três declarações e o badge "Privada" fica sem o
-  destaque vermelho pretendido, herdando `color`/`background` do contexto (`--text-mute`/
-  `transparent`) e o `border-color` genérico já presente logo acima na cascata.
-- **Causa:** não investigada — provavelmente um token planejado (`--danger`) que nunca chegou a
-  ser criado em `_tokens.scss`; o projeto usa `--vida` (vermelho fixo) para esse mesmo papel em
-  outros lugares (ver `IDEAS.md` `I-024`).
-- **Contorno:** nenhum — o badge continua funcional (o ícone e o texto "Privada" identificam a
-  rolagem), só sem o destaque de cor.
-- **Correção:** trocar as três ocorrências de `var(--danger)` por `var(--vida)` (mesmo papel
-  semântico de vermelho fixo, independente do accent) — mudança de uma linha, fora do escopo desta
-  task por não tocar `bandeja-dados`.
-- **Desde:** achado ao pesquisar tokens de cor fixa para a severidade `erro` de `Notificacao`
-  (ui-02, 2026-08-28) — não investigado há quanto tempo o token está quebrado.
 
 ### P-035 — Botão preenchido com o accent fica abaixo de 4,5:1 para texto normal · `ABERTO` · frontend/acessibilidade
 

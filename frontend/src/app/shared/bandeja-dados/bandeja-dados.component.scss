@@ -149,9 +149,9 @@
         text-transform: uppercase;
 
         &--privada {
-            color: var(--danger);
-            border-color: color-mix(in srgb, var(--danger) 45%, transparent);
-            background: color-mix(in srgb, var(--danger) 10%, transparent);
+            color: var(--vida);
+            border-color: color-mix(in srgb, var(--vida) 45%, transparent);
+            background: color-mix(in srgb, var(--vida) 10%, transparent);
         }
     }
 

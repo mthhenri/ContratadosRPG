@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-29 — P-036: badge privado da Bandeja de Dados volta a ter destaque vermelho
+
+O modificador `bandeja__visibilidade--privada` referenciava `--danger`, token inexistente em
+`_tokens.scss`; por isso o navegador descartava cor, borda e fundo do badge. As três referências
+agora usam `--vida`, o vermelho fixo canônico que não muda com o accent escolhido pelo usuário.
+Foi acrescentada uma guarda de regressão em Vitest (`npm run test:estilos --workspace=frontend`):
+ela falhou antes da alteração pelas três ocorrências de `--danger` e passou depois, exigindo as
+três receitas com `--vida`.
+
+**Gate visual:** análogo escolhido: `detalhe__estado-operacional--missao`, selo já aprovado que
+usa `--vida` com fundo e borda translúcidos. No cenário real da criatura Sentinela UI-04, uma
+rolagem oculta confirmou em `1920×1080` e `360×800` o badge `PRIVADA` em `rgb(213, 48, 48)`, fundo
+10% e borda 45%, sem overflow horizontal; a densidade, hierarquia e controles continuam coerentes
+com o análogo nos dois viewports.
+
+**Gates:** teste focal Angular da Bandeja 2/2 e guarda de estilo 1/1 verdes; suíte completa do
+frontend executada; build de produção verde (433,69 kB inicial). Lint sem erros novos, mantendo
+14.534 warnings preexistentes; build mantém o aviso preexistente de
+`ficha-visualizacao.component.scss` acima do budget. A investigação também encontrou cinco usos
+fora do escopo de `--danger` no Inventário do Esquadrão, registrados como `P-040`; não foram
+alterados nesta task.
+
 ## 2026-08-29 — P-038: suíte do frontend restaurada após UI-04
 
 `CampanhaDetalhe` ainda procurava as classes removidas na adoção dos primitivos da UI-04:
