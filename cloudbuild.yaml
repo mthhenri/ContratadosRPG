@@ -1,0 +1,105 @@
+# Pipeline de deploy do backend no Cloud Build — substitui o buildCommand/startCommand do
+# render.yaml (migração Render → Cloud Run). Deploy continua NATIVO, sem GitHub Actions: este
+# arquivo é lido por um TRIGGER do Cloud Build ligado ao repositório Git (Cloud Console →
+# Cloud Build → Triggers → Connect Repository), que dispara sozinho no push pra master —
+# equivalente ao autoDeploy do Render. A CI de PR (.github/workflows/ci.yml) continua
+# separada e não participa do deploy.
+#
+# Pré-requisitos (uma vez, fora deste arquivo):
+#   - APIs habilitadas: Cloud Build, Cloud Run, Artifact Registry, Secret Manager.
+#   - Repositório Docker no Artifact Registry: `gcloud artifacts repositories create
+#     $_REPOSITORY --repository-format=docker --location=$_REGION`.
+#   - Secrets no Secret Manager (nomes usados abaixo): db-senha, jwt-secreto,
+#     armazenamento-r2-account-id, armazenamento-r2-access-key-id,
+#     armazenamento-r2-secret-access-key — mesmos valores hoje marcados `sync: false` no
+#     render.yaml.
+#   - A service account do Cloud Build precisa do papel Secret Manager Secret Accessor (para
+#     ler DB_SENHA no passo de migration) e permissão de deploy no Cloud Run.
+#
+# Variáveis não sensíveis ficam em substitutions (ajustáveis no trigger, sem editar o arquivo).
+substitutions:
+  _REGION: southamerica-east1
+  _SERVICE: contratados-rpg-api
+  _REPOSITORY: contratados-rpg
+  _DB_HOST: '' # host do pooler Supabase (não é segredo, mas varia por projeto)
+  _DB_PORT: '5432'
+  _DB_NOME: postgres
+  _DB_USUARIO: postgres
+  _APP_FRONTEND_ORIGEM: '' # https://<projeto>.pages.dev — obrigatória no boot (CORS)
+  _ARMAZENAMENTO_R2_BUCKET: ''
+  _ARMAZENAMENTO_R2_URL_PUBLICA: ''
+
+# Só o segredo usado DENTRO de um passo do Cloud Build (a migration, rodada como container)
+# precisa estar aqui. Os segredos do deploy em si vão direto do Secret Manager pro Cloud Run
+# via `--set-secrets`, sem passar pelos logs do build.
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/db-senha/versions/latest
+      env: DB_SENHA
+
+steps:
+  # 1. Build das duas imagens (targets do Dockerfile) num único job — a etapa `migrator`
+  #    reaproveita o cache de camadas da `build` compartilhada com a `runtime`.
+  - id: build-runtime
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --target=runtime
+      - -t=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/$_SERVICE:$SHORT_SHA
+      - .
+
+  - id: build-migrator
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --target=migrator
+      - -t=$_SERVICE-migrator:$SHORT_SHA
+      - .
+
+  # 2. Migrations ANTES do deploy — mesma ordem do buildCommand do render.yaml. Só é seguro
+  #    porque a proibição #7 (sem DEFAULT nem NOT NULL sem valor) garante que a revisão
+  #    ANTERIOR do Cloud Run, ainda servindo tráfego durante o rollout, sobrevive ao schema
+  #    novo por alguns segundos (mesmo raciocínio do P-017, ver docs/DEPLOY.md).
+  - id: migrate
+    name: $_SERVICE-migrator:$SHORT_SHA
+    secretEnv: [DB_SENHA]
+    env:
+      - DB_HOST=$_DB_HOST
+      - DB_PORT=$_DB_PORT
+      - DB_NOME=$_DB_NOME
+      - DB_USUARIO=$_DB_USUARIO
+    waitFor: [build-migrator]
+
+  # 3. Push da imagem de runtime pro Artifact Registry (só depois da migration ter passado).
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/$_SERVICE:$SHORT_SHA
+    waitFor: [migrate]
+
+  # 4. Deploy no Cloud Run. APP_PORTA=8080 casa com o --port abaixo e com o EXPOSE do
+  #    Dockerfile (Cloud Run injeta PORT=8080 por padrão; o backend só lê APP_PORTA via
+  #    ConfigService — Proibição #10 —, por isso ela precisa ser setada explicitamente aqui).
+  #    NODE_ENV não entra: já vem fixado na imagem (ver Dockerfile, estágio runtime).
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_SERVICE
+      - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/$_SERVICE:$SHORT_SHA
+      - --region=$_REGION
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8080
+      - --set-env-vars=APP_PORTA=8080,APP_AMBIENTE=production,APP_FRONTEND_ORIGEM=$_APP_FRONTEND_ORIGEM,JWT_EXPIRACAO=7d,DB_HOST=$_DB_HOST,DB_PORT=$_DB_PORT,DB_NOME=$_DB_NOME,DB_USUARIO=$_DB_USUARIO,ARMAZENAMENTO_PROVEDOR=r2,ARMAZENAMENTO_R2_BUCKET=$_ARMAZENAMENTO_R2_BUCKET,ARMAZENAMENTO_R2_URL_PUBLICA=$_ARMAZENAMENTO_R2_URL_PUBLICA
+      - --set-secrets=DB_SENHA=db-senha:latest,JWT_SECRETO=jwt-secreto:latest,ARMAZENAMENTO_R2_ACCOUNT_ID=armazenamento-r2-account-id:latest,ARMAZENAMENTO_R2_ACCESS_KEY_ID=armazenamento-r2-access-key-id:latest,ARMAZENAMENTO_R2_SECRET_ACCESS_KEY=armazenamento-r2-secret-access-key:latest
+    waitFor: [push]
+
+images:
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPOSITORY/$_SERVICE:$SHORT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY

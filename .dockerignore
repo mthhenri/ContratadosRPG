@@ -1,0 +1,32 @@
+# Espelha o .gitignore para o contexto de build do Docker — evita subir node_modules/dist
+# locais (o Dockerfile instala e builda dentro da imagem) e arquivos que nunca deveriam ir
+# pra imagem (segredos, uploads locais, caches de IDE).
+node_modules/
+**/node_modules/
+
+dist/
+**/dist/
+build/
+.angular/
+*.tsbuildinfo
+.wrangler/
+
+.env
+.env.*
+!.env.example
+
+backend/uploads/
+coverage/
+
+.vscode/
+.idea/
+*.log
+Thumbs.db
+.DS_Store
+
+.git/
+.github/
+.claude/
+.agents/
+.superpowers/
+docs/
