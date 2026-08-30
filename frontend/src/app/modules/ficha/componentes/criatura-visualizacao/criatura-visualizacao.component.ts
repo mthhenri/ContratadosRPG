@@ -46,6 +46,7 @@ import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -142,6 +143,7 @@ const COR_FICHA_PADRAO = '#d53030';
     Abas,
     Aba,
     AbaPainel,
+    Modal,
   ],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',

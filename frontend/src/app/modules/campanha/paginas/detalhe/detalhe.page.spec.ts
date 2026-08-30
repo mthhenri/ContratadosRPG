@@ -1635,7 +1635,7 @@ describe('CampanhaDetalhe', () => {
         (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        const dialog = raiz.querySelector('.dialogo');
+        const dialog = raiz.querySelector('app-modal');
         expect(dialog).not.toBeNull();
         expect(dialog?.textContent).toContain('Deseja mesmo duplicar a ficha "Kane" de "Mestre"?');
       });
@@ -1646,10 +1646,10 @@ describe('CampanhaDetalhe', () => {
         (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+        (raiz.querySelector('.modal__fechar') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(raiz.querySelector('app-modal')).toBeNull();
         expect(fichaService.duplicarFicha).not.toHaveBeenCalled();
       });
 
@@ -1660,12 +1660,12 @@ describe('CampanhaDetalhe', () => {
         (raiz.querySelector('.detalhe__ficha-menu-item') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+        (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
         fixture.detectChanges();
 
         expect(fichaService.duplicarFicha).toHaveBeenCalledWith(3);
         expect(fichaService.listarFichas).toHaveBeenCalledTimes(2);
-        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(raiz.querySelector('app-modal')).toBeNull();
       });
     });
 
@@ -1678,7 +1678,7 @@ describe('CampanhaDetalhe', () => {
         fixture.detectChanges();
 
         expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
-        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(raiz.querySelector('app-modal')).toBeNull();
         expect(raiz.textContent).not.toContain('Vera');
       });
     });
@@ -1691,7 +1691,7 @@ describe('CampanhaDetalhe', () => {
         (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        const dialog = raiz.querySelector('.dialogo');
+        const dialog = raiz.querySelector('app-modal');
         expect(dialog).not.toBeNull();
         expect(dialog?.textContent).toContain('Excluir');
         expect(dialog?.textContent).toContain('Vera');
@@ -1703,10 +1703,10 @@ describe('CampanhaDetalhe', () => {
         (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
+        (raiz.querySelector('app-modal .botao--secundario') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(raiz.querySelector('app-modal')).toBeNull();
         expect(fichaService.excluirFicha).not.toHaveBeenCalled();
       });
 
@@ -1716,11 +1716,11 @@ describe('CampanhaDetalhe', () => {
         (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+        (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
         fixture.detectChanges();
 
         expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
-        expect(raiz.querySelector('.dialogo')).toBeNull();
+        expect(raiz.querySelector('app-modal')).toBeNull();
         expect(raiz.textContent).not.toContain('Vera');
       });
     });
@@ -1858,11 +1858,13 @@ describe('CampanhaDetalhe', () => {
       fixture.detectChanges();
 
       expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
-      const dialog = raiz.querySelector('.dialogo');
+      const dialog = Array.from(raiz.querySelectorAll('app-modal')).find((modal) =>
+        modal.textContent?.includes('Vera'),
+      );
       expect(dialog?.textContent).toContain('Vera');
       expect(fichaService.excluirFicha).not.toHaveBeenCalled();
 
-      (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
+      (raiz.querySelector('app-modal .botao--secundario') as HTMLButtonElement).click();
       fixture.detectChanges();
 
       expect(raiz.querySelector('.dialogo')).toBeNull();
@@ -1875,7 +1877,7 @@ describe('CampanhaDetalhe', () => {
       encontrarItemMenu(raiz, 'Excluir ficha').click();
       fixture.detectChanges();
 
-      (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+      (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
       fixture.detectChanges();
 
       expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
@@ -1911,7 +1913,9 @@ describe('CampanhaDetalhe', () => {
 
       expect(fichaService.listarAcessos).toHaveBeenCalledWith(4);
       expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
-      const dialog = raiz.querySelector('.dialogo');
+      const dialog = Array.from(raiz.querySelectorAll('app-modal')).find((modal) =>
+        modal.textContent?.includes('Colega'),
+      );
       expect(dialog?.textContent).toContain('Colega');
     });
 
@@ -1972,7 +1976,7 @@ describe('CampanhaDetalhe', () => {
       abrirMenuCampanha(raiz, fixture);
       encontrarItemMenu(raiz, 'Acesso de visualização').click();
       fixture.detectChanges();
-      (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+      (raiz.querySelector('.modal__fechar') as HTMLButtonElement).click();
       fixture.detectChanges();
       abrirMenuCampanha(raiz, fixture);
 
@@ -1989,7 +1993,7 @@ describe('CampanhaDetalhe', () => {
       abrirMenuCampanha(raiz, fixture);
       encontrarItemMenu(raiz, 'Acesso de visualização').click();
       fixture.detectChanges();
-      (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+      (raiz.querySelector('.modal__fechar') as HTMLButtonElement).click();
       fixture.detectChanges();
 
       // Troca para a outra ficha própria (Zeta, id 5) via "Ver ficha" — sem reabrir a dialog. Sem o

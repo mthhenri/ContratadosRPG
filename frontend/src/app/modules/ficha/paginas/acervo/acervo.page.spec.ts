@@ -186,7 +186,7 @@ describe('FichaAcervo', () => {
     itemAtribuir.click();
     fixture.detectChanges();
 
-    expect(raiz.querySelector('.dialogo')).not.toBeNull();
+    expect(raiz.querySelector('app-modal')).not.toBeNull();
 
     const botaoConfirmar = Array.from(raiz.querySelectorAll('.dialogo__acao')).find((botao) =>
       botao.textContent?.includes('Confirmar'),
@@ -212,7 +212,7 @@ describe('FichaAcervo', () => {
     fixture.detectChanges();
 
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(1, null);
-    expect(raiz.querySelector('.dialogo')).toBeNull();
+    expect(raiz.querySelector('app-modal')).toBeNull();
     expect(raiz.querySelector('.acervo__chip--campanha')).toBeNull();
   });
 
@@ -235,7 +235,7 @@ describe('FichaAcervo', () => {
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Duplicar ficha');
 
-      const dialog = raiz.querySelector('.dialogo');
+      const dialog = raiz.querySelector('app-modal');
       expect(dialog).not.toBeNull();
       expect(dialog?.textContent).toContain('Deseja mesmo duplicar a ficha "Kane"');
     });
@@ -245,10 +245,10 @@ describe('FichaAcervo', () => {
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Duplicar ficha');
 
-      (raiz.querySelector('.dialogo__fundo') as HTMLButtonElement).click();
+      (raiz.querySelector('.modal__fechar') as HTMLButtonElement).click();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(raiz.querySelector('app-modal')).toBeNull();
       expect(fichaService.duplicarFicha).not.toHaveBeenCalled();
     });
 
@@ -258,12 +258,12 @@ describe('FichaAcervo', () => {
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Duplicar ficha');
 
-      (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+      (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
       fixture.detectChanges();
 
       expect(fichaService.duplicarFicha).toHaveBeenCalledWith(1);
       expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(2);
-      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(raiz.querySelector('app-modal')).toBeNull();
     });
   });
 
@@ -273,7 +273,7 @@ describe('FichaAcervo', () => {
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Excluir ficha');
 
-      const dialog = raiz.querySelector('.dialogo');
+      const dialog = raiz.querySelector('app-modal');
       expect(dialog).not.toBeNull();
       expect(dialog?.textContent).toContain('Excluir');
       expect(dialog?.textContent).toContain('Kane');
@@ -284,10 +284,10 @@ describe('FichaAcervo', () => {
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Excluir ficha');
 
-      (raiz.querySelector('.dialogo .botao--secundario') as HTMLButtonElement).click();
+      (raiz.querySelector('app-modal .botao--secundario') as HTMLButtonElement).click();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(raiz.querySelector('app-modal')).toBeNull();
       expect(fichaService.excluirFicha).not.toHaveBeenCalled();
     });
 
@@ -296,12 +296,12 @@ describe('FichaAcervo', () => {
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Excluir ficha');
 
-      (raiz.querySelector('.dialogo .botao--primario') as HTMLButtonElement).click();
+      (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
       fixture.detectChanges();
 
       expect(fichaService.excluirFicha).toHaveBeenCalledWith(1);
       expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(1);
-      expect(raiz.querySelector('.dialogo')).toBeNull();
+      expect(raiz.querySelector('app-modal')).toBeNull();
       expect(raiz.textContent).not.toContain('Kane');
     });
   });
@@ -403,7 +403,7 @@ describe('FichaAcervo', () => {
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Atribuir a campanha');
 
-      const opcoes = Array.from(raiz.querySelectorAll('.dialogo select option')).map((el) => el.textContent);
+      const opcoes = Array.from(raiz.querySelectorAll('app-modal select option')).map((el) => el.textContent);
       expect(opcoes).toEqual(['Operação Alfa']);
     });
   });

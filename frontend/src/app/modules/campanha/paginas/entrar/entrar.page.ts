@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 
 import { CampanhaService } from '../../campanha.service';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /**
  * Dialog de entrada em campanha por código, aberto a partir do painel (`CampanhaLista`).
@@ -15,7 +16,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
  */
 @Component({
   selector: 'app-campanha-entrar',
-  imports: [ReactiveFormsModule, Botao],
+  imports: [ReactiveFormsModule, Botao, Modal],
   templateUrl: './entrar.page.html',
   styleUrl: './entrar.page.scss',
 })

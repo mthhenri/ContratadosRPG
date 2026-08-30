@@ -1,26 +1,5 @@
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Entrar por código">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="fecharDialog()"
-    ></button>
-    <div class="dialogo__painel">
-        <header class="dialogo__cabecalho">
-            <span class="dialogo__indice">//</span>
-            <h2 class="dialogo__titulo">Entrar por código</h2>
-            <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                (click)="fecharDialog()"
-            >
-                ✕
-            </button>
-        </header>
-
-        <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
+<app-modal [aberto]="true" titulo="Entrar por código" (fechou)="fecharDialog()">
+    <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
             <label class="campanha-formulario__campo">
                 <span class="campanha-formulario__rotulo">Código de convite</span>
                 <input
@@ -42,6 +21,5 @@
             >
                 {{ enviando() ? 'Entrando…' : 'Entrar' }}
             </button>
-        </form>
-    </div>
-</div>
+    </form>
+</app-modal>

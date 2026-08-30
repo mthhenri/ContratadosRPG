@@ -227,66 +227,6 @@
     }
 }
 
-.dialogo {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 60px 20px;
-    overflow-y: auto;
-
-    @include bp.mobile {
-        padding: 24px 12px;
-        align-items: center;
-    }
-
-    &__fundo {
-        position: fixed;
-        inset: 0;
-        background: rgb(0 0 0 / 55%);
-        border: 0;
-    }
-    &__painel {
-        position: relative;
-        z-index: 1;
-        width: min(460px, 100%);
-        padding: var(--pad-card);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-card);
-        box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-    }
-
-    &__titulo {
-        margin: 0;
-        color: var(--text);
-        font: 600 13px var(--font-mono);
-        letter-spacing: var(--tracking-label);
-        text-transform: uppercase;
-    }
-    &__fechar {
-        flex: none;
-        width: 26px;
-        height: 26px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
-    }
-}
-
 .revelar-rolagem {
     &__aviso {
         margin: 0 0 16px;

@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — UI-07: diálogos locais adotam o modal nativo
+
+Os 17 diálogos locais restantes dos módulos de campanha, ficha e encontro passaram a usar
+`app-modal`, sobre o elemento `<dialog>` nativo. A migração cobre criar/entrar campanha,
+inventário do esquadrão, acervo e visualizações de ficha, ações do detalhe de campanha e a
+confirmação de rolagens públicas. O conteúdo e os handlers de domínio foram preservados; fundo,
+top layer, Escape, foco e o botão “×” agora são responsabilidade do primitivo compartilhado.
+
+Foram removidas todas as composições `dialogo__fundo`/`dialogo__fechar` dos templates e os
+testes passaram a observar o contrato de `app-modal` em vez dos seletores do overlay anterior.
+Os testes focados dos cinco fluxos principais passaram com **214 testes**, e o build do frontend
+passou. O lint não trouxe erros; manteve avisos históricos do repositório. A compilação ainda
+emite o aviso preexistente de orçamento de estilo em `FichaVisualizacao`.
+
+O análogo usado foi o próprio `app-modal`: cabeçalho mono, superfície, borda, fechamento e
+comportamento responsivo canônicos. No ambiente real, o formulário “Nova campanha” foi observado
+em `1920×1080` e `360×800`: 480 px no desktop e 336 px no mobile, sem overflow horizontal ou
+corte. Escape, clique no fundo e “×” fecharam o modal; o foco e os alvos de toque permaneceram
+visíveis. A ação primária mantém a política preexistente de validar ao enviar, sem alteração de
+regra de domínio.
+
 ## 2026-08-30 — UI-06: auditoria da biblioteca visual fechada
 
 Auditado todo o frontend contra a biblioteca própria em `shared/ui/` e o tema Terminal de

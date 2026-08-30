@@ -446,120 +446,27 @@
     }
 }
 
-// Dialog — bloco sancionado copiado de docs/design/tema/_componentes.scss (mesmo padrão de
-// `CampanhaDetalhe`/`FichaVisualizar`).
-.dialogo {
-    position: fixed;
-    inset: 0;
-    z-index: 40;
+// Conteúdo dos modais nativos da página.
+.dialogo__aviso {
+    margin: 0 0 16px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+}
+
+.dialogo__acoes {
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 60px 20px;
-    overflow-y: auto;
+    flex-wrap: wrap;
+    gap: 10px;
+}
 
-    &__fundo {
-        position: fixed;
-        inset: 0;
-        background: rgb(0 0 0 / 55%);
-        border: 0;
-        cursor: default;
-    }
-
-    &__painel {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        max-width: 420px;
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-card);
-        padding: var(--pad-card);
-        box-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-    }
-
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 16px;
-    }
-
-    &__titulo {
-        font-family: var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-        margin: 0;
-    }
-
-    &__indice {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: 3px;
-    }
-
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
-
-    &__fechar {
-        flex: 0 0 auto;
-        width: 26px;
-        height: 26px;
-        font-size: 13px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-
-        &:disabled {
-            opacity: 0.55;
-            cursor: default;
-        }
-    }
-
-    &__aviso {
-        margin: 0 0 16px;
-        font-family: var(--font-sans);
-        font-size: 13px;
-        color: var(--text);
-    }
-
-    &__acoes {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    &__acao {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 11px 18px;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
+.dialogo__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }

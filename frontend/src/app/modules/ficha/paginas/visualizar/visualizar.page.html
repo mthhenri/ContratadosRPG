@@ -239,27 +239,8 @@
 </section>
 
 @if (dialogAcesso()) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="fecharAcesso()"
-    ></button>
-    <div class="dialogo__painel acesso">
-        <header class="dialogo__cabecalho">
-            <span class="ficha-cartao__indice"><app-icone nome="olho" /></span>
-            <h2 class="dialogo__titulo">Acesso de Visualização</h2>
-            <span class="ficha-cartao__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                (click)="fecharAcesso()"
-            >
-                ✕
-            </button>
-        </header>
+<app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcesso()">
+    <div class="acesso">
 
         <p class="acesso__ajuda">
             Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas
@@ -316,30 +297,10 @@
         <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
         }
     </div>
-</div>
+</app-modal>
 } @if (dialogExclusao()) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="fecharExclusao()"
-    ></button>
-    <div class="dialogo__painel exclusao">
-        <header class="dialogo__cabecalho">
-            <span class="ficha-cartao__indice"><app-icone nome="excluir" /></span>
-            <h2 class="dialogo__titulo">Excluir Ficha</h2>
-            <span class="ficha-cartao__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                [disabled]="excluindo()"
-                (click)="fecharExclusao()"
-            >
-                ✕
-            </button>
-        </header>
+<app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="fecharExclusao()">
+    <div class="exclusao">
 
         <p class="exclusao__aviso">
             Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
@@ -369,5 +330,5 @@
             </button>
         </div>
     </div>
-</div>
+</app-modal>
 }

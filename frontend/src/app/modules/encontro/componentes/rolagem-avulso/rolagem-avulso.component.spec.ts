@@ -86,9 +86,9 @@ describe('RolagemAvulso', () => {
     alternador?.click();
     fixture.detectChanges();
 
-    expect(elemento.querySelector('[aria-label="Tornar rolagens públicas"]')).not.toBeNull();
-    expect(elemento.querySelector('.dialogo__fechar')).not.toBeNull();
-    expect(elemento.querySelector('.criatura__cartao-regua')).not.toBeNull();
+    expect(elemento.querySelector('app-modal')).not.toBeNull();
+    expect(elemento.querySelector('.modal__fechar')).not.toBeNull();
+    expect(elemento.querySelector('.modal__titulo')?.textContent).toContain('Tornar rolagens públicas');
     expect(alternador?.getAttribute('aria-pressed')).toBe('true');
 
     elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__confirmar-publica')?.click();

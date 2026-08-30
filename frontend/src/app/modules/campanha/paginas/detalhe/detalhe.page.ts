@@ -64,6 +64,7 @@ import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Janela da tira "Rolagens Recentes" (item 3) — só rolagens feitas na última hora. */
 const UMA_HORA_MS = 60 * 60 * 1000;
@@ -200,6 +201,7 @@ type EquipeFichaExibicao =
     Tooltip,
     Botao,
     Cartao,
+    Modal,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './detalhe.page.html',

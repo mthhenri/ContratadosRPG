@@ -173,28 +173,7 @@
     <img class="acervo__avatar-preview-imagem" [src]="preview.url" alt="" />
 </div>
 } @if (confirmandoDuplicar(); as pendenteDuplicar) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="cancelarDuplicar()"
-    ></button>
-    <div class="dialogo__painel">
-        <header class="dialogo__cabecalho">
-            <span class="dialogo__indice"><app-icone nome="duplicar" /></span>
-            <h2 class="dialogo__titulo">Duplicar Ficha</h2>
-            <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                [disabled]="duplicando() === pendenteDuplicar.id"
-                (click)="cancelarDuplicar()"
-            >
-                ✕
-            </button>
-        </header>
+<app-modal [aberto]="true" titulo="Duplicar ficha" (fechou)="cancelarDuplicar()">
 
         <p class="dialogo__aviso">
             Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"?
@@ -223,31 +202,9 @@
                 Cancelar
             </button>
         </div>
-    </div>
-</div>
+ </app-modal>
 } @if (confirmandoExcluirFicha(); as pendenteExcluir) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="cancelarExcluirFicha()"
-    ></button>
-    <div class="dialogo__painel">
-        <header class="dialogo__cabecalho">
-            <span class="dialogo__indice"><app-icone nome="excluir" /></span>
-            <h2 class="dialogo__titulo">Excluir Ficha</h2>
-            <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                [disabled]="excluindoFicha() === pendenteExcluir.id"
-                (click)="cancelarExcluirFicha()"
-            >
-                ✕
-            </button>
-        </header>
+<app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="cancelarExcluirFicha()">
 
         <p class="dialogo__aviso">
             Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
@@ -276,31 +233,9 @@
                 Cancelar
             </button>
         </div>
-    </div>
-</div>
+ </app-modal>
 } @if (confirmandoAtribuir(); as pendenteAtribuir) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Atribuir a campanha">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="cancelarAtribuir()"
-    ></button>
-    <div class="dialogo__painel">
-        <header class="dialogo__cabecalho">
-            <span class="dialogo__indice"><app-icone nome="campanhas" /></span>
-            <h2 class="dialogo__titulo">Atribuir a Campanha</h2>
-            <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                [disabled]="atribuindo() === pendenteAtribuir.id"
-                (click)="cancelarAtribuir()"
-            >
-                ✕
-            </button>
-        </header>
+<app-modal [aberto]="true" titulo="Atribuir a campanha" (fechou)="cancelarAtribuir()">
 
         <p class="dialogo__aviso">
             Mover <strong>{{ pendenteAtribuir.nome }}</strong> para qual campanha?
@@ -340,6 +275,5 @@
                 Cancelar
             </button>
         </div>
-    </div>
-</div>
+ </app-modal>
 }

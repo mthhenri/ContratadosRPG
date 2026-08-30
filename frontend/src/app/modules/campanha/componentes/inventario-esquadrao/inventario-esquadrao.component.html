@@ -484,21 +484,11 @@
 
 @if (!somenteLeitura()) {
     @if (transferencia(); as item) {
-        <button
-            class="dialogo__fundo"
-            type="button"
-            aria-label="Cancelar transferência"
-            (click)="transferencia.set(null)"
-        ></button>
-        <section
-            class="dialogo inventario-esquadrao__dialogo"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Pegar item"
+        <app-modal
+            [aberto]="true"
+            [titulo]="'Pegar ' + item.nome"
+            (fechou)="transferencia.set(null)"
         >
-            <header class="dialogo__cabecalho">
-                <h2>Pegar {{ item.nome }}</h2>
-            </header>
             <label
                 >Ficha<select [formControl]="fichaDestino">
                     @for (ficha of fichas(); track ficha.id) {
@@ -513,7 +503,7 @@
                     [max]="item.quantidade"
                     [formControl]="quantidade"
             /></label>
-            <footer class="dialogo__acoes">
+            <footer class="inventario-esquadrao__dialogo-acoes">
                 <button
                     app-botao
                     variante="secundario"
@@ -533,25 +523,15 @@
                     Confirmar
                 </button>
             </footer>
-        </section>
+        </app-modal>
     }
     @if (configuracaoModificacoes(); as configuracao) {
-        <button
-            class="dialogo__fundo"
-            type="button"
-            aria-label="Cancelar modificações"
-            (click)="cancelarConfiguracaoModificacoes()"
-        ></button>
-        <section
-            class="dialogo inventario-esquadrao__dialogo inventario-esquadrao__dialogo--modificacoes"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Modificar item"
+        <app-modal
+            [aberto]="true"
+            titulo="Modificar item"
+            (fechou)="cancelarConfiguracaoModificacoes()"
         >
-            <header class="dialogo__cabecalho">
-                <h2>Modificar item</h2>
-                <p>{{ configuracao.item.nome }}</p>
-            </header>
+            <p class="inventario-esquadrao__dialogo-subtitulo">{{ configuracao.item.nome }}</p>
             <p class="inventario-esquadrao__modificacoes-ajuda">
                 Selecione as modificações compatíveis. A base não usa prestígio ou custo pessoal.
             </p>
@@ -602,7 +582,7 @@
                     </p>
                 }
             </div>
-            <footer class="dialogo__acoes">
+            <footer class="inventario-esquadrao__dialogo-acoes">
                 <button
                     app-botao
                     variante="secundario"
@@ -629,6 +609,6 @@
                     }}
                 </button>
             </footer>
-        </section>
+        </app-modal>
     }
 }

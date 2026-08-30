@@ -16,6 +16,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -56,6 +57,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
     Tooltip,
+    Modal,
   ],
   providers: [FichaEdicaoCriaturaService, FichaRolagemRegistroService],
   templateUrl: './visualizar-criatura.page.html',

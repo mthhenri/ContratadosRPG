@@ -177,7 +177,7 @@ describe('CriaturaVisualizar', () => {
     expect(fichaService.listarAcessos).toHaveBeenCalledWith(4);
     fixture.componentInstance['abrirAcesso']();
     fixture.detectChanges();
-    expect(raiz.querySelector('.dialogo .acesso')).not.toBeNull();
+    expect(raiz.querySelector('app-modal .acesso')).not.toBeNull();
   });
 
   it('entra na sala de tempo real da criatura e absorve ficha:alterada sem recarregar', () => {

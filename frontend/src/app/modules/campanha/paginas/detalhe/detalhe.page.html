@@ -1326,27 +1326,12 @@
 <!-- Vincular ficha existente (m2-21, item 7) — só fichas do acervo **sem campanha** (m3-28). Sem
        endpoint novo: `listarMinhasFichas` + `atribuirCampanha`. Acervo vazio mostra estado vazio,
        não um `<select>` sem opções. -->
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Vincular ficha existente">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="fecharVincularFicha()"
-    ></button>
+<app-modal [aberto]="true" titulo="Vincular ficha" (fechou)="fecharVincularFicha()">
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
             <span class="dialogo__indice"><app-icone nome="duplicar" /></span>
             <h2 class="dialogo__titulo">Vincular Ficha</h2>
             <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                [disabled]="vinculando()"
-                (click)="fecharVincularFicha()"
-            >
-                ✕
-            </button>
         </header>
 
         @if (carregandoFichasSoltas()) {
@@ -1398,7 +1383,7 @@
             </button>
         </div>
     </div>
-</div>
+</app-modal>
 }
 
 <!--
@@ -1466,27 +1451,12 @@
     <img class="detalhe__avatar-preview-imagem" [src]="preview.url" alt="" />
 </div>
 } @if (confirmandoDuplicar(); as pendenteDuplicar) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Duplicar ficha">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="cancelarDuplicar()"
-    ></button>
+<app-modal [aberto]="true" titulo="Duplicar ficha" (fechou)="cancelarDuplicar()">
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
             <span class="dialogo__indice"><app-icone nome="duplicar" /></span>
             <h2 class="dialogo__titulo">Duplicar Ficha</h2>
             <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                [disabled]="duplicando() === pendenteDuplicar.id"
-                (click)="cancelarDuplicar()"
-            >
-                ✕
-            </button>
         </header>
 
         <p class="dialogo__aviso">
@@ -1519,29 +1489,14 @@
             </button>
         </div>
     </div>
-</div>
+</app-modal>
 } @if (confirmandoExcluirFicha(); as pendenteExcluir) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Excluir ficha">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="cancelarExcluirFicha()"
-    ></button>
+<app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="cancelarExcluirFicha()">
     <div class="dialogo__painel">
         <header class="dialogo__cabecalho">
             <span class="dialogo__indice"><app-icone nome="excluir" /></span>
             <h2 class="dialogo__titulo">Excluir Ficha</h2>
             <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                [disabled]="excluindoFicha() === pendenteExcluir.id"
-                (click)="cancelarExcluirFicha()"
-            >
-                ✕
-            </button>
         </header>
 
         <p class="dialogo__aviso">
@@ -1572,28 +1527,14 @@
             </button>
         </div>
     </div>
-</div>
+</app-modal>
 } @if (dialogAcessoFicha()) {
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Acesso de visualização">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="fecharAcessoFicha()"
-    ></button>
+<app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcessoFicha()">
     <div class="dialogo__painel acesso">
         <header class="dialogo__cabecalho">
             <span class="dialogo__indice"><app-icone nome="olho" /></span>
             <h2 class="dialogo__titulo">Acesso de Visualização</h2>
             <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                (click)="fecharAcessoFicha()"
-            >
-                ✕
-            </button>
         </header>
 
         <p class="acesso__ajuda">
@@ -1651,5 +1592,5 @@
         <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
         }
     </div>
-</div>
+</app-modal>
 }

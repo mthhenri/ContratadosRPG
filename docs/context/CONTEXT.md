@@ -709,7 +709,6 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `ui-07` | frontend/design system | migrar overlays/diálogos próprios restantes para `app-modal` |
 | `ui-08` | frontend/design system | criar e adotar o primitivo de botão somente por ícone |
 | `ui-09` | frontend/design system | classificar e adotar botões de ação locais de inventário e Loja/Vendas |
 | `ui-11` | frontend/design system | normalizar tokens de acabamento, raios literais e P-042 |

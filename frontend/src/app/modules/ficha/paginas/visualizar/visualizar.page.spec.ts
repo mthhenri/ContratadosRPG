@@ -204,7 +204,7 @@ describe('FichaVisualizar', () => {
     expect(raiz.querySelector('.acesso')).toBeNull();
     fixture.componentInstance['abrirAcesso']();
     fixture.detectChanges();
-    expect(raiz.querySelector('.dialogo .acesso')).not.toBeNull();
+    expect(raiz.querySelector('app-modal .acesso')).not.toBeNull();
     // Elegíveis excluem o dono (7) e o mestre (99): resta só Vera (11).
     const elegiveis = fixture.componentInstance['membrosElegiveis']();
     expect(elegiveis.map((membro) => membro.nome)).toEqual(['Vera']);
@@ -223,7 +223,7 @@ describe('FichaVisualizar', () => {
     expect(raiz.querySelector('.ficha-pagina__menu-botao')).not.toBeNull();
     fixture.componentInstance['abrirAcesso']();
     fixture.detectChanges();
-    expect(raiz.querySelector('.dialogo .acesso')).not.toBeNull();
+    expect(raiz.querySelector('app-modal .acesso')).not.toBeNull();
   });
 
   describe('visibilidade no menu mobile', () => {
@@ -263,7 +263,7 @@ describe('FichaVisualizar', () => {
       expect(raiz.querySelector('.exclusao')).toBeNull();
       fixture.componentInstance['abrirExclusao']();
       fixture.detectChanges();
-      expect(raiz.querySelector('.dialogo .exclusao')).not.toBeNull();
+      expect(raiz.querySelector('app-modal .exclusao')).not.toBeNull();
     });
 
     it('cancelar fecha a dialog sem excluir', () => {
@@ -997,7 +997,7 @@ describe('FichaVisualizar', () => {
     });
     fixture.componentInstance['abrirAcesso']();
     fixture.detectChanges();
-    expect(raiz.querySelector('.dialogo .acesso__item')).not.toBeNull();
+    expect(raiz.querySelector('app-modal .acesso__item')).not.toBeNull();
 
     fixture.componentInstance['revogar'](11);
 

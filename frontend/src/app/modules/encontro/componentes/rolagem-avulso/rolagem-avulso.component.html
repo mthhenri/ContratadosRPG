@@ -71,27 +71,12 @@
 </section>
 
 @if (confirmandoPublica()) {
-    <div class="dialogo" role="dialog" aria-modal="true" aria-label="Tornar rolagens públicas">
-        <button
-            class="dialogo__fundo"
-            type="button"
-            aria-label="Fechar"
-            (click)="confirmandoPublica.set(false)"
-        ></button>
-        <div class="dialogo__painel revelar-rolagem">
-            <header class="criatura__cartao-cabecalho">
-                <app-icone nome="olho" />
-                <h2 class="dialogo__titulo criatura__cartao-titulo">Tornar rolagens públicas</h2>
-                <span class="criatura__cartao-regua"></span>
-                <button
-                    class="dialogo__fechar"
-                    type="button"
-                    aria-label="Fechar"
-                    (click)="confirmandoPublica.set(false)"
-                >
-                    ✕
-                </button>
-            </header>
+    <app-modal
+        [aberto]="true"
+        titulo="Tornar rolagens públicas"
+        (fechou)="confirmandoPublica.set(false)"
+    >
+        <div class="revelar-rolagem">
             <p class="revelar-rolagem__aviso">
                 A partir de agora, as rolagens de {{ combatente().nome }} ficam visíveis para os
                 jogadores. Tem certeza?
@@ -117,5 +102,5 @@
                 </button>
             </div>
         </div>
-    </div>
+    </app-modal>
 }

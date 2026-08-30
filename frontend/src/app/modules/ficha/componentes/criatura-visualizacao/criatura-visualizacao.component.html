@@ -1517,29 +1517,12 @@
     <app-bandeja-dados />
 
     @if (confirmandoRevelarRolagem()) {
-        <div class="dialogo" role="dialog" aria-modal="true" aria-label="Tornar rolagens públicas">
-            <button
-                class="dialogo__fundo"
-                type="button"
-                aria-label="Fechar"
-                (click)="cancelarRevelarRolagem()"
-            ></button>
-            <div class="dialogo__painel revelar-rolagem">
-                <header class="criatura__cartao-cabecalho">
-                    <app-icone nome="olho" />
-                    <h2 class="dialogo__titulo criatura__cartao-titulo">
-                        Tornar Rolagens Públicas
-                    </h2>
-                    <span class="criatura__cartao-regua"></span>
-                    <button
-                        class="dialogo__fechar"
-                        type="button"
-                        aria-label="Fechar"
-                        (click)="cancelarRevelarRolagem()"
-                    >
-                        ✕
-                    </button>
-                </header>
+        <app-modal
+            [aberto]="true"
+            titulo="Tornar rolagens públicas"
+            (fechou)="cancelarRevelarRolagem()"
+        >
+            <div class="revelar-rolagem">
 
                 <p class="revelar-rolagem__aviso">
                     A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros
@@ -1569,7 +1552,7 @@
                     </button>
                 </div>
             </div>
-        </div>
+        </app-modal>
     }
 </article>
 

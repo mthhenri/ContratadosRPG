@@ -1,26 +1,5 @@
-<div class="dialogo" role="dialog" aria-modal="true" aria-label="Nova campanha">
-    <button
-        class="dialogo__fundo"
-        type="button"
-        aria-label="Fechar"
-        (click)="fecharDialog()"
-    ></button>
-    <div class="dialogo__painel">
-        <header class="dialogo__cabecalho">
-            <span class="dialogo__indice">//</span>
-            <h2 class="dialogo__titulo">Nova campanha</h2>
-            <span class="dialogo__regua"></span>
-            <button
-                class="dialogo__fechar"
-                type="button"
-                aria-label="Fechar"
-                (click)="fecharDialog()"
-            >
-                ✕
-            </button>
-        </header>
-
-        <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
+<app-modal [aberto]="true" titulo="Nova campanha" (fechou)="fecharDialog()">
+    <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
             <label class="campanha-formulario__campo">
                 <span class="campanha-formulario__rotulo">Nome</span>
                 <input
@@ -49,6 +28,5 @@
             >
                 {{ enviando() ? 'Criando…' : 'Criar campanha' }}
             </button>
-        </form>
-    </div>
-</div>
+    </form>
+</app-modal>
