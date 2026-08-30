@@ -36,6 +36,7 @@ import {
 
 import { TemaService, hexParaHsl } from '../../../../core/services/tema.service';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
+import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -129,6 +130,7 @@ const COR_FICHA_PADRAO = '#d53030';
     Icone,
     Tooltip,
     AutoFocus,
+    HoldRepeat,
     ReactiveFormsModule,
     BandejaDados,
     CriaturaResistenciaLista,
@@ -295,6 +297,11 @@ export class CriaturaVisualizacao {
     if (atual && Number.isFinite(valor)) {
       this.rascunhoAtributos.set({ ...atual, [chave]: Math.max(0, valor) });
     }
+  }
+
+  /** Passo −/+ do valor de atributo em edição — mesmo stepper de `FichaVisualizacao`. */
+  protected ajustarAtributoRascunho(chave: ChaveAtributo, delta: number): void {
+    this.definirAtributoRascunho(chave, this.atributoRascunho(chave) + delta);
   }
 
   protected definirModificadorRascunho(chave: ChaveAtributo, valor: ModificadorCriaturaEnum): void {

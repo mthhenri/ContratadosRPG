@@ -134,71 +134,88 @@
      em ordem imprevisível conforme a largura da coluna. -->
 <ng-template #formulario let-rotuloConfirmar>
     <form class="ataque-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-        <label class="ataque-lista__campo ataque-lista__campo--largo">
-            <span class="ataque-lista__campo-rotulo">Nome</span>
-            <input
-                class="ataque-lista__input"
-                formControlName="nome"
-                placeholder="Nome do ataque"
-                aria-label="Nome do ataque"
-            />
-        </label>
+        <div class="ataque-lista__linha-inicial">
+            <label class="ataque-lista__campo">
+                <span class="ataque-lista__campo-rotulo">Custo de ação</span>
+                <select
+                    class="ataque-lista__select"
+                    formControlName="custoAcao"
+                    aria-label="Custo de ação"
+                >
+                    @for (c of custosAcao; track c) {
+                        <option [value]="c">{{ rotuloCustoAcao(c) }}</option>
+                    }
+                </select>
+            </label>
+            <label class="ataque-lista__campo">
+                <span class="ataque-lista__campo-rotulo">Nome</span>
+                <input
+                    class="ataque-lista__input"
+                    formControlName="nome"
+                    placeholder="Nome do ataque"
+                    aria-label="Nome do ataque"
+                />
+            </label>
+            <label class="ataque-lista__checkbox">
+                <input type="checkbox" formControlName="area" /> Atinge área
+            </label>
+        </div>
+        <div class="ataque-lista__formulas">
+            <label class="ataque-lista__campo">
+                <span class="ataque-lista__campo-rotulo">Teste (fórmula)</span>
+                <input
+                    class="ataque-lista__input"
+                    formControlName="teste"
+                    placeholder="ex.: 1D20"
+                    aria-label="Fórmula de teste"
+                />
+            </label>
+            <label class="ataque-lista__campo">
+                <span class="ataque-lista__campo-rotulo">Dano</span>
+                <input
+                    class="ataque-lista__input"
+                    formControlName="dano"
+                    placeholder="ex.: 4D12"
+                    aria-label="Fórmula de dano"
+                />
+            </label>
+            <label class="ataque-lista__campo">
+                <span class="ataque-lista__campo-rotulo">Dano crítico (fórmula)</span>
+                <input
+                    class="ataque-lista__input"
+                    formControlName="danoCritico"
+                    placeholder="ex.: 8D12"
+                    aria-label="Fórmula de dano crítico"
+                />
+            </label>
+        </div>
         <label class="ataque-lista__campo">
-            <span class="ataque-lista__campo-rotulo">Teste (fórmula)</span>
-            <input
-                class="ataque-lista__input"
-                formControlName="teste"
-                placeholder="ex.: lutad20kh1+3"
-                aria-label="Fórmula de teste"
-            />
-        </label>
-        <label class="ataque-lista__campo">
-            <span class="ataque-lista__campo-rotulo">Custo de ação</span>
-            <select
-                class="ataque-lista__select"
-                formControlName="custoAcao"
-                aria-label="Custo de ação"
-            >
-                @for (c of custosAcao; track c) {
-                    <option [value]="c">{{ rotuloCustoAcao(c) }}</option>
-                }
-            </select>
-        </label>
-        <label class="ataque-lista__campo">
-            <span class="ataque-lista__campo-rotulo">Dano</span>
-            <input
-                class="ataque-lista__input"
-                formControlName="dano"
-                placeholder="ex.: 4D12+10"
-                aria-label="Fórmula de dano"
-            />
-        </label>
-        <label class="ataque-lista__campo">
-            <span class="ataque-lista__campo-rotulo">Dano crítico (fórmula)</span>
-            <input
-                class="ataque-lista__input"
-                formControlName="danoCritico"
-                placeholder="ex.: 8D12+20"
-                aria-label="Fórmula de dano crítico"
-            />
-        </label>
-        <label class="ataque-lista__campo ataque-lista__campo--largo">
             <span class="ataque-lista__campo-rotulo">Efeito adicional</span>
-            <input
-                class="ataque-lista__input"
+            <textarea
+                class="ataque-lista__input ataque-lista__textarea"
                 formControlName="efeito"
                 placeholder="Opcional"
                 aria-label="Efeito"
-            />
-        </label>
-        <label class="ataque-lista__checkbox">
-            <input type="checkbox" formControlName="area" /> Atinge área
+                rows="3"
+            ></textarea>
         </label>
         <div class="ataque-lista__form-acoes">
-            <button app-botao variante="primario" type="submit" [disabled]="itemForm.invalid">
+            <button
+                app-botao
+                variante="primario"
+                tamanho="pequeno"
+                type="submit"
+                [disabled]="itemForm.invalid"
+            >
                 {{ rotuloConfirmar }}
             </button>
-            <button app-botao variante="secundario" type="button" (click)="cancelar()">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="pequeno"
+                type="button"
+                (click)="cancelar()"
+            >
                 Cancelar
             </button>
         </div>

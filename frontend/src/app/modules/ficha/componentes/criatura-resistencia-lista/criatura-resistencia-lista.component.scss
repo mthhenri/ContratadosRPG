@@ -46,23 +46,32 @@
             background: var(--accent-dim);
         }
     }
-    // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
-    // (`__grade-acoes`/`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível.
+    // Gatilho do modo de edição — mesmo lápis de seção `.criatura__lapis` (CriaturaVisualizacao,
+    // usado em Classificação/Atributos/Descrição/Natureza/Tema de Horror/Anotações), replicado
+    // aqui porque o encapsulamento de estilos do Angular não deixa a definição de outro componente
+    // vazar pra este. As ações por item (editar/remover) só existem enquanto ativo (`__grade-acoes`/
+    // `__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível.
     &__alternar-edicao {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 20px;
-        height: 20px;
         flex: none;
+        font-size: 12px;
+        line-height: 1;
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-control);
+        padding: 4px 7px;
         cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
         &:hover {
             color: var(--accent);
             border-color: var(--accent-border);
+            background: var(--surface-2);
         }
         &--ativo {
             color: var(--accent);
@@ -207,10 +216,10 @@
         color: var(--vida);
     }
 
-    // --- Formulário (mesmo nos dois modos): grade rotulada em vez de linha de flex-wrap ---
+    // --- Formulário (mesmo nos dois modos): Tipo, Subtipo e Valor em uma linha compacta. ---
     &__form {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
         width: 100%;
     }
@@ -225,9 +234,6 @@
         display: grid;
         gap: 4px;
         min-width: 0;
-        &--largo {
-            grid-column: 1 / -1;
-        }
     }
     &__campo-rotulo {
         font: 600 9px var(--font-mono);

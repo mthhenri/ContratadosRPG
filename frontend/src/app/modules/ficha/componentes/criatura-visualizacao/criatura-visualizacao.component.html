@@ -541,6 +541,7 @@
                         <button
                             app-botao
                             variante="primario"
+                            tamanho="pequeno"
                             type="button"
                             [disabled]="violacoesModificadores().length > 0"
                             (click)="salvarAtributos()"
@@ -550,6 +551,7 @@
                         <button
                             app-botao
                             variante="secundario"
+                            tamanho="pequeno"
                             type="button"
                             (click)="cancelarAtributos()"
                         >
@@ -574,18 +576,33 @@
                                         <span class="criatura__atributo-linha-nome">{{
                                             campo.nome
                                         }}</span>
-                                        <input
-                                            class="criatura__entrada-numero criatura__entrada-numero--linha"
-                                            type="number"
-                                            [value]="atributoRascunho(campo.chave)"
-                                            [attr.aria-label]="'Atributo Final — ' + campo.nome"
-                                            (input)="
-                                                definirAtributoRascunho(
-                                                    campo.chave,
-                                                    $any($event.target).valueAsNumber
-                                                )
-                                            "
-                                        />
+                                        <div class="criatura__atributo-linha-stepper">
+                                            <button
+                                                class="criatura__passo"
+                                                type="button"
+                                                appHoldRepeat
+                                                [attr.aria-label]="'Reduzir ' + campo.nome"
+                                                (passo)="
+                                                    ajustarAtributoRascunho(campo.chave, -1)
+                                                "
+                                            >
+                                                −
+                                            </button>
+                                            <span class="criatura__atributo-linha-valor">{{
+                                                atributoRascunho(campo.chave)
+                                            }}</span>
+                                            <button
+                                                class="criatura__passo"
+                                                type="button"
+                                                appHoldRepeat
+                                                [attr.aria-label]="'Aumentar ' + campo.nome"
+                                                (passo)="
+                                                    ajustarAtributoRascunho(campo.chave, 1)
+                                                "
+                                            >
+                                                +
+                                            </button>
+                                        </div>
                                     </div>
                                     <div
                                         class="criatura__atributo-modificadores"
@@ -1533,6 +1550,7 @@
                     <button
                         app-botao
                         variante="primario"
+                        tamanho="pequeno"
                         class="revelar-rolagem__acao"
                         type="button"
                         (click)="confirmarRevelarRolagem()"
@@ -1542,6 +1560,7 @@
                     <button
                         app-botao
                         variante="secundario"
+                        tamanho="pequeno"
                         class="revelar-rolagem__acao"
                         type="button"
                         (click)="cancelarRevelarRolagem()"

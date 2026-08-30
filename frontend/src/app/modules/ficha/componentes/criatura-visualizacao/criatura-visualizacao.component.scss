@@ -524,6 +524,11 @@
         border: 1px solid var(--border-strong);
         border-radius: 3px;
         cursor: pointer;
+        // Segurar para repetir (appHoldRepeat, usado no passo de Atributos): sem seleção de texto
+        // nem scroll/zoom de toque no gesto — mesma guarda de `.ficha-passo`.
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
         &:hover:not(:disabled) {
             color: var(--accent);
             border-color: var(--accent-border);
@@ -758,6 +763,22 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: var(--text-dim);
+    }
+    // Mesmo stepper (passo −/+ ao redor do valor) da edição de Atributos da ficha de jogador
+    // (`ficha-atributo__stepper`/`ficha-atributo-linha__valor`) — trocou o `<input type="number">`
+    // digitável, que não seguia o padrão de edição no próprio lugar do resto do sistema.
+    &__atributo-linha-stepper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    &__atributo-linha-valor {
+        font-family: var(--font-mono);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+        min-width: 20px;
+        text-align: center;
     }
     // Barrinhas de sinal (4 níveis) — mesmo widget de `.atributo__modificador` do assistente de
     // criação (`criar-criatura.page.scss`, m4-05), preservado sem mudança de interação.
@@ -1006,13 +1027,6 @@
         min-height: 0;
         padding: 2px 6px;
         font-size: 12px;
-    }
-    &__entrada-numero--linha {
-        width: 64px;
-        min-height: 0;
-        padding: 2px 6px;
-        font-size: 14px;
-        text-align: center;
     }
     &__entrada-texto--tag {
         min-height: 0;

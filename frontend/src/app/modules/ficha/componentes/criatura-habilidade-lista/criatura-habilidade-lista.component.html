@@ -138,10 +138,22 @@
             />
         </label>
         <div class="habilidade-lista__form-acoes">
-            <button app-botao variante="primario" type="submit" [disabled]="itemForm.invalid">
+            <button
+                app-botao
+                variante="primario"
+                tamanho="pequeno"
+                type="submit"
+                [disabled]="itemForm.invalid"
+            >
                 {{ rotuloConfirmar }}
             </button>
-            <button app-botao variante="secundario" type="button" (click)="cancelar()">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="pequeno"
+                type="button"
+                (click)="cancelar()"
+            >
                 Cancelar
             </button>
         </div>

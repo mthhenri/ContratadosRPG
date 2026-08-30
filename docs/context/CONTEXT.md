@@ -1179,10 +1179,14 @@ select fazia a linha saltar) e **Atributos**, este com **rascunho + Salvar/Cance
 distribuição de Modificadores é cota fixa (2 Forte / 3 Médio / 3 Fraco / 2 Frágil,
 `shared/regras/criatura`), então emitir a cada clique deixava a ficha inválida e o backend recusava
 a gravação; o Salvar só libera quando `validarFichaCriatura` não acusa mais violação de modificador.
+No editor de Ataques, a primeira linha é Custo de ação/Nome/Atinge área; Teste/Dano/Dano crítico
+dividem a linha seguinte em três colunas iguais e Efeito adicional é um `textarea` inteiro. No
+editor compartilhado de Resistências/Fraquezas, Tipo/Subtipo/Valor dividem uma linha única; os dois
+desenhos foram confirmados em `1920×1080` e `360×800` sem overflow.
 Dois cuidados que valem pra qualquer tela: `<select>` de edição usa `[selected]` na `<option>` (com
 `[value]` no `<select>` as opções do `@for` ainda não existem e o controle abre na 1ª), e `.botao`
 precisa ser copiado pro SCSS de cada componente (a definição da página não atravessa o
-encapsulamento). Só desktop por ora — refinamento mobile é `m4-10`, ainda no backlog.
+encapsulamento). O refinamento mobile mais amplo de criatura/NPC permanece em `m4-10`, no backlog.
 
 **Enquadramento do avatar (pan/zoom) — jogador e criatura.** Retomada do que `m3-62` tinha deixado
 fora de escopo ("crop/editor de imagem no client"), sem processamento de imagem no servidor: só um

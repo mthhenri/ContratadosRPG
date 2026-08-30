@@ -30,6 +30,19 @@ describe('CriaturaResistenciaLista', () => {
     expect(raiz.querySelector('.resistencia-lista__grade-valor')?.textContent?.trim()).toBe('10');
   });
 
+  it('mantém Tipo, Subtipo e Valor na mesma grade do formulário', () => {
+    const { fixture, raiz } = montar();
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+
+    const formulario = raiz.querySelector('.resistencia-lista__form')!;
+    expect(Array.from(formulario.querySelectorAll('[aria-label]')).map((campo) => campo.getAttribute('aria-label'))).toEqual([
+      'Tipo de dano',
+      'Subtipo',
+      'Valor',
+    ]);
+  });
+
   it('na variante lista, o item sem subtipo mostra o próprio tipo como texto principal', () => {
     TestBed.configureTestingModule({ imports: [CriaturaResistenciaLista] });
     const fixture = TestBed.createComponent(CriaturaResistenciaLista);

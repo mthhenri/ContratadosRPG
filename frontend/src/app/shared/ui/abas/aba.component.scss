@@ -38,6 +38,13 @@
   }
 }
 
+// Mesmo hover de `ficha-status__aba` (FichaVisualizacao) — as duas origens tinham o estado ativo,
+// mas só a Ficha tinha o hover; a Criatura (única consumidora hoje deste primitivo) ficava sem
+// nenhum retorno visual ao passar o mouse numa aba inativa.
+:host(:hover):not(.abas__item--ativa) {
+  color: var(--text);
+}
+
 :host(.abas__item--ativa) {
   font-weight: 700;
   color: var(--bg);

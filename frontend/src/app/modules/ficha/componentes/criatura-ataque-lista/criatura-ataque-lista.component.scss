@@ -39,24 +39,34 @@
         color: var(--text-mute);
     }
 
-    // Gatilho do modo de edição — as ações por item (editar/remover) só existem enquanto ativo
-    // (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre visível na tela.
+    // Gatilho do modo de edição — mesmo lápis de seção `.criatura__lapis` (CriaturaVisualizacao,
+    // usado em Classificação/Atributos/Descrição/Natureza/Tema de Horror/Anotações), replicado
+    // aqui porque o encapsulamento de estilos do Angular não deixa a definição de outro componente
+    // vazar pra este. `--adicionar` reusa o botão mas mantém a caixa quadrada de sempre — só o
+    // gatilho de editar/concluir (pencil/check) muda de forma. As ações por item (editar/remover)
+    // só existem enquanto ativo (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre
+    // visível na tela.
     &__cabecalho-acao {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 20px;
-        height: 20px;
         flex: none;
+        font-size: 12px;
+        line-height: 1;
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-control);
+        padding: 4px 7px;
         cursor: pointer;
-        transition: 0.15s ease;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
         &:hover {
             color: var(--accent);
             border-color: var(--accent-border);
+            background: var(--surface-2);
         }
         &--ativo {
             color: var(--accent);
@@ -64,6 +74,9 @@
             border-color: var(--accent);
         }
         &--adicionar {
+            width: 20px;
+            height: 20px;
+            padding: 0;
             color: var(--accent);
             border-color: var(--accent-border);
             &:hover {
@@ -220,10 +233,9 @@
         color: var(--vida);
     }
 
-    // --- Formulário: grade rotulada (não uma linha de flex-wrap de controles sem rótulo) ---
+    // --- Formulário: cabeçalho (custo, nome, área), três fórmulas iguais e efeito em texto livre. ---
     &__form {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 10px;
         width: 100%;
     }
@@ -238,9 +250,23 @@
         display: grid;
         gap: 4px;
         min-width: 0;
-        &--largo {
-            grid-column: 1 / -1;
+    }
+    &__linha-inicial {
+        display: grid;
+        grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr) auto;
+        align-items: end;
+        gap: 10px;
+        min-width: 0;
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+            align-items: stretch;
         }
+    }
+    &__formulas {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        min-width: 0;
     }
     &__campo-rotulo {
         font: 600 9px var(--font-mono);
@@ -268,13 +294,22 @@
             border-color: var(--accent);
         }
     }
+    &__textarea {
+        min-height: 76px;
+        resize: vertical;
+    }
     &__checkbox {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         align-self: end;
         padding-bottom: 6px;
+        white-space: nowrap;
         font: 12px var(--font-sans);
         color: var(--text-dim);
+        @include bp.mobile {
+            align-self: start;
+            padding-bottom: 0;
+        }
     }
 }

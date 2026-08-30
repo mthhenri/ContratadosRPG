@@ -29,6 +29,21 @@ describe('CriaturaAtaqueLista', () => {
     expect(nomes).toEqual(['Golpe de Pedra']);
   });
 
+  it('organiza o formulário com custo, nome, área, fórmulas e efeito em textarea', () => {
+    const { fixture, raiz } = montar();
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+
+    const linhaInicial = raiz.querySelector('.ataque-lista__linha-inicial')!;
+    expect(Array.from(linhaInicial.querySelectorAll('[aria-label]')).map((campo) => campo.getAttribute('aria-label'))).toEqual([
+      'Custo de ação',
+      'Nome do ataque',
+    ]);
+    expect(linhaInicial.querySelector('input[type="checkbox"]')).not.toBeNull();
+    expect(raiz.querySelectorAll('.ataque-lista__formulas .ataque-lista__campo')).toHaveLength(3);
+    expect(raiz.querySelector('textarea.ataque-lista__textarea')).not.toBeNull();
+  });
+
   it('emite rolarAtaque ao clicar no botão de dado', () => {
     const alvo = montar(false);
     (alvo.raiz.querySelector('.ataque-lista__rolar--dano') as HTMLButtonElement).click();

@@ -1,5 +1,93 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — Ficha de Criatura: formulários compactos de Ataque, Resistência e Fraqueza
+
+Pedido direto do autor para reduzir a altura dos editores inline, sem mudar o contrato de
+`FichaCriaturaAtaqueDto` nem de `FichaCriaturaResistenciaDto`. Em `CriaturaAtaqueLista`, a linha
+inicial agora segue Custo de ação → Nome → Atinge área; Teste, Dano e Dano crítico ocupam a mesma
+linha em três colunas idênticas; Efeito adicional virou `textarea` de largura integral. Os exemplos
+de fórmula foram encurtados para permanecerem legíveis no mobile, sem restringir as expressões que
+o mestre pode informar. Em `CriaturaResistenciaLista`, reusado tanto por Resistências como por
+Fraquezas, Tipo, Subtipo e Valor passaram a dividir uma única linha de três colunas.
+
+Foram acrescentados dois testes estruturais (um por componente), além de preservar os testes de
+emissão dos DTOs. O análogo aprovado foi `docs/design/examples/ficha-de-criatura.html`: o shell de
+dashboard, a densidade dos cards, controles nativos e rótulos mono foram preservados. Verificado ao
+vivo com a criatura "A Estátua", autenticada como mestre, nas edições de Ataque e Resistência em
+`1920×1080` e `360×800`: as três fórmulas e os três campos de resistência mantiveram larguras
+iguais em suas respectivas linhas, sem overflow horizontal. A inspeção
+visual confirmou foco visível, contraste e alvos de toque sem corte de conteúdo; no mobile a linha
+inicial do Ataque empilha de modo intencional, enquanto as fórmulas permanecem lado a lado.
+
+Validação: testes focados 15/15; suíte completa do frontend 1.457/1.457; build concluído. O lint
+do frontend não trouxe erros, mantendo os 14.637 avisos preexistentes; o build conserva apenas o
+aviso preexistente de orçamento de SCSS em `FichaVisualizacao`.
+
+## 2026-08-30 — Ficha de Criatura: hover das abas, stepper de Atributos e padronização de botões/lápis
+
+O autor reportou ao vivo cinco divergências visuais na Ficha de Criatura (`CriaturaVisualizacao`
+e as três listas filhas — Resistências/Fraquezas, Ataques, Habilidades), todas do mesmo gênero que
+a auditoria `ui-06` (entrada seguinte deste arquivo) foi aberta pra varrer sistematicamente — aqui
+tratadas como correção direta, não como parte daquela auditoria:
+
+1. **Abas sem hover:** `app-abas`/`app-aba` (`shared/ui/abas/`) — único consumidor real hoje é a
+   Criatura — nunca teve estado de hover, só o ativo. A Ficha de Jogador (`ficha-status__aba`, uma
+   cópia local paralela, não migrada ao primitivo) já tinha `&:hover:not(&--ativa) { color:
+   var(--text); }`; o primitivo ficou pra trás. Replicado o mesmo hover no primitivo.
+2. **Edição de Atributos com `<input type="number">`:** divergia do padrão "edição no próprio
+   lugar" que a Ficha de Jogador já usa (`ficha-atributo__stepper`: passo −/+ ao redor do valor,
+   `appHoldRepeat` pra segurar-e-repetir). Trocado por um stepper idêntico
+   (`ajustarAtributoRascunho`, novo método que soma o delta em cima do já existente
+   `definirAtributoRascunho`).
+3. **Salvar/Cancelar sem fonte:** `app-botao` só define fonte/padding/caixa-alta quando recebe
+   `[tamanho]` — nenhum consumidor deste primitivo no projeto inteiro usava esse input (todos
+   dimensionavam via classe companheira própria). Os botões de Salvar/Cancelar de Atributos, do
+   diálogo "Tornar Rolagens Públicas" e dos formulários de Resistência/Fraqueza, Ataque e
+   Habilidade não tinham nenhuma classe companheira de tamanho — herdavam só a fonte mono da base
+   do primitivo, sem padding/peso/caixa-alta. Corrigido com `tamanho="pequeno"` (valor já existente
+   no primitivo, nunca usado até agora) em vez de duplicar CSS de tamanho em cada componente.
+4. **Lápis de editar/concluir fora do padrão:** o gatilho de modo de edição das três listas
+   (`resistencia-lista__alternar-edicao`, `ataque-lista__cabecalho-acao`,
+   `habilidade-lista__cabecalho-acao`) era uma caixa quadrada fixa de 20×20 com raio hardcoded
+   (`3px`), diferente do lápis de seção `.criatura__lapis` (pílula com `padding: 4px 7px` e
+   `var(--radius-control)`) usado em Classificação/Atributos/Descrição/Natureza/Tema de
+   Horror/Anotações. Alinhado à geometria do `.criatura__lapis` nos três componentes (replicada,
+   não referenciada — o encapsulamento de estilo do Angular não deixa uma classe de
+   `CriaturaVisualizacao` vazar pros componentes filhos). Em Ataques/Habilidades esse botão
+   compartilhava a classe base com o "+" de adicionar (`--adicionar`); a caixa quadrada de 20×20
+   foi preservada só nesse modificador pra não mudar a forma do "+".
+
+Verificado ao vivo (`verify`, Playwright + REST, criatura "A Estátua" do caso de teste de
+`a-estatua.spec.ts`) em `1920×1080` e `360×800`: hover da aba visível por cor (`color: var(--text)`
+sem afetar a aba ativa), stepper de Atributos funcional com `appHoldRepeat`, formulários de
+Resistência/Fraqueza/Ataque/Habilidade com Confirmar/Cancelar no padrão do resto do sistema, lápis
+de Resistências pixel-a-pixel igual ao de Atributos (recorte comparativo lado a lado), sem overflow
+em nenhum viewport. `npx tsc --noEmit`, `ng build` e a suíte dos 5 componentes tocados (53 testes)
+sem regressão.
+
+## 2026-08-30 — `ui-06`: auditoria pós-migração da biblioteca visual entrou no backlog
+
+Após a retirada completa do PrimeNG e o fecho da série `ui-01`…`ui-05`, o autor pediu uma revisão
+do uso efetivo da biblioteca própria: não só se as cópias BEM conhecidas foram eliminadas, mas se
+cada tela usa o componente certo e conserva a padronização de fonte, tamanho, estilo, tokens e
+estados. Foi criada a spec de backlog
+`ui-06-auditoria-conformidade-biblioteca-visual.spec.md`.
+
+A task separa diagnóstico de correção para não esconder um redesenho amplo atrás de uma
+"auditoria". Ela exige uma matriz por módulo/ocorrência, inventário mecânico com falsos positivos
+documentados e inspeção ao vivo em `1920×1080` e `360×800`; botões, campos, cartões, stats, chips,
+abas, modais, notificações, tipografia, foco, erro, desabilitado, responsividade e tokens entram na
+revisão. Cada achado recebe veredito explícito e vira uma spec filha, problema ou ideia conforme a
+natureza.
+
+A spec também fixa a régua para não gerar componentes genéricos por hipótese: reutilizar quando a
+API já cobre o caso; evoluir primitivo para comportamento/estado com dois consumidores reais ou
+que pertença à sua identidade; criar novo componente só para papel visual/interativo próprio. CSS
+local continua permitido para composição de domínio, desde que não recopie a identidade de um
+primitivo. A decisão vigente de que o primitivo define identidade e o consumidor dimensiona o
+controle foi preservada — a auditoria confere esses valores contra `DESIGN.md`, sem criar uma
+escala tipográfica artificial.
+
 ## 2026-08-30 — Modificação "Alcance"/"Aerodinâmica" agora sobe o nível de alcance exibido da arma
 
 Reportado pelo autor: comprar a modificação `Alcance` numa arma de fogo (ex.: Submetralhadora,

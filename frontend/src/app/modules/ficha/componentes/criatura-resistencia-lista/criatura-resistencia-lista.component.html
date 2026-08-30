@@ -166,11 +166,11 @@
     }
 </section>
 
-<!-- Formulário em grade (tipo na linha inteira, subtipo + valor lado a lado, botões no fim): numa
-     coluna de ~340px uma linha de flex-wrap quebrava em pedaços desalinhados. -->
+<!-- Formulário em grade compacta: Tipo, Subtipo e Valor dividem a mesma linha tanto para
+     Resistências quanto para Fraquezas. -->
 <ng-template #formulario>
     <form class="resistencia-lista__form" [formGroup]="itemForm" (ngSubmit)="confirmar()">
-        <label class="resistencia-lista__campo resistencia-lista__campo--largo">
+        <label class="resistencia-lista__campo">
             <span class="resistencia-lista__campo-rotulo">Tipo</span>
             <select
                 class="resistencia-lista__select"
@@ -201,10 +201,22 @@
             />
         </label>
         <div class="resistencia-lista__form-acoes">
-            <button app-botao variante="primario" type="submit" [disabled]="itemForm.invalid">
+            <button
+                app-botao
+                variante="primario"
+                tamanho="pequeno"
+                type="submit"
+                [disabled]="itemForm.invalid"
+            >
                 {{ indiceEmEdicao() === -1 ? "Adicionar" : "Confirmar" }}
             </button>
-            <button app-botao variante="secundario" type="button" (click)="cancelar()">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="pequeno"
+                type="button"
+                (click)="cancelar()"
+            >
                 Cancelar
             </button>
         </div>
