@@ -29,6 +29,26 @@
 
 ## Ativos
 
+### P-041 — Página do Esquadrão não troca lista por conteúdo no mobile · `ABERTO` · frontend/pagina-caderno
+
+- **Sintoma:** no `CadernoFlutuante` em `360×800`, tocar uma página do modo Esquadrão na lista não
+  troca `estado().vistaMobile` para `CONTEUDO` — a lista continua na tela e o editor permanece
+  inacessível pela navegação normal (ele chega a montar no DOM, só fica oculto por
+  `.caderno__corpo--lista .caderno__editor { display: none }`). Achado ao tentar capturar a
+  verificação `360×800` da `P-039` (presença/cursor remoto) — o próprio recorte da `P-039` funciona
+  (confirmado revelando o editor via override de CSS só para a captura), mas a navegação real do
+  mobile para chegar até ele está quebrada.
+- **Causa:** `CadernoFlutuanteStore.refletirPaginaColaborativa` (chamada pelo `effect()` que observa
+  `CadernoEsquadraoColaborativoService.pagina()`) nunca chama `definirVistaMobile('CONTEUDO')` —
+  diferente de `recuperarPagina`, usada pelo caderno privado (`Meu caderno`), que faz exatamente
+  isso. O modo Esquadrão do `CadernoFlutuante` nunca ganhou o mesmo tratamento ao ser adicionado.
+- **Contorno:** nenhum pela UI; o conteúdo existe e sincroniza, só não fica visível no mobile sem
+  intervenção.
+- **Correção:** replicar em `refletirPaginaColaborativa` (ou no ponto que a chama) o mesmo
+  `definirVistaMobile('CONTEUDO')` de `recuperarPagina`.
+- **Desde:** entregável 3 (`caderno-esquadrao-colaborativo.spec.md`), presente desde que o modo
+  Esquadrão existe — achado em 2026-08-30 ao verificar a `P-039` ao vivo em `360×800`.
+
 ### P-040 — Inventário do Esquadrão depende de `var(--danger)` inexistente · `ABERTO` · frontend/inventario-esquadrao
 
 - **Sintoma:** cinco declarações de cor em
@@ -44,43 +64,6 @@
   apropriado, provavelmente `--vida` para as ações destrutivas, após conferir os
   estados do Inventário do Esquadrão ao vivo.
 - **Desde:** encontrado durante a investigação de `P-036`, em 2026-08-29.
-
-### P-039 — Caderno do Esquadrão sem presença nem cursores remotos · `ABERTO` · frontend/pagina-caderno
-
-- **Sintoma:** `caderno-esquadrao-colaborativo.spec.md` (entregável 2) pede sincronização Yjs "incluindo
-  reconexão, presença e cursores remotos no editor Milkdown". A reconexão/sincronização de conteúdo
-  funciona (confirmado ao vivo, dois usuários editando a mesma página simultaneamente e reconectando
-  sem perder texto), mas não existe em lugar nenhum do repositório nenhum uso de `y-protocols/awareness`
-  nem qualquer indicador visual de "quem mais está editando" ou cursor remoto — busca por
-  `awareness`/`presença`/`cursorRemoto` em `frontend/src` e `backend/src` não encontra nada.
-- **Causa:** a implementação (commits `a7304ec`…`ca37bdd`) cobriu a persistência CRDT, o broadcast
-  Socket.IO pós-gravação e o terceiro modo do Caderno, mas nunca chegou a implementar o protocolo de
-  `awareness` do Yjs; o trabalho nunca foi registrado em `HISTORY.md`, então esse recorte pendente
-  também nunca tinha sido escrito em lugar nenhum.
-- **Contorno:** edição concorrente funciona e mescla corretamente sem indicador de presença — o
-  usuário só não vê, em tempo real, quem mais está na mesma página nem onde está o cursor de outro
-  colaborador.
-- **Correção:** implementar `y-protocols/awareness` sobre o mesmo `Y.Doc`/canal Socket.IO já
-  existente e um indicador visual no editor Milkdown (o plugin `@milkdown/plugin-collab` já expõe
-  binding para isso).
-- **Desde:** `caderno-esquadrao-colaborativo.spec.md`, entregável nunca fechado — achado ao
-  verificar a spec ao vivo em 2026-08-29 antes de movê-la para `done/` (ela permanece em `active/`
-  por causa deste item).
-
-### P-002 — `HISTORY.md` sem registro desde a `m3-27` · `ABERTO` · processo
-
-- **Sintoma:** o último bloco registrado é a `m3-27` (2026-07-29), mas **11 commits de trabalho
-  real** entraram depois e não estão em lugar nenhum da documentação: histórico de rolagens virou
-  barra lateral, ícone d20 (SVG + icosaedro facetado), gatilhos flutuantes na ficha, remoção do
-  chip de campanha da topbar, mini-card do painel compactado com Patente/Defesa/Origem, "Remover da
-  campanha" no menu de ações, skeletons do painel e da tela de Fichas, cálculo de **sobrecarregado**
-  migrado de aproximação em SQL para o motor de compras, e o z-index da calculadora flutuante.
-- **Causa:** o trabalho veio de branches `claude/*` mergeadas por PR (#7…#11), fora do fluxo
-  spec-driven que atualiza a documentação no fecho da task.
-- **Contorno:** `git log --no-merges --since=2026-07-29` recupera a lista.
-- **Correção:** escrever o bloco retroativo desses 11 commits no `HISTORY.md`, ou aceitar
-  explicitamente que trabalho vindo por PR não é registrado.
-- **Desde:** 2026-07-29.
 
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
@@ -104,18 +87,6 @@
 - **Correção:** um passe de redução de verdade (auditar o que está no chunk inicial e empurrar para
   lazy). Nunca foi feito.
 - **Desde:** `m1-06`, agravando desde então.
-
-### P-007 — Cloudflare e Render publicam de branches diferentes · `CONTORNADO` · deploy
-
-- **Sintoma:** sintomas fantasma em produção. O caso real: "Vida/Energia aparecendo em branco" —
-  não havia bug de código nenhum.
-- **Causa:** a Cloudflare Pages publica **preview de toda branch**, enquanto o Render só faz
-  auto-deploy do `master`. Um frontend novo conversando com um backend velho produz telas
-  incoerentes que parecem bug.
-- **Contorno:** antes de investigar qualquer sintoma "só em produção", conferir se o `master` foi
-  mergeado e se o Render já reimplantou.
-- **Correção:** alinhar as branches de publicação das duas plataformas.
-- **Desde:** diagnosticado durante a `m2-16d`.
 
 ### P-008 — Aba "Extras" e a Origem estão no lugar errado para um humano · `ACEITO` · UX
 

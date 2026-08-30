@@ -29,15 +29,19 @@
 > resolvidas depois. Lint dos três workspaces sem erro novo. Verificado ao vivo (Postgres+backend+frontend
 > reais, Playwright, `1920×1080`/`360×800`, dois usuários). Ver `HISTORY.md` para o relato completo.
 >
-> **Achado na mesma verificação, spec ainda aberta:** `caderno-esquadrao-colaborativo.spec.md`
-> permanece em `active/`. O editor Milkdown colaborativo tinha dois defeitos reais: um crash de
-> inicialização (`MilkdownError: Context not bind`, o plugin de colaboração era conectado antes do
-> pipeline registrar `collabServiceCtx`) e perda de texto em edição concorrente (o efeito de
-> sincronização local sobrescrevia o `Y.Doc` já sincronizado com um eco desatualizado do próprio
-> usuário) — os dois corrigidos e confirmados com dois navegadores editando a mesma página ao mesmo
-> tempo. Mas o entregável de "presença e cursores remotos" (Yjs `awareness`) nunca foi implementado
-> em lugar nenhum do repositório — registrado como `PROBLEMS.md` `P-039`; a spec só fecha quando
-> esse entregável existir.
+> **`P-039` corrigida, spec ainda aberta por um novo achado:** `caderno-esquadrao-colaborativo.spec.md`
+> permanece em `active/`. O entregável de presença e cursores remotos (Yjs `awareness`) foi
+> implementado: `y-protocols/awareness` roda sobre o mesmo `Y.Doc`, o gateway ganhou um relay
+> broadcast-only puro (`caderno-esquadrao:presenca`, sem persistir nem decodificar — não é a
+> mutação que a proibição #25 veda) e o editor Milkdown mostra cursor/seleção remotos (nome e cor
+> por participante, via `yCursorPlugin`) mais um indicador de presença no cabeçalho. Confirmado ao
+> vivo em `1920×1080` com dois navegadores reais (mestre + jogador): texto convergindo
+> ("Texto do MESTRE. Texto do JOGADOR.") e cada lado mostrando o nome do outro colaborador ao lado
+> do cursor. Mas a verificação em `360×800` esbarrou num defeito **novo e não relacionado**: no
+> mobile, selecionar uma página do Esquadrão não troca a vista de lista para a de conteúdo
+> (`refletirPaginaColaborativa` nunca chama `definirVistaMobile('CONTEUDO')`, ao contrário de
+> `recuperarPagina` no caderno privado) — registrado como `PROBLEMS.md` `P-041`. A spec permanece
+> em `active/` até esse critério de aceite ser verificável.
 >
 > **Uma decisão atrás:** `P-027` — os efeitos permanentes
 > e incondicionais das habilidades de custo 0 E agora pertencem às fórmulas compartilhadas:
@@ -931,10 +935,13 @@ editor Milkdown das demais. O documento é um `Y.Doc` (Yjs, CRDT) persistido no 
 projeção Markdown pesquisável (entra na mesma busca unificada acima); a sincronização usa REST
 autorizado para o snapshot inicial e broadcast Socket.IO pós-gravação para o resto. Todo membro cria,
 renomeia e edita páginas do Esquadrão; só o mestre exclui. A busca inclui o caderno do Esquadrão sem
-expor conteúdo a quem não é membro da campanha. **Lacuna conhecida:** o entregável de presença e
-cursores remotos (Yjs `awareness`) não foi implementado — ver `PROBLEMS.md` `P-039`; edição
-concorrente funciona e mescla corretamente, só não existe indicador visual de quem mais está na
-página.
+expor conteúdo a quem não é membro da campanha. Presença e cursores remotos (`y-protocols/awareness`)
+foram implementados na `P-039`: o `Awareness` roda sobre o mesmo `Y.Doc`, o gateway retransmite o
+payload bruto (`caderno-esquadrao:presenca`) sem persistir nem decodificar, e o editor mostra o
+cursor/seleção de cada colaborador (nome e cor) via `yCursorPlugin`, mais um indicador de
+participantes no cabeçalho. **Lacuna conhecida:** no mobile, abrir uma página do Esquadrão não troca
+da lista para o editor — `PROBLEMS.md` `P-041` —, então o critério de aceite de `360×800` da spec
+não pôde ser verificado ao vivo; a spec permanece em `active/` por causa disso.
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 

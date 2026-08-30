@@ -229,6 +229,7 @@ describe('PainelEncontro', () => {
     const paginaEsquadraoCriada$ = new Subject<PaginaCadernoResumoDto>();
     const paginaEsquadraoAlterada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
     const paginaEsquadraoExcluida$ = new Subject<{ campanhaId: number; paginaId: number }>();
+    const presencaEsquadraoCaderno$ = new Subject<unknown>();
     const encontroService = {
       listarPorCampanha: vi.fn(() =>
         of([
@@ -304,6 +305,7 @@ describe('PainelEncontro', () => {
             conectar: vi.fn(),
             entrarSalaCampanha: vi.fn(),
             sairSalaCampanha: vi.fn(),
+            enviarPresencaEsquadrao: vi.fn(),
             conectado: () => true,
             reconexao: () => 0,
             encontroAlterado$,
@@ -312,6 +314,7 @@ describe('PainelEncontro', () => {
             paginaEsquadraoCriada$,
             paginaEsquadraoAlterada$,
             paginaEsquadraoExcluida$,
+            presencaEsquadraoCaderno$,
           },
         },
         {

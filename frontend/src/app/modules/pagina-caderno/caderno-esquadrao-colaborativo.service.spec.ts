@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { TipoPaginaCadernoEnum } from '@contratados-rpg/shared/enums';
 import { Subject, of } from 'rxjs';
+import { Awareness, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { SessaoService } from '../../core/services/sessao.service';
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import { CadernoEsquadraoColaborativoService } from './caderno-esquadrao-colaborativo.service';
 import { PaginaCadernoService } from './pagina-caderno.service';
@@ -23,6 +25,8 @@ describe('CadernoEsquadraoColaborativoService', () => {
   };
   let servico: CadernoEsquadraoColaborativoService;
   let api: { recuperarEstadoPaginaEsquadrao: ReturnType<typeof vi.fn>; alterarPaginaEsquadrao: ReturnType<typeof vi.fn> };
+  let presencaEsquadraoCaderno$: Subject<{ campanhaId: number; paginaId: number; atualizacao: string }>;
+  let enviarPresencaEsquadrao: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -33,6 +37,8 @@ describe('CadernoEsquadraoColaborativoService', () => {
       recuperarEstadoPaginaEsquadrao: vi.fn(() => of({ pagina, estado })),
       alterarPaginaEsquadrao: vi.fn(() => of({ campanhaId: 3, paginaId: 31, atualizacao: estado, pagina })),
     };
+    presencaEsquadraoCaderno$ = new Subject();
+    enviarPresencaEsquadrao = vi.fn();
     TestBed.configureTestingModule({
       providers: [
         CadernoEsquadraoColaborativoService,
@@ -42,9 +48,15 @@ describe('CadernoEsquadraoColaborativoService', () => {
           useValue: {
             paginaEsquadraoAlterada$: new Subject(),
             paginaEsquadraoExcluida$: new Subject(),
+            presencaEsquadraoCaderno$,
             conectar: vi.fn(),
             entrarSalaCampanha: vi.fn(),
+            enviarPresencaEsquadrao,
           },
+        },
+        {
+          provide: SessaoService,
+          useValue: { usuario: () => ({ id: 7, nome: 'QA' }) },
         },
       ],
     });
@@ -64,5 +76,47 @@ describe('CadernoEsquadraoColaborativoService', () => {
       expect.objectContaining({ titulo: 'Plano revisado', conteudoMarkdown: 'Ponto de encontro' }),
     );
     expect(servico.documento()?.getText('titulo').toString()).toBe('Plano revisado');
+  });
+
+  describe('presença (P-039)', () => {
+    it('ao abrir, anuncia a própria presença com nome/cor derivados da sessão', () => {
+      servico.abrir(31);
+
+      expect(servico.awareness()).not.toBeNull();
+      expect(enviarPresencaEsquadrao).toHaveBeenCalledWith(
+        expect.objectContaining({ campanhaId: 3, paginaId: 31 }),
+      );
+    });
+
+    it('aplica uma atualização de presença remota e projeta o colaborador em participantes()', () => {
+      servico.abrir(31);
+      const remoto = new Awareness(new Y.Doc());
+      remoto.setLocalStateField('user', { name: 'Mestre', color: '#38bdf8' });
+      const atualizacao = encodeAwarenessUpdate(remoto, [remoto.clientID]);
+      const base64 = btoa(String.fromCharCode(...atualizacao));
+
+      presencaEsquadraoCaderno$.next({ campanhaId: 3, paginaId: 31, atualizacao: base64 });
+
+      expect(servico.participantes()).toEqual([
+        expect.objectContaining({ nome: 'Mestre', cor: '#38bdf8' }),
+      ]);
+    });
+
+    it('ignora presença remota de outra página aberta (evento de sessão anterior/alheia)', () => {
+      servico.abrir(31);
+
+      presencaEsquadraoCaderno$.next({ campanhaId: 3, paginaId: 999, atualizacao: 'AAA=' });
+
+      expect(servico.participantes()).toEqual([]);
+    });
+
+    it('ao fechar, limpa o awareness e a lista de participantes', () => {
+      servico.abrir(31);
+
+      servico.fechar();
+
+      expect(servico.awareness()).toBeNull();
+      expect(servico.participantes()).toEqual([]);
+    });
   });
 });

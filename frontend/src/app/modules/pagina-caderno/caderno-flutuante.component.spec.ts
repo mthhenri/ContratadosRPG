@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CadernoFlutuante } from './caderno-flutuante.component';
 import { EDITOR_MARKDOWN_FACTORY } from './editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
+import { SessaoService } from '../../core/services/sessao.service';
 import { TempoRealService } from '../../core/services/tempo-real.service';
 
 const pagina: PaginaCadernoDto = {
@@ -74,10 +75,13 @@ describe('CadernoFlutuante', () => {
             paginaEsquadraoCriada$: new Subject(),
             paginaEsquadraoAlterada$: new Subject(),
             paginaEsquadraoExcluida$: new Subject(),
+            presencaEsquadraoCaderno$: new Subject(),
             conectar: vi.fn(),
             entrarSalaCampanha: vi.fn(),
+            enviarPresencaEsquadrao: vi.fn(),
           },
         },
+        { provide: SessaoService, useValue: { usuario: () => ({ id: 7, nome: 'QA' }) } },
         {
           provide: EDITOR_MARKDOWN_FACTORY,
           useValue: (opcoes: { aoAlterar: (markdown: string) => void }) => {

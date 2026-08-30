@@ -29,6 +29,7 @@ import type {
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoEsquadraoPresencaDto,
   PaginaCadernoResumoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import type { Server, Socket } from 'socket.io';
@@ -46,7 +47,7 @@ interface EntradaSalaResultado {
 /**
  * Gateway de tempo real **broadcast-only** (SYSTEM.SPEC §9, proibição #25): nenhuma escrita entra
  * por aqui — toda mutação passa por REST (guards + validação + motor de regras) e a service emite
- * o evento **após** salvar. O gateway só faz três coisas:
+ * o evento **após** salvar. O gateway só faz quatro coisas:
  *
  * 1. **Handshake autenticado** — valida o JWT na conexão com o **mesmo mecanismo do Passport**
  *    (`JwtService` configurado com o `JWT_SECRETO`, o mesmo segredo que a `JwtStrategy` verifica —
@@ -57,6 +58,10 @@ interface EntradaSalaResultado {
  *    duplica a regra de permissão (proibição #28).
  * 3. **Emissão** dos eventos de negócio (`ficha:alterada`, `ficha:criada`, `membro:entrou`),
  *    chamada pelas services após a mutação.
+ * 4. **Retransmissão de presença efêmera** do Caderno do Esquadrão
+ *    (`caderno-esquadrao:presenca`, P-039) — o único caminho em que o próprio cliente dispara o
+ *    encaminhamento em vez de uma service; não é mutação (nada é persistido) e continua exigindo a
+ *    mesma permissão de sala do item 2, ver `retransmitirPresencaEsquadrao`.
  *
  * A origem do Socket.IO é travada em `APP_FRONTEND_ORIGEM` pelo `WsIoAdapter` (§10.6).
  */
@@ -137,6 +142,42 @@ export class CampanhaGateway implements OnGatewayConnection {
 
     await cliente.join(this.salaCampanha(dto.id));
     return { sucesso: true };
+  }
+
+  /**
+   * Retransmite presença efêmera do Caderno do Esquadrão (P-039) — cursor, seleção e identidade
+   * de `y-protocols/awareness`. **Não é a mutação que a proibição #25 veda**: nada é decodificado,
+   * persistido ou indexado aqui, o payload só é encaminhado aos demais sockets da sala
+   * `campanha:<id>` (broadcast puro, igual a qualquer outro `emitir*` deste gateway — a diferença
+   * é só a origem do disparo, um cliente em vez de uma service).
+   *
+   * O caminho comum já encontra `cliente` na sala (ingressada por `campanha:entrar` ao abrir a
+   * página). Mas os dois eventos trafegam no mesmo socket sem coordenação de ordem no cliente
+   * (`TempoRealService.entrarSalaCampanha` não aguarda o `join`), então uma presença pode chegar
+   * antes do `await cliente.join(...)` acima terminar; nesse caso a checagem de permissão
+   * (`CampanhaService.recuperarCampanha`, a mesma de `entrarSalaCampanha` — proibição #28, sem
+   * duplicar regra) se refaz e o socket ingressa aqui mesmo, sem exigir uma segunda mensagem do
+   * cliente.
+   */
+  @SubscribeMessage('caderno-esquadrao:presenca')
+  async retransmitirPresencaEsquadrao(
+    @ConnectedSocket() cliente: Socket,
+    @MessageBody() evento: PaginaCadernoEsquadraoPresencaDto,
+  ): Promise<void> {
+    const usuario = this.obterUsuario(cliente);
+    if (!usuario) {
+      return;
+    }
+    const sala = this.salaCampanha(evento.campanhaId);
+    if (!cliente.rooms.has(sala)) {
+      try {
+        await this.campanhaService.recuperarCampanha({ id: evento.campanhaId }, usuario);
+      } catch {
+        return;
+      }
+      await cliente.join(sala);
+    }
+    cliente.to(sala).emit('caderno-esquadrao:presenca', evento);
   }
 
   /**

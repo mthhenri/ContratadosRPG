@@ -184,6 +184,35 @@
     box-shadow: inset 2px 0 0 var(--accent);
 }
 
+// Cursor e seleção remotos do modo colaborativo (`y-prosemirror`, P-039). O elemento vem do
+// `defaultCursorBuilder`/`defaultSelectionBuilder` da própria biblioteca, com `border-color`/
+// `background-color` já embutidos inline a partir da cor do participante — só o posicionamento
+// (linha vertical + etiqueta de nome flutuante) fica por conta deste arquivo.
+:host ::ng-deep .milkdown .editor .ProseMirror-yjs-cursor {
+    position: relative;
+    margin-inline: -1px;
+    border-right: 1px solid;
+    border-left: 1px solid;
+    word-break: normal;
+    pointer-events: none;
+}
+
+:host ::ng-deep .milkdown .editor .ProseMirror-yjs-cursor > div {
+    position: absolute;
+    top: -1.35em;
+    left: -1px;
+    padding-inline: 3px;
+    color: var(--bg);
+    font: 700 10px var(--font-mono);
+    line-height: 1.5;
+    white-space: nowrap;
+    user-select: none;
+}
+
+:host ::ng-deep .milkdown .editor .ProseMirror-yjs-selection {
+    border-radius: 2px;
+}
+
 :host(.editor-markdown--somente-leitura) ::ng-deep .milkdown .editor {
     cursor: default;
 }

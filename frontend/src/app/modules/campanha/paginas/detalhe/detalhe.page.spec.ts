@@ -231,6 +231,7 @@ describe('CampanhaDetalhe', () => {
     const paginaEsquadraoCriada$ = new Subject<PaginaCadernoResumoDto>();
     const paginaEsquadraoAlterada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
     const paginaEsquadraoExcluida$ = new Subject<{ campanhaId: number; paginaId: number }>();
+    const presencaEsquadraoCaderno$ = new Subject<unknown>();
     const reconexao = signal(0);
     const tempoRealService = {
       conectar: vi.fn(),
@@ -238,6 +239,7 @@ describe('CampanhaDetalhe', () => {
       sairSalaCampanha: vi.fn(),
       entrarSalaFicha: vi.fn(),
       sairSalaFicha: vi.fn(),
+      enviarPresencaEsquadrao: vi.fn(),
       fichaCriada$: fichaCriada$.asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
@@ -249,6 +251,7 @@ describe('CampanhaDetalhe', () => {
       paginaEsquadraoCriada$: paginaEsquadraoCriada$.asObservable(),
       paginaEsquadraoAlterada$: paginaEsquadraoAlterada$.asObservable(),
       paginaEsquadraoExcluida$: paginaEsquadraoExcluida$.asObservable(),
+      presencaEsquadraoCaderno$: presencaEsquadraoCaderno$.asObservable(),
       reconexao,
       conectado: signal(true),
     };

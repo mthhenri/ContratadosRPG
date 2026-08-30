@@ -29,24 +29,34 @@ interface SocketDublado {
   readonly cliente: Socket;
   readonly join: ReturnType<typeof vi.fn>;
   readonly disconnect: ReturnType<typeof vi.fn>;
+  readonly toSala: ReturnType<typeof vi.fn>;
+  readonly emitirParaSala: ReturnType<typeof vi.fn>;
 }
 
 /**
  * Cria um socket dublado com o handshake e as facetas usadas pelo gateway (`data`, `join`,
- * `disconnect`). `token` alimenta o `handshake.auth.token`; `usuario`, quando informado, simula um
- * socket já autenticado (payload em `data.usuario`). As espiãs `join`/`disconnect` são devolvidas à
- * parte (asserções sobre um método do próprio `Socket` disparariam `unbound-method`).
+ * `disconnect`, `rooms`, `to`). `token` alimenta o `handshake.auth.token`; `usuario`, quando
+ * informado, simula um socket já autenticado (payload em `data.usuario`); `salas`, quando
+ * informado, simula salas já ingressadas (`rooms`, checado por `retransmitirPresencaEsquadrao`
+ * sem chamada de serviço). As espiãs são devolvidas à parte (asserções sobre um método do próprio
+ * `Socket` disparariam `unbound-method`).
  */
-function criarSocket(opcoes: { token?: string; usuario?: JwtPayload } = {}): SocketDublado {
+function criarSocket(
+  opcoes: { token?: string; usuario?: JwtPayload; salas?: readonly string[] } = {},
+): SocketDublado {
   const join = vi.fn();
   const disconnect = vi.fn();
+  const emitirParaSala = vi.fn();
+  const toSala = vi.fn(() => ({ emit: emitirParaSala }));
   const cliente = {
     data: opcoes.usuario ? { usuario: opcoes.usuario } : {},
     handshake: { auth: { token: opcoes.token }, headers: {} },
+    rooms: new Set(opcoes.salas ?? []),
     join,
     disconnect,
+    to: toSala,
   } as unknown as Socket;
-  return { cliente, join, disconnect };
+  return { cliente, join, disconnect, toSala, emitirParaSala };
 }
 
 describe('CampanhaGateway', () => {
@@ -158,6 +168,55 @@ describe('CampanhaGateway', () => {
 
       expect(join).not.toHaveBeenCalled();
       expect(resultado).toEqual({ sucesso: false });
+    });
+  });
+
+  describe('retransmitirPresencaEsquadrao (presença efêmera, P-039)', () => {
+    const evento = { campanhaId: 3, paginaId: 9, atualizacao: 'AQI=' };
+
+    it('encaminha direto quando o socket já está na sala — sem checar a service de novo', async () => {
+      const { cliente, toSala, emitirParaSala, join } = criarSocket({
+        usuario,
+        salas: ['campanha:3'],
+      });
+
+      await gateway.retransmitirPresencaEsquadrao(cliente, evento);
+
+      expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+      expect(join).not.toHaveBeenCalled();
+      expect(toSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitirParaSala).toHaveBeenCalledWith('caderno-esquadrao:presenca', evento);
+    });
+
+    it('confirma o vínculo e ingressa na sala quando ainda não a tinha (corrida com campanha:entrar)', async () => {
+      campanhaService.recuperarCampanha.mockResolvedValue({ id: 3 });
+      const { cliente, toSala, emitirParaSala, join } = criarSocket({ usuario });
+
+      await gateway.retransmitirPresencaEsquadrao(cliente, evento);
+
+      expect(campanhaService.recuperarCampanha).toHaveBeenCalledWith({ id: 3 }, usuario);
+      expect(join).toHaveBeenCalledWith('campanha:3');
+      expect(toSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitirParaSala).toHaveBeenCalledWith('caderno-esquadrao:presenca', evento);
+    });
+
+    it('não encaminha quando o solicitante não é membro da campanha (§14)', async () => {
+      campanhaService.recuperarCampanha.mockRejectedValue(new UnauthorizedAccessException());
+      const { cliente, toSala, join } = criarSocket({ usuario });
+
+      await gateway.retransmitirPresencaEsquadrao(cliente, evento);
+
+      expect(join).not.toHaveBeenCalled();
+      expect(toSala).not.toHaveBeenCalled();
+    });
+
+    it('não encaminha quando o socket não está autenticado', async () => {
+      const { cliente, toSala } = criarSocket();
+
+      await gateway.retransmitirPresencaEsquadrao(cliente, evento);
+
+      expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+      expect(toSala).not.toHaveBeenCalled();
     });
   });
 

@@ -429,6 +429,11 @@ export class CadernoFlutuante implements OnDestroy {
     this.formulario.controls.conteudoMarkdown.setValue(conteudoMarkdown);
   }
 
+  /** Inicial exibida no indicador de presença (P-039) — nome completo vai só na tooltip. */
+  protected iniciaisDoParticipante(nome: string): string {
+    return nome.trim().charAt(0).toUpperCase() || '?';
+  }
+
   protected salvar(): void {
     if (this.modoCaderno() !== 'ESQUADRAO') this.store.salvarAgora();
   }

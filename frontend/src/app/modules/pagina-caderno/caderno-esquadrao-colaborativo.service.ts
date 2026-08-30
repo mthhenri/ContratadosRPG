@@ -5,16 +5,46 @@ import type {
   PaginaCadernoEsquadraoEstadoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import { finalize } from 'rxjs';
+import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 
+import { SessaoService } from '../../core/services/sessao.service';
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import { PaginaCadernoService } from './pagina-caderno.service';
 
 type EstadoSincronizacao = 'INATIVO' | 'SINCRONIZANDO' | 'SINCRONIZADO' | 'FALHA';
 
+/** Um colaborador presente na página aberta agora — projeção do awareness Yjs (P-039), nunca
+ * persistida nem enviada à busca. */
+export interface ParticipanteCaderno {
+  readonly clienteId: number;
+  readonly nome: string;
+  readonly cor: string;
+}
+
 const ORIGEM_INICIAL = Symbol('estado-inicial');
 const ORIGEM_REMOTA = Symbol('atualizacao-remota');
+const ORIGEM_PRESENCA_REMOTA = Symbol('presenca-remota');
 const ATRASO_SINCRONIZACAO = 180;
+
+/**
+ * Paleta fixa de cores de identidade por participante — mesmo espírito de `ficha.cor`: valor
+ * arbitrário associado a uma pessoa, fora do sistema de tokens do tema (não é cor de interface).
+ */
+const PALETA_PRESENCA: readonly string[] = [
+  '#f97316',
+  '#22c55e',
+  '#38bdf8',
+  '#a855f7',
+  '#eab308',
+  '#ec4899',
+  '#14b8a6',
+  '#f43f5e',
+];
+
+function corDoParticipante(usuarioId: number): string {
+  return PALETA_PRESENCA[Math.abs(usuarioId) % PALETA_PRESENCA.length];
+}
 
 /**
  * Sessão efêmera do editor compartilhado. O Y.Doc é a fonte de verdade enquanto uma página está
@@ -24,15 +54,19 @@ const ATRASO_SINCRONIZACAO = 180;
 export class CadernoEsquadraoColaborativoService {
   private readonly api = inject(PaginaCadernoService);
   private readonly tempoReal = inject(TempoRealService);
+  private readonly sessaoService = inject(SessaoService);
   private readonly destroyRef = inject(DestroyRef);
   private temporizador: ReturnType<typeof setTimeout> | null = null;
   private atualizacoesPendentes: Uint8Array[] = [];
   private paginaAtualId: number | null = null;
   private campanhaAtualId: number | null = null;
   private documentoAtual: Y.Doc | null = null;
+  private awarenessAtual: Awareness | null = null;
   private conteudoMarkdownAtual = '';
 
   readonly documento = signal<Y.Doc | null>(null);
+  readonly awareness = signal<Awareness | null>(null);
+  readonly participantes = signal<readonly ParticipanteCaderno[]>([]);
   readonly pagina = signal<PaginaCadernoDto | null>(null);
   readonly titulo = signal('');
   readonly estado = signal<EstadoSincronizacao>('INATIVO');
@@ -51,6 +85,23 @@ export class CadernoEsquadraoColaborativoService {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((evento) => {
         if (evento.paginaId === this.paginaAtualId) this.fechar();
+      });
+    this.tempoReal.presencaEsquadraoCaderno$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((evento) => {
+        if (evento.paginaId !== this.paginaAtualId) return;
+        const awareness = this.awarenessAtual;
+        if (!awareness) return;
+        try {
+          applyAwarenessUpdate(
+            awareness,
+            decodificarBase64(evento.atualizacao),
+            ORIGEM_PRESENCA_REMOTA,
+          );
+        } catch {
+          // Payload de presença corrompido ou incompatível: efêmero, não vale derrubar a sessão
+          // colaborativa por isso — a próxima renovação do awareness local se corrige sozinha.
+        }
       });
   }
 
@@ -96,9 +147,17 @@ export class CadernoEsquadraoColaborativoService {
     if (this.temporizador !== null) clearTimeout(this.temporizador);
     this.temporizador = null;
     this.atualizacoesPendentes = [];
+    // `Awareness` observa `doc.on('destroy', ...)` desde a própria construção — destruir o
+    // documento já cascateia `awareness.destroy()`, que propaga o estado local `null` (protocolo
+    // Yjs: "before a client disconnects, it should propagate a null state") para os demais
+    // colaboradores antes de soltar o listener. Não precisa de um `awarenessAtual?.destroy()`
+    // separado aqui.
     this.documentoAtual?.destroy();
     this.documentoAtual = null;
+    this.awarenessAtual = null;
     this.documento.set(null);
+    this.awareness.set(null);
+    this.participantes.set([]);
     this.paginaAtualId = null;
     this.campanhaAtualId = null;
     this.pagina.set(null);
@@ -111,9 +170,11 @@ export class CadernoEsquadraoColaborativoService {
     const documento = new Y.Doc();
     Y.applyUpdate(documento, decodificarBase64(estadoPagina.estado), ORIGEM_INICIAL);
     const titulo = documento.getText('titulo');
+    const campanhaId = estadoPagina.pagina.campanhaId;
+    const paginaId = estadoPagina.pagina.id;
     this.documentoAtual = documento;
-    this.paginaAtualId = estadoPagina.pagina.id;
-    this.campanhaAtualId = estadoPagina.pagina.campanhaId;
+    this.paginaAtualId = paginaId;
+    this.campanhaAtualId = campanhaId;
     this.conteudoMarkdownAtual = estadoPagina.pagina.conteudoMarkdown;
     this.pagina.set(estadoPagina.pagina);
     this.titulo.set(titulo.toString() || estadoPagina.pagina.titulo);
@@ -124,9 +185,55 @@ export class CadernoEsquadraoColaborativoService {
       this.agendarSincronizacao();
     });
     this.documento.set(documento);
+
+    const awareness = new Awareness(documento);
+    awareness.on(
+      'update',
+      (
+        alteracao: { added: number[]; updated: number[]; removed: number[] },
+        origem: unknown,
+      ) => {
+        this.participantes.set(this.listarParticipantes(awareness));
+        if (origem === ORIGEM_PRESENCA_REMOTA) return;
+        const clientesAlterados = alteracao.added.concat(alteracao.updated, alteracao.removed);
+        const atualizacao = encodeAwarenessUpdate(awareness, clientesAlterados);
+        this.tempoReal.enviarPresencaEsquadrao({
+          campanhaId,
+          paginaId,
+          atualizacao: codificarBase64(atualizacao),
+        });
+      },
+    );
+    const usuario = this.sessaoService.usuario();
+    // Campo `user`/`name`/`color` em inglês: contrato fixo do `y-prosemirror` (o `yCursorPlugin`
+    // lê `estado.user.{name,color}` literalmente) — não é conceito de domínio nomeável em
+    // português, é o formato de rede da biblioteca de terceiros.
+    awareness.setLocalStateField('user', {
+      name: usuario?.nome ?? 'Colaborador',
+      color: corDoParticipante(usuario?.id ?? 0),
+    });
+    this.awarenessAtual = awareness;
+    this.awareness.set(awareness);
+
     this.tempoReal.conectar();
-    this.tempoReal.entrarSalaCampanha(estadoPagina.pagina.campanhaId);
+    this.tempoReal.entrarSalaCampanha(campanhaId);
     this.estado.set('SINCRONIZADO');
+  }
+
+  /** Participantes com estado de presença ativo, exceto o próprio cliente local. */
+  private listarParticipantes(awareness: Awareness): readonly ParticipanteCaderno[] {
+    const participantes: ParticipanteCaderno[] = [];
+    awareness.getStates().forEach((estado, clienteId) => {
+      if (clienteId === awareness.clientID) return;
+      const usuario = (estado as { user?: { name?: string; color?: string } }).user;
+      if (!usuario) return;
+      participantes.push({
+        clienteId,
+        nome: usuario.name ?? 'Colaborador',
+        cor: usuario.color ?? corDoParticipante(clienteId),
+      });
+    });
+    return participantes;
   }
 
   private agendarSincronizacao(): void {

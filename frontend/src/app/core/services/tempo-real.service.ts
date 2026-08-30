@@ -20,6 +20,7 @@ import type {
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
+  PaginaCadernoEsquadraoPresencaDto,
   PaginaCadernoResumoDto,
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
 
@@ -45,6 +46,9 @@ export const SOCKET_FACTORY = new InjectionToken<typeof io>('SOCKET_FACTORY', {
  *
  * **Nunca emite mutação** (proibição #25): só `*:entrar` para ingressar em sala. Toda escrita
  * continua por REST — a service do backend é o árbitro (§14) e emite o broadcast após persistir.
+ * Única exceção: `enviarPresencaEsquadrao` — presença Yjs (cursor, seleção) do Caderno do
+ * Esquadrão (P-039) é efêmera, nunca persistida nem indexada, então não é a mutação que a
+ * proibição veda; o gateway só retransmite o payload à sala, sem decodificá-lo.
  *
  * **Ressincronização (§9):** o Render free tier dorme e derruba conexões. A cada **reconexão** o
  * serviço reingressa nas salas conhecidas (o servidor perde as salas ao cair o socket) e sinaliza
@@ -89,6 +93,7 @@ export class TempoRealService {
     readonly campanhaId: number;
     readonly paginaId: number;
   }>();
+  private readonly presencaEsquadraoSubject = new Subject<PaginaCadernoEsquadraoPresencaDto>();
 
   /** Uma ficha da campanha foi alterada (na sala `ficha:<id>` em que o cliente está). */
   readonly fichaAlterada$: Observable<FichaAlteradaDto> = this.fichaAlteradaSubject.asObservable();
@@ -135,6 +140,8 @@ export class TempoRealService {
   readonly paginaEsquadraoCriada$ = this.paginaEsquadraoCriadaSubject.asObservable();
   readonly paginaEsquadraoAlterada$ = this.paginaEsquadraoAlteradaSubject.asObservable();
   readonly paginaEsquadraoExcluida$ = this.paginaEsquadraoExcluidaSubject.asObservable();
+  /** Presença Yjs (cursor/seleção/identidade) de quem mais edita a mesma página do Esquadrão. */
+  readonly presencaEsquadraoCaderno$ = this.presencaEsquadraoSubject.asObservable();
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -193,6 +200,9 @@ export class TempoRealService {
       (evento: { readonly campanhaId: number; readonly paginaId: number }) =>
         this.paginaEsquadraoExcluidaSubject.next(evento),
     );
+    this.socket.on('caderno-esquadrao:presenca', (evento: PaginaCadernoEsquadraoPresencaDto) =>
+      this.presencaEsquadraoSubject.next(evento),
+    );
     this.socket.on('membro:entrou', (evento: CampanhaMembroEntradaDto) =>
       this.membroEntrouSubject.next(evento),
     );
@@ -235,6 +245,18 @@ export class TempoRealService {
     this.salasCampanha.add(campanhaId);
     if (this.conectado()) {
       this.socket?.emit('campanha:entrar', { id: campanhaId });
+    }
+  }
+
+  /**
+   * Envia presença Yjs (cursor/seleção/identidade) de uma página do Caderno do Esquadrão para os
+   * demais membros da sala `campanha:<id>` (P-039). Efêmera: não é retida aqui, nem reenviada numa
+   * reconexão — quem reabre a página cria uma sessão de presença nova. Sem conexão, é descartada
+   * silenciosamente (não há fila de reenvio; a próxima renovação do awareness local cobre a perda).
+   */
+  enviarPresencaEsquadrao(evento: PaginaCadernoEsquadraoPresencaDto): void {
+    if (this.conectado()) {
+      this.socket?.emit('caderno-esquadrao:presenca', evento);
     }
   }
 

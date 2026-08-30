@@ -1,5 +1,94 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — `P-039`: presença e cursores remotos no Caderno do Esquadrão
+
+Implementado o único entregável que faltava em `caderno-esquadrao-colaborativo.spec.md`:
+`y-protocols/awareness` sobre o mesmo `Y.Doc`/canal Socket.IO já usado para o conteúdo CRDT, com
+cursor/seleção remotos e um indicador de participantes no editor Milkdown.
+
+**Backend.** `CampanhaGateway` ganhou `retransmitirPresencaEsquadrao` (`@SubscribeMessage
+('caderno-esquadrao:presenca')`): um relay broadcast-only puro — não decodifica nem persiste o
+payload, só encaminha à sala `campanha:<id>` (`cliente.to(sala).emit(...)`, que já exclui o
+remetente). Não é a mutação que a proibição #25 veda, porque não há mutação nenhuma: presença é
+efêmera por definição do protocolo Yjs, nunca salva nem indexada. Como os dois eventos
+(`campanha:entrar` e `caderno-esquadrao:presenca`) trafegam no mesmo socket sem coordenação de
+ordem do lado do cliente, o handler se autossuficiente: se o socket ainda não estiver na sala
+(corrida com o `join` assíncrono de `entrarSalaCampanha`), reconfirma a permissão com
+`CampanhaService.recuperarCampanha` — a mesma checagem, reusada, não duplicada (proibição #28) — e
+ingressa ali mesmo antes de retransmitir. Novo DTO `PaginaCadernoEsquadraoPresencaDto` (`shared/`,
+value-object simétrico ida/volta).
+
+**Frontend.** `TempoRealService` ganhou `enviarPresencaEsquadrao`/`presencaEsquadraoCaderno$` — a
+única exceção documentada à regra "nunca emite mutação" do serviço, pelo mesmo motivo do gateway.
+`CadernoEsquadraoColaborativoService` cria um `Awareness` amarrado ao `Y.Doc` da página ao abrir:
+define `user.{name,color}` locais (nomes ingleses exigidos pelo contrato do `y-prosemirror`, que
+lê esse campo literalmente — não é conceito de domínio traduzível), propaga cada mudança local via
+socket e aplica atualizações remotas com `applyAwarenessUpdate` (envolto em `try/catch`: payload de
+presença é efêmero, um pacote corrompido não deve derrubar a sessão colaborativa). Expõe
+`participantes()`, projeção somente-leitura do `awareness.getStates()` para a UI. Ao fechar a
+página, `documento.destroy()` já cascateia `awareness.destroy()` (a própria `Awareness` observa
+`doc.on('destroy', ...)` desde a construção), que propaga o estado `null` e avisa os demais
+colaboradores da saída sem código extra — nenhum peer "fantasma" fica preso além do timeout de 30s
+que o próprio protocolo Yjs já garante para desconexões abruptas (aba fechada à força, queda de
+rede), sem qualquer lógica de limpeza no backend.
+
+`EditorMarkdown` ganhou o input `awareness`, repassado a `collabServiceCtx.setAwareness(...)`
+**antes** de `.connect()` (só assim o `#createPlugins()` interno do `@milkdown/plugin-collab`
+inclui o `yCursorPlugin`). `CadernoFlutuante` mostra um indicador de presença no cabeçalho do
+editor — um chip por participante com cor derivada do `usuarioId` (mesmo espírito de `ficha.cor`:
+identidade arbitrária por pessoa, fora do sistema de tokens do tema) e iniciais, tooltip com o
+nome completo via `appTooltip`. SCSS novo posiciona a linha/etiqueta do cursor remoto e a seleção
+(`.ProseMirror-yjs-cursor`/`.ProseMirror-yjs-selection`, classes do próprio `y-prosemirror`; só a
+cor vem inline da biblioteca, o posicionamento é nosso).
+
+**Verificado ao vivo em `1920×1080`** com Playwright e dois navegadores reais (mestre + jogador,
+contas/campanha criadas via REST): os dois editando a mesma página simultaneamente convergem para
+"Texto do MESTRE. Texto do JOGADOR." e cada lado mostra o nome do colaborador remoto ("Jogador QA"
+em amarelo no lado do mestre; "Mestre QA" em roxo no lado do jogador) ao lado do cursor, mais o
+chip de presença no cabeçalho. **Achado só na verificação `360×800`, fora do escopo desta task:**
+abrir uma página do Esquadrão no mobile não troca a vista de lista para a de conteúdo —
+`refletirPaginaColaborativa` nunca chama `definirVistaMobile('CONTEUDO')`, ao contrário de
+`recuperarPagina` no caderno privado — registrado como `PROBLEMS.md` `P-041`. O recorte da
+`P-039` em si funciona (confirmado revelando o editor por CSS só para a captura), mas a spec
+continua em `active/` porque o critério de aceite de `360×800` não pôde ser exercitado pela
+navegação real.
+
+**Gates:** shared 742/742 (`npm run build --workspace=shared` antes de testar o backend — DTO novo
+não aparece em `nest start --watch` sem isso), backend 473/473 (26 no `campanha.gateway.spec.ts`,
+4 novos cobrindo o relay: encaminha direto quando já na sala, confirma vínculo e ingressa quando
+ainda não, nega para não-membro, ignora socket não autenticado), frontend 1451/1451 (102 arquivos;
+5 novos em `caderno-esquadrao-colaborativo.service.spec.ts` cobrindo anúncio de presença ao abrir,
+aplicação de presença remota, filtro por página e limpeza ao fechar). Build de produção do
+frontend verde (434,03 kB inicial, dentro do budget elevado por `P-004`); build do backend verde.
+Lint sem erro novo nos três workspaces (frontend soma warnings novos da regra de aspas duplas —
+mesma categoria de ruído pré-existente descrita em entradas anteriores, proporcional às ~250
+linhas novas de código no estilo de aspas simples já usado no resto do projeto).
+
+**Sessão concorrente durante esta task:** o autor tinha outra sessão trabalhando ao vivo no mesmo
+diretório (fechando `P-031`/`P-032`/`P-005`/`P-006`/`P-007` em commits e edições próprias). Um
+`git status`/rebuild do `shared` no meio do trabalho confirmou o cruzamento; nada da `P-039` foi
+perdido, mas uma edição de fecho desta task (movendo `P-041` para cima de `P-040` em
+`PROBLEMS.md`) colidiu com uma edição concorrente no mesmo arquivo e apagou por engano os blocos de
+`P-002`/`P-007` que a outra sessão estava fechando — corrigido reconstruindo o arquivo a partir do
+`HEAD` mais os dois conjuntos de mudança (`P-039`→`P-041` desta task, `P-002`/`P-007` da sessão
+concorrente) antes de comitar qualquer coisa.
+
+## 2026-08-30 — `P-007` removida: não era um problema, e o backend está saindo do Render
+
+O dono decidiu duas coisas na mesma conversa: (1) `P-007` ("Cloudflare e Render publicam de
+branches diferentes") não deveria estar em `PROBLEMS.md` — já era `CONTORNADO`, com o contorno
+plenamente descrito, e o próprio cabeçalho do arquivo exclui "decisão consciente de design que
+está funcionando como desejado"; era comportamento conhecido das duas plataformas, não algo
+quebrado. (2) o backend está migrando do Render para o **Google Cloud Run** — quando a migração
+terminar, a causa raiz do item (Cloudflare Pages publica preview de toda branch; Render só faz
+auto-deploy do `master`) deixa de existir de qualquer forma. Item removido de `PROBLEMS.md` sem
+correção de código — nenhum gate aplicável.
+
+**Pendência aberta, fora desta task:** nenhuma spec ou task ainda cobre a migração de deploy do
+backend para o Cloud Run. Os comandos e a seção de deploy do `CLAUDE.md`/`AGENTS.md` ainda
+referenciam o Render; ficam desatualizados assim que a migração acontecer de fato, e ninguém
+tocou nisso aqui.
+
 ## 2026-08-30 — M1 concluído de fato: Cloudflare Pages no ar e repo antigo arquivado
 
 Os dois passos operacionais pendentes desde `m1-14` (P-006) foram executados pelo autor: o
@@ -7269,6 +7358,77 @@ fecha limpo hoje em `master`, apesar do CI rodar lint em todo PR — não invest
 **Próxima task candidata:** `m2-19` (detalhe `/painel/:id` na visão do mestre — "esquadrão"),
 que já está no backlog junto com `m2-20` (mesma tela na visão do jogador), ambas parte da mesma
 frente de redesenho do painel de campanhas iniciada aqui.
+
+## 2026-07-29 a 2026-07-31 — Bloco retroativo: 5 PRs (#7–#11) registrados em `HISTORY.md`, fechando `P-002`
+
+**Este bloco é retroativo**, escrito em 2026-08-30 ao resolver `P-002`, não no momento em que o
+trabalho aconteceu. O trabalho chegou por 5 branches `claude/*` mergeadas por PR (#7 a #11, todas
+em 2026-07-29/31), fora do fluxo spec-driven que fecha com um bloco em `HISTORY.md` — por isso
+nunca foi registrado até agora. A reconstrução usa só `git show`/`git log` de cada commit; não há
+números de gate (testes/lint/build) nem evidência de verificação ao vivo da época, porque nenhum
+dos dois foi deixado em lugar nenhum do repositório. Segue imediatamente a `m3-27` (fechada no
+bloco arquivado logo abaixo) e antecede a `m2-18` (2026-08-01, já documentada acima).
+
+**PR #7 — `histórico de rolagens vira barra lateral` (`a70c94c`, 7 commits, 2026-07-29).** O card
+"Rolagens Recentes" embutido no painel da campanha (pouco legível) e a antiga aba Histórico da
+ficha viram um único componente reusado, `HistoricoRolagensSidebar`
+(`frontend/src/app/shared/`): painel `position:fixed` com backdrop, foco automático e fechamento
+por Esc/backdrop/✕, reusando `ResultadoRolagem` para o detalhamento de cada rolagem. Na campanha,
+o feed migrou do card antigo (SCSS removido) para a sidebar; na ficha, o histórico paginado
+(`RolagemService.listarPorFicha`) fica acessível em qualquer aba, com `FichaVisualizacao` emitindo
+`rolagemRegistrada` pra prepend local ao rolar. Acompanhando a mudança: um ícone de d20 novo
+(`shared/src/icons/d20.svg`, adicionado solto em `f15c044` e ligado ao componente `Icone` em
+`fa549c5`), depois refinado para icosaedro facetado e reaproveitado para remover a aba Histórico
+antiga da ficha, que ficou redundante (`ficha-historico.component.*` inteiro deletado em
+`d9d3e22`); os gatilhos (histórico + calculadora) viram círculos flutuantes no canto inferior
+direito no desktop e voltam a ser botões inline no cabeçalho no mobile, com o chip "campanha
+ativa" removido da topbar junto com o `CampanhaContextoService` inteiro que só existia para
+alimentá-lo (`0400c1b`); dois ajustes finos fecham o lote — o gatilho do histórico parando de
+empilhar no painel da campanha (`e99d54d`) e as ações do cabeçalho da ficha agrupadas para não
+quebrar no mobile (`077ef1d`).
+
+**PR #8 — `ações e estados vazios do mini-card do painel` (`7f37aeb`, 3 commits, 2026-07-30/31).**
+`f76fbe0` acrescenta "Remover da campanha" ao menu de ações da ficha no painel (mesma ação
+`atribuirCampanha` com `campanhaId: null` e o mesmo padrão visual — sem dialog, mini-card some na
+hora — já usado no acervo). `2c442bb` compacta o mini-card (menos padding/gap) e acrescenta
+Patente (derivada do Prestígio no cliente), Defesa/Esquiva/Bloqueio, Personalidade + nome da
+Origem e um aviso de "Sobrecarregado"; `FichaResumoDto` ganha os campos novos, todos opcionais, e
+o backend lê prestígio/derivados/identidade direto do JSONB. `97ef5d7` corrige o skeleton do
+painel (só mimetizava o card de identidade, deixando a coluna de Membros em branco) para uma
+grade de duas colunas de verdade e acrescenta um skeleton equivalente à tela de Fichas (acervo),
+que antes só mostrava texto "Carregando fichas…".
+
+**PRs #9 e #10 — `sobrecarregado` deixa de ser aproximação em SQL (`e370489`+`407200c`, 2
+commits, 2026-07-31).** `b8ab5a0` corrige a 1ª versão do cálculo (SQL puro, soma bruta
+peso×quantidade): passa a excluir item de Armazenamento vestido (amplia o inventário, não pesa
+nele) e item dentro de sub-inventário/container — sem isso, uma mochila vestida ou o conteúdo de
+uma pochete inflava o peso somado e o mini-card acusava sobrecarga que não existia; de quebra,
+o kebab (botão "...") passa a dividir linha com Defesa/Esquiva/Bloqueio em vez de ocupar uma linha
+própria. `92d2011` substitui a aproximação inteira: a versão em SQL não tinha como somar o bônus
+de inventário de um Armazenamento vestido do catálogo (exige lookup no catálogo de itens, fora do
+alcance de SQL puro) — um personagem com mochila vestida perto do limite podia ser acusado de
+sobrecarga inexistente mesmo depois do ajuste de `b8ab5a0`. O cálculo migra pro service, que passa
+a chamar `calcularResumoCompras` (`shared/regras/compras`, o mesmo motor da aba Inventário); o
+repositório devolve um `FichaResumoInternoDto` novo (`shared/`) com os campos brutos que a fórmula
+precisa, e o service os reduz ao `FichaResumoDto` público campo a campo (nunca um spread, pra não
+vazar `itens`/`amplificadores`/`dinheiro`/`vontade`/`inventarioMaximo` bruto pra fora do backend).
+Testes novos no service cobrem os dois casos que a aproximação já acertava mais o caso que só o
+motor completo resolve. `6905229`, sem PR, remove um parâmetro `nivel` obsoleto de um teste de
+`calcularInventario` — limpeza direta ligada a essa mesma frente.
+
+**Commit direto (sem PR) — `ddb49f7` (2026-07-31).** A calculadora flutuante ganha `z-index` maior
+que o da sidebar de histórico, corrigindo a sobreposição entre os dois círculos flutuantes que a
+PR #7 introduziu.
+
+**PR #11 — `6373ca9` (2026-07-31) não tem código de produto.** As duas specs que a branch propunha
+implementar (`m3-61` cor de ficha, `m3-62` avatar/imagem) foram só **escritas**
+(`7dd1c20`/`258345e`) nesta PR — a implementação de fato aconteceu depois, em `m3-61`/`m3-62`
+(2026-08-09/10, já documentadas acima). Não há trabalho de código a registrar retroativamente
+aqui além dos dois commits de spec.
+
+`PROBLEMS.md`: `P-002` sai de Ativos — o bloco retroativo pedido na "Correção" do item foi escrito.
+Não há gate a rodar (task puramente documental, sem diff de código); a política de fundo sobre
+trabalho vindo por PR fora do fluxo de spec continua em aberto em `IDEAS.md` `I-003`.
 
 > Última atualização: 2026-07-29 (**m3-27 — Histórico de rolagem: persistência + feed em tempo
 > real**: task antiga do backlog (apontada como "próxima" desde a `m3-26`, mas empurrada por dois

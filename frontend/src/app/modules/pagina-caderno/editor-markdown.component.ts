@@ -43,6 +43,7 @@ import {
   wrapInOrderedListCommand,
 } from '@milkdown/kit/preset/commonmark';
 import { callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
+import type { Awareness } from 'y-protocols/awareness';
 import type { Doc } from 'yjs';
 
 import { Icone } from '../../shared/icone/icone.component';
@@ -70,6 +71,8 @@ interface EditorMarkdownOpcoes {
   readonly raiz: HTMLElement;
   readonly valorInicial: string;
   readonly documentoColaborativo: Doc | null;
+  /** Presença Yjs (cursor/seleção remotos) do modo colaborativo; ausente no caderno privado. */
+  readonly awareness: Awareness | null;
   readonly aoAlterar: (markdown: string) => void;
 }
 
@@ -89,7 +92,7 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
   'EDITOR_MARKDOWN_FACTORY',
   {
     providedIn: 'root',
-    factory: () => ({ raiz, valorInicial, documentoColaborativo, aoAlterar }) => {
+    factory: () => ({ raiz, valorInicial, documentoColaborativo, awareness, aoAlterar }) => {
       let editor: Editor | null = null;
       const aplicarFormato = (formato: FormatoMarkdown): void => {
         if (!editor) return;
@@ -153,13 +156,16 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
           // chamar `bindDoc`/`connect` dentro do `.config()` acima (antes do pipeline existir)
           // lança `MilkdownError: Context not bind`. Precisa ser uma ação pós-`create()`.
           if (documentoColaborativo) {
-            editor.action((contexto) =>
-              contexto
+            editor.action((contexto) => {
+              const servico = contexto
                 .get(collabServiceCtx)
                 .bindDoc(documentoColaborativo)
-                .bindXmlFragment(documentoColaborativo.getXmlFragment('prosemirror'))
-                .connect(),
-            );
+                .bindXmlFragment(documentoColaborativo.getXmlFragment('prosemirror'));
+              // `setAwareness` precisa vir antes de `connect()` — só aí o `#createPlugins()`
+              // interno decide incluir o `yCursorPlugin` (cursor/seleção remotos, P-039).
+              if (awareness) servico.setAwareness(awareness);
+              servico.connect();
+            });
           }
         },
         destruir: () => { editor?.destroy(); },
@@ -227,6 +233,8 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
   readonly valor = input('');
   /** Documento Yjs da página do esquadrão; ausente no caderno privado. */
   readonly documentoColaborativo = input<Doc | null>(null);
+  /** Presença Yjs (cursor/seleção remotos, P-039) da mesma página; ausente no caderno privado. */
+  readonly awareness = input<Awareness | null>(null);
   readonly somenteLeitura = input(false);
   readonly valorChange = output<string>();
   protected readonly emTabela = signal(false);
@@ -271,6 +279,7 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
       raiz: this.raiz().nativeElement,
       valorInicial: this.valor(),
       documentoColaborativo: this.documentoColaborativo(),
+      awareness: this.awareness(),
       aoAlterar: (markdown) => {
         if (
           !this.sincronizando &&

@@ -32,6 +32,17 @@ export interface PaginaCadernoEsquadraoAlteradaDto {
   readonly pagina: PaginaCadernoResumoDto;
 }
 
+/**
+ * Presença efêmera (y-protocols/awareness: cursor, seleção e identidade de quem está editando).
+ * Value-object retransmitido bruto pelo gateway — nunca persistido nem indexado (P-039); mesmo
+ * formato de ida (cliente → servidor) e volta (servidor → demais clientes da sala).
+ */
+export interface PaginaCadernoEsquadraoPresencaDto {
+  readonly campanhaId: number;
+  readonly paginaId: number;
+  readonly atualizacao: string;
+}
+
 /** Entrada da criação de uma página no caderno do usuário autenticado. */
 export interface PaginaCadernoCriarDto {
   readonly campanhaId: number;

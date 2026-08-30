@@ -616,6 +616,30 @@ $largura-caderno-sobreposicao: 640px;
         text-transform: uppercase;
         white-space: nowrap;
     }
+    // Indicador de presença do Esquadrão (P-039) — mesma receita do selo "Somente leitura" acima
+    // (chip mono retangular, `--radius-control`), com a cor do participante entrando via
+    // `--cor-participante` (custom property por instância, igual a `--cor-ficha` na Ficha:
+    // identidade arbitrária por pessoa, não cor de interface — não é hardcode de tema).
+    &__presenca {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    &__presenca-item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 4px;
+        color: var(--cor-participante);
+        border: 1px solid color-mix(in srgb, var(--cor-participante) 45%, transparent);
+        border-radius: var(--radius-control);
+        background: color-mix(in srgb, var(--cor-participante) 15%, transparent);
+        font: 700 9px var(--font-mono);
+        text-transform: uppercase;
+        cursor: default;
+    }
     &__editor-acoes {
         min-height: 48px;
         display: flex;

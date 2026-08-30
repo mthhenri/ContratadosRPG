@@ -409,6 +409,28 @@
                             @if (somenteLeitura()) {
                                 <span class="caderno__somente-leitura">Somente leitura</span>
                             }
+                            @if (
+                                modoCaderno() === "ESQUADRAO" &&
+                                colaboracaoEsquadrao.participantes().length > 0
+                            ) {
+                                <div
+                                    class="caderno__presenca"
+                                    aria-label="Colaboradores editando esta página agora"
+                                >
+                                    @for (
+                                        participante of colaboracaoEsquadrao.participantes();
+                                        track participante.clienteId
+                                    ) {
+                                        <span
+                                            class="caderno__presenca-item"
+                                            [style.--cor-participante]="participante.cor"
+                                            [appTooltip]="participante.nome"
+                                        >
+                                            {{ iniciaisDoParticipante(participante.nome) }}
+                                        </span>
+                                    }
+                                </div>
+                            }
                         </div>
 
                         @if (
@@ -418,6 +440,7 @@
                             <app-editor-markdown
                                 [valor]="store.rascunho().conteudoMarkdown"
                                 [documentoColaborativo]="documento"
+                                [awareness]="colaboracaoEsquadrao.awareness()"
                                 [somenteLeitura]="false"
                                 (valorChange)="alterarConteudoMarkdown($event)"
                             />
