@@ -227,7 +227,7 @@ describe('PainelEncontro', () => {
     const encontroIniciativaPedido$ = new Subject<{ id: number; campanhaId: number }>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const paginaEsquadraoCriada$ = new Subject<PaginaCadernoResumoDto>();
-    const paginaEsquadraoAtualizada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
+    const paginaEsquadraoAlterada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
     const paginaEsquadraoExcluida$ = new Subject<{ campanhaId: number; paginaId: number }>();
     const encontroService = {
       listarPorCampanha: vi.fn(() =>
@@ -310,7 +310,7 @@ describe('PainelEncontro', () => {
             encontroIniciativaPedido$,
             rolagemRegistrada$,
             paginaEsquadraoCriada$,
-            paginaEsquadraoAtualizada$,
+            paginaEsquadraoAlterada$,
             paginaEsquadraoExcluida$,
           },
         },

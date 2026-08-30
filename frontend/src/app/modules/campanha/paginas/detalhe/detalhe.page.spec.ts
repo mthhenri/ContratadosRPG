@@ -229,7 +229,7 @@ describe('CampanhaDetalhe', () => {
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
     const paginaEsquadraoCriada$ = new Subject<PaginaCadernoResumoDto>();
-    const paginaEsquadraoAtualizada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
+    const paginaEsquadraoAlterada$ = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
     const paginaEsquadraoExcluida$ = new Subject<{ campanhaId: number; paginaId: number }>();
     const reconexao = signal(0);
     const tempoRealService = {
@@ -247,7 +247,7 @@ describe('CampanhaDetalhe', () => {
       inventarioAlterado$: inventarioAlterado$.asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
       paginaEsquadraoCriada$: paginaEsquadraoCriada$.asObservable(),
-      paginaEsquadraoAtualizada$: paginaEsquadraoAtualizada$.asObservable(),
+      paginaEsquadraoAlterada$: paginaEsquadraoAlterada$.asObservable(),
       paginaEsquadraoExcluida$: paginaEsquadraoExcluida$.asObservable(),
       reconexao,
       conectado: signal(true),

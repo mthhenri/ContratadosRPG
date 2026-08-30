@@ -176,7 +176,7 @@
                                 <input
                                     class="campo__controle campo__controle--codinome"
                                     [value]="estado().designacao"
-                                    (input)="atualizar({ designacao: valor($event) })"
+                                    (input)="alterar({ designacao: valor($event) })"
                                     placeholder="Ex.: A Estátua"
                                     required
                                 />
@@ -185,7 +185,7 @@
                                     class="campo__cor-inline"
                                     aria-label="Cor de identidade da criatura"
                                     [value]="estado().cor ?? '#8a2be2'"
-                                    (input)="atualizar({ cor: valor($event) })"
+                                    (input)="alterar({ cor: valor($event) })"
                                 />
                             </span>
                             <small class="campo__ajuda"
@@ -213,7 +213,7 @@
                             class="campo__controle campo__controle--area"
                             rows="2"
                             [value]="estado().conceito"
-                            (input)="atualizar({ conceito: valor($event) })"
+                            (input)="alterar({ conceito: valor($event) })"
                             placeholder='Ex.: "Uma névoa que dissolve qualquer material orgânico ao contato."'
                             required
                         ></textarea>
@@ -226,7 +226,7 @@
                             class="campo__controle campo__controle--area"
                             rows="2"
                             [value]="estado().naturezaFisica"
-                            (input)="atualizar({ naturezaFisica: valor($event) })"
+                            (input)="alterar({ naturezaFisica: valor($event) })"
                             placeholder="Tamanho, forma, material..."
                             required
                         ></textarea>
@@ -250,7 +250,7 @@
                         ><input
                             class="campo__controle"
                             [value]="estado().motivacao"
-                            (input)="atualizar({ motivacao: valor($event) })"
+                            (input)="alterar({ motivacao: valor($event) })"
                             placeholder="Por que ela existe? Por que mata?"
                             required
                     /></label>
@@ -262,7 +262,7 @@
                             class="campo__controle campo__controle--area"
                             rows="2"
                             [value]="estado().ganchoUnico"
-                            (input)="atualizar({ ganchoUnico: valor($event) })"
+                            (input)="alterar({ ganchoUnico: valor($event) })"
                             placeholder="O detalhe que nenhum monstro convencional tem."
                             required
                         ></textarea>
@@ -274,7 +274,7 @@
                         ><input
                             class="campo__controle"
                             [value]="estado().temaHorror"
-                            (input)="atualizar({ temaHorror: valor($event) })"
+                            (input)="alterar({ temaHorror: valor($event) })"
                             placeholder="Perda de controle? Corpo? Identidade?"
                     /></label>
                 </div>
@@ -455,7 +455,7 @@
                             class="campo__controle campo__controle--numero"
                             type="number"
                             [value]="estado().vidaAtual ?? vidaMaxima()"
-                            (input)="atualizar({ vidaAtual: numero($event) })"
+                            (input)="alterar({ vidaAtual: numero($event) })"
                         />
                     </div>
                 </div>
@@ -521,7 +521,7 @@
                             <select
                                 class="campo__controle"
                                 [value]="linha.tipo"
-                                (change)="atualizarResistencia($index, 'tipo', valor($event))"
+                                (change)="alterarResistencia($index, 'tipo', valor($event))"
                             >
                                 @for (tipo of tiposDano; track tipo) {
                                 <option [value]="tipo">{{ tipo }}</option>
@@ -533,7 +533,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.subtipo"
-                                (input)="atualizarResistencia($index, 'subtipo', valor($event))"
+                                (input)="alterarResistencia($index, 'subtipo', valor($event))"
                                 placeholder="Ex.: Cortante"
                         /></label>
                         <label app-campo
@@ -543,7 +543,7 @@
                                 type="number"
                                 min="0"
                                 [value]="linha.valor"
-                                (input)="atualizarResistencia($index, 'valor', numero($event))"
+                                (input)="alterarResistencia($index, 'valor', numero($event))"
                         /></label>
                     </div>
                     }
@@ -579,7 +579,7 @@
                             <select
                                 class="campo__controle"
                                 [value]="linha.tipo"
-                                (change)="atualizarFraqueza($index, 'tipo', valor($event))"
+                                (change)="alterarFraqueza($index, 'tipo', valor($event))"
                             >
                                 @for (tipo of tiposDano; track tipo) {
                                 <option [value]="tipo">{{ tipo }}</option>
@@ -591,7 +591,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.subtipo"
-                                (input)="atualizarFraqueza($index, 'subtipo', valor($event))"
+                                (input)="alterarFraqueza($index, 'subtipo', valor($event))"
                                 placeholder="Ex.: Cortante"
                         /></label>
                         <label app-campo
@@ -601,7 +601,7 @@
                                 type="number"
                                 min="0"
                                 [value]="linha.valor"
-                                (input)="atualizarFraqueza($index, 'valor', numero($event))"
+                                (input)="alterarFraqueza($index, 'valor', numero($event))"
                         /></label>
                         @if (!fraquezaValida(linha)) {
                         <small class="campo__ajuda guia__campo--largo"
@@ -637,7 +637,7 @@
                     <input
                         type="checkbox"
                         [checked]="estado().regeneracao.ativa"
-                        (change)="atualizarRegeneracao({ ativa: !estado().regeneracao.ativa })"
+                        (change)="alterarRegeneracao({ ativa: !estado().regeneracao.ativa })"
                     />
                     <span
                         ><b>Possui Regeneração Natural</b
@@ -681,7 +681,7 @@
                     ><input
                         class="campo__controle"
                         [value]="estado().regeneracao.condicao"
-                        (input)="atualizarRegeneracao({ condicao: valor($event) })"
+                        (input)="alterarRegeneracao({ condicao: valor($event) })"
                         placeholder="Ex.: Ao consumir um ser vivo inteiro no turno."
                         required
                 /></label>
@@ -722,7 +722,7 @@
                             type="number"
                             min="0"
                             [value]="estado().deslocamento.terrestre ?? ''"
-                            (input)="atualizarDeslocamento('terrestre', valor($event) ? numero($event) : null)"
+                            (input)="alterarDeslocamento('terrestre', valor($event) ? numero($event) : null)"
                     /></label>
                     <label app-campo
                         ><span class="campo__rotulo">Voador (m)</span
@@ -731,7 +731,7 @@
                             type="number"
                             min="0"
                             [value]="estado().deslocamento.voador ?? ''"
-                            (input)="atualizarDeslocamento('voador', valor($event) ? numero($event) : null)"
+                            (input)="alterarDeslocamento('voador', valor($event) ? numero($event) : null)"
                     /></label>
                     <label app-campo
                         ><span class="campo__rotulo">Aquático (m)</span
@@ -740,7 +740,7 @@
                             type="number"
                             min="0"
                             [value]="estado().deslocamento.aquatico ?? ''"
-                            (input)="atualizarDeslocamento('aquatico', valor($event) ? numero($event) : null)"
+                            (input)="alterarDeslocamento('aquatico', valor($event) ? numero($event) : null)"
                     /></label>
                     <label app-campo
                         ><span class="campo__rotulo">Sobrenatural (m)</span
@@ -749,7 +749,7 @@
                             type="number"
                             min="0"
                             [value]="estado().deslocamento.sobrenatural ?? ''"
-                            (input)="atualizarDeslocamento('sobrenatural', valor($event) ? numero($event) : null)"
+                            (input)="alterarDeslocamento('sobrenatural', valor($event) ? numero($event) : null)"
                     /></label>
                 </div>
                 } @case ('Ataques') {
@@ -775,7 +775,7 @@
                             min="4"
                             step="1"
                             [value]="estado().turnosPorRodada"
-                            (input)="atualizar({ turnosPorRodada: numero($event) })"
+                            (input)="alterar({ turnosPorRodada: numero($event) })"
                         />
                         <small class="campo__ajuda"
                             >Cadência Frenética possui 4 ou mais turnos.</small
@@ -788,7 +788,7 @@
                             class="campo__controle campo__controle--numero"
                             type="number"
                             [value]="estado().iniciativaBonus ?? ''"
-                            (input)="atualizar({ iniciativaBonus: valor($event) ? numero($event) : null })"
+                            (input)="alterar({ iniciativaBonus: valor($event) ? numero($event) : null })"
                         />
                         <small class="campo__ajuda"
                             >Sugestão: +{{ iniciativaSugerida() }} (≈10% do VD).</small
@@ -817,7 +817,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.nome"
-                                (input)="atualizarAtaque($index, 'nome', valor($event))"
+                                (input)="alterarAtaque($index, 'nome', valor($event))"
                                 placeholder="Ex.: Esmagamento"
                         /></label>
                         <label app-campo
@@ -825,7 +825,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.teste"
-                                (input)="atualizarAtaque($index, 'teste', valor($event))"
+                                (input)="alterarAtaque($index, 'teste', valor($event))"
                                 placeholder="ex.: lutad20kh1+3"
                         /></label>
                         <label app-campo
@@ -833,7 +833,7 @@
                             <select
                                 class="campo__controle"
                                 [value]="linha.custoAcao"
-                                (change)="atualizarAtaque($index, 'custoAcao', valor($event))"
+                                (change)="alterarAtaque($index, 'custoAcao', valor($event))"
                             >
                                 @for (opcao of custosAcao; track opcao) {
                                 <option [value]="opcao">{{ rotuloCustoAcao(opcao) }}</option>
@@ -845,7 +845,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.dano"
-                                (input)="atualizarAtaque($index, 'dano', valor($event))"
+                                (input)="alterarAtaque($index, 'dano', valor($event))"
                                 [placeholder]="'Referência: ' + danoReferencia(linha.custoAcao)"
                         /></label>
                         <label app-campo
@@ -853,7 +853,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.danoCritico"
-                                (input)="atualizarAtaque($index, 'danoCritico', valor($event))"
+                                (input)="alterarAtaque($index, 'danoCritico', valor($event))"
                                 placeholder="ex.: 8D12+20"
                         /></label>
                         <label app-campo class="guia__campo--largo"
@@ -861,13 +861,13 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.efeito"
-                                (input)="atualizarAtaque($index, 'efeito', valor($event))"
+                                (input)="alterarAtaque($index, 'efeito', valor($event))"
                         /></label>
                         <label class="guia__modo-livre">
                             <input
                                 type="checkbox"
                                 [checked]="linha.area"
-                                (change)="atualizarAtaque($index, 'area', !linha.area)"
+                                (change)="alterarAtaque($index, 'area', !linha.area)"
                             />
                             <span
                                 ><b>Ataque de área</b
@@ -916,14 +916,14 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.nome"
-                                (input)="atualizarHabilidade($index, 'nome', valor($event))"
+                                (input)="alterarHabilidade($index, 'nome', valor($event))"
                         /></label>
                         <label app-campo
                             ><span class="campo__rotulo">Tipo</span>
                             <select
                                 class="campo__controle"
                                 [value]="linha.tipo"
-                                (change)="atualizarHabilidade($index, 'tipo', valor($event))"
+                                (change)="alterarHabilidade($index, 'tipo', valor($event))"
                             >
                                 @for (opcao of habilidadeTipos; track opcao) {
                                 <option [value]="opcao">
@@ -938,7 +938,7 @@
                                 class="campo__controle campo__controle--area"
                                 rows="2"
                                 [value]="linha.descricao"
-                                (input)="atualizarHabilidade($index, 'descricao', valor($event))"
+                                (input)="alterarHabilidade($index, 'descricao', valor($event))"
                             ></textarea>
                         </label>
                         <label app-campo class="guia__campo--largo"
@@ -946,7 +946,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="linha.restricao"
-                                (input)="atualizarHabilidade($index, 'restricao', valor($event))"
+                                (input)="alterarHabilidade($index, 'restricao', valor($event))"
                                 placeholder="Ex.: recarga de 3 turnos"
                         /></label>
                     </div>
@@ -1027,7 +1027,7 @@
                         class="campo__controle campo__controle--area"
                         rows="3"
                         [value]="estado().anotacoes"
-                        (input)="atualizar({ anotacoes: valor($event) })"
+                        (input)="alterar({ anotacoes: valor($event) })"
                     ></textarea>
                 </label>
                 @if (erro()) {

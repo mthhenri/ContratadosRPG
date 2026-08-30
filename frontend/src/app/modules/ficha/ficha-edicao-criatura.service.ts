@@ -107,7 +107,7 @@ export class FichaEdicaoCriaturaService {
     this.ajustePendente.next();
   }
 
-  private atualizarDados(mudar: (dados: FichaCriaturaDadosDto) => FichaCriaturaDadosDto): void {
+  private alterarDados(mudar: (dados: FichaCriaturaDadosDto) => FichaCriaturaDadosDto): void {
     const fichaAtual = this.ficha();
     if (!fichaAtual) {
       return;
@@ -117,59 +117,59 @@ export class FichaEdicaoCriaturaService {
   }
 
   ajustarVitalidade(ajuste: AjusteCriaturaVitalidade): void {
-    this.atualizarDados((dados) => ({ ...dados, [ajuste.campo]: ajuste.valor }));
+    this.alterarDados((dados) => ({ ...dados, [ajuste.campo]: ajuste.valor }));
   }
 
   ajustarDefesa(defesa: number): void {
-    this.atualizarDados((dados) => ({ ...dados, defesa }));
+    this.alterarDados((dados) => ({ ...dados, defesa }));
   }
 
   ajustarIdentidade(identidade: FichaCriaturaIdentidadeDto): void {
-    this.atualizarDados((dados) => ({ ...dados, identidade }));
+    this.alterarDados((dados) => ({ ...dados, identidade }));
   }
 
   ajustarNa(na: NivelAmeacaEnum): void {
-    this.atualizarDados((dados) => ({ ...dados, na }));
+    this.alterarDados((dados) => ({ ...dados, na }));
   }
 
   ajustarVd(vd: number): void {
-    this.atualizarDados((dados) => ({ ...dados, vd }));
+    this.alterarDados((dados) => ({ ...dados, vd }));
   }
 
   ajustarAtributos(atributos: FichaAtributosDto): void {
-    this.atualizarDados((dados) => ({ ...dados, atributos }));
+    this.alterarDados((dados) => ({ ...dados, atributos }));
   }
 
   ajustarModificadores(modificadores: FichaCriaturaModificadoresDto): void {
-    this.atualizarDados((dados) => ({ ...dados, modificadores }));
+    this.alterarDados((dados) => ({ ...dados, modificadores }));
   }
 
   ajustarTenacidade(tenacidade: TenacidadeEnum): void {
-    this.atualizarDados((dados) => ({ ...dados, tenacidade }));
+    this.alterarDados((dados) => ({ ...dados, tenacidade }));
   }
 
   ajustarResistencias(resistencias: readonly FichaCriaturaResistenciaDto[]): void {
-    this.atualizarDados((dados) => ({ ...dados, resistencias }));
+    this.alterarDados((dados) => ({ ...dados, resistencias }));
   }
 
   ajustarFraquezas(fraquezas: readonly FichaCriaturaResistenciaDto[]): void {
-    this.atualizarDados((dados) => ({ ...dados, fraquezas }));
+    this.alterarDados((dados) => ({ ...dados, fraquezas }));
   }
 
   ajustarRegeneracao(regeneracao: FichaCriaturaRegeneracaoDto | undefined): void {
-    this.atualizarDados((dados) => ({ ...dados, regeneracao }));
+    this.alterarDados((dados) => ({ ...dados, regeneracao }));
   }
 
   ajustarPorte(porte: PorteCriaturaEnum): void {
-    this.atualizarDados((dados) => ({ ...dados, porte }));
+    this.alterarDados((dados) => ({ ...dados, porte }));
   }
 
   ajustarDeslocamento(deslocamento: FichaCriaturaDeslocamentoDto): void {
-    this.atualizarDados((dados) => ({ ...dados, deslocamento }));
+    this.alterarDados((dados) => ({ ...dados, deslocamento }));
   }
 
   ajustarCadencia(cadencia: CadenciaEnum): void {
-    this.atualizarDados((dados) => ({
+    this.alterarDados((dados) => ({
       ...dados,
       cadencia,
       turnosPorRodada:
@@ -181,23 +181,23 @@ export class FichaEdicaoCriaturaService {
 
   ajustarTurnosPorRodada(turnosPorRodada: number): void {
     const valorSeguro = Number.isFinite(turnosPorRodada) ? Math.max(4, Math.trunc(turnosPorRodada)) : 4;
-    this.atualizarDados((dados) => ({ ...dados, turnosPorRodada: valorSeguro }));
+    this.alterarDados((dados) => ({ ...dados, turnosPorRodada: valorSeguro }));
   }
 
   ajustarIniciativaBonus(iniciativaBonus: number | undefined): void {
-    this.atualizarDados((dados) => ({ ...dados, iniciativaBonus }));
+    this.alterarDados((dados) => ({ ...dados, iniciativaBonus }));
   }
 
   ajustarAtaques(ataques: readonly FichaCriaturaAtaqueDto[]): void {
-    this.atualizarDados((dados) => ({ ...dados, ataques }));
+    this.alterarDados((dados) => ({ ...dados, ataques }));
   }
 
   ajustarHabilidades(habilidades: readonly FichaCriaturaHabilidadeDto[]): void {
-    this.atualizarDados((dados) => ({ ...dados, habilidades }));
+    this.alterarDados((dados) => ({ ...dados, habilidades }));
   }
 
   ajustarAnotacoes(anotacoes: string): void {
-    this.atualizarDados((dados) => ({ ...dados, anotacoes }));
+    this.alterarDados((dados) => ({ ...dados, anotacoes }));
   }
 
   ajustarNome(nome: string): void {

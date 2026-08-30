@@ -177,7 +177,7 @@
                             <select
                                 class="campo__controle"
                                 [value]="estado().usuarioId ?? ''"
-                                (change)="atualizar({ usuarioId: numero($event) })"
+                                (change)="alterar({ usuarioId: numero($event) })"
                             >
                                 <option value="">Você</option>
                                 @for (membro of membros(); track membro.usuarioId) {
@@ -195,7 +195,7 @@
                                 <input
                                     class="campo__controle campo__controle--codinome"
                                     [value]="estado().nome"
-                                    (input)="atualizar({ nome: valor($event) })"
+                                    (input)="alterar({ nome: valor($event) })"
                                     required
                                 />
                                 <!-- Cor de identidade (m3-61): quadradinho no fim da caixa no desktop, barra
@@ -205,7 +205,7 @@
                                     class="campo__cor-inline"
                                     aria-label="Cor de identidade do agente"
                                     [value]="estado().cor ?? '#d53030'"
-                                    (input)="atualizar({ cor: valor($event) })"
+                                    (input)="alterar({ cor: valor($event) })"
                                 />
                             </span>
                             <small class="campo__ajuda"
@@ -394,7 +394,7 @@
                     <input
                         type="checkbox"
                         [checked]="estado().sobrescreverProgressao"
-                        (change)="atualizar({ sobrescreverProgressao: !estado().sobrescreverProgressao })"
+                        (change)="alterar({ sobrescreverProgressao: !estado().sobrescreverProgressao })"
                     />
                     <span
                         ><b>Sobrescrever Nível e Prestígio</b
@@ -414,7 +414,7 @@
                             type="number"
                             min="0"
                             [value]="estado().mediaNivel"
-                            (input)="atualizar({ mediaNivel: numero($event) })"
+                            (input)="alterar({ mediaNivel: numero($event) })"
                     /></label>
                     <label app-campo
                         ><span class="campo__rotulo">Média de prestígio</span
@@ -423,7 +423,7 @@
                             type="number"
                             min="0"
                             [value]="estado().mediaPrestigio"
-                            (input)="atualizar({ mediaPrestigio: numero($event) })"
+                            (input)="alterar({ mediaPrestigio: numero($event) })"
                     /></label>
                 </div>
                 <div class="guia__memorial">
@@ -456,7 +456,7 @@
                             min="0"
                             max="20"
                             [value]="estado().nivelManual"
-                            (input)="atualizar({ nivelManual: numero($event) })"
+                            (input)="alterar({ nivelManual: numero($event) })"
                         /><small class="campo__ajuda">De 0 a 20.</small></label
                     >
                     <label app-campo
@@ -467,7 +467,7 @@
                             type="number"
                             min="0"
                             [value]="estado().prestigioManual"
-                            (input)="atualizar({ prestigioManual: numero($event) })"
+                            (input)="alterar({ prestigioManual: numero($event) })"
                         /><small class="campo__ajuda"
                             >Valor final da ficha, sem cálculo por média.</small
                         ></label
@@ -535,7 +535,7 @@
                     <input
                         type="checkbox"
                         [checked]="estado().modoLivre"
-                        (change)="atualizar({ modoLivre: !estado().modoLivre })"
+                        (change)="alterar({ modoLivre: !estado().modoLivre })"
                     />
                     <span
                         ><b>Modo livre</b
@@ -561,7 +561,7 @@
                             data-testid="personalidade"
                             class="campo__controle"
                             [value]="estado().personalidade"
-                            (input)="atualizar({ personalidade: valor($event) })"
+                            (input)="alterar({ personalidade: valor($event) })"
                             placeholder="Ex.: Atento"
                             required
                         />
@@ -589,7 +589,7 @@
                                     class="campo__controle campo__controle--area"
                                     rows="2"
                                     [value]="estado().personalidadeHabilidade.base.descricao"
-                                    (input)="atualizarPersonalidadeBase('descricao', valor($event))"
+                                    (input)="alterarPersonalidadeBase('descricao', valor($event))"
                                     placeholder="Descreva a Habilidade de Personalidade combinada com o Mestre"
                                 ></textarea>
                             </label>
@@ -600,7 +600,7 @@
                                     type="number"
                                     min="0"
                                     [value]="estado().personalidadeHabilidade.base.custoEnergia ?? ''"
-                                    (input)="atualizarPersonalidadeBase('custoEnergia', valor($event))"
+                                    (input)="alterarPersonalidadeBase('custoEnergia', valor($event))"
                                 />
                             </label>
                         </div>
@@ -615,7 +615,7 @@
                                     class="campo__controle campo__controle--area"
                                     rows="2"
                                     [value]="estado().personalidadeHabilidade.fortificacao1.descricao"
-                                    (input)="atualizarFortificacao('fortificacao1', 'descricao', valor($event))"
+                                    (input)="alterarFortificacao('fortificacao1', 'descricao', valor($event))"
                                     placeholder="Descreva a melhoria combinada com o Mestre"
                                 ></textarea>
                             </label>
@@ -626,7 +626,7 @@
                                     type="number"
                                     min="0"
                                     [value]="estado().personalidadeHabilidade.fortificacao1.custoEnergia ?? ''"
-                                    (input)="atualizarFortificacao('fortificacao1', 'custoEnergia', valor($event))"
+                                    (input)="alterarFortificacao('fortificacao1', 'custoEnergia', valor($event))"
                                 />
                             </label>
                         </div>
@@ -641,7 +641,7 @@
                                     class="campo__controle campo__controle--area"
                                     rows="2"
                                     [value]="estado().personalidadeHabilidade.fortificacao2.descricao"
-                                    (input)="atualizarFortificacao('fortificacao2', 'descricao', valor($event))"
+                                    (input)="alterarFortificacao('fortificacao2', 'descricao', valor($event))"
                                     placeholder="Descreva a melhoria combinada com o Mestre"
                                 ></textarea>
                             </label>
@@ -652,7 +652,7 @@
                                     type="number"
                                     min="0"
                                     [value]="estado().personalidadeHabilidade.fortificacao2.custoEnergia ?? ''"
-                                    (input)="atualizarFortificacao('fortificacao2', 'custoEnergia', valor($event))"
+                                    (input)="alterarFortificacao('fortificacao2', 'custoEnergia', valor($event))"
                                 />
                             </label>
                         </div>
@@ -677,7 +677,7 @@
                             <input
                                 class="campo__controle"
                                 [value]="estado().origem.nome"
-                                (input)="atualizarOrigem('nome', valor($event))"
+                                (input)="alterarOrigem('nome', valor($event))"
                                 placeholder="Ex.: Ex-militar"
                                 required
                             />
@@ -688,7 +688,7 @@
                                 class="campo__controle campo__controle--area"
                                 rows="3"
                                 [value]="estado().origem.descricao"
-                                (input)="atualizarOrigem('descricao', valor($event))"
+                                (input)="alterarOrigem('descricao', valor($event))"
                             ></textarea>
                         </label>
                     </div>
@@ -732,7 +732,7 @@
                                 <select
                                     class="campo__controle"
                                     [value]="linha.parametro ?? ''"
-                                    (change)="atualizarParametroFormacao($index, valor($event))"
+                                    (change)="alterarParametroFormacao($index, valor($event))"
                                     required
                                 >
                                     <option value="">Selecione</option>
@@ -748,7 +748,7 @@
                                 <input
                                     class="campo__controle"
                                     [value]="linha.parametro ?? ''"
-                                    (input)="atualizarParametroFormacao($index, valor($event))"
+                                    (input)="alterarParametroFormacao($index, valor($event))"
                                     required
                                 />
                             </label>
@@ -758,7 +758,7 @@
                                 <input
                                     class="campo__controle"
                                     [value]="linha.texto"
-                                    (input)="atualizarTextoFormacao($index, valor($event))"
+                                    (input)="alterarTextoFormacao($index, valor($event))"
                                     [placeholder]="estado().formacoesCustomizadas[$index] ? 'Descreva a formação autorizada' : 'Preenchido pela formação escolhida'"
                                     required
                                 />
@@ -778,7 +778,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="estado().origem.especialidade.gatilho"
-                                (input)="atualizarEspecialidade('gatilho', valor($event))"
+                                (input)="alterarEspecialidade('gatilho', valor($event))"
                                 placeholder="Ex.: Ao agir sob fogo direto"
                                 required
                         /></label>
@@ -787,7 +787,7 @@
                             ><input
                                 class="campo__controle"
                                 [value]="estado().origem.especialidade.efeito"
-                                (input)="atualizarEspecialidade('efeito', valor($event))"
+                                (input)="alterarEspecialidade('efeito', valor($event))"
                                 placeholder="Ex.: +1 dado em um teste"
                                 required
                         /></label>
@@ -798,7 +798,7 @@
                             class="campo__controle campo__controle--area"
                             rows="3"
                             [value]="estado().origem.saberDeCampo"
-                            (input)="atualizarOrigem('saberDeCampo', valor($event))"
+                            (input)="alterarOrigem('saberDeCampo', valor($event))"
                             placeholder="Conhecimento prático que o agente traz de sua vida anterior."
                             required
                         ></textarea>
@@ -929,7 +929,7 @@
                     <input
                         type="checkbox"
                         [checked]="estado().modoLivre"
-                        (change)="atualizar({ modoLivre: !estado().modoLivre })"
+                        (change)="alterar({ modoLivre: !estado().modoLivre })"
                     />
                     <span
                         ><b>Modo livre</b
@@ -1089,7 +1089,7 @@
                     <input
                         type="checkbox"
                         [checked]="estado().modoLivre"
-                        (change)="atualizar({ modoLivre: !estado().modoLivre })"
+                        (change)="alterar({ modoLivre: !estado().modoLivre })"
                     />
                     <span
                         ><b>Modo livre</b

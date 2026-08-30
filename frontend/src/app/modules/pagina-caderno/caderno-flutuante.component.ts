@@ -256,7 +256,7 @@ export class CadernoFlutuante implements OnDestroy {
           this.store.refletirResumoColaborativo(pagina);
         }
       });
-    this.tempoReal.paginaEsquadraoAtualizada$
+    this.tempoReal.paginaEsquadraoAlterada$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((evento) => {
         if (this.modoCaderno() === 'ESQUADRAO' && evento.campanhaId === this.campanhaId()) {

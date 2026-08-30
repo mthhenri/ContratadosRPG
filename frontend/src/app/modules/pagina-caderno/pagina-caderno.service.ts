@@ -76,7 +76,7 @@ export class PaginaCadernoService {
   ): Observable<PaginaCadernoEsquadraoAlteradaDto> {
     return this.httpClient
       .put<StandardResponse<PaginaCadernoEsquadraoAlteradaDto>>(
-        `${this.base}/pagina-caderno/${id}/esquadrao/atualizacoes`,
+        `${this.base}/pagina-caderno/${id}/esquadrao/alteracoes`,
         dto,
       )
       .pipe(map((resposta) => resposta.dados as PaginaCadernoEsquadraoAlteradaDto));

@@ -15,7 +15,7 @@ import { UsuarioService } from '../../usuario.service';
  * Tela de perfil do usuário autenticado (`/perfil`, m2-14), acessível pelo dropdown de perfil da
  * topbar. Reúne três operações self-service sobre o backend das m2-11/m2-03: **editar nome/login**
  * (`alterarPerfil` — reflete a nova identidade na sessão para a topbar acompanhar, via
- * `SessaoService.atualizarPerfil`), **trocar a senha** (`alterarSenha`, com o toggle "olhinho" de
+ * `SessaoService.alterarPerfil`), **trocar a senha** (`alterarSenha`, com o toggle "olhinho" de
  * revelar) e **excluir a própria conta** (`excluirConta`, com confirmação inline forte — sem
  * `confirm()` nativo, fora do tema —; ao concluir encerra a sessão e vai ao `/login`).
  *
@@ -89,7 +89,7 @@ export class Perfil {
       .pipe(finalize(() => this.salvandoPerfil.set(false)))
       .subscribe({
         next: (perfilAlterado) => {
-          this.sessaoService.atualizarPerfil({
+          this.sessaoService.alterarPerfil({
             nome: perfilAlterado.nome,
             login: perfilAlterado.login,
           });

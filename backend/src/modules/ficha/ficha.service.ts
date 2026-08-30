@@ -453,7 +453,7 @@ export class FichaService {
       throw new BusinessException('Quantidade inválida para transferência');
     }
 
-    const itensCampanhaAtualizados =
+    const itensCampanhaAlterados =
       quantidadeTransferida === itemCampanha.quantidade
         ? itensCampanha.filter((item) => item.id !== itemCampanha.id)
         : itensCampanha.map((item) =>
@@ -489,7 +489,7 @@ export class FichaService {
     });
     await this.campanhaRepositorio.alterarInventario({
       campanhaId: fichaEncontrada.campanhaId,
-      itens: itensCampanhaAtualizados,
+      itens: itensCampanhaAlterados,
     });
 
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
@@ -540,7 +540,7 @@ export class FichaService {
       throw new BusinessException('Quantidade inválida para transferência');
     }
 
-    const itensFichaAtualizados =
+    const itensFichaAlterados =
       quantidadeTransferida === itemOrigem.quantidade
         ? itensFicha.filter((_item, indiceAtual) => indiceAtual !== dto.indice)
         : itensFicha.map((item, indiceAtual) =>
@@ -569,7 +569,7 @@ export class FichaService {
       id: dto.fichaId,
       dados: {
         ...fichaEncontrada.dados,
-        inventario: { ...fichaEncontrada.dados.inventario, itens: itensFichaAtualizados },
+        inventario: { ...fichaEncontrada.dados.inventario, itens: itensFichaAlterados },
       },
     });
     await this.campanhaRepositorio.alterarInventario({

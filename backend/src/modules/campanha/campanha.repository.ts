@@ -106,7 +106,7 @@ export class CampanhaRepository extends BaseRepository {
    *   `FichaRepository.listarVisiveisParaUsuario`, replicado aqui porque isto é agregação, não
    *   listagem) → `totalFichas`, `temFichaCritica` (`BOOL_OR` de Vida atual ≤ 0) e
    *   `fichaCriticaNome` (`MIN(nome) FILTER`, equivalente a "primeira ordenada por nome" já que
-   *   a única ordenação é por nome). O mesmo agregado também alimenta `atualizadoEm`
+   *   a única ordenação é por nome). O mesmo agregado também alimenta `alteradoEm`
    *   (`MAX(ficha.updated_date)`, combinado via `GREATEST` com `campanha.updated_date` — cai só
    *   na data da campanha quando não há fichas visíveis).
    * - `minha_ficha`: a própria ficha do jogador nesta campanha (primeira por nome) — o `WHERE`
@@ -140,8 +140,8 @@ export class CampanhaRepository extends BaseRepository {
               END AS "codigoConvite",
               GREATEST(
                 campanha.updated_date,
-                COALESCE(fichas_agregado.ultima_atualizacao, campanha.updated_date)
-              ) AS "atualizadoEm"
+                COALESCE(fichas_agregado.ultima_alteracao, campanha.updated_date)
+              ) AS "alteradoEm"
        FROM campanha_membro
        INNER JOIN campanha
          ON campanha.id = campanha_membro.campanha_id AND campanha.is_deleted = false
@@ -157,7 +157,7 @@ export class CampanhaRepository extends BaseRepository {
          SELECT COUNT(*)::int AS total,
                 BOOL_OR((ficha.dados->'estado'->>'vidaAtual')::int <= 0) AS tem_critica,
                 MIN(ficha.nome) FILTER (WHERE (ficha.dados->'estado'->>'vidaAtual')::int <= 0) AS nome_critica,
-                MAX(ficha.updated_date) AS ultima_atualizacao
+                MAX(ficha.updated_date) AS ultima_alteracao
          FROM ficha
          WHERE ficha.campanha_id = campanha.id AND ficha.is_deleted = false
            AND (

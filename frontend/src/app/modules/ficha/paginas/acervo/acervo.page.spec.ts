@@ -82,7 +82,7 @@ describe('FichaAcervo', () => {
       fichaCriticaNome: null,
       minhaFichaResumo: null,
       codigoConvite: 'ALFA1234',
-      atualizadoEm: '2026-07-29T01:48:01.082Z',
+      alteradoEm: '2026-07-29T01:48:01.082Z',
     },
   ];
 

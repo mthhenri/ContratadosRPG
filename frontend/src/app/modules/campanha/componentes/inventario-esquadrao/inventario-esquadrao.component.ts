@@ -74,7 +74,7 @@ export class InventarioEsquadrao {
   readonly itens = input.required<readonly CampanhaInventarioItemDto[]>();
   readonly fichas = input<readonly FichaDestinoInventario[]>([]);
   readonly somenteLeitura = input(false);
-  readonly atualizado = output<readonly CampanhaInventarioItemDto[]>();
+  readonly alterado = output<readonly CampanhaInventarioItemDto[]>();
 
   protected readonly catalogoAberto = signal(false);
   protected readonly criandoItem = signal(false);
@@ -246,7 +246,7 @@ export class InventarioEsquadrao {
       peso: Math.max(0, bruto.peso),
       ...(descricao ? { descricao } : {}),
     }).pipe(finalize(() => this.operando.set(false))).subscribe((resultado) => {
-      this.atualizado.emit(resultado.itens);
+      this.alterado.emit(resultado.itens);
       this.cancelarEdicaoItem();
     });
   }
@@ -287,7 +287,7 @@ export class InventarioEsquadrao {
       ...(this.mostraBonus() && bonus ? { bonus } : {}),
       ...(this.modificacoesItemCustom().length ? { modificacoes: this.modificacoesItemCustom() } : {}),
     }).pipe(finalize(() => this.operando.set(false))).subscribe((resultado) => {
-      this.atualizado.emit(resultado.itens);
+      this.alterado.emit(resultado.itens);
       this.cancelarCriarItem();
     });
   }
@@ -305,7 +305,7 @@ export class InventarioEsquadrao {
       resistencia: item.resistencia, bonus: item.bonus,
       ...(modificacoes.length ? { modificacoes } : {}),
     }).pipe(finalize(() => this.operando.set(false))).subscribe((resultado) => {
-      this.atualizado.emit(resultado.itens);
+      this.alterado.emit(resultado.itens);
       this.itemAdicionado.set(item.nome);
       setTimeout(() => {
         if (this.itemAdicionado() === item.nome) this.itemAdicionado.set(null);
@@ -420,7 +420,7 @@ export class InventarioEsquadrao {
   protected ajustar(itemId: string, delta: number): void {
     if (this.somenteLeitura() || this.editandoItemId()) return;
     this.campanhaService.ajustarQuantidadeItemInventario(this.campanhaId(), itemId, delta)
-      .subscribe((resultado) => this.atualizado.emit(resultado.itens));
+      .subscribe((resultado) => this.alterado.emit(resultado.itens));
   }
 
   protected solicitarRemocao(itemId: string): void {
@@ -437,7 +437,7 @@ export class InventarioEsquadrao {
     this.campanhaService.removerItemInventario(this.campanhaId(), itemId)
       .subscribe((resultado) => {
         this.itemConfirmandoRemocao.set(null);
-        this.atualizado.emit(resultado.itens);
+        this.alterado.emit(resultado.itens);
       });
   }
 
@@ -458,7 +458,7 @@ export class InventarioEsquadrao {
       .pipe(finalize(() => this.operando.set(false)))
       .subscribe(() => {
         const restantes = item.quantidade - this.quantidade.value;
-        this.atualizado.emit(restantes <= 0
+        this.alterado.emit(restantes <= 0
           ? this.itens().filter((atual) => atual.id !== item.id)
           : this.itens().map((atual) => atual.id === item.id ? { ...atual, quantidade: restantes } : atual));
         this.transferencia.set(null);

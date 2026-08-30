@@ -36,7 +36,7 @@ interface EstatisticasCampanhas {
  * densas com estatísticas agregadas no topo, alerta de ficha crítica por linha, resumo da
  * própria ficha (jogador) e convite copiável direto na linha (mestre) — sem abrir o detalhe. O
  * enriquecimento (`totalMembros`/`totalFichas`/`temFichaCritica`/`minhaFichaResumo`/
- * `codigoConvite`/`atualizadoEm`) já chega pronto do backend (`CampanhaRepository.listarPorUsuario`),
+ * `codigoConvite`/`alteradoEm`) já chega pronto do backend (`CampanhaRepository.listarPorUsuario`),
  * respeitando a mesma regra de visibilidade §14 — o front só soma/formata. Só apresentação
  * (proibições #16/#17).
  */
@@ -102,9 +102,9 @@ export class CampanhaLista {
     this.dialogoAberto.set(null);
   }
 
-  /** "Agora/há Xs/há X min/há X h" para `campanha.atualizadoEm` — recomputado pelo relógio de 5s. */
+  /** "Agora/há Xs/há X min/há X h" para `campanha.alteradoEm` — recomputado pelo relógio de 5s. */
   protected rotuloAtualizacao(campanha: CampanhaResumoDto): string {
-    return rotuloRelativo(new Date(campanha.atualizadoEm).getTime(), this.agora());
+    return rotuloRelativo(new Date(campanha.alteradoEm).getTime(), this.agora());
   }
 
   /**

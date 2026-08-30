@@ -34,7 +34,7 @@ interface PaginaRepositorioDublado {
 
 interface CampanhaGatewayDublado {
   emitirPaginaEsquadraoCriada: ReturnType<typeof vi.fn>;
-  emitirPaginaEsquadraoAtualizada: ReturnType<typeof vi.fn>;
+  emitirPaginaEsquadraoAlterada: ReturnType<typeof vi.fn>;
   emitirPaginaEsquadraoExcluida: ReturnType<typeof vi.fn>;
 }
 
@@ -96,7 +96,7 @@ describe('PaginaCadernoService', () => {
     campanhaRepositorio = { recuperarMembro: vi.fn() };
     campanhaGateway = {
       emitirPaginaEsquadraoCriada: vi.fn(),
-      emitirPaginaEsquadraoAtualizada: vi.fn(),
+      emitirPaginaEsquadraoAlterada: vi.fn(),
       emitirPaginaEsquadraoExcluida: vi.fn(),
     };
     service = new PaginaCadernoService(

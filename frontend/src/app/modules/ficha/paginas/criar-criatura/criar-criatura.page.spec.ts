@@ -57,10 +57,10 @@ describe('CriaturaCriar', () => {
    * Completa"), passo a passo, avançando pelo assistente — mesmos valores usados no caso de
    * teste do motor de regras (`shared/src/regras/criatura/a-estatua.spec.ts`, m4-02). */
   function preencherAEstatua(componente: CriaturaCriar): void {
-    const atualizar = componente['atualizar'].bind(componente) as (parcial: Partial<Record<string, unknown>>) => void;
+    const alterar = componente['alterar'].bind(componente) as (parcial: Partial<Record<string, unknown>>) => void;
     const avancar = componente['avancar'].bind(componente) as () => void;
 
-    atualizar({
+    alterar({
       designacao: 'A Estátua', origem: OrigemCriaturaEnum.SCP_ADAPTADO,
       conceito: 'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
       naturezaFisica: 'Humanoide, altura entre 1,8m e 2,1m, aparência de pedra calcária escura. Sem feições definidas.',
@@ -71,15 +71,15 @@ describe('CriaturaCriar', () => {
     });
     avancar();
 
-    atualizar({ na: NivelAmeacaEnum.MEDIA, vd: 30 });
+    alterar({ na: NivelAmeacaEnum.MEDIA, vd: 30 });
     avancar();
 
-    atualizar({
+    alterar({
       atributos: { forca: 3, destreza: 4, luta: 5, pontaria: 2, vigor: 3, intelecto: 2, medicina: 2, sentidos: 3, social: 0, vontade: 2 },
     });
     avancar();
 
-    atualizar({
+    alterar({
       modificadores: {
         destreza: ModificadorCriaturaEnum.FORTE, luta: ModificadorCriaturaEnum.FORTE,
         forca: ModificadorCriaturaEnum.MEDIO, vigor: ModificadorCriaturaEnum.MEDIO, sentidos: ModificadorCriaturaEnum.MEDIO,
@@ -89,12 +89,12 @@ describe('CriaturaCriar', () => {
     });
     avancar();
 
-    atualizar({ tenacidade: TenacidadeEnum.PADRAO, vidaAtual: 1050 });
+    alterar({ tenacidade: TenacidadeEnum.PADRAO, vidaAtual: 1050 });
     avancar();
 
     avancar(); // Defesa — só leitura
 
-    atualizar({
+    alterar({
       resistencias: [
         { tipo: TipoDanoEnum.FISICO, subtipo: '', valor: 36 },
         { tipo: TipoDanoEnum.BALISTICO, subtipo: '', valor: 16 },
@@ -105,13 +105,13 @@ describe('CriaturaCriar', () => {
 
     avancar(); // Regeneração — nenhuma
 
-    atualizar({
+    alterar({
       porte: PorteCriaturaEnum.MEDIO,
       deslocamento: { terrestre: 9, voador: null, aquatico: null, sobrenatural: null },
     });
     avancar();
 
-    atualizar({
+    alterar({
       cadencia: CadenciaEnum.SINGULAR,
       turnosPorRodada: 1,
       ataques: [
@@ -124,7 +124,7 @@ describe('CriaturaCriar', () => {
     });
     avancar();
 
-    atualizar({
+    alterar({
       habilidades: [
         {
           nome: 'Imobilidade Absoluta', tipo: HabilidadeTipoCriaturaEnum.PASSIVA,
@@ -162,7 +162,7 @@ describe('CriaturaCriar', () => {
   it('bloqueia o avanço da Identidade sem os campos obrigatórios', () => {
     const { componente } = montar();
     expect(componente['passoValido']()).toBe(false);
-    componente['atualizar']({ designacao: 'A Estátua' });
+    componente['alterar']({ designacao: 'A Estátua' });
     expect(componente['passoValido']()).toBe(false);
   });
 
@@ -254,20 +254,20 @@ describe('CriaturaCriar', () => {
 
   it('bloqueia o passo Resistências sem ao menos uma fraqueza', () => {
     const { componente } = montar();
-    componente['atualizar']({ vd: 30, resistencias: [{ tipo: TipoDanoEnum.FISICO, subtipo: '', valor: 10 }], fraquezas: [] });
-    componente['atualizar']({ passo: 6 });
+    componente['alterar']({ vd: 30, resistencias: [{ tipo: TipoDanoEnum.FISICO, subtipo: '', valor: 10 }], fraquezas: [] });
+    componente['alterar']({ passo: 6 });
     expect(componente['passoValido']()).toBe(false);
   });
 
   it('bloqueia o passo Porte e Deslocamento sem nenhum modo declarado', () => {
     const { componente } = montar();
-    componente['atualizar']({ porte: PorteCriaturaEnum.MEDIO, passo: 8 });
+    componente['alterar']({ porte: PorteCriaturaEnum.MEDIO, passo: 8 });
     expect(componente['passoValido']()).toBe(false);
   });
 
   it('solicita a quantidade de turnos ao escolher Cadência Frenética', () => {
     const { fixture, raiz, componente } = montar();
-    componente['atualizar']({ passo: 9, cadencia: CadenciaEnum.FRENETICA, turnosPorRodada: 6 });
+    componente['alterar']({ passo: 9, cadencia: CadenciaEnum.FRENETICA, turnosPorRodada: 6 });
     fixture.detectChanges();
 
     const entrada = raiz.querySelector<HTMLInputElement>('input[min="4"][step="1"]');
@@ -277,7 +277,7 @@ describe('CriaturaCriar', () => {
 
   it('a distribuição de Modificadores só fica completa em 2 Forte / 3 Médio / 3 Fraco / 2 Frágil', () => {
     const { componente } = montar();
-    componente['atualizar']({
+    componente['alterar']({
       modificadores: {
         destreza: ModificadorCriaturaEnum.FORTE, forca: ModificadorCriaturaEnum.FORTE,
         luta: ModificadorCriaturaEnum.MEDIO, vigor: ModificadorCriaturaEnum.MEDIO, sentidos: ModificadorCriaturaEnum.MEDIO,
@@ -287,13 +287,13 @@ describe('CriaturaCriar', () => {
     });
     expect(componente['distribuicaoModificadoresCompleta']()).toBe(false);
 
-    componente['atualizar']({ modificadores: { ...componente['estado']().modificadores, social: ModificadorCriaturaEnum.FRAGIL } });
+    componente['alterar']({ modificadores: { ...componente['estado']().modificadores, social: ModificadorCriaturaEnum.FRAGIL } });
     expect(componente['distribuicaoModificadoresCompleta']()).toBe(true);
   });
 
   it('trava os botões de um tipo de modificador ao atingir a quota, exceto o já selecionado', () => {
     const { componente } = montar();
-    componente['atualizar']({
+    componente['alterar']({
       modificadores: {
         ...componente['estado']().modificadores,
         destreza: ModificadorCriaturaEnum.FORTE, forca: ModificadorCriaturaEnum.FORTE,
@@ -340,7 +340,7 @@ describe('CriaturaCriar', () => {
       expect(componente['temRascunho']()).toBe(true);
       expect(rascunhos.salvar).not.toHaveBeenCalled();
 
-      componente['atualizar']({ designacao: 'Outra coisa' });
+      componente['alterar']({ designacao: 'Outra coisa' });
       expect(rascunhos.salvar).not.toHaveBeenCalled();
     });
 
@@ -348,7 +348,7 @@ describe('CriaturaCriar', () => {
       const { componente, rascunhos } = montar();
       expect(componente['temRascunho']()).toBe(false);
 
-      componente['atualizar']({ designacao: 'Nova criatura' });
+      componente['alterar']({ designacao: 'Nova criatura' });
       expect(rascunhos.salvar).toHaveBeenCalled();
     });
 

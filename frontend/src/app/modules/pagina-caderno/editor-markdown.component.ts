@@ -218,9 +218,9 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
     '[class.editor-markdown--somente-leitura]': 'somenteLeitura()',
     '[attr.aria-label]':
       'somenteLeitura() ? "Conteúdo Markdown somente leitura" : "Editor Markdown"',
-    '(click)': 'atualizarEstadoTabela()',
-    '(keyup)': 'atualizarEstadoTabela()',
-    '(scroll)': 'atualizarPosicaoRolagem()',
+    '(click)': 'alterarEstadoTabela()',
+    '(keyup)': 'alterarEstadoTabela()',
+    '(scroll)': 'alterarPosicaoRolagem()',
   },
 })
 export class EditorMarkdown implements AfterViewInit, OnDestroy {
@@ -307,11 +307,11 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
     if (!this.somenteLeitura()) this.instancia?.aplicarFormato(formato);
   }
 
-  protected atualizarEstadoTabela(): void {
+  protected alterarEstadoTabela(): void {
     this.emTabela.set(this.instancia?.estaEmTabela() ?? false);
   }
 
-  protected atualizarPosicaoRolagem(): void {
+  protected alterarPosicaoRolagem(): void {
     this.mostrarVoltarAoTopo.set(this.host.nativeElement.scrollTop > 160);
   }
 

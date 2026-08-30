@@ -407,7 +407,7 @@ export class CriaturaCriar {
    * Revisão, que já exige tudo preenchido via `passoValido`). */
   protected readonly violacoesFinais = computed(() => validarFichaCriatura(this.construirDados()).violacoes);
 
-  protected atualizar(parcial: Partial<EstadoGuiaCriatura>): void {
+  protected alterar(parcial: Partial<EstadoGuiaCriatura>): void {
     this.estado.update((atual) => ({ ...atual, ...parcial }));
   }
   protected valor(evento: Event): string { return (evento.target as HTMLInputElement).value; }
@@ -415,26 +415,26 @@ export class CriaturaCriar {
 
   // Setters tipados dos `<select>` de enum — `valor()` devolve `string` bruto do DOM; o cast fica
   // centralizado aqui (em vez de inline no template) para não perder o tipo de `EstadoGuiaCriatura`.
-  protected mudarOrigem(evento: Event): void { this.atualizar({ origem: this.valor(evento) as OrigemCriaturaEnum }); }
-  protected mudarComportamento(evento: Event): void { this.atualizar({ comportamento: this.valor(evento) as ComportamentoCriaturaEnum }); }
-  protected mudarNa(evento: Event): void { this.atualizar({ na: this.valor(evento) as NivelAmeacaEnum }); }
+  protected mudarOrigem(evento: Event): void { this.alterar({ origem: this.valor(evento) as OrigemCriaturaEnum }); }
+  protected mudarComportamento(evento: Event): void { this.alterar({ comportamento: this.valor(evento) as ComportamentoCriaturaEnum }); }
+  protected mudarNa(evento: Event): void { this.alterar({ na: this.valor(evento) as NivelAmeacaEnum }); }
   /** Atributos começam na Base (doc: "Todo atributo começa no valor Base") — só reinicializa
    * enquanto o passo // Atributos ainda não foi visitado, para nunca apagar uma distribuição já
    * feita pelo mestre ao voltar e ajustar o VD. */
   protected mudarVd(evento: Event): void {
     const vd = this.numero(evento);
-    if (this.visitado() >= this.passos.indexOf('Atributos')) { this.atualizar({ vd }); return; }
+    if (this.visitado() >= this.passos.indexOf('Atributos')) { this.alterar({ vd }); return; }
     const base = obterBaseELimitePorVd({ vd }).base;
     const atributos = this.campos.reduce((acc, campo) => ({ ...acc, [campo.chave]: base }), {} as FichaAtributosDto);
-    this.atualizar({ vd, atributos });
+    this.alterar({ vd, atributos });
   }
   protected mudarTenacidade(evento: Event): void {
     const bruto = this.valor(evento);
-    this.atualizar({ tenacidade: bruto ? (bruto as TenacidadeEnum) : null });
+    this.alterar({ tenacidade: bruto ? (bruto as TenacidadeEnum) : null });
   }
   protected mudarPorte(evento: Event): void {
     const bruto = this.valor(evento);
-    this.atualizar({ porte: bruto ? (bruto as PorteCriaturaEnum) : null });
+    this.alterar({ porte: bruto ? (bruto as PorteCriaturaEnum) : null });
   }
   protected mudarCadencia(evento: Event): void {
     const cadencia = this.valor(evento) as CadenciaEnum;
@@ -443,13 +443,13 @@ export class CriaturaCriar {
       [CadenciaEnum.DUPLA]: 2,
       [CadenciaEnum.TRIPLICE]: 3,
     };
-    this.atualizar({ cadencia, turnosPorRodada: turnosFixos[cadencia] ?? 4 });
+    this.alterar({ cadencia, turnosPorRodada: turnosFixos[cadencia] ?? 4 });
   }
   protected mudarRegeneracaoModo(evento: Event): void {
-    this.atualizarRegeneracao({ modo: this.valor(evento) as RegeneracaoModoEnum });
+    this.alterarRegeneracao({ modo: this.valor(evento) as RegeneracaoModoEnum });
   }
   protected mudarRegeneracaoIntensidade(evento: Event): void {
-    this.atualizarRegeneracao({ intensidade: this.valor(evento) as RegeneracaoIntensidadeEnum });
+    this.alterarRegeneracao({ intensidade: this.valor(evento) as RegeneracaoIntensidadeEnum });
   }
 
   protected atributoEfetivo(chave: ChaveAtributo): number | null {
@@ -481,11 +481,11 @@ export class CriaturaCriar {
     // Realocação retira no máximo 3 pontos da Base (doc: "⬥ Realocação de Pontos"), sem nunca negativar.
     const piso = Math.max(0, this.baseLimite().base - 3);
     const valor = Math.max(piso, Math.min(this.baseLimite().limite, atual.atributos[chave] + delta));
-    this.atualizar({ atributos: { ...atual.atributos, [chave]: valor } });
+    this.alterar({ atributos: { ...atual.atributos, [chave]: valor } });
   }
   protected definirModificador(chave: ChaveAtributo, tipo: ModificadorCriaturaEnum): void {
     const atual = this.estado().modificadores[chave];
-    this.atualizar({ modificadores: { ...this.estado().modificadores, [chave]: atual === tipo ? null : tipo } });
+    this.alterar({ modificadores: { ...this.estado().modificadores, [chave]: atual === tipo ? null : tipo } });
   }
   protected contagemModificador(tipo: ModificadorCriaturaEnum): number {
     return CAMPOS.filter((campo) => this.estado().modificadores[campo.chave] === tipo).length;
@@ -505,19 +505,19 @@ export class CriaturaCriar {
     );
   }
 
-  protected adicionarResistencia(): void { this.atualizar({ resistencias: [...this.estado().resistencias, linhaResistenciaVazia()] }); }
+  protected adicionarResistencia(): void { this.alterar({ resistencias: [...this.estado().resistencias, linhaResistenciaVazia()] }); }
   protected removerResistencia(indice: number): void {
-    this.atualizar({ resistencias: this.estado().resistencias.filter((_, i) => i !== indice) });
+    this.alterar({ resistencias: this.estado().resistencias.filter((_, i) => i !== indice) });
   }
-  protected atualizarResistencia(indice: number, campo: keyof LinhaResistencia, valor: string | number): void {
-    this.atualizar({ resistencias: this.estado().resistencias.map((r, i) => (i === indice ? { ...r, [campo]: valor } : r)) });
+  protected alterarResistencia(indice: number, campo: keyof LinhaResistencia, valor: string | number): void {
+    this.alterar({ resistencias: this.estado().resistencias.map((r, i) => (i === indice ? { ...r, [campo]: valor } : r)) });
   }
-  protected adicionarFraqueza(): void { this.atualizar({ fraquezas: [...this.estado().fraquezas, linhaResistenciaVazia()] }); }
+  protected adicionarFraqueza(): void { this.alterar({ fraquezas: [...this.estado().fraquezas, linhaResistenciaVazia()] }); }
   protected removerFraqueza(indice: number): void {
-    this.atualizar({ fraquezas: this.estado().fraquezas.filter((_, i) => i !== indice) });
+    this.alterar({ fraquezas: this.estado().fraquezas.filter((_, i) => i !== indice) });
   }
-  protected atualizarFraqueza(indice: number, campo: keyof LinhaResistencia, valor: string | number): void {
-    this.atualizar({ fraquezas: this.estado().fraquezas.map((f, i) => (i === indice ? { ...f, [campo]: valor } : f)) });
+  protected alterarFraqueza(indice: number, campo: keyof LinhaResistencia, valor: string | number): void {
+    this.alterar({ fraquezas: this.estado().fraquezas.map((f, i) => (i === indice ? { ...f, [campo]: valor } : f)) });
   }
   protected fraquezaValida(linha: LinhaResistencia): boolean {
     return validarFraqueza({ valor: linha.valor, somaResistencias: this.somaResistencias() });
@@ -527,11 +527,11 @@ export class CriaturaCriar {
       this.estado().fraquezas.some((f) => f.tipo === r.tipo && f.subtipo.trim() === r.subtipo.trim()));
   }
 
-  protected atualizarRegeneracao(parcial: Partial<EstadoRegeneracao>): void {
-    this.atualizar({ regeneracao: { ...this.estado().regeneracao, ...parcial } });
+  protected alterarRegeneracao(parcial: Partial<EstadoRegeneracao>): void {
+    this.alterar({ regeneracao: { ...this.estado().regeneracao, ...parcial } });
   }
-  protected atualizarDeslocamento(campo: keyof EstadoDeslocamento, valor: number | null): void {
-    this.atualizar({ deslocamento: { ...this.estado().deslocamento, [campo]: valor } });
+  protected alterarDeslocamento(campo: keyof EstadoDeslocamento, valor: number | null): void {
+    this.alterar({ deslocamento: { ...this.estado().deslocamento, [campo]: valor } });
   }
 
   protected vdTipico(na: NivelAmeacaEnum): string { return VD_TIPICO_POR_NA[na]; }
@@ -539,20 +539,20 @@ export class CriaturaCriar {
   protected danoReferencia(custoAcao: CustoAcaoEnum): string {
     return this.estado().vd > 0 ? obterDanoReferenciaPorVd({ vd: this.estado().vd, custoAcao }) : '—';
   }
-  protected adicionarAtaque(): void { this.atualizar({ ataques: [...this.estado().ataques, linhaAtaqueVazia()] }); }
+  protected adicionarAtaque(): void { this.alterar({ ataques: [...this.estado().ataques, linhaAtaqueVazia()] }); }
   protected removerAtaque(indice: number): void {
-    this.atualizar({ ataques: this.estado().ataques.filter((_, i) => i !== indice) });
+    this.alterar({ ataques: this.estado().ataques.filter((_, i) => i !== indice) });
   }
-  protected atualizarAtaque(indice: number, campo: keyof LinhaAtaque, valor: string | boolean): void {
-    this.atualizar({ ataques: this.estado().ataques.map((a, i) => (i === indice ? { ...a, [campo]: valor } : a)) });
+  protected alterarAtaque(indice: number, campo: keyof LinhaAtaque, valor: string | boolean): void {
+    this.alterar({ ataques: this.estado().ataques.map((a, i) => (i === indice ? { ...a, [campo]: valor } : a)) });
   }
 
-  protected adicionarHabilidade(): void { this.atualizar({ habilidades: [...this.estado().habilidades, linhaHabilidadeVazia()] }); }
+  protected adicionarHabilidade(): void { this.alterar({ habilidades: [...this.estado().habilidades, linhaHabilidadeVazia()] }); }
   protected removerHabilidade(indice: number): void {
-    this.atualizar({ habilidades: this.estado().habilidades.filter((_, i) => i !== indice) });
+    this.alterar({ habilidades: this.estado().habilidades.filter((_, i) => i !== indice) });
   }
-  protected atualizarHabilidade(indice: number, campo: keyof LinhaHabilidade, valor: string): void {
-    this.atualizar({ habilidades: this.estado().habilidades.map((h, i) => (i === indice ? { ...h, [campo]: valor } : h)) });
+  protected alterarHabilidade(indice: number, campo: keyof LinhaHabilidade, valor: string): void {
+    this.alterar({ habilidades: this.estado().habilidades.map((h, i) => (i === indice ? { ...h, [campo]: valor } : h)) });
   }
 
   private construirDados(): FichaCriaturaDadosDto {
@@ -633,14 +633,14 @@ export class CriaturaCriar {
     }
   }
 
-  protected ir(passo: number): void { if (passo <= this.visitado()) this.atualizar({ passo }); }
+  protected ir(passo: number): void { if (passo <= this.visitado()) this.alterar({ passo }); }
   protected avancar(): void {
     if (!this.passoValido()) return;
     const proximo = Math.min(this.passos.length - 1, this.estado().passo + 1);
     this.visitado.update((v) => Math.max(v, proximo));
-    this.atualizar({ passo: proximo });
+    this.alterar({ passo: proximo });
   }
-  protected voltar(): void { this.atualizar({ passo: Math.max(0, this.estado().passo - 1) }); }
+  protected voltar(): void { this.alterar({ passo: Math.max(0, this.estado().passo - 1) }); }
   protected sair(): void { this.confirmandoSaida.set(true); }
   protected confirmarSaida(): void {
     this.confirmandoSaida.set(false);

@@ -85,7 +85,7 @@ describe('SessaoService', () => {
     localStorage.setItem(CHAVE_SESSAO, JSON.stringify(usuarioAutenticado));
     const { servico } = criar();
 
-    servico.atualizarPerfil({ nome: 'Agente Renomeado', login: 'agente.renomeado' });
+    servico.alterarPerfil({ nome: 'Agente Renomeado', login: 'agente.renomeado' });
 
     expect(servico.usuario()).toEqual({
       token: 'jwt-de-teste',

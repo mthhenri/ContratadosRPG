@@ -15,7 +15,7 @@ export class InventarioEsquadraoSidebar {
   readonly campanhaId = input.required<number>();
   readonly itens = input.required<readonly CampanhaInventarioItemDto[]>();
   readonly fichas = input<readonly { id: number; nome: string }[]>([]);
-  readonly atualizado = output<readonly CampanhaInventarioItemDto[]>();
+  readonly alterado = output<readonly CampanhaInventarioItemDto[]>();
   protected readonly aberto = signal(false);
   protected fechar(): void { this.aberto.set(false); }
 }

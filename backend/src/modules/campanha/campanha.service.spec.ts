@@ -138,7 +138,7 @@ describe('CampanhaService', () => {
           fichaCriticaNome: null,
           minhaFichaResumo: null,
           codigoConvite: 'ABCD2345',
-          atualizadoEm: '2026-07-29T01:48:01.082Z',
+          alteradoEm: '2026-07-29T01:48:01.082Z',
         },
       ];
       repositorio.listarPorUsuario.mockResolvedValue(campanhas);

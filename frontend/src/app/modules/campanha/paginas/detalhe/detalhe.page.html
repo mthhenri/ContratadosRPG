@@ -93,7 +93,7 @@
                     [campanhaId]="campanhaAtual.id"
                     [itens]="inventarioEsquadrao()"
                     [fichas]="fichasDestinoInventario()"
-                    (atualizado)="inventarioEsquadrao.set($event)"
+                    (alterado)="inventarioEsquadrao.set($event)"
                 />
                 }
                 <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
@@ -985,7 +985,7 @@
                         [itens]="inventarioEsquadrao()"
                         [fichas]="fichasDestinoInventario()"
                         [somenteLeitura]="!campanhaAtual.naBase"
-                        (atualizado)="inventarioEsquadrao.set($event)"
+                        (alterado)="inventarioEsquadrao.set($event)"
                     />
                 </app-cartao>
                 } @else {

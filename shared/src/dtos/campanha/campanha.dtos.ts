@@ -64,7 +64,7 @@ export interface CampanhaResumoDto {
   /** Código de convite — só preenchido quando `papel === MESTRE`; `null` para `JOGADOR`. */
   readonly codigoConvite: string | null;
   /** `GREATEST` entre `campanha.updated_date` e a última ficha visível alterada (ISO). */
-  readonly atualizadoEm: string;
+  readonly alteradoEm: string;
 }
 
 /**

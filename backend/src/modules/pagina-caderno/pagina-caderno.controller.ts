@@ -93,7 +93,7 @@ export class PaginaCadernoController {
     return this.service.recuperarEstadoPaginaEsquadrao({ id }, usuarioAtivo);
   }
 
-  @Put('pagina-caderno/:id/esquadrao/atualizacoes')
+  @Put('pagina-caderno/:id/esquadrao/alteracoes')
   alterarEsquadrao(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: PaginaCadernoEsquadraoAlterarDto,

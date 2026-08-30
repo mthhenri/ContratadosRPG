@@ -84,7 +84,7 @@ export class TempoRealService {
     EncontroIniciativaPedidoDto & { campanhaId: number }
   >();
   private readonly paginaEsquadraoCriadaSubject = new Subject<PaginaCadernoResumoDto>();
-  private readonly paginaEsquadraoAtualizadaSubject = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
+  private readonly paginaEsquadraoAlteradaSubject = new Subject<PaginaCadernoEsquadraoAlteradaDto>();
   private readonly paginaEsquadraoExcluidaSubject = new Subject<{
     readonly campanhaId: number;
     readonly paginaId: number;
@@ -133,7 +133,7 @@ export class TempoRealService {
     EncontroIniciativaPedidoDto & { campanhaId: number }
   > = this.encontroIniciativaPedidoSubject.asObservable();
   readonly paginaEsquadraoCriada$ = this.paginaEsquadraoCriadaSubject.asObservable();
-  readonly paginaEsquadraoAtualizada$ = this.paginaEsquadraoAtualizadaSubject.asObservable();
+  readonly paginaEsquadraoAlterada$ = this.paginaEsquadraoAlteradaSubject.asObservable();
   readonly paginaEsquadraoExcluida$ = this.paginaEsquadraoExcluidaSubject.asObservable();
 
   /**
@@ -185,8 +185,8 @@ export class TempoRealService {
     this.socket.on('caderno-esquadrao:pagina-criada', (pagina: PaginaCadernoResumoDto) =>
       this.paginaEsquadraoCriadaSubject.next(pagina),
     );
-    this.socket.on('caderno-esquadrao:atualizado', (evento: PaginaCadernoEsquadraoAlteradaDto) =>
-      this.paginaEsquadraoAtualizadaSubject.next(evento),
+    this.socket.on('caderno-esquadrao:alterado', (evento: PaginaCadernoEsquadraoAlteradaDto) =>
+      this.paginaEsquadraoAlteradaSubject.next(evento),
     );
     this.socket.on(
       'caderno-esquadrao:pagina-excluida',

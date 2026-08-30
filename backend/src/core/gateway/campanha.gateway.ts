@@ -261,8 +261,8 @@ export class CampanhaGateway implements OnGatewayConnection {
   }
 
   /** Propaga uma atualização CRDT já persistida; escrita nunca entra pelo gateway. */
-  emitirPaginaEsquadraoAtualizada(evento: PaginaCadernoEsquadraoAlteradaDto): void {
-    this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('caderno-esquadrao:atualizado', evento);
+  emitirPaginaEsquadraoAlterada(evento: PaginaCadernoEsquadraoAlteradaDto): void {
+    this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('caderno-esquadrao:alterado', evento);
   }
 
   /** Invalida a página removida para os membros que mantêm a lista aberta. */

@@ -78,7 +78,7 @@ describe('FichaCriar', () => {
 
   it('permite digitar uma Personalidade e mantém Personalidade separada da Origem', () => {
     const { fixture, raiz, componente } = montar();
-    componente['atualizar']({ passo: 4 });
+    componente['alterar']({ passo: 4 });
     fixture.detectChanges();
 
     const personalidade = raiz.querySelector('[data-testid="personalidade"]') as HTMLInputElement;
@@ -93,7 +93,7 @@ describe('FichaCriar', () => {
 
   it('oferece o catálogo mecânico de Formações e a alternativa Outra', () => {
     const { fixture, raiz, componente } = montar();
-    componente['atualizar']({ passo: 4 });
+    componente['alterar']({ passo: 4 });
     fixture.detectChanges();
 
     const select = raiz.querySelector('[aria-label="Formação 1"]') as HTMLSelectElement;
@@ -125,7 +125,7 @@ describe('FichaCriar', () => {
     vi.useFakeTimers();
     try {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ passo: 5 });
+      componente['alterar']({ passo: 5 });
       fixture.detectChanges();
 
       expect(raiz.querySelectorAll('.guia__dado')).toHaveLength(0);
@@ -155,7 +155,7 @@ describe('FichaCriar', () => {
 
   it('permite ignorar a rolagem de dinheiro inicial no passo Recursos (m3-74)', () => {
     const { fixture, raiz, componente } = montar();
-    componente['atualizar']({ passo: 5 });
+    componente['alterar']({ passo: 5 });
     fixture.detectChanges();
 
     expect(componente['passoValido']()).toBe(false);
@@ -183,7 +183,7 @@ describe('FichaCriar', () => {
 
   it('ignorar a rolagem também zera o bônus monetário de Prestígio, não só o dinheiro rolado', () => {
     const { fixture, raiz, componente } = montar();
-    componente['atualizar']({ sobrescreverProgressao: true, prestigioManual: 30, passo: 5 });
+    componente['alterar']({ sobrescreverProgressao: true, prestigioManual: 30, passo: 5 });
     fixture.detectChanges();
 
     expect(componente['bonusMonetario']()).toBeGreaterThan(0);
@@ -261,7 +261,7 @@ describe('FichaCriar', () => {
   ])('habilita Avançar no modo convencional para um agente de nível %i', (nivel, atributos) => {
     const { fixture, raiz, componente } = montar([fichaExistente]);
     const atributosBase = { destreza: 1, forca: 1, luta: 1, pontaria: 1, vigor: 1, intelecto: 1, medicina: 1, sentidos: 1, social: 1, vontade: 1 };
-    componente['atualizar']({
+    componente['alterar']({
       passo: 3,
       classe: ClasseEnum.COMBATENTE,
       arquetipo: ArquetipoEnum.LUTADOR,
@@ -279,7 +279,7 @@ describe('FichaCriar', () => {
 
   describe('Atributos: teto de 6 pontos e Maestria', () => {
     function irParaAtributos(componente: ReturnType<typeof montar>['componente']): void {
-      componente['atualizar']({ passo: 3, classe: ClasseEnum.COMBATENTE });
+      componente['alterar']({ passo: 3, classe: ClasseEnum.COMBATENTE });
     }
 
     it('o botão "+" para de aumentar o atributo assim que ele chega a 6, mesmo com orçamento restante', () => {
@@ -302,7 +302,7 @@ describe('FichaCriar', () => {
       const botaoMaestria = () => raiz.querySelector('[aria-label="Maestria em Destreza"]') as HTMLButtonElement;
       expect(botaoMaestria().disabled).toBe(true);
 
-      componente['atualizar']({ atributos: { ...componente['estado']().atributos, destreza: 6 } });
+      componente['alterar']({ atributos: { ...componente['estado']().atributos, destreza: 6 } });
       fixture.detectChanges();
 
       expect(botaoMaestria().disabled).toBe(false);
@@ -311,7 +311,7 @@ describe('FichaCriar', () => {
     it('aplicar Maestria custa 2 pontos de atributo além dos já gastos para chegar a 6, e é alternável/única', () => {
       const { fixture, raiz, componente } = montar([fichaExistente]);
       irParaAtributos(componente);
-      componente['atualizar']({ atributos: { ...componente['estado']().atributos, destreza: 6, forca: 6 } });
+      componente['alterar']({ atributos: { ...componente['estado']().atributos, destreza: 6, forca: 6 } });
       fixture.detectChanges();
 
       const saldoSemMaestria = componente['distribuicao']().saldo;
@@ -337,7 +337,7 @@ describe('FichaCriar', () => {
     it('reduzir abaixo de 6 o atributo com Maestria remove a Maestria automaticamente', () => {
       const { fixture, componente } = montar([fichaExistente]);
       irParaAtributos(componente);
-      componente['atualizar']({ atributos: { ...componente['estado']().atributos, destreza: 6 }, maestria: 'destreza' });
+      componente['alterar']({ atributos: { ...componente['estado']().atributos, destreza: 6 }, maestria: 'destreza' });
       fixture.detectChanges();
 
       componente['passoAtributo']('destreza', -1);
@@ -349,7 +349,7 @@ describe('FichaCriar', () => {
 
     it('com bônus fixo de arquétipo (Lutador: +1 Luta/Força), o valor final nunca passa de 6', () => {
       const { fixture, raiz, componente } = montar([fichaExistente]);
-      componente['atualizar']({ passo: 3, classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ passo: 3, classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       fixture.detectChanges();
 
       expect(componente['bonusAtributos']().luta).toBe(1);
@@ -365,8 +365,8 @@ describe('FichaCriar', () => {
 
     it('com bônus fixo de arquétipo, a Maestria já habilita com 5 pontos brutos (6 no valor final)', () => {
       const { fixture, raiz, componente } = montar([fichaExistente]);
-      componente['atualizar']({ passo: 3, classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
-      componente['atualizar']({ atributos: { ...componente['estado']().atributos, luta: 5 } });
+      componente['alterar']({ passo: 3, classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ atributos: { ...componente['estado']().atributos, luta: 5 } });
       fixture.detectChanges();
 
       expect(componente['atributosFinais']().luta).toBe(6);
@@ -396,7 +396,7 @@ describe('FichaCriar', () => {
       ['DUAS_CLASSE_OU_ARQUETIPO', [{ tipo: 'classeOuArquetipo', alvo: 2 }]],
     ])('compõe %s no Nível 0', (pacote, alvos) => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       componente['selecionarPacoteHabilidades'](pacote as never);
 
       expect(componente['comHabilidades']()).toBe(true);
@@ -405,7 +405,7 @@ describe('FichaCriar', () => {
 
     it('oferece somente o pacote de 3 habilidades civis ao Civil', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.CIVIL });
+      componente['alterar']({ classe: ClasseEnum.CIVIL });
 
       expect(componente['pacotesHabilidadesIniciais']().map((pacote) => pacote.id)).toEqual(['TRES_CIVIS']);
       componente['selecionarPacoteHabilidades']('TRES_CIVIS');
@@ -414,7 +414,7 @@ describe('FichaCriar', () => {
 
     it('Experimento compõe o pacote inicial como qualquer outra classe, sem vaga extra', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
       componente['selecionarPacoteHabilidades']('DUAS_GERAIS_UMA_CLASSE_OU_ARQUETIPO');
 
       expect(componente['vagasMelhoria']().map(({ tipo, alvo }) => ({ tipo, alvo }))).toEqual([
@@ -425,30 +425,30 @@ describe('FichaCriar', () => {
 
     it('a vaga "classeOuArquetipo" vira "Classe ou Subclasse" numa classe Experimento, mas continua "Classe ou Arquétipo" numa classe base (P-014)', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       expect(componente['vagasMelhoria']().find((v) => v.tipo === 'classeOuArquetipo')?.rotulo).toBe('Classe ou Arquétipo');
 
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       expect(componente['vagasMelhoria']().find((v) => v.tipo === 'classeOuArquetipo')?.rotulo).toBe('Classe ou Subclasse');
     });
 
     it('bloqueia o passo Habilidades até escolher e preencher o pacote', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, passo: 4 });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, passo: 4 });
       expect(componente['passoValido']()).toBe(false);
 
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       preencherVagasDeMelhoria(componente);
-      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
-      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
+      componente['alterarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['alterarPersonalidadeBase']('custoEnergia', '1');
       expect(componente['passoValido']()).toBe(true);
     });
 
     it('não adiciona a mesma habilidade duas vezes por chamadas repetidas do seletor', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       componente['abrirSeletorMelhoria']('geral');
       const habilidade = componente['gruposVagaAberta']()[0].subgrupos[0].habilidades[0];
@@ -461,7 +461,7 @@ describe('FichaCriar', () => {
 
     it('remove escolhas excedentes ao trocar para um pacote menor', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
       expect(componente['preenchidasNaVaga']('geral')).toBe(4);
@@ -482,24 +482,24 @@ describe('FichaCriar', () => {
 
     it('entra na trilha, trava Avançar com vaga sobrando e libera com modo livre', () => {
       const { fixture, componente } = montar([fichaExistente]);
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 6 });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 6 });
       fixture.detectChanges();
       expect(componente['novoAgente']().nivelInicial).toBe(5);
 
       const indice = componente['passos']().indexOf('Habilidades');
       expect(indice).toBeGreaterThan(-1);
-      componente['atualizar']({ passo: indice, modoLivre: false });
+      componente['alterar']({ passo: indice, modoLivre: false });
       fixture.detectChanges();
       expect(componente['passoValido']()).toBe(false);
 
-      componente['atualizar']({ modoLivre: true });
+      componente['alterar']({ modoLivre: true });
       fixture.detectChanges();
       expect(componente['passoValido']()).toBe(true);
     });
 
     it('preenche as vagas pelo catálogo do sistema e não deixa repetir a Habilidade Inicial nem uma já escolhida', () => {
       const { fixture, componente } = montar([fichaExistente]);
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 2 });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 2 });
       fixture.detectChanges();
       expect(componente['novoAgente']().nivelInicial).toBe(1);
 
@@ -508,8 +508,8 @@ describe('FichaCriar', () => {
 
       componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
-      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
-      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
+      componente['alterarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['alterarPersonalidadeBase']('custoEnergia', '1');
       fixture.detectChanges();
       for (const vaga of componente['vagasMelhoria']()) {
         expect(componente['preenchidasNaVaga'](vaga.tipo)).toBe(vaga.alvo);
@@ -522,7 +522,7 @@ describe('FichaCriar', () => {
 
     it('a Base da Habilidade de Personalidade é sempre exigida, mesmo sem Fortificação desbloqueada', () => {
       const { fixture, componente } = montar([fichaExistente]);
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 2, personalidade: 'Atento' });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 2, personalidade: 'Atento' });
       fixture.detectChanges();
       expect(componente['alvoFortificacoes']()).toBe(0);
 
@@ -531,8 +531,8 @@ describe('FichaCriar', () => {
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(false);
 
-      componente['atualizarPersonalidadeBase']('descricao', 'Ganha +1 dado ao agir sob pressão.');
-      componente['atualizarPersonalidadeBase']('custoEnergia', '2');
+      componente['alterarPersonalidadeBase']('descricao', 'Ganha +1 dado ao agir sob pressão.');
+      componente['alterarPersonalidadeBase']('custoEnergia', '2');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(true);
 
@@ -542,23 +542,23 @@ describe('FichaCriar', () => {
 
     it('exige efeito e custo da 1ª Fortificação a partir do Nível 7 (mesmo com Base e vagas do catálogo preenchidas) — e ela vira o estágio ativo, com nome = personalidade + estágio', () => {
       const { fixture, componente } = montar([fichaExistente]);
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8, personalidade: 'Atento' });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8, personalidade: 'Atento' });
       fixture.detectChanges();
       expect(componente['novoAgente']().nivelInicial).toBe(7);
       expect(componente['alvoFortificacoes']()).toBe(1);
 
       componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
-      componente['atualizarPersonalidadeBase']('descricao', 'Efeito base.');
-      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
+      componente['alterarPersonalidadeBase']('descricao', 'Efeito base.');
+      componente['alterarPersonalidadeBase']('custoEnergia', '1');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(false);
 
-      componente['atualizarFortificacao']('fortificacao1', 'descricao', 'Mais um dado ao forçar o teste.');
+      componente['alterarFortificacao']('fortificacao1', 'descricao', 'Mais um dado ao forçar o teste.');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(false);
 
-      componente['atualizarFortificacao']('fortificacao1', 'custoEnergia', '3');
+      componente['alterarFortificacao']('fortificacao1', 'custoEnergia', '3');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(true);
 
@@ -569,20 +569,20 @@ describe('FichaCriar', () => {
 
     it('permite preencher a 2ª Fortificação antes do Nível 14 desbloqueá-la, sem exigi-la para avançar', () => {
       const { fixture, componente } = montar([fichaExistente]);
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8, personalidade: 'Atento' });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR, mediaNivel: 8, personalidade: 'Atento' });
       fixture.detectChanges();
       expect(componente['alvoFortificacoes']()).toBe(1);
 
       componente['selecionarPacoteHabilidades']('QUATRO_GERAIS');
       preencherVagasDeMelhoria(componente);
-      componente['atualizarPersonalidadeBase']('descricao', 'Efeito base.');
-      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
-      componente['atualizarFortificacao']('fortificacao1', 'descricao', 'Mais um dado.');
-      componente['atualizarFortificacao']('fortificacao1', 'custoEnergia', '3');
+      componente['alterarPersonalidadeBase']('descricao', 'Efeito base.');
+      componente['alterarPersonalidadeBase']('custoEnergia', '1');
+      componente['alterarFortificacao']('fortificacao1', 'descricao', 'Mais um dado.');
+      componente['alterarFortificacao']('fortificacao1', 'custoEnergia', '3');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(true);
 
-      componente['atualizarFortificacao']('fortificacao2', 'descricao', 'Efeito maior, ainda em combinação com o Mestre.');
+      componente['alterarFortificacao']('fortificacao2', 'descricao', 'Efeito maior, ainda em combinação com o Mestre.');
       fixture.detectChanges();
       expect(componente['melhoriasCompletas']()).toBe(true);
       expect(componente['estado']().personalidadeHabilidade.fortificacao2.descricao).toBe('Efeito maior, ainda em combinação com o Mestre.');
@@ -592,7 +592,7 @@ describe('FichaCriar', () => {
   describe('bônus de atributo à escolha (Engenheiro/Assassino/Acadêmico/Híbrido)', () => {
     it('Engenheiro: passoValido(Classe) bloqueia sem escolha e libera com a escolha feita', () => {
       const { componente } = montar();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
+      componente['alterar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
       expect(componente['slotsEscolhaBonus']()).toEqual([['forca', 'destreza']]);
       expect(componente['passoValido']()).toBe(false);
 
@@ -604,14 +604,14 @@ describe('FichaCriar', () => {
 
     it('Assassino: bonusAtributos() combina fixo + escolha em Luta/Pontaria', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ASSASSINO });
+      componente['alterar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ASSASSINO });
       componente['escolherBonusAtributo'](0, { target: { value: 'luta' } } as unknown as Event);
       expect(componente['bonusAtributos']()).toEqual({ destreza: 1, luta: 1 });
     });
 
     it('Acadêmico: slot livre sem Luta/Pontaria', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ACADEMICO });
+      componente['alterar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ACADEMICO });
       expect(componente['slotsEscolhaBonus']()[0]).not.toContain('luta');
       expect(componente['slotsEscolhaBonus']()[0]).not.toContain('pontaria');
 
@@ -621,7 +621,7 @@ describe('FichaCriar', () => {
 
     it('Experimento Híbrido: dois slots independentes, permite repetir o mesmo atributo', () => {
       const { componente } = montar();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.EXPERIMENTO_HIBRIDO });
+      componente['alterar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.EXPERIMENTO_HIBRIDO });
       expect(componente['slotsEscolhaBonus']()).toHaveLength(2);
       expect(componente['passoValido']()).toBe(false);
 
@@ -635,14 +635,14 @@ describe('FichaCriar', () => {
 
     it('perfil sem ponto à escolha (Lutador) não exige nada além do arquétipo', () => {
       const { componente } = montar();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       expect(componente['slotsEscolhaBonus']()).toEqual([]);
       expect(componente['passoValido']()).toBe(true);
     });
 
     it('trocar de arquétipo reseta a escolha anterior', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
+      componente['alterar']({ classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
       componente['escolherBonusAtributo'](0, { target: { value: 'forca' } } as unknown as Event);
       expect(componente['estado']().bonusEscolhido).toEqual(['forca']);
 
@@ -653,7 +653,7 @@ describe('FichaCriar', () => {
 
     it('trocar de classe-base (primeira etapa) reseta a escolha anterior', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_HIBRIDO, bonusEscolhido: ['vigor', 'vigor'] });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_HIBRIDO, bonusEscolhido: ['vigor', 'vigor'] });
       componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
       expect(componente['estado']().bonusEscolhido).toEqual([]);
     });
@@ -661,7 +661,7 @@ describe('FichaCriar', () => {
     it('ficha final (criar()) persiste o bônus escolhido nos atributos', () => {
       const { fixture, componente } = montar();
       vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-      componente['atualizar']({
+      componente['alterar']({
         nome: 'Agente-9', classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO,
         dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true },
         personalidade: 'Firme',
@@ -681,7 +681,7 @@ describe('FichaCriar', () => {
     it('m3-75: ficha final (criar()) trima os campos de texto da Identidade, mas a digitação preserva os espaços', () => {
       const { fixture, componente } = montar();
       vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-      componente['atualizar']({
+      componente['alterar']({
         nome: 'Agente-9', classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO,
         dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true },
         personalidade: '  Firme  ',
@@ -697,7 +697,7 @@ describe('FichaCriar', () => {
         },
         formacoesCustomizadas: [true, false],
       });
-      componente['atualizarPersonalidadeBase']('descricao', '  Efeito com espaço  ');
+      componente['alterarPersonalidadeBase']('descricao', '  Efeito com espaço  ');
       componente['escolherBonusAtributo'](0, { target: { value: 'forca' } } as unknown as Event);
       fixture.detectChanges();
 
@@ -724,7 +724,7 @@ describe('FichaCriar', () => {
 
     it('DOM: Engenheiro mostra um select "Bônus à escolha" com só Força/Destreza', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
+      componente['alterar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.ESPECIALISTA, arquetipo: ArquetipoEnum.ENGENHEIRO });
       fixture.detectChanges();
 
       const select = raiz.querySelector('[data-testid="bonus-escolha-0"]') as HTMLSelectElement;
@@ -740,7 +740,7 @@ describe('FichaCriar', () => {
 
     it('DOM: Experimento Híbrido mostra dois selects rotulados "1ª escolha" e "2ª escolha"', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.EXPERIMENTO_HIBRIDO });
+      componente['alterar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.EXPERIMENTO_HIBRIDO });
       fixture.detectChanges();
 
       expect(raiz.querySelector('[data-testid="bonus-escolha-0"]')).not.toBeNull();
@@ -752,7 +752,7 @@ describe('FichaCriar', () => {
 
     it('DOM: perfil sem ponto à escolha (Lutador) não mostra select nenhum de bônus', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ passo: componente['passos']().indexOf('Classe'), classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       fixture.detectChanges();
 
       expect(raiz.querySelector('[data-testid="bonus-escolha-0"]')).toBeNull();
@@ -760,7 +760,7 @@ describe('FichaCriar', () => {
   });
 
   describe('seletor de Classe em dois passos (P-019)', () => {
-    const irParaClasse = (componente: FichaCriar) => componente['atualizar']({ passo: componente['passos']().indexOf('Classe') });
+    const irParaClasse = (componente: FichaCriar) => componente['alterar']({ passo: componente['passos']().indexOf('Classe') });
     const selects = (raiz: HTMLElement) => Array.from(raiz.querySelectorAll('.guia__campos--duas-colunas select')) as HTMLSelectElement[];
 
     it('DOM: a primeira etapa só lista as três classes-base e Civil — nada de Experimento junto', () => {
@@ -843,7 +843,7 @@ describe('FichaCriar', () => {
       const { componente } = montar();
       componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
       componente['mudarPerfil']({ target: { value: ArquetipoEnum.LUTADOR } } as unknown as Event);
-      componente['atualizar']({ pacoteHabilidadesId: 'QUATRO_GERAIS' });
+      componente['alterar']({ pacoteHabilidadesId: 'QUATRO_GERAIS' });
 
       componente['mudarPerfil']({ target: { value: ClasseEnum.EXPERIMENTO_BESTIAL } } as unknown as Event);
 
@@ -854,7 +854,7 @@ describe('FichaCriar', () => {
       const { componente } = montar();
       componente['mudarClasseBase']({ target: { value: ClasseEnum.COMBATENTE } } as unknown as Event);
       componente['mudarPerfil']({ target: { value: ArquetipoEnum.LUTADOR } } as unknown as Event);
-      componente['atualizar']({ pacoteHabilidadesId: 'QUATRO_GERAIS' });
+      componente['alterar']({ pacoteHabilidadesId: 'QUATRO_GERAIS' });
 
       componente['mudarPerfil']({ target: { value: ArquetipoEnum.MERCENARIO } } as unknown as Event);
 
@@ -865,8 +865,8 @@ describe('FichaCriar', () => {
   describe('Experimento — Peculiaridade dispensa a Origem (m3-58 + Peculiaridade)', () => {
     it('DOM: os cards de pacote de Habilidades iniciais mostram "Classe/Subclasse" (não "Classe/Arquétipo") pra um Experimento', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
-      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ passo: componente['passos']().indexOf('Habilidades') });
       fixture.detectChanges();
 
       const rotulosPacote = Array.from(raiz.querySelectorAll('.guia__pacote strong')).map((n) => n.textContent?.trim());
@@ -875,8 +875,8 @@ describe('FichaCriar', () => {
 
     it('DOM: os cards de pacote continuam "Classe/Arquétipo" pra uma classe base', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
-      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ passo: componente['passos']().indexOf('Habilidades') });
       fixture.detectChanges();
 
       const rotulosPacote = Array.from(raiz.querySelectorAll('.guia__pacote strong')).map((n) => n.textContent?.trim());
@@ -885,7 +885,7 @@ describe('FichaCriar', () => {
 
     it('passo // Habilidades existe no Nível 0 para as três subclasses de Experimento', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
 
       expect(componente['comHabilidades']()).toBe(true);
       expect(componente['passos']()).toContain('Habilidades');
@@ -894,7 +894,7 @@ describe('FichaCriar', () => {
 
     it('sem classe Experimento e sem Melhorias, // Habilidades não existe (comportamento de hoje)', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE });
 
       expect(componente['comHabilidades']()).toBe(true);
       expect(componente['passos']()).toContain('Habilidades');
@@ -902,9 +902,9 @@ describe('FichaCriar', () => {
 
     it('DOM: a vaga "classeOuArquetipo" mostra a aba "Subclasse" (não "Arquétipo") pra um Experimento — o pick é só da própria subclasse (P-014 follow-up)', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
-      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['alterar']({ passo: componente['passos']().indexOf('Habilidades') });
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       fixture.detectChanges();
 
@@ -916,9 +916,9 @@ describe('FichaCriar', () => {
 
     it('DOM: a aba do seletor "Do sistema" continua "Arquétipo" para uma classe base (P-014)', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
+      componente['alterar']({ classe: ClasseEnum.COMBATENTE, arquetipo: ArquetipoEnum.LUTADOR });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
-      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['alterar']({ passo: componente['passos']().indexOf('Habilidades') });
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       fixture.detectChanges();
 
@@ -929,7 +929,7 @@ describe('FichaCriar', () => {
 
     it('escolher Peculiaridade num pacote de Classe/Arquétipo conta como melhoria completa', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
 
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
@@ -942,8 +942,8 @@ describe('FichaCriar', () => {
       componente['adicionarMelhoria'](peculiaridade!);
       componente['fecharSeletorMelhoria']();
       preencherVagasDeMelhoria(componente);
-      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
-      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
+      componente['alterarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['alterarPersonalidadeBase']('custoEnergia', '1');
 
       expect(componente['melhoriasCompletas']()).toBe(true);
       expect(componente['habilidadesDoNivel']().some((h) => h.nome === 'Peculiaridade')).toBe(true);
@@ -951,24 +951,24 @@ describe('FichaCriar', () => {
 
     it('sem escolher o pacote inicial, o Nível 0 de Experimento fica com o passo // Habilidades pendente', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
-      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ passo: componente['passos']().indexOf('Habilidades') });
 
       expect(componente['passoValido']()).toBe(false);
     });
 
     it('escolher Peculiaridade dispensa Origem no passoValido de Identidade', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);
       componente['fecharSeletorMelhoria']();
 
-      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade'), personalidade: 'Instável' });
-      componente['atualizarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
-      componente['atualizarPersonalidadeBase']('custoEnergia', '1');
+      componente['alterar']({ passo: componente['passos']().indexOf('Identidade'), personalidade: 'Instável' });
+      componente['alterarPersonalidadeBase']('descricao', 'Efeito combinado com o Mestre.');
+      componente['alterarPersonalidadeBase']('custoEnergia', '1');
 
       expect(componente['temPeculiaridade']()).toBe(true);
       expect(componente['passoValido']()).toBe(true); // sem nenhum campo de Origem preenchido
@@ -976,14 +976,14 @@ describe('FichaCriar', () => {
 
     it('sem Peculiaridade, o passo Identidade de um Experimento continua exigindo Origem completa', () => {
       const { componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const outra = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome !== 'Peculiaridade')!;
       componente['adicionarMelhoria'](outra);
       componente['fecharSeletorMelhoria']();
 
-      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade'), personalidade: 'Instável' });
+      componente['alterar']({ passo: componente['passos']().indexOf('Identidade'), personalidade: 'Instável' });
 
       expect(componente['temPeculiaridade']()).toBe(false);
       expect(componente['passoValido']()).toBe(false); // Origem continua obrigatória
@@ -993,13 +993,13 @@ describe('FichaCriar', () => {
       const { fixture, componente } = montar();
       const router = TestBed.inject(Router);
       vi.spyOn(router, 'navigate').mockResolvedValue(true);
-      componente['atualizar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL, dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true } });
+      componente['alterar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_ARTIFICIAL, dinheiro: { dados: [1, 1, 1, 1], inicial: 1000, rolado: true } });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);
       componente['fecharSeletorMelhoria']();
-      componente['atualizar']({ personalidade: 'Instável' });
+      componente['alterar']({ personalidade: 'Instável' });
       fixture.detectChanges();
 
       componente['criar']();
@@ -1013,13 +1013,13 @@ describe('FichaCriar', () => {
 
     it('DOM: com Peculiaridade escolhida, o passo Identidade some com o formulário de Origem e mostra a nota', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);
       componente['fecharSeletorMelhoria']();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade') });
+      componente['alterar']({ passo: componente['passos']().indexOf('Identidade') });
       fixture.detectChanges();
 
       const blocoOrigem = raiz.querySelector('.guia__identidade-bloco--origem');
@@ -1032,13 +1032,13 @@ describe('FichaCriar', () => {
 
     it('DOM: com outra Habilidade de Subclasse escolhida, o passo Identidade mantém o formulário de Origem', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const outra = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome !== 'Peculiaridade')!;
       componente['adicionarMelhoria'](outra);
       componente['fecharSeletorMelhoria']();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade') });
+      componente['alterar']({ passo: componente['passos']().indexOf('Identidade') });
       fixture.detectChanges();
 
       const blocoOrigem = raiz.querySelector('.guia__identidade-bloco--origem');
@@ -1049,8 +1049,8 @@ describe('FichaCriar', () => {
 
     it('DOM: o passo // Habilidades renderiza o título "Habilidades" (não "Melhorias")', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
-      componente['atualizar']({ passo: componente['passos']().indexOf('Habilidades') });
+      componente['alterar']({ classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ passo: componente['passos']().indexOf('Habilidades') });
       fixture.detectChanges();
 
       expect(raiz.querySelector('.guia__secao h2')?.textContent?.trim()).toBe('Habilidades');
@@ -1062,13 +1062,13 @@ describe('FichaCriar', () => {
 
     it('DOM: resumo lateral mostra "Peculiaridade" no lugar da Origem em branco', () => {
       const { fixture, raiz, componente } = montar();
-      componente['atualizar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_BESTIAL });
+      componente['alterar']({ nome: 'Espécime-7', classe: ClasseEnum.EXPERIMENTO_BESTIAL });
       componente['selecionarPacoteHabilidades']('DUAS_CLASSE_OU_ARQUETIPO');
       componente['abrirSeletorMelhoria']('classeOuArquetipo');
       const peculiaridade = componente['gruposVagaAberta']().flatMap((g) => g.subgrupos).flatMap((s) => s.habilidades).find((h) => h.nome === 'Peculiaridade')!;
       componente['adicionarMelhoria'](peculiaridade);
       componente['fecharSeletorMelhoria']();
-      componente['atualizar']({ passo: componente['passos']().indexOf('Identidade') });
+      componente['alterar']({ passo: componente['passos']().indexOf('Identidade') });
       fixture.detectChanges();
 
       const linhaOrigem = Array.from(raiz.querySelectorAll('.guia__resumo-linha')).find((linha) => linha.querySelector('span')?.textContent === 'Origem');
@@ -1083,7 +1083,7 @@ describe('FichaCriar', () => {
       const { componente } = montar();
       const indice = indiceEquipamento(componente);
       expect(indice).toBeGreaterThan(-1);
-      componente['atualizar']({ passo: indice });
+      componente['alterar']({ passo: indice });
       expect(componente['passoValido']()).toBe(true);
     });
 
@@ -1091,12 +1091,12 @@ describe('FichaCriar', () => {
       const { fixture, componente } = montar();
       const indice = indiceEquipamento(componente);
       const kit: CarrinhoItemDto[] = [{ nome: 'Pesada', categoria: ItemCategoriaEnum.CORPO_A_CORPO, custo: 1500, peso: 5, quantidade: 2, guardada: false, modificacoes: [] }];
-      componente['atualizar']({ passo: indice, modoLivre: false, kit });
+      componente['alterar']({ passo: indice, modoLivre: false, kit });
       fixture.detectChanges();
       expect(componente['kitTotais']().gasto).toBe(3000); // > 2500
       expect(componente['passoValido']()).toBe(false);
 
-      componente['atualizar']({ modoLivre: true });
+      componente['alterar']({ modoLivre: true });
       fixture.detectChanges();
       expect(componente['passoValido']()).toBe(true);
     });
@@ -1114,7 +1114,7 @@ describe('FichaCriar', () => {
       const router = TestBed.inject(Router);
       vi.spyOn(router, 'navigate').mockResolvedValue(true);
       const kit: CarrinhoItemDto[] = [{ nome: 'Molotov', categoria: ItemCategoriaEnum.EXPLOSIVOS, custo: 400, peso: 1, quantidade: 1, guardada: false, modificacoes: [] }];
-      componente['atualizar']({ nome: 'Agente Kit', classe: ClasseEnum.COMBATENTE, kit, dinheiro: { dados: [1, 2, 3, 4], inicial: 2500, rolado: true } });
+      componente['alterar']({ nome: 'Agente Kit', classe: ClasseEnum.COMBATENTE, kit, dinheiro: { dados: [1, 2, 3, 4], inicial: 2500, rolado: true } });
       fixture.detectChanges();
 
       componente['criar']();
@@ -1138,7 +1138,7 @@ describe('FichaCriar', () => {
 
     it('sem campanhaId, o passo Novo agente mostra "Ficha avulsa" em vez de "Primeiro agente da campanha"', () => {
       const { fixture, raiz, componente } = montar([], null, null);
-      componente['atualizar']({ passo: 2 });
+      componente['alterar']({ passo: 2 });
       fixture.detectChanges();
 
       expect(raiz.textContent).toContain('Ficha avulsa, sem campanha');
@@ -1147,7 +1147,7 @@ describe('FichaCriar', () => {
 
     it('usa Nível e Prestígio exatos informados na ficha avulsa', () => {
       const { fixture, componente } = montar([], null, null);
-      componente['atualizar']({ nivelManual: 12, prestigioManual: 37 });
+      componente['alterar']({ nivelManual: 12, prestigioManual: 37 });
       fixture.detectChanges();
 
       expect(componente['nivelInicial']()).toBe(12);
@@ -1158,7 +1158,7 @@ describe('FichaCriar', () => {
     it('envia Nível e Prestígio exatos no payload da ficha avulsa', () => {
       const { fixture, componente, fichaService } = montar([], null, null);
       vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-      componente['atualizar']({
+      componente['alterar']({
         nome: 'Agente Veterano',
         classe: ClasseEnum.COMBATENTE,
         nivelManual: 12,
@@ -1190,7 +1190,7 @@ describe('FichaCriar', () => {
       const { fixture, componente } = montar([], null, null);
       const router = TestBed.inject(Router);
       const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-      componente['atualizar']({ nome: 'Agente Solto', classe: ClasseEnum.COMBATENTE, dinheiro: { dados: [1, 1, 1, 1], inicial: 1250, rolado: true } });
+      componente['alterar']({ nome: 'Agente Solto', classe: ClasseEnum.COMBATENTE, dinheiro: { dados: [1, 1, 1, 1], inicial: 1250, rolado: true } });
       fixture.detectChanges();
 
       componente['criar']();
@@ -1205,12 +1205,12 @@ describe('FichaCriar', () => {
   describe('progressão manual em campanha', () => {
     it('mantém as médias como padrão e usa os valores exatos ao sobrescrever', () => {
       const { componente } = montar([fichaExistente]);
-      componente['atualizar']({ mediaNivel: 8, mediaPrestigio: 30 });
+      componente['alterar']({ mediaNivel: 8, mediaPrestigio: 30 });
 
       expect(componente['nivelInicial']()).toBe(7);
       expect(componente['prestigioInicial']()).toBe(26);
 
-      componente['atualizar']({ sobrescreverProgressao: true, nivelManual: 15, prestigioManual: 42 });
+      componente['alterar']({ sobrescreverProgressao: true, nivelManual: 15, prestigioManual: 42 });
 
       expect(componente['nivelInicial']()).toBe(15);
       expect(componente['prestigioInicial']()).toBe(42);
@@ -1228,7 +1228,7 @@ describe('FichaCriar', () => {
         mediaPrestigio: 20,
         quantidade: 3,
       });
-      componente['atualizar']({ passo: 2 });
+      componente['alterar']({ passo: 2 });
       fixture.detectChanges();
 
       expect(raiz.textContent).not.toContain('Primeiro agente da campanha');

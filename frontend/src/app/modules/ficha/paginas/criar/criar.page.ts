@@ -218,7 +218,7 @@ export class FichaCriar {
   protected readonly ehMestre = computed(() => this.membros().find((m) => m.usuarioId === this.sessaoService.usuario()?.id)?.papel === TipoCampanhaMembroPapelEnum.MESTRE);
   /** Classe-base "efetiva" do seletor de dois passos (P-019): a `classeBase` já escolhida na
    * primeira etapa, ou — enquanto ela ainda não existir (rascunho antigo, ou estado montado direto
-   * via `atualizar({ classe, arquetipo })`, como em vários testes) — derivada da `classe` já
+   * via `alterar({ classe, arquetipo })`, como em vários testes) — derivada da `classe` já
    * definitiva. Mantém as duas etapas coerentes mesmo quando só a segunda foi preenchida. */
   protected readonly classeBaseAtual = computed(() => {
     const e = this.estado();
@@ -448,7 +448,7 @@ export class FichaCriar {
       membros: campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]),
       medias: campanhaId !== null ? this.fichaService.calcularMediasEsquadrao(campanhaId) : of(null),
     })
-      .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, medias }) => { this.membros.set(membros); this.mediasEsquadrao.set(medias); if (!medias?.quantidade) return; this.atualizar({ mediaNivel: medias.mediaNivel, mediaPrestigio: medias.mediaPrestigio }); });
+      .pipe(finalize(() => this.carregando.set(false))).subscribe(({ membros, medias }) => { this.membros.set(membros); this.mediasEsquadrao.set(medias); if (!medias?.quantidade) return; this.alterar({ mediaNivel: medias.mediaNivel, mediaPrestigio: medias.mediaPrestigio }); });
     // `!this.temRascunho()` evita sobrescrever o rascunho salvo antes do jogador decidir "Retomar"
     // ou "Começar do zero": sem essa trava, este efeito salvava o estado inicial (vazio) assim que
     // `carregando()` virava `false` — antes de qualquer clique — apagando o rascunho que o banner
@@ -456,7 +456,7 @@ export class FichaCriar {
     effect(() => { if (!this.carregando() && !this.temRascunho()) this.rascunhos.salvar(this.campanhaId, 'agente', this.estado()); });
     // A trilha ganha/perde o passo Melhorias conforme o Nível inicial muda (voltar ao passo 03 e
     // editar as médias) — mantém `passo`/`visitado` dentro dos limites da trilha atual.
-    effect(() => { const max = this.passos().length - 1; if (this.estado().passo > max) this.atualizar({ passo: max }); if (this.visitado() > max) this.visitado.set(max); });
+    effect(() => { const max = this.passos().length - 1; if (this.estado().passo > max) this.alterar({ passo: max }); if (this.visitado() > max) this.visitado.set(max); });
     // Sincroniza o `<dialog>` nativo de saída com `confirmandoSaida()` — `showModal()`/`close()` são
     // imperativos, não têm equivalente declarativo em template. `close()` num dialog já fechado (ex.:
     // Esc, que o navegador fecha sozinho antes deste efeito rodar) é um no-op — seguro de chamar
@@ -469,7 +469,7 @@ export class FichaCriar {
   }
   protected retomar(): void { const salvo = this.rascunhos.recuperar<EstadoGuiaCriacao>(this.campanhaId, 'agente'); if (salvo) { const normalizado = normalizarEstado(salvo); this.estado.set(normalizado); this.visitado.set(normalizado.passo); } this.temRascunho.set(false); }
   protected recomecar(): void { this.rascunhos.limpar(this.campanhaId, 'agente'); this.temRascunho.set(false); }
-  protected atualizar(parcial: Partial<EstadoGuiaCriacao>): void { this.estado.update((atual) => ({ ...atual, ...parcial })); }
+  protected alterar(parcial: Partial<EstadoGuiaCriacao>): void { this.estado.update((atual) => ({ ...atual, ...parcial })); }
   protected valor(evento: Event): string { return (evento.target as HTMLInputElement).value; }
   protected numero(evento: Event): number { return Number(this.valor(evento)); }
   /** Primeira etapa do seletor de Classe (P-019): trocar a classe-base sempre reseta a segunda
@@ -479,9 +479,9 @@ export class FichaCriar {
     const valor = this.valor(evento);
     const classeBase = valor ? valor as ClasseEnum : null;
     const classe = classeBase === ClasseEnum.CIVIL ? classeBase : null;
-    this.atualizar({ classeBase, classe, arquetipo: null, bonusEscolhido: [], pacoteHabilidadesId: null, melhorias: [] });
+    this.alterar({ classeBase, classe, arquetipo: null, bonusEscolhido: [], pacoteHabilidadesId: null, melhorias: [] });
   }
-  protected mudarMotivo(evento: Event): void { this.atualizar({ motivo: this.valor(evento) as MotivoEntradaAgenteEnum }); }
+  protected mudarMotivo(evento: Event): void { this.alterar({ motivo: this.valor(evento) as MotivoEntradaAgenteEnum }); }
   /** Segunda etapa do seletor de Classe (P-019): escolhe um arquétipo regular ou a subclasse de
    * Experimento da classe-base atual — `gruposPerfil()` já resolve qual é qual. Só reseta o pacote
    * de Habilidades iniciais e as melhorias já escolhidas quando a `classe` final muda de fato (pick
@@ -491,7 +491,7 @@ export class FichaCriar {
     const valor = this.valor(evento);
     const classeBase = this.classeBaseAtual();
     if (!valor || !classeBase) {
-      this.atualizar({ classe: classeBase, arquetipo: null, bonusEscolhido: [] });
+      this.alterar({ classe: classeBase, arquetipo: null, bonusEscolhido: [] });
       return;
     }
     const opcao = this.gruposPerfil().flatMap((grupo) => grupo.opcoes).find((o) => o.valor === valor);
@@ -499,7 +499,7 @@ export class FichaCriar {
     const classeAnterior = this.estado().classe;
     const classe = opcao.tipo === 'subclasse' ? opcao.valor as ClasseEnum : classeBase;
     const arquetipo = opcao.tipo === 'arquetipo' ? opcao.valor as ArquetipoEnum : null;
-    this.atualizar({
+    this.alterar({
       classe, arquetipo, bonusEscolhido: [],
       ...(classe !== classeAnterior ? { pacoteHabilidadesId: null, melhorias: [] } : {}),
     });
@@ -510,10 +510,10 @@ export class FichaCriar {
     const valor = this.valor(evento);
     const chave = valor ? valor as ChaveAtributo : null;
     const bonusEscolhido = this.slotsEscolhaBonus().map((_, i) => (i === indice ? chave : this.estado().bonusEscolhido[i] ?? null));
-    this.atualizar({ bonusEscolhido });
+    this.alterar({ bonusEscolhido });
   }
-  protected atualizarOrigem(campo: 'nome' | 'descricao' | 'saberDeCampo', valor: string): void { this.atualizar({ origem: { ...this.estado().origem, [campo]: valor } }); }
-  protected atualizarEspecialidade(campo: 'gatilho' | 'efeito', valor: string): void { const origem = this.estado().origem; this.atualizar({ origem: { ...origem, especialidade: { ...origem.especialidade, [campo]: valor } } }); }
+  protected alterarOrigem(campo: 'nome' | 'descricao' | 'saberDeCampo', valor: string): void { this.alterar({ origem: { ...this.estado().origem, [campo]: valor } }); }
+  protected alterarEspecialidade(campo: 'gatilho' | 'efeito', valor: string): void { const origem = this.estado().origem; this.alterar({ origem: { ...origem, especialidade: { ...origem.especialidade, [campo]: valor } } }); }
   protected mudarBonusFormacao(indice: number, evento: Event): void {
     const valor = this.valor(evento);
     const customizada = valor === '__OUTRA__';
@@ -523,17 +523,17 @@ export class FichaCriar {
       ? { bonus, parametro: null, texto: bonus ? FORMACOES[bonus].rotulo : '' }
       : item);
     const formacoesCustomizadas = this.estado().formacoesCustomizadas.map((atualCustomizada, atual) => atual === indice ? customizada : atualCustomizada);
-    this.atualizar({ origem: { ...origem, formacao }, formacoesCustomizadas });
+    this.alterar({ origem: { ...origem, formacao }, formacoesCustomizadas });
   }
-  protected atualizarParametroFormacao(indice: number, valor: string): void {
+  protected alterarParametroFormacao(indice: number, valor: string): void {
     const origem = this.estado().origem;
     const formacao = origem.formacao.map((item, atual) => atual === indice ? { ...item, parametro: valor || null } : item);
-    this.atualizar({ origem: { ...origem, formacao } });
+    this.alterar({ origem: { ...origem, formacao } });
   }
-  protected atualizarTextoFormacao(indice: number, texto: string): void {
+  protected alterarTextoFormacao(indice: number, texto: string): void {
     const origem = this.estado().origem;
     const formacao = origem.formacao.map((item, atual) => atual === indice ? { ...item, texto } : item);
-    this.atualizar({ origem: { ...origem, formacao } });
+    this.alterar({ origem: { ...origem, formacao } });
   }
   protected definicaoFormacao(indice: number): FormacaoDefinicaoDto | null {
     const bonus = this.estado().origem.formacao[indice]?.bonus;
@@ -545,7 +545,7 @@ export class FichaCriar {
     const valor = Math.max(0, Math.min(this.limiteAtributo(chave), atual.atributos[chave] + delta));
     const valorFinal = valor + (this.bonusAtributos()[chave] ?? 0);
     const maestria = atual.maestria === chave && !maestriaAtingivel(valorFinal) ? null : atual.maestria;
-    this.atualizar({ atributos: { ...atual.atributos, [chave]: valor }, maestria });
+    this.alterar({ atributos: { ...atual.atributos, [chave]: valor }, maestria });
   }
 
   protected definirAtributo(chave: ChaveAtributo, valor: number): void {
@@ -556,11 +556,11 @@ export class FichaCriar {
   /** Marca/desmarca a Maestria num atributo — única na ficha, só disponível com 6+ pontos e custa 2 pontos extras do orçamento. */
   protected alternarMaestria(chave: ChaveAtributo): void {
     if (!this.maestriaHabilitada(chave)) return;
-    this.atualizar({ maestria: this.estado().maestria === chave ? null : chave });
+    this.alterar({ maestria: this.estado().maestria === chave ? null : chave });
   }
   protected selecionarPacoteHabilidades(id: HabilidadesPacoteInicialId): void {
     if (!this.pacotesHabilidadesIniciais().some((pacote) => pacote.id === id)) return;
-    this.atualizar({ pacoteHabilidadesId: id });
+    this.alterar({ pacoteHabilidadesId: id });
     const limites = new Map(this.vagasMelhoria().map((vaga) => [vaga.tipo, vaga.alvo]));
     const contagem = new Map<TipoVagaMelhoria, number>();
     const melhorias = this.estado().melhorias.filter((melhoria) => {
@@ -569,7 +569,7 @@ export class FichaCriar {
       contagem.set(melhoria.vaga, atual + 1);
       return true;
     });
-    this.atualizar({ melhorias });
+    this.alterar({ melhorias });
   }
 
   /**
@@ -611,9 +611,9 @@ export class FichaCriar {
     const alvo = this.vagasMelhoria().find((vagaDisponivel) => vagaDisponivel.tipo === vaga)?.alvo ?? 0;
     if (this.preenchidasNaVaga(vaga) >= alvo) return;
     const habilidade: FichaHabilidadeDto = { nome: item.nome, categoria: item.categoria, custoEnergia: item.custoEnergia, descricao: item.descricao, ...(item.origem === undefined ? {} : { origem: item.origem }) };
-    this.atualizar({ melhorias: [...this.estado().melhorias, { vaga, habilidade }] });
+    this.alterar({ melhorias: [...this.estado().melhorias, { vaga, habilidade }] });
   }
-  protected removerMelhoria(nome: string): void { this.atualizar({ melhorias: this.estado().melhorias.filter((m) => m.habilidade.nome !== nome) }); }
+  protected removerMelhoria(nome: string): void { this.alterar({ melhorias: this.estado().melhorias.filter((m) => m.habilidade.nome !== nome) }); }
   /** Custo em Energia digitado: em branco vira `null` (custo ainda não combinado); negativo é clampado a 0. */
   private parseCustoEnergiaPersonalidade(valor: string): number | null {
     const texto = valor.trim();
@@ -622,18 +622,18 @@ export class FichaCriar {
     return Number.isFinite(numero) ? Math.max(0, numero) : null;
   }
   /** Atualiza a Base da Habilidade de Personalidade (m3-78) — sem campo de nome (usa a palavra de Identidade). */
-  protected atualizarPersonalidadeBase(campo: 'descricao' | 'custoEnergia', valor: string): void {
+  protected alterarPersonalidadeBase(campo: 'descricao' | 'custoEnergia', valor: string): void {
     const atual = this.estado().personalidadeHabilidade;
     const base = { ...atual.base, ...(campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : { descricao: valor }) };
-    this.atualizar({ personalidadeHabilidade: { ...atual, base } });
+    this.alterar({ personalidadeHabilidade: { ...atual, base } });
   }
   /** Atualiza a 1ª ou 2ª Fortificação da Habilidade de Personalidade (m3-78). */
-  protected atualizarFortificacao(estagio: 'fortificacao1' | 'fortificacao2', campo: 'descricao' | 'custoEnergia', valor: string): void {
+  protected alterarFortificacao(estagio: 'fortificacao1' | 'fortificacao2', campo: 'descricao' | 'custoEnergia', valor: string): void {
     const atual = this.estado().personalidadeHabilidade;
     const parcial = campo === 'custoEnergia' ? { custoEnergia: this.parseCustoEnergiaPersonalidade(valor) } : { descricao: valor };
-    this.atualizar({ personalidadeHabilidade: { ...atual, [estagio]: { ...atual[estagio], ...parcial } } });
+    this.alterar({ personalidadeHabilidade: { ...atual, [estagio]: { ...atual[estagio], ...parcial } } });
   }
-  protected mudarKit(itens: readonly CarrinhoItemDto[]): void { this.atualizar({ kit: itens }); }
+  protected mudarKit(itens: readonly CarrinhoItemDto[]): void { this.alterar({ kit: itens }); }
   protected passoValido(): boolean {
     const e = this.estado();
     switch (this.passos()[e.passo]) {
@@ -659,14 +659,14 @@ export class FichaCriar {
       default: return true;
     }
   }
-  protected ir(passo: number): void { if (passo <= this.visitado()) this.atualizar({ passo }); }
-  protected avancar(): void { if (!this.passoValido()) return; const proximo = Math.min(this.passos().length - 1, this.estado().passo + 1); this.visitado.update((v) => Math.max(v, proximo)); this.atualizar({ passo: proximo }); }
-  protected voltar(): void { this.atualizar({ passo: Math.max(0, this.estado().passo - 1) }); }
+  protected ir(passo: number): void { if (passo <= this.visitado()) this.alterar({ passo }); }
+  protected avancar(): void { if (!this.passoValido()) return; const proximo = Math.min(this.passos().length - 1, this.estado().passo + 1); this.visitado.update((v) => Math.max(v, proximo)); this.alterar({ passo: proximo }); }
+  protected voltar(): void { this.alterar({ passo: Math.max(0, this.estado().passo - 1) }); }
   protected iniciarRolagemRecursos(): void {
     if (this.estado().dinheiro.rolado || this.rolandoRecursos()) return;
     this.rolandoRecursos.set(true);
     timer(650).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.atualizar({ dinheiro: rolarDinheiro() });
+      this.alterar({ dinheiro: rolarDinheiro() });
       this.rolandoRecursos.set(false);
     });
   }
@@ -674,7 +674,7 @@ export class FichaCriar {
    *  ficha segue com $0 de dinheiro inicial (`bonusMonetario` de Prestígio continua se aplicando). */
   protected ignorarRecursos(): void {
     if (this.estado().dinheiro.rolado || this.rolandoRecursos()) return;
-    this.atualizar({ dinheiro: { dados: [], inicial: 0, rolado: true } });
+    this.alterar({ dinheiro: { dados: [], inicial: 0, rolado: true } });
   }
   /** `true` quando o dinheiro inicial foi resolvido por "ignorar" em vez de rolagem (`dados` vazio). */
   protected readonly recursosIgnorados = computed(() => this.estado().dinheiro.rolado && this.estado().dinheiro.dados.length === 0);

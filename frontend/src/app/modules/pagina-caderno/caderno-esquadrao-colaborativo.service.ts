@@ -38,7 +38,7 @@ export class CadernoEsquadraoColaborativoService {
   readonly estado = signal<EstadoSincronizacao>('INATIVO');
 
   constructor() {
-    this.tempoReal.paginaEsquadraoAtualizada$
+    this.tempoReal.paginaEsquadraoAlterada$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((evento) => {
         if (evento.paginaId !== this.paginaAtualId) return;

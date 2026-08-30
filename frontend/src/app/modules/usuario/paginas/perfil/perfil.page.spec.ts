@@ -45,7 +45,7 @@ describe('Perfil', () => {
     };
     const sessaoService = {
       usuario: vi.fn(() => ({ tipo: opts?.tipoSessao ?? TipoUsuarioEnum.ADMIN })),
-      atualizarPerfil: vi.fn(),
+      alterarPerfil: vi.fn(),
       sair: vi.fn(),
     };
 
@@ -125,7 +125,7 @@ describe('Perfil', () => {
       nome: 'Novo Nome',
       login: 'novo.login',
     });
-    expect(sessaoService.atualizarPerfil).toHaveBeenCalledWith({
+    expect(sessaoService.alterarPerfil).toHaveBeenCalledWith({
       nome: 'Novo Nome',
       login: 'novo.login',
     });

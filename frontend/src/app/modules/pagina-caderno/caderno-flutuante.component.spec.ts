@@ -72,7 +72,7 @@ describe('CadernoFlutuante', () => {
           provide: TempoRealService,
           useValue: {
             paginaEsquadraoCriada$: new Subject(),
-            paginaEsquadraoAtualizada$: new Subject(),
+            paginaEsquadraoAlterada$: new Subject(),
             paginaEsquadraoExcluida$: new Subject(),
             conectar: vi.fn(),
             entrarSalaCampanha: vi.fn(),

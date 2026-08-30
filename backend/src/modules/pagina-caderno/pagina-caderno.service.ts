@@ -224,7 +224,7 @@ export class PaginaCadernoService {
       atualizacao: dto.atualizacao,
       pagina: this.mapearResumo(paginaAlterada),
     };
-    this.campanhaGateway.emitirPaginaEsquadraoAtualizada(evento);
+    this.campanhaGateway.emitirPaginaEsquadraoAlterada(evento);
     return evento;
   }
 

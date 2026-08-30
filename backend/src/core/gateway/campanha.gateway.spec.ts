@@ -181,7 +181,7 @@ describe('CampanhaGateway', () => {
       expect(emitir).toHaveBeenCalledWith('ficha:alterada', ficha);
     });
 
-    it('emite atualização do Esquadrão somente na sala da campanha', () => {
+    it('emite alteração do Esquadrão somente na sala da campanha', () => {
       const evento = {
         campanhaId: 3,
         paginaId: 9,
@@ -189,10 +189,10 @@ describe('CampanhaGateway', () => {
         pagina: { id: 9, campanhaId: 3, usuarioAutorId: null, autorNome: null, tipo: 'ESQUADRAO' },
       };
 
-      gateway.emitirPaginaEsquadraoAtualizada(evento as never);
+      gateway.emitirPaginaEsquadraoAlterada(evento as never);
 
       expect(paraSala).toHaveBeenCalledWith('campanha:3');
-      expect(emitir).toHaveBeenCalledWith('caderno-esquadrao:atualizado', evento);
+      expect(emitir).toHaveBeenCalledWith('caderno-esquadrao:alterado', evento);
     });
 
     it('pede ao EncontroService para resincronizar a Iniciativa após ficha:alterada (m7-17, correção)', () => {
