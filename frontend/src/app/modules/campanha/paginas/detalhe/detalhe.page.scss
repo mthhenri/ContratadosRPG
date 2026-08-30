@@ -1728,52 +1728,62 @@
         color: var(--text);
     }
 
-    // === Esqueleto de carregamento — mimetiza a silhueta real: cabeçalho, tira de 4 estatísticas
-    // e a grade de duas colunas (linhas de membro + cards de ficha).
+    // === Esqueleto de carregamento — reaproveita as classes BEM reais do cabeçalho/estatísticas/
+    // grade (visão mestre) e do `&__jogador` (visão jogador) em vez de duplicar medidas à parte: a
+    // silhueta acompanha o layout de verdade sem manutenção paralela quando ele mudar (ver HTML).
+    // `pointer-events: none` neutraliza hover/cursor dos elementos reais reaproveitados (ex.:
+    // `.detalhe__ficha-card` é clicável de verdade fora do esqueleto).
     &__esqueleto {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
+        pointer-events: none;
     }
 
-    &__esqueleto-cabecalho {
+    &__esqueleto-ficha-topo {
         display: flex;
-    }
-
-    &__esqueleto-estatisticas {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-
-        @include bp.mobile {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    &__esqueleto-membros {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    &__esqueleto-membro {
-        display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 12px;
-        padding: 12px 14px;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-control);
+        gap: 10px;
+        margin-bottom: 12px;
     }
 
-    &__esqueleto-esquadrao {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    // Botões "Inventário"/"Abrir completa" do card de ficha embutida (item 6) — lado a lado no
+    // desktop, linha própria de largura cheia no mobile (mesmo comportamento real de
+    // `&__ficha-embutida-acoes`, ver `detalhe__esqueleto-ficha-topo` acima com `flex-wrap`).
+    &__esqueleto-ficha-acoes {
+        display: flex;
         gap: 8px;
+        flex: none;
 
         @include bp.mobile {
-            grid-template-columns: minmax(0, 1fr);
+            flex-basis: 100%;
+            width: 100%;
         }
+    }
+
+    &__esqueleto-ficha-corpo {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__esqueleto-barras {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__esqueleto-mini-grade {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+
+        @include bp.mobile {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    &__esqueleto-abas {
+        display: flex;
+        gap: 6px;
     }
 
     // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
@@ -2184,12 +2194,13 @@
         height: 20px;
     }
 
-    &--stat {
-        height: 64px;
-    }
-
-    &--ficha {
-        height: 96px;
+    // Título do cabeçalho do card de ficha embutida (visão jogador) — flexível (não `width` fixo),
+    // pra não forçar overflow horizontal no mobile ao lado do avatar (item 6, `&__ficha-embutida`).
+    &--titulo-card {
+        flex: 1 1 auto;
+        min-width: 70px;
+        max-width: 200px;
+        height: 16px;
     }
 
     &--avatar {
@@ -2202,6 +2213,93 @@
         flex: 1;
         max-width: 160px;
         height: 14px;
+    }
+
+    // === Modificadores do esqueleto de carregamento (mestre/jogador — ver HTML) ===
+
+    &--chip {
+        width: 64px;
+        height: 22px;
+        flex: none;
+    }
+
+    &--icone {
+        width: 26px;
+        height: 22px;
+        flex: none;
+    }
+
+    &--rotulo {
+        width: 60px;
+        height: 10px;
+        margin-bottom: 7px;
+    }
+
+    &--secao-titulo {
+        width: 90px;
+        height: 11px;
+    }
+
+    &--chip-papel {
+        width: 64px;
+        height: 14px;
+    }
+
+    // Nome em contexto de coluna (membro/equipe) — ao contrário de `&--nome` (linha, `flex:1`).
+    &--nome-linha {
+        width: 60%;
+        max-width: 140px;
+        height: 13px;
+    }
+
+    &--linha {
+        width: 100%;
+        height: 11px;
+    }
+
+    &--curta {
+        width: 55%;
+    }
+
+    &--vital {
+        width: 56px;
+        height: 14px;
+    }
+
+    // Sem `flex: none` (propositalmente): no cabeçalho "Esquadrão" (visão mestre) este modificador
+    // combina com `.detalhe__nova-ficha`, cujo `flex: 1 1 100%` do mobile empilha os dois botões em
+    // largura cheia — um `flex: none` aqui colidiria (mesma especificidade, `.esqueleto-bloco--botao`
+    // vem depois no arquivo) e cancelaria esse empilhamento real.
+    &--botao {
+        width: 84px;
+        height: 28px;
+    }
+
+    &--barra {
+        width: 100%;
+        height: 10px;
+    }
+
+    &--mini {
+        height: 40px;
+    }
+
+    &--aba {
+        width: 64px;
+        height: 26px;
+        flex: none;
+    }
+
+    &--bloco {
+        width: 100%;
+        height: 60px;
+    }
+
+    &--d20 {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex: none;
     }
 }
 

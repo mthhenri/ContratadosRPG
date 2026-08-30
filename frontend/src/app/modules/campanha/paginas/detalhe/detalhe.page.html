@@ -1,31 +1,188 @@
 <section class="detalhe">
     @if (carregando()) {
+    <!--
+      Esqueleto de carregamento — o papel do usuário (mestre/jogador) só é conhecido depois que
+      `membros()` chega do backend, ou seja, DEPOIS que este bloco já deixou de aparecer; `ehMestre()`
+      nunca é `true` aqui na prática (fallback sempre para a visão de JOGADOR, a pedido do autor).
+      Reaproveita as classes BEM reais do cabeçalho/estatísticas/grade/jogador (em vez de duplicar
+      medidas num `&__esqueleto-*` à parte) — a silhueta acompanha o layout de verdade sem precisar
+      de manutenção paralela quando ele mudar. `pointer-events: none` (ver SCSS) neutraliza hover/
+      cursor dos elementos reais reaproveitados (ex.: `.detalhe__ficha-card` é clicável de verdade).
+    -->
+    @if (ehMestre()) {
     <div class="detalhe__esqueleto" role="status" aria-label="Carregando campanha">
-        <div class="detalhe__esqueleto-cabecalho">
-            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        <header class="detalhe__cabecalho">
+            <div class="detalhe__cabecalho-titulo-linha">
+                <span class="detalhe__cabecalho-indice">//</span>
+                <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+                <span class="detalhe__cabecalho-regua"></span>
+            </div>
+            <div class="detalhe__cabecalho-acoes">
+                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
+            </div>
+        </header>
+
+        <div class="detalhe__estatisticas">
+            <div class="detalhe__estatistica detalhe__stat-convite">
+                <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+            </div>
+            <div class="detalhe__estatistica detalhe__stat-encontro">
+                <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+            </div>
         </div>
-        <div class="detalhe__esqueleto-estatisticas">
-            @for (i of [0, 1, 2, 3]; track i) {
-            <span class="esqueleto-bloco esqueleto-bloco--stat"></span>
-            }
-        </div>
+
         <div class="detalhe__grade">
-            <app-cartao class="detalhe__esqueleto-membros">
-                @for (i of [0, 1, 2]; track i) {
-                <div class="detalhe__esqueleto-membro">
-                    <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
-                    <span class="esqueleto-bloco esqueleto-bloco--nome"></span>
-                </div>
-                }
+            <app-cartao class="detalhe__coluna detalhe__coluna--membros">
+                <header class="detalhe__secao">
+                    <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                    <span class="detalhe__secao-regua"></span>
+                </header>
+                <ul class="detalhe__membros">
+                    @for (i of [0, 1, 2]; track i) {
+                    <li class="detalhe__membro">
+                        <div class="detalhe__membro-linha">
+                            <span class="detalhe__avatar" aria-hidden="true"></span>
+                            <div class="detalhe__membro-identidade">
+                                <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
+                                <span class="esqueleto-bloco esqueleto-bloco--chip-papel"></span>
+                            </div>
+                        </div>
+                    </li>
+                    }
+                </ul>
             </app-cartao>
-            <app-cartao class="detalhe__esqueleto-esquadrao">
-                @for (i of [0, 1, 2, 3]; track i) {
-                <span class="esqueleto-bloco esqueleto-bloco--ficha"></span>
-                }
+
+            <app-cartao class="detalhe__coluna detalhe__coluna--esquadrao">
+                <header class="detalhe__secao">
+                    <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                    <span class="detalhe__secao-regua"></span>
+                    <span class="esqueleto-bloco esqueleto-bloco--botao detalhe__nova-ficha"></span>
+                    <span class="esqueleto-bloco esqueleto-bloco--botao detalhe__nova-ficha"></span>
+                </header>
+                <ul class="detalhe__esquadrao-grid">
+                    @for (i of [0, 1, 2, 3]; track i) {
+                    <li>
+                        <div class="detalhe__ficha-card">
+                            <span class="detalhe__ficha-avatar" aria-hidden="true"></span>
+                            <div class="detalhe__ficha-conteudo">
+                                <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
+                                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                                <div class="detalhe__ficha-vitais">
+                                    <span class="esqueleto-bloco esqueleto-bloco--vital"></span>
+                                    <span class="esqueleto-bloco esqueleto-bloco--vital"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    }
+                </ul>
             </app-cartao>
         </div>
     </div>
-    } @else if (campanha(); as campanhaAtual) { @if (previewJogador(); as jogadorPreview) {
+    } @else {
+    <div class="detalhe__esqueleto" role="status" aria-label="Carregando campanha">
+        <header class="detalhe__cabecalho">
+            <div class="detalhe__cabecalho-titulo-linha">
+                <span class="detalhe__cabecalho-indice">//</span>
+                <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+                <span class="detalhe__cabecalho-regua"></span>
+            </div>
+            <div class="detalhe__cabecalho-acoes">
+                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
+                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
+            </div>
+        </header>
+
+        <div class="detalhe__jogador">
+            <div class="detalhe__jogador-principal">
+                <app-cartao class="detalhe__ficha-embutida">
+                    <div class="detalhe__esqueleto-ficha-topo">
+                        <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
+                        <span class="esqueleto-bloco esqueleto-bloco--titulo-card"></span>
+                        <span class="detalhe__cabecalho-regua"></span>
+                        <div class="detalhe__esqueleto-ficha-acoes">
+                            <span class="esqueleto-bloco esqueleto-bloco--botao"></span>
+                            <span class="esqueleto-bloco esqueleto-bloco--botao"></span>
+                        </div>
+                    </div>
+                    <div class="detalhe__esqueleto-ficha-corpo">
+                        <div class="detalhe__esqueleto-barras">
+                            <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+                            <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+                        </div>
+                        <div class="detalhe__esqueleto-mini-grade">
+                            @for (i of [0, 1, 2, 3]; track i) {
+                            <span class="esqueleto-bloco esqueleto-bloco--mini"></span>
+                            }
+                        </div>
+                        <div class="detalhe__esqueleto-abas">
+                            @for (i of [0, 1, 2]; track i) {
+                            <span class="esqueleto-bloco esqueleto-bloco--aba"></span>
+                            }
+                        </div>
+                        <span class="esqueleto-bloco esqueleto-bloco--bloco"></span>
+                    </div>
+                </app-cartao>
+            </div>
+
+            <div class="detalhe__jogador-lateral">
+                <app-cartao class="detalhe__equipe">
+                    <header class="detalhe__secao">
+                        <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                        <span class="detalhe__secao-regua"></span>
+                    </header>
+                    <ul class="detalhe__equipe-lista">
+                        @for (i of [0, 1, 2]; track i) {
+                        <li class="detalhe__equipe-membro">
+                            <div class="detalhe__equipe-membro-corpo">
+                                <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
+                                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                            </div>
+                        </li>
+                        }
+                    </ul>
+                </app-cartao>
+
+                <app-cartao class="detalhe__rolagens-painel">
+                    <header class="detalhe__secao">
+                        <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                        <span class="detalhe__secao-regua"></span>
+                    </header>
+                    <div class="detalhe__rolagens-painel-corpo">
+                        @for (i of [0, 1]; track i) {
+                        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                        }
+                    </div>
+                </app-cartao>
+
+                <app-cartao class="detalhe__sessao">
+                    <header class="detalhe__secao">
+                        <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                        <span class="detalhe__secao-regua"></span>
+                        <span class="esqueleto-bloco esqueleto-bloco--botao"></span>
+                    </header>
+                    <ul class="detalhe__sessao-lista">
+                        @for (i of [0, 1]; track i) {
+                        <li class="rolagem-pill">
+                            <div class="rolagem-pill__topo">
+                                <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
+                                <span class="esqueleto-bloco esqueleto-bloco--d20"></span>
+                            </div>
+                            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                        </li>
+                        }
+                    </ul>
+                </app-cartao>
+            </div>
+        </div>
+    </div>
+    } } @else if (campanha(); as campanhaAtual) { @if (previewJogador(); as jogadorPreview) {
     <div class="detalhe__preview-barra" role="status">
         <app-icone nome="olho" />
         <span class="detalhe__preview-texto">
