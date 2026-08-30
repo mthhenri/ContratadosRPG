@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — Excedente do limite total de modificações não "contamina" mais mod intocada
+
+Reportado pelo autor ao vivo: subir os stacks de uma modificação (ex.: Mira Dot) além do limite
+total de modificações da patente fazia outra modificação já comprada e intocada (ex.: Alcance)
+aparecer marcada "Excedente" — mesmo sem o jogador ter mexido nela.
+
+Causa raiz: `montarItemInventario` (`ficha-inventario.component.ts`) e `montarItemCarrinho`
+(`compras.page.ts`, "Adicionar itens") calculam o excedente do limite TOTAL somando
+`modificacao.empilhamentos` na ordem de `item.modificacoes` (soma corrida); a mod cujo acumulado
+cruza o teto da patente é a que carrega o rótulo "Excedente" — não necessariamente a que o jogador
+alterou. Como `definirModificacao`/mutação equivalente preservava a posição original da mod editada
+no array (comentário "na ordem original"), aumentar uma mod que ficava ANTES de outra no array
+(ordem de compra, não de tela) empurrava o acumulado para além do limite bem no meio da soma,
+"estourando" silenciosamente numa mod posterior que nunca mudou.
+
+Correção: ao alterar os stacks de uma mod já existente, ela é movida para o fim do array (mesmo
+destino de uma mod nova recém-comprada) em vez de ter sua posição preservada. Como o algoritmo de
+"Excedente" já acumula na ordem do array, a mod mais recentemente alterada passa a ser sempre a
+última a ser somada — e portanto a que absorve o excedente quando o total estoura. Aplicado nos
+dois lugares onde a lógica está duplicada: `ficha-inventario.component.ts` (`definirModificacao`) e
+`compras.page.ts` (`definirModificacao`); a duplicação em si (mesmo algoritmo de acumulação nos dois
+arquivos) é pré-existente e não foi extraída para `shared/regras/compras` nesta task — escopo
+proporcional ao bug relatado, não um refactor arquitetural.
+
+**Testado:** `npm run test --workspace=frontend -- --include=**/ficha-inventario.component.spec.ts
+--include=**/compras.page.spec.ts` — 184 testes, 1 novo (patente Veterano, ordem de array
+propositalmente adversa: Mira Dot alterada no meio do array, Alcance comprada por último).
+Confirmado por reversão manual do fix que o teste novo falha sem a correção (Alcance aparecia
+`excedente: true`). `eslint` nos três arquivos tocados: 0 erros.
+
 ## 2026-08-30 — `P-041`: navegação mobile do Esquadrão volta a trocar lista por conteúdo
 
 Corrigida a navegação mobile (`360×800`) do `CadernoFlutuante` em modo Esquadrão: tocar uma página

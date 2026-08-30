@@ -1553,10 +1553,13 @@ export class ComprasPage {
         if (empilhamentos <= 0) {
           modificacoes = item.modificacoes.filter((modificacao) => modificacao.nome !== modNome);
         } else if (existente) {
-          // Preserva descrição/efeitos/teto da mod ao só mudar os empilhamentos (na ordem original).
-          modificacoes = item.modificacoes.map((modificacao) =>
-            modificacao.nome === modNome ? { ...modificacao, empilhamentos } : modificacao,
-          );
+          // Move a mod alterada pro fim do array: "Excedente" acumula na ordem dele, então quem
+          // foi alterado por último passa a absorver o excedente do limite da patente — não uma
+          // mod antiga e intocada que só estava antes dela.
+          modificacoes = [
+            ...item.modificacoes.filter((modificacao) => modificacao.nome !== modNome),
+            { ...existente, empilhamentos },
+          ];
         } else {
           modificacoes = [...item.modificacoes, { nome: modNome, empilhamentos }];
         }

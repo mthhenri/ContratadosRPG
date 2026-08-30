@@ -656,6 +656,39 @@ describe('FichaInventario', () => {
     expect(vm.modsAtivas[0].ignoraProprio).toBe(true);
   });
 
+  it('excedente do limite TOTAL recai sobre a mod alterada por último, não sobre uma antiga intocada', () => {
+    // Veterano (prestígio 12): 3 níveis de empilhamento por mod, até 9 modificações no item.
+    // Total já no teto (2+3+3+1 = 9): nenhuma mod excedente ainda. "Alcance" vem por último no
+    // array (comprada por último), então é ela quem herdaria o excedente por ordem de array.
+    const item: CarrinhoItemDto = {
+      nome: 'Fuzil',
+      categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
+      custo: 1000,
+      peso: 2,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [
+        { nome: 'Furtiva', empilhamentos: 2 },
+        { nome: 'Tática', empilhamentos: 3 },
+        { nome: 'Mira Dot', empilhamentos: 3 },
+        { nome: 'Alcance', empilhamentos: 1 },
+      ],
+    };
+    const alvo = montar({ itens: [item], amplificadores: [] }, true, 12);
+    expect(alvo.componentInstance['itensInventario']()[0].modsAtivas.some((m) => m.excedente)).toBe(false);
+
+    // Sobe só a Mira Dot (no meio do array) além do teto total do item.
+    alvo.componentInstance['adicionarModificacao'](0, 'Mira Dot');
+    alvo.fixture.componentRef.setInput('inventario', alvo.emitidos.at(-1));
+    alvo.fixture.detectChanges();
+
+    const vm = alvo.componentInstance['itensInventario']()[0];
+    // A mod alterada (Mira Dot) absorve o excedente — Alcance, intocada, não pode ser afetada
+    // só por vir depois dela no array (bug relatado: aumentar Mira Dot "contaminava" Alcance).
+    expect(vm.modsAtivas.find((m) => m.nome === 'Mira Dot')?.excedente).toBe(true);
+    expect(vm.modsAtivas.find((m) => m.nome === 'Alcance')?.excedente).toBe(false);
+  });
+
   it('alternarIgnoraProprio libera empilhar além do teto próprio da mod', () => {
     const item: CarrinhoItemDto = {
       nome: 'Faca',
