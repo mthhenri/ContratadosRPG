@@ -80,17 +80,16 @@ Cloudflare Pages sem backend.
 
 Estes dois itens dependem de ação nas plataformas (fora do que o código controla):
 
-- [ ] **Cloudflare Pages no ar:** conectar o projeto Pages ao Git com **branch de produção
+- [x] **Cloudflare Pages no ar:** conectar o projeto Pages ao Git com **branch de produção
   `master`** (Auto-Deploy). No push para `master`, o build estático é publicado
   automaticamente. Runbook em [DEPLOY.md](DEPLOY.md). Validar a calculadora no ar **com o
   Render dormindo** (deve funcionar).
-- [ ] **Arquivar `contratados-calculadora`:** marcar o repositório antigo como *Archived* no
+- [x] **Arquivar `contratados-calculadora`:** marcar o repositório antigo como *Archived* no
   GitHub. As referências na documentação deste repo (`README.md`, `docs/context/HISTORY.md`) já
   descrevem o repo antigo como arquivado após o M1.
 
-Enquanto esses dois passos de plataforma não forem executados pelo autor, o M1 está
-**completo no código** (paridade funcional das 6 abas, regras extraídas e testadas, sem
-duplicação); resta apenas a publicação e o toggle de arquivamento.
+Os dois passos de plataforma foram executados pelo autor em 2026-08-30. O M1 está **concluído**,
+incluindo publicação e arquivamento — ver `docs/context/HISTORY.md`.
 
 ## 6. Refinamento mobile (task `m1-15`) — verificação responsiva
 

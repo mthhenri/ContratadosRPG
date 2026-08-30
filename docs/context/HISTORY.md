@@ -1,5 +1,14 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — M1 concluído de fato: Cloudflare Pages no ar e repo antigo arquivado
+
+Os dois passos operacionais pendentes desde `m1-14` (P-006) foram executados pelo autor: o
+projeto Cloudflare Pages foi conectado ao Git com branch de produção `master` (Auto-Deploy) e o
+repositório antigo `contratados-calculadora` foi marcado como *Archived* no GitHub. Ambos os
+checkboxes de [docs/PARIDADE-M1.md:83-89](../PARIDADE-M1.md#L83) foram marcados. Sem mudança de
+código — apenas ação de plataforma, confirmada pelo autor. P-006 removido de `PROBLEMS.md`; M1
+passa de "concluído no código" para **concluído**.
+
 ## 2026-08-30 — P-005 reclassificado: não era defeito, era má interpretação da medição
 
 A medição original comparava `scrollWidth`/`clientWidth` de um ancestral (o `overflow-x: clip` do

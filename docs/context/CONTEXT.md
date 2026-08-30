@@ -730,7 +730,7 @@ falhas isoladas/preexistentes.
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação (workspaces, docs, Docker, `core/`, CI, deploy) | **concluído** |
-| M1 | Calculadora com paridade | **concluído no código** (`m1-01`…`m1-20`). Restam 2 passos **operacionais** de plataforma — ver `PROBLEMS.md` `P-006` |
+| M1 | Calculadora com paridade | **concluído** (`m1-01`…`m1-20`), incluindo os 2 passos operacionais de plataforma (Cloudflare Pages no ar, repo antigo arquivado) |
 | M2 | Auth + Campanhas | **concluído**, incluindo o redesenho do painel (`m2-01`…`m2-09` + extensões `m2-10`…`m2-17`; `m2-18` lista, `m2-19` detalhe/mestre, `m2-20` detalhe/jogador, `m2-21` abas + Rolagens na lateral + menu de ficha do jogador) |
 | M3 | Ficha de Jogador | **em andamento** — CRUD, editores, tempo real e rolagens prontos; guia de criação completo (`m3-57`/`m3-58`/`m3-59` — base, melhorias de nível, equipamento inicial); cor (`m3-61`) e avatar (`m3-62`) de identidade por ficha prontos; falta só `m3-53` |
 | M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b`/`m4-04c` (polimento de UI fora da fila) também concluídas. Próxima: `m4-05` (NPC) |

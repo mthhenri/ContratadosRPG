@@ -105,17 +105,6 @@
   lazy). Nunca foi feito.
 - **Desde:** `m1-06`, agravando desde então.
 
-### P-006 — Dois passos operacionais do M1 nunca foram executados · `ABERTO` · operação
-
-- **Sintoma:** o M1 está "concluído no código" mas dois itens de plataforma continuam
-  desmarcados em [docs/PARIDADE-M1.md:83](../PARIDADE-M1.md#L83): (a) conectar o projeto
-  **Cloudflare Pages** ao Git com a branch de produção correta e (b) marcar o repositório antigo
-  `contratados-calculadora` como *Archived* no GitHub.
-- **Causa:** são cliques em painel de plataforma, fora do que uma task de código fecha.
-- **Contorno:** nenhum necessário — não bloqueia desenvolvimento.
-- **Correção:** executar os dois passos e marcar os checkboxes.
-- **Desde:** `m1-14`.
-
 ### P-007 — Cloudflare e Render publicam de branches diferentes · `CONTORNADO` · deploy
 
 - **Sintoma:** sintomas fantasma em produção. O caso real: "Vida/Energia aparecendo em branco" —
