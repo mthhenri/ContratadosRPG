@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — UI-06: auditoria da biblioteca visual fechada
+
+Auditado todo o frontend contra a biblioteca própria em `shared/ui/` e o tema Terminal de
+Contenção, sem corrigir de passagem. A matriz versionada em
+`docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` registra o inventário reproduzível (68 templates,
+719 botões, 320 campos nativos, 165 usos de `app-botao`, 93 de `app-campo`, 42 cartões, 18 stats,
+26 steppers, 3 chips, 15 modais e 224 tooltips), as exceções de widget composto e a decisão de
+cada família. As cópias dos seletores-base permanecem eliminadas e PrimeNG não voltou; a única
+menção residual é um comentário de Tailwind, encaminhado.
+
+O cenário real usou Postgres, backend e frontend locais com `codex.dev`. Foram percorridos login,
+registro, acesso negado, Simulação (Agente/Novo Agente/Compras), campanhas (lista/detalhe/modal),
+acervo, ficha de jogador, ficha de criatura, os dois guias, iniciativa e perfil, em `1920×1080` e
+`360×800`. Também foram observados foco/validação, hover/foco do stepper, conteúdo longo, vazio,
+rascunho e iniciativa ativa/encerrada. Nenhum recorte teve overflow horizontal; a única falha de
+rede foi Google Fonts remoto bloqueado pelo ambiente isolado, sem erro da aplicação.
+
+Os achados receberam cortes próprios: UI-07 migra os overlays locais para `app-modal`; UI-08 cria
+o botão canônico somente por ícone; UI-09 classifica ações de inventário e Loja/Vendas; UI-11
+normaliza raios/tokens e corrige a margem inline de P-042. Como esta tarefa só alterou
+documentação, não houve suíte de código a reexecutar; o lint geral foi executado sem erros e
+manteve 14.637 avisos preexistentes. A evidência obrigatória é a inspeção visual real registrada
+acima.
+
 ## 2026-08-30 — Ficha de Criatura: formulários compactos de Ataque, Resistência e Fraqueza
 
 Pedido direto do autor para reduzir a altura dos editores inline, sem mudar o contrato de

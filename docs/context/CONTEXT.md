@@ -382,14 +382,13 @@
 
 ## 1. Próxima Task
 
-**Auditoria da biblioteca visual em andamento:**
-`ui-06-auditoria-conformidade-biblioteca-visual` está em `docs/specs/active/` desde 2026-08-30.
-O inventário inicial (68 templates/74 SCSS) confirmou a remoção de PrimeNG e das cópias base, mas
-encontrou 32 composições de diálogo próprias, 564 botões nativos fora de `app-botao` que precisam
-de classificação e uma margem inline (`P-042`). A matriz e as evidências já observadas vivem em
-`docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md`; as correções recortadas foram abertas como `ui-07`
-(modal), `ui-08` (botão de ícone) e `ui-09` (ações de domínio). A UI-06 só fecha após percorrer
-todos os módulos e estados reais nos dois viewports, sem refactor oportunista.
+**Auditoria da biblioteca visual concluída:**
+`ui-06-auditoria-conformidade-biblioteca-visual` está em `docs/specs/done/` desde 2026-08-30.
+A matriz final em `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` cobre os 68 templates e todos os
+módulos; a revisão real passou pelas rotas públicas, campanhas, acervo/fichas, guias, iniciativa e
+perfil em 1920×1080 e 360×800, sem overflow horizontal. O diagnóstico confirmou a remoção de
+PrimeNG e das cópias-base, e delimitou correções sem refactor oportunista: UI-07 (modal), UI-08
+(botão de ícone), UI-09 (ações de domínio), UI-11 (tokens de acabamento) e P-042 (margem inline).
 
 **Cinco specs avulsas fechadas (2026-08-29), `caderno-esquadrao-colaborativo` permanece aberta** —
 ver o bloco no topo do arquivo para o resumo e `PROBLEMS.md` `P-039` para a lacuna que mantém essa
@@ -713,6 +712,7 @@ só adaptou o visual de desktop).
 | `ui-07` | frontend/design system | migrar overlays/diálogos próprios restantes para `app-modal` |
 | `ui-08` | frontend/design system | criar e adotar o primitivo de botão somente por ícone |
 | `ui-09` | frontend/design system | classificar e adotar botões de ação locais de inventário e Loja/Vendas |
+| `ui-11` | frontend/design system | normalizar tokens de acabamento, raios literais e P-042 |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
