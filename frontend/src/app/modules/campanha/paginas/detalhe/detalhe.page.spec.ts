@@ -700,7 +700,7 @@ describe('CampanhaDetalhe', () => {
 
       expect(raiz.querySelector('.detalhe__grade')).toBeNull();
       expect(raiz.querySelector('.detalhe__jogador')).not.toBeNull();
-      expect(raiz.querySelector('.card__titulo')?.textContent?.trim()).toBe('Vera');
+      expect(raiz.querySelector('.cartao__titulo')?.textContent?.trim()).toBe('Vera');
     });
 
     it('escolher um jogador sem ficha mostra o estado vazio dele', () => {
@@ -791,8 +791,10 @@ describe('CampanhaDetalhe', () => {
     it('mostra só Convite e Combate — Membros/Fichas/Alertas saíram da tira', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
-      const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .stat'));
-      const rotulos = stats.map((stat) => stat.querySelector('.stat__rotulo')?.textContent?.trim());
+      const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .detalhe__estatistica'));
+      const rotulos = stats.map((stat) =>
+        stat.querySelector('.detalhe__estatistica-rotulo')?.textContent?.trim(),
+      );
 
       // "Combate" entrou na m7-06 como a porta de entrada da tela "Iniciativa" — até então o único
       // caminho até ela era o menu "⋯" do cabeçalho.

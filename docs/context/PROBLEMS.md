@@ -51,20 +51,6 @@
   verificar a spec ao vivo em 2026-08-29 antes de movê-la para `done/` (ela permanece em `active/`
   por causa deste item).
 
-### P-038 — Suíte do frontend tem expectativas anteriores à UI-04 e um foco assíncrono órfão · `ABERTO` · frontend/testes
-
-- **Sintoma:** a suíte completa termina com 3 falhas em 2 arquivos: dois casos de
-  `campanha/paginas/detalhe` esperam dados que não aparecem no fixture atual, e
-  `painel-encontro.page.spec.ts` espera que o modal não exista no DOM. Há ainda um erro não
-  tratado de `leitor-documentos.component.ts:206` tentando chamar `focus()` depois do teardown.
-- **Causa:** os doubles/assertivas dos recortes de campanha e encontro não acompanharam a adoção
-  dos primitivos da UI-04; o timeout do leitor de documentos não verifica a existência do alvo.
-- **Contorno:** build, lint e os testes focados continuam utilizáveis; a suíte ampla fica vermelha
-  até os três recortes receberem fixtures/assertivas e cleanup atualizados.
-- **Correção:** atualizar os doubles de `CampanhaDetalhe` e a expectativa do modal no
-  `PainelEncontro`; cancelar ou proteger o timeout de foco em `LeitorDocumentos`.
-- **Desde:** reencontrado no gate da `ui-05`, em 2026-08-29.
-
 ### P-036 — `var(--danger)` não existe em nenhum token — badge "Privada" da bandeja de dados sem cor · `ABERTO` · frontend/tema
 
 - **Sintoma:** `bandeja-dados.component.scss` (`&__visibilidade--privada`) usa `var(--danger)` em
@@ -104,19 +90,6 @@
   decisão de identidade visual, não de implementação — precisa passar pelo autor e por
   `docs/design/`.
 - **Desde:** existe desde o botão primário original; medido e registrado na `ui-01b` (2026-08-28).
-
-### P-033 — Expectativa de modal em `PainelEncontro` não acompanha o primitivo nativo · `ABERTO` · frontend/testes
-
-- **Sintoma:** o caso de visão do jogador em
-  `painel-encontro.page.spec.ts:654` espera não encontrar `[role="dialog"]`, mas o `app-modal`
-  nativo permanece no DOM fechado.
-- **Causa:** a asserção foi escrita para o ciclo do dialog anterior, no qual o overlay não existia
-  quando fechado; o primitivo atual preserva a semântica nativa de `<dialog>`.
-- **Contorno:** validar o recorte por build e pelos testes focados enquanto a asserção não é
-  atualizada.
-- **Correção:** trocar a expectativa de ausência pela de modal fechado (`open = false`) e rodar a
-  suíte do frontend.
-- **Desde:** reencontrado ao validar a `ui-05`, em 2026-08-29.
 
 ### P-032 — Convenção `alterar`/`alterado` ainda violada em identificadores existentes · `ABERTO` · compartilhado/frontend
 

@@ -651,7 +651,9 @@ describe('PainelEncontro', () => {
       const gatilho = elemento.querySelector<HTMLButtonElement>('.iniciativa__minha-ficha');
 
       expect(gatilho?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Minha ficha');
-      expect(elemento.querySelector('[role="dialog"]')).toBeNull();
+      const modal = elemento.querySelector<HTMLDialogElement>("[role=\"dialog\"]");
+      expect(modal).not.toBeNull();
+      expect(modal?.open).toBe(false);
 
       gatilho?.click();
       fixture.detectChanges();

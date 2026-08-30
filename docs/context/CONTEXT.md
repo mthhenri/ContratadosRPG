@@ -4,7 +4,12 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-08-29 · **Última decisão registrada:** fecho de cinco specs avulsas que
+> **Última revisão:** 2026-08-29 · **Última decisão registrada:** P-038 restaurou a suíte completa
+> do frontend ao alinhar as assertivas de `CampanhaDetalhe` aos primitivos da UI-04, reconhecer o
+> `<dialog>` nativo fechado no Painel de Encontro e proteger o foco adiado do Leitor de Documentos
+> após o teardown. `P-033`, que duplicava a assertiva do modal, foi encerrada junto. Testado:
+> frontend 1444/1444, build verde e lint sem erros (mantém 14.534 warnings preexistentes); sem
+> alteração visual. Antes disso, houve o fecho de cinco specs avulsas que
 > já estavam corrigidas no código e só precisavam da verificação ao vivo obrigatória —
 > `renomear-calculadora-para-simulacao`, `maestrias-efeitos`, `resistencia-protecao-base-bonus`,
 > `ficha-resumo-stats-efetivos` e `formatacao-legibilidade-frontend`, todas movidas para
@@ -20,8 +25,8 @@
 > números. `P-028` (verificação visual pendente da Maestria de Vigor) fechado junto. A Gestão de
 > Usuários — único gate pendente de `formatacao-legibilidade-frontend` — foi percorrida nos dois
 > viewports contra a UI atual, já sem PrimeNG (`ui-05`). Testado: shared 742/742, backend 469/469,
-> frontend 1440/1443 (as 3 falhas são as preexistentes de `P-033`/`P-038`, sem relação com esta
-> task); lint dos três workspaces sem erro novo. Verificado ao vivo (Postgres+backend+frontend
+> frontend 1440/1443 naquele momento; as três falhas então preexistentes de `P-033`/`P-038` foram
+> resolvidas depois. Lint dos três workspaces sem erro novo. Verificado ao vivo (Postgres+backend+frontend
 > reais, Playwright, `1920×1080`/`360×800`, dois usuários). Ver `HISTORY.md` para o relato completo.
 >
 > **Achado na mesma verificação, spec ainda aberta:** `caderno-esquadrao-colaborativo.spec.md`

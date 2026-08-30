@@ -1,5 +1,22 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-29 — P-038: suíte do frontend restaurada após UI-04
+
+`CampanhaDetalhe` ainda procurava as classes removidas na adoção dos primitivos da UI-04:
+`.card__titulo` virou `.cartao__titulo`, e a tira de estatísticas usa
+`.detalhe__estatistica`/`.detalhe__estatistica-rotulo`. As duas assertivas voltaram a cobrir os
+mesmos cenários reais sem reintroduzir markup antigo. No `PainelEncontro`, o `app-modal` nativo
+permanece montado enquanto está fechado; a expectativa agora confirma a presença do `<dialog>` e
+`open = false`, fechando também a P-033 duplicada. Por fim, `LeitorDocumentos` passou a proteger
+o `nativeElement` do gatilho no callback de foco agendado: uma regressão com timers falsos destrói
+o leitor logo após recolhê-lo e confirma que o callback não lança mais `focus()` após o teardown.
+
+**Gates:** recortes focados verdes — `CampanhaDetalhe` 116/116, `PainelEncontro` 53/53 e
+`LeitorDocumentos` 10/10. Suíte completa do frontend 102 arquivos / 1.444 testes verdes, sem erro
+assíncrono de foco. Build de produção verde. Lint sem erros novos, mantendo 14.534 warnings
+preexistentes; o build também mantém o aviso preexistente de `ficha-visualizacao.component.scss`
+acima do budget. Sem mudança de layout ou estilo, portanto sem gate visual adicional.
+
 ## 2026-08-29 — fecho de 5 specs avulsas pendentes + 2 bugs achados no Caderno do Esquadrão
 
 Pedido direto do autor: várias specs em `docs/specs/active/` pareciam já concluídas — conferir e

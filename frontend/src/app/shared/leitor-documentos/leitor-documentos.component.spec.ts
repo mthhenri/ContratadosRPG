@@ -128,6 +128,19 @@ describe('LeitorDocumentos', () => {
     expect(servico.estado().aberto).toBe(false);
   });
 
+  it("não foca o gatilho se o leitor é destruído depois de recolher", () => {
+    vi.useFakeTimers();
+    try {
+      abrir();
+      clicar("[aria-label=\"Recolher documentos\"]");
+      fixture.destroy();
+
+      expect(() => vi.runAllTimers()).not.toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   function abrir(): void {
     servico.abrir();
     fixture.detectChanges();

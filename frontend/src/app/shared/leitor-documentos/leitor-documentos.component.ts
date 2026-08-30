@@ -203,7 +203,7 @@ export class LeitorDocumentos {
       this.abridorOriginal = this.documento.activeElement as HTMLElement | null;
     }
     if (atual.aberto && atual.recolhido && !this.estadoAnterior.recolhido) {
-      setTimeout(() => this.gatilho()?.nativeElement.focus());
+      setTimeout(() => this.gatilho()?.nativeElement?.focus());
     } else if (atual.aberto && !atual.recolhido && this.estadoAnterior.recolhido) {
       setTimeout(() => this.cabecalho()?.nativeElement.focus());
     } else if (!atual.aberto && this.estadoAnterior.aberto) {
