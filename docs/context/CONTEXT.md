@@ -4,7 +4,7 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-08-29 · **Última decisão registrada:** P-038 restaurou a suíte completa
+> **Última revisão:** 2026-08-30 · **Última decisão registrada:** P-038 restaurou a suíte completa
 > do frontend ao alinhar as assertivas de `CampanhaDetalhe` aos primitivos da UI-04, reconhecer o
 > `<dialog>` nativo fechado no Painel de Encontro e proteger o foco adiado do Leitor de Documentos
 > após o teardown. `P-033`, que duplicava a assertiva do modal, foi encerrada junto. Testado:
@@ -382,6 +382,15 @@
 
 ## 1. Próxima Task
 
+**Auditoria da biblioteca visual em andamento:**
+`ui-06-auditoria-conformidade-biblioteca-visual` está em `docs/specs/active/` desde 2026-08-30.
+O inventário inicial (68 templates/74 SCSS) confirmou a remoção de PrimeNG e das cópias base, mas
+encontrou 32 composições de diálogo próprias, 564 botões nativos fora de `app-botao` que precisam
+de classificação e uma margem inline (`P-042`). A matriz e as evidências já observadas vivem em
+`docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md`; as correções recortadas foram abertas como `ui-07`
+(modal), `ui-08` (botão de ícone) e `ui-09` (ações de domínio). A UI-06 só fecha após percorrer
+todos os módulos e estados reais nos dois viewports, sem refactor oportunista.
+
 **Cinco specs avulsas fechadas (2026-08-29), `caderno-esquadrao-colaborativo` permanece aberta** —
 ver o bloco no topo do arquivo para o resumo e `PROBLEMS.md` `P-039` para a lacuna que mantém essa
 última em `active/`. Não há próxima task numerada de milestone aberta; a única frente de código
@@ -701,6 +710,9 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
+| `ui-07` | frontend/design system | migrar overlays/diálogos próprios restantes para `app-modal` |
+| `ui-08` | frontend/design system | criar e adotar o primitivo de botão somente por ícone |
+| `ui-09` | frontend/design system | classificar e adotar botões de ação locais de inventário e Loja/Vendas |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
 ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
