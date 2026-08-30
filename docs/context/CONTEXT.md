@@ -29,19 +29,23 @@
 > resolvidas depois. Lint dos três workspaces sem erro novo. Verificado ao vivo (Postgres+backend+frontend
 > reais, Playwright, `1920×1080`/`360×800`, dois usuários). Ver `HISTORY.md` para o relato completo.
 >
-> **`P-039` corrigida, spec ainda aberta por um novo achado:** `caderno-esquadrao-colaborativo.spec.md`
-> permanece em `active/`. O entregável de presença e cursores remotos (Yjs `awareness`) foi
-> implementado: `y-protocols/awareness` roda sobre o mesmo `Y.Doc`, o gateway ganhou um relay
-> broadcast-only puro (`caderno-esquadrao:presenca`, sem persistir nem decodificar — não é a
-> mutação que a proibição #25 veda) e o editor Milkdown mostra cursor/seleção remotos (nome e cor
-> por participante, via `yCursorPlugin`) mais um indicador de presença no cabeçalho. Confirmado ao
-> vivo em `1920×1080` com dois navegadores reais (mestre + jogador): texto convergindo
-> ("Texto do MESTRE. Texto do JOGADOR.") e cada lado mostrando o nome do outro colaborador ao lado
-> do cursor. Mas a verificação em `360×800` esbarrou num defeito **novo e não relacionado**: no
-> mobile, selecionar uma página do Esquadrão não troca a vista de lista para a de conteúdo
-> (`refletirPaginaColaborativa` nunca chama `definirVistaMobile('CONTEUDO')`, ao contrário de
-> `recuperarPagina` no caderno privado) — registrado como `PROBLEMS.md` `P-041`. A spec permanece
-> em `active/` até esse critério de aceite ser verificável.
+> **`P-039` e `P-041` corrigidas, `caderno-esquadrao-colaborativo.spec.md` fechada:** o entregável de
+> presença e cursores remotos (Yjs `awareness`) foi implementado: `y-protocols/awareness` roda sobre
+> o mesmo `Y.Doc`, o gateway ganhou um relay broadcast-only puro (`caderno-esquadrao:presenca`, sem
+> persistir nem decodificar — não é a mutação que a proibição #25 veda) e o editor Milkdown mostra
+> cursor/seleção remotos (nome e cor por participante, via `yCursorPlugin`) mais um indicador de
+> presença no cabeçalho. Confirmado ao vivo em `1920×1080` com dois navegadores reais (mestre +
+> jogador): texto convergindo ("Texto do MESTRE. Texto do JOGADOR.") e cada lado mostrando o nome do
+> outro colaborador ao lado do cursor. A verificação em `360×800` esbarrou num defeito novo e não
+> relacionado (`P-041`): no mobile, selecionar uma página do Esquadrão ou criar uma nova não trocava
+> a vista de lista para a de conteúdo — os pontos de navegação real (`executarTrocaPagina` e
+> `iniciarNovaPagina` em `caderno-flutuante.component.ts`, ramo `ESQUADRAO`) nunca chamavam
+> `definirVistaMobile('CONTEUDO')`, ao contrário de `recuperarPagina` no caderno privado. Corrigido
+> nos dois pontos de navegação (não em `refletirPaginaColaborativa`, que também roda em toda
+> atualização remota passiva — colocar a troca de vista ali arrastaria a tela de volta ao conteúdo a
+> cada edição de outro colaborador). Confirmado ao vivo em `360×800`: abrir uma página existente e
+> criar uma página nova do Esquadrão agora trocam corretamente para o editor. A spec moveu para
+> `docs/specs/done/`.
 >
 > **Uma decisão atrás:** `P-027` — os efeitos permanentes
 > e incondicionais das habilidades de custo 0 E agora pertencem às fórmulas compartilhadas:
@@ -939,9 +943,9 @@ expor conteúdo a quem não é membro da campanha. Presença e cursores remotos 
 foram implementados na `P-039`: o `Awareness` roda sobre o mesmo `Y.Doc`, o gateway retransmite o
 payload bruto (`caderno-esquadrao:presenca`) sem persistir nem decodificar, e o editor mostra o
 cursor/seleção de cada colaborador (nome e cor) via `yCursorPlugin`, mais um indicador de
-participantes no cabeçalho. **Lacuna conhecida:** no mobile, abrir uma página do Esquadrão não troca
-da lista para o editor — `PROBLEMS.md` `P-041` —, então o critério de aceite de `360×800` da spec
-não pôde ser verificado ao vivo; a spec permanece em `active/` por causa disso.
+participantes no cabeçalho. No mobile, a `P-041` corrigiu a navegação: abrir uma página existente ou
+criar uma nova no modo Esquadrão agora troca a vista de lista para o editor, como já acontecia no
+caderno privado. A spec fechou (`docs/specs/done/`).
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 

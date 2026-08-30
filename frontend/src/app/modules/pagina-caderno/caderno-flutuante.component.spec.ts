@@ -8,6 +8,7 @@ import {
 import type { PaginaCadernoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as Y from 'yjs';
 
 import { CadernoFlutuante } from './caderno-flutuante.component';
 import { EDITOR_MARKDOWN_FACTORY } from './editor-markdown.component';
@@ -45,6 +46,19 @@ describe('CadernoFlutuante', () => {
     buscarCampanha: ReturnType<typeof vi.fn>;
   };
   let aoAlterarEditor: (markdown: string) => void;
+  let tempoReal: {
+    paginaEsquadraoCriada$: Subject<unknown>;
+    paginaEsquadraoAlterada$: Subject<{
+      paginaId: number;
+      atualizacao: string;
+      pagina: PaginaCadernoDto;
+    }>;
+    paginaEsquadraoExcluida$: Subject<{ paginaId: number }>;
+    presencaEsquadraoCaderno$: Subject<unknown>;
+    conectar: ReturnType<typeof vi.fn>;
+    entrarSalaCampanha: ReturnType<typeof vi.fn>;
+    enviarPresencaEsquadrao: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     definirViewport(1920, 1080);
@@ -65,22 +79,20 @@ describe('CadernoFlutuante', () => {
         of({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
       ),
     };
+    tempoReal = {
+      paginaEsquadraoCriada$: new Subject(),
+      paginaEsquadraoAlterada$: new Subject(),
+      paginaEsquadraoExcluida$: new Subject(),
+      presencaEsquadraoCaderno$: new Subject(),
+      conectar: vi.fn(),
+      entrarSalaCampanha: vi.fn(),
+      enviarPresencaEsquadrao: vi.fn(),
+    };
     await TestBed.configureTestingModule({
       imports: [CadernoFlutuante],
       providers: [
         { provide: PaginaCadernoService, useValue: api },
-        {
-          provide: TempoRealService,
-          useValue: {
-            paginaEsquadraoCriada$: new Subject(),
-            paginaEsquadraoAlterada$: new Subject(),
-            paginaEsquadraoExcluida$: new Subject(),
-            presencaEsquadraoCaderno$: new Subject(),
-            conectar: vi.fn(),
-            entrarSalaCampanha: vi.fn(),
-            enviarPresencaEsquadrao: vi.fn(),
-          },
-        },
+        { provide: TempoRealService, useValue: tempoReal },
         { provide: SessaoService, useValue: { usuario: () => ({ id: 7, nome: 'QA' }) } },
         {
           provide: EDITOR_MARKDOWN_FACTORY,
@@ -432,6 +444,75 @@ describe('CadernoFlutuante', () => {
     clicar('[data-pagina-id="11"]');
     expect(raiz().querySelector('.caderno__redimensionar')).toBeNull();
     expect(obter('[aria-label="Voltar para páginas"]')).toBeTruthy();
+  });
+
+  it('no mobile, modo Esquadrão troca de lista para conteúdo ao abrir uma página existente (P-041)', () => {
+    const paginaEsquadrao: PaginaCadernoDto = {
+      ...pagina,
+      id: 21,
+      tipo: TipoPaginaCadernoEnum.ESQUADRAO,
+      usuarioAutorId: null,
+      autorNome: null,
+    };
+    api.listarPaginasEsquadrao.mockReturnValue(
+      of([{ ...paginaEsquadrao, conteudoMarkdown: undefined }]),
+    );
+    api.recuperarEstadoPaginaEsquadrao.mockReturnValue(new Subject());
+
+    definirViewport(360, 800);
+    window.dispatchEvent(new Event('resize'));
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Selecionar caderno do esquadrão"]');
+
+    clicar('[data-pagina-id="21"]');
+
+    expect(obter('.caderno__corpo').classList).toContain('caderno__corpo--conteudo');
+  });
+
+  it('no mobile, modo Esquadrão troca de lista para conteúdo ao criar uma página nova (P-041)', () => {
+    api.criarPaginaEsquadrao.mockReturnValue(new Subject());
+
+    definirViewport(360, 800);
+    window.dispatchEvent(new Event('resize'));
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Selecionar caderno do esquadrão"]');
+
+    clicar('[aria-label="Criar página"]');
+
+    expect(obter('.caderno__corpo').classList).toContain('caderno__corpo--conteudo');
+  });
+
+  it('não força a volta ao conteúdo no mobile quando um colaborador edita remotamente após o usuário voltar à lista', () => {
+    const paginaEsquadrao: PaginaCadernoDto = {
+      ...pagina,
+      id: 21,
+      tipo: TipoPaginaCadernoEnum.ESQUADRAO,
+      usuarioAutorId: null,
+      autorNome: null,
+    };
+    api.listarPaginasEsquadrao.mockReturnValue(
+      of([{ ...paginaEsquadrao, conteudoMarkdown: undefined }]),
+    );
+    const documento = new Y.Doc();
+    documento.getText('titulo').insert(0, paginaEsquadrao.titulo);
+    const estado = btoa(String.fromCharCode(...Y.encodeStateAsUpdate(documento)));
+    api.recuperarEstadoPaginaEsquadrao.mockReturnValue(of({ pagina: paginaEsquadrao, estado }));
+
+    definirViewport(360, 800);
+    window.dispatchEvent(new Event('resize'));
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Selecionar caderno do esquadrão"]');
+    clicar('[data-pagina-id="21"]');
+    clicar('[aria-label="Voltar para páginas"]');
+
+    tempoReal.paginaEsquadraoAlterada$.next({
+      paginaId: 21,
+      atualizacao: estado,
+      pagina: { ...paginaEsquadrao, titulo: 'Editado por outro colaborador' },
+    });
+    fixture.detectChanges();
+
+    expect(obter('.caderno__corpo').classList).toContain('caderno__corpo--lista');
   });
 
   it('jogador combina busca no próprio caderno e nas próprias fichas', () => {

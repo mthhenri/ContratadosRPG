@@ -369,8 +369,10 @@ export class CadernoFlutuante implements OnDestroy {
     this.exclusaoPendente.set(false);
     this.avisoImportacao.set(null);
     this.listaRecolhida.set(true);
-    if (this.modoCaderno() === 'ESQUADRAO') this.colaboracaoEsquadrao.criar(this.campanhaId());
-    else this.store.iniciarNovaPagina();
+    if (this.modoCaderno() === 'ESQUADRAO') {
+      this.store.definirVistaMobile('CONTEUDO');
+      this.colaboracaoEsquadrao.criar(this.campanhaId());
+    } else this.store.iniciarNovaPagina();
     setTimeout(() => this.documento.querySelector<HTMLInputElement>('.caderno__titulo-input')?.focus());
   }
 
@@ -485,8 +487,10 @@ export class CadernoFlutuante implements OnDestroy {
     if (paginaId === null) {
       this.colaboracaoEsquadrao.fechar();
       this.store.desselecionarPagina();
-    } else if (this.modoCaderno() === 'ESQUADRAO') this.colaboracaoEsquadrao.abrir(paginaId);
-    else this.store.recuperarPagina(paginaId);
+    } else if (this.modoCaderno() === 'ESQUADRAO') {
+      this.store.definirVistaMobile('CONTEUDO');
+      this.colaboracaoEsquadrao.abrir(paginaId);
+    } else this.store.recuperarPagina(paginaId);
   }
 
   private carregarCadernoEsquadrao(): void {

@@ -1,5 +1,54 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — `P-041`: navegação mobile do Esquadrão volta a trocar lista por conteúdo
+
+Corrigida a navegação mobile (`360×800`) do `CadernoFlutuante` em modo Esquadrão: tocar uma página
+existente na lista, ou tocar "Criar página", nunca trocava `estado().vistaMobile` de `LISTA` para
+`CONTEUDO` — a lista continuava na tela e o editor ficava inacessível (montado no DOM, só oculto
+por CSS), diferente do caderno privado (`Meu caderno`), onde `recuperarPagina`/`iniciarNovaPagina`
+já fazem essa troca.
+
+A causa raiz identificada na `P-041` original apontava `refletirPaginaColaborativa` como o lugar
+óbvio para a correção, mas essa função também roda em toda atualização remota passiva do Yjs — um
+colaborador digitando título/conteúdo (`paginaEsquadraoAlterada$`), inclusive enquanto o usuário já
+voltou para a lista. Colocar `definirVistaMobile('CONTEUDO')` ali arrastaria a tela de volta ao
+conteúdo a cada tecla de outra pessoa. A correção foi aplicada nos dois pontos de navegação real do
+componente (`caderno-flutuante.component.ts`): `executarTrocaPagina` (ramo `ESQUADRAO`, antes de
+`colaboracaoEsquadrao.abrir`) e `iniciarNovaPagina` (ramo `ESQUADRAO`, antes de
+`colaboracaoEsquadrao.criar`) — o segundo ponto tinha o mesmo defeito, achado durante a
+investigação, ainda não reportado em `PROBLEMS.md`.
+
+**Testado:** `npm run test --workspace=frontend -- --include=**/caderno-flutuante.component.spec.ts`
+— 29 testes, 3 novos cobrindo a `P-041` (abrir página existente, criar página nova, e a regressão
+de não saltar de volta ao conteúdo com edição remota após o usuário voltar à lista). Confirmado por
+reversão manual do fix que os dois primeiros testes falham sem a correção. `eslint` nos dois
+arquivos tocados: 0 erros (avisos de aspas simples são um padrão pré-existente no arquivo inteiro,
+não introduzido por esta task).
+
+`PROBLEMS.md` removeu `P-041`.
+
+## 2026-08-30 — `P-040`: ações destrutivas do Inventário do Esquadrão voltam a ter vermelho
+
+As cinco declarações de `inventario-esquadrao.component.scss` que referenciavam `var(--danger)`
+(token nunca definido em nenhum parcial do tema, mesma causa-raiz de `P-036`) foram trocadas por
+`var(--vida)`, o vermelho fixo canônico: hover do botão remover (`&__remover:hover`, cor e borda),
+o texto de confirmação (`&__remocao-texto`) e os botões de confirmar/cancelar remoção
+(`&__remover--confirmar`, cor e borda). Sem mudança de shell, densidade ou controles — só a
+correção do token.
+
+Foi criada a guarda de regressão `frontend/scripts/inventario-esquadrao.style.test.mjs` (Vitest),
+seguindo o padrão do guard já existente para `P-036`: confirma que o arquivo não referencia mais
+`var(--danger)` e que os três blocos de remoção usam `var(--vida)`. `test:estilos` passou a rodar
+os dois arquivos de guarda.
+
+**Gate visual:** análogo escolhido: badge `bandeja__visibilidade--privada` (correção de `P-036`),
+que já usa `--vida` com destaque vermelho fixo. Verificado ao vivo em `1920×1080` e `360×800`
+(campanha/mestre real via REST, item de inventário criado pela UI): hover do botão remover e o
+estado de confirmação (`REMOVER ITEM?` + botões check/×) renderizam em vermelho nos dois
+viewports, sem overflow, com contraste e alvo de toque corretos no mobile.
+
+`PROBLEMS.md` removeu `P-040`.
+
 ## 2026-08-30 — `P-039`: presença e cursores remotos no Caderno do Esquadrão
 
 Implementado o único entregável que faltava em `caderno-esquadrao-colaborativo.spec.md`:

@@ -9,7 +9,7 @@
     "build": "ng build && node -e \"require('fs').copyFileSync('dist/frontend/browser/index.html','dist/frontend/browser/404.html')\" && node scripts/verificar-documentos-publicados.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test:estilos": "vitest run scripts/bandeja-dados-privada.style.test.mjs",
+    "test:estilos": "vitest run scripts/bandeja-dados-privada.style.test.mjs scripts/inventario-esquadrao.style.test.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format:html-scss": "prettier --write \"src/**/*.{html,scss}\""

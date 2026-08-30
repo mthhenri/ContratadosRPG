@@ -29,42 +29,6 @@
 
 ## Ativos
 
-### P-041 — Página do Esquadrão não troca lista por conteúdo no mobile · `ABERTO` · frontend/pagina-caderno
-
-- **Sintoma:** no `CadernoFlutuante` em `360×800`, tocar uma página do modo Esquadrão na lista não
-  troca `estado().vistaMobile` para `CONTEUDO` — a lista continua na tela e o editor permanece
-  inacessível pela navegação normal (ele chega a montar no DOM, só fica oculto por
-  `.caderno__corpo--lista .caderno__editor { display: none }`). Achado ao tentar capturar a
-  verificação `360×800` da `P-039` (presença/cursor remoto) — o próprio recorte da `P-039` funciona
-  (confirmado revelando o editor via override de CSS só para a captura), mas a navegação real do
-  mobile para chegar até ele está quebrada.
-- **Causa:** `CadernoFlutuanteStore.refletirPaginaColaborativa` (chamada pelo `effect()` que observa
-  `CadernoEsquadraoColaborativoService.pagina()`) nunca chama `definirVistaMobile('CONTEUDO')` —
-  diferente de `recuperarPagina`, usada pelo caderno privado (`Meu caderno`), que faz exatamente
-  isso. O modo Esquadrão do `CadernoFlutuante` nunca ganhou o mesmo tratamento ao ser adicionado.
-- **Contorno:** nenhum pela UI; o conteúdo existe e sincroniza, só não fica visível no mobile sem
-  intervenção.
-- **Correção:** replicar em `refletirPaginaColaborativa` (ou no ponto que a chama) o mesmo
-  `definirVistaMobile('CONTEUDO')` de `recuperarPagina`.
-- **Desde:** entregável 3 (`caderno-esquadrao-colaborativo.spec.md`), presente desde que o modo
-  Esquadrão existe — achado em 2026-08-30 ao verificar a `P-039` ao vivo em `360×800`.
-
-### P-040 — Inventário do Esquadrão depende de `var(--danger)` inexistente · `ABERTO` · frontend/inventario-esquadrao
-
-- **Sintoma:** cinco declarações de cor em
-  `inventario-esquadrao.component.scss` (ações de remover e quantidade negativa)
-  usam `var(--danger)`, token que não é declarado em nenhum parcial do tema.
-  Como no antigo badge de rolagem privada, o navegador descarta essas
-  declarações e o estado perde o destaque vermelho pretendido.
-- **Causa:** o mesmo token planejado, mas nunca definido, que causava `P-036`;
-  o inventário ficou fora do recorte daquela correção.
-- **Contorno:** as ações continuam disponíveis e identificadas por ícone/texto,
-  mas não recebem a cor de severidade.
-- **Correção:** abrir uma spec própria e substituir os usos pelo token semântico
-  apropriado, provavelmente `--vida` para as ações destrutivas, após conferir os
-  estados do Inventário do Esquadrão ao vivo.
-- **Desde:** encontrado durante a investigação de `P-036`, em 2026-08-29.
-
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo
