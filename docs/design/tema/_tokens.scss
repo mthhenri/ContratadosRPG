@@ -21,6 +21,8 @@
 
   /* --- Accent (TROCÁVEL via preset/color-picker — spec M1) --- */
   --accent: #d53030;
+  --accent-text: #ffffff;
+  --accent-hover: #c42c2c;
   --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
 

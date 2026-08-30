@@ -135,6 +135,17 @@ export function razaoContraste(corA: string, corB: string): number {
   return (maisClara + 0.05) / (maisEscura + 0.05);
 }
 
+/**
+ * Cor do texto sobre uma superfície de accent preenchida. Entre preto e branco, a opção de maior
+ * contraste sempre alcança o piso AA de 4,5:1 para texto normal; o token resultante acompanha
+ * presets, cores customizadas e a adaptação de base sem restringir o accent do usuário.
+ */
+export function corTextoSobreAccent(accent: string): string {
+  const contrasteClaro = razaoContraste(accent, '#ffffff');
+  const contrasteEscuro = razaoContraste(accent, '#000000');
+  return contrasteClaro >= contrasteEscuro ? '#ffffff' : '#000000';
+}
+
 /** Converte `[r, g, b]` (0–255) em `#rrggbb`, saturando cada canal ao intervalo válido. */
 function rgbParaHex([vermelho, verde, azul]: [number, number, number]): string {
   const canal = (valor: number): string =>
@@ -160,6 +171,16 @@ function misturarRgb(hex: string, alvo: [number, number, number], proporcao: num
     misturar(verde, alvo[1]),
     misturar(azul, alvo[2]),
   ]);
+}
+
+/**
+ * Accent do estado hover. Escurece quando o texto é claro e clareia quando o texto é escuro,
+ * preservando a cor do rótulo e ampliando seu contraste em vez de degradá-lo com um `filter`.
+ */
+export function corHoverAccent(accent: string): string {
+  const texto = corTextoSobreAccent(accent);
+  const alvo: [number, number, number] = texto === '#ffffff' ? [0, 0, 0] : [255, 255, 255];
+  return misturarRgb(accent, alvo, 0.08);
 }
 
 /**
@@ -495,6 +516,8 @@ export class TemaService {
     }
 
     raiz.style.setProperty('--accent', accent);
+    raiz.style.setProperty('--accent-text', corTextoSobreAccent(accent));
+    raiz.style.setProperty('--accent-hover', corHoverAccent(accent));
     raiz.style.setProperty('color-scheme', base === 'escuro' ? 'dark' : 'light');
   }
 

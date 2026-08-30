@@ -5,6 +5,8 @@ import {
   CONTRASTE_MINIMO,
   PRESETS_ACCENT,
   TemaService,
+  corHoverAccent,
+  corTextoSobreAccent,
   luminanciaRelativa,
   nomearCor,
   razaoContraste,
@@ -50,6 +52,22 @@ describe('TemaService', () => {
     it('cores iguais têm contraste 1', () => {
       expect(razaoContraste('#4c8dd0', '#4c8dd0')).toBeCloseTo(1, 5);
     });
+
+    it('escolhe branco para o accent vermelho padrão e preto para um accent claro', () => {
+      expect(corTextoSobreAccent('#d53030')).toBe('#ffffff');
+      expect(corTextoSobreAccent('#d9a441')).toBe('#000000');
+    });
+
+    it('garante AA de texto normal para todos os presets de accent', () => {
+      for (const preset of PRESETS_ACCENT) {
+        expect(razaoContraste(preset.cor, corTextoSobreAccent(preset.cor))).toBeGreaterThanOrEqual(
+          4.5,
+        );
+        expect(
+          razaoContraste(corHoverAccent(preset.cor), corTextoSobreAccent(preset.cor)),
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    });
   });
 
   describe('trava de contraste por base', () => {
@@ -78,6 +96,21 @@ describe('TemaService', () => {
       const tema = criar();
       tema.selecionarPreset('azul');
       expect(raiz.style.getPropertyValue('--accent').trim()).toBe('#4c8dd0');
+    });
+
+    it('aplica no DOM a cor de texto correspondente ao accent', () => {
+      const tema = criar();
+      tema.selecionarPreset('vermelho');
+      expect(raiz.style.getPropertyValue('--accent-text').trim()).toBe('#ffffff');
+      expect(
+        razaoContraste(raiz.style.getPropertyValue('--accent-hover').trim(), '#ffffff'),
+      ).toBeGreaterThanOrEqual(4.5);
+
+      tema.selecionarPreset('ambar');
+      expect(raiz.style.getPropertyValue('--accent-text').trim()).toBe('#000000');
+      expect(
+        razaoContraste(raiz.style.getPropertyValue('--accent-hover').trim(), '#000000'),
+      ).toBeGreaterThanOrEqual(4.5);
     });
 
     it('base clara escreve overrides de superfície; escura os remove', () => {

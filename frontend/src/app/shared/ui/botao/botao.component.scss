@@ -12,41 +12,51 @@
 $variantes: (
     "primario": (
         cor: var(--accent),
+        texto: var(--accent-text),
+        hover: var(--accent-hover),
         dim: var(--accent-dim),
         borda: var(--accent-border),
     ),
     "secundario": (
         cor: var(--text),
+        texto: var(--bg),
         dim: var(--surface-2),
         borda: var(--border-strong),
     ),
     "positivo": (
         cor: var(--positive),
+        texto: var(--bg),
         dim: color-mix(in srgb, var(--positive) 12%, transparent),
         borda: color-mix(in srgb, var(--positive) 40%, transparent),
     ),
     "info": (
         cor: var(--energy),
+        texto: var(--bg),
         dim: color-mix(in srgb, var(--energy) 12%, transparent),
         borda: color-mix(in srgb, var(--energy) 40%, transparent),
     ),
     "aviso": (
         cor: var(--warning),
+        texto: var(--bg),
         dim: color-mix(in srgb, var(--warning) 12%, transparent),
         borda: color-mix(in srgb, var(--warning) 40%, transparent),
     ),
     "perigo": (
         cor: var(--accent),
+        texto: var(--accent-text),
+        hover: var(--accent-hover),
         dim: var(--accent-dim),
         borda: var(--accent-border),
     ),
     "ajuda": (
         cor: var(--help),
+        texto: var(--bg),
         dim: var(--help-dim),
         borda: var(--help-border),
     ),
     "contraste": (
         cor: var(--contrast),
+        texto: var(--bg),
         dim: var(--contrast-dim),
         borda: var(--contrast-border),
     ),
@@ -65,15 +75,20 @@ $estilo-padrao: (
     "contraste": "preenchido",
 );
 
-@mixin pintar($estilo, $cor, $dim, $borda) {
+@mixin pintar($estilo, $cor, $dim, $borda, $texto, $hover: null) {
     @if $estilo == "preenchido" {
         background: $cor;
-        color: var(--bg);
+        color: $texto;
         border: 0;
 
-        // filter (não uma 2ª cor fixa) pra funcionar com qualquer accent escolhido em runtime.
+        // O accent usa token de hover calculado em runtime; as cores estáveis mantêm o clareamento
+        // já praticado pelo produto.
         &:hover:not(:disabled) {
-            filter: brightness(1.08);
+            @if $hover {
+                background: $hover;
+            } @else {
+                filter: brightness(1.08);
+            }
         }
     } @else if $estilo == "contorno" {
         background: transparent;
@@ -128,17 +143,19 @@ $estilo-padrao: (
     $cor: map.get($paleta, cor);
     $dim: map.get($paleta, dim);
     $borda: map.get($paleta, borda);
+    $texto: map.get($paleta, texto);
+    $hover: map.get($paleta, hover);
 
     // Estilo padrão da variante, sem classe de estilo no host.
     :host(.botao--#{$nome}) {
-        @include pintar(map.get($estilo-padrao, $nome), $cor, $dim, $borda);
+        @include pintar(map.get($estilo-padrao, $nome), $cor, $dim, $borda, $texto, $hover);
     }
 
     // Estilo explícito — dois seletores de classe, então sempre vence o padrão acima,
     // independente da ordem em que o navegador leu as regras.
     @each $estilo in ("preenchido", "contorno", "texto", "link") {
         :host(.botao--#{$nome}.botao--estilo-#{$estilo}) {
-            @include pintar($estilo, $cor, $dim, $borda);
+            @include pintar($estilo, $cor, $dim, $borda, $texto, $hover);
         }
     }
 }
