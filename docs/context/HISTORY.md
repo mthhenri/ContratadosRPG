@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — P-005 reclassificado: não era defeito, era má interpretação da medição
+
+A medição original comparava `scrollWidth`/`clientWidth` de um ancestral (o `overflow-x: clip` do
+`html`/body), não do próprio elemento da barra de abas. O primitivo canônico `.abas` em
+[docs/design/tema/_componentes.scss:299](../design/tema/_componentes.scss#L299) já declara
+`overflow-x: auto` na barra — quando o conteúdo excede a largura disponível, a barra rola dentro de
+si mesma; ela não depende do body/html para tratar overflow. O "corte da última letra" reportado
+era esse comportamento intencional (scroll interno) sendo lido como recorte visual permanente, não
+um defeito de CSS. Removido de `PROBLEMS.md` sem alteração de código — não havia causa raiz a
+corrigir.
+
 ## 2026-08-30 — P-035: botão de accent passa a preservar contraste AA
 
 O preenchimento de `app-botao` das variantes `primario` e `perigo` não usa mais `--bg` como texto.

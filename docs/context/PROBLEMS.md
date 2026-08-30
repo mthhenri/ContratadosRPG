@@ -105,17 +105,6 @@
   lazy). Nunca foi feito.
 - **Desde:** `m1-06`, agravando desde então.
 
-### P-005 — Barra de abas da ficha corta o "A" de "HISTÓRIA" no desktop · `ABERTO` · frontend/CSS
-
-- **Sintoma:** a 1440px, a barra de abas tem `scrollWidth` de 575px contra `clientWidth` de 418px,
-  cortando visualmente a última letra de "HISTÓRIA".
-- **Causa:** o corte acontece num ancestral — a barra em si não tem `overflow-x` próprio, e o
-  `overflow-x: clip` do `html` absorve sem gerar scroll do body.
-- **Contorno:** nenhum. É cosmético e só no desktop.
-- **Correção:** não determinada.
-- **Desde:** medido durante a `m3-60`, declarado fora de escopo daquela spec e registrado para não
-  se perder.
-
 ### P-006 — Dois passos operacionais do M1 nunca foram executados · `ABERTO` · operação
 
 - **Sintoma:** o M1 está "concluído no código" mas dois itens de plataforma continuam
