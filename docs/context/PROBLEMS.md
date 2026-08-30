@@ -67,54 +67,6 @@
   verificar a spec ao vivo em 2026-08-29 antes de movê-la para `done/` (ela permanece em `active/`
   por causa deste item).
 
-### P-035 — Botão preenchido com o accent fica abaixo de 4,5:1 para texto normal · `ABERTO` · frontend/acessibilidade
-
-- **Sintoma:** medido no DOM real em 2026-08-28, durante o gate visual da `ui-01b`: o botão
-  `variante="primario"` preenchido dá **4,00:1** entre o fundo (`--accent` `#d53030`, base padrão)
-  e o texto (`--bg`). O rótulo desses botões é texto normal (12–13px), para o qual o WCAG AA pede
-  **4,5:1**. As demais severidades preenchidas passam com folga — `positivo` 5,90, `info` 5,62,
-  `ajuda` 5,59, `aviso` 8,71, `secundario` 13,63, `contraste` 18,08. `perigo` empata com
-  `primario` porque usa o mesmo `--accent`.
-- **Causa:** a trava de contraste do `TemaService` (`CONTRASTE_MINIMO = 3`, em
-  `frontend/src/app/core/services/tema.service.ts`) é deliberadamente o piso de 3:1 do AA para
-  **componentes de interface e texto grande**, e valida o accent contra a **superfície** — não o
-  caso "texto de `--bg` sobre preenchimento de accent", que é o do botão primário. O accent também
-  é trocável em runtime, então o número varia por usuário; 4,00 é o da base padrão.
-- **Contorno:** nenhum. O botão é legível na prática (falha por 0,5 ponto, não por ordem de
-  grandeza), só não atinge o piso de texto normal.
-- **Correção:** decidir entre escurecer o texto do botão preenchido, clarear o accent da base
-  padrão, ou subir `CONTRASTE_MINIMO` para 4,5 com uma segunda checagem no par accent×`--bg`. É
-  decisão de identidade visual, não de implementação — precisa passar pelo autor e por
-  `docs/design/`.
-- **Desde:** existe desde o botão primário original; medido e registrado na `ui-01b` (2026-08-28).
-
-### P-032 — Convenção `alterar`/`alterado` ainda violada em identificadores existentes · `ABERTO` · compartilhado/frontend
-
-- **Sintoma:** identificadores de produção ainda usam `atualizar`/`atualizado`, contrariando a proibição explícita de `CONVENTIONS.md`. O passe de `skills-08` reencontrou ao menos `shared/src/dtos/campanha/campanha.dtos.ts:67` (`atualizadoEm`) e `frontend/src/app/modules/ficha/ficha-edicao-criatura.service.ts:110` (`atualizarDados`); a auditoria também mostra outros pontos, portanto não é defeito isolado.
-- **Causa:** não investigada; não havia passe mecânico de convenções no fecho das tasks.
-- **Contorno:** consumir os contratos/métodos atuais como estão; novos identificadores devem usar `alterar`/`alterado`.
-- **Correção:** especificar e executar uma migração de nomenclatura com todos os chamadores, testes e possível contrato público mapeados — não renomear de passagem.
-- **Desde:** anterior a `skills-08` (reencontrado em 2026-08-27).
-
-### P-031 — Quatro migrations usam `ck_` em vez de `chk_` em CHECK constraint · `ABERTO` · backend/schema
-
-- **Sintoma:** `docs/CONVENTIONS.md` documenta o prefixo `chk_` para CHECK constraint, e
-  `0018 - Caderno de campanha e busca textual.sql` segue isso (`chk_pagina_caderno_titulo`,
-  `chk_pagina_caderno_conteudo`). Mas `0021 - Tabelas encontro, encontro_combatente e
-  encontro_evento.sql`, `0022`, `0023` e `0024` usam `ck_` (`ck_encontro_combatente_origem`,
-  `ck_encontro_combatente_turnos_por_rodada`, `ck_rolagem_origem`) — prefixo errado e
-  inconsistente com o resto do schema.
-- **Causa:** não investigada — as quatro migrations são da mesma leva (M7, encontro de combate),
-  provavelmente copiaram o prefixo umas das outras sem conferir contra `CONVENTIONS.md`.
-- **Contorno:** nenhum — o prefixo errado já está aplicado em produção; renomear a constraint é
-  uma migration nova (`ALTER TABLE ... RENAME CONSTRAINT ...`), não um problema de leitura.
-- **Correção:** migration `ALTER TABLE ... RENAME CONSTRAINT ck_x TO chk_x` para as quatro
-  constraints, quando alguém for mexer nessa área de qualquer forma (renomear constraint isolada
-  não vale task própria).
-- **Desde:** achado durante `skills-05` (criação da skill `sql-migrations`, 2026-08-27) ao
-  conferir se `0021` exemplifica bem os prefixos do `CONVENTIONS.md` antes de citá-la como
-  referência.
-
 ### P-002 — `HISTORY.md` sem registro desde a `m3-27` · `ABERTO` · processo
 
 - **Sintoma:** o último bloco registrado é a `m3-27` (2026-07-29), mas **11 commits de trabalho

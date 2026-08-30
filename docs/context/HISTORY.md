@@ -1,5 +1,78 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — P-035: botão de accent passa a preservar contraste AA
+
+O preenchimento de `app-botao` das variantes `primario` e `perigo` não usa mais `--bg` como texto.
+O novo token `--accent-text` escolhe preto ou branco pelo maior contraste contra o accent efetivo,
+e o `TemaService` o atualiza junto com `--accent` para presets, cor customizada e adaptação de base.
+O hover recebeu `--accent-hover`: ele escurece o accent sob texto branco ou o clareia sob texto
+preto, evitando que o antigo `brightness(1.08)` reduzisse novamente o contraste. As demais
+severidades e a trava existente de 3:1 entre accent e superfície não mudaram.
+
+**Gates:** o teste de regressão falhou antes pela ausência das funções de cor e passou depois;
+o recorte `tema.service.spec.ts` ficou em 24/24 e a suíte completa do frontend em 102 arquivos /
+1.451 testes. Lint terminou sem erros, mantendo 14.591 warnings preexistentes; o build de produção
+passou e preservou o aviso preexistente de budget de `ficha-visualizacao.component.scss`. No login
+real, o análogo escolhido para o primitivo, em `1920×1080` e `360×800`, mostrou o botão vermelho
+com texto branco e hover escuro, sem overflow; no mobile, o alvo manteve 44px. A P-035 foi removida
+de `PROBLEMS.md`.
+
+## 2026-08-30 — P-032: identificadores de produção migrados de `atualizar` para `alterar`
+
+Inventário completo de `atualiz*` em `shared/src`, `backend/src` e `frontend/src` (435 ocorrências
+brutas) classificado por categoria antes de qualquer rename, para não "renomear de passagem" como
+a própria correção do P-032 exigia. Só os identificadores que nomeiam mutação de domínio entraram
+no escopo; ícone `'atualizar'` (glifo de refresh), payload CRDT `atualizacao`
+(terminologia Yjs), rótulos de frescor (`textoAtualizacao`, `rotuloAtualizacao`, classes CSS
+`__secao-atualizado`/`__linha-atualizado`, texto "Atualizado agora/há Xs") e prosa em
+comentários/descrições de teste ficaram de fora — são conceitos distintos de "alterar o domínio"
+(recarregar/exibir frescor, não mudar estado), registrados na spec como Fora de Escopo.
+
+Renomeado: `SessaoService.atualizarPerfil`→`alterarPerfil`; `atualizarDados` (privado, ficha de
+criatura); os métodos-guarda-chuva `atualizar`/`atualizar*` de `FichaCriar` e `FichaCriarCriatura`
+(~200 pontos entre template e spec, mecânico); `atualizarEstadoTabela`/`atualizarPosicaoRolagem`
+do editor Markdown; variáveis locais `itensCampanhaAtualizados`/`itensFichaAtualizados`; o método
+de gateway `emitirPaginaEsquadraoAtualizada`→`emitirPaginaEsquadraoAlterada` (alinhando com
+`alterarPaginaEsquadrao` e `PaginaCadernoEsquadraoAlteradaDto`, já corretos); o evento de socket
+`'caderno-esquadrao:atualizado'`→`'alterado'` nas duas pontas (backend emite, frontend escuta) e o
+observable espelho `paginaEsquadraoAtualizada$`; a rota REST `PUT .../esquadrao/atualizacoes`→
+`.../alteracoes` nas duas pontas; os `@Output() atualizado`→`alterado` do inventário de esquadrão
+e da sidebar que o reemite; e o campo `CampanhaResumoDto.atualizadoEm`→`alteradoEm` (DTO, SQL do
+`CampanhaRepository` e todos os consumidores/fixtures).
+
+**Gates:** `npm run build --workspace=shared` verde (DTO mudou de campo); suítes completas verdes
+— shared 49/49 arquivos (742 testes), backend 30/30 (473 testes), frontend 102/102 (1451 testes);
+`npm run lint` sem erros novos (warnings preexistentes de aspas, não relacionados). Uma varredura
+final de `grep -rniE "atualizar|atualizad[oa]"` confirmou que só sobraram os casos documentados
+como Fora de Escopo.
+
+**Verificação ao vivo:** stack real (Postgres + backend + frontend) com dois usuários via
+Playwright. Mestre e jogador em uma campanha real, Caderno do Esquadrão aberto nos dois lados: o
+mestre digitou texto na página do Esquadrão, o PUT `esquadrao/alteracoes` persistiu ("Alterações
+sincronizadas com o esquadrão" na UI), e o frame de WebSocket `caderno-esquadrao:alterado` chegou
+ao jogador e renderizou o texto em tempo real — confirmando as duas pontas do protocolo
+renomeado juntas, o risco que a spec havia identificado como não coberto por teste unitário
+(mocks não verificam compatibilidade real de wire entre backend e frontend). Fluxo de perfil
+(`alterarPerfil`) também verificado ao vivo: nome alterado refletido na tela e mensagem de
+sucesso exibida.
+
+## 2026-08-29 — P-031: prefixo de CHECK constraints normalizado no schema aplicado
+
+As migrations históricas `0021` a `0024` introduziram ou recriaram três CHECK constraints com o
+prefixo incorreto `ck_`. A migration `0027 - Renomear CHECK constraints com prefixo correto.sql`
+renomeia no banco aplicado `ck_encontro_combatente_origem`,
+`ck_encontro_combatente_turnos_por_rodada` e `ck_rolagem_origem` para as formas equivalentes
+`chk_`, como determina `CONVENTIONS.md`, sem alterar suas expressões ou reescrever migrations
+históricas. O rollback restaura os nomes antigos para que os rollbacks de `0024` e `0023`
+continuem válidos na ordem correta.
+
+**Gates:** `npm run db:migrate --workspace=backend` aplicou a migration; em seguida
+`npm run db:rollback --workspace=backend` e nova aplicação de `db:migrate` passaram sem erro. A
+consulta direta ao catálogo PostgreSQL retornou somente os três nomes `chk_`; com a permissão de
+leitura necessária, a suíte completa do backend também passou (30 arquivos, 473 testes). O
+`PROBLEMS.md` removeu P-031, e as duas cópias da skill `sql-migrations` agora deixam claro que
+`0021` é exemplo estrutural histórico, mas não de prefixo.
+
 ## 2026-08-29 — P-036: badge privado da Bandeja de Dados volta a ter destaque vermelho
 
 O modificador `bandeja__visibilidade--privada` referenciava `--danger`, token inexistente em

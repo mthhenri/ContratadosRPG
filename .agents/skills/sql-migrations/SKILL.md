@@ -47,9 +47,9 @@ ls backend/src/database/migrations/ | sort | tail -1
 (`ALTER TABLE` + `ADD COLUMN`/`DROP COLUMN`, dois blocos, nada mais — o caso mais comum).
 **Exemplo real — tabela nova:** `0021 - Tabelas encontro, encontro_combatente e
 encontro_evento.sql` (`pk_`/`fk_`/`ix_`/`uix_`, trigger `updated_date`, `DOWN` na ordem inversa do
-`UP`). **Armadilha ao copiar esse arquivo:** seu `CHECK` usa `ck_encontro_combatente_origem` — o
-prefixo correto pela tabela abaixo é `chk_`; a migration errou e não é exemplo desse detalhe
-específico (achado nesta task, registrado em `PROBLEMS.md` — não corrigido aqui, fora de escopo).
+`UP`). **Armadilha ao copiar esse arquivo:** o `CHECK` histórico usa
+`ck_encontro_combatente_origem`, prefixo que já foi corrigido no schema pela migration `0027`.
+Não reescreva a migration aplicada; em CHECK novo, use sempre `chk_` conforme a tabela abaixo.
 
 ## 3. Nomes e prefixos
 

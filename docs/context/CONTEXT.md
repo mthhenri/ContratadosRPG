@@ -389,10 +389,10 @@ de repositório. `design-fidelity` executa o gate visual obrigatório do `CLAUDE
 análogo → construir com tokens → verificar via `verify` → checklist de 6 itens → corrigir antes
 de apresentar), com tabela de análogos em `references/analogos.md`. `regras-do-jogo` conduz a
 mudança de fórmula do documento canônico ao motor puro e seus consumidores derivados, incluindo
-as armadilhas stored vs. efetivo, stat fundido e Civil fora da tabela. Duas dessas tasks acharam e
-registraram dívida real durante a conferência de exemplos: `PROBLEMS.md` `P-031` (migrations com
-prefixo `ck_` errado) e uma lacuna pequena de `examples/README.md` (par `iniciativa-*` sem entrada
-na tabela, documentada na própria skill). Detalhe completo de cada task em `HISTORY.md` (busque
+as armadilhas stored vs. efetivo, stat fundido e Civil fora da tabela. A conferência de exemplos
+revelou o prefixo `ck_` errado nas migrations de encontro; o schema foi corrigido pela migration
+`0027`, sem reescrever o histórico. Permanece a lacuna pequena de `examples/README.md` (par
+`iniciativa-*` sem entrada na tabela, documentada na própria skill). Detalhe completo de cada task em `HISTORY.md` (busque
 `skills-0N`). `convencoes-check` faz o passe final mecânico somente no diff (com buscas e falsos
 positivos em `references/buscas.md`) e exige a leitura manual do que grep não prova; a auditoria
 inicial registrou `PROBLEMS.md` `P-032`, sem correção oportunista. `tempo-real` mapeia a emissão
@@ -1370,7 +1370,9 @@ de view aplica o atributo do TEMPLATE DO CONSUMIDOR, não o do componente).
 "Terminal de Contenção" dark-first com **troca em runtime** (`TemaService`: presets + color picker
 com trava de contraste). Tokens CSS + Tailwind apontam para as CSS custom properties, única fonte
 de verdade em runtime; o serviço aplica também `color-scheme` no `<html>` para controles nativos
-acompanharem a base clara/escura.
+acompanharem a base clara/escura. Botão preenchido sobre `--accent` usa `--accent-text`: o serviço
+escolhe dinamicamente branco ou preto pelo maior contraste, e `--accent-hover` ajusta o fundo na
+mesma direção para preservar WCAG AA no hover sem restringir presets ou cores customizadas.
 `--cor-ficha` (`m3-61`) é um token **separado**, por personagem, não por usuário — nunca ganha
 valor fixo em `_tokens.scss`, sempre `[style.--cor-ficha]` inline por instância; ver "Ficha de
 jogador" acima e `docs/design/DESIGN.md`.
