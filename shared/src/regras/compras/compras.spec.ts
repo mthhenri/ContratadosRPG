@@ -310,6 +310,21 @@ describe('calcularStatItem', () => {
     expect(comPlasma?.informacao).toBe('Curto · Mun: Células de Plasma');
   });
 
+  it('Armas de Fogo: Alcance sobe +1 nível de alcance no texto de informação', () => {
+    // docs/core/sistema-v4.1.0.md — Tipos de Alcance: Curto < Médio < Longo < Longínquo.
+    const comAlcance = calcularStatItem({ item: item('Submetralhadora', ItemCategoriaEnum.ARMAS_DE_FOGO, [mod('Alcance', 1)]) });
+    expect(comAlcance?.informacao).toBe('Médio · Mun: 10mm');
+    const rifleComAlcance = calcularStatItem({ item: item('Rifle de Precisão', ItemCategoriaEnum.ARMAS_DE_FOGO, [mod('Alcance', 1)]) });
+    expect(rifleComAlcance?.informacao).toBe('Longínquo · Mun: 7.62mm');
+  });
+
+  it('Explosivos: Aerodinâmica sobe +1 nível de alcance na 1ª compra; extras não sobem mais', () => {
+    const comAerodinamica = calcularStatItem({ item: item('Molotov', ItemCategoriaEnum.EXPLOSIVOS, [mod('Aerodinâmica', 1)]) });
+    expect(comAerodinamica?.informacao).toBe('Médio · 2m · Em Chamas (2t)');
+    const comExtra = calcularStatItem({ item: item('Molotov', ItemCategoriaEnum.EXPLOSIVOS, [mod('Aerodinâmica', 3)]) });
+    expect(comExtra?.informacao).toBe('Médio · 2m · Em Chamas (2t)');
+  });
+
   it('Exóticos: Vibrante soma +1D8 [Físico] por stack', () => {
     expect(calcularStatItem({ item: item('Motoserra', ItemCategoriaEnum.EXOTICOS, [mod('Vibrante', 1)]) })?.dano).toBe('2D8+1D8 [Físico]');
   });

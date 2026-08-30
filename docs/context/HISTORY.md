@@ -1,5 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-30 — Modificação "Alcance"/"Aerodinâmica" agora sobe o nível de alcance exibido da arma
+
+Reportado pelo autor: comprar a modificação `Alcance` numa arma de fogo (ex.: Submetralhadora,
+`Curto`) não mudava o texto de alcance exibido no item — continuava `Curto` mesmo com a mod
+comprada, quando deveria virar `Médio` (docs/core/sistema-v4.1.0.md — "Tipos de Alcance": Curto <
+Médio < Longo < Longínquo).
+
+Causa raiz: `calcularStatItem` (`shared/src/regras/compras/compras.ts`) monta o campo `informacao`
+(o texto `"Curto · Mun: 10mm"` etc. usado pelo chip do item) só a partir do catálogo, com uma única
+adaptação (troca de munição da mod `Plasma`). As mods `Alcance` (Armas de Fogo) e `Aerodinâmica`
+(Explosivos) já eram reconhecidas e listadas como compráveis, mas seu efeito de "+1 nível de
+alcance" nunca era aplicado ao texto — diferente de `dano`/`resistência`, que já eram recalculados
+pelo motor. Isso não é o mesmo caso da decisão de m3-31 (bônus a **teste** ficam descritivos, o
+jogador aplica na mão): alcance é uma propriedade categórica da arma, não um bônus de rolagem.
+
+Correção: nova função `elevarNivelAlcanceInformacao` em `compras.ts`, que sobe o nível reconhecido
+no início de `informacao` em N degraus (capado em `Longínquo`). Aplicada em `calcularStatItem`:
+`Alcance` (Armas de Fogo, compra única) e `Aerodinâmica` (Explosivos, só a 1ª compra — empilhamentos
+extras continuam só somando ao teste, texto descritivo, sem subir alcance de novo).
+
+**Testado:** `npm run test --workspace=shared` — 744 testes, 2 novos em `compras.spec.ts` (Alcance
+em Submetralhadora e Rifle de Precisão; Aerodinâmica em Molotov com 1ª compra e com empilhamento
+extra). Verificação visual não se aplica — mudança é só no texto derivado pelo motor puro, já
+coberto pelo chip existente do item nas telas que o consomem (`ficha-inventario.component.ts`,
+`compras.page.ts`).
+
 ## 2026-08-30 — Excedente do limite total de modificações não "contamina" mais mod intocada
 
 Reportado pelo autor ao vivo: subir os stacks de uma modificação (ex.: Mira Dot) além do limite

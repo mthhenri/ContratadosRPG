@@ -546,6 +546,27 @@ export function interpretarNotacaoResistencia(texto: string): readonly EntradaRe
 }
 
 /**
+ * Níveis de alcance de arma/explosivo, em ordem crescente (docs/core/sistema-v4.1.0.md —
+ * "Tipos de Alcance"). "Corpo a Corpo" (armas CaC) fica fora: as modificações que sobem alcance
+ * (`Alcance`, `Aerodinâmica`) só existem para Armas de Fogo e Explosivos.
+ */
+const NIVEIS_ALCANCE = ['Curto', 'Médio', 'Longo', 'Longínquo'] as const;
+
+/**
+ * Sobe o nível de alcance no início de `informacao` (ex.: `"Curto · Mun: 10mm"` → `"Médio · Mun:
+ * 10mm"`) em `passos` degraus, sem passar de Longínquo. Devolve o texto inalterado se não começar
+ * com um nível reconhecido.
+ */
+function elevarNivelAlcanceInformacao(informacao: string, passos: number): string {
+  if (passos <= 0) return informacao;
+  const casado = informacao.match(/^(Curto|Médio|Longo|Longínquo)\b/);
+  if (!casado) return informacao;
+  const indiceAtual = NIVEIS_ALCANCE.indexOf(casado[1] as (typeof NIVEIS_ALCANCE)[number]);
+  const indiceNovo = Math.min(indiceAtual + passos, NIVEIS_ALCANCE.length - 1);
+  return NIVEIS_ALCANCE[indiceNovo] + informacao.slice(casado[1].length);
+}
+
+/**
  * Stat computado de um item com as modificações aplicadas: dano (armas), resistência (proteções e,
  * quando aplicável, armazenamento — m3-43), bônus de Esquiva/Bloqueio/Defesa (proteções — m3-43,
  * mods "Flexível"/"Resistente" e efeito custom `DEFESA`) ou bônus de inventário (armazenamento).
@@ -670,6 +691,14 @@ export function calcularStatItem(dto: StatItemCalcularDto): StatItemDto | null {
     let informacao = itemCatalogo.informacao ?? '';
     if (item.categoria === ItemCategoriaEnum.ARMAS_DE_FOGO && empilhamentosDe('Plasma') > 0) {
       informacao = informacao.replace(/Mun:[^·\n]+/, 'Mun: Células de Plasma');
+    }
+    // Alcance (Armas de Fogo) e Aerodinâmica (Explosivos): a 1ª compra sobe +1 nível de alcance;
+    // empilhamentos extras de Aerodinâmica só somam ao teste (descritivo, ver comentário acima).
+    if (item.categoria === ItemCategoriaEnum.ARMAS_DE_FOGO && empilhamentosDe('Alcance') > 0) {
+      informacao = elevarNivelAlcanceInformacao(informacao, 1);
+    }
+    if (item.categoria === ItemCategoriaEnum.EXPLOSIVOS && empilhamentosDe('Aerodinâmica') > 0) {
+      informacao = elevarNivelAlcanceInformacao(informacao, 1);
     }
     return { dano: notacao, informacao: informacao || undefined };
   }
