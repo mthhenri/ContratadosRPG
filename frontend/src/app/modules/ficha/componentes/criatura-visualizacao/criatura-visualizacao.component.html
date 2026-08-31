@@ -189,6 +189,8 @@
 
                     @if (ajustavel()) {
                         <button
+                            app-botao-icone
+                            tamanho="padrao"
                             class="criatura__lapis"
                             type="button"
                             [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
@@ -525,6 +527,8 @@
                     <span class="criatura__cartao-regua"></span>
                     @if (ajustavel() && !atributosEmEdicao()) {
                         <button
+                            app-botao-icone
+                            tamanho="padrao"
                             class="criatura__lapis"
                             type="button"
                             aria-label="Editar atributos"
@@ -1255,6 +1259,8 @@
                                 <span class="criatura__info-regua"></span>
                                 @if (ajustavel() && !editando("anotacoes")) {
                                     <button
+                                        app-botao-icone
+                                        tamanho="padrao"
                                         class="criatura__lapis"
                                         type="button"
                                         aria-label="Editar anotações"
@@ -1299,6 +1305,8 @@
                                 <span class="criatura__info-regua"></span>
                                 @if (ajustavel() && !editando("identidade.conceito")) {
                                     <button
+                                        app-botao-icone
+                                        tamanho="padrao"
                                         class="criatura__lapis"
                                         type="button"
                                         aria-label="Editar descrição"
@@ -1396,6 +1404,8 @@
                                     <span class="criatura__info-regua"></span>
                                     @if (ajustavel() && !editando("identidade.naturezaFisica")) {
                                         <button
+                                            app-botao-icone
+                                            tamanho="padrao"
                                             class="criatura__lapis"
                                             type="button"
                                             aria-label="Editar natureza física"
@@ -1434,6 +1444,8 @@
                                     <span class="criatura__info-regua"></span>
                                     @if (ajustavel() && !editando("identidade.temaHorror")) {
                                         <button
+                                            app-botao-icone
+                                            tamanho="padrao"
                                             class="criatura__lapis"
                                             type="button"
                                             aria-label="Editar tema de horror"

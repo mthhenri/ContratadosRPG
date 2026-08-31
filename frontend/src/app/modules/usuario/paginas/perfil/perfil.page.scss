@@ -108,21 +108,9 @@
         right: 0;
         height: 100%;
         width: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: 0;
-        border-radius: var(--radius-control);
-        color: var(--text-mute);
-        cursor: pointer;
 
         app-icone {
             font-size: 17px;
-        }
-
-        &:hover {
-            color: var(--text);
         }
     }
 

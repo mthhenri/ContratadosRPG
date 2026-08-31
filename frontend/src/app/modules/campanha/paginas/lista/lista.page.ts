@@ -10,6 +10,7 @@ import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Stat } from '../../../../shared/ui/stat/stat.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { CampanhaService } from '../../campanha.service';
 import { CampanhaCriar } from '../criar/criar.page';
@@ -42,7 +43,7 @@ interface EstatisticasCampanhas {
  */
 @Component({
   selector: 'app-campanha-lista',
-  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar, Tooltip, Stat, Botao, Cartao],
+  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar, Tooltip, Stat, Botao, BotaoIcone, Cartao],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })

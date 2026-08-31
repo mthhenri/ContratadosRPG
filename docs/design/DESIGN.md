@@ -134,6 +134,7 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.stat` | Caixa de estatística (rótulo + valor grande) | `vida` (`--vida`, fixo — não `--accent`), `energia` (`--energy`), `positivo` (`--positive`) | **`<app-stat rotulo="…" [valor]="…">`** |
 | `.stepper` | Input numérico com botões `−`/`+` | — | **`<app-step-input [formControl]="…">`** (`shared/ui/stepper/`) |
 | `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho`, `posicaoIcone`, `fluido` e `carregando`. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
+| `.botao-icone` | Ação unitária sem rótulo visual | `compacto` (26px) e `padrao` (32px); em mobile os dois passam ao alvo de toque de 44px. Exige `aria-label` e `appTooltip`; foco e desabilitado são nativos | **`<button app-botao-icone aria-label="…" appTooltip="…">`** |
 | `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
 | `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | `padrao` (`--accent`), `sutil` (`--text-mute`/`--border-strong`) | **`<app-chip variante="…">`** |
 | `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |
@@ -146,6 +147,15 @@ Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.compone
 `ficha-visualizacao.component.scss` nesta atualização — existiam como padrão real no app, mas
 nunca tinham sido documentados aqui. Ver as telas em [`examples/`](examples/README.md) para o
 resultado renderizado de cada um.
+
+### Escolha de botão
+
+Use `app-botao` quando a ação possui rótulo visual, severidade ou uma ação principal/secundária
+legível por texto. Use `app-botao-icone` somente para uma ação unitária cuja leitura visual já é
+um ícone canônico — por exemplo mostrar senha, copiar, editar ou fechar — sempre com `aria-label`
+e `appTooltip`. Teclas da calculadora, `app-step-input`, `app-aba`, o fundo que fecha um modal e
+controles de domínio compostos (como ações de inventário e vitalidade) continuam exceções: a
+interação deles representa valor, navegação ou estado de domínio, não uma ação isolada.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 

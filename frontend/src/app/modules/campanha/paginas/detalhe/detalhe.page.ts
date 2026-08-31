@@ -63,6 +63,7 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
@@ -200,6 +201,7 @@ type EquipeFichaExibicao =
     FichaRolagensPainel,
     Tooltip,
     Botao,
+    BotaoIcone,
     Cartao,
     Modal,
   ],

@@ -44,6 +44,7 @@ import { AbaPainel } from '../../../../shared/ui/abas/aba-painel.directive';
 import { Aba } from '../../../../shared/ui/abas/aba.component';
 import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
@@ -126,6 +127,7 @@ const COR_FICHA_PADRAO = '#d53030';
   selector: 'app-criatura-visualizacao',
   imports: [
     Botao,
+    BotaoIcone,
     Campo,
     Chip,
     Icone,

@@ -19,7 +19,14 @@
 >
     <header class="modal__cabecalho">
         <h2 class="modal__titulo" [id]="tituloId">{{ titulo() }}</h2>
-        <button type="button" class="modal__fechar" aria-label="Fechar" (click)="fechar()">
+        <button
+            app-botao-icone
+            type="button"
+            class="modal__fechar"
+            aria-label="Fechar"
+            appTooltip="Fechar"
+            (click)="fechar()"
+        >
             ×
         </button>
     </header>

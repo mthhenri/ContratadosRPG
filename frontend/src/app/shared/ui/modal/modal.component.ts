@@ -1,5 +1,7 @@
 import { Component, ElementRef, effect, input, output, viewChild } from '@angular/core';
 
+import { BotaoIcone } from '../botao-icone/botao-icone.component';
+
 /** Sequência para o `id` do título — alvo do `aria-labelledby` do `<dialog>`. */
 let sequenciaModal = 0;
 
@@ -50,6 +52,7 @@ function destravarRolagemDoBody(): void {
  */
 @Component({
   selector: 'app-modal',
+  imports: [BotaoIcone],
   templateUrl: './modal.component.html',
   styleUrl: './modal.component.scss',
 })

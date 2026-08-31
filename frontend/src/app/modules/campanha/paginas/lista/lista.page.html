@@ -105,6 +105,8 @@
                         @if (campanha.papel === TipoCampanhaMembroPapelEnum.MESTRE &&
                         campanha.codigoConvite) {
                         <button
+                            app-botao-icone
+                            tamanho="padrao"
                             class="campanhas__linha-copiar"
                             type="button"
                             [class.campanhas__linha-copiar--copiado]="copiadoId() === campanha.id"

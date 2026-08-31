@@ -69,9 +69,12 @@
                             required
                         />
                         <button
+                            app-botao-icone
+                            tamanho="padrao"
                             class="autenticacao__olho"
                             type="button"
                             [attr.aria-label]="senhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+                            [appTooltip]="senhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
                             [attr.aria-pressed]="senhaVisivel()"
                             (click)="alternarSenha()"
                         >
@@ -90,9 +93,12 @@
                             required
                         />
                         <button
+                            app-botao-icone
+                            tamanho="padrao"
                             class="autenticacao__olho"
                             type="button"
                             [attr.aria-label]="confirmacaoVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+                            [appTooltip]="confirmacaoVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
                             [attr.aria-pressed]="confirmacaoVisivel()"
                             (click)="alternarConfirmacao()"
                         >

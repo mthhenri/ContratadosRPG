@@ -523,6 +523,8 @@
                 <div class="detalhe__convite-linha">
                     <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
                     <button
+                        app-botao-icone
+                        tamanho="padrao"
                         class="detalhe__copiar"
                         type="button"
                         [class.detalhe__copiar--copiado]="copiado()"
@@ -534,6 +536,8 @@
                         <span class="detalhe__copiado-tooltip" role="status">Copiado</span>
                     </button>
                     <button
+                        app-botao-icone
+                        tamanho="padrao"
                         class="detalhe__regenerar"
                         type="button"
                         [class.detalhe__regenerar--confirmado]="regenerado()"

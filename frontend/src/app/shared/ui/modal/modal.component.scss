@@ -66,33 +66,6 @@
         margin: 0;
     }
 
-    &__fechar {
-        flex: 0 0 auto;
-        width: 26px;
-        height: 26px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: var(--font-mono);
-        font-size: 18px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-
-        &:hover {
-            color: var(--text);
-            border-color: var(--accent-border);
-        }
-
-        @include bp.mobile {
-            min-width: bp.$alvo-toque;
-            min-height: bp.$alvo-toque;
-        }
-    }
-
     &__corpo {
         min-height: 0;
     }

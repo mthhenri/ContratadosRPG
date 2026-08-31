@@ -267,37 +267,12 @@
     // check).
     &__linha-copiar {
         flex: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        background: transparent;
-        color: var(--text-dim);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            background-color 0.15s ease,
-            border-color 0.15s ease,
-            color 0.15s ease;
-
-        &:hover {
-            color: var(--text);
-            background: var(--surface);
-            border-color: var(--accent-border);
-        }
 
         &--copiado,
         &--copiado:hover {
             color: var(--bg);
             background: var(--accent);
             border-color: var(--accent);
-        }
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
         }
     }
 

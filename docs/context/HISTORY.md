@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-31 — UI-08: primitivo canônico para ações somente por ícone
+
+`app-botao-icone` passou a centralizar a identidade das ações unitárias sem texto visível. É um
+atributo de `<button>` nativo, com `aria-label`, `appTooltip`, foco, estado desabilitado e os
+tamanhos `compacto` (26 px) e `padrao` (32 px), promovidos a 44 px no mobile. Olhos de senha,
+cópia/regeneração de convite, lápis da ficha de criatura, ações do caderno e fechamento de modal
+agora consomem o primitivo; os layouts locais que ainda importam foram preservados, mas sua
+identidade visual duplicada saiu dos consumidores. `DESIGN.md` documenta a escolha em relação a
+`app-botao` e as exceções de controles compostos.
+
+Durante a verificação real, as ações de uma lista de caderno vazia não eram renderizadas. A causa
+foi a composição duplicada da diretiva `Tooltip`: o `hostDirective` do primitivo e o seletor direto
+da tela instanciavam a mesma diretiva no botão. O seletor direto agora exclui
+`app-botao-icone`, deixando a instância composta como única fonte do tooltip. Foi acrescentada a
+regressão integrada para as três ações do mestre sem páginas. O Caderno foi conferido no estado
+vazio em 1920×1080 e 360×800: as ações aparecem, sem overflow, e têm 44×44 px no mobile.
+
+Validação: suíte do frontend **1.460/1.460**, build concluído e lint com 0 erros (14.688 avisos
+históricos). O build ainda informa somente o aviso preexistente de orçamento SCSS em
+`FichaVisualizacao` (47,94 kB ante 45 kB).
+
 ## 2026-08-30 — UI-07: diálogos locais adotam o modal nativo
 
 Os 17 diálogos locais restantes dos módulos de campanha, ficha e encontro passaram a usar

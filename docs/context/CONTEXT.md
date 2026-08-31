@@ -4,12 +4,18 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-08-30 · **Última decisão registrada:** P-038 restaurou a suíte completa
-> do frontend ao alinhar as assertivas de `CampanhaDetalhe` aos primitivos da UI-04, reconhecer o
-> `<dialog>` nativo fechado no Painel de Encontro e proteger o foco adiado do Leitor de Documentos
-> após o teardown. `P-033`, que duplicava a assertiva do modal, foi encerrada junto. Testado:
-> frontend 1444/1444, build verde e lint sem erros (mantém 14.534 warnings preexistentes); sem
-> alteração visual. Antes disso, houve o fecho de cinco specs avulsas que
+> **Última revisão:** 2026-08-31 · **Última decisão registrada:** UI-08 consolidou
+> `app-botao-icone` como o primitivo de ações unitárias sem rótulo visual. Ele exige nome acessível
+> e tooltip, fornece os tamanhos canônicos e assume os estados visuais e o alvo de toque mobile;
+> as cópias locais em autenticação, campanhas, ficha de criatura, caderno, perfil e modal foram
+> removidas. A composição com `Tooltip` exclui o seletor direto em `app-botao-icone`, para que o
+> host directive seja a única instância no mesmo controle. Testado: frontend 1460/1460, build verde
+> e lint sem erros (mantém 14.688 warnings históricos); o aviso preexistente de orçamento SCSS em
+> `FichaVisualizacao` persiste. Antes disso, P-038 restaurou a suíte completa do frontend ao alinhar as assertivas de
+> `CampanhaDetalhe` aos primitivos da UI-04, reconhecer o `<dialog>` nativo fechado no Painel de
+> Encontro e proteger o foco adiado do Leitor de Documentos após o teardown. `P-033`, que duplicava
+> a assertiva do modal, foi encerrada junto. Testado: frontend 1444/1444, build verde e lint sem
+> erros (mantém 14.534 warnings preexistentes); sem alteração visual. Antes disso, houve o fecho de cinco specs avulsas que
 > já estavam corrigidas no código e só precisavam da verificação ao vivo obrigatória —
 > `renomear-calculadora-para-simulacao`, `maestrias-efeitos`, `resistencia-protecao-base-bonus`,
 > `ficha-resumo-stats-efetivos` e `formatacao-legibilidade-frontend`, todas movidas para
@@ -709,7 +715,6 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `ui-08` | frontend/design system | criar e adotar o primitivo de botão somente por ícone |
 | `ui-09` | frontend/design system | classificar e adotar botões de ação locais de inventário e Loja/Vendas |
 | `ui-11` | frontend/design system | normalizar tokens de acabamento, raios literais e P-042 |
 
@@ -1341,6 +1346,14 @@ escrevendo o controle nativo com `formControlName`, e ele tem de ficar filho DIR
 senão a regra global de asterisco obrigatório (`styles/tema/_base.scss`) para de casar — contrato
 travado em `campo.component.spec.ts`. `Stat` ganhou a densidade `compacto` e `StepInput` as
 variações `compacto`/`mini`, para preservar os guias de criação e a loja sem cópia local.
+
+A `ui-08` adicionou **`app-botao-icone`** ao mesmo diretório: um seletor de atributo aplicado ao
+`<button>` nativo para ações unitárias sem rótulo visual. O consumidor informa obrigatoriamente
+`aria-label` e `appTooltip`; o primitivo concentra borda, cor, hover, foco e desabilitado, com
+`[tamanho]="compacto"` (26 px) ou `padrao` (32 px), ambos promovidos para o alvo de toque de 44 px
+no mobile. Senha visível, copiar convite, lápis de edição, ações do caderno e fechar modal usam esse
+contrato. Keypads, `app-step-input`, abas, backdrop do modal e controles de domínio compostos ficam
+fora dele.
 
 A `ui-01b` completou a API de `app-botao` com **8 severidades** (`primario`, `secundario`,
 `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste`) × **4 estilos** (`preenchido`,

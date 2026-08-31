@@ -266,9 +266,12 @@
                         <div class="caderno__lista-acoes">
                             @if (modoCaderno() !== "JOGADORES") {
                                 <button
+                                    app-botao-icone
+                                    tamanho="padrao"
                                     class="caderno__acao-icone"
                                     type="button"
                                     aria-label="Criar página"
+                                    appTooltip="Criar página"
                                     (click)="iniciarNovaPagina()"
                                 >
                                     <app-icone nome="mais" />
@@ -276,9 +279,12 @@
                             }
                             @if (modoCaderno() === "MEU") {
                                 <button
+                                    app-botao-icone
+                                    tamanho="padrao"
                                     class="caderno__acao-icone"
                                     type="button"
                                     aria-label="Importar arquivo Markdown"
+                                    appTooltip="Importar arquivo Markdown"
                                     (click)="entradaImportacao.click()"
                                 >
                                     <app-icone nome="importar" />
@@ -294,9 +300,12 @@
                             }
                             @if (!ehMobile()) {
                                 <button
+                                    app-botao-icone
+                                    tamanho="padrao"
                                     class="caderno__acao-icone"
                                     type="button"
                                     aria-label="Recolher páginas"
+                                    appTooltip="Recolher páginas"
                                     (click)="alternarLista()"
                                 >
                                     <app-icone nome="voltar" />
@@ -370,9 +379,12 @@
                     }
                     @if (!ehMobile() && listaRecolhida()) {
                         <button
+                            app-botao-icone
+                            tamanho="padrao"
                             class="caderno__mostrar-lista caderno__acao-icone"
                             type="button"
                             aria-label="Mostrar páginas"
+                            appTooltip="Mostrar páginas"
                             (click)="alternarLista()"
                         >
                             <app-icone nome="voltar" />

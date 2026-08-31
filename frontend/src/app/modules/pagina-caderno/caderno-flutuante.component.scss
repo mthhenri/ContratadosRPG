@@ -153,8 +153,7 @@ $largura-caderno-sobreposicao: 640px;
         display: flex;
         gap: 6px;
     }
-    &__acoes-janela button,
-    &__acao-icone {
+    &__acoes-janela button {
         width: 32px;
         height: 32px;
         display: grid;
@@ -878,10 +877,6 @@ $largura-caderno-sobreposicao: 640px;
         }
         &__lista-cabecalho {
             min-height: 58px;
-        }
-        &__acao-icone {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
         }
         &__paginas button {
             min-height: bp.$alvo-toque;

@@ -76,7 +76,9 @@ let sequenciaBalao = 0;
  * ```
  */
 @Directive({
-  selector: '[appTooltip]',
+  // `BotaoIcone` aplica esta diretiva como host directive. Excluir o seletor direto evita que
+  // uma tela que também importe `Tooltip` a instancie duas vezes no mesmo `<button>`.
+  selector: '[appTooltip]:not([app-botao-icone])',
   host: {
     '(pointerenter)': 'aoEntrarPonteiro($event)',
     '(pointerleave)': 'aoSairPonteiro($event)',

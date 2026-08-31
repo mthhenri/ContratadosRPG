@@ -12,6 +12,7 @@ import { finalize, switchMap } from 'rxjs';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Marca } from '../../../../shared/marca/marca.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 
@@ -33,7 +34,7 @@ function senhasCoincidem(grupo: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-registro',
-  imports: [ReactiveFormsModule, RouterLink, Icone, Marca, Botao, Campo],
+  imports: [ReactiveFormsModule, RouterLink, Icone, Marca, Botao, BotaoIcone, Campo],
   templateUrl: './registro.page.html',
   styleUrl: './registro.page.scss',
 })

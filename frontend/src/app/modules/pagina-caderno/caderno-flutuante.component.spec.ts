@@ -564,6 +564,20 @@ describe('CadernoFlutuante', () => {
     ]);
   });
 
+  it('mantém as ações da lista disponíveis para o mestre sem páginas', () => {
+    api.listarPaginas.mockReturnValue(of([]));
+    fixture.componentRef.setInput('ehMestre', true);
+    fixture.detectChanges();
+
+    clicar('[aria-label="Abrir caderno"]');
+
+    const criarPagina = obter<HTMLButtonElement>('[aria-label="Criar página"]');
+    expect(criarPagina.classList).toContain('botao-icone');
+    expect(criarPagina.classList).toContain('botao-icone--padrao');
+    expect(raiz().querySelector('[aria-label="Importar arquivo Markdown"]')).not.toBeNull();
+    expect(raiz().querySelector('[aria-label="Recolher páginas"]')).not.toBeNull();
+  });
+
   it('abre resultado de página no caderno e emite resultado de ficha', () => {
     vi.useFakeTimers();
     try {

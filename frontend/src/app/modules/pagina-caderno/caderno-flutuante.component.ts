@@ -29,6 +29,7 @@ import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap,
 import { Icone } from '../../shared/icone/icone.component';
 import { Tooltip } from '../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../shared/ui/botao-icone/botao-icone.component';
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import type { CadernoGeometria } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
@@ -55,7 +56,7 @@ interface TrocaPaginaPendente {
 @Component({
   selector: 'app-caderno-flutuante',
   standalone: true,
-  imports: [Botao, DatePipe, EditorMarkdown, Icone, ReactiveFormsModule, Tooltip],
+  imports: [Botao, BotaoIcone, DatePipe, EditorMarkdown, Icone, ReactiveFormsModule, Tooltip],
   providers: [CadernoFlutuanteStore, CadernoEsquadraoColaborativoService],
   templateUrl: './caderno-flutuante.component.html',
   styleUrl: './caderno-flutuante.component.scss',

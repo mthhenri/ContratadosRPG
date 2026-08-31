@@ -367,23 +367,6 @@
     // Atributos, Descrição/Natureza/Tema de Horror, Anotações).
     &__lapis {
         flex: none;
-        font-size: 12px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        padding: 4px 7px;
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
         // Estado ativo (m4-04b): só a Classificação usa — troca o ícone por "✕" pra cancelar a edição
         // em vez de reabrir (mesmo idioma de "✕" já usado em Combos/Rolagens/Habilidades/Inventário).
         &--ativo {

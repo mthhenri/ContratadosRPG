@@ -86,9 +86,12 @@
                         required
                     />
                     <button
+                        app-botao-icone
+                        tamanho="padrao"
                         class="perfil__olho"
                         type="button"
                         [attr.aria-label]="senhaAtualVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+                        [appTooltip]="senhaAtualVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
                         [attr.aria-pressed]="senhaAtualVisivel()"
                         (click)="alternarSenhaAtual()"
                     >
@@ -111,9 +114,12 @@
                         required
                     />
                     <button
+                        app-botao-icone
+                        tamanho="padrao"
                         class="perfil__olho"
                         type="button"
                         [attr.aria-label]="novaSenhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+                        [appTooltip]="novaSenhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
                         [attr.aria-pressed]="novaSenhaVisivel()"
                         (click)="alternarNovaSenha()"
                     >
