@@ -9,13 +9,13 @@
   &__cabecalho {
     display: flex;
     align-items: center;
-    gap: 11px;
-    margin-bottom: 18px;
+    gap: var(--space-12);
+    margin-bottom: var(--space-20);
 
     &--quebravel {
       @include bp.mobile {
         flex-wrap: wrap;
-        row-gap: 10px;
+        row-gap: var(--space-12);
       }
     }
   }

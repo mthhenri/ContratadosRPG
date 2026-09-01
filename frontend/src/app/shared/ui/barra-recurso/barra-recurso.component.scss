@@ -9,20 +9,20 @@
 .barra-recurso {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-4);
     min-width: 0;
 
     &__topo {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
-        gap: 8px;
+        gap: var(--space-8);
     }
 
     &__rotulo-linha {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: var(--space-4);
         min-width: 0;
     }
 
@@ -46,7 +46,7 @@
     &__valor {
         display: inline-flex;
         align-items: baseline;
-        gap: 3px;
+        gap: var(--space-4);
         font-family: var(--font-mono);
         font-size: 11px;
         color: var(--text-mute);
@@ -67,7 +67,7 @@
             background: transparent;
             border: 1px solid transparent;
             border-radius: var(--radius-control);
-            padding: 0 3px;
+            padding: 0 var(--space-4);
             cursor: text;
             transition:
                 border-color 0.15s ease,
@@ -93,7 +93,7 @@
             background: transparent;
             border: 1px solid transparent;
             border-radius: var(--radius-control);
-            padding: 0 3px;
+            padding: 0 var(--space-4);
             cursor: text;
             transition:
                 border-color 0.15s ease,
@@ -117,7 +117,10 @@
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-control);
-        padding: 1px 3px;
+        // 1px vertical: abaixo do primeiro degrau (--space-4) — mantém a caixa de digitação
+        // rente ao texto de 12px do entorno; arredondar pro degrau engordaria o controle
+        // (ui-18, exceção documentada).
+        padding: 1px var(--space-4);
         outline: none;
         appearance: textfield;
         -moz-appearance: textfield;

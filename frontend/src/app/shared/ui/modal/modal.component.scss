@@ -35,7 +35,7 @@
     &[open] {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: var(--space-16);
     }
 
     // O fundo é o `::backdrop` nativo (top layer) — mesma opacidade dos overlays hand-rolled do
@@ -52,14 +52,14 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: var(--space-12);
         flex: 0 0 auto;
     }
 
     &__titulo-grupo {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: var(--space-8);
         min-width: 0;
     }
 
@@ -78,13 +78,14 @@
     }
 
     // Vazio (nenhum consumidor projeta `[modalAcoes]`) some por completo — `:empty` evita que a
-    // régua e o `gap: 14px` de `&[open]` reservem espaço para um rodapé que não existe.
+    // régua e o `gap: var(--space-16)` de `&[open]` reservem espaço para um rodapé que não
+    // existe.
     &__acoes {
         display: flex;
         flex-wrap: wrap;
         justify-content: flex-end;
-        gap: 10px;
-        padding-top: 14px;
+        gap: var(--space-12);
+        padding-top: var(--space-16);
         border-top: 1px solid var(--border);
         flex: 0 0 auto;
 

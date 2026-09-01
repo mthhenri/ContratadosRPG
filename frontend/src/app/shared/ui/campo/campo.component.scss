@@ -13,7 +13,7 @@ label[app-campo] {
 label[app-campo] {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: var(--space-8);
     margin: 0;
 }
 
@@ -27,7 +27,7 @@ label[app-campo] .campo__rotulo {
 .campo {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: var(--space-8);
     min-width: 0;
     margin: 0;
 
@@ -53,7 +53,7 @@ label[app-campo] .campo__rotulo {
     &__controle {
         width: 100%;
         min-height: 42px;
-        padding: 9px 11px;
+        padding: var(--space-8) var(--space-12);
         font: 13px var(--font-sans);
         color: var(--text);
         background: var(--surface-2);
@@ -85,7 +85,7 @@ label[app-campo] .campo__rotulo {
 
     // Grades densas (ficha, criatura): rótulo menor e respiro mais curto.
     &--compacto {
-        gap: 5px;
+        gap: var(--space-4);
 
         .campo__rotulo {
             font-size: 9px;

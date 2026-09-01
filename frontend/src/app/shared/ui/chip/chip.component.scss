@@ -30,7 +30,7 @@ $severidades: (
 .chip {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-4);
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
@@ -39,14 +39,14 @@ $severidades: (
     color: var(--accent);
     border: 1px solid var(--accent);
     border-radius: var(--radius-selo);
-    padding: 6px 10px;
+    padding: var(--space-8) var(--space-12);
     white-space: nowrap;
 
     &--sutil {
         letter-spacing: var(--tracking-label);
         color: var(--text-mute);
         border-color: var(--border-strong);
-        padding: 4px 9px;
+        padding: var(--space-4) var(--space-8);
     }
 
     app-icone {
@@ -61,11 +61,14 @@ $severidades: (
         color: map.get($paleta, cor);
         border-color: map.get($paleta, borda);
         background: map.get($paleta, fundo);
-        padding: 4px 9px;
+        padding: var(--space-4) var(--space-8);
     }
 
     .chip--severidade-#{$nome}.chip--tom-contorno {
         background: transparent;
-        padding: 1px 6px;
+        // 1px: abaixo do primeiro degrau (--space-4) — compensa a borda extra do tom contorno
+        // pra manter a caixa do mesmo tamanho; arredondar pro degrau mudaria o chip perceptivelmente
+        // (ui-18, exceção documentada).
+        padding: 1px var(--space-8);
     }
 }

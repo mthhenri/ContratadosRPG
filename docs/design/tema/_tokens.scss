@@ -93,7 +93,14 @@
   --radius-selo: 3px;
   --radius-tight: 2px;
 
-  /* --- Espaço (densidade confortável) --- */
+  /* --- Espaço (escala de 5 degraus — ui-18 — 4 · 8 · 12 · 16 · 20) --- */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+
+  /* --- Espaço semântico (densidade confortável) --- */
   --pad-card: 20px;
   --gap-grid: 16px;
 

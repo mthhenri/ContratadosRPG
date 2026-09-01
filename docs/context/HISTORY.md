@@ -1,5 +1,47 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — UI-18: cinco degraus de espaço fecham a última dimensão sem escala do tema
+
+Filha da auditoria visual (achado 3 de Tokens): forma e tipografia já eram tokenizadas, espaço
+tinha só dois tokens semânticos (`--pad-card`, `--gap-grid`) e todo o resto era literal por
+componente. `tema/_tokens.scss` (docs + frontend) ganhou cinco degraus congelados —
+`--space-4`/`--space-8`/`--space-12`/`--space-16`/`--space-20` — escolhidos para preservar a
+densidade atual, não para redesenhar nada.
+
+**Escopo real:** não só os quatro exemplos citados na spec (`stat`, `chip`, `campo`, item de
+`HistoricoRolagensSidebar`) — a nota "Fora de Escopo" da spec ("só `shared/ui` e os consumidores
+citados") confirma que a pasta inteira entra. Migrados os 13 primitivos com `padding`/`gap`/
+`margin` literal em px: `stat`, `chip`, `campo`, `cartao`, `botao`, `abas`/`aba`, `modal`,
+`confirmacao`, `notificacao`, `stepper`, `painel-flutuante`, `barra-recurso`, `estado-vazio`, mais
+o item de `HistoricoRolagensSidebar` (o consumidor citado) — cerca de 60 declarações ao todo.
+
+**Arredondamento:** cada literal foi levado ao degrau mais próximo (regra padrão de
+arredondamento matemático — metade sobe); a maioria ficou a ≤2px do valor anterior, dentro da
+tolerância da própria spec. Duas exceções ficaram fora da escala, cada uma com comentário `//
+ui-18` no SCSS explicando o motivo: o `1px` de compensação fina em `chip--tom-contorno` (compensa
+a borda extra do tom contorno) e no campo de digitação `barra-recurso__entrada` (mantém a caixa
+rente ao texto de 12px) — abaixo do primeiro degrau, arredondar para `4px` teria mudado os dois
+controles miniatura de forma perceptível (delta de 3px, acima da tolerância de ±2px). O `32px` de
+`estado-vazio` não é exceção de arredondamento — virou `calc(var(--space-16) * 2)`, exato, porque
+não existe um degrau isolado nesse tamanho. `DESIGN.md` ganhou a seção "Escala de espaço" com a
+tabela dos cinco degraus e a regra: literal de espaço novo só entra com justificativa escrita no
+PR, mesmo tratamento que a proibição de hex/raio hardcoded já dava a cor e forma.
+
+**Verificação:** build de produção limpo, suíte completa frontend 1506/1506, lint sem erro novo
+(só os avisos preexistentes de aspas, repositório inteiro). Verificação visual ao vivo (Postgres
+16 nativo — Docker bloqueado pela política de rede do ambiente, mesma situação de `ui-16`/`ui-17`)
+em `1920×1080`/`360×800`, comparando a renderização real contra as capturas congeladas de
+`docs/design/examples/` (que preservam o espaçamento anterior à task, sem depender de memória):
+`campanhas.html`/`lobby-de-campanha.html` deram pixel a pixel no mesmo lugar/tamanho de antes —
+cards de stat, chip de papel, `app-cartao`, `app-botao`, mini-card com `app-barra-recurso` — nos
+dois viewports. Também exercitados ao vivo sem regressão: `app-campo` (login), `app-modal`
+(diálogo de tema), `app-painel-flutuante` (calculadora + duas sidebars de inventário/histórico),
+`app-estado-vazio` (histórico e inventário vazios), `app-abas`/`app-aba` (leitor de documentos e a
+barra de 7 abas da calculadora pública) e `app-step-input` (atributos da calculadora). Não houve
+tempo de exercitar ao vivo `notificacao`/`confirmacao` isoladas nem o item de histórico com dados
+reais — mudanças de uma linha cada, mesmo mecanismo de substituição de token já confirmado em todo
+o resto; risco residual baixo, registrado aqui em vez de inflar o gate.
+
 ## 2026-09-01 — UI-17: `app-painel-flutuante` absorve arraste, posição, z-index, minimizar e fechar de calculadora, caderno e leitor de documentos
 
 A maior task derivada da auditoria visual (`INDEX-ajustes-auditoria.md`: "único que move

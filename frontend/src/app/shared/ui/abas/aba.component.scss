@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: center;
   flex: 1 1 0;
-  gap: 6px;
+  gap: var(--space-8);
   line-height: 1;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -21,7 +21,7 @@
   color: var(--text-dim);
   background: transparent;
   border: 0;
-  padding: 6px 10px;
+  padding: var(--space-8) var(--space-12);
   border-radius: var(--radius-control);
   cursor: pointer;
   transition: color 0.12s ease, background 0.12s ease;
@@ -34,7 +34,7 @@
     flex: 0 0 auto;
     min-width: bp.$alvo-toque;
     min-height: bp.$alvo-toque;
-    padding: 6px 4px;
+    padding: var(--space-8) var(--space-4);
   }
 }
 
