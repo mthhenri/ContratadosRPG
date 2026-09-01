@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — README raiz: corrigida a linha de arquitetura que ainda descrevia PrimeNG
+
+`README.md` (raiz) descrevia `frontend/` como "Angular 21 + PrimeNG 21" mesmo depois da `ui-05`
+(2026-08-29) ter removido `primeng`/`@primeuix/themes` do projeto — o fecho daquela task já tinha
+corrigido `SYSTEM.SPEC.md`, `CONVENTIONS.md`, `docs/design/DESIGN.md` e `_componentes.scss`
+(listados no próprio `ui-05.spec.md`), mas não citava o README raiz, que ficou como o único lugar
+do repositório ainda afirmando uma dependência que não existe mais (confirmado por
+`grep -rn "primeng\|primeuix\|PrimeNG" frontend/src frontend/package.json docs/`, que só bate em
+registro histórico de `HISTORY.md`/`specs/done/` e nesta linha do README). Corrigida a linha da
+seção "Arquitetura" para descrever a biblioteca de componentes própria em
+`frontend/src/app/shared/ui/` e adicionada uma linha na tabela de documentação apontando para
+`docs/design/DESIGN.md`, que faltava ali. Sem mudança de código; commit isolado (`3c62752`),
+sem tocar os arquivos da `ui-12` em andamento na mesma árvore de trabalho.
+
 ## 2026-09-01 — Deploy: backend migra do Render para o Google Cloud Run
 
 O Dockerfile multi-stage (`build`/`migrator`/`runtime`) e o `cloudbuild.yaml` já existiam desde
