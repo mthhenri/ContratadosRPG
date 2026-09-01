@@ -12,6 +12,7 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 |---|---|
 | [docs/SYSTEM.SPEC.md](docs/SYSTEM.SPEC.md) | Constituição do projeto — precede tudo |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | Referência rápida de convenções de código |
+| [docs/design/DESIGN.md](docs/design/DESIGN.md) | Identidade visual, tokens e biblioteca de componentes (`frontend/src/app/shared/ui/`) |
 | [docs/context/CONTEXT.md](docs/context/CONTEXT.md) | Estado atual e próxima task |
 | [docs/context/HISTORY.md](docs/context/HISTORY.md) | Histórico completo — o que aconteceu e por quê |
 | [docs/context/PROBLEMS.md](docs/context/PROBLEMS.md) | Problemas conhecidos do sistema |
@@ -32,7 +33,9 @@ Monorepo npm workspaces:
 - **`shared/`** (`@contratados-rpg/shared`) — DTOs, enums, interfaces, validators e o
   motor de regras do jogo (`regras/`)
 - **`backend/`** — NestJS + Knex (SQL bruto) + Socket.IO (broadcast-only) → Google Cloud Run
-- **`frontend/`** — Angular 21 + PrimeNG 21 (standalone + Signals) → Cloudflare
+- **`frontend/`** — Angular 21 (standalone + Signals), biblioteca de componentes própria em
+  `frontend/src/app/shared/ui/` (sem PrimeNG desde `ui-05`, ver `docs/design/DESIGN.md`) →
+  Cloudflare
 - **Banco** — PostgreSQL 16 (local: Docker; produção: Supabase)
 
 ## Desenvolvimento
