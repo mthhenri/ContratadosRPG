@@ -96,6 +96,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -402,6 +403,7 @@ export interface AjusteClasse {
     OverflowFade,
     Tooltip,
     Chip,
+    Botao,
     Modal,
     AjusteEnquadramentoImagem,
     FocoImagem,

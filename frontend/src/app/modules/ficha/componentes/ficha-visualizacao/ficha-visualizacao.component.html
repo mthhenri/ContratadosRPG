@@ -370,6 +370,8 @@
                             <div class="ficha-ident__classe-acoes">
                                 <button
                                     type="button"
+                                    app-botao
+                                    variante="primario"
                                     class="ficha-cartao__acao ficha-cartao__acao--confirmar"
                                     data-testid="confirmar-visibilidade"
                                     (click)="confirmarAlteracaoVisibilidade()"
@@ -378,6 +380,8 @@
                                 </button>
                                 <button
                                     type="button"
+                                    app-botao
+                                    variante="secundario"
                                     class="ficha-cartao__acao"
                                     data-testid="cancelar-visibilidade"
                                     (click)="cancelarAlteracaoVisibilidade()"
@@ -622,6 +626,8 @@
                                         <button
                                             class="ficha-cartao__acao ficha-cartao__acao--confirmar"
                                             type="button"
+                                            app-botao
+                                            variante="primario"
                                             [disabled]="!origemRascunhoValida()"
                                             (click)="confirmarOrigem()"
                                         >
@@ -630,6 +636,8 @@
                                         <button
                                             class="ficha-cartao__acao"
                                             type="button"
+                                            app-botao
+                                            variante="secundario"
                                             (click)="cancelarOrigem()"
                                         >
                                             Cancelar
@@ -692,6 +700,8 @@
                                     <button
                                         class="ficha-cartao__acao ficha-cartao__acao--confirmar"
                                         type="button"
+                                        app-botao
+                                        variante="primario"
                                         (click)="confirmarClasse()"
                                     >
                                         Salvar
@@ -699,6 +709,8 @@
                                     <button
                                         class="ficha-cartao__acao"
                                         type="button"
+                                        app-botao
+                                        variante="secundario"
                                         (click)="cancelarClasse()"
                                     >
                                         Cancelar
@@ -1402,6 +1414,8 @@
                                     <button
                                         class="ficha-cartao__acao ficha-cartao__acao--confirmar"
                                         type="button"
+                                        app-botao
+                                        variante="primario"
                                         (click)="confirmarAtributos()"
                                     >
                                         Salvar
@@ -1409,6 +1423,8 @@
                                     <button
                                         class="ficha-cartao__acao"
                                         type="button"
+                                        app-botao
+                                        variante="secundario"
                                         (click)="cancelarAtributos()"
                                     >
                                         Cancelar
@@ -2584,6 +2600,8 @@
                                                         <button
                                                             type="button"
                                                             class="ficha-cartao__acao ficha-cartao__acao--confirmar"
+                                                            app-botao
+                                                            variante="primario"
                                                             (click)="confirmarAtalhoTraumaLimiar()"
                                                         >
                                                             Registrar trauma
@@ -2591,6 +2609,8 @@
                                                         <button
                                                             type="button"
                                                             class="ficha-cartao__acao"
+                                                            app-botao
+                                                            variante="secundario"
                                                             (click)="cancelarAtalhoTraumaLimiar()"
                                                         >
                                                             Cancelar
@@ -2600,6 +2620,8 @@
                                                     <button
                                                         type="button"
                                                         class="ficha-cartao__acao"
+                                                        app-botao
+                                                        variante="secundario"
                                                         (click)="abrirAtalhoTraumaLimiar()"
                                                     >
                                                         + Registrar trauma "Limiar da Humanidade"
@@ -2802,6 +2824,8 @@
                 <button
                     class="ficha-cartao__acao ficha-cartao__acao--confirmar"
                     type="button"
+                    app-botao
+                    variante="primario"
                     (click)="confirmarPersonalidadeHabilidade()"
                 >
                     Salvar
@@ -2809,6 +2833,8 @@
                 <button
                     class="ficha-cartao__acao"
                     type="button"
+                    app-botao
+                    variante="secundario"
                     (click)="cancelarPersonalidadeHabilidade()"
                 >
                     Cancelar
@@ -2828,12 +2854,14 @@
         <button
             class="ficha-cartao__acao ficha-cartao__acao--confirmar"
             type="button"
+            app-botao
+            variante="primario"
             data-testid="confirmar-limpar-origem"
             (click)="confirmarLimparOrigemEHabilidade()"
         >
             Confirmar
         </button>
-        <button class="ficha-cartao__acao" type="button" (click)="cancelarLimparOrigem()">
+        <button app-botao variante="secundario" class="ficha-cartao__acao" type="button" (click)="cancelarLimparOrigem()">
             Cancelar
         </button>
     </div>

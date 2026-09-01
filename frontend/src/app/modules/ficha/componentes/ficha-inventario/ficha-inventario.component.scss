@@ -287,30 +287,14 @@
     // === Botões ===
     &__btn {
         font-size: 12px;
-        font-weight: 600;
-        border-radius: var(--radius-control);
         padding: 7px 12px;
-        cursor: pointer;
 
-        &--principal {
-            background: var(--accent);
-            color: var(--bg);
-            border: 0;
-        }
-        &--secundario {
-            background: transparent;
-            color: var(--text-dim);
-            border: 1px solid var(--border-strong);
-        }
         &--largo {
             width: 100%;
             margin-top: auto;
         }
         &--flex {
             flex: 1;
-        }
-        &--icone {
-            padding: 4px 8px;
         }
         // "+ Adicionar itens" / "+ Item custom": botão quadrado só com o ícone (a pedido do autor —
         // eram botões de texto largos demais pra caber lado a lado numa coluna estreita).
@@ -328,30 +312,9 @@
             padding: 5px 8px;
             font-size: 11px;
         }
-        &--ativo {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--accent-dim);
-        }
-        // Feedback de adição: pisca positivo por ~900ms (fonte do "✓ Adicionado").
+        // Feedback de adição: a cor vem de `variante="positivo"`; fica local apenas a animação.
         &--feito {
-            background: var(--positive);
-            color: var(--bg);
-            border: 0;
             animation: ficha-inv-pulso 0.9s ease-out;
-        }
-        // Ação destrutiva confirmada (remover/esvaziar).
-        &--perigo {
-            background: var(--accent);
-            color: var(--bg);
-            border: 0;
-        }
-        &:hover:not(:disabled) {
-            filter: brightness(1.08);
-        }
-        &:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
         }
     }
 
@@ -674,20 +637,11 @@
         }
     }
     &__stepper {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-
-        .ficha-inv__entrada--num {
-            flex: 1;
-            min-width: 0;
-        }
         &--modal {
-            justify-content: center;
             margin: 4px 0 12px;
 
-            .ficha-inv__entrada--num {
-                max-width: 90px;
+            app-step-input {
+                max-width: 180px;
             }
         }
     }
@@ -1746,15 +1700,12 @@
             height: bp.$alvo-toque;
             font-size: 16px;
         }
-        // m3-56: 40px → 44px (`$alvo-toque`) — o botão de ação primária (Adicionar/Confirmar/Aplicar)
-        // é controle principal, não decorativo; os 40px antigos ficavam abaixo do alvo de toque.
+        // Tamanho/identidade vêm do primitivo; esta classe só mantém o piso de layout do contexto.
         &__btn {
             min-height: bp.$alvo-toque;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            // m3-60: `&--icone` (lupa da busca, X de remover item) já tinha os 44px de altura vindos
-            // daqui, mas ficava em 28–32px de largura — só o eixo horizontal faltava.
             min-width: bp.$alvo-toque;
         }
 

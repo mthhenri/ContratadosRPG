@@ -255,6 +255,8 @@
             <div class="compras-custom-acoes">
                 <button
                     type="submit"
+                    app-botao
+                    variante="primario"
                     class="compras-btn compras-btn--adicionar"
                     [disabled]="itemCustomForm.invalid"
                 >
@@ -262,6 +264,8 @@
                 </button>
                 <button
                     type="button"
+                    app-botao
+                    variante="secundario"
                     class="compras-btn compras-btn--remover"
                     (click)="cancelarCriarItem()"
                 >
@@ -308,6 +312,8 @@
                 </div>
                 <button
                     type="button"
+                    app-botao
+                    [variante]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome) ? 'positivo' : 'primario'"
                     class="compras-btn compras-btn--adicionar"
                     [class.compras-btn--feito]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome)"
                     (click)="adicionarItem(cartao)"
@@ -345,6 +351,8 @@
                     @if (amp.empilhamentosAtuais > 0) {
                     <button
                         type="button"
+                        app-botao
+                        variante="secundario"
                         class="compras-btn compras-btn--remover"
                         (click)="removerAmplificador(amp.nome)"
                     >
@@ -353,6 +361,8 @@
                     }
                     <button
                         type="button"
+                        app-botao
+                        [variante]="adicionadoRecente() === 'amp:' + amp.nome ? 'positivo' : 'primario'"
                         class="compras-btn compras-btn--adicionar"
                         [class.compras-btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
                         [disabled]="!amp.podeAdicionar"
@@ -472,6 +482,7 @@
                         <span class="compras-remover-texto">Remover item?</span>
                         <button
                             type="button"
+                            app-botao-icone
                             class="compras-btn compras-btn--adicionar compras-btn--icone"
                             [appTooltip]="'Confirmar remoção'"
                             aria-label="Confirmar remoção"
@@ -481,6 +492,7 @@
                         </button>
                         <button
                             type="button"
+                            app-botao-icone
                             class="compras-btn compras-btn--remover compras-btn--icone"
                             [appTooltip]="'Cancelar'"
                             aria-label="Cancelar remoção"
@@ -491,6 +503,7 @@
                         } @else {
                         <button
                             type="button"
+                            app-botao-icone
                             class="compras-btn compras-btn--remover compras-btn--icone"
                             [appTooltip]="'Remover'"
                             aria-label="Remover item"
@@ -761,6 +774,8 @@
                         <div class="compras-custom-acoes">
                             <button
                                 type="submit"
+                                app-botao
+                                variante="primario"
                                 class="compras-btn compras-btn--adicionar"
                                 [disabled]="modCustomForm.invalid"
                             >
@@ -768,6 +783,8 @@
                             </button>
                             <button
                                 type="button"
+                                app-botao
+                                variante="secundario"
                                 class="compras-btn compras-btn--remover"
                                 (click)="cancelarCriarMod()"
                             >
@@ -778,6 +795,8 @@
                     } @else {
                     <button
                         type="button"
+                        app-botao
+                        variante="secundario"
                         class="compras-btn compras-btn--remover compras-btn--pequeno"
                         (click)="alternarCriarMod(item.uid)"
                     >
@@ -823,6 +842,8 @@
                         <div class="compras-mod-entrada__custo">{{ entrada.custoTexto }}</div>
                         <button
                             type="button"
+                            app-botao
+                            variante="primario"
                             class="compras-btn compras-btn--adicionar compras-btn--pequeno"
                             [disabled]="!entrada.podeAdicionar"
                             (click)="adicionarModificacao(item.uid, entrada.nome)"
@@ -868,6 +889,8 @@
                 <div class="compras-item__acoes">
                     <button
                         type="button"
+                        app-botao
+                        variante="secundario"
                         class="compras-btn compras-btn--remover"
                         (click)="removerAmplificador(amp.nome)"
                     >
@@ -875,6 +898,8 @@
                     </button>
                     <button
                         type="button"
+                        app-botao
+                        [variante]="adicionadoRecente() === 'amp:' + amp.nome ? 'positivo' : 'primario'"
                         class="compras-btn compras-btn--adicionar"
                         [class.compras-btn--feito]="adicionadoRecente() === 'amp:' + amp.nome"
                         [disabled]="!amp.podeAumentar"
@@ -1036,6 +1061,9 @@
             <div class="compras-modal__acoes">
                 <button
                     type="button"
+                    app-botao
+                    variante="perigo"
+                    estilo="preenchido"
                     class="compras-btn compras-btn--adicionar"
                     (click)="confirmarRemoverStack()"
                 >
@@ -1043,6 +1071,8 @@
                 </button>
                 <button
                     type="button"
+                    app-botao
+                    variante="secundario"
                     class="compras-btn compras-btn--remover"
                     (click)="cancelarRemocao()"
                 >
@@ -1070,6 +1100,8 @@
             <div class="compras-modal__acoes">
                 <button
                     type="button"
+                    app-botao
+                    variante="primario"
                     class="compras-btn compras-btn--adicionar"
                     (click)="copiarCodigoCarrinho()"
                 >
@@ -1077,6 +1109,8 @@
                 </button>
                 <button
                     type="button"
+                    app-botao
+                    variante="secundario"
                     class="compras-btn compras-btn--remover"
                     (click)="fecharModalExportar()"
                 >
@@ -1108,6 +1142,8 @@
             <div class="compras-modal__acoes">
                 <button
                     type="button"
+                    app-botao
+                    variante="primario"
                     class="compras-btn compras-btn--adicionar"
                     (click)="confirmarImportarCarrinho()"
                 >
@@ -1115,6 +1151,8 @@
                 </button>
                 <button
                     type="button"
+                    app-botao
+                    variante="secundario"
                     class="compras-btn compras-btn--remover"
                     (click)="fecharModalImportar()"
                 >

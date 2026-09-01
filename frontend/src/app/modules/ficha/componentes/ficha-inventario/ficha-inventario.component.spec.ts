@@ -97,6 +97,13 @@ describe('FichaInventario', () => {
     };
   }
 
+  it('veste ações rotuladas e por ícone com os primitivos canônicos', () => {
+    const { raiz } = montar({ itens: [itemLeve], amplificadores: [] });
+
+    expect(raiz.querySelector('.ficha-inv__btn--principal')?.classList).toContain('botao');
+    expect(raiz.querySelector('.ficha-inv__btn--icone')?.classList).toContain('botao-icone');
+  });
+
   it('oferece mandar item não equipado para a base quando habilitado', () => {
     const alvo = montar({ itens: [itemLeve], amplificadores: [] }, true, 100, true, false, true);
     const botao = Array.from(alvo.raiz.querySelectorAll('button'))

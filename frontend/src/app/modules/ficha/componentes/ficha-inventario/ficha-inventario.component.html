@@ -69,6 +69,7 @@
                 />
                 <button
                     type="button"
+                    app-botao-icone
                     class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
                     aria-label="Fechar busca"
                     [appTooltip]="'Fechar busca'"
@@ -87,6 +88,7 @@
                 <div class="ficha-inv__acoes-grupo">
                     <button
                         type="button"
+                        app-botao-icone
                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--quadrado"
                         [attr.aria-expanded]="catalogoAberto()"
                         [attr.aria-label]="catalogoAberto() ? 'Fechar catálogo' : 'Adicionar itens'"
@@ -97,6 +99,7 @@
                     </button>
                     <button
                         type="button"
+                        app-botao-icone
                         class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--quadrado"
                         [class.ficha-inv__btn--ativo]="criandoItem()"
                         [attr.aria-expanded]="criandoItem()"
@@ -154,6 +157,8 @@
             <div class="ficha-inv__acoes">
                 <button
                     type="button"
+                    app-botao
+                    variante="primario"
                     class="ficha-inv__btn ficha-inv__btn--principal"
                     [attr.aria-expanded]="catalogoAberto()"
                     (click)="alternarCatalogo()"
@@ -162,6 +167,8 @@
                 </button>
                 <button
                     type="button"
+                    app-botao
+                    [variante]="criandoItem() ? 'primario' : 'secundario'"
                     class="ficha-inv__btn ficha-inv__btn--secundario"
                     [class.ficha-inv__btn--ativo]="criandoItem()"
                     [attr.aria-expanded]="criandoItem()"
@@ -231,6 +238,8 @@
                 @if (!inventarioVazio() && !confirmandoEsvaziar()) {
                     <button
                         type="button"
+                        app-botao
+                        variante="secundario"
                         class="ficha-inv__btn ficha-inv__btn--secundario"
                         (click)="esvaziar()"
                     >
@@ -242,6 +251,9 @@
                         <span class="ficha-inv__confirmar-texto">Esvaziar tudo?</span>
                         <button
                             type="button"
+                            app-botao
+                            variante="perigo"
+                            estilo="preenchido"
                             class="ficha-inv__btn ficha-inv__btn--perigo"
                             (click)="confirmarEsvaziar()"
                         >
@@ -249,6 +261,8 @@
                         </button>
                         <button
                             type="button"
+                            app-botao
+                            variante="secundario"
                             class="ficha-inv__btn ficha-inv__btn--secundario"
                             (click)="cancelarEsvaziar()"
                         >
@@ -258,6 +272,8 @@
                 }
                 <button
                     type="button"
+                    app-botao
+                    [variante]="mostrarCustos() ? 'primario' : 'secundario'"
                     class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--custos"
                     [class.ficha-inv__btn--ativo]="mostrarCustos()"
                     [attr.aria-pressed]="mostrarCustos()"
@@ -274,6 +290,7 @@
         <ng-template #botaoBuscaTemplate>
             <button
                 type="button"
+                app-botao-icone
                 class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
                 aria-label="Pesquisar no inventário"
                 [appTooltip]="'Pesquisar no inventário'"
@@ -553,6 +570,8 @@
                 <div class="ficha-inv__form-acoes">
                     <button
                         type="submit"
+                        app-botao
+                        variante="primario"
                         class="ficha-inv__btn ficha-inv__btn--principal"
                         [disabled]="itemCustomForm.invalid"
                     >
@@ -560,6 +579,8 @@
                     </button>
                     <button
                         type="button"
+                        app-botao
+                        variante="secundario"
                         class="ficha-inv__btn ficha-inv__btn--secundario"
                         (click)="
                             editandoItemIndice() !== null
@@ -687,6 +708,8 @@
                                 >
                                     <button
                                         type="button"
+                                        app-botao
+                                        variante="secundario"
                                         class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--largo"
                                         (click)="
                                             escolherTipoFragmento(
@@ -699,6 +722,8 @@
                                     </button>
                                     <button
                                         type="button"
+                                        app-botao
+                                        variante="primario"
                                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo"
                                         (click)="
                                             escolherTipoFragmento(
@@ -744,6 +769,8 @@
                                 </div>
                                 <button
                                     type="button"
+                                    app-botao
+                                    [variante]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome) ? 'positivo' : 'primario'"
                                     class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo"
                                     [class.ficha-inv__btn--feito]="
                                         adicionadoRecente() ===
@@ -795,7 +822,10 @@
                                     @if (amp.empilhamentosAtuais > 0) {
                                         <button
                                             type="button"
+                                            app-botao-icone
                                             class="ficha-inv__btn ficha-inv__btn--secundario"
+                                            [appTooltip]="'Remover um stack de ' + amp.nome"
+                                            [attr.aria-label]="'Remover um stack de ' + amp.nome"
                                             (click)="removerAmplificador(amp.nome)"
                                         >
                                             −
@@ -803,6 +833,8 @@
                                     }
                                     <button
                                         type="button"
+                                        app-botao
+                                        [variante]="adicionadoRecente() === 'amp:' + amp.nome ? 'positivo' : 'primario'"
                                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
                                         [class.ficha-inv__btn--feito]="
                                             adicionadoRecente() === 'amp:' + amp.nome
@@ -1171,6 +1203,7 @@
                                     <span class="ficha-inv__remover-texto">Remover item?</span>
                                     <button
                                         type="button"
+                                        app-botao-icone
                                         class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--icone"
                                         [appTooltip]="'Confirmar remoção'"
                                         aria-label="Confirmar remoção"
@@ -1180,6 +1213,7 @@
                                     </button>
                                     <button
                                         type="button"
+                                        app-botao-icone
                                         class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
                                         [appTooltip]="'Cancelar'"
                                         aria-label="Cancelar remoção"
@@ -1190,6 +1224,7 @@
                                 } @else {
                                     <button
                                         type="button"
+                                        app-botao-icone
                                         class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--icone"
                                         [appTooltip]="'Remover'"
                                         [attr.aria-label]="'Remover item ' + item.nomeExibido"
@@ -1245,6 +1280,7 @@
                         } @else if (editavel()) {
                             <button
                                 type="button"
+                                app-botao-icone
                                 class="ficha-inv__mini-btn ficha-inv__municao-consumir"
                                 [class.ficha-inv__municao-consumir--feito]="
                                     contagemMunicaoConsumidaIndice() === item.indice
@@ -1517,6 +1553,8 @@
                             <div class="ficha-inv__form-acoes">
                                 <button
                                     type="button"
+                                    app-botao
+                                    variante="primario"
                                     class="ficha-inv__btn ficha-inv__btn--principal"
                                     [disabled]="conflitoFuncaoFragmento()"
                                     (click)="confirmarAplicarFragmento(item.indice)"
@@ -1525,6 +1563,8 @@
                                 </button>
                                 <button
                                     type="button"
+                                    app-botao
+                                    variante="secundario"
                                     class="ficha-inv__btn ficha-inv__btn--secundario"
                                     (click)="cancelarAplicarFragmento()"
                                 >
@@ -1638,6 +1678,8 @@
                             <div class="ficha-inv__form-acoes">
                                 <button
                                     type="button"
+                                    app-botao
+                                    variante="primario"
                                     class="ficha-inv__btn ficha-inv__btn--principal"
                                     [disabled]="
                                         !opcaoConsumoFragmentoEscolhida() ||
@@ -1650,6 +1692,8 @@
                                 </button>
                                 <button
                                     type="button"
+                                    app-botao
+                                    variante="secundario"
                                     class="ficha-inv__btn ficha-inv__btn--secundario"
                                     (click)="cancelarConsumirFragmento()"
                                 >
@@ -2079,6 +2123,8 @@
                                             <div class="ficha-inv__form-acoes">
                                                 <button
                                                     type="submit"
+                                                    app-botao
+                                                    variante="primario"
                                                     class="ficha-inv__btn ficha-inv__btn--principal"
                                                     [disabled]="modCustomForm.invalid"
                                                 >
@@ -2086,6 +2132,8 @@
                                                 </button>
                                                 <button
                                                     type="button"
+                                                    app-botao
+                                                    variante="secundario"
                                                     class="ficha-inv__btn ficha-inv__btn--secundario"
                                                     (click)="cancelarCriarMod()"
                                                 >
@@ -2096,6 +2144,8 @@
                                     } @else {
                                         <button
                                             type="button"
+                                            app-botao
+                                            variante="secundario"
                                             class="ficha-inv__btn ficha-inv__btn--secundario"
                                             (click)="alternarCriarMod(item.indice)"
                                         >
@@ -2166,6 +2216,8 @@
                                                     </div>
                                                     <button
                                                         type="button"
+                                                        app-botao
+                                                        variante="primario"
                                                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo ficha-inv__btn--pequeno"
                                                         [disabled]="!entrada.podeAdicionar"
                                                         (click)="
@@ -2336,13 +2388,18 @@
                                 <div class="ficha-inv__cartao-acoes">
                                     <button
                                         type="button"
+                                        app-botao-icone
                                         class="ficha-inv__btn ficha-inv__btn--secundario"
+                                        [appTooltip]="'Remover um stack de ' + amp.nome"
+                                        [attr.aria-label]="'Remover um stack de ' + amp.nome"
                                         (click)="removerAmplificador(amp.nome)"
                                     >
                                         − Stack
                                     </button>
                                     <button
                                         type="button"
+                                        app-botao
+                                        [variante]="adicionadoRecente() === 'amp:' + amp.nome ? 'positivo' : 'primario'"
                                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
                                         [class.ficha-inv__btn--feito]="
                                             adicionadoRecente() === 'amp:' + amp.nome
@@ -2377,34 +2434,20 @@
                         Quantas unidades remover? (1–{{ stackItem.quantidade }})
                     </p>
                     <div class="ficha-inv__stepper ficha-inv__stepper--modal">
-                        <button
-                            type="button"
-                            class="ficha-inv__mini-btn"
-                            aria-label="Diminuir quantidade"
-                            (click)="ajustarQuantidadeRemover(-1)"
-                        >
-                            −
-                        </button>
-                        <input
-                            class="ficha-inv__entrada ficha-inv__entrada--num"
-                            type="number"
-                            aria-label="Quantidade a remover"
+                        <app-step-input
+                            [formControl]="quantidadeRemover"
                             [min]="1"
                             [max]="stackItem.quantidade"
-                            [formControl]="quantidadeRemover"
+                            tamanho="compacto"
+                            ariaRotulo="Quantidade a remover"
                         />
-                        <button
-                            type="button"
-                            class="ficha-inv__mini-btn"
-                            aria-label="Aumentar quantidade"
-                            (click)="ajustarQuantidadeRemover(1)"
-                        >
-                            +
-                        </button>
                     </div>
                     <div class="ficha-inv__modal-acoes">
                         <button
                             type="button"
+                            app-botao
+                            variante="perigo"
+                            estilo="preenchido"
                             class="ficha-inv__btn ficha-inv__btn--perigo ficha-inv__btn--flex"
                             (click)="confirmarRemoverStack()"
                         >
@@ -2412,6 +2455,8 @@
                         </button>
                         <button
                             type="button"
+                            app-botao
+                            variante="secundario"
                             class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex"
                             (click)="cancelarRemocao()"
                         >
@@ -2444,34 +2489,19 @@
                         }})
                     </p>
                     <div class="ficha-inv__stepper ficha-inv__stepper--modal">
-                        <button
-                            type="button"
-                            class="ficha-inv__mini-btn"
-                            aria-label="Diminuir quantidade"
-                            (click)="ajustarQuantidadeMover(-1)"
-                        >
-                            −
-                        </button>
-                        <input
-                            class="ficha-inv__entrada ficha-inv__entrada--num"
-                            type="number"
-                            aria-label="Quantidade a mover"
+                        <app-step-input
+                            [formControl]="quantidadeMover"
                             [min]="1"
                             [max]="moverItem.quantidade"
-                            [formControl]="quantidadeMover"
+                            tamanho="compacto"
+                            ariaRotulo="Quantidade a mover"
                         />
-                        <button
-                            type="button"
-                            class="ficha-inv__mini-btn"
-                            aria-label="Aumentar quantidade"
-                            (click)="ajustarQuantidadeMover(1)"
-                        >
-                            +
-                        </button>
                     </div>
                     <div class="ficha-inv__modal-acoes">
                         <button
                             type="button"
+                            app-botao
+                            variante="primario"
                             class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
                             (click)="confirmarMoverQuantidade()"
                         >
@@ -2479,6 +2509,8 @@
                         </button>
                         <button
                             type="button"
+                            app-botao
+                            variante="secundario"
                             class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex"
                             (click)="cancelarMoverQuantidade()"
                         >
@@ -2506,18 +2538,19 @@
                         Quantas unidades de “{{ baseItem.nome }}”? (1–{{ baseItem.quantidade }})
                     </p>
                     <div class="ficha-inv__stepper ficha-inv__stepper--modal">
-                        <input
-                            class="ficha-inv__entrada ficha-inv__entrada--num"
-                            type="number"
-                            aria-label="Quantidade para a base"
+                        <app-step-input
+                            [formControl]="quantidadeMandarParaBase"
                             [min]="1"
                             [max]="baseItem.quantidade"
-                            [formControl]="quantidadeMandarParaBase"
+                            tamanho="compacto"
+                            ariaRotulo="Quantidade para a base"
                         />
                     </div>
                     <div class="ficha-inv__modal-acoes">
                         <button
                             type="button"
+                            app-botao
+                            variante="primario"
                             class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
                             (click)="confirmarMandarParaBase()"
                         >
@@ -2525,6 +2558,8 @@
                         </button>
                         <button
                             type="button"
+                            app-botao
+                            variante="secundario"
                             class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--flex"
                             (click)="indiceMandandoParaBase.set(null)"
                         >

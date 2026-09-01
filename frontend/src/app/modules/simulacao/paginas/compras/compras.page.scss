@@ -48,7 +48,6 @@
 }
 
 // Estado desabilitado comum a todo controle clicável.
-.compras-btn:disabled,
 .compras-categoria:disabled,
 .compras-limpar:disabled,
 .compras-mini-btn:disabled {
@@ -278,30 +277,10 @@
 // === Botões ===
 .compras-btn {
     font-size: 12px;
-    font-weight: 600;
-    border-radius: var(--radius-control);
     padding: 7px 10px;
-    cursor: pointer;
-
-    &--adicionar {
-        background: var(--accent);
-        color: var(--bg);
-        border: 0;
-    }
-    &--remover {
-        background: transparent;
-        color: var(--text-dim);
-        border: 1px solid var(--border-strong);
-    }
-    &--icone {
-        padding: 4px 8px;
-    }
     &--pequeno {
         padding: 5px 8px;
         font-size: 11px;
-    }
-    &:hover:not(:disabled) {
-        filter: brightness(1.08);
     }
 }
 
@@ -790,12 +769,8 @@
 }
 
 // === m3-14: feedback de adição, confirmações, item/mod custom, porte, Modificar ===
-// Feedback de adição: pisca positivo por ~900ms (fonte do "✓ Adicionado"). Definido após
-// `.compras-btn--adicionar` para vencer o fundo accent quando ambos estão na mesma classe.
+// Feedback de adição: a cor vem de `variante="positivo"`; fica local apenas a animação.
 .compras-btn--feito {
-    background: var(--positive);
-    color: var(--bg);
-    border: 0;
     animation: compras-pulso 0.9s ease-out;
 }
 @keyframes compras-pulso {

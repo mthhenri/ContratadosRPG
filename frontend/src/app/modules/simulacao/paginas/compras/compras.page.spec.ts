@@ -68,6 +68,18 @@ describe('ComprasPage', () => {
     expect(raiz.querySelector('.compras-carrinho-item')).toBeNull();
   });
 
+  it('veste ações comuns com os primitivos de botão', async () => {
+    const { fixture, raiz } = await montar();
+    const adicionar = raiz.querySelector('.compras-btn--adicionar') as HTMLButtonElement;
+
+    expect(adicionar.classList).toContain('botao');
+    adicionar.click();
+    fixture.detectChanges();
+
+    const remover = raiz.querySelector('.compras-item-remover .compras-btn--icone') as HTMLButtonElement;
+    expect(remover.classList).toContain('botao-icone');
+  });
+
   it('adiciona um item e recalcula gasto/restante e o stat de dano pelo motor', async () => {
     const { fixture, raiz } = await montar();
     adicionarItem(raiz, 'Leve');

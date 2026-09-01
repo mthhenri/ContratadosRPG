@@ -78,7 +78,10 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { rotuloItem } from '../../rotulos-ficha';
@@ -447,7 +450,18 @@ interface AmpInventarioVM {
  */
 @Component({
   selector: 'app-ficha-inventario',
-  imports: [ReactiveFormsModule, Icone, OverflowFade, Tooltip, Modal, NgTemplateOutlet, AutoFocus],
+  imports: [
+    ReactiveFormsModule,
+    Icone,
+    OverflowFade,
+    Tooltip,
+    Botao,
+    BotaoIcone,
+    Modal,
+    StepInput,
+    NgTemplateOutlet,
+    AutoFocus,
+  ],
   templateUrl: './ficha-inventario.component.html',
   styleUrl: './ficha-inventario.component.scss',
 })
@@ -2005,19 +2019,6 @@ export class FichaInventario {
   }
 
   /**
-   * Passo − / + na quantidade a remover no dialog de stack (limitado a 1..quantidade do item).
-   */
-  protected ajustarQuantidadeRemover(delta: number): void {
-    const indice = this.indiceRemovendoStack();
-    if (indice === null) {
-      return;
-    }
-    const maximo = this.inventario().itens[indice]?.quantidade ?? 1;
-    const valor = Math.min(maximo, Math.max(1, this.quantidadeRemover.value + delta));
-    this.quantidadeRemover.setValue(valor);
-  }
-
-  /**
    * Confirma o dialog de stack: remove a quantidade escolhida (clampada a 1..quantidade). Removê-la
    * toda tira o item da lista; caso contrário decrementa a quantidade. Emite o resultado.
    */
@@ -2133,17 +2134,6 @@ export class FichaInventario {
       return;
     }
     this.moverItemParaContainer(indice, containerId);
-  }
-
-  /** Passo −/+ na quantidade a mover no dialog de stack (limitado a 1..quantidade do item). */
-  protected ajustarQuantidadeMover(delta: number): void {
-    const pendente = this.moverQuantidadePendente();
-    if (!pendente) {
-      return;
-    }
-    const maximo = this.inventario().itens[pendente.indice]?.quantidade ?? 1;
-    const valor = Math.min(maximo, Math.max(1, this.quantidadeMover.value + delta));
-    this.quantidadeMover.setValue(valor);
   }
 
   /**

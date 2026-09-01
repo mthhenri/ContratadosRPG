@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-08-31 — UI-09: botões de domínio adotam os primitivos canônicos
+
+Inventário, Compras/Vendas e os cartões de ação da ficha deixaram de manter identidade de botão
+local. Ações com rótulo agora usam `app-botao`; confirmação, remoção e demais ações unitárias sem
+rótulo visível usam `app-botao-icone`, preservando nome acessível e tooltip. Os três controles de
+quantidade dentro de modais do Inventário passaram para `app-step-input`. O levantamento e o destino
+de cada família estão preservados na spec concluída; os incrementos e as edições derivadas que são
+controles de domínio continuam locais, sem ampliar a API de `Botao` e sem antecipar `I-025`/`I-026`.
+
+O análogo foi a composição de ações de `calculadora-de-atributos.html` (shell, densidade, hierarquia
+e feedback) e o padrão de ficha de `ficha-de-jogador.html` (ações em cartões). A aplicação real foi
+percorrida em `1920×1080` e `360×800` em Compras/Vendas, cobrindo comprar, vender, editar um item
+no carrinho, feedback de adição, formulário inválido/desabilitado e conteúdo longo; não houve
+overflow horizontal, perda de foco ou controle cortado. A ficha autenticada não foi re-semeada: os
+testes focados cobrem estruturalmente o Inventário e os cartões, enquanto a inspeção real concentrou
+os estados interativos públicos compartilhados pela Simulação.
+
+Validação: build de produção concluído; testes focados **351/351**; lint sem erros (14.695 avisos
+históricos). A suíte integral executou **1.461/1.462**: a única falha é preexistente e alheia ao
+corte, em `detalhe.page.spec.ts` ao confirmar exclusão de ficha (`ResizeObserver` ausente no ambiente
+de teste; o mock `excluirFicha(4)` não recebe chamada). O build continua a avisar somente o orçamento
+SCSS preexistente de `FichaVisualizacao` (47,94 kB ante 45 kB).
+
 ## 2026-08-31 — UI-08: primitivo canônico para ações somente por ícone
 
 `app-botao-icone` passou a centralizar a identidade das ações unitárias sem texto visível. É um

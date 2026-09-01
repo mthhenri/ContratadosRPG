@@ -715,7 +715,6 @@ só adaptou o visual de desktop).
 |---|---|---|
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `ui-09` | frontend/design system | classificar e adotar botões de ação locais de inventário e Loja/Vendas |
 | `ui-11` | frontend/design system | normalizar tokens de acabamento, raios literais e P-042 |
 
 `m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
@@ -1354,6 +1353,13 @@ A `ui-08` adicionou **`app-botao-icone`** ao mesmo diretório: um seletor de atr
 no mobile. Senha visível, copiar convite, lápis de edição, ações do caderno e fechar modal usam esse
 contrato. Keypads, `app-step-input`, abas, backdrop do modal e controles de domínio compostos ficam
 fora dele.
+
+A `ui-09` estendeu a adoção à ficha e à Simulação: ações rotuladas de Inventário, Compras/Vendas e
+cartões da ficha usam `app-botao`; confirmações, remoções e ações unitárias por ícone usam
+`app-botao-icone`; os três seletores de quantidade em modal do inventário usam `app-step-input`.
+Classes `ficha-inv__btn`, `compras-btn` e `ficha-cartao__acao` sobrevivem apenas como ganchos de
+layout ou animação de feedback. Incrementos e edições derivadas que são controles de domínio
+permanecem fora da API de botão, conforme `I-025`/`I-026`.
 
 A `ui-01b` completou a API de `app-botao` com **8 severidades** (`primario`, `secundario`,
 `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste`) × **4 estilos** (`preenchido`,

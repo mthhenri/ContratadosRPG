@@ -19,6 +19,16 @@ domínio somente quando a interação não couber em nenhum deles.
    existente quando o contrato comportar o caso ou abrir uma spec separada com dois consumidores
    reais; não adicionar props hipotéticas ao botão.
 
+## Levantamento e destinos
+
+| Arquivo | Família | Destino |
+|---|---|---|
+| `ficha-inventario.component.html` | `ficha-inv__btn` | `app-botao` para todas as ações rotuladas; os modificadores locais ficam só com responsabilidade de layout ou animação de feedback. |
+| `ficha-inventario.component.html` | `ficha-inv__btn--icone` e a ação unitária `ficha-inv__mini-btn` de consumir munição | `app-botao-icone`, com nome acessível e tooltip já existentes. |
+| `ficha-inventario.component.html` | Demais `ficha-inv__mini-btn` | Controles compostos de incremento/edição de domínio. Os três seletores de quantidade em modal migram para `app-step-input`; os demais preservam o contrato próprio, sem ampliar a API de botão. |
+| `compras.page.html` | `compras-btn` | `app-botao` para ação rotulada e `app-botao-icone` para confirmação/remoção por ícone. As classes `compras-btn--*` passam a servir somente ao layout e ao feedback de adição. |
+| `ficha-visualizacao.component.html` | `ficha-cartao__acao` | `app-botao`; a classe permanece como gancho de largura nos grupos de ações. |
+
 ## Critérios de Aceite
 
 - Cada ocorrência das quatro famílias recebe destino explícito e nenhuma ação comum conserva uma
