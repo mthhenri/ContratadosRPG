@@ -1,0 +1,39 @@
+@use "tema/breakpoints" as bp;
+
+// Primitivo de confirmação destrutiva (ui-15), sobre `app-modal` — o `gap: 14px` do
+// `.modal[open]` já separa ícone/mensagem do rodapé de ações, por isso a mensagem não repete
+// margem própria.
+
+.confirmacao {
+    &__icone {
+        display: flex;
+        color: var(--erro);
+    }
+
+    &__mensagem {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+
+        strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+    }
+
+    // `app-botao` não define tamanho por conta própria (ui-01) — o alvo de toque de mobile
+    // segue o mesmo padrão de `ReceberDanoDialog` (`receber-dano__confirmar`/`__cancelar`), o
+    // outro consumidor de `app-modal` com rodapé de ação/cancelamento.
+    &__acao {
+        padding: 10px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

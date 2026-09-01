@@ -43,6 +43,7 @@ import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-
 import { Icone } from '../../../../shared/icone/icone.component';
 import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -148,6 +149,7 @@ export class PainelEncontro {
   private readonly fichaService = inject(FichaService);
   private readonly tempoRealService = inject(TempoRealService);
   private readonly notificacaoService = inject(NotificacaoService);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly roteador = inject(Router);
@@ -896,9 +898,20 @@ export class PainelEncontro {
     this.rolagensOcultasAvulso.update((atuais) => ({ ...atuais, [combatenteId]: oculta }));
   }
 
-  /** Remove um combatente do encontro. */
+  /** Pede confirmação (ui-15) e remove um combatente do encontro — não tem desfazer. */
   protected removerCombatente(combatente: EncontroCombatenteResumoDto): void {
-    this.executarNoEncontro(this.encontroService.removerCombatente(combatente.id));
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Remover combatente',
+        mensagem: `Remover ${combatente.nome} do combate? Ele sai da lista de iniciativa.`,
+        entidade: combatente.nome,
+        rotuloConfirmar: 'Remover',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.executarNoEncontro(this.encontroService.removerCombatente(combatente.id));
+        }
+      });
   }
 
   /** Grava a iniciativa digitada à mão pelo mestre. */
@@ -1010,12 +1023,23 @@ export class PainelEncontro {
     }
   }
 
-  /** Encerra o combate — depois disso o encontro fica só de leitura. */
+  /** Pede confirmação (ui-15) e encerra o combate — depois disso o encontro fica só de leitura. */
   protected encerrarCombate(): void {
     const encontroAtual = this.encontro();
-    if (encontroAtual && !this.emOperacao()) {
-      this.executarNoEncontro(this.encontroService.encerrarEncontro(encontroAtual.id));
+    if (!encontroAtual || this.emOperacao()) {
+      return;
     }
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Encerrar combate',
+        mensagem: 'Encerrar o combate? Ele passa a ficar só de leitura.',
+        rotuloConfirmar: 'Encerrar',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.executarNoEncontro(this.encontroService.encerrarEncontro(encontroAtual.id));
+        }
+      });
   }
 
   /** Aplica dano/cura de 1 ponto pelos steppers do cartão. */

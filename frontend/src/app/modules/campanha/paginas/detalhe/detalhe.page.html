@@ -470,39 +470,6 @@
                 </button>
             </div>
         </form>
-        } @if (confirmandoExclusao()) {
-        <div
-            class="detalhe__exclusao"
-            role="alertdialog"
-            aria-label="Confirmar exclusão da campanha"
-        >
-            <p class="detalhe__exclusao-aviso">
-                Excluir <strong>{{ campanhaAtual.nome }}</strong>? Esta ação não pode ser desfeita.
-            </p>
-            <div class="detalhe__exclusao-acoes">
-                <button
-                    app-botao
-                    variante="primario"
-                    class="botao botao--primario detalhe__acao"
-                    type="button"
-                    [disabled]="excluindo()"
-                    (click)="confirmarExclusao()"
-                >
-                    <app-icone nome="excluir" />
-                    {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
-                </button>
-                <button
-                    app-botao
-                    variante="secundario"
-                    class="botao botao--secundario detalhe__acao"
-                    type="button"
-                    [disabled]="excluindo()"
-                    (click)="cancelarExclusao()"
-                >
-                    Cancelar
-                </button>
-            </div>
-        </div>
         } @if (fichaCritica(); as critica) {
         <div class="detalhe__banner-alerta" role="alert">
             <app-icone nome="alerta" />
@@ -643,7 +610,7 @@
                                 </span>
                             </div>
 
-                            @if (podeGerenciarMembro(membro) && acaoMembro()?.usuarioId !==
+                            @if (podeGerenciarMembro(membro) && acaoMembro() !==
                             membro.usuarioId) {
                             <div class="detalhe__membro-acoes">
                                 <button
@@ -668,17 +635,12 @@
                             }
                         </div>
 
-                        @if (acaoMembro()?.usuarioId === membro.usuarioId) {
+                        @if (acaoMembro() === membro.usuarioId) {
                         <div
                             class="detalhe__membro-confirmacao"
                             role="alertdialog"
-                            [attr.aria-label]="
-                    acaoMembro()?.tipo === 'transferir'
-                      ? 'Confirmar transferência do papel de mestre'
-                      : 'Confirmar remoção do membro'
-                  "
+                            aria-label="Confirmar transferência do papel de mestre"
                         >
-                            @if (acaoMembro()?.tipo === 'transferir') {
                             <p class="detalhe__membro-aviso">
                                 Passar o papel de mestre para <strong>{{ membro.nome }}</strong>?
                                 Você deixará de ser o mestre e passará a jogador.
@@ -707,34 +669,6 @@
                                     Cancelar
                                 </button>
                             </div>
-                            } @else {
-                            <p class="detalhe__membro-aviso">
-                                Remover <strong>{{ membro.nome }}</strong> da campanha?
-                            </p>
-                            <div class="detalhe__membro-confirmacao-acoes">
-                                <button
-                                    app-botao
-                                    variante="primario"
-                                    class="botao botao--primario detalhe__acao"
-                                    type="button"
-                                    [disabled]="processandoMembro()"
-                                    (click)="confirmarRemocaoMembro(membro.usuarioId)"
-                                >
-                                    <app-icone nome="excluir" />
-                                    {{ processandoMembro() ? 'Removendo…' : 'Confirmar remoção' }}
-                                </button>
-                                <button
-                                    app-botao
-                                    variante="secundario"
-                                    class="botao botao--secundario detalhe__acao"
-                                    type="button"
-                                    [disabled]="processandoMembro()"
-                                    (click)="cancelarAcaoMembro()"
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                            }
                         </div>
                         }
                     </li>
@@ -1488,44 +1422,6 @@
                 type="button"
                 [disabled]="duplicando() === pendenteDuplicar.id"
                 (click)="cancelarDuplicar()"
-            >
-                Cancelar
-            </button>
-        </div>
-    </div>
-</app-modal>
-} @if (confirmandoExcluirFicha(); as pendenteExcluir) {
-<app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="cancelarExcluirFicha()">
-    <div class="dialogo__painel">
-        <header class="dialogo__cabecalho">
-            <span class="dialogo__indice"><app-icone nome="excluir" /></span>
-            <h2 class="dialogo__titulo">Excluir Ficha</h2>
-            <span class="dialogo__regua"></span>
-        </header>
-
-        <p class="dialogo__aviso">
-            Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
-        </p>
-
-        <div class="dialogo__acoes">
-            <button
-                app-botao
-                variante="primario"
-                class="botao botao--primario dialogo__acao"
-                type="button"
-                [disabled]="excluindoFicha() === pendenteExcluir.id"
-                (click)="confirmarExcluirFicha()"
-            >
-                <app-icone nome="excluir" />
-                {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
-            </button>
-            <button
-                app-botao
-                variante="secundario"
-                class="botao botao--secundario dialogo__acao"
-                type="button"
-                [disabled]="excluindoFicha() === pendenteExcluir.id"
-                (click)="cancelarExcluirFicha()"
             >
                 Cancelar
             </button>

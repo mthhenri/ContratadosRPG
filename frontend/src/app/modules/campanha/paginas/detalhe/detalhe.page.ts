@@ -65,6 +65,7 @@ import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.comp
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Janela da tira "Rolagens Recentes" (item 3) — só rolagens feitas na última hora. */
@@ -212,6 +213,7 @@ type EquipeFichaExibicao =
 export class CampanhaDetalhe {
   private readonly bandejaDadosService = inject(BandejaDadosService);
   private readonly campanhaService = inject(CampanhaService);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly encontroService = inject(EncontroService);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) da ficha embutida na visão do jogador — mesmo composable de `VisualizarPage`. */
@@ -273,18 +275,12 @@ export class CampanhaDetalhe {
   protected readonly editando = signal(false);
   protected readonly salvando = signal(false);
 
-  /** Exclusão com confirmação inline (só mestre) — evita o diálogo nativo, fora do tema. */
-  protected readonly confirmandoExclusao = signal(false);
-  protected readonly excluindo = signal(false);
-
   /**
-   * Gestão de membros (só mestre, m2-13): qual membro tem confirmação pendente e qual ação
-   * (`remover` o jogador ou `transferir` o mestre a ele). `null` quando nada está pendente.
+   * Gestão de membros (só mestre, m2-13): usuário com transferência de mestre pendente —
+   * `remover` migrou pro `ConfirmacaoService` (ui-15) e não precisa mais de estado local, já que a
+   * confirmação some assim que o usuário responde. `null` quando nada está pendente.
    */
-  protected readonly acaoMembro = signal<{
-    usuarioId: number;
-    tipo: 'remover' | 'transferir';
-  } | null>(null);
+  protected readonly acaoMembro = signal<number | null>(null);
 
   /** Bloqueia os botões enquanto a remoção/transferência do membro está em voo. */
   protected readonly processandoMembro = signal(false);
@@ -357,10 +353,6 @@ export class CampanhaDetalhe {
   } | null>(null);
   /** `id` da ficha cuja duplicação está em voo (m3-52) — desabilita só os botões daquela dialog. */
   protected readonly duplicando = signal<number | null>(null);
-  /** Ficha pendente de confirmação de exclusão (m3-52). */
-  protected readonly confirmandoExcluirFicha = signal<{ id: number; nome: string } | null>(null);
-  /** `id` da ficha cuja exclusão está em voo (m3-52) — desabilita só os botões daquela dialog. */
-  protected readonly excluindoFicha = signal<number | null>(null);
   /** `id` da ficha sendo desatribuída (ação direta, sem dialog) — desabilita só aquele item. */
   protected readonly removendo = signal<number | null>(null);
 
@@ -1082,7 +1074,6 @@ export class CampanhaDetalhe {
       return;
     }
     this.fecharMenuCampanha();
-    this.confirmandoExclusao.set(false);
     this.formularioEdicao.reset({
       nome: campanhaAtual.nome,
       descricao: campanhaAtual.descricao ?? '',
@@ -1118,32 +1109,35 @@ export class CampanhaDetalhe {
       });
   }
 
-  /** Pede confirmação antes de excluir — mostra a área de confirmação inline. */
+  /** Pede confirmação antes de excluir a campanha (ui-15, via `ConfirmacaoService`). */
   protected pedirExclusao(): void {
     this.fecharMenuCampanha();
     this.editando.set(false);
-    this.confirmandoExclusao.set(true);
-  }
-
-  /** Cancela a exclusão pendente. */
-  protected cancelarExclusao(): void {
-    this.confirmandoExclusao.set(false);
+    const campanhaAtual = this.campanha();
+    if (!campanhaAtual) {
+      return;
+    }
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Excluir campanha',
+        mensagem: `Excluir ${campanhaAtual.nome}? Esta ação não pode ser desfeita.`,
+        entidade: campanhaAtual.nome,
+        rotuloConfirmar: 'Confirmar exclusão',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.excluirCampanha();
+        }
+      });
   }
 
   /** Exclui a campanha (soft delete) e navega de volta à lista (`/campanhas`). */
-  protected confirmarExclusao(): void {
-    if (this.excluindo()) {
-      return;
-    }
-    this.excluindo.set(true);
-    this.campanhaService
-      .excluirCampanha(this.id)
-      .pipe(finalize(() => this.excluindo.set(false)))
-      .subscribe({
-        next: () => {
-          void this.router.navigate(['/campanhas']);
-        },
-      });
+  private excluirCampanha(): void {
+    this.campanhaService.excluirCampanha(this.id).subscribe({
+      next: () => {
+        void this.router.navigate(['/campanhas']);
+      },
+    });
   }
 
   /** `true` quando o mestre pode gerir este membro — só jogadores (nunca a própria linha). */
@@ -1151,36 +1145,39 @@ export class CampanhaDetalhe {
     return this.ehMestre() && membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR;
   }
 
-  /** Abre a confirmação de remoção do jogador. */
+  /** Pede confirmação de remoção do jogador (ui-15, via `ConfirmacaoService`). */
   protected pedirRemocaoMembro(membro: CampanhaMembroResumoDto): void {
-    this.acaoMembro.set({ usuarioId: membro.usuarioId, tipo: 'remover' });
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Remover membro',
+        mensagem: `Remover ${membro.nome} da campanha?`,
+        entidade: membro.nome,
+        rotuloConfirmar: 'Confirmar remoção',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.removerMembro(membro.usuarioId);
+        }
+      });
   }
 
   /** Abre a confirmação de transferência do papel de mestre a este jogador. */
   protected pedirTransferenciaMestre(membro: CampanhaMembroResumoDto): void {
-    this.acaoMembro.set({ usuarioId: membro.usuarioId, tipo: 'transferir' });
+    this.acaoMembro.set(membro.usuarioId);
   }
 
-  /** Cancela a ação de membro pendente. */
+  /** Cancela a transferência de mestre pendente. */
   protected cancelarAcaoMembro(): void {
     this.acaoMembro.set(null);
   }
 
   /** Remove o jogador (soft delete) e o tira da lista exibida. */
-  protected confirmarRemocaoMembro(usuarioId: number): void {
-    if (this.processandoMembro()) {
-      return;
-    }
-    this.processandoMembro.set(true);
-    this.campanhaService
-      .removerMembro(this.id, usuarioId)
-      .pipe(finalize(() => this.processandoMembro.set(false)))
-      .subscribe({
-        next: () => {
-          this.membros.update((lista) => lista.filter((membro) => membro.usuarioId !== usuarioId));
-          this.acaoMembro.set(null);
-        },
-      });
+  private removerMembro(usuarioId: number): void {
+    this.campanhaService.removerMembro(this.id, usuarioId).subscribe({
+      next: () => {
+        this.membros.update((lista) => lista.filter((membro) => membro.usuarioId !== usuarioId));
+      },
+    });
   }
 
   /**
@@ -1597,40 +1594,35 @@ export class CampanhaDetalhe {
       });
   }
 
-  /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52). */
+  /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52 · ui-15). */
   protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
     this.fecharMenuFicha();
     this.fecharMenuCampanha();
-    this.confirmandoExcluirFicha.set({ id: fichaId, nome: fichaNome });
-  }
-
-  /** Cancela a exclusão pendente — inócuo enquanto a exclusão está em voo. */
-  protected cancelarExcluirFicha(): void {
-    if (this.excluindoFicha() === null) {
-      this.confirmandoExcluirFicha.set(null);
-    }
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Excluir ficha',
+        mensagem: `Excluir ${fichaNome}? Esta ação não pode ser desfeita.`,
+        entidade: fichaNome,
+        rotuloConfirmar: 'Confirmar exclusão',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.excluirFicha(fichaId);
+        }
+      });
   }
 
   /**
    * Exclui a ficha (soft delete, só dono/mestre — §14, m3-52) e some da lista na hora — sem
-   * refetch, mesmo padrão otimista de `confirmarRemocaoMembro`.
+   * refetch, mesmo padrão otimista de `removerMembro`.
    */
-  protected confirmarExcluirFicha(): void {
-    const pendente = this.confirmandoExcluirFicha();
-    if (!pendente || this.excluindoFicha() !== null) {
-      return;
-    }
-    this.excluindoFicha.set(pendente.id);
-    this.fichaService
-      .excluirFicha(pendente.id)
-      .pipe(finalize(() => this.excluindoFicha.set(null)))
-      .subscribe({
-        next: () => {
-          this.confirmandoExcluirFicha.set(null);
-          this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== pendente.id));
-          this.avancarFichaExibidaApos(pendente.id);
-        },
-      });
+  private excluirFicha(fichaId: number): void {
+    this.fichaService.excluirFicha(fichaId).subscribe({
+      next: () => {
+        this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
+        this.avancarFichaExibidaApos(fichaId);
+      },
+    });
   }
 
   /**

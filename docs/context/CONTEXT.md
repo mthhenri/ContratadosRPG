@@ -64,6 +64,30 @@ esquadrão — seria desproporcional ao risco; vazio sempre real) — nenhum ove
 visível nos dois viewports, `prefers-reduced-motion: reduce` confirmado zerando a animação do
 esqueleto (`getComputedStyle().animationName === 'none'`).
 
+**`ui-15-confirmacao-destrutiva` concluída** (spec em `docs/specs/done/`, ainda sem commit): a
+spec original (herdada da auditoria) foi corrigida antes de implementar — "sair da campanha" não
+existia como ação do jogador, e dois dos quatro fluxos citados não tinham confirmação nenhuma, não
+uma cópia duplicada dela (ver spec para o detalhe). `app-modal` ganhou os slots `[modalIcone]`
+(cabeçalho) e `[modalAcoes]` (rodapé, régua acima, some por completo via `:empty` quando vazio).
+Novo primitivo `app-confirmacao` (`ConfirmacaoService.confirmar(...): Promise<boolean>` + um único
+`<app-confirmacao />` no `layout`, mesmo padrão de singleton de `Notificacoes`) substitui os três
+padrões concorrentes que o produto praticava: modal ad-hoc duplicado (excluir ficha, em
+`acervo.page` e `detalhe.page`), área inline `role="alertdialog"` (excluir campanha, remover
+membro) e nenhuma confirmação (encerrar combate, remover combatente — ganharam confirmação pela
+primeira vez). Achado ao vivo: os quatro diálogos existentes confirmavam com `variante="primario"`
+mesmo sendo destrutivos — nenhum usava a `variante="perigo"` que `app-botao` já tinha; os cinco
+call sites migrados agora usam `perigo` (default do serviço) e ganharam alvo de toque de 44px no
+mobile (`app-botao` não define tamanho por conta própria — a régua seguiu o padrão de
+`ReceberDanoDialog`, o outro consumidor de `app-modal` com esse rodapé). `DESIGN.md` documenta o
+primitivo e a regra de quando escrever "Esta ação não pode ser desfeita." (só quando não há
+alternativa de fato). Testes focados 12/12 nos dois arquivos novos (`confirmacao.service.spec.ts`,
+`confirmacao.component.spec.ts`) + consumidores ajustados, suíte completa frontend 1487/1487, lint
+sem erro novo. Verificação visual ao vivo (Postgres local + backend + frontend reais, sem Docker
+disponível no ambiente) em `1920×1080`/`360×800`, nos cinco fluxos migrados — ordem dos botões,
+severidade, ícone, negrito da entidade e alvo de toque conferidos; achado e corrigido durante o
+próprio gate: os dois botões nasceram sem `gap` (elemento projetado único dentro do slot em vez de
+cada botão marcado com `[modalAcoes]`) e sem tamanho (`app-botao` não herda um por padrão).
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -81,7 +105,7 @@ M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de pós-miles
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `ui-15`…`ui-17` | frontend/design system | filhas da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — confirmação destrutiva, barra de recurso + recuo do cartão de combatente, primitivo de painel flutuante |
+| `ui-16`, `ui-17` | frontend/design system | filhas da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — barra de recurso + recuo do cartão de combatente, primitivo de painel flutuante |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |

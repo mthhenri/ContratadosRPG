@@ -29,18 +29,6 @@
 
 ## Ativos
 
-### P-043 — Teste de exclusão de ficha seleciona o modal errado · `ABERTO` · frontend
-
-- **Sintoma:** a suíte integral e o recorte de `detalhe.page.spec.ts` falham: confirmar
-  "Excluir ficha" não chama `FichaService.excluirFicha(4)`.
-- **Causa:** a assertiva busca `app-modal .botao--primario` no documento inteiro; com vários
-  modais projetados, ela clica o primeiro botão primário disponível, não o modal que contém a
-  ficha pendente.
-- **Contorno:** o recorte da UI-12 passa (36/36) e o build de produção não é afetado.
-- **Correção:** escopar o seletor ao `app-modal` que contém a ficha pendente, como o teste anterior
-  já localiza para a ação de cancelar.
-- **Desde:** confirmado em 2026-09-01 durante a UI-12; não é causado pelo seu diff de tokens/SCSS.
-
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo

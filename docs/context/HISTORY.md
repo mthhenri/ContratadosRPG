@@ -1,5 +1,86 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — UI-15: `app-confirmacao` substitui três padrões concorrentes de confirmação destrutiva
+
+A spec de `ui-15` chegou do backlog herdada da auditoria visual, listando quatro fluxos como cópias
+duplicadas do mesmo modal ad-hoc ("excluir ficha, encerrar encontro, remover combatente e sair da
+campanha"). Verificação no código antes de implementar (mesma sessão, ainda na etapa de spec)
+derrubou essa premissa: "sair da campanha" não existe como ação do jogador — só o mestre remove um
+membro (`CampanhaService.removerMembro`) — e o produto praticava **três padrões concorrentes**
+diferentes, não um só duplicado:
+
+- **Modal ad-hoc duplicado** — excluir ficha, com `<app-modal>` e `.dialogo__acoes` montados à mão
+  quase idênticos em `ficha/paginas/acervo/acervo.page.html` e
+  `campanha/paginas/detalhe/detalhe.page.html` (a segunda cópia carregava um cabeçalho interno
+  redundante — ícone + `<h2>` + `<hr>` — já que o título do `<app-modal>` também mostrava o mesmo
+  texto).
+- **Área inline `role="alertdialog"`** — excluir campanha e remover membro, em
+  `detalhe.page.html`/`.ts` (`confirmandoExclusao`, `acaoMembro`), sem `<dialog>` nativo nenhum.
+- **Nenhuma confirmação** — encerrar combate e remover combatente, em `painel-encontro.page.ts`:
+  os dois disparavam a mutação direto no clique.
+
+A spec ativa foi reescrita com essa lista real antes de qualquer código (ver
+`docs/specs/done/ui-15-confirmacao-destrutiva.spec.md`).
+
+**Entregável 1 — `app-modal` ganhou dois slots.** `[modalIcone]` no cabeçalho (ao lado do título,
+`.modal__titulo-grupo` novo) e `[modalAcoes]` no rodapé (`.modal__acoes`, régua `--border` acima,
+`gap: 10px` — o mesmo valor que `.dialogo__acoes` já usava). Vazio (nenhum consumidor projeta
+`[modalAcoes]`) some por completo via `&:empty { display: none }`, para não acrescentar uma barra
+fantasma aos ~13 outros consumidores de `app-modal` que não usam o slot.
+
+**Entregável 2 — `ConfirmacaoService`/`app-confirmacao`, mesmo padrão de singleton de
+`Notificacoes`.** `confirmar({ titulo, mensagem, entidade?, severidade?, rotuloConfirmar,
+rotuloCancelar? }): Promise<boolean>`; um único `<app-confirmacao />` no `layout`, ao lado de
+`<app-notificacoes />`. `entidade`, quando aparece dentro de `mensagem`, é destacada em `<strong>`
+via split de string (nunca `innerHTML`) — mesma leitura visual que as seis cópias antigas já
+tinham ("Excluir **Nome**? ..."). Severidade `perigo` é o **default** (o serviço nasceu para
+confirmação destrutiva): variante do botão de ação vira `perigo` e o ícone `alerta` aparece no
+cabeçalho; `padrao` desliga os dois. Achado ao vivo revisando os quatro diálogos existentes: nenhum
+deles usava `variante="perigo"` (que já existe em `app-botao`, mapeada pra `--erro`) — todos
+confirmavam exclusão com `variante="primario"` (`--accent`). Os cinco call sites migrados corrigem
+isso.
+
+**Entregável 3 — cinco call sites, cada um saindo de um padrão diferente:** excluir ficha (×2,
+`FichaAcervo` e `CampanhaDetalhe`), excluir campanha, remover membro, encerrar combate e remover
+combatente (esses dois últimos ganharam confirmação pela primeira vez — encerrar um combate ou
+remover um combatente em andamento não tem desfazer). Cada consumidor perdeu o signal de
+"pendente" local (`confirmandoExcluirFicha`, `confirmandoExclusao`, `acaoMembro` com tipo
+`'remover'`) e o signal de "em voo" que existia só para desabilitar os botões do diálogo
+(`excluindoFicha`, `excluindo`) — o diálogo fecha assim que o usuário responde; o
+`.carregando-global` (2px, topbar) já cobre o feedback da chamada HTTP em si, via
+`loading.interceptor`, então nada ficou sem indicação de progresso. `acaoMembro` sobrou só para
+`transferir mestre`, que **não** migrou (não é destrutivo — fica de propósito com a UI inline, ver
+Fora de Escopo da spec).
+
+**Entregável 4 — `DESIGN.md`** ganhou a linha de `app-confirmacao` na tabela de componentes, os
+dois slots novos na linha de `.modal`, e uma seção curta sobre quando escrever "Esta ação não pode
+ser desfeita." (só quando a alternativa de fato não existe — remover um membro pode ser desfeito
+reconvidando-o, por exemplo, e por isso não leva a frase).
+
+**Efeito colateral resolvido:** `PROBLEMS.md` `P-043` ("teste de exclusão de ficha seleciona o
+modal errado") deixou de existir — o teste vulnerável buscava `app-modal .botao--primario` no
+documento inteiro, ambíguo quando mais de um `<app-modal>` está de pé; a migração pra
+`ConfirmacaoService` mockado no teste elimina a query DOM ambígua por completo, não só nesse teste.
+Removido de `PROBLEMS.md` sem entrada de correção separada — o relato é este parágrafo.
+
+**Gates:** testes focados 12/12 nos dois arquivos novos (`confirmacao.service.spec.ts` — 4,
+`confirmacao.component.spec.ts` — 8) + os consumidores ajustados (`acervo.page.spec.ts`,
+`detalhe.page.spec.ts`, `painel-encontro.page.spec.ts`, com cobertura nova para
+encerrar/remover-combatente); suíte completa frontend 1487/1487; lint sem erro novo (só os warnings
+de aspas pré-existentes em todo o repositório, não relacionados a este diff). Verificação visual ao
+vivo — Postgres local iniciado direto (sem Docker disponível neste ambiente), backend e frontend
+reais, dados de setup via REST (dois usuários, campanha, ficha solta, encontro com um avulso) — nos
+cinco fluxos migrados, `1920×1080` e `360×800`: ordem dos botões (ação perigosa primeiro, cancelar
+depois), severidade/ícone, negrito da entidade e alvo de toque de 44px no mobile conferidos.
+**Dois defeitos achados e corrigidos só no gate visual, não pelos testes:** (1) os dois botões do
+rodapé vinham sem `gap` nenhum — o slot `[modalAcoes]` tinha um único `<div>` projetado envolvendo
+os dois, então o `display:flex`/`gap` do wrapper `.modal__acoes` nunca alcançava os botões; corrigido
+marcando `[modalAcoes]` em cada botão diretamente, como dois elementos projetados separados. (2) os
+botões renderizavam a ~26px de altura no mobile — `app-botao` não define tamanho por conta própria
+(decisão da `ui-01`), e nada no `app-confirmacao` supria isso; corrigido com uma classe
+`.confirmacao__acao` (padding + `min-height: bp.$alvo-toque` em `bp.mobile`), a mesma receita que
+`ReceberDanoDialog` já usava no único outro consumidor de `app-modal` com rodapé de ação/cancelar.
+
 ## 2026-09-01 — UI-14: `app-estado-vazio` e `app-esqueleto` fecham a lacuna mais repetida do sistema
 
 A auditoria visual (`ui-06`) apontou que toda lista pode ficar vazia ou carregando e nenhuma tinha

@@ -36,6 +36,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { EncontroService } from '../../../encontro/encontro.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import type { EncontroResumoDto } from '@contratados-rpg/shared/dtos/encontro';
 import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
@@ -91,6 +92,8 @@ describe('CampanhaDetalhe', () => {
     campanha?: Partial<CampanhaRecuperadaDto>;
     /** Encontros de combate da campanha — alimentam o tile "Combate" da tira (m7-06). */
     encontros?: EncontroResumoDto[];
+    /** Resposta do `ConfirmacaoService` mockado (ui-15) para os testes de exclusão/remoção. */
+    confirmarResultado?: boolean;
   }) {
     // m3-65: em produção, `membro.fichas` (listarMembros) e `fichas()` (listarFichas) vêm da
     // mesma visibilidade no backend — nunca inconsistentes. Aqui, quando o teste não declara
@@ -213,6 +216,10 @@ describe('CampanhaDetalhe', () => {
     // estatísticas. Vazia por padrão — os testes que precisam de um combate aberto sobrescrevem.
     const encontroService = { listarPorCampanha: vi.fn(() => of(opts.encontros ?? [])) };
 
+    const confirmacaoService = {
+      confirmar: vi.fn(() => Promise.resolve(opts.confirmarResultado ?? true)),
+    };
+
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn(() => Promise.resolve()) },
       configurable: true,
@@ -268,6 +275,7 @@ describe('CampanhaDetalhe', () => {
         { provide: TempoRealService, useValue: tempoRealService },
         { provide: EncontroService, useValue: encontroService },
         { provide: PaginaCadernoService, useValue: paginaCadernoService },
+        { provide: ConfirmacaoService, useValue: confirmacaoService },
       ],
     });
 
@@ -284,6 +292,7 @@ describe('CampanhaDetalhe', () => {
       rolagemService,
       tempoRealService,
       encontroService,
+      confirmacaoService,
       fichaCriada$,
       membroEntrou$,
       fichaAlterada$,
@@ -453,32 +462,34 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('.detalhe__edicao')).toBeNull();
     });
 
-    it('"Excluir" pede confirmação inline; confirmar exclui e navega de volta à lista', () => {
-      const { fixture, raiz, campanhaService, navegar } = montar(mestre());
+    it('"Excluir" pede confirmação via ConfirmacaoService; confirmar exclui e navega de volta à lista', async () => {
+      const { fixture, raiz, campanhaService, confirmacaoService, navegar } = montar(mestre());
 
       abrirMenuCampanha(raiz, fixture);
       (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[2] as HTMLButtonElement).click();
       fixture.detectChanges();
-      expect(raiz.querySelector('.detalhe__exclusao')).not.toBeNull();
-      expect(campanhaService.excluirCampanha).not.toHaveBeenCalled();
 
-      (raiz.querySelector('.detalhe__exclusao .botao--primario') as HTMLButtonElement).click();
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Excluir campanha' }),
+      );
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
 
       expect(campanhaService.excluirCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
       expect(navegar).toHaveBeenCalledWith(['/campanhas']);
     });
 
-    it('cancela a exclusão sem chamar o backend', () => {
-      const { fixture, raiz, campanhaService } = montar(mestre());
+    it('cancelar (promessa resolve false) não chama o backend', async () => {
+      const { fixture, raiz, campanhaService } = montar({ ...mestre(), confirmarResultado: false });
 
       abrirMenuCampanha(raiz, fixture);
       (raiz.querySelectorAll('.detalhe__cabecalho-menu-item')[2] as HTMLButtonElement).click();
       fixture.detectChanges();
-      (raiz.querySelector('.detalhe__exclusao .botao--secundario') as HTMLButtonElement).click();
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('.detalhe__exclusao')).toBeNull();
       expect(campanhaService.excluirCampanha).not.toHaveBeenCalled();
     });
   });
@@ -495,15 +506,21 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('.detalhe__membro-acoes')).toBeNull();
     });
 
-    it('remove um jogador após confirmação e o tira da lista', () => {
-      const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
+    it('remove um jogador após confirmação (ConfirmacaoService) e o tira da lista', async () => {
+      const { fixture, raiz, campanhaService, confirmacaoService } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+      });
 
       (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
       fixture.detectChanges();
-      expect(raiz.querySelector('.detalhe__membro-confirmacao')).not.toBeNull();
-      expect(campanhaService.removerMembro).not.toHaveBeenCalled();
 
-      (raiz.querySelector('.detalhe__membro-confirmacao .botao--primario') as HTMLButtonElement).click();
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Remover membro' }),
+      );
+      expect(campanhaService.removerMembro).not.toHaveBeenCalled();
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
 
       expect(campanhaService.removerMembro).toHaveBeenCalledWith(CAMPANHA_ID, 2);
@@ -537,15 +554,19 @@ describe('CampanhaDetalhe', () => {
       ).toBe('Ações de ficha');
     });
 
-    it('cancela a ação de membro sem chamar o backend', () => {
-      const { fixture, raiz, campanhaService } = montar({ usuarioId: 1, membros: membrosDois() });
+    it('cancelar a remoção (promessa resolve false) não chama o backend', async () => {
+      const { fixture, raiz, campanhaService } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        confirmarResultado: false,
+      });
 
       (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
       fixture.detectChanges();
-      (raiz.querySelector('.detalhe__membro-confirmacao .botao--secundario') as HTMLButtonElement).click();
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('.detalhe__membro-confirmacao')).toBeNull();
       expect(raiz.querySelector('.detalhe__membro-acoes')).not.toBeNull();
       expect(campanhaService.removerMembro).not.toHaveBeenCalled();
     });
@@ -1683,44 +1704,55 @@ describe('CampanhaDetalhe', () => {
       });
     });
 
-    describe('excluir', () => {
-      it('abre a dialog de confirmação com o nome da ficha', () => {
-        const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+    describe('excluir (ui-15, via ConfirmacaoService)', () => {
+      it('pede confirmação com o nome da ficha', () => {
+        const { fixture, raiz, fichaService, confirmacaoService } = montar({
+          usuarioId: 1,
+          membros: membrosDois(),
+          fichas,
+        });
         abrirMenu(raiz, fixture, 'Vera');
 
         (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        const dialog = raiz.querySelector('app-modal');
-        expect(dialog).not.toBeNull();
-        expect(dialog?.textContent).toContain('Excluir');
-        expect(dialog?.textContent).toContain('Vera');
-      });
-
-      it('cancelar fecha a dialog sem chamar o serviço', () => {
-        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-        abrirMenu(raiz, fixture, 'Vera');
-        (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
-        fixture.detectChanges();
-
-        (raiz.querySelector('app-modal .botao--secundario') as HTMLButtonElement).click();
-        fixture.detectChanges();
-
-        expect(raiz.querySelector('app-modal')).toBeNull();
+        expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+          expect.objectContaining({ titulo: 'Excluir ficha', entidade: 'Vera' }),
+        );
         expect(fichaService.excluirFicha).not.toHaveBeenCalled();
       });
 
-      it('confirmar chama FichaService.excluirFicha e remove o mini-card na hora', () => {
-        const { fixture, raiz, fichaService } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+      it('cancelar (promessa resolve false) não chama o serviço', async () => {
+        const { fixture, raiz, fichaService } = montar({
+          usuarioId: 1,
+          membros: membrosDois(),
+          fichas,
+          confirmarResultado: false,
+        });
         abrirMenu(raiz, fixture, 'Vera');
         (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
         fixture.detectChanges();
+        await Promise.resolve();
+        await Promise.resolve();
+        fixture.detectChanges();
 
-        (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
+        expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+      });
+
+      it('confirmar (promessa resolve true) chama FichaService.excluirFicha e remove o mini-card na hora', async () => {
+        const { fixture, raiz, fichaService } = montar({
+          usuarioId: 1,
+          membros: membrosDois(),
+          fichas,
+        });
+        abrirMenu(raiz, fixture, 'Vera');
+        (raiz.querySelectorAll('.detalhe__ficha-menu-item')[2] as HTMLButtonElement).click();
+        fixture.detectChanges();
+        await Promise.resolve();
+        await Promise.resolve();
         fixture.detectChanges();
 
         expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
-        expect(raiz.querySelector('app-modal')).toBeNull();
         expect(raiz.textContent).not.toContain('Vera');
       });
     });
@@ -1850,38 +1882,41 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
     });
 
-    it('"Excluir ficha" abre a confirmação da ficha exibida e fecha o menu; cancelar não chama o serviço', () => {
-      const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    it('"Excluir ficha" pede confirmação (ui-15) da ficha exibida e fecha o menu; cancelar não chama o serviço', async () => {
+      const { fixture, raiz, fichaService, confirmacaoService } = montar({
+        usuarioId: 2,
+        membros: membrosDois(),
+        fichas,
+        confirmarResultado: false,
+      });
       abrirMenuCampanha(raiz, fixture);
 
       encontrarItemMenu(raiz, 'Excluir ficha').click();
       fixture.detectChanges();
 
       expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
-      const dialog = Array.from(raiz.querySelectorAll('app-modal')).find((modal) =>
-        modal.textContent?.includes('Vera'),
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Excluir ficha', entidade: 'Vera' }),
       );
-      expect(dialog?.textContent).toContain('Vera');
       expect(fichaService.excluirFicha).not.toHaveBeenCalled();
 
-      (raiz.querySelector('app-modal .botao--secundario') as HTMLButtonElement).click();
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('.dialogo')).toBeNull();
       expect(fichaService.excluirFicha).not.toHaveBeenCalled();
     });
 
-    it('confirmar "Excluir ficha" chama FichaService.excluirFicha e troca para outra ficha própria', () => {
+    it('confirmar (ui-15) "Excluir ficha" chama FichaService.excluirFicha e troca para outra ficha própria', async () => {
       const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
       abrirMenuCampanha(raiz, fixture);
       encontrarItemMenu(raiz, 'Excluir ficha').click();
       fixture.detectChanges();
-
-      (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
 
       expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
-      expect(raiz.querySelector('.dialogo')).toBeNull();
       expect(fichaService.recuperarFicha).toHaveBeenCalledWith(5);
     });
 

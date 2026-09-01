@@ -15,6 +15,7 @@ import type { FichaCriarDto, FichaResumoDto } from '@contratados-rpg/shared/dtos
 import { FichaAcervo } from './acervo.page';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 
 /**
  * Prova o acervo de fichas (m3-28, `/fichas`): lista todas as fichas do usuário (com e sem
@@ -86,7 +87,13 @@ describe('FichaAcervo', () => {
     },
   ];
 
-  function montar(opcoes: { fichas?: FichaResumoDto[]; campanhas?: CampanhaResumoDto[] } = {}) {
+  function montar(
+    opcoes: {
+      fichas?: FichaResumoDto[];
+      campanhas?: CampanhaResumoDto[];
+      confirmarResultado?: boolean;
+    } = {},
+  ) {
     const fichaService = {
       listarMinhasFichas: vi.fn(() => of(opcoes.fichas ?? [fichaResumo()])),
       criarFicha: vi.fn((dto: FichaCriarDto) =>
@@ -101,6 +108,9 @@ describe('FichaAcervo', () => {
     const campanhaService = {
       listarCampanhas: vi.fn(() => of(opcoes.campanhas ?? campanhas)),
     };
+    const confirmacaoService = {
+      confirmar: vi.fn(() => Promise.resolve(opcoes.confirmarResultado ?? true)),
+    };
 
     TestBed.configureTestingModule({
       imports: [FichaAcervo],
@@ -108,6 +118,7 @@ describe('FichaAcervo', () => {
         provideRouter([]),
         { provide: FichaService, useValue: fichaService },
         { provide: CampanhaService, useValue: campanhaService },
+        { provide: ConfirmacaoService, useValue: confirmacaoService },
       ],
     });
 
@@ -116,7 +127,14 @@ describe('FichaAcervo', () => {
 
     const fixture = TestBed.createComponent(FichaAcervo);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, fichaService, campanhaService, navegar };
+    return {
+      fixture,
+      raiz: fixture.nativeElement as HTMLElement,
+      fichaService,
+      campanhaService,
+      confirmacaoService,
+      navegar,
+    };
   }
 
   it('carrega e lista as fichas do acervo', () => {
@@ -267,41 +285,46 @@ describe('FichaAcervo', () => {
     });
   });
 
-  describe('excluir (m3-52, replicado da tela da ficha)', () => {
-    it('abre a dialog de confirmação com o nome da ficha', () => {
-      const { fixture, raiz } = montar({ fichas: [fichaResumo({ id: 1, nome: 'Kane' })] });
+  describe('excluir (m3-52 · ui-15, via ConfirmacaoService)', () => {
+    it('pede confirmação com o nome da ficha antes de excluir', () => {
+      const { fixture, raiz, fichaService, confirmacaoService } = montar({
+        fichas: [fichaResumo({ id: 1, nome: 'Kane' })],
+      });
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Excluir ficha');
 
-      const dialog = raiz.querySelector('app-modal');
-      expect(dialog).not.toBeNull();
-      expect(dialog?.textContent).toContain('Excluir');
-      expect(dialog?.textContent).toContain('Kane');
-    });
-
-    it('cancelar fecha a dialog sem chamar o serviço', () => {
-      const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1 })] });
-      abrirMenuFicha(raiz, fixture);
-      clicarItemMenu(raiz, fixture, 'Excluir ficha');
-
-      (raiz.querySelector('app-modal .botao--secundario') as HTMLButtonElement).click();
-      fixture.detectChanges();
-
-      expect(raiz.querySelector('app-modal')).toBeNull();
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Excluir ficha', entidade: 'Kane' }),
+      );
       expect(fichaService.excluirFicha).not.toHaveBeenCalled();
     });
 
-    it('confirmar chama FichaService.excluirFicha e remove o cartão na hora, sem refetch', () => {
-      const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1, nome: 'Kane' })] });
+    it('cancelar (promessa resolve false) não chama o serviço', async () => {
+      const { fixture, raiz, fichaService } = montar({
+        fichas: [fichaResumo({ id: 1 })],
+        confirmarResultado: false,
+      });
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Excluir ficha');
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
 
-      (raiz.querySelector('app-modal .botao--primario') as HTMLButtonElement).click();
+      expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+    });
+
+    it('confirmar (promessa resolve true) chama FichaService.excluirFicha e remove o cartão na hora, sem refetch', async () => {
+      const { fixture, raiz, fichaService } = montar({
+        fichas: [fichaResumo({ id: 1, nome: 'Kane' })],
+      });
+      abrirMenuFicha(raiz, fixture);
+      clicarItemMenu(raiz, fixture, 'Excluir ficha');
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
 
       expect(fichaService.excluirFicha).toHaveBeenCalledWith(1);
       expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(1);
-      expect(raiz.querySelector('app-modal')).toBeNull();
       expect(raiz.textContent).not.toContain('Kane');
     });
   });
