@@ -4,378 +4,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-08-31 · **Última decisão registrada:** UI-08 consolidou
-> `app-botao-icone` como o primitivo de ações unitárias sem rótulo visual. Ele exige nome acessível
-> e tooltip, fornece os tamanhos canônicos e assume os estados visuais e o alvo de toque mobile;
-> as cópias locais em autenticação, campanhas, ficha de criatura, caderno, perfil e modal foram
-> removidas. A composição com `Tooltip` exclui o seletor direto em `app-botao-icone`, para que o
-> host directive seja a única instância no mesmo controle. Testado: frontend 1460/1460, build verde
-> e lint sem erros (mantém 14.688 warnings históricos); o aviso preexistente de orçamento SCSS em
-> `FichaVisualizacao` persiste. Antes disso, P-038 restaurou a suíte completa do frontend ao alinhar as assertivas de
-> `CampanhaDetalhe` aos primitivos da UI-04, reconhecer o `<dialog>` nativo fechado no Painel de
-> Encontro e proteger o foco adiado do Leitor de Documentos após o teardown. `P-033`, que duplicava
-> a assertiva do modal, foi encerrada junto. Testado: frontend 1444/1444, build verde e lint sem
-> erros (mantém 14.534 warnings preexistentes); sem alteração visual. Antes disso, houve o fecho de cinco specs avulsas que
-> já estavam corrigidas no código e só precisavam da verificação ao vivo obrigatória —
-> `renomear-calculadora-para-simulacao`, `maestrias-efeitos`, `resistencia-protecao-base-bonus`,
-> `ficha-resumo-stats-efetivos` e `formatacao-legibilidade-frontend`, todas movidas para
-> `docs/specs/done/`. O módulo M1 (`frontend/src/app/modules/calculadora/`) virou
-> `modules/simulacao/`, rota `/simulacao`, topbar "Simulação"; a calculadora aritmética real
-> (`shared/calculadora-flutuante/`) manteve nome e ícone. `P-029` (Maestria de Vigor e Tanque
-> somando indevidamente na resistência de um tipo criado por modificação, ex. Químico do Hazmat) e
-> `P-030` (Vida/Energia/Defesa/Esquiva/Bloqueio divergindo entre a ficha, o mini-card do Esquadrão
-> e o cartão da Iniciativa) já tinham a correção no código — confirmado ao vivo que uma Armadura
-> Pesada + Hazmat numa ficha com Vigor 6 + Maestria de Vigor + Tanque mostra Químico 2 (só o bônus
-> do próprio Hazmat, sem Vigor/Tanque) contra Físico 19/Balístico 15 (nativos, com os dois bônus),
-> e que os três consumidores (ficha, mini-card, cartão de combatente) exibem exatamente os mesmos
-> números. `P-028` (verificação visual pendente da Maestria de Vigor) fechado junto. A Gestão de
-> Usuários — único gate pendente de `formatacao-legibilidade-frontend` — foi percorrida nos dois
-> viewports contra a UI atual, já sem PrimeNG (`ui-05`). Testado: shared 742/742, backend 469/469,
-> frontend 1440/1443 naquele momento; as três falhas então preexistentes de `P-033`/`P-038` foram
-> resolvidas depois. Lint dos três workspaces sem erro novo. Verificado ao vivo (Postgres+backend+frontend
-> reais, Playwright, `1920×1080`/`360×800`, dois usuários). Ver `HISTORY.md` para o relato completo.
->
-> **`P-039` e `P-041` corrigidas, `caderno-esquadrao-colaborativo.spec.md` fechada:** o entregável de
-> presença e cursores remotos (Yjs `awareness`) foi implementado: `y-protocols/awareness` roda sobre
-> o mesmo `Y.Doc`, o gateway ganhou um relay broadcast-only puro (`caderno-esquadrao:presenca`, sem
-> persistir nem decodificar — não é a mutação que a proibição #25 veda) e o editor Milkdown mostra
-> cursor/seleção remotos (nome e cor por participante, via `yCursorPlugin`) mais um indicador de
-> presença no cabeçalho. Confirmado ao vivo em `1920×1080` com dois navegadores reais (mestre +
-> jogador): texto convergindo ("Texto do MESTRE. Texto do JOGADOR.") e cada lado mostrando o nome do
-> outro colaborador ao lado do cursor. A verificação em `360×800` esbarrou num defeito novo e não
-> relacionado (`P-041`): no mobile, selecionar uma página do Esquadrão ou criar uma nova não trocava
-> a vista de lista para a de conteúdo — os pontos de navegação real (`executarTrocaPagina` e
-> `iniciarNovaPagina` em `caderno-flutuante.component.ts`, ramo `ESQUADRAO`) nunca chamavam
-> `definirVistaMobile('CONTEUDO')`, ao contrário de `recuperarPagina` no caderno privado. Corrigido
-> nos dois pontos de navegação (não em `refletirPaginaColaborativa`, que também roda em toda
-> atualização remota passiva — colocar a troca de vista ali arrastaria a tela de volta ao conteúdo a
-> cada edição de outro colaborador). Confirmado ao vivo em `360×800`: abrir uma página existente e
-> criar uma página nova do Esquadrão agora trocam corretamente para o editor. A spec moveu para
-> `docs/specs/done/`.
->
-> **Uma decisão atrás:** `P-027` — os efeitos permanentes
-> e incondicionais das habilidades de custo 0 E agora pertencem às fórmulas compartilhadas:
-> **Tanque** soma +1 de Vida por progressão e +3 à resistência de toda Proteção equipada;
-> **Segundo Fôlego** soma `⌊Vigor ÷ 2⌋` dados-base à Energia recuperada em qualquer descanso; e
-> **Metabolismo Acelerado** soma Medicina D4 de Vida e Vontade D4 de Energia em descansos Médio e
-> Longo. Criação, edição, fallbacks de ficha e mapper de Encontro propagam `habilidades`; a edição
-> de Tanque altera a Vida máxima persistida somente pelo delta mecânico, preservando ajuste manual.
-> A calculadora pública de Descanso expõe os dois efeitos, atributos, faixas, fórmulas e rolagens.
-> Testado: shared 729/729, backend 456/456, frontend 1329/1329; builds verdes e lint sem erros nos
-> três workspaces. Verificado ao vivo em `1920×1080` e `360×800`, sem overflow ou erro de console;
-> o cenário combinado confirmou Vida 8–32 e Energia 8–40. Ver `HISTORY.md` para o relato completo.
->
-> **Duas decisões atrás:** ajuste avulso pós-M7/M3 (bug
-> reportado direto pelo autor) — a média de Nível/Prestígio do esquadrão não chegava ao **primeiro
-> agente de um jogador comum** numa campanha que já tinha agentes de outros jogadores. Causa: o
-> passo // Novo agente (`criar.page.ts`) decidia "primeiro agente da campanha" checando
-> `fichas().length`, alimentado por `FichaService.listarFichas` — que para um jogador comum (§14)
-> só devolve as próprias fichas e as concedidas por `usuario_ficha_acesso`, nunca as dos demais
-> membros. Um jogador sem ficha própria e sem concessão recebia `fichas = []` mesmo a campanha
-> tendo agentes de verdade, silenciando a regra "Iniciando um Novo Agente"
-> (`docs/core/sistema-v4.1.0.md`), que cobre explicitamente "a chegada de um jogador em uma
-> campanha em andamento". Fix: a média é um **agregado** (nunca expõe ficha individual), então não
-> deve seguir a mesma matriz de visibilidade por ficha — novo recorte calculado
-> `FichaMediasEsquadraoDto { mediaNivel, mediaPrestigio, quantidade }`
-> (`shared/dtos/ficha`, reaproveita `FichaListarDto` como entrada) + `FichaRepository.
-> calcularMediasEsquadrao` (SQL `AVG`/`COUNT` sobre fichas `JOGADOR` ativas da campanha) +
-> `FichaService.calcularMediasEsquadrao` (só exige que o autor seja membro, **sem** ramificar por
-> papel — mestre e jogador comum recebem a mesma média) + `GET /ficha/medias-esquadrao?campanhaId=`.
-> `criar.page.ts` trocou o signal `fichas` (`FichaResumoDto[]`) por `mediasEsquadrao`
-> (`FichaMediasEsquadraoDto | null`); os quatro pontos do template que checavam `fichas().length`
-> passaram a checar `mediasEsquadrao()?.quantidade`. **Achado só na verificação ao vivo:**
-> `AVG(...)::numeric` do Postgres chega pelo driver `pg` como **string**, não `number` — o teste
-> unitário do repositório até mockava esse formato sem questionar; corrigido com `::float8` externo
-> ao `COALESCE`. Testado: shared 723/723 (sem mudança), backend 456/456 (+4), frontend 1326/1326
-> (+2); lint limpo nos três. Verificado ao vivo (Postgres+backend+frontend reais, REST + Playwright,
-> dois usuários): jogador comum sem `usuario_ficha_acesso` sobre a ficha do mestre confirma por REST
-> que `GET /ficha?campanhaId=` devolve `[]` (ficha alheia continua protegida individualmente) mas
-> `GET /ficha/medias-esquadrao` devolve a média correta; no guia desse jogador, o passo // Novo
-> agente não mostra mais "Primeiro agente da campanha" e calcula Nível/Prestígio iniciais corretos,
-> confirmado em `1920×1080` e `360×800`. Controle de regressão: campanha genuinamente vazia
-> continua mostrando "Primeiro agente da campanha" para o mestre. Ver `HISTORY.md` para o relato
-> completo.
->
-> **Três decisões atrás:** `m7-19` (ajuste avulso pós-M7, o
-> mestre pode sobrescrever, por combatente e por encontro, a expressão de dados usada para rolar a
-> Iniciativa) — cobre casos que a fórmula padrão do sistema não prevê (efeito temporário de cena,
-> condição homebrew, ajuste pontual) sem precisar de sequela ou Formação permanente na ficha. Novo
-> campo persistido `encontro_combatente.iniciativa_formula_custom` (migration `0025`, nulo por
-> padrão — nulo usa o cálculo padrão), espelhado em `EncontroCombatenteResumoDto.
-> iniciativaFormulaCustom` e no DTO interno `EncontroCombatenteLinhaDto`. Novo DTO
-> `EncontroCombatenteIniciativaFormulaAlterarDto { id, formula: string | null }` e endpoint
-> `PUT encontro/combatente/:id/iniciativa/formula` (`EncontroService.alterarFormulaIniciativa`),
-> mestre-only (`validarMestre`, mesmo padrão dos demais endpoints de edição pontual do combatente),
-> validado contra `validarFormula` (`shared/regras/rolagem`, a mesma gramática dos presets de
-> rolagem — não duplicada) antes de persistir; `formula` vazio/só espaço é tratado como remoção
-> (`null`). `encontro-revelacao.ts` zera o campo junto dos demais números de quem não tem
-> revelação — mesmo cuidado de §14 que os outros campos calculados do combatente já seguem.
-> Quando presente, a expressão tem prioridade **total** sobre o cálculo padrão (Destreza em D6 +
-> `dadoExtraIniciativa`, m7-18, + `iniciativaBonus`) nos dois pontos que hoje produzem um resultado
-> de dado: `rolarTudo()` (mestre, "Rolar iniciativas") e `rolarMinhaIniciativa()` (jogador rolando o
-> próprio combatente) — os dois extraídos para o mesmo helper `concluirRolagemDeIniciativa` depois
-> de calcular o resultado, sem duplicar a lógica de bandeja/registro/atribuição. Entrada de edição no
-> painel do mestre: campo de texto "Fórmula de Iniciativa" (`.combatente__formula-campo`,
-> `CartaoCombatente`) dentro do mesmo modo "Editar combatentes" (mestre-only) que já edita cor/
-> imagem do avulso, mas — ao contrário daquele bloco — visível para **qualquer** tipo de combatente
-> (agente, criatura, avulso), não só avulso. Testado: shared 723/723 (sem mudança), backend 453/453
-> (+7), frontend 1323/1323 (+8); lint limpo nos três (os 2 erros de `npm run lint -w backend` são o
-> `P-022` preexistente). Verificado ao vivo (Postgres+backend+frontend reais, dois usuários, REST +
-> Playwright): mestre define uma fórmula constante (`50`, fora do alcance de qualquer fórmula padrão
-> possível para o avulso testado) num combatente avulso, "Rolar iniciativas" produz exatamente
-> **50** — prova end-to-end de que a sobrescrita venceu —, remover a fórmula (campo em branco) volta
-> o cálculo ao padrão; confirmado em `1920×1080` e `360×800`. O jogador não tem o botão "Editar
-> combatentes" nem o campo em lugar nenhum da UI, nos dois viewports; uma chamada direta ao endpoint
-> por um jogador é recusada com 403, e uma expressão sintaticamente inválida (`3D`) é recusada com
-> 400 sem persistir.
->
-> **Quatro decisões atrás:** `m7-18` (ajuste avulso pós-M7,
-> "Rolar tudo" do mestre passa a somar o dado extra de Iniciativa de Formação da Origem) — certas
-> Formações da Origem concedem dado extra de Iniciativa (`PERICIA_DADO_INICIATIVA`,
-> `obterDadoExtraIniciativaFormacao`, `shared/regras/identidade/formacoes.ts`), já aplicado
-> corretamente quando o próprio jogador rola a própria iniciativa, mas ignorado pelo atalho **Rolar
-> tudo** do mestre — um agente com essa Formação, rolado pelo mestre, saía sistematicamente com
-> menos dados do que a própria ficha produziria. Corrigido no mesmo padrão de campo calculado que
-> `m7-17` já usa para resistência a dano: `EncontroCombatenteResumoDto` ganhou
-> `dadoExtraIniciativa: number` (default `0` para criatura/NPC/avulso, que não têm Formação de
-> Origem); o mapper do Encontro (`encontro-combatente.mapper.ts`) ganhou
-> `resolverDadoExtraIniciativa`, reaproveitando a função pura do shared sem duplicar a soma no
-> backend; `encontro-revelacao.ts` zera o campo junto de `destreza`/`iniciativaBonus` para quem não
-> tem os números liberados. `rolarTudo()` (`painel-encontro.page.ts`) passou a montar
-> `dados = Math.max(1, destreza) + dadoExtraIniciativa`; o caminho do jogador (`rolar-iniciativa.ts`)
-> não foi tocado — já estava correto. Testado: shared 723/723 (sem mudança), backend 446/446 (+1),
-> frontend 1321/1321 (+1); lint limpo nos três (os 2 erros de `npm run lint -w backend` são o
-> `P-022` preexistente, fora do diff desta task). Verificado ao vivo (Postgres+backend+frontend
-> reais, `1920×1080`): ficha REST-seed com Destreza 1 e 2 entradas de `PERICIA_DADO_INICIATIVA`
-> confirmou `dadoExtraIniciativa: 2` via `GET /encontro/:id`; "Rolar iniciativas" pelo mestre no
-> painel real produziu iniciativa **8** — impossível sob `1D6` (teto 6), consistente com `3D6`
-> (Destreza 1 + dado extra 2), provando a correção end-to-end. **Correção, mesmo dia:** o
-> amplificador `Atento` (`ajusteDadoIniciativaAmplificadores`), inicialmente deixado fora de escopo
-> por depender supostamente do "documento inteiro da ficha" (registrado como `PROBLEMS.md` `P-026`),
-> na prática é função pura sobre `inventario.amplificadores` — mesmo padrão de `obterDadoExtra
-> IniciativaFormacao`. `resolverDadoExtraIniciativa` passou a somar os dois; `P-026` fechado. Testado
-> de novo (mesmos números, backend 446/446 com o caso combinado). Verificado ao vivo: ficha com **só**
-> Atento (3 empilhamentos, sem Formação) confirmou `dadoExtraIniciativa: 3` via REST; "Rolar
-> iniciativas" real produziu **12**, consistente com `4D6` (Destreza 1 + Atento 3).
->
-> **Cinco decisões atrás:** `m3-78` (ajuste avulso pós-M3, a
-> Habilidade de Personalidade ganha 3 estágios com custo em Energia) — deixou de ser um único texto
-> definido a qualquer momento pelo editor completo e passou a ter 3 estágios nomeados (Base, 1ª e 2ª
-> Fortificação — níveis 7/14), cada um com descrição e custo em Energia próprios (nunca um nome
-> próprio: o nome de qualquer estágio é sempre a palavra de Personalidade, sufixada pelo rótulo do
-> estágio numa Fortificação — "Atento — 1ª Fortificação" —, nunca texto livre; corrigido no mesmo dia,
-> ver abaixo), preenchíveis desde
-> o guia de criação (`criar.page.ts`, passo **Identidade** — logo abaixo do campo "Traço de
-> personalidade"; implementada primeiro no passo Habilidades e movida para Identidade por pedido do
-> autor logo depois, ver abaixo — sempre visível, sem gate por nível; só a Base é exigida para
-> avançar do passo Identidade, cada Fortificação só quando o Nível de criação já a desbloqueou, sem
-> bypass de `modoLivre`; o passo Habilidades manteve seu próprio gate só do catálogo,
-> `vagasCatalogoCompletas`, com bypass de `modoLivre` como antes).
-> `identidade.habilidade` (`FichaPersonalidadeHabilidadeDto`, `shared/dtos/ficha`) guarda os 3
-> rascunhos + qual está `ativa`; só o ativo é materializado como o item `categoria: PERSONALIDADE`
-> de `dados.habilidades` (`materializarHabilidadePersonalidade`, `shared/regras/identidade`) — fonte
-> única usada pelo guia e pela ficha, preservando sem mudança nenhum consumidor existente de
-> `dados.habilidades` (rolagem/Energia vinculada, `m3-77`; lista da aba Habilidades). Na ficha, a
-> aba Extras ganhou um seletor do estágio ativo (restrito ao que o Nível **atual** já desbloqueia,
-> mesma `calcularProgressaoAcumulada` do guia) e um editor (`p-dialog`, mesmo mini-editor da Origem)
-> com os 3 blocos sempre preenchíveis, mesmo os ainda não desbloqueados. Retrocompatibilidade
-> tolerante: uma ficha sem `identidade.habilidade` mas com um item `PERSONALIDADE` legado solto em
-> `dados.habilidades` o lê como o estágio correspondente ao Nível atual, sem migração de banco.
-> **Achado só na verificação ao vivo:** o editor da Habilidade de Personalidade (novo `p-dialog`,
-> sem `[appendTo]="'body'"` — mesmo padrão do editor de Origem) não abria de verdade no mobile
-> (360px): `.p-dialog` ficava com `position: static` e altura zero, "visível" no DOM mas sem
-> bounding box — o editor de Origem tem o mesmo defeito latente (fora de escopo desta task, não
-> corrigido). Fix local só no diálogo novo: `[appendTo]="'body'"`. Também achado: reusar
-> `.guia__subsecao-ajuda` (margem superior negativa, pensada para colar num `.guia__subsecao`) fora
-> desse contexto sobrepunha o texto de ajuda já existente do campo de Personalidade no passo
-> Identidade — trocado por um segundo `<small class="campo__ajuda">` dentro do mesmo `<label>`.
-> Testado: shared 722/722 (+13), frontend 1315/1315 (+15), backend 445/445 (sem mudança); lint
-> limpo nos três. Verificado ao vivo (Playwright, `1920×1080`/`360×800`, agente Nível 14 real via
-> guia completo até Habilidades/Identidade + ficha REST-seed em Nível 14): os 3 blocos sempre
-> visíveis no guia, texto do papel do Mestre na Identidade, seletor da aba Extras restrito às
-> Fortificações desbloqueadas, troca de estágio espelhando a aba Habilidades, editor funcionando nos
-> dois viewports depois do fix. **Correção pós-implementação, mesmo dia:** o autor pediu que a
-> seção saísse do passo Habilidades e fosse para o passo Identidade do guia — movida para o fim do
-> bloco visual da Personalidade, antes da Origem, no mesmo passo do campo "Traço de personalidade".
-> Verificado ao vivo de novo nos dois viewports: 0 ocorrências no passo Habilidades, blocos presentes
-> e sem sobreposição no passo Identidade, gate de Avançar reagindo à Base preenchida. Frontend
-> 734/734 (módulo `ficha`), lint e build limpos. **2ª correção, mesmo dia:** removido o campo de nome
-> livre da Fortificação (`FichaFortificacaoPersonalidadeDto` eliminado — a Fortificação reusa
-> `FichaPersonalidadeEstagioDto`, mesma forma `{descricao, custoEnergia}` da Base); o nome agora é
-> sempre derivado em `materializarHabilidadePersonalidade` (`personalidade` + rótulo do estágio via
-> `ROTULOS_PERSONALIDADE_ESTAGIO`), inclusive retornando `null` sem a palavra de Personalidade
-> definida. Os inputs "Nome"/"Nome da melhoria" saíram do guia e do editor da aba Extras; o cabeçalho
-> estático de cada bloco (já usado só pela Base) passou a valer também para as Fortificações. Testado:
-> shared 723/723, frontend 735/735 (módulo `ficha`), lint e build limpos; verificado ao vivo nos dois
-> viewports, no guia e no editor de uma ficha real.
->
-> **Seis decisões atrás:** `m7-20` (regressão do botão
-> "abrir ficha" na grade compacta do jogador, corrigida) — no desktop, com a ficha lateral do
-> jogador aberta, o botão "abrir ficha" de cada cartão da Iniciativa tinha voltado a aparecer:
-> `m7-12` escondia esse botão em `:host-context(.grade--compacta) .combatente { &__abrir-ficha:
-> display: none; }`, e o commit `139d221` ("feat(encontro): adiciona rolagens aos avulsos",
-> 2026-08-22) removeu essa regra sem intenção ao dar suporte a `&__rolar-avulso`. A correção **não**
-> reintroduz a regra dentro de `.grade--compacta` (essa classe também cobre a grade do mestre
-> compactada por quantidade — `colunasGrade() > 3` —, cenário em que o mestre não tem substituto
-> lateral e o botão precisa continuar); em vez disso usa
-> `:host-context(.iniciativa-tela--dividida) .combatente__abrir-ficha { display: none; }`, já que
-> `.iniciativa-tela--dividida` só existe quando `mostrarFichaLateral()` é verdadeiro (nunca pro
-> mestre). Puramente CSS, sem teste unitário (JSDOM não avalia media query), lint limpo. Verificado
-> ao vivo (`1920×1080`, dois usuários reais via REST, encontro com 9 combatentes pra também acionar
-> a grade compacta do mestre por quantidade): jogador com ficha lateral não vê nenhum botão "abrir
-> ficha" na grade; mestre, na mesma grade compacta mas por quantidade, continua vendo o botão no
-> cartão que tem ficha. Sanidade em `360×800` confirmou que o mobile (fora do escopo da regra, que
-> vive só no breakpoint desktop) não mudou.
->
-> **Sete decisões atrás:** `m3-77` (ficha aberta reage por
-> socket a rolagem feita em outro caminho — histórico + `BandejaDados`) — quem está com
-> `visualizar.page.ts`/`visualizar-criatura.page.ts` aberta passa a ver, sem F5, uma rolagem
-> `PUBLICA` feita por outra aba do dono, pelo mestre ou pelo Encontro. Backend:
-> `CampanhaGateway.emitirRolagemRegistrada` ganhou duas salas **mutuamente exclusivas** — com
-> campanha, só `campanha:<id>` (como sempre); ficha solta (m3-28, sem campanha), só `ficha:<id>`, a
-> única sala que ela tem (antes era no-op). Emitir nas duas ao mesmo tempo duplicaria o evento pra
-> quem está nas duas salas simultaneamente (`campanha/detalhe`, que já ingressa o mesmo socket nas
-> duas por ficha visível). Frontend: as duas páginas entram também em `campanha:<id>` quando a ficha
-> pertence a uma (reaproveita `entrarSalaCampanha`) e assinam `rolagemRegistrada$` filtrado por
-> `fichaId`. **Bug pego só ao clicar de verdade contra o stack real, não pelos testes nem por um POST
-> isolado via REST**: a bandeja abria **duas vezes** pra quem acabou de rolar — o eco do broadcast
-> podia chegar **antes** da resposta HTTP do próprio POST, quando o histórico local ainda não tinha o
-> `id` real pra deduplicar. Fix: `FichaRolagemRegistroService` ganhou `enviando$`/`finalizada$`
-> (antes/depois do REST); as páginas contam rolagens "em voo" por ficha e o handler remoto pula a
-> bandeja enquanto o contador > 0 (não dá pra usar `usuarioId` pra isso — quebraria o caso "mesmo
-> dono, outra aba", onde a aba que só observa **deve** abrir a bandeja mesmo sendo o mesmo usuário).
-> Testado: backend 445/445 (+3), frontend 1306/1306 (era 1297, +9); lint limpo nos dois. Verificado
-> ao vivo (`1920×1080`/`360×800`, dois usuários reais + REST, `dados` de ficha/criatura clonados de
-> fichas reais do banco de dev pra passar a validação de domínio): 6 cenários — campanha (mestre rola
-> por fora), clique real na própria tela sem duplicar, criatura, ficha solta no mobile, `PRIVADA` não
-> vaza a terceiro sem acesso, e duas abas reais do mesmo dono (uma só observa, outra rola de
-> verdade). Ver `[[m3-31-sem-fusao-automatica-de-efeitos-na-rolagem]]` (irmã de tema, não de causa) na
-> memória do agente.
->
-> **Oito decisões atrás:** `m3-76` (mod custom ganha peso próprio, exceção ao padrão de +0,2 do
-> sistema) — `pesoCustom?: number` em `ModificacaoAplicadaDto`/`ModificacaoItemDto`
-> (`shared/regras/compras`), devolvido por `obterPesoModificacao` só quando a mod não tem
-> correspondência no catálogo; form de mod custom (`ficha-inventario`) ganhou o campo opcional.
-> **Bug pego só na verificação ao vivo**: `montarItemInventario` tinha uma terceira chamada a
-> `obterPesoModificacao` (badge do card) que nunca recebia `pesoCustom`, caindo sempre no padrão —
-> nenhum teste unitário cobria essa função específica (motor e total do carrinho já estavam certos).
-> Corrigido + teste de regressão no `.ficha-inv__peso` do DOM. Também ajustado ao testar ao vivo:
-> layout do form de mod custom junta nome/limite/peso numa linha no desktop, empilha no mobile.
-> Testado: shared 163/163, frontend 1297/1297 (+4); lint limpo. Ver
-> `[[verificacao-visual-pega-bug-silencioso-de-exibicao]]` na memória do agente.
->
-> **Nove decisões atrás:** `m3-75` (spec pós-milestone, pedido
-> direto do autor: "na criação de ficha de agente, fazer trim em todos os campos de texto") — todo
-> campo de texto livre do passo "Identidade" (`personalidade`, `origem.nome/.descricao/
-> .saberDeCampo`, cada `formacao[].texto/.parametro`, `especialidade.gatilho/.efeito`) só usava
-> `.trim()` para **validar** `passoValido()`, nunca para persistir; um valor como `" Firme "` chegava
-> intacto na ficha final (só `nome` e `fortificacao[].nome/.descricao` já eram trimados antes desta
-> task). Fix: `criar.page.ts` ganhou `origemTrimada()` (mapeia `FichaOrigemDto` trimando cada campo,
-> item a item no array de `formacao`), chamado só no ponto único de montagem em `criar()` —
-> nenhum `.trim()` foi movido pros setters de digitação, preservando espaço temporário enquanto o
-> usuário ainda escreve. Sem utilitário compartilhado novo (a spec pediu explicitamente para não
-> antecipar essa extração). `passoValido()` não mudou — seu próprio trim de validação (incluindo o
-> veto a espaço interno de `personalidade`) já rodava sobre uma cópia separada. Testado: 1 novo caso
-> em `criar.page.spec.ts` (string simples + item de array, confere que o estado em edição continua
-> cru e que o payload de `criarFicha()` chega trimado); suíte completa do frontend 1293/1293 (era
-> 1292, +1); lint limpo. Sem impacto visual — mudança pura de montagem de payload, nenhum
-> template/estilo tocado.
->
-> **Dez decisões atrás:** ajuste avulso no catálogo do passo
-> "Equipamento inicial" do guia (`GuiaEquipamentoLoja`, pedido direto do autor, mesmo dia de
-> `m3-73`/`m3-74`) — as abas de categoria (Corpo a Corpo/Explosivos/Armas de Fogo/…) usavam os
-> emojis crus de `CATALOGO_CATEGORIAS` (`shared/regras/compras`), o único ponto do catálogo de
-> compras que ainda fazia isso: `ComprasPage`, `FichaInventario` e `InventarioEsquadrao` já usam
-> `app-icone` com um `ICONES_CATEGORIA` local (mesmo padrão "definido localmente pra manter o módulo
-> desacoplado" da `ficha-inventario`) — proibição #29 (emoji cru é proibido pelo tema "Terminal de
-> Contenção"). Fix: `GuiaEquipamentoLoja` ganhou o mesmo `ICONES_CATEGORIA` local + `app-icone`.
-> Aproveitado o pedido pra alinhar mais dois pontos ao mesmo análogo (`FichaInventario`): a busca de
-> item subiu pra **antes** das abas de categoria (não mais depois), e passou a cruzar **todas** as
-> categorias quando tem termo digitado — antes só filtrava dentro da aba ativa; agora, igual ao
-> catálogo do Inventário, a busca independe de categoria selecionada e as abas ficam desabilitadas
-> enquanto ela está preenchida (`cartoesCatalogo` virou `{item, categoria}[]` — `adicionar()` passou
-> a receber a categoria do próprio resultado, não mais `categoriaAtiva()`, que ficaria errada num
-> resultado de outra aba). Novo spec (`guia-equipamento-loja.component.spec.ts`, 4 casos). Verificado
-> ao vivo (Playwright) em `1920×1080`/`360×800`: ícones corretos em todas as abas, busca por
-> "Pistola" (Armas de Fogo) enquanto a aba ativa era Corpo a Corpo encontrou o item e adicionou com a
-> categoria certa.
->
-> **Onze decisões atrás (mesmo dia):** `m3-73`/`m3-74` (dois ajustes
-> avulsos do guia de criação, mesmo dia) — `m3-73` corrigiu o seletor de habilidades do passo
-> "Habilidades": a aba ativa (Gerais/Classe/Subclasse/Arquétipo) voltava sozinha pro primeiro grupo
-> a cada "+" clicado, porque `abaAtiva`/`subgrupoAtivo` eram `linkedSignal`s na forma básica,
-> sensíveis à *referência* de `grupos` (recriada a cada `adicionarMelhoria`), não só ao conteúdo.
-> Fix: forma avançada `linkedSignal({source, computation})` com `source` = chave estável dos
-> ids/chaves de grupo, preservando a aba/subgrupo corrente enquanto ainda existir no `grupos()`
-> atual — reset só quando o conjunto muda de fato (troca de vaga/classe/arquétipo). `m3-74` deu ao
-> passo "Recursos" um botão **"Não rolar dinheiro inicial"** ao lado de "Rolar dados"
-> (`ignorarRecursos()`, `criar.page.ts`) — grava `{dados:[],inicial:0,rolado:true}`, mesma trava de
-> escolha única da rolagem normal, ficha final com $0 (mais `bonusMonetario()` de Prestígio, se
-> houver). O kit de "Equipamento inicial" já era opcional (`m3-59`); só faltava esse caminho pro
-> dinheiro. Verificado ao vivo (Playwright): guia completo Base→Revisão→Criar ficha ignorando o
-> dinheiro em `1920×1080`/`360×800`, e a aba do seletor permanecendo em Arquétipo por duas adições
-> seguidas. Ver `HISTORY.md` para o detalhe de causa raiz dos dois.
->
-> **Doze decisões atrás:** `m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) — o acervo
-> (`/fichas`) deixou de listar agentes e criaturas
-> misturados. A tela agora separa por tipo em blocos (`AGENTES`/`CRIATURAS`, NPC estruturalmente
-> pronto e desligado até `m4-07`/`m4-08`), com um `<select>` de visão (Todos/Agentes/Criaturas) —
-> em "Todos" cada bloco trava em ~2 linhas de card com scroll interno e fade (`appOverflowFade`);
-> num tipo filtrado, o bloco usa a altura toda. O card virou um componente único extraído
-> (`CartaoFichaAcervo`, `frontend/.../ficha/componentes/cartao-ficha-acervo/`) com recorte por
-> tipo — agente mostra classe/arquétipo/nível/**Patente** (que faltava antes); criatura mostra
-> Ameaça/NA/VD/Vida/Defesa. Destrava também **criar criatura fora de campanha**
-> (`FichaCriaturaCriarDto.campanhaId: number | null`, botão "Criar criatura" visível só a quem é
-> mestre de alguma campanha — backend exige o mesmo via
-> `CampanhaRepository.contarCampanhasComoMestre`); as rotas `/fichas/criatura/nova`/`:id` reusam
-> `CriaturaCriar`/`CriaturaVisualizar` com `campanhaId` opcional, mesmo padrão de
-> `FichaCriar`/`FichaVisualizar` (m3-28). Dois defeitos vivos alcançáveis pelos mesmos controles do
-> acervo foram corrigidos junto: `duplicarFicha` tipava sempre `JOGADOR` (uma criatura duplicada
-> nascia agente com `dados` de criatura); e `atribuirCampanha` emitia `ficha:criada` (forma de
-> jogador) pra criatura/NPC também, vazando nome/vida pela sala `campanha:<id>` antes de qualquer
-> revelação — agora atribuir criatura/NPC exige que o dono seja **mestre** da campanha-alvo (não só
-> membro) e nunca emite esse evento. Verificado ao vivo (Postgres+backend+frontend reais, dois
-> usuários): a sala não vaza a criatura atribuída (com sanity check confirmando que o listener
-> funciona — atribuir um agente emite normalmente); e o fluxo completo funciona ponta a ponta
-> (criar solta pela UI → aparece com chip "Sem campanha" → abre em `/fichas/criatura/:id`).
->
-> **Treze decisões atrás:** correção pós-`m7-17` — a ficha
-> flutuante do Encontro (`FichaFlutuanteConteudo`) ajusta Vida/Energia/Condições da ficha pela
-> `FichaEdicaoService` genérica (`FichaService.alterarVitalidade`/`alterarFicha`), que só emite
-> `ficha:alterada` na sala `ficha:<id>` — sala que o painel de Iniciativa nunca ouve (só escuta
-> `encontro:alterado` em `campanha:<id>`). Resultado reportado pelo autor: mudar Vida/Energia/
-> Condição pela ficha flutuante durante um combate não atualizava os cartões da Iniciativa em
-> **nenhum** cliente conectado (mestre ou jogador) até a próxima ação que passasse pelo
-> `EncontroService` (avançar turno, ajuste pelo próprio cartão). Corrigido sem tocar a fonte única
-> (Vida/Energia/Condições continuam vivendo na ficha, escritas pela `FichaService`):
-> `CampanhaGateway.emitirFichaAlterada` agora, depois do broadcast de sempre, chama
-> `EncontroService.sincronizarFichaAlterada(fichaId, campanhaId)` — novo método que localiza o
-> encontro aberto (`MONTAGEM`/`ATIVO`) da campanha, confirma que a ficha é combatente dele e, só
-> então, remonta e retransmite `encontro:alterado` (reaproveita `montarEstado`/
-> `montarEstadoParaUsuario`, sem duplicar a regra de revelação §14). O gateway não decide nada
-> sozinho (proibição #25) — só encaminha ao service dono da regra. Novo `forwardRef` mútuo
-> `GatewayModule` ↔ `EncontroModule` (mesmo padrão já usado com `FichaModule`/`CampanhaModule`);
-> `FichaModule` continua sem saber que `encontro` existe. Ver "Tempo real" (seção 4).
->
-> **Quatorze decisões atrás:** `m7-17` (retoque no mesmo dia) — o dialog "Receber dano" ganhou uma grade
-> com cabeçalho único (Dano/Ficha/Custom) em vez de rótulo por campo em cada uma das cinco linhas,
-> e o mobile deixou de empilhar cada célula (o que alongava o dialog e quebrava a leitura
-> coluna↔coluna) — continua tabela, só mais estreita. O cartão da Iniciativa passou a mostrar a
-> mesma faixa compacta de resistência a dano que a ficha mostra
-> (`EncontroCombatenteResumoDto.resistencias`, calculado no mapper do encontro a partir da ficha já
-> carregada — `montarResistencias` pro agente, soma de `resistencias` pra criatura — e ocultado pela
-> mesma regra de revelação das outras defesas), e o dialog aberto por esse cartão agora recebe essa
-> resistência automaticamente (antes só o campo custom existia ali). Achado em verificação ao vivo:
-> a linha "Geral" do dialog mostrava sempre `—` na coluna Ficha mesmo com resistência Geral
-> definida — o número era aplicado no cálculo (silenciosamente correto) mas nunca exibido; corrigido
-> e coberto por teste de regressão.
->
-> **Quinze decisões atrás:** `m7-16` — na tela de Iniciativa, um agente (`JOGADOR`) de ficha **não
-> oculta** (m3-65) mostra avatar/dono/classe-arquétipo pra qualquer membro, mesmo sem
-> `usuario_ficha_acesso` (só os números continuam atrás da concessão; nível fica de fora — a
-> carteirinha identifica, não avalia a força — e sem ela não desenha "Vida —"); mais 4 ajustes de UI
-> no mobile (nome dos cards, bug do minimizar, minimizar=fechar, cabeçalho reorganizado em dois
-> grupos) — ver seção 1.
+> **Última revisão:** 2026-09-01 · **Última decisão registrada:** o backend de produção migrou do
+> Render para o Google Cloud Run (deploy nativo via Cloud Build, banco Supabase inalterado); falta
+> só desligar o Render e reescrever `docs/DEPLOY.md` — ver seção 1. O relato de cada decisão
+> anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -388,363 +20,51 @@
 
 ## 1. Próxima Task
 
+**`ui-12-tokens-semanticos-de-estado` concluída** (commit `4529cd8`, spec em `docs/specs/done/`):
+`--erro`/`--accent-press` desacoplam erro e a severidade `perigo` do `--accent` trocável pelo
+usuário; testes focados 36/36, build e lint limpos, verificação visual em
+`1920×1080`/`360×800`. Registrou `P-043` (`PROBLEMS.md`), defeito pré-existente exposto durante o
+gate, sem relação com o diff de tokens/SCSS.
+
+**Task ativa agora: `ui-13-chip-com-severidade`** (`docs/specs/active/`, filha da mesma auditoria
+visual) — amplia `app-chip` com `[severidade]`/`[tom]` e ícone opcional, migrando as cinco cópias
+locais da mesma receita (`indicador-tempo-real`, `historico-rolagens__privada`, cartão de
+combatente, bandeja de dados). Implementação em andamento, ainda sem commit.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
-aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta:
-(1) desligar/suspender o serviço no Render — hoje ele fica ocioso, sem tráfego, mas ainda cobrando
-o slot do free tier; (2) remover `render.yaml`; (3) reescrever `docs/DEPLOY.md` trocando a seção do
-Render pelo runbook do Cloud Run (setup de projeto GCP, secrets, IAM, trigger do Cloud Build —
-todo esse conhecimento foi extraído ao vivo durante a migração e está em `HISTORY.md`). Adiado de
-propósito a pedido do autor, que quer manter o Render como fallback por mais alguns dias antes do
-desligamento definitivo.
+aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
+pedido do autor (quer manter o Render como fallback por mais alguns dias antes do desligamento
+definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.yaml`; (3) reescrever
+`docs/DEPLOY.md` trocando a seção do Render pelo runbook do Cloud Run (setup de projeto GCP,
+secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
+migração e está em `HISTORY.md`).
 
-**Auditoria da biblioteca visual concluída:**
-`ui-06-auditoria-conformidade-biblioteca-visual` está em `docs/specs/done/` desde 2026-08-30.
-A matriz final em `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` cobre os 68 templates e todos os
-módulos; a revisão real passou pelas rotas públicas, campanhas, acervo/fichas, guias, iniciativa e
-perfil em 1920×1080 e 360×800, sem overflow horizontal. O diagnóstico confirmou a remoção de
-PrimeNG e das cópias-base. As quatro correções delimitadas sem refactor oportunista — UI-07
-(modal), UI-08 (botão de ícone), UI-09 (ações de domínio) e UI-11 (tokens de acabamento) — estão
-concluídas; P-042 (margem inline) foi encerrado em UI-11.
-
-**Cinco specs avulsas fechadas (2026-08-29), `caderno-esquadrao-colaborativo` permanece aberta** —
-ver o bloco no topo do arquivo para o resumo e `PROBLEMS.md` `P-039` para a lacuna que mantém essa
-última em `active/`. Não há próxima task numerada de milestone aberta; a única frente de código
-ainda pendente é o **M4** (`m4-05`…`m4-10`), ao lado de `m3-53` (M3).
-
-**Módulo `skills-agentes` concluído:** a spec guarda-chuva e as nove tasks `skills-01`…`skills-09`
-(fora da fila de milestone) estão em `docs/specs/done/`. Estado atual: as duas pastas de skill
-(`.claude/skills/`↔`.agents/skills/`) estão 100% idênticas (`diff -r` vazio) — `dto-conventions`
-(corrigida), `verify` (corrigida), `task-flow`, `sql-migrations`, `design-fidelity` e
-`regras-do-jogo`, `convencoes-check` e `tempo-real` (as seis últimas, skills novas). `task-flow` reúne o fluxo de spec e o fecho de task, com
-`docs/specs/TEMPLATE.spec.md` como template oficial. `sql-migrations` cobre schema/migration/SQL
-de repositório. `design-fidelity` executa o gate visual obrigatório do `CLAUDE.md` (escolher
-análogo → construir com tokens → verificar via `verify` → checklist de 6 itens → corrigir antes
-de apresentar), com tabela de análogos em `references/analogos.md`. `regras-do-jogo` conduz a
-mudança de fórmula do documento canônico ao motor puro e seus consumidores derivados, incluindo
-as armadilhas stored vs. efetivo, stat fundido e Civil fora da tabela. A conferência de exemplos
-revelou o prefixo `ck_` errado nas migrations de encontro; o schema foi corrigido pela migration
-`0027`, sem reescrever o histórico. Permanece a lacuna pequena de `examples/README.md` (par
-`iniciativa-*` sem entrada na tabela, documentada na própria skill). Detalhe completo de cada task em `HISTORY.md` (busque
-`skills-0N`). `convencoes-check` faz o passe final mecânico somente no diff (com buscas e falsos
-positivos em `references/buscas.md`) e exige a leitura manual do que grep não prova; a auditoria
-inicial registrou `PROBLEMS.md` `P-032`, sem correção oportunista. `tempo-real` mapeia a emissão
-pós-REST, salas, assinantes e a ponte `emitirFichaAlterada` →
-`EncontroService.sincronizarFichaAlterada`; também força a pergunta "quem mais precisa saber?"
-para ficha, resumo público, mini-card, Iniciativa e recorte de revelação. Tasks puramente
-documentais — sem mudança de código de produto além das próprias `SKILL.md`, com
-validação por uso real em cada uma (comandos executados, migration hipotética escrita, tela
-aprovada comparada ao vivo — não só citação copiada da spec). A auditoria de fecho confirmou as
-9 specs, os 8 diretórios de skill, frontmatter/nomes corretos, teto de 150 linhas e espelhamento
-sem diferença.
-
-**Ajuste avulso (pedido direto do autor, 2026-08-27, sem número de milestone) concluído** — o
-inventário de esquadrão ganhou o mesmo editor "Editar informações" de item custom que já existia
-na ficha (nome/custo/peso/descrição; categoria/dano/informação/resistência/bônus/quantidade/
-modificações continuam travados), com um `PATCH` novo (`CampanhaInventarioItemAlterarDto`) porque
-esse inventário é REST puro. Durante a edição, toda a lista (cabeçalho e demais itens) fica
-desabilitada e com estilo `:disabled` de verdade — antes desta task o seletor de Categoria não
-tinha nenhum estado desabilitado visual, apesar de já existir a intenção de travá-lo. **Mesmo dia:**
-o autor achou o defeito irmão já existente na ficha do agente (`ficha-inventario.component.scss`
-nunca teve `:disabled` na Categoria, apesar do template já desabilitá-la há mais tempo) — corrigido
-com a mesma regra. Ver `HISTORY.md` para o relato completo, incluindo a armadilha de build
-(`shared/dist` desatualizado) documentada na skill `verify`.
-
-**Ajustes avulsos concluídos no Caderno (pedidos diretos do autor, 2026-08-25/26):** a importação
-de um `.md` cria e persiste imediatamente uma página com título vindo do arquivo, normaliza front
-matter/BOM/CRLF/imagens e o editor Milkdown usa GFM para tabelas. A barra agora explica todas as
-ações por tooltip, diferencia visualmente H1 de H2, usa ícones de grade para inserir/remover
-linhas e colunas e oferece retorno suave ao topo depois da rolagem. Frontend apenas: nenhum
-endpoint, DTO, migration ou dependência nova. Lote, arrastar-e-soltar e exportação continuam em
-`I-022`. A seleção de página é alternável: clicar na ativa a fecha; se houver rascunho diferente da
-versão persistida, trocar ou fechar pede descarte explícito antes de cancelar o autosave pendente.
-
-**Ajuste avulso (bug reportado direto pelo autor, 2026-08-25, sem número de milestone) concluído**
-— "Documentos" não abria no Edge mobile: o Edge mobile não incorpora PDF em iframe e bloqueia o
-download automático que o plugin nativo precisaria (m3-72 previa esse risco explicitamente). O
-mobile passou a ter um leitor próprio via `pdfjs-dist` (`LeitorPdfMobile`, sem seleção/busca de
-texto — decisão de escopo), lazy-carregado; o desktop continua exatamente no `<iframe>` nativo de
-`m3-72`, sem mudança. Achado só na implementação: `pdfjs-dist` mais recente (6.x) quebra a
-renderização por depender de um método de `Map` ainda não disponível em nenhum navegador estável —
-fixado em `^4.10.38`. Ver o parágrafo sobre `m3-72` (seção 1, logo abaixo) e `HISTORY.md` para o
-relato completo.
-
-**Ajuste avulso (pedido direto do autor, 2026-08-25, sem número de milestone) concluído** — item
-custom ganha a categoria de sistema `SEM_CATEGORIA`, pra registrar item sem categoria mecânica real
-(modificação solta, papel/documento, objeto narrativo) sem mentir escolhendo uma categoria real que
-não descreve o item. Ver "Ficha de jogador" (seção 4) e `HISTORY.md` para o relato completo.
-
-**Ajuste avulso (bug reportado direto pelo autor, 2026-08-24, sem número de milestone) concluído**
-— a média de Nível/Prestígio do esquadrão não chegava ao primeiro agente de um jogador comum numa
-campanha que já tinha agentes de outros jogadores. Ver o bloco no topo do arquivo e
-`HISTORY.md` para o relato completo.
-
-**`m7-19` (ajuste avulso pós-M7, o mestre pode sobrescrever a expressão de dados de Iniciativa por
-combatente/encontro) concluída** — ver o bloco no topo do arquivo. Fecha a fila de ajustes avulsos
-do M7 (`m7-18`…`m7-19`, todos concluídos). Não há próxima task numerada aberta no M7; a única frente
-de código ainda aberta é o **M4** (`m4-05`…`m4-10`), ao lado de `m3-53` (M3) — nenhuma delas tem
-spec ativa no momento.
-
-**`m7-18` (ajuste avulso pós-M7, "Rolar tudo" do mestre passa a somar o dado extra de Iniciativa de
-Formação da Origem) concluída** — ver "Três decisões atrás" no bloco do topo do arquivo.
-
-**`m3-78` (ajuste avulso pós-M3, Habilidade de Personalidade ganha 3 estágios com custo em Energia)
-concluída** — ver "Guia de criação de ficha" (seção 4). Fecha a fila de
-ajustes avulsos do M3 (`m3-73`…`m3-78`, todos concluídos); resta só `m3-53` na fila normal do M3.
-
-**`m7-20` (ajuste avulso pós-M7, regressão do botão "abrir ficha" na grade compacta do jogador)
-concluída.**
-
-**`m4-11` (task adicional do M4, fora da fila `m4-05`…`m4-10`) concluída** — acervo separado por
-tipo, "Criar criatura" solta e os dois defeitos de `duplicarFicha`/`atribuirCampanha` corrigidos;
-ver o bloco no topo do arquivo e a seção 4 ("Ficha de jogador"/"Ficha de criatura"). Não avança a
-fila `m4-05`…`m4-10` — a próxima task numerada do M4 continua sendo `m4-05` (NPC).
-
-O **M7 — Encontro de Combate** está **concluído**, incluindo os oito ajustes de pós-milestone: as 8
-tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend
-de condução + tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da
-rodada, `m7-08` refinamento mobile) mais `m7-09` (turno atual do jogador), `m7-10` (histórico de
-rolagens), `m7-11` (identidade dos cartões), `m7-12` (layout desktop), `m7-13` (acesso pela
-campanha), `m7-14` (dialog de ficha), `m7-15` (ações mobile do jogador), `m7-16` (identidade "de
-carteirinha") e `m7-17` ("Receber dano") — todas entregues. O
-**M6 — Gestão de Usuários** também está **concluído**: `m6-08` (impersonação administrativa) fechou
-a última extensão do milestone. A única frente aberta agora é o **M4** (Ficha de Criatura/NPC —
-restam `m4-05`…`m4-10`), ao lado de `m3-53` (M3).
-
-**Identidade do avulso (ajuste pós-M7, 2026-08-22).** Criar um avulso na Iniciativa exige uma cor
-e aceita imagem opcional; ambas persistem no próprio `encontro_combatente`
-(`cor_avulso`/`imagem_url_avulso`, migration 0023), porque o avulso não tem ficha. O modo "Editar
-combatentes" troca a cor, substitui a imagem e remove a imagem. Formatos/limite seguem os avatares
-de ficha (JPEG/PNG/WEBP, 2MB), inclusive limpeza do blob anterior. `EncontroCombatenteResumoDto`
-continua expondo a forma unificada `corFicha`/`imagemUrl`: o mapper escolhe ficha ou avulso pela
-origem, e o cartão não duplica apresentação. Em `360×800`, os três controles de identidade têm
-alvo de 44×44px. No cartão editável, eles ficam sob o retrato: troca/remoção de imagem na primeira
-linha e troca de cor centralizada na segunda, sem sobrepor a foto.
-
-Fora da edição, o mestre também vê um atalho de dados ao lado do nome do avulso. Ele abre um painel
-compacto de expressão livre, sempre iniciado como **Rolagem oculta**; revelar as próximas rolagens
-pede a mesma confirmação usada por criaturas, e voltar a ocultar é imediato. O resultado usa o
-motor compartilhado, a bandeja e o feed da campanha, identificado pelo nome/cor do avulso. Como não
-há ficha, atributos, `PROF` e `NIV` são rejeitados. Desde a migration 0024, `rolagem` referencia
-exatamente uma origem: `ficha_id` ou `encontro_combatente_id`; somente o mestre da campanha pode
-registrar a segunda forma. A própria Iniciativa renderiza a bandeja central mesmo com o histórico
-recolhido; o botão confirma cada execução com **Rolado** e um pulso curto. No mobile, o painel de
-expressão sobe enquanto a carta de resultado está presente, evitando sobreposição entre os dois.
-O painel pode ser arrastado pelo cabeçalho e permanece limitado à viewport; **Rolar** tem borda,
-hover e cursor de botão. Toda carta da bandeja identifica a execução como **Privada** ou **Pública**
-a partir do mesmo estado usado no registro. A confirmação pública do avulso segue o diálogo
-canônico da criatura. Na visão do mestre, todo combatente com `fichaId` oferece **Abrir ficha**
-mesmo quando está oculto, o encontro não permite ajustes ou a grade usa o recorte compacto de quatro
-ou mais colunas; somente avulsos, que não possuem ficha, omitem a ação.
-
-`m7-10` e `m7-11` já tinham sido implementadas de fato no commit `4ea026d` (`feat: refina tela de
-iniciativa`, que também fechou `m7-09`), mas o registro em `HISTORY.md`/`CONTEXT.md` e o gate visual
-obrigatório ficaram pendentes até esta sessão. `m7-10` reusa `HistoricoRolagensSidebar` no
-cabeçalho de `PainelEncontro` (`rolagensFeed()`, carga inicial via `RolagemService.listarPorCampanha`
-+ atualização ao vivo por `FichaRolagemRegistroService.registrada$`/`TempoRealService.
-rolagemRegistrada$`), sem duplicar consulta ou regra de visibilidade — uma rolagem `PRIVADA` nunca
-chega a quem não tem acesso, nem por REST nem por socket, confirmado ao vivo (mestre, jogador dono
-da rolagem e um terceiro membro sem acesso). `m7-11` fez `CartaoCombatente` exibir `imagemUrl`/
-`imagemFoco` da ficha (com `FocoImagem`, mesmo padrão de enquadramento de `m3-62`) quando existem,
-sem espaço quebrado em combatente avulso ou sem imagem; o backend (`encontro-combatente.mapper.ts`,
-`encontro-revelacao.ts`) já propagava e ocultava a imagem junto com os demais números protegidos
-pela revelação (§14) — confirmado que uma criatura não revelada nunca vaza a própria imagem a um
-jogador sem acesso, mesmo quando o nome permanece visível (identidade mínima da ordem de turno,
-regra pré-existente de `m7-06`). O card "Sua Iniciativa" citado na spec nunca chegou a existir no
-código — o indicador de turno próprio já tinha sido resolvido por `m7-09` (faixa "Sua vez").
-
-**`m7-16` (feedback ao vivo do autor, mesmo dia) refinou essa regra especificamente pra agente.**
-A frase acima ("criatura não revelada nunca vaza a própria imagem") continua valendo à risca pra
-criatura/NPC e pra um agente cuja própria ficha está `oculta` (m3-65) — mas um agente de ficha
-**não oculta** deixou de ser tratado como segredo: a mesma identidade "de carteirinha" (avatar,
-dono, classe-arquétipo — nível fica de fora, a carteirinha identifica quem é o agente, não avalia
-sua força) que `CampanhaRepository.listarMembros` já mostra fora do encontro pra qualquer ficha
-não oculta agora também chega na Iniciativa, mesmo sem `usuario_ficha_acesso` (que é sobre abrir a
-ficha **inteira**, não sobre saber quem está na mesa). Só os **números** (vida, defesas, condições,
-Destreza) continuam atrás da concessão de sempre — e sem eles o cartão não desenha mais nem um
-placeholder "Vida —" (a linha de recursos inteira só entra no DOM quando há número pra mostrar).
-Mecanicamente: o repositório do encontro ganhou `ficha.oculta`/`usuario.nome` (`LEFT JOIN
-usuario`); `EncontroService` calcula um segundo conjunto, `fichaIdsIdentidadeVisivel` (ficha não
-oculta), ao lado do de sempre (`fichaIdsVisiveis`, de `FichaService.listarFichas` — a fonte da
-regra dos números, intocada, proibição #28); `encontro-revelacao.ts` usa os dois pra decidir o que
-cada combatente preserva. `CartaoCombatente.identidadeVisivel` (computed) e a linha de origem
-(`donoNome` + `rotuloClasseCompleto(classe, arquetipo)` em duas linhas, `\n` + `white-space:
-pre-line`, mesmo rótulo "Combatente - Lutador" do mini-card do Esquadrão) seguem esse recorte no
-front — a etiqueta do topo usa o estado de turno normalmente nesse caso (a ordem sempre foi
-pública). Junto, três ajustes de UI mobile: nome do
-cartão parou de quebrar entre os botões (linha própria, `flex-basis: 100%`), minimizar a ficha
-flutuante parou de deixar um selo `position: fixed` preso sobre um cartão (no mobile
-`recolher()` chama `fechar()` — sem janela pra recolher a um canto lá, as duas ações viram uma só),
-e o cabeçalho da Iniciativa (`.iniciativa__acoes`) virou dois grupos — status/navegação do
-encontro e utilitários da sessão — que no mobile empilham em ordem fixa, sem saltar de posição.
-
-**`m7-17` — "Receber dano" (tomador de dano facilitado, pedido direto do autor).** Regra pura
-`calcularDanoRecebido` (`shared/regras/encontro/receber-dano.ts`): os quatro tipos bloqueáveis
-reduzem por `resistenciaFicha + resistenciaCustom` (piso 0), a resistência **Geral** reduz a soma
-dos residuais **uma única vez** (não por linha), e o dano **Geral** é irredutível. `ReceberDanoDialog`
-(`frontend/shared/receber-dano/`) é reaproveitado em três entradas: cartão do combatente
-(`CartaoCombatente`, mestre-only, mesma `podeAjustar` dos steppers; sem `resistenciasFicha` — o
-resumo do encontro não carrega a ficha completa), e o rótulo "Vida" da ficha de agente
-(`resistenciasFicha` de `montarResistencias`) e de criatura (soma de `dados().resistencias` por
-tipo). Confirmar só emite o total efetivo; quem hospeda abate a Vida — cartão via `vidaAjustada`
-(grava o log `DANO` já existente, sem detalhamento por tipo), fichas via `ajustar()`/`ajustarVida()`
-locais (sem log). **Achado na verificação ao vivo:** dano maior que a Vida atual gerava delta que o
-backend rejeita (`ajustarVida`/`alterarVitalidade` recusam Vida negativa) — corrigido clampando o
-delta no cartão do combatente (`Math.min(total, vidaAtual)`; as fichas já estavam protegidas por
-`clamparVitalidade`/`Math.max(0, …)`). Verificado em `1920×1080`/`360×800`.
-
-`m6-08` também já estava implementada (ver a entrega completa na seção 4, "Autenticação e conta");
-só faltava a captura em `1920×1080` (o `360×800` já tinha sido confirmado em 2026-08-12) — feita
-nesta sessão, incluindo o fluxo completo (login → "Logar como" → confirmação → sessão trocada →
-`/painel` → rota exclusiva de `ADMIN` recusada para a sessão impersonada).
-
-Na `m7-09`, `PainelEncontro` passou a derivar `ehMinhaVez` somente do estado de encontro já
-recebido e da ficha do usuário ativo. A `m7-12` usa esse estado para exibir a única ação de condução
-do jogador: **Avançar turno**, apenas na própria vez. O backend confirma que o combatente do slot
-atual pertence à ficha do usuário; chamadas fora da própria vez são recusadas. O mestre preserva
-todos os controles existentes.
-
-Ainda na `m7-12`, o shell desktop permanece estritamente em `85vw`. Só a grade da visão dividida do
-jogador usa cartões compactos em duas colunas; três linhas ficam inteiras antes da rolagem interna.
-O bloco de controles não é renderizado quando não há ação disponível, eliminando a barra vazia. O
-botão de abrir ficha também some desses cartões no desktop, pois a ficha já está aberta ao lado. O
-breakpoint mobile restaura explicitamente a grade canônica de uma coluna e mantém esse acesso.
-
-Na `m7-13`, o link **Iniciativa** da visão do jogador saiu do menu `⋯` de ações da ficha e passou
-ao cabeçalho do card **Sessão**, junto do contexto em que é usado. O link mantém ícone, tooltip e
-rota; o mestre conserva seu menu e o tile Combate, e nenhuma regra de encontro foi alterada.
-
-Na `m7-14`, a ficha aberta pela Iniciativa ganhou o respiro lateral de `--pad-card`; em mobile,
-`.ficha-flutuante__corpo` é a única superfície com rolagem vertical e reserva espaço para a navegação
-fixa da ficha. A ficha de jogador recebe `rolagemExterna` apenas nesse hospedeiro, removendo o teto
-do painel interno que de outro modo criaria uma segunda barra vertical. Cabeçalho, fechamento,
-foco e navegação interna permanecem no mesmo componente.
-
-Na `m7-15`, o jogador com combatente próprio ganhou o atalho mobile **Minha ficha**, fixo acima de
-avisos e resultados transitórios e ausente no desktop. Ele reaproveita a abertura da ficha do cartão.
-Dentro de `FichaFlutuante`, o destino mobile **Rolagens** mantém o painel interno quando esse
-hospedeiro o disponibiliza; a execução e o registro seguem em `FichaRolagensPainel` e nos serviços
-existentes. A ficha aberta por usuário apenas visualizador recebe `podeRolar = false`, portanto não
-exibe rolagem rápida nem presets; não foram adicionados controles de condução.
-Quando o mestre abre uma ficha a partir da Iniciativa no desktop, a mesma janela inicia limitada à
-viewport em `1100×600`; jogador conserva a geometria compacta e o mobile continua em tela cheia.
-
-O módulo de frontend é `frontend/src/app/modules/encontro`. A tela "Iniciativa" é **uma só**
-(`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, com `:encontroId` opcional para o
-histórico) e bifurca por `ehMestre()`; o jogador é espectador, escreve a própria iniciativa e pode
-encerrar somente o turno da própria ficha.
-Quem desenha o log é `componentes/log-encontro` — componente **burro**, alimentado pelo
-`eventos` que já vem dentro do `EncontroRecuperadoDto`. Ele respeita a **revelação** por não fazer
-nada: o log chega recortado do backend (`encontro-revelacao.ts` descarta evento preso a combatente
-que o usuário não pode ver), e o painel **não** filtra de novo.
-
-Atenção ao emitir eventos novos do encontro: `CampanhaGateway.emitirEncontroAlterado` é
-**por socket**, não um `emit` de sala, porque o payload carrega o que o mestre ainda não revelou.
-Qualquer evento novo que carregue estado de combatente precisa do mesmo cuidado.
-
-**Como o recorte mobile do Encontro é feito (`m7-08`) — vale como padrão para telas novas.** Nenhum
-componente consulta `matchMedia`: o que existe é um **sinal de intenção** (`ajustando` no cartão,
-`aberto` no log, `acoesAbertas` na página) que **só o CSS do breakpoint mobile consome**. No
-desktop as mesmas regras deixam tudo visível e o sinal fica inerte. Onde o texto muda com a
-largura (`Energia`/`En`, `Defesa`/`Def`), **os dois rótulos ficam no DOM** e o `display: none`
-escolhe — o escondido também sai da árvore de acessibilidade, então nada é lido duas vezes. Em
-360px: cabeçalho condensado `R3 · T3/6`, cartão enxuto com os steppers atrás de `Ajustar`, ações
-secundárias atrás de `Mais ações`, log recolhido atrás do próprio gatilho, e `Avançar turno`
-(ou `Iniciar combate`) numa barra `position: fixed` no rodapé — mesma receita do rodapé do guia de
-criação de ficha, inclusive o `z-index: 20`.
-
-O gate visual obrigatório (skill `verify`, 1920×1080 e 360×800, **dois usuários simultâneos**) foi
-cumprido em `m7-05`, `m7-06`, `m7-07` e `m7-08`, e vale para cada tela nova.
-
-**Ambiente sem Docker.** O `npm run db:up` depende do daemon do Docker; onde ele não existe, dá para
-subir o Postgres 16 local direto (`initdb`/`pg_ctl` como usuário `postgres`) e seguir com
-`db:migrate` normalmente. Já o `npm run db:seed:dev` está **quebrado** desde a coluna
-`usuario.tipo_usuario_id` do M6 (`P-023`) — para montar cenário de
-verificação, use a API REST em vez do seed.
-
-O M4 (Ficha de Criatura/NPC) foi **aberto** em sessão anterior: `m4-ficha-criatura-npc.spec.md`
-(`docs/specs/backlog/`) foi dividido em **10 tasks numeradas** (`m4-01`…`m4-10`,
-`docs/specs/backlog/`), seguindo o design já fechado em `SCHEMA.md` a partir do capítulo
-"Guia de Criação de Ameaças"/"Guia de Criação de NPCs" (`docs/core/guia_de_mestre-v4.0.0.md`).
-A frente de **criatura** vem primeiro (`m4-01`…`m4-04`), depois **NPC** (`m4-05`…`m4-08`), e as
-duas últimas (`m4-09` listagem/revelação no painel do mestre, `m4-10` refinamento mobile) cobrem
-os dois tipos juntos. `m4-01` (contrato `FichaCriaturaDadosDto`,
-`shared/src/dtos/ficha/ficha-criatura.dtos.ts` + 11 enums novos de conteúdo de jogo), `m4-02`
-(`shared/regras/criatura` — motor de regras puro do roteiro de criação de Ameaças, 10 módulos
-de fórmula + `validarFichaCriatura` + caso de teste completo "A Estátua"), `m4-03`
-(`backend/ficha` estendido para `CRIATURA`: criação restrita ao mestre, dono sempre o mestre,
-sempre dentro de campanha, validação via `validarFichaCriatura`, mesmos mecanismos de
-permissão/visibilidade/tempo real do M3) e `m4-04` (assistente de criação de criatura no
-frontend, `/painel/:campanhaId/criatura/nova`) **concluídas**. Ao montar "A Estátua" como caso
-de teste (`m4-02`), duas divergências internas do próprio documento entre a fórmula geral e os
-números literais do exemplo foram identificadas (modificador Fraco em VD 30; mínimo de
-Fraqueza) — resolvidas com a fórmula geral vencendo, documentadas em
-`shared/src/regras/criatura/modificadores.ts` e `a-estatua.spec.ts` (ver seção 6). A `m4-03`
-decidiu DTOs de operação **próprios** para criatura (`FichaCriaturaCriarDto`/`*CriadaDto`/
-`*RecuperadaDto`/`*AlteradaDto`, `shared/src/dtos/ficha/ficha-criatura-operacao.dtos.ts`) em
-vez de unir com os contratos de jogador — mesma lógica de "dois contratos, não um" já fechada
-em `m4-01` para o documento de jogo (ver seção 6). A `m4-04` verificou ao vivo que abrir a
-ficha recém-criada em `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, telas de jogador)
-quebrava com `TypeError` — resolvido com uma tela dedicada, `CriaturaVisualizacao` (ver seção 7).
-Entre a `m4-04` e a `m4-05`, várias sessões de **polimento de UI** fora da fila de specs (pedido
-direto do autor, não tasks numeradas): `m4-04b` revisou o assistente de criação de criatura
-(upload de imagem, espaçamento entre campos) e o painel do mestre (botões "Nova Criatura"/"Novo
-Agente", tira de estatísticas reduzida a "Convite", coluna Esquadrão dividida com a subseção
-"Criaturas" — exigiu expor `tipo`/`na` em `FichaResumoDto` e ajustar
-`FichaRepository.colunasResumo` para os dois formatos de `dados`), construiu a tela dedicada
-`CriaturaVisualizacao` citada acima e, em 2026-08-15, realinhou o layout dela a um mockup
-reconstruído pelo autor (`docs/design/examples/ficha-de-criatura.html`) — de coluna única
-numerada pra dashboard de 3 colunas com abas, mesmo shell de `FichaVisualizacao` (ver seção 4);
-`m4-04c` trocou o bloco único "Base do VD" do passo // Atributos por 3 cards (Base/Limite/Pontos
-de Ajuste), deu ao card de Pontos de Ajuste um contador real que trava o avanço em saldo 0 (mesmo
-padrão do guia de jogador) e corrigiu o corte do botão "+" do stepper no mobile (ver seção 4).
-Próxima da fila M4: **`m4-05`** (contrato `FichaNpcDadosDto`, início da frente de NPC).
-
-O M6 **concluiu** com `m6-08` (ver seção 4, "Autenticação e conta"). O trio do guia de criação
-(`m3-57` base, `m3-58` melhorias de nível, `m3-59`
-equipamento inicial), o complemento `m3-64`, a `m3-61` (cor de ficha) e a `m3-62` (avatar de ficha)
-**concluíram** — as specs estão em `docs/specs/done/`; o que o guia faz hoje de ponta a ponta está
-descrito na seção 4, em "Guia de criação de ficha". A `m3-64` resolveu o antigo `P-012`: o pacote
-inicial agora é uma regra pura em `shared/regras/agente` e tem consumidor obrigatório no guia.
-
-A `m3-72` também concluiu: Sistema e Guia do Mestre agora abrem pelo mesmo acesso global
-**Documentos**, em janela flutuante no desktop e tela cheia no mobile. Desde o ajuste avulso de
-2026-08-25 (ver "Próxima Task" e `HISTORY.md`), o desktop continua exatamente no `<iframe>` nativo
-de `m3-72`, mas o mobile passou a renderizar com um leitor próprio (`LeitorPdfMobile`, via
-`pdfjs-dist` `^4.10.38`, lazy-carregado, sem seleção/busca de texto) porque o viewer nativo em
-iframe não funciona no Edge mobile — a condição que a própria `m3-72` previa como gatilho para
-trazer o PDF.js de volta.
-
-`m2-18`/`m2-19`/`m2-20`/`m2-21` fecharam a frente de redesenho do painel de campanhas —
-`/campanhas/:id` tem layout dedicado para mestre e para jogador. Fica **em aberto, por decisão do
-autor**: um recorte de UI pensado especificamente para o **mobile** da visão do jogador (a `m2-21`
-só adaptou o visual de desktop).
+Fora da `ui-13`, não há outra spec ativa. A única frente de código de milestone ainda pendente é o
+**M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7
+estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
+| `ui-14`…`ui-17` | frontend/design system | filhas da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — estados de lista vazio/esqueleto, confirmação destrutiva, barra de recurso + recuo do cartão de combatente, primitivo de painel flutuante |
+| `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
+| `swagger-documentacao-api` | backend/infra | expõe a API REST atual via OpenAPI/Swagger gerado pelo backend, sem alterar contratos |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
-| `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — ver seção 1 e `docs/specs/backlog/` |
-| `ui-11` | frontend/design system | normalizar tokens de acabamento, raios literais e P-042 |
+| `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 
-`m3-53` é a única frente de M3 ainda sem spec `done/` vinda da fila original; `m3-73`…`m3-78` eram
-ajustes avulsos (pedido direto do autor, 2026-08-22) — todos **concluídos** (specs em
-`docs/specs/done/`, `m3-78` fechou a fila no bloco do topo do arquivo). `m7-18`…`m7-20` eram o mesmo
-tipo de ajuste avulso, pós-M7 (milestone já concluído) — todos **concluídos** (specs em
-`docs/specs/done/`, `m7-19` fechou a fila; ver bloco no topo do arquivo e "Próxima Task"). As duas
-specs avulsas acima (2026-08-24) nasceram de `IDEAS.md` `I-019`/`I-020` — sem número de
-milestone, a critério do autor na revisão de backlog. A `I-020` e a `I-021` já foram concluídas em
-`preservar-modificacoes-inventario-esquadrao.spec.md` e
-`descricao-modificacoes-item-inventario.spec.md`. Milestone ainda não aberto: `m5-guia-missao`.
+Milestone ainda não aberto: `m5-guia-missao`.
 
 ---
 
 ## 2. Estado Geral
 
 Monorepo npm workspaces (`shared/`, `backend/`, `frontend/`) rodando de ponta a ponta: Angular 21
-SPA → NestJS 11 REST + Socket.IO → PostgreSQL 16. **M0, M1 e M2 concluídos; M3 (ficha de jogador)
-em fase de refino avançado** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real.
+SPA → NestJS 11 REST + Socket.IO → PostgreSQL 16. **M0, M1, M2, M6 e M7 concluídos; M3 (ficha de
+jogador) em fase de refino avançado, falta só `m3-53`; M4 (criatura/NPC) iniciado, falta
+`m4-05`…`m4-10`** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real; o Encontro
+de Combate roda ponta a ponta com tempo real (ver seção 3 e seção 4).
 
 Deploy em produção por **integração nativa das plataformas**, sem GitHub Actions no deploy: push em
 `master` → um trigger do Cloud Build compila, migra e reimplanta o backend no **Google Cloud Run**,
@@ -753,12 +73,11 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 `docs/DEPLOY.md` — ver seção 1. O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em
 todo PR).
 
-**Suítes (checadas na `m6-05`):** shared 601/601 · backend 275/275 · frontend
-921/921 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
-`P-001`/`P-010`/`P-011` descrevem falhas que só reproduzem isoladas (arquivo único), não na suíte
-completa — ver [`PROBLEMS.md`](PROBLEMS.md). Na `m6-05`, lint e builds dos três workspaces
-fecharam limpos. Ver `PROBLEMS.md` `P-009` para o histórico de
-falhas isoladas/preexistentes.
+**Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-12`
+(2026-09-01): frontend 1461/1462, única falha `P-043` (ver `PROBLEMS.md`), preexistente e sem
+relação com aquele diff. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só reproduzem
+isoladas (arquivo único), não na suíte completa.
 
 ---
 
@@ -773,7 +92,7 @@ falhas isoladas/preexistentes.
 | M4 | Ficha de Criatura/NPC | **iniciado** — dividido em `m4-01`…`m4-10` (`docs/specs/backlog/`); `m4-01` (contrato), `m4-02` (`shared/regras/criatura`), `m4-03` (`backend/ficha` para `CRIATURA`) e `m4-04` (assistente de criação no frontend) concluídas; `m4-04b`/`m4-04c` (polimento de UI fora da fila) também concluídas. Próxima: `m4-05` (NPC) |
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
-| M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 7 ajustes de pós-milestone (`m7-09`…`m7-15`, ver seção 1). Numeração M7 é sugestão, não decisão de roadmap |
+| M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
 
 ---
 
@@ -1294,6 +613,48 @@ some ao concluir; sair do guia usa um `<dialog>` nativo (não `confirm()` nem `b
 permite UI customizada), com aviso de que o progresso está salvo. Mobile: trilha vira barra de
 progresso no topo, resumo operacional vira bottom sheet aberto por um botão dedicado no cabeçalho.
 
+### Encontro de Combate — `backend/encontro`, `frontend/src/app/modules/encontro`
+
+Tela única (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, `:encontroId` opcional para
+histórico) que bifurca por `ehMestre()`: o jogador é espectador, rola a própria iniciativa e só
+pode avançar/encerrar o turno da própria ficha (o backend confirma que o combatente do slot atual
+pertence à ficha do usuário ativo). O mestre mantém todos os controles de condução.
+
+Um combatente **avulso** (sem ficha) só existe dentro do encontro: cor obrigatória + imagem
+opcional persistidas em `encontro_combatente` (`cor_avulso`/`imagem_url_avulso`); o modo "Editar
+combatentes" troca cor, substitui e remove imagem. `EncontroCombatenteResumoDto` expõe a forma
+unificada `corFicha`/`imagemUrl` (ficha ou avulso, conforme a origem) para o cartão não duplicar
+apresentação. O mestre tem um atalho de rolagem livre por avulso (expressão de dados livre,
+sempre iniciada como oculta; revelar pede a mesma confirmação usada por criaturas); sem ficha,
+`PROF`/`NIV` são rejeitados na expressão.
+
+Identidade "de carteirinha": um agente de ficha **não oculta** mostra avatar, dono e
+classe/arquétipo para qualquer membro, mesmo sem `usuario_ficha_acesso` — essa concessão protege
+só os **números** (vida, defesas, condições, Destreza), nunca a identidade de quem está na mesa;
+sem a concessão, o cartão simplesmente não desenha a linha de recursos. Criatura/NPC e um agente
+com a própria ficha `oculta` continuam sem vazar nada, imagem inclusive. A ordem de turno em si é
+sempre pública.
+
+"Receber dano" (`ReceberDanoDialog`, reusado no cartão do combatente e no rótulo "Vida" da ficha
+de agente/criatura) aplica `calcularDanoRecebido` (`shared/regras/encontro`): os quatro tipos
+bloqueáveis reduzem por resistência de ficha + custom (piso 0), a resistência **Geral** reduz a
+soma dos residuais uma única vez, e o dano **Geral** é irredutível; o delta é sempre clampado para
+nunca levar a Vida abaixo de 0 (o backend rejeita Vida negativa, nunca clampa sozinho).
+
+O log (`log-encontro`) é um componente burro: renderiza só o que `EncontroRecuperadoDto.eventos`
+já traz recortado pela revelação (§14) — nunca filtra de novo. Qualquer evento novo que carregue
+estado de combatente precisa do mesmo cuidado: `emitirEncontroAlterado` é **por usuário**, não por
+sala, porque o payload varia conforme o que cada um pode ver.
+
+Mobile (padrão de referência para telas novas): nenhum componente lê `matchMedia` diretamente — um
+sinal de intenção (`ajustando`, `aberto`, `acoesAbertas`) é consumido só pelo CSS do breakpoint;
+rótulos alternativos (`Energia`/`En`) ficam os dois no DOM, escondidos por `display: none` (também
+some da árvore de acessibilidade, sem leitura duplicada). Em 360px: cabeçalho condensado, steppers
+atrás de "Ajustar", ações secundárias atrás de "Mais ações", log atrás do próprio gatilho, e
+"Avançar turno" fixo no rodapé — mesma receita do rodapé do guia de criação de ficha. No desktop,
+abrir uma ficha pela Iniciativa limita a janela a `1100×600` (mestre) ou geometria compacta
+(jogador); o jogador com combatente próprio tem o atalho "Minha ficha" fixo, ausente no desktop.
+
 ### Tempo real — `backend/core/gateway`
 
 Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway nunca recebe escrita.
@@ -1374,6 +735,13 @@ cartões da ficha usam `app-botao`; confirmações, remoções e ações unitár
 Classes `ficha-inv__btn`, `compras-btn` e `ficha-cartao__acao` sobrevivem apenas como ganchos de
 layout ou animação de feedback. Incrementos e edições derivadas que são controles de domínio
 permanecem fora da API de botão, conforme `I-025`/`I-026`.
+
+A `ui-12` (2026-09-01) separou semântica de estado do accent trocável pelo usuário: `--erro`
+referencia o vermelho fixo de `--vida` e é usado por erro de campo e `app-botao
+variante="perigo"`, sem depender do accent; `--accent-text` é obrigatório em qualquer
+preenchimento de accent (abas ativas, tecla `=` da calculadora); `TemaService` calcula
+`--accent-press` para o estado pressionado de botões preenchidos e de contorno, com inversão
+controlada nos extremos branco/preto para os três estados não colapsarem.
 
 A `ui-01b` completou a API de `app-botao` com **8 severidades** (`primario`, `secundario`,
 `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste`) × **4 estilos** (`preenchido`,
