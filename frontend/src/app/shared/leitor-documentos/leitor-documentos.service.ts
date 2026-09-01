@@ -3,14 +3,12 @@ import { Injectable, signal } from '@angular/core';
 import {
   type DocumentoRegrasId,
   type LeitorDocumentosEstado,
-  type LeitorGeometria,
+  type LeitorTamanho,
   type LeitorViewport,
 } from './leitor-documentos.model';
-import { limitarGeometria } from './leitor-documentos.util';
+import { limitarTamanho } from './leitor-documentos.util';
 
-const GEOMETRIA_INICIAL: LeitorGeometria = {
-  x: 0,
-  y: 52,
+const TAMANHO_INICIAL: LeitorTamanho = {
   largura: 640,
   altura: 480,
 };
@@ -21,19 +19,7 @@ export class LeitorDocumentosService {
   readonly estado = this.estadoInterno.asReadonly();
 
   abrir(): void {
-    this.estadoInterno.update((estado) => ({ ...estado, aberto: true, recolhido: false }));
-  }
-
-  recolher(): void {
-    this.estadoInterno.update((estado) =>
-      estado.aberto ? { ...estado, recolhido: true } : estado,
-    );
-  }
-
-  reabrir(): void {
-    this.estadoInterno.update((estado) =>
-      estado.recolhido ? { ...estado, recolhido: false } : estado,
-    );
+    this.estadoInterno.update((estado) => ({ ...estado, aberto: true }));
   }
 
   fechar(): void {
@@ -44,10 +30,10 @@ export class LeitorDocumentosService {
     this.estadoInterno.update((estado) => ({ ...estado, documentoAtivo: documento }));
   }
 
-  alterarGeometria(geometria: LeitorGeometria, viewport: LeitorViewport): void {
+  alterarTamanho(tamanho: LeitorTamanho, viewport: LeitorViewport): void {
     this.estadoInterno.update((estado) => ({
       ...estado,
-      geometria: limitarGeometria(geometria, viewport),
+      tamanho: limitarTamanho(tamanho, viewport),
     }));
   }
 }
@@ -55,8 +41,7 @@ export class LeitorDocumentosService {
 function criarEstadoInicial(): LeitorDocumentosEstado {
   return {
     aberto: false,
-    recolhido: false,
     documentoAtivo: 'sistema',
-    geometria: GEOMETRIA_INICIAL,
+    tamanho: TAMANHO_INICIAL,
   };
 }

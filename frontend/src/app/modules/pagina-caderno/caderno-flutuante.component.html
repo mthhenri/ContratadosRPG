@@ -1,102 +1,63 @@
-@if (!estado().aberto) {
+@if (!estado().aberto || painelRef()?.minimizado()) {
     <button
         #gatilho
         class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
         [class.caderno__gatilho--sem-inventario]="semVagaInventario()"
         type="button"
-        aria-label="Abrir caderno"
+        [attr.aria-label]="estado().aberto ? 'Reabrir caderno' : 'Abrir caderno'"
         aria-expanded="false"
-        (click)="abrir()"
-    >
-        <app-icone nome="anotacoes" />
-    </button>
-} @else if (estado().minimizado) {
-    <button
-        #gatilho
-        class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"
-        [class.caderno__gatilho--sem-inventario]="semVagaInventario()"
-        type="button"
-        aria-label="Reabrir caderno"
-        aria-expanded="false"
-        (click)="restaurar()"
+        (click)="estado().aberto ? painelRef()?.restaurar() : abrir()"
     >
         <app-icone nome="anotacoes" />
     </button>
 }
 
-@if (estado().aberto && !estado().minimizado) {
-    <section
-        #janela
-        class="caderno__janela"
-        [class.caderno__janela--mobile]="ehMobile()"
-        [class.caderno__janela--maximizada]="maximizada()"
-        [style.left.px]="ehMobile() ? null : estado().geometria.x"
-        [style.top.px]="ehMobile() ? null : estado().geometria.y"
-        [style.width.px]="ehMobile() ? null : estado().geometria.largura"
-        [style.height.px]="ehMobile() ? null : estado().geometria.altura"
-        [style.z-index]="nivelJanela()"
-        role="dialog"
-        aria-label="Caderno da campanha"
-        aria-modal="false"
-        (focusin)="trazerParaFrente()"
-        (pointerdown)="trazerParaFrente()"
-        (keydown)="aoTecladoJanela($event)"
-    >
-        <header
-            #cabecalho
-            class="caderno__cabecalho"
-            tabindex="-1"
-            (pointerdown)="iniciarArraste($event)"
+<app-painel-flutuante
+    #painel="appPainelFlutuante"
+    id="caderno"
+    [titulo]="'Caderno · ' + campanhaNome()"
+    kicker="Registro operacional"
+    [aberto]="estado().aberto"
+    [mobile]="ehMobile()"
+    [maximizada]="maximizada()"
+    [largura]="ehMobile() ? null : estado().tamanho.largura"
+    [altura]="ehMobile() ? null : estado().tamanho.altura"
+    [posicaoInicial]="{ x: 80, y: 72 }"
+    (fechar)="fechar()"
+    (minimizadoChange)="aoMinimizadoChange($event)"
+>
+    @if (rotuloSalvamento()) {
+        <ng-container painelCabecalhoExtra>
+            <span
+                class="caderno__salvamento"
+                [class.caderno__salvamento--erro]="
+                    store.estadoSalvamento() === 'FALHA' || store.estadoSalvamento() === 'CONFLITO'
+                "
+                aria-live="polite"
+                >{{ rotuloSalvamento() }}</span
+            >
+            @if (store.estadoSalvamento() === "CONFLITO") {
+                <button class="caderno__recarregar" type="button" (click)="recarregarVersao()">
+                    Recarregar versão
+                </button>
+            }
+        </ng-container>
+    }
+    @if (!ehMobile()) {
+        <button
+            painelAcoesExtras
+            app-botao-icone
+            type="button"
+            [attr.aria-label]="
+                maximizada() ? 'Restaurar tamanho do caderno' : 'Maximizar caderno'
+            "
+            [appTooltip]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="alternarMaximizacao()"
         >
-            <div class="caderno__identidade">
-                <span class="caderno__marca" aria-hidden="true">//</span>
-                <div class="caderno__titulo-grupo">
-                    <span class="caderno__kicker">Registro operacional</span>
-                    <h2>Caderno · {{ campanhaNome() }}</h2>
-                </div>
-                @if (rotuloSalvamento()) {
-                    <span
-                        class="caderno__salvamento"
-                        [class.caderno__salvamento--erro]="
-                            store.estadoSalvamento() === 'FALHA' ||
-                            store.estadoSalvamento() === 'CONFLITO'
-                        "
-                        aria-live="polite"
-                        >{{ rotuloSalvamento() }}</span
-                    >
-                    @if (store.estadoSalvamento() === "CONFLITO") {
-                        <button
-                            class="caderno__recarregar"
-                            type="button"
-                            (click)="recarregarVersao()"
-                        >
-                            Recarregar versão
-                        </button>
-                    }
-                }
-                <span class="caderno__regua" aria-hidden="true"></span>
-            </div>
-            <div class="caderno__acoes-janela">
-                <button type="button" aria-label="Minimizar caderno" (click)="minimizar()">
-                    <span aria-hidden="true">−</span>
-                </button>
-                @if (!ehMobile()) {
-                    <button
-                        type="button"
-                        [attr.aria-label]="
-                            maximizada() ? 'Restaurar tamanho do caderno' : 'Maximizar caderno'
-                        "
-                        [appTooltip]="maximizada() ? 'Restaurar tamanho' : 'Maximizar'"
-                        (click)="alternarMaximizacao()"
-                    >
-                        <span aria-hidden="true">{{ maximizada() ? "❐" : "□" }}</span>
-                    </button>
-                }
-                <button type="button" aria-label="Fechar caderno" (click)="fechar()">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-        </header>
+            <span aria-hidden="true">{{ maximizada() ? "❐" : "□" }}</span>
+        </button>
+    }
 
         <div class="caderno__escopo">
             <div class="caderno__segmentado" role="group" aria-label="Caderno consultado">
@@ -330,15 +291,15 @@
                     } @else if (modoCaderno() === "JOGADORES" && jogadorSelecionadoId() === null) {
                         <p class="caderno__estado">Escolha um jogador para consultar o caderno.</p>
                     } @else if (store.paginas().length === 0) {
-                        <div class="caderno__vazio">
-                            <app-icone nome="anotacoes" />
-                            <strong>Nenhuma página ainda</strong>
-                            <span>{{
-                                modoCaderno() === "MEU"
-                                    ? "Crie a primeira página do caderno."
-                                    : "Este caderno está vazio."
-                            }}</span>
-                        </div>
+                        <app-estado-vazio
+                            icone="anotacoes"
+                            titulo="Nenhuma página ainda"
+                            [linhaApoio]="
+                                modoCaderno() === 'MEU'
+                                    ? 'Crie a primeira página do caderno.'
+                                    : 'Este caderno está vazio.'
+                            "
+                        />
                     } @else {
                         <nav class="caderno__paginas" aria-label="Páginas">
                             @for (pagina of store.paginas(); track pagina.id) {
@@ -590,12 +551,12 @@
             </div>
         }
 
-        @if (!ehMobile() && !maximizada()) {
-            <span
-                class="caderno__redimensionar"
-                aria-hidden="true"
-                (pointerdown)="iniciarRedimensionamento($event)"
-            ></span>
-        }
-    </section>
-}
+    @if (!ehMobile() && !maximizada()) {
+        <span
+            painelRedimensionar
+            class="caderno__redimensionar"
+            aria-hidden="true"
+            (pointerdown)="iniciarRedimensionamento($event)"
+        ></span>
+    }
+</app-painel-flutuante>

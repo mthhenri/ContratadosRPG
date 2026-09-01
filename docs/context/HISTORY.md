@@ -1,5 +1,106 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — UI-17: `app-painel-flutuante` absorve arraste, posição, z-index, minimizar e fechar de calculadora, caderno e leitor de documentos
+
+A maior task derivada da auditoria visual (`INDEX-ajustes-auditoria.md`: "único que move
+comportamento de TypeScript") e a última da série `ui-12`…`ui-17`. Um primitivo novo,
+`app-painel-flutuante` (`frontend/src/app/shared/ui/painel-flutuante/`), substitui a implementação
+própria que `CalculadoraFlutuante`, `CadernoFlutuante` e `LeitorDocumentos` mantinham cada um à sua
+maneira — divergindo de verdade, não só na aparência.
+
+**O defeito real que só apareceu ao unificar.** A calculadora tinha `z-index: 66` fixo no SCSS,
+enquanto o caderno usava uma faixa dinâmica que começava em 1210 e o leitor um valor estático de
+1200 — a calculadora nunca conseguia ficar por cima dos outros dois, não importa a ordem de
+interação. Isso não estava registrado em `PROBLEMS.md` porque nenhuma spec anterior tinha motivo
+para abrir os três lado a lado e comparar. O primitivo unifica num contador de módulo compartilhado
+(`trazerParaFrente()`, chamado em `pointerdown`/`focusin` da própria janela): quem foi tocado por
+último sobe, sempre, para os três — confirmado ao vivo (ver "Verificação visual").
+
+**O que o primitivo é dono de verdade:** posição (`x`/`y`, arraste pelo cabeçalho, persistida em
+`localStorage` por `[id]` — `contratados-rpg:painel-flutuante:<id>`), minimizado (idem, também
+persistido — novo para os três; antes só caderno/leitor tinham algo parecido, ad hoc e sem
+persistência), empilhamento de z-index, fechar (`(fechar)`, o consumidor decide o que fazer, igual
+`app-modal`) e o prender-foco: `Tab`/`Shift+Tab` circulam só dentro da janela e `Escape` fecha —
+**nenhum dos três fazia os dois juntos antes** (a calculadora escutava `Escape` pra limpar a
+expressão, não pra fechar; caderno/leitor fechavam no Escape mas nunca prendiam o `Tab`). Moldura
+(superfície/borda/`0 20px 50px -18px` — a mesma sombra de `app-modal`, mesma família visual) e
+cabeçalho (marca "//", kicker opcional, título, minimizar "−", fechar "×") também são do
+primitivo.
+
+**O que fica de fora, deliberadamente (`Fora de Escopo` da spec):** redimensionar por arraste e
+maximizar. Os três continuam com a própria alça/lógica — a calculadora tem mínimo 190×250, caderno
+e leitor têm o próprio mínimo e um estado de tela cheia; o primitivo só expõe `obterElemento()`
+(pro consumidor medir a caixa real ao redimensionar), `moverPara()`/`obterPosicaoAtual()` (pro
+consumidor que maximiza também mover a janela) e os inputs `[largura]`/`[altura]`/`[maximizada]`
+(o último só acabamento — some o raio dos cantos). `[compacta]` diferencia o popup pequeno da
+calculadora (280px, sem redimensionar disponível por padrão) da janela normal de caderno/leitor.
+
+**A janela some com `[hidden]`, não `@if`, ao minimizar** — decisão tomada ao portar o leitor de
+documentos: o teste original "mantém o iframe montado ao recolher" provava que o produto já
+dependia de o PDF preservar página/zoom/rolagem ao invés de recarregar. Se o primitivo destruísse a
+view ao minimizar (como o `@if` original do caderno fazia, inofensivo pra ele por não ter estado de
+DOM), o leitor perderia essa garantia. `[hidden]` beneficia os três sem custo — inclusive o rascunho
+do caderno, que agora também sobrevive a um minimizar (não testado antes por não ter motivo).
+
+**Estado vazio (`app-estado-vazio`, `ui-14`).** Só a lista de páginas do caderno ("Nenhuma página
+ainda") migrou — é o único dos três `<div class="caderno__vazio">` que corresponde ao propósito
+documentado do primitivo ("lista sem conteúdo real"); "Nada encontrado" (resultado de busca vazio)
+e "Selecione uma página" (nada selecionado, não "lista vazia") ficaram como estavam, decisão de
+escopo — `[compacta]`/vazio de busca/seleção não é o que a spec pediu.
+
+**Migração dos três consumidores** apagou o comportamento duplicado, não só a aparência:
+`CalculadoraFlutuante` perdeu `posicao`/`iniciarArraste`/`aoMoverPonteiro` de arraste (manteve
+redimensionar); `LeitorDocumentos` perdeu `x`/`y` de `LeitorGeometria` (renomeado `LeitorTamanho`,
+só `largura`/`altura`) e `recolhido` do `LeitorDocumentosEstado`; `CadernoFlutuante` perdeu
+`x`/`y` de `CadernoGeometria` (idem, `CadernoTamanho`) e `minimizado` do `CadernoFlutuanteEstado` —
+a store não sabe mais que o caderno pode estar minimizado, o primitivo sabe sozinho. Os três
+perderam `abridorOriginal`/captura e devolução manual de foco, `nivelJanela`/`proximoNivelJanela`,
+`alvoEhControle` (só usado por `iniciarArraste`, removido) e `aoTecladoJanela`. O maximizar de
+caderno e leitor precisou aprender a mover a janela também (não só redimensionar), já que a posição
+saiu do estado deles: `moverPara({x:0,y:0}, {persistir:false})` ao maximizar,
+`obterPosicaoAtual()` guardado antes pra devolver ao restaurar.
+
+**Achado do próprio gate visual, corrigido durante a task:** o cabeçalho do primitivo (marca "//" +
+régua decorativa) cabe bem numa janela de 640-960px, mas comia espaço demais no popup compacto de
+280px da calculadora — "Calculadora" truncava pra "Calculad…", mais agressivo no mobile (os botões
+de ação viram alvo de toque de 44px ali, sobrando ainda menos espaço). Corrigido escondendo marca e
+régua quando `[compacta]` (`&__janela--compacta &__marca, &__janela--compacta &__regua { display:
+none }`) — o popup pequeno não precisa da decoração de "janela", só do título.
+
+**DESIGN.md** ganhou a linha do primitivo na tabela e uma seção nova, "Painel flutuante, modal e
+painel lateral (`ui-17`)": a régua prática entre os três — modal bloqueia e centraliza (decisão
+pontual que exige atenção inteira), painel flutuante nunca bloqueia e lembra posição/minimizado
+(ferramenta de apoio mantida aberta enquanto o usuário faz outra coisa em qualquer canto da tela),
+painel lateral de 500px (`HistoricoRolagensSidebar`/`InventarioEsquadraoSidebar`, sem primitivo
+próprio ainda) é sempre a mesma borda/largura pra uma lista que acompanha a coluna principal.
+
+**Testes:** focados nos arquivos alterados 80/80 (`painel-flutuante.component.spec.ts` novo, 11 —
+foco capturado/devolvido, `Tab`/`Shift+Tab` presos, `Escape` emite sem fechar sozinho, minimizar
+esconde+persiste+emite, `restaurar()`, `moverPara()`, retomada por `[id]` após uma "nova instância"
+simulando reload, isolamento entre `[id]` diferentes, z-index sobe ao interagir, arraste real por
+`PointerEvent` movendo pelo deslocamento do ponteiro; `calculadora-flutuante`/`leitor-documentos`/
+`caderno-flutuante`, componente e store, todos ajustados para o novo contrato), suíte completa
+frontend 1506/1506, lint sem erro novo (só os avisos preexistentes de aspas, repositório inteiro),
+build de produção limpo.
+
+**Verificação visual** ao vivo (Postgres 16 nativo — Docker indisponível no ambiente, mesma
+situação já registrada em `ui-16` —, backend e frontend reais, sessão de mestre real via API +
+`localStorage`) em `1920×1080` e `360×800`: os três utilitários abertos, minimizados (`[hidden]`
+confirmado via `element.hidden`, não ausência do elemento) e fechados; o vazio do caderno
+("Nenhuma página ainda", ícone + borda tracejada); foco preso confirmado por 12 `Tab`s consecutivos
+sem escapar da janela de Documentos; `Escape` fechando e devolvendo o foco ao gatilho da topbar;
+arraste real do caderno por `PointerEvent` (posição mudou de `{16,88}` pro ponto arrastado);
+**posição e minimizado sobrevivendo a um `reload()` de verdade** — `localStorage` confirmado com
+`{"x":240,"y":197,"minimizado":true}`, reaberto na mesma posição depois do reload (achado ao vivo,
+não previsto no design: como `aberto` não persiste, meia reload o gatilho volta a dizer "Abrir
+caderno" — o primeiro clique só reengaja o utilitário ainda minimizado, o segundo clique, agora
+"Reabrir caderno", é que mostra a janela; comportamento correto e deliberado, não bug, mas só ficou
+claro ao testar o ciclo completo); os três empilhados com z-index correto (o painel clicado por
+último subiu de 1211 para 1214, acima dos outros dois); sem overflow horizontal no mobile em nenhum
+estado; o corte de título da calculadora corrigido e reverificado nos dois viewports após o ajuste
+de SCSS. Maximizar do caderno verificado (tela cheia, raio zerado, restaura tamanho e posição
+exatos de antes).
+
 ## 2026-09-01 — UI-16: `app-barra-recurso` absorve três desenhos de Vida/Energia; recuo do "já agiu" pela moldura; precedência de estado do cartão de combatente documentada
 
 A spec de `ui-16` chegou do backlog herdada da auditoria visual (sessão anterior, branch

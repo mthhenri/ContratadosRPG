@@ -1,8 +1,8 @@
 import { Component, ElementRef, computed, model, signal, viewChild } from '@angular/core';
 
 import { Icone } from '../icone/icone.component';
-import { AutoFocus } from '../auto-focus/auto-focus.directive';
 import { Botao } from '../ui/botao/botao.component';
+import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
 import {
   avaliarExpressao,
   formatarResultado,
@@ -25,16 +25,17 @@ function limitar(valor: number, minimo: number, maximo: number): number {
 
 /**
  * Calculadora comum flutuante (m3-54) — aritmética normal, **sem relação** com a calculadora do
- * sistema (M1) ou com os dados da ficha. Ícone fixo no canto inferior esquerdo abre um popup
- * arrastável (drag via pointer events próprios — sem CDK, não instalado neste repo); o histórico
- * de cálculos vive só em memória (Signals), então some no F5 (fora de escopo persistir).
+ * sistema (M1) ou com os dados da ficha. Ícone fixo no canto inferior esquerdo abre um painel
+ * flutuante (`app-painel-flutuante`, `ui-17`); o histórico de cálculos vive só em memória
+ * (Signals), então some no F5 (fora de escopo persistir). Redimensionar continua próprio (drag na
+ * alça do canto), fora do escopo do primitivo compartilhado.
  *
  * Autocontido: quem consome só declara `<app-calculadora-flutuante />` uma vez na tela — o gatilho
  * e o popup moram os dois aqui dentro.
  */
 @Component({
   selector: 'app-calculadora-flutuante',
-  imports: [Icone, AutoFocus, Botao],
+  imports: [Icone, Botao, PainelFlutuante],
   templateUrl: './calculadora-flutuante.component.html',
   styleUrl: './calculadora-flutuante.component.scss',
   host: {
@@ -56,8 +57,6 @@ export class CalculadoraFlutuante {
   protected readonly erro = signal(false);
   protected readonly historico = signal<readonly EntradaHistoricoCalculadora[]>([]);
 
-  /** `null` até o primeiro arraste — o popup nasce ancorado por CSS (canto inferior esquerdo). */
-  protected readonly posicao = signal<{ x: number; y: number } | null>(null);
   /** `null` até o primeiro redimensionamento — o popup nasce no tamanho fixo do CSS. */
   protected readonly tamanho = signal<{ width: number; height: number } | null>(null);
 
@@ -70,19 +69,26 @@ export class CalculadoraFlutuante {
     return tamanhoAtual ? tamanhoAtual.width / LARGURA_PADRAO : 1;
   });
 
-  private readonly popupElemento = viewChild<ElementRef<HTMLElement>>('popup');
-  private arrastando = false;
-  private origemArraste = { x: 0, y: 0 };
+  private readonly painelRef = viewChild<PainelFlutuante>('painel');
+  private readonly gatilhoElemento = viewChild<ElementRef<HTMLButtonElement>>('gatilho');
   private redimensionando = false;
   private origemRedimensionamento = { x: 0, y: 0, largura: 0, altura: 0 };
 
-  /** Gatilho: abre se fechada, fecha se aberta — o "x" no cabeçalho também fecha. */
+  /** Gatilho: abre se fechada, fecha se aberta — o "×" no cabeçalho do painel também fecha. */
   protected alternar(): void {
+    if (this.aberta() && this.painelRef()?.minimizado()) {
+      this.painelRef()?.restaurar();
+      return;
+    }
     this.aberta.update((atual) => !atual);
   }
 
   protected fechar(): void {
     this.aberta.set(false);
+  }
+
+  protected aoMinimizadoChange(minimizado: boolean): void {
+    if (minimizado) setTimeout(() => this.gatilhoElemento()?.nativeElement?.focus());
   }
 
   /** Anexa um dígito/operador/parêntese à expressão em edição, com pequenas guardas de digitação. */
@@ -145,7 +151,7 @@ export class CalculadoraFlutuante {
 
   /**
    * Teclado (além do clique — critério de aceite): só escuta enquanto o foco está dentro do
-   * popup (`tabindex` + `appAutoFocus` no container), então não interfere com o resto da ficha.
+   * painel (o `app-painel-flutuante` prende o foco ali), então não interfere com o resto da ficha.
    */
   protected aoTeclado(evento: KeyboardEvent): void {
     const tecla = evento.key;
@@ -176,37 +182,8 @@ export class CalculadoraFlutuante {
     if (tecla === 'Backspace') {
       this.apagarUltimo();
       evento.preventDefault();
-      return;
     }
-    if (tecla === 'Escape') {
-      this.limpar();
-      evento.preventDefault();
-    }
-  }
-
-  /** Início do arraste (pointerdown no cabeçalho) — guarda o offset do ponteiro dentro do popup. */
-  protected iniciarArraste(evento: PointerEvent): void {
-    if (evento.button !== 0) {
-      return;
-    }
-    const elemento = this.popupElemento()?.nativeElement;
-    if (!elemento) {
-      return;
-    }
-    const retangulo = elemento.getBoundingClientRect();
-    this.origemArraste = { x: evento.clientX - retangulo.left, y: evento.clientY - retangulo.top };
-    this.arrastando = true;
-    evento.preventDefault();
-  }
-
-  /** Segue o ponteiro (listener em `window` — o gesto continua mesmo saindo do cabeçalho). */
-  private continuarArraste(evento: PointerEvent): void {
-    const elemento = this.popupElemento()?.nativeElement;
-    const largura = elemento?.offsetWidth ?? 0;
-    const altura = elemento?.offsetHeight ?? 0;
-    const x = limitar(evento.clientX - this.origemArraste.x, 0, window.innerWidth - largura);
-    const y = limitar(evento.clientY - this.origemArraste.y, 0, window.innerHeight - altura);
-    this.posicao.set({ x, y });
+    // Escape não limpa mais a expressão aqui: `app-painel-flutuante` já usa Escape para fechar.
   }
 
   /** Início do redimensionamento (pointerdown na alça do canto) — guarda o tamanho de partida. */
@@ -214,7 +191,7 @@ export class CalculadoraFlutuante {
     if (evento.button !== 0) {
       return;
     }
-    const elemento = this.popupElemento()?.nativeElement;
+    const elemento = this.painelRef()?.obterElemento();
     if (!elemento) {
       return;
     }
@@ -254,17 +231,13 @@ export class CalculadoraFlutuante {
     });
   }
 
-  /** Um único par de listeners em `window` cobre arraste e redimensionamento (mutuamente exclusivos). */
   protected aoMoverPonteiro(evento: PointerEvent): void {
-    if (this.arrastando) {
-      this.continuarArraste(evento);
-    } else if (this.redimensionando) {
+    if (this.redimensionando) {
       this.continuarRedimensionamento(evento);
     }
   }
 
   protected aoSoltarPonteiro(): void {
-    this.arrastando = false;
     this.redimensionando = false;
   }
 }

@@ -151,6 +151,7 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.notificacoes` | Fila de notificações flutuante, `bottom-center` | 4 severidades — `sucesso`, `informacao`, `aviso`, `erro` (`--vida` fixo, não `--accent`) | **`NotificacaoService.notificar(...)`** + `<app-notificacoes />` (um único, no `layout`) |
 | `.estado-vazio` | Estado vazio de lista — ícone + título mono + linha de apoio, borda tracejada `--border-strong` | Ação opcional projetada (`[estadoVazioAcao]`, `app-botao` `contorno`/`link`) | **`<app-estado-vazio icone="…" titulo="…" [linhaApoio]="…">`** |
 | `.esqueleto` | Bloco de esqueleto de carregamento — fundo `--surface-2` pulsante, honra `prefers-reduced-motion` | Só identidade (cor/raio/pulso); o consumidor dimensiona pela própria classe BEM no mesmo elemento | **`<app-esqueleto class="…">`** |
+| `.painel-flutuante` | Janela flutuante arrastável, não modal — mesma superfície/borda/sombra de `.modal`, cabeçalho com título + minimizar (`−`) + "×" | `[compacta]` (popup pequeno, ex. calculadora) vs. janela normal (`[largura]`/`[altura]` do consumidor); `[mobile]` vira folha cheia sem arraste; `[maximizada]` só acabamento (some o raio); slots `[painelCabecalhoExtra]`, `[painelAcoesExtras]`, `[painelRedimensionar]` | **`<app-painel-flutuante id="…" titulo="…" [aberto]="…" (fechar)="…">`** (`shared/ui/painel-flutuante/`) |
 
 Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.component.scss` e
 `ficha-visualizacao.component.scss` nesta atualização — existiam como padrão real no app, mas
@@ -248,6 +249,46 @@ A Cadência (`turnosPorRodada() > 1`) é `<app-chip severidade="secundario">` ao
 origem — antes da `ui-16` era um sufixo concatenado na mesma string (`" · Cadência 2"`). Não
 existe severidade `info` em `app-chip` (ver "Escolha de chip" acima); `secundario` já é o tom
 informativo neutro do catálogo, reaproveitado aqui sem estender a `ui-13`.
+
+### Painel flutuante, modal e painel lateral (`ui-17`)
+
+O produto tem três formas de sobrepor conteúdo à tela, e a escolha entre elas não é estética —
+depende de **quanto a interação bloqueia o resto da tela** e de **quem é dono da posição**:
+
+- **`.modal`** — sobre `<dialog>` nativo, `showModal()`. Bloqueia: o fundo escurece
+  (`::backdrop`) e nada atrás dele recebe foco ou clique enquanto está aberto. Sempre centralizado,
+  nunca arrasta. Use para uma decisão pontual que precisa da atenção inteira do usuário antes de
+  continuar — confirmar, editar um formulário curto, escolher algo de uma lista.
+- **`.painel-flutuante`** — não bloqueia nada. O resto da tela continua clicável, rolável e
+  interagível enquanto o painel está aberto (por design: o jogador rola dados com a calculadora
+  aberta, o mestre lê o Sistema enquanto acompanha o combate). Arrasta, lembra posição e estado
+  minimizado entre sessões (`localStorage`, por `[id]`), empilha por z-index quando mais de um está
+  aberto ao mesmo tempo. Use para uma ferramenta de apoio que o usuário mantém aberta *enquanto*
+  faz outra coisa — calculadora, documentos de referência, caderno de anotações.
+- **Painel lateral de 500px** (`HistoricoRolagensSidebar`, `InventarioEsquadraoSidebar` — sem
+  primitivo próprio ainda, dois consumidores com a mesma métrica) — desliza da borda da tela,
+  largura fixa de 500px no desktop e tela cheia no mobile. Não bloqueia o restante da coluna
+  principal (que continua visível ao lado), mas também não arrasta nem flutua: é sempre a mesma
+  borda, sempre a mesma largura. Use para uma lista/consulta longa que acompanha a tela principal
+  sem competir por espaço com ela.
+
+A régua prática: **precisa da atenção inteira do usuário antes de continuar?** → modal. **O usuário
+mantém aberto enquanto faz outra coisa em qualquer lugar da tela?** → painel flutuante. **É uma
+lista/consulta que acompanha uma coluna fixa?** → painel lateral de 500px.
+
+`app-painel-flutuante` (`shared/ui/painel-flutuante/`) nasceu apagando a reimplementação
+divergente de arraste, posição, empilhamento de z-index, minimizar e fechar que
+`CalculadoraFlutuante`, `CadernoFlutuante` e `LeitorDocumentos` mantinham cada um à sua maneira —
+inclusive um defeito real que só apareceu ao unificar: o z-index fixo da calculadora (66) sempre
+perdia para a faixa dinâmica dos outros dois (1200+), então ela nunca conseguia ficar por cima ao
+ser focada por último. Redimensionar por arraste e maximizar continuam do consumidor (a resolução
+que cada um quer resolver é diferente — a calculadora tem um mínimo de 190×250, o caderno e o
+leitor têm o próprio mínimo e um estado de tela cheia); o primitivo só precisa saber a caixa
+renderizada (`obterElemento()`) para o consumidor medir o próprio redimensionamento, e expõe
+`moverPara()`/`obterPosicaoAtual()` para quem maximiza também precisar mover a janela. A janela
+some com `[hidden]`, não `@if`, ao minimizar — o iframe do leitor de documentos preserva página,
+zoom e rolagem do PDF em vez de recarregar ao restaurar, e a mesma escolha beneficia de graça
+qualquer conteúdo futuro que se importe com o próprio estado interno.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 

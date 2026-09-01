@@ -42,85 +42,14 @@ $largura-caderno-sobreposicao: 640px;
         }
     }
 
-    &__janela {
-        position: fixed;
-        min-width: 0;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-card);
-        box-shadow: 0 22px 64px color-mix(in srgb, var(--bg) 78%, transparent);
-        outline: none;
-        overflow: hidden;
-        container-type: inline-size;
-
-        &--mobile {
-            inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
-                max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
-            width: auto;
-            height: auto;
-        }
-
-        &--maximizada {
-            border-radius: 0;
-        }
-    }
-
-    &__cabecalho {
-        min-height: 54px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 9px 12px 9px 15px;
-        background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
-        border-bottom: 1px solid var(--border);
-        cursor: grab;
-        touch-action: none;
-        &:active {
-            cursor: grabbing;
-        }
-    }
-
-    &__identidade {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex: 1;
-    }
-    &__marca {
-        color: var(--accent);
-        font: 700 18px/1 var(--font-mono);
-    }
-    &__titulo-grupo {
-        min-width: 0;
-        h2 {
-            max-width: 300px;
-            margin: 1px 0 0;
-            overflow: hidden;
-            color: var(--text);
-            font: 700 13px/1.2 var(--font-mono);
-            letter-spacing: 0.04em;
-            text-overflow: ellipsis;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-    }
+    // Superfície, borda, sombra, cabeçalho (marca/título/kicker/régua) e os botões minimizar/×
+    // moram em `app-painel-flutuante` (ui-17). `&__kicker` continua aqui — reaproveitado pelas
+    // labels "Busca unificada"/"Páginas" do corpo, sem relação com o kicker do cabeçalho.
     &__kicker {
         color: var(--text-mute);
         font: 600 9px/1.2 var(--font-mono);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-    }
-    &__regua {
-        min-width: 20px;
-        height: 1px;
-        flex: 1;
-        background: var(--border-strong);
     }
     &__salvamento {
         padding: 4px 7px;
@@ -147,29 +76,6 @@ $largura-caderno-sobreposicao: 640px;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         cursor: pointer;
-    }
-
-    &__acoes-janela {
-        display: flex;
-        gap: 6px;
-    }
-    &__acoes-janela button {
-        width: 32px;
-        height: 32px;
-        display: grid;
-        place-items: center;
-        padding: 0;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        font: 600 17px/1 var(--font-mono);
-        cursor: pointer;
-        &:hover {
-            color: var(--accent);
-            background: var(--surface-2);
-            border-color: var(--accent-border);
-        }
     }
 
     &__escopo {
@@ -797,22 +703,9 @@ $largura-caderno-sobreposicao: 640px;
             }
         }
 
-        &__cabecalho {
-            min-height: 56px;
-            padding-top: calc(8px + env(safe-area-inset-top));
-            cursor: default;
-        }
-        &__titulo-grupo h2 {
-            max-width: 140px;
-        }
-        &__regua,
         &__salvamento,
         &__recarregar {
             display: none;
-        }
-        &__acoes-janela button {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
         }
         &__escopo {
             align-items: stretch;

@@ -13,16 +13,14 @@ export interface LeitorViewport {
   readonly altura: number;
 }
 
-export interface LeitorGeometria {
-  readonly x: number;
-  readonly y: number;
+/** Só o tamanho — a posição é de `app-painel-flutuante` (ui-17), fora do estado deste leitor. */
+export interface LeitorTamanho {
   readonly largura: number;
   readonly altura: number;
 }
 
 export interface LeitorDocumentosEstado {
   readonly aberto: boolean;
-  readonly recolhido: boolean;
   readonly documentoAtivo: DocumentoRegrasId;
-  readonly geometria: LeitorGeometria;
+  readonly tamanho: LeitorTamanho;
 }

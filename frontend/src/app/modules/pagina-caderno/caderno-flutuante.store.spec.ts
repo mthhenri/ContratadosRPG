@@ -122,12 +122,10 @@ describe('CadernoFlutuanteStore', () => {
     expect(store.estadoSalvamento()).toBe('SALVO');
   });
 
-  it('preserva o rascunho ao minimizar e tenta salvá-lo ao fechar', () => {
+  it('tenta salvar o rascunho ao fechar', () => {
     store.abrir(3);
     store.selecionarPagina(pagina);
     store.alterarRascunho({ titulo: 'Alterado', conteudoMarkdown: 'local' });
-    store.minimizar();
-    expect(store.rascunho()).toEqual({ titulo: 'Alterado', conteudoMarkdown: 'local' });
     store.fechar();
     expect(api.alterarPagina).toHaveBeenCalledTimes(1);
     expect(store.estado().aberto).toBe(false);
@@ -217,14 +215,9 @@ describe('CadernoFlutuanteStore', () => {
     expect(store.rascunho().titulo).toBe(pagina.titulo);
   });
 
-  it('limita e persiste somente a geometria no dispositivo', () => {
-    store.alterarGeometria(
-      { x: 2_000, y: -40, largura: 1_600, altura: 900 },
-      { largura: 1_200, altura: 800 },
-    );
-    expect(store.estado().geometria).toEqual({
-      x: 0,
-      y: 0,
+  it('limita e persiste somente o tamanho no dispositivo', () => {
+    store.alterarTamanho({ largura: 1_600, altura: 900 }, { largura: 1_200, altura: 800 });
+    expect(store.estado().tamanho).toEqual({
       largura: 1_200,
       altura: 800,
     });
@@ -235,11 +228,8 @@ describe('CadernoFlutuanteStore', () => {
   });
 
   it('permite reduzir a janela até pouco além da largura mobile', () => {
-    store.alterarGeometria(
-      { x: 0, y: 0, largura: 1, altura: 520 },
-      { largura: 1_200, altura: 800 },
-    );
+    store.alterarTamanho({ largura: 1, altura: 520 }, { largura: 1_200, altura: 800 });
 
-    expect(store.estado().geometria.largura).toBe(440);
+    expect(store.estado().tamanho.largura).toBe(440);
   });
 });
