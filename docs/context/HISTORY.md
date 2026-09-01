@@ -77,6 +77,33 @@ horizontal em nenhum viewport; borda tracejada visível e legível nos dois; `pr
 reduce` confirmado via `getComputedStyle(elemento).animationName === 'none'` no `app-esqueleto`
 (critério de aceite explícito da spec). Spec movida para `docs/specs/done/`.
 
+## 2026-09-01 — Swagger: documentação OpenAPI completa da API REST
+
+O backend agora oferece Swagger UI pública em `/api/docs` e o documento OpenAPI 3.0.3 bruto em
+`/api/docs-json`, ambos fora do `ResponseFormatInterceptor` e, portanto, sem o envelope
+`StandardResponse` que protege as respostas de negócio. O documento declara Bearer JWT e aplica o
+cadeado individualmente: `health`, registro e login ficam públicos; as demais 84 operações REST
+declaram a autenticação. Socket.IO continua deliberadamente fora do Swagger: o gateway é
+broadcast-only e mutações continuam entrando exclusivamente por REST.
+
+Como os DTOs públicos são interfaces e não carregam metadados em runtime, a ponte OpenAPI vive
+isolada em `backend/src/core/openapi/`. O gerador `backend/tools/gerar-openapi-contratos.ts` lê os
+DTOs públicos de `shared/src/dtos/` (ignorando `*Interno*`) e as assinaturas/decorators das
+controllers, produzindo schemas, enums, obrigatoriedade, descrições e a matriz de 87 pares
+`método + caminho`. `openapi.document.ts` a combina ao documento descoberto pelo Nest para incluir
+tags, operationIds estáveis, parâmetros, request bodies, multipart de imagem (JPEG/PNG/WEBP até
+2 MiB), segurança, envelopes de sucesso/erro, paginação e respostas de falha aplicáveis. As
+interfaces do shared seguem sendo contrato e fonte de verdade; a geração não é validação nem uma
+segunda API.
+
+O teste de OpenAPI compara a matriz gerada com os fontes atuais e verifica cada operação contra o
+documento, incluindo tags, segurança, envelope e upload. A documentação de manutenção entrou no
+README: qualquer task que crie, remova ou altere endpoint/DTO público roda
+`npm run openapi:gerar-contratos --workspace=backend` e revisa esse teste. Validação: teste focado
+3/3, suíte backend 476/476, build limpo e lint sem erros (2.681 warnings históricos). Com o backend
+real iniciado localmente, `/api/docs` retornou 200 e `/api/docs-json` expôs 66 caminhos e 87
+operações, com o título `Contratados RPG API`, JWT na rota protegida e multipart na imagem de ficha.
+
 ## 2026-09-01 — UI-13: chip ganha severidade e migra as cinco cópias do selo de estado
 
 `app-chip` (`ui-03`) só cobria o chip de rótulo (`variante` `padrao`/`sutil`). A auditoria visual

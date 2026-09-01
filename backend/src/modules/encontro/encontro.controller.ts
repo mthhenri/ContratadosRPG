@@ -16,6 +16,7 @@ import type {
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import { ActiveUser } from '../../core/decorators';
+import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { EncontroService } from './encontro.service';
 
@@ -26,6 +27,7 @@ import { EncontroService } from './encontro.service';
  * repassa à service. Permissões vivem na service.
  */
 @Controller()
+@DocumentarController('Encontros')
 export class EncontroController {
   constructor(private readonly encontroService: EncontroService) {}
 

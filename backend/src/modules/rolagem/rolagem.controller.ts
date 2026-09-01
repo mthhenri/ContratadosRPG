@@ -15,6 +15,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/rolagem';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { ActiveUser } from '../../core/decorators';
+import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { RolagemService } from './rolagem.service';
 
@@ -25,6 +26,7 @@ import { RolagemService } from './rolagem.service';
  * (microinteligência sancionada — §7.1) e repassa à service. Permissões vivem na service.
  */
 @Controller()
+@DocumentarController('Rolagens')
 export class RolagemController {
   constructor(private readonly rolagemService: RolagemService) {}
 

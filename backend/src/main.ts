@@ -4,9 +4,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
 import { WsIoAdapter } from './core/gateway/ws-io.adapter';
+import { configurarDocumentacaoOpenApi } from './core/openapi';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  configurarDocumentacaoOpenApi(app);
   // Avatar da ficha em `ArmazenamentoLocalProvedor` (m3-62, dev sem credencial R2): serve
   // `backend/uploads/` estático sob `/uploads` — `NestExpressApplication`, já habilitado por
   // `@nestjs/platform-express`, sem dependência nova.
