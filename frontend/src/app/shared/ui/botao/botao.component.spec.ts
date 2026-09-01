@@ -168,18 +168,44 @@ describe('Botao', () => {
     expect(classes(fixture)).toContain('botao--fluido');
   });
 
-  it('mostra o giro e marca aria-busy só enquanto carrega', () => {
+  it('mostra o giro e marca aria-busy/aria-disabled só enquanto carrega', () => {
     const fixture = montar();
 
     expect(botao(fixture).querySelector('.botao__carregando')).toBeNull();
     expect(botao(fixture).getAttribute('aria-busy')).toBeNull();
+    expect(botao(fixture).getAttribute('aria-disabled')).toBeNull();
 
     fixture.componentInstance.carregando.set(true);
     fixture.detectChanges();
 
     expect(botao(fixture).querySelector('.botao__carregando')).not.toBeNull();
     expect(botao(fixture).getAttribute('aria-busy')).toBe('true');
+    expect(botao(fixture).getAttribute('aria-disabled')).toBe('true');
     expect(classes(fixture)).toContain('botao--carregando');
+  });
+
+  it('cancela o Enter/Espaço que ativaria o botão por teclado enquanto carrega, sem depender de disabled', () => {
+    const fixture = montar();
+    fixture.componentInstance.carregando.set(true);
+    fixture.detectChanges();
+
+    expect(botao(fixture).disabled).toBe(false);
+
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+    botao(fixture).dispatchEvent(enter);
+    expect(enter.defaultPrevented).toBe(true);
+
+    const espaco = new KeyboardEvent('keydown', { key: ' ', cancelable: true });
+    botao(fixture).dispatchEvent(espaco);
+    expect(espaco.defaultPrevented).toBe(true);
+  });
+
+  it('não cancela Enter/Espaço fora do estado carregando', () => {
+    const fixture = montar();
+
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+    botao(fixture).dispatchEvent(enter);
+    expect(enter.defaultPrevented).toBe(false);
   });
 
   it('mantém o conteúdo projetado e os atributos nativos do consumidor', () => {

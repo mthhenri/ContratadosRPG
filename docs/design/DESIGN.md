@@ -156,7 +156,7 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.stat` | Caixa de estatística (rótulo + valor grande) | `vida` (`--vida`, fixo — não `--accent`), `energia` (`--energy`), `positivo` (`--positive`) | **`<app-stat rotulo="…" [valor]="…">`** |
 | `.barra-recurso` | Recurso com máximo — rótulo, valor atual/máximo e trilho de progresso (`ui-16`) | `recurso`: `vida` (`--vida`) ou `energia` (`--energy`); `--alerta` automático abaixo de 25% (`--warning`, vence a cor do recurso); `[editavel]` liga a digitação por clique (com `[maximoEditavel]` quando o máximo exibido já soma bônus e a edição precisa partir só da base armazenada); slot `[barraRecursoAcao]` ao lado do rótulo | **`<app-barra-recurso rotulo="…" [recurso]="…" [atual]="…" [maximo]="…">`** (`shared/ui/barra-recurso/`) |
 | `.stepper` | Input numérico com botões `−`/`+` | — | **`<app-step-input [formControl]="…">`** (`shared/ui/stepper/`) |
-| `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho`, `posicaoIcone`, `fluido` e `carregando`. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
+| `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho` (`pequeno`/`medio`/`grande`, ver "Degraus de tamanho" abaixo), `posicaoIcone`, `fluido` e `carregando` (guarda `Enter`/`Espaço`, ver "`carregando` × `disabled`" abaixo). Opacidade de desabilitado única: `0.55`, sem escape hatch por consumidor. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
 | `.botao-icone` | Ação unitária sem rótulo visual | `compacto` (26px) e `padrao` (32px); em mobile os dois passam ao alvo de toque de 44px. Exige `aria-label` e `appTooltip`; foco e desabilitado são nativos | **`<button app-botao-icone aria-label="…" appTooltip="…">`** |
 | `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
 | `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | Rótulo: `padrao` (`--accent`) ou `sutil` (`--text-mute`/`--border-strong`). Estado: severidade `primario`, `secundario`, `aviso` ou `perigo`, tom `sutil` (fundo 12% + borda 40%) ou `contorno` | **`<app-chip variante="…">`** ou **`<app-chip severidade="…" tom="…">`** |
@@ -306,6 +306,44 @@ renderizada (`obterElemento()`) para o consumidor medir o próprio redimensionam
 some com `[hidden]`, não `@if`, ao minimizar — o iframe do leitor de documentos preserva página,
 zoom e rolagem do PDF em vez de recarregar ao restaurar, e a mesma escolha beneficia de graça
 qualquer conteúdo futuro que se importe com o próprio estado interno.
+
+### Acabamento do botão (`ui-19`)
+
+`app-botao` cobre 8 severidades × 4 estilos e ~20 consumidores; esta task fechou três lacunas
+sem mexer no ícone/spinner nem no mapa de cor de `perigo` (`ui-12`).
+
+**`carregando` × `disabled`.** `carregando` nunca desabilita o botão de verdade — `disabled`
+continua exclusivo do consumidor (`[disabled]="enviando()"`), para as duas fontes não brigarem
+pelo mesmo atributo. Antes, `carregando` só barrava o clique por ponteiro
+(`pointer-events: none`); pelo teclado, `Enter`/`Espaço` num `<button>`/`<a>` focado ainda
+disparava a ação, porque `pointer-events` não tem efeito nenhum sobre ativação por teclado. A
+guarda correta cancela o `keydown` de `Enter`/`Espaço` (`evento.preventDefault()`) — cancelar aí
+impede o `click` de sequer existir, em vez de tentar interceptá-lo depois num `(click)` do host:
+esse `(click)` correria depois do `(click)` do template do consumidor (mesmo elemento, sem nó
+wrapper — a ordem de invocação de listeners no mesmo alvo é a ordem de registro no DOM, não a de
+declaração do primitivo), tarde demais para barrar. `carregando` também marca `aria-busy="true"`
+e `aria-disabled="true"` para o leitor de tela anunciar o estado.
+
+**Uma única opacidade de desabilitado.** O primitivo sempre teve `0.55`
+(`:host(:disabled) { opacity: 0.55; }`); seis cópias declaravam `--botao-opacidade-desabilitado`
+para sobrescrever esse valor com `0.4` ou `0.6` (`receber-dano-dialog`, `leitor-pdf-mobile`,
+`historico-rolagens-sidebar` "Carregar mais", `login`/`registro` "Entrar", `perfil` "Salvar"/
+ações). A fresta de customização foi removida junto com as seis declarações — não sobrou jeito
+de um consumidor novo divergir do canônico sem editar o próprio primitivo.
+
+**Degraus de tamanho.** `[tamanho]` é opcional — sem ele, o consumidor continua dono da dimensão,
+como a `ui-01` estabeleceu; a `ui-19` não mudou esse contrato, só migrou os consumidores cujo
+`padding` já batia com um degrau, usando a escala de espaço da `ui-18`:
+
+| Degrau | `padding` | `font-size` | `font-weight` | `letter-spacing` |
+|---|---|---|---|---|
+| `pequeno` | `var(--space-8) var(--space-12)` (8px 12px) | 11px | 600 | `0.08em` |
+| `medio` | `var(--space-12) var(--space-16)` (12px 16px) | 12px | 700 | `var(--tracking-label)` |
+| `grande` | `var(--space-12) var(--space-20)` (12px 20px), `min-height: 48px` | 13px | 700 | `var(--tracking-label)` |
+
+Todo degrau soma `gap: var(--space-8)` e `text-transform: uppercase`. Alvo de toque de 44px no
+mobile é responsabilidade do consumidor (`min-height`/`min-width` na própria classe BEM ou
+`bp.$alvo-toque`) nos três degraus — nenhum deles garante 44px sozinho no desktop.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 

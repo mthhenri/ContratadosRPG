@@ -131,8 +131,6 @@
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
 
-        --botao-opacidade-desabilitado: 0.6;
-
         @include bp.mobile {
             min-height: bp.$alvo-toque;
         }
