@@ -6,9 +6,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-8);
     margin: 0;
-    padding: 32px 20px;
+    // 32px vertical = 2 × --space-16 (exato, sem arredondamento) — respiro generoso do estado
+    // vazio, maior que qualquer degrau isolado da escala (ui-18).
+    padding: calc(var(--space-16) * 2) var(--space-20);
     border: 1px dashed var(--border-strong);
     border-radius: var(--radius-control);
     text-align: center;

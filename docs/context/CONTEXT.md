@@ -147,6 +147,26 @@ exata); achado e corrigido durante o próprio gate — o cabeçalho completo (ma
 truncava o título "Calculadora" no popup compacto de 280px, mais no mobile (botões de 44px); agora
 o popup compacto esconde marca/régua, mantendo só o essencial.
 
+**`ui-18-escala-de-espaco` concluída** (spec em `docs/specs/done/`): cinco degraus de espaço
+congelados em `_tokens.scss` — `--space-4`/`--space-8`/`--space-12`/`--space-16`/`--space-20` —
+fecham a última dimensão do tema sem escala (forma e tipografia já eram tokenizadas). Escopo real
+(a nota "Fora de Escopo" da spec confirma `shared/ui` inteiro, não só os quatro exemplos citados):
+os 13 primitivos com `padding`/`gap`/`margin` literal — `stat`, `chip`, `campo`, `cartao`, `botao`,
+`abas`/`aba`, `modal`, `confirmacao`, `notificacao`, `stepper`, `painel-flutuante`,
+`barra-recurso`, `estado-vazio` — mais o item de `HistoricoRolagensSidebar`. Cada literal foi para
+o degrau mais próximo (a maioria a ≤2px do valor anterior); duas exceções documentadas ficaram
+fora da escala (comentário `// ui-18` no SCSS): o `1px` de compensação fina em
+`chip--tom-contorno` e em `barra-recurso__entrada` (abaixo do primeiro degrau, arredondar mudaria
+visivelmente um controle miniatura). O `32px` de `estado-vazio` virou `calc(var(--space-16) * 2)`
+— exato, não arredondado. `DESIGN.md` documenta a escala e a regra: literal de espaço novo só com
+justificativa no PR. Suíte completa frontend 1506/1506, lint sem erro novo. Verificação visual ao
+vivo (Postgres nativo, Docker bloqueado pela rede do ambiente) em `1920×1080`/`360×800`: comparação
+direta contra as capturas congeladas de `docs/design/examples/` confirmou pixel a pixel o mesmo
+espaçamento de antes em `stat`/`chip`/`cartao`/`botao`/`barra-recurso`; `campo`, `modal`,
+`painel-flutuante`, `estado-vazio`, `abas` e `stepper` exercitados ao vivo sem regressão.
+`notificacao`/`confirmacao` isoladas e o item de histórico com dados reais não foram exercitados ao
+vivo nesta rodada (mudança de uma linha cada, mesmo mecanismo já confirmado no resto).
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -156,11 +176,11 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-17` concluída — ver acima). A série de tasks derivadas da
-auditoria visual (`ui-12`…`ui-17`, `INDEX-ajustes-auditoria.md`) está completa. A única frente de
-código de milestone ainda pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado
-de `m3-53` (M3). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de
-pós-milestone.
+Não há spec ativa no momento (`ui-18` concluída — ver acima). Restam `ui-19`…`ui-23` no backlog
+(acabamento de botão, fila de notificações, chrome da topbar, resultado de rolagem compacto, stat
+sem valor/rodapé do cartão — ver "Fila do backlog" abaixo). A única frente de código de milestone
+ainda pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3).
+M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -169,7 +189,7 @@ pós-milestone.
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-18`…`ui-23` | frontend/design system | seis specs restantes da auditoria visual (escala de espaço, acabamento de botão, fila de notificações, chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
+| `ui-19`…`ui-23` | frontend/design system | cinco specs restantes da auditoria visual (acabamento de botão, fila de notificações, chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
 
 Milestone ainda não aberto: `m5-guia-missao`.
 

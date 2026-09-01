@@ -57,9 +57,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: var(--space-16);
         min-height: 54px;
-        padding: 9px 12px 9px 15px;
+        padding: var(--space-8) var(--space-12) var(--space-8) var(--space-16);
         background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
         border-bottom: 1px solid var(--border);
         cursor: grab;
@@ -73,7 +73,7 @@
     &__identidade {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: var(--space-12);
         min-width: 0;
         flex: 1;
     }
@@ -87,7 +87,7 @@
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: var(--space-4);
 
         h2 {
             margin: 0;
@@ -128,7 +128,7 @@
     &__acoes {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: var(--space-4);
         flex: none;
     }
 

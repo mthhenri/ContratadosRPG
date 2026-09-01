@@ -107,6 +107,23 @@ Sem raio maior que 6px em nenhum lugar do sistema (nada "pill"/arredondado demai
 pesada — só bordas hairline (`--border`/`--border-strong`) e, no máximo, o `box-shadow` sutil do
 dropdown de perfil.
 
+### Escala de espaço (`ui-18`)
+
+Cinco degraus, congelados em `_tokens.scss` — `--space-4` · `--space-8` · `--space-12` ·
+`--space-16` · `--space-20` — para `padding`/`gap`/`margin`. Escolhidos para preservar a
+densidade que já existia em `shared/ui` (cada literal foi arredondado para o degrau mais
+próximo), não para redesenhar nada; `--pad-card`/`--gap-grid` continuam os tokens semânticos que
+compõem sobre esses degraus, sem duplicar a escala.
+
+**Regra:** todo `padding`/`gap`/`margin` novo em `shared/ui` usa um destes cinco degraus. Um
+literal de espaço novo (fora da escala) só entra com justificativa escrita no PR — igual à regra
+de raio/cor da proibição #29, agora estendida a espaço.
+
+**Exceção documentada:** um valor abaixo do primeiro degrau (`1px`, em `chip` tom-contorno e no
+campo de digitação de `barra-recurso`) fica de fora da escala — é compensação fina de um controle
+miniatura, e arredondar para `4px` mudaria o desenho de forma perceptível. Cada ocorrência carrega
+o comentário `// ui-18` explicando o motivo no próprio SCSS.
+
 ### Breakpoints (`tema/_breakpoints.scss`)
 
 | Token | Valor | Uso |

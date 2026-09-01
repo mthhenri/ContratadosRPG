@@ -98,8 +98,8 @@
         flex: none;
         display: flex;
         align-items: center;
-        gap: 11px;
-        padding: 16px 18px;
+        gap: var(--space-12);
+        padding: var(--space-16) var(--space-20);
         border-bottom: 1px solid var(--border);
 
         app-icone {
@@ -121,9 +121,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin: 12px 18px 0;
-            padding: 10px 14px;
+            gap: var(--space-8);
+            margin: var(--space-12) var(--space-20) 0;
+            padding: var(--space-12) var(--space-16);
             min-height: bp.$alvo-toque;
             font-size: 12px;
             font-weight: 600;
@@ -197,7 +197,7 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        padding: 16px 18px;
+        padding: var(--space-16) var(--space-20);
 
         --fade-topo: 0px;
         --fade-base: 0px;
@@ -232,14 +232,14 @@
     &__esqueleto {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: var(--space-12);
     }
 
     &__esqueleto-item {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 12px 14px;
+        gap: var(--space-8);
+        padding: var(--space-12) var(--space-16);
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
@@ -249,7 +249,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: var(--space-12);
     }
 
     &__esqueleto-rotulo {
@@ -279,21 +279,21 @@
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: var(--space-12);
     }
 
     &__item {
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
-        padding: 12px 14px;
+        padding: var(--space-12) var(--space-16);
     }
 
     &__item-cabecalho {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
-        gap: 12px;
+        gap: var(--space-12);
     }
 
     &__rotulo {
@@ -315,8 +315,8 @@
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 8px;
-        margin: 2px 0 8px;
+        gap: var(--space-8);
+        margin: var(--space-4) 0 var(--space-8);
     }
 
     &__autor {
@@ -327,8 +327,8 @@
 
     &__mais {
         display: block;
-        margin: 4px auto 0;
-        padding: 8px 16px;
+        margin: var(--space-4) auto 0;
+        padding: var(--space-8) var(--space-16);
         background: transparent;
         color: var(--text-dim);
         border: 1px solid var(--border-strong);

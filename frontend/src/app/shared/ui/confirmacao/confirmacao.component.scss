@@ -1,6 +1,6 @@
 @use "tema/breakpoints" as bp;
 
-// Primitivo de confirmação destrutiva (ui-15), sobre `app-modal` — o `gap: 14px` do
+// Primitivo de confirmação destrutiva (ui-15), sobre `app-modal` — o `gap: var(--space-16)` do
 // `.modal[open]` já separa ícone/mensagem do rodapé de ações, por isso a mensagem não repete
 // margem própria.
 
@@ -26,7 +26,7 @@
     // segue o mesmo padrão de `ReceberDanoDialog` (`receber-dano__confirmar`/`__cancelar`), o
     // outro consumidor de `app-modal` com rodapé de ação/cancelamento.
     &__acao {
-        padding: 10px 18px;
+        padding: var(--space-12) var(--space-20);
         font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;

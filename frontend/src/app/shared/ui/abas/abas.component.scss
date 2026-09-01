@@ -1,7 +1,7 @@
 :host {
   display: flex;
-  gap: 5px;
-  padding: 4px;
+  gap: var(--space-4);
+  padding: var(--space-4);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);

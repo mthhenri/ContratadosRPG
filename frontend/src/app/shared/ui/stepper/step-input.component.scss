@@ -53,13 +53,13 @@
         font-size: 19px;
         font-weight: 700;
         color: var(--text);
-        padding: 9px 0;
+        padding: var(--space-8) 0;
         background: transparent;
         border: 0;
         border-inline: 1px solid rgba(255, 255, 255, 0.08);
 
         @include bp.mobile {
-            padding: 12px 0;
+            padding: var(--space-12) 0;
             font-size: 20px;
         }
         outline: none;
@@ -86,7 +86,7 @@
         }
 
         .stepper__valor {
-            padding: 8px 0;
+            padding: var(--space-8) 0;
             font-size: 17px;
         }
 
@@ -97,7 +97,7 @@
             }
 
             .stepper__valor {
-                padding: 12px 0;
+                padding: var(--space-12) 0;
                 font-size: 20px;
             }
         }
@@ -112,7 +112,7 @@
         }
 
         .stepper__valor {
-            padding: 4px 0;
+            padding: var(--space-4) 0;
             font-size: 12px;
         }
 
@@ -123,7 +123,7 @@
             }
 
             .stepper__valor {
-                padding: 12px 0;
+                padding: var(--space-12) 0;
                 font-size: 20px;
             }
         }
