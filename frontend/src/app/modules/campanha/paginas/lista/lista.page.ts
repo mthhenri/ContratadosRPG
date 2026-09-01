@@ -12,6 +12,8 @@ import { Stat } from '../../../../shared/ui/stat/stat.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { CampanhaService } from '../../campanha.service';
 import { CampanhaCriar } from '../criar/criar.page';
 import { CampanhaEntrar } from '../entrar/entrar.page';
@@ -43,7 +45,20 @@ interface EstatisticasCampanhas {
  */
 @Component({
   selector: 'app-campanha-lista',
-  imports: [RouterLink, Icone, OverflowFade, CampanhaCriar, CampanhaEntrar, Tooltip, Stat, Botao, BotaoIcone, Cartao],
+  imports: [
+    RouterLink,
+    Icone,
+    OverflowFade,
+    CampanhaCriar,
+    CampanhaEntrar,
+    Tooltip,
+    Stat,
+    Botao,
+    BotaoIcone,
+    Cartao,
+    EstadoVazio,
+    Esqueleto,
+  ],
   templateUrl: './lista.page.html',
   styleUrl: './lista.page.scss',
 })

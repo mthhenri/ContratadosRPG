@@ -9,6 +9,8 @@ import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/sha
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -68,7 +70,7 @@ const BLOCOS_ACERVO: readonly DefinicaoBlocoAcervo[] = [
  */
 @Component({
   selector: 'app-ficha-acervo',
-  imports: [Botao, Cartao, Icone, OverflowFade, CartaoFichaAcervo, Modal],
+  imports: [Botao, Cartao, Icone, OverflowFade, CartaoFichaAcervo, Modal, EstadoVazio, Esqueleto],
   templateUrl: './acervo.page.html',
   styleUrl: './acervo.page.scss',
 })

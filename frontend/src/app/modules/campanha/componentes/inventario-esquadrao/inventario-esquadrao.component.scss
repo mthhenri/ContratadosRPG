@@ -482,15 +482,6 @@
     &__item small {
         color: var(--text-mute);
     }
-    &__vazio {
-        margin: 0;
-        padding: 32px 20px;
-        border: 1px dashed var(--border-strong);
-        border-radius: var(--radius-control);
-        color: var(--text-mute);
-        font-size: 13px;
-        text-align: center;
-    }
     &__lista {
         display: grid;
         gap: 8px;

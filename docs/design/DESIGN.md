@@ -147,6 +147,8 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.abas` | Barra de abas — troca de painel no lugar (`tablist`/`tab`/`tabpanel`), não navegação de rota | `__item--ativa`, colapso mobile só-ícone | **`<app-abas rotulo="…">` + `<button app-aba valor="…">` + `[appAbaPainel]`** |
 | `.modal` | Caixa de diálogo modal, sobre `<dialog>` nativo — cabeçalho com título + "×", corpo projetado | `[largura]` (CSS livre), `[fechavelPeloFundo]` (default `true`) | **`<app-modal aberto titulo>…</app-modal>`** |
 | `.notificacoes` | Fila de notificações flutuante, `bottom-center` | 4 severidades — `sucesso`, `informacao`, `aviso`, `erro` (`--vida` fixo, não `--accent`) | **`NotificacaoService.notificar(...)`** + `<app-notificacoes />` (um único, no `layout`) |
+| `.estado-vazio` | Estado vazio de lista — ícone + título mono + linha de apoio, borda tracejada `--border-strong` | Ação opcional projetada (`[estadoVazioAcao]`, `app-botao` `contorno`/`link`) | **`<app-estado-vazio icone="…" titulo="…" [linhaApoio]="…">`** |
+| `.esqueleto` | Bloco de esqueleto de carregamento — fundo `--surface-2` pulsante, honra `prefers-reduced-motion` | Só identidade (cor/raio/pulso); o consumidor dimensiona pela própria classe BEM no mesmo elemento | **`<app-esqueleto class="…">`** |
 
 Os dois últimos (`.topbar`, `.abas`) foram extraídos direto de `layout.component.scss` e
 `ficha-visualizacao.component.scss` nesta atualização — existiam como padrão real no app, mas
@@ -170,6 +172,36 @@ aceitas hoje são `primario` (estado ativo), `secundario` (informação neutra),
 O tom `sutil` é a receita padrão, com fundo a 12% e borda a 40% da cor; `contorno` preserva um
 aviso contextual que não deve competir com o conteúdo. Ícones `app-icone` podem ser projetados no
 chip de severidade quando acrescentam significado; chip não é botão, nem controle removível.
+
+### Estado vazio e esqueleto de lista (`ui-14`)
+
+Toda lista tem dois momentos sem conteúdo real — carregando e vazia — e os dois usam sempre o
+mesmo par de primitivos, nunca tipografia ou cor própria por consumidor:
+
+- **`app-estado-vazio`** cobre vazio de verdade ("Nenhuma campanha ainda.") e vazio por filtro
+  ("Nenhuma criatura ainda.") com o **mesmo componente** — a API não separa os dois casos, só
+  recebe o texto que o consumidor já decidiu. Três slots (ícone via `app-icone`, título mono,
+  linha de apoio) mais uma ação opcional projetada (`[estadoVazioAcao]`, sempre um `app-botao`
+  `contorno` ou `link` — nunca `preenchido`, para não competir com a ação principal da tela, que
+  já mora na barra acima da lista).
+- **`app-esqueleto`** reserva a geometria do conteúdo real enquanto ele carrega — evita o "flash"
+  de layout quando a resposta chega (a lista não salta de altura). É só identidade (fundo
+  `--surface-2` pulsante, `prefers-reduced-motion` zera a animação); o consumidor monta a
+  silhueta (título/linha/chip/avatar…) com a própria classe BEM no mesmo elemento, igual à
+  composição de `app-botao`.
+
+**Quando usar esqueleto vs. a linha de 2px da topbar:** `app-esqueleto` é para uma **lista com
+geometria conhecida** — o consumidor já sabe a forma do card/linha real e pode desenhar a
+silhueta antes da resposta chegar (histórico de rolagens, acervo de fichas, lista de campanhas,
+inventário). A linha fina `.carregando-global` (`layout.component.scss`, fixa no topo do
+viewport, `--accent`, 2px) é para **navegação global** — qualquer requisição em voo, contada pelo
+`LoadingService`, sem geometria nenhuma para antecipar (troca de rota, submit de formulário,
+ação pontual). Uma tela nunca combina os dois para o mesmo carregamento: se a lista tem forma
+conhecida, esqueleto; senão, a linha global já basta.
+
+Adotado em `HistoricoRolagensSidebar`, `FichaAcervo`, `CampanhaLista`, `InventarioEsquadrao` e
+`FichaInventario` — apagando a marcação ad-hoc (`.esqueleto-bloco`/`@keyframes esqueleto-pulso`
+copiados por página, `<p class="…__vazio">`/`…__estado` com texto solto) que cada um tinha.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 

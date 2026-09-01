@@ -226,12 +226,51 @@
         }
     }
 
-    &__vazio {
-        margin: 0;
-        padding: 24px 0;
-        color: var(--text-mute);
-        font-size: 13px;
-        text-align: center;
+    // Esqueleto de carregamento — silhueta de 3 itens (cabeçalho rótulo+data, autor, resultado),
+    // mesma forma da lista real. `app-esqueleto` é dono da cor/pulso/`prefers-reduced-motion`;
+    // aqui só a geometria (ui-14).
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__esqueleto-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__esqueleto-cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    &__esqueleto-rotulo {
+        width: 90px;
+        height: 13px;
+    }
+
+    &__esqueleto-data {
+        flex: none;
+        width: 48px;
+        height: 11px;
+    }
+
+    &__esqueleto-autor {
+        width: 60%;
+        height: 11px;
+    }
+
+    &__esqueleto-resultado {
+        width: 100%;
+        height: 34px;
     }
 
     &__lista {

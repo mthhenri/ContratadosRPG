@@ -353,9 +353,11 @@
         }
 
         @if (itens().length === 0) {
-            <p class="inventario-esquadrao__vazio">
-                Nenhum item armazenado. Adicione equipamento para preparar o esquadrão.
-            </p>
+            <app-estado-vazio
+                icone="armazenamento"
+                titulo="Nenhum item armazenado."
+                linhaApoio="Adicione equipamento para preparar o esquadrão."
+            />
         } @else {
             <ul class="inventario-esquadrao__lista">
                 @for (item of itens(); track item.id) {

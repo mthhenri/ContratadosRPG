@@ -56,19 +56,6 @@
         }
     }
 
-    &__estado {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 0;
-        font-family: var(--font-sans);
-        color: var(--text-dim);
-
-        app-icone {
-            color: var(--text-mute);
-        }
-    }
-
     // Lista de linhas (m2-18 — era uma grade de cartões, m2-17): coluna única, cada campanha uma
     // linha densa. Rolável com fade topo/base quando a lista é longa (`appOverflowFade`).
     &__lista {
@@ -324,8 +311,9 @@
         white-space: nowrap;
     }
 
-    // Esqueleto de carregamento — mesma silhueta do `__item` real (avatar + linha), evitando o
-    // "flash" seco de texto "Carregando…" antes da lista chegar.
+    // Esqueleto de carregamento (ui-14) — mesma silhueta do `__item` real (avatar + linha),
+    // evitando o "flash" seco de texto "Carregando…" antes da lista chegar. `app-esqueleto` é
+    // dono da cor/pulso/`prefers-reduced-motion`; aqui só a geometria.
     &__esqueleto {
         display: flex;
         flex-direction: column;
@@ -337,41 +325,21 @@
         align-items: center;
         gap: 14px;
         padding: 16px 18px;
-        background: var(--surface-2);
+        background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
     }
-}
-// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
-.esqueleto-bloco {
-    border-radius: var(--radius-control);
-    background: var(--border-strong);
-    animation: esqueleto-pulso 1.4s ease-in-out infinite;
 
-    &--avatar {
+    &__esqueleto-avatar {
         width: 44px;
         height: 44px;
         flex: none;
     }
 
-    &--linha {
+    &__esqueleto-linha {
         flex: 1;
         height: 14px;
         max-width: 220px;
-    }
-}
-@keyframes esqueleto-pulso {
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    .esqueleto-bloco {
-        animation: none;
     }
 }
 

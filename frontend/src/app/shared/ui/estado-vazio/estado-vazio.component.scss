@@ -1,0 +1,36 @@
+// Estado vazio de lista (`ui-14` · `P-034`) — mesma receita já usada localmente em
+// `inventario-esquadrao__vazio` (dashed + `--border-strong`), agora como primitivo único. Só
+// tokens do tema "Terminal de Contenção" (proibição #29).
+
+.estado-vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 32px 20px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-control);
+    text-align: center;
+
+    &__icone {
+        font-size: 20px;
+        color: var(--text-mute);
+    }
+
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-dim);
+    }
+
+    &__apoio {
+        margin: 0;
+        max-width: 42ch;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        color: var(--text-mute);
+    }
+}

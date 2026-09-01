@@ -35,6 +35,28 @@ severidades e a escolha entre chip de rótulo e chip de severidade. Testes focad
 completa 1462/1463 (única falha é `P-043`, preexistente, sem relação com este diff), lint sem erro
 novo, verificação visual em `1920×1080`/`360×800` nos quatro consumidores.
 
+**`ui-14-estados-de-lista-vazio-e-esqueleto` concluída** (spec em `docs/specs/done/`): dois
+primitivos novos em `shared/ui/` — `app-estado-vazio` (ícone opcional + título mono + linha de
+apoio + ação projetada opcional, borda tracejada `--border-strong`, mesmo componente para vazio de
+verdade e vazio por filtro) e `app-esqueleto` (bloco `--surface-2` pulsante, identidade só; o
+consumidor dimensiona pela própria classe BEM, mesma composição de `app-botao`). Adotados em
+**cinco** consumidores (a spec citava quatro; "inventário" resolveu ambíguo entre o do esquadrão e
+o da ficha — decisão do autor: os dois): `HistoricoRolagensSidebar` (esqueleto novo — antes só
+texto "Carregando…" — e estado vazio), `FichaAcervo`, `CampanhaLista` (as duas já tinham esqueleto/
+vazio ad-hoc com `.esqueleto-bloco`/`@keyframes esqueleto-pulso` copiados por página, apagados),
+`InventarioEsquadrao` e `FichaInventario` (as duas só tinham vazio — nenhuma carrega
+assincronamente depois do primeiro paint, então não ganharam esqueleto). `DESIGN.md` documenta a
+escolha entre `app-esqueleto` (lista com geometria conhecida) e a linha `.carregando-global` já
+existente (2px no topo, navegação/requisição global sem geometria pra antecipar). Testes focados
+41/41 (13 dos dois primitivos novos + 4 do histórico + os já existentes ajustados), suíte completa
+frontend 1470/1471 (única falha é `P-043`, preexistente, sem relação com este diff), lint sem erro
+novo. Verificação visual ao vivo (Postgres + backend + frontend reais) em `1920×1080`/`360×800`,
+estados vazio/carregando/preenchido dos cinco consumidores (carregando via `page.route()` com
+atraso, preenchido via mock de payload nos dois casos onde montar o dado real — rolagem/item de
+esquadrão — seria desproporcional ao risco; vazio sempre real) — nenhum overflow, dashed border
+visível nos dois viewports, `prefers-reduced-motion: reduce` confirmado zerando a animação do
+esqueleto (`getComputedStyle().animationName === 'none'`).
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -44,15 +66,15 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Fora da `ui-13`, não há outra spec ativa. A única frente de código de milestone ainda pendente é o
-**M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7
-estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
+Fora da `ui-13`/`ui-14`, não há outra spec ativa. A única frente de código de milestone ainda
+pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1,
+M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `ui-14`…`ui-17` | frontend/design system | filhas da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — estados de lista vazio/esqueleto, confirmação destrutiva, barra de recurso + recuo do cartão de combatente, primitivo de painel flutuante |
+| `ui-15`…`ui-17` | frontend/design system | filhas da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — confirmação destrutiva, barra de recurso + recuo do cartão de combatente, primitivo de painel flutuante |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `swagger-documentacao-api` | backend/infra | expõe a API REST atual via OpenAPI/Swagger gerado pelo backend, sem alterar contratos |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
@@ -78,8 +100,8 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-13`
-(2026-09-01): frontend 1462/1463, única falha `P-043` (ver `PROBLEMS.md`), preexistente e sem
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-14`
+(2026-09-01): frontend 1470/1471, única falha `P-043` (ver `PROBLEMS.md`), preexistente e sem
 relação com aquele diff. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só reproduzem
 isoladas (arquivo único), não na suíte completa.
 

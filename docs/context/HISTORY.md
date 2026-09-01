@@ -1,5 +1,82 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — UI-14: `app-estado-vazio` e `app-esqueleto` fecham a lacuna mais repetida do sistema
+
+A auditoria visual (`ui-06`) apontou que toda lista pode ficar vazia ou carregando e nenhuma tinha
+tratamento comum: cada tela reimplementava um `<p class="…__vazio">`/`…__estado` de texto solto, e
+quatro delas (`campanhas`, `acervo`, `detalhe` da campanha, `perfil`) também reimplementavam um
+esqueleto de carregamento — `.esqueleto-bloco` + `@keyframes esqueleto-pulso` copiados arquivo a
+arquivo, cada cópia com o próprio fundo `--border-strong` e a própria trava de
+`prefers-reduced-motion`.
+
+**Dois primitivos novos, mesma divisão de responsabilidade dos demais `shared/ui/`** (identidade no
+primitivo, tamanho no consumidor):
+
+- **`app-estado-vazio`** — três slots (`[icone]` via `app-icone`, `[titulo]` mono obrigatório,
+  `[linhaApoio]` opcional) + ação opcional projetada (`[estadoVazioAcao]`). Vazio de verdade
+  ("Nenhuma campanha ainda.") e vazio por filtro ("Nenhuma criatura ainda.") são o mesmo
+  componente — a API não separa os dois casos, só recebe o texto que o consumidor já decidiu. O
+  desenho (caixa com borda tracejada `--border-strong`, ícone `--text-mute`, título mono
+  `--text-dim`, linha de apoio sans `--text-mute`) replica exatamente a receita que já existia,
+  isolada, em `inventario-esquadrao__vazio` — a task só generalizou o que um consumidor já tinha
+  acertado.
+- **`app-esqueleto`** — sem inputs: um `<app-esqueleto>` é só um bloco `--surface-2` com pulso
+  (`prefers-reduced-motion` zera a animação) e `aria-hidden`; o consumidor aplica a própria classe
+  BEM no mesmo elemento pra dar forma (título, linha, chip, avatar…), mesma composição que
+  `app-botao` já usa. Trocar o fundo de `--border-strong` (cor do ad-hoc antigo) para `--surface-2`
+  foi deliberado: o bloco agora *é* a silhueta da superfície real (cards reais já usam
+  `--surface-2`), não um traço sobre um container que também usava a mesma cor.
+
+**Cinco consumidores adotados** (a spec listava quatro — histórico de rolagens, acervo de fichas,
+lista de campanhas, inventário — "inventário" ficou ambíguo entre o inventário do esquadrão e o da
+ficha; perguntado, o autor escolheu os dois):
+
+- `HistoricoRolagensSidebar` — o único dos cinco que **não tinha** esqueleto (`carregando()` só
+  trocava o texto por "Carregando…"); ganhou os dois: 3 itens de esqueleto (cabeçalho rótulo+data,
+  linha de autor, bloco de resultado) e `app-estado-vazio` no lugar do texto "Nenhuma rolagem
+  ainda.".
+- `FichaAcervo` e `CampanhaLista` — as duas já tinham esqueleto e vazio ad-hoc; perderam
+  `.esqueleto-bloco`/`@keyframes esqueleto-pulso`/o parágrafo `__estado` e passaram a montar a
+  mesma silhueta com `<app-esqueleto class="…">`.
+- `InventarioEsquadrao` (sidebar da campanha) e `FichaInventario` (aba Inventário da ficha) — as
+  duas só tinham vazio (nenhuma carrega assincronamente depois do primeiro paint da tela que as
+  contém — os itens já chegam prontos no payload da campanha/ficha), então só ganharam
+  `app-estado-vazio`; `FichaInventario` tinha duas variantes de texto por `editavel()`
+  ("Use \"Adicionar itens\"…" vs. "Inventário vazio.") — as duas viraram `app-estado-vazio` com
+  `titulo`/`linhaApoio` diferentes, mesmo componente.
+
+`DESIGN.md` ganhou a seção "Estado vazio e esqueleto de lista": quando usar `app-esqueleto` (lista
+com geometria conhecida, o consumidor já sabe a forma antes da resposta chegar) vs. quando a linha
+`.carregando-global` (2px, `--accent`, fixa no topo, já existente desde antes da `ui-14`) basta
+(navegação global, requisição sem geometria pra antecipar) — a spec pedia essa distinção
+explicitamente.
+
+Análogo por consumidor: `inventario-esquadrao__vazio` (já citado, a receita original do estado
+vazio) e o próprio `.esqueleto-bloco` ad-hoc de `acervo`/`campanhas` (a forma da silhueta não
+mudou, só o mecanismo). Testes focados: `estado-vazio.component.spec.ts` (4), `esqueleto.
+component.spec.ts` (2), `historico-rolagens-sidebar.component.spec.ts` (+2, esqueleto e vazio),
+`lista.page.spec.ts` (1 assert trocado de `.campanhas__estado` pra `app-estado-vazio`) — 41/41.
+Suíte completa frontend 1470/1471 (única falha `P-043`, preexistente, sem relação com este diff);
+lint sem erro novo (só os `warn` pré-existentes de `.ts` sem Prettier, CONVENTIONS.md
+"Formatação"); build de produção do frontend gerado com sucesso pelos próprios runs de teste
+(bundle inteiro compila, nenhum erro de template/tipo nos cinco consumidores).
+
+Verificação visual ao vivo: Postgres 16 nativo (sem Docker disponível no sandbox desta sessão —
+`dockerd` foi possível subir manualmente, mas o pull de `postgres:16` falhou por rede; o cluster
+`postgresql-16` já instalado no sistema resolveu sem precisar de imagem), backend e frontend reais,
+dois usuários registrados via REST. `1920×1080` e `360×800`, estados vazio/carregando/preenchido
+dos cinco consumidores: vazio sempre com dado real (usuário/campanha recém-criados, genuinamente
+sem conteúdo); carregando via `page.route()` atrasando a resposta real (mesma técnica já registrada
+em `m3-56`); preenchido via mock de payload só onde montar o dado real seria desproporcional
+(rolagem exige uma ficha completa por `validarFichaJogador`; item de esquadrão não precisa de nada
+disso e teve seu "preenchido" mockado só por simetria). `FichaInventario` foi verificado com um
+`GET /ficha/:id` mockado (o schema de entrada de `dados` foi comparado contra `FichaJogadorDadosDto`
+diretamente, não montado por tentativa e erro) — a rota renderizou a ficha completa de verdade,
+provando que o "vazio" novo funciona dentro do componente real, não isolado. Nenhum overflow
+horizontal em nenhum viewport; borda tracejada visível e legível nos dois; `prefers-reduced-motion:
+reduce` confirmado via `getComputedStyle(elemento).animationName === 'none'` no `app-esqueleto`
+(critério de aceite explícito da spec). Spec movida para `docs/specs/done/`.
+
 ## 2026-09-01 — UI-13: chip ganha severidade e migra as cinco cópias do selo de estado
 
 `app-chip` (`ui-03`) só cobria o chip de rótulo (`variante` `padrao`/`sutil`). A auditoria visual

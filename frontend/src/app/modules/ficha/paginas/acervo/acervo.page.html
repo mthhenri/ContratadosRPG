@@ -48,21 +48,21 @@
         <div class="acervo__esqueleto" role="status" aria-label="Carregando fichas">
             @for (i of [0, 1, 2]; track i) {
             <div class="acervo__esqueleto-cartao">
-                <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                <app-esqueleto class="acervo__esqueleto-titulo" />
+                <app-esqueleto class="acervo__esqueleto-linha" />
+                <app-esqueleto class="acervo__esqueleto-linha" />
                 <div class="acervo__esqueleto-rodape">
-                    <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+                    <app-esqueleto class="acervo__esqueleto-chip" />
                 </div>
             </div>
             }
         </div>
         } @else if (itens().length === 0) {
-        <p class="acervo__estado">
-            <app-icone nome="agente" />
-            Nenhuma ficha ainda. Crie uma — ela nasce solta, sem campanha, e você pode atribuí-la
-            depois.
-        </p>
+        <app-estado-vazio
+            icone="agente"
+            titulo="Nenhuma ficha ainda."
+            linhaApoio="Crie uma — ela nasce solta, sem campanha, e você pode atribuí-la depois."
+        />
         } @else { @for (bloco of blocos; track bloco.tipo) { @if (mostrarBloco(bloco.tipo)) {
         <header class="acervo__secao">
             <h2 class="acervo__secao-titulo">{{ bloco.titulo }}</h2>
@@ -73,7 +73,7 @@
         </header>
 
         @if (itensDoTipo(bloco.tipo).length === 0) {
-        <p class="acervo__estado">{{ bloco.estadoVazio }}</p>
+        <app-estado-vazio [titulo]="bloco.estadoVazio" />
         } @else {
         <ul
             class="acervo__lista"
