@@ -200,7 +200,7 @@ describe('CampanhaLista', () => {
 
     it('mostra o estado vazio quando não há campanhas', () => {
       const { raiz } = montar([]);
-      expect(raiz.querySelector('.campanhas__estado')).not.toBeNull();
+      expect(raiz.querySelector('app-estado-vazio')).not.toBeNull();
     });
   });
 });

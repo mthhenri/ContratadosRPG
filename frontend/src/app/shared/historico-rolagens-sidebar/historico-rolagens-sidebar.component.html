@@ -64,9 +64,24 @@
 
         <div class="historico-rolagens__corpo" appOverflowFade>
             @if (carregando()) {
-                <p class="historico-rolagens__vazio">Carregando…</p>
+                <div
+                    class="historico-rolagens__esqueleto"
+                    role="status"
+                    aria-label="Carregando rolagens"
+                >
+                    @for (i of [0, 1, 2]; track i) {
+                        <div class="historico-rolagens__esqueleto-item">
+                            <div class="historico-rolagens__esqueleto-cabecalho">
+                                <app-esqueleto class="historico-rolagens__esqueleto-rotulo" />
+                                <app-esqueleto class="historico-rolagens__esqueleto-data" />
+                            </div>
+                            <app-esqueleto class="historico-rolagens__esqueleto-autor" />
+                            <app-esqueleto class="historico-rolagens__esqueleto-resultado" />
+                        </div>
+                    }
+                </div>
             } @else if (itens().length === 0) {
-                <p class="historico-rolagens__vazio">Nenhuma rolagem ainda.</p>
+                <app-estado-vazio icone="d20" titulo="Nenhuma rolagem ainda." />
             } @else {
                 <ul class="historico-rolagens__lista">
                     @for (item of itens(); track item.id) {

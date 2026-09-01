@@ -1,0 +1,27 @@
+// Bloco de esqueleto de carregamento (`ui-14` · `P-034`) — identidade só (cor, raio, pulso); o
+// consumidor dimensiona pela própria classe BEM no mesmo elemento. Só tokens do tema
+// "Terminal de Contenção" (proibição #29) — nenhuma cor nova, `--surface-2` já existe.
+
+:host {
+    display: block;
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    animation: esqueleto-pulso 1.4s ease-in-out infinite;
+}
+
+@keyframes esqueleto-pulso {
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :host {
+        animation: none;
+    }
+}

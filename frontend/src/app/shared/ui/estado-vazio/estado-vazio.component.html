@@ -1,0 +1,10 @@
+<div class="estado-vazio">
+    @if (icone(); as nomeIcone) {
+        <app-icone class="estado-vazio__icone" [nome]="nomeIcone" />
+    }
+    <p class="estado-vazio__titulo">{{ titulo() }}</p>
+    @if (linhaApoio(); as apoio) {
+        <p class="estado-vazio__apoio">{{ apoio }}</p>
+    }
+    <ng-content select="[estadoVazioAcao]" />
+</div>

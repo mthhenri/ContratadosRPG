@@ -80,6 +80,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
@@ -457,6 +458,7 @@ interface AmpInventarioVM {
     Tooltip,
     Botao,
     BotaoIcone,
+    EstadoVazio,
     Modal,
     StepInput,
     NgTemplateOutlet,

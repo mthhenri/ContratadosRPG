@@ -104,21 +104,9 @@
         color: var(--text-mute);
     }
 
-    &__estado {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 0;
-        font-family: var(--font-sans);
-        color: var(--text-dim);
-
-        app-icone {
-            color: var(--text-mute);
-        }
-    }
-
-    // Esqueleto de carregamento — grade de silhuetas de cartão (nome + meta + rodapé com chip),
-    // mesma forma dos cartões reais, evitando o "flash" seco de texto "Carregando…" antes da lista.
+    // Esqueleto de carregamento (ui-14) — grade de silhuetas de cartão (nome + meta + rodapé com
+    // chip), mesma forma dos cartões reais, evitando o "flash" seco de texto "Carregando…" antes
+    // da lista. `app-esqueleto` é dono da cor/pulso/`prefers-reduced-motion`; aqui só a geometria.
     &__esqueleto {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -138,9 +126,25 @@
         flex-direction: column;
         gap: 10px;
         padding: 16px 18px;
-        background: var(--surface-2);
+        background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
+    }
+
+    &__esqueleto-titulo {
+        width: 65%;
+        max-width: 180px;
+        height: 16px;
+    }
+
+    &__esqueleto-linha {
+        width: 55%;
+        height: 12px;
+    }
+
+    &__esqueleto-chip {
+        width: 100px;
+        height: 20px;
     }
 
     &__esqueleto-rodape {
@@ -400,50 +404,6 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--text-mute);
-}
-
-// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
-.esqueleto-bloco {
-    display: block;
-    border-radius: var(--radius-control);
-    background: var(--border-strong);
-    animation: esqueleto-pulso 1.4s ease-in-out infinite;
-
-    &--titulo {
-        width: 65%;
-        max-width: 180px;
-        height: 16px;
-    }
-
-    &--linha {
-        width: 100%;
-        height: 12px;
-
-        &.esqueleto-bloco--curta {
-            width: 55%;
-        }
-    }
-
-    &--chip {
-        width: 100px;
-        height: 20px;
-    }
-}
-
-@keyframes esqueleto-pulso {
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .esqueleto-bloco {
-        animation: none;
-    }
 }
 
 // Conteúdo dos modais nativos da página.

@@ -43,16 +43,17 @@
         <div class="campanhas__esqueleto" role="status" aria-label="Carregando campanhas">
             @for (i of [0, 1]; track i) {
             <div class="campanhas__esqueleto-item">
-                <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                <app-esqueleto class="campanhas__esqueleto-avatar" />
+                <app-esqueleto class="campanhas__esqueleto-linha" />
             </div>
             }
         </div>
         } @else if (campanhas().length === 0) {
-        <p class="campanhas__estado">
-            <app-icone nome="campanhas" />
-            Nenhuma campanha ainda. Crie uma nova ou entre em uma com o código de convite.
-        </p>
+        <app-estado-vazio
+            icone="campanhas"
+            titulo="Nenhuma campanha ainda."
+            linhaApoio="Crie uma nova ou entre em uma com o código de convite."
+        />
         } @else {
         <ul class="campanhas__lista" appOverflowFade>
             @for (campanha of campanhas(); track campanha.id) {

@@ -890,13 +890,15 @@
        — teto fixo só no modo `dialog`, ver `--compacto` no SCSS). -->
     <div class="ficha-inv__lista" appOverflowFade>
         @if (inventarioVazio()) {
-            <p class="ficha-inv__vazio">
-                @if (editavel()) {
-                    Nenhum item no inventário. Use "Adicionar itens" para montá-lo.
-                } @else {
-                    Inventário vazio.
-                }
-            </p>
+            @if (editavel()) {
+                <app-estado-vazio
+                    icone="armazenamento"
+                    titulo="Nenhum item no inventário."
+                    linhaApoio='Use "Adicionar itens" para montá-lo.'
+                />
+            } @else {
+                <app-estado-vazio icone="armazenamento" titulo="Inventário vazio." />
+            }
         }
 
         <!-- Cartão de um item — mesmo card na lista principal (armas → munições → proteções →

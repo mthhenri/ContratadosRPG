@@ -11,6 +11,8 @@ import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.compone
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
 import { Chip } from '../ui/chip/chip.component';
+import { EstadoVazio } from '../ui/estado-vazio/estado-vazio.component';
+import { Esqueleto } from '../ui/esqueleto/esqueleto.component';
 
 /**
  * Barra lateral de histórico de rolagens — substitui a antiga listagem embutida no painel da
@@ -29,7 +31,18 @@ import { Chip } from '../ui/chip/chip.component';
  */
 @Component({
   selector: 'app-historico-rolagens-sidebar',
-  imports: [Icone, ResultadoRolagem, OverflowFade, DatePipe, AutoFocus, Tooltip, Botao, Chip],
+  imports: [
+    Icone,
+    ResultadoRolagem,
+    OverflowFade,
+    DatePipe,
+    AutoFocus,
+    Tooltip,
+    Botao,
+    Chip,
+    EstadoVazio,
+    Esqueleto,
+  ],
   templateUrl: './historico-rolagens-sidebar.component.html',
   styleUrl: './historico-rolagens-sidebar.component.scss',
 })
