@@ -10,6 +10,7 @@ import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.comp
 import { Icone } from '../icone/icone.component';
 import { Marca } from '../marca/marca.component';
 import { Botao } from '../ui/botao/botao.component';
+import { Confirmacao } from '../ui/confirmacao/confirmacao.component';
 import { Notificacoes } from '../ui/notificacao/notificacao.component';
 
 /**
@@ -27,6 +28,7 @@ import { Notificacoes } from '../ui/notificacao/notificacao.component';
     RouterLink,
     RouterLinkActive,
     Notificacoes,
+    Confirmacao,
     ConfiguracoesTema,
     Icone,
     Marca,

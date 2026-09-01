@@ -9,6 +9,7 @@ import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/sha
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
@@ -77,6 +78,7 @@ const BLOCOS_ACERVO: readonly DefinicaoBlocoAcervo[] = [
 export class FichaAcervo {
   private readonly fichaService = inject(FichaService);
   private readonly campanhaService = inject(CampanhaService);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -126,8 +128,6 @@ export class FichaAcervo {
    */
   protected readonly confirmandoDuplicar = signal<{ id: number; nome: string } | null>(null);
   protected readonly duplicando = signal<number | null>(null);
-  protected readonly confirmandoExcluirFicha = signal<{ id: number; nome: string } | null>(null);
-  protected readonly excluindoFicha = signal<number | null>(null);
 
   /** Preview ampliado do avatar em hover sustentado (`agendarPreviewAvatar`) — mesmo padrão de `CampanhaDetalhe`. */
   protected readonly previewAvatar = signal<{ url: string; top: number; left: number } | null>(
@@ -446,34 +446,29 @@ export class FichaAcervo {
       });
   }
 
-  /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52). */
+  /** Abre a confirmação de exclusão a partir do menu da ficha (m3-52 · ui-15). */
   protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
     this.fecharMenuFicha();
-    this.confirmandoExcluirFicha.set({ id: fichaId, nome: fichaNome });
-  }
-
-  /** Cancela a exclusão pendente — inócuo enquanto a exclusão está em voo. */
-  protected cancelarExcluirFicha(): void {
-    if (this.excluindoFicha() === null) {
-      this.confirmandoExcluirFicha.set(null);
-    }
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Excluir ficha',
+        mensagem: `Excluir ${fichaNome}? Esta ação não pode ser desfeita.`,
+        entidade: fichaNome,
+        rotuloConfirmar: 'Confirmar exclusão',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.excluirFicha(fichaId);
+        }
+      });
   }
 
   /** Exclui a ficha (soft delete) e some da lista na hora — sem refetch (m3-52). */
-  protected confirmarExcluirFicha(): void {
-    const pendente = this.confirmandoExcluirFicha();
-    if (!pendente || this.excluindoFicha() !== null) {
-      return;
-    }
-    this.excluindoFicha.set(pendente.id);
-    this.fichaService
-      .excluirFicha(pendente.id)
-      .pipe(finalize(() => this.excluindoFicha.set(null)))
-      .subscribe({
-        next: () => {
-          this.confirmandoExcluirFicha.set(null);
-          this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== pendente.id));
-        },
-      });
+  private excluirFicha(fichaId: number): void {
+    this.fichaService.excluirFicha(fichaId).subscribe({
+      next: () => {
+        this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
+      },
+    });
   }
 }

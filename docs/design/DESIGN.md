@@ -145,7 +145,8 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |
 | `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) | — (consumidor único) |
 | `.abas` | Barra de abas — troca de painel no lugar (`tablist`/`tab`/`tabpanel`), não navegação de rota | `__item--ativa`, colapso mobile só-ícone | **`<app-abas rotulo="…">` + `<button app-aba valor="…">` + `[appAbaPainel]`** |
-| `.modal` | Caixa de diálogo modal, sobre `<dialog>` nativo — cabeçalho com título + "×", corpo projetado | `[largura]` (CSS livre), `[fechavelPeloFundo]` (default `true`) | **`<app-modal aberto titulo>…</app-modal>`** |
+| `.modal` | Caixa de diálogo modal, sobre `<dialog>` nativo — cabeçalho com título + "×", corpo projetado | `[largura]` (CSS livre), `[fechavelPeloFundo]` (default `true`), slots `[modalIcone]` (ícone no cabeçalho) e `[modalAcoes]` (rodapé de botões, régua acima, some por completo se vazio) | **`<app-modal aberto titulo>…</app-modal>`** |
+| `.confirmacao` | Diálogo de confirmação destrutiva sobre `app-modal` — mensagem + botão de ação + cancelar no `[modalAcoes]` | Severidade `perigo` (padrão — `variante="perigo"` no botão, ícone `alerta` em `--erro` no cabeçalho) ou `padrao` (`variante="primario"`, sem ícone); `entidade` destaca um trecho da mensagem em negrito | **`ConfirmacaoService.confirmar({ titulo, mensagem, … }): Promise<boolean>`** + `<app-confirmacao />` (um único, no `layout`) |
 | `.notificacoes` | Fila de notificações flutuante, `bottom-center` | 4 severidades — `sucesso`, `informacao`, `aviso`, `erro` (`--vida` fixo, não `--accent`) | **`NotificacaoService.notificar(...)`** + `<app-notificacoes />` (um único, no `layout`) |
 | `.estado-vazio` | Estado vazio de lista — ícone + título mono + linha de apoio, borda tracejada `--border-strong` | Ação opcional projetada (`[estadoVazioAcao]`, `app-botao` `contorno`/`link`) | **`<app-estado-vazio icone="…" titulo="…" [linhaApoio]="…">`** |
 | `.esqueleto` | Bloco de esqueleto de carregamento — fundo `--surface-2` pulsante, honra `prefers-reduced-motion` | Só identidade (cor/raio/pulso); o consumidor dimensiona pela própria classe BEM no mesmo elemento | **`<app-esqueleto class="…">`** |
@@ -172,6 +173,19 @@ aceitas hoje são `primario` (estado ativo), `secundario` (informação neutra),
 O tom `sutil` é a receita padrão, com fundo a 12% e borda a 40% da cor; `contorno` preserva um
 aviso contextual que não deve competir com o conteúdo. Ícones `app-icone` podem ser projetados no
 chip de severidade quando acrescentam significado; chip não é botão, nem controle removível.
+
+### Confirmação destrutiva (`ui-15`)
+
+Toda ação que apaga ou remove dado sem volta passa por `ConfirmacaoService.confirmar(...)` —
+nunca um `<app-modal>` montado à mão, nem uma área de confirmação inline (`role="alertdialog"`)
+como o produto praticava antes desta task. A ordem dos botões é fixa: ação perigosa primeiro,
+`Cancelar` depois; `Escape`, o clique fora e o "×" resolvem como `Cancelar`.
+
+A consequência (`Esta ação não pode ser desfeita.`) só entra na `mensagem` quando a ação é
+realmente irreversível para quem confirma — excluir ficha ou campanha, por exemplo. Uma ação que
+o mestre pode desfazer por outro caminho (remover um membro, que pode ser reconvidado) não precisa
+da frase: o título e o verbo ("Remover") já bastam. Não adicione a frase por padrão a toda
+chamada — ela é para quando a alternativa de fato não existe.
 
 ### Estado vazio e esqueleto de lista (`ui-14`)
 

@@ -18,7 +18,10 @@
     (click)="onCliqueNoFundo($event)"
 >
     <header class="modal__cabecalho">
-        <h2 class="modal__titulo" [id]="tituloId">{{ titulo() }}</h2>
+        <div class="modal__titulo-grupo">
+            <ng-content select="[modalIcone]" />
+            <h2 class="modal__titulo" [id]="tituloId">{{ titulo() }}</h2>
+        </div>
         <button
             app-botao-icone
             type="button"
@@ -33,5 +36,9 @@
 
     <div class="modal__corpo">
         <ng-content />
+    </div>
+
+    <div class="modal__acoes">
+        <ng-content select="[modalAcoes]" />
     </div>
 </dialog>

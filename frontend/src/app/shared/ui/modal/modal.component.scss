@@ -56,6 +56,13 @@
         flex: 0 0 auto;
     }
 
+    &__titulo-grupo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
     &__titulo {
         font-family: var(--font-mono);
         font-size: 13px;
@@ -68,5 +75,21 @@
 
     &__corpo {
         min-height: 0;
+    }
+
+    // Vazio (nenhum consumidor projeta `[modalAcoes]`) some por completo — `:empty` evita que a
+    // régua e o `gap: 14px` de `&[open]` reservem espaço para um rodapé que não existe.
+    &__acoes {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        flex: 0 0 auto;
+
+        &:empty {
+            display: none;
+        }
     }
 }

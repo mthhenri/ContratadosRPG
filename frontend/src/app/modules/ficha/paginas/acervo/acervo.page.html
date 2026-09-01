@@ -203,37 +203,6 @@
             </button>
         </div>
  </app-modal>
-} @if (confirmandoExcluirFicha(); as pendenteExcluir) {
-<app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="cancelarExcluirFicha()">
-
-        <p class="dialogo__aviso">
-            Excluir <strong>{{ pendenteExcluir.nome }}</strong>? Esta ação não pode ser desfeita.
-        </p>
-
-        <div class="dialogo__acoes">
-            <button
-                app-botao
-                variante="primario"
-                class="dialogo__acao"
-                type="button"
-                [disabled]="excluindoFicha() === pendenteExcluir.id"
-                (click)="confirmarExcluirFicha()"
-            >
-                <app-icone nome="excluir" />
-                {{ excluindoFicha() === pendenteExcluir.id ? 'Excluindo…' : 'Confirmar exclusão' }}
-            </button>
-            <button
-                app-botao
-                variante="secundario"
-                class="dialogo__acao"
-                type="button"
-                [disabled]="excluindoFicha() === pendenteExcluir.id"
-                (click)="cancelarExcluirFicha()"
-            >
-                Cancelar
-            </button>
-        </div>
- </app-modal>
 } @if (confirmandoAtribuir(); as pendenteAtribuir) {
 <app-modal [aberto]="true" titulo="Atribuir a campanha" (fechou)="cancelarAtribuir()">
 

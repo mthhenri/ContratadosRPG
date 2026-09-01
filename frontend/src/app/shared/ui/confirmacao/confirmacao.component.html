@@ -1,0 +1,38 @@
+@if (servico.pedido(); as pedido) {
+<app-modal [aberto]="true" [titulo]="pedido.titulo" (fechou)="cancelar()">
+    @if (perigo()) {
+        <span modalIcone class="confirmacao__icone">
+            <app-icone nome="alerta" />
+        </span>
+    }
+
+    <p class="confirmacao__mensagem">
+        @if (mensagemPartida(); as partes) {
+            {{ partes.antes }}<strong>{{ partes.entidade }}</strong>{{ partes.depois }}
+        } @else {
+            {{ pedido.mensagem }}
+        }
+    </p>
+
+    <button
+        app-botao
+        modalAcoes
+        class="confirmacao__acao"
+        [variante]="perigo() ? 'perigo' : 'primario'"
+        type="button"
+        (click)="confirmar()"
+    >
+        {{ pedido.rotuloConfirmar }}
+    </button>
+    <button
+        app-botao
+        modalAcoes
+        class="confirmacao__acao"
+        variante="secundario"
+        type="button"
+        (click)="cancelar()"
+    >
+        {{ pedido.rotuloCancelar ?? 'Cancelar' }}
+    </button>
+</app-modal>
+}

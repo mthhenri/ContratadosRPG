@@ -31,6 +31,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { EncontroService } from '../../encontro.service';
 import { PainelEncontro } from './painel-encontro.page';
@@ -253,6 +254,7 @@ describe('PainelEncontro', () => {
       ajustarVida: vi.fn(() => of(estado)),
       adicionarCombatente: vi.fn(() => of(estado)),
       removerCombatente: vi.fn(() => of(estado)),
+      encerrarEncontro: vi.fn(() => of(estado)),
       alterarIdentidadeAvulso: vi.fn(() => of(estado)),
       alterarImagemAvulso: vi.fn(() => of(estado)),
       excluirImagemAvulso: vi.fn(() => of(estado)),
@@ -909,6 +911,39 @@ describe('PainelEncontro', () => {
       expect(encontroService.removerCombatente).toHaveBeenCalledWith(1);
     });
 
+    it('remover pelo ícone do cartão (modo edição) pede confirmação (ui-15); cancelar não remove', async () => {
+      const { fixture, encontroService } = montar();
+      const confirmar = vi
+        .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
+        .mockResolvedValue(false);
+      interno(fixture).modoEdicao.set(true);
+      fixture.detectChanges();
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      elemento.querySelector<HTMLButtonElement>('.combatente__remover')?.click();
+      fixture.detectChanges();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Remover combatente' }));
+      expect(encontroService.removerCombatente).not.toHaveBeenCalled();
+    });
+
+    it('remover pelo ícone do cartão (modo edição): confirmar (ui-15) remove o combatente', async () => {
+      const { fixture, encontroService } = montar();
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(true);
+      interno(fixture).modoEdicao.set(true);
+      fixture.detectChanges();
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      elemento.querySelector<HTMLButtonElement>('.combatente__remover')?.click();
+      fixture.detectChanges();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(encontroService.removerCombatente).toHaveBeenCalled();
+    });
+
     it('abre o formulário de avulso separado do seletor, e adiciona o avulso digitado', () => {
       const { fixture, encontroService } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
@@ -1100,6 +1135,39 @@ describe('PainelEncontro', () => {
           (botao) => botao.textContent?.trim() === 'Encerrar',
         ),
       ).toBe(false);
+    });
+
+    it('pede confirmação (ui-15) antes de encerrar; cancelar não chama encerrarEncontro', async () => {
+      const { fixture, encontroService } = montar(encontroAtivo);
+      const confirmar = vi
+        .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
+        .mockResolvedValue(false);
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.painel__acao'))
+        .find((botao) => botao.textContent?.trim() === 'Encerrar')
+        ?.click();
+      fixture.detectChanges();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Encerrar combate' }));
+      expect(encontroService.encerrarEncontro).not.toHaveBeenCalled();
+    });
+
+    it('confirmar (ui-15) chama encerrarEncontro', async () => {
+      const { fixture, encontroService } = montar(encontroAtivo);
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(true);
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.painel__acao'))
+        .find((botao) => botao.textContent?.trim() === 'Encerrar')
+        ?.click();
+      fixture.detectChanges();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(encontroService.encerrarEncontro).toHaveBeenCalledWith(encontroAtivo.id);
     });
 
     it('nunca mostra "Rolar iniciativas" depois que o combate começou', () => {
