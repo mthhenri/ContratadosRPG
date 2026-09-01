@@ -1,0 +1,188 @@
+// Primitivo de recurso com máximo (ui-16). Só tokens do tema — nenhum hex, fonte ou raio literal
+// (proibição #29). Absorve o trilho de 4px do HUD e o de 8px do bloco de vitalidade da ficha
+// (nenhum dos dois era normativo) num só desenho.
+:host {
+    display: block;
+    min-width: 0;
+}
+
+.barra-recurso {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+
+    &__topo {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    &__rotulo-linha {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+
+        // Sinaliza a dica de progressão (hover/foco) — mesma receita do rótulo do bloco de
+        // vitalidade que este primitivo substitui.
+        &--dica {
+            cursor: help;
+            text-decoration: underline dotted var(--text-mute);
+            text-underline-offset: 3px;
+        }
+    }
+
+    &__valor {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 3px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
+    }
+
+    // Maior que o rótulo e que o máximo — é o número que se lê de longe numa mesa (o HUD mobile
+    // que este primitivo substitui já usava um atual maior que o resto por esse motivo).
+    &__valor-atual {
+        font-size: 14px;
+        font-weight: 700;
+        color: inherit;
+        line-height: 1;
+
+        // Valor clicável (digitação direta) — parece o texto do valor, com alvo de clique discreto.
+        &--editavel {
+            font: inherit;
+            color: inherit;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-control);
+            padding: 0 3px;
+            cursor: text;
+            transition:
+                border-color 0.15s ease,
+                background-color 0.15s ease;
+
+            &:hover {
+                border-color: var(--border-strong);
+                background: var(--surface-2);
+            }
+        }
+    }
+
+    &__sep {
+        color: var(--text-mute);
+    }
+
+    &__max {
+        color: var(--text-mute);
+
+        &--editavel {
+            font: inherit;
+            color: inherit;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-control);
+            padding: 0 3px;
+            cursor: text;
+            transition:
+                border-color 0.15s ease,
+                background-color 0.15s ease;
+
+            &:hover {
+                border-color: var(--border-strong);
+                background: var(--surface-2);
+            }
+        }
+    }
+
+    // Campo de digitação direta (clicou no número) — sem as setinhas do number nativo.
+    &__entrada {
+        width: 38px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 1px 3px;
+        outline: none;
+        appearance: textfield;
+        -moz-appearance: textfield;
+
+        &:focus {
+            border-color: var(--accent-border);
+        }
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            appearance: none;
+            margin: 0;
+        }
+    }
+
+    &__trilho {
+        display: block;
+        height: 6px;
+        border-radius: var(--radius-control);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    &__preenchimento {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        transition: width 0.18s ease;
+
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
+    }
+
+    // Vida usa `--vida` (vermelho fixo da identidade, não acompanha a troca de `--accent`);
+    // Energia usa `--energy`.
+    &--vida {
+        .barra-recurso__valor-atual {
+            color: var(--vida);
+        }
+        .barra-recurso__preenchimento {
+            background: var(--vida);
+        }
+    }
+
+    &--energia {
+        .barra-recurso__valor-atual {
+            color: var(--energy);
+        }
+        .barra-recurso__preenchimento {
+            background: var(--energy);
+        }
+    }
+
+    // Mesma especificidade de `&--vida`/`&--energia` (uma classe + descendente) — vence por ficar
+    // depois no arquivo, de propósito: abaixo de 25% o alerta precisa vencer a cor do recurso,
+    // não empilhar com ela. Ao contrário da precedência acidental que a ui-16 corrigiu no cartão
+    // de combatente, esta ordem É a decisão — não mova este bloco para antes dos dois acima.
+    &--alerta {
+        .barra-recurso__valor-atual {
+            color: var(--warning);
+        }
+        .barra-recurso__preenchimento {
+            background: var(--warning);
+        }
+    }
+}

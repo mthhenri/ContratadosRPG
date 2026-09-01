@@ -36,30 +36,20 @@
                 aria-label="Ver e ajustar Vida e Energia"
                 (click)="irParaVitais()"
             >
-                <span class="ficha-hud__vital ficha-hud__vital--vida">
-                    <span class="ficha-hud__vital-linha">
-                        <span class="ficha-hud__vital-rotulo">Vida</span>
-                        <span class="ficha-hud__vital-atual">{{ estado().vidaAtual }}</span>
-                        <span class="ficha-hud__vital-max">/ {{ vidaMaximaEfetiva() }}</span>
-                    </span>
-                    <span class="ficha-hud__trilho">
-                        <span class="ficha-hud__preenche" [style.width.%]="percentualVida()"></span>
-                    </span>
-                </span>
-
-                <span class="ficha-hud__vital ficha-hud__vital--energia">
-                    <span class="ficha-hud__vital-linha">
-                        <span class="ficha-hud__vital-rotulo">Energia</span>
-                        <span class="ficha-hud__vital-atual">{{ estado().energiaAtual }}</span>
-                        <span class="ficha-hud__vital-max">/ {{ energiaMaximaEfetiva() }}</span>
-                    </span>
-                    <span class="ficha-hud__trilho">
-                        <span
-                            class="ficha-hud__preenche"
-                            [style.width.%]="percentualEnergia()"
-                        ></span>
-                    </span>
-                </span>
+                <app-barra-recurso
+                    class="ficha-hud__vital"
+                    rotulo="Vida"
+                    recurso="vida"
+                    [atual]="estado().vidaAtual"
+                    [maximo]="vidaMaximaEfetiva()"
+                />
+                <app-barra-recurso
+                    class="ficha-hud__vital"
+                    rotulo="Energia"
+                    recurso="energia"
+                    [atual]="estado().energiaAtual"
+                    [maximo]="energiaMaximaEfetiva()"
+                />
             </button>
 
             @if (condicoesAtivas().length) {
@@ -906,265 +896,91 @@
 
                         <div class="ficha-vitalidade" #blocoVitalidade>
                             <div class="ficha-barra ficha-barra--vida">
-                                <div class="ficha-barra__topo">
-                                    <span class="ficha-barra__rotulo-linha">
-                                        <span
-                                            class="ficha-barra__rotulo ficha-barra__rotulo--dica"
-                                            [appTooltip]="progressaoVida()"
+                                @if (ajustavel()) {
+                                    <button
+                                        class="ficha-passo"
+                                        type="button"
+                                        aria-label="Reduzir vida"
+                                        appHoldRepeat
+                                        [disabled]="estado().vidaAtual <= 0"
+                                        (passo)="ajustar('vidaAtual', -1)"
+                                    >
+                                        −
+                                    </button>
+                                }
+                                <app-barra-recurso
+                                    class="ficha-barra__primitivo"
+                                    rotulo="Vida"
+                                    recurso="vida"
+                                    [editavel]="ajustavel()"
+                                    [dica]="progressaoVida()"
+                                    [atual]="estado().vidaAtual"
+                                    [maximo]="vidaMaximaEfetiva()"
+                                    [maximoEditavel]="vidaMaxima()"
+                                    (atualAlterado)="commitVitalidade('vidaAtual', $event)"
+                                    (maximoAlterado)="commitVitalidade('vidaMaxima', $event)"
+                                >
+                                    @if (ajustavel()) {
+                                        <button
+                                            barraRecursoAcao
+                                            class="ficha-barra__receber-dano"
+                                            type="button"
+                                            aria-label="Receber dano"
+                                            [appTooltip]="'Receber dano'"
+                                            (click)="receberDanoAberto.set(true)"
                                         >
-                                            Vida
-                                        </span>
-                                        @if (ajustavel()) {
-                                            <button
-                                                class="ficha-barra__receber-dano"
-                                                type="button"
-                                                aria-label="Receber dano"
-                                                [appTooltip]="'Receber dano'"
-                                                (click)="receberDanoAberto.set(true)"
-                                            >
-                                                <app-icone nome="combate" />
-                                            </button>
-                                        }
-                                    </span>
-                                    <div class="ficha-barra__medidor">
-                                        @if (ajustavel()) {
-                                            <button
-                                                class="ficha-passo"
-                                                type="button"
-                                                aria-label="Reduzir vida"
-                                                appHoldRepeat
-                                                [disabled]="estado().vidaAtual <= 0"
-                                                (passo)="ajustar('vidaAtual', -1)"
-                                            >
-                                                −
-                                            </button>
-                                        }
-                                        <span class="ficha-barra__valor">
-                                            @if (
-                                                ajustavel() && editandoVitalidade() === "vidaAtual"
-                                            ) {
-                                                <input
-                                                    #entradaVitalidade
-                                                    class="ficha-barra__entrada"
-                                                    type="number"
-                                                    inputmode="numeric"
-                                                    min="0"
-                                                    [value]="estado().vidaAtual"
-                                                    aria-label="Vida atual"
-                                                    (keydown.enter)="
-                                                        confirmarVitalidade(
-                                                            'vidaAtual',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                    (keydown.escape)="cancelarVitalidade()"
-                                                    (blur)="
-                                                        confirmarVitalidade(
-                                                            'vidaAtual',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                />
-                                            } @else if (ajustavel()) {
-                                                <button
-                                                    class="ficha-barra__valor--editavel"
-                                                    type="button"
-                                                    aria-label="Editar vida atual"
-                                                    (click)="editarVitalidade('vidaAtual')"
-                                                >
-                                                    <strong>{{ estado().vidaAtual }}</strong>
-                                                </button>
-                                            } @else {
-                                                <strong>{{ estado().vidaAtual }}</strong>
-                                            }
-                                            <span class="ficha-barra__sep">/</span>
-                                            @if (
-                                                ajustavel() && editandoVitalidade() === "vidaMaxima"
-                                            ) {
-                                                <input
-                                                    #entradaVitalidade
-                                                    class="ficha-barra__entrada"
-                                                    type="number"
-                                                    inputmode="numeric"
-                                                    min="0"
-                                                    [value]="vidaMaxima()"
-                                                    aria-label="Vida máxima"
-                                                    (keydown.enter)="
-                                                        confirmarVitalidade(
-                                                            'vidaMaxima',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                    (keydown.escape)="cancelarVitalidade()"
-                                                    (blur)="
-                                                        confirmarVitalidade(
-                                                            'vidaMaxima',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                />
-                                            } @else if (ajustavel()) {
-                                                <button
-                                                    class="ficha-barra__valor--editavel ficha-barra__max"
-                                                    type="button"
-                                                    aria-label="Editar vida máxima"
-                                                    (click)="editarVitalidade('vidaMaxima')"
-                                                >
-                                                    {{ vidaMaximaEfetiva() }}
-                                                </button>
-                                            } @else {
-                                                <span class="ficha-barra__max">{{
-                                                    vidaMaximaEfetiva()
-                                                }}</span>
-                                            }
-                                        </span>
-                                        @if (ajustavel()) {
-                                            <button
-                                                class="ficha-passo"
-                                                type="button"
-                                                aria-label="Aumentar vida"
-                                                appHoldRepeat
-                                                (passo)="ajustar('vidaAtual', 1)"
-                                            >
-                                                +
-                                            </button>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="ficha-barra__trilho">
-                                    <span
-                                        class="ficha-barra__preenchimento"
-                                        [style.width.%]="
-                                            percentual(estado().vidaAtual, vidaMaximaEfetiva())
-                                        "
-                                    ></span>
-                                </div>
+                                            <app-icone nome="combate" />
+                                        </button>
+                                    }
+                                </app-barra-recurso>
+                                @if (ajustavel()) {
+                                    <button
+                                        class="ficha-passo"
+                                        type="button"
+                                        aria-label="Aumentar vida"
+                                        appHoldRepeat
+                                        (passo)="ajustar('vidaAtual', 1)"
+                                    >
+                                        +
+                                    </button>
+                                }
                             </div>
 
                             <div class="ficha-barra ficha-barra--energia">
-                                <div class="ficha-barra__topo">
-                                    <span
-                                        class="ficha-barra__rotulo ficha-barra__rotulo--dica"
-                                        [appTooltip]="progressaoEnergia()"
+                                @if (ajustavel()) {
+                                    <button
+                                        class="ficha-passo"
+                                        type="button"
+                                        aria-label="Reduzir energia"
+                                        appHoldRepeat
+                                        (passo)="ajustar('energiaAtual', -1)"
                                     >
-                                        Energia
-                                    </span>
-                                    <div class="ficha-barra__medidor">
-                                        @if (ajustavel()) {
-                                            <button
-                                                class="ficha-passo"
-                                                type="button"
-                                                aria-label="Reduzir energia"
-                                                appHoldRepeat
-                                                (passo)="ajustar('energiaAtual', -1)"
-                                            >
-                                                −
-                                            </button>
-                                        }
-                                        <span class="ficha-barra__valor">
-                                            @if (
-                                                ajustavel() &&
-                                                editandoVitalidade() === "energiaAtual"
-                                            ) {
-                                                <input
-                                                    #entradaVitalidade
-                                                    class="ficha-barra__entrada"
-                                                    type="number"
-                                                    inputmode="numeric"
-                                                    [value]="estado().energiaAtual"
-                                                    aria-label="Energia atual"
-                                                    (keydown.enter)="
-                                                        confirmarVitalidade(
-                                                            'energiaAtual',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                    (keydown.escape)="cancelarVitalidade()"
-                                                    (blur)="
-                                                        confirmarVitalidade(
-                                                            'energiaAtual',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                />
-                                            } @else if (ajustavel()) {
-                                                <button
-                                                    class="ficha-barra__valor--editavel"
-                                                    type="button"
-                                                    aria-label="Editar energia atual"
-                                                    (click)="editarVitalidade('energiaAtual')"
-                                                >
-                                                    <strong>{{ estado().energiaAtual }}</strong>
-                                                </button>
-                                            } @else {
-                                                <strong>{{ estado().energiaAtual }}</strong>
-                                            }
-                                            <span class="ficha-barra__sep">/</span>
-                                            @if (
-                                                ajustavel() &&
-                                                editandoVitalidade() === "energiaMaxima"
-                                            ) {
-                                                <input
-                                                    #entradaVitalidade
-                                                    class="ficha-barra__entrada"
-                                                    type="number"
-                                                    inputmode="numeric"
-                                                    min="0"
-                                                    [value]="energiaMaxima()"
-                                                    aria-label="Energia máxima"
-                                                    (keydown.enter)="
-                                                        confirmarVitalidade(
-                                                            'energiaMaxima',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                    (keydown.escape)="cancelarVitalidade()"
-                                                    (blur)="
-                                                        confirmarVitalidade(
-                                                            'energiaMaxima',
-                                                            entradaVitalidade.value
-                                                        )
-                                                    "
-                                                />
-                                            } @else if (ajustavel()) {
-                                                <button
-                                                    class="ficha-barra__valor--editavel ficha-barra__max"
-                                                    type="button"
-                                                    aria-label="Editar energia máxima"
-                                                    (click)="editarVitalidade('energiaMaxima')"
-                                                >
-                                                    {{ energiaMaximaEfetiva() }}
-                                                </button>
-                                            } @else {
-                                                <span class="ficha-barra__max">{{
-                                                    energiaMaximaEfetiva()
-                                                }}</span>
-                                            }
-                                        </span>
-                                        @if (ajustavel()) {
-                                            <button
-                                                class="ficha-passo"
-                                                type="button"
-                                                aria-label="Aumentar energia"
-                                                appHoldRepeat
-                                                (passo)="ajustar('energiaAtual', 1)"
-                                            >
-                                                +
-                                            </button>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="ficha-barra__trilho">
-                                    <span
-                                        class="ficha-barra__preenchimento"
-                                        [style.width.%]="
-                                            percentual(
-                                                estado().energiaAtual,
-                                                energiaMaximaEfetiva()
-                                            )
-                                        "
-                                    ></span>
-                                </div>
+                                        −
+                                    </button>
+                                }
+                                <app-barra-recurso
+                                    class="ficha-barra__primitivo"
+                                    rotulo="Energia"
+                                    recurso="energia"
+                                    [editavel]="ajustavel()"
+                                    [dica]="progressaoEnergia()"
+                                    [atual]="estado().energiaAtual"
+                                    [maximo]="energiaMaximaEfetiva()"
+                                    [maximoEditavel]="energiaMaxima()"
+                                    (atualAlterado)="commitVitalidade('energiaAtual', $event)"
+                                    (maximoAlterado)="commitVitalidade('energiaMaxima', $event)"
+                                />
+                                @if (ajustavel()) {
+                                    <button
+                                        class="ficha-passo"
+                                        type="button"
+                                        aria-label="Aumentar energia"
+                                        appHoldRepeat
+                                        (passo)="ajustar('energiaAtual', 1)"
+                                    >
+                                        +
+                                    </button>
+                                }
                             </div>
                         </div>
 

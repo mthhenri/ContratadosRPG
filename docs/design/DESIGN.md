@@ -137,6 +137,7 @@ aponta, bloco a bloco, para a implementação correspondente.
 |---|---|---|---|
 | `.card` | Container de seção — cabeçalho com índice numerado + título uppercase + régua fina | `[titulo]`/`[nivelTitulo]` (`h1`/`h2`), índice por `[cartaoIndice]` projetado | **`<app-cartao titulo="…">`** |
 | `.stat` | Caixa de estatística (rótulo + valor grande) | `vida` (`--vida`, fixo — não `--accent`), `energia` (`--energy`), `positivo` (`--positive`) | **`<app-stat rotulo="…" [valor]="…">`** |
+| `.barra-recurso` | Recurso com máximo — rótulo, valor atual/máximo e trilho de progresso (`ui-16`) | `recurso`: `vida` (`--vida`) ou `energia` (`--energy`); `--alerta` automático abaixo de 25% (`--warning`, vence a cor do recurso); `[editavel]` liga a digitação por clique (com `[maximoEditavel]` quando o máximo exibido já soma bônus e a edição precisa partir só da base armazenada); slot `[barraRecursoAcao]` ao lado do rótulo | **`<app-barra-recurso rotulo="…" [recurso]="…" [atual]="…" [maximo]="…">`** (`shared/ui/barra-recurso/`) |
 | `.stepper` | Input numérico com botões `−`/`+` | — | **`<app-step-input [formControl]="…">`** (`shared/ui/stepper/`) |
 | `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho`, `posicaoIcone`, `fluido` e `carregando`. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
 | `.botao-icone` | Ação unitária sem rótulo visual | `compacto` (26px) e `padrao` (32px); em mobile os dois passam ao alvo de toque de 44px. Exige `aria-label` e `appTooltip`; foco e desabilitado são nativos | **`<button app-botao-icone aria-label="…" appTooltip="…">`** |
@@ -216,6 +217,37 @@ conhecida, esqueleto; senão, a linha global já basta.
 Adotado em `HistoricoRolagensSidebar`, `FichaAcervo`, `CampanhaLista`, `InventarioEsquadrao` e
 `FichaInventario` — apagando a marcação ad-hoc (`.esqueleto-bloco`/`@keyframes esqueleto-pulso`
 copiados por página, `<p class="…__vazio">`/`…__estado` com texto solto) que cada um tinha.
+
+### Recurso com máximo e precedência de estado do cartão de combatente (`ui-16`)
+
+`app-barra-recurso` substitui três desenhos que a `ui-16` encontrou divergentes — o HUD sticky
+mobile da ficha, o bloco de vitalidade desktop da mesma ficha e o cartão de combatente, que não
+tinha trilho algum (Vida/Energia eram texto puro). O primitivo é dono do rótulo, do valor
+atual/máximo e do trilho; steppers e o botão "Receber dano" continuam do consumidor, projetados
+ao redor dele ou no slot `[barraRecursoAcao]`. Sanidade fica de fora: `sistema-v4.1.0.md`
+§Sanidade diz que ela "não é uma barra de valor convencional" — o sistema a modela como listas de
+Sequelas/Traumas/Lesões (`ficha-sanidade`), sem par atual/máximo.
+
+O cartão de combatente (`cartao-combatente.component.scss`) tem três classes de estado —
+`--ativo` (é a vez dele), `--agiu` (já gastou os turnos da rodada) e `--morrendo` — que podem
+coincidir: `--agiu` é mutuamente exclusivo de `--ativo` no template
+(`jaAgiu() && !ehTurnoAtual()`), mas `--morrendo` pode somar com qualquer um dos outros dois. A
+precedência é uma decisão registrada, não a ordem incidental em que as regras foram escritas:
+
+- **`--morrendo` vence `--ativo`** para o fundo/borda do cartão inteiro (a regra `&--morrendo`
+  fica depois de `&--ativo` no SCSS, de propósito — não mova). Mesma prioridade que a etiqueta de
+  texto já usa (`etiqueta()`, `cartao-combatente.component.ts`): "Morrendo" aparece antes de
+  checar o turno. O selo de iniciativa (`&__iniciativa`) continua acendendo em `--accent` quando é
+  a vez dele, então "é a vez dele" não desaparece de todo mesmo morrendo.
+- **`--agiu` só mexe em opacidade do retrato** (`0.55`), nunca no fundo/borda do cartão — por isso
+  soma sem conflito com `--morrendo`. Antes da `ui-16` era `opacity: .62` no cartão inteiro, que
+  apagava justamente os números (Vida, Defesa, selo de iniciativa) que o mestre precisa ler à
+  distância; agora eles ficam em contraste cheio mesmo com o combatente recuado.
+
+A Cadência (`turnosPorRodada() > 1`) é `<app-chip severidade="secundario">` ao lado da linha de
+origem — antes da `ui-16` era um sufixo concatenado na mesma string (`" · Cadência 2"`). Não
+existe severidade `info` em `app-chip` (ver "Escolha de chip" acima); `secundario` já é o tom
+informativo neutro do catálogo, reaproveitado aqui sem estender a `ui-13`.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 

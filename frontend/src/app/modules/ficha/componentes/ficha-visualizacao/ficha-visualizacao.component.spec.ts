@@ -128,7 +128,7 @@ describe('FichaVisualizacao', () => {
   it('deriva a Vida Máxima via shared/regras (mesma fonte da edição)', () => {
     const { raiz } = montar(dados);
     const vidaEsperada = calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 3, vigor: 4 });
-    const barra = raiz.querySelector('.ficha-barra--vida .ficha-barra__valor')?.textContent ?? '';
+    const barra = raiz.querySelector('.ficha-barra--vida .barra-recurso__valor')?.textContent ?? '';
     expect(barra.replace(/\s+/g, '')).toBe(`5/${vidaEsperada}`);
   });
 
@@ -154,12 +154,12 @@ describe('FichaVisualizacao', () => {
   it('mostra a progressão da classe no hover (appTooltip) dos rótulos de Vida e Energia', () => {
     const { fixture } = montar(dados);
     const dicaVida = fixture.debugElement
-      .query(By.css('.ficha-barra--vida .ficha-barra__rotulo--dica'))
+      .query(By.css('.ficha-barra--vida .barra-recurso__rotulo--dica'))
       .injector.get(Tooltip).appTooltip();
     expect(dicaVida).toContain('Combatente');
     expect(dicaVida).toContain('/nível');
     const dicaEnergia = fixture.debugElement
-      .query(By.css('.ficha-barra--energia .ficha-barra__rotulo--dica'))
+      .query(By.css('.ficha-barra--energia .barra-recurso__rotulo--dica'))
       .injector.get(Tooltip).appTooltip();
     expect(dicaEnergia).toContain('Energia');
   });
@@ -691,7 +691,7 @@ describe('FichaVisualizacao', () => {
       const vidaBase = calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 3, vigor: 4 });
       // Vida concede +1/Nível fixo — Nível 3 → +3.
       const { raiz } = montar(documento);
-      const barra = raiz.querySelector('.ficha-barra--vida .ficha-barra__valor')?.textContent ?? '';
+      const barra = raiz.querySelector('.ficha-barra--vida .barra-recurso__valor')?.textContent ?? '';
       expect(barra.replace(/\s+/g, '')).toBe(`5/${vidaBase + 3}`);
     });
 
@@ -930,9 +930,9 @@ describe('FichaVisualizacao', () => {
     fixture.componentInstance.ajusteVitalidade.subscribe((a) => ajustes.push(a));
 
     // Clica no valor da Vida → abre o campo de digitação.
-    raiz.querySelector<HTMLButtonElement>('.ficha-barra--vida .ficha-barra__valor--editavel')!.click();
+    raiz.querySelector<HTMLButtonElement>('.ficha-barra--vida .barra-recurso__valor-atual--editavel')!.click();
     fixture.detectChanges();
-    const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--vida .ficha-barra__entrada');
+    const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--vida .barra-recurso__entrada');
     expect(entrada).not.toBeNull();
 
     // Digita acima do máximo → mantém o valor digitado (sem clamp de teto).
@@ -948,15 +948,14 @@ describe('FichaVisualizacao', () => {
     const ajustes: { campo: string; valor: number }[] = [];
     fixture.componentInstance.ajusteVitalidade.subscribe((a) => ajustes.push(a));
 
-    // Na barra de Vida há dois alvos editáveis: [0] atual, [1] máxima.
-    const editaveis = raiz.querySelectorAll<HTMLButtonElement>(
-      '.ficha-barra--vida .ficha-barra__valor--editavel',
-    );
-    expect(editaveis.length).toBe(2);
-    editaveis[1].click();
+    const vidaMaximaBase = calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 3, vigor: 4 });
+    raiz.querySelector<HTMLButtonElement>('.ficha-barra--vida .barra-recurso__max--editavel')!.click();
     fixture.detectChanges();
 
-    const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--vida .ficha-barra__entrada')!;
+    const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--vida .barra-recurso__entrada')!;
+    // A digitação parte da base armazenada, não do máximo exibido (que pode já somar bônus de
+    // amplificador) — mesmo caso que `barra-recurso.component.spec.ts` cobre isolado.
+    expect(entrada.value).toBe(String(vidaMaximaBase));
     entrada.value = '150';
     entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
@@ -1112,16 +1111,16 @@ describe('FichaVisualizacao', () => {
     const ajustes: unknown[] = [];
     fixture.componentInstance.ajusteVitalidade.subscribe((a) => ajustes.push(a));
 
-    raiz.querySelector<HTMLButtonElement>('.ficha-barra--energia .ficha-barra__valor--editavel')!.click();
+    raiz.querySelector<HTMLButtonElement>('.ficha-barra--energia .barra-recurso__valor-atual--editavel')!.click();
     fixture.detectChanges();
-    const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--energia .ficha-barra__entrada');
+    const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--energia .barra-recurso__entrada');
     entrada!.value = '1';
     entrada!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     fixture.detectChanges();
 
     expect(ajustes).toEqual([]);
     // Volta ao modo leitura do valor (botão editável), sem input aberto.
-    expect(raiz.querySelector('.ficha-barra--energia .ficha-barra__entrada')).toBeNull();
+    expect(raiz.querySelector('.ficha-barra--energia .barra-recurso__entrada')).toBeNull();
   });
 
   const campoLuta = { chave: 'luta' as const, abrev: 'LUT', nome: 'Luta' };
@@ -2439,19 +2438,29 @@ describe('FichaVisualizacao', () => {
         s.getAttribute('data-selo-condicao'),
       );
       expect(selos).toEqual(['machucado']);
-      expect(raiz.querySelector('.ficha-hud__vital--vida .ficha-hud__vital-atual')?.textContent?.trim()).toBe('12');
+      expect(
+        raiz.querySelector('.ficha-hud__vital .barra-recurso--vida .barra-recurso__valor-atual')?.textContent?.trim(),
+      ).toBe('12');
     });
 
     it('barra de vitalidade com máxima zero não quebra (divisão por zero)', () => {
-      const { fixture } = montar(
+      const { raiz, fixture } = montar(
         { ...dados, estado: { ...dados.estado, vidaAtual: 0, vidaMaxima: 0, energiaAtual: 0, energiaMaxima: 0 } },
         'Corvo',
         42,
         true,
         false,
       );
-      expect(fixture.componentInstance['percentualVida']()).toBe(0);
-      expect(fixture.componentInstance['percentualEnergia']()).toBe(0);
+      // O HUD só existe fora do destino Agente (m3-60 follow-up) — mesmo ajuste da prova acima.
+      fixture.componentRef.setInput('destinoMobileInicial', 'informacoes');
+      fixture.detectChanges();
+      const preenchimentos = Array.from(
+        raiz.querySelectorAll('.ficha-hud__vital .barra-recurso__preenchimento'),
+      ) as HTMLElement[];
+      expect(preenchimentos.length).toBe(2);
+      for (const preenchimento of preenchimentos) {
+        expect(preenchimento.style.width).toBe('0%');
+      }
     });
   });
 

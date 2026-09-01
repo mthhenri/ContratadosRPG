@@ -1,0 +1,74 @@
+<div [class]="classes()">
+    <div class="barra-recurso__topo">
+        <span class="barra-recurso__rotulo-linha">
+            <span
+                class="barra-recurso__rotulo"
+                [class.barra-recurso__rotulo--dica]="dica()"
+                [appTooltip]="dica() || null"
+            >
+                {{ rotulo() }}
+            </span>
+            <ng-content select="[barraRecursoAcao]" />
+        </span>
+
+        <span class="barra-recurso__valor">
+            @if (editando() === "atual") {
+                <input
+                    class="barra-recurso__entrada"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    appAutoFocus
+                    [value]="atual()"
+                    [attr.aria-label]="rotulo() + ' atual'"
+                    (keydown.enter)="confirmar('atual', $any($event.target).value)"
+                    (keydown.escape)="cancelarEdicao()"
+                    (blur)="confirmar('atual', $any($event.target).value)"
+                />
+            } @else if (editavel()) {
+                <button
+                    class="barra-recurso__valor-atual barra-recurso__valor-atual--editavel"
+                    type="button"
+                    [attr.aria-label]="'Editar ' + rotulo() + ' atual'"
+                    (click)="editar('atual')"
+                >
+                    <strong>{{ atual() }}</strong>
+                </button>
+            } @else {
+                <strong class="barra-recurso__valor-atual">{{ atual() }}</strong>
+            }
+
+            <span class="barra-recurso__sep">/</span>
+
+            @if (editando() === "maximo") {
+                <input
+                    class="barra-recurso__entrada"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    appAutoFocus
+                    [value]="maximoParaEdicao()"
+                    [attr.aria-label]="rotulo() + ' máximo'"
+                    (keydown.enter)="confirmar('maximo', $any($event.target).value)"
+                    (keydown.escape)="cancelarEdicao()"
+                    (blur)="confirmar('maximo', $any($event.target).value)"
+                />
+            } @else if (editavel()) {
+                <button
+                    class="barra-recurso__max barra-recurso__max--editavel"
+                    type="button"
+                    [attr.aria-label]="'Editar ' + rotulo() + ' máximo'"
+                    (click)="editar('maximo')"
+                >
+                    {{ maximo() }}
+                </button>
+            } @else {
+                <span class="barra-recurso__max">{{ maximo() }}</span>
+            }
+        </span>
+    </div>
+
+    <span class="barra-recurso__trilho">
+        <span class="barra-recurso__preenchimento" [style.width.%]="percentual()"></span>
+    </span>
+</div>
