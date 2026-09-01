@@ -18,7 +18,7 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 | [docs/context/MEMORY.md](docs/context/MEMORY.md) | Mapa: onde fica o quê e onde estão as regras |
 | [docs/context/IDEAS.md](docs/context/IDEAS.md) | Ideias levantadas que ainda não viraram spec |
 | [docs/SCHEMA.md](docs/SCHEMA.md) | Schema SQL alvo + forma dos documentos JSONB |
-| [docs/DEPLOY.md](docs/DEPLOY.md) | Runbook de deploy em produção (Cloudflare + Render + Supabase) |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Runbook de deploy em produção — ainda descreve o Render; reescrita para Cloud Run pendente (ver `docs/context/CONTEXT.md`) |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Banco local reproduzível, fixtures e credenciais de desenvolvimento |
 | [docs/PARIDADE-M1.md](docs/PARIDADE-M1.md) | Verificação de paridade da calculadora (fecha o M1) |
 | [docs/core/sistema-v4.1.0.md](docs/core/sistema-v4.1.0.md) | Fonte da verdade das regras do jogo |
@@ -31,7 +31,7 @@ Monorepo npm workspaces:
 
 - **`shared/`** (`@contratados-rpg/shared`) — DTOs, enums, interfaces, validators e o
   motor de regras do jogo (`regras/`)
-- **`backend/`** — NestJS + Knex (SQL bruto) + Socket.IO (broadcast-only) → Render
+- **`backend/`** — NestJS + Knex (SQL bruto) + Socket.IO (broadcast-only) → Google Cloud Run
 - **`frontend/`** — Angular 21 + PrimeNG 21 (standalone + Signals) → Cloudflare
 - **Banco** — PostgreSQL 16 (local: Docker; produção: Supabase)
 
@@ -61,6 +61,9 @@ APP_PORTA  APP_AMBIENTE  APP_FRONTEND_ORIGEM
 
 ## Deploy (produção)
 
-Deploy por integração nativa das plataformas: no push para `master`, o Render (backend) e a
-Cloudflare Pages (frontend) puxam do Git e reimplantam sozinhos (banco no Supabase) — sem GitHub
-Actions no deploy. O provisionamento das plataformas está no runbook [docs/DEPLOY.md](docs/DEPLOY.md).
+Deploy por integração nativa das plataformas: no push para `master`, um trigger do Cloud Build
+compila a imagem, roda as migrations e reimplanta o backend no Google Cloud Run, enquanto a
+Cloudflare Pages puxa do Git e reimplanta o frontend sozinha (banco no Supabase) — sem GitHub
+Actions no deploy. O backend migrou do Render para o Cloud Run em 2026-09-01 (ver
+`docs/context/HISTORY.md`); o runbook [docs/DEPLOY.md](docs/DEPLOY.md) ainda descreve o fluxo
+antigo do Render e está pendente de reescrita.

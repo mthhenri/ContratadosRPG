@@ -388,6 +388,16 @@
 
 ## 1. Próxima Task
 
+**⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
+Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
+aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta:
+(1) desligar/suspender o serviço no Render — hoje ele fica ocioso, sem tráfego, mas ainda cobrando
+o slot do free tier; (2) remover `render.yaml`; (3) reescrever `docs/DEPLOY.md` trocando a seção do
+Render pelo runbook do Cloud Run (setup de projeto GCP, secrets, IAM, trigger do Cloud Build —
+todo esse conhecimento foi extraído ao vivo durante a migração e está em `HISTORY.md`). Adiado de
+propósito a pedido do autor, que quer manter o Render como fallback por mais alguns dias antes do
+desligamento definitivo.
+
 **Auditoria da biblioteca visual concluída:**
 `ui-06-auditoria-conformidade-biblioteca-visual` está em `docs/specs/done/` desde 2026-08-30.
 A matriz final em `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` cobre os 68 templates e todos os
@@ -737,8 +747,11 @@ SPA → NestJS 11 REST + Socket.IO → PostgreSQL 16. **M0, M1 e M2 concluídos;
 em fase de refino avançado** — a ficha lê, edita, rola dados, persiste e sincroniza em tempo real.
 
 Deploy em produção por **integração nativa das plataformas**, sem GitHub Actions no deploy: push em
-`master` → Render (backend) e Cloudflare Pages (frontend) puxam do Git sozinhos; banco no Supabase.
-O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em todo PR).
+`master` → um trigger do Cloud Build compila, migra e reimplanta o backend no **Google Cloud Run**,
+e a Cloudflare Pages reimplanta o frontend sozinha; banco no Supabase. O backend migrou do Render
+para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no Render e reescrever
+`docs/DEPLOY.md` — ver seção 1. O GitHub Actions só roda **CI** (lint + testes nos 3 workspaces em
+todo PR).
 
 **Suítes (checadas na `m6-05`):** shared 601/601 · backend 275/275 · frontend
 921/921 — os 3 workspaces fecham a suíte completa hoje (`npm run test`, sem `--watch`);
@@ -1442,8 +1455,8 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   backend **não liga o `ValidationPipe`**. A validação estrutural fica documentada campo a campo na
   spec; a validação real é de regra de negócio, no service. Não converter DTOs em classes nem
   instalar `class-validator` sem pedir.
-- **Deploy nativo, não Actions** — o autor prefere Render/Cloudflare puxando do Git a pipelines de
-  deploy no GitHub Actions. O Actions fica só com o CI.
+- **Deploy nativo, não Actions** — o autor prefere Cloud Build/Cloudflare puxando do Git a
+  pipelines de deploy no GitHub Actions. O Actions fica só com o CI.
 - **Busca de anotações e documentos começa no PostgreSQL** — usar full-text search nativo
   (`tsvector`/`websearch_to_tsquery`) com índice GIN, respeitando sempre o recorte de permissões no
   backend. Elasticsearch não entra na infraestrutura atual; fica como evolução opcional, com

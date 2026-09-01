@@ -1,5 +1,57 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — Deploy: backend migra do Render para o Google Cloud Run
+
+O Dockerfile multi-stage (`build`/`migrator`/`runtime`) e o `cloudbuild.yaml` já existiam desde
+`839271e` (commit anterior), validados só localmente. Esta entrada cobre o provisionamento real no
+GCP e a primeira subida em produção — cinco problemas de permissão/configuração apareceram em
+cadeia, cada um só visível depois do anterior corrigido, porque o Cloud Build para no primeiro erro
+de cada tentativa:
+
+1. **`db-senha` sem `secretAccessor` para a SA certa.** O secret só liberava
+   `PROJECT_NUMBER@cloudbuild.gserviceaccount.com` (a SA "clássica" do Cloud Build), mas o trigger
+   (`Update-Repository`, criado pelo Console) roda por padrão com a SA do Compute
+   (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`) — é essa que precisa da permissão.
+2. **SA sem `run.admin` nem `iam.serviceAccountUser` no projeto** — necessários pro passo `deploy`
+   do `cloudbuild.yaml` conseguir criar/atualizar o serviço Cloud Run e "agir como" a SA de runtime.
+3. **`migrate` rodando em `/workspace` em vez de `/app`.** O Cloud Build monta `/workspace` (o
+   checkout bruto do Git) como volume e sobrescreve o `WORKDIR` da imagem em qualquer step de
+   imagem customizada — o `migrator` só tem `node_modules`/`knex` instalados em `/app` (onde o
+   `npm install` da etapa `build` rodou). Sem `dir: /app` explícito no step `migrate`, `npm run
+   db:migrate` falhava com `knex: not found` contra o `/workspace` vazio. Corrigido no
+   `cloudbuild.yaml` (`f6bc5fa`).
+4. **`_DB_USUARIO` sem o sufixo do project ref do Supabase.** O host usado
+   (`aws-1-sa-east-1.pooler.supabase.com`) é o pooler multi-tenant (Supavisor) — ele identifica o
+   projeto pelo usuário (`postgres.<project-ref>`), não só pelo host. `postgres` puro dava
+   `(ENOIDENTIFIER) no tenant identifier provided`. Corrigido como substitution do trigger, não no
+   `cloudbuild.yaml` (é dado específico de ambiente).
+5. **SA sem `artifactregistry.writer`** (pro `push` da imagem) **nem `secretAccessor` nos outros 4
+   secrets** (`jwt-secreto` + os três de R2) — usados pelo Cloud Run em runtime via `--set-secrets`,
+   diferente do `db-senha` (usado só durante a migration).
+
+Depois das cinco correções, o build passou de ponta a ponta: build das duas imagens, migration
+(`Already up to date` — schema já aplicado pelo Render antes), push, deploy. `/health` respondeu
+`200` em `https://contratados-rpg-api-35du2tp43q-rj.a.run.app`. CORS verificado com requisição real
+(header `Origin: https://contratados-rpg.pages.dev` → resposta com
+`access-control-allow-origin` correto). `apiBase` do frontend
+(`environment.production.ts`) trocado para a URL do Cloud Run (`bfdbb01`); a Cloudflare Pages
+rebuildou automaticamente e o bundle publicado foi conferido byte a byte (a URL nova aparece no
+chunk atual, a antiga só sobrevive num chunk órfão do build anterior). Smoke test end-to-end real:
+`POST /autenticacao/registro` com a Origin de produção retornou `201` e gravou o usuário no
+Supabase (`id: 7`, login `smoketest_*` — usuário de teste real, não removido).
+
+Ferramental: `gcloud` CLI não estava instalado na máquina do autor; instalado via
+`winget install --id Google.CloudSDK` durante a sessão. Toda alteração de IAM (bindings de secret,
+papéis de projeto/repositório) foi bloqueada pelo classificador do modo automático do Claude Code e
+exigiu confirmação explícita do autor a cada comando — build/deploy/describe/log não foram
+bloqueados.
+
+**Pendente, adiado a pedido do autor** (quer manter o Render no ar como fallback por mais uns
+dias): desligar o serviço no Render, remover `render.yaml` e reescrever `docs/DEPLOY.md` trocando a
+seção do Render pelo runbook do Cloud Run — ver `CONTEXT.md` seção 1. `README.md` e
+`SYSTEM.SPEC.md` já foram atualizados para descrever o Cloud Run como arquitetura de produção
+vigente; só o runbook operacional (`docs/DEPLOY.md`) continua descrevendo o fluxo antigo.
+
 ## 2026-09-01 — UI-11: tokens compactos normalizam o acabamento
 
 O acabamento visual passou a ter uma única fonte de verdade: `--radius-tight` (2px) e

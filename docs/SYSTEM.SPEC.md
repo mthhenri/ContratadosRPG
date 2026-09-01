@@ -54,10 +54,12 @@ Consulte-os antes de alterar qualquer fórmula, tabela de progressão ou regra d
 
 ### Infraestrutura
 - **Local:** Docker + Docker Compose (PostgreSQL 16)
-- **Produção:** frontend → Cloudflare; API → Render; banco → Supabase (Postgres)
+- **Produção:** frontend → Cloudflare; API → Google Cloud Run; banco → Supabase (Postgres)
 - **CI:** GitHub Actions — lint + testes em todo PR
-- **Deploy:** integração nativa das plataformas — Render (backend) e Cloudflare Pages
-  (frontend) reimplantam automaticamente no push para master (sem GitHub Actions no deploy)
+- **Deploy:** integração nativa das plataformas — um trigger do Cloud Build compila, migra e
+  reimplanta o backend no Cloud Run, e a Cloudflare Pages reimplanta o frontend, ambos
+  automaticamente no push para master (sem GitHub Actions no deploy). Migrado do Render em
+  2026-09-01 — ver `docs/context/HISTORY.md`.
 
 ---
 
@@ -292,7 +294,7 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
 - **Permissões:** a service de ficha/campanha é o único árbitro — o gateway consulta a
   mesma verificação usada pelo REST. Proibido duplicar regra de permissão no gateway.
 - **Resiliência:** cliente ressincroniza (refetch da ficha aberta) ao reconectar —
-  necessário porque o Render free tier dorme e derruba conexões.
+  necessário porque o Cloud Run escala a zero por padrão e derruba conexões.
 
 ---
 
