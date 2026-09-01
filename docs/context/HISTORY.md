@@ -105,13 +105,12 @@ Cadência 2 com Vida abaixo de 25% mostrando trilho e chip em `--warning`, stepp
 em 44×44px via `boundingBox()`. Nenhum overflow horizontal, nenhuma tela com cara de HTML genérico;
 a comparação contra o card de Identidade da ficha (análogo aprovado) confirma mesma "voz" visual.
 
-**Pendência real — spec fica em `active/`.** A própria spec cravou dois riscos como "validar em
-sessão real antes de fechar": a legibilidade do novo recuo do "já agiu" à distância de leitura da
-mesa, e se `--morrendo` vencer `--ativo` (em vez do inverso) é de fato a leitura certa numa sessão
-de verdade. Nenhuma sessão sozinha resolve isso — pede jogadores numa mesa real. Até essa validação
-acontecer e ser registrada, a spec permanece em `docs/specs/active/`, não em `docs/specs/done/`,
-por instrução explícita do `CLAUDE.md` ("Quando não houver tempo ou ambiente suficiente para
-cumprir todos os gates, a tarefa permanece aberta").
+**Validação da mesa real.** A própria spec cravou dois riscos como "validar em sessão real antes de
+fechar": a legibilidade do novo recuo do "já agiu" à distância de leitura da mesa, e se
+`--morrendo` vencer `--ativo` (em vez do inverso) é de fato a leitura certa. Nenhuma sessão de
+agente sozinha resolve isso; o autor (mthhenri) revisou as capturas dos dois estados — inclusive o
+par antes/depois de avançar o turno com o mesmo combatente `ativo+morrendo` → `agiu+morrendo` — e
+aprovou ("me parece ok, pode concluir"). Spec movida para `docs/specs/done/`.
 
 ## 2026-09-01 — UI-15: `app-confirmacao` substitui três padrões concorrentes de confirmação destrutiva
 

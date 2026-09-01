@@ -88,8 +88,7 @@ severidade, ícone, negrito da entidade e alvo de toque conferidos; achado e cor
 próprio gate: os dois botões nasceram sem `gap` (elemento projetado único dentro do slot em vez de
 cada botão marcado com `[modalAcoes]`) e sem tamanho (`app-botao` não herda um por padrão).
 
-**`ui-16-barra-de-recurso-e-cartao-de-combatente` implementada, spec permanece em `active/`**
-(pende a rodada de mesa real que a própria spec exige antes de fechar — ver abaixo). A spec
+**`ui-16-barra-de-recurso-e-cartao-de-combatente` concluída** (spec em `docs/specs/done/`). A spec
 herdada da auditoria foi corrigida antes de implementar (commit `9bdad49`): Sanidade não é um
 recurso numérico (`sistema-v4.1.0.md` §Sanidade: "não é uma barra de valor convencional"), o
 "painel do mestre" não tinha marcação própria de recurso (só embrulha `app-cartao-combatente`) e
@@ -114,10 +113,11 @@ visual ao vivo (Postgres local nativo + backend + frontend reais, Docker bloquea
 rede do ambiente) em `1920×1080`/`360×800`: HUD mobile, bloco de vitalidade desktop (edição,
 dica de progressão via tooltip), painel de Iniciativa nos dois viewports, com um combatente
 `ativo+morrendo`, o mesmo depois de `agiu+morrendo`, uma criatura de Cadência 2 abaixo de 25% de
-Vida (chip + trilho em alerta) e steppers mobile medidos em 44×44px. **Pendência real**: os dois
-riscos que a spec cravou como "validar em sessão real antes de fechar" (legibilidade do recuo e a
-escolha `--morrendo` > `--ativo`) não podem ser resolvidos por uma sessão sozinha — pedem uma mesa
-de verdade. Enquanto isso não acontece, a spec fica em `docs/specs/active/`, não em `done/`.
+Vida (chip + trilho em alerta) e steppers mobile medidos em 44×44px. A spec cravava dois riscos
+como "validar em sessão real antes de fechar" (legibilidade do recuo e a escolha `--morrendo` >
+`--ativo`) que uma sessão de agente sozinha não resolve; o autor (mthhenri) revisou as capturas —
+inclusive o par antes/depois de avançar o turno com o mesmo combatente `ativo+morrendo` →
+`agiu+morrendo` — e aprovou.
 
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
@@ -128,11 +128,10 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-`ui-16` é a única spec em `docs/specs/active/` — implementada, aguardando a rodada de mesa real que
-a própria spec exige antes de mover para `done/` (ver acima). A única frente de código de milestone
-ainda
-pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1,
-M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
+Não há spec ativa no momento (`ui-16` concluída — ver acima). A única frente de código de
+milestone ainda pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de
+`m3-53` (M3). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de
+pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
