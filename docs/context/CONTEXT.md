@@ -20,6 +20,13 @@
 
 ## 1. Próxima Task
 
+**`fix-coluna-vitalidade-energia` concluída** (spec em `docs/specs/done/`, ainda sem commit): a
+grade do bloco Vida/Energia da ficha passou a se ajustar pela largura disponível da própria coluna,
+em vez do viewport. Com menos de espaço para duas barras completas, Energia reflui para a linha
+seguinte e os steppers continuam integralmente dentro do cartão. Teste focado e build de produção
+passaram; lint sem erro novo (somente avisos preexistentes). Verificação ao vivo em `1920×1080` e
+`360×800`: `scrollWidth` ficou igual à largura do bloco nos dois casos, sem overflow horizontal.
+
 **`ui-12-tokens-semanticos-de-estado` concluída** (commit `4529cd8`, spec em `docs/specs/done/`):
 `--erro`/`--accent-press` desacoplam erro e a severidade `perigo` do `--accent` trocável pelo
 usuário; testes focados 36/36, build e lint limpos, verificação visual em

@@ -1,5 +1,22 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — Correção visual: Vitalidade reflui antes de vazar na coluna da ficha
+
+O relato visual mostrou o `+` de Energia saindo alguns pixels pela borda direita do cartão de
+Identidade. A causa era uma grade sempre forçada em duas colunas, condicionada apenas ao breakpoint
+do viewport: a ficha também cabe em painéis de desktop cuja coluna é estreita, onde as duas barras
+e seus steppers já não cabem lado a lado. `FichaVisualizacao` passou a usar uma grade `auto-fit`
+com largura mínima de faixa, portanto Vida e Energia permanecem em paralelo somente quando as duas
+cabem inteiras; abaixo disso, Energia reflui para a segunda linha. O primitivo `app-barra-recurso`,
+edição direta, botões de ajuste e cores semânticas foram preservados.
+
+**Verificação:** teste focado de `ficha-visualizacao` e build de produção do frontend concluídos.
+Lint sem erros novos; permanecem somente os avisos preexistentes de aspas e comprimento de linha do
+repositório. Na aplicação real, com a ficha de desenvolvimento, inspecionei o cartão em
+`1920×1080` e `360×800`, usando `docs/design/examples/ficha-de-jogador.html` como análogo de
+densidade e hierarquia. A coluna de vitalidade mediu `378px/378px` de largura/`scrollWidth` no
+desktop e `280px/280px` no mobile: nenhuma barra, valor ou stepper transbordou horizontalmente.
+
 ## 2026-09-01 — UI-18: cinco degraus de espaço fecham a última dimensão sem escala do tema
 
 Filha da auditoria visual (achado 3 de Tokens): forma e tipografia já eram tokenizadas, espaço
