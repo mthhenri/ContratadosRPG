@@ -20,7 +20,7 @@
 substitutions:
   _REGION: southamerica-east1
   _SERVICE: contratados-rpg-api
-  _REPOSITORY: contratados-rpg
+  _REPOSITORY: contratados-rpg-nest-api
   _DB_HOST: '' # host do pooler Supabase (não é segredo, mas varia por projeto)
   _DB_PORT: '5432'
   _DB_NOME: postgres
