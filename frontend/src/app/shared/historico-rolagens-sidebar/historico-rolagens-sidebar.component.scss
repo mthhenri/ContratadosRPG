@@ -286,18 +286,6 @@
         overflow-wrap: anywhere;
     }
 
-    &__privada {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--warning);
-        border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
-        border-radius: var(--radius-control);
-        padding: 1px 6px;
-    }
-
     &__mais {
         display: block;
         margin: 4px auto 0;
@@ -314,7 +302,6 @@
             color: var(--text);
             border-color: var(--accent-border);
         }
-
     }
 
     @include bp.mobile {

@@ -80,7 +80,7 @@
                             <div class="historico-rolagens__meta">
                                 <span class="historico-rolagens__autor">{{ metaAutor(item) }}</span>
                                 @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
-                                    <span class="historico-rolagens__privada">privada</span>
+                                    <app-chip severidade="aviso" tom="contorno">privada</app-chip>
                                 }
                             </div>
                             <app-resultado-rolagem

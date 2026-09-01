@@ -10,6 +10,7 @@ import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
 import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
+import { Chip } from '../ui/chip/chip.component';
 
 /**
  * Barra lateral de histórico de rolagens — substitui a antiga listagem embutida no painel da
@@ -28,7 +29,7 @@ import { Botao } from '../ui/botao/botao.component';
  */
 @Component({
   selector: 'app-historico-rolagens-sidebar',
-  imports: [Icone, ResultadoRolagem, OverflowFade, DatePipe, AutoFocus, Tooltip, Botao],
+  imports: [Icone, ResultadoRolagem, OverflowFade, DatePipe, AutoFocus, Tooltip, Botao, Chip],
   templateUrl: './historico-rolagens-sidebar.component.html',
   styleUrl: './historico-rolagens-sidebar.component.scss',
 })

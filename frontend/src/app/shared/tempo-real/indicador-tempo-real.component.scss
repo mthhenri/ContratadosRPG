@@ -1,20 +1,6 @@
 // Selo de tempo real offline (m3-08). Só tokens do tema "Terminal de Contenção" (proibição #29):
 // chip mono UPPERCASE em --warning (semântica de aviso), borda/fundo derivados por color-mix.
 .indicador-tempo-real {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 4px 10px;
-    border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
-    border-radius: var(--radius-control);
-    background: color-mix(in srgb, var(--warning) 12%, transparent);
-    color: var(--warning);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    white-space: nowrap;
     pointer-events: none;
 
     // Debounce visual: só aparece após ~1,5s desconectado — micro-quedas (o socket reconecta sozinho)

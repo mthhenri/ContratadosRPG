@@ -1,19 +1,71 @@
-.chip {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-compact);
-  padding: 6px 10px;
+@use "sass:map";
 
-  &--sutil {
-    letter-spacing: 0.12em;
-    color: var(--text-mute);
-    border-color: var(--border-strong);
-    padding: 4px 9px;
-  }
+$severidades: (
+    "primario": (
+        cor: var(--accent),
+        fundo: var(--accent-dim),
+        borda: var(--accent-border),
+    ),
+    "secundario": (
+        cor: var(--text-dim),
+        fundo: var(--surface-2),
+        borda: var(--border-strong),
+    ),
+    "aviso": (
+        cor: var(--warning),
+        fundo: color-mix(in srgb, var(--warning) 12%, transparent),
+        borda: color-mix(in srgb, var(--warning) 40%, transparent),
+    ),
+    "perigo": (
+        cor: var(--erro),
+        fundo: color-mix(in srgb, var(--erro) 12%, transparent),
+        borda: color-mix(in srgb, var(--erro) 40%, transparent),
+    ),
+);
+
+:host {
+    display: inline-flex;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-selo);
+    padding: 6px 10px;
+    white-space: nowrap;
+
+    &--sutil {
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+        border-color: var(--border-strong);
+        padding: 4px 9px;
+    }
+
+    app-icone {
+        font-size: 1.1em;
+    }
+}
+
+@each $nome, $paleta in $severidades {
+    .chip--severidade-#{$nome} {
+        font-size: 10px;
+        letter-spacing: var(--tracking-label);
+        color: map.get($paleta, cor);
+        border-color: map.get($paleta, borda);
+        background: map.get($paleta, fundo);
+        padding: 4px 9px;
+    }
+
+    .chip--severidade-#{$nome}.chip--tom-contorno {
+        background: transparent;
+        padding: 1px 6px;
+    }
 }

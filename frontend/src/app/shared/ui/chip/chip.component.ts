@@ -10,12 +10,22 @@ import { Component, computed, input } from '@angular/core';
  */
 export type ChipVariante = 'padrao' | 'sutil';
 
+/** Cores semânticas que já possuem consumidores de selo no produto. */
+export type ChipSeveridade = 'primario' | 'secundario' | 'aviso' | 'perigo';
+
+/**
+ * Tratamento visual da severidade. `sutil` aplica a receita canônica (fundo a 12% e borda a
+ * 40%); `contorno` preserva selos informativos que pedem somente o contorno.
+ */
+export type ChipTom = 'sutil' | 'contorno';
+
 /**
  * Primitivo de selo curto (`ui-03` · `P-034`). Substitui as 3 cópias locais de
  * `.chip-classificacao`. O nome do componente é genérico — "classificação" (`CLASSE-E //
  * CONFIDENCIAL`) é um **uso** do chip, não a identidade dele.
  *
- * Só recebe texto por `<ng-content>`: nenhuma das três origens tem ícone ou botão de remoção.
+ * O chip de rótulo conserva as variantes da ui-03. Com `severidade`, ele vira um selo de estado
+ * e aceita um `app-icone` projetado antes do texto; não é removível nem clicável.
  */
 @Component({
   selector: 'app-chip',
@@ -26,9 +36,22 @@ export class Chip {
   /** Ênfase visual. Sem valor, usa o desenho canônico do catálogo (`--accent`). */
   readonly variante = input<ChipVariante>('padrao');
 
+  /** Semântica de estado. Sem valor, preserva o chip de rótulo da ui-03. */
+  readonly severidade = input<ChipSeveridade>();
+
+  /** Aplicação da cor semântica; só tem efeito quando há `severidade`. */
+  readonly tom = input<ChipTom>('sutil');
+
   protected readonly classes = computed(() => {
     const partes = ['chip'];
-    if (this.variante() === 'sutil') partes.push('chip--sutil');
+    const severidade = this.severidade();
+
+    if (severidade) {
+      partes.push(`chip--severidade-${severidade}`, `chip--tom-${this.tom()}`);
+    } else if (this.variante() === 'sutil') {
+      partes.push('chip--sutil');
+    }
+
     return partes.join(' ');
   });
 }

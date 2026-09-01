@@ -83,12 +83,19 @@
 
     <div class="combatente__corpo">
         @if (etiqueta(); as marca) {
-            <span class="combatente__etiqueta" [class]="'combatente__etiqueta--' + marca.variante">
-                @if (marca.variante === "perigo") {
-                    <app-icone nome="morrendo" />
-                }
-                {{ marca.texto }}
-            </span>
+            @if (marca.variante === "ameaca") {
+                <app-chip severidade="aviso">{{ marca.texto }}</app-chip>
+            } @else {
+                <span
+                    class="combatente__etiqueta"
+                    [class]="'combatente__etiqueta--' + marca.variante"
+                >
+                    @if (marca.variante === "perigo") {
+                        <app-icone nome="morrendo" />
+                    }
+                    {{ marca.texto }}
+                </span>
+            }
         }
 
         <span class="combatente__origem">{{ linhaOrigem() }}</span>
@@ -278,16 +285,13 @@
         }
 
         @for (condicao of combatente().condicoes; track condicao.nome) {
-            <span
-                class="combatente__condicao"
-                [class.combatente__condicao--perde-turno]="condicao.perdeTurno"
-            >
+            <app-chip [severidade]="condicao.perdeTurno ? 'primario' : 'aviso'">
                 {{ condicao.nome }}
                 @if (condicao.rodadasRestantes !== null) {
                     · {{ condicao.rodadasRestantes }}
                     {{ condicao.rodadasRestantes === 1 ? "rodada" : "rodadas" }}
                 }
-            </span>
+            </app-chip>
         }
 
         @if (estadoNarrativo(); as narrativo) {

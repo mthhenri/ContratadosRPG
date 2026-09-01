@@ -283,12 +283,6 @@
             border-color: var(--accent-border);
             background: var(--accent-dim);
         }
-
-        &--ameaca {
-            color: var(--warning);
-            border-color: color-mix(in srgb, var(--warning) 40%, transparent);
-            background: color-mix(in srgb, var(--warning) 12%, transparent);
-        }
     }
 
     // A linha de origem **fica** no mobile, ao contrário do mockup de 360px, porque é ela que carrega
@@ -672,30 +666,6 @@
         }
     }
 
-    &__condicao {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        width: fit-content;
-        padding: 4px 8px;
-        font-family: var(--font-mono);
-        font-size: 9px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        border-radius: var(--radius-compact);
-        color: var(--warning);
-        border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
-        background: color-mix(in srgb, var(--warning) 12%, transparent);
-
-        // A condição que consome o turno é a que muda o combate — ela usa o accent, não o aviso.
-        &--perde-turno {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--accent-dim);
-        }
-    }
-
     &__narrativo {
         font-family: var(--font-mono);
         font-size: 10px;
@@ -758,10 +728,6 @@
         }
         &__defesas {
             gap: 2px 5px;
-            font-size: 8px;
-        }
-        &__condicao {
-            padding: 2px 5px;
             font-size: 8px;
         }
         &__narrativo {

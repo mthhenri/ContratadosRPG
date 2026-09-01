@@ -20,10 +20,12 @@
                     >
                         <header class="bandeja__cabecalho">
                             <span class="bandeja__rotulo">{{ entrada.rotulo }}</span>
-                            <span
+                            <app-chip
                                 class="bandeja__visibilidade"
-                                [class.bandeja__visibilidade--privada]="
+                                [severidade]="
                                     entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA
+                                        ? 'perigo'
+                                        : 'secundario'
                                 "
                                 [attr.data-icone]="
                                     entrada.visibilidade === RolagemVisibilidadeEnum.PRIVADA
@@ -43,7 +45,7 @@
                                         ? "Privada"
                                         : "Pública"
                                 }}
-                            </span>
+                            </app-chip>
                             <button
                                 class="bandeja__fechar"
                                 type="button"

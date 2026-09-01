@@ -1,5 +1,52 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — UI-13: chip ganha severidade e migra as cinco cópias do selo de estado
+
+`app-chip` (`ui-03`) só cobria o chip de rótulo (`variante` `padrao`/`sutil`). A auditoria visual
+listou cinco lugares que reimplementavam à mão o mesmo selo de estado (mono uppercase, borda a 40%
++ fundo a 12% da cor, `--tracking-label`): `.indicador-tempo-real`, `.historico-rolagens__privada`,
+`.bandeja__visibilidade--privada`, `.combatente__condicao` e `.combatente__etiqueta--ameaca`. A
+`ui-13` ampliou o primitivo em vez de criar um sexto componente: `[severidade]`
+(`primario`/`secundario`/`aviso`/`perigo`, mapeados em `chip.component.scss` para
+`--accent`/`--text-dim`/`--warning`/`--erro`) e `[tom]` (`sutil` = fundo+borda; `contorno` = só
+borda, para selos informativos que não devem competir com o conteúdo), mais um slot opcional de
+`app-icone` projetado antes do texto.
+
+Migração dos cinco consumidores, mapeando a cor original para a severidade equivalente (nenhuma
+cor mudou, só a origem):
+- `indicador-tempo-real` (offline) e `historico-rolagens__privada`: usavam `--warning` → `aviso`
+  (o histórico já usava tom contorno no original, preservado).
+- `bandeja__visibilidade--privada`: usava `var(--vida)` (acoplado ao accent do usuário) → `perigo`
+  (`--erro`, fixo) — correção de acoplamento que a `ui-12` já tinha objetivado para outros
+  consumidores; `frontend/scripts/bandeja-dados-privada.style.test.mjs` prova que o chip não
+  reintroduziu `var(--danger)` nem a cor antiga.
+- `combatente__condicao`: `--warning` por padrão, `--accent` quando `perdeTurno` (a condição que
+  consome o turno muda o combate, por isso usa o accent) → `aviso`/`primario` na mesma condição.
+- `combatente__etiqueta--ameaca`: usava `--warning` → `aviso`.
+
+Cada SCSS local perdeu o bloco BEM inteiro (cor, borda, fundo, raio, tipografia) e manteve só a
+classe de layout onde ainda cabia (`margin-left: auto` em `bandeja__visibilidade`); o breakpoint
+mobile de `combatente__condicao` (padding/fonte reduzidos a 360px) foi removido porque `app-chip`
+não tem variante compacta — decisão aceita depois da verificação visual não mostrar overflow real
+no card a 360px (só um artefato de screenshot `fullPage` sobre o rodapé fixo "Iniciar combate", às
+360px, que não acontece na rolagem real).
+
+`--radius-selo: 3px` foi promovido a token em `_tokens.scss` (repetia literal nos seis arquivos,
+fora dos dois tokens de forma existentes). `DESIGN.md` ganhou a tabela de severidades do chip e uma
+seção "Escolha de chip" (rótulo vs. severidade).
+
+Análogo: o próprio `.chip-classificacao`/`app-chip` da `ui-03`, já com identidade fechada — a task
+não introduziu shell novo, só estendeu inputs no primitivo existente. Verificação ao vivo (stack
+real, `ui13verify` + campanha + encontro com 3 combatentes via REST): as 4 cenas exigidas —
+`cartao-combatente` (condição `perdeTurno`/sem, etiqueta ameaça), `historico-rolagens-sidebar`
+(rolagem privada), `bandeja-dados` (carta privada com ícone olho-fechado) e
+`indicador-tempo-real` (offline, socket.io abortado via Playwright) — em `1920×1080` e `360×800`:
+cores e ícones batem com o desenho original, sem overflow horizontal, sem regressão de densidade.
+Testes focados 33/33 (`chip`, `bandeja-dados`, `cartao-combatente`, `historico-rolagens-sidebar`,
+`indicador-tempo-real`); suíte integral do frontend 1462/1463 — única falha é `P-043`
+(`detalhe.page.spec.ts`), preexistente e confirmada sem relação com este diff (reproduz igual em
+`master` antes da task); lint sem erro novo (mesmos ~14.7k warnings históricos de aspas simples).
+
 ## 2026-09-01 — README raiz: corrigida a linha de arquitetura que ainda descrevia PrimeNG
 
 `README.md` (raiz) descrevia `frontend/` como "Angular 21 + PrimeNG 21" mesmo depois da `ui-05`

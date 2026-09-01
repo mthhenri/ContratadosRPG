@@ -156,11 +156,12 @@
   }
 }
 
-// === Chip de classificação → PRIMITIVO: `frontend/src/app/shared/ui/chip/` ===
+// === Chip de classificação/estado → PRIMITIVO: `frontend/src/app/shared/ui/chip/` ===
 // Use `<app-chip>…</app-chip>` (variante `padrao`, o bloco abaixo) ou `<app-chip
-// variante="sutil">` para o desenho mais discreto (`--text-mute`/`--border-strong`) que 2 das 3
-// cópias auditadas na `ui-03` já usavam. "CLASSE-E // CONFIDENCIAL" é um USO do chip, não a
-// identidade do componente — o nome é só "chip".
+// variante="sutil">` para rótulos estáveis e discretos. Para estado, use
+// `<app-chip severidade="aviso">` (tom `sutil`, fundo 12% + borda 40%) ou
+// `tom="contorno"` para não competir com o conteúdo. "CLASSE-E // CONFIDENCIAL" é um USO do
+// chip, não a identidade do componente — o nome é só "chip".
 .chip-classificacao {
   font-family: var(--font-mono);
   font-size: 11px;

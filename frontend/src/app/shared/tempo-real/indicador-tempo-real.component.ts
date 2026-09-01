@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 
 import { TempoRealService } from '../../core/services/tempo-real.service';
+import { Chip } from '../ui/chip/chip.component';
 
 /**
  * Selo discreto de estado do tempo real (m3-08). **Silêncio quando conectado**; quando a conexão
@@ -16,6 +17,7 @@ import { TempoRealService } from '../../core/services/tempo-real.service';
  */
 @Component({
   selector: 'app-indicador-tempo-real',
+  imports: [Chip],
   templateUrl: './indicador-tempo-real.component.html',
   styleUrl: './indicador-tempo-real.component.scss',
 })

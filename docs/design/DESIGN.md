@@ -96,7 +96,8 @@ inventado):
 |---|---|---|
 | `--radius-card` | `6px` | Cards, painéis, dropdown |
 | `--radius-control` | `4px` | Botão, input, stepper, tab |
-| `--radius-compact` | `3px` | Chips, badges e controles compactos |
+| `--radius-compact` | `3px` | Badges e controles compactos |
+| `--radius-selo` | `3px` | Chips e selos semânticos |
 | `--radius-tight` | `2px` | Barras de progresso e acabamento mínimo |
 | `--pad-card` | `20px` | Padding interno de card (densidade "confortável") |
 | `--gap-grid` | `16px` | Gap entre cards/colunas de grid |
@@ -140,7 +141,7 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho`, `posicaoIcone`, `fluido` e `carregando`. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
 | `.botao-icone` | Ação unitária sem rótulo visual | `compacto` (26px) e `padrao` (32px); em mobile os dois passam ao alvo de toque de 44px. Exige `aria-label` e `appTooltip`; foco e desabilitado são nativos | **`<button app-botao-icone aria-label="…" appTooltip="…">`** |
 | `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
-| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | `padrao` (`--accent`), `sutil` (`--text-mute`/`--border-strong`) | **`<app-chip variante="…">`** |
+| `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | Rótulo: `padrao` (`--accent`) ou `sutil` (`--text-mute`/`--border-strong`). Estado: severidade `primario`, `secundario`, `aviso` ou `perigo`, tom `sutil` (fundo 12% + borda 40%) ou `contorno` | **`<app-chip variante="…">`** ou **`<app-chip severidade="…" tom="…">`** |
 | `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |
 | `.topbar` | Barra de navegação superior (chrome "Barra de Comando") | `__item--ativo`, dropdown de perfil (`__perfil-*`) | — (consumidor único) |
 | `.abas` | Barra de abas — troca de painel no lugar (`tablist`/`tab`/`tabpanel`), não navegação de rota | `__item--ativa`, colapso mobile só-ícone | **`<app-abas rotulo="…">` + `<button app-aba valor="…">` + `[appAbaPainel]`** |
@@ -160,6 +161,15 @@ um ícone canônico — por exemplo mostrar senha, copiar, editar ou fechar — 
 e `appTooltip`. Teclas da calculadora, `app-step-input`, `app-aba`, o fundo que fecha um modal e
 controles de domínio compostos (como ações de inventário e vitalidade) continuam exceções: a
 interação deles representa valor, navegação ou estado de domínio, não uma ação isolada.
+
+### Escolha de chip
+
+Use o chip de **rótulo** (`variante="padrao"`/`"sutil"`) para classificação, código ou identidade
+sem estado do domínio. Use o chip de **severidade** para informar um estado curto: as severidades
+aceitas hoje são `primario` (estado ativo), `secundario` (informação neutra), `aviso` e `perigo`.
+O tom `sutil` é a receita padrão, com fundo a 12% e borda a 40% da cor; `contorno` preserva um
+aviso contextual que não deve competir com o conteúdo. Ícones `app-icone` podem ser projetados no
+chip de severidade quando acrescentam significado; chip não é botão, nem controle removível.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 

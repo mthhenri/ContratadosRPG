@@ -26,10 +26,14 @@ usuário; testes focados 36/36, build e lint limpos, verificação visual em
 `1920×1080`/`360×800`. Registrou `P-043` (`PROBLEMS.md`), defeito pré-existente exposto durante o
 gate, sem relação com o diff de tokens/SCSS.
 
-**Task ativa agora: `ui-13-chip-com-severidade`** (`docs/specs/active/`, filha da mesma auditoria
-visual) — amplia `app-chip` com `[severidade]`/`[tom]` e ícone opcional, migrando as cinco cópias
-locais da mesma receita (`indicador-tempo-real`, `historico-rolagens__privada`, cartão de
-combatente, bandeja de dados). Implementação em andamento, ainda sem commit.
+**`ui-13-chip-com-severidade` concluída** (spec em `docs/specs/done/`, ainda sem commit): `app-chip`
+ganhou `[severidade]`/`[tom]` e slot de ícone; as cinco cópias locais da mesma receita
+(`indicador-tempo-real`, `historico-rolagens__privada`, `bandeja__visibilidade--privada`,
+`combatente__condicao`, `combatente__etiqueta--ameaca`) migraram para o primitivo e perderam a
+identidade BEM local. `--radius-selo` promovido a token; `DESIGN.md` documenta as quatro
+severidades e a escolha entre chip de rótulo e chip de severidade. Testes focados 33/33, suíte
+completa 1462/1463 (única falha é `P-043`, preexistente, sem relação com este diff), lint sem erro
+novo, verificação visual em `1920×1080`/`360×800` nos quatro consumidores.
 
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
@@ -74,8 +78,8 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-12`
-(2026-09-01): frontend 1461/1462, única falha `P-043` (ver `PROBLEMS.md`), preexistente e sem
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-13`
+(2026-09-01): frontend 1462/1463, única falha `P-043` (ver `PROBLEMS.md`), preexistente e sem
 relação com aquele diff. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só reproduzem
 isoladas (arquivo único), não na suíte completa.
 
@@ -776,7 +780,10 @@ A `ui-03` (2026-08-29) fechou o conjunto de composição visual: **`app-cartao`*
 opcional — sem ele é só a caixa; índice do cabeçalho por projeção `[cartaoIndice]`, cobre texto e
 ícone com um mecanismo só), **`app-stat`** (`[rotulo]`/`[valor]`/`variante` em
 `vida`/`energia`/`positivo` — só exibição pura; um campo editável com rolagem de dado é outro
-primitivo, ainda não construído, `IDEAS.md` `I-025`), **`app-chip`** (`variante` `padrao`/`sutil`)
+primitivo, ainda não construído, `IDEAS.md` `I-025`), **`app-chip`** (`variante` `padrao`/`sutil`
+para rótulo; `severidade` `primario`/`secundario`/`aviso`/`perigo` + `tom` `sutil`/`contorno` para
+estado, com slot opcional de `app-icone` — a `ui-13`, 2026-09-01, migrou as cinco cópias locais da
+mesma receita para esse modo)
 e **`app-abas`**/**`app-aba`**/**`AbaPainel`** (tablist/tab/tabpanel — só para troca de painel no
 lugar, não navegação de rota; setas/Home/End com ativação automática, recuperado de um algoritmo
 que já existia **escrito e correto** mas nunca ligado a nenhum template em

@@ -3,6 +3,7 @@ import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../icone/icone.component';
 import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
+import { Chip } from '../ui/chip/chip.component';
 import { BandejaDadosService } from './bandeja-dados.service';
 
 /** Largura máxima da carta (casa com o SCSS) — usada em telas largas o bastante para acomodá-la. */
@@ -19,7 +20,7 @@ const MARGEM_LATERAL_MINIMA = 32;
  */
 @Component({
   selector: 'app-bandeja-dados',
-  imports: [Icone, ResultadoRolagem],
+  imports: [Icone, ResultadoRolagem, Chip],
   templateUrl: './bandeja-dados.component.html',
   styleUrl: './bandeja-dados.component.scss',
 })

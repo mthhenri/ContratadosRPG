@@ -107,7 +107,7 @@ describe('CartaoCombatente', () => {
       { nivelAmeaca: NivelAmeacaEnum.ALTA, emCombate: true },
     );
     expect(defesas(fixture)).toEqual(['Defesa 17']);
-    expect(texto(fixture, '.combatente__etiqueta')).toBe('Ameaça · Alta');
+    expect(texto(fixture, 'app-chip')).toBe('Ameaça · Alta');
   });
 
   it('não desenha faixa de defesas nem Energia para o avulso', () => {

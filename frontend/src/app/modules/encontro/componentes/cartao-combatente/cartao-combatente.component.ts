@@ -8,6 +8,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 
@@ -52,7 +53,7 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
  */
 @Component({
   selector: 'app-cartao-combatente',
-  imports: [Icone, Tooltip, FocoImagem, ReceberDanoDialog],
+  imports: [Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip],
   templateUrl: './cartao-combatente.component.html',
   styleUrl: './cartao-combatente.component.scss',
 })
