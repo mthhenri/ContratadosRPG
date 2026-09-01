@@ -38,9 +38,11 @@ tudo de uma vez.
 | `--accent` | `#d53030` (padrão) | `213, 48, 48` | Cor de tema — **trocável por usuário** (seletor, spec M1) |
 | `--accent-text` | branco ou preto | — | Texto sobre preenchimento de `--accent`; o `TemaService` escolhe a cor de maior contraste a cada troca |
 | `--accent-hover` | varia com `--accent` | — | Preenchimento de hover do accent; o `TemaService` ajusta a luminância na direção que preserva o contraste de `--accent-text` |
+| `--accent-press` | varia com `--accent` | — | Preenchimento do estado pressionado; segue a direção de `--accent-hover`, mais distante do repouso, preservando o contraste de `--accent-text` |
 | `--accent-dim` | `color-mix(accent 12%, transparent)` | — | Fundo de destaque suave |
 | `--accent-border` | `color-mix(accent 40%, transparent)` | — | Borda de destaque, hover, foco |
 | `--vida` | `#d53030` | `213, 48, 48` | Stat Vida — vermelho **fixo**, não acompanha `--accent` |
+| `--erro` | `var(--vida)` | — | Erro de campo e ação destrutiva — vermelho **fixo**, não acompanha `--accent` |
 | `--energy` | `#4c8dd0` | `76, 141, 208` | Stat Energia |
 | `--positive` | `#4a9d6b` | `74, 157, 107` | Ganho, dano furtivo |
 | `--warning` | `#d9a441` | `217, 164, 65` | Aviso, prestígio |

@@ -14,6 +14,7 @@ $variantes: (
         cor: var(--accent),
         texto: var(--accent-text),
         hover: var(--accent-hover),
+        press: var(--accent-press),
         dim: var(--accent-dim),
         borda: var(--accent-border),
     ),
@@ -42,11 +43,11 @@ $variantes: (
         borda: color-mix(in srgb, var(--warning) 40%, transparent),
     ),
     "perigo": (
-        cor: var(--accent),
-        texto: var(--accent-text),
-        hover: var(--accent-hover),
-        dim: var(--accent-dim),
-        borda: var(--accent-border),
+        cor: var(--erro),
+        texto: var(--contrast),
+        press: var(--erro),
+        dim: color-mix(in srgb, var(--erro) 12%, transparent),
+        borda: color-mix(in srgb, var(--erro) 40%, transparent),
     ),
     "ajuda": (
         cor: var(--help),
@@ -75,7 +76,7 @@ $estilo-padrao: (
     "contraste": "preenchido",
 );
 
-@mixin pintar($estilo, $cor, $dim, $borda, $texto, $hover: null) {
+@mixin pintar($estilo, $cor, $dim, $borda, $texto, $hover: null, $press: null) {
     @if $estilo == "preenchido" {
         background: $cor;
         color: $texto;
@@ -90,6 +91,14 @@ $estilo-padrao: (
                 filter: brightness(1.08);
             }
         }
+
+        &:active:not(:disabled) {
+            @if $press {
+                background: $press;
+            } @else {
+                filter: brightness(0.92);
+            }
+        }
     } @else if $estilo == "contorno" {
         background: transparent;
         color: $cor;
@@ -97,6 +106,16 @@ $estilo-padrao: (
 
         &:hover:not(:disabled) {
             background: $dim;
+        }
+
+        &:active:not(:disabled) {
+            @if $press {
+                background: $press;
+                color: $texto;
+                border-color: $press;
+            } @else {
+                background: color-mix(in srgb, $cor 20%, transparent);
+            }
         }
     } @else if $estilo == "texto" {
         background: transparent;
@@ -145,17 +164,18 @@ $estilo-padrao: (
     $borda: map.get($paleta, borda);
     $texto: map.get($paleta, texto);
     $hover: map.get($paleta, hover);
+    $press: map.get($paleta, press);
 
     // Estilo padrão da variante, sem classe de estilo no host.
     :host(.botao--#{$nome}) {
-        @include pintar(map.get($estilo-padrao, $nome), $cor, $dim, $borda, $texto, $hover);
+        @include pintar(map.get($estilo-padrao, $nome), $cor, $dim, $borda, $texto, $hover, $press);
     }
 
     // Estilo explícito — dois seletores de classe, então sempre vence o padrão acima,
     // independente da ordem em que o navegador leu as regras.
     @each $estilo in ("preenchido", "contorno", "texto", "link") {
         :host(.botao--#{$nome}.botao--estilo-#{$estilo}) {
-            @include pintar($estilo, $cor, $dim, $borda, $texto, $hover);
+            @include pintar($estilo, $cor, $dim, $borda, $texto, $hover, $press);
         }
     }
 }

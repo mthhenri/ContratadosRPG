@@ -177,10 +177,33 @@ function misturarRgb(hex: string, alvo: [number, number, number], proporcao: num
  * Accent do estado hover. Escurece quando o texto é claro e clareia quando o texto é escuro,
  * preservando a cor do rótulo e ampliando seu contraste em vez de degradá-lo com um `filter`.
  */
-export function corHoverAccent(accent: string): string {
+function alvoInteracaoAccent(accent: string): [number, number, number] {
   const texto = corTextoSobreAccent(accent);
   const alvo: [number, number, number] = texto === '#ffffff' ? [0, 0, 0] : [255, 255, 255];
+
+  // Os presets branco/preto já estão no extremo para onde o texto pede que a interação avance.
+  // Nesse caso, use o sentido oposto: mantém o mesmo texto legível e torna hover/pressionado
+  // perceptíveis, em vez de deixar os três estados idênticos.
+  if (misturarRgb(accent, alvo, 0.08) === accent) {
+    return texto === '#ffffff' ? [255, 255, 255] : [0, 0, 0];
+  }
+
+  return alvo;
+}
+
+export function corHoverAccent(accent: string): string {
+  const alvo = alvoInteracaoAccent(accent);
   return misturarRgb(accent, alvo, 0.08);
+}
+
+/**
+ * Accent do estado pressionado. Segue a mesma direção do hover, mas avança mais até o extremo
+ * que preserva o contraste do texto; assim a sequência repouso → hover → pressionado é visível
+ * sem trocar o rótulo nem aplicar filtros que possam degradar sua legibilidade.
+ */
+export function corPressAccent(accent: string): string {
+  const alvo = alvoInteracaoAccent(accent);
+  return misturarRgb(accent, alvo, 0.16);
 }
 
 /**
@@ -518,6 +541,7 @@ export class TemaService {
     raiz.style.setProperty('--accent', accent);
     raiz.style.setProperty('--accent-text', corTextoSobreAccent(accent));
     raiz.style.setProperty('--accent-hover', corHoverAccent(accent));
+    raiz.style.setProperty('--accent-press', corPressAccent(accent));
     raiz.style.setProperty('color-scheme', base === 'escuro' ? 'dark' : 'light');
   }
 

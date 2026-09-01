@@ -23,6 +23,7 @@
   --accent: #d53030;
   --accent-text: #ffffff;
   --accent-hover: #c42c2c;
+  --accent-press: #b32828;
   --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
 
@@ -39,6 +40,7 @@
   /* Vida é vermelho FIXO da identidade — não acompanha a troca de `--accent` (que só
      coincide com este valor na base padrão). Usado pela stat Vida nas abas agente/descanso. */
   --vida: #d53030;      /* stat Vida (vermelho fixo) */
+  --erro: #d62222;  /* erro e ação destrutiva (vermelho fixo) */
   --vida-border: color-mix(in srgb, var(--vida) 40%, transparent);
   --energy: #4c8dd0;    /* Energia */
   --positive: #4a9d6b;  /* dano furtivo / ganho */

@@ -6,6 +6,7 @@ import {
   PRESETS_ACCENT,
   TemaService,
   corHoverAccent,
+  corPressAccent,
   corTextoSobreAccent,
   luminanciaRelativa,
   nomearCor,
@@ -66,6 +67,10 @@ describe('TemaService', () => {
         expect(
           razaoContraste(corHoverAccent(preset.cor), corTextoSobreAccent(preset.cor)),
         ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          razaoContraste(corPressAccent(preset.cor), corTextoSobreAccent(preset.cor)),
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(corPressAccent(preset.cor)).not.toBe(corHoverAccent(preset.cor));
       }
     });
   });
@@ -105,12 +110,14 @@ describe('TemaService', () => {
       expect(
         razaoContraste(raiz.style.getPropertyValue('--accent-hover').trim(), '#ffffff'),
       ).toBeGreaterThanOrEqual(4.5);
+      expect(raiz.style.getPropertyValue('--accent-press').trim()).toBe(corPressAccent('#d53030'));
 
       tema.selecionarPreset('ambar');
       expect(raiz.style.getPropertyValue('--accent-text').trim()).toBe('#000000');
       expect(
         razaoContraste(raiz.style.getPropertyValue('--accent-hover').trim(), '#000000'),
       ).toBeGreaterThanOrEqual(4.5);
+      expect(raiz.style.getPropertyValue('--accent-press').trim()).toBe(corPressAccent('#d9a441'));
     });
 
     it('base clara escreve overrides de superfície; escura os remove', () => {

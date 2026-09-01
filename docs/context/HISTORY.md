@@ -14,6 +14,28 @@ seção "Arquitetura" para descrever a biblioteca de componentes própria em
 `docs/design/DESIGN.md`, que faltava ali. Sem mudança de código; commit isolado (`3c62752`),
 sem tocar os arquivos da `ui-12` em andamento na mesma árvore de trabalho.
 
+## 2026-09-01 — UI-12: tokens de estado separam semântica e accent
+
+Erro e ação destrutiva agora têm o alias semântico `--erro`, apontando para o vermelho fixo de
+`--vida`; `app-campo` e a variante `perigo` de `app-botao` o consomem sem depender do accent
+selecionado pelo usuário. O botão destrutivo usa texto `--contrast`, preservando leitura também
+quando o accent escolhido pede texto preto. As sete ocorrências reais de `variante="perigo"` foram
+classificadas: todas iniciam ou confirmam exclusão, limpeza ou encerramento; nenhuma era só ênfase.
+
+A série de interação do accent ganhou `--accent-press`. O `TemaService` o calcula na mesma direção
+de `--accent-hover`, com avanço maior e contraste AA; nos extremos branco/preto, inverte de forma
+controlada para os três estados não colapsarem visualmente. Botões preenchidos e de contorno passaram
+a expor estado pressionado. Abas ativas e a tecla `=` da calculadora usam `--accent-text`, não o
+fundo global. Os dois espelhos de `_tokens.scss` e `DESIGN.md` foram atualizados.
+
+O análogo foi `app-botao`, observado no formulário de registro e no diálogo de remoção do simulador
+de Compras. Na aplicação real, com base clara + accent verde, os erros permaneceram vermelhos e os
+botões preenchidos mantiveram texto legível; o diálogo destrutivo permaneceu vermelho em
+1920×1080 e 360×800, sem overflow nem corte. Testes focados: 36/36. Build de produção concluído;
+lint sem erros (14.713 warnings históricos). A suíte integral chegou a 1461/1462: a falha
+reprodutível de `detalhe.page.spec.ts` foi registrada separadamente como P-043, pois seu seletor
+genérico clica outro modal e não tem relação com os tokens/SCSS desta task.
+
 ## 2026-09-01 — Deploy: backend migra do Render para o Google Cloud Run
 
 O Dockerfile multi-stage (`build`/`migrator`/`runtime`) e o `cloudbuild.yaml` já existiam desde
