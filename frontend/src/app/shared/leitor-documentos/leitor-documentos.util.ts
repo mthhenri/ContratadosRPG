@@ -1,29 +1,21 @@
-import { type LeitorGeometria, type LeitorViewport } from './leitor-documentos.model';
+import { type LeitorTamanho, type LeitorViewport } from './leitor-documentos.model';
 
 export const LARGURA_MINIMA_LEITOR = 640;
 export const ALTURA_MINIMA_LEITOR = 480;
 
-export function limitarGeometria(
-  geometria: LeitorGeometria,
-  viewport: LeitorViewport,
-): LeitorGeometria {
+export function limitarTamanho(tamanho: LeitorTamanho, viewport: LeitorViewport): LeitorTamanho {
   const larguraViewport = limitarMinimo(viewport.largura, 0);
   const alturaViewport = limitarMinimo(viewport.altura, 0);
   const largura =
     Math.min(LARGURA_MINIMA_LEITOR, larguraViewport) === larguraViewport
       ? larguraViewport
-      : limitarIntervalo(geometria.largura, LARGURA_MINIMA_LEITOR, larguraViewport);
+      : limitarIntervalo(tamanho.largura, LARGURA_MINIMA_LEITOR, larguraViewport);
   const altura =
     Math.min(ALTURA_MINIMA_LEITOR, alturaViewport) === alturaViewport
       ? alturaViewport
-      : limitarIntervalo(geometria.altura, ALTURA_MINIMA_LEITOR, alturaViewport);
+      : limitarIntervalo(tamanho.altura, ALTURA_MINIMA_LEITOR, alturaViewport);
 
-  return {
-    x: limitarIntervalo(geometria.x, 0, Math.max(0, larguraViewport - largura)),
-    y: limitarIntervalo(geometria.y, 0, Math.max(0, alturaViewport - altura)),
-    largura,
-    altura,
-  };
+  return { largura, altura };
 }
 
 function limitarMinimo(valor: number, minimo: number): number {

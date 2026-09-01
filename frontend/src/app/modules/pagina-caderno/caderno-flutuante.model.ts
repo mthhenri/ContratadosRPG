@@ -4,7 +4,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 
-export const CADERNO_GEOMETRIA_STORAGE_KEY = 'contratados-rpg:caderno-geometria:v1';
+export const CADERNO_TAMANHO_STORAGE_KEY = 'contratados-rpg:caderno-geometria:v1';
 export const CADERNO_AUTOSAVE_DELAY = 800;
 export const CADERNO_LARGURA_MINIMA = 440;
 export const CADERNO_ALTURA_MINIMA = 520;
@@ -28,19 +28,17 @@ export interface CadernoViewport {
   readonly altura: number;
 }
 
-export interface CadernoGeometria {
-  readonly x: number;
-  readonly y: number;
+/** Só o tamanho — a posição é de `app-painel-flutuante` (ui-17), fora do estado deste caderno. */
+export interface CadernoTamanho {
   readonly largura: number;
   readonly altura: number;
 }
 
 export interface CadernoFlutuanteEstado {
   readonly aberto: boolean;
-  readonly minimizado: boolean;
   readonly carregando: boolean;
   readonly vistaMobile: VistaMobileCaderno;
-  readonly geometria: CadernoGeometria;
+  readonly tamanho: CadernoTamanho;
 }
 
 export const RASCUNHO_CADERNO_VAZIO: CadernoRascunho = {

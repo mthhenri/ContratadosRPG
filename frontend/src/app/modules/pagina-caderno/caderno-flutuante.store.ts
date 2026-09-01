@@ -12,11 +12,11 @@ import { finalize } from 'rxjs';
 import {
   CADERNO_ALTURA_MINIMA,
   CADERNO_AUTOSAVE_DELAY,
-  CADERNO_GEOMETRIA_STORAGE_KEY,
   CADERNO_LARGURA_MINIMA,
+  CADERNO_TAMANHO_STORAGE_KEY,
   type CadernoFlutuanteEstado,
-  type CadernoGeometria,
   type CadernoRascunho,
+  type CadernoTamanho,
   type CadernoViewport,
   type EstadoSalvamentoCaderno,
   RASCUNHO_CADERNO_VAZIO,
@@ -25,9 +25,7 @@ import {
 } from './caderno-flutuante.model';
 import { PaginaCadernoService } from './pagina-caderno.service';
 
-const GEOMETRIA_INICIAL: CadernoGeometria = {
-  x: 80,
-  y: 72,
+const TAMANHO_INICIAL: CadernoTamanho = {
   largura: 960,
   altura: 680,
 };
@@ -37,7 +35,7 @@ export class CadernoFlutuanteStore {
   private readonly api = inject(PaginaCadernoService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly estadoInterno = signal<CadernoFlutuanteEstado>(
-    criarEstadoInicial(carregarGeometria()),
+    criarEstadoInicial(carregarTamanho()),
   );
   private readonly campanhaIdInterno = signal<number | null>(null);
   private readonly paginasInternas = signal<PaginaCadernoResumoDto[]>([]);
@@ -67,28 +65,12 @@ export class CadernoFlutuanteStore {
       this.campanhaIdInterno.set(campanhaId);
       this.carregarPaginas(campanhaId);
     }
-    this.estadoInterno.update((estado) => ({
-      ...estado,
-      aberto: true,
-      minimizado: false,
-    }));
-  }
-
-  minimizar(): void {
-    this.estadoInterno.update((estado) =>
-      estado.aberto ? { ...estado, minimizado: true } : estado,
-    );
-  }
-
-  restaurar(): void {
-    this.estadoInterno.update((estado) =>
-      estado.aberto ? { ...estado, minimizado: false } : estado,
-    );
+    this.estadoInterno.update((estado) => ({ ...estado, aberto: true }));
   }
 
   fechar(): void {
     this.salvarAgora();
-    this.estadoInterno.update((estado) => ({ ...estado, aberto: false, minimizado: false }));
+    this.estadoInterno.update((estado) => ({ ...estado, aberto: false }));
   }
 
   selecionarPagina(pagina: PaginaCadernoDto): void {
@@ -344,10 +326,10 @@ export class CadernoFlutuanteStore {
     this.estadoInterno.update((estado) => ({ ...estado, vistaMobile }));
   }
 
-  alterarGeometria(geometria: CadernoGeometria, viewport: CadernoViewport): void {
-    const geometriaLimitada = limitarGeometria(geometria, viewport);
-    this.estadoInterno.update((estado) => ({ ...estado, geometria: geometriaLimitada }));
-    persistirGeometria(geometriaLimitada);
+  alterarTamanho(tamanho: CadernoTamanho, viewport: CadernoViewport): void {
+    const tamanhoLimitado = limitarTamanho(tamanho, viewport);
+    this.estadoInterno.update((estado) => ({ ...estado, tamanho: tamanhoLimitado }));
+    persistirTamanho(tamanhoLimitado);
   }
 
   private carregarPaginas(campanhaId: number): void {
@@ -409,29 +391,21 @@ export class CadernoFlutuanteStore {
   }
 }
 
-function criarEstadoInicial(geometria: CadernoGeometria): CadernoFlutuanteEstado {
+function criarEstadoInicial(tamanho: CadernoTamanho): CadernoFlutuanteEstado {
   return {
     aberto: false,
-    minimizado: false,
     carregando: false,
     vistaMobile: 'LISTA',
-    geometria,
+    tamanho,
   };
 }
 
-function limitarGeometria(
-  geometria: CadernoGeometria,
-  viewport: CadernoViewport,
-): CadernoGeometria {
+function limitarTamanho(tamanho: CadernoTamanho, viewport: CadernoViewport): CadernoTamanho {
   const larguraViewport = numeroNaoNegativo(viewport.largura);
   const alturaViewport = numeroNaoNegativo(viewport.altura);
-  const largura = limitarDimensao(geometria.largura, CADERNO_LARGURA_MINIMA, larguraViewport);
-  const altura = limitarDimensao(geometria.altura, CADERNO_ALTURA_MINIMA, alturaViewport);
   return {
-    x: limitarIntervalo(geometria.x, 0, Math.max(0, larguraViewport - largura)),
-    y: limitarIntervalo(geometria.y, 0, Math.max(0, alturaViewport - altura)),
-    largura,
-    altura,
+    largura: limitarDimensao(tamanho.largura, CADERNO_LARGURA_MINIMA, larguraViewport),
+    altura: limitarDimensao(tamanho.altura, CADERNO_ALTURA_MINIMA, alturaViewport),
   };
 }
 
@@ -449,27 +423,27 @@ function limitarIntervalo(valor: number, minimo: number, maximo: number): number
   return Math.min(Math.max(valor, minimo), maximo);
 }
 
-function carregarGeometria(): CadernoGeometria {
+function carregarTamanho(): CadernoTamanho {
   try {
-    const valor = globalThis.localStorage?.getItem(CADERNO_GEOMETRIA_STORAGE_KEY);
-    if (!valor) return GEOMETRIA_INICIAL;
-    const geometria = JSON.parse(valor) as Partial<CadernoGeometria>;
+    const valor = globalThis.localStorage?.getItem(CADERNO_TAMANHO_STORAGE_KEY);
+    if (!valor) return TAMANHO_INICIAL;
+    const tamanho = JSON.parse(valor) as Partial<CadernoTamanho>;
     if (
-      [geometria.x, geometria.y, geometria.largura, geometria.altura].every(
+      [tamanho.largura, tamanho.altura].every(
         (item) => typeof item === 'number' && Number.isFinite(item),
       )
     ) {
-      return geometria as CadernoGeometria;
+      return { largura: tamanho.largura!, altura: tamanho.altura! };
     }
   } catch {
-    // Preferência local inválida ou indisponível: usa a geometria canônica.
+    // Preferência local inválida ou indisponível: usa o tamanho canônico.
   }
-  return GEOMETRIA_INICIAL;
+  return TAMANHO_INICIAL;
 }
 
-function persistirGeometria(geometria: CadernoGeometria): void {
+function persistirTamanho(tamanho: CadernoTamanho): void {
   try {
-    globalThis.localStorage?.setItem(CADERNO_GEOMETRIA_STORAGE_KEY, JSON.stringify(geometria));
+    globalThis.localStorage?.setItem(CADERNO_TAMANHO_STORAGE_KEY, JSON.stringify(tamanho));
   } catch {
     // A janela continua funcional quando o armazenamento local está indisponível.
   }

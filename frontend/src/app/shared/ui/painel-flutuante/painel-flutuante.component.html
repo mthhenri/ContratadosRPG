@@ -1,0 +1,65 @@
+@if (aberto()) {
+    <section
+        #janela
+        class="painel-flutuante__janela"
+        [class.painel-flutuante__janela--compacta]="compacta()"
+        [class.painel-flutuante__janela--mobile]="mobile()"
+        [class.painel-flutuante__janela--maximizada]="maximizada()"
+        [hidden]="minimizado()"
+        [style.left.px]="mobile() ? null : posicaoAtual().x"
+        [style.top.px]="mobile() ? null : posicaoAtual().y"
+        [style.width.px]="mobile() ? null : largura()"
+        [style.height.px]="mobile() ? null : altura()"
+        [style.z-index]="nivel()"
+        role="dialog"
+        [attr.aria-label]="titulo()"
+        aria-modal="false"
+        tabindex="-1"
+        (pointerdown)="trazerParaFrente()"
+        (focusin)="trazerParaFrente()"
+        (keydown)="aoTeclado($event)"
+    >
+        <header class="painel-flutuante__cabecalho" (pointerdown)="iniciarArraste($event)">
+            <div class="painel-flutuante__identidade">
+                <span class="painel-flutuante__marca" aria-hidden="true">//</span>
+                <div class="painel-flutuante__titulo-grupo">
+                    @if (kicker(); as rotulo) {
+                        <span class="painel-flutuante__kicker">{{ rotulo }}</span>
+                    }
+                    <h2>{{ titulo() }}</h2>
+                </div>
+                <ng-content select="[painelCabecalhoExtra]" />
+                <span class="painel-flutuante__regua" aria-hidden="true"></span>
+            </div>
+            <div class="painel-flutuante__acoes">
+                <ng-content select="[painelAcoesExtras]" />
+                <button
+                    app-botao-icone
+                    type="button"
+                    [attr.aria-label]="'Minimizar ' + titulo()"
+                    appTooltip="Minimizar"
+                    (pointerdown)="$event.stopPropagation()"
+                    (click)="alternarMinimizar()"
+                >
+                    <span aria-hidden="true">−</span>
+                </button>
+                <button
+                    app-botao-icone
+                    type="button"
+                    [attr.aria-label]="'Fechar ' + titulo()"
+                    appTooltip="Fechar"
+                    (pointerdown)="$event.stopPropagation()"
+                    (click)="fechar.emit()"
+                >
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="painel-flutuante__corpo">
+            <ng-content />
+        </div>
+
+        <ng-content select="[painelRedimensionar]" />
+    </section>
+}

@@ -61,6 +61,9 @@ describe('CadernoFlutuante', () => {
   };
 
   beforeEach(async () => {
+    // `app-painel-flutuante` persiste posição/minimizado em `localStorage` por `[id]` ("caderno")
+    // — sem isso, um teste anterior que minimiza ou arrasta vazaria o estado para o próximo.
+    localStorage.clear();
     definirViewport(1920, 1080);
     instalarMatchMedia();
     api = {
@@ -122,9 +125,9 @@ describe('CadernoFlutuante', () => {
   });
 
   it('nasce fechado e abre uma janela não modal pelo acionador', () => {
-    expect(raiz().querySelector('.caderno__janela')).toBeNull();
+    expect(raiz().querySelector('.painel-flutuante__janela')).toBeNull();
     clicar('[aria-label="Abrir caderno"]');
-    expect(obter('.caderno__janela').getAttribute('aria-modal')).toBe('false');
+    expect(obter('.painel-flutuante__janela').getAttribute('aria-modal')).toBe('false');
     expect(raiz().textContent).toContain('Operação Eclipse');
   });
 
@@ -169,40 +172,47 @@ describe('CadernoFlutuante', () => {
     expect(obter('.caderno__corpo').classList).not.toContain('caderno__corpo--lista-recolhida');
   });
 
-  it('maximiza a janela e restaura a geometria anterior no desktop', () => {
+  it('maximiza a janela e restaura tamanho e posição anteriores no desktop', () => {
     clicar('[aria-label="Abrir caderno"]');
-    const geometriaAntes = fixture.componentInstance['estado']().geometria;
+    const tamanhoAntes = fixture.componentInstance['estado']().tamanho;
+    const janela = obter('.painel-flutuante__janela');
+    const xAntes = janela.style.left;
+    const yAntes = janela.style.top;
 
     clicar('[aria-label="Maximizar caderno"]');
 
-    expect(obter('.caderno__janela').classList).toContain('caderno__janela--maximizada');
-    expect(fixture.componentInstance['estado']().geometria).toMatchObject({
-      x: 0,
-      y: 0,
+    expect(obter('.painel-flutuante__janela').classList).toContain(
+      'painel-flutuante__janela--maximizada',
+    );
+    expect(fixture.componentInstance['estado']().tamanho).toEqual({
       largura: window.innerWidth,
       altura: window.innerHeight,
     });
+    expect(obter('.painel-flutuante__janela').style.left).toBe('0px');
+    expect(obter('.painel-flutuante__janela').style.top).toBe('0px');
 
     clicar('[aria-label="Restaurar tamanho do caderno"]');
-    expect(fixture.componentInstance['estado']().geometria).toEqual(geometriaAntes);
+    expect(fixture.componentInstance['estado']().tamanho).toEqual(tamanhoAntes);
+    expect(obter('.painel-flutuante__janela').style.left).toBe(xAntes);
+    expect(obter('.painel-flutuante__janela').style.top).toBe(yAntes);
   });
 
-  it('restaura em 800 × 800 quando a geometria anterior ocupava ao menos 90% da tela', () => {
+  it('restaura em 800 × 800 centralizado quando o tamanho anterior ocupava ao menos 90% da tela', () => {
     const store = fixture.componentInstance['store'];
-    store.alterarGeometria(
-      { x: 0, y: 0, largura: 1_800, altura: 980 },
+    store.alterarTamanho(
+      { largura: 1_800, altura: 980 },
       { largura: window.innerWidth, altura: window.innerHeight },
     );
     clicar('[aria-label="Abrir caderno"]');
     clicar('[aria-label="Maximizar caderno"]');
     clicar('[aria-label="Restaurar tamanho do caderno"]');
 
-    expect(fixture.componentInstance['estado']().geometria).toEqual({
-      x: 560,
-      y: 140,
+    expect(fixture.componentInstance['estado']().tamanho).toEqual({
       largura: 800,
       altura: 800,
     });
+    expect(obter('.painel-flutuante__janela').style.left).toBe('560px');
+    expect(obter('.painel-flutuante__janela').style.top).toBe('140px');
   });
 
   it('recolhe a lista aberta ao criar uma página para revelar o editor', () => {
@@ -217,9 +227,10 @@ describe('CadernoFlutuante', () => {
     abrirPagina();
     aoAlterarEditor('rascunho preservado');
     fixture.detectChanges();
-    clicar('[aria-label="Minimizar caderno"]');
-    expect(raiz().querySelector('.caderno__janela')).toBeNull();
+    clicar('[aria-label="Minimizar Caderno · Operação Eclipse"]');
+    expect(obter('.painel-flutuante__janela').hidden).toBe(true);
     clicar('[aria-label="Reabrir caderno"]');
+    expect(obter('.painel-flutuante__janela').hidden).toBe(false);
     expect(obter('app-editor-markdown').getAttribute('aria-label')).toBe('Editor Markdown');
   });
 
@@ -440,7 +451,9 @@ describe('CadernoFlutuante', () => {
     window.dispatchEvent(new Event('resize'));
     fixture.detectChanges();
     clicar('[aria-label="Abrir caderno"]');
-    expect(obter('.caderno__janela').classList).toContain('caderno__janela--mobile');
+    expect(obter('.painel-flutuante__janela').classList).toContain(
+      'painel-flutuante__janela--mobile',
+    );
     clicar('[data-pagina-id="11"]');
     expect(raiz().querySelector('.caderno__redimensionar')).toBeNull();
     expect(obter('[aria-label="Voltar para páginas"]')).toBeTruthy();

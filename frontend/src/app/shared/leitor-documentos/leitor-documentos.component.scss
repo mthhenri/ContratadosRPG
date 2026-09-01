@@ -1,6 +1,9 @@
 @use "tema/breakpoints" as bp;
 @use "../utilitario-flutuante/utilitario-flutuante" as utilitario-flutuante;
 
+// Moldura da janela (superfície, borda, sombra, cabeçalho, minimizar/fechar) mora em
+// `app-painel-flutuante` (ui-17) — este arquivo só cuida do gatilho e do conteúdo projetado.
+
 :host {
     display: contents;
 }
@@ -21,119 +24,6 @@
 
         app-icone {
             font-size: 16px;
-        }
-    }
-
-    &__janela {
-        position: fixed;
-        z-index: 1200;
-        min-width: 0;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-card);
-        box-shadow: 0 22px 64px color-mix(in srgb, var(--bg) 78%, transparent);
-        overflow: hidden;
-
-        &[hidden] {
-            display: none;
-        }
-
-        &--mobile {
-            inset: 0;
-            width: auto;
-            height: auto;
-            border: 0;
-            border-radius: 0;
-        }
-
-        &--maximizada {
-            border-radius: 0;
-        }
-    }
-
-    &__cabecalho {
-        min-height: 54px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 9px 12px 9px 15px;
-        background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
-        border-bottom: 1px solid var(--border);
-        cursor: grab;
-        touch-action: none;
-
-        &:active {
-            cursor: grabbing;
-        }
-    }
-
-    &__identidade {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex: 1;
-    }
-
-    &__marca {
-        color: var(--accent);
-        font: 700 18px/1 var(--font-mono);
-    }
-
-    &__titulo-grupo {
-        min-width: 0;
-
-        h2 {
-            margin: 1px 0 0;
-            color: var(--text);
-            font: 700 13px/1.2 var(--font-mono);
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-    }
-
-    &__kicker,
-    &__dica {
-        color: var(--text-mute);
-        font: 600 9px/1.2 var(--font-mono);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-    }
-
-    &__regua {
-        min-width: 24px;
-        height: 1px;
-        flex: 1;
-        background: var(--border-strong);
-    }
-
-    &__acoes-janela {
-        display: flex;
-        gap: 6px;
-
-        button {
-            width: 32px;
-            height: 32px;
-            display: grid;
-            place-items: center;
-            padding: 0;
-            color: var(--text-dim);
-            background: transparent;
-            border: 1px solid var(--border-strong);
-            font-size: 17px;
-            font-weight: 600;
-            line-height: 1;
-
-            &:hover {
-                color: var(--accent);
-                background: var(--surface-2);
-                border-color: var(--accent-border);
-            }
         }
     }
 
@@ -182,6 +72,10 @@
     &__dica {
         margin-left: auto;
         text-align: right;
+        color: var(--text-mute);
+        font: 600 9px/1.2 var(--font-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
     &__pdf {
@@ -218,17 +112,6 @@
 
 @media (max-width: 560px) {
     .leitor-documentos {
-        &__cabecalho {
-            min-height: 56px;
-            padding-top: calc(8px + env(safe-area-inset-top));
-            cursor: default;
-        }
-
-        &__acoes-janela button {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
-
         &__toolbar {
             flex-wrap: wrap;
             padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));

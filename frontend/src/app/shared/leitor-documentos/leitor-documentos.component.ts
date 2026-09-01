@@ -1,13 +1,10 @@
-import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
   computed,
-  effect,
   inject,
   signal,
-  untracked,
   viewChild,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -15,20 +12,31 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { Icone } from '../icone/icone.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
+import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
+import {
+  PainelFlutuante,
+  type PainelFlutuantePosicao,
+} from '../ui/painel-flutuante/painel-flutuante.component';
 import {
   DOCUMENTOS_REGRAS,
   type DocumentoRegrasId,
-  type LeitorGeometria,
+  type LeitorTamanho,
 } from './leitor-documentos.model';
 import { LeitorDocumentosService } from './leitor-documentos.service';
 import { LeitorPdfMobile } from './leitor-pdf-mobile/leitor-pdf-mobile.component';
 
 const BREAKPOINT_MOBILE = 560;
 
+/**
+ * Leitor de documentos do sistema (regras + guia do mestre), sobre `app-painel-flutuante`
+ * (ui-17) — arraste, posição, empilhamento, minimizar e fechar vêm todos do primitivo. Este
+ * componente só cuida do conteúdo (seletor de documento, PDF) e do que continua fora do escopo do
+ * primitivo: redimensionar por arraste e maximizar.
+ */
 @Component({
   selector: 'app-leitor-documentos',
   standalone: true,
-  imports: [Icone, Tooltip, LeitorPdfMobile, Botao],
+  imports: [Icone, Tooltip, LeitorPdfMobile, Botao, BotaoIcone, PainelFlutuante],
   templateUrl: './leitor-documentos.component.html',
   styleUrl: './leitor-documentos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,7 +49,6 @@ const BREAKPOINT_MOBILE = 560;
 })
 export class LeitorDocumentos {
   private readonly servico = inject(LeitorDocumentosService);
-  private readonly documento = inject(DOCUMENT);
   private readonly sanitizer = inject(DomSanitizer);
 
   protected readonly estado = this.servico.estado;
@@ -54,174 +61,101 @@ export class LeitorDocumentos {
     this.sanitizer.bypassSecurityTrustResourceUrl(this.documentoConfiguracao().url),
   );
 
-  private readonly janela = viewChild<ElementRef<HTMLElement>>('janela');
-  private readonly cabecalho = viewChild<ElementRef<HTMLElement>>('cabecalho');
-  private readonly gatilho = viewChild<ElementRef<HTMLButtonElement>>('gatilho');
-  private abridorOriginal: HTMLElement | null = null;
-  private geometriaAntesDeMaximizar: LeitorGeometria | null = null;
-  private estadoAnterior = { aberto: false, recolhido: false };
-  private arrastando = false;
+  protected readonly painelRef = viewChild<PainelFlutuante>('painel');
+  private readonly gatilhoElemento = viewChild<ElementRef<HTMLButtonElement>>('gatilho');
+  private tamanhoAntesDeMaximizar: LeitorTamanho | null = null;
+  private posicaoAntesDeMaximizar: PainelFlutuantePosicao | null = null;
   private redimensionando = false;
-  private origemArraste = { ponteiroX: 0, ponteiroY: 0, janelaX: 0, janelaY: 0 };
-  private origemRedimensionamento = {
-    ponteiroX: 0,
-    ponteiroY: 0,
-    geometria: { x: 0, y: 52, largura: 640, altura: 480 } as LeitorGeometria,
-  };
-
-  constructor() {
-    effect(() => {
-      const atual = { aberto: this.estado().aberto, recolhido: this.estado().recolhido };
-      untracked(() => this.sincronizarFoco(atual));
-      this.estadoAnterior = atual;
-    });
-  }
+  private origemRedimensionamento = { ponteiroX: 0, ponteiroY: 0, largura: 640, altura: 480 };
 
   protected selecionarDocumento(documento: DocumentoRegrasId): void {
     this.servico.selecionarDocumento(documento);
   }
 
-  protected recolher(): void {
-    this.servico.recolher();
-  }
-
-  protected reabrir(): void {
-    this.servico.reabrir();
-  }
-
   protected fechar(): void {
     this.maximizada.set(false);
-    this.geometriaAntesDeMaximizar = null;
+    this.tamanhoAntesDeMaximizar = null;
+    this.posicaoAntesDeMaximizar = null;
     this.servico.fechar();
+  }
+
+  protected aoMinimizadoChange(minimizado: boolean): void {
+    if (minimizado) setTimeout(() => this.gatilhoElemento()?.nativeElement?.focus());
   }
 
   protected alternarMaximizacao(): void {
     if (this.ehMobile()) return;
+    const painel = this.painelRef();
     if (this.maximizada()) {
-      const geometria = this.geometriaAntesDeMaximizar;
-      if (geometria) this.servico.alterarGeometria(geometria, this.viewport());
-      this.geometriaAntesDeMaximizar = null;
+      if (this.tamanhoAntesDeMaximizar) {
+        this.servico.alterarTamanho(this.tamanhoAntesDeMaximizar, this.viewport());
+      }
+      if (this.posicaoAntesDeMaximizar) {
+        painel?.moverPara(this.posicaoAntesDeMaximizar);
+      }
+      this.tamanhoAntesDeMaximizar = null;
+      this.posicaoAntesDeMaximizar = null;
       this.maximizada.set(false);
       return;
     }
 
-    this.geometriaAntesDeMaximizar = this.estado().geometria;
+    this.tamanhoAntesDeMaximizar = this.estado().tamanho;
+    this.posicaoAntesDeMaximizar = painel?.obterPosicaoAtual() ?? null;
     const viewport = this.viewport();
-    this.servico.alterarGeometria(
-      { x: 0, y: 0, largura: viewport.largura, altura: viewport.altura },
-      viewport,
-    );
+    this.servico.alterarTamanho({ largura: viewport.largura, altura: viewport.altura }, viewport);
+    painel?.moverPara({ x: 0, y: 0 }, { persistir: false });
     this.maximizada.set(true);
-  }
-
-  protected iniciarArraste(evento: PointerEvent): void {
-    if (
-      this.ehMobile() ||
-      this.maximizada() ||
-      evento.button !== 0 ||
-      this.alvoEhControle(evento.target)
-    ) return;
-    const retangulo = this.janela()?.nativeElement.getBoundingClientRect();
-    if (!retangulo) return;
-    evento.preventDefault();
-    this.arrastando = true;
-    this.origemArraste = {
-      ponteiroX: evento.clientX,
-      ponteiroY: evento.clientY,
-      janelaX: retangulo.left,
-      janelaY: retangulo.top,
-    };
   }
 
   protected iniciarRedimensionamento(evento: PointerEvent): void {
     if (this.ehMobile() || this.maximizada() || evento.button !== 0) return;
+    const retangulo = this.painelRef()?.obterElemento()?.getBoundingClientRect();
+    if (!retangulo) return;
     evento.preventDefault();
     this.redimensionando = true;
     this.origemRedimensionamento = {
       ponteiroX: evento.clientX,
       ponteiroY: evento.clientY,
-      geometria: this.estado().geometria,
+      largura: retangulo.width,
+      altura: retangulo.height,
     };
   }
 
   protected aoMoverPonteiro(evento: PointerEvent): void {
-    if (this.arrastando) {
-      this.servico.alterarGeometria(
-        {
-          ...this.estado().geometria,
-          x: this.origemArraste.janelaX + evento.clientX - this.origemArraste.ponteiroX,
-          y: this.origemArraste.janelaY + evento.clientY - this.origemArraste.ponteiroY,
-        },
-        this.viewport(),
-      );
-    } else if (this.redimensionando) {
-      this.servico.alterarGeometria(
-        {
-          ...this.origemRedimensionamento.geometria,
-          largura:
-            this.origemRedimensionamento.geometria.largura +
-            evento.clientX -
-            this.origemRedimensionamento.ponteiroX,
-          altura:
-            this.origemRedimensionamento.geometria.altura +
-            evento.clientY -
-            this.origemRedimensionamento.ponteiroY,
-        },
-        this.viewport(),
-      );
-    }
+    if (!this.redimensionando) return;
+    this.servico.alterarTamanho(
+      {
+        largura:
+          this.origemRedimensionamento.largura +
+          evento.clientX -
+          this.origemRedimensionamento.ponteiroX,
+        altura:
+          this.origemRedimensionamento.altura +
+          evento.clientY -
+          this.origemRedimensionamento.ponteiroY,
+      },
+      this.viewport(),
+    );
   }
 
   protected encerrarInteracao(): void {
-    this.arrastando = false;
     this.redimensionando = false;
   }
 
   protected aoRedimensionarViewport(): void {
     this.ehMobile.set(this.verificarMobile());
-    if (this.maximizada() && !this.ehMobile()) {
-      const viewport = this.viewport();
-      this.servico.alterarGeometria(
-        { x: 0, y: 0, largura: viewport.largura, altura: viewport.altura },
-        viewport,
-      );
-    } else if (!this.ehMobile()) {
-      this.servico.alterarGeometria(this.estado().geometria, this.viewport());
+    if (this.ehMobile()) return;
+    const viewport = this.viewport();
+    if (this.maximizada()) {
+      this.servico.alterarTamanho({ largura: viewport.largura, altura: viewport.altura }, viewport);
+    } else {
+      this.servico.alterarTamanho(this.estado().tamanho, viewport);
     }
-  }
-
-  protected aoTecladoJanela(evento: KeyboardEvent): void {
-    if (evento.key !== 'Escape' || !this.janela()?.nativeElement.contains(evento.target as Node)) {
-      return;
-    }
-    evento.preventDefault();
-    this.fechar();
-  }
-
-  private sincronizarFoco(atual: { aberto: boolean; recolhido: boolean }): void {
-    if (!this.estadoAnterior.aberto && atual.aberto) {
-      this.abridorOriginal = this.documento.activeElement as HTMLElement | null;
-    }
-    if (atual.aberto && atual.recolhido && !this.estadoAnterior.recolhido) {
-      setTimeout(() => this.gatilho()?.nativeElement?.focus());
-    } else if (atual.aberto && !atual.recolhido && this.estadoAnterior.recolhido) {
-      setTimeout(() => this.cabecalho()?.nativeElement.focus());
-    } else if (!atual.aberto && this.estadoAnterior.aberto) {
-      const destino = this.abridorOriginal;
-      setTimeout(() => destino?.isConnected && destino.focus());
-      this.abridorOriginal = null;
-    } else if (atual.aberto && !this.estadoAnterior.aberto) {
-      setTimeout(() => this.cabecalho()?.nativeElement.focus());
-    }
-  }
-
-  private alvoEhControle(alvo: EventTarget | null): boolean {
-    return alvo instanceof Element && Boolean(alvo.closest('button, a, input, select, textarea'));
   }
 
   private verificarMobile(): boolean {
     return typeof window.matchMedia === 'function'
-      ? window.matchMedia('(max-width: ' + BREAKPOINT_MOBILE + 'px)').matches
+      ? window.matchMedia(`(max-width: ${BREAKPOINT_MOBILE}px)`).matches
       : window.innerWidth <= BREAKPOINT_MOBILE;
   }
 

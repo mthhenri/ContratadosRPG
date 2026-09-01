@@ -1,0 +1,140 @@
+@use "tema/breakpoints" as bp;
+
+// Primitivo de janela flutuante arrastável (ui-17). Moldura única para os três utilitários que a
+// hospedam — a mesma sombra/borda/raio de `app-modal` (0 20px 50px -18px), porque os dois
+// primitivos são a mesma "família" visual (superfície elevada com cabeçalho + "×"); só painel
+// flutuante arrasta, minimiza e nunca bloqueia o resto da tela.
+
+:host {
+    display: contents;
+}
+
+.painel-flutuante {
+    &__janela {
+        position: fixed;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+        outline: none;
+        overflow: hidden;
+        // Permite que o conteúdo projetado use `@container` em vez de media query — a largura
+        // disponível de uma janela flutuante depende do próprio redimensionamento, não do viewport
+        // (ex.: o caderno estreita a lista de páginas sobre o editor abaixo de 640px de janela).
+        container-type: inline-size;
+
+        // `[hidden]` (não `@if`) esconde a janela ao minimizar — mantém o conteúdo projetado
+        // montado (ex.: o iframe do leitor de documentos preserva página/zoom/rolagem do PDF em
+        // vez de recarregar ao restaurar). Especificidade de classe+atributo (0,2,0) vence a regra
+        // de `display: flex` acima (0,1,0), então não precisa vir depois no arquivo (mesma
+        // ressalva de `app-modal` sobre o UA stylesheet, mas aqui as duas regras já são do autor).
+        &[hidden] {
+            display: none;
+        }
+
+        &--compacta {
+            width: 280px;
+        }
+
+        &--mobile {
+            inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+                max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+            width: auto;
+            height: auto;
+        }
+
+        &--maximizada {
+            border-radius: 0;
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 54px;
+        padding: 9px 12px 9px 15px;
+        background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
+        border-bottom: 1px solid var(--border);
+        cursor: grab;
+        touch-action: none;
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    &__identidade {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    &__marca {
+        color: var(--accent);
+        font: 700 18px/1 var(--font-mono);
+    }
+
+    &__titulo-grupo {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        h2 {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    &__kicker {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+
+    &__regua {
+        flex: 1;
+        min-width: 24px;
+        height: 1px;
+        background: var(--border);
+    }
+
+    // Popup compacto (ex.: calculadora) não tem largura de sobra pra decoração de "janela" — a
+    // marca "//" e a régua competiam com o próprio título por espaço, truncando até um nome curto
+    // como "Calculadora" (achado ao vivo no gate visual em 360×800).
+    &__janela--compacta &__marca,
+    &__janela--compacta &__regua {
+        display: none;
+    }
+
+    &__acoes {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: none;
+    }
+
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+    }
+}

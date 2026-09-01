@@ -119,6 +119,34 @@ como "validar em sessão real antes de fechar" (legibilidade do recuo e a escolh
 inclusive o par antes/depois de avançar o turno com o mesmo combatente `ativo+morrendo` →
 `agiu+morrendo` — e aprovou.
 
+**`ui-17-painel-flutuante` concluída** (spec em `docs/specs/done/`) — a última da série de tasks
+derivadas da auditoria visual. Novo primitivo `app-painel-flutuante` (`shared/ui/painel-flutuante/`)
+absorve arraste, posição (persistida em `localStorage` por `[id]`), empilhamento de z-index,
+minimizar (idem persistido — novo pros três; nenhum media isso antes) e fechar — os cinco
+comportamentos que `CalculadoraFlutuante`, `CadernoFlutuante` e `LeitorDocumentos` reimplementavam
+cada um à sua maneira, inclusive um defeito real só visível ao unificar (o z-index fixo da
+calculadora, 66, nunca vencia a faixa dinâmica dos outros dois, 1200+). Redimensionar e maximizar
+continuam do consumidor (fora de escopo da spec); o primitivo expõe `obterElemento()`/
+`moverPara()`/`obterPosicaoAtual()` pra quem precisa. A janela some com `[hidden]`, não `@if`, ao
+minimizar — o iframe do leitor de documentos preserva página/zoom/rolagem do PDF em vez de
+recarregar. Prende o foco (`Tab`/`Shift+Tab` só circulam dentro da janela) e fecha por `Escape` —
+nenhum dos três fazia os dois juntos antes. `CadernoFlutuanteEstado` perdeu `minimizado` e `x`/`y`
+de `geometria` (renomeada `tamanho`); `LeitorDocumentosEstado` perdeu `recolhido` e `x`/`y` de
+`geometria` (idem, `tamanho`) — os dois não sabem mais que o próprio utilitário pode estar
+minimizado ou onde está na tela, o primitivo sabe sozinho. A lista de páginas vazia do caderno
+("Nenhuma página ainda") migrou pra `app-estado-vazio` (`ui-14`); os outros dois `.caderno__vazio`
+("Nada encontrado" da busca, "Selecione uma página" do editor) ficaram como estavam — não são o
+mesmo tipo de vazio que a spec pediu. `DESIGN.md` ganhou a seção "Painel flutuante, modal e painel
+lateral" com a régua prática de quando usar cada um. Testes focados 80/80, suíte completa frontend
+1506/1506, lint sem erro novo, build de produção limpo. Verificação visual ao vivo (Postgres nativo
+— Docker indisponível no ambiente) em `1920×1080`/`360×800`: os três utilitários em normal/
+minimizado/fechado, vazio do caderno, foco preso por 12 `Tab`s, `Escape` fechando com foco
+devolvido ao gatilho, arraste real, z-index correto entre os três, e posição+minimizado
+sobrevivendo a um `reload()` de verdade (`localStorage` conferido, painel reaberto na posição
+exata); achado e corrigido durante o próprio gate — o cabeçalho completo (marca "//" + régua)
+truncava o título "Calculadora" no popup compacto de 280px, mais no mobile (botões de 44px); agora
+o popup compacto esconde marca/régua, mantendo só o essencial.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -128,19 +156,20 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-16` concluída — ver acima). A única frente de código de
-milestone ainda pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de
-`m3-53` (M3). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de
+Não há spec ativa no momento (`ui-17` concluída — ver acima). A série de tasks derivadas da
+auditoria visual (`ui-12`…`ui-17`, `INDEX-ajustes-auditoria.md`) está completa. A única frente de
+código de milestone ainda pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado
+de `m3-53` (M3). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de
 pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `ui-17` | frontend/design system | filha da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — primitivo de painel flutuante |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
+| `ui-18`…`ui-23` | frontend/design system | seis specs restantes da auditoria visual (escala de espaço, acabamento de botão, fila de notificações, chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
 
 Milestone ainda não aberto: `m5-guia-missao`.
 
@@ -162,8 +191,8 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-16`
-(2026-09-01): frontend 1495/1495 — o defeito `P-043` que rondava a suíte completa em rodadas
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-17`
+(2026-09-01): frontend 1506/1506 — o defeito `P-043` que rondava a suíte completa em rodadas
 anteriores não reproduziu nesta. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só
 reproduzem isoladas (arquivo único), não na suíte completa.
 

@@ -30,8 +30,13 @@ import { Icone } from '../../shared/icone/icone.component';
 import { Tooltip } from '../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../shared/ui/botao-icone/botao-icone.component';
+import { EstadoVazio } from '../../shared/ui/estado-vazio/estado-vazio.component';
+import {
+  PainelFlutuante,
+  type PainelFlutuantePosicao,
+} from '../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { TempoRealService } from '../../core/services/tempo-real.service';
-import type { CadernoGeometria } from './caderno-flutuante.model';
+import type { CadernoTamanho } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
 import { EditorMarkdown } from './editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
@@ -45,7 +50,6 @@ import {
 
 const BREAKPOINT_MOBILE = 560;
 const TAMANHO_MAXIMO_IMPORTACAO_BYTES = 1_000_000;
-let proximoNivelJanela = 1210;
 
 type ModoCaderno = 'MEU' | 'ESQUADRAO' | 'JOGADORES';
 
@@ -56,7 +60,17 @@ interface TrocaPaginaPendente {
 @Component({
   selector: 'app-caderno-flutuante',
   standalone: true,
-  imports: [Botao, BotaoIcone, DatePipe, EditorMarkdown, Icone, ReactiveFormsModule, Tooltip],
+  imports: [
+    Botao,
+    BotaoIcone,
+    DatePipe,
+    EditorMarkdown,
+    EstadoVazio,
+    Icone,
+    PainelFlutuante,
+    ReactiveFormsModule,
+    Tooltip,
+  ],
   providers: [CadernoFlutuanteStore, CadernoEsquadraoColaborativoService],
   templateUrl: './caderno-flutuante.component.html',
   styleUrl: './caderno-flutuante.component.scss',
@@ -101,7 +115,6 @@ export class CadernoFlutuante implements OnDestroy {
   private readonly termoBuscaAtual = signal('');
   protected readonly ehMobile = signal(this.verificarMobile());
   protected readonly maximizada = signal(false);
-  protected readonly nivelJanela = signal(proximoNivelJanela);
   protected readonly semVagaInventario = computed(() => !this.ehMestre() || !this.temInventario());
   protected readonly jogadores = computed(() =>
     this.membros().filter((membro) => membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR),
@@ -145,18 +158,15 @@ export class CadernoFlutuante implements OnDestroy {
   protected readonly termoBusca = new FormControl('', { nonNullable: true });
   protected readonly buscaAtiva = computed(() => this.termoBuscaAtual().trim().length > 0);
 
-  private readonly janela = viewChild<ElementRef<HTMLElement>>('janela');
-  private readonly cabecalho = viewChild<ElementRef<HTMLElement>>('cabecalho');
+  protected readonly painelRef = viewChild<PainelFlutuante>('painel');
   private readonly gatilho = viewChild<ElementRef<HTMLButtonElement>>('gatilho');
-  private abridorOriginal: HTMLElement | null = null;
-  private geometriaAntesDeMaximizar: CadernoGeometria | null = null;
-  private arrastando = false;
+  private tamanhoAntesDeMaximizar: CadernoTamanho | null = null;
+  private posicaoAntesDeMaximizar: PainelFlutuantePosicao | null = null;
   private redimensionando = false;
-  private origemArraste = { ponteiroX: 0, ponteiroY: 0, janelaX: 0, janelaY: 0 };
   private origemRedimensionamento = {
     ponteiroX: 0,
     ponteiroY: 0,
-    geometria: { x: 0, y: 0, largura: 960, altura: 680 } as CadernoGeometria,
+    tamanho: { largura: 960, altura: 680 } as CadernoTamanho,
   };
   private readonly buscaSolicitada = new Subject<{
     readonly termo: string;
@@ -279,53 +289,51 @@ export class CadernoFlutuante implements OnDestroy {
   }
 
   protected abrir(): void {
-    this.abridorOriginal = this.documento.activeElement as HTMLElement | null;
     this.store.abrir(this.campanhaId());
-    this.trazerParaFrente();
-    setTimeout(() => this.cabecalho()?.nativeElement.focus());
   }
 
-  protected minimizar(): void {
-    this.store.minimizar();
-    setTimeout(() => this.gatilho()?.nativeElement.focus());
+  protected aoMinimizadoChange(minimizado: boolean): void {
+    if (minimizado) setTimeout(() => this.gatilho()?.nativeElement?.focus());
   }
 
   protected alternarMaximizacao(): void {
     if (this.ehMobile()) return;
+    const painel = this.painelRef();
     if (this.maximizada()) {
-      if (this.geometriaAntesDeMaximizar) {
-        this.store.alterarGeometria(
-          reduzirGeometriaRestaurada(this.geometriaAntesDeMaximizar, this.viewport()),
-          this.viewport(),
-        );
+      const viewport = this.viewport();
+      if (this.tamanhoAntesDeMaximizar) {
+        const precisaReduzir = precisaReduzirTamanho(this.tamanhoAntesDeMaximizar, viewport);
+        const tamanhoRestaurado = precisaReduzir
+          ? { largura: 800, altura: 800 }
+          : this.tamanhoAntesDeMaximizar;
+        this.store.alterarTamanho(tamanhoRestaurado, viewport);
+        const posicaoRestaurada = precisaReduzir
+          ? {
+              x: Math.round((viewport.largura - tamanhoRestaurado.largura) / 2),
+              y: Math.round((viewport.altura - tamanhoRestaurado.altura) / 2),
+            }
+          : this.posicaoAntesDeMaximizar;
+        if (posicaoRestaurada) painel?.moverPara(posicaoRestaurada);
       }
-      this.geometriaAntesDeMaximizar = null;
+      this.tamanhoAntesDeMaximizar = null;
+      this.posicaoAntesDeMaximizar = null;
       this.maximizada.set(false);
       return;
     }
-    this.geometriaAntesDeMaximizar = this.estado().geometria;
+    this.tamanhoAntesDeMaximizar = this.estado().tamanho;
+    this.posicaoAntesDeMaximizar = painel?.obterPosicaoAtual() ?? null;
     const viewport = this.viewport();
-    this.store.alterarGeometria(
-      { x: 0, y: 0, largura: viewport.largura, altura: viewport.altura },
-      viewport,
-    );
+    this.store.alterarTamanho({ largura: viewport.largura, altura: viewport.altura }, viewport);
+    painel?.moverPara({ x: 0, y: 0 }, { persistir: false });
     this.maximizada.set(true);
-  }
-
-  protected restaurar(): void {
-    this.store.restaurar();
-    this.trazerParaFrente();
-    setTimeout(() => this.cabecalho()?.nativeElement.focus());
   }
 
   protected fechar(): void {
     this.exclusaoPendente.set(false);
     this.maximizada.set(false);
-    this.geometriaAntesDeMaximizar = null;
+    this.tamanhoAntesDeMaximizar = null;
+    this.posicaoAntesDeMaximizar = null;
     this.store.fechar();
-    const destino = this.abridorOriginal;
-    setTimeout(() => destino?.isConnected && destino.focus());
-    this.abridorOriginal = null;
   }
 
   protected selecionarModo(modo: ModoCaderno): void {
@@ -537,97 +545,49 @@ export class CadernoFlutuante implements OnDestroy {
     this.store.recuperarPagina(resultado.id);
   }
 
-  protected trazerParaFrente(): void {
-    proximoNivelJanela += 1;
-    this.nivelJanela.set(proximoNivelJanela);
-  }
-
-  protected iniciarArraste(evento: PointerEvent): void {
-    if (
-      this.ehMobile() ||
-      this.maximizada() ||
-      evento.button !== 0 ||
-      this.alvoEhControle(evento.target)
-    ) return;
-    const retangulo = this.janela()?.nativeElement.getBoundingClientRect();
-    if (!retangulo) return;
-    evento.preventDefault();
-    this.arrastando = true;
-    this.origemArraste = {
-      ponteiroX: evento.clientX,
-      ponteiroY: evento.clientY,
-      janelaX: retangulo.left,
-      janelaY: retangulo.top,
-    };
-  }
-
   protected iniciarRedimensionamento(evento: PointerEvent): void {
     if (this.ehMobile() || this.maximizada() || evento.button !== 0) return;
+    const retangulo = this.painelRef()?.obterElemento()?.getBoundingClientRect();
+    if (!retangulo) return;
     evento.preventDefault();
     this.redimensionando = true;
     this.origemRedimensionamento = {
       ponteiroX: evento.clientX,
       ponteiroY: evento.clientY,
-      geometria: this.estado().geometria,
+      tamanho: { largura: retangulo.width, altura: retangulo.height },
     };
   }
 
   protected aoMoverPonteiro(evento: PointerEvent): void {
-    if (this.arrastando) {
-      this.store.alterarGeometria(
-        {
-          ...this.estado().geometria,
-          x: this.origemArraste.janelaX + evento.clientX - this.origemArraste.ponteiroX,
-          y: this.origemArraste.janelaY + evento.clientY - this.origemArraste.ponteiroY,
-        },
-        this.viewport(),
-      );
-    } else if (this.redimensionando) {
-      this.store.alterarGeometria(
-        {
-          ...this.origemRedimensionamento.geometria,
-          largura:
-            this.origemRedimensionamento.geometria.largura +
-            evento.clientX -
-            this.origemRedimensionamento.ponteiroX,
-          altura:
-            this.origemRedimensionamento.geometria.altura +
-            evento.clientY -
-            this.origemRedimensionamento.ponteiroY,
-        },
-        this.viewport(),
-      );
-    }
+    if (!this.redimensionando) return;
+    this.store.alterarTamanho(
+      {
+        largura:
+          this.origemRedimensionamento.tamanho.largura +
+          evento.clientX -
+          this.origemRedimensionamento.ponteiroX,
+        altura:
+          this.origemRedimensionamento.tamanho.altura +
+          evento.clientY -
+          this.origemRedimensionamento.ponteiroY,
+      },
+      this.viewport(),
+    );
   }
 
   protected encerrarInteracao(): void {
-    this.arrastando = false;
     this.redimensionando = false;
   }
 
   protected aoRedimensionarViewport(): void {
     this.ehMobile.set(this.verificarMobile());
-    if (this.maximizada() && !this.ehMobile()) {
-      const viewport = this.viewport();
-      this.store.alterarGeometria(
-        { x: 0, y: 0, largura: viewport.largura, altura: viewport.altura },
-        viewport,
-      );
-    } else if (!this.ehMobile()) {
-      this.store.alterarGeometria(this.estado().geometria, this.viewport());
+    if (this.ehMobile()) return;
+    const viewport = this.viewport();
+    if (this.maximizada()) {
+      this.store.alterarTamanho({ largura: viewport.largura, altura: viewport.altura }, viewport);
+    } else {
+      this.store.alterarTamanho(this.estado().tamanho, viewport);
     }
-  }
-
-  protected aoTecladoJanela(evento: KeyboardEvent): void {
-    if (evento.key !== 'Escape' || !this.janela()?.nativeElement.contains(evento.target as Node)) {
-      return;
-    }
-    evento.preventDefault();
-    this.fechar();
-  }
-
-  private alvoEhControle(alvo: EventTarget | null): boolean {
-    return alvo instanceof Element && Boolean(alvo.closest('button, a, input, select, textarea'));
   }
 
   private verificarMobile(): boolean {
@@ -641,19 +601,9 @@ export class CadernoFlutuante implements OnDestroy {
   }
 }
 
-function reduzirGeometriaRestaurada(
-  geometria: CadernoGeometria,
+function precisaReduzirTamanho(
+  tamanho: CadernoTamanho,
   viewport: { largura: number; altura: number },
-): CadernoGeometria {
-  if (geometria.largura < viewport.largura * 0.9 && geometria.altura < viewport.altura * 0.9) {
-    return geometria;
-  }
-  const largura = 800;
-  const altura = 800;
-  return {
-    x: Math.round((viewport.largura - largura) / 2),
-    y: Math.round((viewport.altura - altura) / 2),
-    largura,
-    altura,
-  };
+): boolean {
+  return tamanho.largura >= viewport.largura * 0.9 || tamanho.altura >= viewport.altura * 0.9;
 }

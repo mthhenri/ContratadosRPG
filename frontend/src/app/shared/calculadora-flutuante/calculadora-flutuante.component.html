@@ -1,184 +1,172 @@
-<button
-    class="calc-flutuante__gatilho utilitario-flutuante utilitario-flutuante--calculadora utilitario-flutuante--inline-mobile"
-    type="button"
-    [attr.aria-label]="aberta() ? 'Fechar calculadora' : 'Abrir calculadora'"
-    [attr.aria-expanded]="aberta()"
-    (click)="alternar()"
->
-    <app-icone nome="calculadora" />
-</button>
-
-@if (aberta()) {
-    <div
-        #popup
-        appAutoFocus
-        class="calc-flutuante__popup"
-        [class.calc-flutuante__popup--posicionado]="posicao() !== null"
-        [style.left.px]="posicao()?.x ?? null"
-        [style.top.px]="posicao()?.y ?? null"
-        [style.width.px]="tamanho()?.width ?? null"
-        [style.height.px]="tamanho()?.height ?? null"
-        [style.--calc-escala]="escala()"
-        role="dialog"
-        aria-label="Calculadora"
-        tabindex="-1"
-        (keydown)="aoTeclado($event)"
+@if (!aberta() || painel.minimizado()) {
+    <button
+        #gatilho
+        class="calc-flutuante__gatilho utilitario-flutuante utilitario-flutuante--calculadora utilitario-flutuante--inline-mobile"
+        type="button"
+        [attr.aria-label]="aberta() ? 'Reabrir calculadora' : 'Abrir calculadora'"
+        [attr.aria-expanded]="aberta() && !painel.minimizado()"
+        (click)="alternar()"
     >
-        <header class="calc-flutuante__cabecalho" (pointerdown)="iniciarArraste($event)">
-            <span class="calc-flutuante__titulo">Calculadora</span>
-            <button
-                class="calc-flutuante__fechar"
-                type="button"
-                aria-label="Fechar calculadora"
-                (pointerdown)="$event.stopPropagation()"
-                (click)="fechar()"
-            >
-                ✕
-            </button>
-        </header>
+        <app-icone nome="calculadora" />
+    </button>
+}
 
-        <div class="calc-flutuante__corpo">
-            <div class="calc-flutuante__visor">
-                {{ erro() ? "Erro" : expressao() || "0" }}
-            </div>
-
-            <div class="calc-flutuante__teclado">
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--funcao"
-                    (click)="limpar()"
-                >
-                    C
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--funcao"
-                    (click)="inserir('(')"
-                >
-                    (
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--funcao"
-                    (click)="inserir(')')"
-                >
-                    )
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--operador"
-                    (click)="inserir('÷')"
-                >
-                    ÷
-                </button>
-
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('7')">
-                    7
-                </button>
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('8')">
-                    8
-                </button>
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('9')">
-                    9
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--operador"
-                    (click)="inserir('×')"
-                >
-                    ×
-                </button>
-
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('4')">
-                    4
-                </button>
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('5')">
-                    5
-                </button>
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('6')">
-                    6
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--operador"
-                    (click)="inserir('-')"
-                >
-                    −
-                </button>
-
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('1')">
-                    1
-                </button>
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('2')">
-                    2
-                </button>
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('3')">
-                    3
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--operador"
-                    (click)="inserir('+')"
-                >
-                    +
-                </button>
-
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('0')">
-                    0
-                </button>
-                <button type="button" class="calc-flutuante__tecla" (click)="inserir('.')">
-                    .
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--operador"
-                    (click)="inserir('%')"
-                >
-                    %
-                </button>
-                <button
-                    type="button"
-                    class="calc-flutuante__tecla calc-flutuante__tecla--igual"
-                    (click)="calcular()"
-                >
-                    =
-                </button>
-            </div>
-
-            @if (historico().length) {
-                <div class="calc-flutuante__historico">
-                    <div class="calc-flutuante__historico-cabecalho">
-                        <span class="calc-flutuante__historico-titulo">Histórico da sessão</span>
-                        <button
-                            app-botao
-                            class="calc-flutuante__historico-limpar"
-                            type="button"
-                            aria-label="Limpar histórico"
-                            (click)="limparHistorico()"
-                        >
-                            Limpar
-                        </button>
-                    </div>
-                    <ul class="calc-flutuante__historico-lista">
-                        @for (entrada of historico(); track $index) {
-                            <li class="calc-flutuante__historico-item">
-                                <span class="calc-flutuante__historico-expressao">{{
-                                    entrada.expressao
-                                }}</span>
-                                <span class="calc-flutuante__historico-resultado"
-                                    >= {{ entrada.resultado }}</span
-                                >
-                            </li>
-                        }
-                    </ul>
-                </div>
-            }
+<app-painel-flutuante
+    #painel="appPainelFlutuante"
+    id="calculadora"
+    titulo="Calculadora"
+    [aberto]="aberta()"
+    [compacta]="true"
+    [largura]="tamanho()?.width ?? null"
+    [altura]="tamanho()?.height ?? null"
+    [posicaoInicial]="{ x: 16, y: 88 }"
+    [style.--calc-escala]="escala()"
+    (fechar)="fechar()"
+    (minimizadoChange)="aoMinimizadoChange($event)"
+    (keydown)="aoTeclado($event)"
+>
+    <div class="calc-flutuante__corpo">
+        <div class="calc-flutuante__visor">
+            {{ erro() ? "Erro" : expressao() || "0" }}
         </div>
 
-        <span
-            class="calc-flutuante__redimensionar"
-            aria-hidden="true"
-            (pointerdown)="iniciarRedimensionamento($event)"
-        ></span>
+        <div class="calc-flutuante__teclado">
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--funcao"
+                (click)="limpar()"
+            >
+                C
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--funcao"
+                (click)="inserir('(')"
+            >
+                (
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--funcao"
+                (click)="inserir(')')"
+            >
+                )
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--operador"
+                (click)="inserir('÷')"
+            >
+                ÷
+            </button>
+
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('7')">
+                7
+            </button>
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('8')">
+                8
+            </button>
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('9')">
+                9
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--operador"
+                (click)="inserir('×')"
+            >
+                ×
+            </button>
+
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('4')">
+                4
+            </button>
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('5')">
+                5
+            </button>
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('6')">
+                6
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--operador"
+                (click)="inserir('-')"
+            >
+                −
+            </button>
+
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('1')">
+                1
+            </button>
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('2')">
+                2
+            </button>
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('3')">
+                3
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--operador"
+                (click)="inserir('+')"
+            >
+                +
+            </button>
+
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('0')">
+                0
+            </button>
+            <button type="button" class="calc-flutuante__tecla" (click)="inserir('.')">
+                .
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--operador"
+                (click)="inserir('%')"
+            >
+                %
+            </button>
+            <button
+                type="button"
+                class="calc-flutuante__tecla calc-flutuante__tecla--igual"
+                (click)="calcular()"
+            >
+                =
+            </button>
+        </div>
+
+        @if (historico().length) {
+            <div class="calc-flutuante__historico">
+                <div class="calc-flutuante__historico-cabecalho">
+                    <span class="calc-flutuante__historico-titulo">Histórico da sessão</span>
+                    <button
+                        app-botao
+                        class="calc-flutuante__historico-limpar"
+                        type="button"
+                        aria-label="Limpar histórico"
+                        (click)="limparHistorico()"
+                    >
+                        Limpar
+                    </button>
+                </div>
+                <ul class="calc-flutuante__historico-lista">
+                    @for (entrada of historico(); track $index) {
+                        <li class="calc-flutuante__historico-item">
+                            <span class="calc-flutuante__historico-expressao">{{
+                                entrada.expressao
+                            }}</span>
+                            <span class="calc-flutuante__historico-resultado"
+                                >= {{ entrada.resultado }}</span
+                            >
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
-}
+
+    <span
+        painelRedimensionar
+        class="calc-flutuante__redimensionar"
+        aria-hidden="true"
+        (pointerdown)="iniciarRedimensionamento($event)"
+    ></span>
+</app-painel-flutuante>

@@ -9,6 +9,9 @@ describe('LeitorDocumentos', () => {
   let servico: LeitorDocumentosService;
 
   beforeEach(async () => {
+    // `app-painel-flutuante` persiste posição/minimizado em `localStorage` por `[id]`
+    // ("documentos") — sem isso, um teste anterior que minimiza vazaria o estado para o próximo.
+    localStorage.clear();
     definirViewport(1920, 1080);
     instalarMatchMedia();
     await TestBed.configureTestingModule({ imports: [LeitorDocumentos] }).compileComponents();
@@ -40,14 +43,20 @@ describe('LeitorDocumentos', () => {
     expect(servico.estado().documentoAtivo).toBe('guia-mestre');
   });
 
-  it('mantém o iframe montado ao recolher para preservar o estado do viewer', () => {
+  it('mantém o iframe montado ao minimizar para preservar o estado do viewer', () => {
     abrir();
     const iframe = obter<HTMLIFrameElement>('iframe');
-    clicar('[aria-label="Recolher documentos"]');
-    expect(servico.estado()).toMatchObject({ aberto: true, recolhido: true });
+    clicar('[aria-label="Minimizar Documentos do sistema"]');
     expect(fixture.nativeElement.querySelector('iframe')).toBe(iframe);
-    expect(obter('.leitor-documentos__janela').hidden).toBe(true);
+    expect(obter('.painel-flutuante__janela').hidden).toBe(true);
     expect(obter('[aria-label="Reabrir documentos"]')).toBeTruthy();
+  });
+
+  it('reabre do gatilho minimizado e devolve o painel visível', () => {
+    abrir();
+    clicar('[aria-label="Minimizar Documentos do sistema"]');
+    clicar('[aria-label="Reabrir documentos"]');
+    expect(obter('.painel-flutuante__janela').hidden).toBe(false);
   });
 
   it('fecha e remove o visualizador, devolvendo o foco ao abridor', async () => {
@@ -55,54 +64,33 @@ describe('LeitorDocumentos', () => {
     document.body.append(abridor);
     abridor.focus();
     abrir();
-    clicar('[aria-label="Fechar documentos"]');
+    clicar('[aria-label="Fechar Documentos do sistema"]');
     await vi.waitFor(() => expect(document.activeElement).toBe(abridor));
     expect(fixture.nativeElement.querySelector('iframe')).toBeNull();
     abridor.remove();
   });
 
-  it('permite arrastar a janela até o topo do viewport, acima da topbar', () => {
+  it('maximiza na viewport e restaura tamanho e posição anteriores', () => {
     definirViewport(1200, 900);
     abrir();
-    const janela = obter('.leitor-documentos__janela');
-    vi.spyOn(janela, 'getBoundingClientRect').mockReturnValue(
-      criarRetangulo({ left: 0, top: 52, width: 640, height: 480 }),
-    );
-    obter('.leitor-documentos__cabecalho').dispatchEvent(
-      new PointerEvent('pointerdown', { button: 0, clientX: 100, clientY: 100, bubbles: true }),
-    );
-    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 100, clientY: -200 }));
-    window.dispatchEvent(new PointerEvent('pointerup'));
-    expect(servico.estado().geometria.y).toBe(0);
-  });
-
-  it('maximiza na viewport e restaura a geometria anterior', () => {
-    definirViewport(1200, 900);
-    abrir();
-    servico.alterarGeometria(
-      { x: 80, y: 70, largura: 760, altura: 560 },
-      { largura: 1200, altura: 900 },
-    );
+    servico.alterarTamanho({ largura: 760, altura: 560 }, { largura: 1200, altura: 900 });
     fixture.detectChanges();
+    const janela = obter('.painel-flutuante__janela');
+    const xAntes = janela.style.left;
+    const yAntes = janela.style.top;
 
     clicar('[aria-label="Maximizar documentos"]');
-    expect(servico.estado().geometria).toEqual({
-      x: 0,
-      y: 0,
-      largura: 1200,
-      altura: 900,
-    });
-    expect(obter('.leitor-documentos__janela').classList).toContain(
-      'leitor-documentos__janela--maximizada',
+    expect(servico.estado().tamanho).toEqual({ largura: 1200, altura: 900 });
+    expect(obter('.painel-flutuante__janela').style.left).toBe('0px');
+    expect(obter('.painel-flutuante__janela').style.top).toBe('0px');
+    expect(obter('.painel-flutuante__janela').classList).toContain(
+      'painel-flutuante__janela--maximizada',
     );
 
     clicar('[aria-label="Restaurar tamanho dos documentos"]');
-    expect(servico.estado().geometria).toEqual({
-      x: 80,
-      y: 70,
-      largura: 760,
-      altura: 560,
-    });
+    expect(servico.estado().tamanho).toEqual({ largura: 760, altura: 560 });
+    expect(obter('.painel-flutuante__janela').style.left).toBe(xAntes);
+    expect(obter('.painel-flutuante__janela').style.top).toBe(yAntes);
   });
 
   it('usa tela cheia no mobile sem alça de redimensionamento, com o leitor próprio em vez do iframe', () => {
@@ -110,8 +98,8 @@ describe('LeitorDocumentos', () => {
     definirViewport(360, 800);
     window.dispatchEvent(new Event('resize'));
     fixture.detectChanges();
-    expect(obter('.leitor-documentos__janela').classList).toContain(
-      'leitor-documentos__janela--mobile',
+    expect(obter('.painel-flutuante__janela').classList).toContain(
+      'painel-flutuante__janela--mobile',
     );
     expect(fixture.nativeElement.querySelector('.leitor-documentos__redimensionar')).toBeNull();
     // Edge mobile não incorpora PDF em iframe e bloqueia o download automático que o plugin
@@ -120,19 +108,18 @@ describe('LeitorDocumentos', () => {
     expect(obter('app-leitor-pdf-mobile')).toBeTruthy();
   });
 
-  it('fecha com Escape quando o foco está no shell do leitor', () => {
+  it('fecha com Escape quando o foco está dentro do painel', () => {
     abrir();
-    const cabecalho = obter('.leitor-documentos__cabecalho');
-    cabecalho.focus();
-    cabecalho.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    const janela = obter('.painel-flutuante__janela');
+    janela.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(servico.estado().aberto).toBe(false);
   });
 
-  it("não foca o gatilho se o leitor é destruído depois de recolher", () => {
+  it("não foca o gatilho se o leitor é destruído depois de minimizar", () => {
     vi.useFakeTimers();
     try {
       abrir();
-      clicar("[aria-label=\"Recolher documentos\"]");
+      clicar('[aria-label="Minimizar Documentos do sistema"]');
       fixture.destroy();
 
       expect(() => vi.runAllTimers()).not.toThrow();
@@ -177,17 +164,4 @@ function instalarMatchMedia(): void {
       dispatchEvent: vi.fn(),
     })),
   });
-}
-
-function criarRetangulo(
-  parcial: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>,
-): DOMRect {
-  return {
-    ...parcial,
-    x: parcial.left,
-    y: parcial.top,
-    right: parcial.left + parcial.width,
-    bottom: parcial.top + parcial.height,
-    toJSON: () => ({}),
-  };
 }
