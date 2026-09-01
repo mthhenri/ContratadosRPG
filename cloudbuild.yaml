@@ -62,6 +62,11 @@ steps:
   #    novo por alguns segundos (mesmo raciocínio do P-017, ver docs/DEPLOY.md).
   - id: migrate
     name: $_SERVICE-migrator:$SHORT_SHA
+    # O Cloud Build monta /workspace (o checkout bruto do Git) como volume e sobrescreve o
+    # WORKDIR da imagem em qualquer step de imagem customizada. `dir` absoluto força a execução
+    # em /app, onde o `npm install` da etapa `build` realmente instalou o `knex` (node_modules) —
+    # sem isso, `npm run db:migrate` roda contra o código-fonte cru e falha com "knex: not found".
+    dir: /app
     secretEnv: [DB_SENHA]
     env:
       - DB_HOST=$_DB_HOST
