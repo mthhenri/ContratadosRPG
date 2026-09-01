@@ -140,7 +140,7 @@
         letter-spacing: 0.09em;
         color: var(--text-dim);
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
     }
     &__efeito {
         margin: 0;

@@ -275,7 +275,7 @@
         letter-spacing: 0.1em;
         color: var(--warning);
         border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         padding: 1px 6px;
 
         // A Inicial (vem de graça do arquétipo/subclasse): selo preenchido no accent, mais forte que
@@ -379,7 +379,7 @@
         letter-spacing: 0.08em;
         color: var(--positive);
         border: 1px solid color-mix(in srgb, var(--positive) 40%, transparent);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         padding: 2px 6px;
         white-space: nowrap;
         transition:

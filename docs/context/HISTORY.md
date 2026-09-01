@@ -1,5 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — UI-11: tokens compactos normalizam o acabamento
+
+O acabamento visual passou a ter uma única fonte de verdade: `--radius-tight` (2px) e
+`--radius-compact` (3px) foram documentados ao lado do já existente `--radius-control` (4px) e
+substituem todos os raios literais equivalentes no frontend e no handoff de tema. `50%` foi
+preservado apenas onde descreve forma circular de avatar ou launcher. O Tailwind agora aponta para
+os quatro tokens de raio e seu comentário não menciona mais a API removida.
+
+O guia de criação de criatura trocou a margem inline por `guia__stats--espacada`, consumindo
+`--gap-grid`; assim, P-042 foi encerrado. A regressão `ui-11-tokens-acabamento.style.test.mjs`
+protege os templates contra `style=` e os SCSS de produção contra raios 2/3/4px literais.
+
+O análogo foi o guia de criação de jogador (`docs/design/examples/ficha-criacao-guia.html`) para
+shell, densidade e progressão, combinado ao mockup de criatura
+(`docs/design/examples/ficha-de-criatura.html`) para a hierarquia do domínio. A aplicação real foi
+observada em 1920×1080 e 360×800: guia de criatura, campanhas, fichas, perfil, acesso negado,
+Compras, Iniciativa (inclusive montagem com avulso) e Caderno com editor aberto. Não houve overflow
+horizontal; os controles móveis observados mantiveram 44px de altura e a navegação por teclado
+alcançou um campo com `:focus-visible`.
+
+Validação: testes de estilos 5/5; lint do frontend sem erros; build de produção concluído. A suíte
+integral mantém uma única falha histórica, alheia ao corte: `detalhe.page.spec.ts` não alcança
+`FichaService.excluirFicha(4)` ao confirmar exclusão, em execução que também acusa
+`ResizeObserver` ausente no ambiente. O build mantém apenas o aviso histórico de orçamento SCSS de
+`FichaVisualizacao` (48,02 kB ante 45 kB).
+
 ## 2026-08-31 — UI-09: botões de domínio adotam os primitivos canônicos
 
 Inventário, Compras/Vendas e os cartões de ação da ficha deixaram de manter identidade de botão

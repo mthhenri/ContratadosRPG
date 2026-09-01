@@ -108,7 +108,7 @@
         font-weight: 700;
         color: var(--accent);
         border: 1px solid var(--accent);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
     }
 
     &__cabecalho-regua {
@@ -1821,7 +1821,7 @@
     text-transform: uppercase;
     color: var(--accent);
     border: 1px solid var(--accent-border);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     padding: 4px 8px;
     width: fit-content;
 
@@ -1869,7 +1869,7 @@
         color: var(--text-dim);
         background: transparent;
         border: none;
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         cursor: pointer;
         transition: color 0.15s ease;
 
@@ -1939,7 +1939,7 @@
         font-weight: 700;
         color: var(--accent);
         border: 1px solid var(--accent);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
     }
 
     &__regua {

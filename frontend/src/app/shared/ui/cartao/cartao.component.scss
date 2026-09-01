@@ -26,7 +26,7 @@
     font-weight: 700;
     color: var(--accent);
     border: 1px solid var(--accent);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     width: 22px;
     height: 22px;
     display: flex;

@@ -87,7 +87,7 @@
     padding: 5px 8px;
     color: var(--accent);
     border: 1px solid var(--accent-border);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     font: 600 10px var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -261,7 +261,7 @@
     color: var(--accent);
     background: transparent;
     border: 1px solid var(--accent-border);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     font: 600 10px var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;

@@ -393,8 +393,9 @@
 A matriz final em `docs/design/AUDITORIA-BIBLIOTECA-VISUAL.md` cobre os 68 templates e todos os
 módulos; a revisão real passou pelas rotas públicas, campanhas, acervo/fichas, guias, iniciativa e
 perfil em 1920×1080 e 360×800, sem overflow horizontal. O diagnóstico confirmou a remoção de
-PrimeNG e das cópias-base, e delimitou correções sem refactor oportunista: UI-07 (modal), UI-08
-(botão de ícone), UI-09 (ações de domínio), UI-11 (tokens de acabamento) e P-042 (margem inline).
+PrimeNG e das cópias-base. As quatro correções delimitadas sem refactor oportunista — UI-07
+(modal), UI-08 (botão de ícone), UI-09 (ações de domínio) e UI-11 (tokens de acabamento) — estão
+concluídas; P-042 (margem inline) foi encerrado em UI-11.
 
 **Cinco specs avulsas fechadas (2026-08-29), `caderno-esquadrao-colaborativo` permanece aberta** —
 ver o bloco no topo do arquivo para o resumo e `PROBLEMS.md` `P-039` para a lacuna que mantém essa

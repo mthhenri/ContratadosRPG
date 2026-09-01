@@ -210,7 +210,7 @@
 }
 
 :host ::ng-deep .milkdown .editor .ProseMirror-yjs-selection {
-    border-radius: 2px;
+    border-radius: var(--radius-tight);
 }
 
 :host(.editor-markdown--somente-leitura) ::ng-deep .milkdown .editor {

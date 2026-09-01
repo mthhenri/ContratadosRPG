@@ -124,7 +124,7 @@
         text-transform: uppercase;
         color: var(--text-dim);
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
     }
     &__descricao {
         margin: 0;

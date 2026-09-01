@@ -29,7 +29,7 @@
     font-weight: 700;
     color: var(--accent);
     border: 1px solid var(--accent);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     width: 22px;
     height: 22px;
     display: flex;
@@ -169,7 +169,7 @@
   text-transform: uppercase;
   color: var(--accent);
   border: 1px solid var(--accent);
-  border-radius: 3px;
+  border-radius: var(--radius-compact);
   padding: 6px 10px;
 }
 
@@ -262,7 +262,7 @@
     align-items: center;
     gap: 10px;
     padding: 9px 10px;
-    border-radius: 4px;
+    border-radius: var(--radius-control);
     font-family: var(--font-sans);
     font-size: 13px;
     color: var(--text);

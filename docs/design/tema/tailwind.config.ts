@@ -38,8 +38,10 @@ const config: Partial<Config> = {
         label: '0.12em',
       },
       borderRadius: {
-        card: '6px',
-        control: '4px',
+        card: 'var(--radius-card)',
+        control: 'var(--radius-control)',
+        compact: 'var(--radius-compact)',
+        tight: 'var(--radius-tight)',
       },
     },
   },

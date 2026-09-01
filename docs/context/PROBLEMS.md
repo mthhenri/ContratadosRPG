@@ -29,16 +29,6 @@
 
 ## Ativos
 
-### P-042 — Margem inline no guia de criação de criatura · `ABERTO` · frontend/design system
-
-- **Sintoma:** `criar-criatura.page.html` aplica `style="margin-top: 16px"` no bloco de stats,
-  contrariando a proibição de estilo inline e deixando uma medida fora do SCSS/tokens revisáveis.
-- **Causa:** ajuste local de espaçamento permaneceu no template durante a evolução do guia.
-- **Contorno:** nenhum; o layout aparece correto, mas escapa da fonte de verdade visual.
-- **Correção:** mover o espaçamento para a classe BEM/SCSS do guia, usando o padrão de espaço já
-  adotado pelo componente; executar o gate visual do guia nos dois viewports.
-- **Desde:** identificado na auditoria `ui-06` (2026-08-30).
-
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo

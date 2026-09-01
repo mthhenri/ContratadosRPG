@@ -266,7 +266,7 @@
         text-transform: uppercase;
         letter-spacing: 0.14em;
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         color: var(--text-mute);
 
         app-icone {
@@ -683,7 +683,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         color: var(--warning);
         border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
         background: color-mix(in srgb, var(--warning) 12%, transparent);

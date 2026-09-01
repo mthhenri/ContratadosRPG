@@ -678,7 +678,7 @@
     &__trilho {
         display: block;
         height: 4px;
-        border-radius: 2px;
+        border-radius: var(--radius-tight);
         background: var(--border-strong);
         overflow: hidden;
     }
@@ -686,7 +686,7 @@
     &__preenche {
         display: block;
         height: 100%;
-        border-radius: 2px;
+        border-radius: var(--radius-tight);
         transition: width 0.18s ease;
 
         @media (prefers-reduced-motion: reduce) {
@@ -726,7 +726,7 @@
         font-weight: 700;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         padding: 2px 6px;
         color: var(--warning);
         border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
@@ -2377,7 +2377,7 @@
     color: var(--text-dim);
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     padding: 4px 9px;
     flex: 0 0 auto;
     white-space: nowrap;
@@ -3099,7 +3099,7 @@
             cursor: help;
             text-decoration: underline dotted var(--text-mute);
             text-underline-offset: 3px;
-            border-radius: 2px;
+            border-radius: var(--radius-tight);
 
             // A regra global de foco (`_base.scss`) só cobre `a`/`button` — este rótulo precisa do
             // próprio tratamento por ser focável via `tabindex` sem ser um controle nativo.

@@ -124,7 +124,7 @@
     text-transform: uppercase;
     color: var(--text-mute);
     border: 1px solid var(--border-strong);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     padding: 4px 8px;
 
     &--campanha {

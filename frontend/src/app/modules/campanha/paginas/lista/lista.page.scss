@@ -388,7 +388,7 @@
     text-transform: uppercase;
     color: var(--accent);
     border: 1px solid var(--accent-border);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     padding: 4px 8px;
     width: fit-content;
 

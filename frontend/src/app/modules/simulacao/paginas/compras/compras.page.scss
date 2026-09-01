@@ -264,7 +264,7 @@
     font-size: 10px;
     color: var(--positive);
     border: 1px solid color-mix(in srgb, var(--positive) 45%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     padding: 1px 5px;
     margin-left: 4px;
 
@@ -422,7 +422,7 @@
     letter-spacing: 0.08em;
     color: var(--warning);
     border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
-    border-radius: 3px;
+    border-radius: var(--radius-compact);
     padding: 0 4px;
     vertical-align: middle;
 }
@@ -467,7 +467,7 @@
         width: 13px;
         height: 13px;
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         position: relative;
     }
     &--ativo &__caixa {

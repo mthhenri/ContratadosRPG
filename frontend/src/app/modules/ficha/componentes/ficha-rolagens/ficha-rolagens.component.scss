@@ -147,7 +147,7 @@
         font-weight: 700;
         color: var(--warning);
         border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         padding: 0 5px;
     }
     &__preset-acoes {

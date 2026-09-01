@@ -233,7 +233,7 @@
         justify-content: center;
         width: 16px;
         height: 16px;
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         background: color-mix(in srgb, var(--bg) 75%, transparent);
         border: 1px solid var(--border-strong);
         color: var(--text-dim);
@@ -257,7 +257,7 @@
         justify-content: center;
         width: 16px;
         height: 16px;
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         background: color-mix(in srgb, var(--bg) 75%, transparent);
         border: 1px solid var(--border-strong);
         color: var(--text-dim);
@@ -471,7 +471,7 @@
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         cursor: pointer;
         transition:
             color 0.15s ease,
@@ -505,7 +505,7 @@
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
         cursor: pointer;
         // Segurar para repetir (appHoldRepeat, usado no passo de Atributos): sem seleção de texto
         // nem scroll/zoom de toque no gesto — mesma guarda de `.ficha-passo`.
@@ -555,7 +555,7 @@
         max-width: 240px;
         height: 3px;
         background: var(--bg);
-        border-radius: 2px;
+        border-radius: var(--radius-tight);
         overflow: hidden;
     }
     &__barra-vida-preenchida {

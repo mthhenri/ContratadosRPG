@@ -39,8 +39,8 @@ inline. Os seletores-base dos primitivos existem somente em shared/ui/. Ocorrên
 .botao nos guias são classes companheiras de dimensão, não cópias do bloco-base.
 
 Falsos positivos: #000 em mask-image é máscara, não cor de tema; border-radius: 50% é geometria
-de avatar/launcher; Milkdown/ProseMirror e PDF viewer são DOM de terceiro. Raios literais 2/3/4px
-permanecem candidatos até UI-11 decidir token ou exceção.
+de avatar/launcher; Milkdown/ProseMirror e PDF viewer são DOM de terceiro. UI-11 normalizou os
+raios literais: `--radius-tight` (2px), `--radius-compact` (3px) e `--radius-control` (4px).
 
 ## Contrato de decisão
 
@@ -55,29 +55,29 @@ permanecem candidatos até UI-11 decidir token ou exceção.
 |---|---|---|
 | Ações rotuladas e links de ação | CONFORME | app-botao preservado; ação de domínio local segue UI-09. |
 | Campo rotulado | CONFORME | app-campo preserva controle projetado no rótulo; não virar CVA. |
-| Cartão, stat, chip e stepper | CONFORME | 42/18/3/26 usos; stepper observado em hover/foco. Raios literais seguem UI-11. |
+| Cartão, stat, chip e stepper | CONFORME | 42/18/3/26 usos; stepper observado em hover/foco. Raios normalizados em UI-11. |
 | Abas | EXCEÇÃO JUSTIFICADA | app-abas é tabpanel; a simulação usa navegação de rota, não tabpanel. |
 | Modal | CORRIGIR | 32 composições dialogo__fundo/dialogo__fechar em oito templates: UI-07. |
 | Ações somente por ícone | EVOLUIR PRIMITIVO | olhos, cópia, lápis, fechar e chrome recorrente: UI-08. |
 | Ações locais de inventário e Loja/Vendas | CORRIGIR | famílias ficha-inv__btn, ficha-inv__mini-btn e compras-btn: UI-09. |
 | Cor/fonte | CONFORME | fontes usam tokens; #000 é só máscara alfa. |
-| Raio/forma | CORRIGIR | 2/3/4px fora dos tokens: UI-11; 0/50% somente forma estrutural. |
-| Estilo inline | CORRIGIR | criar-criatura.page.html:450 é P-042 e UI-11. |
-| API de UI removida | CONFORME | só comentário residual sobre PrimeNG no tailwind.config.ts: UI-11. |
+| Raio/forma | CONFORME | 2/3/4px usam tokens; 0/50% permanece somente como forma estrutural. |
+| Estilo inline | CONFORME | P-042 encerrado: guia de criatura usa classe BEM e `--gap-grid`. |
+| API de UI removida | CONFORME | comentário residual removido do tailwind.config.ts. |
 
 ## Matriz por módulo
 
 | Módulo | Análogo/evidência | Veredito | Destino |
 |---|---|---|---|
 | autenticacao | login.html e cadastro.html; normal, foco e validação observados | CONFORME + EVOLUIR | UI-08 para olhos de senha. |
-| acesso-negado | padrão de formulário/auth e retorno real nos dois viewports | CONFORME | UI-11 só para raio literal. |
-| simulacao | calculadora-de-atributos; Agente, Novo Agente e Compras observados | CONFORME + EXCEÇÃO | Keypad é widget; Loja/Vendas: UI-09; raios: UI-11. |
-| campanha | campanhas/lobby; lista, detalhe cheio, modal e mobile observados | CORRIGIR / EVOLUIR | UI-07, UI-08, UI-09 e UI-11. |
-| encontro | iniciativa desktop/mobile; mestre, turno e conteúdo cheio observados | CORRIGIR / EVOLUIR | UI-07, UI-08 e UI-11. |
-| ficha | fichas, guia e acervo; jogador, criatura e dois guias observados | CORRIGIR / EVOLUIR | UI-07, UI-08, UI-09, UI-11 e P-042. |
-| pagina-caderno | utilitário flutuante; editor é DOM de terceiro | EXCEÇÃO / EVOLUIR | preservar editor; UI-08 e UI-11. |
-| usuario | perfil.html; perfil preenchido observado | CONFORME + EVOLUIR | UI-08 para ações compactas e UI-11 para raios. |
-| shared | layout, notificações, leitor, calculadora e bandejas em rotas reais | EXCEÇÃO / CORRIGIR / EVOLUIR | widget composto preservado; UI-07, UI-08 e UI-11. |
+| acesso-negado | padrão de formulário/auth e retorno real nos dois viewports | CONFORME | — |
+| simulacao | calculadora-de-atributos; Agente, Novo Agente e Compras observados | CONFORME + EXCEÇÃO | Keypad é widget; Loja/Vendas: UI-09. |
+| campanha | campanhas/lobby; lista, detalhe cheio, modal e mobile observados | CORRIGIR / EVOLUIR | UI-07, UI-08 e UI-09. |
+| encontro | iniciativa desktop/mobile; mestre, turno e conteúdo cheio observados | CORRIGIR / EVOLUIR | UI-07 e UI-08. |
+| ficha | fichas, guia e acervo; jogador, criatura e dois guias observados | CORRIGIR / EVOLUIR | UI-07, UI-08 e UI-09. |
+| pagina-caderno | utilitário flutuante; editor é DOM de terceiro | EXCEÇÃO / EVOLUIR | preservar editor; UI-08. |
+| usuario | perfil.html; perfil preenchido observado | CONFORME + EVOLUIR | UI-08 para ações compactas. |
+| shared | layout, notificações, leitor, calculadora e bandejas em rotas reais | EXCEÇÃO / CORRIGIR / EVOLUIR | widget composto preservado; UI-07 e UI-08. |
 
 ## Revisão visual ao vivo
 
@@ -103,5 +103,3 @@ aprovados. As capturas da sessão são ui06-*.png.
 | P1 | Overlays/diálogos locais duplicam app-modal | UI-07 |
 | P1 | Ações icon-only repetem identidade fora da biblioteca | UI-08 |
 | P1 | Inventário e Loja/Vendas exigem classificação de domínio | UI-09 |
-| P1 | Margem inline em criar criatura | P-042 e UI-11 |
-| P2 | Raios 2/3/4px e comentário residual PrimeNG | UI-11 |

@@ -94,6 +94,8 @@ inventado):
 |---|---|---|
 | `--radius-card` | `6px` | Cards, painéis, dropdown |
 | `--radius-control` | `4px` | Botão, input, stepper, tab |
+| `--radius-compact` | `3px` | Chips, badges e controles compactos |
+| `--radius-tight` | `2px` | Barras de progresso e acabamento mínimo |
 | `--pad-card` | `20px` | Padding interno de card (densidade "confortável") |
 | `--gap-grid` | `16px` | Gap entre cards/colunas de grid |
 | `--grid-cell` / `--grid-line` | `32px` / `rgba(255,255,255,.02)` | Textura de grid de fundo, sutil |

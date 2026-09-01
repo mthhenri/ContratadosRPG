@@ -212,7 +212,7 @@
         align-items: center;
         gap: 10px;
         padding: 9px 10px;
-        border-radius: 4px;
+        border-radius: var(--radius-control);
         font-family: var(--font-sans);
         font-size: 13px;
         color: var(--text);

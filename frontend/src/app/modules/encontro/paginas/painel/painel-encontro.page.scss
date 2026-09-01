@@ -302,7 +302,7 @@
         font-weight: 700;
         color: var(--accent);
         border: 1px solid var(--accent);
-        border-radius: 3px;
+        border-radius: var(--radius-compact);
     }
 
     &__titulo {

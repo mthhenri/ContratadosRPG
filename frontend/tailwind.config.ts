@@ -3,7 +3,7 @@
 // os utilitários apontam para as MESMAS CSS custom properties de docs/design/tema/_tokens.scss
 // (espelhadas em src/styles/tema/_tokens.scss), para que utilitário Tailwind e SCSS/BEM nunca
 // divirjam. Nada de hex/fonte/raio solto aqui (proibições #29 do CLAUDE.md). Tailwind cobre
-// layout/espaçamento; a identidade visual continua vindo dos tokens e do preset PrimeNG.
+// layout/espaçamento; a identidade visual continua vindo exclusivamente dos tokens.
 
 import type { Config } from 'tailwindcss';
 
@@ -42,8 +42,10 @@ const config: Config = {
         label: '0.12em',
       },
       borderRadius: {
-        card: '6px',
-        control: '4px',
+        card: 'var(--radius-card)',
+        control: 'var(--radius-control)',
+        compact: 'var(--radius-compact)',
+        tight: 'var(--radius-tight)',
       },
     },
   },

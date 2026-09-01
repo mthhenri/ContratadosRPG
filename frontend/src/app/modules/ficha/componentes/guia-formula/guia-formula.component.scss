@@ -46,7 +46,7 @@
         color: var(--accent);
         font-weight: 700;
         border: 1px solid var(--accent-border);
-        border-radius: 2px;
+        border-radius: var(--radius-tight);
         padding: 0 4px;
         line-height: 1.3;
     }
