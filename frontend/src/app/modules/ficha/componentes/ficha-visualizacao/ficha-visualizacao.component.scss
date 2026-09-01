@@ -631,87 +631,17 @@
         color: inherit;
     }
 
+    // `app-barra-recurso` (ui-16) é dono de rótulo/valor/trilho e da cor por recurso — aqui só
+    // sobra a caixa em volta dele. Antes desta task, cada `&__vital` desenhava o próprio trilho de
+    // 4px (`--radius-tight`), diferente do trilho do bloco de vitalidade da ficha (8px,
+    // `--radius-control`) — o primitivo apagou essa segunda receita.
     &__vital {
         flex: 1 1 0;
         min-width: 0;
-        display: block;
         padding: 7px 9px 8px;
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
-    }
-
-    &__vital-linha {
-        display: flex;
-        align-items: baseline;
-        gap: 5px;
-        margin-bottom: 6px;
-    }
-
-    &__vital-rotulo {
-        flex: 1;
-        font-family: var(--font-mono);
-        font-size: 9px;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--text-mute);
-    }
-
-    &__vital-atual {
-        font-family: var(--font-mono);
-        font-size: 17px;
-        font-weight: 700;
-        line-height: 1;
-    }
-
-    &__vital-max {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-mute);
-    }
-
-    // `display: block` porque `<span>` é inline por padrão e ignoraria a altura da barra.
-    // Trilho em `--border-strong` (não `--surface-2`, que é o fundo da própria caixa): esse é o par
-    // já calibrado do tema para ficar visível sobre `--surface-2` nas duas bases em runtime — mesmo
-    // motivo do avatar listrado de `campanha/lista` (m1-13).
-    &__trilho {
-        display: block;
-        height: 4px;
-        border-radius: var(--radius-tight);
-        background: var(--border-strong);
-        overflow: hidden;
-    }
-
-    &__preenche {
-        display: block;
-        height: 100%;
-        border-radius: var(--radius-tight);
-        transition: width 0.18s ease;
-
-        @media (prefers-reduced-motion: reduce) {
-            transition: none;
-        }
-    }
-
-    // Vida usa `--vida` (vermelho fixo da identidade, não acompanha a troca de `--accent`);
-    // Energia usa `--energy`. Mesma semântica das barras do card de Identidade.
-    &__vital--vida {
-        .ficha-hud__vital-atual {
-            color: var(--vida);
-        }
-        .ficha-hud__preenche {
-            background: var(--vida);
-        }
-    }
-
-    &__vital--energia {
-        .ficha-hud__vital-atual {
-            color: var(--energy);
-        }
-        .ficha-hud__preenche {
-            background: var(--energy);
-        }
     }
 
     &__condicoes {
@@ -2391,8 +2321,8 @@
     gap: 14px;
 
     // m3-56: era `max-width: 360px` (número mágico) — não bastava pros 390/430px de teste do
-    // passe mobile. Medido ao vivo: com 2 colunas, cada `.ficha-barra__medidor` (stepper − / valor
-    // / stepper +, ~120px + o texto do valor) não cabia na metade da coluna de Identidade
+    // passe mobile. Medido ao vivo: com 2 colunas, cada `.ficha-barra` (stepper − / primitivo /
+    // stepper +, ~120px + o texto do valor) não cabia na metade da coluna de Identidade
     // (~161px a 390px) — o botão "+" saía do viewport e ficava clicável só em parte (escondido
     // pelo `overflow-x: clip` de segurança do `html`, que evita scroll do body mas não evita o
     // corte visual/de toque). Substituído por `bp.mobile` (560px, cobre toda a faixa 360-430px).
@@ -2402,26 +2332,26 @@
 }
 
 // === Barras de Vida/Energia ===
+// `app-barra-recurso` (ui-16) é dono do rótulo, do valor e do trilho — os steppers
+// (`.ficha-passo`, compartilhado) flanqueiam o primitivo, mesmo arranjo do recurso no cartão de
+// combatente. Antes desta task este bloco desenhava a própria receita (rótulo centralizado numa
+// linha, medidor numa segunda, trilho de 8px numa terceira) — trilho e cor por recurso hoje vêm
+// do primitivo.
 .ficha-barra {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    width: 100%;
 
-    &__topo {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
+    &__primitivo {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 220px;
     }
 
-    // Rótulo "Vida" + botão "Receber dano" (m7-17), lado a lado sobre o medidor.
-    &__rotulo-linha {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
+    // Botão "Receber dano" (m7-17) — projetado no slot `[barraRecursoAcao]` do primitivo, só na
+    // barra de Vida.
     &__receber-dano {
         display: inline-flex;
         align-items: center;
@@ -2448,135 +2378,6 @@
         @include bp.mobile {
             width: bp.$alvo-toque;
             height: bp.$alvo-toque;
-        }
-    }
-
-    // Valor + passos − / + (quando ajustável): agrupa à direita, alinhado à barra.
-    &__medidor {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    &__rotulo {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-mute);
-
-        // Sinaliza a dica (progressão da classe no hover/title).
-        &--dica {
-            cursor: help;
-            text-decoration: underline dotted var(--text-mute);
-            text-underline-offset: 3px;
-        }
-    }
-
-    // Atual / máxima lado a lado (cada um clicável para digitar; m3-10).
-    &__valor {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        color: var(--text-mute);
-
-        strong {
-            font-size: 15px;
-            font-weight: 700;
-        }
-    }
-
-    &__sep {
-        color: var(--text-mute);
-    }
-
-    // Valor clicável (digitação direta): parece o texto do valor, mas com alvo de clique discreto.
-    &__valor--editavel {
-        font: inherit;
-        color: inherit;
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: var(--radius-control);
-        padding: 1px 5px;
-        cursor: text;
-        transition:
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            border-color: var(--border-strong);
-            background: var(--surface-2);
-        }
-    }
-
-    // Campo de digitação direta do valor atual (clicou no número) — sem as setinhas do number nativo.
-    &__entrada {
-        width: 48px;
-        font-family: var(--font-mono);
-        font-size: 15px;
-        font-weight: 700;
-        text-align: center;
-        color: var(--text);
-        background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        padding: 2px 4px;
-        outline: none;
-        -moz-appearance: textfield;
-        -webkit-appearance: textfield;
-        appearance: textfield;
-
-        &:focus {
-            border-color: var(--accent-border);
-        }
-
-        &::-webkit-outer-spin-button,
-        &::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-    }
-
-    &__max {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        color: var(--text-mute);
-    }
-
-    &__trilho {
-        width: 100%;
-        height: 8px;
-        border-radius: var(--radius-control);
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        overflow: hidden;
-    }
-
-    &__preenchimento {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        transition: width 0.2s ease;
-    }
-
-    &--vida {
-        .ficha-barra__valor strong {
-            color: var(--vida);
-        }
-        .ficha-barra__preenchimento {
-            background: var(--vida);
-        }
-    }
-
-    &--energia {
-        .ficha-barra__valor strong {
-            color: var(--energy);
-        }
-        .ficha-barra__preenchimento {
-            background: var(--energy);
         }
     }
 }

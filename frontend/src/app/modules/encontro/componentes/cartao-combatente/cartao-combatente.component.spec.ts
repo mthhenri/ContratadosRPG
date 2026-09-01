@@ -184,12 +184,15 @@ describe('CartaoCombatente', () => {
   it('só cita a Cadência quando ela de fato multiplica os turnos', () => {
     const singular = montar({ ...base, donoNome: 'Bia' });
     expect(texto(singular, '.combatente__origem')).toBe('Bia\nAgente');
+    expect(singular.nativeElement.querySelector('app-chip')).toBeNull();
 
     const dupla = montar(
       { ...base, tipoFicha: TipoFichaEnum.CRIATURA, cadencia: CadenciaEnum.DUPLA },
       {},
     );
-    expect(texto(dupla, '.combatente__origem')).toBe('Criatura da campanha · Cadência 2');
+    // A Cadência virou chip ao lado da origem (ui-16) — não mais sufixo dentro da mesma string.
+    expect(texto(dupla, '.combatente__origem')).toBe('Criatura da campanha');
+    expect(texto(dupla, '.combatente__origem-linha app-chip')).toBe('Cadência 2');
   });
 
   it('mostra classe e arquétipo na carteirinha do agente, sem nível (m7-16)', () => {
@@ -291,13 +294,20 @@ describe('CartaoCombatente', () => {
     expect(elementoAtual.querySelector('.combatente')?.classList).toContain('combatente--ajustando');
   });
 
-  it('carrega o rótulo curto de Energia ao lado do longo, para o CSS escolher (m7-08)', () => {
+  it('desenha Vida e Energia com o primitivo de recurso, cada um com sua cor (ui-16)', () => {
     const fixture = montar(base);
-    const energia = (fixture.nativeElement as HTMLElement).querySelector(
-      '.combatente__recurso--energia',
+    const recursos = (fixture.nativeElement as HTMLElement).querySelectorAll(
+      '.combatente__recurso',
     );
-    expect(energia?.querySelector('.combatente__rotulo-longo')?.textContent?.trim()).toBe('Energia');
-    expect(energia?.querySelector('.combatente__rotulo-curto')?.textContent?.trim()).toBe('En');
+    expect(recursos.length).toBe(2);
+
+    const vida = recursos[0];
+    expect(vida.querySelector('.barra-recurso--vida')).not.toBeNull();
+    expect(vida.querySelector('.barra-recurso__rotulo')?.textContent?.trim()).toBe('Vida');
+
+    const energia = recursos[1];
+    expect(energia.querySelector('.barra-recurso--energia')).not.toBeNull();
+    expect(energia.querySelector('.barra-recurso__rotulo')?.textContent?.trim()).toBe('Energia');
   });
 
   it('só expõe o campo de iniciativa e o remover no modo de edição explícito', () => {
@@ -342,12 +352,14 @@ describe('CartaoCombatente', () => {
 
     // Sem acesso aos números, o cartão não desenha a linha de recursos — nem um "Vida —" (m7-16).
     expect(elemento.querySelector('.combatente__recursos')).toBeNull();
-    expect(elemento.querySelector('.combatente__recurso--vida')).toBeNull();
+    expect(elemento.querySelector('.combatente__barra')).toBeNull();
     expect(elemento.querySelector('.combatente__defesas')).toBeNull();
     // Nem o Nível de Ameaça vaza: dizer "Ameaça · Alta" já entregaria metade do segredo.
     expect(texto(fixture, '.combatente__etiqueta')).toBe('Não revelado');
-    // A Cadência fica — quem age duas vezes na rodada age na frente de todo mundo.
-    expect(texto(fixture, '.combatente__origem')).toBe('Em campo · Cadência 2');
+    // A Cadência fica, mesmo sem revelação — quem age duas vezes na rodada age na frente de todo
+    // mundo. Hoje é o chip ao lado da origem (ui-16), não mais sufixo de texto na mesma string.
+    expect(texto(fixture, '.combatente__origem')).toBe('Em campo');
+    expect(texto(fixture, 'app-chip')).toBe('Cadência 2');
     expect(texto(fixture, '.combatente__iniciativa-valor')).toBe('21');
   });
 

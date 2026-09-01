@@ -95,6 +95,7 @@ import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
@@ -255,16 +256,6 @@ const ABAS_STATUS_COMPACTO: readonly AbaStatus[] = ['informacoes', 'inventario',
 export type DestinoMobile = 'agente' | AbaStatus;
 
 /**
- * Percentual de preenchimento de uma barra de vitalidade, limitado a 0–100. A máxima pode ser 0
- * (ficha recém-criada, ou Energia zerada por classe) — nesse caso a barra fica vazia em vez de
- * dividir por zero.
- */
-function percentualBarra(atual: number, maxima: number): number {
-  if (maxima <= 0) return 0;
-  return Math.max(0, Math.min(100, (atual / maxima) * 100));
-}
-
-/**
  * Destinos da barra inferior, na ordem de exibição. Os seis últimos espelham `ABAS_STATUS` — a
  * barra lê como as três colunas do desktop da esquerda para a direita (Identidade+Atributos,
  * depois as abas do card de Status).
@@ -403,6 +394,7 @@ export interface AjusteClasse {
     OverflowFade,
     Tooltip,
     Chip,
+    BarraRecurso,
     Botao,
     Modal,
     AjusteEnquadramentoImagem,
@@ -977,16 +969,6 @@ export class FichaVisualizacao {
 
   private readonly blocoVitalidade = viewChild<ElementRef<HTMLElement>>('blocoVitalidade');
 
-  /** Preenchimento da barra de Vida do HUD, em % da máxima efetiva (0–100). */
-  protected readonly percentualVida = computed(() =>
-    percentualBarra(this.estado().vidaAtual, this.vidaMaximaEfetiva()),
-  );
-
-  /** Preenchimento da barra de Energia do HUD, em % da máxima efetiva (0–100). */
-  protected readonly percentualEnergia = computed(() =>
-    percentualBarra(this.estado().energiaAtual, this.energiaMaximaEfetiva()),
-  );
-
   /** Só as condições ligadas — o HUD mostra selo apenas do que está ativo (nada quando não há). */
   protected readonly condicoesAtivas = computed(() =>
     CONDICOES_FICHA.filter((condicao) => this.condicoes()[condicao.chave]),
@@ -1007,12 +989,8 @@ export class FichaVisualizacao {
    */
   private readonly progressoContainer = viewChild<ElementRef<HTMLElement>>('progressoContainer');
 
-  /** Campo de vitalidade em digitação direta (clicou no valor), ou `null` fora de edição. */
-  protected readonly editandoVitalidade = signal<CampoVitalidade | null>(null);
-
   /** Estado do dialog "Receber dano" (m7-17) — aqui a resistência automática está disponível. */
   protected readonly receberDanoAberto = signal(false);
-  private readonly entradaVitalidade = viewChild<ElementRef<HTMLInputElement>>('entradaVitalidade');
 
   /** Derivado em digitação direta (clicou no valor da coluna), ou `null` fora de edição. */
   protected readonly editandoDerivado = signal<ChaveInfoExtra | null>(null);
@@ -1127,14 +1105,8 @@ export class FichaVisualizacao {
     });
     this.corFichaForm.valueChanges.subscribe((cor) => this.ajusteCor.emit(cor));
 
-    // Ao abrir a digitação direta (Vida/Energia ou um derivado), foca e seleciona para trocar já.
-    effect(() => {
-      if (this.editandoVitalidade() !== null) {
-        const elemento = this.entradaVitalidade()?.nativeElement;
-        elemento?.focus();
-        elemento?.select();
-      }
-    });
+    // Ao abrir a digitação direta de um derivado, foca e seleciona para trocar já. Vida/Energia
+    // usam `appAutoFocus` dentro do próprio `app-barra-recurso` (ui-16), sem precisar de effect.
     effect(() => {
       if (this.editandoDerivado() !== null) {
         const elemento = this.entradaDerivado()?.nativeElement;
@@ -1770,42 +1742,17 @@ export class FichaVisualizacao {
     }
   }
 
-  /** Abre a digitação direta do valor de Vida/Energia (clique no número). */
-  protected editarVitalidade(campo: CampoVitalidade): void {
-    this.editandoVitalidade.set(campo);
-  }
-
-  /** Cancela a digitação sem alterar (Escape). */
-  protected cancelarVitalidade(): void {
-    this.editandoVitalidade.set(null);
-  }
-
   /**
-   * Confirma o valor digitado (Enter/blur): clampa a [0, máximo] e emite se mudou. O guard evita o
-   * commit duplo do `blur` que segue o `Enter` (o campo já saiu de edição) e ignora texto inválido.
+   * Recebe o valor digitado direto no `app-barra-recurso` (`atualAlterado`/`maximoAlterado`,
+   * ui-16 — o primitivo já é dono da digitação, não mais este componente) e emite se mudou.
+   * Mesmo clamp de antes: só a Energia atual pode negativar; Vida atual e as máximas têm piso 0,
+   * sem teto (o teto é responsabilidade do documento/backend).
    */
-  protected confirmarVitalidade(campo: CampoVitalidade, texto: string): void {
-    if (this.editandoVitalidade() !== campo) {
-      return;
-    }
-    this.editandoVitalidade.set(null);
-    const bruto = Number.parseInt(texto, 10);
-    if (Number.isNaN(bruto)) {
-      return;
-    }
-    // m3-10: só a Energia atual pode negativar; Vida atual e as máximas têm piso 0. Sem teto.
-    const valor = campo === 'energiaAtual' ? bruto : Math.max(0, bruto);
+  protected commitVitalidade(campo: CampoVitalidade, valorDigitado: number): void {
+    const valor = campo === 'energiaAtual' ? valorDigitado : Math.max(0, valorDigitado);
     if (valor !== this.valorVitalidade(campo)) {
       this.ajusteVitalidade.emit({ campo, valor });
     }
-  }
-
-  /** Percentual de preenchimento de uma barra (atual÷máximo), limitado a 0–100. */
-  protected percentual(atual: number, maximo: number): number {
-    if (maximo <= 0) {
-      return 0;
-    }
-    return Math.max(0, Math.min(100, (atual / maximo) * 100));
   }
 
   /** Status derivado (mesma seleção da edição — `status-derivado`); stored vence o calculado. */

@@ -21,20 +21,35 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
 
-    // É a vez dele: o cartão inteiro acende no accent (mockup, primeiro cartão).
+    // É a vez dele: o cartão inteiro acende no accent (mockup, primeiro cartão). `&--morrendo`
+    // (abaixo) é declarado **depois** de propósito, não por acidente de cascata (ui-16): um
+    // combatente que é a vez dele **e** está morrendo mostra o tom de morrendo, a mesma
+    // prioridade que a etiqueta de texto já usa (`etiqueta()`, cartao-combatente.component.ts,
+    // devolve "Morrendo" antes de checar o turno). O selo de iniciativa (`&__iniciativa` abaixo)
+    // continua acendendo em `--accent` nessa combinação, então "é a vez dele" não desaparece de
+    // todo — documentado em `docs/design/DESIGN.md`, não mova este bloco para depois de
+    // `&--morrendo`.
     &--ativo {
         background: var(--accent-dim);
         border-color: var(--accent);
     }
 
-    // Já gastou os turnos desta rodada: o cartão recua. Sem isso, a Ameaça (que mostra a etiqueta de
-    // **natureza**, não de estado, como no mockup) ficaria indistinguível de quem ainda vai agir — e
-    // numa criatura de Cadência > 1, saber se ela já agiu é metade da leitura do combate.
+    // Já gastou os turnos desta rodada: recua pela moldura — retrato apagado, etiqueta e borda na
+    // cor de resting (`--text-mute`/`--border`, já o padrão do card, nenhuma escalada aqui) — em
+    // vez de `opacity` no cartão inteiro (ui-16). Vida, Defesa e o selo de iniciativa continuam em
+    // contraste cheio: apagar justamente os números que o mestre precisa ler era o defeito que
+    // esta task corrigiu. Mutuamente exclusivo de `&--ativo` no template
+    // (`jaAgiu() && !ehTurnoAtual()`), mas pode coincidir com `&--morrendo` — as duas se somam sem
+    // conflito porque nenhuma mexe na mesma propriedade.
     &--agiu {
-        opacity: 0.62;
+        .combatente__retrato {
+            opacity: 0.55;
+        }
     }
 
     // Morrendo tem um acento mais surdo que "age agora" — presença sem roubar a vez de quem age.
+    // Ver o comentário de `&--ativo`: a ordem entre os dois blocos é decisão registrada, não
+    // acidente de cascata.
     &--morrendo {
         background: color-mix(in srgb, var(--accent) 8%, var(--surface));
         border-color: var(--accent-border);
@@ -286,8 +301,15 @@
     }
 
     // A linha de origem **fica** no mobile, ao contrário do mockup de 360px, porque é ela que carrega
-    // a Cadência ("Criatura da campanha · Cadência 2") e o dono do agente. O que engordava o cartão
-    // eram os steppers de 44px, não estes 9px de texto — e são eles que a m7-08 recolhe.
+    // o dono do agente e (ao lado, ver `&__origem-linha`) o chip de Cadência. O que engordava o
+    // cartão eram os steppers de 44px, não estes 9px de texto — e são eles que a m7-08 recolhe.
+    &__origem-linha {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
     &__origem {
         font-family: var(--font-mono);
         font-size: 9px;
@@ -471,46 +493,23 @@
     }
 
     // ── Recursos (Vida / Energia) ─────────────────────────────────────────────
+    // `app-barra-recurso` (ui-16) é dono do rótulo/valor/trilho e da cor por recurso — aqui só
+    // sobra o layout dos steppers em volta dela. Cor e trilho vieram do primitivo; antes desta
+    // task, Vida/Energia eram texto puro sem trilho algum.
     &__recursos {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px 12px;
-
-        // Mobile (m7-08): `Vida x/y · En x/y` em **uma** linha, como no mockup de 360px.
-        @include bp.mobile {
-            align-items: center;
-            gap: 4px 6px;
-            font-size: 10px;
-        }
+        gap: 8px 16px;
     }
 
     &__recurso {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 600;
-
-        &--vida {
-            color: var(--vida);
-        }
-        &--energia {
-            color: var(--energy);
-        }
-
-        @include bp.mobile {
-            font-size: 10px;
-        }
     }
 
-    // O ponto que separa Vida de Energia no mobile é pontuação de layout, não conteúdo — por isso
-    // vive no CSS, junto da decisão de largura que o cria.
-    @include bp.mobile {
-        &__recurso--energia::before {
-            content: "·";
-            color: var(--text-mute);
-        }
+    &__barra {
+        min-width: 84px;
     }
 
     // Os dois rótulos viajam no DOM; a largura da tela escolhe qual aparece. O escondido sai do
@@ -722,9 +721,10 @@
         &__recursos {
             gap: 2px 6px;
         }
+        // `app-barra-recurso` fixa o próprio tamanho de fonte (não herda `font-size` do
+        // ancestral) — a grade compacta só aperta o gap dela para o stepper, não o texto.
         &__recurso {
             gap: 3px;
-            font-size: 9px;
         }
         &__defesas {
             gap: 2px 5px;

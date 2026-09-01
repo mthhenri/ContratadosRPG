@@ -88,6 +88,37 @@ severidade, ícone, negrito da entidade e alvo de toque conferidos; achado e cor
 próprio gate: os dois botões nasceram sem `gap` (elemento projetado único dentro do slot em vez de
 cada botão marcado com `[modalAcoes]`) e sem tamanho (`app-botao` não herda um por padrão).
 
+**`ui-16-barra-de-recurso-e-cartao-de-combatente` concluída** (spec em `docs/specs/done/`). A spec
+herdada da auditoria foi corrigida antes de implementar (commit `9bdad49`): Sanidade não é um
+recurso numérico (`sistema-v4.1.0.md` §Sanidade: "não é uma barra de valor convencional"), o
+"painel do mestre" não tinha marcação própria de recurso (só embrulha `app-cartao-combatente`) e
+`app-chip` nunca teve severidade `info`. Novo primitivo `app-barra-recurso`
+(`shared/ui/barra-recurso/`) — rótulo + valor atual/máximo + trilho, cor fixa por recurso
+(`--vida`/`--energy`) e alerta abaixo de 25% (`--warning`, vence a cor do recurso) — substitui três
+desenhos divergentes: o HUD sticky mobile da ficha, o bloco de vitalidade desktop da mesma ficha
+(edição por clique preservada via `[editavel]`, com `[maximoEditavel]` para a base armazenada
+quando o máximo exibido já soma bônus de amplificador) e o cartão de combatente, que não tinha
+trilho algum (Vida/Energia eram texto puro). `criatura-visualizacao` ficou de fora (m4-04b, fora de
+escopo de revisões de tema). O recuo do estado "já agiu" trocou de `opacity: .62` no cartão inteiro
+para recuo pela moldura (retrato a 0,55; números e barras seguem em contraste cheio — confirmado ao
+vivo: brilho médio do retrato caiu de 43,9 para 36,7 entre "ativo" e "agiu", brilho dos números de
+Vida/Energia ficou estável, 35,1 → 35,6). A precedência entre `--ativo`/`--agiu`/`--morrendo` virou
+decisão registrada (`DESIGN.md`): `--morrendo` vence `--ativo` no fundo/borda do cartão — mesma
+prioridade que a etiqueta de texto já usava —, `--agiu` só mexe em opacidade do retrato e por isso
+soma sem conflito com `--morrendo`. A Cadência virou `<app-chip severidade="secundario">` ao lado
+da origem, em vez de sufixo concatenado na mesma string. Testes focados nos arquivos alterados
+173/173 (`barra-recurso`, `cartao-combatente`, `ficha-visualizacao`), suíte completa frontend
+1495/1495, lint sem erro novo (só os avisos preexistentes de aspas, repositório inteiro). Verificação
+visual ao vivo (Postgres local nativo + backend + frontend reais, Docker bloqueado pela política de
+rede do ambiente) em `1920×1080`/`360×800`: HUD mobile, bloco de vitalidade desktop (edição,
+dica de progressão via tooltip), painel de Iniciativa nos dois viewports, com um combatente
+`ativo+morrendo`, o mesmo depois de `agiu+morrendo`, uma criatura de Cadência 2 abaixo de 25% de
+Vida (chip + trilho em alerta) e steppers mobile medidos em 44×44px. A spec cravava dois riscos
+como "validar em sessão real antes de fechar" (legibilidade do recuo e a escolha `--morrendo` >
+`--ativo`) que uma sessão de agente sozinha não resolve; o autor (mthhenri) revisou as capturas —
+inclusive o par antes/depois de avançar o turno com o mesmo combatente `ativo+morrendo` →
+`agiu+morrendo` — e aprovou.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -97,15 +128,16 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Fora da `ui-13`/`ui-14`, não há outra spec ativa. A única frente de código de milestone ainda
-pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1,
-M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
+Não há spec ativa no momento (`ui-16` concluída — ver acima). A única frente de código de
+milestone ainda pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de
+`m3-53` (M3). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de
+pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
 | Spec | Frente | O que é |
 |---|---|---|
-| `ui-16`, `ui-17` | frontend/design system | filhas da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — barra de recurso + recuo do cartão de combatente, primitivo de painel flutuante |
+| `ui-17` | frontend/design system | filha da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — primitivo de painel flutuante |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
@@ -130,10 +162,10 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-14`
-(2026-09-01): frontend 1470/1471, única falha `P-043` (ver `PROBLEMS.md`), preexistente e sem
-relação com aquele diff. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só reproduzem
-isoladas (arquivo único), não na suíte completa.
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-16`
+(2026-09-01): frontend 1495/1495 — o defeito `P-043` que rondava a suíte completa em rodadas
+anteriores não reproduziu nesta. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só
+reproduzem isoladas (arquivo único), não na suíte completa.
 
 ---
 

@@ -8,6 +8,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
@@ -53,7 +54,7 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
  */
 @Component({
   selector: 'app-cartao-combatente',
-  imports: [Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip],
+  imports: [Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip, BarraRecurso],
   templateUrl: './cartao-combatente.component.html',
   styleUrl: './cartao-combatente.component.scss',
 })
@@ -161,13 +162,11 @@ export class CartaoCombatente {
   /**
    * Linha de origem do cartão: o agente mostra quem o joga e a classe/arquétipo, em duas linhas
    * (`\n` + `white-space: pre-line` no SCSS) — o nível fica de fora, a carteirinha identifica quem
-   * é o agente, não avalia sua força. Os demais dizem de onde vieram, numa linha só. A Cadência só
-   * entra quando de fato multiplica os turnos — "Cadência 1" seria ruído em todo agente (Cadência
-   * é atributo de criatura; o agente é sempre Singular).
+   * é o agente, não avalia sua força. Os demais dizem de onde vieram, numa linha só. A Cadência
+   * (`cadenciaRotulo` abaixo) saiu daqui na `ui-16`: virou chip ao lado da linha, em vez de sufixo
+   * concatenado na mesma string.
    */
   protected readonly linhaOrigem = computed<string>(() => {
-    const sufixoCadencia =
-      this.turnosPorRodada() > 1 ? ` · Cadência ${this.turnosPorRodada()}` : '';
     const combatenteAtual = this.combatente();
     // A carteirinha do agente vale tanto revelado quanto só-identidade — as duas populam
     // `donoNome` do mesmo jeito (m7-16); só os números diferem, e esta linha não os usa.
@@ -175,24 +174,33 @@ export class CartaoCombatente {
       const classeLabel = combatenteAtual.classe
         ? rotuloClasseCompleto(combatenteAtual.classe, combatenteAtual.arquetipo)
         : 'Agente';
-      return `${combatenteAtual.donoNome}\n${classeLabel}${sufixoCadencia}`;
+      return `${combatenteAtual.donoNome}\n${classeLabel}`;
     }
-    // A Cadência fica: ela é visível de qualquer forma — quem age duas vezes na rodada age duas
-    // vezes na frente de todo mundo.
     if (!this.revelado()) {
-      return `Em campo${sufixoCadencia}`;
+      return 'Em campo';
     }
     if (combatenteAtual.origem === CombatenteOrigemEnum.AVULSO) {
-      return `Digitado nesta sessão${sufixoCadencia}`;
+      return 'Digitado nesta sessão';
     }
     if (combatenteAtual.tipoFicha === TipoFichaEnum.CRIATURA) {
-      return `Criatura da campanha${sufixoCadencia}`;
+      return 'Criatura da campanha';
     }
     if (combatenteAtual.tipoFicha === TipoFichaEnum.JOGADOR) {
-      return `Agente${sufixoCadencia}`;
+      return 'Agente';
     }
-    return `Adicionado pelo mestre${sufixoCadencia}`;
+    return 'Adicionado pelo mestre';
   });
+
+  /**
+   * Chip "Cadência N" ao lado da linha de origem (`ui-16` — antes era sufixo de texto embutido em
+   * `linhaOrigem`). `null` quando ele tem só o turno padrão — "Cadência 1" seria ruído em todo
+   * agente (Cadência é atributo de criatura; o agente é sempre Singular). Visível **mesmo sem**
+   * `revelado()`/identidade: quem age duas vezes na rodada age duas vezes na frente de todo mundo,
+   * então esconder a Cadência nunca fez parte do que "não revelado" oculta.
+   */
+  protected readonly cadenciaRotulo = computed<string | null>(() =>
+    this.turnosPorRodada() > 1 ? `Cadência ${this.turnosPorRodada()}` : null,
+  );
 
   /**
    * Etiqueta do topo do cartão. O agente mostra o **estado** no combate (Morrendo tem precedência

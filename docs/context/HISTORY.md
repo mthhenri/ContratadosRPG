@@ -1,5 +1,117 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — UI-16: `app-barra-recurso` absorve três desenhos de Vida/Energia; recuo do "já agiu" pela moldura; precedência de estado do cartão de combatente documentada
+
+A spec de `ui-16` chegou do backlog herdada da auditoria visual (sessão anterior, branch
+`claude/ui-16-spec-xpgqsu`) e foi corrigida antes de implementar (commit `9bdad49`), com três
+achados que mudaram o escopo real:
+
+- **Sanidade não é um recurso numérico.** O Objetivo original listava "Vida, Energia, Sanidade"
+  como trio de recursos com máximo — mas `sistema-v4.1.0.md` §Sanidade diz textualmente "sua
+  sanidade não é uma 'barra' de valor convencional", e o app já a modela assim
+  (`ficha-sanidade`: Sequelas/Traumas/Lesões, sem par atual/máximo). Sanidade ficou fora.
+- **"Painel do mestre" não é um call site.** `painel-encontro.page.html` só instancia
+  `<app-cartao-combatente>` e repassa `vidaAjustada`/`energiaAjustada` — não tem marcação própria
+  de recurso para migrar. Adotar o primitivo no cartão já cobre o painel inteiro.
+- **`app-chip` nunca teve severidade `info`.** A spec original pedia "chip de severidade info" pra
+  Cadência; `ChipSeveridade` real é `primario | secundario | aviso | perigo`
+  (`chip.component.ts`) — `DESIGN.md` já documentava isso na tabela "Escolha de chip". Usado
+  `secundario` (informação neutra), sem estender a `ui-13`.
+
+A spec ativa foi reescrita com essas correções antes de qualquer código (ver
+`docs/specs/active/ui-16-barra-de-recurso-e-cartao-de-combatente.spec.md` — permanece em `active/`,
+não `done/`, ver "Pendência real" no fim deste bloco).
+
+**Entregável 1 — `app-barra-recurso` (`frontend/src/app/shared/ui/barra-recurso/`).** Rótulo +
+valor atual/máximo + trilho, cor fixa por recurso (`recurso: 'vida' | 'energia'` → `--vida`/
+`--energy`, não acompanham `--accent`) e `--alerta` automático abaixo de 25% (`--warning`, vence a
+cor do recurso por ordem deliberada no SCSS — comentário no arquivo aponta para não inverter). Dois
+modos: leitura simples (HUD, cartão) e `[editavel]` (bloco de vitalidade da ficha) — clique no
+número abre um `<input type="number" appAutoFocus>`, Enter/blur confirma via `atualAlterado`/
+`maximoAlterado` (números, não strings — o clamp de domínio, energiaAtual podendo negativar mas
+não vidaAtual/máximas, continua no consumidor). Achado durante a integração: o bloco de vitalidade
+da ficha edita a **base armazenada** de vidaMaxima/energiaMaxima, não o valor exibido (que já soma
+bônus de amplificador) — reproduzir esse comportamento exigiu um segundo input opcional,
+`[maximoEditavel]`, que separa "o que a barra mostra" de "o que a digitação parte" (coberto em
+`barra-recurso.component.spec.ts` e num teste de integração em `ficha-visualizacao.component.spec.ts`
+que verifica o valor inicial do campo de edição, não só o resultado emitido).
+
+**Entregável 2 — adoção nos três call sites reais.** `ficha-visualizacao.component.html`: o HUD
+sticky mobile (`ficha-hud__vital`, antes com o próprio trilho de 4px/`--radius-tight`) e o bloco de
+vitalidade desktop (`ficha-barra`, antes 8px/`--radius-control`, três linhas centralizadas —
+rótulo isolado em cima, depois steppers+valor, depois trilho). Nenhuma das duas alturas era
+normativa; o primitivo fixou uma altura própria (6px) e um layout novo: steppers (`ficha-passo`
+existente) flanqueando o primitivo, mesmo arranjo do cartão de combatente — a coluna de Vida/Energia
+da ficha deixou de ser um bloco centralizado de 3 linhas pra virar uma linha [stepper, rótulo+valor,
+trilho, stepper], mudança visual deliberada de unificação, não regressão (comparada ao vivo contra
+o card de Identidade — segue a mesma "voz"). `cartao-combatente.component.html`: Vida/Energia
+deixaram de ser texto puro (`Vida 12/20`) sem trilho algum — agora usam o primitivo com steppers
+`combatente__stepper` (18px desktop, 44px mobile só quando "Ajustar" abre, comportamento já
+existente preservado). `criatura-visualizacao` (`criatura__barra-vida`) ficou de fora — m4-04b,
+`DESIGN.md` já marca a ficha de criatura fora de escopo de revisões de tema.
+
+Removido como código morto após a migração: `percentualBarra()`/`percentualVida`/`percentualEnergia`
+e `percentual()` (duas implementações do mesmo cálculo de percentual no mesmo arquivo, uma por call
+site — o primitivo absorveu as duas), `editandoVitalidade`/`editarVitalidade`/`cancelarVitalidade`/
+`confirmarVitalidade`/o `viewChild` `entradaVitalidade` e o `effect` de foco associado (o primitivo
+usa `appAutoFocus`, diretiva já existente em `shared/auto-focus/`, em vez de um `effect` próprio por
+consumidor).
+
+**Entregável 3 — recuo do "já agiu" pela moldura.** Trocado `opacity: .62` no `.combatente` inteiro
+(defeito que a spec original documentava: apagava justamente Vida, Defesa e o selo de iniciativa
+que o mestre precisa ler) por `opacity: .55` só em `.combatente__retrato`; a etiqueta "já agiu" já
+usava `--text-mute` por padrão (nenhuma mudança necessária ali) e a borda permanece a `--border`
+neutra de repouso (nunca ganha a escalada de `--ativo`/`--morrendo`). Confirmado ao vivo por
+diferença de brilho médio de pixel: o retrato caiu de 43,9 pra 36,7 (~16%) entre o estado ativo e o
+estado "já agiu" do mesmo combatente na mesma captura; a faixa de números Vida/Energia ficou em
+35,1 → 35,6 (estável, dentro do ruído de anti-aliasing).
+
+**Entregável 4 — precedência de `--ativo`/`--agiu`/`--morrendo` documentada.** As três já produziam
+um resultado antes desta task, mas por ordem incidental de declaração no SCSS, nunca registrada.
+Decisão tomada e documentada (`DESIGN.md`, nova seção "Recurso com máximo e precedência de estado
+do cartão de combatente"): `--morrendo` vence `--ativo` no fundo/borda do cartão inteiro quando os
+dois coincidem — mesma prioridade que a etiqueta de texto já usava (`etiqueta()` devolve "Morrendo"
+antes de checar o turno) — e o selo de iniciativa continua acendendo em `--accent` nessa combinação,
+então "é a vez dele" não desaparece por completo. `--agiu` só mexe em opacidade do retrato, nunca em
+fundo/borda, e por isso soma sem conflito com `--morrendo`; é mutuamente exclusivo de `--ativo` já
+no template (`jaAgiu() && !ehTurnoAtual()`). Comentários no SCSS (`cartao-combatente.component.scss`)
+apontam a ordem como decisão, não reordenar.
+
+**Entregável 5 — Cadência virou chip.** Antes era um sufixo concatenado dentro da mesma string de
+`linhaOrigem()` (`" · Cadência 2"`, uma variável só, repetida nas seis ramificações da função).
+Extraída para um computed próprio (`cadenciaRotulo`) e renderizada como
+`<app-chip severidade="secundario">` ao lado da linha de origem (`combatente__origem-linha`, novo
+wrapper flex) — visível mesmo sem `revelado()`/identidade, mesma regra de antes ("quem age duas
+vezes na rodada age duas vezes na frente de todo mundo").
+
+**Testes.** Focados nos arquivos alterados: `barra-recurso.component.spec.ts` (9, incluindo
+`maximoEditavel`), `cartao-combatente.component.spec.ts` (23 — três reescritas para as novas
+classes/estrutura, sem perder cobertura: Cadência como chip em vez de sufixo, rótulo de Energia por
+extenso em vez de curto/longo, seletor `.combatente__barra` no lugar de `.combatente__recurso--vida`),
+`ficha-visualizacao.component.spec.ts` (165 — sete reescritas pelas novas classes/comportamento,
+uma delas trocada de acesso direto a método TS removido para asserção sobre o DOM renderizado,
+mais robusta). Suíte completa do frontend: 1495/1495. Lint: sem erro novo (só os avisos
+pré-existentes de aspas, repositório inteiro, não deste diff).
+
+**Verificação visual ao vivo.** Docker bloqueado pela política de rede do ambiente (registro
+`production.cloudfront.docker.com` nega 403) — Postgres local nativo (`apt`, mesmo `.env.example`)
+no lugar do container. Backend + frontend reais, cenário montado via REST (mestre, campanha, ficha
+de jogador, encontro com 3 combatentes — a própria ficha, uma criatura avulsa Cadência Dupla, um
+avulso singular) e Playwright dirigindo o browser de verdade, `1920×1080` e `360×800`: HUD mobile e
+bloco de vitalidade desktop da ficha (edição por clique, tooltip de progressão no hover do rótulo),
+painel de Iniciativa nos dois viewports com um combatente `ativo+morrendo` (ficha com `morrendo`
+setado antes do início) e o mesmo depois de avançar o turno (`agiu+morrendo`), a criatura de
+Cadência 2 com Vida abaixo de 25% mostrando trilho e chip em `--warning`, steppers mobile medidos
+em 44×44px via `boundingBox()`. Nenhum overflow horizontal, nenhuma tela com cara de HTML genérico;
+a comparação contra o card de Identidade da ficha (análogo aprovado) confirma mesma "voz" visual.
+
+**Validação da mesa real.** A própria spec cravou dois riscos como "validar em sessão real antes de
+fechar": a legibilidade do novo recuo do "já agiu" à distância de leitura da mesa, e se
+`--morrendo` vencer `--ativo` (em vez do inverso) é de fato a leitura certa. Nenhuma sessão de
+agente sozinha resolve isso; o autor (mthhenri) revisou as capturas dos dois estados — inclusive o
+par antes/depois de avançar o turno com o mesmo combatente `ativo+morrendo` → `agiu+morrendo` — e
+aprovou ("me parece ok, pode concluir"). Spec movida para `docs/specs/done/`.
+
 ## 2026-09-01 — UI-15: `app-confirmacao` substitui três padrões concorrentes de confirmação destrutiva
 
 A spec de `ui-15` chegou do backlog herdada da auditoria visual, listando quatro fluxos como cópias

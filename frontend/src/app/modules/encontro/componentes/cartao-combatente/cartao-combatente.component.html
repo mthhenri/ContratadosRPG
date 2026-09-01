@@ -98,7 +98,12 @@
             }
         }
 
-        <span class="combatente__origem">{{ linhaOrigem() }}</span>
+        <span class="combatente__origem-linha">
+            <span class="combatente__origem">{{ linhaOrigem() }}</span>
+            @if (cadenciaRotulo(); as cadencia) {
+                <app-chip severidade="secundario">{{ cadencia }}</app-chip>
+            }
+        </span>
 
         @if (totalOcorrencias() > 1) {
             <span class="combatente__turno"
@@ -204,7 +209,7 @@
 
         @if (revelado()) {
             <span class="combatente__recursos">
-                <span class="combatente__recurso combatente__recurso--vida">
+                <span class="combatente__recurso">
                     @if (podeAjustar()) {
                         <button
                             class="combatente__stepper"
@@ -216,7 +221,13 @@
                             −
                         </button>
                     }
-                    Vida {{ combatente().vidaAtual }}/{{ combatente().vidaMaxima }}
+                    <app-barra-recurso
+                        class="combatente__barra"
+                        rotulo="Vida"
+                        recurso="vida"
+                        [atual]="combatente().vidaAtual"
+                        [maximo]="combatente().vidaMaxima"
+                    />
                     @if (podeAjustar()) {
                         <button
                             class="combatente__stepper"
@@ -231,7 +242,7 @@
                 </span>
 
                 @if (temEnergia()) {
-                    <span class="combatente__recurso combatente__recurso--energia">
+                    <span class="combatente__recurso">
                         @if (podeAjustar()) {
                             <button
                                 class="combatente__stepper"
@@ -243,9 +254,13 @@
                                 −
                             </button>
                         }
-                        <span class="combatente__rotulo-longo">Energia</span>
-                        <span class="combatente__rotulo-curto">En</span>
-                        {{ combatente().energiaAtual }}/{{ combatente().energiaMaxima }}
+                        <app-barra-recurso
+                            class="combatente__barra"
+                            rotulo="Energia"
+                            recurso="energia"
+                            [atual]="combatente().energiaAtual ?? 0"
+                            [maximo]="combatente().energiaMaxima ?? 0"
+                        />
                         @if (podeAjustar()) {
                             <button
                                 class="combatente__stepper"
