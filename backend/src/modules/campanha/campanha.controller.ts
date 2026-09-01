@@ -20,6 +20,7 @@ import type {
   CampanhaResumoDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import { ActiveUser } from '../../core/decorators';
+import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaService } from './campanha.service';
 
@@ -30,6 +31,7 @@ import { CampanhaService } from './campanha.service';
  * ou o `usuarioId` do token (microinteligência sancionada — §7.1).
  */
 @Controller('campanha')
+@DocumentarController('Campanhas')
 export class CampanhaController {
   constructor(private readonly campanhaService: CampanhaService) {}
 

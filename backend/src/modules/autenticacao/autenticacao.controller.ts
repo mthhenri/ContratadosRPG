@@ -6,6 +6,7 @@ import type {
   UsuarioCriarDto,
 } from '@contratados-rpg/shared/dtos/usuario';
 import { Public } from '../../core/decorators';
+import { DocumentarController } from '../../core/openapi';
 import { AutenticacaoService } from './autenticacao.service';
 
 /**
@@ -14,6 +15,7 @@ import { AutenticacaoService } from './autenticacao.service';
  * à service (proibição #2). A saída é embrulhada em `StandardResponse<T>` pelo interceptor.
  */
 @Controller('autenticacao')
+@DocumentarController('Autenticação')
 export class AutenticacaoController {
   constructor(private readonly autenticacaoService: AutenticacaoService) {}
 

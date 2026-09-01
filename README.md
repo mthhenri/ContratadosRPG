@@ -26,6 +26,18 @@ Sucessor da [contratados-calculadora](https://github.com/mthhenri/contratados-ca
 | [docs/core/guia_de_mestre-v4.0.0.md](docs/core/guia_de_mestre-v4.0.0.md) | Fonte da verdade de criação de ameaças |
 | [docs/specs/](docs/specs/) | Workflow spec-driven: backlog → active → done |
 
+## API REST (Swagger)
+
+Com o backend em execução, a documentação navegável da API REST está em
+[`/api/docs`](http://localhost:3100/api/docs) e o documento OpenAPI bruto em
+[`/api/docs-json`](http://localhost:3100/api/docs-json). As duas rotas são públicas e não usam
+o envelope `StandardResponse` das operações de negócio.
+
+O Swagger cobre somente HTTP REST. O Socket.IO continua **broadcast-only**: mutações entram pela
+API REST e os eventos permanecem documentados no gateway, fora do OpenAPI. Ao criar, remover ou
+alterar endpoint ou DTO público, atualize a documentação na mesma task executando
+`npm run openapi:gerar-contratos --workspace=backend` e revise o teste de cobertura OpenAPI.
+
 ## Arquitetura
 
 Monorepo npm workspaces:

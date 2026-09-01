@@ -25,12 +25,14 @@ import { BuscaCampanhaFonteEnum } from '@contratados-rpg/shared/enums';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 
 import { ActiveUser } from '../../core/decorators';
+import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { BuscaCampanhaFontesPipe } from './busca-campanha-fontes.pipe';
 import { PaginaCadernoService } from './pagina-caderno.service';
 
 /** Endpoints protegidos do caderno; ids de rota são apenas mesclados aos DTOs. */
 @Controller()
+@DocumentarController('Caderno')
 export class PaginaCadernoController {
   constructor(private readonly service: PaginaCadernoService) {}
 

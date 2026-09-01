@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { Public } from '../core/decorators';
+import { DocumentarController } from '../core/openapi';
 
 /**
  * Endpoint operacional de disponibilidade da API. Não possui service nem repository: não
@@ -9,6 +10,7 @@ import { Public } from '../core/decorators';
  * `response-format.interceptor`. Ver m0-04-healthcheck-endpoint.spec.md.
  */
 @Controller('health')
+@DocumentarController('Operação')
 export class HealthController {
   @Public()
   @Get()

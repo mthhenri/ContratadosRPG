@@ -38,6 +38,7 @@ import type {
   FichaVitalidadeAlterarDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import { ActiveUser } from '../../core/decorators';
+import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { FichaService } from './ficha.service';
 
@@ -48,6 +49,7 @@ import { FichaService } from './ficha.service';
  * `@Param`/`@Query` (microinteligência sancionada — §7.1). Permissões e validação vivem na service.
  */
 @Controller('ficha')
+@DocumentarController('Fichas')
 export class FichaController {
   constructor(private readonly fichaService: FichaService) {}
 

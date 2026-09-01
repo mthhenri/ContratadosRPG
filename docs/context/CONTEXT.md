@@ -35,6 +35,13 @@ severidades e a escolha entre chip de rótulo e chip de severidade. Testes focad
 completa 1462/1463 (única falha é `P-043`, preexistente, sem relação com este diff), lint sem erro
 novo, verificação visual em `1920×1080`/`360×800` nos quatro consumidores.
 
+**`swagger-documentacao-api` concluída** (spec em `docs/specs/done/`, ainda sem commit): o
+backend expõe Swagger UI em `/api/docs` e JSON OpenAPI em `/api/docs-json`. Uma ponte gerada a
+partir dos DTOs públicos e das controllers preserva as interfaces de `shared` como fonte de
+verdade, documenta os 87 pares REST atuais com JWT/envelopes/erros e protege deriva por teste.
+`npm run openapi:gerar-contratos --workspace=backend` deve acompanhar toda alteração de endpoint
+ou DTO público. Testes backend 476/476, build limpo e lint sem erros novos; ver `HISTORY.md`.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -54,7 +61,6 @@ estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 |---|---|---|
 | `ui-14`…`ui-17` | frontend/design system | filhas da auditoria visual (`INDEX-ajustes-auditoria.md` define a ordem sugerida) — estados de lista vazio/esqueleto, confirmação destrutiva, barra de recurso + recuo do cartão de combatente, primitivo de painel flutuante |
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
-| `swagger-documentacao-api` | backend/infra | expõe a API REST atual via OpenAPI/Swagger gerado pelo backend, sem alterar contratos |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 

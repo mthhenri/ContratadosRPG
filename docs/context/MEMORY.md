@@ -65,6 +65,7 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 | `@Public()`, `@ActiveUser()` | `backend/src/core/decorators/` |
 | Exceções de negócio | `backend/src/core/exceptions/` — `BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException` |
 | Filtro global + interceptor de resposta | `backend/src/core/filters/`, `backend/src/core/interceptors/` |
+| Documentação REST OpenAPI/Swagger | `backend/src/core/openapi/` — `openapi.document.ts` registra `/api/docs` e `/api/docs-json`; `contratos-gerados.ts` é produzido por `backend/tools/gerar-openapi-contratos.ts` a partir de DTOs públicos e controllers |
 | **Gateway WebSocket** (broadcast-only) | `backend/src/core/gateway/` — `CampanhaGateway`, `WsIoAdapter` |
 | Resincronização da Iniciativa quando a ficha muda fora do `EncontroService` (ficha flutuante etc.) | `CampanhaGateway.emitirFichaAlterada` chama `EncontroService.sincronizarFichaAlterada` |
 | **Armazenamento de blob** (avatar da ficha, local/R2) | `backend/src/core/armazenamento/` — `ArmazenamentoProvedor`, `ArmazenamentoLocalProvedor`/`ArmazenamentoR2Provedor`, toggle via `ConfigService.obterConfiguracaoArmazenamento()` |
@@ -141,6 +142,7 @@ A lista completa está no [`CLAUDE.md`](../../CLAUDE.md) ("Development Commands"
 | Apagar e recriar o banco local com fixtures | `npm run db:reset:dev` |
 | Reconciliar apenas as fixtures locais | `npm run db:seed:dev` |
 | API (`:3100`) | `npm run backend:dev` |
+| Gerar contrato OpenAPI após mudar DTO/endpoint público | `npm run openapi:gerar-contratos --workspace=backend` |
 | SPA (`:4300`) | `npm run frontend:dev` |
 | **Testar o motor de regras** — antes de tocar em qualquer fórmula | `npm run test --workspace=shared` |
 

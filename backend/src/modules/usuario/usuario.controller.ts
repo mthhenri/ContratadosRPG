@@ -30,6 +30,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/usuario';
 import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
 import { ActiveUser, TiposPermitidos } from '../../core/decorators';
+import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { UsuarioService } from './usuario.service';
 
@@ -40,6 +41,7 @@ import { UsuarioService } from './usuario.service';
  * montando o DTO com o `id` do token (microinteligência sancionada — §7.1).
  */
 @Controller('usuario')
+@DocumentarController('Usuários')
 @TiposPermitidos(TipoUsuarioEnum.ADMIN)
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
