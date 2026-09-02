@@ -14,7 +14,25 @@
     align-items: flex-start;
     gap: var(--gap-grid);
     width: 85vw;
-    margin: 0 auto;
+    margin: 0 7.5vw;
+    transition:
+        width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+        margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+
+    // Feed de rolagens aberto: a iniciativa passa a ocupar apenas a área que sobra à esquerda.
+    &--lateral-aberta {
+        width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2));
+        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
+
+        .iniciativa {
+            width: 100%;
+            margin: 0;
+        }
+    }
 
     &--dividida {
         .iniciativa {
@@ -79,6 +97,15 @@
 
         &__ficha {
             display: none;
+        }
+
+        &--lateral-aberta {
+            width: 100%;
+            margin: 0;
+
+            .iniciativa {
+                width: 100%;
+            }
         }
     }
 }

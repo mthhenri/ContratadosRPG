@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — barra lateral: histórico e inventário passam a reservar a área de trabalho
+
+As barras de **Histórico de Rolagens** e **Inventário de Esquadrão** deixaram de escurecer e cobrir
+o conteúdo acima de `560px`. O token `--largura-painel-lateral` dá ao painel até `500px`, limitado a
+`48vw`; campanha, ficha de jogador, ficha de criatura e painel de Iniciativa passam a reservar essa
+mesma faixa à direita enquanto o histórico está aberto. Na campanha do mestre, o inventário adota a
+mesma reserva e os dois estados são mutuamente exclusivos. No mobile, o painel segue full-bleed,
+com fundo, foco inicial e fechamento por `Escape`, para não dividir inutilmente os `360px` disponíveis.
+
+O protocolo visual agora inclui `960×1080` como viewport de **tela dividida**, além de
+`1920×1080` e `360×800`; `DESIGN.md` e as cópias sincronizadas da skill `verify` registram esse
+terceiro cenário. O análogo mantido foi o painel lateral de rolagens aprovado (`ui-17`): mesma
+superfície, cabeçalho técnico, densidade e controles, mudando só a relação espacial com a página.
+
+Testes focados dos dois painéis: **8/8**. Lint do frontend sem erro novo (avisos históricos).
+Build de produção passou, com os dois warnings de budget conhecidos. Inspeção na aplicação real com
+campanhas locais temporárias: mestre em `1920×1080` (histórico, 500px), mestre em `960×1080`
+(inventário, ~461px) e `360×800` (histórico full-bleed), além do jogador em `960×1080` (histórico,
+sem gatilho de inventário). A ficha foi conferida nos três viewports, e a Iniciativa em `960×1080`.
+Em desktop e tela dividida, o conteúdo terminou 40px antes do painel e permaneceu acionável, sem
+backdrop; no mobile, o backdrop permaneceu ativo. A suíte frontend ampla
+teve **1546/1547** testes: a única falha foi `Stat > mostra traço atenuado quando o valor não foi
+preenchido`, pertencente a alteração alheia já presente em `shared/ui/stat`, fora deste recorte.
+
 ## 2026-09-02 — ui-22: dado descartado (kh/kl) ganha risco diagonal em vez de line-through
 
 Quinto ajuste na mesma revisão: o autor pediu que o dado descartado por `kh`/`kl` (ou qualquer

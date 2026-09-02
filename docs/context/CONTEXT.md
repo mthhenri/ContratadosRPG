@@ -4,15 +4,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-22` concluída — variante
-> `[compacto]` de `app-resultado-rolagem` (total 22px, pool numa linha), adotada no painel lateral
-> de histórico e no feed da campanha; item do histórico com rótulo dentro da caixa e a régua
-> curva por ficha na lateral esquerda, mesma receita do item ativo da topbar (ui-21); aria-label
-> no dado descartado; duração da barra da bandeja por custom property; glow do crítico em mixin;
-> legenda discreta com a expressão de dados abaixo do rótulo (`rolagem.formula`, coluna nova via
-> migration `0028`), ausente no teste de Atributo direto; dado descartado por `kh`/`kl` risca na
-> diagonal (`::after` com gradiente, `currentColor`) em vez do antigo `text-decoration: line-
-> through`.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** histórico e inventário deixam
+> de escurecer e cobrir o conteúdo acima de 560px — o token `--largura-painel-lateral` (até 500px,
+> 48vw em tela dividida) reserva a faixa à direita em campanha, ficha de jogador, ficha de criatura
+> e Iniciativa. `960×1080` (tela dividida) entra como terceiro viewport obrigatório de verificação
+> visual, ao lado de `360×800` e `1920×1080`.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -522,11 +518,13 @@ modificações canônicas: ele aplica categoria, restrições do item, conflitos
 `shared/regras/compras`, enquanto a base deliberadamente não calcula prestígio, custo pessoal,
 fragmentos ou modificações livres. O catálogo preserva a adição simples e oferece **Modificar**;
 o Item custom mostra uma prévia de seus chips antes da criação.
-No desktop, as sidebars compartilhadas de inventário de esquadrão e histórico de rolagens têm 500px;
-o histórico usa a mesma largura na campanha e na ficha. A pilha de atalhos flutuantes (inventário,
-histórico e calculadora, conforme a tela) fica a 24px do canto inferior esquerdo tanto na campanha
-quanto na ficha. Em viewports mobile, esses controles continuam inline no cabeçalho com alvos de 44px
-e as sidebars ocupam toda a largura disponível.
+No desktop, as sidebars compartilhadas de inventário de esquadrão e histórico de rolagens têm até
+500px; ao abrir, reservam essa faixa à direita e a campanha/ficha/Iniciativa usam somente a área
+restante, sem fundo bloqueador. Em tela dividida, a largura é limitada a 48% da viewport para manter
+uma coluna de trabalho útil. A pilha de atalhos flutuantes (inventário, histórico e calculadora,
+conforme a tela) fica a 24px do canto inferior esquerdo tanto na campanha quanto na ficha. No mobile,
+esses controles continuam inline no cabeçalho com alvos de 44px e as sidebars ocupam toda a largura
+com fundo de fechamento.
 
 O **Caderno** também integra os utilitários da campanha. Cada membro possui um caderno privado por
 campanha, formado por páginas com título e Markdown, sem imagens ou anexos. A página usa Milkdown
@@ -1069,6 +1067,7 @@ que já existia **escrito e correto** mas nunca ligado a nenhum template em
 mesmo seletor, sem piloto novo (as 4 cópias locais restantes têm obstáculo real: duas mostram um
 valor **derivado** — atributo + bônus — que digitação direta editaria errado, duas outras
 precisam de um `[tamanho]` compacto que o primitivo ainda não tem, `IDEAS.md` `I-026`).
+
 Dois bugs só apareceram na verificação ao vivo, nenhum pego por teste unitário isolado: a
 navegação por teclado usava o sinal `ativa()` do consumidor (atualiza só no próximo ciclo do
 Angular) em vez do foco real de DOM, perdendo passos em setas rápidas; e `.abas__rotulo`, sendo

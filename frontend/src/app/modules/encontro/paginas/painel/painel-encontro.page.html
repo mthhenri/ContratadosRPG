@@ -1,4 +1,8 @@
-<div class="iniciativa-tela" [class.iniciativa-tela--dividida]="mostrarFichaLateral()">
+<div
+    class="iniciativa-tela"
+    [class.iniciativa-tela--dividida]="mostrarFichaLateral()"
+    [class.iniciativa-tela--lateral-aberta]="rolagensSidebarAberto()"
+>
     <section class="iniciativa">
         <header class="iniciativa__topo">
             <a
@@ -63,6 +67,7 @@
                     }
                     <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
                     <app-historico-rolagens-sidebar
+                        [(aberto)]="rolagensSidebarAberto"
                         titulo="Rolagens da Campanha"
                         [itens]="rolagensFeed()"
                         [carregando]="carregandoRolagens()"

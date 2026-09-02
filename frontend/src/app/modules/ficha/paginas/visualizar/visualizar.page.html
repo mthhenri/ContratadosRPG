@@ -1,4 +1,4 @@
-<section class="ficha-pagina">
+<section class="ficha-pagina" [class.ficha-pagina--lateral-aberta]="historicoSidebarAberto()">
     <header class="ficha-pagina__topo">
         @if (campanhaId(); as campanhaAtualId) {
         <a
@@ -42,6 +42,7 @@
              um. Precisam ficar juntos no DOM para o `flex` do grupo colocá-los um do lado do outro
              nessa faixa. -->
             <app-historico-rolagens-sidebar
+                [(aberto)]="historicoSidebarAberto"
                 titulo="Histórico de Rolagens"
                 [itens]="historicoRolagens()"
                 [carregando]="historicoCarregando()"

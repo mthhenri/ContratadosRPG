@@ -178,6 +178,8 @@ export class FichaVisualizar {
 
   /** P-021: botão "Abrir calculadora" de dentro do painel do histórico (só existe no mobile). */
   protected readonly calculadoraAberta = signal(false);
+  /** A página reserva a faixa da direita enquanto o histórico está aberto. */
+  protected readonly historicoSidebarAberto = signal(false);
 
   /** Rolagens desta tela ainda em voo no REST (m3-77) — ver `onRolagemRemota`. */
   private rolagensLocaisEmVoo = 0;

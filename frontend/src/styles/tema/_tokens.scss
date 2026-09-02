@@ -100,6 +100,11 @@
     --space-16: 16px;
     --space-20: 20px;
 
+    /* --- Layout de apoio --- */
+    /* Painéis de consulta que permanecem abertos ao lado da área de trabalho. Em janela dividida
+       ocupa no máximo 48% para que a página preserve uma coluna útil. */
+    --largura-painel-lateral: min(500px, 48vw);
+
     /* --- Espaço semântico (densidade confortável) --- */
     --pad-card: 20px;
     --gap-grid: 16px;

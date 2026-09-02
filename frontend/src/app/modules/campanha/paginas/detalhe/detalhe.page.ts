@@ -303,6 +303,9 @@ export class CampanhaDetalhe {
 
   /** P-021: botão "Abrir calculadora" de dentro do painel do histórico (só existe no mobile). */
   protected readonly calculadoraAberta = signal(false);
+  /** A página reserva a faixa da direita enquanto uma das consultas laterais está aberta. */
+  protected readonly historicoSidebarAberto = signal(false);
+  protected readonly inventarioSidebarAberto = signal(false);
   /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão do assistente). */
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
 
@@ -782,6 +785,16 @@ export class CampanhaDetalhe {
     // Slot de contexto da topbar (ui-21): nome da campanha, sempre que `campanha()` mudar
     // (carregamento inicial, rename) — some ao sair da tela, como `tempoRealService.sairSala*`.
     effect(() => this.topbarContexto.definir(this.campanha()?.nome ?? null));
+    effect(() => {
+      if (this.historicoSidebarAberto()) {
+        this.inventarioSidebarAberto.set(false);
+      }
+    });
+    effect(() => {
+      if (this.inventarioSidebarAberto()) {
+        this.historicoSidebarAberto.set(false);
+      }
+    });
     this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
 
     this.carregar(true);

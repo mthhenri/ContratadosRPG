@@ -50,19 +50,22 @@ npm run start --workspace=frontend -- --port 4301 --proxy-config <proxy apontand
 
 ## Viewports padrão
 
-Toda verificação visual usa um destes dois tamanhos fixos — nunca a janela padrão do
-navegador nem um tamanho arbitrário:
+Toda verificação visual usa estes tamanhos fixos — nunca a janela padrão do navegador nem um
+tamanho arbitrário:
 
 - **Mobile:** `360×800` (Galaxy S20 FE) — telefone de referência do projeto.
+- **Tela dividida:** `960×1080` — metade de um Full HD; valida uma ficha ou campanha aberta ao
+  lado de mapa, chamada ou painel de apoio antes de o layout entrar no mobile.
 - **Desktop:** `1920×1080` (FullHD).
 
 ```js
 await browser.newContext({ viewport: { width: 360, height: 800 } });  // mobile
+await browser.newContext({ viewport: { width: 960, height: 1080 } }); // tela dividida
 await browser.newContext({ viewport: { width: 1920, height: 1080 } }); // desktop
 ```
 
-O breakpoint mobile do CSS (`$bp-mobile`) é `560px` — 360px está bem dentro dele, então
-qualquer verificação em 360×800 já exercita o layout mobile real, não uma zona intermediária.
+O breakpoint mobile do CSS (`$bp-mobile`) é `560px` — 360px está bem dentro dele, enquanto
+960px exerce deliberadamente a zona intermediária, antes do mobile.
 
 ## Dirigir a UI
 

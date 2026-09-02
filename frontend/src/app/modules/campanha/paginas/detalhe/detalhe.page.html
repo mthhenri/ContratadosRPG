@@ -1,4 +1,7 @@
-<section class="detalhe">
+<section
+    class="detalhe"
+    [class.detalhe--lateral-aberta]="historicoSidebarAberto() || inventarioSidebarAberto()"
+>
     @if (carregando()) {
     <!--
       Esqueleto de carregamento — o papel do usuário (mestre/jogador) só é conhecido depois que
@@ -244,6 +247,7 @@
                 </a>
                 <app-historico-rolagens-sidebar
                     #historicoSidebar
+                    [(aberto)]="historicoSidebarAberto"
                     titulo="Rolagens da Campanha"
                     [itens]="rolagensFeed()"
                     [carregando]="carregandoRolagens()"
@@ -252,6 +256,7 @@
                 />
                 @if (exibirComoMestre()) {
                 <app-inventario-esquadrao-sidebar
+                    [(aberto)]="inventarioSidebarAberto"
                     [campanhaId]="campanhaAtual.id"
                     [itens]="inventarioEsquadrao()"
                     [fichas]="fichasDestinoInventario()"

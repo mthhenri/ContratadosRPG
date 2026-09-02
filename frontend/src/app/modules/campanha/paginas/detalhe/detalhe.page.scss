@@ -60,10 +60,32 @@
     }
     // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
     // (m2-18), que aproveita mais a tela que o teto fixo.
-    max-width: 85vw;
-    margin: 0 auto;
+    width: 85vw;
+    max-width: none;
+    margin: 0 7.5vw;
+    transition:
+        width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+        margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+
+    // A consulta lateral deixa de encobrir a campanha: a área de trabalho usa o espaço restante
+    // da viewport e continua acionável. O mesmo token define a largura real do painel.
+    &--lateral-aberta {
+        width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2));
+        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
+
+        @include bp.mobile {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+        }
+    }
 
     @include bp.mobile {
+        width: 100%;
         max-width: 100%;
     }
 
