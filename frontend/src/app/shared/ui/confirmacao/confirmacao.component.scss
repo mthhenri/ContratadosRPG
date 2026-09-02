@@ -25,6 +25,9 @@
     // `app-botao` não define tamanho por conta própria (ui-01) — o alvo de toque de mobile
     // segue o mesmo padrão de `ReceberDanoDialog` (`receber-dano__confirmar`/`__cancelar`), o
     // outro consumidor de `app-modal` com rodapé de ação/cancelamento.
+    // ui-19: padding/font-weight/letter-spacing batem com o degrau `grande` do app-botao, mas
+    // font-size é 12px (o degrau é 13px) e o degrau também traria `min-height: 48px` no
+    // desktop, que este rodapé nunca teve — não migrado para `[tamanho]`.
     &__acao {
         padding: var(--space-12) var(--space-20);
         font-size: 12px;

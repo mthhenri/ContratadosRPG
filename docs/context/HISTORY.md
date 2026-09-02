@@ -1,5 +1,63 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — UI-19: guarda de teclado, opacidade única e migração de degrau em `app-botao`
+
+Filha da auditoria visual (seção Botão), fecha os três buracos do primitivo mais usado (8
+severidades × 4 estilos, ~20 consumidores).
+
+**Guarda de teclado do `carregando`.** Antes, `carregando` só barrava o clique por ponteiro
+(`pointer-events: none`) — pelo teclado, `Enter`/`Espaço` num `<button>`/`<a>` focado ainda
+disparava a ação, porque `pointer-events` não tem efeito nenhum sobre ativação por teclado. A
+correção não intercepta `click` (um `(click)` no host do primitivo correria *depois* do `(click)`
+do template do consumidor — mesmo elemento, sem nó wrapper, e a ordem de invocação de listeners no
+mesmo alvo é a ordem de registro no DOM, não a de declaração do primitivo — tarde demais para
+barrar); em vez disso cancela o `keydown` de `Enter`/`Espaço` (`evento.preventDefault()`), que
+impede o `click` de sequer existir. `carregando` também passou a marcar `aria-disabled="true"`,
+além do `aria-busy` já existente, para o leitor de tela anunciar o estado. `disabled` continua
+exclusivo do consumidor — as duas fontes não brigam pelo mesmo atributo.
+
+**Uma única opacidade de desabilitado.** O primitivo sempre teve `0.55`
+(`var(--botao-opacidade-desabilitado, 0.55)`); seis cópias declaravam a variável para sobrescrever
+esse valor — `receber-dano-dialog` e `leitor-pdf-mobile` com `0.4`, `historico-rolagens-sidebar`
+("Carregar mais"), `login`/`registro` ("Entrar") e `perfil` (ações) com `0.6`. As seis declarações
+foram apagadas e o primitivo virou `opacity: 0.55;` puro — sem fresta de customização, a variável
+não existe mais em nenhum consumidor.
+
+**Migração de `[tamanho]`.** Ao contrário do texto da spec ("Não define dimensão hoje"), `[tamanho]`
+(`pequeno`/`medio`/`grande`) já existia desde a `ui-01b`, com os três degraus definidos em
+`botao.component.scss` — a spec herdada da auditoria estava desatualizada nesse ponto, corrigida
+antes de implementar. O trabalho real do entregável 3 era auditar os ~36 consumidores de
+`app-botao` que ainda não usam `[tamanho]` e migrar os que batem. Uma sub-tarefa (`Explore`)
+levantou padding/font-size/font-weight/letter-spacing/gap de cada classe-companheira contra os três
+degraus; migrar `[tamanho]` também adota o font-size/weight/letter-spacing/gap do degrau inteiro,
+não só o padding — então só migraram os casos onde padding **e** font-size **e** font-weight batiam
+exatamente: `.acesso__revogar` (`detalhe.page`, `visualizar.page`, `visualizar-criatura.page` — 3
+telas, mesma receita de "Revogar acesso de visualização") e `.config-custom__salvar`
+(`configuracoes-tema`, "Salvar cor") → `[tamanho]="pequeno"`. Cinco quase-matches (padding bate,
+mas outra propriedade diverge) ficaram **anotados** no SCSS com comentário `// ui-19` em vez de
+migrados: `.detalhe__encontro-acao` (font-weight 700≠600), `.config-opcao`/`.config-swatch`
+(font-size 12≠11), `.historico-rolagens__abrir-calculadora` (font-weight 600≠700, e o `display:
+none` do desktop colidiria em especificidade empatada com `:host(.botao--medio)`) e
+`.confirmacao__acao` (font-size 12≠13, e o degrau `grande` traria `min-height: 48px` que esse
+rodapé nunca teve). Os ~30 consumidores restantes divergem claramente (paddings de outra família,
+sem classe-companheira, ou botões quadrados ícone-only usando `app-botao` em vez de
+`app-botao-icone`) e não foram anotados — anotar todos seria escopo desproporcional ao pedido da
+spec (`CLAUDE.md` "Rigor com eficiência"). `DESIGN.md` ganhou a seção "Acabamento do botão (ui-19)"
+com a tabela dos três degraus e as duas regras.
+
+**Verificação:** suíte completa frontend 1508/1508 (2 testes novos do guardarTeclado/aria-disabled
+em `botao.component.spec.ts`), build de produção limpo, lint sem erro novo. Verificação visual ao
+vivo (Postgres 16 nativo — Docker indisponível no ambiente) em `1920×1080`/`360×800`: os dois
+consumidores migrados (`.acesso__revogar` no modal "Acesso de visualização" de uma ficha real,
+`.config-custom__salvar` no modal de tema) renderizaram sem overflow, com a mesma densidade dos
+botões vizinhos não migrados (`.config-opcao`/`.config-swatch`, que ficaram com padding idêntico
+mas font-size divergente, sem quebrar o alinhamento visual do grupo); opacidade de desabilitado
+conferida via `getComputedStyle` num botão real da tela de login — `0.55` exato, convergência sem
+quebra de cascata. A guarda de teclado do `carregando` não tem consumidor real hoje (nenhuma tela
+usa `[carregando]="..."` ainda — é opt-in, ui-01b) — verificada só por teste de componente
+(`dispatchEvent(new KeyboardEvent('keydown', ...))` + `defaultPrevented`), não ao vivo; fica como
+pendência natural para quando o primeiro consumidor adotar `carregando`.
+
 ## 2026-09-01 — UI-18: cinco degraus de espaço fecham a última dimensão sem escala do tema
 
 Filha da auditoria visual (achado 3 de Tokens): forma e tipografia já eram tokenizadas, espaço
