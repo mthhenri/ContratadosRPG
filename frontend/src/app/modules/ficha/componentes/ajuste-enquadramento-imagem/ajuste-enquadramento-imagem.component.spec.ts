@@ -132,4 +132,12 @@ describe('AjusteEnquadramentoImagem', () => {
     botaoConfirmar.click();
     expect(confirmados).toEqual([{ x: 10, y: 90, escala: 1.2 }]);
   });
+
+  it('apresenta Cancelar antes de Confirmar nos botões médios canônicos', () => {
+    const { raiz } = montar('https://exemplo.test/avatar.webp');
+    const acoes = [...raiz.querySelectorAll('.enquadramento__acoes .botao')] as HTMLButtonElement[];
+
+    expect(acoes.map((botao) => botao.textContent?.trim())).toEqual(['Cancelar', 'Confirmar']);
+    expect(acoes.every((botao) => botao.classList.contains('botao--medio'))).toBe(true);
+  });
 });

@@ -1,3 +1,5 @@
+@use "tema/breakpoints" as bp;
+
 // Seletor de enquadramento (pan/zoom) do avatar — painel sobreposto ancorado pelo host, nunca
 // empurra o resto da coluna. Só tokens do tema "Terminal de Contenção" (proibição #29).
 
@@ -20,6 +22,11 @@
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
     box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 60%, transparent);
+
+    @include bp.mobile {
+        left: 50%;
+        transform: translateX(-50%);
+    }
 
     &__cabecalho {
         display: flex;
@@ -77,7 +84,17 @@
 
     &__acoes {
         display: flex;
-        gap: 8px;
+        gap: var(--space-8);
         justify-content: flex-end;
+
+        @include bp.mobile {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            .botao {
+                width: 100%;
+                min-height: bp.$alvo-toque;
+            }
+        }
     }
 }

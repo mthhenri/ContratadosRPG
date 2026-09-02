@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — UI-26: ações canônicas no enquadramento de avatar
+
+O painel de pan/zoom do avatar tinha ações com ordem invertida e sem um degrau de tamanho explícito
+do primitivo. O rodapé agora é `Cancelar` (secundário) → `Confirmar` (primário), ambos com
+`app-botao[tamanho="medio"]`; em celular, a grade preserva dois alvos de 44px. A inspeção inicial
+revelou que o popover ainda cortava o Confirmar por estar ancorado à esquerda do avatar. No
+breakpoint móvel, ele passou a se centralizar em relação ao avatar, sem alterar pan/zoom, upload ou
+persistência.
+
+Teste focado: 12/12; suíte completa do frontend: 1.538/1.538. Lint sem erros (15.220 avisos
+preexistentes) e build de produção concluído, mantendo somente os avisos de budget inicial e do
+estilo de `FichaVisualizacao`. Verificação ao vivo em `1920×1080` e `360×800` com o fluxo real de
+reajuste de imagem existente: ordem e variantes corretas, sem overflow horizontal; no mobile o
+painel ficou de `51,23px` a `308,77px` da viewport e os dois botões mediram 44px de altura mínima.
+
 ## 2026-09-02 — UI-21: chrome da topbar (item ativo, contexto, tempo real fixo, Escape, painel de tema)
 
 Cinco ajustes na mesma barra de 52px, filhos da auditoria visual (seção "Chrome de aplicação").
