@@ -4,8 +4,9 @@ import { NotificacaoService } from './notificacao.service';
 
 /**
  * Prova a fila de `NotificacaoService`: enfileira, auto-sumir por severidade (mesma janela de
- * tempo por severidade, `erro` mais longa que `sucesso`), dispensa manual com a mesma transição de
- * saída de `BandejaDadosService` (marca `saindo` antes de remover de fato) e empilhamento.
+ * tempo por severidade, `erro` mais longa que `sucesso`), dispensa manual com a mesma transição
+ * de saída de `BandejaDadosService` (marca `saindo` antes de remover de fato), empilhamento e,
+ * desde a ui-20, `duracaoMs`/`acao` por entrada e o par `pausar`/`retomar` do hover.
  */
 describe('NotificacaoService', () => {
   function montar() {
@@ -80,6 +81,59 @@ describe('NotificacaoService', () => {
 
       vi.advanceTimersByTime(4000);
       expect(servico.fila().find((e) => e.resumo === 'Demorada')?.saindo).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('notificar carrega duracaoMs e acao na entrada (ui-20)', () => {
+    const servico = montar();
+    const executar = vi.fn();
+    servico.notificar({
+      severidade: 'erro',
+      resumo: 'Falhou',
+      acao: { rotulo: 'Tentar de novo', executar },
+    });
+
+    expect(servico.fila()[0].duracaoMs).toBe(8000);
+    expect(servico.fila()[0].acao).toEqual({ rotulo: 'Tentar de novo', executar });
+  });
+
+  it('pausar cancela o auto-sumir; retomar reagenda a partir do tempo cheio (ui-20)', () => {
+    vi.useFakeTimers();
+    try {
+      const servico = montar();
+      const id = servico.notificar({ severidade: 'sucesso', resumo: 'Salvo' });
+
+      vi.advanceTimersByTime(3000);
+      servico.pausar(id);
+      vi.advanceTimersByTime(4000); // ultrapassaria os 4000ms de sucesso se não tivesse pausado
+      expect(servico.fila()[0].saindo).toBe(false);
+
+      servico.retomar(id);
+      vi.advanceTimersByTime(3999);
+      expect(servico.fila()[0].saindo).toBe(false);
+      vi.advanceTimersByTime(1);
+      expect(servico.fila()[0].saindo).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('retomar não reagenda uma entrada que já está saindo ou que não existe mais', () => {
+    vi.useFakeTimers();
+    try {
+      const servico = montar();
+      const id = servico.notificar({ severidade: 'sucesso', resumo: 'Salvo' });
+
+      servico.fechar(id);
+      servico.retomar(id);
+      vi.advanceTimersByTime(200);
+      expect(servico.fila()).toHaveLength(0);
+
+      servico.retomar(9999); // id inexistente — não deve lançar
+      vi.advanceTimersByTime(10000);
+      expect(servico.fila()).toHaveLength(0);
     } finally {
       vi.useRealTimers();
     }

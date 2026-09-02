@@ -1,5 +1,72 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — UI-20: ícone, ação e barra de duração na fila de notificações
+
+Filha da auditoria visual (seção Abas · modal · notificações). A fila de `NotificacaoService`
+(ui-02) tinha 4 severidades e régua de 3px, mas nenhum ícone, nenhuma forma de responder a um
+erro além de fechar, e nenhuma indicação de quanto tempo restava — os três padrões já existiam no
+projeto (ícone em `app-icone`, estilo `link` do `app-botao`, barra de duração com pausa no hover
+da bandeja de dados), só não tinham chegado à fila.
+
+**Ícone por severidade.** `check` (sucesso), `alerta` (aviso) casam de cara com o nome; `olho`
+(informação) e `excluir` (erro) sobraram por eliminação — o catálogo do `app-icone` não tem um "i"
+nem um "x" dedicados, e o entregável vetava ícone novo. Cor do ícone, da régua esquerda e da barra
+de duração é a mesma por severidade — os quatro tokens que já pintavam a régua desde a `ui-02`
+(`--positive`/`--energy`/`--warning`/`--erro`), agora aplicados também aos dois elementos novos via
+seletor aninhado (`&--sucesso .notificacoes__icone`, etc.) em vez de uma cor solta.
+
+**Slot de ação.** `NotificacaoService.notificar(...)` ganhou `acao?: { rotulo, executar }`, guardado
+na entrada junto com `duracaoMs` (abaixo). O template renderiza a ação como `app-botao`
+`estilo="link"`, com `[variante]` também derivada da severidade — `positivo`/`info`/`aviso`/
+`perigo`, que por coincidência de nome já usam exatamente os mesmos quatro tokens de cor do SCSS
+deste componente, então a ação sai pintada igual ao resto do card sem nenhuma cor custom. É um
+`<button>` nativo, irmão do botão "×" dentro do mesmo card — Enter/Espaço ativam sozinhos, sem
+guarda de teclado dedicada, ao contrário do `carregando` da `ui-19` (que precisou cancelar o
+`keydown` porque ali a ativação nativa era o comportamento indesejado; aqui é exatamente o que se
+quer).
+`Notificacoes.executarAcao()` chama `entrada.acao.executar()` e só depois `servico.fechar(id)`,
+nessa ordem: se fosse ao contrário, um erro dentro de `executar()` fecharia o toast sem o usuário
+saber se a ação de fato rodou.
+
+**Barra de duração.** Mesma receita visual da bandeja de dados (`bandeja-esvazia`, `m3-22`): barra
+de 3px que esvazia da esquerda pra direita e volta cheia + pausa no `:hover` do card inteiro. A
+diferença é que a bandeja tem uma duração só (7s, literal no CSS); a fila de notificações tem
+quatro (`sucesso` 4s … `erro` 8s), então a duração não podia ficar hardcoded no SCSS — `notificar`
+agora grava `duracaoMs: DURACAO_MS[severidade]` em cada entrada, e o template liga
+`[style.animation-duration.ms]="entrada.duracaoMs"` na barra; o CSS só declara a forma
+(`@keyframes notificacoes-esvazia`, nome próprio porque `@keyframes` não é escopado por componente
+no Angular). O par `pausar`/`retomar` do serviço (mesmo par de `BandejaDadosService`) cancela e
+reagenda o timer de auto-sumir junto com o `(mouseenter)`/`(mouseleave)` do card — a barra visual
+(CSS puro) e o fechamento de verdade (timer JS) pausam/retomam juntos porque os dois reagem ao
+mesmo hover, não porque um controla o outro. `prefers-reduced-motion` zera a animação da barra —
+achado lateral: a bandeja de dados **não** tem esse `@media` na sua própria barra (só na entrada e
+na saída), registrado como `PROBLEMS.md` P-019 em vez de corrigido (arquivo fora do recorte desta
+spec).
+
+**Documentação.** `DESIGN.md` ganhou a seção "Fila de notificações — ícone, ação e duração
+(ui-20)", com a régua de quando um `acao` de notificação basta (resposta curta, de uma etapa, sem
+confirmação — "tentar de novo", "ver detalhes") e quando o caso precisa de `ConfirmacaoService`
+(ui-15) ou um `app-modal` de verdade (ação destrutiva, ou explicar várias opções) — a notificação
+nunca é um diálogo de decisão disfarçado.
+
+**Verificação:** suíte completa frontend 1516/1516 (8 testes novos: ícone por severidade,
+`duracaoMs` na barra, ausência do botão de ação sem `acao`, ação com variante/teclado/ordem
+executar-then-fechar, par pausar/retomar no serviço e no componente), build de produção limpo,
+lint sem erro novo (buscas mecânicas do `convencoes-check` limpas no diff). Verificação visual ao
+vivo (Postgres 16 nativo, backend e frontend reais, sessão real via `/autenticacao/registro` +
+`/autenticacao/login`) em `1920×1080`/`360×800`: as quatro severidades lado a lado, com e sem ação,
+sem overflow em nenhum dos dois viewports; hover no card com ação (erro) mostrou a barra voltando
+a 100% (comparação antes/depois do hover); ativação da ação só por teclado (`Tab` implícito via
+`.focus()` + `Enter`, sem `click` de mouse) executou o callback e iniciou a saída do toast, na
+ordem certa; `prefers-reduced-motion: reduce` emulado via Playwright confirmou
+`animation-name: none` computado na barra. Como não há hoje nenhum call site real passando `acao`
+(o único candidato natural, `error-handler.interceptor.ts`, exigiria repetir a requisição original —
+fora do escopo do entregável, que pede a capacidade, não um "tentar de novo" genérico arriscando
+reenvio duplicado de POST/PATCH em dezenas de call sites não relacionados), a verificação visual
+da ação usou uma notificação disparada manualmente via `NotificacaoService` (mesmo padrão de
+verificação sem consumidor real que a guarda de teclado da `ui-19` já usou) — registrado aqui, não
+como pendência: a capacidade está completa e testada, só falta um consumidor real adotá-la.
+
 ## 2026-09-02 — UI-19: guarda de teclado, opacidade única e migração de degrau em `app-botao`
 
 Filha da auditoria visual (seção Botão), fecha os três buracos do primitivo mais usado (8

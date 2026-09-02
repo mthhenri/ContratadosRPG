@@ -165,7 +165,7 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.abas` | Barra de abas — troca de painel no lugar (`tablist`/`tab`/`tabpanel`), não navegação de rota | `__item--ativa`, colapso mobile só-ícone | **`<app-abas rotulo="…">` + `<button app-aba valor="…">` + `[appAbaPainel]`** |
 | `.modal` | Caixa de diálogo modal, sobre `<dialog>` nativo — cabeçalho com título + "×", corpo projetado | `[largura]` (CSS livre), `[fechavelPeloFundo]` (default `true`), slots `[modalIcone]` (ícone no cabeçalho) e `[modalAcoes]` (rodapé de botões, régua acima, some por completo se vazio) | **`<app-modal aberto titulo>…</app-modal>`** |
 | `.confirmacao` | Diálogo de confirmação destrutiva sobre `app-modal` — mensagem + botão de ação + cancelar no `[modalAcoes]` | Severidade `perigo` (padrão — `variante="perigo"` no botão, ícone `alerta` em `--erro` no cabeçalho) ou `padrao` (`variante="primario"`, sem ícone); `entidade` destaca um trecho da mensagem em negrito | **`ConfirmacaoService.confirmar({ titulo, mensagem, … }): Promise<boolean>`** + `<app-confirmacao />` (um único, no `layout`) |
-| `.notificacoes` | Fila de notificações flutuante, `bottom-center` | 4 severidades — `sucesso`, `informacao`, `aviso`, `erro` (`--vida` fixo, não `--accent`) | **`NotificacaoService.notificar(...)`** + `<app-notificacoes />` (um único, no `layout`) |
+| `.notificacoes` | Fila de notificações flutuante, `bottom-center` | 4 severidades — `sucesso`, `informacao`, `aviso`, `erro` (`--vida` fixo, não `--accent`) — cada uma com ícone, cor de régua/barra e ação opcional (`estilo="link"`, ver "Fila de notificações" abaixo); barra de duração com pausa no hover, duração real por severidade | **`NotificacaoService.notificar(...)`** + `<app-notificacoes />` (um único, no `layout`) |
 | `.estado-vazio` | Estado vazio de lista — ícone + título mono + linha de apoio, borda tracejada `--border-strong` | Ação opcional projetada (`[estadoVazioAcao]`, `app-botao` `contorno`/`link`) | **`<app-estado-vazio icone="…" titulo="…" [linhaApoio]="…">`** |
 | `.esqueleto` | Bloco de esqueleto de carregamento — fundo `--surface-2` pulsante, honra `prefers-reduced-motion` | Só identidade (cor/raio/pulso); o consumidor dimensiona pela própria classe BEM no mesmo elemento | **`<app-esqueleto class="…">`** |
 | `.painel-flutuante` | Janela flutuante arrastável, não modal — mesma superfície/borda/sombra de `.modal`, cabeçalho com título + minimizar (`−`) + "×" | `[compacta]` (popup pequeno, ex. calculadora) vs. janela normal (`[largura]`/`[altura]` do consumidor); `[mobile]` vira folha cheia sem arraste; `[maximizada]` só acabamento (some o raio); slots `[painelCabecalhoExtra]`, `[painelAcoesExtras]`, `[painelRedimensionar]` | **`<app-painel-flutuante id="…" titulo="…" [aberto]="…" (fechar)="…">`** (`shared/ui/painel-flutuante/`) |
@@ -344,6 +344,43 @@ como a `ui-01` estabeleceu; a `ui-19` não mudou esse contrato, só migrou os co
 Todo degrau soma `gap: var(--space-8)` e `text-transform: uppercase`. Alvo de toque de 44px no
 mobile é responsabilidade do consumidor (`min-height`/`min-width` na própria classe BEM ou
 `bp.$alvo-toque`) nos três degraus — nenhum deles garante 44px sozinho no desktop.
+
+### Fila de notificações — ícone, ação e duração (`ui-20`)
+
+`app-notificacoes` (`NotificacaoService`) ganhou três acabamentos, sem mexer no posicionamento
+`bottom-center` nem no par entra/sai da `ui-02`.
+
+**Ícone por severidade.** Cada severidade sai com o ícone que já existe no catálogo do
+`app-icone` — nenhum glifo novo: `check` (sucesso), `olho` (informação, por eliminação — não há
+"i" no catálogo), `alerta` (aviso) e `excluir` (erro, também por eliminação). A cor do ícone, da
+régua esquerda e da barra de duração é sempre a mesma por severidade —
+`--positive`/`--energy`/`--warning`/`--erro`, os quatro tokens que já pintavam a régua desde a
+`ui-02`.
+
+**Quando a notificação leva ação, e quando o erro exige diálogo.** O slot de ação
+(`acao: { rotulo, executar }` em `NotificacaoService.notificar(...)`) é para uma resposta curta,
+de uma etapa e sem confirmação própria — "tentar de novo" numa requisição que falhou, "ver
+detalhes" num aviso. É **erro** quem mais costuma precisar dela; sucesso/informação/aviso raramente
+têm o que responder além de fechar. Ela sai como `app-botao` `estilo="link"`, com a `variante` da
+própria severidade (`positivo`/`info`/`aviso`/`perigo` — as quatro já usam exatamente os mesmos
+tokens `--positive`/`--energy`/`--warning`/`--erro`), **nunca** um botão `preenchido`/`contorno`:
+a notificação não é um cartão de decisão, é um aviso passageiro que pode ganhar uma saída rápida.
+Uma ação **destrutiva**, que precisa de confirmação, ou um erro que exige explicar **várias**
+opções ao usuário não cabem no toast — isso é sempre `ConfirmacaoService.confirmar(...)` (`ui-15`)
+ou um `app-modal` de verdade, nunca um `acao` de notificação disfarçado de diálogo. A ação nunca
+fecha o toast antes de rodar: `executarAcao` chama `entrada.acao.executar()` e só depois chama
+`fechar(id)` — na ordem inversa, um erro dentro de `executar()` fecharia a notificação sem o
+usuário saber se a ação de fato aconteceu.
+
+**Barra de duração.** Mesmo comportamento da bandeja de dados (`ui-16`/`m3-22`): uma barra de 3px
+no rodapé do card esvazia da esquerda pra direita e volta cheia + pausa no `:hover` do card
+inteiro (não só da barra). A diferença para a bandeja — que tem uma duração só (7s) — é que aqui
+cada severidade tem a sua (`sucesso` 4s, `informação` 5s, `aviso` 6s, `erro` 8s, mais tempo de
+leitura pra quem mais precisa dele); por isso a duração real do `NotificacaoService` chega à barra
+por `entrada.duracaoMs`, ligado a `animation-duration` no template — nunca um segundo número
+escrito solto no SCSS. O par `pausar`/`retomar` do serviço (mesmo par de `BandejaDadosService`)
+cancela e reagenda o timer de auto-sumir junto com o hover, para a barra visual e o fechamento de
+verdade nunca discordarem. `prefers-reduced-motion` zera a animação da barra.
 
 ## Cor de ficha (identidade por personagem, m3-61)
 

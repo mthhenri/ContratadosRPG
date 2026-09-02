@@ -4,9 +4,9 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-19` concluída — `app-botao`
-> ganhou guarda de teclado no `carregando`, opacidade de desabilitado única (`0.55`) e migração de
-> `[tamanho]` nos consumidores cujo padding+font-size+font-weight batiam com um degrau. Ainda
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-20` concluída — a fila de
+> notificações ganhou ícone por severidade, slot de ação opcional (`estilo="link"` do `app-botao`)
+> e barra de duração com pausa no hover, alimentada pela duração real do serviço. Ainda
 > pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
@@ -168,25 +168,24 @@ espaçamento de antes em `stat`/`chip`/`cartao`/`botao`/`barra-recurso`; `campo`
 `notificacao`/`confirmacao` isoladas e o item de histórico com dados reais não foram exercitados ao
 vivo nesta rodada (mudança de uma linha cada, mesmo mecanismo já confirmado no resto).
 
-**`ui-19-botao-acabamento` concluída** (spec em `docs/specs/done/`): `app-botao` ganhou guarda de
-teclado no `carregando` (cancela `keydown` de `Enter`/`Espaço` — `pointer-events: none` sozinho não
-barra ativação por teclado — e marca `aria-disabled` além do `aria-busy` já existente) e convergiu
-para uma única opacidade de desabilitado (`0.55`; as seis cópias que declaravam
-`--botao-opacidade-desabilitado` com `0.4`/`0.6` foram apagadas). `[tamanho]` (`pequeno`/`medio`/
-`grande`) já existia desde a `ui-01b`, ao contrário do que a spec herdada da auditoria dizia
-("Não define dimensão hoje") — corrigido antes de implementar; o trabalho real foi auditar os ~36
-consumidores de `app-botao` sem `[tamanho]` e migrar os dois cujo padding+font-size+font-weight
-batiam exatamente com um degrau: `.acesso__revogar` (3 telas: `detalhe.page`, `visualizar.page`,
-`visualizar-criatura.page`) e `.config-custom__salvar` (`configuracoes-tema`) →
-`[tamanho]="pequeno"`. Cinco quase-matches (só o padding bate) ficaram anotados com `// ui-19` no
-SCSS em vez de migrados — divergem em font-size/font-weight ou trariam dimensão nova
-(`min-height`/`display`) que o consumidor nunca teve. `DESIGN.md` documenta a regra `carregando`×
-`disabled`, a opacidade única e a tabela dos três degraus. Suíte completa frontend 1508/1508, build
-e lint limpos. Verificação visual ao vivo (Postgres nativo, Docker indisponível no ambiente) em
-`1920×1080`/`360×800` nos dois consumidores migrados (modal "Acesso de visualização" de uma ficha
-real, modal de tema) e opacidade `0.55` conferida via `getComputedStyle` num botão real de
-`/login`; a guarda de teclado não tem consumidor real ainda (`carregando` é opt-in, sem tela
-adotando hoje) — verificada só por teste de componente.
+**`ui-20-fila-de-notificacoes` concluída** (spec em `docs/specs/done/`): `app-notificacoes` ganhou
+ícone por severidade (`check`/`olho`/`alerta`/`excluir`, sem glifo novo — `olho`/`excluir` sobraram
+por eliminação para informação/erro), slot de ação opcional (`acao?: { rotulo, executar }` em
+`NotificacaoService.notificar(...)`, renderizado como `app-botao` `estilo="link"` com `[variante]`
+da própria severidade — `executarAcao` chama `executar()` e só depois `fechar(id)`, nunca ao
+contrário) e barra de duração de 3px com pausa no hover (mesma receita da bandeja de dados,
+`m3-22`), alimentada por `entrada.duracaoMs` (4 valores por severidade, não um número fixo no CSS
+como a bandeja tem). Achado lateral: a barra da bandeja de dados não honra
+`prefers-reduced-motion` — registrado como `PROBLEMS.md` P-019, não corrigido (fora do recorte).
+`DESIGN.md` ganhou a seção "Fila de notificações" com a régua de quando uma ação de toast basta e
+quando o caso precisa de `ConfirmacaoService`/`app-modal`. Suíte completa frontend 1516/1516 (8
+testes novos), build e lint limpos. Verificação visual ao vivo (Postgres nativo) em
+`1920×1080`/`360×800`: quatro severidades com e sem ação, hover pausando/restaurando a barra,
+ativação da ação só por teclado, `prefers-reduced-motion` emulado confirmando a animação
+desligada. Sem call site real usando `acao` ainda (o candidato natural,
+`error-handler.interceptor.ts`, exigiria reenviar a requisição original — fora do escopo do
+entregável) — verificado com uma notificação disparada manualmente, mesmo padrão que a guarda de
+teclado da `ui-19` já usou sem consumidor real. Detalhe completo em `HISTORY.md`.
 
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
@@ -197,11 +196,11 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-19` concluída — ver acima). Restam `ui-20`…`ui-23` no backlog
-(fila de notificações, chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do
-cartão — ver "Fila do backlog" abaixo). A única frente de código de milestone ainda pendente é o
-**M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7
-estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
+Não há spec ativa no momento (`ui-20` concluída — ver acima). Restam `ui-21`…`ui-23` no backlog
+(chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão — ver "Fila do
+backlog" abaixo). A única frente de código de milestone ainda pendente é o **M4**
+(`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7 estão
+concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -210,7 +209,7 @@ estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-20`…`ui-23` | frontend/design system | quatro specs restantes da auditoria visual (fila de notificações, chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
+| `ui-21`…`ui-23` | frontend/design system | três specs restantes da auditoria visual (chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
 
 Milestone ainda não aberto: `m5-guia-missao`.
 
@@ -232,8 +231,8 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-19`
-(2026-09-02): frontend 1508/1508 — o defeito `P-043` que rondava a suíte completa em rodadas
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-20`
+(2026-09-02): frontend 1516/1516 — o defeito `P-043` que rondava a suíte completa em rodadas
 anteriores não reproduziu nesta. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só
 reproduzem isoladas (arquivo único), não na suíte completa.
 

@@ -21,6 +21,18 @@
     }
 }
 
+// Barra de duração (ui-20): mesma receita da bandeja de dados (`bandeja-esvazia`), com nome
+// próprio porque `@keyframes` não é escopado por componente no Angular. A duração real vem do
+// serviço via `animation-duration` inline (`entrada.duracaoMs`) — o CSS só declara a forma.
+@keyframes notificacoes-esvazia {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
 .notificacoes {
     position: fixed;
     left: 50%;
@@ -37,6 +49,8 @@
     }
 
     &__item {
+        position: relative; // ancora a barra de duração no rodapé (ui-20)
+        overflow: hidden; // a barra respeita o raio da carta, mesmo padrão de `BandejaDados`
         display: flex;
         align-items: flex-start;
         gap: var(--space-12);
@@ -61,18 +75,55 @@
             transition: none;
         }
 
+        // Cada severidade tinge a régua esquerda, o ícone (ui-20) e a barra de duração (ui-20)
+        // com a mesma cor — `.notificacoes__icone`/`.notificacoes__barra` são descendentes
+        // diretos deste item, então o seletor abaixo não vaza para outras severidades.
         &--sucesso {
             border-left-color: var(--positive);
+
+            .notificacoes__icone {
+                color: var(--positive);
+            }
+            .notificacoes__barra {
+                background: var(--positive);
+            }
         }
         &--informacao {
             border-left-color: var(--energy);
+
+            .notificacoes__icone {
+                color: var(--energy);
+            }
+            .notificacoes__barra {
+                background: var(--energy);
+            }
         }
         &--aviso {
             border-left-color: var(--warning);
+
+            .notificacoes__icone {
+                color: var(--warning);
+            }
+            .notificacoes__barra {
+                background: var(--warning);
+            }
         }
         &--erro {
-            border-left-color: var(--vida);
+            border-left-color: var(--erro);
+
+            .notificacoes__icone {
+                color: var(--erro);
+            }
+            .notificacoes__barra {
+                background: var(--erro);
+            }
         }
+    }
+
+    &__icone {
+        flex: 0 0 auto;
+        display: flex;
+        margin-top: 1px; // alinha o topo do glifo com a primeira linha do resumo
     }
 
     &__texto {
@@ -97,6 +148,18 @@
         color: var(--text-dim);
     }
 
+    // Ação opcional (ui-20) — estilo `link` do primitivo (P-034), sem degrau de tamanho: os
+    // três degraus da `ui-18` (`docs/design/DESIGN.md`) trazem padding/uppercase de botão de
+    // verdade, pesado demais para uma resposta inline dentro do próprio texto do toast.
+    &__acao {
+        align-self: flex-start;
+        margin-top: var(--space-4);
+        padding: 0;
+        font-family: var(--font-sans);
+        font-size: 12.5px;
+        font-weight: 600;
+    }
+
     &__fechar {
         flex: 0 0 auto;
         margin-left: auto;
@@ -116,5 +179,30 @@
             min-width: bp.$alvo-toque;
             min-height: bp.$alvo-toque;
         }
+    }
+
+    // Barra de duração (ui-20) — mesmo comportamento de `BandejaDados`: esvazia da esquerda pra
+    // direita pela duração real da severidade (`entrada.duracaoMs`, inline no template) e volta
+    // cheia + pausa no hover do card inteiro (não só da barra). Cor por severidade em
+    // `&__item--*` acima; aqui só a forma.
+    &__barra {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        transform-origin: left;
+        animation-name: notificacoes-esvazia;
+        animation-timing-function: linear;
+        animation-fill-mode: forwards;
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
+    }
+
+    &__item:hover &__barra {
+        animation: none; // pausa
+        transform: scaleX(1); // e volta ao máximo
     }
 }
