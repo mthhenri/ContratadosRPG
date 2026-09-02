@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-22: a curvinha migrou de embaixo pra lateral esquerda
+
+Terceiro ajuste na mesma revisão: a régua curva ficou boa, mas o autor preferiu na **lateral
+esquerda** em vez de embaixo (mais perto da barra de 3px do POC B original, só que agora
+arredondada). Muda só a direção do `box-shadow` inset — a receita continua a mesma da topbar
+(`border-radius` + `box-shadow inset`, cor por ficha): `inset 0 -2px 0` virou `inset 2px 0 0`, sem
+tocar em padding, fundo ou no resto do cartão. Verificado ao vivo de novo contra as 38 rolagens
+(todas as formas de expressão) em `1920×1080`/`360×800`, painel da ficha — sem overflow, curva
+visível nos dois cantos da esquerda (topo e base), glow do crítico ileso. Teste focado 4/4, build
+limpo.
+
 ## 2026-09-02 — ui-22: escolhido o POC B ("tira colorida"), com a curvinha da topbar
 
 Da rodada de 3 POCs visuais da revisão anterior (cartão/tira colorida/linha corrida), o autor

@@ -278,10 +278,11 @@
 
     // ui-22: dez rolagens cabem em bem menos altura que antes — a lista ganha gap enxuto e o
     // item vira um cartão único (rótulo + meta + a rolagem) em vez de cabeçalho fora da caixa e
-    // corpo dentro dela. O acabamento do cartão (fundo `--surface-2` + réguinha inferior em
+    // corpo dentro dela. O acabamento do cartão (fundo `--surface-2` + réguinha lateral em
     // `--cor-ficha`, arredondada pelo raio do próprio cartão) reusa a receita do item ativo da
-    // topbar (`layout.component.scss` `&--ativo`, ui-21): mesmo `box-shadow: inset 0 -2px 0`, cor
-    // por ficha em vez de `--accent` — "a mesma curvinha" pedida na revisão.
+    // topbar (`layout.component.scss` `&--ativo`, ui-21) — mesmo `box-shadow` inset, cor por
+    // ficha em vez de `--accent`, só o lado trocado (esquerda em vez de embaixo, a pedido do
+    // autor) — "a mesma curvinha" pedida na revisão.
     &__lista {
         list-style: none;
         margin: 0;
@@ -298,7 +299,7 @@
         padding: var(--space-12) var(--space-16);
         background: var(--surface-2);
         border-radius: var(--radius-control);
-        box-shadow: inset 0 -2px 0 var(--cor-ficha, var(--border-strong));
+        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
     }
 
     &__meta {

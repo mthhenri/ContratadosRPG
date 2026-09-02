@@ -7,9 +7,10 @@
 > **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-22` concluída — variante
 > `[compacto]` de `app-resultado-rolagem` (total 22px, pool numa linha), adotada no painel lateral
 > de histórico e no feed da campanha; item do histórico com rótulo dentro da caixa e a régua
-> inferior curva por ficha, mesma receita do item ativo da topbar (ui-21); aria-label no dado
-> descartado; duração da barra da bandeja por custom property; glow do crítico em mixin. Ainda
-> pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
+> curva por ficha na lateral esquerda, mesma receita do item ativo da topbar (ui-21); aria-label
+> no dado descartado; duração da barra da bandeja por custom property; glow do crítico em mixin.
+> Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
+> seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
@@ -268,10 +269,11 @@ atributo como dado/escalado/offset, repetição `#N`, crítico, desvantagem intr
 `HISTORY.md`), 38 rolagens reais na mesma lista sem overflow. 3 POCs visuais gerados e enviados ao
 autor para escolha (cartão/tira colorida/linha corrida); escolheu a **tira colorida**, pedindo
 mais padding e a "curvinha" da topbar — `historico-rolagens__item` trocou `border-left` por
-`box-shadow: inset 0 -2px 0 var(--cor-ficha, var(--border-strong))` + `border-radius`, a mesma
-receita do item ativo da topbar (`layout.component.scss` `&--ativo`, ui-21), que é o que faz a
-régua curvar nos cantos. Medido de novo: 780px pras mesmas 10 rolagens. Testes focados 8/8, suíte
-completa frontend 1539/1540 (única falha,
+`box-shadow` inset + `border-radius`, a mesma receita do item ativo da topbar
+(`layout.component.scss` `&--ativo`, ui-21) que faz a régua curvar nos cantos; a régua migrou de
+embaixo (`inset 0 -2px 0`) para a lateral esquerda (`inset 2px 0 0`) num terceiro ajuste da mesma
+revisão. Medido de novo: 780px pras mesmas 10 rolagens. Testes focados 8/8, suíte completa
+frontend 1539/1540 (única falha,
 `painel-flutuante.component.spec.ts`, não reproduz isolada nem tem relação com este diff), lint
 sem erro novo, build limpo. Verificação visual ao vivo (Postgres nativo) em
 `1920×1080`/`360×800`, painel da ficha e feed da
