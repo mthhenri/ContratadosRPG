@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — fix: mensagem de vazio por aba no inventário
+
+O painel de inventário sempre teve duas fontes de "vazio": o bloco genérico
+`app-estado-vazio` (só olhava o inventário inteiro, itens + amplificadores) e um
+texto solto por aba (`Nenhum fragmento/amplificador no inventário.`) que só
+cobria as abas de Amplificadores/Fragmentos. Com o inventário inteiro zerado, as
+duas apareciam juntas em qualquer aba — a genérica e a específica, duplicadas.
+`secaoFiltradaVazia`/`tituloSecaoVazia` substituem o critério único por um por
+aba (`mostrandoSoAmplificadores`/`mostrandoSoFragmentos`/equipamentos), e o
+`app-estado-vazio` (ícone + título + apoio) passa a ser a única mensagem em
+qualquer uma das três abas; o texto solto foi removido. `inventarioVazio`
+(inventário como um todo) segue existindo só para o botão "Esvaziar".
+
+Suíte de `FichaInventario`: 167/167. Verificação ao vivo em `1920×1080` e
+`360×800`: ficha nova sem nada no inventário mostra "Nenhum item"/"Nenhum
+amplificador"/"Nenhum fragmento no inventário." conforme a aba, sem duplicar;
+com um amplificador já adquirido, a aba Fragmentos mostra só a mensagem de
+fragmento, e a aba Amplificadores lista o item normalmente — sem regressão.
+
 ## 2026-09-02 — UI-26: ações canônicas no enquadramento de avatar
 
 O painel de pan/zoom do avatar tinha ações com ordem invertida e sem um degrau de tamanho explícito
