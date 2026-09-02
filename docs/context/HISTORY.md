@@ -1,5 +1,36 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — painéis laterais: saída contínua e sem sobreposição durante o retorno
+
+O Histórico de Rolagens e o Inventário de Esquadrão não são mais removidos no mesmo clique que
+inicia o fechamento. Cada componente separa seu estado público de abertura do estado de renderização:
+ao fechar, a rota começa a recuperar sua largura e o painel permanece no DOM por `260ms`, deslizando
+para fora; ao terminar, o painel e o backdrop são removidos. Se a pessoa reabrir antes do término,
+o temporizador é cancelado e o mesmo painel segue aberto. Esse desenho conserva a interação já
+existente — Escape, backdrop mobile e exclusividade entre histórico/inventário — sem o sumiço seco
+que interrompia a transição.
+
+Campanha, ficha de jogador, ficha de criatura e Iniciativa trocaram margens automáticas por largura
+e margens numéricas interpoláveis. Painel e área de trabalho usam a mesma curva de `260ms`; após
+uma primeira inspeção, a saída passou a compartilhar essa curva, pois uma curva de aceleração fazia
+o conteúdo retornar antes da retirada lateral do painel. No ponto intermediário de `960×1080`, o
+painel saiu para `x≈933px`, enquanto o conteúdo terminava em `x≈884px`: a área voltou sem passar sob
+a superfície. `prefers-reduced-motion` continua desabilitando o movimento.
+
+A investigação da expressão que não aparece no histórico das rolagens rápidas concluiu que não há
+perda no serviço nem no backend: os testes diretos de atributo registram somente rótulo e resultado
+por decisão explícita anterior, porque o rótulo já identifica o atributo. A bandeja de dados ainda
+recebe a fórmula completa; danos, presets e rolagens avulsas persistem sua fórmula normalmente.
+
+Testes focados dos painéis: **10/10**; suíte frontend completa: **1549/1549**. Lint terminou com
+zero erros (15.293 avisos de estilo já presentes no repositório) e o build passou, preservando os
+dois avisos de orçamento conhecidos. Na aplicação real, abertura e fechamento foram observados em
+`1920×1080`, `960×1080` e `360×800`; a topbar de 52px permaneceu acima do painel, os estados
+intermediários de histórico e inventário foram medidos em 960px, e não houve overflow horizontal.
+O análogo visual foi o próprio painel lateral aprovado na tarefa imediatamente anterior, preservando
+superfície, cabeçalho técnico, densidade e controles. A spec está em
+`docs/specs/done/painel-lateral-transicao-fluida.spec.md`.
+
 ## 2026-09-02 — painel lateral: topbar preservada e histórico ganha contexto
 
 O refinamento da reserva lateral moveu o início efetivo do **Histórico de Rolagens** e do

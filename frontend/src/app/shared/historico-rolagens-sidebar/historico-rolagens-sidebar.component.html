@@ -5,25 +5,26 @@
     [class.historico-rolagens__gatilho--empilhado]="acimaDaCalculadora()"
     [class.utilitario-flutuante--acima]="acimaDaCalculadora()"
     [attr.aria-expanded]="aberto()"
-    [attr.aria-label]="aberto() ? 'Fechar histórico de rolagens' : 'Abrir histórico de rolagens'"
-    [appTooltip]="'Histórico de rolagens'"
+    [attr.aria-label]="aberto() ? 'Fechar ' + titulo().toLowerCase() : 'Abrir ' + titulo().toLowerCase()"
+    [appTooltip]="titulo()"
     (click)="alternar()"
 >
     <app-icone nome="d20" />
 </button>
 
-@if (aberto()) {
+@if (painelRenderizado()) {
     <button
         class="historico-rolagens__fundo"
+        [class.historico-rolagens__fundo--saindo]="saindo()"
         type="button"
-        aria-label="Fechar histórico de rolagens"
+        [attr.aria-label]="'Fechar ' + titulo().toLowerCase()"
         (click)="fechar()"
     ></button>
 
     <aside
         class="historico-rolagens__painel"
-        role="dialog"
-        aria-modal="true"
+        [class.historico-rolagens__painel--saindo]="saindo()"
+        role="complementary"
         [attr.aria-label]="titulo()"
         tabindex="-1"
         appAutoFocus
@@ -40,7 +41,7 @@
                 class="historico-rolagens__fechar"
                 type="button"
                 app-botao
-                aria-label="Fechar histórico de rolagens"
+                [attr.aria-label]="'Fechar ' + titulo().toLowerCase()"
                 (click)="fechar()"
             >
                 ✕

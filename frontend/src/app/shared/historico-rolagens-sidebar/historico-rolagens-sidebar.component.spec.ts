@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
@@ -53,6 +53,57 @@ describe('HistoricoRolagensSidebar', () => {
     const gatilho = obterGatilho();
     expect(gatilho.classList).toContain('utilitario-flutuante--acima');
     expect(gatilho.classList).toContain('historico-rolagens__gatilho--empilhado');
+  });
+
+  it('expõe a abertura para que a página reserve a coluna lateral', () => {
+    obterGatilho().click();
+    fixture.detectChanges();
+
+    expect(fixture.componentRef.instance.aberto()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.historico-rolagens__painel')).not.toBeNull();
+  });
+
+  it('usa o contexto recebido no título visível e nos rótulos do histórico', () => {
+    fixture.componentRef.setInput('titulo', 'Histórico de Rolagens da Campanha');
+    fixture.detectChanges();
+
+    const gatilho = obterGatilho();
+    expect(gatilho.getAttribute('aria-label')).toBe('Abrir histórico de rolagens da campanha');
+
+    gatilho.click();
+    fixture.detectChanges();
+
+    const painel = fixture.nativeElement.querySelector('.historico-rolagens__painel') as HTMLElement;
+    expect(painel.getAttribute('aria-label')).toBe('Histórico de Rolagens da Campanha');
+    expect(painel.querySelector('.historico-rolagens__titulo')?.textContent?.trim()).toBe(
+      'Histórico de Rolagens da Campanha',
+    );
+  });
+
+  it('mantém o painel montado durante a saída e cancela essa saída ao reabrir', () => {
+    vi.useFakeTimers();
+    try {
+      const gatilho = obterGatilho();
+      gatilho.click();
+      fixture.detectChanges();
+
+      (fixture.nativeElement.querySelector('.historico-rolagens__fechar') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(fixture.componentRef.instance.aberto()).toBe(false);
+      expect(fixture.nativeElement.querySelector('.historico-rolagens__painel')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.historico-rolagens__painel--saindo')).not.toBeNull();
+
+      gatilho.click();
+      fixture.detectChanges();
+      vi.advanceTimersByTime(260);
+      fixture.detectChanges();
+
+      expect(fixture.componentRef.instance.aberto()).toBe(true);
+      expect(fixture.nativeElement.querySelector('.historico-rolagens__painel')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.historico-rolagens__painel--saindo')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('mostra o esqueleto de carregamento (ui-14) em vez de um texto solto', () => {

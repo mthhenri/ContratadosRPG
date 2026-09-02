@@ -66,28 +66,27 @@
     }
 
     &__fundo {
-        position: fixed;
-        inset: 0;
-        z-index: 64;
-        background: rgb(0 0 0 / 55%);
-        border: 0;
-        cursor: default;
+        display: none;
     }
 
     &__painel {
         position: fixed;
-        top: 0;
+        top: var(--altura-topbar);
         right: 0;
         bottom: 0;
         z-index: 65;
-        width: min(500px, 100vw);
+        width: var(--largura-painel-lateral);
         display: flex;
         flex-direction: column;
         background: var(--surface);
         border-left: 1px solid var(--border-strong);
         box-shadow: -16px 0 40px rgb(0 0 0 / 45%);
         outline: none;
-        animation: historico-rolagens-desliza 0.22s ease;
+        animation: historico-rolagens-entra 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &--saindo {
+    animation: historico-rolagens-sai 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
 
         @media (prefers-reduced-motion: reduce) {
             animation: none;
@@ -362,18 +361,62 @@
     }
 
     @include bp.mobile {
+        &__cabecalho {
+            gap: var(--space-8);
+            padding: var(--space-12) var(--space-16);
+        }
+
+        &__titulo {
+            flex: 1;
+            min-width: 0;
+            font-size: 11px;
+            line-height: 1.35;
+            white-space: normal;
+        }
+
+        &__regua,
+        &__contagem {
+            display: none;
+        }
+
+        &__fundo {
+            display: block;
+            position: fixed;
+            inset: var(--altura-topbar) 0 0;
+            z-index: 64;
+            background: rgb(0 0 0 / 55%);
+            border: 0;
+            cursor: default;
+            opacity: 1;
+            transition: opacity 0.26s ease;
+
+            &--saindo {
+                opacity: 0;
+            }
+        }
+
         &__painel {
             width: 100vw;
         }
     }
 }
 
-@keyframes historico-rolagens-desliza {
+@keyframes historico-rolagens-entra {
     from {
         transform: translateX(100%);
     }
 
     to {
         transform: translateX(0);
+    }
+}
+
+@keyframes historico-rolagens-sai {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(100%);
     }
 }

@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, model, output, signal } from '@angular/core';
 import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/campanha';
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
 import { Icone } from '../icone/icone.component';
@@ -16,6 +16,34 @@ export class InventarioEsquadraoSidebar {
   readonly itens = input.required<readonly CampanhaInventarioItemDto[]>();
   readonly fichas = input<readonly { id: number; nome: string }[]>([]);
   readonly alterado = output<readonly CampanhaInventarioItemDto[]>();
-  protected readonly aberto = signal(false);
-  protected fechar(): void { this.aberto.set(false); }
+  /** Estado bidirecional para a página reservar a faixa da barra lateral quando ela está aberta. */
+  readonly aberto = model(false);
+  protected readonly painelRenderizado = signal(false);
+  protected readonly saindo = signal(false);
+  private encerramentoPendente: ReturnType<typeof setTimeout> | null = null;
+
+  protected alternar(): void {
+    if (this.aberto()) {
+      this.fechar();
+      return;
+    }
+    if (this.encerramentoPendente) {
+      clearTimeout(this.encerramentoPendente);
+      this.encerramentoPendente = null;
+    }
+    this.painelRenderizado.set(true);
+    this.saindo.set(false);
+    this.aberto.set(true);
+  }
+
+  protected fechar(): void {
+    if (!this.aberto()) return;
+    this.aberto.set(false);
+    this.saindo.set(true);
+    this.encerramentoPendente = setTimeout(() => {
+      this.painelRenderizado.set(false);
+      this.saindo.set(false);
+      this.encerramentoPendente = null;
+    }, 260);
+  }
 }

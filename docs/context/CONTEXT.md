@@ -4,11 +4,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** o token `--altura-topbar`
-> alinha histórico e inventário com o fim da barra institucional, que ganhou contexto de
-> empilhamento acima dos dois painéis. O histórico se desambigua por tela: "Histórico de Rolagens
-> da Campanha" (detalhe e Iniciativa) e "Histórico de Rolagens da Ficha" (as duas visualizações de
-> ficha), inclusive em tooltip e rótulos acessíveis.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** os painéis laterais de
+> histórico e inventário mantêm o DOM durante os 260ms de saída; a rota retorna à largura normal
+> no mesmo ritmo e uma reabertura cancela o fechamento pendente. A topbar permanece acima de toda
+> a transição, e a expressão ausente no histórico de testes rápidos de atributo é uma regra
+> deliberada, não uma falha de persistência.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -23,6 +23,16 @@
 ---
 
 ## 1. Próxima Task
+
+**`painel-lateral-transicao-fluida` concluída** (spec em `docs/specs/done/`, ainda sem commit):
+histórico e inventário preservam a superfície por `260ms` ao fechar e deslizam para fora enquanto
+campanha, ficha de jogador, ficha de criatura e Iniciativa devolvem a largura reservada. A mesma
+curva de animação mantém o painel à direita do conteúdo durante a saída, e reabrir antes do fim
+anula a remoção agendada. `prefers-reduced-motion` continua sem movimento perceptível. A expressão
+das rolagens rápidas de atributo permanece propositalmente ausente do histórico: o rótulo do
+atributo é persistido e a fórmula só é mostrada na bandeja. Testes focados 10/10, suíte frontend
+1549/1549, lint sem erros e build passaram. Inspeção real em `1920×1080`/`960×1080`/`360×800`
+confirmou topbar em 52px, painel abaixo dela e ausência de sobreposição na abertura e no retorno.
 
 **`painel-lateral-abaixo-topbar-e-contexto-historico` concluída** (spec em `docs/specs/done/`,
 ainda sem commit): `--altura-topbar` é o token que alinha a barra institucional com os painéis

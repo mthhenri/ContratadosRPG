@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, model, output, signal } from '@angular/core';
 
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -71,14 +71,42 @@ export class HistoricoRolagensSidebar {
   readonly abrirCalculadora = output<void>();
 
   protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
-  protected readonly aberto = signal(false);
+  /** Estado bidirecional para a página reservar a faixa da barra lateral quando ela está aberta. */
+  readonly aberto = model(false);
+  /** Mantém o DOM durante a saída, mesmo depois de devolver a coluna para a página. */
+  protected readonly painelRenderizado = signal(false);
+  protected readonly saindo = signal(false);
+  private encerramentoPendente: ReturnType<typeof setTimeout> | null = null;
 
   protected alternar(): void {
-    this.aberto.update((atual) => !atual);
+    if (this.aberto()) {
+      this.fechar();
+      return;
+    }
+    this.abrir();
   }
 
   protected fechar(): void {
+    if (!this.aberto()) {
+      return;
+    }
     this.aberto.set(false);
+    this.saindo.set(true);
+    this.encerramentoPendente = setTimeout(() => {
+      this.painelRenderizado.set(false);
+      this.saindo.set(false);
+      this.encerramentoPendente = null;
+    }, 260);
+  }
+
+  private abrir(): void {
+    if (this.encerramentoPendente) {
+      clearTimeout(this.encerramentoPendente);
+      this.encerramentoPendente = null;
+    }
+    this.painelRenderizado.set(true);
+    this.saindo.set(false);
+    this.aberto.set(true);
   }
 
   /** Autor + (opcionalmente) o nome da ficha — junta os dois numa string só para o template. */

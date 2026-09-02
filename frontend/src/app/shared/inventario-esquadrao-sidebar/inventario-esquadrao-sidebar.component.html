@@ -5,22 +5,23 @@
     [attr.aria-expanded]="aberto()"
     aria-label="Abrir inventário de esquadrão"
     [appTooltip]="'Inventário de esquadrão'"
-    (click)="aberto.set(!aberto())"
+    (click)="alternar()"
 >
     <app-icone nome="inventario" />
 </button>
 
-@if (aberto()) {
+@if (painelRenderizado()) {
     <button
         class="inventario-sidebar__fundo"
+        [class.inventario-sidebar__fundo--saindo]="saindo()"
         type="button"
         aria-label="Fechar inventário"
         (click)="fechar()"
     ></button>
     <aside
         class="inventario-sidebar__painel"
-        role="dialog"
-        aria-modal="true"
+        [class.inventario-sidebar__painel--saindo]="saindo()"
+        role="complementary"
         aria-label="Inventário de esquadrão"
         tabindex="-1"
         appAutoFocus
