@@ -23,8 +23,8 @@
         <!-- Ações do cabeçalho agrupadas (m3-62): um único container flex, não mais itens soltos
          direto em `.ficha-pagina__topo` — no mobile, quando a linha não cabe, o grupo inteiro
          quebra pra baixo (e quebra internamente entre si) sempre colado à direita, em vez de cada
-         item quebrar isolado (o kebab acabava sozinho grudado na esquerda, e o selo de tempo real
-         ao vivo bagunçava a fileira). Ver `&__acoes` no SCSS. -->
+         item quebrar isolado (o kebab acabava sozinho grudado na esquerda). Ver `&__acoes` no
+         SCSS. O selo de tempo real offline saiu daqui na ui-21 — mora fixo na topbar agora. -->
         <div class="ficha-pagina__acoes">
             <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
             @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
@@ -35,11 +35,7 @@
             >
                 {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
             </span>
-            }
-
-            <app-indicador-tempo-real />
-
-            @if (ficha()) {
+            } @if (ficha()) {
             <!-- Gatilhos flutuantes (m3-61): no desktop cada um vira um círculo fixo no canto inferior
              direito (Histórico empilhado ACIMA da Calculadora); no mobile os dois voltam a ser
              botões inline aqui no cabeçalho, lado a lado — ver `@include bp.mobile` no SCSS de cada
@@ -241,7 +237,6 @@
 @if (dialogAcesso()) {
 <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcesso()">
     <div class="acesso">
-
         <p class="acesso__ajuda">
             Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas
             não editá-la; você pode revogar a qualquer momento.
@@ -302,7 +297,6 @@
 } @if (dialogExclusao()) {
 <app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="fecharExclusao()">
     <div class="exclusao">
-
         <p class="exclusao__aviso">
             Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
         </p>

@@ -1,5 +1,7 @@
 // Selo de tempo real offline (m3-08). Só tokens do tema "Terminal de Contenção" (proibição #29):
 // chip mono UPPERCASE em --warning (semântica de aviso), borda/fundo derivados por color-mix.
+@use "tema/breakpoints" as bp;
+
 .indicador-tempo-real {
     pointer-events: none;
 
@@ -16,6 +18,17 @@
         border-radius: 50%;
         background: var(--warning);
         animation: indicador-tempo-real-pulsar 1.4s ease-in-out infinite;
+    }
+
+    // ui-21: montado globalmente na topbar (antes cada página posicionava a própria cópia). No
+    // mobile, com nav + logo + gatilho de perfil já disputando os ~336px úteis de um viewport de
+    // 360px, o rótulo de texto ("Tempo real offline") transbordaria — mesmo tratamento do
+    // `.topbar__item` (só ícone abaixo do breakpoint). O nome acessível sobrevive via
+    // `aria-label` no `app-chip` (o texto interno vira `aria-hidden`, puramente decorativo aqui).
+    @include bp.mobile {
+        &__texto {
+            display: none;
+        }
     }
 }
 

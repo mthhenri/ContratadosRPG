@@ -23,13 +23,13 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
-import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../ficha.service';
 import { FichaEdicaoService } from '../../ficha-edicao.service';
@@ -82,7 +82,6 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     Botao,
     Icone,
     FichaVisualizacao,
-    IndicadorTempoReal,
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
     Tooltip,
@@ -103,6 +102,7 @@ export class FichaVisualizar {
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
+  private readonly topbarContexto = inject(TopbarContextoService);
   private readonly bandejaDados = inject(BandejaDadosService);
   private readonly notificacaoService = inject(NotificacaoService);
   private readonly rotaAtiva = inject(ActivatedRoute);
@@ -231,6 +231,9 @@ export class FichaVisualizar {
   });
 
   constructor() {
+    // Slot de contexto da topbar (ui-21) — some ao sair da tela, como `tempoRealService.sairSala*`.
+    this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
+
     // Histórico de rolagens (barra lateral do cabeçalho) — `fichaId` já é conhecido de forma
     // síncrona (parâmetro de rota), então a 1ª página carrega direto aqui, sem esperar um `effect`.
     this.carregarHistoricoPagina(1);
@@ -256,6 +259,8 @@ export class FichaVisualizar {
           this.ficha.set(normalizada);
           this.fichaEdicao.definirBase(normalizada);
           this.membros.set(membros);
+          // Slot de contexto da topbar (ui-21): dizer em qual ficha o usuário está agora.
+          this.topbarContexto.definir(normalizada.nome);
           if (this.podeGerenciar()) {
             this.carregarAcessos();
           }

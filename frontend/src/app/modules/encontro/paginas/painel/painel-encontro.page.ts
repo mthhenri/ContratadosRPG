@@ -41,13 +41,13 @@ import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.com
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
-import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
@@ -119,7 +119,6 @@ interface CombatenteVisualDto extends EncontroCombatenteResumoDto {
     RouterLink,
     ReactiveFormsModule,
     Icone,
-    IndicadorTempoReal,
     Tooltip,
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
@@ -148,6 +147,7 @@ export class PainelEncontro {
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
   private readonly tempoRealService = inject(TempoRealService);
+  private readonly topbarContexto = inject(TopbarContextoService);
   private readonly notificacaoService = inject(NotificacaoService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly formBuilder = inject(FormBuilder);
@@ -493,6 +493,9 @@ export class PainelEncontro {
   );
 
   constructor() {
+    // Slot de contexto da topbar (ui-21) — some ao sair da tela, como `tempoRealService.sairSala*`.
+    this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
+
     this.carregarRolagens();
 
     // `paramMap` (e não o `snapshot`) porque abrir um encontro do histórico troca só o parâmetro:
@@ -554,7 +557,12 @@ export class PainelEncontro {
     // não de campanha).
     this.campanhaService
       .recuperarCampanha(this.campanhaId)
-      .subscribe({ next: (campanha) => this.campanhaNome.set(campanha.nome) });
+      .subscribe({
+        next: (campanha) => {
+          this.campanhaNome.set(campanha.nome);
+          this.topbarContexto.definir(campanha.nome);
+        },
+      });
 
     // Liga a ficha do jogador (coluna lateral, item novo) desde já: `meuFichaId` ainda não tem
     // valor no primeiro tick (falta carregar), mas `inicializar` só lê o getter depois, na hora de

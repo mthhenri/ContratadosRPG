@@ -80,7 +80,6 @@
                         (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
                     />
                     }
-                    <app-indicador-tempo-real />
                 </div>
             </div>
         </header>
@@ -437,7 +436,12 @@
 
             <label class="adicionar__campo adicionar__campo--curto">
                 <span class="adicionar__rotulo">Vida do avulso</span>
-                <input class="painel__controle" type="number" formControlName="vidaMaximaAvulso" min="1" />
+                <input
+                    class="painel__controle"
+                    type="number"
+                    formControlName="vidaMaximaAvulso"
+                    min="1"
+                />
             </label>
 
             <label class="adicionar__campo">

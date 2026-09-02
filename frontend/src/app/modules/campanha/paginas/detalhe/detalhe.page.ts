@@ -37,10 +37,10 @@ import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inve
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
-import { IndicadorTempoReal } from '../../../../shared/tempo-real/indicador-tempo-real.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { CampanhaService } from '../../campanha.service';
 import { EncontroService } from '../../../encontro/encontro.service';
 import { rotuloStatusEncontro } from '../../../encontro/rotulos-encontro';
@@ -193,7 +193,6 @@ type EquipeFichaExibicao =
     HistoricoRolagensSidebar,
     InventarioEsquadraoSidebar,
     InventarioEsquadrao,
-    IndicadorTempoReal,
     HoldRepeat,
     BandejaDados,
     CalculadoraFlutuante,
@@ -228,6 +227,7 @@ export class CampanhaDetalhe {
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
   private readonly tempoRealService = inject(TempoRealService);
+  private readonly topbarContexto = inject(TopbarContextoService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
@@ -777,6 +777,11 @@ export class CampanhaDetalhe {
   }
 
   constructor() {
+    // Slot de contexto da topbar (ui-21): nome da campanha, sempre que `campanha()` mudar
+    // (carregamento inicial, rename) — some ao sair da tela, como `tempoRealService.sairSala*`.
+    effect(() => this.topbarContexto.definir(this.campanha()?.nome ?? null));
+    this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
+
     this.carregar(true);
     this.carregarRolagens();
     this.carregarEncontros();

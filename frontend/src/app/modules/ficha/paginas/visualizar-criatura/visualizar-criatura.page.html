@@ -29,11 +29,7 @@
             >
                 {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
             </span>
-            }
-
-            <app-indicador-tempo-real />
-
-            @if (ficha()) {
+            } @if (ficha()) {
             <app-historico-rolagens-sidebar
                 titulo="Histórico de Rolagens"
                 [itens]="historicoRolagens()"
@@ -161,7 +157,6 @@
 @if (dialogAcesso()) {
 <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcesso()">
     <div class="acesso">
-
         <p class="acesso__ajuda">
             Conceda a visualização desta ficha a outros membros da campanha. Eles poderão vê-la, mas
             não editá-la; você pode revogar a qualquer momento.
@@ -222,7 +217,6 @@
 } @if (dialogExclusao()) {
 <app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="fecharExclusao()">
     <div class="exclusao">
-
         <p class="exclusao__aviso">
             Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
         </p>

@@ -65,6 +65,24 @@ describe('TempoRealService', () => {
     servico.conectar();
     expect(ioMock).not.toHaveBeenCalled();
     expect(servico.conectado()).toBe(false);
+    expect(servico.ativo()).toBe(false);
+  });
+
+  it('ativo fica true assim que conectar() é chamado com token, mesmo antes do connect (ui-21)', () => {
+    const { servico } = criar(() => 'jwt');
+    expect(servico.ativo()).toBe(false);
+    servico.conectar();
+    expect(servico.ativo()).toBe(true);
+    expect(servico.conectado()).toBe(false);
+  });
+
+  it('desconectar() zera ativo — o selo global volta a ficar em silêncio', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    socketFake.disparar('connect');
+    servico.desconectar();
+    expect(servico.ativo()).toBe(false);
+    expect(servico.conectado()).toBe(false);
   });
 
   it('conecta uma única vez com o token no auth do handshake (idempotente)', () => {

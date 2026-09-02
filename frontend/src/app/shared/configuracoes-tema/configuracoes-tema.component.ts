@@ -4,6 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Icone } from '../icone/icone.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
+import { Modal } from '../ui/modal/modal.component';
 import { BaseTema, TemaService } from '../../core/services/tema.service';
 
 /**
@@ -20,13 +21,14 @@ export type VarianteGatilhoTema = 'topbar' | 'menu';
  * `TemaService`; este componente só orquestra a UI e consome os tokens do tema (nenhum hex/
  * fonte/raio solto — proibição #29).
  *
- * O painel **fecha apenas por botão** (o "×" ou "Fechar"), sem clique-fora — mesmo padrão de
- * acessibilidade dos modais de ajuda/compras (não aciona `click-events-have-key-events`/
- * `interactive-supports-focus` do lint).
+ * O painel é o primitivo `app-modal` (ui-21 — antes uma segunda implementação de modal,
+ * `.config-modal`, mantida em paralelo ao `app-modal` já existente). `[fechavelPeloFundo]="false"`
+ * preserva a mesma decisão de acessibilidade de sempre: fecha só por botão ou `Escape` (o que o
+ * `<dialog>` nativo já faz sozinho), nunca por clique-fora.
  */
 @Component({
   selector: 'app-configuracoes-tema',
-  imports: [ReactiveFormsModule, Icone, Tooltip, Botao],
+  imports: [ReactiveFormsModule, Icone, Tooltip, Botao, Modal],
   templateUrl: './configuracoes-tema.component.html',
   styleUrl: './configuracoes-tema.component.scss',
 })

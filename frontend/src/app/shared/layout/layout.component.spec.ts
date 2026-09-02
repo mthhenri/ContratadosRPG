@@ -6,6 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { TemaService } from '../../core/services/tema.service';
+import { TopbarContextoService } from '../../core/services/topbar-contexto.service';
 import { LeitorDocumentosService } from '../leitor-documentos/leitor-documentos.service';
 import { Layout } from './layout.component';
 
@@ -193,5 +194,118 @@ describe('Layout — leitor global de documentos', () => {
     expect(raiz.querySelector('.conteudo')?.textContent).toContain('Conteudo B');
     expect(raiz.querySelector('app-leitor-documentos')).toBe(leitorAntes);
     expect(leitorService.estado().aberto).toBe(false);
+  });
+});
+
+/**
+ * Prova o chrome da topbar (ui-21): slot de contexto vazio/preenchido, selo de tempo real montado
+ * uma única vez na barra (a lógica de silêncio/aviso é do `IndicadorTempoReal`, provada à parte),
+ * e `Escape` fechando o dropdown de perfil com o foco devolvido ao gatilho.
+ */
+describe('Layout — chrome da topbar (ui-21)', () => {
+  const CHAVE_SESSAO = 'contratados-rpg.sessao';
+
+  async function montar(autenticado: boolean) {
+    localStorage.clear();
+    if (autenticado) {
+      localStorage.setItem(
+        CHAVE_SESSAO,
+        JSON.stringify({
+          token: 'token',
+          id: 1,
+          login: 'agente',
+          nome: 'Agente Teste',
+          tipo: TipoUsuarioEnum.NORMAL,
+        }),
+      );
+    }
+
+    TestBed.configureTestingModule({
+      imports: [Layout],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+      ],
+    });
+    await TestBed.compileComponents();
+
+    const fixture = TestBed.createComponent(Layout);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    return {
+      fixture,
+      raiz: fixture.nativeElement as HTMLElement,
+      topbarContexto: TestBed.inject(TopbarContextoService),
+    };
+  }
+
+  afterEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('style');
+  });
+
+  it('slot de contexto vazio: sem separador nem buraco (nada renderizado)', async () => {
+    const { raiz } = await montar(true);
+    expect(raiz.querySelector('.topbar__contexto')).toBeNull();
+  });
+
+  it('slot de contexto preenchido: mostra o separador "//" e o rótulo', async () => {
+    const { fixture, raiz, topbarContexto } = await montar(true);
+    topbarContexto.definir('Campanha Alfa');
+    fixture.detectChanges();
+
+    const contexto = raiz.querySelector('.topbar__contexto');
+    expect(contexto?.querySelector('.topbar__contexto-separador')?.textContent).toBe('//');
+    expect(contexto?.querySelector('.topbar__contexto-rotulo')?.textContent).toBe('Campanha Alfa');
+  });
+
+  it('some de volta quando a página limpa o contexto ao sair', async () => {
+    const { fixture, raiz, topbarContexto } = await montar(true);
+    topbarContexto.definir('Campanha Alfa');
+    fixture.detectChanges();
+    expect(raiz.querySelector('.topbar__contexto')).not.toBeNull();
+
+    topbarContexto.limpar();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.topbar__contexto')).toBeNull();
+  });
+
+  it('monta o selo de tempo real uma única vez na topbar, autenticado ou não', async () => {
+    const autenticado = await montar(true);
+    expect(autenticado.raiz.querySelectorAll('app-indicador-tempo-real')).toHaveLength(1);
+
+    TestBed.resetTestingModule();
+    const anonimo = await montar(false);
+    expect(anonimo.raiz.querySelectorAll('app-indicador-tempo-real')).toHaveLength(1);
+  });
+
+  it('Escape fecha o dropdown de perfil e devolve o foco ao gatilho', async () => {
+    const { fixture, raiz } = await montar(true);
+    const gatilho = raiz.querySelector<HTMLButtonElement>('.topbar__perfil-gatilho')!;
+    gatilho.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.topbar__perfil-menu')).not.toBeNull();
+
+    raiz
+      .querySelector('.topbar__perfil')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.topbar__perfil-menu')).toBeNull();
+    expect(document.activeElement).toBe(gatilho);
+  });
+
+  it('Escape não faz nada quando o dropdown já está fechado', async () => {
+    const { fixture, raiz } = await montar(true);
+
+    expect(() =>
+      raiz
+        .querySelector('.topbar__perfil')!
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })),
+    ).not.toThrow();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.topbar__perfil-menu')).toBeNull();
   });
 });

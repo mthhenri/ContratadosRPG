@@ -39,9 +39,9 @@ describe('ConfiguracoesTema', () => {
 
   it('mantém o painel fechado até o gatilho ser clicado', () => {
     const { raiz, abrir } = montar();
-    expect(raiz.querySelector('.config-modal')).toBeNull();
+    expect(raiz.querySelector('dialog')).toBeNull();
     abrir();
-    expect(raiz.querySelector('.config-modal')).not.toBeNull();
+    expect(raiz.querySelector('dialog')?.open).toBe(true);
   });
 
   it('variante "menu" (tema dentro do menu de perfil, mobile): o gatilho vira item de menu e abre o mesmo painel', () => {
@@ -51,7 +51,7 @@ describe('ConfiguracoesTema', () => {
     expect(gatilho.getAttribute('role')).toBe('menuitem');
 
     abrir();
-    expect(raiz.querySelector('.config-modal')).not.toBeNull();
+    expect(raiz.querySelector('dialog')?.open).toBe(true);
   });
 
   it('exibe todos os presets de accent, sem swatch salvo enquanto nada foi salvo', () => {

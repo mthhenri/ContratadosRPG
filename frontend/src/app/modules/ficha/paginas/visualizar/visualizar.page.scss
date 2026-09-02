@@ -68,12 +68,12 @@
         }
     }
 
-    // Grupo de ações do cabeçalho (m3-62): selo de auto-save + selo de tempo real + gatilhos
-    // flutuantes (histórico/calculadora) + kebab, todos num único flex — `margin-left: auto` cola o
-    // grupo na borda direita tanto ao lado de `&__voltar` quanto sozinho numa segunda linha (o
-    // kebab não fica mais isolado grudado na esquerda quando a fileira quebra). No mobile o próprio
-    // grupo quebra internamente se não couber — defensivo pro selo "tempo real offline"
-    // (`app-indicador-tempo-real`, só aparece após ~1,5s desconectado) não espremer os botões.
+    // Grupo de ações do cabeçalho (m3-62): selo de auto-save + gatilhos flutuantes (histórico/
+    // calculadora) + kebab, todos num único flex — `margin-left: auto` cola o grupo na borda
+    // direita tanto ao lado de `&__voltar` quanto sozinho numa segunda linha (o kebab não fica
+    // mais isolado grudado na esquerda quando a fileira quebra). No mobile o próprio grupo quebra
+    // internamente se não couber. O selo "tempo real offline" saiu daqui na ui-21 — mora fixo na
+    // topbar agora, fora do fluxo desta página.
     &__acoes {
         display: flex;
         align-items: center;

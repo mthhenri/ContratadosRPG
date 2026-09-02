@@ -10,6 +10,13 @@
         <app-marca class="topbar__logo" />
         <span class="topbar__marca">Contratados<span class="topbar__marca-sufixo">RPG</span></span>
 
+        @if (topbarContexto.contexto(); as contexto) {
+            <span class="topbar__contexto">
+                <span class="topbar__contexto-separador" aria-hidden="true">//</span>
+                <span class="topbar__contexto-rotulo">{{ contexto }}</span>
+            </span>
+        }
+
         <nav class="topbar__nav" aria-label="Navegação principal">
             @if (sessaoService.autenticado()) {
                 <a
@@ -64,9 +71,16 @@
         </nav>
 
         <div class="topbar__acoes">
+            <app-indicador-tempo-real />
+
             @if (sessaoService.usuario(); as usuarioAtual) {
-                <div class="topbar__perfil">
+                <div
+                    class="topbar__perfil"
+                    tabindex="-1"
+                    (keydown.escape)="fecharPerfilPeloTeclado()"
+                >
                     <button
+                        #perfilGatilho
                         class="topbar__perfil-gatilho"
                         type="button"
                         [attr.aria-expanded]="perfilAberto()"

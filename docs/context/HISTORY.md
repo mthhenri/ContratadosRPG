@@ -1,5 +1,90 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — UI-21: chrome da topbar (item ativo, contexto, tempo real fixo, Escape, painel de tema)
+
+Cinco ajustes na mesma barra de 52px, filhos da auditoria visual (seção "Chrome de aplicação").
+
+**1) Item ativo.** `.topbar__item--ativo` só trocava texto/fundo para `--text`/`--surface-2` — 3%
+de luminância sobre `--surface`, quase invisível no mobile só-ícone. Ganhou `box-shadow: inset 0
+-2px 0 var(--accent)` (não `border-bottom`, para não alterar a altura da caixa e continuar
+centralizado por `align-items: center`) — sem tocar no fundo/texto existentes.
+
+**2) Slot de contexto.** Novo `TopbarContextoService` (`core/services/`, mesmo padrão simples de
+`LoadingService`: um signal + `definir()`/`limpar()`) alimenta um `@if` entre a marca e a nav —
+mono 11px `--text-dim`, separador `//` em `--accent`, oculto abaixo de 900px (mesmo limiar de
+`&__marca`/`&__identidade`, m2-16f) e ausente do DOM quando `null` (sem buraco nem separador
+solto). As quatro páginas donas de uma entidade — `CampanhaDetalhe` (nome da campanha via
+`effect()` sobre o signal `campanha()`), `FichaVisualizar`, `FichaVisualizarCriatura` (nome da
+ficha, no `.subscribe` do carregamento) e `PainelEncontro` (nome da campanha, busca única) —
+chamam `definir()` e limpam no `DestroyRef.onDestroy()`, mesmo padrão que já usam para
+`tempoRealService.sairSala*`.
+
+**3) Selo de tempo real, lugar fixo.** `app-indicador-tempo-real` vivia duplicado em quatro
+páginas (`visualizar`, `visualizar-criatura`, `detalhe`, `painel-encontro`), cada uma com seu
+próprio comentário defensivo sobre o selo "bagunçar a fileira"/"disputar lugar com o status" no
+mobile — o mesmo sintoma documentado quatro vezes. Migrou para um único `<app-indicador-tempo-real
+/>` no `Layout`, dentro de `.topbar__acoes`. Isso expôs um alarme falso que não existia antes: o
+componente decidia sozinho com base em `TempoRealService.conectado` (`signal(false)` até a
+primeira `conectar()`), então montado globalmente ele acenderia "Tempo real offline" em qualquer
+página antes de qualquer ficha/campanha ter sido aberta nesta sessão. Corrigido com um novo signal
+`TempoRealService.ativo` (`true` desde a primeira `conectar()` com token até `desconectar()`); o
+selo agora exige `ativo() && !conectado()`. No mobile o texto vira `aria-hidden`/`display: none`
+(mesmo tratamento de `.topbar__item`, texto "Tempo real offline" não cabe ao lado de nav+perfil em
+360px) e o nome acessível sobrevive via `aria-label` estático no `app-chip`.
+
+**4) `Escape` no dropdown de perfil.** `.topbar__perfil` ganhou `(keydown.escape)` (com
+`tabindex="-1"` — sem isso o `@angular-eslint/template/interactive-supports-focus` acusa erro,
+mesmo padrão de `tabindex="-1"` que `HistoricoRolagensSidebar` já usa para o próprio painel) que
+fecha o menu e devolve o foco ao gatilho (`viewChild` + `.focus()`), sem alterar a decisão
+existente de não fechar por clique-fora.
+
+**5) Painel de tema migrado para `app-modal`.** `.config-modal`/`.config-modal-fundo` eram uma
+segunda implementação de modal (cabeçalho, backdrop, fechamento) mantida em paralelo ao `app-modal`
+que o projeto já tinha desde a `ui-02`. `ConfiguracoesTema` agora projeta o mesmo conteúdo dentro
+de `<app-modal [largura]="'560px'" [fechavelPeloFundo]="false">`, com o botão "Fechar" no slot
+`modalAcoes` (padrão de `Confirmacao`, mais recente que o `<div class="ajuda__acoes">` solto de
+`AjudaSimulacao`) — ganha `<dialog>` nativo e fechamento por `Escape` de graça, perde ~70 linhas de
+CSS duplicado (cabeçalho, backdrop, botão ×).
+
+Testes focados 63/63 (`tempo-real.service`, `topbar-contexto.service` — novo —,
+`indicador-tempo-real`, `layout`, `configuracoes-tema`) + 243/243 nas quatro páginas consumidoras;
+suíte completa do frontend 1537/1537; lint sem erros (0 erros, 15.214 avisos preexistentes — a
+`interactive-supports-focus` acima foi pega e corrigida durante este mesmo lint, não é um dos
+avisos preexistentes); build de produção limpo (mantém os avisos de budget já existentes).
+Verificação visual ao vivo (Postgres nativo + backend + frontend reais, sessão real registrada via
+REST) em `1920×1080`/`360×800`: item ativo com régua vermelha visível nos dois viewports; slot de
+contexto vazio em `/campanhas` e preenchido ("// Campanha de Verificação UI-21") em
+`/campanhas/:id`, oculto no mobile sem overflow (`scrollWidth = clientWidth`); painel de tema sem
+`.config-modal` no DOM, `<dialog open>` real, fechado por `Escape`; dropdown de perfil aberto,
+fechado por `Escape` com `document.activeElement` de volta no gatilho; selo "Tempo real offline"
+forçado via `context.route('**/socket.io/**', route => route.abort())` (sem depurar/derrubar o
+backend compartilhado com outra sessão) — apareceu na topbar em ambos os viewports, texto completo
+no desktop, só o ponto pulsante no mobile, sem overflow em nenhum dos dois.
+
+## 2026-09-02 — UI-25: História expansível, vitais compactos e preview de avatar
+
+A aba História reutilizava a caixa e o teto de leitura de 195px de Anotações, embora seja o
+conteúdo principal do card de Status. Ela agora tem modificadores próprios: em leitura ou edição,
+a caixa acompanha a altura disponível da coluna no desktop e o texto deixa de ser limitado pelo
+peek de Anotações; no mobile o conteúdo cresce sem corte ou rolagem horizontal.
+
+`app-barra-recurso` ganhou o tamanho opt-in `compacto`, que concentra apenas a densidade interna
+de rótulo, valor e trilho. A ficha usa a variante para Vida e Energia, mantendo o reflow pelo
+espaço real da coluna (duas faixas no desktop quando cabem; uma por linha no celular). O Esquadrão
+do mestre passou a consumir as mesmas barras nos cartões de jogadores e preservou os steppers ±;
+os cartões de criaturas continuam com o resumo próprio. Os previews de avatar do Acervo e do
+Esquadrão cresceram de 200×200 para 300×300px, inclusive no cálculo que os mantém dentro da
+viewport.
+
+Teste focado: 292/292; suíte completa do frontend: 1537/1537. Build de produção concluiu; manteve
+os avisos de budget inicial e de 45,15kB do estilo de `FichaVisualizacao` (sem erro). O lint saiu
+sem erros e com 15.214 avisos preexistentes. Verificação ao vivo com a ficha Quimera Codex e a
+Campanha do Codex em `1920×1080` e `360×800`: História em leitura e edição, barras lado a lado no
+desktop e empilhadas no mobile, Esquadrão do mestre com duas barras por jogador e nenhum overflow
+horizontal (`scrollWidth = clientWidth` nos dois viewports). Como o cenário não tinha avatar
+preenchido, a prévia foi renderizada temporariamente só no navegador (sem persistência); o elemento
+real mediu 300×300px.
+
 ## 2026-09-02 — UI-24: ordem dos controles do painel flutuante
 
 O cabeçalho compartilhado de `app-painel-flutuante` projetava as ações extras antes de minimizar.

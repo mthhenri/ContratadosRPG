@@ -1,4 +1,13 @@
-import { Component, Injector, ViewContainerRef, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  ViewContainerRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -6,9 +15,11 @@ import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 
 import { LoadingService } from '../../core/services/loading.service';
 import { SessaoService } from '../../core/services/sessao.service';
+import { TopbarContextoService } from '../../core/services/topbar-contexto.service';
 import { ConfiguracoesTema } from '../configuracoes-tema/configuracoes-tema.component';
 import { Icone } from '../icone/icone.component';
 import { Marca } from '../marca/marca.component';
+import { IndicadorTempoReal } from '../tempo-real/indicador-tempo-real.component';
 import { Botao } from '../ui/botao/botao.component';
 import { Confirmacao } from '../ui/confirmacao/confirmacao.component';
 import { Notificacoes } from '../ui/notificacao/notificacao.component';
@@ -33,6 +44,7 @@ import { Notificacoes } from '../ui/notificacao/notificacao.component';
     Icone,
     Marca,
     Botao,
+    IndicadorTempoReal,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -41,6 +53,7 @@ export class Layout {
   protected readonly TipoUsuarioEnum = TipoUsuarioEnum;
   protected readonly loadingService = inject(LoadingService);
   protected readonly sessaoService = inject(SessaoService);
+  protected readonly topbarContexto = inject(TopbarContextoService);
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly urlAtual = toSignal(
@@ -55,7 +68,11 @@ export class Layout {
   });
   private leitorDocumentosMontado = false;
 
-  /** Se o dropdown de perfil está aberto (fecha só por botão/ação — mesmo padrão do tema). */
+  private readonly perfilGatilho = viewChild<ElementRef<HTMLButtonElement>>('perfilGatilho');
+
+  /** Se o dropdown de perfil está aberto (fecha só por botão/ação/`Escape` — mesmo padrão do tema
+   *  quanto a não fechar por clique-fora; `Escape` é diferente porque é o que modal e painel de
+   *  histórico já fazem, sem conflitar com essa decisão — ui-21). */
   protected readonly perfilAberto = signal(false);
   protected readonly rotaIsolada = computed(() => this.urlAtual().startsWith('/acesso-negado'));
 
@@ -65,6 +82,16 @@ export class Layout {
 
   protected fecharPerfil(): void {
     this.perfilAberto.set(false);
+  }
+
+  /** `Escape` fecha o dropdown de perfil e devolve o foco ao próprio gatilho (ui-21) — só age
+   *  quando o dropdown está aberto, então não interfere com outro uso de `Escape` na página. */
+  protected fecharPerfilPeloTeclado(): void {
+    if (!this.perfilAberto()) {
+      return;
+    }
+    this.fecharPerfil();
+    this.perfilGatilho()?.nativeElement.focus();
   }
 
   /** Abre o leitor global sem navegar nem alterar os demais utilitários da topbar. */

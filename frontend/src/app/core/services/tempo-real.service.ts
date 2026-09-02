@@ -71,6 +71,13 @@ export class TempoRealService {
 
   /** `true` enquanto o socket está conectado ao gateway. */
   readonly conectado = signal(false);
+  /**
+   * `true` desde a primeira `conectar()` bem-sucedida (token presente) até `desconectar()` — o
+   * app inteiro alguma vez pediu tempo real nesta sessão. O selo global da topbar (ui-21) só
+   * mostra "offline" quando `ativo && !conectado`: sem isso, toda página apareceria offline antes
+   * de qualquer tela de ficha/campanha jamais ter chamado `conectar()`.
+   */
+  readonly ativo = signal(false);
   /** Contador que incrementa a cada **reconexão** — as telas ressincronizam quando ele muda. */
   readonly reconexao = signal(0);
 
@@ -166,6 +173,7 @@ export class TempoRealService {
     }
 
     this.tokenConectado = token;
+    this.ativo.set(true);
     this.socket = this.criarSocket(environment.apiBase || undefined, { auth: { token } });
 
     this.socket.on('connect', () => {
@@ -277,6 +285,7 @@ export class TempoRealService {
     this.tokenConectado = null;
     this.jaConectou = false;
     this.conectado.set(false);
+    this.ativo.set(false);
     this.salasFicha.clear();
     this.salasCampanha.clear();
   }

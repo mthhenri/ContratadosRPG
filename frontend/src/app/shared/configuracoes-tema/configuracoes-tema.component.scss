@@ -1,6 +1,7 @@
 // Painel de configurações de tema (m1-13). Consome apenas os tokens do tema "Terminal de
 // Contenção" (docs/design/tema/_tokens.scss) — nenhum hex/fonte/raio solto (proibição #29). O
-// modal reusa o padrão .ajuda-modal (m1-12); o gatilho reusa a linguagem de botão secundário.
+// modal é o primitivo `app-modal` desde a ui-21 (cabeçalho, fundo, `<dialog>` nativo e Escape são
+// dele); o gatilho reusa a linguagem de botão secundário.
 
 @use "tema/breakpoints" as bp;
 
@@ -61,77 +62,7 @@
     }
 }
 
-// === Modal (fundo + caixa) — adaptado de .ajuda-modal (m1-12) ===
-.config-modal-fundo {
-    position: fixed;
-    inset: 0;
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 30;
-}
-
-.config-modal {
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-card);
-    padding: var(--pad-card);
-    // Largura calibrada para o rótulo mais longo possível ("Vermelho escuro", nome composto do
-    // slot custom salvo) caber em uma linha só na grade de 3 colunas, sem quebrar o padrão visual.
-    max-width: 560px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    // Base + presets + color picker podem passar da altura da tela no mobile — rolar por dentro.
-    max-height: calc(100dvh - 32px);
-    overflow-y: auto;
-
-    &__cabecalho {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-    }
-
-    &__titulo {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text);
-        margin: 0;
-    }
-
-    &__fechar {
-        flex: 0 0 auto;
-        width: 26px;
-        height: 26px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-
-        &:hover {
-            color: var(--text);
-            border-color: var(--accent-border);
-        }
-    }
-
-    &__acoes {
-        display: flex;
-        justify-content: flex-end;
-    }
-}
-
-// === Seções ===
+// === Seções (conteúdo projetado dentro do `app-modal`) ===
 .config-secao {
     display: flex;
     flex-direction: column;

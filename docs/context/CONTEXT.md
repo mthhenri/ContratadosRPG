@@ -4,9 +4,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-24` concluída — os controles
-> de painéis flutuantes seguem minimizar, maximizar/restaurar quando existir, fechar. Ainda pendente:
-> desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-21` concluída — chrome da
+> topbar (item ativo, slot de contexto, selo de tempo real fixo, `Escape` no dropdown de perfil,
+> painel de tema migrado para `app-modal`). Ainda pendente: desligar o Render e reescrever
+> `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
@@ -229,6 +230,24 @@ desligada. Sem call site real usando `acao` ainda (o candidato natural,
 entregável) — verificado com uma notificação disparada manualmente, mesmo padrão que a guarda de
 teclado da `ui-19` já usou sem consumidor real. Detalhe completo em `HISTORY.md`.
 
+**`ui-21-chrome-da-topbar` concluída** (spec em `docs/specs/done/`): cinco ajustes na mesma barra
+de 52px. Item ativo ganhou régua de 2px em `--accent` (`box-shadow` inset, sem tocar fundo/texto);
+novo `TopbarContextoService` alimenta um slot mono entre a marca e a nav (`// <campanha ou
+ficha>`), alimentado por `CampanhaDetalhe`/`FichaVisualizar`/`FichaVisualizarCriatura`/
+`PainelEncontro`, oculto abaixo de 900px e ausente do DOM quando vazio; `app-indicador-tempo-real`
+saiu das quatro páginas que o duplicavam e virou singleton no `Layout` — exigiu o novo signal
+`TempoRealService.ativo` (`true` desde a 1ª `conectar()` até `desconectar()`) para não acender
+"offline" em página nenhuma tiver aberto ficha/campanha ainda; dropdown de perfil fecha por
+`Escape` com foco devolvido ao gatilho; `.config-modal` (segunda implementação de modal em
+paralelo ao `app-modal` da `ui-02`) foi substituído pelo primitivo, com o botão "Fechar" no slot
+`modalAcoes`. Testes focados 63/63 + 243/243 nas quatro páginas, suíte completa frontend
+1537/1537, lint sem erros (15.214 avisos preexistentes), build limpo. Verificação visual ao vivo
+em `1920×1080`/`360×800`: régua vermelha do item ativo, contexto vazio/preenchido, painel de tema
+sem `.config-modal`, `Escape` fechando tema e dropdown de perfil, e o selo "Tempo real offline"
+forçado via bloqueio de rede do `socket.io` (sem depender do socket real nem derrubar o backend
+compartilhado) — apareceu certo nos dois viewports, sem overflow. Detalhe completo em
+`HISTORY.md`.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -238,9 +257,9 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-24` concluída — ver acima). Restam `ui-21`…`ui-23` no backlog
-(chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão — ver "Fila do
-backlog" abaixo). A única frente de código de milestone ainda pendente é o **M4**
+Não há spec ativa no momento (`ui-21` concluída — ver acima). Restam `ui-22`…`ui-23` no backlog
+(resultado de rolagem compacto, stat sem valor/rodapé do cartão — ver "Fila do backlog" abaixo). A
+única frente de código de milestone ainda pendente é o **M4**
 (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7 estão
 concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
@@ -251,7 +270,7 @@ concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-21`…`ui-23` | frontend/design system | três specs restantes da auditoria visual (chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
+| `ui-22`…`ui-23` | frontend/design system | duas specs restantes da auditoria visual (resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
 
 Milestone ainda não aberto: `m5-guia-missao`.
 
@@ -273,8 +292,8 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-24`
-(2026-09-02): frontend 1521/1521 — o defeito `P-043` que rondava a suíte completa em rodadas
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-21`
+(2026-09-02): frontend 1537/1537 — o defeito `P-043` que rondava a suíte completa em rodadas
 anteriores não reproduziu nesta. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só
 reproduzem isoladas (arquivo único), não na suíte completa.
 
