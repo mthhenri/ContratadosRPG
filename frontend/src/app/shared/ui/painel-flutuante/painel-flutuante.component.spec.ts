@@ -29,6 +29,7 @@ interface DefinicaoComponenteComEstilos {
       (fechar)="fechamentos.set(fechamentos() + 1)"
       (minimizadoChange)="minimizadoEmitido.set($event)"
     >
+      <button painelAcoesExtras type="button" aria-label="Maximizar painel">Maximizar</button>
       <button type="button" class="corpo-foco">Foco no corpo</button>
     </app-painel-flutuante>
   `,
@@ -235,6 +236,22 @@ describe('PainelFlutuante', () => {
     segunda.detectChanges();
     expect(janela(segunda)!.style.left).toBe('77px');
     expect(janela(segunda)!.style.top).toBe('33px');
+  });
+
+  it("ordena minimizar, ação extra e fechar no cabeçalho", () => {
+    const fixture = montar();
+    fixture.componentInstance.aberto.set(true);
+    fixture.detectChanges();
+
+    const rotulos = Array.from(
+      janela(fixture)!.querySelectorAll<HTMLButtonElement>(".painel-flutuante__acoes button"),
+    ).map((botao) => botao.getAttribute("aria-label"));
+
+    expect(rotulos).toEqual([
+      "Minimizar Painel de teste",
+      "Maximizar painel",
+      "Fechar Painel de teste",
+    ]);
   });
 
   it(

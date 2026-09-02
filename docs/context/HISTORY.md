@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — UI-24: ordem dos controles do painel flutuante
+
+O cabeçalho compartilhado de `app-painel-flutuante` projetava as ações extras antes de minimizar.
+Por isso, Caderno e Documentos liam `Maximizar → Minimizar → Fechar`, em vez da ordem operacional
+pedida pelo autor. O slot `[painelAcoesExtras]` agora fica entre os controles fixos: `Minimizar →
+Maximizar/Restaurar → Fechar`. Não houve mudança de ícone, dimensão, comportamento nem rótulo
+acessível; Calculadora, que não projeta maximização, continua com `Minimizar → Fechar`.
+
+O teste do primitivo ganhou um consumidor projetado de maximização e afirma a ordem do DOM, que
+também é a sequência de foco por teclado. Teste focado: 14/14; suíte completa do frontend:
+1521/1521; build de produção limpo. O lint completou sem erros novos, mantendo 15.139 avisos
+preexistentes do repositório. Verificação visual ao vivo com a janela de Documentos em
+`1920×1080` confirmou `−`, maximizar, `×` na mesma densidade do chrome UI-17; em `360×800`, onde
+maximizar não é oferecido, confirmou `−`, `×`, sem overflow horizontal (`scrollWidth = 360`).
+
 ## 2026-09-02 — UI-20: ícone, ação e barra de duração na fila de notificações
 
 Filha da auditoria visual (seção Abas · modal · notificações). A fila de `NotificacaoService`

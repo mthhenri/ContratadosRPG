@@ -46,8 +46,8 @@ interface EstadoPersistido {
  * usar `<dialog>`, porque um painel flutuante continua interativo com o resto da tela atrás dele.
  *
  * Corpo projetado (`<ng-content>`) mais três slots: `[painelCabecalhoExtra]` (entre o título e os
- * botões — ex.: status de salvamento do caderno), `[painelAcoesExtras]` (botões extras antes de
- * minimizar/fechar — ex.: maximizar) e `[painelRedimensionar]` (alça de redimensionar do
+ * botões — ex.: status de salvamento do caderno), `[painelAcoesExtras]` (botões extras entre
+ * minimizar e fechar — ex.: maximizar) e `[painelRedimensionar]` (alça de redimensionar do
  * consumidor, ancorada no canto inferior direito pelo próprio consumidor).
  */
 @Component({

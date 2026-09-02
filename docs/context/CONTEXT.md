@@ -4,10 +4,9 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-20` concluída — a fila de
-> notificações ganhou ícone por severidade, slot de ação opcional (`estilo="link"` do `app-botao`)
-> e barra de duração com pausa no hover, alimentada pela duração real do serviço. Ainda
-> pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-24` concluída — os controles
+> de painéis flutuantes seguem minimizar, maximizar/restaurar quando existir, fechar. Ainda pendente:
+> desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
@@ -182,6 +181,15 @@ exata); achado e corrigido durante o próprio gate — o cabeçalho completo (ma
 truncava o título "Calculadora" no popup compacto de 280px, mais no mobile (botões de 44px); agora
 o popup compacto esconde marca/régua, mantendo só o essencial.
 
+**`ui-24-ordem-dos-controles-do-painel-flutuante` concluída** (spec em `docs/specs/done/`): o slot
+`[painelAcoesExtras]` do primitivo passou de antes de minimizar para entre minimizar e fechar. Assim,
+os painéis com maximização (Caderno e Documentos) seguem `Minimizar → Maximizar/Restaurar → Fechar`
+também no DOM e na navegação por teclado; sem ação extra, a sequência permanece `Minimizar → Fechar`.
+Teste focado 14/14, suíte completa frontend 1521/1521 e build de produção limpo. Lint sem erros
+novos, com 15.139 avisos preexistentes. Gate visual ao vivo em `1920×1080` e `360×800` conferiu a
+janela de Documentos: ordem e densidade corretas no desktop; no mobile, onde maximizar não existe,
+sem overflow horizontal.
+
 **`ui-18-escala-de-espaco` concluída** (spec em `docs/specs/done/`): cinco degraus de espaço
 congelados em `_tokens.scss` — `--space-4`/`--space-8`/`--space-12`/`--space-16`/`--space-20` —
 fecham a última dimensão do tema sem escala (forma e tipografia já eram tokenizadas). Escopo real
@@ -230,7 +238,7 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-20` concluída — ver acima). Restam `ui-21`…`ui-23` no backlog
+Não há spec ativa no momento (`ui-24` concluída — ver acima). Restam `ui-21`…`ui-23` no backlog
 (chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão — ver "Fila do
 backlog" abaixo). A única frente de código de milestone ainda pendente é o **M4**
 (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7 estão
@@ -265,8 +273,8 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-20`
-(2026-09-02): frontend 1516/1516 — o defeito `P-043` que rondava a suíte completa em rodadas
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-24`
+(2026-09-02): frontend 1521/1521 — o defeito `P-043` que rondava a suíte completa em rodadas
 anteriores não reproduziu nesta. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só
 reproduzem isoladas (arquivo único), não na suíte completa.
 

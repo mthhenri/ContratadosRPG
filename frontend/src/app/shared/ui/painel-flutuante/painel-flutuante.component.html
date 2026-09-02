@@ -32,7 +32,6 @@
                 <span class="painel-flutuante__regua" aria-hidden="true"></span>
             </div>
             <div class="painel-flutuante__acoes">
-                <ng-content select="[painelAcoesExtras]" />
                 <button
                     app-botao-icone
                     type="button"
@@ -43,6 +42,7 @@
                 >
                     <span aria-hidden="true">−</span>
                 </button>
+                <ng-content select="[painelAcoesExtras]" />
                 <button
                     app-botao-icone
                     type="button"
