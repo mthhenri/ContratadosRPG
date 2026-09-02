@@ -898,15 +898,15 @@
        tem `align-items:stretch`; sem teto, a lista cresce sem fim e a página inteira fica gigante
        — teto fixo só no modo `dialog`, ver `--compacto` no SCSS). -->
     <div class="ficha-inv__lista" appOverflowFade>
-        @if (inventarioVazio()) {
+        @if (secaoFiltradaVazia()) {
             @if (editavel()) {
                 <app-estado-vazio
                     icone="armazenamento"
-                    titulo="Nenhum item no inventário."
+                    [titulo]="tituloSecaoVazia()"
                     linhaApoio='Use "Adicionar itens" para montá-lo.'
                 />
             } @else {
-                <app-estado-vazio icone="armazenamento" titulo="Inventário vazio." />
+                <app-estado-vazio icone="armazenamento" [titulo]="tituloSecaoVazia()" />
             }
         }
 
@@ -2348,13 +2348,6 @@
                     />
                 }
             </div>
-        }
-        @if (mostrandoSoFragmentos() && itensListaFragmentos().length === 0) {
-            <p class="ficha-inv__vazio">Nenhum fragmento no inventário.</p>
-        }
-
-        @if (mostrandoSoAmplificadores() && amplificadoresInventario().length === 0) {
-            <p class="ficha-inv__vazio">Nenhum amplificador no inventário.</p>
         }
 
         @if (mostrandoSoAmplificadores() && amplificadoresInventario().length > 0) {

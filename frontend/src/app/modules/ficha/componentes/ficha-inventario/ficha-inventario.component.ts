@@ -1105,9 +1105,31 @@ export class FichaInventario {
   );
 
   // === Inventário (lista) ===
+  /** Inventário como um todo vazio (itens + amplificadores) — usado pelo botão "Esvaziar", que limpa tudo independente da aba ativa. */
   protected readonly inventarioVazio = computed(
     () => this.inventario().itens.length === 0 && this.inventario().amplificadores.length === 0,
   );
+
+  /** Vazio conforme a aba de filtro ativa: cada aba (equipamentos/amplificadores/fragmentos) tem seu próprio critério, evitando duplicar a mensagem de "vazio" quando o inventário inteiro está zerado. */
+  protected readonly secaoFiltradaVazia = computed(() => {
+    if (this.mostrandoSoAmplificadores()) {
+      return this.amplificadoresInventario().length === 0;
+    }
+    if (this.mostrandoSoFragmentos()) {
+      return this.itensListaFragmentos().length === 0;
+    }
+    return this.inventarioVazio();
+  });
+
+  protected readonly tituloSecaoVazia = computed(() => {
+    if (this.mostrandoSoAmplificadores()) {
+      return 'Nenhum amplificador no inventário.';
+    }
+    if (this.mostrandoSoFragmentos()) {
+      return 'Nenhum fragmento no inventário.';
+    }
+    return 'Nenhum item no inventário.';
+  });
 
   protected readonly itensInventario = computed<readonly ItemInventarioVM[]>(() =>
     this.inventario().itens.map((item, indice) => this.montarItemInventario(item, indice)),
