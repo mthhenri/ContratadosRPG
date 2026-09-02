@@ -4,10 +4,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-23` concluída — `app-stat`
-> distingue ausência (traço em `--text-mute`, rótulo acessível "Não preenchido") de um valor `0`
-> real; `app-cartao` ganhou o slot `[cartaoRodape]`, com a mesma régua hairline do cabeçalho, e a
-> ação "Abrir ficha completa" da ficha embutida na campanha migrou para ele.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** o token `--altura-topbar`
+> alinha histórico e inventário com o fim da barra institucional, que ganhou contexto de
+> empilhamento acima dos dois painéis. O histórico se desambigua por tela: "Histórico de Rolagens
+> da Campanha" (detalhe e Iniciativa) e "Histórico de Rolagens da Ficha" (as duas visualizações de
+> ficha), inclusive em tooltip e rótulos acessíveis.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -22,6 +23,16 @@
 ---
 
 ## 1. Próxima Task
+
+**`painel-lateral-abaixo-topbar-e-contexto-historico` concluída** (spec em `docs/specs/done/`,
+ainda sem commit): `--altura-topbar` é o token que alinha a barra institucional com os painéis
+laterais. Histórico e inventário abrem a partir do fim da barra, sem pintura, sombra ou backdrop
+acima dela; no mobile eles mantêm largura total somente na área restante. O histórico usa
+“Histórico de Rolagens da Campanha” no detalhe e na Iniciativa, e “Histórico de Rolagens da
+Ficha” nas duas visualizações de ficha, também nos nomes acessíveis e dicas. Testes focados 9/9,
+suíte frontend 1548/1548, lint sem erros novos e build passaram. Inspeção real em
+`1920×1080`/`960×1080`/`360×800`: topbar com 52px permaneceu acionável, painel/fundo começaram
+em 52px e o título contextual coube integralmente no mobile.
 
 **`fix-paineis-flutuantes-corpo-flex` concluída** (spec em `docs/specs/done/`, ainda sem commit):
 o corpo projetado por `app-painel-flutuante` agora é uma coluna flexível. O `CadernoFlutuante`, que

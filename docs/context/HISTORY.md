@@ -1,5 +1,31 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — painel lateral: topbar preservada e histórico ganha contexto
+
+O refinamento da reserva lateral moveu o início efetivo do **Histórico de Rolagens** e do
+**Inventário de Esquadrão** para logo abaixo da topbar institucional. O novo token
+`--altura-topbar` é consumido pela própria barra e pelos dois painéis; a topbar ganhou contexto
+de empilhamento acima deles, impedindo que o painel, sua sombra ou o backdrop mobile passem sobre
+ela. Portanto a faixa lateral continua reduzindo somente o conteúdo da rota — campanha, ficha e
+Iniciativa — sem encobrir a navegação. No mobile, painel e backdrop ocupam a largura total apenas
+a partir dos 52px abaixo da topbar.
+
+Para desambiguar o mesmo componente em telas diferentes, campanha e Iniciativa agora mostram
+**“Histórico de Rolagens da Campanha”**, enquanto as fichas de jogador e criatura mostram
+**“Histórico de Rolagens da Ficha”**. A mesma informação chega ao tooltip e aos rótulos acessíveis
+de abrir e fechar. Durante a inspeção surgiu um ajuste visual: o contexto longo não cabia no
+cabeçalho móvel com a mesma linha; nessa largura, o título passa a poder usar duas linhas, sem
+perder o botão de fechar ou ocultar “Campanha”/“Ficha”. O análogo mantido foi o painel lateral já
+aprovado da campanha/ficha, junto da topbar institucional: mesma superfície, cabeçalho técnico,
+densidade e controles, agora corretamente subordinado à barra de comando.
+
+Testes focados dos painéis: **9/9**; suíte frontend completa: **1548/1548**. Lint terminou sem
+erros novos (avisos históricos) e o build passou com os dois avisos de orçamento conhecidos. Na
+aplicação real, campanhas e fichas temporárias confirmaram em `1920×1080`, `960×1080` e
+`360×800`: a topbar permaneceu clicável, painel e fundo começaram em `y=52`, a reserva lateral
+permaneceu em 500px/~461px sem backdrop acima do mobile e os dois títulos contextuais ficaram
+inteiros. A spec complementar está em `docs/specs/done/painel-lateral-abaixo-topbar-e-contexto-historico.spec.md`.
+
 ## 2026-09-02 — ui-23: stat distingue ausência de zero e cartão ganha rodapé projetado
 
 `app-stat` agora trata `0` como valor real e mostra um traço discreto, em `--text-mute`, para

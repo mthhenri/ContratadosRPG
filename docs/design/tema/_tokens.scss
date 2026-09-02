@@ -101,6 +101,8 @@
   --space-20: 20px;
 
   /* --- Layout de apoio --- */
+  /* Altura da barra de comando institucional; overlays que pertencem à rota começam depois dela. */
+  --altura-topbar: 3.25rem;
   /* Painéis de consulta que permanecem abertos ao lado da área de trabalho. Em janela dividida
      ocupa no máximo 48% para que a página preserve uma coluna útil. */
   --largura-painel-lateral: min(500px, 48vw);
