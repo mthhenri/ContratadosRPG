@@ -71,7 +71,9 @@
                             <span class="detalhe__ficha-avatar" aria-hidden="true"></span>
                             <div class="detalhe__ficha-conteudo">
                                 <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
-                                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                                <span
+                                    class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
+                                ></span>
                                 <div class="detalhe__ficha-vitais">
                                     <span class="esqueleto-bloco esqueleto-bloco--vital"></span>
                                     <span class="esqueleto-bloco esqueleto-bloco--vital"></span>
@@ -142,7 +144,9 @@
                         <li class="detalhe__equipe-membro">
                             <div class="detalhe__equipe-membro-corpo">
                                 <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
-                                <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                                <span
+                                    class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
+                                ></span>
                             </div>
                         </li>
                         }
@@ -174,7 +178,9 @@
                                 <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
                                 <span class="esqueleto-bloco esqueleto-bloco--d20"></span>
                             </div>
-                            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+                            <span
+                                class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
+                            ></span>
                         </li>
                         }
                     </ul>
@@ -609,8 +615,7 @@
                                 </span>
                             </div>
 
-                            @if (podeGerenciarMembro(membro) && acaoMembro() !==
-                            membro.usuarioId) {
+                            @if (podeGerenciarMembro(membro) && acaoMembro() !== membro.usuarioId) {
                             <div class="detalhe__membro-acoes">
                                 <button
                                     class="detalhe__membro-acao"
@@ -780,8 +785,10 @@
                                     >
                                     }
                                 </a>
-                                <div class="detalhe__ficha-vitais">
-                                    <span class="detalhe__ficha-vital detalhe__ficha-vital--vida">
+                                <div class="detalhe__ficha-recursos">
+                                    <div
+                                        class="detalhe__ficha-recurso detalhe__ficha-recurso--vida"
+                                    >
                                         @if (podeAjustarFicha(ficha.usuarioId)) {
                                         <button
                                             class="detalhe__ficha-passo"
@@ -794,10 +801,14 @@
                                             −
                                         </button>
                                         }
-                                        <span
-                                            >Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—'
-                                            }}</span
-                                        >
+                                        <app-barra-recurso
+                                            class="detalhe__ficha-recurso-primitivo"
+                                            rotulo="Vida"
+                                            recurso="vida"
+                                            tamanho="compacto"
+                                            [atual]="ficha.vidaAtual"
+                                            [maximo]="ficha.vidaMaxima ?? 0"
+                                        />
                                         @if (podeAjustarFicha(ficha.usuarioId)) {
                                         <button
                                             class="detalhe__ficha-passo"
@@ -809,9 +820,9 @@
                                             +
                                         </button>
                                         }
-                                    </span>
-                                    <span
-                                        class="detalhe__ficha-vital detalhe__ficha-vital--energia"
+                                    </div>
+                                    <div
+                                        class="detalhe__ficha-recurso detalhe__ficha-recurso--energia"
                                     >
                                         @if (podeAjustarFicha(ficha.usuarioId)) {
                                         <button
@@ -824,10 +835,14 @@
                                             −
                                         </button>
                                         }
-                                        <span
-                                            >Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima
-                                            ?? '—' }}</span
-                                        >
+                                        <app-barra-recurso
+                                            class="detalhe__ficha-recurso-primitivo"
+                                            rotulo="Energia"
+                                            recurso="energia"
+                                            tamanho="compacto"
+                                            [atual]="ficha.energiaAtual"
+                                            [maximo]="ficha.energiaMaxima ?? 0"
+                                        />
                                         @if (podeAjustarFicha(ficha.usuarioId)) {
                                         <button
                                             class="detalhe__ficha-passo"
@@ -839,7 +854,7 @@
                                             +
                                         </button>
                                         }
-                                    </span>
+                                    </div>
                                 </div>
                                 @if (ficha.defesa !== undefined || ficha.esquiva !== undefined ||
                                 ficha.bloqueio !== undefined || ficha.contraAtaque !== undefined ||

@@ -1039,6 +1039,17 @@ describe('CampanhaDetalhe', () => {
       expect(vera?.querySelector('.detalhe__ficha-dono')?.textContent?.trim()).toBe('Jogador');
     });
 
+    it('mostra barras compactas de Vida e Energia nos cartões de jogadores', () => {
+      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+
+      const cartaoJogador = Array.from(
+        raiz.querySelectorAll<HTMLElement>('.detalhe__esquadrao-grid .detalhe__ficha-card'),
+      ).find((cartao) => cartao.textContent?.includes('Kane'));
+
+      expect(cartaoJogador?.querySelector('.barra-recurso--vida.barra-recurso--compacta')).not.toBeNull();
+      expect(cartaoJogador?.querySelector('.barra-recurso--energia.barra-recurso--compacta')).not.toBeNull();
+    });
+
     it('mostra o estado vazio quando a campanha não tem nenhuma ficha visível', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas: [] });
       expect(raiz.querySelector('.detalhe__estado')).not.toBeNull();

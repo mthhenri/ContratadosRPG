@@ -6,49 +6,51 @@
 // outra, mesmo efeito visual — então o primitivo segue as origens de verdade, não o exemplo
 // congelado (que o próprio comentário do catálogo já avisa: "o mais simples, não o único").
 :host {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1 1 0;
-  gap: var(--space-8);
-  line-height: 1;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  white-space: nowrap;
-  color: var(--text-dim);
-  background: transparent;
-  border: 0;
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  transition: color 0.12s ease, background 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    gap: var(--space-8);
+    line-height: 1;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    white-space: nowrap;
+    color: var(--text-dim);
+    background: transparent;
+    border: 0;
+    padding: var(--space-8) var(--space-12);
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition:
+        color 0.12s ease,
+        background 0.12s ease;
 
-  // Colapso mobile para só-ícone, com alvo de toque mínimo — reproduz `ficha-status__aba`, a
-  // origem mais madura (chegou a esse desenho depois do achado ao vivo do corte de rótulo hoje
-  // registrado em `P-005`). Item do tamanho do conteúdo (não mais igual), a barra rola em vez de
-  // espremer alguma aba abaixo do alvo de toque.
-  @include bp.mobile {
-    flex: 0 0 auto;
-    min-width: bp.$alvo-toque;
-    min-height: bp.$alvo-toque;
-    padding: var(--space-8) var(--space-4);
-  }
+    // Colapso mobile para só-ícone, com alvo de toque mínimo — reproduz `ficha-status__aba`, a
+    // origem mais madura (chegou a esse desenho depois do achado ao vivo do corte de rótulo hoje
+    // registrado em `P-005`). Item do tamanho do conteúdo (não mais igual), a barra rola em vez de
+    // espremer alguma aba abaixo do alvo de toque.
+    @include bp.mobile {
+        flex: 0 0 auto;
+        min-width: bp.$alvo-toque;
+        min-height: bp.$alvo-toque;
+        padding: var(--space-8) var(--space-4);
+    }
 }
 
 // Mesmo hover de `ficha-status__aba` (FichaVisualizacao) — as duas origens tinham o estado ativo,
 // mas só a Ficha tinha o hover; a Criatura (única consumidora hoje deste primitivo) ficava sem
 // nenhum retorno visual ao passar o mouse numa aba inativa.
 :host(:hover):not(.abas__item--ativa) {
-  color: var(--text);
+    color: var(--text);
 }
 
 :host(.abas__item--ativa) {
-  font-weight: 700;
-  color: var(--accent-text);
-  background: var(--accent);
+    font-weight: 700;
+    color: var(--accent-text);
+    background: var(--accent);
 }
 
 // Rótulo de texto do item (ícone + `<span class="abas__rotulo">`) — projetado pelo consumidor via
@@ -62,16 +64,16 @@
 // (decisão anterior, fora do escopo desta task); o primitivo segue a Ficha: nenhum item ganha
 // mais espaço, só o item ativo reexibe o próprio rótulo, com reticências se não couber.
 :host ::ng-deep .abas__rotulo {
-  @include bp.mobile {
-    display: none;
-  }
+    @include bp.mobile {
+        display: none;
+    }
 }
 
 :host(.abas__item--ativa) ::ng-deep .abas__rotulo {
-  @include bp.mobile {
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    @include bp.mobile {
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }

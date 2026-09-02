@@ -1,68 +1,76 @@
 .stat {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  padding: var(--space-12) var(--space-16);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: var(--space-12) var(--space-16);
 
-  &__rotulo {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mute);
-    margin-bottom: var(--space-8);
-  }
-
-  &__valor {
-    font-family: var(--font-mono);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text);
-    line-height: 1;
-  }
-
-  &__nota {
-    display: block;
-    margin-top: var(--space-4);
-    font: 10px/1.35 var(--font-sans);
-    color: var(--text-mute);
-  }
-
-  &--vida {
-    border-color: var(--vida-border);
-    .stat__valor { color: var(--vida); }
-  }
-
-  &--energia {
-    border-color: color-mix(in srgb, var(--energy) 35%, transparent);
-    .stat__valor { color: var(--energy); }
-  }
-
-  &--positivo {
-    border-color: color-mix(in srgb, var(--positive) 35%, transparent);
-    .stat__valor { color: var(--positive); }
-  }
-
-  &--alerta {
-    border-color: var(--accent-border);
-    .stat__valor { color: var(--accent); }
-  }
-
-  &--compacto {
-    padding: var(--space-12);
-
-    .stat__rotulo {
-      margin-bottom: var(--space-4);
-      font-size: 9px;
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        margin-bottom: var(--space-8);
     }
 
-    .stat__valor {
-      font-size: 19px;
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
     }
 
-    .stat__nota {
-      margin-top: var(--space-4);
-      font: 9px/1.35 var(--font-mono);
+    &__nota {
+        display: block;
+        margin-top: var(--space-4);
+        font: 10px/1.35 var(--font-sans);
+        color: var(--text-mute);
     }
-  }
+
+    &--vida {
+        border-color: var(--vida-border);
+        .stat__valor {
+            color: var(--vida);
+        }
+    }
+
+    &--energia {
+        border-color: color-mix(in srgb, var(--energy) 35%, transparent);
+        .stat__valor {
+            color: var(--energy);
+        }
+    }
+
+    &--positivo {
+        border-color: color-mix(in srgb, var(--positive) 35%, transparent);
+        .stat__valor {
+            color: var(--positive);
+        }
+    }
+
+    &--alerta {
+        border-color: var(--accent-border);
+        .stat__valor {
+            color: var(--accent);
+        }
+    }
+
+    &--compacto {
+        padding: var(--space-12);
+
+        .stat__rotulo {
+            margin-bottom: var(--space-4);
+            font-size: 9px;
+        }
+
+        .stat__valor {
+            font-size: 19px;
+        }
+
+        .stat__nota {
+            margin-top: var(--space-4);
+            font: 9px/1.35 var(--font-mono);
+        }
+    }
 }

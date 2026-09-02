@@ -156,6 +156,30 @@
         }
     }
 
+    // Variante para cartões e faixas densas: reduz só a cadência interna. Largura, grade e os
+    // steppers continuam no consumidor para que o primitivo não imponha layout à tela que o usa.
+    &--compacta {
+        .barra-recurso__topo {
+            gap: var(--space-4);
+        }
+
+        .barra-recurso__rotulo {
+            font-size: 9px;
+        }
+
+        .barra-recurso__valor {
+            font-size: 10px;
+        }
+
+        .barra-recurso__valor-atual {
+            font-size: 12px;
+        }
+
+        .barra-recurso__trilho {
+            height: 4px;
+        }
+    }
+
     // Vida usa `--vida` (vermelho fixo da identidade, não acompanha a troca de `--accent`);
     // Energia usa `--energy`.
     &--vida {

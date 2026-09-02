@@ -6,6 +6,9 @@ import { Tooltip } from '../../tooltip/tooltip.directive';
 /** Recurso com máximo que o primitivo sabe desenhar hoje — Sanidade não é um par atual/máximo. */
 export type BarraRecursoTipo = 'vida' | 'energia';
 
+/** Densidade interna do primitivo; o consumidor continua dono do tamanho e do arranjo externo. */
+export type BarraRecursoTamanho = 'padrao' | 'compacto';
+
 /**
  * Primitivo de recurso com máximo (`ui-16`): rótulo + valor atual/máximo + trilho de progresso,
  * cor fixa por recurso (`--vida`/`--energy`, não acompanham `--accent`) e limiar de alerta
@@ -29,6 +32,7 @@ export class BarraRecurso {
   readonly recurso = input.required<BarraRecursoTipo>();
   readonly atual = input.required<number>();
   readonly maximo = input.required<number>();
+  readonly tamanho = input<BarraRecursoTamanho>('padrao');
 
   /** Habilita clicar nos números para digitar o valor direto — só o bloco de vitalidade usa. */
   readonly editavel = input(false);
@@ -62,6 +66,9 @@ export class BarraRecurso {
 
   protected readonly classes = computed(() => {
     const partes = ['barra-recurso', `barra-recurso--${this.recurso()}`];
+    if (this.tamanho() === 'compacto') {
+      partes.push('barra-recurso--compacta');
+    }
     if (this.emAlerta()) {
       partes.push('barra-recurso--alerta');
     }

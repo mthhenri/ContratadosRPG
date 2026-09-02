@@ -382,6 +382,14 @@
         &.overflow-fade--base {
             --fade-base: 20px;
         }
+
+        // História é a única aba cujo texto é o conteúdo principal da coluna; não herda o teto de
+        // 195px que protege o peek de Anotações dentro da visão resumida da ficha.
+        &--historia {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none;
+        }
     }
 }
 
@@ -900,6 +908,10 @@
         flex: 1;
     }
 
+    &__conteudo--historia {
+        min-height: 0;
+    }
+
     // Única seção com a caixa de fundo mais clara (era o "conteudo" inteiro antes) — Sequelas/
     // Traumas/Lesões agora usam o próprio visual do `FichaSanidade` (editável). Altura mínima pra
     // ocupar um espaço considerável mesmo com pouco (ou nenhum) texto — o espaço sobrou das tags
@@ -914,6 +926,11 @@
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
+    }
+
+    &__anotacoes-caixa--historia {
+        flex: 1 1 auto;
+        min-height: 0;
     }
 
     &__anotacoes-cabecalho {
@@ -941,6 +958,11 @@
         &:focus {
             border-color: var(--accent-border);
         }
+    }
+
+    &__anotacoes-campo--historia {
+        flex: 1 1 auto;
+        min-height: 0;
     }
 
     &__rotulo-coluna {
@@ -2319,7 +2341,7 @@
 // `+` ultrapassar o cartão.
 .ficha-vitalidade {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 192px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 176px), 1fr));
     gap: 14px;
 }
 
@@ -2339,7 +2361,11 @@
     &__primitivo {
         flex: 1 1 auto;
         min-width: 0;
-        max-width: 220px;
+        max-width: 184px;
+
+        @include bp.mobile {
+            max-width: none;
+        }
     }
 
     // Botão "Receber dano" (m7-17) — projetado no slot `[barraRecursoAcao]` do primitivo, só na

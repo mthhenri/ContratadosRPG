@@ -25,7 +25,7 @@ import { rotuloPatente } from '../../status-derivado';
 const MS_PREVIEW_AVATAR = 600;
 
 /** Tamanho do preview ampliado do avatar (px, quadrado) — `object-fit: contain`, sem recorte. */
-const PX_PREVIEW_AVATAR = 200;
+const PX_PREVIEW_AVATAR = 300;
 
 /** Valor do `<select>` de visão quando nenhum tipo está filtrado — os blocos aparecem todos. */
 const FILTRO_TODOS = 'TODOS' as const;

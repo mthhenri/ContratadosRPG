@@ -1,32 +1,32 @@
 <app-modal [aberto]="true" titulo="Nova campanha" (fechou)="fecharDialog()">
     <form class="campanha-formulario__corpo" [formGroup]="formulario" (ngSubmit)="enviar()">
-            <label class="campanha-formulario__campo">
-                <span class="campanha-formulario__rotulo">Nome</span>
-                <input
-                    class="campanha-formulario__entrada"
-                    type="text"
-                    formControlName="nome"
-                    required
-                />
-            </label>
+        <label class="campanha-formulario__campo">
+            <span class="campanha-formulario__rotulo">Nome</span>
+            <input
+                class="campanha-formulario__entrada"
+                type="text"
+                formControlName="nome"
+                required
+            />
+        </label>
 
-            <label class="campanha-formulario__campo">
-                <span class="campanha-formulario__rotulo">Descrição (opcional)</span>
-                <textarea
-                    class="campanha-formulario__entrada campanha-formulario__entrada--area"
-                    formControlName="descricao"
-                    rows="3"
-                ></textarea>
-            </label>
+        <label class="campanha-formulario__campo">
+            <span class="campanha-formulario__rotulo">Descrição (opcional)</span>
+            <textarea
+                class="campanha-formulario__entrada campanha-formulario__entrada--area"
+                formControlName="descricao"
+                rows="3"
+            ></textarea>
+        </label>
 
-            <button
-                app-botao
-                variante="primario"
-                class="campanha-formulario__enviar"
-                type="submit"
-                [disabled]="enviando()"
-            >
-                {{ enviando() ? 'Criando…' : 'Criar campanha' }}
-            </button>
+        <button
+            app-botao
+            variante="primario"
+            class="campanha-formulario__enviar"
+            type="submit"
+            [disabled]="enviando()"
+        >
+            {{ enviando() ? 'Criando…' : 'Criar campanha' }}
+        </button>
     </form>
 </app-modal>

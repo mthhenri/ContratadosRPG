@@ -65,6 +65,7 @@ import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.comp
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
@@ -75,7 +76,7 @@ const UMA_HORA_MS = 60 * 60 * 1000;
 const MS_PREVIEW_AVATAR = 600;
 
 /** Tamanho do preview ampliado do avatar (px, quadrado) — `object-fit: contain`, sem recorte. */
-const PX_PREVIEW_AVATAR = 200;
+const PX_PREVIEW_AVATAR = 300;
 
 /** Uma das 3 condições no mini-card — sempre as 3, com `ativa` dizendo se está marcada (item 3). */
 interface ItemFichaCondicao extends DescritorCondicao {
@@ -203,6 +204,7 @@ type EquipeFichaExibicao =
     Botao,
     BotaoIcone,
     Cartao,
+    BarraRecurso,
     Modal,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],

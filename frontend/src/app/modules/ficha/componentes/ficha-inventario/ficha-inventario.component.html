@@ -770,7 +770,12 @@
                                 <button
                                     type="button"
                                     app-botao
-                                    [variante]="adicionadoRecente() === chaveCartao(cartao.categoria, cartao.item.nome) ? 'positivo' : 'primario'"
+                                    [variante]="
+                                        adicionadoRecente() ===
+                                        chaveCartao(cartao.categoria, cartao.item.nome)
+                                            ? 'positivo'
+                                            : 'primario'
+                                    "
                                     class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--largo"
                                     [class.ficha-inv__btn--feito]="
                                         adicionadoRecente() ===
@@ -834,7 +839,11 @@
                                     <button
                                         type="button"
                                         app-botao
-                                        [variante]="adicionadoRecente() === 'amp:' + amp.nome ? 'positivo' : 'primario'"
+                                        [variante]="
+                                            adicionadoRecente() === 'amp:' + amp.nome
+                                                ? 'positivo'
+                                                : 'primario'
+                                        "
                                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
                                         [class.ficha-inv__btn--feito]="
                                             adicionadoRecente() === 'amp:' + amp.nome
@@ -2401,7 +2410,11 @@
                                     <button
                                         type="button"
                                         app-botao
-                                        [variante]="adicionadoRecente() === 'amp:' + amp.nome ? 'positivo' : 'primario'"
+                                        [variante]="
+                                            adicionadoRecente() === 'amp:' + amp.nome
+                                                ? 'positivo'
+                                                : 'primario'
+                                        "
                                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--flex"
                                         [class.ficha-inv__btn--feito]="
                                             adicionadoRecente() === 'amp:' + amp.nome

@@ -174,75 +174,73 @@
 </div>
 } @if (confirmandoDuplicar(); as pendenteDuplicar) {
 <app-modal [aberto]="true" titulo="Duplicar ficha" (fechou)="cancelarDuplicar()">
+    <p class="dialogo__aviso">
+        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"?
+    </p>
 
-        <p class="dialogo__aviso">
-            Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"?
-        </p>
-
-        <div class="dialogo__acoes">
-            <button
-                app-botao
-                variante="primario"
-                class="dialogo__acao"
-                type="button"
-                [disabled]="duplicando() === pendenteDuplicar.id"
-                (click)="confirmarDuplicar()"
-            >
-                <app-icone nome="duplicar" />
-                {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
-            </button>
-            <button
-                app-botao
-                variante="secundario"
-                class="dialogo__acao"
-                type="button"
-                [disabled]="duplicando() === pendenteDuplicar.id"
-                (click)="cancelarDuplicar()"
-            >
-                Cancelar
-            </button>
-        </div>
- </app-modal>
+    <div class="dialogo__acoes">
+        <button
+            app-botao
+            variante="primario"
+            class="dialogo__acao"
+            type="button"
+            [disabled]="duplicando() === pendenteDuplicar.id"
+            (click)="confirmarDuplicar()"
+        >
+            <app-icone nome="duplicar" />
+            {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
+        </button>
+        <button
+            app-botao
+            variante="secundario"
+            class="dialogo__acao"
+            type="button"
+            [disabled]="duplicando() === pendenteDuplicar.id"
+            (click)="cancelarDuplicar()"
+        >
+            Cancelar
+        </button>
+    </div>
+</app-modal>
 } @if (confirmandoAtribuir(); as pendenteAtribuir) {
 <app-modal [aberto]="true" titulo="Atribuir a campanha" (fechou)="cancelarAtribuir()">
+    <p class="dialogo__aviso">
+        Mover <strong>{{ pendenteAtribuir.nome }}</strong> para qual campanha?
+    </p>
 
-        <p class="dialogo__aviso">
-            Mover <strong>{{ pendenteAtribuir.nome }}</strong> para qual campanha?
-        </p>
+    <select
+        class="acervo__select"
+        aria-label="Campanha de destino"
+        [value]="campanhaEscolhida()"
+        (change)="mudarCampanhaEscolhida($event)"
+    >
+        @for (campanha of campanhasElegiveis(); track campanha.id) {
+        <option [value]="campanha.id">{{ campanha.nome }}</option>
+        }
+    </select>
 
-        <select
-            class="acervo__select"
-            aria-label="Campanha de destino"
-            [value]="campanhaEscolhida()"
-            (change)="mudarCampanhaEscolhida($event)"
+    <div class="dialogo__acoes">
+        <button
+            app-botao
+            variante="primario"
+            class="dialogo__acao"
+            type="button"
+            [disabled]="atribuindo() === pendenteAtribuir.id"
+            (click)="confirmarAtribuir()"
         >
-            @for (campanha of campanhasElegiveis(); track campanha.id) {
-            <option [value]="campanha.id">{{ campanha.nome }}</option>
-            }
-        </select>
-
-        <div class="dialogo__acoes">
-            <button
-                app-botao
-                variante="primario"
-                class="dialogo__acao"
-                type="button"
-                [disabled]="atribuindo() === pendenteAtribuir.id"
-                (click)="confirmarAtribuir()"
-            >
-                <app-icone nome="campanhas" />
-                {{ atribuindo() === pendenteAtribuir.id ? 'Atribuindo…' : 'Confirmar' }}
-            </button>
-            <button
-                app-botao
-                variante="secundario"
-                class="dialogo__acao"
-                type="button"
-                [disabled]="atribuindo() === pendenteAtribuir.id"
-                (click)="cancelarAtribuir()"
-            >
-                Cancelar
-            </button>
-        </div>
- </app-modal>
+            <app-icone nome="campanhas" />
+            {{ atribuindo() === pendenteAtribuir.id ? 'Atribuindo…' : 'Confirmar' }}
+        </button>
+        <button
+            app-botao
+            variante="secundario"
+            class="dialogo__acao"
+            type="button"
+            [disabled]="atribuindo() === pendenteAtribuir.id"
+            (click)="cancelarAtribuir()"
+        >
+            Cancelar
+        </button>
+    </div>
+</app-modal>
 }

@@ -1,9 +1,6 @@
 <div class="cartao">
     @if (titulo(); as tituloTexto) {
-        <div
-            class="cartao__cabecalho"
-            [class.cartao__cabecalho--quebravel]="cabecalhoQuebravel()"
-        >
+        <div class="cartao__cabecalho" [class.cartao__cabecalho--quebravel]="cabecalhoQuebravel()">
             <span class="cartao__indice"><ng-content select="[cartaoIndice]" /></span>
             @if (nivelTitulo() === "h1") {
                 <h1 class="cartao__titulo">{{ tituloTexto }}</h1>

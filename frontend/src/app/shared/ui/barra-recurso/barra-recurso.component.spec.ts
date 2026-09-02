@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { BarraRecurso, BarraRecursoTipo } from './barra-recurso.component';
+import { BarraRecurso, BarraRecursoTamanho, BarraRecursoTipo } from './barra-recurso.component';
 
 /** Prova rótulo/valor/trilho, o limiar de alerta e a edição opcional por clique. */
 @Component({
@@ -14,6 +14,7 @@ import { BarraRecurso, BarraRecursoTipo } from './barra-recurso.component';
       [maximo]="maximo()"
       [maximoEditavel]="maximoEditavel()"
       [editavel]="editavel()"
+      [tamanho]="tamanho()"
       (atualAlterado)="atualEmitido.set($event)"
       (maximoAlterado)="maximoEmitido.set($event)"
     />
@@ -25,6 +26,7 @@ class Hospedeiro {
   readonly maximo = signal(20);
   readonly maximoEditavel = signal<number | null>(null);
   readonly editavel = signal(false);
+  readonly tamanho = signal<BarraRecursoTamanho>('padrao');
   readonly atualEmitido = signal<number | null>(null);
   readonly maximoEmitido = signal<number | null>(null);
 }
@@ -65,6 +67,15 @@ describe('BarraRecurso', () => {
       const barra = raiz(fixture).querySelector('.barra-recurso') as HTMLElement;
       expect(barra.classList.contains(`barra-recurso--${recurso}`)).toBe(true);
     }
+  });
+
+  it('aplica a variante compacta quando solicitada', () => {
+    const fixture = montar();
+    fixture.componentInstance.tamanho.set('compacto');
+    fixture.detectChanges();
+
+    const barra = raiz(fixture).querySelector('.barra-recurso') as HTMLElement;
+    expect(barra.classList.contains('barra-recurso--compacta')).toBe(true);
   });
 
   it('vira alerta abaixo de 25%, nos dois recursos', () => {

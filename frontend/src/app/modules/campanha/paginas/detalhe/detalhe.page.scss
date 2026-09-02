@@ -1466,6 +1466,31 @@
         gap: 4px 10px;
     }
 
+    // Barras só nos cartões de jogadores: criaturas conservam `__ficha-vitais`, que inclui os
+    // atributos defensivos próprios desse tipo de ficha.
+    &__ficha-recursos {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-8);
+        margin-top: var(--space-4);
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    &__ficha-recurso {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        min-width: 0;
+    }
+
+    &__ficha-recurso-primitivo {
+        flex: 1;
+        min-width: 0;
+    }
+
     &__ficha-vital {
         display: inline-flex;
         align-items: center;
@@ -1603,8 +1628,8 @@
     &__avatar-preview {
         position: fixed;
         z-index: 22;
-        width: 200px;
-        height: 200px;
+        width: 300px;
+        height: 300px;
         padding: 4px;
         background: var(--surface);
         border: 1px solid var(--border-strong);
@@ -1918,7 +1943,6 @@
         color: var(--text-mute);
         margin-bottom: 7px;
     }
-
 }
 
 // Conteúdo complementar dos modais nativos de ficha.

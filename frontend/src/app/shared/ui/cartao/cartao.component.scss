@@ -1,52 +1,52 @@
 @use "tema/breakpoints" as bp;
 
 .cartao {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--pad-card);
 
-  &__cabecalho {
-    display: flex;
-    align-items: center;
-    gap: var(--space-12);
-    margin-bottom: var(--space-20);
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: var(--space-12);
+        margin-bottom: var(--space-20);
 
-    &--quebravel {
-      @include bp.mobile {
-        flex-wrap: wrap;
-        row-gap: var(--space-12);
-      }
+        &--quebravel {
+            @include bp.mobile {
+                flex-wrap: wrap;
+                row-gap: var(--space-12);
+            }
+        }
     }
-  }
 
-  &__indice {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius-compact);
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+    &__indice {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-compact);
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-  &__titulo {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0;
-  }
+    &__titulo {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
 
-  &__regua {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+    &__regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 }

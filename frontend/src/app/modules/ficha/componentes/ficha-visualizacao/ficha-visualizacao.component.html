@@ -912,6 +912,7 @@
                                     class="ficha-barra__primitivo"
                                     rotulo="Vida"
                                     recurso="vida"
+                                    tamanho="compacto"
                                     [editavel]="ajustavel()"
                                     [dica]="progressaoVida()"
                                     [atual]="estado().vidaAtual"
@@ -962,6 +963,7 @@
                                     class="ficha-barra__primitivo"
                                     rotulo="Energia"
                                     recurso="energia"
+                                    tamanho="compacto"
                                     [editavel]="ajustavel()"
                                     [dica]="progressaoEnergia()"
                                     [atual]="estado().energiaAtual"
@@ -2459,8 +2461,10 @@
              pode, e `ajustavel()` regate o painel também (fragmento de URL manipulado à mão não
              renderiza a caixa; a `dados().historia` nem chega ao visualizador). -->
                     @if (abaStatusEfetiva() === "historia" && ajustavel()) {
-                        <div class="ficha-status__conteudo">
-                            <div class="ficha-status__anotacoes-caixa">
+                        <div class="ficha-status__conteudo ficha-status__conteudo--historia">
+                            <div
+                                class="ficha-status__anotacoes-caixa ficha-status__anotacoes-caixa--historia"
+                            >
                                 <div class="ficha-status__anotacoes-cabecalho">
                                     <span class="ficha-status__rotulo-coluna">História</span>
                                     @if (!editandoHistoria()) {
@@ -2478,7 +2482,7 @@
                                 @if (editandoHistoria()) {
                                     <textarea
                                         #entradaHistoria
-                                        class="ficha-status__anotacoes-campo"
+                                        class="ficha-status__anotacoes-campo ficha-status__anotacoes-campo--historia"
                                         rows="10"
                                         aria-label="História"
                                         placeholder="Escreva a história do agente aqui…"
@@ -2487,7 +2491,10 @@
                                         (blur)="confirmarHistoria(entradaHistoria.value)"
                                     ></textarea>
                                 } @else if (historia()) {
-                                    <p class="ficha-visao__anotacoes" appOverflowFade>
+                                    <p
+                                        class="ficha-visao__anotacoes ficha-visao__anotacoes--historia"
+                                        appOverflowFade
+                                    >
                                         {{ historia() }}
                                     </p>
                                 } @else {
@@ -2677,7 +2684,13 @@
         >
             Confirmar
         </button>
-        <button app-botao variante="secundario" class="ficha-cartao__acao" type="button" (click)="cancelarLimparOrigem()">
+        <button
+            app-botao
+            variante="secundario"
+            class="ficha-cartao__acao"
+            type="button"
+            (click)="cancelarLimparOrigem()"
+        >
             Cancelar
         </button>
     </div>

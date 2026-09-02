@@ -2499,6 +2499,25 @@ describe('FichaVisualizacao', () => {
       expect(raiz.textContent).toContain('Nasceu numa colônia orbital.');
     });
 
+    it('usa a caixa expansível exclusiva da História', () => {
+      const { raiz, fixture } = montar(
+        { ...dados, historia: 'Nasceu numa colônia orbital.' },
+        'Corvo',
+        42,
+        true,
+        false,
+      );
+
+      const botao = Array.from(raiz.querySelectorAll('.ficha-status__aba')).find(
+        (item) => item.textContent?.trim() === 'História',
+      ) as HTMLButtonElement;
+      botao.click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.ficha-status__anotacoes-caixa--historia')).not.toBeNull();
+      expect(raiz.querySelector('.ficha-visao__anotacoes--historia')).not.toBeNull();
+    });
+
     it('sem historia definida (ou ausente — visualizador nunca chega aqui) mostra a mensagem de vazio', () => {
       const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
       fixture.componentRef.setInput('abaStatusInicial', 'historia');

@@ -586,9 +586,7 @@
                                                 type="button"
                                                 appHoldRepeat
                                                 [attr.aria-label]="'Reduzir ' + campo.nome"
-                                                (passo)="
-                                                    ajustarAtributoRascunho(campo.chave, -1)
-                                                "
+                                                (passo)="ajustarAtributoRascunho(campo.chave, -1)"
                                             >
                                                 −
                                             </button>
@@ -600,9 +598,7 @@
                                                 type="button"
                                                 appHoldRepeat
                                                 [attr.aria-label]="'Aumentar ' + campo.nome"
-                                                (passo)="
-                                                    ajustarAtributoRascunho(campo.chave, 1)
-                                                "
+                                                (passo)="ajustarAtributoRascunho(campo.chave, 1)"
                                             >
                                                 +
                                             </button>
@@ -1535,7 +1531,6 @@
             (fechou)="cancelarRevelarRolagem()"
         >
             <div class="revelar-rolagem">
-
                 <p class="revelar-rolagem__aviso">
                     A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros
                     jogadores. Tem certeza?

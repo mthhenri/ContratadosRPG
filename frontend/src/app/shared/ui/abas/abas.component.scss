@@ -1,14 +1,14 @@
 :host {
-  display: flex;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  overflow-x: auto;
-  scrollbar-width: none;
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow-x: auto;
+    scrollbar-width: none;
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }

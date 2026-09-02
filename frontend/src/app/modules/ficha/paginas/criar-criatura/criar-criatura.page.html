@@ -448,7 +448,12 @@
                 </label>
                 @if (estado().tenacidade) {
                 <div class="guia__stats guia__stats--espacada">
-                    <app-stat tamanho="compacto" rotulo="Vida Máxima" [valor]="vidaMaxima()" variante="vida" />
+                    <app-stat
+                        tamanho="compacto"
+                        rotulo="Vida Máxima"
+                        [valor]="vidaMaxima()"
+                        variante="vida"
+                    />
                     <div class="guia__stat">
                         <span class="guia__stat-rotulo">Vida atual</span>
                         <input
@@ -812,7 +817,7 @@
                                 <app-icone nome="excluir" />
                             </button>
                         </div>
-                    <label app-campo
+                        <label app-campo
                             ><span class="campo__rotulo">Nome</span
                             ><input
                                 class="campo__controle"
@@ -1099,7 +1104,12 @@
                 </div>
                 } @if (estado().tenacidade) {
                 <div class="guia__stats">
-                    <app-stat tamanho="compacto" rotulo="Vida" [valor]="vidaMaxima()" variante="vida" />
+                    <app-stat
+                        tamanho="compacto"
+                        rotulo="Vida"
+                        [valor]="vidaMaxima()"
+                        variante="vida"
+                    />
                     <app-stat tamanho="compacto" rotulo="Defesa" [valor]="defesaBase()" />
                 </div>
                 } @if (estado().resistencias.length || estado().fraquezas.length) {
