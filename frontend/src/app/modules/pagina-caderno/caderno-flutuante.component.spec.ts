@@ -172,6 +172,11 @@ describe('CadernoFlutuante', () => {
     expect(obter('.caderno__corpo').classList).not.toContain('caderno__corpo--lista-recolhida');
   });
 
+  it("projeta o corpo flexível do caderno diretamente no corpo do painel", () => {
+    clicar("[aria-label=\"Abrir caderno\"]");
+    expect(obter(".caderno__corpo").parentElement).toBe(obter(".painel-flutuante__corpo"));
+  });
+
   it('maximiza a janela e restaura tamanho e posição anteriores no desktop', () => {
     clicar('[aria-label="Abrir caderno"]');
     const tamanhoAntes = fixture.componentInstance['estado']().tamanho;

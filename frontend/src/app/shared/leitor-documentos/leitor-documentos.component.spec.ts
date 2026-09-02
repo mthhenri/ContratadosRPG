@@ -34,6 +34,13 @@ describe('LeitorDocumentos', () => {
     expect(fixture.nativeElement.querySelector('[aria-label="Buscar nos documentos"]')).toBeNull();
   });
 
+  it("mantém barra e visualizador no mesmo corpo flexível do leitor", () => {
+    abrir();
+    const conteudo = obter('.leitor-documentos__conteudo');
+    expect(conteudo.querySelector('.leitor-documentos__toolbar')).toBeTruthy();
+    expect(obter<HTMLIFrameElement>('iframe').parentElement).toBe(conteudo);
+  });
+
   it('troca para o Guia do Mestre no mesmo leitor', () => {
     abrir();
     clicar('[aria-label="Selecionar Guia do Mestre"]');
@@ -105,7 +112,8 @@ describe('LeitorDocumentos', () => {
     // Edge mobile não incorpora PDF em iframe e bloqueia o download automático que o plugin
     // nativo precisaria (janela em branco) — o mobile usa o leitor próprio via pdfjs-dist.
     expect(fixture.nativeElement.querySelector('iframe')).toBeNull();
-    expect(obter('app-leitor-pdf-mobile')).toBeTruthy();
+    const leitorMobile = obter('app-leitor-pdf-mobile');
+    expect(leitorMobile.parentElement).toBe(obter('.leitor-documentos__conteudo'));
   });
 
   it('fecha com Escape quando o foco está dentro do painel', () => {

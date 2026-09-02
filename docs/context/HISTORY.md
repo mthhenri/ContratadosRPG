@@ -1,5 +1,70 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-01 — Correção visual: caderno ocupa a altura do painel flutuante
+
+A segunda captura do autor mostrou que o problema de altura não era exclusivo do leitor de PDF: o
+`CadernoFlutuante` projetava escopo, busca e `.caderno__corpo` diretamente em
+`app-painel-flutuante`. Embora o último tivesse `flex: 1`, o corpo do primitivo não era um
+contêiner flexível, então a grade de lista/editor recebia somente a altura intrínseca do conteúdo e
+deixava a maior parte da janela vazia.
+
+A correção foi feita no contrato compartilhado: `.painel-flutuante__corpo` agora organiza a
+projeção como coluna flexível, com altura mínima segura. Os controles de cada consumidor conservam
+sua altura; apenas regiões que já pedem `flex: 1`, como o corpo do caderno e o conteúdo do leitor,
+ocupam o restante. A calculadora permanece naturalmente compacta, porque não declara esse
+crescimento. O teste do primitivo fixa o contrato de estilo e o do caderno confirma sua projeção
+direta no corpo compartilhado.
+
+**Verificação:** testes focados de painel e caderno passaram (31 casos no caderno) e a suíte
+frontend completa passou em 1510/1510. Na aplicação real, o caderno preencheu a área abaixo de
+escopo e busca no tamanho compacto do relato (`1155×566`: corpo `1145×384`), em `1920×1080` e em
+`360×800` (lista mobile `342×545`), sem corte, espaço vazio indevido ou overflow vertical do
+conteúdo. O build de produção passou e o lint terminou sem erros, preservando somente os avisos
+históricos do repositório.
+
+## 2026-09-01 — Correção visual: PDF preenche o corpo do leitor de documentos
+
+A primeira correção do leitor tratou a posição persistida, mas a captura seguinte revelou o
+defeito que ainda importava: o iframe ficava diretamente no corpo projetado de
+`app-painel-flutuante`. O iframe tinha `flex: 1`, porém seu pai não era um contêiner flexível; o
+navegador então aplicava a altura padrão de aproximadamente 150px, deixando quase todo o cartão
+vazio. Era especialmente visível no viewport compacto de `656×493` que o autor enviou.
+
+`LeitorDocumentos` passou a agrupar a barra de seleção e o visualizador em
+`.leitor-documentos__conteudo`, uma coluna com `height: 100%` e `min-height: 0`. A barra continua
+com sua altura própria, e tanto o iframe desktop como o leitor PDF mobile preenchem o restante. O
+recorte segue o padrão de região flexível já usado pelo editor de `CadernoFlutuante`; a moldura do
+painel, tamanho salvo, arraste, maximização e controles do PDF não foram alterados.
+
+**Verificação:** teste focado 11/11 e suíte frontend completa 1508/1508 passaram. O build de
+produção passou e o lint não teve erros (somente os avisos históricos). Na aplicação real,
+inspecionei o tamanho compacto do relato, `1920×1080` e `360×800`: o iframe passou a ocupar
+`638×371` dentro do cartão de `640×480`, e o leitor mobile ocupou `342×633` abaixo da barra. Sem
+overflow horizontal, corte de conteúdo ou área vazia indevida; controles, hierarquia e alvos de
+toque conservaram o contrato de `app-painel-flutuante`/`CadernoFlutuante`.
+
+## 2026-09-01 — Correção visual: leitor de documentos não reabre mais fora da tela
+
+O painel dos documentos lembrava a posição em `localStorage`, mas só conferia seus limites quando
+o viewport recebia um evento de redimensionamento. Depois de trocar de monitor, diminuir a janela
+ou carregar uma preferência antiga, o leitor podia nascer parcialmente cortado até o usuário
+redimensionar a tela manualmente. A responsabilidade já era do primitivo compartilhado
+`app-painel-flutuante`, que também atende calculadora e caderno; a correção ficou nele, sem criar
+um ajuste exclusivo para o leitor.
+
+Depois que a janela é renderizada, a abertura e a restauração de um painel minimizado passam a
+medir sua caixa real e limitam `x`/`y` ao viewport, persistindo a posição corrigida. A lógica de
+arraste existente continua usando a mesma função de limite; mobile continua a folha integral e
+não recebe posição fixa. `DESIGN.md` passou a registrar esse contrato de recuperação de posição.
+
+**Verificação:** o novo teste de regressão do primitivo passou junto aos 12 testes focados, e a
+suíte frontend completa passou em 1507/1507. Build de produção passou; lint terminou sem erros e
+com os avisos históricos do repositório. Inspecionei a aplicação real contra o análogo
+`app-painel-flutuante`/`CadernoFlutuante` da UI-17: com posição persistida `1800×900`, o leitor
+abriu inteiro em `1280×600` no viewport `1920×1080`; em `360×800`, permaneceu a folha de
+`344×784` com margem de 8px. Nos dois tamanhos, controles, moldura e hierarquia foram preservados
+e o documento não criou overflow horizontal.
+
 ## 2026-09-01 — Correção visual: Vitalidade reflui antes de vazar na coluna da ficha
 
 O relato visual mostrou o `+` de Energia saindo alguns pixels pela borda direita do cartão de

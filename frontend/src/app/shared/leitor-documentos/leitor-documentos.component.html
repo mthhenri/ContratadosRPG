@@ -42,46 +42,50 @@
         </button>
     }
 
-    <div class="leitor-documentos__toolbar" role="toolbar" aria-label="Escolher documento">
-        <div class="leitor-documentos__segmentado" role="group" aria-label="Documento">
-            <button
-                type="button"
-                [class.leitor-documentos__segmentado-item--ativo]="
-                    estado().documentoAtivo === 'sistema'
-                "
-                [attr.aria-pressed]="estado().documentoAtivo === 'sistema'"
-                aria-label="Selecionar Sistema"
-                (click)="selecionarDocumento('sistema')"
-            >
-                Sistema
-            </button>
-            <button
-                type="button"
-                [class.leitor-documentos__segmentado-item--ativo]="
-                    estado().documentoAtivo === 'guia-mestre'
-                "
-                [attr.aria-pressed]="estado().documentoAtivo === 'guia-mestre'"
-                aria-label="Selecionar Guia do Mestre"
-                (click)="selecionarDocumento('guia-mestre')"
-            >
-                Guia do Mestre
-            </button>
+    <div class="leitor-documentos__conteudo">
+        <div class="leitor-documentos__toolbar" role="toolbar" aria-label="Escolher documento">
+            <div class="leitor-documentos__segmentado" role="group" aria-label="Documento">
+                <button
+                    type="button"
+                    [class.leitor-documentos__segmentado-item--ativo]="
+                        estado().documentoAtivo === 'sistema'
+                    "
+                    [attr.aria-pressed]="estado().documentoAtivo === 'sistema'"
+                    aria-label="Selecionar Sistema"
+                    (click)="selecionarDocumento('sistema')"
+                >
+                    Sistema
+                </button>
+                <button
+                    type="button"
+                    [class.leitor-documentos__segmentado-item--ativo]="
+                        estado().documentoAtivo === 'guia-mestre'
+                    "
+                    [attr.aria-pressed]="estado().documentoAtivo === 'guia-mestre'"
+                    aria-label="Selecionar Guia do Mestre"
+                    (click)="selecionarDocumento('guia-mestre')"
+                >
+                    Guia do Mestre
+                </button>
+            </div>
+            <span class="leitor-documentos__dica">
+                Busca, páginas e zoom ficam na barra do PDF.
+            </span>
         </div>
-        <span class="leitor-documentos__dica">Busca, páginas e zoom ficam na barra do PDF.</span>
-    </div>
 
-    @if (ehMobile()) {
-        <app-leitor-pdf-mobile
-            [url]="documentoConfiguracao().url"
-            [titulo]="documentoConfiguracao().titulo"
-        />
-    } @else {
-        <iframe
-            class="leitor-documentos__pdf"
-            [src]="documentoUrl()"
-            [title]="documentoConfiguracao().titulo"
-        ></iframe>
-    }
+        @if (ehMobile()) {
+            <app-leitor-pdf-mobile
+                [url]="documentoConfiguracao().url"
+                [titulo]="documentoConfiguracao().titulo"
+            />
+        } @else {
+            <iframe
+                class="leitor-documentos__pdf"
+                [src]="documentoUrl()"
+                [title]="documentoConfiguracao().titulo"
+            ></iframe>
+        }
+    </div>
 
     @if (!ehMobile() && !maximizada()) {
         <span
