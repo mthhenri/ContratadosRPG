@@ -1,5 +1,52 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-22: ajuste pós-revisão (rótulo dentro da caixa, mais respiro)
+
+O autor revisou a `ui-22` ao vivo e achou a variante `[compacto]` compacta demais: o rótulo da
+rolagem ficava **fora** da caixa (`historico-rolagens__meta`, texto solto acima) e o padding da
+pílula do resultado (2px/8px) apertava demais. Dois ajustes, sem mudar o contrato do componente:
+
+1. A caixa (`--surface-2`/`--border`/`--radius-control`) migrou de volta para
+   `historico-rolagens__item` — que agora envolve rótulo + meta + a rolagem inteira, um cartão só
+   — em vez de viver dentro de `resultado-rolagem--compacto` sozinha (o desenho anterior deixava
+   o rótulo do lado de fora, "flutuando"). `resultado-rolagem--compacto` ficou só com a tipografia/
+   layout da linha; quem incorporar o modificador sem essa moldura externa decide a própria caixa.
+2. Padding do cartão voltou a `var(--space-12) var(--space-16)` (era `2px 8px` na pílula); dado/
+   grupo de dano ganharam 1px a mais de padding cada; gap entre os blocos de uma repetição `#N`
+   subiu de 2px para 6px.
+
+Resultado: as mesmas 10 rolagens da medição original da `ui-22` (teste kh/kl, dano multi-tipo,
+crítico, repetição, uma privada) agora somam **843px**, contra os **1864px** de antes da task —
+`2,2×` menos altura. É menos agressivo que o `3,3×` da primeira entrega (que o autor achou
+excessivo), mas ainda uma redução real; o `HISTORY.md` de `ui-22` (abaixo) registra o número
+antigo como o estado **na hora**, não reescrito aqui.
+
+Testado ao vivo contra **todas as formas de expressão da gramática de rolagem** (não só o recorte
+da medição de altura) — gerei 27 rolagens novas com o motor real (`rolarFormula`), uma para cada
+recurso: `NdM` simples, tipo de dano único e Composto (`[A-B]`), `kh`/`kl`, margem de crítico
+(`cm`), explosão (`!`)/implosão (`?`), `kh`+`cm`+`!` combinados, atributo como fonte de dados
+(`FORd6`), atributo escalado (`FOR*3`/`LUT/2`), atributo+offset como quantidade (`(LUT+3)d20`),
+repetição (`(fórmula)#N`, com e sem tipo de dano), crítico (dobra), os 5 tipos de dano (Físico/
+Balístico/Explosão/Químico/Geral), termo negativo/multi-termo, desvantagem intrínseca (regra 270,
+atributo ≤ 0) e atributo com valor negativo — 38 rolagens no total (as 27 + as 11 da rodada
+anterior) na mesma lista real, sem nenhuma quebrando o layout ou cortando conteúdo (`scrollWidth
+=== clientWidth` nos dois viewports). Cada uma tem seu próprio card visualmente correto: crítico
+com glow, desvantagem com selo, margem de crítico com `◆ N`, dado descartado riscado+esmaecido.
+
+Também gerei **3 POCs visuais** (mesma massa de dados real, screenshots enviados ao autor pra
+escolher) sem commitar nenhum:
+- **A — Cartão** (a que ficou): caixa fechada `--surface-2`/`--border`, rótulo dentro.
+- **B — Tira colorida**: sem caixa fechada, barra lateral de 3px em `--cor-ficha` + fundo
+  `--surface-2` + régua inferior — mais denso que A, identidade por ficha mais visível.
+- **C — Linha corrida**: sem caixa nenhuma, só uma régua tracejada entre itens — o mais denso dos
+  três, estética de log de terminal.
+
+Suíte completa frontend 1539/1540 (a única falha, `painel-flutuante.component.spec.ts` — asserção
+de posição restaurada —, não reproduz isolada nem tem relação com este diff; PROBLEMS.md já
+documenta esse padrão de flake só-na-suíte-completa em outros arquivos). Lint sem erro novo, build
+limpo. Verificação visual ao vivo (Postgres nativo) em `1920×1080`/`360×800`, painel da ficha e
+feed da campanha, sem overflow horizontal nos dois.
+
 ## 2026-09-02 — ui-22: resultado de rolagem compacto
 
 `app-resultado-rolagem` tinha uma forma só — total de 44px desenhado para a carta de 640px da

@@ -5,10 +5,11 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-22` concluída — variante
-> `[compacto]` de `app-resultado-rolagem` (total 22px, pool numa linha), adotada no painel lateral
-> de histórico e no feed da campanha; aria-label no dado descartado; duração da barra da bandeja
-> por custom property; glow do crítico em mixin. Ainda pendente: desligar o Render e reescrever
-> `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
+> `[compacto]` de `app-resultado-rolagem` (total 22px, pool numa linha, rótulo dentro da caixa
+> após ajuste pós-revisão), adotada no painel lateral de histórico e no feed da campanha;
+> aria-label no dado descartado; duração da barra da bandeja por custom property; glow do crítico
+> em mixin. Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud
+> Run) — ver seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
@@ -249,18 +250,27 @@ forçado via bloqueio de rede do `socket.io` (sem depender do socket real nem de
 compartilhado) — apareceu certo nos dois viewports, sem overflow. Detalhe completo em
 `HISTORY.md`.
 
-**`ui-22-resultado-rolagem-compacto` concluída** (spec em `docs/specs/done/`): `app-resultado-
-rolagem` ganhou `[compacto]` (total 22px, pool/grupos/legenda numa linha só, dentro de uma pílula
-`--surface-2`/`--border`) — `HistoricoRolagensSidebar` passa `true` no único call site, cobrindo
-os dois consumidores (painel lateral da ficha, feed da campanha; é o mesmo componente para os
-dois, não existiam dois lugares separados); a bandeja (carta de 640px) fica na forma cheia. Dado
-descartado pelo `kh`/`kl` ganhou `aria-label` (antes só opacidade + risco); a duração da barra da
-bandeja passou a vir do serviço por custom property (`--bandeja-duracao`, sem literal solto no
-CSS); o glow do crítico/chip de dano (`text-shadow` + `color-mix()`, três vezes calculado inline)
-virou mixin em `frontend/src/styles/tema/_glow.scss` (espelhado em `docs/design/tema/`). Medido ao
-vivo com as mesmas 10 rolagens reais: 1864px → 567px (`3,3×`, a spec pedia "pelo menos 3×").
-Testes focados 8/8, suíte completa frontend 1540/1540, lint sem erro novo, build limpo.
-Verificação visual ao vivo (Postgres nativo) em `1920×1080`/`360×800`, painel da ficha e feed da
+**`ui-22-resultado-rolagem-compacto` concluída, com ajuste pós-revisão** (spec em
+`docs/specs/done/`): `app-resultado-rolagem` ganhou `[compacto]` (total 22px, pool/grupos/legenda
+numa linha só) — `HistoricoRolagensSidebar` passa `true` no único call site, cobrindo os dois
+consumidores (painel lateral da ficha, feed da campanha; é o mesmo componente para os dois, não
+existiam dois lugares separados); a bandeja (carta de 640px) fica na forma cheia. Dado descartado
+pelo `kh`/`kl` ganhou `aria-label` (antes só opacidade + risco); a duração da barra da bandeja
+passou a vir do serviço por custom property (`--bandeja-duracao`, sem literal solto no CSS); o
+glow do crítico/chip de dano (`text-shadow` + `color-mix()`, três vezes calculado inline) virou
+mixin em `frontend/src/styles/tema/_glow.scss` (espelhado em `docs/design/tema/`). A primeira
+entrega ficou compacta demais na revisão do autor — rótulo fora da caixa, padding apertado; a
+caixa (`--surface-2`/`--border`) migrou de `resultado-rolagem--compacto` para
+`historico-rolagens__item` (agora envolve rótulo + rolagem, um cartão só) e os paddings
+cresceram. Medido ao vivo com as mesmas 10 rolagens reais: 1864px → 843px (`2,2×`). Testado
+contra as 27 formas de expressão da gramática de rolagem (grupos de dano, `kh`/`kl`/`cm`/`!`/`?`,
+atributo como dado/escalado/offset, repetição `#N`, crítico, desvantagem intrínseca — detalhe em
+`HISTORY.md`), 38 rolagens reais na mesma lista sem overflow. 3 POCs visuais gerados e enviados ao
+autor para escolha (cartão/tira colorida/linha corrida) — só o cartão foi commitado. Testes
+focados 8/8, suíte completa frontend 1539/1540 (única falha,
+`painel-flutuante.component.spec.ts`, não reproduz isolada nem tem relação com este diff), lint
+sem erro novo, build limpo. Verificação visual ao vivo (Postgres nativo) em
+`1920×1080`/`360×800`, painel da ficha e feed da
 campanha, sem overflow horizontal nos dois. Detalhe completo em `HISTORY.md`.
 
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google

@@ -193,26 +193,24 @@
         }
     }
 
-    // Variante de linha (ui-22): total menor, pool/grupos/legenda numa linha só, dentro de uma
-    // pílula rasa (`--surface-2`/`--border`) — cabe ~3x mais histórico na mesma altura do painel
-    // lateral/feed da campanha sem perder total, modificadores ou chips de dano. A bandeja (carta
-    // de 640px) nunca recebe este modificador — fica na forma cheia (m3-22/m3-55).
+    // Variante de linha (ui-22, ajustada após revisão do autor): total menor, pool/grupos/legenda
+    // numa linha só — cabe mais histórico na mesma altura do painel lateral/feed da campanha sem
+    // perder total, modificadores ou chips de dano. Sem caixa própria (`--surface-2`/`--border`
+    // agora vivem no item que envolve rótulo + esta rolagem — `HistoricoRolagensSidebar` — pra
+    // não aninhar caixa dentro de caixa); quem incorporar este modificador sem essa moldura
+    // externa decide a própria. A bandeja (carta de 640px) nunca recebe este modificador — fica
+    // na forma cheia (m3-22/m3-55).
     &--compacto {
         align-items: stretch;
         margin-top: 0;
-        gap: 4px;
+        gap: 6px;
 
         .resultado-rolagem__corpo {
             align-items: center;
-            gap: 8px;
-            padding: 2px 8px;
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-control);
+            gap: 10px;
 
             &:not(:first-child) {
-                padding-top: 2px; // sem régua cheia — só respiro entre blocos
-                border-top: 0;
+                padding-top: 6px; // sem régua cheia — só respiro entre blocos de repetição #N
             }
         }
 
@@ -233,15 +231,15 @@
             flex-direction: row;
             flex-wrap: wrap;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         .resultado-rolagem__pool {
-            gap: 3px 6px;
+            gap: 4px 8px;
         }
 
         .resultado-rolagem__dado-termo {
-            gap: 3px;
+            gap: 4px;
         }
 
         .resultado-rolagem__dado-nota {
@@ -249,15 +247,19 @@
         }
 
         .resultado-rolagem__dado {
-            font-size: 11px;
-            min-width: 18px;
-            padding: 1px 4px;
+            font-size: 12px;
+            min-width: 20px;
+            padding: 2px 6px;
         }
 
         .resultado-rolagem__critico,
         .resultado-rolagem__legenda,
         .resultado-rolagem__grupo {
-            font-size: 11px;
+            font-size: 12px;
+        }
+
+        .resultado-rolagem__grupo {
+            padding: 2px 7px;
         }
 
         .resultado-rolagem__desvantagem {
