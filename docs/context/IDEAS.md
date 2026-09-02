@@ -206,9 +206,9 @@
   (distinta de `validarPermissaoEdicao`, que hoje deixa dono e mestre editarem igual) e decidir onde
   ela aparece na UI (cabeçalho? aba própria?) — ainda não especificado.
 
-### I-014 — M8 sugerido: documentos e anotações de campanha · campanha/documentos
+### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
 
-- **Ideia:** criar um módulo de documentos da campanha — possivelmente M8 — no qual o mestre possa
+- **Ideia:** criar um módulo de documentos da campanha — possivelmente M9 — no qual o mestre possa
   cadastrar conteúdo em texto ou imagem, compartilhar documentos selecionados com os jogadores e
   oferecer aos jogadores uma biblioteca dos documentos recebidos dentro da própria campanha. Os
   **cadernos privados** que antes faziam parte desta ideia já foram especificados separadamente em
@@ -222,7 +222,7 @@
   busca textual inicial será feita no **PostgreSQL**, que continua como fonte de verdade: `tsvector`,
   consulta amigável e índice GIN, sempre recortados pelas permissões da campanha. Ainda falta decidir
   quais formatos de documento são aceitos e se haverá versionamento ou organização por pastas/tags.
-  A numeração M8 é sugestão, não decisão de roadmap.
+  A numeração M9 é sugestão, não decisão de roadmap.
 - **Evolução futura — Elasticsearch:** permanece uma opção para busca semântica/híbrida, maior
   sofisticação de relevância ou volume que justifique um índice separado. Nesse cenário, PostgreSQL
   continua autoritativo e Elasticsearch é projeção reconstruível, sincronizada em criação, alteração
@@ -233,12 +233,12 @@
   imagens e pistas livremente, colocariam itens lado a lado, criariam conexões visuais entre eles e
   acrescentariam anotações próprias, formando um mapa mental da investigação ou da campanha. Esse
   upgrade exigiria posicionamento livre, persistência do layout, conexões entre nós, colaboração em
-  tempo real e regras de edição/visibilidade. É uma evolução da M8 centrada em conhecimento e pistas,
-  distinta do tabletop tático da M10, que é centrado em mapas, tokens e posicionamento de cena.
+  tempo real e regras de edição/visibilidade. É uma evolução da M9 centrada em conhecimento e pistas,
+  distinta do tabletop tático da M11, que é centrado em mapas, tokens e posicionamento de cena.
 
-### I-015 — M9 sugerido: assistência por IA · inteligência artificial
+### I-015 — M10 sugerido: assistência por IA · inteligência artificial
 
-- **Ideia:** integrar assistência de IA — possivelmente como M9 — em diferentes pontos do produto:
+- **Ideia:** integrar assistência de IA — possivelmente como M10 — em diferentes pontos do produto:
   no guia de criação de personagem, como ajuda para dúvidas sobre o sistema e como ferramenta de
   escrita e preparação para o mestre.
 - **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
@@ -249,11 +249,11 @@
   permissões, custos e limites de uso, privacidade dos dados da campanha, prevenção de respostas
   incorretas sobre regras e UX específica para cada caso. Provedor ainda não definido (Gemini,
   OpenAI ou outro); também falta decidir se será uma experiência única ou recursos independentes.
-  A numeração M9 é sugestão, não decisão de roadmap.
+  A numeração M10 é sugestão, não decisão de roadmap.
 
-### I-016 — M10 sugerido: tabletop virtual e biblioteca de tokens · campanha/mapa
+### I-016 — M11 sugerido: tabletop virtual e biblioteca de tokens · campanha/mapa
 
-- **Ideia:** criar um tabletop virtual — possivelmente como M10 — no qual o mestre possa montar ou
+- **Ideia:** criar um tabletop virtual — possivelmente como M11 — no qual o mestre possa montar ou
   carregar um mapa e posicionar, mover e gerenciar os tokens dos participantes da cena. Cada agente
   teria uma biblioteca própria de imagens de token, com upload de múltiplas opções e seleção do
   token que será exibido no tabletop em cada momento.
@@ -268,17 +268,17 @@
   movimentação, permissões e UI de mestre/jogador. Ainda precisa decidir suporte a grade e medidas,
   camadas, obstáculos, áreas, névoa de guerra/visibilidade, vínculo com cenas e iniciativa, quem pode
   mover cada token e se a escolha do token ativo pertence ao jogador, ao mestre ou a ambos. Também
-  precisa definir limites e tratamento das imagens enviadas. A numeração M10 é sugestão, não decisão
+  precisa definir limites e tratamento das imagens enviadas. A numeração M11 é sugestão, não decisão
   de roadmap.
 
-### I-017 — M11 sugerido: Base, esquadrões e histórico operacional · campanha/organização
+### I-017 — M12 sugerido: Base, esquadrões e histórico operacional · campanha/organização
 
 - **Ideia:** representar a estrutura institucional da Fundação acima das campanhas: uma **Base da
   Fundação** contém **esquadrões**; um esquadrão reúne seus **agentes** e possui um histórico de
   **missões/campanhas**. A experiência seria inicialmente mais documental e histórica do que
   mecânica, dando uma existência concreta ao Esquadrão 251 e à trajetória de suas operações, em vez
   de transformar a Base desde o começo num conjunto de loja, enfermaria, reparos e outros serviços.
-- **Origem:** conversa com o autor em 2026-08-11, ao refinar a sugestão de uma possível M11.
+- **Origem:** conversa com o autor em 2026-08-11, ao refinar a sugestão de uma possível M12.
 - **Por quê:** hoje o esquadrão existe implicitamente dentro da campanha, e a ficha do agente não
   informa a qual esquadrão ele pertence. Isso inverte a hierarquia percebida: conceitualmente, a
   Base contém o esquadrão, o esquadrão reúne agentes e participa de missões ou campanhas. Tornar essa
@@ -292,9 +292,9 @@
 - **Decisões abertas:** definir se “campanha” e “missão” são a mesma entidade em durações diferentes
   ou se a campanha contém missões; se um agente pode mudar de esquadrão preservando histórico; se
   uma campanha pode envolver mais de um esquadrão; e se o vínculo pertence à ficha, ao usuário ou a
-  uma participação histórica própria. Embora chamada provisoriamente de M11, a ideia também pode ser
+  uma participação histórica própria. Embora chamada provisoriamente de M12, a ideia também pode ser
   tratada como uma ampliação tardia da M2. A numeração indica agrupamento de escopo, não dependência:
-  M7–M11 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
+  M7–M12 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
 
 ### I-024 — `perigo` e `primario` são a mesma cor, e ela é trocável pelo usuário · frontend/design system

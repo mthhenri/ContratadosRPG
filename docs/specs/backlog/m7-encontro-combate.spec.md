@@ -11,7 +11,7 @@
 
 > **Intenção.** É o **primeiro tijolo mecânico do combate**, não o tabletop. Dá ao mestre uma mesa
 > de combate: quem age, em que ordem, em qual rodada, com quanta vida e sob quais condições. A
-> representação espacial (mapa, tokens, posição) é a `I-016` (tabletop virtual, sugerido M10) e fica
+> representação espacial (mapa, tokens, posição) é a `I-016` (tabletop virtual, sugerido M11) e fica
 > **fora**; este módulo é desenhado para **não conflitar** com ela — o encontro é a camada de ordem
 > e estado de turno, sobre a qual um tabletop futuro poderia se apoiar.
 

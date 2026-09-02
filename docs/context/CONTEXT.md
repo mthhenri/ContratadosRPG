@@ -271,8 +271,10 @@ concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 | `ui-22`…`ui-23` | frontend/design system | duas specs restantes da auditoria visual (resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
+| `espectadores-01`…`06` | campanha (M8) | papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro — módulo novo, ainda não iniciado |
 
-Milestone ainda não aberto: `m5-guia-missao`.
+Milestones ainda não abertos: `m5-guia-missao` e o M8 `espectadores-campanha` (specs prontas em
+`docs/specs/backlog/`, aguardando início).
 
 ---
 
@@ -311,6 +313,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
+| M8 | Espectadores e Prévias de Campanha | **não iniciado** — specs `espectadores-01`…`06` prontas em `docs/specs/backlog/` (papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
 
 ---
 
@@ -396,8 +399,9 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
   fichas; mestre sempre primeiro, depois jogadores em ordem alfabética) e **Esquadrão** (grid fixo
   de 2 colunas — 1 no mobile, e antes de Membros quando a grade empilha; segue a mesma ordem
   mestre→alfabética da coluna Membros — com as fichas de **jogador** (`tipo === JOGADOR`) da
-  campanha achatadas, nome do dono em cada mini-card, Vida/Energia com ajuste rápido ± sem abrir a
-  ficha (operação dedicada que só altera `dados.estado.vidaAtual`/`energiaAtual`, sem regravar
+  campanha achatadas, nome do dono em cada mini-card, duas `app-barra-recurso` **compactas**
+  (Vida/Energia com ajuste rápido ±) sem abrir a ficha — lado a lado no desktop e empilhadas no
+  mobile (operação dedicada que só altera `dados.estado.vidaAtual`/`energiaAtual`, sem regravar
   identidade, cor, avatar ou visibilidade), reações
   (Defesa/Esquiva/Bloqueio/Contra-ataque, cada uma só aparece se a ficha tiver o valor — Contra-
   ataque recalculado ao vivo no backend quando o snapshot não foi persistido) e o kebab de ações da
@@ -603,7 +607,12 @@ trio Informações/Inventário/Habilidades, some com Prestígio, Sanidade, Extra
 Atributos + Combate pra aba Informações (uso de `CampanhaDetalhe`, coluna estreita numa tela larga
 — ver seção "Painel de campanhas" acima). No mobile a tela vira **HUD fixo no topo + barra de
 navegação no rodapé** (não empilhamento de colunas) — por breakpoint real de viewport, não pelo
-`modo`; em `'compacto'` a barra some com os destinos que não existem nesse modo.
+`modo`; em `'compacto'` a barra some com os destinos que não existem nesse modo. As barras de
+Vida/Energia usam `app-barra-recurso[tamanho="compacto"]`: a grade as mantém lado a lado quando a
+coluna comporta as duas e as reflui no mobile; a variante do primitivo reduz apenas sua densidade
+interna, nunca impõe largura ao consumidor. A aba História tem caixa própria expansível (não herda
+o teto de leitura de Anotações), preenchendo a coluna de Status no desktop e liberando o texto para
+crescer no mobile.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. Cada ficha
@@ -619,7 +628,7 @@ guardado em disco local (dev) ou Cloudflare R2 (produção) atrás de `Armazenam
 (`backend/src/core/armazenamento/`), escolhido por `ARMAZENAMENTO_PROVEDOR`. O card do acervo usa a
 mesma receita visual do card de ficha do Esquadrão (`CampanhaDetalhe`, `m3-52`): borda + listras
 diagonais do avatar seguem `--cor-ficha` (`color-mix` sobre `--border-strong` sem cor definida) e o
-hover sustentado sobre o avatar abre um preview 200×200 sem recorte
+hover sustentado sobre o avatar abre um preview 300×300 sem recorte
 (`agendarPreviewAvatar`/`cancelarPreviewAvatar`).
 
 **Acervo (`/fichas`, `FichaAcervo`) separado por tipo (`m4-11`).** A tela lista agentes e criaturas
@@ -752,7 +761,9 @@ abaixo do avatar nos dois componentes (`FichaVisualizacao`/`CriaturaVisualizacao
 arquivo novo abre o seletor automaticamente antes do upload; um selo dedicado (canto livre do
 avatar) reabre o seletor pra reajustar uma imagem já salva, sem reenviar arquivo. `imagemFoco`
 viaja pelo `PUT /ficha/:id` genérico (como `cor`), não pelo endpoint multipart de imagem — são só
-números. Remover a imagem zera o enquadramento junto (sem metadado órfão). Ícone de rolagem
+números. O rodapé do seletor é `Cancelar` (secundário) → `Confirmar` (primário), ambos no degrau
+`medio` de `app-botao`; no mobile o painel se centraliza sob o avatar e mantém dois alvos de 44px
+sem corte. Remover a imagem zera o enquadramento junto (sem metadado órfão). Ícone de rolagem
 **d20** (não d6) em todo gatilho da ficha de jogador — o sistema só tem testes `Nd20kh1±mod`, então
 a troca de `nome="dado"` → `nome="d20"` (`app-icone`) foi total, sem glifo de d6 sobrando em lugar
 nenhum.
