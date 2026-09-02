@@ -237,10 +237,6 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
-
-        // Esta tela sempre usou 0.6, e o canônico do primitivo é 0.55. A diferença fica
-        // declarada como dado até a ui-04 decidir convergir — não como uma regra repetida.
-        --botao-opacidade-desabilitado: 0.6;
     }
 
     &__alternativa {

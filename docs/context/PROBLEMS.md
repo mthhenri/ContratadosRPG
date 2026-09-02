@@ -88,3 +88,19 @@
   de Civil levantadas na mesma investigação (passo // Recursos, progressão pós-criação) ficaram
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
+
+### P-019 — Barra de tempo da bandeja de dados não honra `prefers-reduced-motion` · `ABERTO` · frontend
+
+- **Sintoma:** `bandeja-dados.component.scss` tem `@media (prefers-reduced-motion: reduce)` para a
+  animação de entrada (`bandeja-entra`) e para a transição de saída, mas não para
+  `&__barra { animation: bandeja-esvazia 7s linear forwards; }` — com a preferência ligada, a barra
+  de tempo continua esvaziando animada.
+- **Causa:** a barra de tempo (`m3-22`) nasceu antes da `ui-20`, que introduziu o mesmo padrão em
+  `Notificacoes` e — lá, sim — com o `@media` correspondente na própria `&__barra`. O gap na
+  bandeja não foi visto até a comparação lado a lado.
+- **Contorno:** nenhum.
+- **Correção:** replicar em `bandeja-dados.component.scss` o mesmo bloco
+  `@media (prefers-reduced-motion: reduce) { animation: none; }` dentro de `&__barra` que
+  `notificacao.component.scss` já tem.
+- **Desde:** encontrado durante a `ui-20` (2026-09-02), fora do recorte da task (arquivo não
+  tocado pela spec).

@@ -150,11 +150,10 @@ $estilo-padrao: (
         border-color 0.15s ease;
 }
 
-// Presente em 11 das 20 cópias. `--botao-opacidade-desabilitado` é a fresta para o consumidor
-// que hoje usa outro valor (ex.: `autenticacao__enviar`, 0.6) declarar a diferença como dado, em
-// vez de repetir a regra — e para a ui-04 enxergar por grep quantos ainda divergem do canônico.
+// Única opacidade de desabilitado do produto (ui-19): as seis cópias que declaravam
+// `--botao-opacidade-desabilitado` (0.4 ou 0.6) convergiram para o canônico do primitivo.
 :host(:disabled) {
-    opacity: var(--botao-opacidade-desabilitado, 0.55);
+    opacity: 0.55;
     cursor: default;
 }
 

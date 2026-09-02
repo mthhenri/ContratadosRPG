@@ -1,5 +1,130 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — UI-20: ícone, ação e barra de duração na fila de notificações
+
+Filha da auditoria visual (seção Abas · modal · notificações). A fila de `NotificacaoService`
+(ui-02) tinha 4 severidades e régua de 3px, mas nenhum ícone, nenhuma forma de responder a um
+erro além de fechar, e nenhuma indicação de quanto tempo restava — os três padrões já existiam no
+projeto (ícone em `app-icone`, estilo `link` do `app-botao`, barra de duração com pausa no hover
+da bandeja de dados), só não tinham chegado à fila.
+
+**Ícone por severidade.** `check` (sucesso), `alerta` (aviso) casam de cara com o nome; `olho`
+(informação) e `excluir` (erro) sobraram por eliminação — o catálogo do `app-icone` não tem um "i"
+nem um "x" dedicados, e o entregável vetava ícone novo. Cor do ícone, da régua esquerda e da barra
+de duração é a mesma por severidade — os quatro tokens que já pintavam a régua desde a `ui-02`
+(`--positive`/`--energy`/`--warning`/`--erro`), agora aplicados também aos dois elementos novos via
+seletor aninhado (`&--sucesso .notificacoes__icone`, etc.) em vez de uma cor solta.
+
+**Slot de ação.** `NotificacaoService.notificar(...)` ganhou `acao?: { rotulo, executar }`, guardado
+na entrada junto com `duracaoMs` (abaixo). O template renderiza a ação como `app-botao`
+`estilo="link"`, com `[variante]` também derivada da severidade — `positivo`/`info`/`aviso`/
+`perigo`, que por coincidência de nome já usam exatamente os mesmos quatro tokens de cor do SCSS
+deste componente, então a ação sai pintada igual ao resto do card sem nenhuma cor custom. É um
+`<button>` nativo, irmão do botão "×" dentro do mesmo card — Enter/Espaço ativam sozinhos, sem
+guarda de teclado dedicada, ao contrário do `carregando` da `ui-19` (que precisou cancelar o
+`keydown` porque ali a ativação nativa era o comportamento indesejado; aqui é exatamente o que se
+quer).
+`Notificacoes.executarAcao()` chama `entrada.acao.executar()` e só depois `servico.fechar(id)`,
+nessa ordem: se fosse ao contrário, um erro dentro de `executar()` fecharia o toast sem o usuário
+saber se a ação de fato rodou.
+
+**Barra de duração.** Mesma receita visual da bandeja de dados (`bandeja-esvazia`, `m3-22`): barra
+de 3px que esvazia da esquerda pra direita e volta cheia + pausa no `:hover` do card inteiro. A
+diferença é que a bandeja tem uma duração só (7s, literal no CSS); a fila de notificações tem
+quatro (`sucesso` 4s … `erro` 8s), então a duração não podia ficar hardcoded no SCSS — `notificar`
+agora grava `duracaoMs: DURACAO_MS[severidade]` em cada entrada, e o template liga
+`[style.animation-duration.ms]="entrada.duracaoMs"` na barra; o CSS só declara a forma
+(`@keyframes notificacoes-esvazia`, nome próprio porque `@keyframes` não é escopado por componente
+no Angular). O par `pausar`/`retomar` do serviço (mesmo par de `BandejaDadosService`) cancela e
+reagenda o timer de auto-sumir junto com o `(mouseenter)`/`(mouseleave)` do card — a barra visual
+(CSS puro) e o fechamento de verdade (timer JS) pausam/retomam juntos porque os dois reagem ao
+mesmo hover, não porque um controla o outro. `prefers-reduced-motion` zera a animação da barra —
+achado lateral: a bandeja de dados **não** tem esse `@media` na sua própria barra (só na entrada e
+na saída), registrado como `PROBLEMS.md` P-019 em vez de corrigido (arquivo fora do recorte desta
+spec).
+
+**Documentação.** `DESIGN.md` ganhou a seção "Fila de notificações — ícone, ação e duração
+(ui-20)", com a régua de quando um `acao` de notificação basta (resposta curta, de uma etapa, sem
+confirmação — "tentar de novo", "ver detalhes") e quando o caso precisa de `ConfirmacaoService`
+(ui-15) ou um `app-modal` de verdade (ação destrutiva, ou explicar várias opções) — a notificação
+nunca é um diálogo de decisão disfarçado.
+
+**Verificação:** suíte completa frontend 1516/1516 (8 testes novos: ícone por severidade,
+`duracaoMs` na barra, ausência do botão de ação sem `acao`, ação com variante/teclado/ordem
+executar-then-fechar, par pausar/retomar no serviço e no componente), build de produção limpo,
+lint sem erro novo (buscas mecânicas do `convencoes-check` limpas no diff). Verificação visual ao
+vivo (Postgres 16 nativo, backend e frontend reais, sessão real via `/autenticacao/registro` +
+`/autenticacao/login`) em `1920×1080`/`360×800`: as quatro severidades lado a lado, com e sem ação,
+sem overflow em nenhum dos dois viewports; hover no card com ação (erro) mostrou a barra voltando
+a 100% (comparação antes/depois do hover); ativação da ação só por teclado (`Tab` implícito via
+`.focus()` + `Enter`, sem `click` de mouse) executou o callback e iniciou a saída do toast, na
+ordem certa; `prefers-reduced-motion: reduce` emulado via Playwright confirmou
+`animation-name: none` computado na barra. Como não há hoje nenhum call site real passando `acao`
+(o único candidato natural, `error-handler.interceptor.ts`, exigiria repetir a requisição original —
+fora do escopo do entregável, que pede a capacidade, não um "tentar de novo" genérico arriscando
+reenvio duplicado de POST/PATCH em dezenas de call sites não relacionados), a verificação visual
+da ação usou uma notificação disparada manualmente via `NotificacaoService` (mesmo padrão de
+verificação sem consumidor real que a guarda de teclado da `ui-19` já usou) — registrado aqui, não
+como pendência: a capacidade está completa e testada, só falta um consumidor real adotá-la.
+
+## 2026-09-02 — UI-19: guarda de teclado, opacidade única e migração de degrau em `app-botao`
+
+Filha da auditoria visual (seção Botão), fecha os três buracos do primitivo mais usado (8
+severidades × 4 estilos, ~20 consumidores).
+
+**Guarda de teclado do `carregando`.** Antes, `carregando` só barrava o clique por ponteiro
+(`pointer-events: none`) — pelo teclado, `Enter`/`Espaço` num `<button>`/`<a>` focado ainda
+disparava a ação, porque `pointer-events` não tem efeito nenhum sobre ativação por teclado. A
+correção não intercepta `click` (um `(click)` no host do primitivo correria *depois* do `(click)`
+do template do consumidor — mesmo elemento, sem nó wrapper, e a ordem de invocação de listeners no
+mesmo alvo é a ordem de registro no DOM, não a de declaração do primitivo — tarde demais para
+barrar); em vez disso cancela o `keydown` de `Enter`/`Espaço` (`evento.preventDefault()`), que
+impede o `click` de sequer existir. `carregando` também passou a marcar `aria-disabled="true"`,
+além do `aria-busy` já existente, para o leitor de tela anunciar o estado. `disabled` continua
+exclusivo do consumidor — as duas fontes não brigam pelo mesmo atributo.
+
+**Uma única opacidade de desabilitado.** O primitivo sempre teve `0.55`
+(`var(--botao-opacidade-desabilitado, 0.55)`); seis cópias declaravam a variável para sobrescrever
+esse valor — `receber-dano-dialog` e `leitor-pdf-mobile` com `0.4`, `historico-rolagens-sidebar`
+("Carregar mais"), `login`/`registro` ("Entrar") e `perfil` (ações) com `0.6`. As seis declarações
+foram apagadas e o primitivo virou `opacity: 0.55;` puro — sem fresta de customização, a variável
+não existe mais em nenhum consumidor.
+
+**Migração de `[tamanho]`.** Ao contrário do texto da spec ("Não define dimensão hoje"), `[tamanho]`
+(`pequeno`/`medio`/`grande`) já existia desde a `ui-01b`, com os três degraus definidos em
+`botao.component.scss` — a spec herdada da auditoria estava desatualizada nesse ponto, corrigida
+antes de implementar. O trabalho real do entregável 3 era auditar os ~36 consumidores de
+`app-botao` que ainda não usam `[tamanho]` e migrar os que batem. Uma sub-tarefa (`Explore`)
+levantou padding/font-size/font-weight/letter-spacing/gap de cada classe-companheira contra os três
+degraus; migrar `[tamanho]` também adota o font-size/weight/letter-spacing/gap do degrau inteiro,
+não só o padding — então só migraram os casos onde padding **e** font-size **e** font-weight batiam
+exatamente: `.acesso__revogar` (`detalhe.page`, `visualizar.page`, `visualizar-criatura.page` — 3
+telas, mesma receita de "Revogar acesso de visualização") e `.config-custom__salvar`
+(`configuracoes-tema`, "Salvar cor") → `[tamanho]="pequeno"`. Cinco quase-matches (padding bate,
+mas outra propriedade diverge) ficaram **anotados** no SCSS com comentário `// ui-19` em vez de
+migrados: `.detalhe__encontro-acao` (font-weight 700≠600), `.config-opcao`/`.config-swatch`
+(font-size 12≠11), `.historico-rolagens__abrir-calculadora` (font-weight 600≠700, e o `display:
+none` do desktop colidiria em especificidade empatada com `:host(.botao--medio)`) e
+`.confirmacao__acao` (font-size 12≠13, e o degrau `grande` traria `min-height: 48px` que esse
+rodapé nunca teve). Os ~30 consumidores restantes divergem claramente (paddings de outra família,
+sem classe-companheira, ou botões quadrados ícone-only usando `app-botao` em vez de
+`app-botao-icone`) e não foram anotados — anotar todos seria escopo desproporcional ao pedido da
+spec (`CLAUDE.md` "Rigor com eficiência"). `DESIGN.md` ganhou a seção "Acabamento do botão (ui-19)"
+com a tabela dos três degraus e as duas regras.
+
+**Verificação:** suíte completa frontend 1508/1508 (2 testes novos do guardarTeclado/aria-disabled
+em `botao.component.spec.ts`), build de produção limpo, lint sem erro novo. Verificação visual ao
+vivo (Postgres 16 nativo — Docker indisponível no ambiente) em `1920×1080`/`360×800`: os dois
+consumidores migrados (`.acesso__revogar` no modal "Acesso de visualização" de uma ficha real,
+`.config-custom__salvar` no modal de tema) renderizaram sem overflow, com a mesma densidade dos
+botões vizinhos não migrados (`.config-opcao`/`.config-swatch`, que ficaram com padding idêntico
+mas font-size divergente, sem quebrar o alinhamento visual do grupo); opacidade de desabilitado
+conferida via `getComputedStyle` num botão real da tela de login — `0.55` exato, convergência sem
+quebra de cascata. A guarda de teclado do `carregando` não tem consumidor real hoje (nenhuma tela
+usa `[carregando]="..."` ainda — é opt-in, ui-01b) — verificada só por teste de componente
+(`dispatchEvent(new KeyboardEvent('keydown', ...))` + `defaultPrevented`), não ao vivo; fica como
+pendência natural para quando o primeiro consumidor adotar `carregando`.
+
 ## 2026-09-01 — Correção visual: caderno ocupa a altura do painel flutuante
 
 A segunda captura do autor mostrou que o problema de altura não era exclusivo do leitor de PDF: o

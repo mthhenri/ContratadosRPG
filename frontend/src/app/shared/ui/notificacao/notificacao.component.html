@@ -8,13 +8,32 @@
                 [class.notificacoes__item--aviso]="entrada.severidade === 'aviso'"
                 [class.notificacoes__item--erro]="entrada.severidade === 'erro'"
                 [class.notificacoes__item--saindo]="entrada.saindo"
+                (mouseenter)="servico.pausar(entrada.id)"
+                (mouseleave)="servico.retomar(entrada.id)"
             >
+                <span class="notificacoes__icone">
+                    <app-icone [nome]="icone(entrada.severidade)" />
+                </span>
+
                 <div class="notificacoes__texto">
                     <span class="notificacoes__resumo">{{ entrada.resumo }}</span>
                     @if (entrada.detalhe) {
                         <span class="notificacoes__detalhe">{{ entrada.detalhe }}</span>
                     }
+                    @if (entrada.acao; as acao) {
+                        <button
+                            app-botao
+                            [variante]="variante(entrada.severidade)"
+                            estilo="link"
+                            type="button"
+                            class="notificacoes__acao"
+                            (click)="executarAcao(entrada)"
+                        >
+                            {{ acao.rotulo }}
+                        </button>
+                    }
                 </div>
+
                 <button
                     type="button"
                     class="notificacoes__fechar"
@@ -23,6 +42,12 @@
                 >
                     ×
                 </button>
+
+                <span
+                    class="notificacoes__barra"
+                    aria-hidden="true"
+                    [style.animation-duration.ms]="entrada.duracaoMs"
+                ></span>
             </article>
         }
     </div>

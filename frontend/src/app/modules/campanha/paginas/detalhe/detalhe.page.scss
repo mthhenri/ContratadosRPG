@@ -424,6 +424,8 @@
         color: var(--text-mute);
     }
 
+    // ui-19: padding bate com o degrau `pequeno` do app-botao, mas font-weight é 700 (o degrau
+    // é 600) — não migrado para `[tamanho]`.
     &__encontro-acao {
         flex: none;
         display: inline-flex;
@@ -2081,15 +2083,9 @@
         color: var(--text);
     }
 
+    // Padding/font-size/font-weight batiam byte a byte com o degrau `pequeno` (ui-19) — migrado
+    // para `[tamanho]="pequeno"`; só `flex: none` continua aqui (layout, não identidade).
     &__revogar {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 12px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
         flex: none;
     }
 }

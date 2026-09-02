@@ -147,7 +147,6 @@
         background: var(--accent);
         border: 0;
         padding: 7px 14px;
-        --botao-opacidade-desabilitado: 0.4;
 
         @include bp.mobile {
             min-height: bp.$alvo-toque;

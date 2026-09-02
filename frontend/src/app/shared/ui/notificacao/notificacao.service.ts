@@ -20,11 +20,28 @@ const DURACAO_SAIDA_MS = 200;
 /** Quantas notificações a pilha mantém ao mesmo tempo (mais antigas somem primeiro). */
 const LIMITE_FILA = 5;
 
+/**
+ * Ação opcional da notificação (ui-20) — hoje só `erro` costuma precisar de resposta além
+ * de fechar.
+ */
+export interface NotificacaoAcao {
+  readonly rotulo: string;
+  readonly executar: () => void;
+}
+
 export interface NotificacaoEntrada {
   readonly id: number;
   readonly severidade: NotificacaoSeveridade;
   readonly resumo: string;
   readonly detalhe?: string;
+  readonly acao?: NotificacaoAcao;
+  /**
+   * Duração (ms) do auto-sumir desta entrada — mesmo valor de {@link DURACAO_MS} usado para
+   * agendar o timer, exposto por entrada (não por severidade) para a barra de tempo do
+   * componente (ui-20) ler de uma fonte só, igual `BandejaDadosService.duracaoMs` faz para a
+   * bandeja.
+   */
+  readonly duracaoMs: number;
   /** `true` durante a transição de saída — só sai do array ao fim dela. */
   readonly saindo: boolean;
 }
@@ -47,13 +64,35 @@ export class NotificacaoService {
     readonly severidade: NotificacaoSeveridade;
     readonly resumo: string;
     readonly detalhe?: string;
+    readonly acao?: NotificacaoAcao;
   }): number {
     this.contador += 1;
     const id = this.contador;
-    const nova: NotificacaoEntrada = { id, saindo: false, ...entrada };
+    const nova: NotificacaoEntrada = {
+      id,
+      saindo: false,
+      duracaoMs: DURACAO_MS[entrada.severidade],
+      ...entrada,
+    };
     this._fila.update((atuais) => [...atuais, nova].slice(-LIMITE_FILA));
     this.agendar(id, entrada.severidade);
     return id;
+  }
+
+  /** Pausa o auto-sumir (mouse sobre o toast) — a barra de tempo congela cheia via `:hover`. */
+  pausar(id: number): void {
+    this.cancelarTimer(id);
+  }
+
+  /**
+   * Ao sair o mouse, reinicia o auto-sumir **do tempo cheio** (se o toast ainda existe e não está
+   * saindo) — mesmo par `pausar`/`retomar` de `BandejaDadosService`.
+   */
+  retomar(id: number): void {
+    const entrada = this._fila().find((atual) => atual.id === id);
+    if (entrada && !entrada.saindo) {
+      this.agendar(id, entrada.severidade);
+    }
   }
 
   /** Inicia a saída suave (o "×" da notificação ou o fim do auto-sumir); idempotente. */
@@ -70,6 +109,7 @@ export class NotificacaoService {
   }
 
   private agendar(id: number, severidade: NotificacaoSeveridade): void {
+    this.cancelarTimer(id);
     this.timers.set(
       id,
       setTimeout(() => {

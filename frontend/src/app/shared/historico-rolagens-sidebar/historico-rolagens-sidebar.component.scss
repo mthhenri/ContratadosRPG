@@ -113,6 +113,9 @@
     // gatilho normal dela (no cabeçalho da página) fica coberto por este painel full-bleed. No
     // desktop a calculadora já tem gatilho próprio sempre visível (círculo flutuante fora deste
     // painel), então o botão nem entra no layout.
+    // ui-19: dentro do bp.mobile, padding/font-size/letter-spacing/gap batem com o degrau `medio`
+    // do app-botao, mas font-weight é 600 (o degrau é 700) — e o `display: none` do desktop
+    // colidiria em especificidade empatada com `:host(.botao--medio)`. Não migrado.
     &__abrir-calculadora {
         display: none;
 
@@ -335,7 +338,6 @@
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
-        --botao-opacidade-desabilitado: 0.6;
 
         &:hover:not(:disabled) {
             color: var(--text);

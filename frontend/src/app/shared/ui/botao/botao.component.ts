@@ -69,6 +69,8 @@ export type BotaoPosicaoIcone = 'esquerda' | 'direita' | 'acima' | 'abaixo';
   host: {
     '[class]': 'classes()',
     '[attr.aria-busy]': 'carregando() ? "true" : null',
+    '[attr.aria-disabled]': 'carregando() ? "true" : null',
+    '(keydown)': 'guardarTeclado($event)',
   },
 })
 export class Botao {
@@ -91,7 +93,9 @@ export class Botao {
   readonly fluido = input(false);
 
   /**
-   * Mostra o giro de carregamento e marca `aria-busy`, além de barrar o clique por ponteiro.
+   * Mostra o giro de carregamento, marca `aria-busy`/`aria-disabled` e barra a ativação — por
+   * ponteiro (`pointer-events: none` no SCSS) e por teclado (`guardarTeclado` cancela o `Enter`/
+   * `Espaço` que ativaria o `<button>`/`<a>` focado; `pointer-events` sozinho não cobre teclado).
    * **Não** desabilita o botão: `disabled` continua sendo do consumidor — que é como o produto
    * já faz (`[disabled]="enviando()"`) — para as duas fontes não brigarem pelo mesmo atributo.
    */
@@ -121,4 +125,18 @@ export class Botao {
 
     return partes.join(' ');
   });
+
+  /**
+   * Guarda de teclado do estado `carregando`. Cancela o `keydown` de `Enter`/`Espaço` — a
+   * ativação nativa do `<button>`/`<a>` só dispara `click` depois desse default não ser
+   * cancelado, então barrar aqui impede o `click` de sequer existir, em vez de tentar
+   * interceptá-lo depois (um `(click)` no próprio host correria depois do `(click)` do template
+   * do consumidor, tarde demais para barrar).
+   */
+  protected guardarTeclado(evento: Event): void {
+    const tecla = (evento as KeyboardEvent).key;
+    if (this.carregando() && (tecla === 'Enter' || tecla === ' ')) {
+      evento.preventDefault();
+    }
+  }
 }

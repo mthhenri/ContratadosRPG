@@ -4,11 +4,11 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-01 · **Última decisão registrada:** o corpo de
-> `app-painel-flutuante` é a coluna flexível compartilhada; cada consumidor só declara `flex: 1`
-> na região que deve preencher o restante. Assim o leitor mantém barra e PDF, e o caderno mantém
-> filtros, lista e editor, sem espaço vazio. O relato de cada decisão anterior (o *porquê* e o
-> *como*, task a task) está em `HISTORY.md`.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-20` concluída — a fila de
+> notificações ganhou ícone por severidade, slot de ação opcional (`estilo="link"` do `app-botao`)
+> e barra de duração com pausa no hover, alimentada pela duração real do serviço. Ainda
+> pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
+> O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
 > ~400 linhas. O relato de *como se chegou aqui* está em [`HISTORY.md`](HISTORY.md).
@@ -202,6 +202,25 @@ espaçamento de antes em `stat`/`chip`/`cartao`/`botao`/`barra-recurso`; `campo`
 `notificacao`/`confirmacao` isoladas e o item de histórico com dados reais não foram exercitados ao
 vivo nesta rodada (mudança de uma linha cada, mesmo mecanismo já confirmado no resto).
 
+**`ui-20-fila-de-notificacoes` concluída** (spec em `docs/specs/done/`): `app-notificacoes` ganhou
+ícone por severidade (`check`/`olho`/`alerta`/`excluir`, sem glifo novo — `olho`/`excluir` sobraram
+por eliminação para informação/erro), slot de ação opcional (`acao?: { rotulo, executar }` em
+`NotificacaoService.notificar(...)`, renderizado como `app-botao` `estilo="link"` com `[variante]`
+da própria severidade — `executarAcao` chama `executar()` e só depois `fechar(id)`, nunca ao
+contrário) e barra de duração de 3px com pausa no hover (mesma receita da bandeja de dados,
+`m3-22`), alimentada por `entrada.duracaoMs` (4 valores por severidade, não um número fixo no CSS
+como a bandeja tem). Achado lateral: a barra da bandeja de dados não honra
+`prefers-reduced-motion` — registrado como `PROBLEMS.md` P-019, não corrigido (fora do recorte).
+`DESIGN.md` ganhou a seção "Fila de notificações" com a régua de quando uma ação de toast basta e
+quando o caso precisa de `ConfirmacaoService`/`app-modal`. Suíte completa frontend 1516/1516 (8
+testes novos), build e lint limpos. Verificação visual ao vivo (Postgres nativo) em
+`1920×1080`/`360×800`: quatro severidades com e sem ação, hover pausando/restaurando a barra,
+ativação da ação só por teclado, `prefers-reduced-motion` emulado confirmando a animação
+desligada. Sem call site real usando `acao` ainda (o candidato natural,
+`error-handler.interceptor.ts`, exigiria reenviar a requisição original — fora do escopo do
+entregável) — verificado com uma notificação disparada manualmente, mesmo padrão que a guarda de
+teclado da `ui-19` já usou sem consumidor real. Detalhe completo em `HISTORY.md`.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -211,11 +230,11 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-18` concluída — ver acima). Restam `ui-19`…`ui-23` no backlog
-(acabamento de botão, fila de notificações, chrome da topbar, resultado de rolagem compacto, stat
-sem valor/rodapé do cartão — ver "Fila do backlog" abaixo). A única frente de código de milestone
-ainda pendente é o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3).
-M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
+Não há spec ativa no momento (`ui-20` concluída — ver acima). Restam `ui-21`…`ui-23` no backlog
+(chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão — ver "Fila do
+backlog" abaixo). A única frente de código de milestone ainda pendente é o **M4**
+(`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7 estão
+concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -224,7 +243,7 @@ M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de p�
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-19`…`ui-23` | frontend/design system | cinco specs restantes da auditoria visual (acabamento de botão, fila de notificações, chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
+| `ui-21`…`ui-23` | frontend/design system | três specs restantes da auditoria visual (chrome da topbar, resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
 
 Milestone ainda não aberto: `m5-guia-missao`.
 
@@ -246,8 +265,8 @@ para o Cloud Run em 2026-09-01 (ver `HISTORY.md`); falta desligar o serviço no 
 todo PR).
 
 **Suítes:** cada fecho de task registra a contagem da rodada em `HISTORY.md` — não repita a suíte
-completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-17`
-(2026-09-01): frontend 1506/1506 — o defeito `P-043` que rondava a suíte completa em rodadas
+completa sem mudança relevante desde a última. A mais recente completa foi a da `ui-20`
+(2026-09-02): frontend 1516/1516 — o defeito `P-043` que rondava a suíte completa em rodadas
 anteriores não reproduziu nesta. `P-001`/`P-009`/`P-010`/`P-011` descrevem outras falhas que só
 reproduzem isoladas (arquivo único), não na suíte completa.
 

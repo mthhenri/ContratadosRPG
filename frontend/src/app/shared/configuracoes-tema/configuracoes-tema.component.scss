@@ -153,6 +153,8 @@
     gap: 8px;
 }
 
+// ui-19: padding bate com o degrau `pequeno` do app-botao, mas font-size é 12px (o degrau é
+// 11px) — não migrado para `[tamanho]`.
 .config-opcao {
     flex: 1;
     font-size: 12px;
@@ -184,6 +186,8 @@
     gap: 8px;
 }
 
+// ui-19: padding bate com o degrau `pequeno` do app-botao, mas font-size é 12px (o degrau é
+// 11px) — não migrado para `[tamanho]`.
 .config-swatch {
     display: flex;
     align-items: center;
@@ -290,16 +294,13 @@
         color: var(--text);
     }
 
+    // Padding/font-size/font-weight/letter-spacing batiam byte a byte com o degrau `pequeno`
+    // (ui-19) — migrado para `[tamanho]="pequeno"`.
     &__salvar {
         margin-left: auto;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        padding: 8px 12px;
 
         &:hover {
             color: var(--text);
