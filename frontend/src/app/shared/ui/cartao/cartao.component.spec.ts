@@ -19,6 +19,9 @@ import { Cartao, CartaoNivelTitulo } from './cartao.component';
       <span cartaoIndice>{{ indice() }}</span>
       <span cartaoFim class="fim">{{ fim() }}</span>
       <p class="conteudo">Corpo do cartão</p>
+      @if (mostrarRodape()) {
+      <div cartaoRodape class="rodape"><button type="button">Abrir ficha completa</button></div>
+      }
     </app-cartao>
   `,
 })
@@ -26,6 +29,7 @@ class Hospedeiro {
   readonly titulo = signal<string | undefined>(undefined);
   readonly nivelTitulo = signal<CartaoNivelTitulo>('h2');
   readonly cabecalhoQuebravel = signal(false);
+  readonly mostrarRodape = signal(false);
   readonly indice = signal('1');
   readonly fim = signal('12');
 }
@@ -96,5 +100,25 @@ describe('Cartao', () => {
     fixture.detectChanges();
 
     expect(raiz(fixture).querySelector('.cartao__cabecalho--quebravel')).not.toBeNull();
+  });
+
+  it('projeta o rodapé de ações abaixo de uma régua própria', () => {
+    const fixture = montar();
+    fixture.componentInstance.mostrarRodape.set(true);
+    fixture.detectChanges();
+
+    const rodape = raiz(fixture).querySelector('.cartao__rodape');
+
+    expect(rodape).not.toBeNull();
+    expect(rodape?.querySelector('.rodape button')?.textContent?.trim()).toBe('Abrir ficha completa');
+  });
+
+  it('mantém o rodapé vazio para o estilo ocultá-lo quando nenhum conteúdo é projetado', () => {
+    const elemento = raiz(montar());
+
+    const rodape = elemento.querySelector('.cartao__rodape');
+
+    expect(rodape).not.toBeNull();
+    expect(rodape?.querySelector('[cartaoRodape]')).toBeNull();
   });
 });

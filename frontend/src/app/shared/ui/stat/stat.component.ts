@@ -31,8 +31,11 @@ export class Stat {
   /** Rótulo curto do que o valor representa (ex.: "Vida", "Prestígio"). */
   readonly rotulo = input.required<string>();
 
-  /** Valor a destacar. Aceita número ou texto já formatado pelo consumidor. */
-  readonly valor = input.required<string | number>();
+  /**
+   * Valor a destacar. Zero é um valor real; `null`, `undefined` e texto vazio representam um
+   * campo ainda não preenchido e ganham o traço discreto no template.
+   */
+  readonly valor = input<string | number | null | undefined>();
 
   /** Complemento curto abaixo do valor, usado em resumos de progressão. */
   readonly nota = input('');
@@ -42,6 +45,11 @@ export class Stat {
 
   /** Densidade compacta usada nos resumos dos guias de criação. */
   readonly tamanho = input<StatTamanho>('padrao');
+
+  protected readonly temValor = computed(() => {
+    const valor = this.valor();
+    return valor !== null && valor !== undefined && valor !== '';
+  });
 
   protected readonly classes = computed(() => {
     const variante = this.variante();

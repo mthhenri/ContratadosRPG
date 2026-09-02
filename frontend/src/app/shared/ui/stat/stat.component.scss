@@ -21,6 +21,11 @@
         line-height: 1;
     }
 
+    &__valor--sem-valor {
+        color: var(--text-mute);
+        font-weight: 400;
+    }
+
     &__nota {
         display: block;
         margin-top: var(--space-4);

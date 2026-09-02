@@ -49,4 +49,20 @@
         height: 1px;
         background: var(--border);
     }
+
+    // O slot `[cartaoRodape]` é opcional. `:empty` evita margem, régua e espaço em cartões que
+    // não têm uma ação de encerramento.
+    &__rodape {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-12);
+        margin-top: var(--space-20);
+        padding-top: var(--space-16);
+        border-top: 1px solid var(--border);
+
+        &:empty {
+            display: none;
+        }
+    }
 }

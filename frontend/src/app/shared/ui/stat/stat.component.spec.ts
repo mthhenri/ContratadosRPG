@@ -10,7 +10,7 @@ import { Stat, StatVariante } from './stat.component';
 })
 class Hospedeiro {
   readonly rotulo = signal('Vida');
-  readonly valor = signal<string | number>(18);
+  readonly valor = signal<string | number | undefined>(18);
   readonly variante = signal<StatVariante | undefined>(undefined);
 }
 
@@ -31,6 +31,30 @@ describe('Stat', () => {
 
     expect(elemento.querySelector('.stat__rotulo')?.textContent?.trim()).toBe('Vida');
     expect(elemento.querySelector('.stat__valor')?.textContent?.trim()).toBe('18');
+  });
+
+  it('mostra traço atenuado quando o valor não foi preenchido', () => {
+    const fixture = montar();
+    fixture.componentInstance.valor.set(undefined);
+    fixture.detectChanges();
+
+    const valor = raiz(fixture).querySelector('.stat__valor');
+    const marcadorAusente = valor?.querySelector('.stat__valor--sem-valor');
+
+    expect(valor?.textContent?.trim()).toBe('—');
+    expect(marcadorAusente).not.toBeNull();
+    expect(marcadorAusente?.getAttribute('aria-label')).toBe('Não preenchido');
+  });
+
+  it('preserva zero como valor informado', () => {
+    const fixture = montar();
+    fixture.componentInstance.valor.set(0);
+    fixture.detectChanges();
+
+    const valor = raiz(fixture).querySelector('.stat__valor');
+
+    expect(valor?.textContent?.trim()).toBe('0');
+    expect(valor?.querySelector('.stat__valor--sem-valor')).toBeNull();
   });
 
   it('não aplica modificador de cor por padrão', () => {

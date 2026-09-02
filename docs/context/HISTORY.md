@@ -1,5 +1,21 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-23: stat distingue ausência de zero e cartão ganha rodapé projetado
+
+`app-stat` agora trata `0` como valor real e mostra um traço discreto, em `--text-mute`, para
+`null`, `undefined` e texto vazio. O marcador tem o rótulo acessível “Não preenchido”, de modo que
+o leitor não recebe um zero inventado. `app-cartao` ganhou o slot opcional `[cartaoRodape]`: quando
+há conteúdo, ele cria uma régua hairline e o espaçamento de encerramento; quando não há, `:empty`
+remove o wrapper visual. A ação “Abrir ficha completa” da ficha embutida na campanha migrou para
+esse slot, eliminando sua margem externa local.
+
+`DESIGN.md` registra os dois contratos. Os testes foram escritos antes da implementação e cobrem
+ausência, zero e os dois estados do rodapé. A validação passou em `1920×1080` e `360×800`, com
+stat preenchido, zero e ausente, e cartão com e sem rodapé; não houve overflow horizontal. Foram
+executados os testes focados (12), a suíte completa (shared 744, backend 476, frontend 1547), o
+build do frontend e o lint (0 erros; 15.274 avisos preexistentes). O build conserva os dois avisos
+de orçamento preexistentes: bundle inicial e estilo de `ficha-visualizacao`.
+
 ## 2026-09-02 — barra lateral: histórico e inventário passam a reservar a área de trabalho
 
 As barras de **Histórico de Rolagens** e **Inventário de Esquadrão** deixaram de escurecer e cobrir

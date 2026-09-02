@@ -4,11 +4,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** histórico e inventário deixam
-> de escurecer e cobrir o conteúdo acima de 560px — o token `--largura-painel-lateral` (até 500px,
-> 48vw em tela dividida) reserva a faixa à direita em campanha, ficha de jogador, ficha de criatura
-> e Iniciativa. `960×1080` (tela dividida) entra como terceiro viewport obrigatório de verificação
-> visual, ao lado de `360×800` e `1920×1080`.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-23` concluída — `app-stat`
+> distingue ausência (traço em `--text-mute`, rótulo acessível "Não preenchido") de um valor `0`
+> real; `app-cartao` ganhou o slot `[cartaoRodape]`, com a mesma régua hairline do cabeçalho, e a
+> ação "Abrir ficha completa" da ficha embutida na campanha migrou para ele.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -1067,6 +1066,9 @@ que já existia **escrito e correto** mas nunca ligado a nenhum template em
 mesmo seletor, sem piloto novo (as 4 cópias locais restantes têm obstáculo real: duas mostram um
 valor **derivado** — atributo + bônus — que digitação direta editaria errado, duas outras
 precisam de um `[tamanho]` compacto que o primitivo ainda não tem, `IDEAS.md` `I-026`).
+
+A `ui-23` complementou esses dois primitivos: o valor de `app-stat` pode faltar sem ser confundido
+com zero, e o conteúdo projetado em `[cartaoRodape]` só cria o encerramento com régua quando existe.
 
 Dois bugs só apareceram na verificação ao vivo, nenhum pego por teste unitário isolado: a
 navegação por teclado usava o sinal `ativa()` do consumidor (atualiza só no próximo ciclo do

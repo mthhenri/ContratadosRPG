@@ -1,6 +1,12 @@
 <div [class]="classes()">
     <div class="stat__rotulo">{{ rotulo() }}</div>
-    <div class="stat__valor">{{ valor() }}</div>
+    <div class="stat__valor">
+        @if (temValor()) {
+            {{ valor() }}
+        } @else {
+            <span class="stat__valor--sem-valor" aria-label="Não preenchido">—</span>
+        }
+    </div>
     @if (nota()) {
         <div class="stat__nota">{{ nota() }}</div>
     }
