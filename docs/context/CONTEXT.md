@@ -10,7 +10,9 @@
 > curva por ficha na lateral esquerda, mesma receita do item ativo da topbar (ui-21); aria-label
 > no dado descartado; duração da barra da bandeja por custom property; glow do crítico em mixin;
 > legenda discreta com a expressão de dados abaixo do rótulo (`rolagem.formula`, coluna nova via
-> migration `0028`), ausente no teste de Atributo direto.
+> migration `0028`), ausente no teste de Atributo direto; dado descartado por `kh`/`kl` risca na
+> diagonal (`::after` com gradiente, `currentColor`) em vez do antigo `text-decoration: line-
+> through`.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -288,7 +290,15 @@ Testes focados 8/8, suíte completa frontend 1541/1542 (única falha,
 ao vivo (Postgres nativo) em `1920×1080`/`360×800`, painel da ficha e feed da campanha, com dados
 reais gerados pela rolagem rápida (fórmula curta e uma longa com Composto) e teste de Força — sem
 overflow horizontal em nenhum dos dois, legenda ausente exatamente onde deveria (Força, rolagens
-pré-migration). Detalhe completo em `HISTORY.md`.
+pré-migration). Num quinto ajuste, o dado descartado por `kh`/`kl` (ou qualquer expressão que não
+conta todos os dados do pool) trocou `text-decoration: line-through` por um risco na diagonal —
+`&--descartado` ganhou `position: relative` + `::after` com `linear-gradient(to top right, …)` em
+`currentColor` (a cor de tipo de dano por trás continua a mesma de sempre), `border-radius:
+inherit` pra não vazar pelos cantos do chip. Verificado com `6d6kh3[Físico]` e
+`8d10kl2cm2[Explosão]` em `1920×1080`/`360×800`, bandeja e histórico compacto — diagonal legível
+nos dois tamanhos de chip, `cm`/glow do crítico intactos. Testes 6/6 do componente + 22/22 de
+`historico-rolagens-sidebar`/`bandeja-dados` (sanity, só CSS mudou). Detalhe completo em
+`HISTORY.md`.
 
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já

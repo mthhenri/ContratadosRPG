@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-22: dado descartado (kh/kl) ganha risco diagonal em vez de line-through
+
+Quinto ajuste na mesma revisão: o autor pediu que o dado descartado por `kh`/`kl` (ou qualquer
+expressão que não conta todos os dados do pool) trocasse o `text-decoration: line-through` —
+um traço horizontal cruzando só o dígito — por um risco na diagonal cortando o dadinho inteiro.
+
+`resultado-rolagem.component.scss`, `&__dado--descartado`: saiu `text-decoration: line-through`,
+entrou um `::after` absoluto (`inset: 0`, `position: relative` no próprio `&--descartado`) com
+`background: linear-gradient(to top right, transparent … currentColor … transparent)` — uma
+faixa de ~2px cruzando a caixa inteira de canto a canto. `currentColor` (não uma variável nova)
+porque o dado descartado não define `color` própria: herda a cor de tipo de dano quando a tem
+(`--fisico`/`--balistico`/etc.) ou `--text-mute` por padrão — o risco automaticamente acompanha
+essa cor, igual o comentário já dizia sobre a cor de tipo "continuar visível por trás".
+`border-radius: inherit` no pseudo-elemento pra não vazar quadrado pelos cantos arredondados do
+chip. `opacity: 0.45` do esmaecimento continua — só o "risco" em si mudou de técnica.
+
+Verificado ao vivo com `6d6kh3[Físico]` (bandeja e histórico compacto) e `8d10kl2cm2[Explosão]`
+(mobile, `kl` + margem de crítico juntos) em `1920×1080`/`360×800` — diagonal legível nos dois
+tamanhos de chip (16px da bandeja, 12px do compacto), cor de tipo de dano correta atrás do risco,
+sem overflow, `cm`/glow do crítico nos dados mantidos intactos. Suíte focada do componente 6/6,
+mais `historico-rolagens-sidebar`/`bandeja-dados` 22/22 (sanity — só CSS mudou, sem template/
+lógica), lint sem violação nova de comprimento, build de frontend limpo (mesmos dois warnings de
+budget pré-existentes).
+
 ## 2026-09-02 — ui-22: legenda de expressão nos cards de rolagem, exceto teste de Atributo
 
 Quarto ajuste na mesma revisão: o autor pediu para exibir a expressão de dados usada em cada
