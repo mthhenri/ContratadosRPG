@@ -1024,6 +1024,7 @@ describe('FichaVisualizar', () => {
         nomeAutor: 'Mestre',
         nomeFicha: 'Kane',
         rotulo: 'Luta',
+        formula: null,
         visibilidade: RolagemVisibilidadeEnum.PUBLICA,
         resultado: { dados: [], atributos: [], constante: 0, total: 12 },
         createdDate: '2026-08-23T12:00:00.000Z',

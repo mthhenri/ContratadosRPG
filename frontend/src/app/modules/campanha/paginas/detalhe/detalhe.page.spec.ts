@@ -75,6 +75,7 @@ describe('CampanhaDetalhe', () => {
       nomeAutor: 'Mestre',
       nomeFicha: 'Kane',
       rotulo: '1d20+5',
+      formula: '1d20+5',
       visibilidade: RolagemVisibilidadeEnum.PUBLICA,
       resultado: { dados: [], atributos: [], constante: 5, total: 17 },
       createdDate: new Date().toISOString(),

@@ -96,6 +96,9 @@
                                     item.createdDate | date: "dd/MM HH:mm"
                                 }}</span>
                             </div>
+                            @if (item.formula) {
+                                <span class="historico-rolagens__formula">{{ item.formula }}</span>
+                            }
                             <app-resultado-rolagem
                                 [resultado]="item.resultado"
                                 [corFicha]="item.corFicha"

@@ -204,6 +204,7 @@ describe('CriaturaVisualizar', () => {
         nomeAutor: 'Mestre',
         nomeFicha: 'A Estátua',
         rotulo: 'Luta',
+        formula: null,
         visibilidade: RolagemVisibilidadeEnum.PRIVADA,
         resultado: { dados: [], atributos: [], constante: 0, total: 12 },
         createdDate: '2026-08-23T12:00:00.000Z',

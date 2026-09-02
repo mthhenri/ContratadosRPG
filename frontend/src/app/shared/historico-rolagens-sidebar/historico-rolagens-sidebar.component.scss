@@ -317,6 +317,18 @@
         color: var(--text);
     }
 
+    // ui-22-followup: expressão de dados da rolagem (ex.: "2d6+3[Físico]"), discreta — mesmo
+    // tamanho do horário (`&__data`, 10px), cinza a 75% de opacidade. Ausente no teste de Atributo
+    // direto (o rótulo já é o nome do atributo — `RolagemResumoDto.formula` chega `null`).
+    &__formula {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-dim);
+        opacity: 75%;
+        overflow-wrap: anywhere;
+    }
+
     &__autor {
         font-size: 11px;
         color: var(--text-dim);

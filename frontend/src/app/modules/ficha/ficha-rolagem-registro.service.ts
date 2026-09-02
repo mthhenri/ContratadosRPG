@@ -96,6 +96,7 @@ export class FichaRolagemRegistroService {
     this.rolagemService
       .registrar(fichaId, {
         rotulo: entrada.rotulo,
+        formula: entrada.formula ?? null,
         visibilidade: this.ocultaSignal()
           ? RolagemVisibilidadeEnum.PRIVADA
           : RolagemVisibilidadeEnum.PUBLICA,

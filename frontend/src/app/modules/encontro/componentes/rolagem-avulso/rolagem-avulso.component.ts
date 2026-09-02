@@ -150,6 +150,7 @@ export class RolagemAvulso implements OnInit {
     this.rolagemService
       .registrarAvulso(combatente.encontroId, combatente.id, {
         rotulo: 'Rolagem livre',
+        formula,
         visibilidade: this.oculta()
           ? RolagemVisibilidadeEnum.PRIVADA
           : RolagemVisibilidadeEnum.PUBLICA,

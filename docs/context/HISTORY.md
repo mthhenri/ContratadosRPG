@@ -1,5 +1,44 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-22: legenda de expressão nos cards de rolagem, exceto teste de Atributo
+
+Quarto ajuste na mesma revisão: o autor pediu para exibir a expressão de dados usada em cada
+rolagem (ex.: `2d6+3[Físico]`) como legenda discreta abaixo do rótulo — cinza a 75% de opacidade,
+mesmo tamanho de fonte do horário (10px) — **exceto** quando a rolagem veio direto de um teste de
+Atributo (o rótulo já é o nome do atributo; repetir `FORd20kh1cm1 + PROF` ali seria redundante).
+
+Descoberta ao investigar: a fórmula nunca foi persistida — `RolagemRegistrarDto` só guardava
+`rotulo`/`visibilidade`/`resultado`; o texto da fórmula é calculado em toda rolagem (usado só na
+bandeja/toast) e descartado antes do POST. Precisou de coluna nova: migration `0028` adiciona
+`rolagem.formula VARCHAR` (nullable — `DOWN` reverte com `DROP COLUMN`, testado com
+`db:rollback`→`db:migrate`). `formula` entrou como campo obrigatório (`string | null`, nunca
+opcional) em `RolagemRegistrarDto`/`RolagemInternoRegistrarDto`/`RolagemResumoDto`
+(`shared/dtos/rolagem`) — quem registra decide explicitamente entre mandar o texto ou `null`,
+sem esquecimento silencioso. Repositório: coluna extra no `INSERT ... SELECT` e em
+`colunasResumo()`; service e controller são passthrough puro (sem regra nova ali).
+
+No frontend, o funil único é `FichaRolagemRegistroService.registrar()` (repassa `entrada.formula
+?? null` ao HTTP) — a maioria dos chamadores já calculava e passava `formula` para a bandeja
+havia tempos (m3-30/m3-31), então só precisou **parar de omiti-la** no registro. As duas exceções
+("veio direto de um atributo") passaram a **não** mandar `formula` nessa chamada específica —
+`FichaVisualizacao.rolarTesteAtributo` e `CriaturaVisualizacao.rolarTesteAtributo` (via
+`rolarTesteAtributoCriatura`) — a bandeja continua recebendo a fórmula normalmente, só o registro
+que persiste é que a omite. `RolagemAvulso` (combatente avulso do encontro) ganhou `formula`
+também — não é atributo-direto (avulsos nem têm atributos), então se qualifica.
+
+Exibição em `historico-rolagens-sidebar` (`&__formula`, `display:block`, `font-family: var(--font-
+mono)`, `font-size: 10px`, `color: var(--text-dim)`, `opacity: 75%`, `overflow-wrap: anywhere`),
+condicionada a `@if (item.formula)` — some sozinha em rolagens antigas (coluna `NULL` por
+retroatividade) e em teste de Atributo. Verificado ao vivo contra dados reais gerados pela própria
+rolagem rápida (fórmula curta e uma longa com Composto, `4d6+2d8+PONd6kh1cm1+PROF+NIV+VON*2-3
+[Balístico-Explosão]`) e teste de Força, em `1920×1080`/`360×800`, painel da ficha **e** feed da
+campanha (mesmo componente reusado) — sem overflow mesmo na fórmula longa (`overflow-wrap`
+funcionando), legenda ausente exatamente nos cards "Força"/rolagens pré-migration. Suítes
+completas: shared 744/744, backend 476/476, frontend 1541/1542 (a 1 falha é o flake pré-existente
+e documentado de `painel-flutuante.component.spec.ts`, não relacionado). Lint sem violação nova de
+comprimento de linha; build de frontend e backend limpos (só o warning pré-existente de budget de
+bundle).
+
 ## 2026-09-02 — ui-22: a curvinha migrou de embaixo pra lateral esquerda
 
 Terceiro ajuste na mesma revisão: a régua curva ficou boa, mas o autor preferiu na **lateral

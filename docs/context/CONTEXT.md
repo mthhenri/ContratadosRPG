@@ -8,7 +8,9 @@
 > `[compacto]` de `app-resultado-rolagem` (total 22px, pool numa linha), adotada no painel lateral
 > de histórico e no feed da campanha; item do histórico com rótulo dentro da caixa e a régua
 > curva por ficha na lateral esquerda, mesma receita do item ativo da topbar (ui-21); aria-label
-> no dado descartado; duração da barra da bandeja por custom property; glow do crítico em mixin.
+> no dado descartado; duração da barra da bandeja por custom property; glow do crítico em mixin;
+> legenda discreta com a expressão de dados abaixo do rótulo (`rolagem.formula`, coluna nova via
+> migration `0028`), ausente no teste de Atributo direto.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -272,12 +274,21 @@ mais padding e a "curvinha" da topbar — `historico-rolagens__item` trocou `bor
 `box-shadow` inset + `border-radius`, a mesma receita do item ativo da topbar
 (`layout.component.scss` `&--ativo`, ui-21) que faz a régua curvar nos cantos; a régua migrou de
 embaixo (`inset 0 -2px 0`) para a lateral esquerda (`inset 2px 0 0`) num terceiro ajuste da mesma
-revisão. Medido de novo: 780px pras mesmas 10 rolagens. Testes focados 8/8, suíte completa
-frontend 1539/1540 (única falha,
-`painel-flutuante.component.spec.ts`, não reproduz isolada nem tem relação com este diff), lint
-sem erro novo, build limpo. Verificação visual ao vivo (Postgres nativo) em
-`1920×1080`/`360×800`, painel da ficha e feed da
-campanha, sem overflow horizontal nos dois. Detalhe completo em `HISTORY.md`.
+revisão. Medido de novo: 780px pras mesmas 10 rolagens. Num quarto ajuste, os cards passaram a
+exibir a expressão de dados usada (ex.: `2d6+3[Físico]`) como legenda discreta abaixo do rótulo
+(mono, `--text-dim` a 75% de opacidade, 10px — mesmo tamanho do horário), **exceto** no teste de
+Atributo direto (rótulo já é o nome do atributo). A fórmula nunca tinha sido persistida —
+`RolagemRegistrarDto`/`RolagemInternoRegistrarDto`/`RolagemResumoDto` ganharam `formula: string |
+null` (migration `0028`, coluna nova em `rolagem`); `FichaRolagemRegistroService.registrar()`
+passou a repassá-la; as duas chamadas de teste de Atributo (ficha de jogador e criatura) passaram
+a omiti-la deliberadamente nesse registro (a bandeja/toast continua mostrando, como sempre).
+Testes focados 8/8, suíte completa frontend 1541/1542 (única falha,
+`painel-flutuante.component.spec.ts`, não reproduz isolada nem tem relação com este diff), backend
+476/476, shared 744/744, lint sem erro novo, build limpo (backend e frontend). Verificação visual
+ao vivo (Postgres nativo) em `1920×1080`/`360×800`, painel da ficha e feed da campanha, com dados
+reais gerados pela rolagem rápida (fórmula curta e uma longa com Composto) e teste de Força — sem
+overflow horizontal em nenhum dos dois, legenda ausente exatamente onde deveria (Força, rolagens
+pré-migration). Detalhe completo em `HISTORY.md`.
 
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
