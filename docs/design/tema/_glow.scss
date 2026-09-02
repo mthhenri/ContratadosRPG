@@ -1,0 +1,25 @@
+// _glow.scss
+// Realce de brilho por `text-shadow` sobre uma cor mix — receita repetida em três seletores de
+// `resultado-rolagem` (total/selo de crítico, m3-30; chip de tipo de dano) antes de existir aqui
+// (ui-22): mesmo caso da chip (`ui-13`) — três cópias da mesma fórmula, raio e opacidade
+// diferentes em cada, unificadas num mixin em vez de recalculadas por seletor. Componentes fazem
+// `@use 'tema/glow' as glow;` (resolvido via stylePreprocessorOptions.includePaths em
+// angular.json), igual `tema/breakpoints`.
+
+@mixin simples($cor, $blur: 10px, $opacidade: 70%) {
+  text-shadow: 0 0 $blur color-mix(in srgb, #{$cor} $opacidade, transparent);
+}
+
+// Camada dupla (raio maior e mais opaco por baixo do raio menor) — só o total de crítico usa,
+// realce mais forte que o selo/chip de `simples`.
+@mixin duplo(
+  $cor,
+  $blur-externo: 16px,
+  $opacidade-externa: 80%,
+  $blur-interno: 5px,
+  $opacidade-interna: 60%
+) {
+  text-shadow:
+    0 0 $blur-externo color-mix(in srgb, #{$cor} $opacidade-externa, transparent),
+    0 0 $blur-interno color-mix(in srgb, #{$cor} $opacidade-interna, transparent);
+}

@@ -4,9 +4,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-21` concluída — chrome da
-> topbar (item ativo, slot de contexto, selo de tempo real fixo, `Escape` no dropdown de perfil,
-> painel de tema migrado para `app-modal`). Ainda pendente: desligar o Render e reescrever
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-22` concluída — variante
+> `[compacto]` de `app-resultado-rolagem` (total 22px, pool numa linha), adotada no painel lateral
+> de histórico e no feed da campanha; aria-label no dado descartado; duração da barra da bandeja
+> por custom property; glow do crítico em mixin. Ainda pendente: desligar o Render e reescrever
 > `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
@@ -248,6 +249,20 @@ forçado via bloqueio de rede do `socket.io` (sem depender do socket real nem de
 compartilhado) — apareceu certo nos dois viewports, sem overflow. Detalhe completo em
 `HISTORY.md`.
 
+**`ui-22-resultado-rolagem-compacto` concluída** (spec em `docs/specs/done/`): `app-resultado-
+rolagem` ganhou `[compacto]` (total 22px, pool/grupos/legenda numa linha só, dentro de uma pílula
+`--surface-2`/`--border`) — `HistoricoRolagensSidebar` passa `true` no único call site, cobrindo
+os dois consumidores (painel lateral da ficha, feed da campanha; é o mesmo componente para os
+dois, não existiam dois lugares separados); a bandeja (carta de 640px) fica na forma cheia. Dado
+descartado pelo `kh`/`kl` ganhou `aria-label` (antes só opacidade + risco); a duração da barra da
+bandeja passou a vir do serviço por custom property (`--bandeja-duracao`, sem literal solto no
+CSS); o glow do crítico/chip de dano (`text-shadow` + `color-mix()`, três vezes calculado inline)
+virou mixin em `frontend/src/styles/tema/_glow.scss` (espelhado em `docs/design/tema/`). Medido ao
+vivo com as mesmas 10 rolagens reais: 1864px → 567px (`3,3×`, a spec pedia "pelo menos 3×").
+Testes focados 8/8, suíte completa frontend 1540/1540, lint sem erro novo, build limpo.
+Verificação visual ao vivo (Postgres nativo) em `1920×1080`/`360×800`, painel da ficha e feed da
+campanha, sem overflow horizontal nos dois. Detalhe completo em `HISTORY.md`.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -257,9 +272,9 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-21` concluída — ver acima). Restam `ui-22`…`ui-23` no backlog
-(resultado de rolagem compacto, stat sem valor/rodapé do cartão — ver "Fila do backlog" abaixo). A
-única frente de código de milestone ainda pendente é o **M4**
+Não há spec ativa no momento (`ui-22` concluída — ver acima). Resta `ui-23` no backlog (stat sem
+valor/rodapé do cartão — ver "Fila do backlog" abaixo). A única frente de código de milestone
+ainda pendente é o **M4**
 (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7 estão
 concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
@@ -270,7 +285,7 @@ concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-22`…`ui-23` | frontend/design system | duas specs restantes da auditoria visual (resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
+| `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
 | `m8-01`…`m8-06` | campanha (M8) | papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro — módulo novo, ainda não iniciado |
 
 Milestones ainda não abertos: `m5-guia-missao` e o M8 `m8-espectadores-campanha` (specs prontas em

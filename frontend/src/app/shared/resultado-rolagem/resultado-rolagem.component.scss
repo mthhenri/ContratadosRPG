@@ -2,6 +2,7 @@
 // reuso no histórico da ficha e no feed da campanha. Só tokens do tema (proibição #29).
 
 @use "tema/breakpoints" as bp;
+@use "tema/glow" as glow;
 
 :host {
     display: contents;
@@ -49,9 +50,7 @@
 
         // Crítico (m3-30): brilho no número — destaque maior quando bate crítico ou dobra o dano.
         &--critico {
-            text-shadow:
-                0 0 16px color-mix(in srgb, var(--cor-ficha, var(--accent)) 80%, transparent),
-                0 0 5px color-mix(in srgb, var(--cor-ficha, var(--accent)) 60%, transparent);
+            @include glow.duplo(var(--cor-ficha, var(--accent)));
         }
     }
 
@@ -149,7 +148,7 @@
         color: var(--cor-ficha, var(--accent));
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
-        text-shadow: 0 0 10px color-mix(in srgb, var(--cor-ficha, var(--accent)) 70%, transparent);
+        @include glow.simples(var(--cor-ficha, var(--accent)));
     }
 
     &__legenda {
@@ -189,8 +188,80 @@
                 color: var(--dano-#{$tipo});
                 border-color: var(--dano-#{$tipo}-border);
                 background: var(--dano-#{$tipo}-dim);
-                text-shadow: 0 0 8px color-mix(in srgb, var(--dano-#{$tipo}) 55%, transparent);
+                @include glow.simples(var(--dano-#{$tipo}), 8px, 55%);
             }
+        }
+    }
+
+    // Variante de linha (ui-22): total menor, pool/grupos/legenda numa linha só, dentro de uma
+    // pílula rasa (`--surface-2`/`--border`) — cabe ~3x mais histórico na mesma altura do painel
+    // lateral/feed da campanha sem perder total, modificadores ou chips de dano. A bandeja (carta
+    // de 640px) nunca recebe este modificador — fica na forma cheia (m3-22/m3-55).
+    &--compacto {
+        align-items: stretch;
+        margin-top: 0;
+        gap: 4px;
+
+        .resultado-rolagem__corpo {
+            align-items: center;
+            gap: 8px;
+            padding: 2px 8px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-control);
+
+            &:not(:first-child) {
+                padding-top: 2px; // sem régua cheia — só respiro entre blocos
+                border-top: 0;
+            }
+        }
+
+        .resultado-rolagem__total {
+            flex-direction: row;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 22px;
+        }
+
+        .resultado-rolagem__critico-badge,
+        .resultado-rolagem__indice-badge {
+            font-size: 9px;
+        }
+
+        .resultado-rolagem__detalhe {
+            flex: 1;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .resultado-rolagem__pool {
+            gap: 3px 6px;
+        }
+
+        .resultado-rolagem__dado-termo {
+            gap: 3px;
+        }
+
+        .resultado-rolagem__dado-nota {
+            font-size: 10px;
+        }
+
+        .resultado-rolagem__dado {
+            font-size: 11px;
+            min-width: 18px;
+            padding: 1px 4px;
+        }
+
+        .resultado-rolagem__critico,
+        .resultado-rolagem__legenda,
+        .resultado-rolagem__grupo {
+            font-size: 11px;
+        }
+
+        .resultado-rolagem__desvantagem {
+            font-size: 10px;
         }
     }
 }

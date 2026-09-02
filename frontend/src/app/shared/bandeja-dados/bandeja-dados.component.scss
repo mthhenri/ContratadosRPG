@@ -110,7 +110,9 @@
         }
     }
 
-    // Barra de tempo no rodapé: esvazia em 7s (casa com duracaoMs); no hover volta cheia e pausa.
+    // Barra de tempo no rodapé: esvazia na duração real do serviço (`--bandeja-duracao`, casada
+    // com `BandejaDadosService.duracaoMs` — ui-22, antes eram dois "7" soltos, um aqui e um lá);
+    // no hover volta cheia e pausa.
     &__barra {
         position: absolute;
         left: 0;
@@ -119,7 +121,7 @@
         height: 3px;
         background: var(--accent);
         transform-origin: left;
-        animation: bandeja-esvazia 7s linear forwards;
+        animation: bandeja-esvazia var(--bandeja-duracao) linear forwards;
     }
 
     &__carta:hover &__barra {

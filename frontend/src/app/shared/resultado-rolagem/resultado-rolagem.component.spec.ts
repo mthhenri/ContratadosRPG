@@ -63,4 +63,32 @@ describe('ResultadoRolagem', () => {
     expect(dados[2].classList.contains('resultado-rolagem__dado--balistico')).toBe(true);
     expect(dados[2].classList.contains('resultado-rolagem__dado--descartado')).toBe(true);
   });
+
+  /** ui-22: leitor de tela anuncia o dado descartado pelo keep, hoje só opacidade + risco. */
+  it('dado descartado pelo keep ganha aria-label "(descartado)"; o mantido não', () => {
+    const raiz = montar(resultadoBase([
+      { sinal: 1, faces: 6, valores: [6, 1], subtotal: 6, mantidos: [6] },
+    ]));
+    const dados = raiz.querySelectorAll('.resultado-rolagem__dado');
+    expect(dados[0].getAttribute('aria-label')).toBeNull();
+    expect(dados[1].getAttribute('aria-label')).toBe('1 (descartado)');
+  });
+
+  /** ui-22: variante de linha do painel lateral/feed — a bandeja continua na forma cheia. */
+  it('[compacto] aplica o modificador --compacto na raiz; sem o input, a forma continua cheia', () => {
+    const resultado = resultadoBase([{ sinal: 1, faces: 20, valores: [15], subtotal: 15 }]);
+
+    const cheia = montar(resultado);
+    expect(cheia.querySelector('.resultado-rolagem')!.classList.contains('resultado-rolagem--compacto')).toBe(false);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [ResultadoRolagem] });
+    const fixture = TestBed.createComponent(ResultadoRolagem);
+    fixture.componentRef.setInput('resultado', resultado);
+    fixture.componentRef.setInput('compacto', true);
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const raizCompacta = raiz.querySelector('.resultado-rolagem')!;
+    expect(raizCompacta.classList.contains('resultado-rolagem--compacto')).toBe(true);
+  });
 });

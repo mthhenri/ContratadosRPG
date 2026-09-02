@@ -1,5 +1,58 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-22: resultado de rolagem compacto
+
+`app-resultado-rolagem` tinha uma forma só — total de 44px desenhado para a carta de 640px da
+bandeja — reusada também no painel lateral de histórico (500px) e no feed da campanha (mesmo
+componente `HistoricoRolagensSidebar`, consumido pelas duas telas via `RolagemResumoDto`; não
+existe um componente de "feed" à parte). Numa lista de dez rolagens cada item chegava a ocupar
+quase 190px de altura (medido ao vivo, acima da estimativa "quase 120px" da própria auditoria).
+
+Novo input `[compacto]` em `ResultadoRolagem`: total 22px, pool/grupos/legenda numa única linha
+que quebra por necessidade em vez de empilhar em blocos verticais separados — dentro de uma
+pílula rasa (`--surface-2`/`--border`, únicos tokens novos no uso, nenhum token novo no sistema).
+`HistoricoRolagensSidebar` passa `[compacto]="true"` no único call site do `<app-resultado-
+rolagem>` que tem — cobre os dois consumidores (painel da ficha e feed da campanha) numa edição
+só; a bandeja nunca recebe o modificador e continua na forma cheia. O item da lista também
+colapsou cabeçalho + meta (rótulo/data numa linha, autor/chip/data em outra) numa linha só
+(`&__meta`), e a caixa própria do item (`--surface-2`/`--border`/padding) saiu — a pílula do
+resultado compacto já dá a moldura, o item vira só texto + régua fina de separação.
+
+Três pontas soltas da spec original:
+- **Leitor de tela**: o dado descartado pelo `kh`/`kl` (opacidade 0,45 + risco, só visual) ganhou
+  `aria-label="<valor> (descartado)"`; o mantido não leva `aria-label` (accessible name cai no
+  texto visível).
+- **Duração da barra de tempo da bandeja**: os "7s" viviam soltos em dois lugares —
+  `BandejaDadosService.DURACAO_MS` e `animation: bandeja-esvazia 7s linear forwards` no SCSS.
+  Unificados por custom property (`[style.--bandeja-duracao.ms]="bandeja.duracaoMs"` no
+  container, `animation-duration: var(--bandeja-duracao)` no SCSS, sem fallback numérico) — muda
+  a duração no serviço sem tocar no CSS, mesmo padrão de `--bandeja-carta-largura` (m3-56).
+- **Glow do crítico**: a receita de `text-shadow` com `color-mix()` aparecia calculada inline três
+  vezes no próprio arquivo (`__total--critico`, `__critico`, `__grupo--#{$tipo}`), cada uma com
+  raio/opacidade diferentes — mesmo caso da chip (`ui-13`). Novo par de mixins em
+  `frontend/src/styles/tema/_glow.scss` (`simples`/`duplo`, espelhado em `docs/design/tema/`
+  como todo o resto de `tema/`): as três chamadas agora passam só cor + raio/opacidade, sem
+  recalcular a fórmula.
+
+Medição ao vivo (não confiei só na prosa da spec): as mesmas 10 rolagens reais — teste com
+kh/kl, dano multi-tipo, crítico, repetição `(fórmula)#N`, uma privada — mediram **1864px** no
+histórico antigo (`git stash` temporário pra comparar lado a lado com o mesmo dado) e **567px**
+depois, `3,3×` menos altura (a spec pedia "pelo menos 3×"). Gerei as rolagens com o motor real
+(`rolarFormula` de `shared/dist/regras/rolagem`, script único) contra a ficha `Operador Codex` do
+seed de desenvolvimento (`npm run db:seed:dev`), gravadas via `POST /ficha/:id/rolagem` — dado
+real, não mock.
+
+Testes focados 8/8 (2 novos: aria-label do descartado, classe `--compacto` presente/ausente),
+suíte completa frontend 1540/1540, lint sem erro novo (só os avisos históricos de aspas), build
+de produção limpo (mesmos dois avisos de orçamento pré-existentes, sem relação com este diff).
+Verificação visual ao vivo (Postgres nativo — Docker indisponível no ambiente) em
+`1920×1080`/`360×800`: painel da ficha e feed da campanha nos dois viewports, sem overflow
+horizontal em nenhum dos dois (`scrollWidth === clientWidth` conferido); crítico com glow
+visível, chips de dano coloridos por tipo, dado descartado riscado+esmaecido, repetição `#N` em
+duas pílulas empilhadas, chip "privada" — nenhuma regressão encontrada. A bandeja (forma cheia)
+segue idêntica: `getComputedStyle` confirmou `--bandeja-duracao: 7000ms` e `animation-duration:
+7s` resolvidos a partir do serviço, não de um literal no CSS.
+
 ## 2026-09-02 — fix: mensagem de vazio por aba no inventário
 
 O painel de inventário sempre teve duas fontes de "vazio": o bloco genérico
