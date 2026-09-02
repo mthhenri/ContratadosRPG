@@ -1506,7 +1506,9 @@ export class FichaVisualizacao {
       // exibir `kh1` (mantém o maior) numa rolagem que na verdade manteve o menor.
       const formulaExibida = atributo <= 0 ? `${2 - atributo}d20kl1cm1 + PROF${sufixo}` : formula;
       this.bandeja.mostrar({ rotulo: campo.nome, formula: formulaExibida, resultado, corFicha: this.cor(), visibilidade: this.registro.oculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
-      this.registrarRolagem({ rotulo: campo.nome, formula: formulaExibida, resultado });
+      // ui-22-followup: teste de Atributo direto não persiste `formula` — o rótulo já é o nome
+      // do atributo, então a expressão no histórico seria redundante (a bandeja segue completa).
+      this.registrarRolagem({ rotulo: campo.nome, resultado });
     }
   }
 

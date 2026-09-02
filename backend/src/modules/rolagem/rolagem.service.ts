@@ -61,6 +61,7 @@ export class RolagemService {
       campanhaId: ficha.campanhaId,
       usuarioId: usuarioAtivo.sub,
       rotulo: dto.rotulo,
+      formula: dto.formula,
       visibilidade: dto.visibilidade,
       resultado: dto.resultado,
     });
@@ -98,6 +99,7 @@ export class RolagemService {
       campanhaId: encontro.campanhaId,
       usuarioId: usuarioAtivo.sub,
       rotulo: dto.rotulo,
+      formula: dto.formula,
       visibilidade: dto.visibilidade,
       resultado: dto.resultado,
     });

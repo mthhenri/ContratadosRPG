@@ -1,4 +1,8 @@
-<div class="resultado-rolagem" [style.--cor-ficha]="corFicha()">
+<div
+    class="resultado-rolagem"
+    [class.resultado-rolagem--compacto]="compacto()"
+    [style.--cor-ficha]="corFicha()"
+>
     @for (resultado of resultadosExibidos(); track $index) {
         <div class="resultado-rolagem__corpo">
             <span
@@ -35,6 +39,11 @@
                                         "
                                         [class.resultado-rolagem__dado--descartado]="
                                             dado.mantidos && !marcado.mantido
+                                        "
+                                        [attr.aria-label]="
+                                            dado.mantidos && !marcado.mantido
+                                                ? marcado.valor + ' (descartado)'
+                                                : null
                                         "
                                     >
                                         {{ marcado.valor }}

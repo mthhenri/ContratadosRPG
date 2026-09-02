@@ -86,21 +86,23 @@
                 <ul class="historico-rolagens__lista">
                     @for (item of itens(); track item.id) {
                         <li class="historico-rolagens__item" [style.--cor-ficha]="item.corFicha">
-                            <header class="historico-rolagens__item-cabecalho">
-                                <span class="historico-rolagens__rotulo">{{ item.rotulo }}</span>
-                                <span class="historico-rolagens__data">{{
-                                    item.createdDate | date: "dd/MM HH:mm"
-                                }}</span>
-                            </header>
                             <div class="historico-rolagens__meta">
+                                <span class="historico-rolagens__rotulo">{{ item.rotulo }}</span>
                                 <span class="historico-rolagens__autor">{{ metaAutor(item) }}</span>
                                 @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
                                     <app-chip severidade="aviso" tom="contorno">privada</app-chip>
                                 }
+                                <span class="historico-rolagens__data">{{
+                                    item.createdDate | date: "dd/MM HH:mm"
+                                }}</span>
                             </div>
+                            @if (item.formula) {
+                                <span class="historico-rolagens__formula">{{ item.formula }}</span>
+                            }
                             <app-resultado-rolagem
                                 [resultado]="item.resultado"
                                 [corFicha]="item.corFicha"
+                                [compacto]="true"
                             />
                         </li>
                     }

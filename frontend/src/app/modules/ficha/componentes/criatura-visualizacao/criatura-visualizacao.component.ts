@@ -680,7 +680,9 @@ export class CriaturaVisualizacao {
       return;
     }
     this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor(), visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
-    this.rolagemRegistro.registrar(executada);
+    // ui-22-followup: mesmo racional do teste de Atributo da ficha de jogador — não persiste
+    // `formula` (o rótulo já diz "Teste de <atributo>"); só a bandeja mostra a expressão.
+    this.rolagemRegistro.registrar({ rotulo: executada.rotulo, resultado: executada.resultado });
   }
 
   /** Botão "Teste" do card de Ataque — fórmula própria do ataque (`ataque.teste`, ajuste

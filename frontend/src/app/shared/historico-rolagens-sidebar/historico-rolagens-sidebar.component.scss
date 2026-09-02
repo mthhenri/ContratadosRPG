@@ -276,27 +276,38 @@
         height: 34px;
     }
 
+    // ui-22: dez rolagens cabem em bem menos altura que antes — a lista ganha gap enxuto e o
+    // item vira um cartão único (rótulo + meta + a rolagem) em vez de cabeçalho fora da caixa e
+    // corpo dentro dela. O acabamento do cartão (fundo `--surface-2` + réguinha lateral em
+    // `--cor-ficha`, arredondada pelo raio do próprio cartão) reusa a receita do item ativo da
+    // topbar (`layout.component.scss` `&--ativo`, ui-21) — mesmo `box-shadow` inset, cor por
+    // ficha em vez de `--accent`, só o lado trocado (esquerda em vez de embaixo, a pedido do
+    // autor) — "a mesma curvinha" pedida na revisão.
     &__lista {
         list-style: none;
         margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: var(--space-12);
+        gap: var(--space-8);
     }
 
     &__item {
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-control);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
         padding: var(--space-12) var(--space-16);
+        background: var(--surface-2);
+        border-radius: var(--radius-control);
+        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
     }
 
-    &__item-cabecalho {
+    &__meta {
         display: flex;
         align-items: baseline;
-        justify-content: space-between;
-        gap: var(--space-12);
+        flex-wrap: wrap;
+        gap: var(--space-8);
+        line-height: 1.2;
     }
 
     &__rotulo {
@@ -306,26 +317,31 @@
         color: var(--text);
     }
 
-    &__data {
-        flex: none;
+    // ui-22-followup: expressão de dados da rolagem (ex.: "2d6+3[Físico]"), discreta — mesmo
+    // tamanho do horário (`&__data`, 10px), cinza a 75% de opacidade. Ausente no teste de Atributo
+    // direto (o rótulo já é o nome do atributo — `RolagemResumoDto.formula` chega `null`).
+    &__formula {
+        display: block;
         font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-mute);
-        white-space: nowrap;
-    }
-
-    &__meta {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: var(--space-8);
-        margin: var(--space-4) 0 var(--space-8);
+        font-size: 10px;
+        color: var(--text-dim);
+        opacity: 75%;
+        overflow-wrap: anywhere;
     }
 
     &__autor {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--text-dim);
         overflow-wrap: anywhere;
+    }
+
+    &__data {
+        flex: none;
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+        white-space: nowrap;
     }
 
     &__mais {

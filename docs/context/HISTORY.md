@@ -1,5 +1,202 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-22: dado descartado (kh/kl) ganha risco diagonal em vez de line-through
+
+Quinto ajuste na mesma revisão: o autor pediu que o dado descartado por `kh`/`kl` (ou qualquer
+expressão que não conta todos os dados do pool) trocasse o `text-decoration: line-through` —
+um traço horizontal cruzando só o dígito — por um risco na diagonal cortando o dadinho inteiro.
+
+`resultado-rolagem.component.scss`, `&__dado--descartado`: saiu `text-decoration: line-through`,
+entrou um `::after` absoluto (`inset: 0`, `position: relative` no próprio `&--descartado`) com
+`background: linear-gradient(to top right, transparent … currentColor … transparent)` — uma
+faixa de ~2px cruzando a caixa inteira de canto a canto. `currentColor` (não uma variável nova)
+porque o dado descartado não define `color` própria: herda a cor de tipo de dano quando a tem
+(`--fisico`/`--balistico`/etc.) ou `--text-mute` por padrão — o risco automaticamente acompanha
+essa cor, igual o comentário já dizia sobre a cor de tipo "continuar visível por trás".
+`border-radius: inherit` no pseudo-elemento pra não vazar quadrado pelos cantos arredondados do
+chip. `opacity: 0.45` do esmaecimento continua — só o "risco" em si mudou de técnica.
+
+Verificado ao vivo com `6d6kh3[Físico]` (bandeja e histórico compacto) e `8d10kl2cm2[Explosão]`
+(mobile, `kl` + margem de crítico juntos) em `1920×1080`/`360×800` — diagonal legível nos dois
+tamanhos de chip (16px da bandeja, 12px do compacto), cor de tipo de dano correta atrás do risco,
+sem overflow, `cm`/glow do crítico nos dados mantidos intactos. Suíte focada do componente 6/6,
+mais `historico-rolagens-sidebar`/`bandeja-dados` 22/22 (sanity — só CSS mudou, sem template/
+lógica), lint sem violação nova de comprimento, build de frontend limpo (mesmos dois warnings de
+budget pré-existentes).
+
+## 2026-09-02 — ui-22: legenda de expressão nos cards de rolagem, exceto teste de Atributo
+
+Quarto ajuste na mesma revisão: o autor pediu para exibir a expressão de dados usada em cada
+rolagem (ex.: `2d6+3[Físico]`) como legenda discreta abaixo do rótulo — cinza a 75% de opacidade,
+mesmo tamanho de fonte do horário (10px) — **exceto** quando a rolagem veio direto de um teste de
+Atributo (o rótulo já é o nome do atributo; repetir `FORd20kh1cm1 + PROF` ali seria redundante).
+
+Descoberta ao investigar: a fórmula nunca foi persistida — `RolagemRegistrarDto` só guardava
+`rotulo`/`visibilidade`/`resultado`; o texto da fórmula é calculado em toda rolagem (usado só na
+bandeja/toast) e descartado antes do POST. Precisou de coluna nova: migration `0028` adiciona
+`rolagem.formula VARCHAR` (nullable — `DOWN` reverte com `DROP COLUMN`, testado com
+`db:rollback`→`db:migrate`). `formula` entrou como campo obrigatório (`string | null`, nunca
+opcional) em `RolagemRegistrarDto`/`RolagemInternoRegistrarDto`/`RolagemResumoDto`
+(`shared/dtos/rolagem`) — quem registra decide explicitamente entre mandar o texto ou `null`,
+sem esquecimento silencioso. Repositório: coluna extra no `INSERT ... SELECT` e em
+`colunasResumo()`; service e controller são passthrough puro (sem regra nova ali).
+
+No frontend, o funil único é `FichaRolagemRegistroService.registrar()` (repassa `entrada.formula
+?? null` ao HTTP) — a maioria dos chamadores já calculava e passava `formula` para a bandeja
+havia tempos (m3-30/m3-31), então só precisou **parar de omiti-la** no registro. As duas exceções
+("veio direto de um atributo") passaram a **não** mandar `formula` nessa chamada específica —
+`FichaVisualizacao.rolarTesteAtributo` e `CriaturaVisualizacao.rolarTesteAtributo` (via
+`rolarTesteAtributoCriatura`) — a bandeja continua recebendo a fórmula normalmente, só o registro
+que persiste é que a omite. `RolagemAvulso` (combatente avulso do encontro) ganhou `formula`
+também — não é atributo-direto (avulsos nem têm atributos), então se qualifica.
+
+Exibição em `historico-rolagens-sidebar` (`&__formula`, `display:block`, `font-family: var(--font-
+mono)`, `font-size: 10px`, `color: var(--text-dim)`, `opacity: 75%`, `overflow-wrap: anywhere`),
+condicionada a `@if (item.formula)` — some sozinha em rolagens antigas (coluna `NULL` por
+retroatividade) e em teste de Atributo. Verificado ao vivo contra dados reais gerados pela própria
+rolagem rápida (fórmula curta e uma longa com Composto, `4d6+2d8+PONd6kh1cm1+PROF+NIV+VON*2-3
+[Balístico-Explosão]`) e teste de Força, em `1920×1080`/`360×800`, painel da ficha **e** feed da
+campanha (mesmo componente reusado) — sem overflow mesmo na fórmula longa (`overflow-wrap`
+funcionando), legenda ausente exatamente nos cards "Força"/rolagens pré-migration. Suítes
+completas: shared 744/744, backend 476/476, frontend 1541/1542 (a 1 falha é o flake pré-existente
+e documentado de `painel-flutuante.component.spec.ts`, não relacionado). Lint sem violação nova de
+comprimento de linha; build de frontend e backend limpos (só o warning pré-existente de budget de
+bundle).
+
+## 2026-09-02 — ui-22: a curvinha migrou de embaixo pra lateral esquerda
+
+Terceiro ajuste na mesma revisão: a régua curva ficou boa, mas o autor preferiu na **lateral
+esquerda** em vez de embaixo (mais perto da barra de 3px do POC B original, só que agora
+arredondada). Muda só a direção do `box-shadow` inset — a receita continua a mesma da topbar
+(`border-radius` + `box-shadow inset`, cor por ficha): `inset 0 -2px 0` virou `inset 2px 0 0`, sem
+tocar em padding, fundo ou no resto do cartão. Verificado ao vivo de novo contra as 38 rolagens
+(todas as formas de expressão) em `1920×1080`/`360×800`, painel da ficha — sem overflow, curva
+visível nos dois cantos da esquerda (topo e base), glow do crítico ileso. Teste focado 4/4, build
+limpo.
+
+## 2026-09-02 — ui-22: escolhido o POC B ("tira colorida"), com a curvinha da topbar
+
+Da rodada de 3 POCs visuais da revisão anterior (cartão/tira colorida/linha corrida), o autor
+escolheu o **B**, com dois ajustes: mais padding (estava "muito grudado") e o mesmo acabamento do
+item ativo da topbar — a régua inferior em `--accent` que curva nos cantos por seguir o
+`border-radius` do próprio elemento (`layout.component.scss` `&--ativo`, ui-21).
+
+`historico-rolagens__item` trocou a barra lateral de 3px (`border-left`) por
+`box-shadow: inset 0 -2px 0 var(--cor-ficha, var(--border-strong))` — literalmente a mesma receita
+da topbar, cor por ficha em vez de `--accent` (mesmo motivo de sempre: rolagens de fichas
+diferentes convivendo na mesma lista) — e ganhou `border-radius: var(--radius-control)`, que é o
+que faz a régua curvar nos dois cantos inferiores em vez de ficar reta feito uma sublinha comum.
+Padding voltou para `var(--space-12) var(--space-16)` (era `var(--space-10) var(--space-12)` no
+POC B original). Sem `border` de contorno — só o fundo `--surface-2` + a régua, igual ao item da
+topbar quando ativo.
+
+Mesmas 10 rolagens da medição anterior: 780px (era 843px no cartão fechado da rodada passada —
+sem o contorno de 1px nos 4 lados, o cartão fica ligeiramente mais enxuto mesmo com padding
+igual). Verificado ao vivo contra a mesma bateria de 38 rolagens (todas as formas de expressão da
+gramática) em `1920×1080`/`360×800`, painel da ficha e feed da campanha — sem overflow, glow do
+crítico não cortado pela curva (sem `overflow: hidden` no item). Testes focados 10/10, lint sem
+erro novo, build limpo.
+
+## 2026-09-02 — ui-22: ajuste pós-revisão (rótulo dentro da caixa, mais respiro)
+
+O autor revisou a `ui-22` ao vivo e achou a variante `[compacto]` compacta demais: o rótulo da
+rolagem ficava **fora** da caixa (`historico-rolagens__meta`, texto solto acima) e o padding da
+pílula do resultado (2px/8px) apertava demais. Dois ajustes, sem mudar o contrato do componente:
+
+1. A caixa (`--surface-2`/`--border`/`--radius-control`) migrou de volta para
+   `historico-rolagens__item` — que agora envolve rótulo + meta + a rolagem inteira, um cartão só
+   — em vez de viver dentro de `resultado-rolagem--compacto` sozinha (o desenho anterior deixava
+   o rótulo do lado de fora, "flutuando"). `resultado-rolagem--compacto` ficou só com a tipografia/
+   layout da linha; quem incorporar o modificador sem essa moldura externa decide a própria caixa.
+2. Padding do cartão voltou a `var(--space-12) var(--space-16)` (era `2px 8px` na pílula); dado/
+   grupo de dano ganharam 1px a mais de padding cada; gap entre os blocos de uma repetição `#N`
+   subiu de 2px para 6px.
+
+Resultado: as mesmas 10 rolagens da medição original da `ui-22` (teste kh/kl, dano multi-tipo,
+crítico, repetição, uma privada) agora somam **843px**, contra os **1864px** de antes da task —
+`2,2×` menos altura. É menos agressivo que o `3,3×` da primeira entrega (que o autor achou
+excessivo), mas ainda uma redução real; o `HISTORY.md` de `ui-22` (abaixo) registra o número
+antigo como o estado **na hora**, não reescrito aqui.
+
+Testado ao vivo contra **todas as formas de expressão da gramática de rolagem** (não só o recorte
+da medição de altura) — gerei 27 rolagens novas com o motor real (`rolarFormula`), uma para cada
+recurso: `NdM` simples, tipo de dano único e Composto (`[A-B]`), `kh`/`kl`, margem de crítico
+(`cm`), explosão (`!`)/implosão (`?`), `kh`+`cm`+`!` combinados, atributo como fonte de dados
+(`FORd6`), atributo escalado (`FOR*3`/`LUT/2`), atributo+offset como quantidade (`(LUT+3)d20`),
+repetição (`(fórmula)#N`, com e sem tipo de dano), crítico (dobra), os 5 tipos de dano (Físico/
+Balístico/Explosão/Químico/Geral), termo negativo/multi-termo, desvantagem intrínseca (regra 270,
+atributo ≤ 0) e atributo com valor negativo — 38 rolagens no total (as 27 + as 11 da rodada
+anterior) na mesma lista real, sem nenhuma quebrando o layout ou cortando conteúdo (`scrollWidth
+=== clientWidth` nos dois viewports). Cada uma tem seu próprio card visualmente correto: crítico
+com glow, desvantagem com selo, margem de crítico com `◆ N`, dado descartado riscado+esmaecido.
+
+Também gerei **3 POCs visuais** (mesma massa de dados real, screenshots enviados ao autor pra
+escolher) sem commitar nenhum:
+- **A — Cartão** (a que ficou): caixa fechada `--surface-2`/`--border`, rótulo dentro.
+- **B — Tira colorida**: sem caixa fechada, barra lateral de 3px em `--cor-ficha` + fundo
+  `--surface-2` + régua inferior — mais denso que A, identidade por ficha mais visível.
+- **C — Linha corrida**: sem caixa nenhuma, só uma régua tracejada entre itens — o mais denso dos
+  três, estética de log de terminal.
+
+Suíte completa frontend 1539/1540 (a única falha, `painel-flutuante.component.spec.ts` — asserção
+de posição restaurada —, não reproduz isolada nem tem relação com este diff; PROBLEMS.md já
+documenta esse padrão de flake só-na-suíte-completa em outros arquivos). Lint sem erro novo, build
+limpo. Verificação visual ao vivo (Postgres nativo) em `1920×1080`/`360×800`, painel da ficha e
+feed da campanha, sem overflow horizontal nos dois.
+
+## 2026-09-02 — ui-22: resultado de rolagem compacto
+
+`app-resultado-rolagem` tinha uma forma só — total de 44px desenhado para a carta de 640px da
+bandeja — reusada também no painel lateral de histórico (500px) e no feed da campanha (mesmo
+componente `HistoricoRolagensSidebar`, consumido pelas duas telas via `RolagemResumoDto`; não
+existe um componente de "feed" à parte). Numa lista de dez rolagens cada item chegava a ocupar
+quase 190px de altura (medido ao vivo, acima da estimativa "quase 120px" da própria auditoria).
+
+Novo input `[compacto]` em `ResultadoRolagem`: total 22px, pool/grupos/legenda numa única linha
+que quebra por necessidade em vez de empilhar em blocos verticais separados — dentro de uma
+pílula rasa (`--surface-2`/`--border`, únicos tokens novos no uso, nenhum token novo no sistema).
+`HistoricoRolagensSidebar` passa `[compacto]="true"` no único call site do `<app-resultado-
+rolagem>` que tem — cobre os dois consumidores (painel da ficha e feed da campanha) numa edição
+só; a bandeja nunca recebe o modificador e continua na forma cheia. O item da lista também
+colapsou cabeçalho + meta (rótulo/data numa linha, autor/chip/data em outra) numa linha só
+(`&__meta`), e a caixa própria do item (`--surface-2`/`--border`/padding) saiu — a pílula do
+resultado compacto já dá a moldura, o item vira só texto + régua fina de separação.
+
+Três pontas soltas da spec original:
+- **Leitor de tela**: o dado descartado pelo `kh`/`kl` (opacidade 0,45 + risco, só visual) ganhou
+  `aria-label="<valor> (descartado)"`; o mantido não leva `aria-label` (accessible name cai no
+  texto visível).
+- **Duração da barra de tempo da bandeja**: os "7s" viviam soltos em dois lugares —
+  `BandejaDadosService.DURACAO_MS` e `animation: bandeja-esvazia 7s linear forwards` no SCSS.
+  Unificados por custom property (`[style.--bandeja-duracao.ms]="bandeja.duracaoMs"` no
+  container, `animation-duration: var(--bandeja-duracao)` no SCSS, sem fallback numérico) — muda
+  a duração no serviço sem tocar no CSS, mesmo padrão de `--bandeja-carta-largura` (m3-56).
+- **Glow do crítico**: a receita de `text-shadow` com `color-mix()` aparecia calculada inline três
+  vezes no próprio arquivo (`__total--critico`, `__critico`, `__grupo--#{$tipo}`), cada uma com
+  raio/opacidade diferentes — mesmo caso da chip (`ui-13`). Novo par de mixins em
+  `frontend/src/styles/tema/_glow.scss` (`simples`/`duplo`, espelhado em `docs/design/tema/`
+  como todo o resto de `tema/`): as três chamadas agora passam só cor + raio/opacidade, sem
+  recalcular a fórmula.
+
+Medição ao vivo (não confiei só na prosa da spec): as mesmas 10 rolagens reais — teste com
+kh/kl, dano multi-tipo, crítico, repetição `(fórmula)#N`, uma privada — mediram **1864px** no
+histórico antigo (`git stash` temporário pra comparar lado a lado com o mesmo dado) e **567px**
+depois, `3,3×` menos altura (a spec pedia "pelo menos 3×"). Gerei as rolagens com o motor real
+(`rolarFormula` de `shared/dist/regras/rolagem`, script único) contra a ficha `Operador Codex` do
+seed de desenvolvimento (`npm run db:seed:dev`), gravadas via `POST /ficha/:id/rolagem` — dado
+real, não mock.
+
+Testes focados 8/8 (2 novos: aria-label do descartado, classe `--compacto` presente/ausente),
+suíte completa frontend 1540/1540, lint sem erro novo (só os avisos históricos de aspas), build
+de produção limpo (mesmos dois avisos de orçamento pré-existentes, sem relação com este diff).
+Verificação visual ao vivo (Postgres nativo — Docker indisponível no ambiente) em
+`1920×1080`/`360×800`: painel da ficha e feed da campanha nos dois viewports, sem overflow
+horizontal em nenhum dos dois (`scrollWidth === clientWidth` conferido); crítico com glow
+visível, chips de dano coloridos por tipo, dado descartado riscado+esmaecido, repetição `#N` em
+duas pílulas empilhadas, chip "privada" — nenhuma regressão encontrada. A bandeja (forma cheia)
+segue idêntica: `getComputedStyle` confirmou `--bandeja-duracao: 7000ms` e `animation-duration:
+7s` resolvidos a partir do serviço, não de um literal no CSS.
+
 ## 2026-09-02 — fix: mensagem de vazio por aba no inventário
 
 O painel de inventário sempre teve duas fontes de "vazio": o bloco genérico

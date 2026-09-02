@@ -274,7 +274,11 @@ describe('PainelEncontro', () => {
           provide: RolagemService,
           useValue: {
             listarPorCampanha: vi.fn(() => of([])),
-            registrar: vi.fn((fichaId: number, dto: { rotulo: string; resultado: unknown }) =>
+            registrar: vi.fn(
+              (
+                fichaId: number,
+                dto: { rotulo: string; formula: string | null; resultado: unknown },
+              ) =>
               of({
                 id: 1,
                 fichaId,
@@ -283,6 +287,7 @@ describe('PainelEncontro', () => {
                 nomeAutor: 'Bia',
                 nomeFicha: 'K. Amaral',
                 rotulo: dto.rotulo,
+                formula: dto.formula,
                 visibilidade: RolagemVisibilidadeEnum.PUBLICA,
                 resultado: dto.resultado,
                 createdDate: '2026-08-20T15:00:00.000Z',
@@ -445,6 +450,7 @@ describe('PainelEncontro', () => {
       nomeAutor: 'Bia',
       nomeFicha: 'K. Amaral',
       rotulo: 'Iniciativa',
+      formula: '1D20',
       visibilidade: RolagemVisibilidadeEnum.PUBLICA,
       resultado: { formula: '1D20', dados: [], total: 17 } as unknown as RolagemResumoDto['resultado'],
       createdDate: '2026-08-20T15:00:00.000Z',

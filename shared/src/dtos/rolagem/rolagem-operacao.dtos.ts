@@ -20,6 +20,12 @@ import type { ResultadoRolagemDto } from '../../regras/rolagem';
  */
 export interface RolagemRegistrarDto {
   readonly rotulo: string;
+  /**
+   * Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no
+   * histórico/feed. `null` quando quem registra não a informa — o teste de Atributo direto (o
+   * rótulo já é o nome do atributo) nunca a envia.
+   */
+  readonly formula: string | null;
   readonly visibilidade: RolagemVisibilidadeEnum;
   readonly resultado: ResultadoRolagemDto;
 }
@@ -41,6 +47,7 @@ export interface RolagemInternoRegistrarDto {
   readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly rotulo: string;
+  readonly formula: string | null;
   readonly visibilidade: RolagemVisibilidadeEnum;
   readonly resultado: ResultadoRolagemDto;
 }
@@ -60,6 +67,7 @@ export interface RolagemResumoDto {
   readonly nomeAutor: string;
   readonly nomeFicha: string;
   readonly rotulo: string;
+  readonly formula: string | null;
   readonly visibilidade: RolagemVisibilidadeEnum;
   readonly resultado: ResultadoRolagemDto;
   readonly createdDate: string;

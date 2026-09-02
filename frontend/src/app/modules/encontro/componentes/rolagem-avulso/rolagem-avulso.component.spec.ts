@@ -135,6 +135,7 @@ describe('RolagemAvulso', () => {
 
     expect(rolagemService.registrarAvulso).toHaveBeenCalledWith(12, 31, {
       rotulo: 'Rolagem livre',
+      formula: '1d6+2',
       visibilidade: RolagemVisibilidadeEnum.PRIVADA,
       resultado: expect.objectContaining({ total: expect.any(Number) }),
     });

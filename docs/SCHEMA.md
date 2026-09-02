@@ -229,6 +229,7 @@ CREATE TABLE rolagem (
   campanha_id                  INTEGER,            -- fk_rolagem_campanha (nullable — ficha solta, m3-28)
   usuario_id                   INTEGER NOT NULL,   -- fk_rolagem_usuario (autor da rolagem)
   rotulo                       VARCHAR NOT NULL,
+  formula                      VARCHAR,            -- expressão de dados (ex.: "2d6+3[Físico]") — m3-27-ui22
   tipo_rolagem_visibilidade_id INTEGER NOT NULL,   -- fk_rolagem_tipo_rolagem_visibilidade
   resultado                    JSONB   NOT NULL    -- ResultadoRolagemDto — forma abaixo
 );
@@ -240,6 +241,13 @@ CREATE TABLE rolagem (
 na maioria dos casos, mas também um visualizador com acesso concedido (`usuario_ficha_acesso`,
 quem pode **ver** a ficha pode rolar) ou o mestre. `campanha_id` é resolvido da ficha no momento
 do registro (não vem do cliente).
+
+**`formula` é opcional por design.** Guarda a expressão de dados exibida como legenda discreta
+no histórico/feed (ui-22, followup pós-lançamento). `NULL` quando quem registra não a informa —
+o teste de Atributo direto (`FichaVisualizacao.rolarTesteAtributo`/
+`CriaturaVisualizacao.rolarTesteAtributo`) nunca a envia, porque o `rotulo` já é o nome do
+atributo e repeti-lo como fórmula seria redundante. Todo outro caminho (rolagem rápida, preset,
+dano de item/ataque, avulso do encontro) envia a fórmula usada.
 
 **Visibilidade.** `PUBLICA` (default) aparece para todos os membros da campanha no feed; `PRIVADA`
 só para o **autor** e o **mestre** — o mesmo mecanismo cobre o mestre rolando "só para si" (autor

@@ -4,10 +4,17 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-21` concluída — chrome da
-> topbar (item ativo, slot de contexto, selo de tempo real fixo, `Escape` no dropdown de perfil,
-> painel de tema migrado para `app-modal`). Ainda pendente: desligar o Render e reescrever
-> `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** `ui-22` concluída — variante
+> `[compacto]` de `app-resultado-rolagem` (total 22px, pool numa linha), adotada no painel lateral
+> de histórico e no feed da campanha; item do histórico com rótulo dentro da caixa e a régua
+> curva por ficha na lateral esquerda, mesma receita do item ativo da topbar (ui-21); aria-label
+> no dado descartado; duração da barra da bandeja por custom property; glow do crítico em mixin;
+> legenda discreta com a expressão de dados abaixo do rótulo (`rolagem.formula`, coluna nova via
+> migration `0028`), ausente no teste de Atributo direto; dado descartado por `kh`/`kl` risca na
+> diagonal (`::after` com gradiente, `currentColor`) em vez do antigo `text-decoration: line-
+> through`.
+> Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
+> seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
@@ -248,6 +255,51 @@ forçado via bloqueio de rede do `socket.io` (sem depender do socket real nem de
 compartilhado) — apareceu certo nos dois viewports, sem overflow. Detalhe completo em
 `HISTORY.md`.
 
+**`ui-22-resultado-rolagem-compacto` concluída, com ajuste pós-revisão** (spec em
+`docs/specs/done/`): `app-resultado-rolagem` ganhou `[compacto]` (total 22px, pool/grupos/legenda
+numa linha só) — `HistoricoRolagensSidebar` passa `true` no único call site, cobrindo os dois
+consumidores (painel lateral da ficha, feed da campanha; é o mesmo componente para os dois, não
+existiam dois lugares separados); a bandeja (carta de 640px) fica na forma cheia. Dado descartado
+pelo `kh`/`kl` ganhou `aria-label` (antes só opacidade + risco); a duração da barra da bandeja
+passou a vir do serviço por custom property (`--bandeja-duracao`, sem literal solto no CSS); o
+glow do crítico/chip de dano (`text-shadow` + `color-mix()`, três vezes calculado inline) virou
+mixin em `frontend/src/styles/tema/_glow.scss` (espelhado em `docs/design/tema/`). A primeira
+entrega ficou compacta demais na revisão do autor — rótulo fora da caixa, padding apertado; a
+caixa (`--surface-2`/`--border`) migrou de `resultado-rolagem--compacto` para
+`historico-rolagens__item` (agora envolve rótulo + rolagem, um cartão só) e os paddings
+cresceram. Medido ao vivo com as mesmas 10 rolagens reais: 1864px → 843px (`2,2×`). Testado
+contra as 27 formas de expressão da gramática de rolagem (grupos de dano, `kh`/`kl`/`cm`/`!`/`?`,
+atributo como dado/escalado/offset, repetição `#N`, crítico, desvantagem intrínseca — detalhe em
+`HISTORY.md`), 38 rolagens reais na mesma lista sem overflow. 3 POCs visuais gerados e enviados ao
+autor para escolha (cartão/tira colorida/linha corrida); escolheu a **tira colorida**, pedindo
+mais padding e a "curvinha" da topbar — `historico-rolagens__item` trocou `border-left` por
+`box-shadow` inset + `border-radius`, a mesma receita do item ativo da topbar
+(`layout.component.scss` `&--ativo`, ui-21) que faz a régua curvar nos cantos; a régua migrou de
+embaixo (`inset 0 -2px 0`) para a lateral esquerda (`inset 2px 0 0`) num terceiro ajuste da mesma
+revisão. Medido de novo: 780px pras mesmas 10 rolagens. Num quarto ajuste, os cards passaram a
+exibir a expressão de dados usada (ex.: `2d6+3[Físico]`) como legenda discreta abaixo do rótulo
+(mono, `--text-dim` a 75% de opacidade, 10px — mesmo tamanho do horário), **exceto** no teste de
+Atributo direto (rótulo já é o nome do atributo). A fórmula nunca tinha sido persistida —
+`RolagemRegistrarDto`/`RolagemInternoRegistrarDto`/`RolagemResumoDto` ganharam `formula: string |
+null` (migration `0028`, coluna nova em `rolagem`); `FichaRolagemRegistroService.registrar()`
+passou a repassá-la; as duas chamadas de teste de Atributo (ficha de jogador e criatura) passaram
+a omiti-la deliberadamente nesse registro (a bandeja/toast continua mostrando, como sempre).
+Testes focados 8/8, suíte completa frontend 1541/1542 (única falha,
+`painel-flutuante.component.spec.ts`, não reproduz isolada nem tem relação com este diff), backend
+476/476, shared 744/744, lint sem erro novo, build limpo (backend e frontend). Verificação visual
+ao vivo (Postgres nativo) em `1920×1080`/`360×800`, painel da ficha e feed da campanha, com dados
+reais gerados pela rolagem rápida (fórmula curta e uma longa com Composto) e teste de Força — sem
+overflow horizontal em nenhum dos dois, legenda ausente exatamente onde deveria (Força, rolagens
+pré-migration). Num quinto ajuste, o dado descartado por `kh`/`kl` (ou qualquer expressão que não
+conta todos os dados do pool) trocou `text-decoration: line-through` por um risco na diagonal —
+`&--descartado` ganhou `position: relative` + `::after` com `linear-gradient(to top right, …)` em
+`currentColor` (a cor de tipo de dano por trás continua a mesma de sempre), `border-radius:
+inherit` pra não vazar pelos cantos do chip. Verificado com `6d6kh3[Físico]` e
+`8d10kl2cm2[Explosão]` em `1920×1080`/`360×800`, bandeja e histórico compacto — diagonal legível
+nos dois tamanhos de chip, `cm`/glow do crítico intactos. Testes 6/6 do componente + 22/22 de
+`historico-rolagens-sidebar`/`bandeja-dados` (sanity, só CSS mudou). Detalhe completo em
+`HISTORY.md`.
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -257,9 +309,9 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-21` concluída — ver acima). Restam `ui-22`…`ui-23` no backlog
-(resultado de rolagem compacto, stat sem valor/rodapé do cartão — ver "Fila do backlog" abaixo). A
-única frente de código de milestone ainda pendente é o **M4**
+Não há spec ativa no momento (`ui-22` concluída — ver acima). Resta `ui-23` no backlog (stat sem
+valor/rodapé do cartão — ver "Fila do backlog" abaixo). A única frente de código de milestone
+ainda pendente é o **M4**
 (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7 estão
 concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
@@ -270,7 +322,7 @@ concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-22`…`ui-23` | frontend/design system | duas specs restantes da auditoria visual (resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
+| `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
 | `m8-01`…`m8-06` | campanha (M8) | papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro — módulo novo, ainda não iniciado |
 
 Milestones ainda não abertos: `m5-guia-missao` e o M8 `m8-espectadores-campanha` (specs prontas em

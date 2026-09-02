@@ -40,6 +40,13 @@ export class ResultadoRolagem {
   readonly corFicha = input<string | null | undefined>(null);
 
   /**
+   * Variante de linha (ui-22): total 22px, pool/grupos/legenda numa única linha em vez de
+   * empilhados — usada onde o histórico precisa caber mais rolagens na mesma altura (painel
+   * lateral, feed da campanha). `false` (padrão) preserva a forma cheia de 44px da bandeja.
+   */
+  readonly compacto = input(false);
+
+  /**
    * Resultados a exibir (m3-46): sem repetição `#N`, é só o próprio resultado; com `subResultados`
    * (2+ rolagens independentes de `(<fórmula>)#N`), são todas elas.
    */

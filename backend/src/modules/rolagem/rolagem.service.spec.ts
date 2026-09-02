@@ -52,6 +52,7 @@ function criarResumo(overrides: Partial<RolagemResumoDto> = {}): RolagemResumoDt
     nomeAutor: 'Agente Novato',
     nomeFicha: 'Ficha de Teste',
     rotulo: 'Luta',
+    formula: null,
     visibilidade: RolagemVisibilidadeEnum.PUBLICA,
     resultado,
     createdDate: new Date().toISOString(),
@@ -108,6 +109,7 @@ describe('RolagemService', () => {
           encontroId: 12,
           combatenteId: 31,
           rotulo: 'Rolagem livre',
+          formula: '1d6+2',
           visibilidade: RolagemVisibilidadeEnum.PRIVADA,
           resultado,
         },
@@ -120,6 +122,7 @@ describe('RolagemService', () => {
         campanhaId: 5,
         usuarioId: usuarioAtivo.sub,
         rotulo: 'Rolagem livre',
+        formula: '1d6+2',
         visibilidade: RolagemVisibilidadeEnum.PRIVADA,
         resultado,
       });
@@ -134,7 +137,13 @@ describe('RolagemService', () => {
       rolagemRepositorio.registrarRolagem.mockResolvedValue(rolagemRegistrada);
 
       const resultadoServico = await service.registrarRolagem(
-        { fichaId: 10, rotulo: 'Luta', visibilidade: RolagemVisibilidadeEnum.PUBLICA, resultado },
+        {
+          fichaId: 10,
+          rotulo: 'Luta',
+          formula: null,
+          visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+          resultado,
+        },
         usuarioAtivo,
       );
 
@@ -145,6 +154,7 @@ describe('RolagemService', () => {
         campanhaId: 5,
         usuarioId: usuarioAtivo.sub,
         rotulo: 'Luta',
+        formula: null,
         visibilidade: RolagemVisibilidadeEnum.PUBLICA,
         resultado,
       });
@@ -157,7 +167,13 @@ describe('RolagemService', () => {
       rolagemRepositorio.registrarRolagem.mockResolvedValue(rolagemRegistrada);
 
       await service.registrarRolagem(
-        { fichaId: 10, rotulo: 'Luta', visibilidade: RolagemVisibilidadeEnum.PUBLICA, resultado },
+        {
+          fichaId: 10,
+          rotulo: 'Luta',
+          formula: null,
+          visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+          resultado,
+        },
         usuarioAtivo,
       );
 
@@ -170,7 +186,13 @@ describe('RolagemService', () => {
       rolagemRepositorio.registrarRolagem.mockResolvedValue(rolagemRegistrada);
 
       await service.registrarRolagem(
-        { fichaId: 10, rotulo: 'Luta', visibilidade: RolagemVisibilidadeEnum.PRIVADA, resultado },
+        {
+          fichaId: 10,
+          rotulo: 'Luta',
+          formula: null,
+          visibilidade: RolagemVisibilidadeEnum.PRIVADA,
+          resultado,
+        },
         usuarioAtivo,
       );
 
@@ -182,7 +204,13 @@ describe('RolagemService', () => {
 
       await expect(
         service.registrarRolagem(
-          { fichaId: 10, rotulo: 'Luta', visibilidade: RolagemVisibilidadeEnum.PUBLICA, resultado },
+          {
+            fichaId: 10,
+            rotulo: 'Luta',
+            formula: null,
+            visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+            resultado,
+          },
           usuarioAtivo,
         ),
       ).rejects.toThrow(UnauthorizedAccessException);
@@ -195,7 +223,13 @@ describe('RolagemService', () => {
       rolagemRepositorio.registrarRolagem.mockResolvedValue(rolagemRegistrada);
 
       await service.registrarRolagem(
-        { fichaId: 10, rotulo: 'Luta', visibilidade: RolagemVisibilidadeEnum.PUBLICA, resultado },
+        {
+          fichaId: 10,
+          rotulo: 'Luta',
+          formula: null,
+          visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+          resultado,
+        },
         usuarioAtivo,
       );
 

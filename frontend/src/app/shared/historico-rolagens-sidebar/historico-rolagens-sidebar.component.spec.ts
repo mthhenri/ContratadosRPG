@@ -1,7 +1,29 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
+
 import { HistoricoRolagensSidebar } from './historico-rolagens-sidebar.component';
+
+function criarItem(sobrescritas: Partial<RolagemResumoDto> = {}): RolagemResumoDto {
+  return {
+    id: 1,
+    fichaId: 3,
+    encontroCombatenteId: null,
+    campanhaId: 5,
+    usuarioId: 1,
+    nomeAutor: 'Agente',
+    nomeFicha: 'Ficha',
+    rotulo: 'Dano',
+    formula: '2d6+3[Físico]',
+    visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+    resultado: { dados: [], atributos: [], constante: 3, total: 9 },
+    createdDate: new Date().toISOString(),
+    corFicha: null,
+    ...sobrescritas,
+  };
+}
 
 describe('HistoricoRolagensSidebar', () => {
   let fixture: ComponentFixture<HistoricoRolagensSidebar>;
@@ -55,6 +77,26 @@ describe('HistoricoRolagensSidebar', () => {
       'Nenhuma rolagem ainda.',
     );
     expect(painel.querySelector('.historico-rolagens__esqueleto')).toBeNull();
+  });
+
+  it('mostra a expressão da rolagem como legenda discreta abaixo do rótulo', () => {
+    fixture.componentRef.setInput('itens', [criarItem({ formula: '2d6+3[Físico]' })]);
+    obterGatilho().click();
+    fixture.detectChanges();
+
+    const formula = (fixture.nativeElement as HTMLElement).querySelector(
+      '.historico-rolagens__formula',
+    );
+    expect(formula?.textContent?.trim()).toBe('2d6+3[Físico]');
+  });
+
+  it('omite a legenda de expressão no teste de Atributo direto (formula nula)', () => {
+    fixture.componentRef.setInput('itens', [criarItem({ rotulo: 'Luta', formula: null })]);
+    obterGatilho().click();
+    fixture.detectChanges();
+
+    const painel = fixture.nativeElement as HTMLElement;
+    expect(painel.querySelector('.historico-rolagens__formula')).toBeNull();
   });
 
   function obterGatilho(): HTMLButtonElement {

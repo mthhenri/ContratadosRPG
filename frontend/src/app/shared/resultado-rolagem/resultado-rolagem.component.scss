@@ -2,6 +2,7 @@
 // reuso no histórico da ficha e no feed da campanha. Só tokens do tema (proibição #29).
 
 @use "tema/breakpoints" as bp;
+@use "tema/glow" as glow;
 
 :host {
     display: contents;
@@ -49,9 +50,7 @@
 
         // Crítico (m3-30): brilho no número — destaque maior quando bate crítico ou dobra o dano.
         &--critico {
-            text-shadow:
-                0 0 16px color-mix(in srgb, var(--cor-ficha, var(--accent)) 80%, transparent),
-                0 0 5px color-mix(in srgb, var(--cor-ficha, var(--accent)) 60%, transparent);
+            @include glow.duplo(var(--cor-ficha, var(--accent)));
         }
     }
 
@@ -134,10 +133,29 @@
             background: var(--accent-dim);
         }
 
-        // Dado descartado pelo keep (kh/kl) — esmaecido e riscado (m3-29).
+        // Dado descartado pelo keep (kh/kl) ou por qualquer expressão que não conta todos os
+        // dados do pool — esmaecido e riscado na diagonal (m3-29, ajustado após revisão do autor:
+        // era `text-decoration: line-through`, um traço horizontal sobre o número; virou um traço
+        // diagonal cortando o dadinho inteiro, mais legível como "descartado" que uma tarja no
+        // meio do dígito). `currentColor` — a cor de tipo de dano (`--fisico` etc.) continua
+        // visível por trás e o traço acompanha, sem precisar de uma segunda variável de cor.
         &--descartado {
+            position: relative;
             opacity: 0.45;
-            text-decoration: line-through;
+
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                background: linear-gradient(
+                    to top right,
+                    transparent calc(50% - 1px),
+                    currentColor calc(50% - 1px),
+                    currentColor calc(50% + 1px),
+                    transparent calc(50% + 1px)
+                );
+            }
         }
     }
 
@@ -149,7 +167,7 @@
         color: var(--cor-ficha, var(--accent));
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
-        text-shadow: 0 0 10px color-mix(in srgb, var(--cor-ficha, var(--accent)) 70%, transparent);
+        @include glow.simples(var(--cor-ficha, var(--accent)));
     }
 
     &__legenda {
@@ -189,8 +207,82 @@
                 color: var(--dano-#{$tipo});
                 border-color: var(--dano-#{$tipo}-border);
                 background: var(--dano-#{$tipo}-dim);
-                text-shadow: 0 0 8px color-mix(in srgb, var(--dano-#{$tipo}) 55%, transparent);
+                @include glow.simples(var(--dano-#{$tipo}), 8px, 55%);
             }
+        }
+    }
+
+    // Variante de linha (ui-22, ajustada após revisão do autor): total menor, pool/grupos/legenda
+    // numa linha só — cabe mais histórico na mesma altura do painel lateral/feed da campanha sem
+    // perder total, modificadores ou chips de dano. Sem caixa própria (`--surface-2`/`--border`
+    // agora vivem no item que envolve rótulo + esta rolagem — `HistoricoRolagensSidebar` — pra
+    // não aninhar caixa dentro de caixa); quem incorporar este modificador sem essa moldura
+    // externa decide a própria. A bandeja (carta de 640px) nunca recebe este modificador — fica
+    // na forma cheia (m3-22/m3-55).
+    &--compacto {
+        align-items: stretch;
+        margin-top: 0;
+        gap: 6px;
+
+        .resultado-rolagem__corpo {
+            align-items: center;
+            gap: 10px;
+
+            &:not(:first-child) {
+                padding-top: 6px; // sem régua cheia — só respiro entre blocos de repetição #N
+            }
+        }
+
+        .resultado-rolagem__total {
+            flex-direction: row;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 22px;
+        }
+
+        .resultado-rolagem__critico-badge,
+        .resultado-rolagem__indice-badge {
+            font-size: 9px;
+        }
+
+        .resultado-rolagem__detalhe {
+            flex: 1;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .resultado-rolagem__pool {
+            gap: 4px 8px;
+        }
+
+        .resultado-rolagem__dado-termo {
+            gap: 4px;
+        }
+
+        .resultado-rolagem__dado-nota {
+            font-size: 10px;
+        }
+
+        .resultado-rolagem__dado {
+            font-size: 12px;
+            min-width: 20px;
+            padding: 2px 6px;
+        }
+
+        .resultado-rolagem__critico,
+        .resultado-rolagem__legenda,
+        .resultado-rolagem__grupo {
+            font-size: 12px;
+        }
+
+        .resultado-rolagem__grupo {
+            padding: 2px 7px;
+        }
+
+        .resultado-rolagem__desvantagem {
+            font-size: 10px;
         }
     }
 }

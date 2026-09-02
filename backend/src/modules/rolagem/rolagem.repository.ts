@@ -35,7 +35,7 @@ export class RolagemRepository extends BaseRepository {
             rolagem.campanha_id AS "campanhaId", rolagem.usuario_id AS "usuarioId",
             usuario.nome AS "nomeAutor", COALESCE(ficha.nome, encontro_combatente.nome_avulso) AS "nomeFicha",
             COALESCE(ficha.cor, encontro_combatente.cor_avulso) AS "corFicha",
-            rolagem.rotulo, tipo_rolagem_visibilidade.codigo AS visibilidade,
+            rolagem.rotulo, rolagem.formula, tipo_rolagem_visibilidade.codigo AS visibilidade,
             rolagem.resultado, rolagem.created_date AS "createdDate"`;
   }
 
@@ -58,8 +58,8 @@ export class RolagemRepository extends BaseRepository {
    */
   async registrarRolagem(dto: RolagemInternoRegistrarDto): Promise<RolagemResumoDto> {
     const [inserida] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO rolagem (ficha_id, encontro_combatente_id, campanha_id, usuario_id, rotulo, tipo_rolagem_visibilidade_id, resultado, created_date, updated_date, is_deleted)
-       SELECT :fichaId, :encontroCombatenteId, :campanhaId, :usuarioId, :rotulo,
+      `INSERT INTO rolagem (ficha_id, encontro_combatente_id, campanha_id, usuario_id, rotulo, formula, tipo_rolagem_visibilidade_id, resultado, created_date, updated_date, is_deleted)
+       SELECT :fichaId, :encontroCombatenteId, :campanhaId, :usuarioId, :rotulo, :formula,
               (SELECT id FROM tipo_rolagem_visibilidade WHERE codigo = :visibilidade AND is_deleted = false),
               :resultado::jsonb, NOW(), NOW(), false
        RETURNING id`,
@@ -69,6 +69,7 @@ export class RolagemRepository extends BaseRepository {
         campanhaId: dto.campanhaId,
         usuarioId: dto.usuarioId,
         rotulo: dto.rotulo,
+        formula: dto.formula,
         visibilidade: dto.visibilidade,
         resultado: JSON.stringify(dto.resultado),
       },
