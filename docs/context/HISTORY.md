@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — ui-22: escolhido o POC B ("tira colorida"), com a curvinha da topbar
+
+Da rodada de 3 POCs visuais da revisão anterior (cartão/tira colorida/linha corrida), o autor
+escolheu o **B**, com dois ajustes: mais padding (estava "muito grudado") e o mesmo acabamento do
+item ativo da topbar — a régua inferior em `--accent` que curva nos cantos por seguir o
+`border-radius` do próprio elemento (`layout.component.scss` `&--ativo`, ui-21).
+
+`historico-rolagens__item` trocou a barra lateral de 3px (`border-left`) por
+`box-shadow: inset 0 -2px 0 var(--cor-ficha, var(--border-strong))` — literalmente a mesma receita
+da topbar, cor por ficha em vez de `--accent` (mesmo motivo de sempre: rolagens de fichas
+diferentes convivendo na mesma lista) — e ganhou `border-radius: var(--radius-control)`, que é o
+que faz a régua curvar nos dois cantos inferiores em vez de ficar reta feito uma sublinha comum.
+Padding voltou para `var(--space-12) var(--space-16)` (era `var(--space-10) var(--space-12)` no
+POC B original). Sem `border` de contorno — só o fundo `--surface-2` + a régua, igual ao item da
+topbar quando ativo.
+
+Mesmas 10 rolagens da medição anterior: 780px (era 843px no cartão fechado da rodada passada —
+sem o contorno de 1px nos 4 lados, o cartão fica ligeiramente mais enxuto mesmo com padding
+igual). Verificado ao vivo contra a mesma bateria de 38 rolagens (todas as formas de expressão da
+gramática) em `1920×1080`/`360×800`, painel da ficha e feed da campanha — sem overflow, glow do
+crítico não cortado pela curva (sem `overflow: hidden` no item). Testes focados 10/10, lint sem
+erro novo, build limpo.
+
 ## 2026-09-02 — ui-22: ajuste pós-revisão (rótulo dentro da caixa, mais respiro)
 
 O autor revisou a `ui-22` ao vivo e achou a variante `[compacto]` compacta demais: o rótulo da
