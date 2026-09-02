@@ -2313,22 +2313,14 @@
     white-space: nowrap;
 }
 
-// Vida/Energia lado a lado (redesenho de comparação visual) — cada `.ficha-barra` centralizada
-// na própria metade da coluna; empilha só no mobile bem estreito.
+// Vida/Energia lado a lado quando a própria coluna comporta as duas. A ficha também aparece em
+// painéis e larguras intermediárias de desktop, portanto o viewport não é uma medida confiável:
+// abaixo de duas faixas de 192px, Energia reflui para a próxima linha em vez de deixar o stepper
+// `+` ultrapassar o cartão.
 .ficha-vitalidade {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 192px), 1fr));
     gap: 14px;
-
-    // m3-56: era `max-width: 360px` (número mágico) — não bastava pros 390/430px de teste do
-    // passe mobile. Medido ao vivo: com 2 colunas, cada `.ficha-barra` (stepper − / primitivo /
-    // stepper +, ~120px + o texto do valor) não cabia na metade da coluna de Identidade
-    // (~161px a 390px) — o botão "+" saía do viewport e ficava clicável só em parte (escondido
-    // pelo `overflow-x: clip` de segurança do `html`, que evita scroll do body mas não evita o
-    // corte visual/de toque). Substituído por `bp.mobile` (560px, cobre toda a faixa 360-430px).
-    @include bp.mobile {
-        grid-template-columns: minmax(0, 1fr);
-    }
 }
 
 // === Barras de Vida/Energia ===

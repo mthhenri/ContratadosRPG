@@ -21,6 +21,40 @@
 
 ## 1. Próxima Task
 
+**`fix-paineis-flutuantes-corpo-flex` concluída** (spec em `docs/specs/done/`, ainda sem commit):
+o corpo projetado por `app-painel-flutuante` agora é uma coluna flexível. O `CadernoFlutuante`, que
+projeta escopo, busca e `.caderno__corpo` diretamente nela, volta a expandir lista e editor até a
+base da janela, em vez de deixar a maior parte do painel vazia. Filhos naturalmente compactos,
+como a calculadora, preservam sua altura porque não recebem `flex: 1`. Testes focados, suíte
+frontend completa (1510/1510) e inspeção real no tamanho compacto do relato, `1920×1080` e
+`360×800` passaram; build de produção também passou e lint terminou sem erros (mantém os avisos
+históricos do repositório).
+
+**`fix-leitor-documentos-altura-pdf` concluída** (spec em `docs/specs/done/`, ainda sem commit):
+o leitor agora envolve barra e visualizador em um corpo flexível, para o PDF preencher toda a
+altura disponível abaixo dos controles em vez de nascer com os `150px` padrão do `iframe`. A
+estrutura também preserva o leitor PDF próprio no mobile. Teste focado, suíte frontend completa
+(1508/1508) e build passaram; lint sem erros (somente os avisos históricos). Na aplicação real,
+o visualizador mediu `638×371` no cartão compacto de `640×480` que expunha o defeito e `342×633`
+no mobile `360×800`, sem área vazia indevida ou overflow horizontal.
+
+**`fix-leitor-documentos-abertura-visivel` concluída** (spec em `docs/specs/done/`, ainda sem
+commit): `app-painel-flutuante` agora limita ao viewport uma posição restaurada de
+`localStorage`, depois que a janela renderiza e também ao sair de minimizado. Assim o leitor de
+documentos não fica parcialmente fora da tela ao reabrir em outro monitor ou tamanho de janela;
+arraste, maximização, tamanho e a folha mobile foram preservados. Teste de regressão, suíte
+frontend completa (1507/1507) e build passaram; lint sem erros (mantém os avisos históricos). Na
+aplicação real, uma posição propositalmente fora da tela (`1800×900`) foi corrigida para
+`1280×600` em `1920×1080`; no mobile `360×800`, o painel ocupou `344×784` com margem de `8px`,
+sem overflow.
+
+**`fix-coluna-vitalidade-energia` concluída** (commit `306a971`, spec em `docs/specs/done/`): a
+grade do bloco Vida/Energia da ficha passou a se ajustar pela largura disponível da própria coluna,
+em vez do viewport. Com menos de espaço para duas barras completas, Energia reflui para a linha
+seguinte e os steppers continuam integralmente dentro do cartão. Teste focado e build de produção
+passaram; lint sem erro novo (somente avisos preexistentes). Verificação ao vivo em `1920×1080` e
+`360×800`: `scrollWidth` ficou igual à largura do bloco nos dois casos, sem overflow horizontal.
+
 **`ui-12-tokens-semanticos-de-estado` concluída** (commit `4529cd8`, spec em `docs/specs/done/`):
 `--erro`/`--accent-press` desacoplam erro e a severidade `perigo` do `--accent` trocável pelo
 usuário; testes focados 36/36, build e lint limpos, verificação visual em

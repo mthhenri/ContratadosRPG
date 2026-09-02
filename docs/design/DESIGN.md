@@ -279,9 +279,10 @@ depende de **quanto a interação bloqueia o resto da tela** e de **quem é dono
 - **`.painel-flutuante`** — não bloqueia nada. O resto da tela continua clicável, rolável e
   interagível enquanto o painel está aberto (por design: o jogador rola dados com a calculadora
   aberta, o mestre lê o Sistema enquanto acompanha o combate). Arrasta, lembra posição e estado
-  minimizado entre sessões (`localStorage`, por `[id]`), empilha por z-index quando mais de um está
-  aberto ao mesmo tempo. Use para uma ferramenta de apoio que o usuário mantém aberta *enquanto*
-  faz outra coisa — calculadora, documentos de referência, caderno de anotações.
+  minimizado entre sessões (`localStorage`, por `[id]`) e limita a posição salva ao viewport ao
+  abrir ou restaurar, empilha por z-index quando mais de um está aberto ao mesmo tempo. Use para
+  uma ferramenta de apoio que o usuário mantém aberta *enquanto* faz outra coisa — calculadora,
+  documentos de referência, caderno de anotações.
 - **Painel lateral de 500px** (`HistoricoRolagensSidebar`, `InventarioEsquadraoSidebar` — sem
   primitivo próprio ainda, dois consumidores com a mesma métrica) — desliza da borda da tela,
   largura fixa de 500px no desktop e tela cheia no mobile. Não bloqueia o restante da coluna
@@ -306,6 +307,11 @@ renderizada (`obterElemento()`) para o consumidor medir o próprio redimensionam
 some com `[hidden]`, não `@if`, ao minimizar — o iframe do leitor de documentos preserva página,
 zoom e rolagem do PDF em vez de recarregar ao restaurar, e a mesma escolha beneficia de graça
 qualquer conteúdo futuro que se importe com o próprio estado interno.
+
+O corpo projetado pelo primitivo é uma **coluna flexível** (`flex: 1; min-height: 0`): controles
+fixos de cada consumidor ficam no fluxo normal, e a região que deve preencher o restante declara
+o seu próprio `flex: 1; min-height: 0`. Esse contrato mantém caderno, leitor e futuros utilitários
+com a altura íntegra sem obrigar calculadoras ou conteúdos naturalmente compactos a crescer.
 
 ### Acabamento do botão (`ui-19`)
 

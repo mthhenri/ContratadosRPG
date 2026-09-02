@@ -5,6 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PainelFlutuante } from './painel-flutuante.component';
 
+interface DefinicaoComponenteComEstilos {
+  readonly ɵcmp: {
+    readonly styles: readonly string[];
+  };
+}
+
 /**
  * Prova o primitivo de painel flutuante (ui-17): foco preso e devolvido ao gatilho, Escape
  * fechando, minimizar/posição persistindo em `localStorage` por `[id]` — o contrato que os três
@@ -231,6 +237,34 @@ describe('PainelFlutuante', () => {
     expect(janela(segunda)!.style.top).toBe('33px');
   });
 
+  it(
+    "ao abrir, limita uma posição persistida que ficou fora do viewport e salva a correção",
+    async () => {
+      localStorage.setItem(
+        "contratados-rpg:painel-flutuante:teste-painel",
+        JSON.stringify({ x: 900, y: 700, minimizado: false }),
+      );
+      const fixture = montar();
+      fixture.componentInstance.aberto.set(true);
+      fixture.detectChanges();
+
+      const elemento = janela(fixture)!;
+      vi.spyOn(elemento, "getBoundingClientRect").mockReturnValue(
+        criarRetangulo({ left: 900, top: 700, width: 640, height: 480 }),
+      );
+      await flush();
+      fixture.detectChanges();
+
+      const xEsperado = Math.max(0, window.innerWidth - 640);
+      const yEsperado = Math.max(0, window.innerHeight - 480);
+      expect(elemento.style.left).toBe(`${xEsperado}px`);
+      expect(elemento.style.top).toBe(`${yEsperado}px`);
+      expect(
+        JSON.parse(localStorage.getItem("contratados-rpg:painel-flutuante:teste-painel")!),
+      ).toMatchObject({ x: xEsperado, y: yEsperado });
+    },
+  );
+
   it('instâncias com [id] diferentes não compartilham posição/minimizado', () => {
     const primeira = montar('painel-x');
     primeira.componentInstance.aberto.set(true);
@@ -266,6 +300,15 @@ describe('PainelFlutuante', () => {
     const fixture = montar();
     const debug = fixture.debugElement.query(By.directive(PainelFlutuante));
     expect(debug.componentInstance).toBeInstanceOf(PainelFlutuante);
+  });
+
+  it("organiza o conteúdo projetado em uma coluna flexível para preencher a janela", () => {
+    const estilos = (PainelFlutuante as unknown as DefinicaoComponenteComEstilos).ɵcmp.styles.join(
+      '\n',
+    );
+    expect(estilos).toMatch(
+      /painel-flutuante__corpo[^}]*display:\s*flex;[^}]*flex-direction:\s*column/,
+    );
   });
 });
 

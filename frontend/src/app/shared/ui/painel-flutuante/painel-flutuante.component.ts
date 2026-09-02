@@ -121,7 +121,12 @@ export class PainelFlutuante {
         this.origemFoco = this.documento.activeElement as HTMLElement | null;
         this.trazerParaFrente();
         if (!this.minimizadoInterno()) {
-          untracked(() => setTimeout(() => this.janela()?.nativeElement.focus()));
+          untracked(() =>
+            setTimeout(() => {
+              this.limitarPosicaoAoViewport();
+              this.janela()?.nativeElement.focus();
+            }),
+          );
         }
       } else if (!aberto && this.abertoAnterior) {
         const destino = this.origemFoco;
@@ -153,7 +158,10 @@ export class PainelFlutuante {
   restaurar(): void {
     this.definirMinimizado(false);
     this.trazerParaFrente();
-    setTimeout(() => this.janela()?.nativeElement.focus());
+    setTimeout(() => {
+      this.limitarPosicaoAoViewport();
+      this.janela()?.nativeElement.focus();
+    });
   }
 
   protected alternarMinimizar(): void {
@@ -202,6 +210,10 @@ export class PainelFlutuante {
   }
 
   protected aoRedimensionarViewport(): void {
+    this.limitarPosicaoAoViewport();
+  }
+
+  private limitarPosicaoAoViewport(): void {
     if (this.mobile()) return;
     const retangulo = this.janela()?.nativeElement.getBoundingClientRect();
     if (!retangulo) return;
