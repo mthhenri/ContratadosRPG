@@ -1,6 +1,6 @@
-# espectadores-03-frontend-painel-visualizador.spec.md
+# m8-03-frontend-painel-visualizador.spec.md
 
-> Task 3/5 do módulo `espectadores-campanha.spec.md`.
+> Task 3/6 do módulo `m8-espectadores-campanha.spec.md`.
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md`. O análogo aprovado é a composição
 > “Sessão” e o histórico de rolagens da `CampanhaDetalhe`: mesma densidade de resultado, estados
@@ -52,15 +52,15 @@ dedicado ao vivo.
 
 ## Fora de Escopo
 
-- Prévia de jogador fiel; ela é `espectadores-04`.
-- Visão de Iniciativa/Encontro; ela é `espectadores-05`, entregue como gatilho/seção à parte do
+- Prévia de jogador fiel; ela é `m8-04`.
+- Visão de Iniciativa/Encontro; ela é `m8-05`, entregue como gatilho/seção à parte do
   feed de rolagens, não dentro dele. Fichas ou documentos seguem fora do painel.
 - Alterações nos componentes canônicos de resultado de rolagem, salvo correção estritamente
   necessária e especificada em task própria.
 
 ## Dependências
 
-- `espectadores-02-backend-permissoes-projecoes`.
+- `m8-02-backend-permissoes-projecoes`.
 - `m2-19-painel-campanha-detalhe-mestre-esquadrao` e `m3-27-historico-rolagem`.
 - `docs/design/DESIGN.md` e skill `verify`.
 

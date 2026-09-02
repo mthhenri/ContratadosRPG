@@ -1,6 +1,6 @@
-# espectadores-02-backend-permissoes-projecoes.spec.md
+# m8-02-backend-permissoes-projecoes.spec.md
 
-> Task 2/5 do módulo `espectadores-campanha.spec.md`.
+> Task 2/6 do módulo `m8-espectadores-campanha.spec.md`.
 
 ## Objetivo
 
@@ -54,7 +54,7 @@ recortes de leitura que protegem o Painel do espectador e a prévia do jogador.
 
 ## Dependências
 
-- `espectadores-01-papel-convite-contratos`.
+- `m8-01-papel-convite-contratos`.
 - `m3-27-historico-rolagem`, `m3-51-permissoes-granulares-acesso` e `tempo-real`.
 
 ## Riscos e mitigação

@@ -1,6 +1,6 @@
-# espectadores-05-visao-iniciativa-encontro.spec.md
+# m8-05-visao-iniciativa-encontro.spec.md
 
-> Task 5/6 do módulo `espectadores-campanha.spec.md` (M8).
+> Task 5/6 do módulo `m8-espectadores-campanha.spec.md`.
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md`. O análogo aprovado é a própria **visão
 > espectador do jogador** no Encontro (`m7-06-frontend-visao-jogador`, `frontend/src/app/modules/
@@ -17,19 +17,19 @@ ao encontro).
 
 ## Entregáveis
 
-1. Backend: estender a resolução de capacidades de `espectadores-02` para que a projeção de leitura
+1. Backend: estender a resolução de capacidades de `m8-02` para que a projeção de leitura
    do painel de espectador também aceite consultar o encontro ativo da campanha, reaproveitando o
    mesmo serviço/mapper que já monta a visão do jogador (`m7-04`/`m7-06`) — incluindo a regra de
    revelação de criatura/NPC já existente. Nenhuma query nova filtra combatente no frontend.
 2. `CampanhaGateway` mantém o espectador na mesma sala `campanha:<id>` (já concedida em
-   `espectadores-02`) e confirma que ele recebe `encontro:alterado` só com o recorte permitido —
+   `m8-02`) e confirma que ele recebe `encontro:alterado` só com o recorte permitido —
    sem eventos de condução que só o mestre deveria receber, se algum existir.
-3. Frontend: dentro do Painel do espectador (`espectadores-03`), um gatilho "Ver Iniciativa"
+3. Frontend: dentro do Painel do espectador (`m8-03`), um gatilho "Ver Iniciativa"
    aparece somente quando há encontro ativo na campanha e abre a mesma composição de tela usada
    pela visão do jogador, em modo espectador — sem `Voltar`/`Avançar`/`Rolar tudo`/`Encerrar`, sem
    steppers de vida, sem edição de combatente e sem o fluxo de "rolar minha iniciativa" (que não se
    aplica: a conta não tem ficha no encontro).
-4. A prévia de jogador (`espectadores-04`) herda o mesmo comportamento sem trabalho extra: como ela
+4. A prévia de jogador (`m8-04`) herda o mesmo comportamento sem trabalho extra: como ela
    já reutiliza a composição real da visão de jogador, o encontro ativo aparece para o mestre em
    prévia exatamente como o jogador-alvo o veria, log incluído.
 5. Testes de service/gateway e de página cobrem: espectador com encontro ativo vê ordem/turno/
@@ -59,7 +59,7 @@ ao encontro).
 
 ## Dependências
 
-- `espectadores-02-backend-permissoes-projecoes` e `espectadores-03-frontend-painel-visualizador`.
+- `m8-02-backend-permissoes-projecoes` e `m8-03-frontend-painel-visualizador`.
 - `m7-04-backend-encontro-conducao`, `m7-06-frontend-visao-jogador`, `m7-07-frontend-log-encontro`
   e `m7-13-acesso-iniciativa-campanha-jogador`.
 - `docs/design/DESIGN.md` e skill `verify`.

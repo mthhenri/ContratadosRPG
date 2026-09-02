@@ -1,6 +1,6 @@
-# espectadores-01-papel-convite-contratos.spec.md
+# m8-01-papel-convite-contratos.spec.md
 
-> Task 1/5 do módulo `espectadores-campanha.spec.md`.
+> Task 1/6 do módulo `m8-espectadores-campanha.spec.md`.
 
 ## Objetivo
 
@@ -35,7 +35,7 @@ independente, sem mudar ainda os fluxos REST ou as telas.
 ## Fora de Escopo
 
 - Endpoint que aceita o código, mudança de papel efetiva, WebSocket ou interface.
-- Alterar permissões de ficha/rolagem; isso é `espectadores-02`.
+- Alterar permissões de ficha/rolagem; isso é `m8-02`.
 
 ## Dependências
 

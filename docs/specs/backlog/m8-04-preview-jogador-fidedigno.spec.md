@@ -1,6 +1,6 @@
-# espectadores-04-preview-jogador-fidedigno.spec.md
+# m8-04-preview-jogador-fidedigno.spec.md
 
-> Task 4/5 do módulo `espectadores-campanha.spec.md`.
+> Task 4/6 do módulo `m8-espectadores-campanha.spec.md`.
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md`. O análogo aprovado é a própria visão de
 > jogador de `CampanhaDetalhe` (`m2-20`/`m2-21`): shell, densidade, navegação, responsividade e
@@ -18,7 +18,7 @@ quem está olhando.
 1. Substituir a ação atual por “Prévia de jogador”. O mestre escolhe apenas membros `JOGADOR`
    ativos; selecionar um abre rota dedicada de prévia. Espectadores e o próprio mestre não são
    alvos dessa ação.
-2. A rota consome exclusivamente a projeção de alvo de `espectadores-02`. A composição reutiliza
+2. A rota consome exclusivamente a projeção de alvo de `m8-02`. A composição reutiliza
    os mesmos componentes e os mesmos ramos da visão normal de jogador (ficha própria, fichas
    concedidas, Rolagens e Sessão), sem montar uma cópia de markup com dados carregados como mestre.
 3. Inserir uma barra persistente “Visualizando como <nome> · prévia somente leitura” e uma ação
@@ -54,8 +54,8 @@ quem está olhando.
 
 ## Dependências
 
-- `espectadores-02-backend-permissoes-projecoes` e
-  `espectadores-03-frontend-painel-visualizador`.
+- `m8-02-backend-permissoes-projecoes` e
+  `m8-03-frontend-painel-visualizador`.
 - `m2-20-painel-campanha-detalhe-jogador`, `m2-21-painel-jogador-abas-ficha` e
   `m3-51-permissoes-granulares-acesso`.
 - `docs/design/DESIGN.md` e skill `verify`.

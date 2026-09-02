@@ -271,9 +271,9 @@ concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 | `ui-22`…`ui-23` | frontend/design system | duas specs restantes da auditoria visual (resultado de rolagem compacto, stat sem valor/rodapé do cartão) — não citadas na ordem sugerida original como bloqueantes de milestone |
-| `espectadores-01`…`06` | campanha (M8) | papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro — módulo novo, ainda não iniciado |
+| `m8-01`…`m8-06` | campanha (M8) | papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro — módulo novo, ainda não iniciado |
 
-Milestones ainda não abertos: `m5-guia-missao` e o M8 `espectadores-campanha` (specs prontas em
+Milestones ainda não abertos: `m5-guia-missao` e o M8 `m8-espectadores-campanha` (specs prontas em
 `docs/specs/backlog/`, aguardando início).
 
 ---
@@ -313,7 +313,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
-| M8 | Espectadores e Prévias de Campanha | **não iniciado** — specs `espectadores-01`…`06` prontas em `docs/specs/backlog/` (papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
+| M8 | Espectadores e Prévias de Campanha | **não iniciado** — specs `m8-01`…`m8-06` prontas em `docs/specs/backlog/` (papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
 
 ---
 

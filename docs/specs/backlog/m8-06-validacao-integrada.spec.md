@@ -1,6 +1,6 @@
-# espectadores-06-validacao-integrada.spec.md
+# m8-06-validacao-integrada.spec.md
 
-> Task 6/6 e gate obrigatório do módulo `espectadores-campanha.spec.md` (M8).
+> Task 6/6 e gate obrigatório do módulo `m8-espectadores-campanha.spec.md`.
 
 > **Antes de qualquer UI:** ler `docs/design/DESIGN.md` e usar a skill `verify` na aplicação real.
 
@@ -21,7 +21,7 @@ as duas formas de prévia se comportam corretamente entre contas e em desktop/mo
 4. Cenário de encontro ativo: mestre inicia um combate com um NPC não revelado; confirmar que o
    espectador vê ordem/turno/rodada/cartões de combatente e log igual ao jogador, o NPC oculto
    continua oculto para ele, e nenhum controle de condução nem "rolar minha iniciativa" aparece ou
-   funciona por rota direta (`espectadores-05`).
+   funciona por rota direta (`m8-05`).
 5. Inspeção visual pessoal do fluxo completo: gestão de convites/papel pelo mestre, entrada e
    feed do espectador, visão de Iniciativa do espectador, prévia do espectador pelo mestre, e
    prévia de jogador para alvo com/sem ficha. Registrar análogo, estados, viewports, achados e
@@ -47,9 +47,9 @@ as duas formas de prévia se comportam corretamente entre contas e em desktop/mo
 
 ## Dependências
 
-- `espectadores-01-papel-convite-contratos`, `espectadores-02-backend-permissoes-projecoes`,
-  `espectadores-03-frontend-painel-visualizador`, `espectadores-04-preview-jogador-fidedigno` e
-  `espectadores-05-visao-iniciativa-encontro`.
+- `m8-01-papel-convite-contratos`, `m8-02-backend-permissoes-projecoes`,
+  `m8-03-frontend-painel-visualizador`, `m8-04-preview-jogador-fidedigno` e
+  `m8-05-visao-iniciativa-encontro`.
 - `docs/design/DESIGN.md`, skill `verify` e `task-flow`.
 
 ## Riscos e mitigação

@@ -1,10 +1,10 @@
-# espectadores-campanha.spec.md
+# m8-espectadores-campanha.spec.md
 
 > **Milestone M8 (número sugerido, não decisão de roadmap fechada — ver `docs/context/IDEAS.md`) —
 > Espectadores e Prévias de Campanha.** Nasce do pedido do autor em 2026-09-02 para permitir que
 > pessoas acompanhem uma sessão sem se tornarem jogadores e para tornar a prévia do mestre fiel à
 > visão real de um jogador. Este arquivo é guarda-chuva: implementar somente pelas tasks
-> `espectadores-01`…`espectadores-06` abaixo.
+> `m8-01`…`m8-06` abaixo.
 
 ## Objetivo
 
@@ -44,7 +44,7 @@ servidor-orientada das permissões e dos dados que o jogador escolhido realmente
    espectador ganha a mesma visão read-only que o jogador já tem (`m7-06`/`m7-07`): ordem, turno,
    rodada, cartões de combatente e log do encontro, com a mesma regra de revelação de NPC/criatura
    — sem ampliar o que o jogador já vê. Ele nunca conduz o encontro nem rola a própria iniciativa
-   (não tem ficha). Detalhado em `espectadores-05-visao-iniciativa-encontro`.
+   (não tem ficha). Detalhado em `m8-05-visao-iniciativa-encontro`.
 
 ## Matriz de permissões
 
@@ -65,17 +65,16 @@ servidor-orientada das permissões e dos dados que o jogador escolhido realmente
 
 | Task | Camada | Conteúdo | Depende de |
 |---|---|---|---|
-| `espectadores-01` | banco + shared | Papel, segundo convite, DTOs, contratos e compatibilidade de dados existentes. | — |
-| `espectadores-02` | backend + tempo real | Entrada determinada pelo código, gestão de papel, permissões e projeções seguras. | `espectadores-01` |
-| `espectadores-03` | frontend | Entrada, gestão de convites/membros e Painel do espectador ao vivo. | `espectadores-02` |
-| `espectadores-04` | backend + frontend | Prévia fiel da visão de jogador, sem usar os privilégios do mestre. | `espectadores-02`, `espectadores-03` |
-| `espectadores-05` | backend + frontend | Visão read-only de Iniciativa/Encontro ativo, reaproveitando a tela do jogador. | `espectadores-02`, `espectadores-03` |
-| `espectadores-06` | integração + visual | Regressão de permissões, sessão em tempo real e gate visual desktop/mobile. | `espectadores-03`, `espectadores-04`, `espectadores-05` |
+| `m8-01` | banco + shared | Papel, segundo convite, DTOs, contratos e compatibilidade de dados existentes. | — |
+| `m8-02` | backend + tempo real | Entrada determinada pelo código, gestão de papel, permissões e projeções seguras. | `m8-01` |
+| `m8-03` | frontend | Entrada, gestão de convites/membros e Painel do espectador ao vivo. | `m8-02` |
+| `m8-04` | backend + frontend | Prévia fiel da visão de jogador, sem usar os privilégios do mestre. | `m8-02`, `m8-03` |
+| `m8-05` | backend + frontend | Visão read-only de Iniciativa/Encontro ativo, reaproveitando a tela do jogador. | `m8-02`, `m8-03` |
+| `m8-06` | integração + visual | Regressão de permissões, sessão em tempo real e gate visual desktop/mobile. | `m8-03`, `m8-04`, `m8-05` |
 
-**Ordem:** `espectadores-01 → espectadores-02 → espectadores-03`, depois `espectadores-04` e
-`espectadores-05` em paralelo (independentes entre si), fechando com `espectadores-06`. A última
-task é obrigatória: a utilidade do módulo depende de confirmar a separação real entre os três
-papéis, não apenas de esconder controles no frontend.
+**Ordem:** `m8-01 → m8-02 → m8-03`, depois `m8-04` e `m8-05` em paralelo (independentes entre si),
+fechando com `m8-06`. A última task é obrigatória: a utilidade do módulo depende de confirmar a
+separação real entre os três papéis, não apenas de esconder controles no frontend.
 
 ## Critérios de aceite do módulo
 
@@ -116,7 +115,7 @@ papéis, não apenas de esconder controles no frontend.
   de ficha).
 - `m7-04-backend-encontro-conducao`, `m7-06-frontend-visao-jogador`, `m7-07-frontend-log-encontro`
   e `m7-13-acesso-iniciativa-campanha-jogador` (visão read-only e log do encontro reaproveitados
-  por `espectadores-05`).
+  por `m8-05`).
 - `docs/design/DESIGN.md` para qualquer task de interface.
 
 ## Riscos e mitigação
