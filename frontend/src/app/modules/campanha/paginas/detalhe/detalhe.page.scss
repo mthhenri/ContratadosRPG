@@ -77,6 +77,36 @@
         width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2));
         margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
 
+        // O painel lateral encolhe `.detalhe` sem encolher a **viewport** — as grades internas
+        // (`&__grade`/`&__esquadrao-grid`/`&__jogador`) não caem sozinhas pro layout de 1 coluna
+        // via media query (ela olha a tela inteira, não a faixa que sobrou). `bp.tablet-lateral-
+        // aberta`/`bp.mobile-lateral-aberta` (`tema/_breakpoints.scss`) somam a reserva do painel
+        // aos limiares normais, disparando o MESMO arranjo que `bp.tablet`/`bp.mobile` já usam —
+        // só pela largura que sobrou, não incondicionalmente: um desktop cheio com o painel aberto
+        // ainda tem espaço de sobra pra 2 colunas e não deve perder a grade à toa.
+        @include bp.tablet-lateral-aberta {
+            .detalhe__grade {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .detalhe__coluna--esquadrao {
+                order: -1;
+            }
+
+            .detalhe__jogador {
+                flex-direction: column;
+            }
+        }
+
+        // Limiar mais apertado: o grid fixo de 2 colunas dos cartões do Esquadrão só precisa cair
+        // pra 1 quando a largura que sobrou já é tão estreita quanto o mobile de verdade — o mesmo
+        // ponto em que `&__esquadrao-grid` já colapsa sem nenhum painel aberto.
+        @include bp.mobile-lateral-aberta {
+            .detalhe__esquadrao-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
         @include bp.mobile {
             width: 100%;
             max-width: 100%;

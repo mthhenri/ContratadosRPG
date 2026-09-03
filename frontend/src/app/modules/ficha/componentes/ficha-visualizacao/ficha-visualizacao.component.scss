@@ -175,6 +175,39 @@
         }
     }
 
+    // `apertado` (input booleano, só tem efeito em `modo="padrao"` — `&--compacto` já é bem mais
+    // estreito por natureza e não precisa disso): a página hospedeira (`FichaVisualizar`/
+    // `CriaturaVisualizar`) reservou a faixa lateral do Histórico de Rolagens e alimenta este
+    // sinal com o próprio `historicoSidebarAberto()`. As três colunas fixas (Identidade 420 +
+    // Atributos 260 + Status mín. 420) só colapsavam pelo `bp.tablet` de viewport **real** — um
+    // desktop comum (ex. 1600px) com o painel aberto nunca cruza esse limiar sozinho, mas perde os
+    // mesmos ~540px que o painel reserva, e a coluna Status vazava/espremia (achado ao vivo).
+    // `bp.tablet-lateral-aberta`/`bp.mobile-lateral-aberta` (`tema/_breakpoints.scss`) somam essa
+    // reserva ao limiar — os MESMOS pontos de colapso do `bp.tablet` acima, só disparados também
+    // pela largura que sobrou ao conteúdo.
+    &--apertado:not(&--compacto) {
+        .ficha-visao__linha-colunas {
+            @include bp.tablet-lateral-aberta {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .ficha-visao__coluna--identidade,
+        .ficha-visao__coluna--atributos {
+            @include bp.tablet-lateral-aberta {
+                width: 100%;
+            }
+        }
+
+        .ficha-visao__coluna--status {
+            @include bp.tablet-lateral-aberta {
+                min-width: 0;
+                width: 100%;
+            }
+        }
+    }
+
     // === `modo="compacto"` (m2-20, "card de equipe") — usado por `CampanhaDetalhe` pra qualquer
     // ficha exibida na coluna principal da visão do jogador (própria ou de colega). Duas colunas
     // lado a lado (não três): a esquerda empilha Identidade em cima de Atributos — resumido, com o

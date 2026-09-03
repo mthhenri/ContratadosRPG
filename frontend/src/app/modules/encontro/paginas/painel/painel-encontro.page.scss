@@ -34,6 +34,30 @@
         }
     }
 
+    // Mesma razão do comentário logo abaixo (`&--dividida .iniciativa`): o painel de rolagens
+    // encolhe `.iniciativa` sem encolher a viewport. Mas, ao contrário da divisão com a ficha do
+    // jogador (que sempre aperta pra 30%), este painel deixa espaço de sobra em telas largas — daí
+    // `bp.tablet-lateral-aberta`/`bp.mobile-lateral-aberta` (`tema/_breakpoints.scss`) em vez de um
+    // colapso incondicional: cada elemento cai no MESMO degrau que já usa em `bp.tablet`/
+    // `bp.mobile`, só disparado pela largura que sobrou ao conteúdo.
+    &--lateral-aberta .iniciativa {
+        @include bp.tablet-lateral-aberta {
+            .painel,
+            .grade,
+            .historico__lista {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @include bp.mobile-lateral-aberta {
+            .painel,
+            .grade,
+            .historico__lista {
+                grid-template-columns: 1fr;
+            }
+        }
+    }
+
     &--dividida {
         .iniciativa {
             flex: 0 0 30%;

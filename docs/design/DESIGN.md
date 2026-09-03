@@ -136,6 +136,13 @@ Media queries são avaliadas em tempo de compilação e não leem `var(--…)` �
 um token **Sass**, não uma CSS custom property (não viola a proibição de hex/raio hardcoded, que
 trata de valor visual, não de estrutura responsiva).
 
+Uma rota que reserva `--largura-painel-lateral` (Histórico de Rolagens, Inventário de Esquadrão)
+fica mais estreita que a viewport sozinha sugere — os mixins `bp.tablet-lateral-aberta`/
+`bp.mobile-lateral-aberta` somam a reserva máxima do painel (`$reserva-painel-lateral`, `540px` =
+`500px` + `2×20px` de margem) a `$bp-tablet`/`$bp-mobile`, para que o mesmo arranjo de 1 coluna
+dispare pela largura que sobrou ao conteúdo, não pela tela inteira. Use-os em vez de `bp.tablet`/
+`bp.mobile` sempre que o CSS estiver sob um modificador de painel lateral aberto.
+
 Toda verificação visual do projeto usa três viewports fixos — nunca a janela padrão do navegador:
 **mobile `360×800`** (Galaxy S20 FE), **tela dividida `960×1080`** (metade de um FullHD, para
 ficha/campanha ao lado de mapa ou chamada) e **desktop `1920×1080`** (FullHD) — ver

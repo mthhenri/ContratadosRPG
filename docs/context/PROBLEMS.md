@@ -104,3 +104,20 @@
   `notificacao.component.scss` já tem.
 - **Desde:** encontrado durante a `ui-20` (2026-09-02), fora do recorte da task (arquivo não
   tocado pela spec).
+
+### P-044 — Itens da topbar se sobrepõem em telas por volta de 960px de largura · `ABERTO` · frontend
+
+- **Sintoma:** em `~960px` de largura (o viewport de "tela dividida" da verificação visual), o
+  item de navegação "Documentos" e o seletor de usuário (nome + avatar) do `LayoutComponent`
+  sobrepõem texto um do outro — sem relação com nenhum painel lateral aberto, reproduz igual com
+  Histórico/Inventário fechados.
+- **Causa:** não investigada. A faixa de navegação (`Campanhas · Fichas · Simulação ·
+  Documentos`) mais o seletor de usuário parecem não ter um breakpoint entre o desktop cheio e o
+  colapso mobile (`bp.mobile`, 560px) — 960px cai nesse vão.
+- **Contorno:** nenhum.
+- **Correção:** dar à faixa de navegação da topbar um tratamento intermediário (esconder rótulos,
+  virar menu, ou truncar) antes de `bp.mobile`, ou reavaliar o breakpoint de tablet (`1080px`) da
+  topbar especificamente.
+- **Desde:** encontrado ao verificar `painéis laterais: fecha de verdade a exclusão mútua e para
+  de espremer a rota` (2026-09-02) — fora do recorte da task, `LayoutComponent` não foi tocado.
+

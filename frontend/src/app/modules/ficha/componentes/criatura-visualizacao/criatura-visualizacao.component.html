@@ -1,4 +1,8 @@
-<article class="criatura" [style.--cor-modificador-fraca]="modificadorCorFraca()">
+<article
+    class="criatura"
+    [class.criatura--apertado]="apertado()"
+    [style.--cor-modificador-fraca]="modificadorCorFraca()"
+>
     <!-- Barra superior: rótulo + chip de classificação — mesma estrutura de `ficha-visao__topo`
        (FichaVisualizacao), movida pra dentro do componente (era da página) pra bater exatamente
        com o padrão do jogador, inclusive o traço divisor. -->

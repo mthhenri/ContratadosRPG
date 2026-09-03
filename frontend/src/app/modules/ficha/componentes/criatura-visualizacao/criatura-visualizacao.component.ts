@@ -166,6 +166,15 @@ export class CriaturaVisualizacao {
   /** Dono (mestre) edita; visualizador revelado é só-leitura — mesmo sinal de `FichaVisualizacao.ajustavel`. */
   readonly ajustavel = input.required<boolean>();
 
+  /**
+   * `true` quando a página hospedeira reservou a faixa lateral do Histórico de Rolagens
+   * (`--largura-painel-lateral`) e por isso está mais estreita do que a viewport sugere —
+   * `CriaturaVisualizar` alimenta com o próprio `historicoSidebarAberto()`. Mesmo sinal de
+   * `FichaVisualizacao.apertado` (ver SCSS): dispara o colapso das 3 colunas também pela largura
+   * que sobrou ao conteúdo, não só pela viewport real.
+   */
+  readonly apertado = input(false);
+
   readonly vitalidadeMudou = output<AjusteCriaturaVitalidade>();
   readonly defesaMudou = output<number>();
   readonly identidadeMudou = output<FichaCriaturaIdentidadeDto>();

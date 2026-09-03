@@ -1,4 +1,4 @@
-import { Component, input, model, output, signal } from '@angular/core';
+import { Component, effect, input, model, output, signal, untracked } from '@angular/core';
 import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/campanha';
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
 import { Icone } from '../icone/icone.component';
@@ -22,28 +22,42 @@ export class InventarioEsquadraoSidebar {
   protected readonly saindo = signal(false);
   private encerramentoPendente: ReturnType<typeof setTimeout> | null = null;
 
+  constructor() {
+    // Reage a `aberto` mudar por QUALQUER via — clique do próprio gatilho ou a página fechando
+    // este painel de fora (mútua exclusão com outra barra lateral, ex. `CampanhaDetalhe`) —, não
+    // só pelo antigo `alternar`/`fechar` interno. Sem isto, um fechamento externo (via
+    // `[(aberto)]`) nunca desmontava o painel: `painelRenderizado` ficava preso em `true` e o
+    // painel continuava renderizado por baixo do que abriu depois, reaparecendo se aquele outro
+    // fosse fechado.
+    effect(() => {
+      if (this.aberto()) {
+        if (this.encerramentoPendente) {
+          clearTimeout(this.encerramentoPendente);
+          this.encerramentoPendente = null;
+        }
+        this.painelRenderizado.set(true);
+        this.saindo.set(false);
+        return;
+      }
+      untracked(() => {
+        if (!this.painelRenderizado()) {
+          return;
+        }
+        this.saindo.set(true);
+        this.encerramentoPendente = setTimeout(() => {
+          this.painelRenderizado.set(false);
+          this.saindo.set(false);
+          this.encerramentoPendente = null;
+        }, 260);
+      });
+    });
+  }
+
   protected alternar(): void {
-    if (this.aberto()) {
-      this.fechar();
-      return;
-    }
-    if (this.encerramentoPendente) {
-      clearTimeout(this.encerramentoPendente);
-      this.encerramentoPendente = null;
-    }
-    this.painelRenderizado.set(true);
-    this.saindo.set(false);
-    this.aberto.set(true);
+    this.aberto.update((atual) => !atual);
   }
 
   protected fechar(): void {
-    if (!this.aberto()) return;
     this.aberto.set(false);
-    this.saindo.set(true);
-    this.encerramentoPendente = setTimeout(() => {
-      this.painelRenderizado.set(false);
-      this.saindo.set(false);
-      this.encerramentoPendente = null;
-    }, 260);
   }
 }

@@ -472,6 +472,16 @@ export class FichaVisualizacao {
    * História seguem só na ficha completa (via "Abrir ficha completa").
    */
   readonly modo = input<'padrao' | 'compacto'>('padrao');
+
+  /**
+   * `true` quando a página hospedeira reservou a faixa lateral do Histórico de Rolagens
+   * (`--largura-painel-lateral`) e por isso está mais estreita do que a viewport sugere —
+   * `FichaVisualizar`/`CriaturaVisualizar` alimentam com o próprio `historicoSidebarAberto()`. Só
+   * tem efeito em `modo="padrao"` (ver SCSS): dispara o mesmo colapso de 3 colunas que `bp.tablet`
+   * já faz, só que também pela largura que sobrou ao conteúdo, não só pela viewport real.
+   */
+  readonly apertado = input(false);
+
   /** Autoriza oferecer a transferência de itens desta ficha para a base da campanha. */
   readonly podeMandarParaBase = input(false);
 

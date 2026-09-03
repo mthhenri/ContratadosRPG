@@ -33,3 +33,27 @@ $alvo-toque: 44px;
         @content;
     }
 }
+
+// Reserva máxima da faixa lateral de consulta (`--largura-painel-lateral`, `docs/design/tema/
+// _tokens.scss`): painel de até 500px + 20px de margem de cada lado = 540px. A media query não lê
+// `var(--…)` (nota acima), então o valor é o mesmo 500px+2×20px, só repetido aqui em Sass puro
+// para derivar os dois limiares abaixo.
+$reserva-painel-lateral: 540px;
+
+// Uma rota que reserva a faixa lateral (`&--lateral-aberta`/`&--dividida`, ver `detalhe.page.scss`
+// e `painel-encontro.page.scss`) fica mais estreita que a viewport sozinha sugere — os dois mixins
+// abaixo somam essa reserva aos limiares normais para que o mesmo arranjo de `bp.tablet`/
+// `bp.mobile` dispare pela largura que **sobrou** ao conteúdo, não pela tela inteira. Sem isso, o
+// conteúdo ou fica espremido numa grade de largura de desktop (tela dividida) ou perde a grade
+// mesmo sobrando espaço de sobra (desktop cheio) — os dois defeitos observados ao vivo.
+@mixin tablet-lateral-aberta {
+    @media (max-width: $bp-tablet + $reserva-painel-lateral) {
+        @content;
+    }
+}
+
+@mixin mobile-lateral-aberta {
+    @media (max-width: $bp-mobile + $reserva-painel-lateral) {
+        @content;
+    }
+}

@@ -1,5 +1,84 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — painéis laterais: colapso da grade só quando falta espaço de verdade + ficha/criatura entram no mesmo tratamento
+
+Segunda rodada de correção do mesmo par de defeitos (ver a entrada logo abaixo), a partir de
+capturas reais enviadas pelo autor depois da primeira tentativa. Duas observações novas: a
+correção anterior forçava 1 coluna em `CampanhaDetalhe`/`PainelEncontro` **sempre** que um painel
+lateral estava aberto, mesmo num desktop cheio com espaço de sobra — "ficou em linha", no relato
+do autor, uma grade inteira virando uma fileira de cartões esticados sem necessidade; e as telas
+de ficha de jogador/criatura (`FichaVisualizar`/`CriaturaVisualizar`), com o mesmo mecanismo de
+reserva lateral, nunca tinham recebido o equivalente — confirmado ao vivo pela segunda captura do
+autor, o card de Status (`.ficha-visao__linha-colunas`, 420+260+mín. 420px) continuava tentando
+caber em 3 colunas mesmo espremido.
+
+**Colapso proporcional, não incondicional.** `tema/_breakpoints.scss` ganhou dois mixins novos —
+`bp.tablet-lateral-aberta`/`bp.mobile-lateral-aberta` — que somam a reserva máxima do painel
+(`$reserva-painel-lateral: 540px` = 500px + 2×20px de margem) aos limiares existentes
+(`$bp-tablet`/`$bp-mobile`), então o mesmo arranjo de `bp.tablet`/`bp.mobile` dispara pela largura
+que **sobrou** ao conteúdo, não incondicionalmente. `detalhe.page.scss` e
+`painel-encontro.page.scss` passaram a usar esses mixins em vez do colapso fixo da rodada
+anterior: um desktop de 1920px com o painel aberto preserva a grade de 2 colunas (`450px 914px`,
+medido), e só telas efetivamente estreitas (tela dividida `960×1080`, ou qualquer largura
+squeezada abaixo do limiar derivado) colapsam.
+
+**Ficha de jogador e de criatura ganham o mesmo tratamento.** `FichaVisualizacao` e
+`CriaturaVisualizacao` são componentes com encapsulamento de estilo — o SCSS da página hospedeira
+não alcança o DOM interno deles —, então cada um ganhou um input booleano novo, `apertado`, que
+`FichaVisualizar`/`CriaturaVisualizar` alimentam com o próprio `historicoSidebarAberto()`. Sob
+`&--apertado`, os MESMOS pontos que já colapsavam em `bp.tablet` (a grade de 3 colunas
+Identidade/Atributos/Status) passam a colapsar também em `bp.tablet-lateral-aberta`. Só tem efeito
+em `modo="padrao"` (`&--apertado:not(&--compacto)`) — o card de equipe embutido já é estreito por
+natureza e não precisa disso.
+
+Testes: suíte frontend completa **1549/1549**, build passou. Verificação ao vivo com dados reais
+(ficha e criatura criadas via API com o mesmo fixture dos testes de componente) em `1920×1080`,
+`1400×900` e `960×1080`, painel aberto: a grade de `CampanhaDetalhe` preserva 2 colunas em
+`1920px` e colapsa em `960px`; a ficha de jogador preserva as 3 colunas em `1920px`
+(`flex-direction: row`) e empilha em `1400px`/`960px` (`flex-direction: column`, confirmado via
+classe `ficha-visao--apertado` e `getComputedStyle`); a ficha de criatura colapsa a grade fixa
+(`820px`, coluna única) em `1400px`. Fechado: `P-045`. Ainda aberto, sem relação com este par de
+componentes: `P-044` (sobreposição da topbar em `~960px`, pré-existente).
+
+## 2026-09-02 — painéis laterais: fecha de verdade a exclusão mútua e para de espremer a rota
+
+Verificação ao vivo, a pedido do autor, encontrou dois defeitos no par Histórico de Rolagens /
+Inventário de Esquadrão que as tarefas anteriores desta mesma sequência não cobriam.
+
+**Exclusão mútua não fechava o painel de fato.** `CampanhaDetalhe` já fechava um painel lateral
+pelo `model()` quando o outro abria (`effect` cruzado), mas cada componente só desmontava a si
+mesmo (`painelRenderizado`/`saindo`) dentro do próprio `alternar`/`fechar` — um fechamento externo
+via `[(aberto)]` nunca disparava essa saída. O painel ficava preso renderizado por baixo do que
+abriu depois e reaparecia se aquele fosse fechado, clique a clique — confirmado ao vivo: abrir o
+Inventário e clicar no gatilho do Histórico continuava mostrando "INVENTÁRIO DE ESQUADRÃO". Os
+dois componentes passaram a reagir a `aberto()` com um único `effect()` (monta/agenda a saída de
+260ms independentemente de quem mudou o sinal); `alternar`/`fechar` agora só tocam o próprio
+`aberto`.
+
+**A rota empurrada não colapsava as grades internas.** `--largura-painel-lateral` reserva até
+500px (48vw em tela dividida) da viewport, mas as grades de 2+ colunas de `CampanhaDetalhe`
+(Membros/Esquadrão) e `PainelEncontro` (`.painel`/`.grade`/`.historico__lista`) só caem para 1
+coluna por media query de largura de **tela**, não da faixa que sobrou — o mesmo problema que
+`&--dividida .iniciativa` já resolvia em `painel-encontro.page.scss` para a ficha do jogador, só
+que nunca estendido ao painel lateral. Em `960×1080` com o Inventário aberto, a área útil caía a
+459px (medido) e o grid de 2 colunas continuava de largura de desktop — a campanha renderizada
+mostrou a caixa "Membros" e os botões do cabeçalho visivelmente espremidos. `detalhe.page.scss` e
+`painel-encontro.page.scss` passaram a forçar, sob o modificador de painel aberto, o mesmo arranjo
+de 1 coluna que `bp.tablet`/`bp.mobile` já usam — sem breakpoint novo, só o gatilho trocado de
+largura de tela para o estado do painel.
+
+Testes focados dos dois componentes: **10/10**; `detalhe.page`/`painel-encontro.page`: **174/174**.
+Lint sem erros novos (2 avisos de comentário longo corrigidos antes de fechar a tarefa). Verificação
+ao vivo em `1920×1080`, `960×1080` (tela dividida) e `360×800`: abrir o Inventário e depois clicar
+em Histórico agora troca de fato o painel visível; em `960×1080` a campanha empurrada passou a
+empilhar Esquadrão/Membros em vez de espremer 2 colunas em ~230px cada, sem overflow horizontal em
+nenhum dos três viewports. Ficou de fora desta rodada, não investigado a fundo: o mesmo tipo de
+espremimento potencial dentro de `FichaVisualizacao` (`visualizar.page`/`visualizar-criatura.page`
+reservam a mesma faixa lateral para o histórico, mas não têm o equivalente de `&--lateral-aberta`
+forçando o colapso interno) e uma sobreposição de itens da topbar em `~960px` de largura mesmo sem
+nenhum painel aberto — pré-existente, sem relação com este par de componentes (registrados em
+`PROBLEMS.md` como `P-044`/`P-045`).
+
 ## 2026-09-02 — painéis laterais: saída contínua e sem sobreposição durante o retorno
 
 O Histórico de Rolagens e o Inventário de Esquadrão não são mais removidos no mesmo clique que

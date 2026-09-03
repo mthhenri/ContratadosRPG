@@ -4,11 +4,13 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** os painéis laterais de
-> histórico e inventário mantêm o DOM durante os 260ms de saída; a rota retorna à largura normal
-> no mesmo ritmo e uma reabertura cancela o fechamento pendente. A topbar permanece acima de toda
-> a transição, e a expressão ausente no histórico de testes rápidos de atributo é uma regra
-> deliberada, não uma falha de persistência.
+> **Última revisão:** 2026-09-02 · **Última decisão registrada:** abrir um painel lateral fecha de
+> fato o outro (o componente reage a `aberto` mudar por qualquer via, não só pelo próprio clique).
+> A rota/ficha empurrada por um painel só colapsa a grade quando a largura que sobrou já é estreita
+> de verdade — `bp.tablet-lateral-aberta`/`bp.mobile-lateral-aberta` somam a reserva do painel
+> (540px) aos limiares normais, em vez de colapsar sempre que o painel está aberto (regressão da
+> 1ª tentativa: "ficou em linha" num desktop cheio). Ficha de jogador/criatura ganharam o mesmo
+> tratamento via um input `apertado` novo (`P-045` fechado).
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -24,7 +26,25 @@
 
 ## 1. Próxima Task
 
-**`painel-lateral-transicao-fluida` concluída** (spec em `docs/specs/done/`, ainda sem commit):
+**Painéis laterais: exclusão mútua e colapso de grade proporcional concluído** (relato ao vivo do
+autor, duas rodadas, sem spec própria): `HistoricoRolagensSidebar`/`InventarioEsquadraoSidebar`
+passaram a reagir a `aberto()` num único `effect()`, então fechar um pelo `[(aberto)]` do outro
+agora desmonta de verdade (antes o painel forçado a fechar ficava preso renderizado por baixo do
+que abriu depois). `tema/_breakpoints.scss` ganhou `bp.tablet-lateral-aberta`/`bp.mobile-lateral-
+aberta` (limiares normais + reserva máxima do painel, 540px): `detalhe.page.scss`/`painel-
+encontro.page.scss` os usam para colapsar a grade só quando a largura que sobrou já é estreita de
+verdade — a 1ª tentativa colapsava sempre que um painel estava aberto, mesmo com espaço de sobra
+("ficou em linha" num desktop cheio, regressão relatada e corrigida na mesma rodada). `Ficha
+Visualizacao`/`CriaturaVisualizacao` ganharam um input `apertado` novo, alimentado pelo
+`historicoSidebarAberto()` da própria página, disparando o mesmo colapso que `bp.tablet` já fazia
+na grade de 3 colunas Identidade/Atributos/Status. Suíte frontend completa 1549/1549, build
+passou. Inspeção ao vivo com dados reais (ficha/criatura criadas via API) em `1920×1080`,
+`1400×900` e `960×1080`: grades preservam colunas com espaço de sobra e colapsam só quando
+squeezadas de verdade; a troca de painel visível ao alternar também foi reconfirmada. `P-045`
+fechado. Ainda aberto, sem relação com os painéis laterais: `P-044` (sobreposição pré-existente da
+topbar em `~960px`).
+
+**`painel-lateral-transicao-fluida` concluída** (spec em `docs/specs/done/`, commit `1d397b5`):
 histórico e inventário preservam a superfície por `260ms` ao fechar e deslizam para fora enquanto
 campanha, ficha de jogador, ficha de criatura e Iniciativa devolvem a largura reservada. A mesma
 curva de animação mantém o painel à direita do conteúdo durante a saída, e reabrir antes do fim
@@ -35,7 +55,7 @@ atributo é persistido e a fórmula só é mostrada na bandeja. Testes focados 1
 confirmou topbar em 52px, painel abaixo dela e ausência de sobreposição na abertura e no retorno.
 
 **`painel-lateral-abaixo-topbar-e-contexto-historico` concluída** (spec em `docs/specs/done/`,
-ainda sem commit): `--altura-topbar` é o token que alinha a barra institucional com os painéis
+commit `aa5fa82`): `--altura-topbar` é o token que alinha a barra institucional com os painéis
 laterais. Histórico e inventário abrem a partir do fim da barra, sem pintura, sombra ou backdrop
 acima dela; no mobile eles mantêm largura total somente na área restante. O histórico usa
 “Histórico de Rolagens da Campanha” no detalhe e na Iniciativa, e “Histórico de Rolagens da

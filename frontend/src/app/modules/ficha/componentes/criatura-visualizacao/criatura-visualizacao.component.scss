@@ -111,6 +111,17 @@
         }
     }
 
+    // `apertado` (input booleano): a página hospedeira (`CriaturaVisualizar`) reservou a faixa
+    // lateral do Histórico de Rolagens e alimenta este sinal com o próprio
+    // `historicoSidebarAberto()` — mesma razão e mesmo mixin de `FichaVisualizacao`
+    // (`ficha-visualizacao.component.scss`, `&--apertado`): as 3 colunas fixas só colapsavam pelo
+    // `bp.tablet` de viewport real, que um desktop comum com o painel aberto nunca cruza sozinho.
+    &--apertado &__linha-colunas {
+        @include bp.tablet-lateral-aberta {
+            grid-template-columns: 1fr;
+        }
+    }
+
     &__coluna {
         display: flex;
         flex-direction: column;
