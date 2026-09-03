@@ -4,6 +4,7 @@ import { autenticacaoGuard } from './core/guards/autenticacao.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { mestreCampanhaGuard } from './core/guards/mestre-campanha.guard';
 import { espectadorCampanhaGuard } from './core/guards/espectador-campanha.guard';
+import { previaJogadorCampanhaGuard } from './core/guards/previa-jogador-campanha.guard';
 
 export const routes: Routes = [
   {
@@ -70,6 +71,17 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./modules/campanha/paginas/espectador/espectador.page').then(
         (pagina) => pagina.CampanhaEspectador,
+      ),
+  },
+  // Prévia de jogador (m8-04) — só o mestre da campanha, para um `usuarioAlvoId` `JOGADOR` ativo
+  // (`previaJogadorCampanhaGuard`, mesmo racional de `espectadorCampanhaGuard`: usa a própria
+  // projeção como autoridade). Mesma convenção de precedência das rotas acima.
+  {
+    path: 'campanhas/:id/previa/:usuarioAlvoId',
+    canActivate: [autenticacaoGuard, previaJogadorCampanhaGuard],
+    loadComponent: () =>
+      import('./modules/campanha/paginas/previa-jogador/previa-jogador.page').then(
+        (pagina) => pagina.CampanhaPreviaJogador,
       ),
   },
   // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/campanhas`

@@ -1,5 +1,119 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — m8-04: Prévia de jogador fidedigna, substitui "Ver como jogador" (M8)
+
+Quarta task do módulo `m8-espectadores-campanha`. Objetivo: trocar o antigo "Ver como jogador"
+(um toggle local em `CampanhaDetalhe` que trocava o layout pra visão de jogador mas continuava
+carregando os dados **como mestre**, só bloqueando `pointer-events`) por uma prévia de verdade —
+os dados e as capacidades vêm do recorte do alvo, nunca dos privilégios de quem está olhando.
+
+**Backend — a projeção de m8-02 não bastava, faltavam dois recortes.** `CampanhaProjecaoService.
+recuperarPreviaJogador` (m8-02) já dava `fichas`/`rolagens` calculados para o alvo, mas não dava
+(a) a ficha **completa** (com `dados`) de nenhuma delas — só `FichaResumoDto`, sem o documento que
+`<app-ficha-visualizacao>` precisa — nem (b) a coluna "Equipe" (que exige `CampanhaMembroResumoDto`
+com `acessoCompleto` por ficha, calculado por viewer). Duas adições, as duas reusando regra já
+existente, nunca reimplementando:
+- `FichaService.recuperarFichaParaAlvo` — a mesma lógica de `recuperarFicha` (visibilidade +
+  `omitirCamposPrivados`), mas extraída para um novo núcleo privado `avaliarVisibilidadePara(ficha,
+  usuarioId)` parametrizado por `usuarioId` em vez de `JwtPayload` — permite avaliar a visibilidade
+  de uma ficha **para outro usuário** que não o requisitante. Exige requisitante mestre da campanha
+  da ficha e alvo `JOGADOR` ativo dela; lança `UnauthorizedAccessException` se o alvo não tiver
+  nenhum acesso à ficha (nunca vaza ficha alheia) e `ResourceNotFoundException` se a ficha não
+  existir ou for solta (m3-28, prévia não se aplica).
+- `CampanhaProjecaoService.recuperarPreviaJogador` passou a incluir `membros` — mesma consulta que
+  `CampanhaService.listarMembros` usa pro mestre (`CampanhaRepository.listarMembros`), mas chamada
+  com a identidade do **alvo** (`usuarioAtivoId: usuarioAlvoId, usuarioAtivoEhMestre: false`) —
+  nunca a do mestre requisitante, mesmo ele sendo quem de fato pediu. Novo método
+  `recuperarFichaPreviaJogador` delega inteiramente a `FichaService.recuperarFichaParaAlvo`; novo
+  endpoint `GET campanha/:id/previa-jogador/:usuarioAlvoId/ficha/:fichaId`.
+- Novos DTOs em `shared/`: `FichaPreviaJogadorRecuperarDto` (`fichaId`/`usuarioAlvoId`, entrada de
+  service ↔ service) e `CampanhaPreviaJogadorFichaRecuperarDto` (entrada pública do novo endpoint).
+  `CampanhaPreviaJogadorDto.membros` estendido.
+
+**Frontend — nova página, não um toggle.** `CampanhaPreviaJogador` (`/campanhas/:id/previa/
+:usuarioAlvoId`, `previaJogadorCampanhaGuard` — mesmo racional de `espectadorCampanhaGuard`,
+m8-03: usa a própria projeção como autoridade) reusa os componentes que a visão de jogador de
+`CampanhaDetalhe` já usa — `FichaVisualizacao`, `FichaRolagensPainel`, `InventarioEsquadrao`,
+`app-cartao` — sobre dados vindos só da projeção do alvo, nunca fazendo fetch "como mestre".
+`fichasPorMembro`/`equipeExibicao`/`membrosOrdenados` (a lógica de agrupamento "Equipe" de
+`CampanhaDetalhe`) foram extraídos para `campanha-equipe.util.ts`, um módulo de funções puras
+reusado pelas duas páginas — a alternativa (duplicar a lógica) violaria a regra de não repetir
+regra de apresentação entre duas telas que consomem a mesma forma de dado.
+
+**Sem mutação de verdade, não só de aparência — a parte mais delicada da task.** O critério de
+aceite exige que nenhum clique dispare REST/socket. Para controles cujo `@Output` o pai decide o
+que fazer (`ajusteVitalidade` etc. de `FichaVisualizacao`), bastou **não conectar** o output —
+por isso `[ajustavel]` pôde espelhar a permissão real do alvo (o botão aparece habilitado, como o
+alvo veria, mas emitir o evento não faz nada). Mas `podeRolar` (em `FichaVisualizacao` **e**
+`FichaRolagensPainel`) e `InventarioEsquadrao.somenteLeitura` não funcionam assim: os três
+injetam `FichaRolagemRegistroService`/chamam `CampanhaService`/`FichaService` **diretamente** de
+dentro do componente, sem passar por um `@Output` que a página pudesse recusar — não há como
+"desconectar" uma chamada que o componente decide disparar sozinho. Pra esses três, o valor foi
+travado no mais restrito (`podeRolar` sempre `false`, `somenteLeitura` sempre `true`),
+independente do que o alvo realmente poderia fazer — decisão deliberada de segurança sobre
+fidelidade visual, documentada no cabeçalho da classe. `FichaRolagemRegistroService` precisou
+entrar em `providers` da página só para a injeção não quebrar (`@Injectable()`, não
+`providedIn: 'root'`) — nunca é de fato usado, porque `podeRolar=false` bloqueia toda a UI que o
+chamaria (`@if (podeRolar())` no topo dos dois templates).
+
+**`detalhe.page` — remoção completa do mecanismo antigo.** `previewJogador`/`exibirComoMestre`/
+`usuarioIdPreview` saíram por inteiro; `exibirComoMestre()` virou `ehMestre()` em todo o template
+(6 lugares), `usuarioIdPreview()` virou `usuarioAtivoId()` (3 lugares). O picker de dois passos no
+menu kebab (1º passo lista jogadores, 2º passo "Voltar") continua — só o item final mudou de
+comportamento: `abrirPreviaJogador(membro)` navega para a rota nova em vez de setar um signal
+local. Rótulo do item "Ver como jogador" → "Prévia de jogador" (`abrirEscolhaPreviewJogador` →
+`abrirEscolhaPreviaJogador`, `escolhendoPreviewJogador` → `escolhendoPreviaJogador`). A barra
+"Visualizando como X" e `.detalhe__conteudo--bloqueado` saíram do SCSS por completo — o defeito
+`P-047` (barra sem tratamento mobile) que descrevia exatamente esse código deixou de existir
+como problema porque o código em si não existe mais; removido de `PROBLEMS.md` sem virar entrada
+de `HISTORY.md` própria (a remoção é parte desta task, não uma correção separada).
+
+**Testado:** `shared` 744/744, `backend` 530/530 (72 novos: `FichaService.recuperarFichaParaAlvo`
+7 casos — dono, concessão redigida, sem acesso, requisitante não-mestre, alvo não-JOGADOR/mestre/
+espectador, ficha solta —, `CampanhaProjecaoService` 5 casos novos — membros calculados pro alvo,
+delegação da ficha, propagação de erro, campanha divergente do `:id`), `frontend` 1585/1585 (46
+novos: guard 2, service 2, página nova 10, `detalhe.page.spec` líquido -5 — removidos 9 testes do
+mecanismo antigo, adicionados 4 do fluxo de navegação). Lint (`shared`/`backend`/`frontend`) e
+`tsc --noEmit` sem erro novo — só os avisos de aspas/`max-len` já tolerados (padrão do
+repositório inteiro). `npm run openapi:gerar-contratos` regenerado (2 rotas novas). `convencoes-
+check`: buscas mecânicas limpas (nomes/DTOs/enums, SQL, hardcode de cor/fonte/raio, `title=`
+nativo) — único acerto foi `??` de TypeScript confundido com `?` posicional de SQL, falso positivo
+já documentado na skill.
+
+**Verificado ao vivo (skill `verify`, `1920×1080` e `360×800`):** stack completo (Postgres nativo
+via `pg_ctlcluster`, backend, frontend), cenário via REST — mestre + Vera (ficha própria, 1
+rolagem pública, 1 privada) + Colega (ficha com concessão a Vera, anotação privada) + um jogador
+sem ficha. Fluxo real do menu (`Prévia de jogador` → escolher `Vera` → navega pra rota nova) até
+"Sair da prévia"; ficha da própria Vera com dados completos e sem controle de mutação ativo;
+clicar na ficha concedida do Colega troca a exibição **sem** vazar a anotação privada dele
+(`omitirCamposPrivados` provado ponta a ponta pela rota nova); alvo sem ficha mostra o estado
+vazio; rolagem privada de um alvo nunca aparece na prévia de **outro** alvo (a de Vera não aparece
+na de quem não tem ficha) mas a própria rolagem privada do alvo aparece nele mesmo — comportamento
+correto (§14: autor sempre vê a própria privada), não um vazamento; jogador comum tentando abrir
+`/previa/:outroUsuarioId` cai em `/acesso-negado`.
+
+**Dois achados só na verificação ao vivo, corrigidos antes do fecho:**
+1. Nomes na Equipe ("Vera"/"Colega") quebravam letra a letra numa coluna estreitíssima —
+   `.previa-jogador__equipe-membro` é `display:flex` (linha), e o HTML não envolvia
+   nome+fichas num wrapper `flex-direction:column` como o análogo (`.detalhe__equipe-membro-
+   corpo`) tem — nome e botão de ficha viravam itens **lado a lado** na mesma linha flex, cada
+   um espremido. Corrigido adicionando o wrapper que faltava (HTML + `&__equipe-membro-corpo`
+   no SCSS), igual ao análogo.
+2. No mobile, rolando até o fim da página, a barra fixa `.ficha-nav` (interna de
+   `<app-ficha-visualizacao modo="compacto">`) cobria a última linha da "Sessão". `.detalhe`/
+   `.visualizar` resolvem isso com uma variável `--piso-flutuante` **definida no próprio
+   container da página** (não há cascata global) e consumida no `padding-bottom` — a versão
+   inicial desta página só *consumia* `var(--piso-flutuante)` sem nunca *defini-la*, então o
+   `calc()` inteiro ficava inválido (`padding-bottom` computado em `0px`, confirmado por
+   `getComputedStyle` antes/depois). Corrigido declarando `--piso-flutuante: 0px` (`57px` no
+   mobile) em `.previa-jogador`, igual a `.detalhe`.
+
+Ambos confirmados com `getComputedStyle`/screenshot antes e depois da correção, não só lidos no
+código. Componente análogo aprovado: a visão de jogador de `CampanhaDetalhe` (m2-20/m2-21) — shell,
+densidade, Equipe/Rolagens/Sessão e o padrão de barra de contexto/somente-leitura já usado no
+projeto (`.espectador__preview-*`, m8-03) foram todos conferidos lado a lado, não só "usa os
+tokens".
+
 ## 2026-09-03 — fix pós-revisão da `m8-03`: "Sair da visualização" sem receita de tamanho
 
 O autor apontou, olhando a captura, um botão fora do padrão visual do resto do app — "Sair da

@@ -972,6 +972,12 @@ export const schemasContratosPublicos = {
                     "$ref": "#/components/schemas/FichaResumoDto"
                 }
             },
+            "membros": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/CampanhaMembroResumoDto"
+                }
+            },
             "rolagens": {
                 "type": "array",
                 "items": {
@@ -985,11 +991,33 @@ export const schemasContratosPublicos = {
         "required": [
             "campanha",
             "fichas",
+            "membros",
             "rolagens",
             "podeAcessarInventarioEsquadrao"
         ],
         "additionalProperties": false,
-        "description": "Saída da prévia de jogador (decisão de produto #6) — fichas visíveis, feed e capacidade de\nacessar o inventário de esquadrão calculados com a identidade do **alvo** (`usuarioAlvoId`),\nnunca do mestre que requisita. Somente leitura: não existe DTO de mutação para esta projeção."
+        "description": "Saída da prévia de jogador (decisão de produto #6) — fichas visíveis, feed e capacidade de\nacessar o inventário de esquadrão calculados com a identidade do **alvo** (`usuarioAlvoId`),\nnunca do mestre que requisita. Somente leitura: não existe DTO de mutação para esta projeção.\n\n`membros` (m8-04) é a mesma forma de `CampanhaMembroResumoDto` que a visão normal de jogador\nconsome para montar a coluna \"Equipe\" — mas com `acessoCompleto`/visibilidade de ficha oculta\ncalculados como o **alvo** veria (reusa `CampanhaRepository.listarMembros` passando a\nidentidade do alvo, nunca a do mestre que requisita — mesmo racional de `fichas`). O grid\n\"Esquadrão\"/coluna \"Membros\" (visão de mestre) não faz parte desta projeção — só o que a visão\nde **jogador** usa."
+    },
+    "CampanhaPreviaJogadorFichaRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "usuarioAlvoId": {
+                "type": "number"
+            },
+            "fichaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "usuarioAlvoId",
+            "fichaId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da ficha completa dentro da prévia de jogador (m8-04, complemento `PreviaJogadorFicha`\nantes do verbo) — `campanhaId`/`usuarioAlvoId`/`fichaId` vêm todos do `@Param`. `campanhaId` é\nchecado contra a campanha real da ficha (defesa em profundidade — a autorização de fato é toda\nde `FichaService.recuperarFichaParaAlvo`, que nunca recebe `campanhaId`: deriva a campanha da\nprópria ficha)."
     },
     "EncontroLinhaDto": {
         "type": "object",
@@ -2867,6 +2895,23 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Saída da recuperação individual — a ficha completa (identidade/posse + documento de jogo).\n`campanhaId` `null` para uma ficha solta no acervo (m3-28)."
+    },
+    "FichaPreviaJogadorRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "fichaId": {
+                "type": "number"
+            },
+            "usuarioAlvoId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "fichaId",
+            "usuarioAlvoId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da recuperação de ficha completa para a **prévia de jogador** (`m8-espectadores-\ncampanha`, m8-04) — complemento `PreviaJogador` antes do verbo, campos explícitos (composta,\nnão `{ id }`, mesmo padrão de `CampanhaMembroInternoRecuperarDto`). Só o mestre da campanha\npode requisitar; a visibilidade/redação de `dados` (`omitirCamposPrivados`) é calculada com a\nidentidade do **alvo** (`usuarioAlvoId`), nunca do mestre — a service nunca reimplementa a\nregra de `validarPermissaoVisualizacao`, só a avalia para outro usuário."
     },
     "FichaAlterarDto": {
         "type": "object",
@@ -5384,6 +5429,14 @@ export const operacoesContratosPublicos = {
         "tag": "Campanhas",
         "publica": false,
         "responseSchema": "CampanhaPreviaJogadorDto"
+    },
+    "CampanhaProjecaoController_recuperarFichaPreviaJogador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/previa-jogador/:usuarioAlvoId/ficha/:fichaId",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "FichaRecuperadaDto"
     },
     "EncontroController_criar": {
         "controller": "EncontroController",

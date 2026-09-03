@@ -256,6 +256,19 @@ export interface FichaRecuperadaDto {
 }
 
 /**
+ * Entrada da recuperação de ficha completa para a **prévia de jogador** (`m8-espectadores-
+ * campanha`, m8-04) — complemento `PreviaJogador` antes do verbo, campos explícitos (composta,
+ * não `{ id }`, mesmo padrão de `CampanhaMembroInternoRecuperarDto`). Só o mestre da campanha
+ * pode requisitar; a visibilidade/redação de `dados` (`omitirCamposPrivados`) é calculada com a
+ * identidade do **alvo** (`usuarioAlvoId`), nunca do mestre — a service nunca reimplementa a
+ * regra de `validarPermissaoVisualizacao`, só a avalia para outro usuário.
+ */
+export interface FichaPreviaJogadorRecuperarDto {
+  readonly fichaId: number;
+  readonly usuarioAlvoId: number;
+}
+
+/**
  * Entrada pública da alteração completa da ficha — `nome` + documento de jogo `dados`. Só o dono
  * ou o mestre podem alterar (§14); a permissão e a validação via `shared/regras` são arbitradas
  * na service. O `id` vem no DTO interno (nunca `alterar(id, dados)`).

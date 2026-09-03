@@ -623,10 +623,31 @@ export interface CampanhaPreviaJogadorRecuperarDto {
  * Saída da prévia de jogador (decisão de produto #6) — fichas visíveis, feed e capacidade de
  * acessar o inventário de esquadrão calculados com a identidade do **alvo** (`usuarioAlvoId`),
  * nunca do mestre que requisita. Somente leitura: não existe DTO de mutação para esta projeção.
+ *
+ * `membros` (m8-04) é a mesma forma de `CampanhaMembroResumoDto` que a visão normal de jogador
+ * consome para montar a coluna "Equipe" — mas com `acessoCompleto`/visibilidade de ficha oculta
+ * calculados como o **alvo** veria (reusa `CampanhaRepository.listarMembros` passando a
+ * identidade do alvo, nunca a do mestre que requisita — mesmo racional de `fichas`). O grid
+ * "Esquadrão"/coluna "Membros" (visão de mestre) não faz parte desta projeção — só o que a visão
+ * de **jogador** usa.
  */
 export interface CampanhaPreviaJogadorDto {
   readonly campanha: CampanhaIdentidadeSeguraDto;
   readonly fichas: readonly FichaResumoDto[];
+  readonly membros: readonly CampanhaMembroResumoDto[];
   readonly rolagens: readonly RolagemResumoDto[];
   readonly podeAcessarInventarioEsquadrao: boolean;
+}
+
+/**
+ * Entrada da ficha completa dentro da prévia de jogador (m8-04, complemento `PreviaJogadorFicha`
+ * antes do verbo) — `campanhaId`/`usuarioAlvoId`/`fichaId` vêm todos do `@Param`. `campanhaId` é
+ * checado contra a campanha real da ficha (defesa em profundidade — a autorização de fato é toda
+ * de `FichaService.recuperarFichaParaAlvo`, que nunca recebe `campanhaId`: deriva a campanha da
+ * própria ficha).
+ */
+export interface CampanhaPreviaJogadorFichaRecuperarDto {
+  readonly campanhaId: number;
+  readonly usuarioAlvoId: number;
+  readonly fichaId: number;
 }

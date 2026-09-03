@@ -191,29 +191,13 @@
             </div>
         </div>
     </div>
-    } } @else if (campanha(); as campanhaAtual) { @if (previewJogador(); as jogadorPreview) {
-    <div class="detalhe__preview-barra" role="status">
-        <app-icone nome="olho" />
-        <span class="detalhe__preview-texto">
-            Visualizando como <strong>{{ jogadorPreview.nome }}</strong> · somente leitura
-        </span>
-        <button
-            app-botao
-            variante="secundario"
-            class="botao botao--secundario detalhe__acao detalhe__preview-sair"
-            type="button"
-            (click)="sairPreviewJogador()"
-        >
-            Sair da visualização
-        </button>
-    </div>
-    }
-    <div class="detalhe__conteudo" [class.detalhe__conteudo--bloqueado]="previewJogador() !== null">
+    } } @else if (campanha(); as campanhaAtual) {
+    <div class="detalhe__conteudo">
         <header class="detalhe__cabecalho">
             <div class="detalhe__cabecalho-titulo-linha">
                 <span class="detalhe__cabecalho-indice">//</span>
                 <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
-                @if (exibirComoMestre()) {
+                @if (ehMestre()) {
                 <button
                     class="detalhe__estado-operacional"
                     type="button"
@@ -254,7 +238,7 @@
                     [acimaDaCalculadora]="true"
                     (abrirCalculadora)="calculadoraAberta.set(true)"
                 />
-                @if (exibirComoMestre()) {
+                @if (ehMestre()) {
                 <app-inventario-esquadrao-sidebar
                     [(aberto)]="inventarioSidebarAberto"
                     [campanhaId]="campanhaAtual.id"
@@ -273,7 +257,7 @@
                     [membros]="membros()"
                     (abrirFicha)="abrirAnotacoesFicha($event)"
                 />
-                } @if (exibirComoMestre()) {
+                } @if (ehMestre()) {
                 <div class="detalhe__cabecalho-menu-envoltorio">
                     <button
                         class="detalhe__cabecalho-menu-botao"
@@ -293,7 +277,7 @@
                         (click)="fecharMenuCampanha()"
                     ></button>
                     <div class="detalhe__cabecalho-menu" role="menu">
-                        @if (!escolhendoPreviewJogador()) {
+                        @if (!escolhendoPreviaJogador()) {
                         <a
                             class="detalhe__cabecalho-menu-item"
                             role="menuitem"
@@ -325,28 +309,28 @@
                             class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
-                            (click)="abrirEscolhaPreviewJogador()"
+                            (click)="abrirEscolhaPreviaJogador()"
                         >
                             <app-icone nome="olho" />
-                            <span>Ver como jogador</span>
+                            <span>Prévia de jogador</span>
                         </button>
-                        } } @else { @for (jogadorPreview of jogadoresDaCampanha(); track
-                        jogadorPreview.usuarioId) {
+                        } } @else { @for (jogadorAlvo of jogadoresDaCampanha(); track
+                        jogadorAlvo.usuarioId) {
                         <button
                             class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
-                            (click)="iniciarPreviewJogador(jogadorPreview)"
+                            (click)="abrirPreviaJogador(jogadorAlvo)"
                         >
                             <app-icone nome="protecoes" />
-                            <span>{{ jogadorPreview.nome }}</span>
+                            <span>{{ jogadorAlvo.nome }}</span>
                         </button>
                         }
                         <button
                             class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
-                            (click)="escolhendoPreviewJogador.set(false)"
+                            (click)="escolhendoPreviaJogador.set(false)"
                         >
                             <app-icone nome="voltar" />
                             <span>Voltar</span>
@@ -493,7 +477,7 @@
                 Ver ficha →
             </a>
         </div>
-        } @if (exibirComoMestre()) {
+        } @if (ehMestre()) {
         <div class="detalhe__estatisticas">
             <div class="detalhe__estatistica detalhe__stat-convite">
                 <span class="detalhe__estatistica-rotulo">Convite de jogador</span>
@@ -638,7 +622,7 @@
                 }
             </ul>
         </section>
-        } } @if (exibirComoMestre()) {
+        } } @if (ehMestre()) {
         <div class="detalhe__grade">
             <app-cartao class="detalhe__coluna detalhe__coluna--membros">
                 <header class="detalhe__secao">

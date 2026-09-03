@@ -3,6 +3,7 @@ import type {
   CampanhaPainelEspectadorDto,
   CampanhaPreviaJogadorDto,
 } from '@contratados-rpg/shared/dtos/campanha';
+import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -40,6 +41,19 @@ export class CampanhaProjecaoController {
   ): Promise<CampanhaPreviaJogadorDto> {
     return this.campanhaProjecaoService.recuperarPreviaJogador(
       { campanhaId: id, usuarioAlvoId },
+      usuarioAtivo,
+    );
+  }
+
+  @Get('campanha/:id/previa-jogador/:usuarioAlvoId/ficha/:fichaId')
+  recuperarFichaPreviaJogador(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('usuarioAlvoId', ParseIntPipe) usuarioAlvoId: number,
+    @Param('fichaId', ParseIntPipe) fichaId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<FichaRecuperadaDto> {
+    return this.campanhaProjecaoService.recuperarFichaPreviaJogador(
+      { campanhaId: id, usuarioAlvoId, fichaId },
       usuarioAtivo,
     );
   }

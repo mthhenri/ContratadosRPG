@@ -762,8 +762,8 @@ describe('CampanhaDetalhe', () => {
     });
   });
 
-  // === "Ver como jogador" (preview do mestre) ===
-  describe('"Ver como jogador" (preview do mestre)', () => {
+  // === "Prévia de jogador" (m8-04) — substitui o antigo "Ver como jogador" ===
+  describe('"Prévia de jogador" (m8-04 — rota dedicada, substitui o antigo "Ver como jogador")', () => {
     it('não mostra a opção quando a campanha não tem jogadores', () => {
       const { fixture, raiz } = montar(mestre());
 
@@ -771,18 +771,18 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).toHaveLength(3);
     });
 
-    it('mostra "Ver como jogador" como 3º item quando há jogadores na campanha', () => {
+    it('mostra "Prévia de jogador" como 3º item quando há jogadores na campanha', () => {
       const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois() });
 
       abrirMenuCampanha(raiz, fixture);
-      expect(encontrarItemMenu(raiz, 'Ver como jogador')).not.toBeNull();
+      expect(encontrarItemMenu(raiz, 'Prévia de jogador')).not.toBeNull();
     });
 
-    it('clicar em "Ver como jogador" lista os jogadores da campanha, com "Voltar"', () => {
+    it('clicar em "Prévia de jogador" lista os jogadores da campanha, com "Voltar"', () => {
       const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosTres() });
 
       abrirMenuCampanha(raiz, fixture);
-      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      encontrarItemMenu(raiz, 'Prévia de jogador').click();
       fixture.detectChanges();
 
       const itens = Array.from(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).map((item) =>
@@ -795,7 +795,7 @@ describe('CampanhaDetalhe', () => {
       const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois() });
 
       abrirMenuCampanha(raiz, fixture);
-      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      encontrarItemMenu(raiz, 'Prévia de jogador').click();
       fixture.detectChanges();
       encontrarItemMenu(raiz, 'Voltar').click();
       fixture.detectChanges();
@@ -803,103 +803,25 @@ describe('CampanhaDetalhe', () => {
       const itens = Array.from(raiz.querySelectorAll('.detalhe__cabecalho-menu-item')).map((item) =>
         item.textContent?.replace(/\s+/g, ' ').trim(),
       );
-      expect(itens).toEqual(['Iniciativa', 'Editar', 'Excluir', 'Ver como jogador']);
+      expect(itens).toEqual(['Iniciativa', 'Editar', 'Excluir', 'Prévia de jogador']);
     });
 
-    it('escolher um jogador troca para o layout de jogador, mostrando a ficha própria dele', () => {
-      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
+    it('escolher um jogador navega para a rota dedicada da prévia (m8-04) — nunca troca o layout desta página', () => {
+      const { fixture, raiz, navegar } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
       abrirMenuCampanha(raiz, fixture);
-      encontrarItemMenu(raiz, 'Ver como jogador').click();
+      encontrarItemMenu(raiz, 'Prévia de jogador').click();
       fixture.detectChanges();
       encontrarItemMenu(raiz, 'Jogador').click();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('.detalhe__grade')).toBeNull();
-      expect(raiz.querySelector('.detalhe__jogador')).not.toBeNull();
-      expect(raiz.querySelector('.cartao__titulo')?.textContent?.trim()).toBe('Vera');
-    });
-
-    it('escolher um jogador sem ficha mostra o estado vazio dele', () => {
-      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosTres(), fichas });
-
-      abrirMenuCampanha(raiz, fixture);
-      encontrarItemMenu(raiz, 'Ver como jogador').click();
-      fixture.detectChanges();
-      encontrarItemMenu(raiz, 'Colega').click();
-      fixture.detectChanges();
-
-      expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
-    });
-
-    it('mostra a barra de "Visualizando como X" e trava a interação do conteúdo', () => {
-      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-      abrirMenuCampanha(raiz, fixture);
-      encontrarItemMenu(raiz, 'Ver como jogador').click();
-      fixture.detectChanges();
-      encontrarItemMenu(raiz, 'Jogador').click();
-      fixture.detectChanges();
-
-      const barra = raiz.querySelector('.detalhe__preview-barra');
-      expect(barra?.textContent).toContain('Visualizando como');
-      expect(barra?.textContent).toContain('Jogador');
-
-      const conteudo = raiz.querySelector('.detalhe__conteudo');
-      expect(conteudo?.classList.contains('detalhe__conteudo--bloqueado')).toBe(true);
-    });
-
-    it('"Sair da visualização" volta ao layout de mestre', () => {
-      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-      abrirMenuCampanha(raiz, fixture);
-      encontrarItemMenu(raiz, 'Ver como jogador').click();
-      fixture.detectChanges();
-      encontrarItemMenu(raiz, 'Jogador').click();
-      fixture.detectChanges();
-
-      (raiz.querySelector('.detalhe__preview-sair') as HTMLButtonElement).click();
-      fixture.detectChanges();
-
-      expect(raiz.querySelector('.detalhe__preview-barra')).toBeNull();
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'previa', 2]);
+      // Nada muda nesta página — o layout de mestre (grid "Esquadrão") continua o mesmo; não há
+      // mais toggle local nem barra "Visualizando como X" (removidos, m8-04).
       expect(raiz.querySelector('.detalhe__grade')).not.toBeNull();
       expect(raiz.querySelector('.detalhe__jogador')).toBeNull();
-    });
-
-    it('a área de conteúdo não fica travada fora do preview', () => {
-      const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
-
-      expect(raiz.querySelector('.detalhe__conteudo')?.classList.contains('detalhe__conteudo--bloqueado')).toBe(
-        false,
-      );
-    });
-
-    it('permissão de edição no preview segue o jogador emulado, não o mestre real', () => {
-      const fichasComColega: FichaResumoDto[] = [
-        fichas[0],
-        fichas[1],
-        { ...fichas[1], id: 6, usuarioId: 3, nome: 'Rex' },
-      ];
-      const { fixture, raiz } = montar({ usuarioId: 1, membros: membrosTres(), fichas: fichasComColega });
-
-      abrirMenuCampanha(raiz, fixture);
-      encontrarItemMenu(raiz, 'Ver como jogador').click();
-      fixture.detectChanges();
-      encontrarItemMenu(raiz, 'Jogador').click();
-      fixture.detectChanges();
-
-      // Ficha própria (Vera, do "Jogador" emulado, usuarioId 2): ações de dono habilitadas.
-      abrirMenuCampanha(raiz, fixture);
-      expect(encontrarItemMenu(raiz, 'Excluir ficha').disabled).toBe(false);
-
-      // Troca pra ficha de um colega (Rex, usuarioId 3, via "Ver ficha" na Equipe): sem ações de dono.
-      const botaoRex = Array.from(raiz.querySelectorAll('.detalhe__equipe-ficha')).find((botao) =>
-        botao.textContent?.includes('Rex'),
-      ) as HTMLButtonElement;
-      botaoRex.click();
-      fixture.detectChanges();
-
-      expect(encontrarItemMenu(raiz, 'Excluir ficha').disabled).toBe(true);
+      expect(raiz.querySelector('.detalhe__preview-barra')).toBeNull();
+      expect(raiz.querySelector('.detalhe__cabecalho-menu')).toBeNull();
     });
   });
 

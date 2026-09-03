@@ -143,26 +143,6 @@
 - **Desde:** comportamento anterior ao M8; registrado explicitamente em `m8-01` (2026-09-03) e
   reafirmado como decisão consciente de escopo em `m8-02` (2026-09-03).
 
-### P-047 — Barra "Visualizando como X" sem tratamento mobile (texto/botão podem se sobrepor) · `ABERTO` · frontend
-
-- **Sintoma:** `.detalhe__preview-barra`/`.detalhe__preview-sair` ("Ver como jogador", m2-19) não
-  têm nenhuma regra `@include bp.mobile` — nem `flex-wrap` na barra, nem `min-height`/largura no
-  botão "Sair da visualização". Achado por analogia direta: a `m8-03` copiou essa receita para a
-  barra "Modo prévia" do Painel do espectador e, em `360×800`, reproduziu ao vivo o texto quebrado
-  por baixo do botão se sobrepondo a ele, além do botão medir só 26px de altura (abaixo do alvo de
-  toque de 44px); a `m8-03` corrigiu isso na cópia nova (`espectador.page.scss`), mas não tocou o
-  original.
-- **Causa:** a barra nunca foi verificada em `360×800` — o texto "Visualizando como **Nome** ·
-  somente leitura" pode ser curto o bastante para não ter exposto o problema nas verificações
-  anteriores, mas o mecanismo (sem `flex-wrap`, sem `min-height` no botão) é o mesmo defeito.
-- **Contorno:** nenhum.
-- **Correção:** aplicar em `detalhe.page.scss` o mesmo par de regras que `espectador.page.scss`
-  ganhou — `&__preview-barra` com `flex-wrap: wrap` no mobile, `&__preview-texto` com
-  `flex-basis: 100%`, `&__preview-sair` com `width: 100%; min-height: bp.$alvo-toque;`.
-- **Desde:** pré-existente ao M8 (m2-19); achado ao vivo durante a verificação visual da `m8-03`
-  (2026-09-03), fora do recorte da task (`detalhe.page.scss` foi tocado por outras seções, mas não
-  por este bloco).
-
 ### P-048 — Botões de ícone soltos sem passar por `app-botao-icone` · `ABERTO` · frontend
 
 - **Sintoma:** alguns controles clicáveis do app são `<button>`/`<a>` com classe BEM local e

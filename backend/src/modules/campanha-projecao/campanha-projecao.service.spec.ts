@@ -10,6 +10,7 @@ import { CampanhaProjecaoService } from './campanha-projecao.service';
 
 interface CampanhaRepositorioDublado {
   recuperarPorId: ReturnType<typeof vi.fn>;
+  listarMembros: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaServicoDublado {
@@ -20,6 +21,7 @@ interface CampanhaServicoDublado {
 
 interface FichaServicoDublado {
   listarFichasParaAlvo: ReturnType<typeof vi.fn>;
+  recuperarFichaParaAlvo: ReturnType<typeof vi.fn>;
 }
 
 interface RolagemRepositorioDublado {
@@ -48,13 +50,13 @@ describe('CampanhaProjecaoService', () => {
   let service: CampanhaProjecaoService;
 
   beforeEach(() => {
-    campanhaRepositorio = { recuperarPorId: vi.fn() };
+    campanhaRepositorio = { recuperarPorId: vi.fn(), listarMembros: vi.fn() };
     campanhaServico = {
       validarMembro: vi.fn(),
       ehEspectador: vi.fn((papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.ESPECTADOR),
       ehMestre: vi.fn((papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.MESTRE),
     };
-    fichaServico = { listarFichasParaAlvo: vi.fn() };
+    fichaServico = { listarFichasParaAlvo: vi.fn(), recuperarFichaParaAlvo: vi.fn() };
     rolagemRepositorio = { listarPublicasPorCampanha: vi.fn(), listarPorCampanha: vi.fn() };
     service = new CampanhaProjecaoService(
       campanhaRepositorio as unknown as CampanhaRepository,
@@ -124,11 +126,13 @@ describe('CampanhaProjecaoService', () => {
   });
 
   describe('recuperarPreviaJogador', () => {
-    it('devolve fichas/feed/capacidade calculados com a identidade do alvo', async () => {
+    it('devolve fichas/membros/feed/capacidade calculados com a identidade do alvo', async () => {
       campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
       campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
       const fichasDoAlvo = [{ id: 5, nome: 'Agente Beta' }];
       fichaServico.listarFichasParaAlvo.mockResolvedValue(fichasDoAlvo);
+      const membrosParaAlvo = [{ usuarioId: usuarioJogador.sub, nome: 'Agente Beta', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] }];
+      campanhaRepositorio.listarMembros.mockResolvedValue(membrosParaAlvo);
       const feedDoAlvo = [{ id: 1, rotulo: 'Luta' }];
       rolagemRepositorio.listarPorCampanha.mockResolvedValue(feedDoAlvo);
 
@@ -141,6 +145,13 @@ describe('CampanhaProjecaoService', () => {
         campanhaId: 3,
         usuarioAlvoId: usuarioJogador.sub,
       });
+      // Identidade de VIEWER passada ao repositório é a do alvo, nunca a do mestre requisitante
+      // (`usuarioAtivoEhMestre: false` mesmo o requisitante real sendo mestre) — é o cerne do m8-04.
+      expect(campanhaRepositorio.listarMembros).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioAtivoId: usuarioJogador.sub,
+        usuarioAtivoEhMestre: false,
+      });
       expect(rolagemRepositorio.listarPorCampanha).toHaveBeenCalledWith({
         campanhaId: 3,
         usuarioId: usuarioJogador.sub,
@@ -149,6 +160,7 @@ describe('CampanhaProjecaoService', () => {
       expect(resultado).toEqual({
         campanha: { id: 3, nome: 'Contenção Alfa', descricao: 'Missão inaugural', naBase: true },
         fichas: fichasDoAlvo,
+        membros: membrosParaAlvo,
         rolagens: feedDoAlvo,
         podeAcessarInventarioEsquadrao: true,
       });
@@ -197,6 +209,51 @@ describe('CampanhaProjecaoService', () => {
       );
 
       expect(resultado.podeAcessarInventarioEsquadrao).toBe(false);
+    });
+  });
+
+  describe('recuperarFichaPreviaJogador', () => {
+    it('delega a FichaService.recuperarFichaParaAlvo e devolve a ficha', async () => {
+      const fichaParaAlvo = { id: 5, campanhaId: 3, usuarioId: usuarioJogador.sub, nome: 'Agente Beta' };
+      fichaServico.recuperarFichaParaAlvo.mockResolvedValue(fichaParaAlvo);
+
+      const resultado = await service.recuperarFichaPreviaJogador(
+        { campanhaId: 3, usuarioAlvoId: usuarioJogador.sub, fichaId: 5 },
+        usuarioMestre,
+      );
+
+      expect(fichaServico.recuperarFichaParaAlvo).toHaveBeenCalledWith(
+        { fichaId: 5, usuarioAlvoId: usuarioJogador.sub },
+        usuarioMestre,
+      );
+      expect(resultado).toBe(fichaParaAlvo);
+    });
+
+    it('propaga UnauthorizedAccessException de FichaService (requisitante não-mestre, alvo não-JOGADOR ou sem acesso)', async () => {
+      fichaServico.recuperarFichaParaAlvo.mockRejectedValue(new UnauthorizedAccessException());
+
+      await expect(
+        service.recuperarFichaPreviaJogador(
+          { campanhaId: 3, usuarioAlvoId: usuarioJogador.sub, fichaId: 5 },
+          usuarioJogador,
+        ),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+
+    it('lança ResourceNotFoundException quando a ficha pertence a outra campanha (defesa em profundidade do :id)', async () => {
+      fichaServico.recuperarFichaParaAlvo.mockResolvedValue({
+        id: 5,
+        campanhaId: 99,
+        usuarioId: usuarioJogador.sub,
+        nome: 'Agente Beta',
+      });
+
+      await expect(
+        service.recuperarFichaPreviaJogador(
+          { campanhaId: 3, usuarioAlvoId: usuarioJogador.sub, fichaId: 5 },
+          usuarioMestre,
+        ),
+      ).rejects.toThrow(ResourceNotFoundException);
     });
   });
 });

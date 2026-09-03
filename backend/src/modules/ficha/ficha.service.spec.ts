@@ -79,6 +79,7 @@ interface CampanhaServiceDublado {
   validarAcessoInventario: ReturnType<typeof vi.fn>;
   ehEspectador: ReturnType<typeof vi.fn>;
   ehJogador: ReturnType<typeof vi.fn>;
+  ehMestre: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaGatewayDublado {
@@ -305,6 +306,9 @@ describe('FichaService', () => {
       ),
       ehJogador: vi.fn(
         (papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.JOGADOR,
+      ),
+      ehMestre: vi.fn(
+        (papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.MESTRE,
       ),
     };
     campanhaGateway = {
@@ -1195,6 +1199,110 @@ describe('FichaService', () => {
       await expect(
         service.listarFichasParaAlvo({ campanhaId: 3, usuarioAlvoId: 999 }),
       ).rejects.toThrow(UnauthorizedAccessException);
+    });
+  });
+
+  describe('recuperarFichaParaAlvo (m8-04, prévia de jogador)', () => {
+    /** `recuperarMembro` é chamado duas vezes (requisitante mestre, depois alvo) — cada teste
+     * dubla por `usuarioId` para não depender da ordem das chamadas. */
+    function mockMembros(
+      porUsuario: Record<number, { papel: TipoCampanhaMembroPapelEnum } | null>,
+    ): void {
+      campanhaRepositorio.recuperarMembro.mockImplementation(
+        (dto: { usuarioId: number }) => porUsuario[dto.usuarioId] ?? null,
+      );
+    }
+
+    it('devolve a ficha completa (sem redação) quando o alvo é o próprio dono', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      mockMembros({
+        [usuarioMestre.sub]: { papel: TipoCampanhaMembroPapelEnum.MESTRE },
+        [usuarioDono.sub]: { papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+      });
+
+      const resultado = await service.recuperarFichaParaAlvo(
+        { fichaId: 5, usuarioAlvoId: usuarioDono.sub },
+        usuarioMestre,
+      );
+
+      expect(resultado).toBe(fichaPersistida);
+      expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
+    });
+
+    it('omite campos privados quando o alvo só tem concessão de visualização', async () => {
+      const fichaComAnotacoes = {
+        ...fichaPersistida,
+        dados: criarDados({ anotacoes: 'Só quem tem acesso vê isso.' }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComAnotacoes);
+      mockMembros({
+        [usuarioMestre.sub]: { papel: TipoCampanhaMembroPapelEnum.MESTRE },
+        [usuarioMembro.sub]: { papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue({ id: 1 });
+
+      const resultado = await service.recuperarFichaParaAlvo(
+        { fichaId: 5, usuarioAlvoId: usuarioMembro.sub },
+        usuarioMestre,
+      );
+
+      expect(fichaRepositorio.recuperarAcesso).toHaveBeenCalledWith({
+        fichaId: 5,
+        usuarioId: usuarioMembro.sub,
+      });
+      expect(resultado.dados.anotacoes).toBeUndefined();
+    });
+
+    it('lança UnauthorizedAccessException quando o alvo não tem nenhum acesso à ficha (m8-04: prévia não vaza ficha alheia)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      mockMembros({
+        [usuarioMestre.sub]: { papel: TipoCampanhaMembroPapelEnum.MESTRE },
+        [usuarioMembro.sub]: { papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+      });
+      fichaRepositorio.recuperarAcesso.mockResolvedValue(null);
+
+      await expect(
+        service.recuperarFichaParaAlvo({ fichaId: 5, usuarioAlvoId: usuarioMembro.sub }, usuarioMestre),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+
+    it('lança UnauthorizedAccessException quando o requisitante não é mestre da campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      mockMembros({ [usuarioMembro.sub]: { papel: TipoCampanhaMembroPapelEnum.JOGADOR } });
+
+      await expect(
+        service.recuperarFichaParaAlvo({ fichaId: 5, usuarioAlvoId: usuarioDono.sub }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o alvo não é JOGADOR (mestre ou espectador)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      mockMembros({
+        [usuarioMestre.sub]: { papel: TipoCampanhaMembroPapelEnum.MESTRE },
+        [usuarioMembro.sub]: { papel: TipoCampanhaMembroPapelEnum.ESPECTADOR },
+      });
+
+      await expect(
+        service.recuperarFichaParaAlvo({ fichaId: 5, usuarioAlvoId: usuarioMembro.sub }, usuarioMestre),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+
+    it('lança ResourceNotFoundException quando a ficha não existe', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.recuperarFichaParaAlvo({ fichaId: 99, usuarioAlvoId: usuarioMembro.sub }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
+    });
+
+    it('lança ResourceNotFoundException quando a ficha está solta (sem campanha, m3-28)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({ ...fichaPersistida, campanhaId: null });
+
+      await expect(
+        service.recuperarFichaParaAlvo({ fichaId: 5, usuarioAlvoId: usuarioMembro.sub }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
     });
   });
 
