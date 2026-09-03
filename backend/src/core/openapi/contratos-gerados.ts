@@ -32,16 +32,20 @@ export const schemasContratosPublicos = {
             },
             "codigoConvite": {
                 "type": "string"
+            },
+            "codigoConviteEspectador": {
+                "type": "string"
             }
         },
         "required": [
             "id",
             "nome",
             "descricao",
-            "codigoConvite"
+            "codigoConvite",
+            "codigoConviteEspectador"
         ],
         "additionalProperties": false,
-        "description": "Saída de criação — a campanha criada, já com o `codigoConvite` gerado."
+        "description": "Saída de criação — a campanha criada, já com os dois convites gerados (`codigoConvite` para\r\n`JOGADOR`, `codigoConviteEspectador` para `ESPECTADOR` — m8-01)."
     },
     "CampanhaListarDto": {
         "type": "object",
@@ -72,7 +76,8 @@ export const schemasContratosPublicos = {
                 "type": "string",
                 "enum": [
                     "MESTRE",
-                    "JOGADOR"
+                    "JOGADOR",
+                    "ESPECTADOR"
                 ]
             },
             "totalMembros": {
@@ -98,7 +103,11 @@ export const schemasContratosPublicos = {
             },
             "codigoConvite": {
                 "type": "string",
-                "description": "Código de convite — só preenchido quando `papel === MESTRE`; `null` para `JOGADOR`."
+                "description": "Código de convite de jogador — só preenchido quando `papel === MESTRE`; `null` senão."
+            },
+            "codigoConviteEspectador": {
+                "type": "string",
+                "description": "Código de convite de espectador (m8-01) — mesmo recorte de `codigoConvite`: só preenchido\r\nquando `papel === MESTRE`; `null` para `JOGADOR`/`ESPECTADOR`."
             },
             "alteradoEm": {
                 "type": "string",
@@ -116,6 +125,7 @@ export const schemasContratosPublicos = {
             "fichaCriticaNome",
             "minhaFichaResumo",
             "codigoConvite",
+            "codigoConviteEspectador",
             "alteradoEm"
         ],
         "additionalProperties": false,
@@ -149,6 +159,9 @@ export const schemasContratosPublicos = {
             "codigoConvite": {
                 "type": "string"
             },
+            "codigoConviteEspectador": {
+                "type": "string"
+            },
             "naBase": {
                 "type": "boolean",
                 "description": "Estado \"Na Base da Fundação\" (`true`) ou \"Em Missão\" (`false`) — gate do inventário de\r\nesquadrão (§ inventário). Só o Mestre altera (`alterarEstado`). Campanha existente nasce\r\n`na_base = null` no banco, tratado como `true` na leitura (`COALESCE`)."
@@ -159,10 +172,11 @@ export const schemasContratosPublicos = {
             "nome",
             "descricao",
             "codigoConvite",
+            "codigoConviteEspectador",
             "naBase"
         ],
         "additionalProperties": false,
-        "description": "Saída da recuperação individual — a campanha completa, incluindo o `codigoConvite`."
+        "description": "Saída da recuperação individual — a campanha completa, incluindo os dois convites. Segue o\r\nmesmo recorte de exposição que `codigoConvite` já tinha antes do m8-01 (não gateado por papel\r\nnesta consulta — diferente de `CampanhaResumoDto`, que só mostra o convite ao mestre); mudar\r\nesse recorte é fluxo de REST/permissão, fora do escopo desta task."
     },
     "CampanhaAlterarDto": {
         "type": "object",
@@ -247,7 +261,8 @@ export const schemasContratosPublicos = {
                 "type": "string",
                 "enum": [
                     "MESTRE",
-                    "JOGADOR"
+                    "JOGADOR",
+                    "ESPECTADOR"
                 ]
             }
         },
@@ -289,6 +304,86 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Saída da regeneração — o novo `codigoConvite`, que invalida o anterior."
+    },
+    "CampanhaConviteEspectadorRegenerarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da regeneração do convite de espectador (complemento `ConviteEspectador` inteiro\r\nantes do verbo, distinto de `CampanhaConviteRegenerarDto` que regenera o de `JOGADOR`) — o\r\n`id` vem do `@Param`, injetado no DTO pela controller. Só o mestre pode regenerar (§14)."
+    },
+    "CampanhaConviteEspectadorRegeneradoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "codigoConviteEspectador": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "codigoConviteEspectador"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da regeneração — o novo `codigoConviteEspectador`, que invalida o anterior."
+    },
+    "CampanhaMembroPapelAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "papel": {
+                "type": "string",
+                "enum": [
+                    "JOGADOR",
+                    "ESPECTADOR"
+                ]
+            }
+        },
+        "required": [
+            "id",
+            "usuarioId",
+            "papel"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da troca de papel de um membro entre `JOGADOR` e `ESPECTADOR` pelo mestre\r\n(complemento `MembroPapel` antes do verbo) — o `id` é o da campanha (`@Param`) e `usuarioId`\r\no membro alvo (`@Param`), ambos injetados pela controller; `papel` vem do corpo, restrito à\r\nunião `JOGADOR | ESPECTADOR` no próprio tipo — o cliente nunca pode promover a `MESTRE` por\r\neste contrato (isso é `CampanhaMestreTransferirDto`)."
+    },
+    "CampanhaMembroPapelAlteradoDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "usuarioId": {
+                "type": "number"
+            },
+            "papel": {
+                "type": "string",
+                "enum": [
+                    "JOGADOR",
+                    "ESPECTADOR"
+                ]
+            }
+        },
+        "required": [
+            "campanhaId",
+            "usuarioId",
+            "papel"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da troca de papel — confirmação do novo `papel` do membro na campanha."
     },
     "CampanhaMembrosListarDto": {
         "type": "object",
@@ -375,7 +470,8 @@ export const schemasContratosPublicos = {
                 "type": "string",
                 "enum": [
                     "MESTRE",
-                    "JOGADOR"
+                    "JOGADOR",
+                    "ESPECTADOR"
                 ]
             },
             "fichas": {
@@ -4204,6 +4300,10 @@ export const schemasContratosPublicos = {
             "rotulo": {
                 "type": "string"
             },
+            "formula": {
+                "type": "string",
+                "description": "Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no\r\nhistórico/feed. `null` quando quem registra não a informa — o teste de Atributo direto (o\r\nrótulo já é o nome do atributo) nunca a envia."
+            },
             "visibilidade": {
                 "type": "string",
                 "enum": [
@@ -4218,6 +4318,7 @@ export const schemasContratosPublicos = {
         },
         "required": [
             "rotulo",
+            "formula",
             "visibilidade",
             "resultado"
         ],
@@ -4236,6 +4337,10 @@ export const schemasContratosPublicos = {
             "rotulo": {
                 "type": "string"
             },
+            "formula": {
+                "type": "string",
+                "description": "Expressão de dados usada na rolagem (ex.: `2d6+3[Físico]`), exibida como legenda discreta no\r\nhistórico/feed. `null` quando quem registra não a informa — o teste de Atributo direto (o\r\nrótulo já é o nome do atributo) nunca a envia."
+            },
             "visibilidade": {
                 "type": "string",
                 "enum": [
@@ -4252,6 +4357,7 @@ export const schemasContratosPublicos = {
             "encontroId",
             "combatenteId",
             "rotulo",
+            "formula",
             "visibilidade",
             "resultado"
         ],
@@ -4285,6 +4391,9 @@ export const schemasContratosPublicos = {
             "rotulo": {
                 "type": "string"
             },
+            "formula": {
+                "type": "string"
+            },
             "visibilidade": {
                 "type": "string",
                 "enum": [
@@ -4313,6 +4422,7 @@ export const schemasContratosPublicos = {
             "nomeAutor",
             "nomeFicha",
             "rotulo",
+            "formula",
             "visibilidade",
             "resultado",
             "createdDate",

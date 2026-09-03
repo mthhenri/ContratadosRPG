@@ -63,16 +63,23 @@ export class CampanhaRepository extends BaseRepository {
   }
 
   /**
-   * Insere uma nova campanha e retorna seus dados. O `codigoConvite` já vem gerado da
-   * service. Segue o padrão `INSERT ... SELECT ... RETURNING` com BaseEntity explícita, sem
-   * `VALUES` e sem `DEFAULT` (§10.2.6/§10.2.8).
+   * Insere uma nova campanha e retorna seus dados. Os dois convites (`codigoConvite` de
+   * `JOGADOR`, `codigoConviteEspectador` de `ESPECTADOR` — m8-01) já vêm gerados da service.
+   * Segue o padrão `INSERT ... SELECT ... RETURNING` com BaseEntity explícita, sem `VALUES` e
+   * sem `DEFAULT` (§10.2.6/§10.2.8).
    */
   async criarCampanha(dto: CampanhaInternoCriarDto): Promise<CampanhaCriadaDto> {
     const [campanhaCriada] = await this.executarConsulta<CampanhaCriadaDto>(
-      `INSERT INTO campanha (nome, descricao, codigo_convite, created_date, updated_date, is_deleted)
-       SELECT :nome, :descricao, :codigoConvite, NOW(), NOW(), false
-       RETURNING id, nome, descricao, codigo_convite AS "codigoConvite"`,
-      { nome: dto.nome, descricao: dto.descricao ?? null, codigoConvite: dto.codigoConvite },
+      `INSERT INTO campanha (nome, descricao, codigo_convite, codigo_convite_espectador, created_date, updated_date, is_deleted)
+       SELECT :nome, :descricao, :codigoConvite, :codigoConviteEspectador, NOW(), NOW(), false
+       RETURNING id, nome, descricao, codigo_convite AS "codigoConvite",
+                 codigo_convite_espectador AS "codigoConviteEspectador"`,
+      {
+        nome: dto.nome,
+        descricao: dto.descricao ?? null,
+        codigoConvite: dto.codigoConvite,
+        codigoConviteEspectador: dto.codigoConviteEspectador,
+      },
     );
     return campanhaCriada;
   }
@@ -138,6 +145,9 @@ export class CampanhaRepository extends BaseRepository {
               CASE WHEN tipo_campanha_membro_papel.codigo = :papelMestre
                    THEN campanha.codigo_convite
               END AS "codigoConvite",
+              CASE WHEN tipo_campanha_membro_papel.codigo = :papelMestre
+                   THEN campanha.codigo_convite_espectador
+              END AS "codigoConviteEspectador",
               GREATEST(
                 campanha.updated_date,
                 COALESCE(fichas_agregado.ultima_alteracao, campanha.updated_date)
@@ -213,6 +223,7 @@ export class CampanhaRepository extends BaseRepository {
   async recuperarPorId(dto: CampanhaRecuperarDto): Promise<CampanhaRecuperadaDto | null> {
     const [campanhaEncontrada] = await this.executarConsulta<CampanhaRecuperadaDto>(
       `SELECT id, nome, descricao, codigo_convite AS "codigoConvite",
+              codigo_convite_espectador AS "codigoConviteEspectador",
               COALESCE(na_base, true) AS "naBase"
        FROM campanha
        WHERE id = :id AND is_deleted = false`,

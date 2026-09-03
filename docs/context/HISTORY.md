@@ -1,5 +1,61 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — m8-01: papel ESPECTADOR e convite de espectador (banco + contratos, M8)
+
+Primeira task do módulo `m8-espectadores-campanha` (`docs/specs/backlog/m8-espectadores-campanha.spec.md`,
+6 tasks). Objetivo explícito da spec: preparar banco e contratos compartilhados **sem** mudar
+fluxos REST ou telas ainda — endpoint que aceita o novo código, o efeito de permissão do papel e a
+troca `JOGADOR ↔ ESPECTADOR` são tasks seguintes.
+
+**Banco** (`0029 - Papel ESPECTADOR e convite de espectador.sql`): seed de `ESPECTADOR` em
+`tipo_campanha_membro_papel` (mesmo padrão literal-SQL de `0002`/`0015`/`0020`, sem alterar os
+vínculos ativos). `campanha` ganha `codigo_convite_espectador` — nasce nullable, recebe backfill
+único por linha (`MD5(RANDOM()::text || CLOCK_TIMESTAMP()::text || campanha.id::text)`, sem
+depender da extensão `pgcrypto`), só então vira `NOT NULL` com `uix_campanha_codigo_convite_espectador_ativo`
+(índice único parcial, mesmo padrão do convite de jogador). Testado `db:migrate` → `db:rollback` →
+`db:migrate` sem erro contra o Postgres real do Docker Compose (266 campanhas existentes, todas
+com código de espectador único após o backfill).
+
+**Contratos** (`shared/src/enums/tipo-campanha-membro-papel.enum.ts`,
+`shared/src/dtos/campanha/campanha.dtos.ts`): `TipoCampanhaMembroPapelEnum` ganha `ESPECTADOR`.
+`CampanhaCriadaDto`/`CampanhaInternoCriarDto` ganham `codigoConviteEspectador` (obrigatório —
+criação passa a gerar e persistir os dois códigos explicitamente no `INSERT ... SELECT`, nunca
+`DEFAULT`). `CampanhaResumoDto.codigoConviteEspectador` segue o mesmo recorte que `codigoConvite`
+já tinha (`string | null`, só preenchido para o mestre — `CASE WHEN papel = MESTRE` no SQL de
+`listarPorUsuario`). `CampanhaRecuperadaDto.codigoConviteEspectador` é `string` sempre presente,
+espelhando o recorte **atual** de `codigoConvite` nessa consulta — que já não é gateado por papel
+(`recuperarPorId`/`recuperarCampanha` devolvem o código a qualquer membro hoje, não só ao mestre);
+decisão explícita desta task foi **não** mudar esse recorte pré-existente, porque isso seria mudar
+um fluxo REST em produção, fora do objetivo declarado da spec — fica registrado aqui para quem for
+implementar a task de endpoint/permissão decidir se esse gap também deve fechar. Dois pares de
+contrato novos, ainda sem service/controller (fora de escopo — "criar contratos", não
+implementá-los): `CampanhaConviteEspectadorRegenerarDto`/`CampanhaConviteEspectadorRegeneradoDto`
+(regenerar só o convite de espectador) e `CampanhaMembroPapelAlterarDto`/`CampanhaMembroPapelAlteradoDto`
+(mestre troca um membro entre `JOGADOR`/`ESPECTADOR` — o campo `papel` é tipado como a união
+`JOGADOR | ESPECTADOR`, nunca `MESTRE`, no próprio TS).
+
+**Backend** (`campanha.repository.ts`/`campanha.service.ts`): `criarCampanha` gera e grava os dois
+códigos; `recuperarPorId`/`listarPorUsuario` passam a selecionar `codigo_convite_espectador`.
+Verificado ao vivo contra o Postgres real (script descartável instanciando `CampanhaRepository`
+direto, sem subir o Nest inteiro — a porta 3100 já estava ocupada por outra sessão concorrente
+rodando `backend:dev`, então evitei derrubá-la): `criarCampanha` grava os dois códigos,
+`recuperarPorId` devolve os dois, `listarPorUsuario` só mostra os dois ao mestre — script apagado
+ao final, nenhum rastro no diff.
+
+**Docs**: `SCHEMA.md` e `SYSTEM.SPEC.md §14` documentam `ESPECTADOR`, a nova coluna/índice e a
+distinção papel-por-campanha (`tipo_campanha_membro_papel`) × papel-global-da-conta (`tipo_usuario`,
+M6) — a spec pedia essa diferença explícita porque as duas tabelas se parecem mas não têm relação.
+
+Testes: shared 744/744, backend 476/476 (fixtures de `campanha.service.spec.ts` atualizadas com o
+segundo código; `randomBytes` dublado devolve o mesmo buffer nas duas chamadas do teste
+determinístico de `criarCampanha`, então os dois códigos saem iguais só ali — em produção cada
+chamada usa bytes aleatórios distintos). `tsc --noEmit` nos dois workspaces sem erro novo (os
+erros preexistentes de `encontro-conducao.service.spec.ts`/`ficha.service.spec.ts`/
+`rolagem.service.spec.ts`/`openapi.document.spec.ts`/`gerar-openapi-contratos.ts` não têm relação
+com este diff). Lint sem erro novo (só avisos históricos de aspas/max-len). `npm run
+openapi:gerar-contratos --workspace=backend` rodado após o diff de DTOs públicos, regenerando
+`contratos-gerados.ts`.
+
 ## 2026-09-03 — painéis laterais: vão real contra o conteúdo no desktop (relato ao vivo, sem spec própria)
 
 O autor marcou duas faixas brancas em capturas de `Campanha do Matheus`/`Sentinela Matheus` com o

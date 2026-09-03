@@ -42,11 +42,16 @@ Criadas com seed na mesma migration. BaseEntity + `codigo` + `descricao`.
 ```sql
 CREATE TABLE tipo_campanha_membro_papel (
   -- BaseEntity...
-  codigo    VARCHAR NOT NULL,   -- MESTRE | JOGADOR
+  codigo    VARCHAR NOT NULL,   -- MESTRE | JOGADOR | ESPECTADOR (m8-01)
   descricao VARCHAR NOT NULL
 );
 -- uix_tipo_campanha_membro_papel_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
 ```
+
+> **Papel por campanha × papel global:** esta tabela é o papel de um membro **numa campanha**
+> específica (`campanha_membro.tipo_campanha_membro_papel_id`). É independente do papel
+> **global** da conta (`tipo_usuario`: `NORMAL`/`ADMIN`/`TESTER`, M6), que vale em qualquer
+> campanha e não tem relação com `MESTRE`/`JOGADOR`/`ESPECTADOR`.
 
 ### tipo_usuario (M6)
 
@@ -123,16 +128,18 @@ CREATE TABLE usuario_impersonacao (
 -- ix_usuario_impersonacao_usuario_alvo: INDEX (usuario_alvo_id)
 ```
 
-## campanha (M2)
+## campanha (M2; convite de espectador no M8)
 
 ```sql
 CREATE TABLE campanha (
   -- BaseEntity...
-  nome            VARCHAR NOT NULL,
-  descricao       TEXT,
-  codigo_convite  VARCHAR NOT NULL    -- regenerável pelo mestre; invalida o anterior
+  nome                        VARCHAR NOT NULL,
+  descricao                   TEXT,
+  codigo_convite              VARCHAR NOT NULL,   -- entra como JOGADOR; regenerável pelo mestre
+  codigo_convite_espectador   VARCHAR NOT NULL    -- entra como ESPECTADOR (m8-01); idem, independente
 );
 -- uix_campanha_codigo_convite_ativo: UNIQUE (codigo_convite) WHERE is_deleted = false
+-- uix_campanha_codigo_convite_espectador_ativo: UNIQUE (codigo_convite_espectador) WHERE is_deleted = false
 ```
 
 ## campanha_membro (M2)
@@ -150,6 +157,9 @@ CREATE TABLE campanha_membro (
 
 Regras: uma campanha tem exatamente um membro `MESTRE` no v1 (inicialmente o criador; o papel
 é transferível pelo mestre atual — §14); jogador entra via `codigo_convite` com papel `JOGADOR`.
+Desde o m8-01, a campanha também tem `codigo_convite_espectador`, independente do de jogador, para
+entrar com papel `ESPECTADOR` — o endpoint que aceita esse código e o efeito de permissão do papel
+são tasks seguintes do módulo `m8-espectadores-campanha` (m8-01 só prepara banco e contratos).
 
 ## ficha (M3 jogador; M4 criatura/NPC)
 

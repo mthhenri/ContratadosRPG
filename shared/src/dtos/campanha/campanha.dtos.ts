@@ -18,12 +18,16 @@ export interface CampanhaCriarDto {
   readonly descricao?: string;
 }
 
-/** Saída de criação — a campanha criada, já com o `codigoConvite` gerado. */
+/**
+ * Saída de criação — a campanha criada, já com os dois convites gerados (`codigoConvite` para
+ * `JOGADOR`, `codigoConviteEspectador` para `ESPECTADOR` — m8-01).
+ */
 export interface CampanhaCriadaDto {
   readonly id: number;
   readonly nome: string;
   readonly descricao: string | null;
   readonly codigoConvite: string;
+  readonly codigoConviteEspectador: string;
 }
 
 /**
@@ -61,8 +65,13 @@ export interface CampanhaResumoDto {
    * (não tem "sua ficha" na campanha) e para o jogador que ainda não criou nenhuma.
    */
   readonly minhaFichaResumo: { nome: string; vidaAtual: number; vidaMaxima: number | null } | null;
-  /** Código de convite — só preenchido quando `papel === MESTRE`; `null` para `JOGADOR`. */
+  /** Código de convite de jogador — só preenchido quando `papel === MESTRE`; `null` senão. */
   readonly codigoConvite: string | null;
+  /**
+   * Código de convite de espectador (m8-01) — mesmo recorte de `codigoConvite`: só preenchido
+   * quando `papel === MESTRE`; `null` para `JOGADOR`/`ESPECTADOR`.
+   */
+  readonly codigoConviteEspectador: string | null;
   /** `GREATEST` entre `campanha.updated_date` e a última ficha visível alterada (ISO). */
   readonly alteradoEm: string;
 }
@@ -75,12 +84,18 @@ export interface CampanhaRecuperarDto {
   readonly id: number;
 }
 
-/** Saída da recuperação individual — a campanha completa, incluindo o `codigoConvite`. */
+/**
+ * Saída da recuperação individual — a campanha completa, incluindo os dois convites. Segue o
+ * mesmo recorte de exposição que `codigoConvite` já tinha antes do m8-01 (não gateado por papel
+ * nesta consulta — diferente de `CampanhaResumoDto`, que só mostra o convite ao mestre); mudar
+ * esse recorte é fluxo de REST/permissão, fora do escopo desta task.
+ */
 export interface CampanhaRecuperadaDto {
   readonly id: number;
   readonly nome: string;
   readonly descricao: string | null;
   readonly codigoConvite: string;
+  readonly codigoConviteEspectador: string;
   /**
    * Estado "Na Base da Fundação" (`true`) ou "Em Missão" (`false`) — gate do inventário de
    * esquadrão (§ inventário). Só o Mestre altera (`alterarEstado`). Campanha existente nasce
@@ -109,13 +124,15 @@ export interface CampanhaExcluirDto {
 }
 
 /**
- * Entrada interna do `CampanhaRepository.criarCampanha` — o `codigoConvite` já foi gerado na
- * service. `Interno` porque nunca trafega ao frontend (a entrada pública não informa o código).
+ * Entrada interna do `CampanhaRepository.criarCampanha` — os dois convites (`codigoConvite` de
+ * `JOGADOR`, `codigoConviteEspectador` de `ESPECTADOR` — m8-01) já foram gerados na service.
+ * `Interno` porque nunca trafega ao frontend (a entrada pública não informa nenhum dos códigos).
  */
 export interface CampanhaInternoCriarDto {
   readonly nome: string;
   readonly descricao?: string;
   readonly codigoConvite: string;
+  readonly codigoConviteEspectador: string;
 }
 
 /**
@@ -192,6 +209,47 @@ export interface CampanhaConviteRegenerarDto {
 export interface CampanhaConviteRegeneradoDto {
   readonly id: number;
   readonly codigoConvite: string;
+}
+
+/*
+ * ── m8-01: convite de espectador e troca de papel JOGADOR ↔ ESPECTADOR pelo mestre ──────────
+ * Só os contratos — endpoint, mudança de papel efetiva e interface são escopo de tasks
+ * seguintes do módulo `m8-espectadores-campanha` (ver spec).
+ */
+
+/**
+ * Entrada da regeneração do convite de espectador (complemento `ConviteEspectador` inteiro
+ * antes do verbo, distinto de `CampanhaConviteRegenerarDto` que regenera o de `JOGADOR`) — o
+ * `id` vem do `@Param`, injetado no DTO pela controller. Só o mestre pode regenerar (§14).
+ */
+export interface CampanhaConviteEspectadorRegenerarDto {
+  readonly id: number;
+}
+
+/** Saída da regeneração — o novo `codigoConviteEspectador`, que invalida o anterior. */
+export interface CampanhaConviteEspectadorRegeneradoDto {
+  readonly id: number;
+  readonly codigoConviteEspectador: string;
+}
+
+/**
+ * Entrada da troca de papel de um membro entre `JOGADOR` e `ESPECTADOR` pelo mestre
+ * (complemento `MembroPapel` antes do verbo) — o `id` é o da campanha (`@Param`) e `usuarioId`
+ * o membro alvo (`@Param`), ambos injetados pela controller; `papel` vem do corpo, restrito à
+ * união `JOGADOR | ESPECTADOR` no próprio tipo — o cliente nunca pode promover a `MESTRE` por
+ * este contrato (isso é `CampanhaMestreTransferirDto`).
+ */
+export interface CampanhaMembroPapelAlterarDto {
+  readonly id: number;
+  readonly usuarioId: number;
+  readonly papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR;
+}
+
+/** Saída da troca de papel — confirmação do novo `papel` do membro na campanha. */
+export interface CampanhaMembroPapelAlteradoDto {
+  readonly campanhaId: number;
+  readonly usuarioId: number;
+  readonly papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR;
 }
 
 /**

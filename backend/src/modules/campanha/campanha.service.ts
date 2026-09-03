@@ -93,7 +93,8 @@ export class CampanhaService {
   ) {}
 
   /**
-   * Cria uma campanha: gera um `codigoConvite` único, persiste a `campanha` e cria o
+   * Cria uma campanha: gera os dois convites únicos (`codigoConvite` de `JOGADOR`,
+   * `codigoConviteEspectador` de `ESPECTADOR` — m8-01), persiste a `campanha` e cria o
    * `campanha_membro` do criador com papel `MESTRE`. Uma campanha tem exatamente um mestre
    * no v1 (SYSTEM.SPEC §14).
    */
@@ -105,6 +106,7 @@ export class CampanhaService {
       nome: dto.nome,
       descricao: dto.descricao,
       codigoConvite: this.gerarCodigoConvite(),
+      codigoConviteEspectador: this.gerarCodigoConvite(),
     });
 
     await this.campanhaRepositorio.criarMembro({

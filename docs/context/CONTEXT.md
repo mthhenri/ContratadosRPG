@@ -389,6 +389,27 @@ nos dois tamanhos de chip, `cm`/glow do crítico intactos. Testes 6/6 do compone
 `historico-rolagens-sidebar`/`bandeja-dados` (sanity, só CSS mudou). Detalhe completo em
 `HISTORY.md`.
 
+**`m8-01-papel-convite-contratos` concluída** (spec em `docs/specs/done/`): primeira task do módulo
+`m8-espectadores-campanha` — banco e contratos compartilhados para o terceiro papel de campanha,
+`ESPECTADOR`, sem mudar ainda fluxos REST ou telas (objetivo explícito da spec). Migration `0029`
+insere `ESPECTADOR` em `tipo_campanha_membro_papel` e adiciona `campanha.codigo_convite_espectador`
+(convite independente do de jogador, backfill único + `NOT NULL` + índice único parcial, mesmo
+padrão de `0015`/`0020`); testada `db:migrate` → `db:rollback` → `db:migrate` contra o Postgres
+real (266 campanhas existentes). `TipoCampanhaMembroPapelEnum` ganha `ESPECTADOR`;
+`CampanhaCriadaDto`/`CampanhaResumoDto`/`CampanhaRecuperadaDto` documentam
+`codigoConviteEspectador` (mestre-only em `CampanhaResumoDto`, mesmo recorte não-gateado que
+`codigoConvite` já tinha em `CampanhaRecuperadaDto` — decisão de não estender esse gap de
+permissão nesta task, fica registrada para quem implementar o endpoint); dois pares de contrato
+novos ainda sem service/controller: `CampanhaConviteEspectadorRegenerarDto`/`...RegeneradoDto` e
+`CampanhaMembroPapelAlterarDto`/`...AlteradoDto` (troca `JOGADOR ↔ ESPECTADOR` pelo mestre, `papel`
+tipado sem permitir `MESTRE`). `criarCampanha` passa a gerar e persistir os dois convites.
+`SCHEMA.md`/`SYSTEM.SPEC.md §14` documentam a diferença entre papel por campanha
+(`tipo_campanha_membro_papel`) e papel global da conta (`tipo_usuario`, M6). Testes shared
+744/744, backend 476/476, lint sem erro novo, `openapi:gerar-contratos` rodado. Verificado ao vivo
+contra o Postgres real (script descartável, sem subir o Nest — porta 3100 já ocupada por sessão
+concorrente): criação/leitura/listagem dos dois códigos confirmadas, script removido sem deixar
+rastro. Próxima do módulo: `m8-02` (permissões de ficha/rolagem para o papel).
+
 **⚠ Pendente operacional — cutover Render → Cloud Run:** o backend de produção já roda no Google
 Cloud Run (migrado em 2026-09-01, detalhe completo em `HISTORY.md`); `apiBase` do frontend já
 aponta para lá e o smoke test end-to-end (registro real gravando no Supabase) passou. Falta, a
@@ -398,11 +419,11 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`ui-22` concluída — ver acima). Resta `ui-23` no backlog (stat sem
-valor/rodapé do cartão — ver "Fila do backlog" abaixo). A única frente de código de milestone
-ainda pendente é o **M4**
-(`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6 e M7 estão
-concluídos, incluindo todos os ajustes avulsos de pós-milestone.
+Não há spec ativa no momento (`m8-01` concluída — ver acima). Resta `ui-23` no backlog (stat sem
+valor/rodapé do cartão — ver "Fila do backlog" abaixo). As frentes de código de milestone ainda
+pendentes são o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3), e o
+**M8** (`m8-02`…`m8-06`, recém-iniciado). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os
+ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -412,10 +433,10 @@ concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 | `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
-| `m8-01`…`m8-06` | campanha (M8) | papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro — módulo novo, ainda não iniciado |
+| `m8-02`…`m8-06` | campanha (M8) | `m8-01` concluída (banco + contratos do papel ESPECTADOR — ver acima); restam permissões de ficha/rolagem, endpoint/entrada por convite, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro |
 
-Milestones ainda não abertos: `m5-guia-missao` e o M8 `m8-espectadores-campanha` (specs prontas em
-`docs/specs/backlog/`, aguardando início).
+Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` foi iniciado
+(`m8-01` concluída; specs de `m8-02`…`m8-06` prontas em `docs/specs/backlog/`).
 
 ---
 
@@ -454,7 +475,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
-| M8 | Espectadores e Prévias de Campanha | **não iniciado** — specs `m8-01`…`m8-06` prontas em `docs/specs/backlog/` (papel ESPECTADOR, convite próprio, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
+| M8 | Espectadores e Prévias de Campanha | **iniciado** — `m8-01` concluída (banco + contratos do papel ESPECTADOR); restam `m8-02`…`m8-06` (permissões, endpoint/entrada por convite, painel de leitura ao vivo, prévia fiel de jogador e visão read-only de Iniciativa/Encontro), specs prontas em `docs/specs/backlog/`. Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
 
 ---
 

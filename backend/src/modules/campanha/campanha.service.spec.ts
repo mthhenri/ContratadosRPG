@@ -56,6 +56,7 @@ describe('CampanhaService', () => {
     nome: 'Contenção Alfa',
     descricao: 'Missão inaugural',
     codigoConvite: 'ABCD2345',
+    codigoConviteEspectador: 'WXYZ6789',
     naBase: true,
   };
 
@@ -95,6 +96,7 @@ describe('CampanhaService', () => {
         nome: 'Contenção Alfa',
         descricao: 'Missão inaugural',
         codigoConvite: 'ABCD2345',
+        codigoConviteEspectador: 'WXYZ6789',
       });
       repositorio.criarMembro.mockResolvedValue(undefined);
 
@@ -107,7 +109,10 @@ describe('CampanhaService', () => {
       expect(repositorio.criarCampanha).toHaveBeenCalledWith({
         nome: 'Contenção Alfa',
         descricao: 'Missão inaugural',
+        // randomBytes dublado devolve sempre o mesmo buffer — os dois convites saem iguais
+        // neste teste determinístico; em produção cada chamada usa bytes aleatórios distintos.
         codigoConvite: 'ABCDEFGH',
+        codigoConviteEspectador: 'ABCDEFGH',
       });
 
       expect(repositorio.criarMembro).toHaveBeenCalledWith({
@@ -120,6 +125,7 @@ describe('CampanhaService', () => {
         nome: 'Contenção Alfa',
         descricao: 'Missão inaugural',
         codigoConvite: 'ABCD2345',
+        codigoConviteEspectador: 'WXYZ6789',
       });
     });
   });
@@ -138,6 +144,7 @@ describe('CampanhaService', () => {
           fichaCriticaNome: null,
           minhaFichaResumo: null,
           codigoConvite: 'ABCD2345',
+          codigoConviteEspectador: 'WXYZ6789',
           alteradoEm: '2026-07-29T01:48:01.082Z',
         },
       ];

@@ -495,9 +495,11 @@ forma do documento (`@IsEnum`, `@IsInt`, ranges).
 ```
 usuario                     login UNIQUE, senha (hash bcrypt), nome
 
-campanha                    nome, descricao, codigo_convite UNIQUE
+campanha                    nome, descricao, codigo_convite UNIQUE,
+                             codigo_convite_espectador UNIQUE (m8-01)
 campanha_membro             campanha_id FK, usuario_id FK, tipo_campanha_membro_papel_id FK
-tipo_campanha_membro_papel  codigo: MESTRE | JOGADOR
+tipo_campanha_membro_papel  codigo: MESTRE | JOGADOR | ESPECTADOR — papel POR CAMPANHA, distinto
+                             do papel GLOBAL da conta (tipo_usuario: NORMAL | ADMIN | TESTER, M6)
 
 ficha                       campanha_id FK, usuario_id FK (dono), tipo_ficha_id FK,
                             nome, dados JSONB
@@ -522,7 +524,11 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
 - Criatura e NPC usam o **mesmo mecanismo** de ficha: dono = mestre; invisíveis aos
   jogadores por padrão; reveláveis via `usuario_ficha_acesso`. Sem caso especial.
 - Jogador entra na campanha informando `codigo_convite`; entra com papel `JOGADOR`.
-  O mestre pode regenerar o código a qualquer momento (invalida o anterior).
+  O mestre pode regenerar o código a qualquer momento (invalida o anterior). Desde o m8-01, a
+  campanha também tem `codigo_convite_espectador`, independente e regenerável do mesmo jeito,
+  para entrar com papel `ESPECTADOR`; o endpoint que aceita esse código, o efeito de permissão do
+  papel (leitura sem ficha própria) e a troca `JOGADOR ↔ ESPECTADOR` pelo mestre são tasks
+  seguintes do módulo `m8-espectadores-campanha` — m8-01 só prepara banco e contratos.
 - Uma campanha tem exatamente **um** mestre no v1 — inicialmente o criador, mas o papel é
   **transferível** pelo mestre atual a outro membro (o alvo vira `MESTRE` e o mestre atual é
   rebaixado a `JOGADOR`, **atomicamente**; a invariante de exatamente um mestre se mantém).
