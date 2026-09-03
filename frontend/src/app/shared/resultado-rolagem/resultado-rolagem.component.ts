@@ -2,6 +2,21 @@ import { Component, computed, input } from '@angular/core';
 
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { DadosRoladosDto, ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
+import { Icone, type IconeNome } from '../icone/icone.component';
+
+/**
+ * Faces com SVG de dado dedicado (`d4`..`d20` em `icone.component`) — as únicas que trocam o
+ * quadradinho pela silhueta do dado. Fórmula caseira com face fora desse conjunto (ex.: `d3`,
+ * `d100`) não tem arte própria e continua no quadradinho de sempre (fallback).
+ */
+const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
+  4: 'd4',
+  6: 'd6',
+  8: 'd8',
+  10: 'd10',
+  12: 'd12',
+  20: 'd20',
+};
 
 /**
  * Modificador BEM (`resultado-rolagem__grupo--<sufixo>`) por tipo de dano — cor dedicada por tipo
@@ -25,7 +40,7 @@ const SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
  */
 @Component({
   selector: 'app-resultado-rolagem',
-  imports: [],
+  imports: [Icone],
   templateUrl: './resultado-rolagem.component.html',
   styleUrl: './resultado-rolagem.component.scss',
 })
@@ -78,6 +93,11 @@ export class ResultadoRolagem {
     return dado.tipoDano
       ? `resultado-rolagem__dado resultado-rolagem__dado--${SUFIXO_TIPO_DANO[dado.tipoDano]}`
       : 'resultado-rolagem__dado';
+  }
+
+  /** Nome do ícone (`app-icone`) pra este `faces`, ou `null` no fallback sem arte própria. */
+  protected iconeDado(faces: number): IconeNome | null {
+    return ICONE_POR_FACES[faces] ?? null;
   }
 
   /**

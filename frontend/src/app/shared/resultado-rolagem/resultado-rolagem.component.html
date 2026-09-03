@@ -25,12 +25,9 @@
                     <div class="resultado-rolagem__pool">
                         @for (dado of resultado.dados; track $index) {
                             <span class="resultado-rolagem__dado-termo">
-                                <span class="resultado-rolagem__dado-nota">{{
-                                    (dado.sinal < 0 ? "−" : "") +
-                                        dado.valores.length +
-                                        "D" +
-                                        dado.faces
-                                }}</span>
+                                @if (dado.sinal < 0) {
+                                    <span class="resultado-rolagem__dado-sinal">−</span>
+                                }
                                 @for (marcado of dadosMarcados(dado); track $index) {
                                     <span
                                         [class]="classeDado(dado)"
@@ -46,7 +43,10 @@
                                                 : null
                                         "
                                     >
-                                        {{ marcado.valor }}
+                                        @if (iconeDado(dado.faces); as icone) {
+                                            <app-icone class="resultado-rolagem__dado-svg" [nome]="icone" />
+                                        }
+                                        <span class="resultado-rolagem__dado-valor">{{ marcado.valor }}</span>
                                     </span>
                                 }
                                 @if (dado.desvantagem) {

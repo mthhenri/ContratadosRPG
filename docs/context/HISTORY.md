@@ -1,5 +1,60 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-02 — dadinhos do pool trocam o quadradinho pela silhueta do dado (SVG)
+
+Pedido direto do autor: depois de trocar o glifo do d20 e desenhar os SVGs dos demais dados
+(`shared/src/icons/d4.svg`..`d12.svg`), a rolagem (`ResultadoRolagem`, reusada pela bandeja de
+dados, pelo histórico lateral, pelo painel de encontro e pelo feed da campanha) devia mostrar a
+silhueta do dado por trás de cada valor rolado em vez do quadradinho neutro — "mais visual, mais
+direto" — e o rótulo `NdM` (`4d8`, `3d6`...) sair de cena, já que a forma + a contagem de ícones
+passam a carregar essa informação sozinhas.
+
+**Ícones novos em `icone.component`, mesmo tratamento do `d20`.** `d4`/`d6`/`d8`/`d10`/`d12`
+entraram como `@case` no `@switch` de `icone.component.html`, cada um um `<svg>` aninhado que
+remapeia o `viewBox` original pros 24×24 dos demais ícones — o `<path>` teve `fill`/`stroke`
+próprios removidos (herda `currentColor`/`none` do wrapper), mas ao contrário do `d20`
+**preservando `fill-rule="evenodd"`**: nos cinco novos, os sub-paths se sobrepõem e é o evenodd
+que desenha as linhas de faceta (o d20 tem facetas ladrilhadas, sem sobreposição, por isso saiu
+ileso sem o atributo). Essa é a edição de SVG que foi avisada com antecedência antes de mexer.
+
+**Armadilha real: `app-icone` não deixa o pai controlar o tamanho do SVG interno.**
+`icone.component.scss` mede o próprio `<svg>` em `1.15em`, e a *view encapsulation* do Angular
+impede um seletor descendente do componente-pai (`resultado-rolagem`) de alcançar esse `<svg>`
+interno — `color` passa porque é herdável por CSS normal, mas `width`/`height` não atravessam a
+fronteira do componente. A primeira tentativa (`width: 100%` no descendente) compilava sem erro e
+não fazia nada: os dados renderizavam sem nenhuma silhueta visível, só o número solto. A correção
+pilota o tamanho pelo `font-size` do host (`calc(30px / 1.15)` cheio, `calc(22px / 1.15)`
+compacto) e deixa o `1.15em` interno do `icone.component` fazer a conta.
+
+**Preenchimento esmaecido por `opacity`, não pelo token `-dim`.** A escolha do autor foi manter o
+peso visual sutil de hoje (nada do preenchimento cheio do d20 da topbar). A primeira tentativa
+reusou os tokens `--dano-*-dim`/`--border` (7–12% alpha) — calibrados pra um fundo *sob* texto
+opaco, não pra um SVG de linhas finas — e o resultado, verificado ao vivo, era invisível de novo.
+A correção usa a cor cheia do tipo + `opacity: 0.4` (0.45 no `--escolhido`) direto no ícone,
+mantendo o número por cima na cor cheia de sempre — mesma linguagem visual, intensidade calibrada
+pro elemento certo.
+
+**Estrutura:** `.resultado-rolagem__dado` virou um `inline-grid` com `app-icone` + o valor na
+mesma célula (`grid-area` compartilhada) em vez de posicionamento absoluto. Fórmula com face fora
+de `d4/d6/d8/d10/d12/d20` (ex.: um `d3`/`d100` caseiro) cai no fallback antigo — quadradinho com
+borda própria, via `:not(:has(app-icone))`. O rótulo `NdM` foi substituído por um `−` compacto
+só quando `dado.sinal < 0` (pool subtraído) — a única informação que a silhueta não carrega
+sozinha; a distinção entre tipos de dano na mesma fórmula (`4d6[F] + 4d6[Q]`), antes dada pelo
+texto `NdM`, agora vem só da cor do ícone.
+
+Testes: suíte frontend completa **1551/1551** (2 casos novos: ícone no dado padrão + fallback sem
+ícone numa face fora do conjunto; ausência do rótulo `NdM` + sinal `−` isolado), build limpo, lint
+sem erros novos (avisos de aspas/`max-len` pré-existentes no repo, confirmado num arquivo não
+tocado). Verificação ao vivo (`verify`, ficha real criada via API com o motor de regras de
+`shared/regras/agente`, rolagem real disparada pela "Rolagem rápida" da aba Rolagens com
+`4d8[F] + 3d6kh2[Q] + 2d10cm2[B] - 2d4[E] + 1d12[G] + 1d20` e depois `4d3 - 1d20`): os 6 ícones
+renderizam a forma e a cor certas por tipo de dano, `--escolhido`/`--descartado` (kh/kl) e o
+◆ de crítico continuam legíveis por cima da silhueta, o fallback (`d3`) mantém o quadradinho, o
+sinal `−` aparece isolado sem o `NdM`, e a forma cheia (bandeja) e a compacta (histórico lateral)
+ficam corretas em `1920×1080` e `360×800`, sem overflow. Análogo usado: o próprio
+`.resultado-rolagem__dado` de antes (shell/densidade/estados idênticos) + o caso `d20` já existente
+em `icone.component` (padrão de adaptação do SVG-fonte).
+
 ## 2026-09-02 — painéis laterais: colapso da grade só quando falta espaço de verdade + ficha/criatura entram no mesmo tratamento
 
 Segunda rodada de correção do mesmo par de defeitos (ver a entrada logo abaixo), a partir de

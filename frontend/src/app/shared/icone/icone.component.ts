@@ -11,7 +11,9 @@ import { Component, input } from '@angular/core';
  * "Inventário"; `camadas`/`teto`, toggles "não conta no total/teto" das modificações de item; e
  * `busca`, botão de busca de itens na aba Inventário; `duplicar`, ação de clonar uma ficha no
  * painel da campanha (m3-52); `d20`, gatilho da barra lateral de histórico de rolagens
- * (campanha e ficha); e `fragmento-construtor`/`fragmento-potencializador`, variantes do
+ * (campanha e ficha); `d4`/`d6`/`d8`/`d10`/`d12`, mesma família de dado sólido do `d20` — usados
+ * no pool de dados de `ResultadoRolagem` (silhueta do dado por trás do valor rolado, em vez do
+ * quadradinho); e `fragmento-construtor`/`fragmento-potencializador`, variantes do
  * diamante genérico `fragmento` com um selo no canto inferior direito (martelo/estrela) —
  * usadas só onde a categoria específica importa (abas do catálogo, select de item custom);
  * o `fragmento` genérico continua valendo pros demais usos (filtro, badge "de Fragmento"); as
@@ -87,6 +89,11 @@ export type IconeNome =
   | 'busca'
   | 'duplicar'
   | 'd20'
+  | 'd4'
+  | 'd6'
+  | 'd8'
+  | 'd10'
+  | 'd12'
   | 'modificador'
   | 'vassoura'
   | 'importar'

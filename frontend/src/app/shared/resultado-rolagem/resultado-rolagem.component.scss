@@ -88,8 +88,8 @@
         gap: 5px 10px;
     }
 
-    // Um termo de dado (m3-22): o rótulo NdM + os valores rolados em chips. Quebra em várias linhas
-    // quando há muitos dados (ex.: 6d6, 10d10 crítico).
+    // Um termo de dado (m3-22): o sinal (se subtraído) + os valores rolados em chips. Quebra em
+    // várias linhas quando há muitos dados (ex.: 6d6, 10d10 crítico).
     &__dado-termo {
         display: flex;
         flex-wrap: wrap;
@@ -97,40 +97,87 @@
         gap: 5px;
     }
 
-    &__dado-nota {
+    // "−" antes de um pool subtraído (ex.: `4d6 - 2d4`) — a única informação que a silhueta do
+    // dado não carrega sozinha; o `NdM` por extenso saiu (a forma + a contagem de ícones já dizem
+    // tipo e quantidade, texto ficaria redundante — pedido do autor, revisão pós-SVG dos dados).
+    &__dado-sinal {
         font-family: var(--font-mono);
-        font-size: 12px;
+        font-size: 14px;
+        font-weight: 700;
         color: var(--text-mute);
     }
 
-    &__dado {
-        font-family: var(--font-mono);
-        font-size: 16px;
-        color: var(--text-mute);
-        min-width: 28px;
-        text-align: center;
-        padding: 2px 6px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-control);
+    // Valor rolado, empilhado sobre a silhueta do dado (mesma célula de grid do `&__dado`) — sem
+    // z-index próprio: no fluxo normal, pinta depois do `app-icone` (que não tem z-index) e antes
+    // do `::after` do risco de descartado (esse sim com `z-index: 1`), então cobre o dado mas fica
+    // por baixo do risco.
+    &__dado-valor {
+        line-height: 1;
+    }
 
-        // Cor por tipo de dano (I-011) — mesma paleta do chip de resumo (`__grupo`), aplicada ao
-        // dadinho individual do pool, pra dar pista visual de qual `NdM` é qual tipo numa fórmula com
-        // vários (ex.: `4d6[F] + 4d6[Q]`). Declarado antes de `--escolhido`/`--descartado`: quando um
-        // dado é mantido, a cor de "escolhido" continua prevalecendo (mesma prioridade de sempre); a
-        // cor de tipo some do texto/borda, mas o dado ainda existe visualmente no grupo certo pela
-        // posição. Descartado só mexe em opacidade/risco, então a cor de tipo continua visível por trás.
+    // Dadinho do pool (I-011/redesign SVG): a silhueta do dado (`app-icone`, `d4`..`d20`) empilhada
+    // com o valor por cima, no lugar do quadradinho de texto — ambos ocupam a mesma célula de grid
+    // (`place-items: center` + `grid-area` compartilhada) em vez de posicionamento absoluto, pra não
+    // depender de o ícone herdar altura/largura do host de outro componente.
+    &__dado {
+        position: relative;
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text-mute);
+
+        > * {
+            grid-area: 1 / 1;
+        }
+
+        // `app-icone` mede o próprio SVG em `1.15em` (`icone.component.scss`) — a view encapsulation
+        // do Angular impede um `width`/`height` daqui de alcançar o `<svg>` interno (`color` passa,
+        // por herança normal de CSS; `width` não é herdável e o seletor não atravessa o componente).
+        // Então o tamanho do dado se pilota pelo `font-size` do host, não por `width`/`height` diretos.
+        &-svg {
+            display: block;
+            font-size: calc(30px / 1.15); // caixa de ~30px — acompanha o `width`/`height` do `&__dado`
+            color: var(--text-mute); // preenchimento neutro — sem tipo de dano nem keep
+            opacity: 0.4; // silhueta é traço fino demais pros tokens `-dim`/`--border` (7-12% alpha,
+            // calibrados pra fundo sob texto opaco) — some quase por completo num SVG de linhas finas
+        }
+
+        // Sem ícone (fallback de face fora de d4/d6/d8/d10/d12/d20 — ex.: `d3`/`d100` caseiro):
+        // volta ao quadradinho de sempre, com borda própria (a silhueta do dado não existe aqui).
+        &:not(:has(app-icone)) {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-control);
+        }
+
+        // Cor por tipo de dano (I-011) — mesma paleta do chip de resumo (`__grupo`): o preenchimento
+        // do dado usa a cor do tipo, esmaecida por `opacity` (não pelo token `-dim` — ver comentário
+        // do `&-svg` acima), o valor por cima fica na cor cheia. Dá a pista de qual `NdM` é qual tipo
+        // numa fórmula com vários (ex.: `4d6[F] + 4d6[Q]`), já que o rótulo `NdM` não existe mais.
+        // Declarado antes de `--escolhido`/`--descartado`: quando um dado é mantido, a cor de
+        // "escolhido" continua prevalecendo (mesma prioridade de sempre). Descartado só mexe em
+        // opacidade/risco, então a cor de tipo continua visível por trás.
         @each $tipo in fisico, balistico, explosao, quimico, geral {
             &--#{$tipo} {
                 color: var(--dano-#{$tipo});
-                border-color: var(--dano-#{$tipo}-border);
-                background: var(--dano-#{$tipo}-dim);
+
+                .resultado-rolagem__dado-svg {
+                    color: var(--dano-#{$tipo});
+                    opacity: 0.4;
+                }
             }
         }
 
         &--escolhido {
             color: var(--text);
-            border-color: var(--accent-border);
-            background: var(--accent-dim);
+
+            .resultado-rolagem__dado-svg {
+                color: var(--accent);
+                opacity: 0.45;
+            }
         }
 
         // Dado descartado pelo keep (kh/kl) ou por qualquer expressão que não conta todos os
@@ -140,13 +187,13 @@
         // meio do dígito). `currentColor` — a cor de tipo de dano (`--fisico` etc.) continua
         // visível por trás e o traço acompanha, sem precisar de uma segunda variável de cor.
         &--descartado {
-            position: relative;
             opacity: 0.45;
 
             &::after {
                 content: "";
                 position: absolute;
                 inset: 0;
+                z-index: 1;
                 border-radius: inherit;
                 background: linear-gradient(
                     to top right,
@@ -261,14 +308,18 @@
             gap: 4px;
         }
 
-        .resultado-rolagem__dado-nota {
+        .resultado-rolagem__dado-sinal {
             font-size: 10px;
         }
 
         .resultado-rolagem__dado {
+            width: 22px;
+            height: 22px;
             font-size: 12px;
-            min-width: 20px;
-            padding: 2px 6px;
+
+            .resultado-rolagem__dado-svg {
+                font-size: calc(22px / 1.15);
+            }
         }
 
         .resultado-rolagem__critico,

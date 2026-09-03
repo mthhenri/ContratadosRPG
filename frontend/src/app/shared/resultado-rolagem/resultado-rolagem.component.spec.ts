@@ -74,6 +74,26 @@ describe('ResultadoRolagem', () => {
     expect(dados[1].getAttribute('aria-label')).toBe('1 (descartado)');
   });
 
+  /** Redesign SVG dos dados: face padrão (d4..d20) troca o quadradinho pela silhueta do dado. */
+  it('face padrão (ex.: d6) renderiza o ícone do dado; face fora do conjunto cai no fallback', () => {
+    const raiz = montar(resultadoBase([
+      { sinal: 1, faces: 6, valores: [4], subtotal: 4 },
+      { sinal: 1, faces: 3, valores: [2], subtotal: 2 },
+    ]));
+    const dados = raiz.querySelectorAll('.resultado-rolagem__dado');
+    expect(dados[0].querySelector('app-icone')).not.toBeNull();
+    expect(dados[1].querySelector('app-icone')).toBeNull();
+  });
+
+  /** Rótulo `NdM` saiu (a forma do dado já diz o tipo); só sobra o "−" de um pool subtraído. */
+  it('sem rótulo NdM; pool subtraído (sinal < 0) mostra só o sinal "−"', () => {
+    const raiz = montar(resultadoBase([
+      { sinal: -1, faces: 6, valores: [4], subtotal: -4 },
+    ]));
+    expect(raiz.querySelector('.resultado-rolagem__dado-nota')).toBeNull();
+    expect(raiz.querySelector('.resultado-rolagem__dado-sinal')?.textContent?.trim()).toBe('−');
+  });
+
   /** ui-22: variante de linha do painel lateral/feed — a bandeja continua na forma cheia. */
   it('[compacto] aplica o modificador --compacto na raiz; sem o input, a forma continua cheia', () => {
     const resultado = resultadoBase([{ sinal: 1, faces: 20, valores: [15], subtotal: 15 }]);
