@@ -496,7 +496,7 @@
         } @if (exibirComoMestre()) {
         <div class="detalhe__estatisticas">
             <div class="detalhe__estatistica detalhe__stat-convite">
-                <span class="detalhe__estatistica-rotulo">Convite</span>
+                <span class="detalhe__estatistica-rotulo">Convite de jogador</span>
                 <div class="detalhe__convite-linha">
                     <code class="detalhe__codigo">{{ campanhaAtual.codigoConvite }}</code>
                     <button
@@ -505,7 +505,7 @@
                         class="detalhe__copiar"
                         type="button"
                         [class.detalhe__copiar--copiado]="copiado()"
-                        [attr.aria-label]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
+                        [attr.aria-label]="rotuloCopiarConvite(copiado(), 'jogador')"
                         [appTooltip]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
                         (click)="copiarConvite()"
                     >
@@ -519,13 +519,56 @@
                         type="button"
                         [class.detalhe__regenerar--confirmado]="regenerado()"
                         [disabled]="regenerando()"
-                        [attr.aria-label]="regenerando() ? 'Regenerando código de convite' : 'Regenerar código de convite'"
+                        [attr.aria-label]="rotuloRegenerarConvite(regenerando(), 'jogador')"
                         [appTooltip]="'Regenerar convite'"
-                        (click)="regenerarConvite()"
+                        (click)="pedirRegenerarConvite()"
                     >
                         <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
                     </button>
                 </div>
+            </div>
+
+            <div class="detalhe__estatistica detalhe__stat-convite-espectador">
+                <span class="detalhe__estatistica-rotulo">Convite de espectador</span>
+                <div class="detalhe__convite-linha">
+                    <code class="detalhe__codigo">{{ campanhaAtual.codigoConviteEspectador }}</code>
+                    <button
+                        app-botao-icone
+                        tamanho="padrao"
+                        class="detalhe__copiar"
+                        type="button"
+                        [class.detalhe__copiar--copiado]="copiadoEspectador()"
+                        [attr.aria-label]="rotuloCopiarConvite(copiadoEspectador(), 'espectador')"
+                        [appTooltip]="copiadoEspectador() ? 'Código copiado' : 'Copiar código de convite'"
+                        (click)="copiarConviteEspectador()"
+                    >
+                        <app-icone [nome]="copiadoEspectador() ? 'check' : 'copiar'" />
+                        <span class="detalhe__copiado-tooltip" role="status">Copiado</span>
+                    </button>
+                    <button
+                        app-botao-icone
+                        tamanho="padrao"
+                        class="detalhe__regenerar"
+                        type="button"
+                        [class.detalhe__regenerar--confirmado]="regeneradoEspectador()"
+                        [disabled]="regenerandoEspectador()"
+                        [attr.aria-label]="rotuloRegenerarConvite(regenerandoEspectador(), 'espectador')"
+                        [appTooltip]="'Regenerar convite'"
+                        (click)="pedirRegenerarConviteEspectador()"
+                    >
+                        <app-icone [nome]="regeneradoEspectador() ? 'check' : 'atualizar'" />
+                    </button>
+                </div>
+                <a
+                    app-botao
+                    variante="secundario"
+                    class="botao botao--secundario detalhe__abrir-painel-espectador"
+                    [routerLink]="['/campanhas', campanhaAtual.id, 'espectador']"
+                    [appTooltip]="'Abrir o Painel do espectador em modo de prévia'"
+                >
+                    <app-icone nome="olho" />
+                    Painel do espectador
+                </a>
             </div>
 
             <div class="detalhe__estatistica detalhe__stat-encontro">
@@ -614,7 +657,13 @@
                                 <span class="detalhe__membro-nome">{{ membro.nome }}</span>
                                 <span class="chip-papel">
                                     <app-icone
-                                        [nome]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE ? 'coroa' : 'protecoes'"
+                                        [nome]="
+                                            membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
+                                                ? 'coroa'
+                                                : membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+                                                  ? 'olho'
+                                                  : 'protecoes'
+                                        "
                                     />
                                     {{ membro.papel }}
                                 </span>
@@ -622,6 +671,7 @@
 
                             @if (podeGerenciarMembro(membro) && acaoMembro() !== membro.usuarioId) {
                             <div class="detalhe__membro-acoes">
+                                @if (membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR) {
                                 <button
                                     class="detalhe__membro-acao"
                                     type="button"
@@ -630,6 +680,26 @@
                                     (click)="pedirTransferenciaMestre(membro)"
                                 >
                                     <app-icone nome="coroa" />
+                                </button>
+                                }
+                                <button
+                                    class="detalhe__membro-acao"
+                                    type="button"
+                                    [disabled]="alterandoPapel() === membro.usuarioId"
+                                    [attr.aria-label]="
+                                        'Tornar ' + membro.nome + ' ' +
+                                        (papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'Espectador' : 'Jogador')
+                                    "
+                                    [appTooltip]="
+                                        papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR
+                                            ? 'Tornar espectador'
+                                            : 'Tornar jogador'
+                                    "
+                                    (click)="pedirAlterarPapelMembro(membro)"
+                                >
+                                    <app-icone
+                                        [nome]="papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'olho' : 'protecoes'"
+                                    />
                                 </button>
                                 <button
                                     class="detalhe__membro-acao"

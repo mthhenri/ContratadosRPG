@@ -2,9 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { StandardResponse } from '@contratados-rpg/shared/interfaces';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaAlteradaDto,
   CampanhaAlterarDto,
+  CampanhaConviteEspectadorRegeneradoDto,
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaCriarDto,
@@ -14,6 +16,7 @@ import {
   CampanhaInventarioItemAdicionarDto,
   CampanhaInventarioItemAlterarDto,
   CampanhaEntrarDto,
+  CampanhaMembroPapelAlteradoDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMestreTransferidoDto,
@@ -90,6 +93,36 @@ export class CampanhaService {
     return this.httpClient
       .post<StandardResponse<CampanhaConviteRegeneradoDto>>(`${this.base}/${id}/convite/regenerar`, {})
       .pipe(map((resposta) => resposta.dados as CampanhaConviteRegeneradoDto));
+  }
+
+  /**
+   * Regenera o convite de espectador (só mestre — o backend barra com 403), independente do
+   * convite de jogador (m8-01/m8-02 — cada código é regenerado sem invalidar o outro).
+   */
+  regenerarConviteEspectador(id: number): Observable<CampanhaConviteEspectadorRegeneradoDto> {
+    return this.httpClient
+      .post<StandardResponse<CampanhaConviteEspectadorRegeneradoDto>>(
+        `${this.base}/${id}/convite-espectador/regenerar`,
+        {},
+      )
+      .pipe(map((resposta) => resposta.dados as CampanhaConviteEspectadorRegeneradoDto));
+  }
+
+  /**
+   * Troca o papel de um membro entre `JOGADOR` e `ESPECTADOR` (só mestre — §14; nunca o mestre em
+   * si, nunca promove direto a `MESTRE` — isso é {@link transferirMestre}).
+   */
+  alterarPapelMembro(
+    id: number,
+    usuarioId: number,
+    papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR,
+  ): Observable<CampanhaMembroPapelAlteradoDto> {
+    return this.httpClient
+      .patch<StandardResponse<CampanhaMembroPapelAlteradoDto>>(
+        `${this.base}/${id}/membro/${usuarioId}/papel`,
+        { papel },
+      )
+      .pipe(map((resposta) => resposta.dados as CampanhaMembroPapelAlteradoDto));
   }
 
   /** Remove um jogador da campanha — soft delete (só mestre — o backend barra o jogador com 403). */

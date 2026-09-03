@@ -427,9 +427,12 @@
         margin-bottom: 16px;
     }
 
-    // Tile "Convite" — o código + copiar/regenerar (antes uma caixa própria `&__convite`, agora
-    // dentro da tira de estatísticas). Largura contida no desktop; linha inteira no mobile.
-    &__stat-convite {
+    // Tile "Convite de jogador" — o código + copiar/regenerar (antes uma caixa própria
+    // `&__convite`, agora dentro da tira de estatísticas). Largura contida no desktop; linha
+    // inteira no mobile. Tile "Convite de espectador" (m8-03) é o par independente — mesma
+    // medida, código e regeneração próprios (m8-01/m8-02: os dois convites nunca se invalidam).
+    &__stat-convite,
+    &__stat-convite-espectador {
         min-width: 0;
         flex: 0 1 340px;
 
@@ -483,8 +486,12 @@
     }
 
     // ui-19: padding bate com o degrau `pequeno` do app-botao, mas font-weight é 700 (o degrau
-    // é 600) — não migrado para `[tamanho]`.
-    &__encontro-acao {
+    // é 600) — não migrado para `[tamanho]`. `&__abrir-painel-espectador` (m8-03, link "Painel do
+    // espectador" no tile de convite de espectador) reusa a mesma receita — num seletor próprio,
+    // não a mesma classe, porque quem testa `&__encontro-acao` sozinha espera achar só o link do
+    // tile "Combate".
+    &__encontro-acao,
+    &__abrir-painel-espectador {
         flex: none;
         display: inline-flex;
         align-items: center;
@@ -503,6 +510,13 @@
         @include bp.mobile {
             min-height: bp.$alvo-toque;
         }
+    }
+
+    // Só o link "Painel do espectador" empilha dentro do próprio tile (o de "Combate" fica ao
+    // lado do texto de estado, não abaixo dele) — folga acima e largura pelo conteúdo.
+    &__abrir-painel-espectador {
+        margin-top: 8px;
+        width: fit-content;
     }
 
     &__convite-linha {

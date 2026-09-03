@@ -140,7 +140,9 @@
         // Então o tamanho do dado se pilota pelo `font-size` do host, não por `width`/`height` diretos.
         &-svg {
             display: block;
-            font-size: calc(30px / 1.15); // caixa de ~30px — acompanha o `width`/`height` do `&__dado`
+            font-size: calc(
+                30px / 1.15
+            ); // caixa de ~30px — acompanha o `width`/`height` do `&__dado`
             color: var(--text-mute); // preenchimento neutro — sem tipo de dano nem keep
             opacity: 0.4; // silhueta é traço fino demais pros tokens `-dim`/`--border` (7-12% alpha,
             // calibrados pra fundo sob texto opaco) — some quase por completo num SVG de linhas finas

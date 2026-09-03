@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { autenticacaoGuard } from './core/guards/autenticacao.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { mestreCampanhaGuard } from './core/guards/mestre-campanha.guard';
+import { espectadorCampanhaGuard } from './core/guards/espectador-campanha.guard';
 
 export const routes: Routes = [
   {
@@ -58,6 +59,18 @@ export const routes: Routes = [
     canActivate: [autenticacaoGuard],
     loadChildren: () =>
       import('./modules/encontro/encontro.routes').then((modulo) => modulo.encontroRoutes),
+  },
+  // Painel do espectador ao vivo (m8-03) — só o espectador real da campanha ou o mestre em
+  // prévia (`espectadorCampanhaGuard`, que usa a própria projeção do painel como autoridade,
+  // já que `ESPECTADOR` não pode chamar `listarMembros`). Mesma convenção de precedência das
+  // rotas acima (ficha/criatura/iniciativa): casa antes do prefixo genérico `campanhas`.
+  {
+    path: 'campanhas/:id/espectador',
+    canActivate: [autenticacaoGuard, espectadorCampanhaGuard],
+    loadComponent: () =>
+      import('./modules/campanha/paginas/espectador/espectador.page').then(
+        (pagina) => pagina.CampanhaEspectador,
+      ),
   },
   // Área privada de campanhas (guardada) — destino padrão pós-login. Montada sob `/campanhas`
   // (listar/criar/entrar/detalhe), consumindo o backend fechado nas m2-04/m2-05 — m2-07.

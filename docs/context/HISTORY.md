@@ -1,5 +1,99 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — m8-03: frontend do papel ESPECTADOR — entrada, gestão e Painel ao vivo (M8)
+
+Terceira task do módulo `m8-espectadores-campanha` (depende de `m8-02`): o frontend inteiro do
+papel `ESPECTADOR` — bifurcação pós-entrada, os dois convites geridos pelo mestre com troca de
+papel `JOGADOR ↔ ESPECTADOR`, e a rota nova `/campanhas/:id/espectador` (Painel do espectador),
+única porta que esse papel consegue abrir. Nenhum backend novo: consome inteiramente o que `m8-02`
+já expôs (`CampanhaProjecaoController`, `regenerarConviteEspectador`, `alterarPapelMembro`).
+
+**Achado pré-requisito: `m8-01` deixou o frontend sem compilar.** Antes de tocar o entregável, `npx
+tsc --noEmit` no frontend falhava com 7 erros — `codigoConviteEspectador` (adicionado a
+`CampanhaResumoDto`/`CampanhaCriadaDto`/`CampanhaRecuperadaDto` na `m8-01`, campo obrigatório)
+faltava em fixtures de teste em `campanha.service.spec.ts`, `detalhe.page.spec.ts`,
+`lista.page.spec.ts` e `acervo.page.spec.ts` — nenhum desses arquivos tinha sido tocado pela `m8-01`
+(que era propositalmente backend-only). Corrigido como pré-requisito do próprio gate desta task
+(sem isso `tsc`/build nunca passariam), não como tarefa própria.
+
+**Entrada por código único, bifurcação no cliente (item 1).** `CampanhaEntrar` (`entrar.page.ts`)
+continua com um único campo "Código de convite" — nada mudou na coleta. A mudança é o que acontece
+com a resposta: `CampanhaEntradaDto.papel` (já devolvido pelo backend desde a `m8-02`) decide o
+destino — `NotificacaoService.notificar` confirma "Você entrou como Jogador"/"...Espectador" antes
+de navegar, e a navegação bifurca entre `/campanhas/:id` (como sempre) e `/campanhas/:id/espectador`
+(novo). `entrar.page.spec.ts` não existia — criado do zero (3 testes: bifurcação JOGADOR, bifurcação
+ESPECTADOR, ausência de qualquer seletor de papel no formulário).
+
+**Gestão do mestre em `CampanhaDetalhe` (item 2).** A tira de estatísticas ganhou um segundo tile:
+"Convite de jogador" (renomeado do antigo "Convite") e "Convite de espectador", cada um com o
+próprio par copiar/regenerar (`copiarConviteEspectador`/`regenerarConviteEspectador`, signals
+`copiadoEspectador`/`regenerandoEspectador`/`regeneradoEspectador` — espelham exatamente os do
+convite de jogador) e um link "Painel do espectador" para a mestre abrir a prévia. Regenerar
+qualquer um dos dois convites agora pede confirmação (`ConfirmacaoService`, severidade `padrao`) —
+o convite de jogador não pedia antes; decisão desta task estender a mesma régua aos dois, já que os
+dois invalidam um código em uso. A coluna "Membros" ganhou o terceiro ícone de chip (`olho` para
+`ESPECTADOR`, ao lado de `coroa`/`protecoes` já existentes) e um botão "Alternar papel" novo
+(`pedirAlterarPapelMembro`/`alterarPapelMembro`, mesma confirmação) ao lado de "Remover" — troca
+`JOGADOR ↔ ESPECTADOR` e recarrega membros/fichas (um jogador rebaixado pode deixar de ver a
+própria ficha, m8-02). `podeGerenciarMembro` passou de "só JOGADOR" para "qualquer não-MESTRE"; o
+botão "Transferir mestre" ficou restrito a `papel === JOGADOR` (o backend já recusava promover
+espectador direto a mestre — agora o botão nem aparece pra isso).
+
+**Painel do espectador — rota, guard e página novos (itens 3-5).** Nova rota de nível superior
+`campanhas/:id/espectador` (mesma convenção de precedência de `ficha`/`criatura`/`iniciativa` em
+`app.routes.ts` — precisa vir antes do `campanhas` genérico). `espectadorCampanhaGuard` não
+reimplementa permissão: chama `CampanhaProjecaoService.recuperarPainelEspectador` (o mesmo endpoint
+que a página carrega) e usa sucesso/falha como autoridade — `listarMembros`/`recuperarCampanha`, que
+`mestreCampanhaGuard` usaria, já recusam `ESPECTADOR` desde a `m8-02`, então não servem de guard
+aqui. A página nova (`CampanhaEspectador`) é composição própria, não uma máscara sobre
+mestre/jogador: cabeçalho compacto (nome + selo "Modo espectador", ícone `olho`), barra "Modo
+prévia · Sair da visualização" só quando `ehMestrePreview()` (resolvido via `listarCampanhas` — a
+única rota que devolve o próprio papel sem exigir permissão que `ESPECTADOR` não tem), e um feed
+dominante de rolagens públicas com a mesma densidade de item do análogo aprovado
+(`HistoricoRolagensSidebar`, ui-22: rótulo/autor/fórmula/`app-resultado-rolagem[compacto]`/tempo
+relativo), paginado (`itens/totalItens/paginaAtual/totalPaginas`, teto de 20 por página, "Carregar
+mais") e com prepend em tempo real deduplicado por id (`rolagemRegistrada$`, mesmo padrão de
+`onRolagemRegistrada` em `visualizar.page.ts`). Nenhum controle de escrita existe no template — sem
+card de ficha, convites, gestão de membros ou botão de rolar; a ausência é estrutural (o template
+nunca os declara), não um esconder condicional.
+
+**Achado ao vivo, corrigido na própria task: barra de prévia sem tratamento mobile.** A verificação
+em `360×800` (Postgres nativo — Docker bloqueado pelo ambiente) achou o texto "Modo prévia · você
+vê..." quebrando por baixo do botão "Sair da visualização" e se sobrepondo a ele, e o próprio botão
+medindo só 26px de altura (abaixo do alvo de toque de 44px exigido pelo item 5). Corrigido em
+`espectador.page.scss` (`&__preview-barra` com `flex-wrap` no mobile, `&__preview-texto` em
+`flex-basis: 100%`, `&__preview-sair` em `width: 100%; min-height: bp.$alvo-toque`) e reconfirmado
+com nova captura. A mesma receita (`.detalhe__preview-barra`/`.detalhe__preview-sair`, "Ver como
+jogador") não tem esse tratamento no arquivo original — registrado como `P-047` (`PROBLEMS.md`),
+fora do recorte desta task.
+
+**Verificação ao vivo completa (Postgres nativo, backend+frontend reais).** Cenário via REST:
+mestre cria campanha (dois convites), jogador entra pelo de jogador e cria uma ficha, espectador
+entra pelo de espectador. Confirmado ao vivo: entrada pela UI real (não só REST) bifurca para os
+dois papéis com o toast certo; tira de convites do mestre mostra os dois tiles com copiar/regenerar
+independentes; chip/ações de papel na lista de membros batem exatamente com o desenho (crop
+conferido: espectador com `olho`+botão "tornar jogador"+remover, jogador com
+`coroa`+`protecoes`+botão "tornar espectador"+remover); o mestre abre "Painel do espectador" e vê a
+barra de prévia + feed vazio; o espectador real abre a mesma rota direto e vê exatamente o mesmo
+recorte, sem a barra; uma rolagem `PUBLICA` registrada pelo jogador via REST chegou **sem recarregar**
+(sentinela `window.__sentinela` sobrevivendo) nos dois painéis simultaneamente (espectador real e
+mestre em prévia) — mesmo item, mesma renderização, confirmando que nenhum privilégio de mestre
+vaza na prévia. `1920×1080` e `360×800` sem overflow horizontal (`scrollWidth`/`clientWidth`
+conferido por script) nos dois papéis e nos dois estados (vazio/preenchido).
+
+**Gates.** Suíte frontend completa 1576/1576 (era 1553; a diferença inclui os testes novos e os 4
+mocks corrigidos), lint sem erro novo (15.586 avisos históricos — cresceu com as novas strings, não
+com violação), build de produção limpo com os avisos de budget conhecidos (`P-004`). `shared`/
+`backend` inalterados nesta task — não re-executados (nenhuma mudança desde a última rodada verde
+da `m8-02`). `convencoes-check`: só achado de linha longa (`P-020`) em atributos com ternário
+(`[attr.aria-label]`) — os dois piores casos (copiar/regenerar do convite de espectador) foram
+extraídos para `rotuloCopiarConvite`/`rotuloRegenerarConvite` no componente; os restantes batem o
+mesmo padrão pré-existente e extenso do próprio arquivo (dezenas de linhas >100 chars antes desta
+task), então não foram tocados. `npm run format:html-scss` também corrigiu, de passagem, drift de
+formatação pré-existente e não relacionado em três arquivos (`historico-rolagens-sidebar`,
+`inventario-esquadrao-sidebar`, `resultado-rolagem` — indentação/quebra de linha, zero mudança de
+comportamento).
+
 ## 2026-09-03 — m8-02: permissões e projeções de leitura do ESPECTADOR (backend, M8)
 
 Segunda task do módulo `m8-espectadores-campanha` (depende de `m8-01`): entrada determinada pelo

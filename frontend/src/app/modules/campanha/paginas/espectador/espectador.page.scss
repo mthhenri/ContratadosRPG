@@ -1,0 +1,291 @@
+@use "tema/breakpoints" as bp;
+
+// Container de página própria (m8-03) — mesma medida de `.detalhe`/`.iniciativa`: 85vw centrado
+// no desktop, largura total sem margem no mobile (decisão registrada em `campanha-mobile-margem-
+// conteudo`). Sem painel lateral aqui (nenhuma consulta/histórico flutuante), então nunca precisa
+// do estado `--lateral-aberta` que `.detalhe` tem.
+.espectador {
+    width: 85vw;
+    max-width: none;
+    margin: 0 7.5vw;
+
+    @include bp.mobile {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+    }
+
+    // Barra de prévia do mestre — mesma receita de `.detalhe__preview-barra` (ui-15/m2-19), mas
+    // com texto mais longo que o original ("Modo prévia · você vê exatamente..."): no mobile o
+    // botão precisa da própria linha, senão o texto quebrado por baixo dele se sobrepõe.
+    &__preview-barra {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 10px 16px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        color: var(--accent);
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+        }
+    }
+
+    &__preview-texto {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+
+        @include bp.mobile {
+            flex-basis: 100%;
+        }
+    }
+
+    &__preview-sair {
+        flex: none;
+
+        @include bp.mobile {
+            width: 100%;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // Cabeçalho compacto — voltar (só espectador real) + nome da campanha + selo, uma linha só.
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 16px;
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+            row-gap: 10px;
+        }
+    }
+
+    &__voltar {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 22px;
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    &__titulo {
+        margin: 0;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__regua {
+        flex: 1;
+        min-width: 20px;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__selo {
+        flex: none;
+    }
+
+    // === Feed dominante de rolagens públicas — mesma densidade/receita de item do análogo
+    // aprovado (`HistoricoRolagensSidebar`, ui-22), num cartão de página em vez de painel flutuante.
+    &__feed {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    &__secao {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    &__secao-titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+        white-space: nowrap;
+    }
+
+    &__secao-regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__secao-contagem {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
+
+    &__corpo {
+        min-height: 0;
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    &__esqueleto-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__esqueleto-cabecalho {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    &__esqueleto-rotulo {
+        width: 120px;
+        height: 14px;
+    }
+
+    &__esqueleto-data {
+        flex: none;
+        width: 52px;
+        height: 11px;
+    }
+
+    &__esqueleto-autor {
+        width: 40%;
+        height: 11px;
+    }
+
+    &__esqueleto-resultado {
+        width: 100%;
+        height: 34px;
+    }
+
+    &__lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+        background: var(--surface-2);
+        border-radius: var(--radius-control);
+        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
+    }
+
+    &__meta {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 8px;
+        line-height: 1.2;
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__formula {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-dim);
+        opacity: 75%;
+        overflow-wrap: anywhere;
+    }
+
+    &__autor {
+        font-size: 11px;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    &__data {
+        flex: none;
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+        white-space: nowrap;
+    }
+
+    &__mais {
+        display: block;
+        margin: 12px auto 0;
+        padding: 8px 16px;
+        background: transparent;
+        color: var(--text-dim);
+        border: 1px solid var(--border-strong);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        &:hover:not(:disabled) {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            width: 100%;
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

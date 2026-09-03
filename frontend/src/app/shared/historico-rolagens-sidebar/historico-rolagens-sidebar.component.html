@@ -5,7 +5,9 @@
     [class.historico-rolagens__gatilho--empilhado]="acimaDaCalculadora()"
     [class.utilitario-flutuante--acima]="acimaDaCalculadora()"
     [attr.aria-expanded]="aberto()"
-    [attr.aria-label]="aberto() ? 'Fechar ' + titulo().toLowerCase() : 'Abrir ' + titulo().toLowerCase()"
+    [attr.aria-label]="
+        aberto() ? 'Fechar ' + titulo().toLowerCase() : 'Abrir ' + titulo().toLowerCase()
+    "
     [appTooltip]="titulo()"
     (click)="alternar()"
 >

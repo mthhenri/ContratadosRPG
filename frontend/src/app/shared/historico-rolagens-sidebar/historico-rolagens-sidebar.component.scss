@@ -84,9 +84,9 @@
         outline: none;
         animation: historico-rolagens-entra 0.26s cubic-bezier(0.22, 1, 0.36, 1);
 
-  &--saindo {
-    animation: historico-rolagens-sai 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
+        &--saindo {
+            animation: historico-rolagens-sai 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
 
         @media (prefers-reduced-motion: reduce) {
             animation: none;

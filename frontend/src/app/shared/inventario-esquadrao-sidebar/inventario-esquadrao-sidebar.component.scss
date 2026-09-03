@@ -37,9 +37,9 @@
         outline: none;
         animation: inventario-sidebar-entra 0.26s cubic-bezier(0.22, 1, 0.36, 1);
 
-  &--saindo {
-    animation: inventario-sidebar-sai 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
+        &--saindo {
+            animation: inventario-sidebar-sai 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
     }
     &__cabecalho {
         flex: none;

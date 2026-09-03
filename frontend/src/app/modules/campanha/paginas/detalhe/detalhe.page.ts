@@ -273,6 +273,15 @@ export class CampanhaDetalhe {
   protected readonly regenerado = signal(false);
   protected readonly copiado = signal(false);
 
+  /**
+   * Convite de espectador (m8-03) — mesmos três signals do convite de jogador acima, em par
+   * próprio: os dois códigos regeneram de forma independente (m8-01/m8-02), então cada UI de
+   * copiar/regenerar precisa do seu próprio estado efêmero.
+   */
+  protected readonly regenerandoEspectador = signal(false);
+  protected readonly regeneradoEspectador = signal(false);
+  protected readonly copiadoEspectador = signal(false);
+
   /** Edição inline de nome/descrição (só mestre) — alterna o card entre exibição e formulário. */
   protected readonly editando = signal(false);
   protected readonly salvando = signal(false);
@@ -286,6 +295,12 @@ export class CampanhaDetalhe {
 
   /** Bloqueia os botões enquanto a remoção/transferência do membro está em voo. */
   protected readonly processandoMembro = signal(false);
+
+  /**
+   * `usuarioId` do membro cuja troca de papel (m8-03, `JOGADOR ↔ ESPECTADOR`) está em voo —
+   * desabilita só o botão daquela linha, mesmo padrão de {@link revogandoAcesso}.
+   */
+  protected readonly alterandoPapel = signal<number | null>(null);
 
   /**
    * Fichas visíveis da campanha (m2-16) — o backend já filtra por §14; o front só agrupa.
@@ -1037,7 +1052,23 @@ export class CampanhaDetalhe {
       });
   }
 
-  protected regenerarConvite(): void {
+  /** Pede confirmação (ui-15) antes de regenerar o convite de jogador — invalida o código atual. */
+  protected pedirRegenerarConvite(): void {
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Regenerar convite de jogador',
+        mensagem: 'O código atual deixa de funcionar. Quem ainda não entrou vai precisar do novo.',
+        rotuloConfirmar: 'Regenerar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.regenerarConvite();
+        }
+      });
+  }
+
+  private regenerarConvite(): void {
     if (this.regenerando()) {
       return;
     }
@@ -1055,6 +1086,43 @@ export class CampanhaDetalhe {
           // Confirmação visual: o botão vira "Regenerado ✓" e volta ao normal após 1,5 s.
           this.regenerado.set(true);
           setTimeout(() => this.regenerado.set(false), 1500);
+        },
+      });
+  }
+
+  /** Pede confirmação antes de regenerar o convite de espectador — espelha {@link pedirRegenerarConvite}. */
+  protected pedirRegenerarConviteEspectador(): void {
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Regenerar convite de espectador',
+        mensagem: 'O código atual deixa de funcionar. Quem ainda não entrou vai precisar do novo.',
+        rotuloConfirmar: 'Regenerar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.regenerarConviteEspectador();
+        }
+      });
+  }
+
+  private regenerarConviteEspectador(): void {
+    if (this.regenerandoEspectador()) {
+      return;
+    }
+    this.regenerandoEspectador.set(true);
+    this.campanhaService
+      .regenerarConviteEspectador(this.id)
+      .pipe(finalize(() => this.regenerandoEspectador.set(false)))
+      .subscribe({
+        next: (conviteRegenerado) => {
+          this.campanha.update((campanhaAtual) =>
+            campanhaAtual
+              ? { ...campanhaAtual, codigoConviteEspectador: conviteRegenerado.codigoConviteEspectador }
+              : campanhaAtual,
+          );
+          this.regeneradoEspectador.set(true);
+          setTimeout(() => this.regeneradoEspectador.set(false), 1500);
         },
       });
   }
@@ -1167,9 +1235,12 @@ export class CampanhaDetalhe {
     });
   }
 
-  /** `true` quando o mestre pode gerir este membro — só jogadores (nunca a própria linha). */
+  /**
+   * `true` quando o mestre pode gerir este membro — jogadores e espectadores (m8-03), nunca o
+   * mestre (nem a própria linha, já que o requisitante é sempre o mestre aqui).
+   */
   protected podeGerenciarMembro(membro: CampanhaMembroResumoDto): boolean {
-    return this.ehMestre() && membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR;
+    return this.ehMestre() && membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE;
   }
 
   /** Pede confirmação de remoção do jogador (ui-15, via `ConfirmacaoService`). */
@@ -1228,6 +1299,53 @@ export class CampanhaDetalhe {
   }
 
   /**
+   * Papel de destino do "Alternar papel" (m8-03) — o único par que o mestre gere por este botão é
+   * `JOGADOR ↔ ESPECTADOR`; promover a `MESTRE` é sempre {@link pedirTransferenciaMestre}, nunca
+   * este caminho (o backend recusaria de qualquer forma, mas o botão nem chega a oferecer).
+   */
+  protected papelAlvo(
+    membro: CampanhaMembroResumoDto,
+  ): TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR {
+    return membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR
+      ? TipoCampanhaMembroPapelEnum.ESPECTADOR
+      : TipoCampanhaMembroPapelEnum.JOGADOR;
+  }
+
+  /** Pede confirmação antes de alternar o papel de um membro entre `JOGADOR` e `ESPECTADOR`. */
+  protected pedirAlterarPapelMembro(membro: CampanhaMembroResumoDto): void {
+    const alvo = this.papelAlvo(membro);
+    const rotuloAlvo = alvo === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'Espectador' : 'Jogador';
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Alterar papel',
+        mensagem: `Tornar ${membro.nome} ${rotuloAlvo}?`,
+        entidade: membro.nome,
+        rotuloConfirmar: 'Confirmar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.alterarPapelMembro(membro.usuarioId, alvo);
+        }
+      });
+  }
+
+  /** Troca o papel e recarrega membros/fichas — um jogador rebaixado deixa de ver a própria ficha. */
+  private alterarPapelMembro(
+    usuarioId: number,
+    papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR,
+  ): void {
+    if (this.alterandoPapel() !== null) {
+      return;
+    }
+    this.alterandoPapel.set(usuarioId);
+    this.campanhaService
+      .alterarPapelMembro(this.id, usuarioId, papel)
+      .pipe(finalize(() => this.alterandoPapel.set(null)))
+      .subscribe({ next: () => this.recarregarMembrosEFichas() });
+  }
+
+  /**
    * Recarrega membros e fichas (após transferir o mestre, ou ao receber `ficha:criada`/
    * `ficha:alterada`/`membro:entrou` em tempo real) para refletir novos papéis/fichas/Vida-Energia-
    * condições sem piscar a tela — só a `campanha` (nome/descrição/convite) fica de fora, ela não
@@ -1279,6 +1397,30 @@ export class CampanhaDetalhe {
     void navigator.clipboard.writeText(codigoConvite).then(() => {
       this.copiado.set(true);
       setTimeout(() => this.copiado.set(false), 1500);
+    });
+  }
+
+  /** `aria-label` do botão de copiar convite — extraído para não estourar a linha do template. */
+  protected rotuloCopiarConvite(copiado: boolean, tipo: 'jogador' | 'espectador'): string {
+    return copiado ? 'Código copiado' : `Copiar código de convite de ${tipo}`;
+  }
+
+  /** `aria-label` do botão de regenerar convite — mesma razão de {@link rotuloCopiarConvite}. */
+  protected rotuloRegenerarConvite(regenerando: boolean, tipo: 'jogador' | 'espectador'): string {
+    return regenerando
+      ? `Regenerando código de convite de ${tipo}`
+      : `Regenerar código de convite de ${tipo}`;
+  }
+
+  /** Copia o código de convite de espectador — espelha {@link copiarConvite}. */
+  protected copiarConviteEspectador(): void {
+    const codigoConviteEspectador = this.campanha()?.codigoConviteEspectador;
+    if (!codigoConviteEspectador) {
+      return;
+    }
+    void navigator.clipboard.writeText(codigoConviteEspectador).then(() => {
+      this.copiadoEspectador.set(true);
+      setTimeout(() => this.copiadoEspectador.set(false), 1500);
     });
   }
 

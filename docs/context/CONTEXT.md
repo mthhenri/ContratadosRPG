@@ -4,19 +4,19 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-03 · **Última decisão registrada:** no desktop, `.detalhe`/
-> `.ficha-pagina`/`.iniciativa-tela` no estado `--lateral-aberta` usam `width: auto` (não mais
-> `calc(100vw - ...)`) — a conta em `vw` ignorava o padding de `.conteudo` e deixava a equação do
-> box model sobre-restringida, fazendo o navegador descartar a `margin-right` e o painel encostar
-> sem vão nenhum no conteúdo. Com `width: auto`, as margens explícitas passam a valer de verdade
-> (vão de 40px medido ao vivo em `1920×1080`/`960×1080`, histórico e inventário). No breakpoint
-> mobile, os mesmos contêineres zeram a margem horizontal desktop (regra anterior, sem mudança
-> nesta rodada). Na campanha vista por jogador, `Rolagens` continua como destino móvel externo à
-> ficha compacta: em celular ele mostra somente o painel de rolagens, nunca a última aba de Status;
-> em desktop preserva a coluna existente entre Equipe e Sessão. A troca da ficha exibida volta o
-> destino para Agente. A decisão anterior dos painéis laterais permanece: um abre fechando o outro,
-> e a rota/ficha só colapsa a grade quando a largura que sobrou está estreita de verdade
-> (`bp.tablet-lateral-aberta`/`bp.mobile-lateral-aberta`).
+> **Última revisão:** 2026-09-03 · **Última decisão registrada:** o Painel do espectador
+> (`/campanhas/:id/espectador`, m8-03) usa `.espectador` como container de página própria (85vw/
+> 7,5vw no desktop, full-bleed no mobile — mesma medida de `.detalhe`/`.iniciativa`), com um feed
+> de rolagens públicas que reusa a densidade de item de `HistoricoRolagensSidebar` (ui-22) sem
+> reusar o componente em si (ele é um painel overlay; a página precisa de conteúdo dominante).
+> `espectadorCampanhaGuard` não relê permissão — chama a própria projeção do painel
+> (`CampanhaProjecaoService.recuperarPainelEspectador`) e usa sucesso/falha como autoridade, porque
+> `listarMembros`/`recuperarCampanha` (que guards análogos usariam) já recusam `ESPECTADOR` desde a
+> m8-02. No desktop, `.detalhe`/`.ficha-pagina`/`.iniciativa-tela` no estado `--lateral-aberta`
+> continuam usando `width: auto` (não `calc(100vw - ...)`, que sobre-restringia o box model e
+> descartava a `margin-right` — vão de 40px medido ao vivo); no mobile os mesmos contêineres zeram
+> a margem horizontal desktop. Na campanha vista por jogador, `Rolagens` continua como destino
+> móvel externo à ficha compacta; painéis laterais continuam com exclusão mútua (um fecha o outro).
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -389,6 +389,32 @@ nos dois tamanhos de chip, `cm`/glow do crítico intactos. Testes 6/6 do compone
 `historico-rolagens-sidebar`/`bandeja-dados` (sanity, só CSS mudou). Detalhe completo em
 `HISTORY.md`.
 
+**`m8-03-frontend-painel-visualizador` concluída** (spec em `docs/specs/done/`): terceira task do
+módulo `m8-espectadores-campanha` — frontend inteiro do papel `ESPECTADOR`, todo em cima do que a
+`m8-02` já expõe (nenhum backend novo). `CampanhaEntrar` bifurca pós-entrada por
+`CampanhaEntradaDto.papel` (toast confirmando o papel obtido + navegação a `/campanhas/:id` ou
+`/campanhas/:id/espectador`, o formulário continua com um único campo). `CampanhaDetalhe` (mestre)
+ganhou o tile "Convite de espectador" (copiar/regenerar próprios, mesma confirmação que passou a
+valer também pro convite de jogador), o chip de papel `olho` e um botão "Alternar papel"
+(`JOGADOR ↔ ESPECTADOR`, com confirmação, recarrega membros/fichas) na lista de Membros —
+"Transferir mestre" ficou restrito a `papel === JOGADOR`. Rota nova `/campanhas/:id/espectador`
+(`espectadorCampanhaGuard`, que usa a própria projeção do painel como autoridade — `ESPECTADOR` não
+pode chamar `listarMembros`/`recuperarCampanha`, então um guard nesses moldes não serviria) leva ao
+Painel do espectador: composição própria (não máscara sobre mestre/jogador) com cabeçalho compacto,
+selo "Modo espectador", barra "Modo prévia · Sair da visualização" só para o mestre
+(`ehMestrePreview`, resolvido via `listarCampanhas`) e um feed dominante de rolagens `PUBLICA`
+paginado com prepend em tempo real deduplicado — nenhum controle de escrita existe no template.
+Achado e corrigido ao vivo: a barra de prévia não tinha tratamento mobile (texto sobrepondo o botão,
+botão abaixo do alvo de toque de 44px) — corrigido só na página nova; o mesmo defeito na barra
+original "Ver como jogador" (`CampanhaDetalhe`) ficou registrado (`P-047`), fora do recorte.
+Corrigido também, como pré-requisito do próprio gate: 4 fixtures de teste que a `m8-01` deixou sem
+`codigoConviteEspectador` (o frontend não compilava). Suíte frontend 1576/1576 (era 1553), lint sem
+erro novo, build limpo (avisos de budget conhecidos, `P-004`); `shared`/`backend` inalterados, não
+re-executados. Verificação ao vivo completa (Postgres nativo, backend+frontend reais, `1920×1080`/
+`360×800`): entrada pelos dois códigos via UI real, tira de convites e gestão de papel do mestre,
+Painel do espectador em prévia e como espectador real, rolagem pública chegando sem recarregar
+(sentinela) nos dois simultaneamente, sem overflow horizontal em nenhum viewport.
+
 **`m8-02-backend-permissoes-projecoes` concluída** (spec em `docs/specs/done/`): segunda task do
 módulo `m8-espectadores-campanha` — entrada por qualquer um dos dois códigos com papel resolvido no
 servidor (`CampanhaRepository.recuperarPorCodigoConviteOuEspectador`, um `CASE` sobre os dois
@@ -410,8 +436,7 @@ legível por espectador e por mestre em prévia) e prévia de jogador (fichas vi
 capacidade de inventário calculados com a identidade do alvo — só o mestre pede, alvo precisa ser
 `JOGADOR` ativo). Testes shared 744/744, backend 520/520, lint sem erro novo,
 `openapi:gerar-contratos` rodado (precisou registrar `CampanhaProjecaoController` no mapa estático
-da ferramenta). Próxima do módulo: `m8-03` (frontend — entrada, gestão de convites/membros e Painel
-do espectador ao vivo).
+da ferramenta).
 
 **`m8-01-papel-convite-contratos` concluída** (spec em `docs/specs/done/`): primeira task do módulo
 `m8-espectadores-campanha` — banco e contratos compartilhados para o terceiro papel de campanha,
@@ -443,11 +468,11 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`m8-02` concluída — ver acima). Resta `ui-23` no backlog (stat sem
+Não há spec ativa no momento (`m8-03` concluída — ver acima). Resta `ui-23` no backlog (stat sem
 valor/rodapé do cartão — ver "Fila do backlog" abaixo). As frentes de código de milestone ainda
 pendentes são o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3), e o
-**M8** (`m8-03`…`m8-06`, backend de permissões e projeções pronto). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os
-ajustes avulsos de pós-milestone.
+**M8** (`m8-04`…`m8-06`, backend+frontend de permissões, projeções e Painel do espectador prontos).
+M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -457,10 +482,10 @@ ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 | `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
-| `m8-03`…`m8-06` | campanha (M8) | `m8-01`/`m8-02` concluídas (banco + contratos do papel ESPECTADOR; backend de permissões e projeções de leitura — ver acima); restam frontend de entrada/gestão/painel ao vivo, prévia fiel de jogador, visão read-only de Iniciativa/Encontro e a integração final |
+| `m8-04`…`m8-06` | campanha (M8) | `m8-01`/`m8-02`/`m8-03` concluídas (banco + contratos; backend de permissões e projeções; frontend de entrada/gestão/Painel do espectador — ver acima); restam prévia fiel de jogador, visão read-only de Iniciativa/Encontro e a integração final |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` foi iniciado
-(`m8-01`/`m8-02` concluídas; specs de `m8-03`…`m8-06` prontas em `docs/specs/backlog/`).
+(`m8-01`/`m8-02`/`m8-03` concluídas; specs de `m8-04`…`m8-06` prontas em `docs/specs/backlog/`).
 
 ---
 
@@ -499,7 +524,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
-| M8 | Espectadores e Prévias de Campanha | **iniciado** — `m8-01`/`m8-02` concluídas (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura); restam `m8-03`…`m8-06` (frontend de entrada/gestão/painel ao vivo, prévia fiel de jogador, visão read-only de Iniciativa/Encontro e a integração final), specs prontas em `docs/specs/backlog/`. Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
+| M8 | Espectadores e Prévias de Campanha | **iniciado** — `m8-01`/`m8-02`/`m8-03` concluídas (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo); restam `m8-04`…`m8-06` (prévia fiel de jogador, visão read-only de Iniciativa/Encontro e a integração final), specs prontas em `docs/specs/backlog/`. Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
 
 ---
 
@@ -565,9 +590,9 @@ após a validação bem-sucedida.
 
 ### Campanhas — `backend/campanha`, `frontend/campanha`
 
-CRUD de campanha com papéis (mestre/jogador), entrada por `codigo_convite` com regeneração pelo
-mestre, listagem de membros, remoção de jogador e transferência de mestre. UI sob `/campanhas`
-(guardada): lista de campanhas (`/campanhas`) é um **painel de controle** (m2-18) — linhas densas por
+CRUD de campanha com papéis (mestre/jogador/espectador — M8), entrada por `codigo_convite` com
+regeneração pelo mestre, listagem de membros, remoção de jogador e transferência de mestre. UI sob
+`/campanhas` (guardada): lista de campanhas (`/campanhas`) é um **painel de controle** (m2-18) — linhas densas por
 campanha com tira de 4 estatísticas agregadas no topo (Campanhas/Você mestra/Fichas em
 campo/Alertas), alerta visual + nome da ficha crítica por linha, resumo da própria ficha
 (Vida atual/máxima, jogador) e convite copiável direto na linha (mestre), sem abrir o detalhe. O
@@ -704,6 +729,21 @@ cursor/seleção de cada colaborador (nome e cor) via `yCursorPlugin`, mais um i
 participantes no cabeçalho. No mobile, a `P-041` corrigiu a navegação: abrir uma página existente ou
 criar uma nova no modo Esquadrão agora troca a vista de lista para o editor, como já acontecia no
 caderno privado. A spec fechou (`docs/specs/done/`).
+
+**Papel ESPECTADOR (M8, `m8-01`…`m8-03` concluídas).** Terceiro papel de campanha, independente de
+`TipoUsuarioEnum`: entra por um convite próprio (`codigoConviteEspectador`, gerado junto do de
+jogador e regenerado independentemente pelo mestre) e acompanha, em tempo real, só as rolagens
+`PUBLICA` da campanha — nunca ficha, caderno, inventário, convite, membro ou controle de rolagem
+(o backend recusa `ESPECTADOR` explicitamente em cada um desses módulos, não só esconde na UI). O
+mesmo campo "Código de convite" da entrada resolve o papel no servidor a partir de qual dos dois
+códigos bateu; o cliente nunca escolhe. O mestre gere os dois convites e troca um membro entre
+`JOGADOR ↔ ESPECTADOR` em `CampanhaDetalhe` (nunca promove espectador direto a mestre — isso exige
+virar jogador primeiro). O destino do espectador é uma rota própria,
+`/campanhas/:id/espectador` (Painel do espectador) — cabeçalho compacto, selo "Modo espectador" e
+um feed dominante e paginado de rolagens públicas, sem nenhum controle de escrita; o mestre pode
+abri-la como prévia (mesmo payload que um espectador real recebe, nunca com privilégio de mestre) a
+partir de um link no tile "Convite de espectador". Faltam `m8-04` (prévia fiel de jogador) e
+`m8-05` (visão read-only de Iniciativa/Encontro).
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 

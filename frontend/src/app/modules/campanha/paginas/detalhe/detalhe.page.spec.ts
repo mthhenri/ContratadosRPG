@@ -58,6 +58,7 @@ describe('CampanhaDetalhe', () => {
     nome: 'Contenção Delta',
     descricao: 'Operação em curso',
     codigoConvite: 'DEF456',
+    codigoConviteEspectador: 'ESP456',
     naBase: true,
   };
 
@@ -124,9 +125,15 @@ describe('CampanhaDetalhe', () => {
       alterarCampanha: vi.fn(() => opts.alterarRetorno ?? of({ ...campanhaBase } as CampanhaAlteradaDto)),
       excluirCampanha: vi.fn(() => of(undefined)),
       regenerarConvite: vi.fn(() => of({ id: CAMPANHA_ID, codigoConvite: 'NOVO' })),
+      regenerarConviteEspectador: vi.fn(() =>
+        of({ id: CAMPANHA_ID, codigoConviteEspectador: 'NOVOESP' }),
+      ),
       removerMembro: vi.fn(() => of({ campanhaId: CAMPANHA_ID, usuarioId: 0 })),
       transferirMestre: vi.fn(() =>
         of({ campanhaId: CAMPANHA_ID, mestreAnteriorUsuarioId: 0, novoMestreUsuarioId: 0 }),
+      ),
+      alterarPapelMembro: vi.fn((_id: number, usuarioId: number, papel: TipoCampanhaMembroPapelEnum) =>
+        of({ campanhaId: CAMPANHA_ID, usuarioId, papel }),
       ),
       recuperarInventario: vi.fn(() => of({ itens: [] })),
       alterarEstado: vi.fn((_id: number, naBase: boolean) => of({ id: CAMPANHA_ID, naBase })),
@@ -349,6 +356,21 @@ describe('CampanhaDetalhe', () => {
     return item;
   }
 
+  /**
+   * Localiza uma ação de `.detalhe__membro-acoes` pelo prefixo do `aria-label` (m8-03: o número de
+   * botões varia por papel — Transferir mestre só existe para `JOGADOR` —, então indexar por
+   * posição quebra sempre que a lista de ações muda).
+   */
+  function botaoAcaoMembro(raiz: HTMLElement, prefixoAriaLabel: string): HTMLButtonElement {
+    const botao = Array.from(
+      raiz.querySelectorAll<HTMLButtonElement>('.detalhe__membro-acoes .detalhe__membro-acao'),
+    ).find((item) => item.getAttribute('aria-label')?.startsWith(prefixoAriaLabel));
+    if (!botao) {
+      throw new Error(`Ação de membro "${prefixoAriaLabel}" não encontrada`);
+    }
+    return botao;
+  }
+
   it('mostra o botão "Voltar às campanhas" no cabeçalho, apontando para /campanhas', () => {
     const { raiz } = montar(mestre());
     const voltar = raiz.querySelector('.detalhe__cabecalho-voltar');
@@ -513,7 +535,7 @@ describe('CampanhaDetalhe', () => {
         membros: membrosDois(),
       });
 
-      (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
+      botaoAcaoMembro(raiz, 'Remover').click();
       fixture.detectChanges();
 
       expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
@@ -562,7 +584,7 @@ describe('CampanhaDetalhe', () => {
         confirmarResultado: false,
       });
 
-      (raiz.querySelectorAll('.detalhe__membro-acoes button')[1] as HTMLButtonElement).click();
+      botaoAcaoMembro(raiz, 'Remover').click();
       fixture.detectChanges();
       await Promise.resolve();
       await Promise.resolve();
@@ -570,6 +592,76 @@ describe('CampanhaDetalhe', () => {
 
       expect(raiz.querySelector('.detalhe__membro-acoes')).not.toBeNull();
       expect(campanhaService.removerMembro).not.toHaveBeenCalled();
+    });
+
+    // === Troca de papel JOGADOR ↔ ESPECTADOR (m8-03) ===
+    it('"Transferir mestre" só aparece para JOGADOR — nunca para ESPECTADOR', () => {
+      const { raiz } = montar({
+        usuarioId: 1,
+        membros: [
+          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+          { usuarioId: 2, nome: 'Espectador', papel: TipoCampanhaMembroPapelEnum.ESPECTADOR, fichas: [] },
+        ],
+      });
+
+      expect(
+        raiz.querySelector('.detalhe__membro-acoes [aria-label^="Transferir"]'),
+      ).toBeNull();
+      expect(botaoAcaoMembro(raiz, 'Tornar Espectador Jogador')).not.toBeNull();
+      expect(botaoAcaoMembro(raiz, 'Remover')).not.toBeNull();
+    });
+
+    it('alterna um jogador para espectador após confirmação, e a lista atualiza', async () => {
+      const { fixture, raiz, campanhaService, confirmacaoService } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+      });
+      campanhaService.alterarPapelMembro.mockReturnValue(
+        of({ campanhaId: CAMPANHA_ID, usuarioId: 2, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR }),
+      );
+      campanhaService.listarMembros.mockReturnValue(
+        of([
+          { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+          { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.ESPECTADOR, fichas: [] },
+        ]),
+      );
+
+      botaoAcaoMembro(raiz, 'Tornar Jogador Espectador').click();
+      fixture.detectChanges();
+
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Alterar papel', mensagem: 'Tornar Jogador Espectador?' }),
+      );
+      expect(campanhaService.alterarPapelMembro).not.toHaveBeenCalled();
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(campanhaService.alterarPapelMembro).toHaveBeenCalledWith(
+        CAMPANHA_ID,
+        2,
+        TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      );
+      const chips = Array.from(raiz.querySelectorAll('.chip-papel')).map((el) =>
+        el.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+      expect(chips.some((texto) => texto?.includes('ESPECTADOR'))).toBe(true);
+    });
+
+    it('cancelar a troca de papel (promessa resolve false) não chama o backend', async () => {
+      const { fixture, raiz, campanhaService } = montar({
+        usuarioId: 1,
+        membros: membrosDois(),
+        confirmarResultado: false,
+      });
+
+      botaoAcaoMembro(raiz, 'Tornar Jogador Espectador').click();
+      fixture.detectChanges();
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(campanhaService.alterarPapelMembro).not.toHaveBeenCalled();
     });
   });
 
@@ -813,7 +905,7 @@ describe('CampanhaDetalhe', () => {
 
   // === Tira de estatísticas (item 2) ===
   describe('tira de estatísticas (item 2)', () => {
-    it('mostra só Convite e Combate — Membros/Fichas/Alertas saíram da tira', () => {
+    it('mostra os dois convites e Combate — Membros/Fichas/Alertas saíram da tira', () => {
       const { raiz } = montar({ usuarioId: 1, membros: membrosDois(), fichas });
 
       const stats = Array.from(raiz.querySelectorAll('.detalhe__estatisticas .detalhe__estatistica'));
@@ -822,8 +914,9 @@ describe('CampanhaDetalhe', () => {
       );
 
       // "Combate" entrou na m7-06 como a porta de entrada da tela "Iniciativa" — até então o único
-      // caminho até ela era o menu "⋯" do cabeçalho.
-      expect(rotulos).toEqual(['Convite', 'Combate']);
+      // caminho até ela era o menu "⋯" do cabeçalho. m8-03: o convite de espectador entrou como
+      // um par independente do de jogador, cada um com controle próprio.
+      expect(rotulos).toEqual(['Convite de jogador', 'Convite de espectador', 'Combate']);
     });
 
     it('o tile de Combate mostra o combate aberto e leva à tela "Iniciativa"', () => {
@@ -892,17 +985,67 @@ describe('CampanhaDetalhe', () => {
       expect(raiz.querySelector('.detalhe__stat-convite')).toBeNull();
     });
 
-    it('copiar convite chama o clipboard e regenerar chama o backend', async () => {
-      const { fixture, raiz, campanhaService } = montar(mestre());
+    it('copiar convite de jogador chama o clipboard e regenerar pede confirmação antes do backend', async () => {
+      const { fixture, raiz, campanhaService, confirmacaoService } = montar(mestre());
 
-      (raiz.querySelector('.detalhe__copiar') as HTMLButtonElement).click();
+      (raiz.querySelectorAll('.detalhe__copiar')[0] as HTMLButtonElement).click();
       await Promise.resolve();
       fixture.detectChanges();
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('DEF456');
 
-      (raiz.querySelector('.detalhe__regenerar') as HTMLButtonElement).click();
+      (raiz.querySelectorAll('.detalhe__regenerar')[0] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Regenerar convite de jogador' }),
+      );
+      expect(campanhaService.regenerarConvite).not.toHaveBeenCalled();
+      await Promise.resolve();
+      await Promise.resolve();
       fixture.detectChanges();
       expect(campanhaService.regenerarConvite).toHaveBeenCalledWith(CAMPANHA_ID);
+    });
+
+    it('copiar convite de espectador chama o clipboard e regenerar pede confirmação antes do backend', async () => {
+      const { fixture, raiz, campanhaService, confirmacaoService } = montar(mestre());
+
+      (raiz.querySelectorAll('.detalhe__copiar')[1] as HTMLButtonElement).click();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('ESP456');
+
+      (raiz.querySelectorAll('.detalhe__regenerar')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Regenerar convite de espectador' }),
+      );
+      expect(campanhaService.regenerarConviteEspectador).not.toHaveBeenCalled();
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(campanhaService.regenerarConviteEspectador).toHaveBeenCalledWith(CAMPANHA_ID);
+    });
+
+    it('os dois convites regeneram de forma independente — cancelar um não afeta o outro', async () => {
+      const { fixture, raiz, campanhaService } = montar({
+        ...mestre(),
+        confirmarResultado: false,
+      });
+
+      (raiz.querySelectorAll('.detalhe__regenerar')[0] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(campanhaService.regenerarConvite).not.toHaveBeenCalled();
+      expect(campanhaService.regenerarConviteEspectador).not.toHaveBeenCalled();
+    });
+
+    it('o tile de espectador tem um link para abrir o Painel do espectador em prévia', () => {
+      const { raiz } = montar(mestre());
+
+      const link = raiz.querySelector('.detalhe__abrir-painel-espectador');
+      expect(link?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador`);
     });
   });
 

@@ -5,11 +5,13 @@ import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaAlteradaDto,
+  CampanhaConviteEspectadorRegeneradoDto,
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaEntradaDto,
   CampanhaEstadoAlteradaDto,
   CampanhaInventarioDto,
+  CampanhaMembroPapelAlteradoDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMestreTransferidoDto,
@@ -54,6 +56,7 @@ describe('CampanhaService', () => {
         fichaCriticaNome: null,
         minhaFichaResumo: null,
         codigoConvite: 'ABCD1234',
+        codigoConviteEspectador: 'ESPECT1234',
         alteradoEm: '2026-07-29T01:48:01.082Z',
       },
     ];
@@ -74,6 +77,7 @@ describe('CampanhaService', () => {
       nome: 'Contenção Beta',
       descricao: null,
       codigoConvite: 'ABC123',
+      codigoConviteEspectador: 'ESP123',
     };
 
     let recebido: CampanhaCriadaDto | undefined;
@@ -111,6 +115,7 @@ describe('CampanhaService', () => {
       nome: 'Contenção Delta',
       descricao: 'Operação em curso',
       codigoConvite: 'DEF456',
+      codigoConviteEspectador: 'ESP456',
       naBase: true,
     };
 
@@ -183,6 +188,44 @@ describe('CampanhaService', () => {
     requisicao.flush(envelope(regenerado));
 
     expect(recebido).toEqual(regenerado);
+  });
+
+  it('regenera o convite de espectador de uma campanha, independente do de jogador', () => {
+    const { servico, http } = criar();
+    const regenerado: CampanhaConviteEspectadorRegeneradoDto = {
+      id: 8,
+      codigoConviteEspectador: 'ESPNEW',
+    };
+
+    let recebido: CampanhaConviteEspectadorRegeneradoDto | undefined;
+    servico.regenerarConviteEspectador(8).subscribe((dados) => (recebido = dados));
+    const requisicao = http.expectOne((req) =>
+      req.url.endsWith('/campanha/8/convite-espectador/regenerar'),
+    );
+    expect(requisicao.request.method).toBe('POST');
+    requisicao.flush(envelope(regenerado));
+
+    expect(recebido).toEqual(regenerado);
+  });
+
+  it('altera o papel de um membro entre JOGADOR e ESPECTADOR', () => {
+    const { servico, http } = criar();
+    const alterado: CampanhaMembroPapelAlteradoDto = {
+      campanhaId: 8,
+      usuarioId: 2,
+      papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+    };
+
+    let recebido: CampanhaMembroPapelAlteradoDto | undefined;
+    servico
+      .alterarPapelMembro(8, 2, TipoCampanhaMembroPapelEnum.ESPECTADOR)
+      .subscribe((dados) => (recebido = dados));
+    const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/8/membro/2/papel'));
+    expect(requisicao.request.method).toBe('PATCH');
+    expect(requisicao.request.body).toEqual({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+    requisicao.flush(envelope(alterado));
+
+    expect(recebido).toEqual(alterado);
   });
 
   it('remove um membro da campanha', () => {
