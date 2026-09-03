@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
-import { ClasseEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { ClasseEnum, EncontroStatusEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaPreviaJogadorDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
@@ -108,6 +109,7 @@ describe('CampanhaPreviaJogador', () => {
       ],
       rolagens: [rolagem()],
       podeAcessarInventarioEsquadrao: true,
+      encontroAtivo: null,
       ...sobrescritas,
     };
   }
@@ -118,6 +120,7 @@ describe('CampanhaPreviaJogador', () => {
     const fichaVisibilidadeAlterada$ = new Subject<unknown>();
     const fichaAlterada$ = new Subject<{ id: number }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
+    const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
 
     const campanhaProjecaoService = {
       recuperarPreviaJogador: vi.fn(() => of(opts.previaResposta ?? previa())),
@@ -135,6 +138,7 @@ describe('CampanhaPreviaJogador', () => {
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
+      encontroAlterado$: encontroAlterado$.asObservable(),
     };
 
     TestBed.configureTestingModule({
@@ -164,6 +168,7 @@ describe('CampanhaPreviaJogador', () => {
       rolagemRegistrada$,
       membroEntrou$,
       fichaAlterada$,
+      encontroAlterado$,
     };
   }
 
@@ -295,5 +300,62 @@ describe('CampanhaPreviaJogador', () => {
     const link = raiz.querySelector('.previa-jogador__preview-sair');
 
     expect(link?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}`);
+  });
+
+  describe('"Ver Iniciativa" (m8-05)', () => {
+    const encontroAtivo: EncontroRecuperadoDto = {
+      id: 9,
+      campanhaId: CAMPANHA_ID,
+      nome: 'Emboscada no Setor 4',
+      status: EncontroStatusEnum.ATIVO,
+      rodadaAtual: 1,
+      turnoIndice: 0,
+      combatentes: [],
+      ordemRodada: [],
+      eventos: [],
+    };
+
+    it('não aparece sem encontro ativo', () => {
+      const { raiz } = montar({ previaResposta: previa({ encontroAtivo: null }) });
+      expect(raiz.querySelector('.previa-jogador__ver-iniciativa')).toBeNull();
+    });
+
+    it('aparece com encontro ativo (redigido para o alvo) e abre a composição de leitura ao clicar', () => {
+      const { fixture, raiz } = montar({ previaResposta: previa({ encontroAtivo }) });
+
+      const gatilho = raiz.querySelector('.previa-jogador__ver-iniciativa') as HTMLButtonElement;
+      expect(gatilho).not.toBeNull();
+      expect(raiz.querySelector('dialog')?.hasAttribute('open')).toBeFalsy();
+
+      gatilho.click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('app-iniciativa-leitura')).not.toBeNull();
+    });
+
+    it('encontro:alterado da própria campanha refaz a projeção inteira via REST — nunca lê o payload do evento (o mestre requisitante não pode herdar o próprio recorte de mestre)', () => {
+      const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar({
+        previaResposta: previa({ encontroAtivo: null }),
+      });
+      campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValue(of(previa({ encontroAtivo })));
+
+      encontroAlterado$.next({
+        encontro: { ...encontroAtivo, id: 999, campanhaId: CAMPANHA_ID } as never,
+      });
+      fixture.detectChanges();
+
+      expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+    });
+
+    it('encontro:alterado de OUTRA campanha não dispara refetch', () => {
+      const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar();
+      campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, campanhaId: CAMPANHA_ID + 1 } as never });
+      fixture.detectChanges();
+
+      expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
+    });
   });
 });

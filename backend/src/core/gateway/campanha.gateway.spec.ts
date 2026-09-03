@@ -457,5 +457,83 @@ describe('CampanhaGateway', () => {
         expect(emitir).not.toHaveBeenCalled();
       });
     });
+
+    describe('emitirEncontroAlterado (m7-06, estendido à sala do espectador em m8-05)', () => {
+      /** Socket conectado dublado — só o que o laço de `emitirEncontroAlterado` usa. */
+      function criarSocketConectado(usuarioConectado: JwtPayload | undefined) {
+        return {
+          data: usuarioConectado ? { usuario: usuarioConectado } : {},
+          emit: vi.fn(),
+        };
+      }
+
+      it('busca os sockets em campanha:<id> E campanha:<id>:espectador — nunca só a sala de membro', async () => {
+        const fetchSockets = vi.fn().mockResolvedValue([]);
+        const paraIn = vi.fn(() => ({ fetchSockets }));
+        (gateway as unknown as { servidor: Server }).servidor = {
+          ...(gateway as unknown as { servidor: Server }).servidor,
+          in: paraIn,
+        } as unknown as Server;
+
+        await gateway.emitirEncontroAlterado(3, vi.fn());
+
+        expect(paraIn).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
+      });
+
+      it('emite um payload por usuário conectado, socket a socket — e memoriza por usuário (duas abas custam uma montagem só)', async () => {
+        const mestreConectado: JwtPayload = usuario;
+        const espectadorConectado: JwtPayload = {
+          sub: 99,
+          login: 'olheiro',
+          tipo: TipoUsuarioEnum.NORMAL,
+          tokenVersao: 1,
+        };
+        const socketMestre = criarSocketConectado(mestreConectado);
+        const socketEspectador1 = criarSocketConectado(espectadorConectado);
+        const socketEspectador2 = criarSocketConectado(espectadorConectado);
+        const fetchSockets = vi
+          .fn()
+          .mockResolvedValue([socketMestre, socketEspectador1, socketEspectador2]);
+        (gateway as unknown as { servidor: Server }).servidor = {
+          ...(gateway as unknown as { servidor: Server }).servidor,
+          in: vi.fn(() => ({ fetchSockets })),
+        } as unknown as Server;
+
+        const montarParaUsuario = vi.fn(async (usuarioAlvo: JwtPayload) => ({
+          id: 9,
+          campanhaId: 3,
+          recorteDe: usuarioAlvo.sub,
+        }));
+
+        await gateway.emitirEncontroAlterado(3, montarParaUsuario as never);
+
+        // Duas identidades distintas conectadas (mestre, espectador) — mas o espectador tem duas
+        // abas, então a montagem para ele só acontece uma vez.
+        expect(montarParaUsuario).toHaveBeenCalledTimes(2);
+        expect(socketMestre.emit).toHaveBeenCalledWith('encontro:alterado', {
+          encontro: { id: 9, campanhaId: 3, recorteDe: mestreConectado.sub },
+        });
+        expect(socketEspectador1.emit).toHaveBeenCalledWith('encontro:alterado', {
+          encontro: { id: 9, campanhaId: 3, recorteDe: espectadorConectado.sub },
+        });
+        expect(socketEspectador2.emit).toHaveBeenCalledWith(
+          'encontro:alterado',
+          socketEspectador1.emit.mock.calls[0][1],
+        );
+      });
+
+      it('pula socket sem usuário autenticado em data — nunca emite pra ele', async () => {
+        const socketSemUsuario = criarSocketConectado(undefined);
+        const fetchSockets = vi.fn().mockResolvedValue([socketSemUsuario]);
+        (gateway as unknown as { servidor: Server }).servidor = {
+          ...(gateway as unknown as { servidor: Server }).servidor,
+          in: vi.fn(() => ({ fetchSockets })),
+        } as unknown as Server;
+
+        await gateway.emitirEncontroAlterado(3, vi.fn());
+
+        expect(socketSemUsuario.emit).not.toHaveBeenCalled();
+      });
+    });
   });
 });

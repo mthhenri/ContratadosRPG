@@ -1,0 +1,34 @@
+<app-cartao titulo="Iniciativa" [cabecalhoQuebravel]="true">
+    <span cartaoIndice>//</span>
+    <div cartaoFim class="iniciativa-leitura__stats">
+        <app-chip>{{ rotuloStatus() }}</app-chip>
+        @if (emCombate()) {
+        <app-chip severidade="primario">Rodada {{ encontro().rodadaAtual }}</app-chip>
+        <app-chip>Turno {{ encontro().turnoIndice + 1 }}/{{ totalDeTurnos() }}</app-chip>
+        }
+    </div>
+
+    @if (combatentesVisuais().length) {
+    <div class="iniciativa-leitura__grade" [style.--grade-colunas]="colunasGrade()">
+        @for (combatente of combatentesVisuais(); track combatente.chaveVisual) {
+        <app-cartao-combatente
+            [combatente]="combatente"
+            [ocorrencia]="combatente.ocorrencia"
+            [totalOcorrencias]="combatente.totalOcorrencias"
+            [ehTurnoAtual]="ehDaVez(combatente)"
+            [jaAgiu]="jaAgiu(combatente)"
+            [emCombate]="emCombate()"
+            [nivelAmeaca]="nivelAmeaca(combatente)"
+        />
+        }
+    </div>
+    } @else {
+    <p class="iniciativa-leitura__vazio">O mestre ainda está montando a ordem de iniciativa.</p>
+    }
+</app-cartao>
+
+<app-log-encontro
+    [eventos]="encontro().eventos"
+    [combatentes]="encontro().combatentes"
+    [rodadaAtual]="encontro().rodadaAtual"
+/>

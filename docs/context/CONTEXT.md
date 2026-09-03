@@ -4,35 +4,31 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-03 · **Última decisão registrada:** a Prévia de jogador
-> (`/campanhas/:id/previa/:usuarioAlvoId`, m8-04) substitui o antigo "Ver como jogador" — um
-> toggle local em `CampanhaDetalhe` que só trocava o layout, mas continuava buscando os dados
-> **como mestre**. A prévia é uma rota própria (`previaJogadorCampanhaGuard`, mesmo racional de
-> `espectadorCampanhaGuard`) que reusa os componentes da visão de jogador (`FichaVisualizacao`,
-> `FichaRolagensPainel`, `InventarioEsquadrao`, `app-cartao`) sobre dados vindos só da projeção do
-> alvo (`CampanhaProjecaoService.recuperarPreviaJogador`/`recuperarFichaPreviaJogador`, que delega
-> a `FichaService.recuperarFichaParaAlvo` — visibilidade/redação calculadas pra identidade do
-> **alvo**, nunca do mestre requisitante). Controles cujo `@Output` o pai controla (`ajusteVitalidade`
-> etc.) podem espelhar a permissão real do alvo — não conectar o output já garante zero mutação;
-> controles que o próprio componente dispara por conta própria sem passar por `@Output`
-> (`podeRolar` de `FichaVisualizacao`/`FichaRolagensPainel`, `InventarioEsquadrao.somenteLeitura`)
-> ficam **sempre** no valor mais restrito, nunca espelhando o alvo — não há como desconectar uma
-> chamada que o componente decide fazer sozinho. `fichasPorMembro`/`equipeExibicao`/
-> `membrosOrdenados` (agrupamento "Equipe") viraram funções puras em `campanha-equipe.util.ts`,
-> reusadas por `CampanhaDetalhe` e pela prévia. Uma variável CSS como `--piso-flutuante` (o piso
-> que `<app-ficha-visualizacao modo="compacto">` reserva pra própria barra fixa no mobile) precisa
-> ser **definida no próprio container de cada página** que hospeda a ficha compacta — não há
-> cascata global; só consumi-la sem defini-la invalida o `calc()` inteiro (acerto encontrado ao
-> vivo nesta task). O Painel do espectador (`/campanhas/:id/espectador`, m8-03) usa `.espectador`
-> como container de página própria (85vw/7,5vw no desktop, full-bleed no mobile — mesma medida de
-> `.detalhe`/`.iniciativa`/`.previa-jogador`), com um feed de rolagens públicas que reusa a
-> densidade de item de `HistoricoRolagensSidebar` (ui-22) sem reusar o componente em si (ele é um
-> painel overlay; a página precisa de conteúdo dominante). No desktop, `.detalhe`/`.ficha-pagina`/
-> `.iniciativa-tela` no estado `--lateral-aberta` continuam usando `width: auto` (não
-> `calc(100vw - ...)`, que sobre-restringia o box model e descartava a `margin-right` — vão de 40px
-> medido ao vivo); no mobile os mesmos contêineres zeram a margem horizontal desktop. Na campanha
-> vista por jogador, `Rolagens` continua como destino móvel externo à ficha compacta; painéis
-> laterais continuam com exclusão mútua (um fecha o outro).
+> **Última revisão:** 2026-09-03 · **Última decisão registrada:** a visão read-only de Iniciativa
+> (m8-05) dá ao espectador e à Prévia de jogador a mesma tela "Iniciativa" que jogador/mestre já
+> tinham — ordem, turno, rodada, cartões de combatente e log da rodada — sem nenhum controle de
+> condução. Um componente novo, `IniciativaLeitura` (`app-iniciativa-leitura`,
+> `frontend/src/app/modules/encontro/componentes/iniciativa-leitura/`), reusa `CartaoCombatente` e
+> `LogEncontro` **sem conectar nenhum `@Output`** — `podeAjustar`/`ehMestre`/`emEdicao` nem são
+> passados, ficam no `false` padrão dos próprios primitivos, então não há binding nenhum para
+> inspecionar ou errar. A derivação de apresentação (`ordemRodada` → cartões visuais, "de quem é a
+> vez", "já agiu", colunas da grade) que só existia dentro de `painel-encontro.page.ts` foi extraída
+> para `encontro-leitura.util.ts` (funções puras) e a própria página do jogador/mestre passou a
+> consumi-la — a mesma apresentação para os dois consumidores, nunca duplicada. Backend: dois
+> métodos novos em `EncontroService` — `recuperarEncontroAtivoParaEspectador`/
+> `recuperarEncontroAtivoParaAlvo` — reusam `montarEstado`/`ocultarNaoRevelados`/
+> `recuperarAbertoPorCampanha` (nunca uma segunda regra de revelação) e **não validam quem pediu**:
+> o payload é sempre o mesmo para `ESPECTADOR` real e `MESTRE` em prévia, porque calculá-lo a partir
+> da identidade real do requisitante (que pode ser o próprio mestre) vazaria o encontro sem redação
+> nenhuma — quem chama (`CampanhaProjecaoService`) já validou mestre-ou-espectador/mestre-requisitante
+> antes. `encontroAtivo` (`EncontroRecuperadoDto | null`) foi embutido direto em
+> `CampanhaPainelEspectadorDto`/`CampanhaPreviaJogadorDto` — nenhuma rota REST nova. Por isso o
+> tempo real (`encontro:alterado`, agora também emitido para `campanha:<id>:espectador`) nunca é
+> lido diretamente pelas duas páginas — o mesmo evento carrega o recorte de **mestre** para quem
+> está de fato conectado como mestre (em prévia), então o evento só é sinal para um refetch REST
+> (que sempre redige, não importa quem pediu), nunca a fonte do dado exibido. Achado corrigido só na
+> verificação ao vivo: o cabeçalho `app-cartao` sem `[cartaoIndice]` deixava uma caixa vazia no
+> lugar do índice "//" que todo outro cartão do sistema mostra.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -405,6 +401,42 @@ nos dois tamanhos de chip, `cm`/glow do crítico intactos. Testes 6/6 do compone
 `historico-rolagens-sidebar`/`bandeja-dados` (sanity, só CSS mudou). Detalhe completo em
 `HISTORY.md`.
 
+**`m8-05-visao-iniciativa-encontro` concluída** (spec em `docs/specs/done/`): quinta task do módulo
+`m8-espectadores-campanha` — visão read-only da tela "Iniciativa" para `ESPECTADOR` e Prévia de
+jogador, reusando a mesma composição/serviço/mapper do jogador (nunca uma segunda leitura do
+encontro). Gap de backend encontrado na investigação: `EncontroService.montarEstadoParaUsuario`
+chamava `FichaService.listarFichas` para qualquer não-mestre — e `listarFichas` sempre rejeita
+`ESPECTADOR` (decisão de produto #4), então um espectador conectado no socket faria a montagem do
+broadcast estourar exceção. Corrigido tratando `ESPECTADOR` como conjunto de fichas visíveis vazio,
+sem chamar a service (o fato já é conhecido, não uma segunda consulta de permissão). Dois métodos
+novos, `recuperarEncontroAtivoParaEspectador`/`recuperarEncontroAtivoParaAlvo`, devolvem o encontro
+não-encerrado da campanha redigido — mas **sem depender da identidade de quem pediu**: o mestre em
+prévia chamando com a própria identidade real receberia o estado sem redação nenhuma (branch
+`MESTRE` de `montarEstadoParaUsuario`), então esses dois métodos ignoram o requisitante de propósito
+e são chamados só por `CampanhaProjecaoService` (que já validou mestre-ou-espectador/mestre
+requisitante antes). `CampanhaGateway.emitirEncontroAlterado` passou a buscar sockets também em
+`campanha:<id>:espectador` (mesmo padrão de `emitirRolagemRegistrada`) — sem isso um espectador real
+nunca receberia o evento, preso na sala errada desde a `m8-02`. Frontend: `IniciativaLeitura`
+(`app-iniciativa-leitura`) reusa `CartaoCombatente`/`LogEncontro` sem outputs conectados
+(`podeAjustar`/`ehMestre`/`emEdicao` nem são passados — ficam no `false` padrão dos próprios
+primitivos); a derivação de apresentação de `painel-encontro.page.ts` (ordenação visual, "de quem é
+a vez", colunas da grade) foi extraída para `encontro-leitura.util.ts` e a própria página do
+jogador/mestre foi refatorada para consumi-la, em vez de manter uma cópia paralela. Gatilho "Ver
+Iniciativa" (`app-modal`) aparece em `espectador.page`/`previa-jogador.page` só quando
+`encontroAtivo !== null`; `encontro:alterado` nunca é lido diretamente por essas duas páginas — só
+dispara um refetch REST (`recuperarPainelEspectador`/`recuperarPreviaJogador`, ambos sempre
+redigidos), porque o payload do socket carregaria o recorte de mestre para quem está conectado como
+mestre de verdade. Achado só na verificação ao vivo: `app-cartao` sem `[cartaoIndice]` deixava uma
+caixa vazia no cabeçalho — corrigido com `//`, igual a todo outro cartão do sistema. `shared`
+744/744, `backend` 540/540 (12 novos), `frontend` 1620/1620 (18 novos: 9 do componente novo, 9 das
+páginas), lint sem erro novo, nenhuma rota REST nova (campo embutido nos DTOs existentes, sem
+regenerar `openapi:gerar-contratos`). Verificação ao vivo completa (Postgres nativo, backend+
+frontend reais, `1920×1080`/`360×800`): espectador com encontro ativo vendo NPC não revelado (sem
+identidade nenhuma) ao lado da ficha de Vera com carteirinha mas sem números; a mesma tela na Prévia
+de Vera já mostrando os números da própria Vera (Vida/Energia/Defesa) e o NPC continuando oculto; o
+mestre avançando o turno via REST em paralelo e o espectador recebendo a virada de turno/rodada sem
+recarregar (sentinela sobrevivendo). Detalhe completo em `HISTORY.md`.
+
 **`m8-04-preview-jogador-fidedigno` concluída** (spec em `docs/specs/done/`): quarta task do módulo
 `m8-espectadores-campanha` — troca o antigo "Ver como jogador" (toggle local em `CampanhaDetalhe`
 que carregava dados **como mestre**, só travando `pointer-events`) por uma prévia de verdade. Nova
@@ -511,12 +543,11 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`m8-04` concluída — ver acima). Resta `ui-23` no backlog (stat sem
+Não há spec ativa no momento (`m8-05` concluída — ver acima). Resta `ui-23` no backlog (stat sem
 valor/rodapé do cartão — ver "Fila do backlog" abaixo). As frentes de código de milestone ainda
 pendentes são o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3), e o
-**M8** (`m8-05`/`m8-06`, backend+frontend de permissões, projeções, Painel do espectador e Prévia
-de jogador prontos). M0, M1, M2, M6 e M7 estão concluídos, incluindo todos os ajustes avulsos de
-pós-milestone.
+**M8** (`m8-06`, integração final do módulo `m8-espectadores-campanha`). M0, M1, M2, M6 e M7 estão
+concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -526,10 +557,10 @@ pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 | `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
-| `m8-05`/`m8-06` | campanha (M8) | `m8-01`…`m8-04` concluídas (banco + contratos; backend de permissões e projeções; frontend de entrada/gestão/Painel do espectador/Prévia de jogador — ver acima); restam visão read-only de Iniciativa/Encontro e a integração final |
+| `m8-06` | campanha (M8) | `m8-01`…`m8-05` concluídas (banco + contratos; backend de permissões e projeções; frontend de entrada/gestão/Painel do espectador/Prévia de jogador/visão de Iniciativa — ver acima); resta a integração final do módulo |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` foi iniciado
-(`m8-01`…`m8-04` concluídas; specs de `m8-05`/`m8-06` prontas em `docs/specs/backlog/`).
+(`m8-01`…`m8-05` concluídas; spec de `m8-06` pronta em `docs/specs/backlog/`).
 
 ---
 
@@ -568,7 +599,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
-| M8 | Espectadores e Prévias de Campanha | **iniciado** — `m8-01`…`m8-04` concluídas (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna); restam `m8-05`/`m8-06` (visão read-only de Iniciativa/Encontro e a integração final), specs prontas em `docs/specs/backlog/`. Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
+| M8 | Espectadores e Prévias de Campanha | **iniciado** — `m8-01`…`m8-05` concluídas (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa); resta `m8-06` (integração final), spec pronta em `docs/specs/backlog/`. Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
 
 ---
 
@@ -774,7 +805,7 @@ participantes no cabeçalho. No mobile, a `P-041` corrigiu a navegação: abrir 
 criar uma nova no modo Esquadrão agora troca a vista de lista para o editor, como já acontecia no
 caderno privado. A spec fechou (`docs/specs/done/`).
 
-**Papel ESPECTADOR (M8, `m8-01`…`m8-04` concluídas).** Terceiro papel de campanha, independente de
+**Papel ESPECTADOR (M8, `m8-01`…`m8-05` concluídas).** Terceiro papel de campanha, independente de
 `TipoUsuarioEnum`: entra por um convite próprio (`codigoConviteEspectador`, gerado junto do de
 jogador e regenerado independentemente pelo mestre) e acompanha, em tempo real, só as rolagens
 `PUBLICA` da campanha — nunca ficha, caderno, inventário, convite, membro ou controle de rolagem
@@ -790,7 +821,11 @@ partir de um link no tile "Convite de espectador". O mestre também tem a Prévi
 (`/campanhas/:id/previa/:usuarioAlvoId`, m8-04) — para um `JOGADOR` específico, mostra a mesma
 ficha própria/concedida, Equipe, Rolagens e Sessão que aquele jogador veria, calculadas com a
 identidade dele (nunca do mestre); controles de mutação nunca disparam REST/socket, mesmo os
-visualmente habilitados. Falta `m8-05` (visão read-only de Iniciativa/Encontro).
+visualmente habilitados. O espectador e a prévia também têm um gatilho "Ver Iniciativa"
+(`m8-05`), que só aparece com um encontro ativo na campanha e abre a mesma composição de leitura
+(`IniciativaLeitura`) da tela "Iniciativa" de jogador/mestre — ordem, turno, rodada, cartões e log
+da rodada, redigidos do mesmo jeito (NPC não revelado continua sem números para nenhum dos dois) e
+sem nenhum controle de condução. Falta `m8-06` (integração final do módulo).
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 

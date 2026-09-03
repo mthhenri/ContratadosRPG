@@ -383,7 +383,8 @@ export class CampanhaGateway implements OnGatewayConnection {
   }
 
   /**
-   * Emite `encontro:alterado` na sala `campanha:<id>` (§9), **um payload por usuário** (m7-06).
+   * Emite `encontro:alterado` na sala `campanha:<id>` **e** na sala do espectador (m8-05), **um
+   * payload por usuário** (m7-06).
    *
    * Diferente dos outros eventos, este não pode ser um `emit` único para a sala: o estado do
    * encontro carrega Vida, defesas e log de criaturas que o mestre talvez ainda não tenha revelado,
@@ -392,13 +393,21 @@ export class CampanhaGateway implements OnGatewayConnection {
    * socket. O resultado é memorizado por usuário — quem está com duas abas abertas custa uma
    * montagem só.
    *
+   * `campanha:<id>:espectador` entra na varredura pelo mesmo motivo de `emitirRolagemRegistrada`
+   * (m8-02): é a sala de quem entrou com o convite de espectador. O recorte por usuário acima já
+   * cobre a segurança — depois do fix de `montarEstadoParaUsuario` para `ESPECTADOR` (m8-05), o
+   * socket de um espectador real recebe o mesmo resultado (fichas visíveis vazio) que
+   * `EncontroService.recuperarEncontroAtivoParaEspectador` já devolve pelo REST.
+   *
    * Continua **broadcast-only**: nada entra por aqui, a service chama depois de persistir.
    */
   async emitirEncontroAlterado(
     campanhaId: number,
     montarParaUsuario: (usuario: JwtPayload) => Promise<EncontroAlteradoDto['encontro']>,
   ): Promise<void> {
-    const sockets = await this.servidor.in(this.salaCampanha(campanhaId)).fetchSockets();
+    const sockets = await this.servidor
+      .in([this.salaCampanha(campanhaId), this.salaCampanhaEspectador(campanhaId)])
+      .fetchSockets();
     const porUsuario = new Map<number, EncontroAlteradoDto['encontro']>();
     for (const socket of sockets) {
       const usuario = (socket.data as { usuario?: JwtPayload }).usuario;

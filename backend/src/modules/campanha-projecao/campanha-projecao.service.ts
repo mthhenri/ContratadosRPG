@@ -12,36 +12,41 @@ import { ResourceNotFoundException, UnauthorizedAccessException } from '../../co
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
+import { EncontroService } from '../encontro/encontro.service';
 import { FichaService } from '../ficha/ficha.service';
 import { RolagemRepository } from '../rolagem/rolagem.repository';
 
 /**
- * Projeções de leitura do módulo `m8-espectadores-campanha` (m8-02, entregáveis 5/6): o painel do
- * espectador e a prévia de jogador. As duas cruzam três domínios — identidade de campanha
- * (`campanha`), fichas visíveis (`ficha`) e feed de rolagens (`rolagem`) — por isso vivem num
- * módulo próprio em vez de em qualquer um dos três: `CampanhaModule` não pode importar
- * `FichaModule`/`RolagemModule` sem criar um ciclo (os dois já importam `CampanhaModule`), e este
- * módulo, importando os três em vez de ser importado por eles, evita o ciclo por completo.
+ * Projeções de leitura do módulo `m8-espectadores-campanha` (m8-02/m8-05, entregáveis 5/6): o
+ * painel do espectador e a prévia de jogador. As duas cruzam quatro domínios — identidade de
+ * campanha (`campanha`), fichas visíveis (`ficha`), feed de rolagens (`rolagem`) e o encontro
+ * ativo (`encontro`) — por isso vivem num módulo próprio em vez de em qualquer um deles:
+ * `CampanhaModule` não pode importar `EncontroModule`/`FichaModule`/`RolagemModule` sem criar um
+ * ciclo (os três já importam `CampanhaModule`), e este módulo, importando os quatro em vez de ser
+ * importado por eles, evita o ciclo por completo.
  *
  * Nenhuma regra de permissão é reimplementada aqui (proibição #28): a identidade segura reusa
  * `CampanhaRepository.recuperarPorId` (dono da tabela `campanha`), a checagem de papel reusa os
- * predicados de `CampanhaService`, as fichas visíveis reusam `FichaService.listarFichasParaAlvo`
- * e o feed reusa `RolagemRepository` — cada um já dono da própria regra.
+ * predicados de `CampanhaService`, as fichas visíveis reusam `FichaService.listarFichasParaAlvo`,
+ * o feed reusa `RolagemRepository` e o encontro ativo reusa
+ * `EncontroService.recuperarEncontroAtivoParaEspectador`/`recuperarEncontroAtivoParaAlvo` — cada
+ * um já dono da própria regra.
  */
 @Injectable()
 export class CampanhaProjecaoService {
   constructor(
     private readonly campanhaRepositorio: CampanhaRepository,
     private readonly campanhaService: CampanhaService,
+    private readonly encontroService: EncontroService,
     private readonly fichaService: FichaService,
     private readonly rolagemRepositorio: RolagemRepository,
   ) {}
 
   /**
    * Painel do espectador (decisão de produto #5): identidade segura + feed paginado de rolagens
-   * `PUBLICA`. Legível por `ESPECTADOR` e por `MESTRE` em modo de prévia — o payload é idêntico
-   * nos dois casos, nunca vaza privilégio de mestre. `UnauthorizedAccessException` para
-   * `JOGADOR` ou não-membro.
+   * `PUBLICA` + encontro ativo redigido (m8-05). Legível por `ESPECTADOR` e por `MESTRE` em modo
+   * de prévia — o payload é idêntico nos dois casos, nunca vaza privilégio de mestre.
+   * `UnauthorizedAccessException` para `JOGADOR` ou não-membro.
    */
   async recuperarPainelEspectador(
     dto: CampanhaPainelEspectadorRecuperarDto,
@@ -66,7 +71,11 @@ export class CampanhaProjecaoService {
       itensPorPagina: dto.itensPorPagina,
     });
 
-    return { campanha: identidade, rolagens };
+    const encontroAtivo = await this.encontroService.recuperarEncontroAtivoParaEspectador({
+      campanhaId: dto.campanhaId,
+    });
+
+    return { campanha: identidade, rolagens, encontroAtivo };
   }
 
   /**
@@ -113,12 +122,18 @@ export class CampanhaProjecaoService {
       ehMestre: false,
     });
 
+    const encontroAtivo = await this.encontroService.recuperarEncontroAtivoParaAlvo({
+      campanhaId: dto.campanhaId,
+      usuarioAlvoId: dto.usuarioAlvoId,
+    });
+
     return {
       campanha: identidade,
       fichas,
       membros,
       rolagens,
       podeAcessarInventarioEsquadrao: identidade.naBase,
+      encontroAtivo,
     };
   }
 

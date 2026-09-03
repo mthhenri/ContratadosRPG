@@ -1,5 +1,121 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — m8-05: Visão read-only de Iniciativa/Encontro para espectador e Prévia de jogador (M8)
+
+Quinta task do módulo `m8-espectadores-campanha`. Objetivo: quando a campanha tem um encontro
+ativo, dar ao espectador (e à Prévia de jogador do mestre) a mesma visão que o jogador já tem do
+Encontro — ordem, turno, rodada, cartões de combatente e log da rodada — sem nenhum controle de
+condução e sem o pedido de "rolar minha iniciativa" (a conta espectadora não tem ficha vinculada ao
+encontro).
+
+**Backend — dois gaps encontrados na investigação, nenhum na spec.**
+
+1. `EncontroService.montarEstadoParaUsuario` (aplica a revelação m7-06 pro ponto de vista de **um**
+   usuário) chamava `FichaService.listarFichas` para qualquer papel que não fosse `MESTRE` — e
+   `listarFichas` **sempre** rejeita `ESPECTADOR` (`UnauthorizedAccessException`, decisão de
+   produto #4 do próprio `m8-02`). Como esse método é chamado por `emitirEstado`/
+   `sincronizarFichaAlterada` **por socket conectado**, um espectador real na sala do encontro
+   faria a montagem do broadcast estourar exceção assim que a `m8-05` estendesse a sala do
+   espectador (item 2 abaixo). Corrigido tratando `ESPECTADOR` como conjunto de fichas visíveis
+   vazio, sem chamar `listarFichas` — não é uma segunda regra de permissão, é o mesmo fato que a
+   decisão #4 já estabelece (espectador nunca vê ficha), só evitando a exceção.
+2. `CampanhaGateway.emitirEncontroAlterado` só buscava sockets em `campanha:<id>` — nunca em
+   `campanha:<id>:espectador`, a sala que `entrarSalaCampanha` já roteia `ESPECTADOR` desde a
+   `m8-02`. Sem o fix, nenhum espectador real jamais receberia `encontro:alterado` ao vivo.
+   Corrigido estendendo a busca de sockets para as duas salas (`.in([...])`), mesmo padrão que
+   `emitirRolagemRegistrada` já usa.
+
+**A leitura do espectador/prévia não podia reusar `recuperarEncontro` como está.** Esse método
+calcula o recorte a partir da identidade **real** de quem chama (`usuarioAtivo.sub`) — correto para
+o jogador/mestre olhando a própria tela, mas errado para o Painel do espectador em modo de prévia:
+o mestre em prévia É de fato mestre, então chamar `recuperarEncontro` com a própria identidade
+devolveria o encontro **sem redação nenhuma** (o branch `MESTRE` de `montarEstadoParaUsuario`
+retorna o estado intacto). Dois métodos novos em `EncontroService` resolvem isso ignorando o
+requisitante de propósito:
+
+- `recuperarEncontroAtivoParaEspectador({ campanhaId })` — sempre fichas visíveis vazias (o mesmo
+  recorte para `ESPECTADOR` real e `MESTRE` em prévia).
+- `recuperarEncontroAtivoParaAlvo({ campanhaId, usuarioAlvoId })` — fichas visíveis calculadas via
+  `FichaService.listarFichasParaAlvo` (já existente, m8-04), com a identidade do **alvo**.
+
+Os dois delegam a um helper privado comum (`recuperarEncontroAbertoRedigido`) que reusa
+`encontroRepositorio.recuperarAbertoPorCampanha` (a mesma consulta que já arbitra "um encontro por
+campanha" em `criarEncontro`) e `montarEstado`/`ocultarNaoRevelados` — nenhuma regra de revelação
+reimplementada. Nenhum dos dois valida o requisitante: confiam em quem chama
+(`CampanhaProjecaoService`) já ter validado mestre-ou-espectador/mestre-requisitante antes — mesmo
+padrão de `FichaService.listarFichasParaAlvo`, que só valida o alvo, não quem pediu.
+
+**`encontroAtivo` embutido nas duas projeções existentes — nenhuma rota REST nova.**
+`CampanhaPainelEspectadorDto`/`CampanhaPreviaJogadorDto` ganharam
+`encontroAtivo: EncontroRecuperadoDto | null`, populado dentro de
+`CampanhaProjecaoService.recuperarPainelEspectador`/`recuperarPreviaJogador` chamando os dois
+métodos acima. Isso também resolve "como o frontend descobre que existe um encontro ativo" de
+graça — é só checar o campo, sem endpoint dedicado.
+
+**Frontend — `IniciativaLeitura`, não uma segunda tela.** `painel-encontro.page.html` (jogador/
+mestre) usa `<app-cartao-combatente>` + `<app-log-encontro>` diretamente na página, sem um wrapper
+reutilizável — não dava pra "só desconectar os outputs" de uma página inteira (ela injeta
+`FichaEdicaoService`/`FichaRolagemRegistroService` como providers, amarra a ficha lateral do
+próprio jogador via `membros()`/`minhasFichaIds()`, e toda mutação já é a própria chamada de
+método). Um componente novo, `IniciativaLeitura` (`app-iniciativa-leitura`,
+`frontend/src/app/modules/encontro/componentes/iniciativa-leitura/`), monta de novo só o essencial
+— cabeçalho com status/rodada/turno (`app-cartao`/`app-chip`), a grade de `<app-cartao-combatente>`
+e o `<app-log-encontro>` — a partir do `EncontroRecuperadoDto` já redigido pelo backend.
+`podeAjustar`/`ehMestre`/`emEdicao` **nem são passados**: ficam no `false` padrão dos próprios
+primitivos, então não há binding nenhum para inspecionar ou desconectar por engano (mais seguro que
+passar `[podeAjustar]="false"` explicitamente). `LogEncontro` não tem `@Output` algum.
+
+A derivação de apresentação que `painel-encontro.page.ts` fazia inline (achatar `combatentes` +
+`ordemRodada` numa lista visual com `ocorrencia`/`chaveVisual`, "de quem é a vez", "já agiu",
+colunas da grade, nível de Ameaça via lookup em `fichasCampanha`) foi extraída para
+`frontend/src/app/modules/encontro/encontro-leitura.util.ts` (funções puras) — e
+`painel-encontro.page.ts` foi refatorado para consumir o mesmo util, em vez de manter uma cópia
+paralela só para a composição nova (mesmo precedente de `campanha-equipe.util.ts` na m8-04). O log
+da rodada (`LogEncontro`) está construído e funcional, mas hoje **oculto** em
+`painel-encontro.page.html` (comentário "por enquanto, a pedido... volta quando o formato for
+revisto" — decisão de produto não relacionada a esta task). `IniciativaLeitura` o mostra mesmo
+assim: é um requisito explícito do Objetivo/critério de aceite da spec ("o log do encontro chega ao
+vivo"), e ocultá-lo aqui alteraria a tela do jogador — fora de escopo — sem nenhum ganho.
+
+**Gatilho "Ver Iniciativa"** (`app-modal`, primitivo controlado) aparece em `espectador.page.html`/
+`previa-jogador.page.html` só quando `encontroAtivo() !== null`. Nas duas páginas,
+`tempoRealService.encontroAlterado$` **nunca** alimenta a composição diretamente — o mesmo evento
+carrega o recorte de **mestre** para quem está de fato conectado como mestre (a prévia do mestre,
+por exemplo), então usá-lo como fonte vazaria o encontro sem redação para quem está em modo de
+prévia. Em vez disso, o evento (filtrado por `campanhaId`) só dispara um refetch REST: em
+`espectador.page.ts`, `recuperarPainelEspectador(id, 1, 1)` (página mínima, só para atualizar
+`encontroAtivo` sem perturbar a paginação do feed de rolagens já carregado); em
+`previa-jogador.page.ts`, `carregarPrevia()` — a mesma recarga completa que a página já dispara
+para `membroEntrou$`/`fichaVisibilidadeAlterada$`/`fichaAlterada$` (m8-04), reusada sem inventar um
+caminho novo.
+
+**Testado:** `shared` 744/744 (inalterado), `backend` 540/540 (12 novos: 7 em
+`encontro.service.spec.ts` — fix do espectador em `recuperarEncontro`, os dois métodos "Para*" —, 3
+em `campanha.gateway.spec.ts` — `.in()` nas duas salas, um payload por usuário, pula socket sem
+usuário —, 2 em `campanha-projecao.service.spec.ts`), `frontend` 1620/1620 (18 novos: 9 em
+`iniciativa-leitura.component.spec.ts` — status/rodada/turno, um cartão por ocorrência, log,
+"Não revelado" preservado, ausência de todo controle de condução/rolar iniciativa, montagem sem
+`ordemRodada`, resolução de "Ameaça" com/sem `fichasCampanha` —, 5 em `espectador.page.spec.ts` e 4
+em `previa-jogador.page.spec.ts` — gatilho condicional, abrir o modal, refetch em `encontro:alterado`
+da própria campanha vs. de outra). Lint sem erro novo (`0 errors`, warnings pré-existentes de estilo
+no repositório inteiro). Nenhuma rota REST nova — `openapi:gerar-contratos` não precisou regenerar.
+
+**Verificado ao vivo** (Postgres nativo — sem Docker disponível neste ambiente, cluster `pg_ctlcluster
+16 main` — backend+frontend reais, `1920×1080`/`360×800`): seed via REST (mestre, Vera-jogadora,
+espectador; ficha de criatura "A Estátua" — mesmo fixture validado de
+`shared/src/regras/criatura/a-estatua.spec.ts` — como NPC nunca revelado a ninguém além do mestre;
+encontro iniciado com as duas iniciativas atribuídas). Espectador real: "Ver Iniciativa" abre o
+modal mostrando a criatura como "Não revelado" (sem números, sem identidade) e Vera com carteirinha
+(nome) mas **sem** Vida/Energia/Defesa — o espectador nunca vê nenhuma ficha, nem a de um jogador
+com ficha não-oculta. Mestre em prévia de Vera: mesma tela, mesmo NPC oculto, mas Vera aparece com
+os próprios números (Vida 31/31, Energia 10/10, Defesa/Esquiva/Bloqueio) porque o alvo tem
+visibilidade da própria ficha. Tempo real: o mestre avançou o turno via REST em paralelo enquanto o
+espectador tinha o modal aberto — "Turno 1/2"→"Turno 2/2", "Aguarda"→"Age agora", sem recarregar
+(sentinela plantada em `window` sobreviveu). Achado só na verificação ao vivo (não no código nem nos
+testes): `<app-cartao titulo="Iniciativa">` sem `[cartaoIndice]` projetado deixava uma caixa vazia
+onde todo outro cartão do sistema mostra `//` — corrigido projetando `<span cartaoIndice>//</span>`,
+confirmado com nova captura nos dois viewports.
+
 ## 2026-09-03 — m8-04: Prévia de jogador fidedigna, substitui "Ver como jogador" (M8)
 
 Quarta task do módulo `m8-espectadores-campanha`. Objetivo: trocar o antigo "Ver como jogador"

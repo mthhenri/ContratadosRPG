@@ -98,6 +98,7 @@ describe('EncontroService', () => {
   let fichaService: {
     recuperarFicha: ReturnType<typeof vi.fn>;
     listarFichas: ReturnType<typeof vi.fn>;
+    listarFichasParaAlvo: ReturnType<typeof vi.fn>;
   };
   let campanhaGateway: { emitirEncontroAlterado: ReturnType<typeof vi.fn> };
   let armazenamentoProvedor: {
@@ -125,7 +126,11 @@ describe('EncontroService', () => {
     campanhaRepositorio = {
       recuperarMembro: vi.fn().mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE }),
     };
-    fichaService = { recuperarFicha: vi.fn(), listarFichas: vi.fn().mockResolvedValue([]) };
+    fichaService = {
+      recuperarFicha: vi.fn(),
+      listarFichas: vi.fn().mockResolvedValue([]),
+      listarFichasParaAlvo: vi.fn().mockResolvedValue([]),
+    };
     campanhaGateway = { emitirEncontroAlterado: vi.fn() };
     armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
     service = new EncontroService(
@@ -773,6 +778,161 @@ describe('EncontroService', () => {
       await expect(service.recuperarEncontro({ id: 50 }, jogador)).rejects.toThrow(
         UnauthorizedAccessException,
       );
+    });
+
+    it('espectador lê o encontro sem estourar exceção — nunca chama FichaService.listarFichas (m8-05, decisão de produto #4)', async () => {
+      const espectador: JwtPayload = {
+        sub: 3,
+        login: 'olheiro',
+        tipo: TipoUsuarioEnum.NORMAL,
+        tokenVersao: 1,
+      };
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          id: 200,
+          iniciativa: 21,
+          fichaId: 30,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'SCP-1471-A',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 40,
+            vidaMaxima: 52,
+            defesa: 17,
+            atributos: { destreza: 4 },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+      ]);
+
+      const estado = await service.recuperarEncontro({ id: 50 }, espectador);
+
+      expect(fichaService.listarFichas).not.toHaveBeenCalled();
+      expect(estado.combatentes[0]).toMatchObject({
+        revelado: false,
+        vidaAtual: 0,
+        vidaMaxima: 0,
+        defesa: null,
+      });
+    });
+  });
+
+  describe('recuperarEncontroAtivoParaEspectador (m8-05, Painel do espectador)', () => {
+    it('devolve null sem encontro em andamento — sem consultar ficha nenhuma', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(null);
+
+      const resultado = await service.recuperarEncontroAtivoParaEspectador({ campanhaId: 5 });
+
+      expect(resultado).toBeNull();
+      expect(fichaService.listarFichas).not.toHaveBeenCalled();
+      expect(fichaService.listarFichasParaAlvo).not.toHaveBeenCalled();
+    });
+
+    it('redige o encontro em andamento sem nenhuma ficha visível, sem validar o requisitante (mestre em prévia recebe o mesmo que o espectador real)', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(
+        criarEncontroLinha({ status: EncontroStatusEnum.ATIVO, rodadaAtual: 1 }),
+      );
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          id: 200,
+          iniciativa: 21,
+          fichaId: 30,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'SCP-1471-A',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 40,
+            vidaMaxima: 52,
+            defesa: 17,
+            atributos: { destreza: 4 },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+      ]);
+
+      const resultado = await service.recuperarEncontroAtivoParaEspectador({ campanhaId: 5 });
+
+      // Nunca consulta quem pediu — não recebe JwtPayload nenhum, então não há como reusar a
+      // identidade real do mestre-em-prévia por engano.
+      expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      expect(resultado?.combatentes[0]).toMatchObject({
+        revelado: false,
+        vidaAtual: 0,
+        defesa: null,
+      });
+    });
+  });
+
+  describe('recuperarEncontroAtivoParaAlvo (m8-05, prévia de jogador)', () => {
+    it('devolve null sem encontro em andamento', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(null);
+
+      const resultado = await service.recuperarEncontroAtivoParaAlvo({
+        campanhaId: 5,
+        usuarioAlvoId: 40,
+      });
+
+      expect(resultado).toBeNull();
+    });
+
+    it('redige o encontro com a identidade do alvo, nunca do mestre requisitante — ficha visível ao alvo permanece revelada', async () => {
+      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(
+        criarEncontroLinha({ status: EncontroStatusEnum.ATIVO }),
+      );
+      fichaService.listarFichasParaAlvo.mockResolvedValue([{ id: 40 }]);
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({
+          id: 200,
+          iniciativa: 21,
+          fichaId: 30,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'SCP-1471-A',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 40,
+            vidaMaxima: 52,
+            defesa: 17,
+            atributos: { destreza: 4 },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+        criarCombatenteLinha({
+          id: 201,
+          iniciativa: 14,
+          fichaId: 40,
+          nomeAvulso: null,
+          vidaMaximaAvulso: null,
+          vidaAtualAvulso: null,
+          fichaNome: 'K. Amaral',
+          tipoFicha: TipoFichaEnum.CRIATURA,
+          fichaDados: {
+            vidaAtual: 31,
+            vidaMaxima: 31,
+            defesa: 14,
+            atributos: { destreza: 4 },
+          } as unknown as EncontroCombatenteLinhaDto['fichaDados'],
+        }),
+      ]);
+
+      const resultado = await service.recuperarEncontroAtivoParaAlvo({
+        campanhaId: 5,
+        usuarioAlvoId: 40,
+      });
+
+      expect(fichaService.listarFichasParaAlvo).toHaveBeenCalledWith({
+        campanhaId: 5,
+        usuarioAlvoId: 40,
+      });
+      const [criatura, propriaDoAlvo] = resultado?.combatentes ?? [];
+      expect(criatura).toMatchObject({ revelado: false, vidaAtual: 0, defesa: null });
+      expect(propriaDoAlvo).toMatchObject({ revelado: true, vidaAtual: 31, defesa: 14 });
     });
   });
 

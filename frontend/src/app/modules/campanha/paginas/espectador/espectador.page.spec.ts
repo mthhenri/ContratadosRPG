@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { EncontroStatusEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaPainelEspectadorDto, CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaEspectador } from './espectador.page';
@@ -42,6 +43,7 @@ describe('CampanhaEspectador', () => {
     return {
       campanha: { id: CAMPANHA_ID, nome: 'Contenção Delta', descricao: null, naBase: true },
       rolagens: { itens: rolagens, totalItens: rolagens.length, paginaAtual, totalPaginas },
+      encontroAtivo: null,
     };
   }
 
@@ -56,11 +58,13 @@ describe('CampanhaEspectador', () => {
       listarCampanhas: vi.fn(() => of(opts.campanhas ?? [])),
     };
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
+    const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      encontroAlterado$: encontroAlterado$.asObservable(),
     };
 
     TestBed.configureTestingModule({
@@ -83,6 +87,7 @@ describe('CampanhaEspectador', () => {
       campanhaService,
       tempoRealService,
       rolagemRegistrada$,
+      encontroAlterado$,
     };
   }
 
@@ -118,6 +123,7 @@ describe('CampanhaEspectador', () => {
             entrarSalaCampanha: vi.fn(),
             sairSalaCampanha: vi.fn(),
             rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
+            encontroAlterado$: new Subject<{ encontro: { campanhaId: number } }>().asObservable(),
           },
         },
       ],
@@ -201,6 +207,7 @@ describe('CampanhaEspectador', () => {
       of({
         campanha: { id: CAMPANHA_ID, nome: 'Contenção Delta', descricao: null, naBase: true },
         rolagens: { itens: [rolagem({ id: 2 })], totalItens: 2, paginaAtual: 2, totalPaginas: 2 },
+        encontroAtivo: null,
       }),
     );
     (raiz.querySelector('.espectador__mais') as HTMLButtonElement).click();
@@ -220,5 +227,79 @@ describe('CampanhaEspectador', () => {
     expect(raiz.querySelector('input')).toBeNull();
     expect(raiz.querySelector('select')).toBeNull();
     expect(raiz.textContent).not.toContain('Rolar');
+  });
+
+  describe('"Ver Iniciativa" (m8-05)', () => {
+    const encontroAtivo: EncontroRecuperadoDto = {
+      id: 9,
+      campanhaId: CAMPANHA_ID,
+      nome: 'Emboscada no Setor 4',
+      status: EncontroStatusEnum.ATIVO,
+      rodadaAtual: 1,
+      turnoIndice: 0,
+      combatentes: [],
+      ordemRodada: [],
+      eventos: [],
+    };
+
+    it('não aparece sem encontro ativo', () => {
+      const { raiz } = montar({ painelRetorno: painel([]) });
+      expect(raiz.querySelector('.espectador__ver-iniciativa')).toBeNull();
+    });
+
+    it('aparece com encontro ativo e abre a composição de leitura ao clicar', () => {
+      const { fixture, raiz } = montar({
+        painelRetorno: { ...painel([]), encontroAtivo },
+      });
+
+      const gatilho = raiz.querySelector('.espectador__ver-iniciativa') as HTMLButtonElement;
+      expect(gatilho).not.toBeNull();
+      expect(raiz.querySelector('dialog')?.hasAttribute('open')).toBeFalsy();
+
+      gatilho.click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('app-iniciativa-leitura')).not.toBeNull();
+    });
+
+    it('encontro:alterado da própria campanha refaz o painel via REST — nunca lê o payload do evento (mestre em prévia não pode herdar o recorte de mestre do socket)', () => {
+      const { fixture, raiz, campanhaProjecaoService, encontroAlterado$ } = montar({
+        painelRetorno: { ...painel([]), encontroAtivo: null },
+      });
+      expect(raiz.querySelector('.espectador__ver-iniciativa')).toBeNull();
+
+      const encontroRedigido: EncontroRecuperadoDto = { ...encontroAtivo, id: 10 };
+      campanhaProjecaoService.recuperarPainelEspectador.mockReturnValue(
+        of({ ...painel([]), encontroAtivo: encontroRedigido }),
+      );
+
+      // O payload do evento carregaria o recorte de MESTRE se quem está conectado for o mestre em
+      // prévia — a página nunca deve ler `evento.encontro` diretamente, só usá-lo como sinal.
+      encontroAlterado$.next({
+        encontro: { ...encontroRedigido, id: 999, campanhaId: CAMPANHA_ID } as never,
+      });
+      fixture.detectChanges();
+
+      expect(campanhaProjecaoService.recuperarPainelEspectador).toHaveBeenCalledWith(CAMPANHA_ID, 1, 1);
+      const gatilho = raiz.querySelector('.espectador__ver-iniciativa');
+      expect(gatilho).not.toBeNull();
+      gatilho?.dispatchEvent(new Event('click'));
+      fixture.detectChanges();
+      // O encontro de fato aberto no modal é o devolvido pelo REST (id 10), nunca o do evento (id 999).
+      const modalCorpo = raiz.querySelector('app-iniciativa-leitura');
+      expect(modalCorpo).not.toBeNull();
+    });
+
+    it('encontro:alterado de OUTRA campanha não dispara refetch', () => {
+      const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar({
+        painelRetorno: { ...painel([]), encontroAtivo: null },
+      });
+      campanhaProjecaoService.recuperarPainelEspectador.mockClear();
+
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, campanhaId: CAMPANHA_ID + 1 } as never });
+      fixture.detectChanges();
+
+      expect(campanhaProjecaoService.recuperarPainelEspectador).not.toHaveBeenCalled();
+    });
   });
 });

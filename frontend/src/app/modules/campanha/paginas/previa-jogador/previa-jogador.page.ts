@@ -25,6 +25,7 @@ import {
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
+import { IniciativaLeitura } from '../../../encontro/componentes/iniciativa-leitura/iniciativa-leitura.component';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
 import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
@@ -36,6 +37,7 @@ import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Janela da tira "Sessão" — mesma janela de uma hora de `CampanhaDetalhe`. */
 const UMA_HORA_MS = 60 * 60 * 1000;
@@ -69,11 +71,13 @@ const UMA_HORA_MS = 60 * 60 * 1000;
     FichaVisualizacao,
     FichaRolagensPainel,
     InventarioEsquadrao,
+    IniciativaLeitura,
     Botao,
     Cartao,
     Chip,
     EstadoVazio,
     Esqueleto,
+    Modal,
   ],
   providers: [FichaRolagemRegistroService],
   templateUrl: './previa-jogador.page.html',
@@ -182,6 +186,14 @@ export class CampanhaPreviaJogador {
     () => this.fichaExibidaDados()?.usuarioId === this.usuarioAlvoId,
   );
 
+  /**
+   * Encontro não-encerrado da campanha, já redigido com a identidade do alvo (m8-05) — gatilha
+   * "Ver Iniciativa". Vem direto de `previa()?.encontroAtivo` (a mesma projeção que já traz
+   * fichas/membros/rolagens), nunca um cálculo próprio desta página.
+   */
+  protected readonly encontroAtivo = computed(() => this.previa()?.encontroAtivo ?? null);
+  protected readonly iniciativaAberta = signal(false);
+
   protected selecionarFichaExibida(fichaId: number): void {
     if (this.fichaExibidaId() === fichaId) {
       return;
@@ -250,6 +262,14 @@ export class CampanhaPreviaJogador {
     this.tempoRealService.inventarioAlterado$
       .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
       .subscribe({ next: () => this.carregarInventario() });
+
+    // Encontro alterado (m8-05): mesmo racional de membroEntrou$/fichaVisibilidadeAlterada$ acima
+    // — nunca confia no payload do socket (o mesmo evento carrega o recorte de MESTRE para o
+    // mestre de verdade em prévia), refaz a projeção inteira via REST
+    // (`recuperarEncontroAtivoParaAlvo`, sempre redigido com a identidade do alvo).
+    this.tempoRealService.encontroAlterado$
+      .pipe(filter((evento) => evento.encontro.campanhaId === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.carregarPrevia() });
 
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));

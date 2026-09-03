@@ -29,6 +29,19 @@
 
         <span class="espectador__regua"></span>
 
+        @if (encontroAtivo(); as encontro) {
+        <button
+            app-botao
+            variante="secundario"
+            type="button"
+            class="botao botao--secundario espectador__ver-iniciativa"
+            (click)="iniciativaAberta.set(true)"
+        >
+            <app-icone nome="d20" />
+            Ver Iniciativa
+        </button>
+        }
+
         <app-chip severidade="secundario" class="espectador__selo">
             <app-icone nome="olho" />
             Modo espectador
@@ -100,4 +113,15 @@
             } }
         </div>
     </app-cartao>
+
+    @if (encontroAtivo(); as encontro) {
+    <app-modal
+        [aberto]="iniciativaAberta()"
+        titulo="Iniciativa"
+        largura="960px"
+        (fechou)="iniciativaAberta.set(false)"
+    >
+        <app-iniciativa-leitura [encontro]="encontro" />
+    </app-modal>
+    }
 </section>

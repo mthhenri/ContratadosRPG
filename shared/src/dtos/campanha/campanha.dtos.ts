@@ -1,4 +1,5 @@
 import type { ArquetipoEnum, ClasseEnum, ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '../../enums';
+import type { EncontroRecuperadoDto } from '../encontro';
 import type { FichaResumoDto } from '../ficha';
 import type { RolagemResumoDto } from '../rolagem';
 import type { PaginatedResult } from '../../interfaces';
@@ -605,6 +606,12 @@ export interface CampanhaPainelEspectadorRecuperarDto {
 export interface CampanhaPainelEspectadorDto {
   readonly campanha: CampanhaIdentidadeSeguraDto;
   readonly rolagens: PaginatedResult<RolagemResumoDto>;
+  /**
+   * Encontro não-encerrado da campanha, redigido para quem não vê nenhuma ficha (m8-05) — `null`
+   * sem combate em andamento. Gatilha "Ver Iniciativa" no Painel do espectador; o mesmo payload
+   * para `ESPECTADOR` real e `MESTRE` em prévia (`EncontroService.recuperarEncontroAtivoParaEspectador`).
+   */
+  readonly encontroAtivo: EncontroRecuperadoDto | null;
 }
 
 /**
@@ -637,6 +644,12 @@ export interface CampanhaPreviaJogadorDto {
   readonly membros: readonly CampanhaMembroResumoDto[];
   readonly rolagens: readonly RolagemResumoDto[];
   readonly podeAcessarInventarioEsquadrao: boolean;
+  /**
+   * Encontro não-encerrado da campanha, redigido com a identidade do **alvo** (m8-05) — `null` sem
+   * combate em andamento. Gatilha "Ver Iniciativa" na prévia; nunca o recorte do mestre que
+   * requisita (`EncontroService.recuperarEncontroAtivoParaAlvo`).
+   */
+  readonly encontroAtivo: EncontroRecuperadoDto | null;
 }
 
 /**

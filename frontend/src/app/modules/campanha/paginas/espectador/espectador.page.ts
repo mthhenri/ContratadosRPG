@@ -1,13 +1,15 @@
 import { DestroyRef, Component, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { filter, finalize } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaIdentidadeSeguraDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaProjecaoService } from '../../campanha-projecao.service';
 import { CampanhaService } from '../../campanha.service';
+import { IniciativaLeitura } from '../../../encontro/componentes/iniciativa-leitura/iniciativa-leitura.component';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -19,6 +21,7 @@ import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Tamanho de página do feed — mesmo degrau do histórico de rolagens da ficha (`visualizar.page.ts`). */
 const ITENS_POR_PAGINA = 20;
@@ -38,7 +41,19 @@ const ITENS_POR_PAGINA = 20;
  */
 @Component({
   selector: 'app-campanha-espectador',
-  imports: [RouterLink, Icone, OverflowFade, ResultadoRolagem, Botao, Cartao, Chip, EstadoVazio, Esqueleto],
+  imports: [
+    RouterLink,
+    Icone,
+    OverflowFade,
+    ResultadoRolagem,
+    Botao,
+    Cartao,
+    Chip,
+    EstadoVazio,
+    Esqueleto,
+    IniciativaLeitura,
+    Modal,
+  ],
   templateUrl: './espectador.page.html',
   styleUrl: './espectador.page.scss',
 })
@@ -62,6 +77,14 @@ export class CampanhaEspectador {
 
   /** `true` quando quem abriu esta rota é o mestre da campanha, em prévia (nunca um espectador real). */
   protected readonly ehMestrePreview = signal(false);
+
+  /**
+   * Encontro não-encerrado da campanha, já redigido pelo backend (m8-05) — gatilha "Ver
+   * Iniciativa". `EncontroService.recuperarEncontroAtivoParaEspectador` devolve o mesmo resultado
+   * para `ESPECTADOR` real e `MESTRE` em prévia; esta página nunca decide o recorte sozinha.
+   */
+  protected readonly encontroAtivo = signal<EncontroRecuperadoDto | null>(null);
+  protected readonly iniciativaAberta = signal(false);
 
   /** Relógio de 5s só para recomputar o tempo relativo das rolagens, sem novo fetch. */
   private readonly agora = signal(Date.now());
@@ -101,8 +124,23 @@ export class CampanhaEspectador {
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
 
+    // Encontro alterado (m8-05): nunca confia no payload do socket — o mesmo evento carrega o
+    // recorte de MESTRE para quem está de fato conectado como mestre (em prévia), então só um
+    // refetch via REST (`recuperarEncontroAtivoParaEspectador`, sempre redigido) garante o mesmo
+    // resultado para ESPECTADOR real e MESTRE em prévia. `itensPorPagina: 1` evita perturbar a
+    // paginação do feed de rolagens já carregado.
+    this.tempoRealService.encontroAlterado$
+      .pipe(filter((evento) => evento.encontro.campanhaId === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.atualizarEncontroAtivo() });
+
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
+  }
+
+  private atualizarEncontroAtivo(): void {
+    this.campanhaProjecaoService
+      .recuperarPainelEspectador(this.id, 1, 1)
+      .subscribe({ next: (painel) => this.encontroAtivo.set(painel.encontroAtivo) });
   }
 
   private onRolagemRegistrada(rolagem: RolagemResumoDto): void {
@@ -132,6 +170,7 @@ export class CampanhaEspectador {
       .subscribe({
         next: (painel) => {
           this.campanha.set(painel.campanha);
+          this.encontroAtivo.set(painel.encontroAtivo);
           this.rolagens.update((atuais) =>
             pagina === 1 ? painel.rolagens.itens : [...atuais, ...painel.rolagens.itens],
           );

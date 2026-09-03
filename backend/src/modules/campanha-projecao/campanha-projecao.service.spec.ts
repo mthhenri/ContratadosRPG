@@ -4,6 +4,7 @@ import { ResourceNotFoundException, UnauthorizedAccessException } from '../../co
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
 import type { CampanhaService } from '../campanha/campanha.service';
+import type { EncontroService } from '../encontro/encontro.service';
 import type { FichaService } from '../ficha/ficha.service';
 import type { RolagemRepository } from '../rolagem/rolagem.repository';
 import { CampanhaProjecaoService } from './campanha-projecao.service';
@@ -17,6 +18,11 @@ interface CampanhaServicoDublado {
   validarMembro: ReturnType<typeof vi.fn>;
   ehEspectador: ReturnType<typeof vi.fn>;
   ehMestre: ReturnType<typeof vi.fn>;
+}
+
+interface EncontroServicoDublado {
+  recuperarEncontroAtivoParaEspectador: ReturnType<typeof vi.fn>;
+  recuperarEncontroAtivoParaAlvo: ReturnType<typeof vi.fn>;
 }
 
 interface FichaServicoDublado {
@@ -45,6 +51,7 @@ const campanhaPersistida = {
 describe('CampanhaProjecaoService', () => {
   let campanhaRepositorio: CampanhaRepositorioDublado;
   let campanhaServico: CampanhaServicoDublado;
+  let encontroServico: EncontroServicoDublado;
   let fichaServico: FichaServicoDublado;
   let rolagemRepositorio: RolagemRepositorioDublado;
   let service: CampanhaProjecaoService;
@@ -56,11 +63,16 @@ describe('CampanhaProjecaoService', () => {
       ehEspectador: vi.fn((papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.ESPECTADOR),
       ehMestre: vi.fn((papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.MESTRE),
     };
+    encontroServico = {
+      recuperarEncontroAtivoParaEspectador: vi.fn().mockResolvedValue(null),
+      recuperarEncontroAtivoParaAlvo: vi.fn().mockResolvedValue(null),
+    };
     fichaServico = { listarFichasParaAlvo: vi.fn(), recuperarFichaParaAlvo: vi.fn() };
     rolagemRepositorio = { listarPublicasPorCampanha: vi.fn(), listarPorCampanha: vi.fn() };
     service = new CampanhaProjecaoService(
       campanhaRepositorio as unknown as CampanhaRepository,
       campanhaServico as unknown as CampanhaService,
+      encontroServico as unknown as EncontroService,
       fichaServico as unknown as FichaService,
       rolagemRepositorio as unknown as RolagemRepository,
     );
@@ -86,7 +98,29 @@ describe('CampanhaProjecaoService', () => {
       expect(resultado).toEqual({
         campanha: { id: 3, nome: 'Contenção Alfa', descricao: 'Missão inaugural', naBase: true },
         rolagens: feed,
+        encontroAtivo: null,
       });
+    });
+
+    it('inclui o encontro ativo redigido para espectador (m8-05) — mesmo método para ESPECTADOR e MESTRE em prévia', async () => {
+      campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+      rolagemRepositorio.listarPublicasPorCampanha.mockResolvedValue({
+        itens: [],
+        totalItens: 0,
+        paginaAtual: 1,
+        totalPaginas: 0,
+      });
+      const encontroRedigido = { id: 9, campanhaId: 3, status: 'ATIVO' };
+      encontroServico.recuperarEncontroAtivoParaEspectador.mockResolvedValue(encontroRedigido);
+
+      const resultado = await service.recuperarPainelEspectador(
+        { campanhaId: 3, pagina: 1, itensPorPagina: 20 },
+        usuarioEspectador,
+      );
+
+      expect(encontroServico.recuperarEncontroAtivoParaEspectador).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(resultado.encontroAtivo).toBe(encontroRedigido);
     });
 
     it('devolve o mesmo payload para o MESTRE em modo de prévia — sem dado extra de mestre', async () => {
@@ -163,7 +197,29 @@ describe('CampanhaProjecaoService', () => {
         membros: membrosParaAlvo,
         rolagens: feedDoAlvo,
         podeAcessarInventarioEsquadrao: true,
+        encontroAtivo: null,
       });
+    });
+
+    it('inclui o encontro ativo redigido com a identidade do alvo (m8-05), nunca do mestre requisitante', async () => {
+      campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      fichaServico.listarFichasParaAlvo.mockResolvedValue([]);
+      campanhaRepositorio.listarMembros.mockResolvedValue([]);
+      rolagemRepositorio.listarPorCampanha.mockResolvedValue([]);
+      const encontroRedigido = { id: 9, campanhaId: 3, status: 'ATIVO' };
+      encontroServico.recuperarEncontroAtivoParaAlvo.mockResolvedValue(encontroRedigido);
+
+      const resultado = await service.recuperarPreviaJogador(
+        { campanhaId: 3, usuarioAlvoId: usuarioJogador.sub },
+        usuarioMestre,
+      );
+
+      expect(encontroServico.recuperarEncontroAtivoParaAlvo).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioAlvoId: usuarioJogador.sub,
+      });
+      expect(resultado.encontroAtivo).toBe(encontroRedigido);
     });
 
     it('lança UnauthorizedAccessException quando o requisitante não é mestre', async () => {

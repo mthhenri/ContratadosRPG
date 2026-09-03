@@ -23,6 +23,19 @@
 
         <span class="previa-jogador__regua"></span>
 
+        @if (encontroAtivo(); as encontro) {
+        <button
+            app-botao
+            variante="secundario"
+            type="button"
+            class="botao botao--secundario previa-jogador__ver-iniciativa"
+            (click)="iniciativaAberta.set(true)"
+        >
+            <app-icone nome="d20" />
+            Ver Iniciativa
+        </button>
+        }
+
         <app-chip severidade="secundario" class="previa-jogador__selo">
             <app-icone nome="protecoes" />
             Prévia de jogador
@@ -227,5 +240,16 @@
     </div>
     }
 </section>
+
+@if (encontroAtivo(); as encontro) {
+<app-modal
+    [aberto]="iniciativaAberta()"
+    titulo="Iniciativa"
+    largura="960px"
+    (fechou)="iniciativaAberta.set(false)"
+>
+    <app-iniciativa-leitura [encontro]="encontro" [fichasCampanha]="previa()?.fichas ?? []" />
+</app-modal>
+}
 
 <app-bandeja-dados />

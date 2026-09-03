@@ -12,6 +12,7 @@ const PREVIA: CampanhaPreviaJogadorDto = {
   membros: [],
   rolagens: [],
   podeAcessarInventarioEsquadrao: true,
+  encontroAtivo: null,
 };
 
 describe('previaJogadorCampanhaGuard', () => {

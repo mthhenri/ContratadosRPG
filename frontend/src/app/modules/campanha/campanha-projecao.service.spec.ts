@@ -36,6 +36,7 @@ describe('CampanhaProjecaoService', () => {
     const painel: CampanhaPainelEspectadorDto = {
       campanha: { id: 8, nome: 'Contenção Delta', descricao: null, naBase: true },
       rolagens: { itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 },
+      encontroAtivo: null,
     };
 
     let recebido: CampanhaPainelEspectadorDto | undefined;
@@ -75,6 +76,7 @@ describe('CampanhaProjecaoService', () => {
       membros: [],
       rolagens: [],
       podeAcessarInventarioEsquadrao: true,
+      encontroAtivo: null,
     };
 
     let recebido: CampanhaPreviaJogadorDto | undefined;
