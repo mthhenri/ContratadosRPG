@@ -1,5 +1,23 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — fix pós-revisão da `m8-03`: "Sair da visualização" sem receita de tamanho
+
+O autor apontou, olhando a captura, um botão fora do padrão visual do resto do app — "Sair da
+visualização" na barra de prévia do Painel do espectador. Inspeção ao vivo (`getComputedStyle`)
+confirmou: `app-botao` nasce deliberadamente sem `display`/`padding`/`font-size` (só a base — ver
+`botao.component.scss`, comentário "não acrescentar dimensão aqui") até o consumidor pedir
+`[tamanho]` ou trazer a própria receita de classe; toda outra chamada de `app-botao` nesta task
+(convites, "Painel do espectador") tinha uma classe local com essa receita, mas
+`.espectador__preview-sair` foi copiada de `.detalhe__preview-sair` sem também copiar
+`.detalhe__acao` — a classe que de fato dá padding/`font-size: 11px`/peso 700/`uppercase` ao botão
+original. Resultado: o botão renderizava com o `font-family` correto (mono, seguia herdando da
+base) mas em peso normal, minúsculo, sem padding — lia como link genérico, não como o botão
+"terminal" do resto do app. Corrigido acrescentando a mesma receita de `.detalhe__acao` a
+`&__preview-sair` em `espectador.page.scss`. Reconfirmado ao vivo (`getComputedStyle` antes/depois
++ captura em `1920×1080`/`360×800`): agora bate exatamente com `.detalhe__nova-ficha` (mesma
+família de botão secundário com tamanho) e o alvo de toque mobile continua 44px. Suíte do arquivo
+8/8, lint sem erro novo, build limpo.
+
 ## 2026-09-03 — m8-03: frontend do papel ESPECTADOR — entrada, gestão e Painel ao vivo (M8)
 
 Terceira task do módulo `m8-espectadores-campanha` (depende de `m8-02`): o frontend inteiro do
