@@ -1252,6 +1252,11 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   copiados de `_componentes.scss` (`P-034`). Série `ui-01`…`ui-05`; `ui-01`…`ui-04`
   fecharam (ver acima). A `ui-05` removeu a última dependência de biblioteca de componentes e o
   tema segue exclusivamente pelas CSS custom properties.
+  A reauditoria estática UI-27 (2026-09-03) encontrou dívida de adoção posterior: esqueletos em
+  quatro telas, cabeçalho de cartão da Iniciativa, casca interna de três modais e stats da
+  Simulação já são cobertos pelos primitivos; estados vazios densos pedem variante compacta; os
+  três seletores segmentados justificam primitivo próprio. Matriz e ordem de correção estão em
+  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-045`…`P-050`.
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**

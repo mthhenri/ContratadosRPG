@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — UI-27: componentes fantasma reavaliados após a expansão da biblioteca
+
+O autor pediu uma varredura de três classes de “componente fantasma”: composição local já coberta
+por `shared/ui`, lacuna pequena que deveria evoluir um primitivo e papel recorrente ainda sem
+componente. A auditoria estática percorreu os 72 templates e respectivos SCSS de
+`frontend/src/app`, comparando marcação, identidade e semântica — a contagem mecânica selecionou
+candidatos, mas botões/campos nativos não foram tratados automaticamente como defeito.
+
+Foram confirmadas quatro adoções diretas: esqueletos locais em Perfil, campanha e visualizações de
+ficha; cabeçalho `.cartao__*` da Iniciativa; segunda casca de cabeçalho/rodapé dentro de três
+`app-modal` da campanha; e `.agente-stat`/`.calc-stat` nas cinco páginas da Simulação. Dois recortes
+pedem evolução: densidade compacta de `app-estado-vazio` para listas e, sujeito à confirmação na
+migração, projeção mais flexível das ações de modal. Caderno, Leitor de Documentos e Inventário da
+ficha fornecem três casos reais para um novo `app-segmentado`, semanticamente diferente de abas.
+
+O diagnóstico completo, falsos positivos e ordem sugerida ficaram em
+`docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; os desvios atuais são `P-045`…`P-050`. Nenhum HTML,
+SCSS ou TypeScript foi alterado, portanto não houve mudança visual para capturar nem suíte de
+frontend a executar. Foram verificados o inventário reproduzível, links/caminhos documentais,
+formatação e diff completo; cada correção futura permanece aberta e exigirá spec e gate visual
+próprios nos três viewports canônicos.
+
 ## 2026-09-03 — m8-01: papel ESPECTADOR e convite de espectador (banco + contratos, M8)
 
 Primeira task do módulo `m8-espectadores-campanha` (`docs/specs/backlog/m8-espectadores-campanha.spec.md`,
