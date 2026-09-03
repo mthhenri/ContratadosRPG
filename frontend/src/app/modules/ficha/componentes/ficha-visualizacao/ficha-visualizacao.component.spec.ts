@@ -2399,6 +2399,15 @@ describe('FichaVisualizacao', () => {
       );
     });
 
+    it('no compacto, Rolagens marca o destino externo em vez de manter uma aba interna exposta', () => {
+      const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
+      fixture.componentRef.setInput('modo', 'compacto');
+      fixture.componentRef.setInput('destinoMobileInicial', 'rolagens');
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.ficha-visao__linha-colunas--rolagens')).not.toBeNull();
+    });
+
     it('o HUD não aparece no destino Agente — o card de Identidade já mostra o mesmo Nome/Vida/Energia', () => {
       const { raiz } = montar(dados, 'Corvo', 42, true, false);
       expect(raiz.querySelector('.ficha-hud')).toBeNull();

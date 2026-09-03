@@ -24,8 +24,12 @@
     }
 
     // Feed de rolagens aberto: a iniciativa passa a ocupar apenas a área que sobra à esquerda.
+    // `width: auto` (não `calc(100vw - ...)`): a conta em `vw` ignorava o padding horizontal de
+    // `.conteudo` (`layout.component.scss`), sobre-restringindo a equação do box model e fazendo o
+    // navegador descartar a `margin-right` — o painel encostava sem vão no conteúdo. Mesmo ajuste
+    // de `detalhe.page.scss`/`visualizar.page.scss`.
     &--lateral-aberta {
-        width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2));
+        width: auto;
         margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
 
         .iniciativa {

@@ -306,6 +306,8 @@ export class CampanhaDetalhe {
   /** A página reserva a faixa da direita enquanto uma das consultas laterais está aberta. */
   protected readonly historicoSidebarAberto = signal(false);
   protected readonly inventarioSidebarAberto = signal(false);
+  /** Destino da barra inferior da ficha compacta na visão de jogador; Rolagens mora fora do card. */
+  protected readonly destinoMobileFicha = signal<DestinoMobile>('agente');
   /** `true` enquanto a criação da nova ficha está em voo (desabilita o botão do assistente). */
   /** Assistente de criação (m3-16) aberto — agora disparado do próprio detalhe (m2-16). */
 
@@ -718,6 +720,7 @@ export class CampanhaDetalhe {
    * dentro e o próprio componente rolou pro topo.
    */
   protected aoMudarDestinoFicha(destino: DestinoMobile): void {
+    this.destinoMobileFicha.set(destino);
     if (destino !== 'rolagens') {
       return;
     }
@@ -785,6 +788,10 @@ export class CampanhaDetalhe {
     // Slot de contexto da topbar (ui-21): nome da campanha, sempre que `campanha()` mudar
     // (carregamento inicial, rename) — some ao sair da tela, como `tempoRealService.sairSala*`.
     effect(() => this.topbarContexto.definir(this.campanha()?.nome ?? null));
+    effect(() => {
+      this.fichaExibidaId();
+      this.destinoMobileFicha.set('agente');
+    });
     effect(() => {
       if (this.historicoSidebarAberto()) {
         this.inventarioSidebarAberto.set(false);

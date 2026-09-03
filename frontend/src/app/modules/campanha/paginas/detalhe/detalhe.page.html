@@ -1019,6 +1019,7 @@
                         [ehMestre]="false"
                         [podeMandarParaBase]="campanhaAtual.naBase && podeAjustarFichaExibida()"
                         modo="compacto"
+                        [destinoMobileInicial]="destinoMobileFicha()"
                         (abaStatusMudou)="aoMudarDestinoFicha($event)"
                         (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
                         (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
@@ -1204,7 +1205,13 @@
              a MESMA flag do teste de atributo/dano rolados lá dentro (`FichaRolagemRegistroService`,
              provido pela página). Só existe quando há ficha exibida: sem ficha, não há o que rolar. -->
                 @if (fichaExibidaDados(); as fichaParaRolar) {
-                <app-cartao class="detalhe__rolagens-painel" #cardRolagens>
+                <app-cartao
+                    class="detalhe__rolagens-painel"
+                    [class.detalhe__rolagens-painel--mobile-ativo]="
+                        destinoMobileFicha() === 'rolagens'
+                    "
+                    #cardRolagens
+                >
                     <header class="detalhe__secao">
                         <h2 class="detalhe__secao-titulo">Rolagens</h2>
                         <span class="detalhe__secao-regua"></span>

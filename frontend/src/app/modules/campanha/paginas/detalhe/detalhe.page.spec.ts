@@ -1803,6 +1803,21 @@ describe('CampanhaDetalhe', () => {
       expect(botoes.some((texto) => texto?.includes('Zeta'))).toBe(true);
     });
 
+    it('mostra o painel externo de Rolagens no mobile apenas quando a ficha compacta seleciona esse destino', () => {
+      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      const fichaCompacta = fixture.debugElement.query(By.css('app-ficha-visualizacao')).componentInstance as {
+        abaStatusMudou: { emit(destino: 'rolagens'): void };
+      };
+      const painel = () => raiz.querySelector('.detalhe__rolagens-painel');
+
+      expect(painel()?.classList).not.toContain('detalhe__rolagens-painel--mobile-ativo');
+
+      fichaCompacta.abaStatusMudou.emit('rolagens');
+      fixture.detectChanges();
+
+      expect(painel()?.classList).toContain('detalhe__rolagens-painel--mobile-ativo');
+    });
+
     it('"Ver ficha" troca a ficha exibida sem navegar, e a de um colega vira só leitura', () => {
       const { fixture, raiz, fichaService, navegar } = montar({
         usuarioId: 2,

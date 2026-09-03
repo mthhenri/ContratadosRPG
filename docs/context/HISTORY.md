@@ -1,5 +1,137 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — painéis laterais: vão real contra o conteúdo no desktop (relato ao vivo, sem spec própria)
+
+O autor marcou duas faixas brancas em capturas de `Campanha do Matheus`/`Sentinela Matheus` com o
+histórico e o inventário de esquadrão abertos: o conteúdo encostava sem vão nenhum tanto na borda
+esquerda da tela quanto na borda do painel lateral aberto. A verificação ao vivo (`codex.dev`,
+`1920×1080`) confirmou: com o histórico aberto, `.detalhe__painel`/`.detalhe` mediam exatamente a
+mesma coordenada X (1420px) — vão zero, apesar de `&--lateral-aberta` já declarar
+`margin-right: calc(var(--largura-painel-lateral) + var(--space-20))`.
+
+Causa raiz: `width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2))` soma com
+as duas margens exatamente `100vw`, mas o contêiner pai (`.conteudo`, `layout.component.scss`) já
+tem `padding: 24px 20px` — a largura de conteúdo real disponível é `100vw - 40px`, não `100vw`. Com
+`width`, `margin-left` e `margin-right` todos explícitos e a soma excedendo a largura do bloco
+contêiner, o box model considera a equação sobre-restringida e, pela regra do CSS 2.1 §10.3.3,
+descarta o valor de `margin-right` (em `ltr`) — o bloco simplesmente termina onde `margin-left +
+width` manda, sem nenhum respiro reservado à direita. O `margin-right` nunca teve efeito visual
+nesse layout.
+
+Correção: trocar `width: calc(...)` por `width: auto` nas três ocorrências do mesmo padrão —
+`detalhe.page.scss`, `visualizar.page.scss` (`.ficha-pagina--lateral-aberta`) e
+`painel-encontro.page.scss` (`.iniciativa-tela--lateral-aberta`). Com `width: auto` e as duas
+margens explícitas, o navegador resolve a largura pela equação padrão do box model
+(`largura = contêiner − margin-left − margin-right`), o que faz a `margin-right` valer de verdade.
+Medido ao vivo após a correção: `1920×1080`, vão de 40px nos dois lados (contra o painel e contra a
+borda esquerda) tanto no histórico quanto no inventário, em `CampanhaDetalhe` **e** em `Iniciativa`
+(`Teste de Encontro`, `Campanha do Codex`, rodada em andamento); `960×1080`, mesmo vão de 40px em
+`CampanhaDetalhe`; `360×800`, sem alteração (o painel é full-bleed no mobile por desenho, sem vão a
+reservar) nas três telas. Nenhum dos viewports, em nenhuma das três telas ou dos dois painéis
+(histórico/inventário), apresentou overflow horizontal.
+
+Aproveitada a mesma sessão para revalidar o relato adicional do autor ("a margem do mobile ficou
+zoada"), referente às quatro specs móveis já concluídas antes desta rodada
+(`acervo-fichas-mobile-margem-conteudo`, `ficha-completa-mobile-margem-conteudo`,
+`campanha-mobile-margem-conteudo`, `campanha-jogador-mobile-abas-isoladas` — todas em
+`docs/specs/done/`): inspeção ao vivo repetida em `360×800` como `codex.dev` (mestre, `Campanha do
+Codex`) e `jogador.stub.1` (jogador, `Campanha do Matheus`) não reproduziu overflow nem corte em
+nenhuma aba (Agente/Status/Invent./Habilid./Rolagens) nem no painel de histórico/inventário
+mobile — o estado dessas quatro specs permanece correto; o defeito real e ainda vivo era o vão zero
+no desktop, tratado nesta entrada.
+
+Suíte frontend completa: 1553/1553. Lint: 0 erros (15.329 avisos históricos, mesma contagem). Build
+de produção: ver resultado registrado na tarefa. Mudança só de SCSS (sem alteração de `.ts`/`.html`
+nem de nenhuma classe testada em spec) — nenhum teste unitário assert a nova propriedade.
+
+## 2026-09-03 — acervo de fichas: listagem ocupa a largura útil no mobile
+
+O novo recorte enviado pelo autor foi reproduzido em `/fichas` a `360×800`. A página usava
+`max-width: 80vw` e `margin: 0 auto` em todas as larguras; embora a rota já tivesse seu próprio
+padding, o acervo ficava limitado a 288px e acrescentava 19px de margem por lado. Os cartões,
+ações e filtro apareciam mais estreitos que o padrão canônico da tela.
+
+No breakpoint mobile, `.acervo` agora remove o limite de largura e a margem automática. A listagem
+passou a ocupar 326px de área útil (x=12–338), com margens computadas em zero e sem overflow
+horizontal; o padding da rota continua como único respiro lateral. O layout desktop não foi tocado:
+em `960×1080`, o acervo permaneceu em 768px com margem de 76px por lado, e em `1920×1080` em
+1536px, centralizado e sem overflow.
+
+Análogo escolhido: `docs/design/examples/acervo-de-fichas.html` e o `FichaAcervo` vivo — mesma
+topbar, cartão de listagem, filtro, densidade e navegação; a mudança só retira a limitação que não
+faz sentido abaixo de 560px. Inspeção real logada como `codex.dev` confirmou o estado preenchido
+em `360×800`, `960×1080` e `1920×1080`, sem corte dos controles ou dos cartões. Teste focado:
+24/24. Suíte frontend: 1553/1553. Lint: sem erros, com 15.329 avisos históricos. Build de produção
+passou; os únicos avisos são os budgets conhecidos em `P-004`.
+
+## 2026-09-03 — ficha completa: margem desktop deixa de deslocar o conteúdo no mobile
+
+O relato complementar do autor foi reproduzido na rota de ficha completa em `360×800`. A
+`.ficha-pagina` tinha a mesma combinação encontrada antes na campanha: o breakpoint mobile definia
+`width: 100%`, mas mantinha a margem desktop (`0 7.5vw`). Isso produzia margem lateral computada de
+27px e deslocava o conteúdo para x=39–365; o overflow global escondia o excesso à direita e fazia a
+interface parecer cortada.
+
+A regra mobile agora declara `margin: 0`, sem mexer no padding canônico da rota nem no layout de
+tablet/desktop. A ficha começa em x=12 e termina em x=338 em `360×800`, com margem computada zero e
+sem overflow horizontal. A navegação inferior foi percorrida integralmente — Agente, Informações,
+Inventário, Habilidades, Rolagens, Extras e História — e cada seção permaneceu alcançável. Em
+`960×1080` e `1920×1080`, as margens desktop seguiram em 72px e 144px, respectivamente.
+
+Análogo escolhido: `docs/design/examples/ficha-de-jogador.html` e o `FichaVisualizar` vivo; a
+intervenção preserva a mesma densidade, hierarquia, cartões e barra móvel, removendo somente a
+margem incompatível com a viewport. Inspeção real logada como `codex.dev` confirmou os três
+viewports e os estados móveis, sem corte, overflow ou controles ocultos. Teste focado: 56/56. Suíte
+frontend: 1553/1553. Lint: sem erros, com 15.329 avisos históricos. Build de produção passou; os
+únicos avisos são os budgets conhecidos em `P-004`.
+
+## 2026-09-03 — campanha: margem desktop deixa de deslocar as duas visões no mobile
+
+O novo relato do autor foi reproduzido com a fixture local em `360×800`, tanto na campanha vista
+por jogador quanto na vista por mestre. Embora o breakpoint mobile já trocasse `.detalhe` para
+`width: 100%`, ele não sobrescrevia a margem herdada da composição desktop (`0 7.5vw`). O resultado
+computado era `margin-left/right: 27px`, com o conteúdo iniciando em x=39 e ultrapassando a borda
+direita — o scroll global escondia parte desse excesso, dando a aparência de um padding aleatório.
+
+A regra mobile compartilhada agora também define `margin: 0`. O respiro interno da rota e dos cards
+continua intacto: as duas visões iniciam em x=12, com a margem computada em 0px e sem overflow
+horizontal. A regra desktop segue em 7,5vw (72px em `960×1080`, 144px em `1920×1080`), portanto não
+altera a composição larga nem os painéis laterais. Como checagem adicional, a barra móvel do jogador
+foi percorrida integralmente: Agente, Informações, Inventário e Habilidades mantêm Rolagens oculto;
+Rolagens deixa somente o painel externo visível.
+
+Análogo escolhido: `docs/design/examples/ficha-de-jogador.html` e o `CampanhaDetalhe` vivo — mesmos
+cartões, densidade, navegação inferior e hierarquia; a intervenção só remove o deslocamento do
+contêiner. Inspeção real logada como `codex.dev`, em `360×800`, `960×1080` e `1920×1080`, confirmou
+foco e controles visíveis, ausência de corte e de overflow nas duas visões. Teste focado:
+118/118. Suíte frontend: 1553/1553. Lint: sem erros, com 15.329 avisos históricos. Build de produção
+passou; os únicos avisos são os budgets conhecidos em `P-004`.
+
+## 2026-09-02 — campanha do jogador: destinos móveis de ficha deixam de espelhar a última aba
+
+O relato do autor foi reproduzido na visão de jogador de `/campanhas/:id`: a barra móvel do cartão
+compacto já tratava **Rolagens** como destino externo, mas o painel de rolagens ficava sempre
+visível na coluna da campanha e o card de Status continuava com a última aba interna escolhida.
+Assim, ao tocar Rolagens depois de Inventário, os dois conteúdos apareciam juntos, dando a impressão
+de espelho entre abas.
+
+`CampanhaDetalhe` passou a guardar o destino móvel da ficha exibida e a repassá-lo ao compacto. Em
+mobile, o painel externo de Rolagens só recebe `display: block` quando esse destino está ativo; ao
+selecioná-lo, `FichaVisualizacao` marca o seu recorte compacto e esconde a coluna de Status. Os
+destinos Agente, Informações, Inventário e Habilidades conservam o card de Status normal. Ao trocar
+a ficha exibida, o destino volta para Agente, evitando que a seleção anterior atravesse a nova
+ficha. Desktop não recebe essa regra: o painel externo continua entre Equipe e Sessão, na mesma
+ordem e densidade de antes.
+
+Testes de regressão cobrem a marcação do destino externo no compacto e a propagação do evento até a
+campanha. Ciclo focado: 285/285. Suíte frontend completa: 1553/1553. Lint terminou sem erros
+(15.329 avisos históricos de aspas e `max-len`); build de produção passou, preservando os avisos
+conhecidos de budget (`P-004`). Verificação real com a fixture local `Campanha do Matheus`, logado
+como `codex.dev`: em `360×800`, Agente/Informações/Inventário/Habilidades mantiveram Rolagens
+oculto e, em Rolagens, o Status ficou oculto e o painel externo visível, sem overflow horizontal;
+em `1920×1080`, o painel permaneceu na coluna de Equipe. Análogo: `ficha-de-jogador.html` e o
+componente vivo `FichaVisualizacao` — mesma barra inferior, cartões e hierarquia.
+
 ## 2026-09-02 — dadinhos do pool trocam o quadradinho pela silhueta do dado (SVG)
 
 Pedido direto do autor: depois de trocar o glifo do d20 e desenhar os SVGs dos demais dados

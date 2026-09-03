@@ -4,13 +4,19 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-02 · **Última decisão registrada:** abrir um painel lateral fecha de
-> fato o outro (o componente reage a `aberto` mudar por qualquer via, não só pelo próprio clique).
-> A rota/ficha empurrada por um painel só colapsa a grade quando a largura que sobrou já é estreita
-> de verdade — `bp.tablet-lateral-aberta`/`bp.mobile-lateral-aberta` somam a reserva do painel
-> (540px) aos limiares normais, em vez de colapsar sempre que o painel está aberto (regressão da
-> 1ª tentativa: "ficou em linha" num desktop cheio). Ficha de jogador/criatura ganharam o mesmo
-> tratamento via um input `apertado` novo (`P-045` fechado).
+> **Última revisão:** 2026-09-03 · **Última decisão registrada:** no desktop, `.detalhe`/
+> `.ficha-pagina`/`.iniciativa-tela` no estado `--lateral-aberta` usam `width: auto` (não mais
+> `calc(100vw - ...)`) — a conta em `vw` ignorava o padding de `.conteudo` e deixava a equação do
+> box model sobre-restringida, fazendo o navegador descartar a `margin-right` e o painel encostar
+> sem vão nenhum no conteúdo. Com `width: auto`, as margens explícitas passam a valer de verdade
+> (vão de 40px medido ao vivo em `1920×1080`/`960×1080`, histórico e inventário). No breakpoint
+> mobile, os mesmos contêineres zeram a margem horizontal desktop (regra anterior, sem mudança
+> nesta rodada). Na campanha vista por jogador, `Rolagens` continua como destino móvel externo à
+> ficha compacta: em celular ele mostra somente o painel de rolagens, nunca a última aba de Status;
+> em desktop preserva a coluna existente entre Equipe e Sessão. A troca da ficha exibida volta o
+> destino para Agente. A decisão anterior dos painéis laterais permanece: um abre fechando o outro,
+> e a rota/ficha só colapsa a grade quando a largura que sobrou está estreita de verdade
+> (`bp.tablet-lateral-aberta`/`bp.mobile-lateral-aberta`).
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -25,6 +31,53 @@
 ---
 
 ## 1. Próxima Task
+
+**Painéis laterais: vão real contra o conteúdo no desktop concluído** (relato ao vivo do autor,
+sem spec própria — duas faixas brancas marcadas em captura de `Campanha do Matheus`/`Sentinela
+Matheus`): `detalhe.page.scss`, `visualizar.page.scss` e `painel-encontro.page.scss` trocaram
+`width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2))` por `width: auto` no
+estado `--lateral-aberta`. A conta em `vw` ignorava o padding de `.conteudo`
+(`layout.component.scss`) e sobre-restringia a equação do box model, descartando o valor de
+`margin-right` (CSS 2.1 §10.3.3) — o painel encostava no conteúdo sem vão nenhum, medido ao vivo em
+`1420px` para os dois (histórico e inventário, `1920×1080`). Com `width: auto`, o navegador resolve
+a largura a partir das duas margens, e o vão passou a 40px dos dois lados (conteúdo↔painel e
+conteúdo↔borda esquerda) em `1920×1080`/`960×1080`, confirmado ao vivo em `CampanhaDetalhe`
+(histórico e inventário) e em `Iniciativa` (histórico, combate em andamento); `360×800` não muda
+(painel full-bleed por desenho). Reaproveitada a sessão para reconfirmar ao vivo as quatro specs
+móveis abaixo (nenhuma regressão encontrada). Suíte frontend 1553/1553, lint sem erros (15.329 avisos históricos), build
+passou com os avisos de budget conhecidos (`P-004`).
+
+**`acervo-fichas-mobile-margem-conteudo` concluída** (spec em `docs/specs/done/`): o acervo de
+fichas não limita mais a área útil a 80vw no mobile. Em `360×800`, `.acervo` passou de 288px para
+326px de largura, zerando a margem adicional de 19px por lado e preservando o padding canônico da
+rota; cartões, ações e filtro ficaram sem corte ou overflow. Em `960×1080` e `1920×1080`, a regra
+desktop de 80vw permaneceu centralizada. Teste focado 24/24 e suíte frontend 1553/1553; lint sem
+erros (15.329 avisos históricos) e build passaram com os avisos de budget conhecidos (`P-004`).
+
+**`ficha-completa-mobile-margem-conteudo` concluída** (spec em `docs/specs/done/`): a rota de
+ficha completa não conserva mais os 7,5vw desktop no mobile; em `360×800`, o contêiner passou de
+x=39–365 (27px de margem em cada lado) para x=12–338, com margem computada em 0px e sem overflow.
+As sete seções móveis (Agente, Informações, Inventário, Habilidades, Rolagens, Extras e História)
+foram percorridas sem corte. Em `960×1080` e `1920×1080`, a composição desktop preservou as
+margens de 72px e 144px. Teste focado 56/56 e suíte frontend 1553/1553; lint sem erros (15.329
+avisos históricos) e build passaram com os avisos de budget conhecidos (`P-004`).
+
+**`campanha-mobile-margem-conteudo` concluída** (spec em `docs/specs/done/`): `.detalhe` não herda
+mais a margem de 7,5vw em telas até 560px; jogador e mestre passam a começar no padding canônico
+da rota, sem deslocamento/corte lateral. Em `360×800`, a margem computada foi de 27px para 0px nas
+duas visões; `960×1080` e `1920×1080` preservaram a margem desktop e nenhuma das três larguras teve
+overflow horizontal. A navegação móvel de jogador também foi percorrida de Agente a Rolagens.
+Testes focados 118/118 e suíte frontend 1553/1553; lint sem erros (15.329 avisos históricos) e
+build passou com os avisos conhecidos de budget (`P-004`).
+
+**`campanha-jogador-mobile-abas-isoladas` concluída** (spec em `docs/specs/done/`): a barra móvel
+da ficha compacta agora separa o destino externo **Rolagens** das abas internas. Na campanha, o
+painel externo só aparece no destino Rolagens e a coluna Status fica invisível nesse recorte; em
+Agente, Informações, Inventário e Habilidades, Rolagens não vaza. Mudar a ficha exibida restaura
+Agente. Desktop mantém a composição Equipe → Rolagens → Sessão. Testes focados 285/285 e suíte
+frontend 1553/1553; lint sem erros (avisos históricos) e build passaram. Inspeção real com
+`Campanha do Matheus` em `1920×1080` e `360×800` confirmou uma superfície por destino, sem
+overflow horizontal.
 
 **Painéis laterais: exclusão mútua e colapso de grade proporcional concluído** (relato ao vivo do
 autor, duas rodadas, sem spec própria): `HistoricoRolagensSidebar`/`InventarioEsquadraoSidebar`

@@ -40,8 +40,12 @@
     gap: var(--gap-grid);
 
     // O histórico ocupa uma coluna de apoio em desktop; a ficha usa somente a largura livre.
+    // `width: auto` (não `calc(100vw - ...)`): a conta em `vw` ignorava o padding horizontal de
+    // `.conteudo` (`layout.component.scss`), sobre-restringindo a equação do box model e fazendo o
+    // navegador descartar a `margin-right` — o painel encostava sem vão no conteúdo. Mesmo ajuste
+    // de `detalhe.page.scss`.
     &--lateral-aberta {
-        width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2));
+        width: auto;
         margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
 
         @include bp.mobile {
@@ -57,6 +61,7 @@
     @include bp.mobile {
         width: 100%;
         max-width: 100%;
+        margin: 0;
         // m3-60: o rodapé reserva a altura da barra de navegação fixa + a safe area do iOS, senão o
         // último bloco de cada aba fica embaixo dela e é inalcançável.
         padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));

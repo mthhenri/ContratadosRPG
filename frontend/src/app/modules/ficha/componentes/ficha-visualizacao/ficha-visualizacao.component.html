@@ -73,6 +73,9 @@
         <div
             class="ficha-visao__linha-colunas"
             [class.ficha-visao__linha-colunas--agente]="mostrandoAgente()"
+            [class.ficha-visao__linha-colunas--rolagens]="
+                modo() === 'compacto' && destinoMobile() === 'rolagens'
+            "
         >
             <!-- Agrupa Identidade+Atributos num único item de flex/grid da linha (só o `modo="compacto"`
          usa isso pra empilhar as duas — ver SCSS): sem o agrupamento, a Status (mais alta, sem

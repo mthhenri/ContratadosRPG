@@ -172,6 +172,15 @@
                     display: none;
                 }
             }
+
+            // Na campanha, Rolagens do compacto é um destino externo: o painel vive entre Equipe e
+            // Sessão, não dentro deste card. Esconder Status aqui impede que Inventário/Habilidades
+            // (a última aba interna escolhida) acompanhem a rolagem e pareçam o espelho da aba.
+            .ficha-visao--compacto
+                &.ficha-visao__linha-colunas--rolagens
+                > .ficha-visao__coluna--status {
+                display: none;
+            }
         }
     }
 

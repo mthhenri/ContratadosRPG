@@ -4,6 +4,11 @@
     max-width: 80vw;
     margin: 0 auto;
 
+    @include bp.mobile {
+        max-width: none;
+        margin: 0;
+    }
+
     // Dois grupos — criar (esquerda) e filtro por tipo (direita), mesmo padrão que a m7-16 aplicou
     // em `.iniciativa__acoes`: no mobile cada grupo empilha na mesma ordem sempre, nada salta de
     // posição conforme o que está visível (ex.: "Criar criatura" só aparece pra quem é mestre).

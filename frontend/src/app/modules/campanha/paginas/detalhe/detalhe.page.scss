@@ -72,9 +72,14 @@
     }
 
     // A consulta lateral deixa de encobrir a campanha: a área de trabalho usa o espaço restante
-    // da viewport e continua acionável. O mesmo token define a largura real do painel.
+    // da viewport e continua acionável. `width: auto` (não `calc(100vw - ...)`) é proposital: a
+    // conta em `vw` ignorava o padding horizontal de `.conteudo` (`layout.component.scss`), então
+    // a equação ficava sobre-restringida e o navegador descartava a `margin-right` (regra do
+    // box model p/ bloco não-flutuante com as três propriedades explícitas) — o painel encostava
+    // sem vão nenhum no conteúdo. Com `width: auto`, a única incógnita é a largura, que o
+    // navegador resolve a partir das margens de verdade.
     &--lateral-aberta {
-        width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2));
+        width: auto;
         margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
 
         // O painel lateral encolhe `.detalhe` sem encolher a **viewport** — as grades internas
@@ -117,6 +122,7 @@
     @include bp.mobile {
         width: 100%;
         max-width: 100%;
+        margin: 0;
     }
 
     // === Cabeçalho da página (m2-19, item 6; reflow mobile do "1"/próxima leva) — substitui o antigo
@@ -948,6 +954,16 @@
     // O corpo rola por dentro pelo mesmo motivo (e com a mesma receita) de Equipe/Sessão: com os três
     // cards empilhados, um painel de presets alto empurraria Sessão pra fora da tela. 420px é a régua
     // que os dois vizinhos já usam.
+    &__rolagens-painel {
+        @include bp.mobile {
+            display: none;
+
+            &.detalhe__rolagens-painel--mobile-ativo {
+                display: block;
+            }
+        }
+    }
+
     &__rolagens-painel-corpo {
         max-height: 420px;
         overflow-y: auto;
