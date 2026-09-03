@@ -163,3 +163,28 @@
   (2026-09-03), fora do recorte da task (`detalhe.page.scss` foi tocado por outras seções, mas não
   por este bloco).
 
+### P-048 — Botões de ícone soltos sem passar por `app-botao-icone` · `ABERTO` · frontend
+
+- **Sintoma:** alguns controles clicáveis do app são `<button>`/`<a>` com classe BEM local e
+  estilo próprio em vez do primitivo `shared/ui/botao-icone` (ou `app-botao` quando o alvo é
+  `<a>`) — por exemplo `.detalhe__membro-acao` (ações "Transferir mestre"/"Alternar
+  papel"/"Remover" na lista de membros de `detalhe.page.html`), `.detalhe__cabecalho-voltar` e
+  `.espectador__voltar` (links de "voltar" com ícone), `.detalhe__cabecalho-menu-botao`/`⋯` (menu
+  de ações), `.rolagem-pill__d20`. Funcionam e usam tokens de design corretamente, mas não passam
+  pela biblioteca — cada um reimplementa hover/foco/tamanho na mão.
+- **Causa:** convenção antiga do projeto (a maioria desses controles é anterior à `shared/ui/`
+  atual) nunca revisitada; a `m8-03` seguiu o padrão já existente ao adicionar "Alternar papel"
+  ao invés de o corrigir, por estar fora do recorte da task.
+- **Contorno:** nenhum — o comportamento visual está correto hoje, é dívida de arquitetura/reuso,
+  não defeito visível.
+- **Correção:** decisão do autor pendente (2026-09-03): a intenção é que **todo** controle
+  clicável do app passe a usar o primitivo correspondente (ver "Biblioteca de componentes é
+  obrigatória" em `CLAUDE.md`/`AGENTS.md`) — inclusive os que hoje são exceção histórica. Exige um
+  levantamento completo de todos os controles fora do padrão (não só os listados acima, que foram
+  os encontrados durante a auditoria da `m8-03`) e provavelmente uma spec própria, já que
+  `app-botao-icone` só suporta `button` — controles que hoje são `<a>` (`.detalhe__cabecalho-voltar`,
+  `.espectador__voltar`) podem exigir ampliar o primitivo para aceitar âncora, o que é decisão do
+  autor por si só (ver a mesma seção do `CLAUDE.md`/`AGENTS.md`).
+- **Desde:** dívida pré-existente; nomeada e registrada explicitamente a pedido do autor após a
+  auditoria de conformidade da `m8-03` com a nova regra de biblioteca de componentes (2026-09-03).
+
