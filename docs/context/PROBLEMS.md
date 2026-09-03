@@ -121,3 +121,25 @@
 - **Desde:** encontrado ao verificar `painéis laterais: fecha de verdade a exclusão mútua e para
   de espremer a rota` (2026-09-02) — fora do recorte da task, `LayoutComponent` não foi tocado.
 
+### P-046 — `GET /campanha/:id` devolve os dois códigos de convite a qualquer JOGADOR · `ACEITO` · backend
+
+- **Sintoma:** `CampanhaRecuperadaDto.codigoConvite`/`codigoConviteEspectador` chegam sempre
+  preenchidos nessa consulta, mesmo para um `JOGADOR` — só o mestre gerou os códigos, mas qualquer
+  membro que chame `recuperarCampanha` (ou a tela que consome esse endpoint) os vê. Diferente de
+  `CampanhaResumoDto` (usado na listagem), que já gateia por `CASE WHEN papel = MESTRE` desde antes
+  do m8.
+- **Causa:** recorte pré-existente ao papel `ESPECTADOR` (m8-01/m8-02) — `m8-01` já registrou o gap
+  para `codigoConvite`, e `codigoConviteEspectador` nasceu com o mesmo recorte para não abrir uma
+  inconsistência entre os dois campos. O `m8-02` fechou a parte que lhe cabia (`ESPECTADOR` agora é
+  rejeitado neste endpoint inteiro, `UnauthorizedAccessException` — usa a projeção dedicada do
+  painel), mas decidiu não estender o fechamento ao recorte `JOGADOR`, que é comportamento em
+  produção anterior ao módulo M8 e fora do objetivo das duas specs.
+- **Contorno:** nenhum — não é urgente (um jogador já está dentro da campanha; o código de convite
+  não é um segredo capaz de dano fora dela).
+- **Correção:** gatear os dois campos por `this.ehMestre(papel)` em `recuperarCampanha`
+  (`CampanhaService`), devolvendo `null` para `JOGADOR` — mesma forma de `CampanhaResumoDto`. Exige
+  decidir se algum consumidor do frontend depende do valor não-nulo para não-mestre antes de mudar
+  o contrato.
+- **Desde:** comportamento anterior ao M8; registrado explicitamente em `m8-01` (2026-09-03) e
+  reafirmado como decisão consciente de escopo em `m8-02` (2026-09-03).
+

@@ -59,8 +59,11 @@ consomem os dois o mesmo motor — nunca reimplemente uma fórmula de um lado s�
 
 | Quero mexer em | Fica em |
 |---|---|
-| Módulos de domínio | `backend/src/modules/` — `autenticacao/`, `campanha/`, `ficha/`, `pagina-caderno/`, `rolagem/`, `usuario/` |
+| Módulos de domínio | `backend/src/modules/` — `autenticacao/`, `campanha/`, `campanha-projecao/`, `ficha/`, `pagina-caderno/`, `rolagem/`, `usuario/` |
 | Cadernos privados e busca textual da campanha | `backend/src/modules/pagina-caderno/` + `backend/src/database/migrations/0018 - Caderno de campanha e busca textual.sql` |
+| Predicados de papel de campanha (`ehMestre`/`ehJogador`/`ehEspectador`) e `validarMembro` (devolve o vínculo) | `CampanhaService` (m8-02) — `ficha`/`rolagem`/`pagina-caderno` reusam, nunca comparam `papel === TipoCampanhaMembroPapelEnum.X` por conta própria |
+| Painel do espectador e prévia de jogador (projeções de leitura só-GET) | `backend/src/modules/campanha-projecao/` (m8-02) — módulo próprio pra não criar ciclo entre `campanha`/`ficha`/`rolagem` (os dois últimos já importam `campanha`) |
+| Registrar um controller novo para a geração de contratos OpenAPI | `@DocumentarController(...)` (runtime) **não** basta — `backend/tools/gerar-openapi-contratos.ts` tem seu próprio mapa estático `TAGS_POR_CONTROLLER`; controller ausente dele é silenciosamente pulado pelo gerador |
 | `BaseEntity`, `BaseRepository` | `backend/src/core/base/` |
 | `@Public()`, `@ActiveUser()` | `backend/src/core/decorators/` |
 | Exceções de negócio | `backend/src/core/exceptions/` — `BusinessException`, `ResourceNotFoundException`, `UnauthorizedAccessException` |

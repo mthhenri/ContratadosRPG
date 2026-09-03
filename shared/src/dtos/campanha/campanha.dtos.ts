@@ -1,4 +1,7 @@
 import type { ArquetipoEnum, ClasseEnum, ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '../../enums';
+import type { FichaResumoDto } from '../ficha';
+import type { RolagemResumoDto } from '../rolagem';
+import type { PaginatedResult } from '../../interfaces';
 import type { ModificacaoAplicadaDto } from "../../regras/compras";
 
 /**
@@ -178,9 +181,11 @@ export interface CampanhaMembroInternoRecuperadoDto {
  */
 
 /**
- * Entrada de "entrar na campanha" — o usuário autenticado ingressa informando o
- * `codigoConvite`. O `usuarioId` do ingressante vem do JWT (`@ActiveUser().sub`), nunca do
- * corpo. Entra sempre com papel `JOGADOR` (SYSTEM.SPEC §14).
+ * Entrada de "entrar na campanha" — o usuário autenticado ingressa informando um `codigoConvite`.
+ * O `usuarioId` do ingressante vem do JWT (`@ActiveUser().sub`), nunca do corpo. **m8-02**: o
+ * mesmo campo aceita tanto o convite de `JOGADOR` quanto o de `ESPECTADOR` — o servidor resolve
+ * qual dos dois bateu e decide o papel a partir disso (SYSTEM.SPEC §14); o cliente nunca escolhe
+ * o papel por corpo, query ou rota.
  */
 export interface CampanhaEntrarDto {
   readonly codigoConvite: string;
@@ -188,7 +193,8 @@ export interface CampanhaEntrarDto {
 
 /**
  * Saída de "entrar na campanha" — a campanha em que o usuário ingressou e o `papel` obtido
- * (`JOGADOR`). Recorte enxuto, sem o `codigoConvite` (visível só na recuperação de membro).
+ * (`JOGADOR` ou `ESPECTADOR`, conforme o código informado — m8-02). Recorte enxuto, sem o
+ * `codigoConvite` (visível só na recuperação de membro).
  */
 export interface CampanhaEntradaDto {
   readonly id: number;
@@ -212,9 +218,9 @@ export interface CampanhaConviteRegeneradoDto {
 }
 
 /*
- * ── m8-01: convite de espectador e troca de papel JOGADOR ↔ ESPECTADOR pelo mestre ──────────
- * Só os contratos — endpoint, mudança de papel efetiva e interface são escopo de tasks
- * seguintes do módulo `m8-espectadores-campanha` (ver spec).
+ * ── m8-01/m8-02: convite de espectador e troca de papel JOGADOR ↔ ESPECTADOR pelo mestre ─────
+ * m8-01 só criou os contratos abaixo; m8-02 implementa o endpoint e a mudança de papel efetiva
+ * (`CampanhaService.regenerarConviteEspectador`/`alterarPapelMembro`).
  */
 
 /**
@@ -228,6 +234,16 @@ export interface CampanhaConviteEspectadorRegenerarDto {
 
 /** Saída da regeneração — o novo `codigoConviteEspectador`, que invalida o anterior. */
 export interface CampanhaConviteEspectadorRegeneradoDto {
+  readonly id: number;
+  readonly codigoConviteEspectador: string;
+}
+
+/**
+ * Entrada interna da persistência do novo convite de espectador — o `id` vem no DTO (nunca
+ * `alterar(id, dados)`); o `codigoConviteEspectador` já foi gerado na service. Só service ↔
+ * repository — mesma forma de `CampanhaConviteInternoAlterarDto` (convite de `JOGADOR`).
+ */
+export interface CampanhaConviteEspectadorInternoAlterarDto {
   readonly id: number;
   readonly codigoConviteEspectador: string;
 }
@@ -247,6 +263,25 @@ export interface CampanhaMembroPapelAlterarDto {
 
 /** Saída da troca de papel — confirmação do novo `papel` do membro na campanha. */
 export interface CampanhaMembroPapelAlteradoDto {
+  readonly campanhaId: number;
+  readonly usuarioId: number;
+  readonly papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR;
+}
+
+/**
+ * Entrada interna da troca de papel — mesma forma pública de `CampanhaMembroPapelAlterarDto`,
+ * mas com `campanhaId` no nome do campo (`Interno`, nunca `id` — a convenção de "id implícito da
+ * entidade" é só para o DTO público que a controller monta a partir do `@Param`). Só service ↔
+ * repository.
+ */
+export interface CampanhaMembroPapelInternoAlterarDto {
+  readonly campanhaId: number;
+  readonly usuarioId: number;
+  readonly papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR;
+}
+
+/** Saída interna da troca de papel — mesma forma de `CampanhaMembroPapelAlteradoDto`. */
+export interface CampanhaMembroPapelInternoAlteradoDto {
   readonly campanhaId: number;
   readonly usuarioId: number;
   readonly papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR;
@@ -304,10 +339,26 @@ export interface CampanhaMembrosInternoListarDto {
 
 /**
  * Entrada interna da consulta de campanha por código de convite — base do `entrarCampanha`.
+ * **m8-02**: o mesmo `codigoConvite` é comparado contra os dois códigos ativos da campanha
+ * (`codigo_convite` de `JOGADOR`, `codigo_convite_espectador` de `ESPECTADOR`) — o repositório
+ * resolve qual bateu e devolve o papel correspondente (`CampanhaConviteInternoRecuperadoDto`).
  * Só service ↔ repository (o `codigoConvite` chega no `CampanhaEntrarDto` público).
  */
 export interface CampanhaConviteRecuperarDto {
   readonly codigoConvite: string;
+}
+
+/**
+ * Saída interna da consulta por qualquer um dos dois convites (m8-02) — a campanha e o `papel`
+ * resolvido a partir de qual código bateu (`JOGADOR` para `codigo_convite`, `ESPECTADOR` para
+ * `codigo_convite_espectador`). Os dois índices únicos parciais ativos garantem que um código só
+ * resolve para uma campanha, então o papel nunca é ambíguo. Só service ↔ repository.
+ */
+export interface CampanhaConviteInternoRecuperadoDto {
+  readonly id: number;
+  readonly nome: string;
+  readonly descricao: string | null;
+  readonly papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR;
 }
 
 /**
@@ -515,4 +566,67 @@ export interface CampanhaInventarioInternoAlterarDto {
 /** Payload do evento de tempo real `campanha:inventario-alterado` — o cliente refaz o GET. */
 export interface CampanhaInventarioAlteradoDto {
   readonly campanhaId: number;
+}
+
+/*
+ * ── m8-02: projeções de leitura para ESPECTADOR (painel) e prévia de jogador pelo mestre ─────
+ * Decisões de produto #5/#6 de `m8-espectadores-campanha.spec.md`: nenhuma das duas expõe
+ * código de convite, contagem de membros ou qualquer dado que o recorte-alvo não veria.
+ */
+
+/**
+ * Identidade segura de campanha (m8-02) — recorte sem código de convite nem membros, usado pelas
+ * duas projeções de leitura abaixo. `naBase` viaja porque é estado de jogo, não de gestão (o
+ * mesmo campo já é público em `CampanhaRecuperadaDto`).
+ */
+export interface CampanhaIdentidadeSeguraDto {
+  readonly id: number;
+  readonly nome: string;
+  readonly descricao: string | null;
+  readonly naBase: boolean;
+}
+
+/**
+ * Entrada da projeção do painel de espectador (complemento `PainelEspectador` antes do verbo) —
+ * o `campanhaId` vem do `@Param`; `pagina`/`itensPorPagina` da `@Query` (mesmo padrão paginado de
+ * `RolagemInternoListarDto`).
+ */
+export interface CampanhaPainelEspectadorRecuperarDto {
+  readonly campanhaId: number;
+  readonly pagina: number;
+  readonly itensPorPagina: number;
+}
+
+/**
+ * Saída da projeção do painel de espectador (decisão de produto #5) — identidade segura + feed
+ * paginado de rolagens exclusivamente `PUBLICA`. Legível por `ESPECTADOR` e por `MESTRE` em modo
+ * de prévia (o payload é idêntico nos dois casos — privilégio de mestre nunca vaza aqui).
+ */
+export interface CampanhaPainelEspectadorDto {
+  readonly campanha: CampanhaIdentidadeSeguraDto;
+  readonly rolagens: PaginatedResult<RolagemResumoDto>;
+}
+
+/**
+ * Entrada da prévia de jogador (complemento `PreviaJogador` antes do verbo) — `campanhaId` e
+ * `usuarioAlvoId` vêm do `@Param`. Só o mestre da campanha pode requisitar; o alvo precisa ser
+ * `JOGADOR` ativo (a service valida, nunca o cliente). Sem paginação: o feed reusa o mesmo teto
+ * de 50 linhas do feed normal de campanha (`RolagemCampanhaListarDto`) — a mesma janela que o
+ * alvo veria na própria sessão.
+ */
+export interface CampanhaPreviaJogadorRecuperarDto {
+  readonly campanhaId: number;
+  readonly usuarioAlvoId: number;
+}
+
+/**
+ * Saída da prévia de jogador (decisão de produto #6) — fichas visíveis, feed e capacidade de
+ * acessar o inventário de esquadrão calculados com a identidade do **alvo** (`usuarioAlvoId`),
+ * nunca do mestre que requisita. Somente leitura: não existe DTO de mutação para esta projeção.
+ */
+export interface CampanhaPreviaJogadorDto {
+  readonly campanha: CampanhaIdentidadeSeguraDto;
+  readonly fichas: readonly FichaResumoDto[];
+  readonly rolagens: readonly RolagemResumoDto[];
+  readonly podeAcessarInventarioEsquadrao: boolean;
 }

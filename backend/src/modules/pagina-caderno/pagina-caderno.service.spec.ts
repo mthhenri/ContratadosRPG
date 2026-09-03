@@ -42,6 +42,10 @@ interface CampanhaRepositorioDublado {
   recuperarMembro: ReturnType<typeof vi.fn>;
 }
 
+interface CampanhaServicoDublado {
+  ehEspectador: ReturnType<typeof vi.fn>;
+}
+
 const usuarioAutor: JwtPayload = {
   sub: 7,
   login: 'agente.autor',
@@ -78,6 +82,7 @@ describe('PaginaCadernoService', () => {
   let campanhaRepositorio: CampanhaRepositorioDublado;
   let service: PaginaCadernoService;
   let campanhaGateway: CampanhaGatewayDublado;
+  let campanhaServico: CampanhaServicoDublado;
 
   beforeEach(() => {
     paginaRepositorio = {
@@ -99,9 +104,13 @@ describe('PaginaCadernoService', () => {
       emitirPaginaEsquadraoAlterada: vi.fn(),
       emitirPaginaEsquadraoExcluida: vi.fn(),
     };
+    campanhaServico = {
+      ehEspectador: vi.fn((papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.ESPECTADOR),
+    };
     service = new PaginaCadernoService(
       paginaRepositorio as unknown as PaginaCadernoRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
+      campanhaServico as never,
       campanhaGateway as never,
     );
   });

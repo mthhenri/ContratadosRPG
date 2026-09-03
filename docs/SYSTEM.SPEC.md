@@ -290,7 +290,12 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
 - **Salas:**
   - `ficha:<id>` — entrar exige a mesma permissão de visualização do REST (§14).
     Evento: `ficha:alterada`.
-  - `campanha:<id>` — só membros. Eventos: `ficha:criada`, `membro:entrou`.
+  - `campanha:<id>` — mestre/jogador. Eventos: `ficha:criada`, `membro:entrou`,
+    `campanha:membro-papel-alterado`, `campanha:inventario-alterado`, `caderno-esquadrao:*`.
+  - `campanha:<id>:espectador` (m8-02) — só `ESPECTADOR`, sala própria e separada da de
+    mestre/jogador. Recebe só o que é explicitamente encaminhado às duas salas (hoje, só
+    `rolagem:registrada` pública) — nunca os eventos de ficha/inventário/caderno/gestão de membro
+    acima, fechado por construção (a sala nunca é alvo desses `emit()`).
 - **Permissões:** a service de ficha/campanha é o único árbitro — o gateway consulta a
   mesma verificação usada pelo REST. Proibido duplicar regra de permissão no gateway.
 - **Resiliência:** cliente ressincroniza (refetch da ficha aberta) ao reconectar —
@@ -511,24 +516,34 @@ usuario_ficha_acesso        ficha_id FK, usuario_id FK
 
 ### Matriz de permissões (validada na service; vale para REST e WebSocket)
 
-| Ação | Dono da ficha | Mestre da campanha | Outro membro |
-|---|---|---|---|
-| Ver ficha | ✅ | ✅ | só com linha em `usuario_ficha_acesso` |
-| Editar ficha | ✅ | ✅ | ❌ |
-| Criar ficha de jogador | ✅ (a própria) | ✅ | — |
-| Criar criatura/NPC | ❌ | ✅ | — |
-| Gerenciar campanha (convite, membros) | — | ✅ | ❌ |
+| Ação | Dono da ficha | Mestre da campanha | Outro membro (`JOGADOR`) | `ESPECTADOR` |
+|---|---|---|---|---|
+| Ver ficha | ✅ | ✅ | só com linha em `usuario_ficha_acesso` | ❌ (sempre, mesmo com concessão) |
+| Editar ficha | ✅ | ✅ | ❌ | ❌ |
+| Criar ficha de jogador | ✅ (a própria) | ✅ | — | ❌ |
+| Criar criatura/NPC | ❌ | ✅ | — | ❌ |
+| Rolar/registrar rolagem | conforme acesso à ficha | ✅ | conforme acesso à ficha | ❌ (não tem ficha) |
+| Ver rolagem pública da campanha | ✅ | ✅ | ✅ | ✅ |
+| Ver rolagem privada | autor/mestre | ✅ | só se autor | ❌ |
+| Caderno / inventário de esquadrão | — | ✅ | ✅ | ❌ |
+| Gerenciar campanha (convite, membros, papel) | — | ✅ | ❌ | ❌ |
 
 ### Regras fundamentais
 
 - Criatura e NPC usam o **mesmo mecanismo** de ficha: dono = mestre; invisíveis aos
   jogadores por padrão; reveláveis via `usuario_ficha_acesso`. Sem caso especial.
-- Jogador entra na campanha informando `codigo_convite`; entra com papel `JOGADOR`.
-  O mestre pode regenerar o código a qualquer momento (invalida o anterior). Desde o m8-01, a
-  campanha também tem `codigo_convite_espectador`, independente e regenerável do mesmo jeito,
-  para entrar com papel `ESPECTADOR`; o endpoint que aceita esse código, o efeito de permissão do
-  papel (leitura sem ficha própria) e a troca `JOGADOR ↔ ESPECTADOR` pelo mestre são tasks
-  seguintes do módulo `m8-espectadores-campanha` — m8-01 só prepara banco e contratos.
+- Jogador entra na campanha informando `codigo_convite`; entra com papel `JOGADOR`. Desde o m8-01/
+  m8-02, o mesmo campo (`codigoConvite`) aceita também `codigo_convite_espectador` — o servidor
+  resolve qual dos dois bateu e concede `JOGADOR` ou `ESPECTADOR` (o cliente nunca escolhe o papel).
+  O mestre pode regenerar cada código independentemente (invalida só o correspondente) e alterar
+  explicitamente o papel de um membro entre `JOGADOR`/`ESPECTADOR` — nunca a si mesmo, nunca o
+  único mestre; promover um espectador a mestre exige primeiro torná-lo `JOGADOR`.
+  `ESPECTADOR` nunca obtém ficha, nunca rola e nunca vê dado de gestão (código, membros), mesmo por
+  rota direta ou concessão em `usuario_ficha_acesso` — só a identidade segura da campanha e o feed
+  de rolagens `PUBLICA`, via projeção dedicada (painel do espectador) ou, para o mestre, em modo de
+  prévia. A sala de WebSocket do espectador (`campanha:<id>:espectador`) é separada da sala de
+  mestre/jogador — só recebe os eventos explicitamente encaminhados a ela (hoje, só rolagem
+  pública), nunca os de ficha/inventário/caderno/gestão de membro.
 - Uma campanha tem exatamente **um** mestre no v1 — inicialmente o criador, mas o papel é
   **transferível** pelo mestre atual a outro membro (o alvo vira `MESTRE` e o mestre atual é
   rebaixado a `JOGADOR`, **atomicamente**; a invariante de exatamente um mestre se mantém).

@@ -77,6 +77,8 @@ interface CampanhaRepositorioDublado {
 
 interface CampanhaServiceDublado {
   validarAcessoInventario: ReturnType<typeof vi.fn>;
+  ehEspectador: ReturnType<typeof vi.fn>;
+  ehJogador: ReturnType<typeof vi.fn>;
 }
 
 interface CampanhaGatewayDublado {
@@ -296,7 +298,15 @@ describe('FichaService', () => {
       alterarInventario: vi.fn(),
       contarCampanhasComoMestre: vi.fn(),
     };
-    campanhaServiceDublado = { validarAcessoInventario: vi.fn() };
+    campanhaServiceDublado = {
+      validarAcessoInventario: vi.fn(),
+      ehEspectador: vi.fn(
+        (papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      ),
+      ehJogador: vi.fn(
+        (papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.JOGADOR,
+      ),
+    };
     campanhaGateway = {
       emitirFichaCriada: vi.fn(),
       emitirFichaAlterada: vi.fn(),
@@ -426,6 +436,18 @@ describe('FichaService', () => {
 
     it('lança UnauthorizedAccessException quando o autor não é membro da campanha', async () => {
       campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.criarFicha({ campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.criarFicha).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o autor é ESPECTADOR (m8-02)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
 
       await expect(
         service.criarFicha({ campanhaId: 3, nome: 'Agente Alfa', dados: criarDados() }, usuarioMembro),
@@ -1106,6 +1128,74 @@ describe('FichaService', () => {
       expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
       expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
     });
+
+    it('lança UnauthorizedAccessException quando o autor é ESPECTADOR (m8-02)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+
+      await expect(service.listarFichas({ campanhaId: 3 }, usuarioMembro)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+
+      expect(fichaRepositorio.listarPorCampanha).not.toHaveBeenCalled();
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listarFichasParaAlvo (m8-02, prévia de jogador)', () => {
+    it('devolve as fichas visíveis ao alvo JOGADOR', async () => {
+      const fichas = [{ id: 5, usuarioId: usuarioMembro.sub, nome: 'Agente Beta', classe: ClasseEnum.SUPORTE, nivel: 2 }];
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.listarVisiveisParaUsuario.mockResolvedValue(
+        fichas.map((ficha) => ({ ...ficha, atributos: ATRIBUTOS_RESUMO, habilidades: [] })),
+      );
+
+      const resultado = await service.listarFichasParaAlvo({
+        campanhaId: 3,
+        usuarioAlvoId: usuarioMembro.sub,
+      });
+
+      expect(fichaRepositorio.listarVisiveisParaUsuario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioMembro.sub,
+      });
+      expect(resultado).toMatchObject(fichas);
+    });
+
+    it('lança UnauthorizedAccessException quando o alvo não é JOGADOR (mestre)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+
+      await expect(
+        service.listarFichasParaAlvo({ campanhaId: 3, usuarioAlvoId: usuarioMestre.sub }),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o alvo é ESPECTADOR', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+
+      await expect(
+        service.listarFichasParaAlvo({ campanhaId: 3, usuarioAlvoId: usuarioMembro.sub }),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.listarVisiveisParaUsuario).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o alvo não é membro da campanha', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.listarFichasParaAlvo({ campanhaId: 3, usuarioAlvoId: 999 }),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
   });
 
   describe('calcularMediasEsquadrao', () => {
@@ -1150,16 +1240,42 @@ describe('FichaService', () => {
 
       expect(fichaRepositorio.calcularMediasEsquadrao).not.toHaveBeenCalled();
     });
+
+    it('lança UnauthorizedAccessException quando o autor é ESPECTADOR (m8-02)', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+
+      await expect(
+        service.calcularMediasEsquadrao({ campanhaId: 3 }, usuarioMembro),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(fichaRepositorio.calcularMediasEsquadrao).not.toHaveBeenCalled();
+    });
   });
 
   describe('recuperarFicha', () => {
-    it('devolve a ficha para o dono sem consultar papel/concessão', async () => {
+    it('devolve a ficha para o dono sem consultar concessão (m8-02: só confirma que não é espectador)', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
 
       const resultado = await service.recuperarFicha({ id: 5 }, usuarioDono);
 
       expect(resultado).toBe(fichaPersistida);
-      expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o dono foi rebaixado a ESPECTADOR (m8-02)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+
+      await expect(service.recuperarFicha({ id: 5 }, usuarioDono)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
     });
 
     it('devolve a ficha para o mestre da campanha', async () => {
@@ -1892,14 +2008,24 @@ describe('FichaService', () => {
       expect(resultado).toEqual({ id: 5, campanhaId: 3 });
     });
 
-    it('desatribui a ficha (campanhaId: null) sem checar membro nem emitir evento', async () => {
+    it('desatribui a ficha (campanhaId: null) sem checar membro-alvo nem emitir evento', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
       const fichaDesatribuida = { id: 5, campanhaId: null, usuarioId: usuarioDono.sub, nome: 'Agente Alfa', dados: criarDados() };
       fichaRepositorio.atribuirCampanha.mockResolvedValue(fichaDesatribuida);
 
       const resultado = await service.atribuirCampanha({ id: 5, campanhaId: null }, usuarioDono);
 
-      expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      // m8-02: validarPermissaoEdicao consulta o papel da campanha de origem (3) só pra confirmar
+      // que o dono não é espectador — mas como `dto.campanhaId` é `null`, não há campanha-alvo pra
+      // validar o membro (`validarMembroAlvo`), então a consulta acontece uma única vez.
+      expect(campanhaRepositorio.recuperarMembro).toHaveBeenCalledTimes(1);
+      expect(campanhaRepositorio.recuperarMembro).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+      });
       expect(fichaRepositorio.atribuirCampanha).toHaveBeenCalledWith({ id: 5, campanhaId: null });
       expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
       expect(resultado).toEqual({ id: 5, campanhaId: null });
@@ -2054,6 +2180,19 @@ describe('FichaService', () => {
     it('lança ResourceNotFoundException quando o alvo não é membro da campanha', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.concederAcesso({ fichaId: 5, usuarioId: 99 }, usuarioDono),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(fichaRepositorio.concederAcesso).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando o alvo é ESPECTADOR (m8-02 — concessão não amplia o papel)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.JOGADOR }) // validarPermissaoEdicao (dono)
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR }); // validarMembroAlvo
 
       await expect(
         service.concederAcesso({ fichaId: 5, usuarioId: 99 }, usuarioDono),
@@ -2667,11 +2806,14 @@ describe('FichaService', () => {
     describe('recuperarFichaCriatura', () => {
       it('devolve a ficha para o mestre (dono)', async () => {
         fichaRepositorio.recuperarPorId.mockResolvedValue(fichaCriaturaPersistida);
+        campanhaRepositorio.recuperarMembro.mockResolvedValue({
+          papel: TipoCampanhaMembroPapelEnum.MESTRE,
+        });
 
         const resultado = await service.recuperarFichaCriatura({ id: 9 }, usuarioMestre);
 
         expect(resultado.dados).toEqual(criarDadosCriatura());
-        expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+        expect(fichaRepositorio.recuperarAcesso).not.toHaveBeenCalled();
       });
 
       it('lança UnauthorizedAccessException para um jogador sem concessão (invisível por padrão)', async () => {

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { JwtService } from '@nestjs/jwt';
 import type { Server, Socket } from 'socket.io';
-import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { UnauthorizedAccessException } from '../exceptions';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import type { CampanhaService } from '../../modules/campanha/campanha.service';
@@ -18,7 +18,7 @@ interface FichaServiceDublado {
 }
 
 interface CampanhaServiceDublado {
-  recuperarCampanha: ReturnType<typeof vi.fn>;
+  validarAcessoSalaCampanha: ReturnType<typeof vi.fn>;
 }
 
 interface EncontroServiceDublado {
@@ -71,7 +71,7 @@ describe('CampanhaGateway', () => {
   beforeEach(() => {
     jwtService = { verify: vi.fn() };
     fichaService = { recuperarFicha: vi.fn() };
-    campanhaService = { recuperarCampanha: vi.fn() };
+    campanhaService = { validarAcessoSalaCampanha: vi.fn() };
     encontroService = { sincronizarFichaAlterada: vi.fn().mockResolvedValue(undefined) };
     gateway = new CampanhaGateway(
       jwtService as unknown as JwtService,
@@ -148,20 +148,46 @@ describe('CampanhaGateway', () => {
     });
   });
 
-  describe('entrar na sala campanha:<id> (só membros §14)', () => {
-    it('entra na sala quando a service de campanha confirma o vínculo', async () => {
-      campanhaService.recuperarCampanha.mockResolvedValue({ id: 3 });
+  describe('entrar na sala campanha:<id> (§14, qualquer papel — m8-02)', () => {
+    it('entra na sala cheia quando o vínculo é JOGADOR', async () => {
+      campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
       const { cliente, join } = criarSocket({ usuario });
 
       const resultado = await gateway.entrarSalaCampanha(cliente, { id: 3 });
 
-      expect(campanhaService.recuperarCampanha).toHaveBeenCalledWith({ id: 3 }, usuario);
+      expect(campanhaService.validarAcessoSalaCampanha).toHaveBeenCalledWith({ id: 3 }, usuario);
       expect(join).toHaveBeenCalledWith('campanha:3');
       expect(resultado).toEqual({ sucesso: true });
     });
 
+    it('entra na sala cheia quando o vínculo é MESTRE', async () => {
+      campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      const { cliente, join } = criarSocket({ usuario });
+
+      await gateway.entrarSalaCampanha(cliente, { id: 3 });
+
+      expect(join).toHaveBeenCalledWith('campanha:3');
+    });
+
+    it('m8-02: entra numa sala própria (campanha:<id>:espectador), não na sala cheia, quando o vínculo é ESPECTADOR', async () => {
+      campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+      const { cliente, join } = criarSocket({ usuario });
+
+      const resultado = await gateway.entrarSalaCampanha(cliente, { id: 3 });
+
+      expect(join).toHaveBeenCalledWith('campanha:3:espectador');
+      expect(join).not.toHaveBeenCalledWith('campanha:3');
+      expect(resultado).toEqual({ sucesso: true });
+    });
+
     it('nega a entrada (sem join) quando o usuário não é membro (§14)', async () => {
-      campanhaService.recuperarCampanha.mockRejectedValue(new UnauthorizedAccessException());
+      campanhaService.validarAcessoSalaCampanha.mockRejectedValue(new UnauthorizedAccessException());
       const { cliente, join } = criarSocket({ usuario });
 
       const resultado = await gateway.entrarSalaCampanha(cliente, { id: 3 });
@@ -182,26 +208,40 @@ describe('CampanhaGateway', () => {
 
       await gateway.retransmitirPresencaEsquadrao(cliente, evento);
 
-      expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+      expect(campanhaService.validarAcessoSalaCampanha).not.toHaveBeenCalled();
       expect(join).not.toHaveBeenCalled();
       expect(toSala).toHaveBeenCalledWith('campanha:3');
       expect(emitirParaSala).toHaveBeenCalledWith('caderno-esquadrao:presenca', evento);
     });
 
     it('confirma o vínculo e ingressa na sala quando ainda não a tinha (corrida com campanha:entrar)', async () => {
-      campanhaService.recuperarCampanha.mockResolvedValue({ id: 3 });
+      campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
       const { cliente, toSala, emitirParaSala, join } = criarSocket({ usuario });
 
       await gateway.retransmitirPresencaEsquadrao(cliente, evento);
 
-      expect(campanhaService.recuperarCampanha).toHaveBeenCalledWith({ id: 3 }, usuario);
+      expect(campanhaService.validarAcessoSalaCampanha).toHaveBeenCalledWith({ id: 3 }, usuario);
       expect(join).toHaveBeenCalledWith('campanha:3');
       expect(toSala).toHaveBeenCalledWith('campanha:3');
       expect(emitirParaSala).toHaveBeenCalledWith('caderno-esquadrao:presenca', evento);
     });
 
+    it('m8-02: ingressa na sala própria do espectador quando o vínculo é ESPECTADOR', async () => {
+      campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+      const { cliente, toSala, join } = criarSocket({ usuario });
+
+      await gateway.retransmitirPresencaEsquadrao(cliente, evento);
+
+      expect(join).toHaveBeenCalledWith('campanha:3:espectador');
+      expect(toSala).toHaveBeenCalledWith('campanha:3:espectador');
+    });
+
     it('não encaminha quando o solicitante não é membro da campanha (§14)', async () => {
-      campanhaService.recuperarCampanha.mockRejectedValue(new UnauthorizedAccessException());
+      campanhaService.validarAcessoSalaCampanha.mockRejectedValue(new UnauthorizedAccessException());
       const { cliente, toSala, join } = criarSocket({ usuario });
 
       await gateway.retransmitirPresencaEsquadrao(cliente, evento);
@@ -215,7 +255,7 @@ describe('CampanhaGateway', () => {
 
       await gateway.retransmitirPresencaEsquadrao(cliente, evento);
 
-      expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+      expect(campanhaService.validarAcessoSalaCampanha).not.toHaveBeenCalled();
       expect(toSala).not.toHaveBeenCalled();
     });
   });
@@ -364,6 +404,20 @@ describe('CampanhaGateway', () => {
       expect(emitir).toHaveBeenCalledWith('campanha:inventario-alterado', { campanhaId: 3 });
     });
 
+    it('m8-02: emite campanha:membro-papel-alterado só na sala cheia — nunca alcança o espectador', () => {
+      const evento = {
+        campanhaId: 3,
+        usuarioId: 42,
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      };
+
+      gateway.emitirPapelMembroAlterado(evento as never);
+
+      expect(paraSala).toHaveBeenCalledTimes(1);
+      expect(paraSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitir).toHaveBeenCalledWith('campanha:membro-papel-alterado', evento);
+    });
+
     it('emite ficha:acesso-revogado na sala ficha:<id> (m3-51 — expulsão em tempo real)', () => {
       gateway.emitirAcessoRevogado({ fichaId: 5, usuarioId: 42 });
 
@@ -372,13 +426,13 @@ describe('CampanhaGateway', () => {
     });
 
     describe('emitirRolagemRegistrada (m3-27/m3-77)', () => {
-      it('com campanha, emite só na sala campanha:<id> — nunca também em ficha:<id>', () => {
+      it('com campanha, emite na sala campanha:<id> e na sala do espectador — nunca em ficha:<id>', () => {
         const rolagem = { id: 9, fichaId: 5, campanhaId: 3 };
 
         gateway.emitirRolagemRegistrada(rolagem as never);
 
         expect(paraSala).toHaveBeenCalledTimes(1);
-        expect(paraSala).toHaveBeenCalledWith('campanha:3');
+        expect(paraSala).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
         expect(emitir).toHaveBeenCalledTimes(1);
         expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
       });

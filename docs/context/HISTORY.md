@@ -1,5 +1,93 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-03 — m8-02: permissões e projeções de leitura do ESPECTADOR (backend, M8)
+
+Segunda task do módulo `m8-espectadores-campanha` (depende de `m8-01`): entrada determinada pelo
+código informado, gestão explícita de papel pelo mestre, recusa do papel `ESPECTADOR` em toda rota
+de ficha/rolagem/caderno/inventário, e as duas projeções de leitura (painel do espectador, prévia
+de jogador) que `m8-03`/`m8-04` vão consumir no frontend.
+
+**Entrada por código único, papel resolvido no servidor.** `CampanhaRepository.recuperarPorId
+CodigoConvite` virou `recuperarPorCodigoConviteOuEspectador`: um único `SELECT` com `CASE WHEN
+codigo_convite = :codigoConvite THEN JOGADOR ELSE ESPECTADOR END` resolve o papel a partir de qual
+dos dois índices únicos parciais bateu — nunca ambíguo, porque cada código só resolve pra uma
+campanha ativa. `CampanhaService.entrarCampanha` usa o papel devolvido (não mais um literal
+`JOGADOR` fixo); "já é membro" continua `BusinessException` **independente** de qual código foi
+informado, cobrindo a decisão de produto #3 (sem autoelevação/autorrebaixamento por convite).
+
+**Gestão de papel pelo mestre**, dois métodos novos em `CampanhaService`: `regenerarConviteEspectador`
+(mesma forma de `regenerarConvite`, convite independente) e `alterarPapelMembro` (`JOGADOR ↔
+ESPECTADOR`; recusa alterar o próprio requisitante e o alvo `MESTRE`; emite
+`campanha:membro-papel-alterado`, novo evento do `CampanhaGateway`, só na sala cheia — dado de
+gestão, fora do recorte do espectador). `transferirMestre` ganhou uma trava nova: alvo precisa ser
+`JOGADOR` (não só "não é mestre" como antes) — promover um espectador a mestre exige primeiro
+`alterarPapelMembro` pra `JOGADOR` (decisão de produto #3, "primeiro o torna jogador").
+
+**Predicados centralizados em `CampanhaService`** (entregável 3): `ehMestre`/`ehJogador`/
+`ehEspectador`, públicos, e `validarMembro` (antes `private`, só confirmava vínculo — agora devolve
+o vínculo com o papel, usado por `ficha`/`rolagem`/`pagina-caderno` pra nunca comparar
+`papel === TipoCampanhaMembroPapelEnum.X` por conta própria). Endpoints que agora recusam
+`ESPECTADOR` explicitamente, mesmo sendo membro ativo: `recuperarCampanha`/`listarMembros`
+(dados de gestão), `validarAcessoInventario`/`validarLeituraInventario` (inventário de esquadrão),
+`FichaService.criarFicha`/`listarFichas`/`calcularMediasEsquadrao`/`validarPermissaoVisualizacao`/
+`validarPermissaoEdicao`/`validarMembroAlvo` (ficha e concessão de acesso — inclusive o caso em que
+o mestre rebaixa um `JOGADOR` que já possuía ficha própria: o espectador resultante perde a visão
+dela, checado antes do `return` de posse) e `PaginaCadernoService.recuperarPapelMembro` (gate único
+reusado por todo método do caderno). `RolagemService.listarPorCampanha` **não precisou de mudança**:
+o gate de membership já aceita qualquer papel, e o filtro de visibilidade (`PUBLICA` para quem não é
+autor nem mestre) já produzia o recorte certo assim que `entrarCampanha` passou a criar vínculos
+`ESPECTADOR` de verdade.
+
+**Sala de WebSocket separada para o espectador** (`CampanhaGateway`): `entrarSalaCampanha` chama
+`validarAcessoSalaCampanha` (novo método — aceita qualquer papel, diferente de `recuperarCampanha`
+que nega espectador) e roteia por papel: `MESTRE`/`JOGADOR` entram em `campanha:<id>` como sempre;
+`ESPECTADOR` entra numa sala própria, `campanha:<id>:espectador`, que **só** recebe o que os métodos
+`emitir*` explicitamente mandam pras duas salas — hoje, só `emitirRolagemRegistrada` quando
+`PUBLICA`. Isso fecha por construção (não por filtro em cada `emit()`) o vazamento que existiria se
+o espectador entrasse na sala cheia: `ficha:criada`, `campanha:inventario-alterado`,
+`caderno-esquadrao:*` e `campanha:membro-papel-alterado` nunca alcançam a sala do espectador, porque
+ela nunca é passada pra esses `emit()`. `retransmitirPresencaEsquadrao` ganhou o mesmo roteamento no
+caminho de corrida (socket ainda não processou o `join` de `campanha:entrar`).
+
+**Duas projeções de leitura**, módulo novo `backend/src/modules/campanha-projecao/` (evita o ciclo
+que existiria se a lógica vivesse em `campanha`, `ficha` ou `rolagem` — os dois últimos já importam
+`CampanhaModule`, então uma importação de volta criaria um ciclo de 2 nós; o módulo novo importa os
+três, nenhum importa ele de volta). `CampanhaIdentidadeSeguraDto` (id/nome/descricao/naBase, sem
+código nem membros) é a base comum das duas:
+
+- **Painel do espectador** (decisão de produto #5, `GET /campanha/:id/painel-espectador`):
+  identidade segura + feed **paginado** de rolagens exclusivamente `PUBLICA`
+  (`RolagemRepository.listarPublicasPorCampanha`, novo — sem `usuarioId`/`ehMestre`, porque o
+  recorte é sempre público, diferente do feed de atividade recente de `listarPorCampanha`, que tem
+  teto de 50 e inclui `PRIVADA` do autor/mestre). Legível por `ESPECTADOR` e por `MESTRE` em modo de
+  prévia — o payload é idêntico nos dois casos.
+- **Prévia de jogador** (decisão de produto #6, `GET /campanha/:id/previa-jogador/:usuarioAlvoId`):
+  só o mestre pede; fichas visíveis, feed e capacidade de acessar o inventário de esquadrão
+  calculados com a identidade do **alvo**, nunca do mestre. `FichaService.listarFichasParaAlvo`
+  (novo) reusa a mesma consulta de `listarFichas` (`listarVisiveisParaUsuario`) parametrizada por um
+  `usuarioAlvoId` arbitrário, validando que o alvo é `JOGADOR` ativo antes de calcular qualquer
+  coisa — a permissão "quem pode pedir a prévia de quem" já foi decidida pelo chamador
+  (`CampanhaProjecaoService`), então aqui é dupla checagem, não regra duplicada. Somente leitura:
+  não existe DTO de mutação para esta projeção.
+
+**Testes**: shared 744/744, backend 520/520 (67 em `campanha.service.spec.ts`, +9 em
+`campanha-projecao.service.spec.ts`, +4 em `campanha.repository.spec.ts`, +6 em
+`campanha.gateway.spec.ts`, +9 em `ficha.service.spec.ts`, +1 em `rolagem.service.spec.ts` sobre o
+baseline de `m8-01`) — cobrindo entrada pelos dois códigos, regeneração independente do convite de
+espectador, alteração de papel (sucesso, autoalteração, alvo mestre, alvo inexistente),
+`transferirMestre` recusando alvo espectador, negação do espectador em ficha/concessão/inventário/
+caderno/campanha (inclusive o caso de rebaixamento de um jogador com ficha própria), roteamento de
+sala do gateway por papel (incluindo a corrida de `caderno-esquadrao:presenca`) e a diferença de
+payload entre painel do espectador e prévia de jogador. `tsc --noEmit` do frontend contra o `shared`
+atualizado sem erro novo (DTOs só ganharam campos/tipos novos, nada removido). Lint dos três
+workspaces sem erro novo (15.329 avisos históricos de aspas/max-len, mesma contagem de antes). `npm
+run openapi:gerar-contratos --workspace=backend` rodado após o diff de DTOs/endpoints públicos —
+precisou também registrar `CampanhaProjecaoController` no mapa `TAGS_POR_CONTROLLER` de
+`backend/tools/gerar-openapi-contratos.ts` (a ferramenta ignora o `@DocumentarController` em tempo
+de execução; tem sua própria lista estática de controllers documentados, e um controller ausente
+dela é silenciosamente pulado — achado durante o próprio gate, corrigido na mesma tarefa). Próxima
+do módulo: `m8-03` (frontend — entrada, gestão de convites/membros e Painel do espectador ao vivo).
+
 ## 2026-09-03 — m8-01: papel ESPECTADOR e convite de espectador (banco + contratos, M8)
 
 Primeira task do módulo `m8-espectadores-campanha` (`docs/specs/backlog/m8-espectadores-campanha.spec.md`,

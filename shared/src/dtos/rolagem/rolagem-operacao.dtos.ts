@@ -110,3 +110,16 @@ export interface RolagemCampanhaInternoListarDto {
   readonly usuarioId: number;
   readonly ehMestre: boolean;
 }
+
+/**
+ * Entrada interna da listagem **paginada** de rolagens `PUBLICA` de uma campanha (m8-02) —
+ * alimenta o painel de espectador e a prévia de jogador (`shared/dtos/campanha`). Diferente de
+ * `RolagemCampanhaInternoListarDto` (feed de atividade recente, teto de 50 linhas, inclui
+ * `PRIVADA` do autor/mestre): aqui o recorte é sempre e só `PUBLICA`, qualquer que seja quem
+ * pede — por isso não carrega `usuarioId`/`ehMestre`.
+ */
+export interface RolagemCampanhaPublicaInternoListarDto {
+  readonly campanhaId: number;
+  readonly pagina: number;
+  readonly itensPorPagina: number;
+}

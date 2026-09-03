@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './modules/autenticacao/autenticacao.guard';
 import { UsuarioModule } from './modules/usuario/usuario.module';
 import { AutorizacaoGuard } from './modules/usuario/autorizacao.guard';
 import { CampanhaModule } from './modules/campanha/campanha.module';
+import { CampanhaProjecaoModule } from './modules/campanha-projecao/campanha-projecao.module';
 import { FichaModule } from './modules/ficha/ficha.module';
 import { EncontroModule } from './modules/encontro/encontro.module';
 import { RolagemModule } from './modules/rolagem/rolagem.module';
@@ -32,6 +33,7 @@ import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.mod
     AutenticacaoModule,
     UsuarioModule,
     CampanhaModule,
+    CampanhaProjecaoModule,
     FichaModule,
     RolagemModule,
     EncontroModule,
