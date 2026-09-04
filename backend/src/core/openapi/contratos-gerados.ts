@@ -934,11 +934,16 @@ export const schemasContratosPublicos = {
             "rolagens": {
                 "type": "object",
                 "additionalProperties": true
+            },
+            "encontroAtivo": {
+                "$ref": "#/components/schemas/EncontroRecuperadoDto",
+                "description": "Encontro não-encerrado da campanha, redigido para quem não vê nenhuma ficha (m8-05) — `null`\nsem combate em andamento. Gatilha \"Ver Iniciativa\" no Painel do espectador; o mesmo payload\npara `ESPECTADOR` real e `MESTRE` em prévia (`EncontroService.recuperarEncontroAtivoParaEspectador`)."
             }
         },
         "required": [
             "campanha",
-            "rolagens"
+            "rolagens",
+            "encontroAtivo"
         ],
         "additionalProperties": false,
         "description": "Saída da projeção do painel de espectador (decisão de produto #5) — identidade segura + feed\npaginado de rolagens exclusivamente `PUBLICA`. Legível por `ESPECTADOR` e por `MESTRE` em modo\nde prévia (o payload é idêntico nos dois casos — privilégio de mestre nunca vaza aqui)."
@@ -986,6 +991,10 @@ export const schemasContratosPublicos = {
             },
             "podeAcessarInventarioEsquadrao": {
                 "type": "boolean"
+            },
+            "encontroAtivo": {
+                "$ref": "#/components/schemas/EncontroRecuperadoDto",
+                "description": "Encontro não-encerrado da campanha, redigido com a identidade do **alvo** (m8-05) — `null` sem\ncombate em andamento. Gatilha \"Ver Iniciativa\" na prévia; nunca o recorte do mestre que\nrequisita (`EncontroService.recuperarEncontroAtivoParaAlvo`)."
             }
         },
         "required": [
@@ -993,7 +1002,8 @@ export const schemasContratosPublicos = {
             "fichas",
             "membros",
             "rolagens",
-            "podeAcessarInventarioEsquadrao"
+            "podeAcessarInventarioEsquadrao",
+            "encontroAtivo"
         ],
         "additionalProperties": false,
         "description": "Saída da prévia de jogador (decisão de produto #6) — fichas visíveis, feed e capacidade de\nacessar o inventário de esquadrão calculados com a identidade do **alvo** (`usuarioAlvoId`),\nnunca do mestre que requisita. Somente leitura: não existe DTO de mutação para esta projeção.\n\n`membros` (m8-04) é a mesma forma de `CampanhaMembroResumoDto` que a visão normal de jogador\nconsome para montar a coluna \"Equipe\" — mas com `acessoCompleto`/visibilidade de ficha oculta\ncalculados como o **alvo** veria (reusa `CampanhaRepository.listarMembros` passando a\nidentidade do alvo, nunca a do mestre que requisita — mesmo racional de `fichas`). O grid\n\"Esquadrão\"/coluna \"Membros\" (visão de mestre) não faz parte desta projeção — só o que a visão\nde **jogador** usa."

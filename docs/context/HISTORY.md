@@ -1,5 +1,82 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-04 — m8-06: Validação integrada do módulo `m8-espectadores-campanha` (M8, gate final)
+
+Sexta e última task do módulo — não é produto novo, é o gate que fecha `m8-01`…`m8-05` com
+evidência de que convites, permissões, feed em tempo real e as duas prévias se comportam
+corretamente **entre contas** (não só em teste unitário com service dublada) e em
+desktop/mobile. Cenário de 4 identidades reais (mestre, Vera — jogador com ficha, Rex — jogador
+dono de uma ficha nunca compartilhada, Olheiro — espectador) rodado contra o backend de verdade
+(Postgres + NestJS) via REST cru + `socket.io-client` cru, sem template unitário nenhum — exatamente
+o que o risco da spec cobrava ("teste unitário não prova isolamento de dados").
+
+**30 verificações ao vivo, todas passando** (script descartável, não suíte permanente — mesmo
+espírito do `verify` das tasks anteriores):
+
+- **Entregável 1** (convites + rolagem pública/privada): entrada pelos dois códigos reais da
+  campanha; rolagem `PUBLICA` e `PRIVADA` registradas por Vera.
+- **Entregável 2** (regressão de autorização REST): espectador recebe `403` em `GET`/`POST` de
+  ficha própria, ficha de Rex (a "não compartilhada"), listagem de fichas, registro de rolagem,
+  caderno, inventário de campanha, membros e regeneração dos dois convites — mas **lê** o feed de
+  rolagem da campanha (é membro) só com a `PUBLICA` dentro, nunca a `PRIVADA`.
+- **Entregável 2** (regressão via Socket.IO): espectador entra na sala própria
+  (`campanha:<id>:espectador`), nunca na sala cheia nem na de uma campanha alheia nem na de uma
+  ficha; recebe `rolagem:registrada` só da `PUBLICA`; nunca recebe `ficha:criada` (broadcast de
+  conteúdo de jogo).
+- **Entregável 4** (encontro ativo com NPC não revelado): jogador e espectador recebem
+  exatamente o mesmo recorte de "A Estátua" (nome anunciado, todos os números zerados,
+  `revelado: false`, JSON idêntico byte a byte entre os dois); `turno/avancar` e
+  `iniciativa/pedido` (mestre pede que a mesa role) negados por rota direta para o espectador.
+- **Entregável 3** (prévia do mestre vs. Vera real): mesma faixa de identidade de campanha
+  (`id`/`nome`/`descricao`/`naBase`) — a prévia **nunca** inclui os dois códigos de convite, a
+  única diferença esperada; mesmo conjunto de fichas, membros, feed de rolagens e o
+  `encontroAtivo` byte a byte iguais entre a prévia do mestre e o que Vera recebe de verdade.
+
+Nenhum bug de backend encontrado — as 5 tasks anteriores compõem corretamente entre contas. O
+único ajuste foi na primeira redação do próprio script de verificação (assumi que um combatente
+"não revelado" viria com `nome: null`; `encontro-revelacao.ts` deliberadamente preserva o nome —
+"o mestre anuncia o nome em voz alta na mesa" — e zera só os números; corrigido antes de declarar
+qualquer falha real).
+
+**Entregável 5 — inspeção visual pessoal, 1920×1080 e 360×800**, cenário próprio (mestre, Vera,
+Semficha — jogador sem nenhuma ficha na campanha, Olheiro): gestão de convites/papel em
+`CampanhaDetalhe`, Painel do espectador em modo prévia pelo mestre, Painel do espectador real
+(feed + "Ver Iniciativa"), Prévia de jogador para alvo com ficha (Vera) e sem ficha (Semficha),
+modal de Iniciativa nas quatro composições. Achado real, corrigido nesta task:
+
+- **Botão "Ver Iniciativa" sem nenhuma receita visual** em `espectador.page.html` e
+  `previa-jogador.page.html` (m8-05): usa `app-botao` + `variante="secundario"`, igual ao botão
+  "Sair da visualização"/"Sair da prévia" ao lado — mas, ao contrário deles, sem `[tamanho]` **e**
+  sem a classe local de receita (`display`/`padding`/`font-size`/etc. que `app-botao` deixa por
+  conta do consumidor quando `[tamanho]` não é informado — mesmo aviso do `CLAUDE.md` sobre anexar
+  a diretiva sem os inputs que dão forma ao controle). Na tela renderizada saía como texto solto
+  colado no chip "Modo espectador"/"Prévia de jogador", sem caixa, padding ou peso — não "nosso
+  componente" nenhum, apesar do código já ter a diretiva. Corrigido acrescentando
+  `&__ver-iniciativa` em `espectador.page.scss`/`previa-jogador.page.scss`, mesma receita já usada
+  por `&__preview-sair` nos dois arquivos (compacta o bastante para caber ao lado do selo, com
+  `min-height` de alvo de toque no mobile). Confirmado nos dois viewports depois do fix — não é o
+  mesmo defeito de `P-048` (que é sobre controles que nunca chamam o primitivo; aqui o primitivo é
+  chamado, só faltava a densidade).
+
+**Divergência preexistente da `m8-05` encontrada e corrigida** (não é achado da spec, é gate que
+faltou rodar): `backend/src/core/openapi/contratos-gerados.ts` nunca tinha sido regenerado depois
+que a `m8-05` acrescentou `encontroAtivo` a `CampanhaPainelEspectadorDto`/`CampanhaPreviaJogadorDto`
+— o contrato público publicado ficou um commit atrasado do `shared/`. Corrigido rodando
+`npm run openapi:gerar-contratos` e commitando o resultado. Também corrigido 1 erro real de lint
+(`@typescript-eslint/require-await`) que a `m8-05` deixou em `campanha.gateway.spec.ts` (mock
+`async` sem `await` dentro) — `npm run lint` (raiz) não passava limpo antes deste commit.
+
+**Testes:** shared 744/744, backend 540/540, frontend 1602/1602 (nenhum novo — mudança de escopo
+foi CSS + regeneração de contrato + 1 mock de teste, sem regra de negócio nova). `npm run lint`
+(raiz) limpo nos três workspaces (0 erros, só os warnings de aspas/`max-len` preexistentes).
+Build de `backend` (`nest build`) e `frontend` (produção) OK — únicos avisos são os orçamentos de
+bundle já preexistentes, não deste diff. `tsc --noEmit` do backend mantém os mesmos 8 erros
+preexistentes em arquivos de teste/ferramenta que já existiam antes desta task (confirmados
+idênticos, não relacionados ao módulo `m8-espectadores-campanha`) — fora do escopo, não
+corrigidos.
+
+Módulo `m8-espectadores-campanha` (`m8-01`…`m8-06`) **concluído**.
+
 ## 2026-09-03 — m8-05: Visão read-only de Iniciativa/Encontro para espectador e Prévia de jogador (M8)
 
 Quinta task do módulo `m8-espectadores-campanha`. Objetivo: quando a campanha tem um encontro

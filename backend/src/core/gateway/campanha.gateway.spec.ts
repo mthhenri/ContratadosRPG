@@ -499,11 +499,13 @@ describe('CampanhaGateway', () => {
           in: vi.fn(() => ({ fetchSockets })),
         } as unknown as Server;
 
-        const montarParaUsuario = vi.fn(async (usuarioAlvo: JwtPayload) => ({
-          id: 9,
-          campanhaId: 3,
-          recorteDe: usuarioAlvo.sub,
-        }));
+        const montarParaUsuario = vi.fn((usuarioAlvo: JwtPayload) =>
+          Promise.resolve({
+            id: 9,
+            campanhaId: 3,
+            recorteDe: usuarioAlvo.sub,
+          }),
+        );
 
         await gateway.emitirEncontroAlterado(3, montarParaUsuario as never);
 

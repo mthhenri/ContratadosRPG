@@ -4,31 +4,20 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-03 · **Última decisão registrada:** a visão read-only de Iniciativa
-> (m8-05) dá ao espectador e à Prévia de jogador a mesma tela "Iniciativa" que jogador/mestre já
-> tinham — ordem, turno, rodada, cartões de combatente e log da rodada — sem nenhum controle de
-> condução. Um componente novo, `IniciativaLeitura` (`app-iniciativa-leitura`,
-> `frontend/src/app/modules/encontro/componentes/iniciativa-leitura/`), reusa `CartaoCombatente` e
-> `LogEncontro` **sem conectar nenhum `@Output`** — `podeAjustar`/`ehMestre`/`emEdicao` nem são
-> passados, ficam no `false` padrão dos próprios primitivos, então não há binding nenhum para
-> inspecionar ou errar. A derivação de apresentação (`ordemRodada` → cartões visuais, "de quem é a
-> vez", "já agiu", colunas da grade) que só existia dentro de `painel-encontro.page.ts` foi extraída
-> para `encontro-leitura.util.ts` (funções puras) e a própria página do jogador/mestre passou a
-> consumi-la — a mesma apresentação para os dois consumidores, nunca duplicada. Backend: dois
-> métodos novos em `EncontroService` — `recuperarEncontroAtivoParaEspectador`/
-> `recuperarEncontroAtivoParaAlvo` — reusam `montarEstado`/`ocultarNaoRevelados`/
-> `recuperarAbertoPorCampanha` (nunca uma segunda regra de revelação) e **não validam quem pediu**:
-> o payload é sempre o mesmo para `ESPECTADOR` real e `MESTRE` em prévia, porque calculá-lo a partir
-> da identidade real do requisitante (que pode ser o próprio mestre) vazaria o encontro sem redação
-> nenhuma — quem chama (`CampanhaProjecaoService`) já validou mestre-ou-espectador/mestre-requisitante
-> antes. `encontroAtivo` (`EncontroRecuperadoDto | null`) foi embutido direto em
-> `CampanhaPainelEspectadorDto`/`CampanhaPreviaJogadorDto` — nenhuma rota REST nova. Por isso o
-> tempo real (`encontro:alterado`, agora também emitido para `campanha:<id>:espectador`) nunca é
-> lido diretamente pelas duas páginas — o mesmo evento carrega o recorte de **mestre** para quem
-> está de fato conectado como mestre (em prévia), então o evento só é sinal para um refetch REST
-> (que sempre redige, não importa quem pediu), nunca a fonte do dado exibido. Achado corrigido só na
-> verificação ao vivo: o cabeçalho `app-cartao` sem `[cartaoIndice]` deixava uma caixa vazia no
-> lugar do índice "//" que todo outro cartão do sistema mostra.
+> **Última revisão:** 2026-09-04 · **Última decisão registrada:** `m8-06` fechou o módulo
+> `m8-espectadores-campanha` com um gate de validação integrada — 4 identidades reais (mestre,
+> jogador com ficha, jogador dono de ficha nunca compartilhada, espectador) rodadas contra o
+> backend de verdade via REST cru + `socket.io-client` cru, não teste unitário com service dublada
+> (o próprio risco da spec: "teste unitário não prova isolamento de dados"). 30 verificações ao
+> vivo confirmaram que `m8-01`…`m8-05` compõem corretamente entre contas — nenhum bug de backend
+> encontrado. Dois achados reais, os dois corrigidos na própria task: (1) o botão "Ver Iniciativa"
+> (`espectador.page.html`/`previa-jogador.page.html`, m8-05) usava `app-botao` sem `[tamanho]` **e**
+> sem a classe local de receita que todo outro botão nessa densidade no projeto sempre teve —
+> renderizava como texto solto colado no chip ao lado; corrigido acrescentando `&__ver-iniciativa`
+> aos dois SCSS, mesma receita de `&__preview-sair`; (2) `backend/src/core/openapi/contratos-
+> gerados.ts` nunca tinha sido regenerado depois que a `m8-05` acrescentou `encontroAtivo` às duas
+> projeções — corrigido rodando `npm run openapi:gerar-contratos`. Detalhe completo, achados e
+> viewports verificados em `HISTORY.md`.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -401,6 +390,28 @@ nos dois tamanhos de chip, `cm`/glow do crítico intactos. Testes 6/6 do compone
 `historico-rolagens-sidebar`/`bandeja-dados` (sanity, só CSS mudou). Detalhe completo em
 `HISTORY.md`.
 
+**`m8-06-validacao-integrada` concluída** (spec em `docs/specs/done/`): sexta e última task do
+módulo `m8-espectadores-campanha` — gate de integração, não produto novo. Cenário de 4 identidades
+reais (mestre, jogador com ficha, jogador dono de uma ficha nunca compartilhada, espectador) contra
+o backend de verdade via REST cru + `socket.io-client` cru (o próprio risco da spec: teste unitário
+com service dublada não prova isolamento de dados entre contas). 30 verificações passaram — nenhum
+bug de backend encontrado, `m8-01`…`m8-05` compõem corretamente: espectador nega `403` em toda
+superfície de ficha/caderno/inventário/membros/convites e só lê a fatia `PUBLICA` do feed de
+rolagem; sala de socket certa (nunca a cheia, nunca a de campanha alheia, nunca a de uma ficha);
+recorte do NPC não revelado idêntico byte a byte entre jogador e espectador; prévia do mestre
+idêntica à visão real do alvo (só os dois códigos de convite ausentes, diferença esperada). Dois
+achados reais na verificação visual (`1920×1080`/`360×800`, cenário próprio com um jogador sem
+ficha na campanha), os dois corrigidos: (1) o botão "Ver Iniciativa" (m8-05, nas duas páginas)
+usava `app-botao` sem `[tamanho]` **e** sem a classe local de receita que todo outro botão dessa
+densidade no projeto sempre teve — renderizava como texto solto colado no chip ao lado; corrigido
+com `&__ver-iniciativa` (mesma receita de `&__preview-sair`) nos dois SCSS; (2)
+`contratos-gerados.ts` nunca tinha sido regenerado depois que a `m8-05` acrescentou `encontroAtivo`
+às duas projeções — corrigido rodando `npm run openapi:gerar-contratos`. Também corrigido 1 erro de
+lint (`@typescript-eslint/require-await`) deixado pela `m8-05` em `campanha.gateway.spec.ts`.
+Nenhum teste automatizado novo (mudança de escopo foi CSS + regeneração de contrato + 1 mock) —
+`shared` 744/744, `backend` 540/540, `frontend` 1602/1602 inalterados, `npm run lint` limpo nos
+três workspaces. Detalhe completo, os 30 pontos verificados e os viewports em `HISTORY.md`.
+
 **`m8-05-visao-iniciativa-encontro` concluída** (spec em `docs/specs/done/`): quinta task do módulo
 `m8-espectadores-campanha` — visão read-only da tela "Iniciativa" para `ESPECTADOR` e Prévia de
 jogador, reusando a mesma composição/serviço/mapper do jogador (nunca uma segunda leitura do
@@ -543,11 +554,11 @@ definitivo): (1) desligar/suspender o serviço no Render; (2) remover `render.ya
 secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao vivo durante a
 migração e está em `HISTORY.md`).
 
-Não há spec ativa no momento (`m8-05` concluída — ver acima). Resta `ui-23` no backlog (stat sem
-valor/rodapé do cartão — ver "Fila do backlog" abaixo). As frentes de código de milestone ainda
-pendentes são o **M4** (`m4-05`…`m4-10`, criatura/NPC — ver seção 3), ao lado de `m3-53` (M3), e o
-**M8** (`m8-06`, integração final do módulo `m8-espectadores-campanha`). M0, M1, M2, M6 e M7 estão
-concluídos, incluindo todos os ajustes avulsos de pós-milestone.
+Não há spec ativa no momento (`m8-06` concluída — ver acima; módulo `m8-espectadores-campanha`
+inteiro fechado). Resta `ui-23` no backlog (stat sem valor/rodapé do cartão — ver "Fila do backlog"
+abaixo). A única frente de código de milestone ainda pendente é o **M4** (`m4-05`…`m4-10`,
+criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6, M7 e M8 estão concluídos,
+incluindo todos os ajustes avulsos de pós-milestone.
 
 ### Fila do backlog (`docs/specs/backlog/`)
 
@@ -557,10 +568,9 @@ concluídos, incluindo todos os ajustes avulsos de pós-milestone.
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
 | `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
-| `m8-06` | campanha (M8) | `m8-01`…`m8-05` concluídas (banco + contratos; backend de permissões e projeções; frontend de entrada/gestão/Painel do espectador/Prévia de jogador/visão de Iniciativa — ver acima); resta a integração final do módulo |
 
-Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` foi iniciado
-(`m8-01`…`m8-05` concluídas; spec de `m8-06` pronta em `docs/specs/backlog/`).
+Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
+(`m8-01`…`m8-06`).
 
 ---
 
@@ -599,7 +609,7 @@ reproduzem isoladas (arquivo único), não na suíte completa.
 | M5 | Guia de Missão | não iniciado |
 | M6 | Gestão de Usuários e Papéis | **concluído** — `m6-01`…`m6-08` (`m6-08`: impersonação administrativa auditável) |
 | M7 | Encontro de Combate | **concluído** — 8 tasks originais (`m7-01` contrato, `m7-02` motor puro, `m7-03` backend de montagem, `m7-04` backend de condução/tempo real, `m7-05` painel do mestre, `m7-06` visão do jogador, `m7-07` log da rodada, `m7-08` refinamento mobile) + 9 ajustes de pós-milestone (`m7-09`…`m7-17`, ver seção 4 "Encontro de Combate"). Numeração M7 é sugestão, não decisão de roadmap |
-| M8 | Espectadores e Prévias de Campanha | **iniciado** — `m8-01`…`m8-05` concluídas (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa); resta `m8-06` (integração final), spec pronta em `docs/specs/backlog/`. Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
+| M8 | Espectadores e Prévias de Campanha | **concluído** — `m8-01`…`m8-06` (banco + contratos do papel ESPECTADOR; backend de permissões e as duas projeções de leitura; frontend de entrada/gestão de convites-membros/Painel do espectador ao vivo/Prévia de jogador fidedigna/visão read-only de Iniciativa; `m8-06` fechou com gate de validação integrada entre 4 contas reais). Numeração M8 é sugestão, não decisão de roadmap — ver `docs/context/IDEAS.md` |
 
 ---
 
@@ -805,7 +815,7 @@ participantes no cabeçalho. No mobile, a `P-041` corrigiu a navegação: abrir 
 criar uma nova no modo Esquadrão agora troca a vista de lista para o editor, como já acontecia no
 caderno privado. A spec fechou (`docs/specs/done/`).
 
-**Papel ESPECTADOR (M8, `m8-01`…`m8-05` concluídas).** Terceiro papel de campanha, independente de
+**Papel ESPECTADOR (M8, `m8-01`…`m8-06` concluídas — módulo fechado).** Terceiro papel de campanha, independente de
 `TipoUsuarioEnum`: entra por um convite próprio (`codigoConviteEspectador`, gerado junto do de
 jogador e regenerado independentemente pelo mestre) e acompanha, em tempo real, só as rolagens
 `PUBLICA` da campanha — nunca ficha, caderno, inventário, convite, membro ou controle de rolagem
@@ -825,7 +835,12 @@ visualmente habilitados. O espectador e a prévia também têm um gatilho "Ver I
 (`m8-05`), que só aparece com um encontro ativo na campanha e abre a mesma composição de leitura
 (`IniciativaLeitura`) da tela "Iniciativa" de jogador/mestre — ordem, turno, rodada, cartões e log
 da rodada, redigidos do mesmo jeito (NPC não revelado continua sem números para nenhum dos dois) e
-sem nenhum controle de condução. Falta `m8-06` (integração final do módulo).
+sem nenhum controle de condução. `m8-06` fechou o módulo com um gate de validação integrada — 4
+contas reais (mestre, jogador com ficha, jogador dono de ficha nunca compartilhada, espectador)
+contra o backend de verdade via REST + Socket.IO cru, confirmando que as cinco tasks anteriores
+compõem corretamente entre contas (nenhum bug de backend achado) e corrigindo dois achados da
+verificação visual integrada: o botão "Ver Iniciativa" sem receita de estilo nas duas páginas
+(m8-05) e `contratos-gerados.ts` desatualizado desde que a `m8-05` acrescentou `encontroAtivo`.
 
 ### Ficha de jogador — `backend/ficha`, `frontend/ficha`
 
