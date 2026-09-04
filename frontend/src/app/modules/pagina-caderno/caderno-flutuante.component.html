@@ -37,7 +37,12 @@
                 >{{ rotuloSalvamento() }}</span
             >
             @if (store.estadoSalvamento() === "CONFLITO") {
-                <button class="caderno__recarregar" type="button" (click)="recarregarVersao()">
+                <button
+                    app-botao
+                    class="caderno__recarregar"
+                    type="button"
+                    (click)="recarregarVersao()"
+                >
                     Recarregar versão
                 </button>
             }
@@ -349,6 +354,7 @@
                 }
                 @if (ehMobile()) {
                     <button
+                        app-botao
                         class="caderno__voltar"
                         type="button"
                         aria-label="Voltar para páginas"

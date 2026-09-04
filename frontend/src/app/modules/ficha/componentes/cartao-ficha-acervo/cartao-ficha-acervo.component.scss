@@ -142,28 +142,9 @@
 // pintura — mesmo problema/correção já documentados no acervo e em `CampanhaDetalhe`, m3-52).
 .acervo__menu-botao {
     flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 26px;
     height: 22px;
     font-size: 15px;
-    line-height: 1;
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    transition:
-        color 0.15s ease,
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-
-    &:hover {
-        color: var(--accent);
-        border-color: var(--accent-border);
-        background: var(--surface-2);
-    }
 
     @include bp.mobile {
         width: bp.$alvo-toque;

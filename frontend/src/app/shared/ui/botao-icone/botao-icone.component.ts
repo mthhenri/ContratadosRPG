@@ -32,5 +32,17 @@ export class BotaoIcone {
   /** `mini` cobre ícone inline sem borda; `compacto` cobre fechar/copiar; `padrao` cobre ações dentro de campos. */
   readonly tamanho = input<BotaoIconeTamanho>('compacto');
 
-  protected readonly classes = computed(() => `botao-icone botao-icone--${this.tamanho()}`);
+  /**
+   * Selo circular (ui-30, `P-048`): raio 50% em vez do raio de controle padrão — para os badges
+   * sobre canto de foto/card (enquadrar e remover avatar, "i" de informação), que sempre foram
+   * círculos, não retângulos arredondados. Opt-in porque a maioria das ações unitárias do produto
+   * usa o raio de controle padrão.
+   */
+  readonly redondo = input(false);
+
+  protected readonly classes = computed(() => {
+    const partes = ['botao-icone', `botao-icone--${this.tamanho()}`];
+    if (this.redondo()) partes.push('botao-icone--redondo');
+    return partes.join(' ');
+  });
 }

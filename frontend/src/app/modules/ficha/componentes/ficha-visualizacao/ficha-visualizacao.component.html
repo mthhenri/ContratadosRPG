@@ -32,6 +32,7 @@
             </div>
 
             <button
+                app-botao
                 class="ficha-hud__vitais"
                 type="button"
                 aria-label="Ver e ajustar Vida e Energia"
@@ -112,6 +113,8 @@
                                                 />
                                             </div>
                                             <button
+                                                app-botao-icone
+                                                [redondo]="true"
                                                 type="button"
                                                 class="ficha-ident__avatar-enquadrar"
                                                 aria-label="Ajustar enquadramento"
@@ -121,6 +124,8 @@
                                                 <app-icone nome="busca" />
                                             </button>
                                             <button
+                                                app-botao-icone
+                                                [redondo]="true"
                                                 type="button"
                                                 class="ficha-ident__avatar-remover"
                                                 aria-label="Remover avatar"
@@ -166,6 +171,7 @@
                                         }}</span>
                                     }
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-ident__visibilidade"
                                         [attr.aria-label]="
@@ -331,6 +337,7 @@
                                                 }}</span>
                                                 @if (!editandoOrigem() && origemEditavel()) {
                                                     <button
+                                                        app-botao-icone
                                                         class="ficha-ident__chip-lapis"
                                                         type="button"
                                                         aria-label="Editar origem"
@@ -719,6 +726,7 @@
                                 }
                                 @if (ajustavelAmplo()) {
                                     <button
+                                        app-botao-icone
                                         class="ficha-ident__chip-lapis"
                                         type="button"
                                         aria-label="Editar classe e arquétipo"
@@ -872,6 +880,8 @@
                                         <span class="ficha-mini__rotulo-linha">
                                             <span class="ficha-mini__rotulo">Crédito</span>
                                             <button
+                                                app-botao-icone
+                                                [redondo]="true"
                                                 type="button"
                                                 class="ficha-mini__info"
                                                 aria-label="Descrição do Limite de Crédito"
@@ -927,6 +937,7 @@
                                 >
                                     @if (ajustavel()) {
                                         <button
+                                            app-botao-icone
                                             barraRecursoAcao
                                             class="ficha-barra__receber-dano"
                                             type="button"
@@ -995,6 +1006,7 @@
                         <div class="ficha-condicoes" role="group" aria-label="Condições">
                             @for (condicao of condicoesFicha; track condicao.chave) {
                                 <button
+                                    app-botao
                                     class="ficha-condicoes__item"
                                     [class.ficha-condicoes__item--ativa]="
                                         condicoes()[condicao.chave]
@@ -1221,6 +1233,7 @@
                                 <span class="ficha-cartao__regua"></span>
                                 @if (!editandoAtributos() && ajustavelAmplo()) {
                                     <button
+                                        app-botao-icone
                                         class="ficha-cartao__lapis"
                                         type="button"
                                         aria-label="Editar atributos"
@@ -1526,6 +1539,8 @@
                                                     >
                                                         @if (podeRolar()) {
                                                             <button
+                                                                app-botao-icone
+                                                                tamanho="mini"
                                                                 class="ficha-atributo__rolar"
                                                                 type="button"
                                                                 [attr.aria-label]="
@@ -1791,6 +1806,8 @@
                                             linha.bruto !== null
                                         ) {
                                             <button
+                                                app-botao-icone
+                                                tamanho="mini"
                                                 class="ficha-mini__rolar"
                                                 type="button"
                                                 [attr.aria-label]="'Rolar ' + linha.rotulo"
@@ -1856,6 +1873,8 @@
                                     >
                                         @if (podeRolar()) {
                                             <button
+                                                app-botao-icone
+                                                tamanho="mini"
                                                 class="ficha-mini__rolar"
                                                 type="button"
                                                 aria-label="Rolar Iniciativa"
@@ -1905,6 +1924,7 @@
                                         <span class="ficha-status__rotulo-coluna">Anotações</span>
                                         @if (!editandoAnotacoes()) {
                                             <button
+                                                app-botao-icone
                                                 class="ficha-cartao__lapis"
                                                 type="button"
                                                 aria-label="Editar anotações"
@@ -2189,6 +2209,7 @@
                                                     !editandoPersonalidadeHabilidade()
                                                 ) {
                                                     <button
+                                                        app-botao-icone
                                                         class="ficha-ident__chip-lapis"
                                                         type="button"
                                                         aria-label="Editar Habilidade de Personalidade"
@@ -2271,6 +2292,7 @@
                                                                         >Remover?</span
                                                                     >
                                                                     <button
+                                                                        app-botao-icone
                                                                         type="button"
                                                                         class="ficha-extras__mini-btn ficha-extras__mini-btn--perigo"
                                                                         [appTooltip]="'Confirmar — desfaz o bônus, a Energia Máxima e devolve o item'"
@@ -2284,6 +2306,7 @@
                                                                         ✓
                                                                     </button>
                                                                     <button
+                                                                        app-botao-icone
                                                                         type="button"
                                                                         class="ficha-extras__mini-btn"
                                                                         [appTooltip]="'Cancelar'"
@@ -2298,6 +2321,7 @@
                                                             } @else {
                                                                 <span class="ficha-extras__acoes">
                                                                     <button
+                                                                        app-botao-icone
                                                                         type="button"
                                                                         class="ficha-extras__mini-btn"
                                                                         [appTooltip]="'Remover — desfaz o bônus, a Energia Máxima e devolve o item ao inventário'"
@@ -2473,6 +2497,7 @@
                                     <span class="ficha-status__rotulo-coluna">História</span>
                                     @if (!editandoHistoria()) {
                                         <button
+                                            app-botao-icone
                                             class="ficha-cartao__lapis"
                                             type="button"
                                             aria-label="Editar história"

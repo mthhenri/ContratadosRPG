@@ -7,6 +7,8 @@
                     {{ passoAtualIndice() + 1 }}/{{ passosExecucao().length }}
                 </span>
                 <button
+                    app-botao-icone
+                    tamanho="mini"
                     type="button"
                     class="ficha-combos__mini-btn"
                     [appTooltip]="'Parar'"
@@ -36,6 +38,7 @@
             }
 
             <button
+                app-botao
                 type="button"
                 class="ficha-combos__btn ficha-combos__btn--principal"
                 (click)="executarPassoAtual()"
@@ -56,7 +59,7 @@
                 [ngTemplateOutletContext]="{ titulo: 'Novo combo' }"
             />
         } @else {
-            <button type="button" class="ficha-combos__novo" (click)="abrirNovo()">
+            <button app-botao type="button" class="ficha-combos__novo" (click)="abrirNovo()">
                 + Novo combo
             </button>
         }
@@ -85,6 +88,7 @@
                         >
                         <div class="ficha-combos__combo-acoes">
                             <button
+                                app-botao
                                 type="button"
                                 class="ficha-combos__btn ficha-combos__btn--rolar"
                                 [disabled]="combo.passos.length === 0"
@@ -97,6 +101,8 @@
                                     <span class="ficha-combos__remover">
                                         <span class="ficha-combos__remover-texto">Remover?</span>
                                         <button
+                                            app-botao-icone
+                                            tamanho="mini"
                                             type="button"
                                             class="ficha-combos__mini-btn ficha-combos__mini-btn--perigo"
                                             [appTooltip]="'Confirmar'"
@@ -106,6 +112,8 @@
                                             ✓
                                         </button>
                                         <button
+                                            app-botao-icone
+                                            tamanho="mini"
                                             type="button"
                                             class="ficha-combos__mini-btn"
                                             [appTooltip]="'Cancelar'"
@@ -117,6 +125,8 @@
                                     </span>
                                 } @else {
                                     <button
+                                        app-botao-icone
+                                        tamanho="mini"
                                         type="button"
                                         class="ficha-combos__mini-btn"
                                         [appTooltip]="'Editar'"
@@ -126,6 +136,8 @@
                                         ✎
                                     </button>
                                     <button
+                                        app-botao-icone
+                                        tamanho="mini"
                                         type="button"
                                         class="ficha-combos__mini-btn"
                                         [appTooltip]="'Remover'"
@@ -197,6 +209,8 @@
                     </select>
                     <div class="ficha-combos__passo-edit-acoes">
                         <button
+                            app-botao-icone
+                            tamanho="mini"
                             type="button"
                             class="ficha-combos__mini-btn"
                             [appTooltip]="'Mover pra cima'"
@@ -207,6 +221,8 @@
                             ↑
                         </button>
                         <button
+                            app-botao-icone
+                            tamanho="mini"
                             type="button"
                             class="ficha-combos__mini-btn"
                             [appTooltip]="'Mover pra baixo'"
@@ -217,6 +233,8 @@
                             ↓
                         </button>
                         <button
+                            app-botao-icone
+                            tamanho="mini"
                             type="button"
                             class="ficha-combos__mini-btn"
                             [appTooltip]="'Remover passo'"
@@ -228,13 +246,19 @@
                     </div>
                 </div>
             }
-            <button type="button" class="ficha-combos__add-passo" (click)="adicionarPasso()">
+            <button
+                app-botao
+                type="button"
+                class="ficha-combos__add-passo"
+                (click)="adicionarPasso()"
+            >
                 + Passo
             </button>
         </div>
 
         <div class="ficha-combos__form-acoes">
             <button
+                app-botao
                 type="submit"
                 class="ficha-combos__btn ficha-combos__btn--principal"
                 [disabled]="form.invalid"
@@ -242,6 +266,7 @@
                 Salvar
             </button>
             <button
+                app-botao
                 type="button"
                 class="ficha-combos__btn ficha-combos__btn--secundario"
                 (click)="cancelarEdicao()"

@@ -504,31 +504,10 @@
     }
 
     // Lápis de "editar esta seção" no cabeçalho do card (edição no próprio lugar — m3-10).
+    // ui-30: `app-botao-icone` (compacto) — geometria/cor/hover/piso de toque já são dele.
     &__lapis {
         flex: 0 0 auto;
         font-size: 12px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        padding: 4px 7px;
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-
-        @include bp.mobile {
-            min-width: bp.$alvo-toque;
-            min-height: bp.$alvo-toque;
-        }
     }
 
     // Salvar/Cancelar da seção em edição, no próprio cabeçalho (nunca no fim da página).
@@ -1372,31 +1351,11 @@
         color: var(--text-dim);
     }
 
+    // ui-30: `app-botao-icone` (compacto) — geometria/cor/hover já são dele.
     &__mini-btn {
         width: 22px;
         height: 22px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         font-size: 12px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-
-        &--perigo:hover {
-            color: var(--accent);
-            border-color: var(--accent);
-        }
     }
 }
 
@@ -1618,56 +1577,30 @@
     // Selo de enquadramento (pan/zoom, ajuste pós-mockup) no canto superior esquerdo — único canto
     // livre (upload no inferior direito, remover no superior direito). Só existe junto do `<img>`
     // (sem imagem, nada a enquadrar). Mesmo racional de tamanho/alvo-de-toque do `&__avatar-remover`.
+    // ui-30: `app-botao-icone[redondo]` — raio, cor, borda, hover e piso de toque mobile são do
+    // primitivo; só sobram posição/tamanho do selo.
     &__avatar-enquadrar {
         position: absolute;
         left: -4px;
         top: -4px;
         z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 24px;
         height: 24px;
-        border-radius: 50%;
         background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        color: var(--text-dim);
         font-size: 12px;
-        cursor: pointer;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-        @include alvo-de-toque($posicionar: false);
     }
 
     // Selo de remover no canto superior direito — só existe junto do `<img>` (sem imagem, nada a
-    // remover). 24px (era 18px), mesmo racional de tamanho/alvo-de-toque do `&__avatar-upload` acima.
+    // remover). 24px (era 18px).
     &__avatar-remover {
         position: absolute;
         right: -4px;
         top: -4px;
         z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 24px;
         height: 24px;
-        border-radius: 50%;
         background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        color: var(--text-dim);
         font-size: 11px;
-        padding: 0;
-        cursor: pointer;
-
-        @include alvo-de-toque($posicionar: false);
-
-        &:hover {
-            color: var(--text);
-            border-color: var(--accent);
-        }
     }
 
     &__texto {
@@ -1877,31 +1810,9 @@
         margin-bottom: 16px;
     }
 
-    // Lápis para editar classe/arquétipo, ao lado dos chips.
+    // Lápis para editar classe/arquétipo, ao lado dos chips. ui-30: `app-botao-icone` (compacto).
     &__chip-lapis {
         font-size: 11px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        padding: 3px 6px;
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-
-        @include bp.mobile {
-            min-width: bp.$alvo-toque;
-            min-height: bp.$alvo-toque;
-        }
     }
 
     // Mini-editor de Classe/Arquétipo (dois selects + Salvar/Cancelar).
@@ -1976,19 +1887,12 @@
         padding: 6px 10px;
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         line-height: 1;
         letter-spacing: var(--tracking-label);
         color: var(--text-dim);
         white-space: nowrap;
-        cursor: pointer;
-        transition:
-            background-color 0.15s ease,
-            border-color 0.15s ease,
-            color 0.15s ease;
 
         app-icone {
             font-size: 13px;
@@ -2050,33 +1954,16 @@
 
     // Dadinho de rolar (Dano C. a C./Furtivo no glance de Status) — mesmo padrão visual do dadinho
     // de Atributos (`.ficha-atributo__rolar`), só que aqui é opcional (só nas duas caixas de dano).
+    // ui-30: `app-botao-icone[tamanho="mini"]` — cor/hover já são dele; só sobram posição e o
+    // tamanho (18px, maior que o mini padrão de 16px).
     &__rolar {
         position: absolute;
         top: 4px;
         right: 4px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 18px;
         height: 18px;
-        padding: 0;
         font-size: 11px;
         color: var(--text-mute);
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.12s ease,
-            border-color 0.12s ease,
-            background 0.12s ease;
-
-        &:hover,
-        &:focus-visible {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--accent-dim);
-        }
     }
 
     // Densidade mais baixa que o box padrão — Nível/Prestígio/Dinheiro/Salário/Patente, que dividem
@@ -2189,30 +2076,14 @@
         }
     }
 
+    // ui-30: `app-botao-icone[redondo]` — só sobra o tamanho pequeno do selo (menor que qualquer
+    // `[tamanho]` do primitivo) e a cor mais apagada (`--text-mute`, não o `--text-dim` padrão).
     &__info {
         flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 14px;
         height: 14px;
-        padding: 0;
         font-size: 10px;
-        line-height: 1;
         color: var(--text-mute);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: 50%;
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease;
-
-        &:hover,
-        &:focus-visible {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
     }
 
     &__valor {
@@ -2411,34 +2282,12 @@
     }
 
     // Botão "Receber dano" (m7-17) — projetado no slot `[barraRecursoAcao]` do primitivo, só na
-    // barra de Vida.
+    // barra de Vida. ui-30: `app-botao-icone` (compacto) — geometria/cor/hover/piso mobile já são
+    // dele; só sobra o tamanho menor que o compacto padrão.
     &__receber-dano {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 20px;
         height: 20px;
         font-size: 11px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
     }
 }
 
@@ -2461,17 +2310,10 @@
         background: var(--surface-2);
         color: var(--text-dim);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
-        cursor: pointer;
-        transition:
-            background-color 0.15s ease,
-            border-color 0.15s ease,
-            color 0.15s ease;
 
         app-icone {
             font-size: 13px;
@@ -2480,10 +2322,6 @@
         &:hover:not(:disabled) {
             border-color: var(--accent-border);
             color: var(--text);
-        }
-
-        &:disabled {
-            cursor: default;
         }
 
         // Somente leitura (sem `ajustavel`) e inativa: unidade decorativa, sem afundar o hover.
@@ -2915,33 +2753,15 @@
     border-radius: var(--radius-control);
 
     // Dadinho de rolar teste (m3-22): canto superior direito do box, discreto até o hover/foco.
+    // ui-30: `app-botao-icone[tamanho="mini"]` — cor/hover já são dele; só sobram posição e tamanho.
     &__rolar {
         position: absolute;
         top: 4px;
         right: 4px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 22px;
         height: 22px;
-        padding: 0;
         font-size: 13px;
         color: var(--text-mute);
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.12s ease,
-            border-color 0.12s ease,
-            background 0.12s ease;
-
-        &:hover,
-        &:focus-visible {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--accent-dim);
-        }
     }
 
     &__abrev {
@@ -3166,15 +2986,9 @@
 // originais, para que o custo em densidade da decisão fique legível num lugar só.
 // ============================================================================================
 
-// Dadinho de rolar teste do atributo — 22×22, e é o gesto mais repetido da ficha em mesa.
-.ficha-atributo__rolar {
-    @include alvo-de-toque($posicionar: false); // já é `position: absolute`
-}
-
-// Dadinho de rolar Dano C.a.C./Furtivo no card de Status — 18×18.
-.ficha-mini__rolar {
-    @include alvo-de-toque($posicionar: false); // já é `position: absolute`
-}
+// Dadinho de rolar teste do atributo (22×22) e o de Dano C.a.C./Furtivo no card de Status (18×18):
+// ui-30 os migrou para `app-botao-icone[tamanho="mini"]`, que já garante o piso de toque mobile
+// sozinho — os dois saem da lista de `alvo-de-toque` manual.
 
 // Estrela de Maestria — ~21×26.
 .ficha-atributo__maestria {

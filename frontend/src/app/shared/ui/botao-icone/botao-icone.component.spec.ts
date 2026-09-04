@@ -19,6 +19,15 @@ import { BotaoIcone } from './botao-icone.component';
     <a app-botao-icone tamanho="mini" routerLink="/campanhas" aria-label="Voltar" [appTooltip]="'Voltar'">
       <span aria-hidden="true">←</span>
     </a>
+    <button
+      app-botao-icone
+      [redondo]="true"
+      aria-label="Remover avatar"
+      [appTooltip]="'Remover avatar'"
+      type="button"
+    >
+      <span aria-hidden="true">✕</span>
+    </button>
   `,
   imports: [BotaoIcone, RouterLink],
 })
@@ -53,6 +62,15 @@ describe('BotaoIcone', () => {
     expect(link.classList).toContain('botao-icone');
     expect(link.classList).toContain('botao-icone--mini');
     expect(link.getAttribute('aria-label')).toBe('Voltar');
+  });
+
+  it('veste o selo circular com `redondo` (ui-30)', () => {
+    const fixture = montar();
+    const botoes = (fixture.nativeElement as HTMLElement).querySelectorAll('button');
+    const redondo = botoes[1];
+
+    expect(redondo.classList).toContain('botao-icone--redondo');
+    expect(redondo.classList).toContain('botao-icone--compacto');
   });
 
   it('preserva o estado desabilitado nativo', () => {

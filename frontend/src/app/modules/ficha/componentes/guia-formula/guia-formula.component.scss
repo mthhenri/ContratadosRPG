@@ -14,7 +14,6 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
@@ -22,9 +21,7 @@
     color: var(--text-dim);
     background: transparent;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 3px 8px;
-    cursor: pointer;
 
     // m3-60: 71×24px medidos ao vivo (rolagens, atributos) — a área de toque cresce por padding +
     // margem negativa (mesma técnica de `ficha-inv__item-apelido-lapis`), sem inflar o desenho
@@ -150,7 +147,6 @@
 
 // Botão "Fechar" — linguagem do botão secundário do tema.
 .guia-btn {
-    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -158,9 +154,7 @@
     color: var(--text);
     background: transparent;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     padding: 8px 16px;
-    cursor: pointer;
 
     &:hover {
         border-color: var(--accent-border);

@@ -62,3 +62,9 @@
         border-color: transparent;
     }
 }
+
+// Selo circular (ui-30): badges sobre canto de foto/card (enquadrar/remover avatar, "i" de
+// informação) sempre foram círculos — só o raio muda, o tamanho continua vindo de `[tamanho]`.
+:host(.botao-icone--redondo) {
+    border-radius: 50%;
+}

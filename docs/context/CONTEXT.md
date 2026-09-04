@@ -307,8 +307,25 @@ mecânica de `app-painel-flutuante` (ui-17), já compartilhada por três outros 
 registrado como `P-058`, fora do escopo desta série. Suíte do módulo 126/126, lint sem erro novo.
 Gate visual ao vivo (Postgres nativo) em `1920×1080`/`360×800`, mestre e jogador: um combatente
 avulso nasce não revelado para o jogador, satisfazendo o par revelado/não-revelado sem precisar de
-uma ficha de criatura completa. `ui-30`…`ui-32` seguem em `docs/specs/backlog/` — `P-048` continua
-`ABERTO`.
+uma ficha de criatura completa.
+
+**`ui-30-adocao-botao-icone-ficha` concluída** (spec em `docs/specs/done/`, 3/5 da série que fecha
+`P-048`, a maior): 12 arquivos do lado não-criatura de `modules/ficha` (+ `guia-equipamento-loja`,
+`guia-formula`, `pagina-caderno/caderno-flutuante`) adotam `app-botao`/`app-botao-icone` — detalhe
+completo por arquivo em `HISTORY.md`. Dois desvios do texto da spec a favor do código real
+(`.sanidade__add` e `.ficha-hud__vitais` foram para `app-botao`, não `app-botao-icone` — ambos têm
+estado com texto/conteúdo rico incompatível com a caixa fixa do primitivo de ícone). Achado que
+virou decisão do autor (via pergunta, não escolha unilateral): `app-botao-icone` ganhou o input
+`[redondo]` (raio 50%) para os selos circulares de avatar/informação
+(`ficha-ident__avatar-enquadrar`/`-remover`, `ficha-mini__info`), que a caixa de raio padrão do
+primitivo quebraria. Suíte focada 38 arquivos/868 testes, lint sem erro novo. Gate visual ao vivo
+em `1920×1080`/`360×800` cobrindo Habilidades, Rolagens (+ guia de fórmula), Inventário, Sanidade,
+"Receber dano" e os dois selos `[redondo]` com um avatar de teste enviado de propósito (circulares,
+confirmados); `ficha-combos` (componente sem rota/consumidor no app hoje) e
+`guia-equipamento-loja` (só na etapa 7/8 do guia de criação) não puderam ser abertos ao vivo —
+migrados conforme a spec e cobertos pela suíte própria, reusando padrões (`mini`/`compacto`) já
+confirmados ao vivo em outros arquivos desta mesma task. `ui-31`/`ui-32` seguem em
+`docs/specs/backlog/` — `P-048` continua `ABERTO`.
 
 **`ui-24-ordem-dos-controles-do-painel-flutuante` concluída** (spec em `docs/specs/done/`): o slot
 `[painelAcoesExtras]` do primitivo passou de antes de minimizar para entre minimizar e fechar. Assim,

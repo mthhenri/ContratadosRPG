@@ -14,6 +14,8 @@ import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** As três listas de Sanidade do `estado`, emitidas juntas a cada mutação (a página persiste o trio). */
@@ -77,7 +79,17 @@ const ROTULO_LISTA: Record<ListaSanidade, string> = {
  */
 @Component({
   selector: 'app-ficha-sanidade',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, HoldRepeat, Icone, OverflowFade, Tooltip, Modal],
+  imports: [
+    NgTemplateOutlet,
+    ReactiveFormsModule,
+    HoldRepeat,
+    Icone,
+    OverflowFade,
+    Tooltip,
+    Modal,
+    Botao,
+    BotaoIcone,
+  ],
   templateUrl: './ficha-sanidade.component.html',
   styleUrl: './ficha-sanidade.component.scss',
 })

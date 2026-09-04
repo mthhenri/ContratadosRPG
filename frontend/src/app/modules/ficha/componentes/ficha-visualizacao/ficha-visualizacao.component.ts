@@ -98,6 +98,7 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -396,6 +397,7 @@ export interface AjusteClasse {
     Chip,
     BarraRecurso,
     Botao,
+    BotaoIcone,
     Modal,
     AjusteEnquadramentoImagem,
     FocoImagem,

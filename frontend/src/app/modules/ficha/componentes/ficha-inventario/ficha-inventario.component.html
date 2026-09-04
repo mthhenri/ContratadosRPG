@@ -939,6 +939,8 @@
                                 }
                                 @if (editavel() && item.podeApelidar) {
                                     <button
+                                        app-botao-icone
+                                        tamanho="mini"
                                         type="button"
                                         class="ficha-inv__item-apelido-lapis"
                                         [attr.aria-label]="'Editar apelido de ' + item.nomeExibido"
@@ -950,6 +952,8 @@
                                 }
                                 @if (editavel() && item.custom) {
                                     <button
+                                        app-botao-icone
+                                        tamanho="mini"
                                         type="button"
                                         class="ficha-inv__item-apelido-lapis"
                                         [attr.aria-label]="'Editar informações ' + item.nome"
@@ -979,6 +983,7 @@
                             <div class="ficha-inv__item-acoes">
                                 @if (podeMandarParaBase() && !item.equipado) {
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-inv__mandar-base"
                                         [appTooltip]="'Transferir para o inventário de esquadrão'"
@@ -993,6 +998,7 @@
                                 }
                                 @if (item.modificavel) {
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-inv__modificar"
                                         [appTooltip]="'Modificar'"
@@ -1027,6 +1033,7 @@
 
                                 @if (item.ehArmazenamento) {
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-inv__porte"
                                         [class.ficha-inv__porte--vestida]="!item.guardada"
@@ -1052,6 +1059,7 @@
 
                                 @if (item.ehProtecao) {
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-inv__porte"
                                         [class.ficha-inv__porte--vestida]="item.equipado"
@@ -1139,6 +1147,7 @@
 
                                 @if (item.fragmentoPotencializador) {
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-inv__modificar"
                                         [appTooltip]="'Aplicar Fragmento'"
@@ -1155,6 +1164,7 @@
                                         <span>Aplicar em...</span>
                                     </button>
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-inv__modificar"
                                         [appTooltip]="'Consumir para benefício pessoal — cobra Preço de Sanidade'"
@@ -1174,6 +1184,7 @@
 
                                 @if (item.fragmentoConstrutorMunicao) {
                                     <button
+                                        app-botao
                                         type="button"
                                         class="ficha-inv__modificar"
                                         [class.ficha-inv__modificar--aberto]="item.recarregada"
@@ -1254,6 +1265,7 @@
                         {{ item.stat }}
                         @if (podeRolar() && item.danoFormula) {
                             <button
+                                app-botao
                                 type="button"
                                 class="ficha-inv__item-rolar"
                                 [attr.aria-label]="'Rolar dano de ' + item.nomeExibido"
@@ -1882,6 +1894,7 @@
                                                                     }
                                                                 </select>
                                                                 <button
+                                                                    app-botao-icone
                                                                     type="button"
                                                                     class="ficha-inv__efeito-remover"
                                                                     aria-label="Remover efeito"
@@ -2113,6 +2126,7 @@
                                                     }
                                                 </div>
                                                 <button
+                                                    app-botao
                                                     type="button"
                                                     class="ficha-inv__efeito-adicionar"
                                                     (click)="adicionarEfeitoMod()"

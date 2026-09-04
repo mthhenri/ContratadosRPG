@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 
 /**
  * Ficha do acervo já enriquecida pro cartão (m4-11) — recorte de `FichaResumoDto` + os rótulos já
@@ -48,7 +49,7 @@ export interface ItemAcervo {
  */
 @Component({
   selector: 'app-cartao-ficha-acervo',
-  imports: [RouterLink, Icone],
+  imports: [RouterLink, Icone, BotaoIcone],
   templateUrl: './cartao-ficha-acervo.component.html',
   styleUrl: './cartao-ficha-acervo.component.scss',
 })

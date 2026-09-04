@@ -178,15 +178,8 @@
 .loja__item-add {
     flex: none;
     align-self: center;
-    font: 16px var(--font-mono);
+    font-size: 16px;
     color: var(--accent);
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    @include bp.mobile {
-        min-width: bp.$alvo-toque;
-        min-height: bp.$alvo-toque;
-    }
 }
 .loja__vazio {
     grid-column: 1 / -1;
@@ -265,19 +258,8 @@
 }
 .loja__carrinho-item-remover {
     flex: none;
-    padding: 0;
     font-size: 12px;
     color: var(--text-mute);
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    &:hover {
-        color: var(--accent);
-    }
-    @include bp.mobile {
-        min-width: bp.$alvo-toque;
-        min-height: bp.$alvo-toque;
-    }
 }
 
 @include bp.mobile {

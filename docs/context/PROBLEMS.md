@@ -140,9 +140,16 @@
   `rolagem-avulso` e `painel-encontro.page` adotam `app-botao`/`app-botao-icone`; achado à parte
   na implementação e registrado em `P-058` (`ficha-flutuante.component` reimplementa a mesma
   janela flutuante de `app-painel-flutuante`, ui-17 — os três botões de janela migraram para
-  `app-botao-icone`, mas a duplicação de componente fica de fora desta série). `ui-30`…`ui-32`
-  (ficha, criatura, simulação/usuário) seguem em `docs/specs/backlog/`, ainda não implementadas —
-  a entrada permanece `ABERTO` até a série inteira fechar.
+  `app-botao-icone`, mas a duplicação de componente fica de fora desta série). **`ui-30`
+  (`modules/ficha`, lado não-criatura) concluída** — os 12 arquivos do entregável adotam
+  `app-botao`/`app-botao-icone`, com três desvios do texto da spec resolvidos a favor do código/UX
+  real (`.sanidade__add` e `.ficha-hud__vitais` foram para `app-botao`, não `app-botao-icone` —
+  ambos têm estado com texto/conteúdo rico que a caixa fixa do ícone quebraria) e um achado que
+  virou extensão do primitivo, decidida pelo autor: `app-botao-icone` ganhou o input `[redondo]`
+  (raio 50%) para os selos circulares de `ficha-ident__avatar-enquadrar`/`-remover` e
+  `ficha-mini__info`, que sempre foram círculos, não retângulos arredondados. `ui-31`/`ui-32`
+  (criatura, simulação/usuário) seguem em `docs/specs/backlog/`, ainda não implementadas — a
+  entrada permanece `ABERTO` até a série inteira fechar.
 - **Desde:** dívida pré-existente; nomeada e registrada explicitamente a pedido do autor após a
   auditoria de conformidade da `m8-03` com a nova regra de biblioteca de componentes (2026-09-03);
   escopo completo medido e dividido em 2026-09-04.
