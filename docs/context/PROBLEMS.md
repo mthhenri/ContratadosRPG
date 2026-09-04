@@ -121,3 +121,65 @@
 - **Desde:** encontrado ao verificar `painéis laterais: fecha de verdade a exclusão mútua e para
   de espremer a rota` (2026-09-02) — fora do recorte da task, `LayoutComponent` não foi tocado.
 
+### P-045 — Quatro telas recriam a identidade de `app-esqueleto` · `ABERTO` · frontend/design system
+
+- **Sintoma:** Perfil, detalhe de campanha e as visualizações de jogador/criatura possuem
+  `.esqueleto-bloco`, `@keyframes esqueleto-pulso` e tratamento de movimento reduzido locais.
+- **Causa:** os esqueletos extensos nasceram antes de `app-esqueleto`; a adoção da UI-14 cobriu
+  listas, mas não revisitou essas quatro telas.
+- **Contorno:** nenhum; a aparência funciona, mas quatro donos podem divergir.
+- **Correção:** usar `app-esqueleto` como bloco base e manter local somente a geometria de cada
+  silhueta. Recorte e evidência em `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`.
+- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
+
+### P-046 — Iniciativa recria o cabeçalho de `app-cartao` · `ABERTO` · frontend/design system
+
+- **Sintoma:** `painel-encontro.page` declara e monta localmente `cartao__cabecalho`, índice,
+  título e régua, incluindo identidade tipográfica e de acabamento já pertencente a `app-cartao`.
+- **Causa:** a tela foi construída com a anatomia visual do cartão, sem consumir o primitivo.
+- **Contorno:** nenhum; hoje as duas implementações precisam evoluir em paralelo.
+- **Correção:** compor os estados da Iniciativa com `app-cartao`; só evoluir sua API se a inspeção
+  ao vivo provar a necessidade de uma variante estrutural.
+- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
+
+### P-047 — Modais de campanha repetem cabeçalho e rodapé dentro de `app-modal` · `ABERTO` · frontend/design system
+
+- **Sintoma:** Vincular, Duplicar e Acesso de Visualização usam `app-modal`, mas projetam dentro
+  dele outro painel com título, índice, régua e `.dialogo__acoes`.
+- **Causa:** a migração para o modal nativo trocou o overlay sem adotar integralmente os slots
+  `modalIcone` e `modalAcoes`.
+- **Contorno:** nenhum; visualmente existe um modal dentro do contrato de outro modal.
+- **Correção:** remover a segunda casca e projetar ícone/conteúdo/ações nos slots; confirmar se o
+  slot de ações precisa aceitar um wrapper condicional antes de ampliar a API.
+- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
+
+### P-048 — Simulação mantém stats paralelos a `app-stat` · `ABERTO` · frontend/design system
+
+- **Sintoma:** Agente, Novo Agente, Patente, Descanso e Compras mantêm `.agente-stat`/`.calc-stat`
+  com a mesma anatomia de rótulo, valor, nota e tom do primitivo existente.
+- **Causa:** o primitivo nasceu dessa família, mas os consumidores originais não foram migrados.
+- **Contorno:** nenhum; alterações de densidade, semântica e acessibilidade precisam ser repetidas.
+- **Correção:** adotar `app-stat` nos casos cobertos e ampliar somente a lacuna comprovada por um
+  consumidor real.
+- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
+
+### P-049 — Estados vazios densos não cabem no primitivo atual · `ABERTO` · frontend/design system
+
+- **Sintoma:** listas compactas de Encontro e Ficha repetem parágrafos `__vazio`; o
+  `app-estado-vazio` atual impõe uma caixa com 32px de respiro vertical, grande demais para elas.
+- **Causa:** UI-14 centralizou somente os estados vazios amplos e não definiu densidade compacta.
+- **Contorno:** manter texto local evita inflar as listas, mas fragmenta tipografia e semântica.
+- **Correção:** acrescentar variante compacta baseada nos consumidores reais e migrar apenas
+  vazios de lista; mensagens de ajuda, carregamento e validação permanecem locais.
+- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
+
+### P-050 — Três controles segmentados têm identidade local · `ABERTO` · frontend/design system
+
+- **Sintoma:** Caderno, Leitor de Documentos e Inventário da ficha implementam separadamente grupo
+  de seleção única, item ativo, foco, borda, raio e responsividade.
+- **Causa:** `app-abas` tem semântica de tabpanel e corretamente não cobre seletores de modo com
+  `aria-pressed`; falta um primitivo com papel próprio.
+- **Contorno:** os três funcionam, mas acumulam deriva visual e de interação.
+- **Correção:** criar `app-segmentado` a partir dos três contratos reais, com item por diretiva,
+  seleção única, foco, desabilitado e densidade compacta.
+- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
