@@ -108,26 +108,15 @@
         flex: none;
         display: flex;
         gap: 6px;
+    }
 
-        button {
-            width: 32px;
-            height: 32px;
-            display: grid;
-            place-items: center;
-            padding: 0;
-            color: var(--text-dim);
-            background: transparent;
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-control);
-            font: 600 17px/1 var(--font-mono);
-            cursor: pointer;
-
-            &:hover {
-                color: var(--accent);
-                background: var(--surface-2);
-                border-color: var(--accent-border);
-            }
-        }
+    // Identidade (cor/borda/hover) é do `app-botao-icone` (ui-29); aqui só sobra o tamanho, igual
+    // ao par minimizar/fechar de `app-painel-flutuante` (ui-17), a versão compartilhada da mesma
+    // janela flutuante que esta ficha ainda reimplementa à mão — ver `P-058`.
+    &__acao-janela {
+        width: 32px;
+        height: 32px;
+        font-size: 17px;
     }
 
     &__corpo {
@@ -175,7 +164,7 @@
             cursor: default;
         }
 
-        &__acoes-janela button {
+        &__acao-janela {
             width: bp.$alvo-toque;
             height: bp.$alvo-toque;
         }

@@ -6,6 +6,7 @@
     <section class="iniciativa">
         <header class="iniciativa__topo">
             <a
+                app-botao-icone
                 class="iniciativa__voltar"
                 [routerLink]="['/campanhas', campanhaId]"
                 aria-label="Voltar à campanha"
@@ -27,6 +28,7 @@
              embaixo — só o mestre navega pelo histórico. -->
                     @if (!carregando() && ehMestre() && vendoHistorico()) {
                     <button
+                        app-botao
                         class="iniciativa__historico"
                         type="button"
                         [appTooltip]="'Voltar ao combate em andamento'"
@@ -37,6 +39,7 @@
                     </button>
                     } @if (!carregando() && ehMestre() && historico().length) {
                     <button
+                        app-botao
                         class="iniciativa__historico"
                         type="button"
                         [attr.aria-expanded]="historicoAberto()"
@@ -56,6 +59,7 @@
                 <div class="iniciativa__acoes-grupo iniciativa__acoes-grupo--utilitarios">
                     @if (mostrarFichaLateral()) {
                     <button
+                        app-botao
                         class="iniciativa__minha-ficha"
                         type="button"
                         [appTooltip]="'Abrir sua ficha'"

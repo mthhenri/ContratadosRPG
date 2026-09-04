@@ -10,6 +10,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
@@ -32,7 +33,7 @@ const FONTE_DE_FICHA = /\b(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFIC
 /** Painel compacto de rolagem livre atribuído a um combatente avulso. */
 @Component({
   selector: 'app-rolagem-avulso',
-  imports: [Icone, Tooltip, Botao, Modal],
+  imports: [Icone, Tooltip, Botao, BotaoIcone, Modal],
   templateUrl: './rolagem-avulso.component.html',
   styleUrl: './rolagem-avulso.component.scss',
 })

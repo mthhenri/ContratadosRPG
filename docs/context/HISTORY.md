@@ -1,5 +1,78 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-04 — `ui-29`: adota `app-botao`/`app-botao-icone` em `modules/encontro`
+
+Segunda tarefa da série `ui-28`…`ui-32` (`P-048`). Escopo: `cartao-combatente`, `log-encontro`,
+`rolagem-avulso` e `painel-encontro.page`, conforme
+`docs/specs/backlog/ui-29-adocao-botao-icone-encontro.spec.md` (movida para `done/` ao final).
+
+**Entregue:**
+
+- `cartao-combatente.component.html`: `.combatente__abrir-ficha`, `.combatente__rolar-avulso`,
+  `.combatente__receber-dano`, `.combatente__remover` e o `<button>` "remover imagem" de
+  `.combatente__identidade-acao` migrados para `app-botao-icone` (tamanho padrão `compacto`,
+  26×26); `.combatente__ajustar` (tem texto, "Ajustar"/"Fechar") para `app-botao`. Os dois
+  `<label class="combatente__identidade-acao">` (trocar imagem/cor) **não** migraram — não são
+  `<button>`/`<a>`, e o SCSS foi reorganizado para separar a geometria comum (compartilhada com o
+  `<label>`) da identidade própria do `<label>` (`label.combatente__identidade-acao`), evitando que
+  a classe BEM compartilhada vazasse cor/borda por cima do primitivo no `<button>`. Os quatro
+  `.combatente__stepper` (−/+) ficaram de fora — mesmo padrão de stepper já excluído na `ui-28`.
+- `log-encontro.component.html`: `.log__acao` (×2, "Rodada atual"/"Rodada anterior") e
+  `.log__gatilho` (mobile) migrados para `app-botao` (têm texto).
+- `rolagem-avulso.component.html`: `.rolagem-avulso__fechar` para `app-botao-icone`;
+  `.rolagem-avulso__visibilidade` para `app-botao` (ícone + texto). `.rolagem-avulso__rolar` e os
+  dois botões do modal de confirmação já usavam `app-botao` antes desta tarefa.
+- `painel-encontro.page.html`: `.iniciativa__voltar` (`<a routerLink>`, ícone-só) para
+  `app-botao-icone`; `.iniciativa__minha-ficha` (ícone + texto) para `app-botao`. A maioria dos
+  botões desta página (`.painel__acao`, `.secundarias__gatilho`/`__acao`, `.abertura__acao`,
+  `.adicionar__acao`) **já** usava `app-botao` antes desta tarefa — só faltavam os três acima.
+  **Desvio da spec:** `.iniciativa__historico` (×2: "Combate atual"/"N encerrados") foi migrado
+  para `app-botao`, não `app-botao-icone` como a spec original propunha — o levantamento que gerou
+  a spec classificou como "ícone-só", mas o markup real sempre teve texto ao lado do ícone; o
+  código venceu a spec (mesmo princípio de "a regra vence o mockup" já usado no domínio).
+- **Achado só na implementação, fora do escopo listado na spec:** `ficha-flutuante.component.html`
+  tem três botões de janela (minimizar/maximizar/fechar) sem classe própria, só com
+  `.ficha-flutuante__acoes-janela button` no SCSS — a spec só citava o `.ficha-flutuante__gatilho`
+  (excluído, `utilitario-flutuante`) e não via os três controles da janela. Migrados para
+  `app-botao-icone` com uma classe nova (`.ficha-flutuante__acao-janela`) para a geometria (32×32,
+  igual ao par minimizar/fechar de `app-painel-flutuante`); SCSS reduzido de um bloco `button { ... }`
+  para só largura/altura/`font-size`. Ao investigar essa janela descobriu-se que
+  `ficha-flutuante.component` reimplementa à mão a mesma mecânica de arraste/redimensionamento/
+  minimizar/maximizar de `shared/ui/painel-flutuante` (`app-painel-flutuante`, ui-17) — um
+  primitivo já compartilhado por `leitor-documentos`, `caderno-flutuante` e a calculadora
+  flutuante, cujos próprios botões de janela já usam `app-botao-icone`. Migrar `ficha-flutuante`
+  para hospedar seu conteúdo dentro de `app-painel-flutuante` é uma refatoração de componente
+  inteira (geometria, arraste, `[hidden]`), fora do escopo de "adotar `app-botao`/`app-botao-icone`"
+  desta série — registrado como **`P-058`**, decisão do autor pendente.
+- Todo CSS de identidade (cor, borda, hover, transição, `font-family`, `border-radius`, `cursor`)
+  removido dos seletores migrados, mantendo só geometria/posicionamento e os poucos overrides de
+  estado que divergem de propósito do padrão do primitivo (ex.: `.combatente--ajustando &` no botão
+  "Ajustar", que acende accent no estado aberto).
+
+**Testes e lint:** `npx ng test --include='src/app/modules/encontro/**/*.spec.ts' --watch=false` —
+8 arquivos / 126 testes, todos passando, sem nenhuma alteração de spec (as classes BEM usadas pelos
+testes via `querySelector` foram preservadas em todo controle migrado). `npx eslint` nos 8 arquivos
+tocados — 0 erros (avisos pré-existentes de aspas/`max-len` em trechos não tocados por esta tarefa).
+
+**Verificação ao vivo:** stack real (Postgres nativo + `backend:dev` + `frontend:dev`), fixture via
+REST (`/autenticacao/registro`+`login`, `POST /campanha`, `POST /campanha/entrar`,
+`POST /campanha/:id/encontro`, dois combatentes avulsos com iniciativa atribuída,
+`POST /encontro/:id/iniciar`). Descoberta útil: um combatente avulso nasce **não revelado** para o
+jogador (tag "NÃO REVELADO" na tela) — satisfaz sozinho o critério de aceite "pelo menos um
+combatente revelado e um não revelado" sem precisar montar uma ficha de criatura completa.
+Viewports `1920×1080` e `360×800`, mestre e jogador: painel de Iniciativa em modo de edição
+(remover/ajustar visíveis), diálogo "Receber dano", painel de rolagem avulsa (fechar + visibilidade),
+cabeçalho do jogador (voltar, "Você está assistindo a este combate"). Análogo: os controles de
+`ui-28` em `detalhe.page.html` (mesmo primitivo, mesmo tamanho `compacto`) — comparação positiva,
+sem overflow, alvo de toque e contraste corretos em ambos os viewports. `ficha-flutuante` não foi
+aberta ao vivo nesta verificação (exige uma ficha real; combatentes avulsos não têm `fichaId`) — a
+migração dos seus três botões foi conferida por leitura de código e por serem o mesmo primitivo já
+verificado ao vivo em `app-painel-flutuante` (par minimizar/fechar idêntico).
+
+**Documentação:** `P-048` atualizado (série continua `ABERTO`, agora com `ui-28` e `ui-29`
+concluídas); `P-058` criado para a duplicação `ficha-flutuante`/`app-painel-flutuante`. Spec movida
+para `docs/specs/done/`. `ui-30`…`ui-32` seguem em `docs/specs/backlog/`, não implementadas.
+
 ## 2026-09-04 — `ui-28`: amplia `app-botao-icone` (âncora + tamanho `mini`) e adota em `shared/` + `modules/campanha`
 
 Primeira das cinco tarefas da série `ui-28`…`ui-32` que fecha o `P-048` (botões/links soltos sem

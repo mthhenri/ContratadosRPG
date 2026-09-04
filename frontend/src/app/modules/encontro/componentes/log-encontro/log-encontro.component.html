@@ -4,6 +4,7 @@
         <span class="log__regua"></span>
         @if (expandido()) {
             <button
+                app-botao
                 class="log__acao"
                 type="button"
                 [appTooltip]="'Mostrar só a rodada em curso'"
@@ -14,6 +15,7 @@
         }
         @if (temRodadasAnteriores()) {
             <button
+                app-botao
                 class="log__acao"
                 type="button"
                 [appTooltip]="'Abrir mais uma rodada para trás'"
@@ -25,6 +27,7 @@
 
         <!-- Gatilho do mobile (m7-08): no desktop o CSS o esconde e a lista fica sempre aberta. -->
         <button
+            app-botao
             class="log__gatilho"
             type="button"
             [attr.aria-expanded]="aberto()"

@@ -136,8 +136,12 @@
   controles originais desta entrada) — ver `HISTORY.md` para o relato completo, inclusive uma
   exceção descoberta só na implementação (`utilitario-flutuante`, botão de ação flutuante já
   compartilhado por 6 consumidores, com posicionamento `fixed` que o primitivo não cobre).
-  `ui-29`…`ui-32` (encontro,
-  ficha, criatura, simulação/usuário) seguem em `docs/specs/backlog/`, ainda não implementadas —
+  **`ui-29` (`modules/encontro`) concluída** — `cartao-combatente`, `log-encontro`,
+  `rolagem-avulso` e `painel-encontro.page` adotam `app-botao`/`app-botao-icone`; achado à parte
+  na implementação e registrado em `P-058` (`ficha-flutuante.component` reimplementa a mesma
+  janela flutuante de `app-painel-flutuante`, ui-17 — os três botões de janela migraram para
+  `app-botao-icone`, mas a duplicação de componente fica de fora desta série). `ui-30`…`ui-32`
+  (ficha, criatura, simulação/usuário) seguem em `docs/specs/backlog/`, ainda não implementadas —
   a entrada permanece `ABERTO` até a série inteira fechar.
 - **Desde:** dívida pré-existente; nomeada e registrada explicitamente a pedido do autor após a
   auditoria de conformidade da `m8-03` com a nova regra de biblioteca de componentes (2026-09-03);
@@ -223,3 +227,21 @@
   unilateral do agente (ver "Biblioteca de componentes é obrigatória" em `CLAUDE.md`/`AGENTS.md`).
 - **Desde:** encontrado no levantamento completo do `P-048` (2026-09-04) — fora do escopo da série
   `ui-28`…`ui-32` (`docs/specs/backlog/INDEX-adocao-total-botao-icone.md`) por decisão do autor.
+
+### P-058 — `ficha-flutuante.component` reimplementa `app-painel-flutuante` · `ABERTO` · frontend/design system
+
+- **Sintoma:** `modules/encontro/componentes/ficha-flutuante` tem sua própria janela arrastável,
+  redimensionável, minimizável e maximizável (geometria, arraste, `[hidden]`, cabeçalho com "//" +
+  régua + botões de minimizar/maximizar/fechar) — a mesma anatomia e mecânica de
+  `shared/ui/painel-flutuante` (ui-17), que já é a versão compartilhada dessa janela e hospeda
+  `leitor-documentos`, `caderno-flutuante` e a calculadora flutuante.
+- **Causa:** não confirmado se `ficha-flutuante` nasceu antes de `app-painel-flutuante` existir ou
+  se só não foi revisitado depois — o comentário do componente já cita "mesma mecânica de
+  `leitor-documentos`" sem apontar para o primitivo.
+- **Contorno:** funciona; os três botões de janela já adotam `app-botao-icone` (`ui-29`), mas a
+  geometria/arraste/redimensionamento continuam duplicados à mão.
+- **Correção:** decisão do autor pendente — migrar `ficha-flutuante` para hospedar seu conteúdo
+  dentro de `app-painel-flutuante` (como os demais três consumidores já fazem) é uma refatoração de
+  componente, não uma troca de classe CSS; maior que o escopo de "adotar `app-botao`/
+  `app-botao-icone`" da série `ui-28`…`ui-32`.
+- **Desde:** achado durante a implementação de `ui-29` (2026-09-04), fora do escopo daquela tarefa.

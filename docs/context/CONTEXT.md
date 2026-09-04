@@ -295,6 +295,21 @@ inventário de esquadrão, comparado com o análogo já aprovado (`.detalhe__cop
 `ui-29` (encontro), `ui-30` (ficha), `ui-31` (criatura) e `ui-32` (simulação/usuário) seguem em
 `docs/specs/backlog/` — `P-048` continua `ABERTO` até a série inteira fechar.
 
+**`ui-29-adocao-botao-icone-encontro` concluída** (spec em `docs/specs/done/`, 2/5 da série que
+fecha `P-048`): `modules/encontro` adota `app-botao`/`app-botao-icone` — `cartao-combatente`
+(abrir-ficha, rolar-avulso, receber-dano, remover, "remover imagem" → ícone; "Ajustar/Fechar" →
+texto), `log-encontro` (ações de rodada + gatilho mobile), `rolagem-avulso` (fechar + visibilidade)
+e `painel-encontro.page` (voltar, histórico, "Minha ficha" — a maioria dos botões da página já
+usava `app-botao` antes desta tarefa). Achado fora do escopo listado: os três botões de janela
+(minimizar/maximizar/fechar) de `ficha-flutuante.component`, sem classe própria — migrados para
+`app-botao-icone`; ao investigá-los, descobriu-se que `ficha-flutuante` reimplementa à mão a mesma
+mecânica de `app-painel-flutuante` (ui-17), já compartilhada por três outros consumidores —
+registrado como `P-058`, fora do escopo desta série. Suíte do módulo 126/126, lint sem erro novo.
+Gate visual ao vivo (Postgres nativo) em `1920×1080`/`360×800`, mestre e jogador: um combatente
+avulso nasce não revelado para o jogador, satisfazendo o par revelado/não-revelado sem precisar de
+uma ficha de criatura completa. `ui-30`…`ui-32` seguem em `docs/specs/backlog/` — `P-048` continua
+`ABERTO`.
+
 **`ui-24-ordem-dos-controles-do-painel-flutuante` concluída** (spec em `docs/specs/done/`): o slot
 `[painelAcoesExtras]` do primitivo passou de antes de minimizar para entre minimizar e fechar. Assim,
 os painéis com maximização (Caderno e Documentos) seguem `Minimizar → Maximizar/Restaurar → Fechar`

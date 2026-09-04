@@ -37,6 +37,8 @@
             </div>
             <div class="ficha-flutuante__acoes-janela">
                 <button
+                    app-botao-icone
+                    class="ficha-flutuante__acao-janela"
                     type="button"
                     aria-label="Minimizar ficha"
                     [appTooltip]="'Minimizar'"
@@ -46,6 +48,8 @@
                 </button>
                 @if (!ehMobile()) {
                     <button
+                        app-botao-icone
+                        class="ficha-flutuante__acao-janela"
                         type="button"
                         [attr.aria-label]="
                             maximizada() ? 'Restaurar tamanho da ficha' : 'Maximizar ficha'
@@ -57,6 +61,8 @@
                     </button>
                 }
                 <button
+                    app-botao-icone
+                    class="ficha-flutuante__acao-janela"
                     type="button"
                     aria-label="Fechar ficha"
                     [appTooltip]="'Fechar'"

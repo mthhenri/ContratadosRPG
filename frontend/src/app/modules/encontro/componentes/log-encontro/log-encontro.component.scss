@@ -62,7 +62,6 @@
     &__acao {
         flex: none;
         padding: 6px 10px;
-        font-family: var(--font-mono);
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
@@ -70,13 +69,8 @@
         color: var(--text);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            background-color 0.15s ease,
-            border-color 0.15s ease;
 
-        &:hover {
+        &:hover:not(:disabled) {
             background: var(--surface-2);
             border-color: var(--accent-border);
         }
@@ -99,7 +93,6 @@
         flex: none;
         min-height: bp.$alvo-toque;
         padding: 0 12px;
-        font-family: var(--font-mono);
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
@@ -107,8 +100,6 @@
         color: var(--text);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
 
         @include bp.mobile {
             display: inline-block;

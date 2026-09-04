@@ -9,6 +9,7 @@ import {
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
 import {
   GEOMETRIA_INICIAL_FICHA_FLUTUANTE,
@@ -31,7 +32,7 @@ const BREAKPOINT_MOBILE = 560;
  */
 @Component({
   selector: 'app-ficha-flutuante',
-  imports: [Icone, Tooltip, FichaFlutuanteConteudo],
+  imports: [Icone, Tooltip, BotaoIcone, FichaFlutuanteConteudo],
   templateUrl: './ficha-flutuante.component.html',
   styleUrl: './ficha-flutuante.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
