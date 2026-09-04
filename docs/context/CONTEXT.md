@@ -279,6 +279,22 @@ exata); achado e corrigido durante o próprio gate — o cabeçalho completo (ma
 truncava o título "Calculadora" no popup compacto de 280px, mais no mobile (botões de 44px); agora
 o popup compacto esconde marca/régua, mantendo só o essencial.
 
+**`ui-28-primitivo-botao-icone-shared-campanha` concluída** (spec em `docs/specs/done/`, 1/5 da
+série que fecha `P-048`): `app-botao-icone` ganhou seletor `button[app-botao-icone], a[app-botao-icone]`
+(aceita âncora) e o tamanho `mini` (16px, sem borda — ícone inline dentro de outro controle, ex.
+dadinho de um pill de rolagem), documentado em `DESIGN.md`. Adotado em `shared/`
+(`bandeja-dados`, `configuracoes-tema`, `inventario-esquadrao-sidebar`, `notificacao`, `layout`) e
+`modules/campanha` (`detalhe.page`, `espectador.page`, `previa-jogador.page`,
+`inventario-esquadrao`), removendo CSS de identidade duplicado — inclui os 5 controles originais
+do `P-048`. Exceção descoberta na implementação: os gatilhos `utilitario-flutuante` (calculadora,
+histórico de rolagens, inventário) são um botão de ação flutuante `position: fixed` já
+compartilhado por 6 consumidores, papel diferente do primitivo — ficam de fora, documentado no
+`INDEX` da série. Suíte completa frontend 1603/1603, lint sem erro novo. Gate visual ao vivo
+(Postgres nativo, Docker indisponível) em `1920×1080`/`360×800` no detalhe da campanha e no
+inventário de esquadrão, comparado com o análogo já aprovado (`.detalhe__copiar`/`.modal__fechar`).
+`ui-29` (encontro), `ui-30` (ficha), `ui-31` (criatura) e `ui-32` (simulação/usuário) seguem em
+`docs/specs/backlog/` — `P-048` continua `ABERTO` até a série inteira fechar.
+
 **`ui-24-ordem-dos-controles-do-painel-flutuante` concluída** (spec em `docs/specs/done/`): o slot
 `[painelAcoesExtras]` do primitivo passou de antes de minimizar para entre minimizar e fechar. Assim,
 os painéis com maximização (Caderno e Documentos) seguem `Minimizar → Maximizar/Restaurar → Fechar`

@@ -80,6 +80,7 @@
                     (keydown.escape)="fecharPerfilPeloTeclado()"
                 >
                     <button
+                        app-botao
                         #perfilGatilho
                         class="topbar__perfil-gatilho"
                         type="button"
@@ -108,6 +109,7 @@
                                 usuarioAtual.nome
                             }}</span>
                             <a
+                                app-botao
                                 class="topbar__perfil-item"
                                 routerLink="/perfil"
                                 role="menuitem"
@@ -124,6 +126,7 @@
                                 role="none"
                             />
                             <button
+                                app-botao
                                 class="topbar__perfil-item topbar__perfil-item--sair"
                                 type="button"
                                 role="menuitem"
@@ -136,7 +139,7 @@
                     }
                 </div>
             } @else {
-                <a class="topbar__sessao" routerLink="/login">
+                <a app-botao class="topbar__sessao" routerLink="/login">
                     <app-icone nome="entrar" />
                     <span>Entrar</span>
                 </a>

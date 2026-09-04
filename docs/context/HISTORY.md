@@ -1,5 +1,89 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-04 — `ui-28`: amplia `app-botao-icone` (âncora + tamanho `mini`) e adota em `shared/` + `modules/campanha`
+
+Primeira das cinco tarefas da série `ui-28`…`ui-32` que fecha o `P-048` (botões/links soltos sem
+passar pela biblioteca de componentes). O `P-048` original citava 5 controles (achados na
+auditoria da `m8-03`); pedido ao autor para decidir o escopo real antes de mexer em código —
+resposta: levantamento completo do app. Um agente de exploração varreu `frontend/src/app/**`
+e achou **130 classes distintas / 201 ocorrências** adicionais, além de dois padrões que não
+mapeiam em nenhum primitivo hoje (Grupo C "valor editável clicável", ~32 ocorrências, e Grupo D
+"seletor customizado", fora de escopo por ser campo de formulário). Dado o tamanho, o autor
+escolheu dividir em spec de milestone por módulo (`docs/specs/backlog/INDEX-adocao-total-botao-icone.md`)
+em vez de um diff único, e decidiu as duas lacunas do primitivo encontradas: `app-botao-icone`
+ganha suporte a `<a>` e um tamanho `mini` sem borda (padrão "ícone inline", como o dadinho de um
+pill de rolagem). Grupo C virou `P-057`, registrado à parte.
+
+**Entregue nesta tarefa (`ui-28`, fundação da série):**
+
+- `BotaoIcone` (`shared/ui/botao-icone/botao-icone.component.ts`): seletor
+  `button[app-botao-icone], a[app-botao-icone]`; `BotaoIconeTamanho` ganhou `'mini'` (16×16,
+  `border-color: transparent`, sem fundo no hover) além de `compacto`/`padrao`.
+- `shared/`: `bandeja-dados` (`__fechar`), `configuracoes-tema` (`__remover` do swatch salvo, agora
+  `mini`), `inventario-esquadrao-sidebar` (`__fechar`), `notificacao` (`__fechar`) migrados para
+  `app-botao-icone`; `layout` (`topbar__sessao`, `topbar__perfil-gatilho`, `topbar__perfil-item`
+  ×2) para `app-botao`. CSS de identidade duplicado (borda, hover, transição, cursor) removido de
+  cada um, mantendo só geometria/posicionamento e overrides de estado legítimos (ex.: hover
+  "perigo" em `.detalhe__membro-acao`/`.inventario-esquadrao__remover`, que diverge de propósito
+  do hover padrão do primitivo).
+- `modules/campanha`: os 5 controles originais do `P-048`
+  (`.detalhe__cabecalho-voltar`, `.espectador__voltar`, `.detalhe__membro-acao` ×3,
+  `.detalhe__cabecalho-menu-botao` ×2, `.rolagem-pill__d20` ×3 — duas cópias em `detalhe.page.html`
+  mais a de `previa-jogador.page.html`) e o resto do módulo achado no levantamento:
+  `.detalhe__ficha-menu-botao`, `.detalhe__estado-operacional`, `.detalhe__cabecalho-menu-item`
+  (11 ocorrências, um único `replace_all`), `.detalhe__banner-link`, `.detalhe__ficha-menu-item`
+  (3), e praticamente todos os botões de `inventario-esquadrao.component.html` (item custom,
+  adicionar, catálogo, editar item, remover, modificação, pegar).
+- **Exceção encontrada só na implementação** (não estava no levantamento original): os gatilhos
+  `.calc-flutuante__gatilho`/`.historico-rolagens__gatilho`/`.inventario-sidebar__gatilho` usam
+  `shared/utilitario-flutuante/_utilitario-flutuante.scss` — um botão de ação flutuante 48px,
+  `position: fixed`, com empilhamento entre si via CSS custom properties, já compartilhado por 6
+  consumidores. Papel genuinamente diferente de `app-botao-icone` (que é inline, sem
+  posicionamento próprio) — documentado como exclusão permanente no `INDEX` da série (vale também
+  para `.ficha-flutuante__gatilho` da `ui-29` e `.caderno__gatilho` da `ui-30`). O `__fechar` de
+  cada painel (diferente do `__gatilho`) seguiu no escopo normal.
+
+**Dois bugs próprios cometidos e corrigidos ainda na mesma tarefa** (achados pelos testes, não por
+inspeção manual — reforça por que rodar a suíte inteira antes de fechar importa):
+
+1. Ao migrar `.notificacoes__fechar`, `.bandeja__fechar` e `.inventario-sidebar__fechar` para
+   `app-botao-icone`, a classe BEM original foi derrubada por engano (sobrou só a diretiva do
+   primitivo). `notificacao.component.spec.ts` pegou a de notificação (o teste dependia da classe
+   para achar o botão); as outras duas não tinham teste cobrindo e só foram achadas revisando o
+   diff a fio depois do primeiro sinal.
+2. `layout.component.ts` tinha `viewChild<ElementRef<HTMLButtonElement>>('perfilGatilho')` sem
+   `read: ElementRef` explícito — funcionava porque o `<button>` não hospedava nenhum componente.
+   Ao adicionar `app-botao` ao mesmo botão, a referência de template sem `read` passou a resolver
+   a **instância do componente `Botao`** em vez do `ElementRef` nativo (regra do Angular: uma
+   referência de template sem qualificador aponta pro componente do host, quando existe um).
+   `fecharPerfilPeloTeclado` (`Escape` no dropdown de perfil) quebrou com
+   `Cannot read properties of undefined (reading 'focus')` — só apareceu como uma exceção não
+   tratada no `layout.component.spec.ts`, não como falha de asserção. Corrigido com
+   `viewChild<ElementRef<HTMLButtonElement>, ElementRef<HTMLButtonElement>>('perfilGatilho', {
+   read: ElementRef })`. Registrado aqui porque **qualquer** botão/link com referência de template
+   (`#algumRef`) que ganhar `app-botao`/`app-botao-icone` nas próximas tarefas da série corre o
+   mesmo risco — vale a pena checar antes de migrar.
+
+**Testado**: `npm run lint --workspace=frontend` (0 erros); suíte completa do frontend —
+`npm run test --workspace=frontend` — **117 arquivos, 1603 testes, todos passando** (gate de
+integração, não só os arquivos tocados).
+
+**Verificado ao vivo** (stack real — Postgres local + backend NestJS + `ng serve`, sessão real,
+campanha com dois membros e um item de inventário criados via REST): `1920×1080` e `360×800` em
+`/campanhas/:id` (cabeçalho com voltar/menu ⋯, lista de membros com ações, menu de ações aberto) e
+no inventário de esquadrão (vazio, catálogo aberto, item adicionado com pegar/estoque/remover) —
+identidade visual idêntica ao análogo já aprovado (`.detalhe__copiar`/`.detalhe__regenerar` em
+`app-botao-icone tamanho="padrao"`, e `.modal__fechar` sem tamanho explícito), sem overflow, alvo
+de toque de 44px no mobile herdado do primitivo. O tamanho `mini` novo foi verificado no badge de
+remoção de cor personalizada do painel de Tema (`config-swatch-slot__remover`) — aceita a pequena
+normalização de canto quadrado em vez de círculo perfeito, resultado esperado de unificar a
+identidade num primitivo só.
+
+**Pendente** (backlog, não desta tarefa): `ui-29` (encontro), `ui-30` (ficha), `ui-31` (criatura),
+`ui-32` (simulação/usuário) — specs já escritas em `docs/specs/backlog/`, dependem só de `ui-28`
+(pronta). `P-048` continua `ABERTO` até a série inteira fechar. `P-057` (Grupo C, "valor editável
+clicável") aberto à parte, sem spec ainda — decisão de criar primitivo novo pendente do autor.
+
 ## 2026-09-04 — Correção de P-019 e P-044: motion reduzido na bandeja de dados e sobreposição da topbar em ~960px
 
 Dois defeitos pequenos e já totalmente diagnosticados em `PROBLEMS.md`, corrigidos juntos por

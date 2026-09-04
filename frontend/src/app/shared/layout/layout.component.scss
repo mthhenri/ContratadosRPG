@@ -183,9 +183,7 @@
         padding: 4px 6px 4px 10px;
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         color: var(--text-dim);
-        cursor: pointer;
 
         app-icone {
             color: var(--text-mute);
@@ -261,14 +259,12 @@
         align-items: center;
         gap: 10px;
         padding: 9px 10px;
-        border-radius: var(--radius-control);
         font-family: var(--font-sans);
         font-size: 13px;
         color: var(--text);
         background: transparent;
         border: 0;
         text-decoration: none;
-        cursor: pointer;
         text-align: left;
         width: 100%;
 
@@ -317,7 +313,6 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-family: var(--font-mono);
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
@@ -325,7 +320,6 @@
         background: transparent;
         border: 0;
         padding: 4px 6px;
-        cursor: pointer;
         text-decoration: none;
 
         @include bp.mobile {

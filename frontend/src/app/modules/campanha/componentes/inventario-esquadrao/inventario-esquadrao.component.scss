@@ -510,15 +510,8 @@
         font: 700 12px var(--font-mono);
     }
     &__item-editar {
-        display: inline-flex;
-        align-items: center;
         margin-left: 6px;
-        padding: 3px;
-        border: 0;
-        border-radius: var(--radius-control);
-        background: transparent;
         color: var(--text-mute);
-        cursor: pointer;
     }
     &__item-editar app-icone {
         display: inline-flex;
@@ -567,8 +560,7 @@
         border-radius: var(--radius-control);
         overflow: hidden;
     }
-    &__quantidade button,
-    &__remover {
+    &__quantidade button {
         width: 32px;
         height: 32px;
         border: 0;
@@ -601,13 +593,11 @@
         min-height: 32px;
         padding: 5px 10px;
         border: 1px solid var(--accent-border);
-        border-radius: var(--radius-control);
         background: var(--accent-dim);
         color: var(--accent);
         font: 600 11px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: var(--tracking-label);
-        cursor: pointer;
     }
     &__pegar:hover:not(:disabled),
     &__pegar:focus-visible {
@@ -621,11 +611,9 @@
     }
     &__remover {
         margin-left: auto;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         font-size: 16px;
     }
-    &__remover:hover {
+    &__remover:hover:not(:disabled) {
         color: var(--vida);
         border-color: var(--vida);
         background: var(--surface);
@@ -767,28 +755,21 @@
         font: 600 11px var(--font-mono);
         text-align: center;
     }
-    &__modificacao-adicionar,
-    &__modificacao-remover {
+    &__modificacao-adicionar {
         min-height: 32px;
+        padding: 6px 8px;
         border: 1px solid var(--accent-border);
-        border-radius: var(--radius-control);
         background: transparent;
         color: var(--accent);
         font: 700 10px var(--font-mono);
-        cursor: pointer;
-    }
-    &__modificacao-adicionar {
-        padding: 6px 8px;
     }
     &__modificacao-remover {
-        width: 32px;
-        padding: 0;
-        color: var(--text-dim);
-        border-color: var(--border-strong);
         font-size: 16px;
     }
-    &__modificacao-adicionar:hover:not(:disabled),
-    &__modificacao-remover:hover {
+    &__modificacao-adicionar:hover:not(:disabled) {
+        background: var(--accent-dim);
+    }
+    &__modificacao-remover:hover:not(:disabled) {
         background: var(--accent-dim);
     }
     &__modificacao-adicionar:disabled {
@@ -875,15 +856,10 @@
         &__modificacao-acoes {
             justify-content: flex-end;
         }
-        &__modificacao-adicionar,
-        &__modificacao-remover {
+        &__modificacao-adicionar {
             min-height: 44px;
         }
-        &__modificacao-remover {
-            width: 44px;
-        }
-        &__quantidade button,
-        &__remover {
+        &__quantidade button {
             width: 44px;
             height: 44px;
         }

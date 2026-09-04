@@ -1,11 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { RouterLink, provideRouter } from '@angular/router';
 
 import { Tooltip } from '../../tooltip/tooltip.directive';
 import { BotaoIcone } from './botao-icone.component';
 
 @Component({
-  imports: [BotaoIcone],
   template: `
     <button
       app-botao-icone
@@ -16,7 +16,11 @@ import { BotaoIcone } from './botao-icone.component';
     >
       <span aria-hidden="true">⧉</span>
     </button>
+    <a app-botao-icone tamanho="mini" routerLink="/campanhas" aria-label="Voltar" [appTooltip]="'Voltar'">
+      <span aria-hidden="true">←</span>
+    </a>
   `,
+  imports: [BotaoIcone, RouterLink],
 })
 class Hospedeiro {
   readonly desabilitado = signal(false);
@@ -24,7 +28,7 @@ class Hospedeiro {
 
 describe('BotaoIcone', () => {
   function montar() {
-    TestBed.configureTestingModule({ imports: [Hospedeiro] });
+    TestBed.configureTestingModule({ imports: [Hospedeiro], providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(Hospedeiro);
     fixture.detectChanges();
     return fixture;
@@ -40,6 +44,15 @@ describe('BotaoIcone', () => {
     expect(fixture.debugElement.query((elemento) => elemento.nativeElement === botao).injector.get(Tooltip).appTooltip()).toBe(
       'Copiar código de convite',
     );
+  });
+
+  it('veste uma âncora com o tamanho `mini`, sem perder o nome acessível (ui-28)', () => {
+    const fixture = montar();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a')!;
+
+    expect(link.classList).toContain('botao-icone');
+    expect(link.classList).toContain('botao-icone--mini');
+    expect(link.getAttribute('aria-label')).toBe('Voltar');
   });
 
   it('preserva o estado desabilitado nativo', () => {

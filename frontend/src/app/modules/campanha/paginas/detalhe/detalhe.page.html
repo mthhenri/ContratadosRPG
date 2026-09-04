@@ -199,6 +199,7 @@
                 <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
                 @if (ehMestre()) {
                 <button
+                    app-botao
                     class="detalhe__estado-operacional"
                     type="button"
                     [class.detalhe__estado-operacional--base]="campanhaAtual.naBase"
@@ -222,6 +223,7 @@
             </div>
             <div class="detalhe__cabecalho-acoes">
                 <a
+                    app-botao-icone
                     class="detalhe__cabecalho-voltar"
                     routerLink="/campanhas"
                     aria-label="Voltar às campanhas"
@@ -260,11 +262,13 @@
                 } @if (ehMestre()) {
                 <div class="detalhe__cabecalho-menu-envoltorio">
                     <button
+                        app-botao-icone
                         class="detalhe__cabecalho-menu-botao"
                         type="button"
                         aria-haspopup="menu"
                         [attr.aria-expanded]="menuCampanhaAberto()"
                         aria-label="Ações da campanha"
+                        [appTooltip]="'Ações da campanha'"
                         (click)="alternarMenuCampanha()"
                     >
                         ⋯
@@ -279,7 +283,7 @@
                     <div class="detalhe__cabecalho-menu" role="menu">
                         @if (!escolhendoPreviaJogador()) {
                         <a
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             role="menuitem"
                             [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
                         >
@@ -287,7 +291,7 @@
                             <span>Iniciativa</span>
                         </a>
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             (click)="abrirEdicao()"
@@ -296,7 +300,7 @@
                             <span>Editar</span>
                         </button>
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             (click)="pedirExclusao()"
@@ -306,7 +310,7 @@
                         </button>
                         @if (jogadoresDaCampanha().length) {
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             (click)="abrirEscolhaPreviaJogador()"
@@ -317,7 +321,7 @@
                         } } @else { @for (jogadorAlvo of jogadoresDaCampanha(); track
                         jogadorAlvo.usuarioId) {
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             (click)="abrirPreviaJogador(jogadorAlvo)"
@@ -327,7 +331,7 @@
                         </button>
                         }
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             (click)="escolhendoPreviaJogador.set(false)"
@@ -347,11 +351,13 @@
                `menuCampanhaAberto` porque os dois menus são mutuamente exclusivos (`ehMestre()`). -->
                 <div class="detalhe__cabecalho-menu-envoltorio">
                     <button
+                        app-botao-icone
                         class="detalhe__cabecalho-menu-botao"
                         type="button"
                         aria-haspopup="menu"
                         [attr.aria-expanded]="menuCampanhaAberto()"
                         aria-label="Ações de ficha"
+                        [appTooltip]="'Ações de ficha'"
                         (click)="alternarMenuCampanha()"
                     >
                         ⋯
@@ -365,7 +371,7 @@
                     ></button>
                     <div class="detalhe__cabecalho-menu" role="menu">
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             (click)="abrirCriarFicha()"
@@ -374,7 +380,7 @@
                             <span>Criar nova ficha</span>
                         </button>
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             (click)="abrirVincularFicha()"
@@ -383,7 +389,7 @@
                             <span>Vincular ficha existente</span>
                         </button>
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             [disabled]="!minhaFichaExibida()"
@@ -398,7 +404,7 @@
                             }
                         </button>
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             [disabled]="!minhaFichaExibida() || removendo() === minhaFichaExibida()?.id"
@@ -408,7 +414,7 @@
                             <span> {{ rotuloRemoverDaCampanha() }} </span>
                         </button>
                         <button
-                            class="detalhe__cabecalho-menu-item"
+                            app-botao class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
                             [disabled]="!minhaFichaExibida()"
@@ -471,6 +477,7 @@
                 ><strong>{{ critica.nome }}</strong> está crítica (Vida ≤ 0).</span
             >
             <a
+                app-botao
                 class="detalhe__banner-link"
                 [routerLink]="['/campanhas', campanhaAtual.id, 'ficha', critica.id]"
             >
@@ -604,9 +611,12 @@
                     <div class="rolagem-pill__topo">
                         <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
                         <button
+                            app-botao-icone
+                            tamanho="mini"
                             type="button"
                             class="rolagem-pill__d20"
                             [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                            [appTooltip]="'Ver resultado de ' + item.rotulo"
                             (mouseenter)="mostrarPreviaRolagem(item)"
                             (mouseleave)="esconderPreviaRolagem()"
                             (focus)="mostrarPreviaRolagem(item)"
@@ -657,6 +667,8 @@
                             <div class="detalhe__membro-acoes">
                                 @if (membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR) {
                                 <button
+                                    app-botao-icone
+                                    tamanho="padrao"
                                     class="detalhe__membro-acao"
                                     type="button"
                                     [attr.aria-label]="'Transferir o papel de mestre para ' + membro.nome"
@@ -667,6 +679,8 @@
                                 </button>
                                 }
                                 <button
+                                    app-botao-icone
+                                    tamanho="padrao"
                                     class="detalhe__membro-acao"
                                     type="button"
                                     [disabled]="alterandoPapel() === membro.usuarioId"
@@ -686,6 +700,8 @@
                                     />
                                 </button>
                                 <button
+                                    app-botao-icone
+                                    tamanho="padrao"
                                     class="detalhe__membro-acao"
                                     type="button"
                                     [attr.aria-label]="'Remover ' + membro.nome + ' da campanha'"
@@ -935,9 +951,11 @@
                                     </div>
                                     } @if (podeAjustarFicha(ficha.usuarioId)) {
                                     <button
+                                        app-botao-icone
                                         class="detalhe__ficha-menu-botao"
                                         type="button"
                                         [attr.aria-label]="'Ações de ' + ficha.nome"
+                                        [appTooltip]="'Ações de ' + ficha.nome"
                                         aria-haspopup="menu"
                                         [attr.aria-expanded]="menuFichaAberto()?.id === ficha.id"
                                         (click)="alternarMenuFicha(ficha, $event)"
@@ -1312,9 +1330,12 @@
                             <div class="rolagem-pill__topo">
                                 <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
                                 <button
+                                    app-botao-icone
+                                    tamanho="mini"
                                     type="button"
                                     class="rolagem-pill__d20"
                                     [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                                    [appTooltip]="'Ver resultado de ' + item.rotulo"
                                     (mouseenter)="mostrarPreviaRolagem(item)"
                                     (mouseleave)="esconderPreviaRolagem()"
                                     (focus)="mostrarPreviaRolagem(item)"
@@ -1426,7 +1447,7 @@
     [style.right.px]="menuFichaPosicao()?.right"
 >
     <button
-        class="detalhe__ficha-menu-item"
+        app-botao class="detalhe__ficha-menu-item"
         type="button"
         role="menuitem"
         (click)="pedirDuplicar(menuAberto.id, menuAberto.nome, menuAberto.donoNome)"
@@ -1435,7 +1456,7 @@
         <span>Duplicar ficha</span>
     </button>
     <button
-        class="detalhe__ficha-menu-item"
+        app-botao class="detalhe__ficha-menu-item"
         type="button"
         role="menuitem"
         [disabled]="removendo() === menuAberto.id"
@@ -1445,7 +1466,7 @@
         <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
     </button>
     <button
-        class="detalhe__ficha-menu-item"
+        app-botao class="detalhe__ficha-menu-item"
         type="button"
         role="menuitem"
         (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"

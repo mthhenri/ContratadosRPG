@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 
 import { Icone, IconeNome } from '../../icone/icone.component';
 import { Botao, BotaoVariante } from '../botao/botao.component';
+import { BotaoIcone } from '../botao-icone/botao-icone.component';
 import {
   NotificacaoEntrada,
   NotificacaoService,
@@ -40,7 +41,7 @@ const VARIANTE_POR_SEVERIDADE: Record<NotificacaoSeveridade, BotaoVariante> = {
  */
 @Component({
   selector: 'app-notificacoes',
-  imports: [Icone, Botao],
+  imports: [Icone, Botao, BotaoIcone],
   templateUrl: './notificacao.component.html',
   styleUrl: './notificacao.component.scss',
 })

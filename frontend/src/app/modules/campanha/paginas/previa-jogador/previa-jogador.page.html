@@ -217,9 +217,12 @@
                         <div class="rolagem-pill__topo">
                             <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
                             <button
+                                app-botao-icone
+                                tamanho="mini"
                                 type="button"
                                 class="rolagem-pill__d20"
                                 [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                                [appTooltip]="'Ver resultado de ' + item.rotulo"
                                 (mouseenter)="mostrarPreviaRolagem(item)"
                                 (mouseleave)="esconderPreviaRolagem()"
                                 (focus)="mostrarPreviaRolagem(item)"

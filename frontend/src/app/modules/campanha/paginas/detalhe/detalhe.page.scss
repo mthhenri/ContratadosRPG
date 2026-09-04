@@ -190,34 +190,9 @@
     // `&__link`), agora ao lado do gatilho de histórico de rolagens no cabeçalho.
     &__cabecalho-voltar {
         flex: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 22px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
 
         app-icone {
             font-size: 13px;
-        }
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
         }
     }
 
@@ -238,33 +213,6 @@
 
     &__cabecalho-menu-botao {
         flex: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 22px;
-        font-size: 15px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
     }
 
     // Fundo transparente pra fechar o menu com um clique fora — sem clipping ancestral aqui (o
@@ -303,21 +251,11 @@
         color: var(--text);
         background: transparent;
         border: 0;
-        border-radius: var(--radius-control);
-        cursor: pointer;
         text-align: left;
-        transition:
-            background-color 0.15s ease,
-            color 0.15s ease;
 
         &:hover:not(:disabled) {
             background: var(--surface-2);
             color: var(--accent);
-        }
-
-        &:disabled {
-            opacity: 0.55;
-            cursor: default;
         }
 
         @include bp.mobile {
@@ -1190,22 +1128,8 @@
 
     &__membro-acao {
         flex: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        background: transparent;
-        color: var(--text-dim);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            background-color 0.15s ease,
-            border-color 0.15s ease,
-            color 0.15s ease;
 
-        &:hover {
+        &:hover:not(:disabled) {
             color: var(--text);
             background: var(--surface);
             border-color: var(--accent-border);
@@ -1598,28 +1522,6 @@
     &__ficha-menu-botao {
         flex: none;
         margin-left: auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 22px;
-        font-size: 15px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
     }
 
     &__ficha-menu-fundo {
@@ -1656,14 +1558,9 @@
         color: var(--text);
         background: transparent;
         border: 0;
-        border-radius: var(--radius-control);
-        cursor: pointer;
         text-align: left;
-        transition:
-            background-color 0.15s ease,
-            color 0.15s ease;
 
-        &:hover {
+        &:hover:not(:disabled) {
             background: var(--surface-2);
             color: var(--accent);
         }
@@ -1842,16 +1739,6 @@
             min-height: bp.$alvo-toque;
         }
 
-        &__membro-acao {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
-
-        &__ficha-menu-botao {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
-
         &__ficha-passo {
             width: bp.$alvo-toque;
             height: bp.$alvo-toque;
@@ -1933,26 +1820,7 @@
     // Dadinho d20 (item 3, ajuste pós-m2-19): hover/foco mostra o resultado completo da rolagem na
     // bandeja de dados flutuante (`BandejaDadosService`, o mesmo container das rolagens ao vivo).
     &__d20 {
-        display: inline-flex;
         flex-shrink: 0;
-        align-items: center;
-        justify-content: center;
-        width: 16px;
-        height: 16px;
-        padding: 0;
-        font-size: 12px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: none;
-        border-radius: var(--radius-compact);
-        cursor: pointer;
-        transition: color 0.15s ease;
-
-        &:hover,
-        &:focus-visible {
-            color: var(--accent);
-        }
     }
 
     &__rotulo {

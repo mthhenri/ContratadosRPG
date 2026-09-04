@@ -13,6 +13,7 @@
                 >
                 <div class="inventario-esquadrao__acoes-controles">
                     <button
+                        app-botao
                         class="inventario-esquadrao__item-custom"
                         type="button"
                         [attr.aria-expanded]="criandoItem()"
@@ -23,6 +24,7 @@
                         {{ criandoItem() ? "Fechar formulário" : "Item custom" }}
                     </button>
                     <button
+                        app-botao
                         class="inventario-esquadrao__adicionar"
                         type="button"
                         [attr.aria-expanded]="catalogoAberto()"
@@ -243,6 +245,7 @@
                 <div class="inventario-esquadrao__form-acoes">
                     @if (!editandoItemId()) {
                         <button
+                            app-botao
                             type="button"
                             class="inventario-esquadrao__form-btn inventario-esquadrao__abrir-modificacoes-custom"
                             [disabled]="itemCustomForm.invalid || operando()"
@@ -252,6 +255,7 @@
                         </button>
                     }
                     <button
+                        app-botao
                         type="submit"
                         class="inventario-esquadrao__form-btn inventario-esquadrao__form-btn--principal"
                         [disabled]="itemCustomForm.invalid || operando()"
@@ -259,6 +263,7 @@
                         {{ editandoItemId() ? "Salvar alterações" : "Adicionar item" }}
                     </button>
                     <button
+                        app-botao
                         type="button"
                         class="inventario-esquadrao__form-btn"
                         (click)="editandoItemId() ? cancelarEdicaoItem() : cancelarCriarItem()"
@@ -318,6 +323,7 @@
                             </div>
                             <div class="inventario-esquadrao__catalogo-item-acoes">
                                 <button
+                                    app-botao
                                     class="inventario-esquadrao__catalogo-adicionar"
                                     type="button"
                                     [class.inventario-esquadrao__catalogo-adicionar--feito]="
@@ -334,6 +340,7 @@
                                     }}
                                 </button>
                                 <button
+                                    app-botao
                                     class="inventario-esquadrao__catalogo-modificar"
                                     type="button"
                                     [disabled]="operando()"
@@ -370,9 +377,12 @@
                                 {{ item.nome }}
                                 @if (!somenteLeitura() && ehItemCustom(item) && !editandoItemId()) {
                                     <button
+                                        app-botao-icone
+                                        tamanho="mini"
                                         type="button"
                                         class="inventario-esquadrao__item-editar"
                                         [attr.aria-label]="'Editar informações de ' + item.nome"
+                                        [appTooltip]="'Editar informações de ' + item.nome"
                                         (click)="abrirEdicaoItem(item)"
                                     >
                                         <app-icone nome="editar" />
@@ -429,6 +439,7 @@
                                     </button>
                                 </div>
                                 <button
+                                    app-botao
                                     class="inventario-esquadrao__pegar"
                                     type="button"
                                     [disabled]="fichas().length === 0 || !!editandoItemId()"
@@ -446,19 +457,25 @@
                                             >Remover item?</span
                                         >
                                         <button
+                                            app-botao-icone
+                                            tamanho="padrao"
                                             class="inventario-esquadrao__remover inventario-esquadrao__remover--confirmar"
                                             type="button"
                                             [disabled]="!!editandoItemId()"
                                             [attr.aria-label]="'Confirmar remoção de ' + item.nome"
+                                            [appTooltip]="'Confirmar remoção'"
                                             (click)="confirmarRemocao(item.id)"
                                         >
                                             <app-icone nome="check" />
                                         </button>
                                         <button
+                                            app-botao-icone
+                                            tamanho="padrao"
                                             class="inventario-esquadrao__remover"
                                             type="button"
                                             [disabled]="!!editandoItemId()"
                                             [attr.aria-label]="'Cancelar remoção de ' + item.nome"
+                                            [appTooltip]="'Cancelar remoção'"
                                             (click)="cancelarRemocao()"
                                         >
                                             ×
@@ -466,10 +483,13 @@
                                     </span>
                                 } @else {
                                     <button
+                                        app-botao-icone
+                                        tamanho="padrao"
                                         class="inventario-esquadrao__remover"
                                         type="button"
                                         [disabled]="!!editandoItemId()"
                                         [attr.aria-label]="'Remover ' + item.nome"
+                                        [appTooltip]="'Remover ' + item.nome"
                                         (click)="solicitarRemocao(item.id)"
                                     >
                                         ×
@@ -554,9 +574,12 @@
                         <div class="inventario-esquadrao__modificacao-acoes">
                             @if (quantidadeModificacao(modificacao)) {
                                 <button
+                                    app-botao-icone
+                                    tamanho="padrao"
                                     type="button"
                                     class="inventario-esquadrao__modificacao-remover"
                                     [attr.aria-label]="'Remover ' + modificacao.nome"
+                                    [appTooltip]="'Remover ' + modificacao.nome"
                                     (click)="removerModificacao(modificacao)"
                                 >
                                     −
@@ -564,6 +587,7 @@
                                 <output>{{ quantidadeModificacao(modificacao) }}×</output>
                             }
                             <button
+                                app-botao
                                 type="button"
                                 class="inventario-esquadrao__modificacao-adicionar"
                                 [disabled]="

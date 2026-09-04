@@ -96,9 +96,12 @@
                             <span class="config-swatch__nome">{{ tema.nomeAccentSalvo() }}</span>
                         </button>
                         <button
+                            app-botao-icone
+                            tamanho="mini"
                             type="button"
                             class="config-swatch-slot__remover"
                             aria-label="Remover cor personalizada salva"
+                            [appTooltip]="'Remover'"
                             (click)="removerSalvo()"
                         >
                             ×

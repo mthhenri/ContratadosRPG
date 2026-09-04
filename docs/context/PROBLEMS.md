@@ -125,16 +125,23 @@
   ao invés de o corrigir, por estar fora do recorte da task.
 - **Contorno:** nenhum — o comportamento visual está correto hoje, é dívida de arquitetura/reuso,
   não defeito visível.
-- **Correção:** decisão do autor pendente (2026-09-03): a intenção é que **todo** controle
-  clicável do app passe a usar o primitivo correspondente (ver "Biblioteca de componentes é
-  obrigatória" em `CLAUDE.md`/`AGENTS.md`) — inclusive os que hoje são exceção histórica. Exige um
-  levantamento completo de todos os controles fora do padrão (não só os listados acima, que foram
-  os encontrados durante a auditoria da `m8-03`) e provavelmente uma spec própria, já que
-  `app-botao-icone` só suporta `button` — controles que hoje são `<a>` (`.detalhe__cabecalho-voltar`,
-  `.espectador__voltar`) podem exigir ampliar o primitivo para aceitar âncora, o que é decisão do
-  autor por si só (ver a mesma seção do `CLAUDE.md`/`AGENTS.md`).
+- **Correção:** levantamento completo feito em 2026-09-04 (agente de exploração): **130 classes
+  distintas / 201 ocorrências** fora do padrão em quase todo módulo do frontend — tamanho de
+  milestone. Dividido na série `ui-28`…`ui-32`
+  (`docs/specs/backlog/INDEX-adocao-total-botao-icone.md`), com duas decisões do autor já tomadas
+  (2026-09-04): `app-botao-icone` ganha suporte a `<a>` **e** um tamanho `mini` sem borda (padrão
+  "ícone inline", ex. `.rolagem-pill__d20`); o subconjunto "valor editável clicável" (Grupo C do
+  levantamento) fica fora desta série, registrado à parte em `P-057`. **`ui-28` concluída e movida
+  para `docs/specs/done/`** (fundação do primitivo + `shared/` + `modules/campanha`, inclui os 5
+  controles originais desta entrada) — ver `HISTORY.md` para o relato completo, inclusive uma
+  exceção descoberta só na implementação (`utilitario-flutuante`, botão de ação flutuante já
+  compartilhado por 6 consumidores, com posicionamento `fixed` que o primitivo não cobre).
+  `ui-29`…`ui-32` (encontro,
+  ficha, criatura, simulação/usuário) seguem em `docs/specs/backlog/`, ainda não implementadas —
+  a entrada permanece `ABERTO` até a série inteira fechar.
 - **Desde:** dívida pré-existente; nomeada e registrada explicitamente a pedido do autor após a
-  auditoria de conformidade da `m8-03` com a nova regra de biblioteca de componentes (2026-09-03).
+  auditoria de conformidade da `m8-03` com a nova regra de biblioteca de componentes (2026-09-03);
+  escopo completo medido e dividido em 2026-09-04.
 
 ### P-051 — Quatro telas recriam a identidade de `app-esqueleto` · `ABERTO` · frontend/design system
 
@@ -198,3 +205,21 @@
 - **Correção:** criar `app-segmentado` a partir dos três contratos reais, com item por diretiva,
   seleção única, foco, desabilitado e densidade compacta.
 - **Desde:** confirmado na auditoria UI-27 (2026-09-03).
+
+### P-057 — "Valor editável" clicável não tem primitivo próprio · `ABERTO` · frontend/design system
+
+- **Sintoma:** ~15 classes/32 ocorrências (`criatura__designacao`, `criatura__stat-valor`,
+  `criatura__vitalidade-valor`/`-maxima`, `criatura__tag-valor`, `criatura__info-nota-texto`,
+  `ficha-inv__carga-valor`/`__municao-valor`, `ficha-ident__nome`/`__contrato`/`__meta-valor`,
+  `ficha-mini__valor`, `ficha-resistencia__valor`, `barra-recurso__valor-atual`/`__max`) mostram um
+  valor/dado da ficha e, ao clicar, viram um `<input>` de edição inline — reimplementam cursor,
+  hover e foco na mão, mas não são bem uma "ação única" (`app-botao-icone`) nem um "botão com
+  texto" (`app-botao`): é mais perto de um campo de formulário disfarçado de valor.
+- **Causa:** nenhum primitivo de `shared/ui/` cobre esse papel; nasceram como CSS local em cada
+  tela que precisou do padrão.
+- **Contorno:** funcionam, mas cada tela reimplementa a mesma identidade separadamente.
+- **Correção:** decisão do autor pendente — criar um primitivo próprio (`app-valor-editavel`?) ou
+  esticar `app-botao` (`estilo="texto"`) para cobrir o papel. Nenhuma das duas é escolha
+  unilateral do agente (ver "Biblioteca de componentes é obrigatória" em `CLAUDE.md`/`AGENTS.md`).
+- **Desde:** encontrado no levantamento completo do `P-048` (2026-09-04) — fora do escopo da série
+  `ui-28`…`ui-32` (`docs/specs/backlog/INDEX-adocao-total-botao-icone.md`) por decisão do autor.

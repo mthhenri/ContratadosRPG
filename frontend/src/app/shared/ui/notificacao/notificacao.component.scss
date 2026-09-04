@@ -161,24 +161,7 @@
     }
 
     &__fechar {
-        flex: 0 0 auto;
         margin-left: auto;
-        border: 0;
-        background: transparent;
-        color: var(--text-mute);
-        font-size: 18px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 0 var(--space-4);
-
-        &:hover {
-            color: var(--text);
-        }
-
-        @include bp.mobile {
-            min-width: bp.$alvo-toque;
-            min-height: bp.$alvo-toque;
-        }
     }
 
     // Barra de duração (ui-20) — mesmo comportamento de `BandejaDados`: esvazia da esquerda pra
