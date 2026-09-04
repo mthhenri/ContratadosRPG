@@ -1,0 +1,255 @@
+<section class="previa-jogador">
+    <div class="previa-jogador__preview-barra" role="status">
+        <app-icone nome="olho" />
+        <span class="previa-jogador__preview-texto">
+            Visualizando como <strong>{{ nomeAlvo() }}</strong> · prévia somente leitura
+        </span>
+        <a
+            app-botao
+            variante="secundario"
+            class="botao botao--secundario previa-jogador__preview-sair"
+            [routerLink]="['/campanhas', id]"
+        >
+            Sair da prévia
+        </a>
+    </div>
+
+    <header class="previa-jogador__cabecalho">
+        @if (carregando()) {
+        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        } @else {
+        <h1 class="previa-jogador__titulo">{{ previa()?.campanha?.nome }}</h1>
+        }
+
+        <span class="previa-jogador__regua"></span>
+
+        @if (encontroAtivo(); as encontro) {
+        <button
+            app-botao
+            variante="secundario"
+            type="button"
+            class="botao botao--secundario previa-jogador__ver-iniciativa"
+            (click)="iniciativaAberta.set(true)"
+        >
+            <app-icone nome="d20" />
+            Ver Iniciativa
+        </button>
+        }
+
+        <app-chip severidade="secundario" class="previa-jogador__selo">
+            <app-icone nome="protecoes" />
+            Prévia de jogador
+        </app-chip>
+    </header>
+
+    @if (carregando()) {
+    <div class="previa-jogador__corpo" role="status" aria-label="Carregando prévia">
+        <div class="previa-jogador__principal">
+            <app-cartao class="previa-jogador__ficha">
+                <app-esqueleto class="previa-jogador__esqueleto-linha" />
+                <app-esqueleto class="previa-jogador__esqueleto-bloco" />
+            </app-cartao>
+        </div>
+        <div class="previa-jogador__lateral">
+            <app-cartao class="previa-jogador__equipe">
+                <app-esqueleto class="previa-jogador__esqueleto-linha" />
+                <app-esqueleto class="previa-jogador__esqueleto-linha" />
+            </app-cartao>
+        </div>
+    </div>
+    } @else {
+    <div class="previa-jogador__corpo">
+        <div class="previa-jogador__principal">
+            @if (fichaExibidaDados(); as fichaExibida) {
+            <app-cartao
+                class="previa-jogador__ficha"
+                [titulo]="fichaExibida.nome"
+                [cabecalhoQuebravel]="true"
+            >
+                <span cartaoIndice><app-icone nome="agente" /></span>
+                @if (previa()?.podeAcessarInventarioEsquadrao) {
+                <button
+                    app-botao
+                    variante="secundario"
+                    cartaoFim
+                    class="botao botao--secundario previa-jogador__alternar-inventario"
+                    type="button"
+                    [attr.aria-pressed]="exibindoInventarioJogador()"
+                    (click)="exibindoInventarioJogador.set(!exibindoInventarioJogador())"
+                >
+                    <app-icone nome="inventario" />
+                    {{ rotuloAlternarInventario() }}
+                </button>
+                }
+
+                <app-ficha-visualizacao
+                    [fichaId]="fichaExibida.id"
+                    [nome]="fichaExibida.nome"
+                    [cor]="fichaExibida.cor"
+                    [imagemUrl]="fichaExibida.imagemUrl"
+                    [dados]="fichaExibida.dados"
+                    [ajustavel]="podeAjustarFichaExibida()"
+                    [podeRolar]="false"
+                    [ehMestre]="false"
+                    modo="compacto"
+                />
+            </app-cartao>
+            } @else if (carregandoFichaExibida()) {
+            <p class="previa-jogador__estado">Carregando ficha…</p>
+            } @else {
+            <app-estado-vazio
+                icone="agente"
+                [titulo]="nomeAlvo() + ' não tem uma ficha nesta campanha.'"
+            />
+            }
+        </div>
+
+        <div class="previa-jogador__lateral">
+            @if (exibindoInventarioJogador() && previa()?.podeAcessarInventarioEsquadrao) {
+            <app-cartao class="previa-jogador__inventario">
+                <header class="previa-jogador__secao">
+                    <h2 class="previa-jogador__secao-titulo">Inventário de Esquadrão</h2>
+                    <span class="previa-jogador__secao-regua"></span>
+                </header>
+                <app-inventario-esquadrao
+                    [campanhaId]="id"
+                    [itens]="inventarioEsquadrao()"
+                    [fichas]="fichasDestinoInventario()"
+                    [somenteLeitura]="true"
+                />
+            </app-cartao>
+            } @else {
+            <app-cartao class="previa-jogador__equipe">
+                <header class="previa-jogador__secao">
+                    <h2 class="previa-jogador__secao-titulo">Equipe</h2>
+                    <span class="previa-jogador__secao-regua"></span>
+                </header>
+                <ul class="previa-jogador__equipe-lista" appOverflowFade>
+                    @for (item of equipeExibicao(); track item.membro.usuarioId) {
+                    <li class="previa-jogador__equipe-membro">
+                        @if (item.membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+                        <div class="previa-jogador__equipe-cabecalho">
+                            <span class="chip-papel">
+                                <app-icone nome="coroa" />
+                                Mestre
+                            </span>
+                            <span class="previa-jogador__equipe-nome">{{ item.membro.nome }}</span>
+                        </div>
+                        } @else {
+                        <div class="previa-jogador__equipe-membro-corpo">
+                            <span class="previa-jogador__equipe-nome">{{ item.membro.nome }}</span>
+                            @if (item.fichas.length) { @for (ficha of item.fichas; track ficha.id) {
+                            @if (ficha.tipo === 'completa') {
+                            <button
+                                type="button"
+                                class="previa-jogador__equipe-ficha"
+                                [class.previa-jogador__equipe-ficha--ativa]="
+                                    fichaExibidaId() === ficha.id
+                                "
+                                [attr.aria-pressed]="fichaExibidaId() === ficha.id"
+                                [attr.aria-label]="rotuloVerFicha(ficha.nome, item.membro.nome)"
+                                (click)="selecionarFichaExibida(ficha.id)"
+                            >
+                                <app-icone nome="olho" />
+                                <span class="previa-jogador__equipe-ficha-corpo">
+                                    <span class="previa-jogador__equipe-ficha-nome"
+                                        >{{ ficha.nome }}</span
+                                    >
+                                    <span class="previa-jogador__equipe-ficha-vitais">
+                                        Vida {{ ficha.vidaAtual }}/{{ ficha.vidaMaxima ?? '—' }} ·
+                                        Energia {{ ficha.energiaAtual }}/{{ ficha.energiaMaxima ??
+                                        '—' }}
+                                    </span>
+                                </span>
+                            </button>
+                            } @else {
+                            <span
+                                class="previa-jogador__equipe-carteirinha"
+                                [attr.aria-label]="rotuloFichaSemAcesso(ficha.nome, item.membro.nome)"
+                            >
+                                <span class="previa-jogador__equipe-ficha-corpo">
+                                    <span class="previa-jogador__equipe-ficha-nome"
+                                        >{{ ficha.nome }}</span
+                                    >
+                                    <span class="previa-jogador__equipe-ficha-vitais"
+                                        >{{ ficha.classeTexto }}</span
+                                    >
+                                </span>
+                            </span>
+                            } } } @else {
+                            <span class="previa-jogador__equipe-vazio"
+                                >Sem ficha nesta campanha</span
+                            >
+                            }
+                        </div>
+                        }
+                    </li>
+                    }
+                </ul>
+            </app-cartao>
+            } @if (fichaExibidaDados(); as fichaParaRolar) {
+            <app-cartao class="previa-jogador__rolagens">
+                <header class="previa-jogador__secao">
+                    <h2 class="previa-jogador__secao-titulo">Rolagens</h2>
+                    <span class="previa-jogador__secao-regua"></span>
+                </header>
+                <div class="previa-jogador__rolagens-corpo" appOverflowFade>
+                    <app-ficha-rolagens-painel
+                        [dados]="fichaParaRolar.dados"
+                        [editavel]="false"
+                        [podeRolar]="false"
+                    />
+                </div>
+            </app-cartao>
+            }
+
+            <app-cartao class="previa-jogador__sessao">
+                <header class="previa-jogador__secao">
+                    <h2 class="previa-jogador__secao-titulo">Sessão</h2>
+                    <span class="previa-jogador__secao-regua"></span>
+                </header>
+                @if (rolagensRecentes().length === 0) {
+                <p class="previa-jogador__estado">Nenhuma rolagem na última hora.</p>
+                } @else {
+                <ul class="previa-jogador__sessao-lista" appOverflowFade>
+                    @for (item of rolagensRecentes(); track item.id) {
+                    <li class="rolagem-pill">
+                        <div class="rolagem-pill__topo">
+                            <span class="rolagem-pill__rotulo">{{ item.rotulo }}</span>
+                            <button
+                                type="button"
+                                class="rolagem-pill__d20"
+                                [attr.aria-label]="'Ver resultado de ' + item.rotulo"
+                                (mouseenter)="mostrarPreviaRolagem(item)"
+                                (mouseleave)="esconderPreviaRolagem()"
+                                (focus)="mostrarPreviaRolagem(item)"
+                                (blur)="esconderPreviaRolagem()"
+                            >
+                                <app-icone nome="d20" />
+                            </button>
+                        </div>
+                        <span class="rolagem-pill__meta"
+                            >{{ item.nomeAutor }} · {{ tempoRolagem(item) }}</span
+                        >
+                    </li>
+                    }
+                </ul>
+                }
+            </app-cartao>
+        </div>
+    </div>
+    }
+</section>
+
+@if (encontroAtivo(); as encontro) {
+<app-modal
+    [aberto]="iniciativaAberta()"
+    titulo="Iniciativa"
+    largura="960px"
+    (fechou)="iniciativaAberta.set(false)"
+>
+    <app-iniciativa-leitura [encontro]="encontro" [fichasCampanha]="previa()?.fichas ?? []" />
+</app-modal>
+}
+
+<app-bandeja-dados />

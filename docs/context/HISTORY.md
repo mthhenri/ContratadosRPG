@@ -1,5 +1,512 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-04 — m8-06: Validação integrada do módulo `m8-espectadores-campanha` (M8, gate final)
+
+Sexta e última task do módulo — não é produto novo, é o gate que fecha `m8-01`…`m8-05` com
+evidência de que convites, permissões, feed em tempo real e as duas prévias se comportam
+corretamente **entre contas** (não só em teste unitário com service dublada) e em
+desktop/mobile. Cenário de 4 identidades reais (mestre, Vera — jogador com ficha, Rex — jogador
+dono de uma ficha nunca compartilhada, Olheiro — espectador) rodado contra o backend de verdade
+(Postgres + NestJS) via REST cru + `socket.io-client` cru, sem template unitário nenhum — exatamente
+o que o risco da spec cobrava ("teste unitário não prova isolamento de dados").
+
+**30 verificações ao vivo, todas passando** (script descartável, não suíte permanente — mesmo
+espírito do `verify` das tasks anteriores):
+
+- **Entregável 1** (convites + rolagem pública/privada): entrada pelos dois códigos reais da
+  campanha; rolagem `PUBLICA` e `PRIVADA` registradas por Vera.
+- **Entregável 2** (regressão de autorização REST): espectador recebe `403` em `GET`/`POST` de
+  ficha própria, ficha de Rex (a "não compartilhada"), listagem de fichas, registro de rolagem,
+  caderno, inventário de campanha, membros e regeneração dos dois convites — mas **lê** o feed de
+  rolagem da campanha (é membro) só com a `PUBLICA` dentro, nunca a `PRIVADA`.
+- **Entregável 2** (regressão via Socket.IO): espectador entra na sala própria
+  (`campanha:<id>:espectador`), nunca na sala cheia nem na de uma campanha alheia nem na de uma
+  ficha; recebe `rolagem:registrada` só da `PUBLICA`; nunca recebe `ficha:criada` (broadcast de
+  conteúdo de jogo).
+- **Entregável 4** (encontro ativo com NPC não revelado): jogador e espectador recebem
+  exatamente o mesmo recorte de "A Estátua" (nome anunciado, todos os números zerados,
+  `revelado: false`, JSON idêntico byte a byte entre os dois); `turno/avancar` e
+  `iniciativa/pedido` (mestre pede que a mesa role) negados por rota direta para o espectador.
+- **Entregável 3** (prévia do mestre vs. Vera real): mesma faixa de identidade de campanha
+  (`id`/`nome`/`descricao`/`naBase`) — a prévia **nunca** inclui os dois códigos de convite, a
+  única diferença esperada; mesmo conjunto de fichas, membros, feed de rolagens e o
+  `encontroAtivo` byte a byte iguais entre a prévia do mestre e o que Vera recebe de verdade.
+
+Nenhum bug de backend encontrado — as 5 tasks anteriores compõem corretamente entre contas. O
+único ajuste foi na primeira redação do próprio script de verificação (assumi que um combatente
+"não revelado" viria com `nome: null`; `encontro-revelacao.ts` deliberadamente preserva o nome —
+"o mestre anuncia o nome em voz alta na mesa" — e zera só os números; corrigido antes de declarar
+qualquer falha real).
+
+**Entregável 5 — inspeção visual pessoal, 1920×1080 e 360×800**, cenário próprio (mestre, Vera,
+Semficha — jogador sem nenhuma ficha na campanha, Olheiro): gestão de convites/papel em
+`CampanhaDetalhe`, Painel do espectador em modo prévia pelo mestre, Painel do espectador real
+(feed + "Ver Iniciativa"), Prévia de jogador para alvo com ficha (Vera) e sem ficha (Semficha),
+modal de Iniciativa nas quatro composições. Achado real, corrigido nesta task:
+
+- **Botão "Ver Iniciativa" sem nenhuma receita visual** em `espectador.page.html` e
+  `previa-jogador.page.html` (m8-05): usa `app-botao` + `variante="secundario"`, igual ao botão
+  "Sair da visualização"/"Sair da prévia" ao lado — mas, ao contrário deles, sem `[tamanho]` **e**
+  sem a classe local de receita (`display`/`padding`/`font-size`/etc. que `app-botao` deixa por
+  conta do consumidor quando `[tamanho]` não é informado — mesmo aviso do `CLAUDE.md` sobre anexar
+  a diretiva sem os inputs que dão forma ao controle). Na tela renderizada saía como texto solto
+  colado no chip "Modo espectador"/"Prévia de jogador", sem caixa, padding ou peso — não "nosso
+  componente" nenhum, apesar do código já ter a diretiva. Corrigido acrescentando
+  `&__ver-iniciativa` em `espectador.page.scss`/`previa-jogador.page.scss`, mesma receita já usada
+  por `&__preview-sair` nos dois arquivos (compacta o bastante para caber ao lado do selo, com
+  `min-height` de alvo de toque no mobile). Confirmado nos dois viewports depois do fix — não é o
+  mesmo defeito de `P-048` (que é sobre controles que nunca chamam o primitivo; aqui o primitivo é
+  chamado, só faltava a densidade).
+
+**Divergência preexistente da `m8-05` encontrada e corrigida** (não é achado da spec, é gate que
+faltou rodar): `backend/src/core/openapi/contratos-gerados.ts` nunca tinha sido regenerado depois
+que a `m8-05` acrescentou `encontroAtivo` a `CampanhaPainelEspectadorDto`/`CampanhaPreviaJogadorDto`
+— o contrato público publicado ficou um commit atrasado do `shared/`. Corrigido rodando
+`npm run openapi:gerar-contratos` e commitando o resultado. Também corrigido 1 erro real de lint
+(`@typescript-eslint/require-await`) que a `m8-05` deixou em `campanha.gateway.spec.ts` (mock
+`async` sem `await` dentro) — `npm run lint` (raiz) não passava limpo antes deste commit.
+
+**Testes:** shared 744/744, backend 540/540, frontend 1602/1602 (nenhum novo — mudança de escopo
+foi CSS + regeneração de contrato + 1 mock de teste, sem regra de negócio nova). `npm run lint`
+(raiz) limpo nos três workspaces (0 erros, só os warnings de aspas/`max-len` preexistentes).
+Build de `backend` (`nest build`) e `frontend` (produção) OK — únicos avisos são os orçamentos de
+bundle já preexistentes, não deste diff. `tsc --noEmit` do backend mantém os mesmos 8 erros
+preexistentes em arquivos de teste/ferramenta que já existiam antes desta task (confirmados
+idênticos, não relacionados ao módulo `m8-espectadores-campanha`) — fora do escopo, não
+corrigidos.
+
+Módulo `m8-espectadores-campanha` (`m8-01`…`m8-06`) **concluído**.
+
+## 2026-09-03 — m8-05: Visão read-only de Iniciativa/Encontro para espectador e Prévia de jogador (M8)
+
+Quinta task do módulo `m8-espectadores-campanha`. Objetivo: quando a campanha tem um encontro
+ativo, dar ao espectador (e à Prévia de jogador do mestre) a mesma visão que o jogador já tem do
+Encontro — ordem, turno, rodada, cartões de combatente e log da rodada — sem nenhum controle de
+condução e sem o pedido de "rolar minha iniciativa" (a conta espectadora não tem ficha vinculada ao
+encontro).
+
+**Backend — dois gaps encontrados na investigação, nenhum na spec.**
+
+1. `EncontroService.montarEstadoParaUsuario` (aplica a revelação m7-06 pro ponto de vista de **um**
+   usuário) chamava `FichaService.listarFichas` para qualquer papel que não fosse `MESTRE` — e
+   `listarFichas` **sempre** rejeita `ESPECTADOR` (`UnauthorizedAccessException`, decisão de
+   produto #4 do próprio `m8-02`). Como esse método é chamado por `emitirEstado`/
+   `sincronizarFichaAlterada` **por socket conectado**, um espectador real na sala do encontro
+   faria a montagem do broadcast estourar exceção assim que a `m8-05` estendesse a sala do
+   espectador (item 2 abaixo). Corrigido tratando `ESPECTADOR` como conjunto de fichas visíveis
+   vazio, sem chamar `listarFichas` — não é uma segunda regra de permissão, é o mesmo fato que a
+   decisão #4 já estabelece (espectador nunca vê ficha), só evitando a exceção.
+2. `CampanhaGateway.emitirEncontroAlterado` só buscava sockets em `campanha:<id>` — nunca em
+   `campanha:<id>:espectador`, a sala que `entrarSalaCampanha` já roteia `ESPECTADOR` desde a
+   `m8-02`. Sem o fix, nenhum espectador real jamais receberia `encontro:alterado` ao vivo.
+   Corrigido estendendo a busca de sockets para as duas salas (`.in([...])`), mesmo padrão que
+   `emitirRolagemRegistrada` já usa.
+
+**A leitura do espectador/prévia não podia reusar `recuperarEncontro` como está.** Esse método
+calcula o recorte a partir da identidade **real** de quem chama (`usuarioAtivo.sub`) — correto para
+o jogador/mestre olhando a própria tela, mas errado para o Painel do espectador em modo de prévia:
+o mestre em prévia É de fato mestre, então chamar `recuperarEncontro` com a própria identidade
+devolveria o encontro **sem redação nenhuma** (o branch `MESTRE` de `montarEstadoParaUsuario`
+retorna o estado intacto). Dois métodos novos em `EncontroService` resolvem isso ignorando o
+requisitante de propósito:
+
+- `recuperarEncontroAtivoParaEspectador({ campanhaId })` — sempre fichas visíveis vazias (o mesmo
+  recorte para `ESPECTADOR` real e `MESTRE` em prévia).
+- `recuperarEncontroAtivoParaAlvo({ campanhaId, usuarioAlvoId })` — fichas visíveis calculadas via
+  `FichaService.listarFichasParaAlvo` (já existente, m8-04), com a identidade do **alvo**.
+
+Os dois delegam a um helper privado comum (`recuperarEncontroAbertoRedigido`) que reusa
+`encontroRepositorio.recuperarAbertoPorCampanha` (a mesma consulta que já arbitra "um encontro por
+campanha" em `criarEncontro`) e `montarEstado`/`ocultarNaoRevelados` — nenhuma regra de revelação
+reimplementada. Nenhum dos dois valida o requisitante: confiam em quem chama
+(`CampanhaProjecaoService`) já ter validado mestre-ou-espectador/mestre-requisitante antes — mesmo
+padrão de `FichaService.listarFichasParaAlvo`, que só valida o alvo, não quem pediu.
+
+**`encontroAtivo` embutido nas duas projeções existentes — nenhuma rota REST nova.**
+`CampanhaPainelEspectadorDto`/`CampanhaPreviaJogadorDto` ganharam
+`encontroAtivo: EncontroRecuperadoDto | null`, populado dentro de
+`CampanhaProjecaoService.recuperarPainelEspectador`/`recuperarPreviaJogador` chamando os dois
+métodos acima. Isso também resolve "como o frontend descobre que existe um encontro ativo" de
+graça — é só checar o campo, sem endpoint dedicado.
+
+**Frontend — `IniciativaLeitura`, não uma segunda tela.** `painel-encontro.page.html` (jogador/
+mestre) usa `<app-cartao-combatente>` + `<app-log-encontro>` diretamente na página, sem um wrapper
+reutilizável — não dava pra "só desconectar os outputs" de uma página inteira (ela injeta
+`FichaEdicaoService`/`FichaRolagemRegistroService` como providers, amarra a ficha lateral do
+próprio jogador via `membros()`/`minhasFichaIds()`, e toda mutação já é a própria chamada de
+método). Um componente novo, `IniciativaLeitura` (`app-iniciativa-leitura`,
+`frontend/src/app/modules/encontro/componentes/iniciativa-leitura/`), monta de novo só o essencial
+— cabeçalho com status/rodada/turno (`app-cartao`/`app-chip`), a grade de `<app-cartao-combatente>`
+e o `<app-log-encontro>` — a partir do `EncontroRecuperadoDto` já redigido pelo backend.
+`podeAjustar`/`ehMestre`/`emEdicao` **nem são passados**: ficam no `false` padrão dos próprios
+primitivos, então não há binding nenhum para inspecionar ou desconectar por engano (mais seguro que
+passar `[podeAjustar]="false"` explicitamente). `LogEncontro` não tem `@Output` algum.
+
+A derivação de apresentação que `painel-encontro.page.ts` fazia inline (achatar `combatentes` +
+`ordemRodada` numa lista visual com `ocorrencia`/`chaveVisual`, "de quem é a vez", "já agiu",
+colunas da grade, nível de Ameaça via lookup em `fichasCampanha`) foi extraída para
+`frontend/src/app/modules/encontro/encontro-leitura.util.ts` (funções puras) — e
+`painel-encontro.page.ts` foi refatorado para consumir o mesmo util, em vez de manter uma cópia
+paralela só para a composição nova (mesmo precedente de `campanha-equipe.util.ts` na m8-04). O log
+da rodada (`LogEncontro`) está construído e funcional, mas hoje **oculto** em
+`painel-encontro.page.html` (comentário "por enquanto, a pedido... volta quando o formato for
+revisto" — decisão de produto não relacionada a esta task). `IniciativaLeitura` o mostra mesmo
+assim: é um requisito explícito do Objetivo/critério de aceite da spec ("o log do encontro chega ao
+vivo"), e ocultá-lo aqui alteraria a tela do jogador — fora de escopo — sem nenhum ganho.
+
+**Gatilho "Ver Iniciativa"** (`app-modal`, primitivo controlado) aparece em `espectador.page.html`/
+`previa-jogador.page.html` só quando `encontroAtivo() !== null`. Nas duas páginas,
+`tempoRealService.encontroAlterado$` **nunca** alimenta a composição diretamente — o mesmo evento
+carrega o recorte de **mestre** para quem está de fato conectado como mestre (a prévia do mestre,
+por exemplo), então usá-lo como fonte vazaria o encontro sem redação para quem está em modo de
+prévia. Em vez disso, o evento (filtrado por `campanhaId`) só dispara um refetch REST: em
+`espectador.page.ts`, `recuperarPainelEspectador(id, 1, 1)` (página mínima, só para atualizar
+`encontroAtivo` sem perturbar a paginação do feed de rolagens já carregado); em
+`previa-jogador.page.ts`, `carregarPrevia()` — a mesma recarga completa que a página já dispara
+para `membroEntrou$`/`fichaVisibilidadeAlterada$`/`fichaAlterada$` (m8-04), reusada sem inventar um
+caminho novo.
+
+**Testado:** `shared` 744/744 (inalterado), `backend` 540/540 (12 novos: 7 em
+`encontro.service.spec.ts` — fix do espectador em `recuperarEncontro`, os dois métodos "Para*" —, 3
+em `campanha.gateway.spec.ts` — `.in()` nas duas salas, um payload por usuário, pula socket sem
+usuário —, 2 em `campanha-projecao.service.spec.ts`), `frontend` 1620/1620 (18 novos: 9 em
+`iniciativa-leitura.component.spec.ts` — status/rodada/turno, um cartão por ocorrência, log,
+"Não revelado" preservado, ausência de todo controle de condução/rolar iniciativa, montagem sem
+`ordemRodada`, resolução de "Ameaça" com/sem `fichasCampanha` —, 5 em `espectador.page.spec.ts` e 4
+em `previa-jogador.page.spec.ts` — gatilho condicional, abrir o modal, refetch em `encontro:alterado`
+da própria campanha vs. de outra). Lint sem erro novo (`0 errors`, warnings pré-existentes de estilo
+no repositório inteiro). Nenhuma rota REST nova — `openapi:gerar-contratos` não precisou regenerar.
+
+**Verificado ao vivo** (Postgres nativo — sem Docker disponível neste ambiente, cluster `pg_ctlcluster
+16 main` — backend+frontend reais, `1920×1080`/`360×800`): seed via REST (mestre, Vera-jogadora,
+espectador; ficha de criatura "A Estátua" — mesmo fixture validado de
+`shared/src/regras/criatura/a-estatua.spec.ts` — como NPC nunca revelado a ninguém além do mestre;
+encontro iniciado com as duas iniciativas atribuídas). Espectador real: "Ver Iniciativa" abre o
+modal mostrando a criatura como "Não revelado" (sem números, sem identidade) e Vera com carteirinha
+(nome) mas **sem** Vida/Energia/Defesa — o espectador nunca vê nenhuma ficha, nem a de um jogador
+com ficha não-oculta. Mestre em prévia de Vera: mesma tela, mesmo NPC oculto, mas Vera aparece com
+os próprios números (Vida 31/31, Energia 10/10, Defesa/Esquiva/Bloqueio) porque o alvo tem
+visibilidade da própria ficha. Tempo real: o mestre avançou o turno via REST em paralelo enquanto o
+espectador tinha o modal aberto — "Turno 1/2"→"Turno 2/2", "Aguarda"→"Age agora", sem recarregar
+(sentinela plantada em `window` sobreviveu). Achado só na verificação ao vivo (não no código nem nos
+testes): `<app-cartao titulo="Iniciativa">` sem `[cartaoIndice]` projetado deixava uma caixa vazia
+onde todo outro cartão do sistema mostra `//` — corrigido projetando `<span cartaoIndice>//</span>`,
+confirmado com nova captura nos dois viewports.
+
+## 2026-09-03 — m8-04: Prévia de jogador fidedigna, substitui "Ver como jogador" (M8)
+
+Quarta task do módulo `m8-espectadores-campanha`. Objetivo: trocar o antigo "Ver como jogador"
+(um toggle local em `CampanhaDetalhe` que trocava o layout pra visão de jogador mas continuava
+carregando os dados **como mestre**, só bloqueando `pointer-events`) por uma prévia de verdade —
+os dados e as capacidades vêm do recorte do alvo, nunca dos privilégios de quem está olhando.
+
+**Backend — a projeção de m8-02 não bastava, faltavam dois recortes.** `CampanhaProjecaoService.
+recuperarPreviaJogador` (m8-02) já dava `fichas`/`rolagens` calculados para o alvo, mas não dava
+(a) a ficha **completa** (com `dados`) de nenhuma delas — só `FichaResumoDto`, sem o documento que
+`<app-ficha-visualizacao>` precisa — nem (b) a coluna "Equipe" (que exige `CampanhaMembroResumoDto`
+com `acessoCompleto` por ficha, calculado por viewer). Duas adições, as duas reusando regra já
+existente, nunca reimplementando:
+- `FichaService.recuperarFichaParaAlvo` — a mesma lógica de `recuperarFicha` (visibilidade +
+  `omitirCamposPrivados`), mas extraída para um novo núcleo privado `avaliarVisibilidadePara(ficha,
+  usuarioId)` parametrizado por `usuarioId` em vez de `JwtPayload` — permite avaliar a visibilidade
+  de uma ficha **para outro usuário** que não o requisitante. Exige requisitante mestre da campanha
+  da ficha e alvo `JOGADOR` ativo dela; lança `UnauthorizedAccessException` se o alvo não tiver
+  nenhum acesso à ficha (nunca vaza ficha alheia) e `ResourceNotFoundException` se a ficha não
+  existir ou for solta (m3-28, prévia não se aplica).
+- `CampanhaProjecaoService.recuperarPreviaJogador` passou a incluir `membros` — mesma consulta que
+  `CampanhaService.listarMembros` usa pro mestre (`CampanhaRepository.listarMembros`), mas chamada
+  com a identidade do **alvo** (`usuarioAtivoId: usuarioAlvoId, usuarioAtivoEhMestre: false`) —
+  nunca a do mestre requisitante, mesmo ele sendo quem de fato pediu. Novo método
+  `recuperarFichaPreviaJogador` delega inteiramente a `FichaService.recuperarFichaParaAlvo`; novo
+  endpoint `GET campanha/:id/previa-jogador/:usuarioAlvoId/ficha/:fichaId`.
+- Novos DTOs em `shared/`: `FichaPreviaJogadorRecuperarDto` (`fichaId`/`usuarioAlvoId`, entrada de
+  service ↔ service) e `CampanhaPreviaJogadorFichaRecuperarDto` (entrada pública do novo endpoint).
+  `CampanhaPreviaJogadorDto.membros` estendido.
+
+**Frontend — nova página, não um toggle.** `CampanhaPreviaJogador` (`/campanhas/:id/previa/
+:usuarioAlvoId`, `previaJogadorCampanhaGuard` — mesmo racional de `espectadorCampanhaGuard`,
+m8-03: usa a própria projeção como autoridade) reusa os componentes que a visão de jogador de
+`CampanhaDetalhe` já usa — `FichaVisualizacao`, `FichaRolagensPainel`, `InventarioEsquadrao`,
+`app-cartao` — sobre dados vindos só da projeção do alvo, nunca fazendo fetch "como mestre".
+`fichasPorMembro`/`equipeExibicao`/`membrosOrdenados` (a lógica de agrupamento "Equipe" de
+`CampanhaDetalhe`) foram extraídos para `campanha-equipe.util.ts`, um módulo de funções puras
+reusado pelas duas páginas — a alternativa (duplicar a lógica) violaria a regra de não repetir
+regra de apresentação entre duas telas que consomem a mesma forma de dado.
+
+**Sem mutação de verdade, não só de aparência — a parte mais delicada da task.** O critério de
+aceite exige que nenhum clique dispare REST/socket. Para controles cujo `@Output` o pai decide o
+que fazer (`ajusteVitalidade` etc. de `FichaVisualizacao`), bastou **não conectar** o output —
+por isso `[ajustavel]` pôde espelhar a permissão real do alvo (o botão aparece habilitado, como o
+alvo veria, mas emitir o evento não faz nada). Mas `podeRolar` (em `FichaVisualizacao` **e**
+`FichaRolagensPainel`) e `InventarioEsquadrao.somenteLeitura` não funcionam assim: os três
+injetam `FichaRolagemRegistroService`/chamam `CampanhaService`/`FichaService` **diretamente** de
+dentro do componente, sem passar por um `@Output` que a página pudesse recusar — não há como
+"desconectar" uma chamada que o componente decide disparar sozinho. Pra esses três, o valor foi
+travado no mais restrito (`podeRolar` sempre `false`, `somenteLeitura` sempre `true`),
+independente do que o alvo realmente poderia fazer — decisão deliberada de segurança sobre
+fidelidade visual, documentada no cabeçalho da classe. `FichaRolagemRegistroService` precisou
+entrar em `providers` da página só para a injeção não quebrar (`@Injectable()`, não
+`providedIn: 'root'`) — nunca é de fato usado, porque `podeRolar=false` bloqueia toda a UI que o
+chamaria (`@if (podeRolar())` no topo dos dois templates).
+
+**`detalhe.page` — remoção completa do mecanismo antigo.** `previewJogador`/`exibirComoMestre`/
+`usuarioIdPreview` saíram por inteiro; `exibirComoMestre()` virou `ehMestre()` em todo o template
+(6 lugares), `usuarioIdPreview()` virou `usuarioAtivoId()` (3 lugares). O picker de dois passos no
+menu kebab (1º passo lista jogadores, 2º passo "Voltar") continua — só o item final mudou de
+comportamento: `abrirPreviaJogador(membro)` navega para a rota nova em vez de setar um signal
+local. Rótulo do item "Ver como jogador" → "Prévia de jogador" (`abrirEscolhaPreviewJogador` →
+`abrirEscolhaPreviaJogador`, `escolhendoPreviewJogador` → `escolhendoPreviaJogador`). A barra
+"Visualizando como X" e `.detalhe__conteudo--bloqueado` saíram do SCSS por completo — o defeito
+`P-047` (barra sem tratamento mobile) que descrevia exatamente esse código deixou de existir
+como problema porque o código em si não existe mais; removido de `PROBLEMS.md` sem virar entrada
+de `HISTORY.md` própria (a remoção é parte desta task, não uma correção separada).
+
+**Testado:** `shared` 744/744, `backend` 530/530 (72 novos: `FichaService.recuperarFichaParaAlvo`
+7 casos — dono, concessão redigida, sem acesso, requisitante não-mestre, alvo não-JOGADOR/mestre/
+espectador, ficha solta —, `CampanhaProjecaoService` 5 casos novos — membros calculados pro alvo,
+delegação da ficha, propagação de erro, campanha divergente do `:id`), `frontend` 1585/1585 (46
+novos: guard 2, service 2, página nova 10, `detalhe.page.spec` líquido -5 — removidos 9 testes do
+mecanismo antigo, adicionados 4 do fluxo de navegação). Lint (`shared`/`backend`/`frontend`) e
+`tsc --noEmit` sem erro novo — só os avisos de aspas/`max-len` já tolerados (padrão do
+repositório inteiro). `npm run openapi:gerar-contratos` regenerado (2 rotas novas). `convencoes-
+check`: buscas mecânicas limpas (nomes/DTOs/enums, SQL, hardcode de cor/fonte/raio, `title=`
+nativo) — único acerto foi `??` de TypeScript confundido com `?` posicional de SQL, falso positivo
+já documentado na skill.
+
+**Verificado ao vivo (skill `verify`, `1920×1080` e `360×800`):** stack completo (Postgres nativo
+via `pg_ctlcluster`, backend, frontend), cenário via REST — mestre + Vera (ficha própria, 1
+rolagem pública, 1 privada) + Colega (ficha com concessão a Vera, anotação privada) + um jogador
+sem ficha. Fluxo real do menu (`Prévia de jogador` → escolher `Vera` → navega pra rota nova) até
+"Sair da prévia"; ficha da própria Vera com dados completos e sem controle de mutação ativo;
+clicar na ficha concedida do Colega troca a exibição **sem** vazar a anotação privada dele
+(`omitirCamposPrivados` provado ponta a ponta pela rota nova); alvo sem ficha mostra o estado
+vazio; rolagem privada de um alvo nunca aparece na prévia de **outro** alvo (a de Vera não aparece
+na de quem não tem ficha) mas a própria rolagem privada do alvo aparece nele mesmo — comportamento
+correto (§14: autor sempre vê a própria privada), não um vazamento; jogador comum tentando abrir
+`/previa/:outroUsuarioId` cai em `/acesso-negado`.
+
+**Dois achados só na verificação ao vivo, corrigidos antes do fecho:**
+1. Nomes na Equipe ("Vera"/"Colega") quebravam letra a letra numa coluna estreitíssima —
+   `.previa-jogador__equipe-membro` é `display:flex` (linha), e o HTML não envolvia
+   nome+fichas num wrapper `flex-direction:column` como o análogo (`.detalhe__equipe-membro-
+   corpo`) tem — nome e botão de ficha viravam itens **lado a lado** na mesma linha flex, cada
+   um espremido. Corrigido adicionando o wrapper que faltava (HTML + `&__equipe-membro-corpo`
+   no SCSS), igual ao análogo.
+2. No mobile, rolando até o fim da página, a barra fixa `.ficha-nav` (interna de
+   `<app-ficha-visualizacao modo="compacto">`) cobria a última linha da "Sessão". `.detalhe`/
+   `.visualizar` resolvem isso com uma variável `--piso-flutuante` **definida no próprio
+   container da página** (não há cascata global) e consumida no `padding-bottom` — a versão
+   inicial desta página só *consumia* `var(--piso-flutuante)` sem nunca *defini-la*, então o
+   `calc()` inteiro ficava inválido (`padding-bottom` computado em `0px`, confirmado por
+   `getComputedStyle` antes/depois). Corrigido declarando `--piso-flutuante: 0px` (`57px` no
+   mobile) em `.previa-jogador`, igual a `.detalhe`.
+
+Ambos confirmados com `getComputedStyle`/screenshot antes e depois da correção, não só lidos no
+código. Componente análogo aprovado: a visão de jogador de `CampanhaDetalhe` (m2-20/m2-21) — shell,
+densidade, Equipe/Rolagens/Sessão e o padrão de barra de contexto/somente-leitura já usado no
+projeto (`.espectador__preview-*`, m8-03) foram todos conferidos lado a lado, não só "usa os
+tokens".
+
+## 2026-09-03 — fix pós-revisão da `m8-03`: "Sair da visualização" sem receita de tamanho
+
+O autor apontou, olhando a captura, um botão fora do padrão visual do resto do app — "Sair da
+visualização" na barra de prévia do Painel do espectador. Inspeção ao vivo (`getComputedStyle`)
+confirmou: `app-botao` nasce deliberadamente sem `display`/`padding`/`font-size` (só a base — ver
+`botao.component.scss`, comentário "não acrescentar dimensão aqui") até o consumidor pedir
+`[tamanho]` ou trazer a própria receita de classe; toda outra chamada de `app-botao` nesta task
+(convites, "Painel do espectador") tinha uma classe local com essa receita, mas
+`.espectador__preview-sair` foi copiada de `.detalhe__preview-sair` sem também copiar
+`.detalhe__acao` — a classe que de fato dá padding/`font-size: 11px`/peso 700/`uppercase` ao botão
+original. Resultado: o botão renderizava com o `font-family` correto (mono, seguia herdando da
+base) mas em peso normal, minúsculo, sem padding — lia como link genérico, não como o botão
+"terminal" do resto do app. Corrigido acrescentando a mesma receita de `.detalhe__acao` a
+`&__preview-sair` em `espectador.page.scss`. Reconfirmado ao vivo (`getComputedStyle` antes/depois
++ captura em `1920×1080`/`360×800`): agora bate exatamente com `.detalhe__nova-ficha` (mesma
+família de botão secundário com tamanho) e o alvo de toque mobile continua 44px. Suíte do arquivo
+8/8, lint sem erro novo, build limpo.
+
+## 2026-09-03 — m8-03: frontend do papel ESPECTADOR — entrada, gestão e Painel ao vivo (M8)
+
+Terceira task do módulo `m8-espectadores-campanha` (depende de `m8-02`): o frontend inteiro do
+papel `ESPECTADOR` — bifurcação pós-entrada, os dois convites geridos pelo mestre com troca de
+papel `JOGADOR ↔ ESPECTADOR`, e a rota nova `/campanhas/:id/espectador` (Painel do espectador),
+única porta que esse papel consegue abrir. Nenhum backend novo: consome inteiramente o que `m8-02`
+já expôs (`CampanhaProjecaoController`, `regenerarConviteEspectador`, `alterarPapelMembro`).
+
+**Achado pré-requisito: `m8-01` deixou o frontend sem compilar.** Antes de tocar o entregável, `npx
+tsc --noEmit` no frontend falhava com 7 erros — `codigoConviteEspectador` (adicionado a
+`CampanhaResumoDto`/`CampanhaCriadaDto`/`CampanhaRecuperadaDto` na `m8-01`, campo obrigatório)
+faltava em fixtures de teste em `campanha.service.spec.ts`, `detalhe.page.spec.ts`,
+`lista.page.spec.ts` e `acervo.page.spec.ts` — nenhum desses arquivos tinha sido tocado pela `m8-01`
+(que era propositalmente backend-only). Corrigido como pré-requisito do próprio gate desta task
+(sem isso `tsc`/build nunca passariam), não como tarefa própria.
+
+**Entrada por código único, bifurcação no cliente (item 1).** `CampanhaEntrar` (`entrar.page.ts`)
+continua com um único campo "Código de convite" — nada mudou na coleta. A mudança é o que acontece
+com a resposta: `CampanhaEntradaDto.papel` (já devolvido pelo backend desde a `m8-02`) decide o
+destino — `NotificacaoService.notificar` confirma "Você entrou como Jogador"/"...Espectador" antes
+de navegar, e a navegação bifurca entre `/campanhas/:id` (como sempre) e `/campanhas/:id/espectador`
+(novo). `entrar.page.spec.ts` não existia — criado do zero (3 testes: bifurcação JOGADOR, bifurcação
+ESPECTADOR, ausência de qualquer seletor de papel no formulário).
+
+**Gestão do mestre em `CampanhaDetalhe` (item 2).** A tira de estatísticas ganhou um segundo tile:
+"Convite de jogador" (renomeado do antigo "Convite") e "Convite de espectador", cada um com o
+próprio par copiar/regenerar (`copiarConviteEspectador`/`regenerarConviteEspectador`, signals
+`copiadoEspectador`/`regenerandoEspectador`/`regeneradoEspectador` — espelham exatamente os do
+convite de jogador) e um link "Painel do espectador" para a mestre abrir a prévia. Regenerar
+qualquer um dos dois convites agora pede confirmação (`ConfirmacaoService`, severidade `padrao`) —
+o convite de jogador não pedia antes; decisão desta task estender a mesma régua aos dois, já que os
+dois invalidam um código em uso. A coluna "Membros" ganhou o terceiro ícone de chip (`olho` para
+`ESPECTADOR`, ao lado de `coroa`/`protecoes` já existentes) e um botão "Alternar papel" novo
+(`pedirAlterarPapelMembro`/`alterarPapelMembro`, mesma confirmação) ao lado de "Remover" — troca
+`JOGADOR ↔ ESPECTADOR` e recarrega membros/fichas (um jogador rebaixado pode deixar de ver a
+própria ficha, m8-02). `podeGerenciarMembro` passou de "só JOGADOR" para "qualquer não-MESTRE"; o
+botão "Transferir mestre" ficou restrito a `papel === JOGADOR` (o backend já recusava promover
+espectador direto a mestre — agora o botão nem aparece pra isso).
+
+**Painel do espectador — rota, guard e página novos (itens 3-5).** Nova rota de nível superior
+`campanhas/:id/espectador` (mesma convenção de precedência de `ficha`/`criatura`/`iniciativa` em
+`app.routes.ts` — precisa vir antes do `campanhas` genérico). `espectadorCampanhaGuard` não
+reimplementa permissão: chama `CampanhaProjecaoService.recuperarPainelEspectador` (o mesmo endpoint
+que a página carrega) e usa sucesso/falha como autoridade — `listarMembros`/`recuperarCampanha`, que
+`mestreCampanhaGuard` usaria, já recusam `ESPECTADOR` desde a `m8-02`, então não servem de guard
+aqui. A página nova (`CampanhaEspectador`) é composição própria, não uma máscara sobre
+mestre/jogador: cabeçalho compacto (nome + selo "Modo espectador", ícone `olho`), barra "Modo
+prévia · Sair da visualização" só quando `ehMestrePreview()` (resolvido via `listarCampanhas` — a
+única rota que devolve o próprio papel sem exigir permissão que `ESPECTADOR` não tem), e um feed
+dominante de rolagens públicas com a mesma densidade de item do análogo aprovado
+(`HistoricoRolagensSidebar`, ui-22: rótulo/autor/fórmula/`app-resultado-rolagem[compacto]`/tempo
+relativo), paginado (`itens/totalItens/paginaAtual/totalPaginas`, teto de 20 por página, "Carregar
+mais") e com prepend em tempo real deduplicado por id (`rolagemRegistrada$`, mesmo padrão de
+`onRolagemRegistrada` em `visualizar.page.ts`). Nenhum controle de escrita existe no template — sem
+card de ficha, convites, gestão de membros ou botão de rolar; a ausência é estrutural (o template
+nunca os declara), não um esconder condicional.
+
+**Achado ao vivo, corrigido na própria task: barra de prévia sem tratamento mobile.** A verificação
+em `360×800` (Postgres nativo — Docker bloqueado pelo ambiente) achou o texto "Modo prévia · você
+vê..." quebrando por baixo do botão "Sair da visualização" e se sobrepondo a ele, e o próprio botão
+medindo só 26px de altura (abaixo do alvo de toque de 44px exigido pelo item 5). Corrigido em
+`espectador.page.scss` (`&__preview-barra` com `flex-wrap` no mobile, `&__preview-texto` em
+`flex-basis: 100%`, `&__preview-sair` em `width: 100%; min-height: bp.$alvo-toque`) e reconfirmado
+com nova captura. A mesma receita (`.detalhe__preview-barra`/`.detalhe__preview-sair`, "Ver como
+jogador") não tem esse tratamento no arquivo original — registrado como `P-047` (`PROBLEMS.md`),
+fora do recorte desta task.
+
+**Verificação ao vivo completa (Postgres nativo, backend+frontend reais).** Cenário via REST:
+mestre cria campanha (dois convites), jogador entra pelo de jogador e cria uma ficha, espectador
+entra pelo de espectador. Confirmado ao vivo: entrada pela UI real (não só REST) bifurca para os
+dois papéis com o toast certo; tira de convites do mestre mostra os dois tiles com copiar/regenerar
+independentes; chip/ações de papel na lista de membros batem exatamente com o desenho (crop
+conferido: espectador com `olho`+botão "tornar jogador"+remover, jogador com
+`coroa`+`protecoes`+botão "tornar espectador"+remover); o mestre abre "Painel do espectador" e vê a
+barra de prévia + feed vazio; o espectador real abre a mesma rota direto e vê exatamente o mesmo
+recorte, sem a barra; uma rolagem `PUBLICA` registrada pelo jogador via REST chegou **sem recarregar**
+(sentinela `window.__sentinela` sobrevivendo) nos dois painéis simultaneamente (espectador real e
+mestre em prévia) — mesmo item, mesma renderização, confirmando que nenhum privilégio de mestre
+vaza na prévia. `1920×1080` e `360×800` sem overflow horizontal (`scrollWidth`/`clientWidth`
+conferido por script) nos dois papéis e nos dois estados (vazio/preenchido).
+
+**Gates.** Suíte frontend completa 1576/1576 (era 1553; a diferença inclui os testes novos e os 4
+mocks corrigidos), lint sem erro novo (15.586 avisos históricos — cresceu com as novas strings, não
+com violação), build de produção limpo com os avisos de budget conhecidos (`P-004`). `shared`/
+`backend` inalterados nesta task — não re-executados (nenhuma mudança desde a última rodada verde
+da `m8-02`). `convencoes-check`: só achado de linha longa (`P-020`) em atributos com ternário
+(`[attr.aria-label]`) — os dois piores casos (copiar/regenerar do convite de espectador) foram
+extraídos para `rotuloCopiarConvite`/`rotuloRegenerarConvite` no componente; os restantes batem o
+mesmo padrão pré-existente e extenso do próprio arquivo (dezenas de linhas >100 chars antes desta
+task), então não foram tocados. `npm run format:html-scss` também corrigiu, de passagem, drift de
+formatação pré-existente e não relacionado em três arquivos (`historico-rolagens-sidebar`,
+`inventario-esquadrao-sidebar`, `resultado-rolagem` — indentação/quebra de linha, zero mudança de
+comportamento).
+
+## 2026-09-03 — m8-02: permissões e projeções de leitura do ESPECTADOR (backend, M8)
+
+Segunda task do módulo `m8-espectadores-campanha` (depende de `m8-01`): entrada determinada pelo
+código informado, gestão explícita de papel pelo mestre, recusa do papel `ESPECTADOR` em toda rota
+de ficha/rolagem/caderno/inventário, e as duas projeções de leitura (painel do espectador, prévia
+de jogador) que `m8-03`/`m8-04` vão consumir no frontend.
+
+**Entrada por código único, papel resolvido no servidor.** `CampanhaRepository.recuperarPorId
+CodigoConvite` virou `recuperarPorCodigoConviteOuEspectador`: um único `SELECT` com `CASE WHEN
+codigo_convite = :codigoConvite THEN JOGADOR ELSE ESPECTADOR END` resolve o papel a partir de qual
+dos dois índices únicos parciais bateu — nunca ambíguo, porque cada código só resolve pra uma
+campanha ativa. `CampanhaService.entrarCampanha` usa o papel devolvido (não mais um literal
+`JOGADOR` fixo); "já é membro" continua `BusinessException` **independente** de qual código foi
+informado, cobrindo a decisão de produto #3 (sem autoelevação/autorrebaixamento por convite).
+
+**Gestão de papel pelo mestre**, dois métodos novos em `CampanhaService`: `regenerarConviteEspectador`
+(mesma forma de `regenerarConvite`, convite independente) e `alterarPapelMembro` (`JOGADOR ↔
+ESPECTADOR`; recusa alterar o próprio requisitante e o alvo `MESTRE`; emite
+`campanha:membro-papel-alterado`, novo evento do `CampanhaGateway`, só na sala cheia — dado de
+gestão, fora do recorte do espectador). `transferirMestre` ganhou uma trava nova: alvo precisa ser
+`JOGADOR` (não só "não é mestre" como antes) — promover um espectador a mestre exige primeiro
+`alterarPapelMembro` pra `JOGADOR` (decisão de produto #3, "primeiro o torna jogador").
+
+**Predicados centralizados em `CampanhaService`** (entregável 3): `ehMestre`/`ehJogador`/
+`ehEspectador`, públicos, e `validarMembro` (antes `private`, só confirmava vínculo — agora devolve
+o vínculo com o papel, usado por `ficha`/`rolagem`/`pagina-caderno` pra nunca comparar
+`papel === TipoCampanhaMembroPapelEnum.X` por conta própria). Endpoints que agora recusam
+`ESPECTADOR` explicitamente, mesmo sendo membro ativo: `recuperarCampanha`/`listarMembros`
+(dados de gestão), `validarAcessoInventario`/`validarLeituraInventario` (inventário de esquadrão),
+`FichaService.criarFicha`/`listarFichas`/`calcularMediasEsquadrao`/`validarPermissaoVisualizacao`/
+`validarPermissaoEdicao`/`validarMembroAlvo` (ficha e concessão de acesso — inclusive o caso em que
+o mestre rebaixa um `JOGADOR` que já possuía ficha própria: o espectador resultante perde a visão
+dela, checado antes do `return` de posse) e `PaginaCadernoService.recuperarPapelMembro` (gate único
+reusado por todo método do caderno). `RolagemService.listarPorCampanha` **não precisou de mudança**:
+o gate de membership já aceita qualquer papel, e o filtro de visibilidade (`PUBLICA` para quem não é
+autor nem mestre) já produzia o recorte certo assim que `entrarCampanha` passou a criar vínculos
+`ESPECTADOR` de verdade.
+
+**Sala de WebSocket separada para o espectador** (`CampanhaGateway`): `entrarSalaCampanha` chama
+`validarAcessoSalaCampanha` (novo método — aceita qualquer papel, diferente de `recuperarCampanha`
+que nega espectador) e roteia por papel: `MESTRE`/`JOGADOR` entram em `campanha:<id>` como sempre;
+`ESPECTADOR` entra numa sala própria, `campanha:<id>:espectador`, que **só** recebe o que os métodos
+`emitir*` explicitamente mandam pras duas salas — hoje, só `emitirRolagemRegistrada` quando
+`PUBLICA`. Isso fecha por construção (não por filtro em cada `emit()`) o vazamento que existiria se
+o espectador entrasse na sala cheia: `ficha:criada`, `campanha:inventario-alterado`,
+`caderno-esquadrao:*` e `campanha:membro-papel-alterado` nunca alcançam a sala do espectador, porque
+ela nunca é passada pra esses `emit()`. `retransmitirPresencaEsquadrao` ganhou o mesmo roteamento no
+caminho de corrida (socket ainda não processou o `join` de `campanha:entrar`).
+
+**Duas projeções de leitura**, módulo novo `backend/src/modules/campanha-projecao/` (evita o ciclo
+que existiria se a lógica vivesse em `campanha`, `ficha` ou `rolagem` — os dois últimos já importam
+`CampanhaModule`, então uma importação de volta criaria um ciclo de 2 nós; o módulo novo importa os
+três, nenhum importa ele de volta). `CampanhaIdentidadeSeguraDto` (id/nome/descricao/naBase, sem
+código nem membros) é a base comum das duas:
+
+- **Painel do espectador** (decisão de produto #5, `GET /campanha/:id/painel-espectador`):
+  identidade segura + feed **paginado** de rolagens exclusivamente `PUBLICA`
+  (`RolagemRepository.listarPublicasPorCampanha`, novo — sem `usuarioId`/`ehMestre`, porque o
+  recorte é sempre público, diferente do feed de atividade recente de `listarPorCampanha`, que tem
+  teto de 50 e inclui `PRIVADA` do autor/mestre). Legível por `ESPECTADOR` e por `MESTRE` em modo de
+  prévia — o payload é idêntico nos dois casos.
+- **Prévia de jogador** (decisão de produto #6, `GET /campanha/:id/previa-jogador/:usuarioAlvoId`):
+  só o mestre pede; fichas visíveis, feed e capacidade de acessar o inventário de esquadrão
+  calculados com a identidade do **alvo**, nunca do mestre. `FichaService.listarFichasParaAlvo`
+  (novo) reusa a mesma consulta de `listarFichas` (`listarVisiveisParaUsuario`) parametrizada por um
+  `usuarioAlvoId` arbitrário, validando que o alvo é `JOGADOR` ativo antes de calcular qualquer
+  coisa — a permissão "quem pode pedir a prévia de quem" já foi decidida pelo chamador
+  (`CampanhaProjecaoService`), então aqui é dupla checagem, não regra duplicada. Somente leitura:
+  não existe DTO de mutação para esta projeção.
+
+**Testes**: shared 744/744, backend 520/520 (67 em `campanha.service.spec.ts`, +9 em
+`campanha-projecao.service.spec.ts`, +4 em `campanha.repository.spec.ts`, +6 em
+`campanha.gateway.spec.ts`, +9 em `ficha.service.spec.ts`, +1 em `rolagem.service.spec.ts` sobre o
+baseline de `m8-01`) — cobrindo entrada pelos dois códigos, regeneração independente do convite de
+espectador, alteração de papel (sucesso, autoalteração, alvo mestre, alvo inexistente),
+`transferirMestre` recusando alvo espectador, negação do espectador em ficha/concessão/inventário/
+caderno/campanha (inclusive o caso de rebaixamento de um jogador com ficha própria), roteamento de
+sala do gateway por papel (incluindo a corrida de `caderno-esquadrao:presenca`) e a diferença de
+payload entre painel do espectador e prévia de jogador. `tsc --noEmit` do frontend contra o `shared`
+atualizado sem erro novo (DTOs só ganharam campos/tipos novos, nada removido). Lint dos três
+workspaces sem erro novo (15.329 avisos históricos de aspas/max-len, mesma contagem de antes). `npm
+run openapi:gerar-contratos --workspace=backend` rodado após o diff de DTOs/endpoints públicos —
+precisou também registrar `CampanhaProjecaoController` no mapa `TAGS_POR_CONTROLLER` de
+`backend/tools/gerar-openapi-contratos.ts` (a ferramenta ignora o `@DocumentarController` em tempo
+de execução; tem sua própria lista estática de controllers documentados, e um controller ausente
+dela é silenciosamente pulado — achado durante o próprio gate, corrigido na mesma tarefa). Próxima
+do módulo: `m8-03` (frontend — entrada, gestão de convites/membros e Painel do espectador ao vivo).
+
 ## 2026-09-03 — UI-27: componentes fantasma reavaliados após a expansão da biblioteca
 
 O autor pediu uma varredura de três classes de “componente fantasma”: composição local já coberta
@@ -16,7 +523,7 @@ migração, projeção mais flexível das ações de modal. Caderno, Leitor de D
 ficha fornecem três casos reais para um novo `app-segmentado`, semanticamente diferente de abas.
 
 O diagnóstico completo, falsos positivos e ordem sugerida ficaram em
-`docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; os desvios atuais são `P-045`…`P-050`. Nenhum HTML,
+`docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; os desvios atuais são `P-051`…`P-056`. Nenhum HTML,
 SCSS ou TypeScript foi alterado, portanto não houve mudança visual para capturar nem suíte de
 frontend a executar. Foram verificados o inventário reproduzível, links/caminhos documentais,
 formatação e diff completo; cada correção futura permanece aberta e exigirá spec e gate visual

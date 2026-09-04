@@ -44,9 +44,14 @@
                                         "
                                     >
                                         @if (iconeDado(dado.faces); as icone) {
-                                            <app-icone class="resultado-rolagem__dado-svg" [nome]="icone" />
+                                            <app-icone
+                                                class="resultado-rolagem__dado-svg"
+                                                [nome]="icone"
+                                            />
                                         }
-                                        <span class="resultado-rolagem__dado-valor">{{ marcado.valor }}</span>
+                                        <span class="resultado-rolagem__dado-valor">{{
+                                            marcado.valor
+                                        }}</span>
                                     </span>
                                 }
                                 @if (dado.desvantagem) {

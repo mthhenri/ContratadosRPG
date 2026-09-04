@@ -33,6 +33,7 @@ const TAGS_POR_CONTROLLER: Readonly<Record<string, string>> = {
     AutenticacaoController: "Autenticação",
     UsuarioController: "Usuários",
     CampanhaController: "Campanhas",
+    CampanhaProjecaoController: "Campanhas",
     FichaController: "Fichas",
     RolagemController: "Rolagens",
     PaginaCadernoController: "Caderno",

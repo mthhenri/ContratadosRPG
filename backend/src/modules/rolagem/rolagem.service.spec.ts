@@ -304,5 +304,21 @@ describe('RolagemService', () => {
         ehMestre: false,
       });
     });
+
+    it('m8-02: aceita ESPECTADOR (é membro) e resolve ehMestre=false — repository já filtra só PUBLICA pra quem não é mestre nem autor', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+      rolagemRepositorio.listarPorCampanha.mockResolvedValue([criarResumo()]);
+
+      const resultado = await service.listarPorCampanha({ campanhaId: 5 }, usuarioAtivo);
+
+      expect(rolagemRepositorio.listarPorCampanha).toHaveBeenCalledWith({
+        campanhaId: 5,
+        usuarioId: usuarioAtivo.sub,
+        ehMestre: false,
+      });
+      expect(resultado).toEqual([criarResumo()]);
+    });
   });
 });

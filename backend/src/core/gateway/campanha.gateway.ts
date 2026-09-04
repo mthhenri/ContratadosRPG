@@ -12,8 +12,11 @@ import type {
   CampanhaEstadoAlteradaDto,
   CampanhaInventarioAlteradoDto,
   CampanhaMembroEntradaDto,
+  CampanhaMembroInternoRecuperadoDto,
+  CampanhaMembroPapelAlteradoDto,
   CampanhaRecuperarDto,
 } from '@contratados-rpg/shared/dtos/campanha';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
@@ -121,8 +124,13 @@ export class CampanhaGateway implements OnGatewayConnection {
 
   /**
    * Entra na sala `campanha:<id>` — só **membros** (§14), consultando
-   * `CampanhaService.recuperarCampanha` (que valida o vínculo do usuário na campanha). Sem
-   * permissão (a service lança), a entrada é negada e nenhuma sala é ingressada.
+   * `CampanhaService.validarAcessoSalaCampanha` (que valida o vínculo do usuário na campanha,
+   * **qualquer papel**). **m8-02**: um `ESPECTADOR` entra numa sala própria
+   * (`campanha:<id>:espectador`), não na sala cheia de mestre/jogador — assim ele só recebe os
+   * eventos que o gateway explicitamente encaminha às duas salas (`rolagem:registrada` pública),
+   * nunca `ficha:criada`, `campanha:inventario-alterado`, `caderno-esquadrao:*` ou qualquer outro
+   * broadcast de conteúdo de jogo que a sala cheia recebe. Sem permissão (a service lança), a
+   * entrada é negada e nenhuma sala é ingressada.
    */
   @SubscribeMessage('campanha:entrar')
   async entrarSalaCampanha(
@@ -134,13 +142,18 @@ export class CampanhaGateway implements OnGatewayConnection {
       return { sucesso: false };
     }
 
+    let membroEncontrado: CampanhaMembroInternoRecuperadoDto;
     try {
-      await this.campanhaService.recuperarCampanha({ id: dto.id }, usuario);
+      membroEncontrado = await this.campanhaService.validarAcessoSalaCampanha({ id: dto.id }, usuario);
     } catch {
       return { sucesso: false };
     }
 
-    await cliente.join(this.salaCampanha(dto.id));
+    const sala =
+      membroEncontrado.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+        ? this.salaCampanhaEspectador(dto.id)
+        : this.salaCampanha(dto.id);
+    await cliente.join(sala);
     return { sucesso: true };
   }
 
@@ -155,9 +168,9 @@ export class CampanhaGateway implements OnGatewayConnection {
    * página). Mas os dois eventos trafegam no mesmo socket sem coordenação de ordem no cliente
    * (`TempoRealService.entrarSalaCampanha` não aguarda o `join`), então uma presença pode chegar
    * antes do `await cliente.join(...)` acima terminar; nesse caso a checagem de permissão
-   * (`CampanhaService.recuperarCampanha`, a mesma de `entrarSalaCampanha` — proibição #28, sem
-   * duplicar regra) se refaz e o socket ingressa aqui mesmo, sem exigir uma segunda mensagem do
-   * cliente.
+   * (`CampanhaService.validarAcessoSalaCampanha`, a mesma de `entrarSalaCampanha` — proibição
+   * #28, sem duplicar regra) se refaz e o socket ingressa na sala certa (mesmo roteamento por
+   * papel — m8-02), sem exigir uma segunda mensagem do cliente.
    */
   @SubscribeMessage('caderno-esquadrao:presenca')
   async retransmitirPresencaEsquadrao(
@@ -168,13 +181,25 @@ export class CampanhaGateway implements OnGatewayConnection {
     if (!usuario) {
       return;
     }
-    const sala = this.salaCampanha(evento.campanhaId);
-    if (!cliente.rooms.has(sala)) {
+    const salaMembro = this.salaCampanha(evento.campanhaId);
+    const salaEspectador = this.salaCampanhaEspectador(evento.campanhaId);
+    let sala = cliente.rooms.has(salaMembro)
+      ? salaMembro
+      : cliente.rooms.has(salaEspectador)
+        ? salaEspectador
+        : null;
+    if (!sala) {
+      let membroEncontrado: CampanhaMembroInternoRecuperadoDto;
       try {
-        await this.campanhaService.recuperarCampanha({ id: evento.campanhaId }, usuario);
+        membroEncontrado = await this.campanhaService.validarAcessoSalaCampanha(
+          { id: evento.campanhaId },
+          usuario,
+        );
       } catch {
         return;
       }
+      sala =
+        membroEncontrado.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR ? salaEspectador : salaMembro;
       await cliente.join(sala);
     }
     cliente.to(sala).emit('caderno-esquadrao:presenca', evento);
@@ -328,6 +353,12 @@ export class CampanhaGateway implements OnGatewayConnection {
    * `campanhaId === null` não tem sala de campanha — a ficha aberta em `/fichas/:id` só está em
    * `ficha:<id>` (`entrarSalaFicha`, sempre ingressada), então é essa sala que recebe o evento;
    * sem `fichaId` (rolagem de combatente avulso), não há sala nenhuma — no-op.
+   *
+   * **m8-02**: com campanha, também emite na sala `campanha:<id>:espectador` — quem entrou como
+   * `ESPECTADOR` (`entrarSalaCampanha`) nunca está na sala cheia, então sem este segundo `.to()`
+   * ele nunca receberia rolagem pública nenhuma. Como este método só é chamado com `PUBLICA`
+   * (`RolagemService.registrarRolagem`/`registrarRolagemAvulso` só chamam aqui depois de checar a
+   * visibilidade), o payload é seguro para as duas salas.
    */
   emitirRolagemRegistrada(rolagem: RolagemResumoDto): void {
     if (rolagem.campanhaId === null) {
@@ -336,11 +367,24 @@ export class CampanhaGateway implements OnGatewayConnection {
       }
       return;
     }
-    this.servidor.to(this.salaCampanha(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
+    this.servidor
+      .to([this.salaCampanha(rolagem.campanhaId), this.salaCampanhaEspectador(rolagem.campanhaId)])
+      .emit('rolagem:registrada', rolagem);
   }
 
   /**
-   * Emite `encontro:alterado` na sala `campanha:<id>` (§9), **um payload por usuário** (m7-06).
+   * Emite `campanha:membro-papel-alterado` na sala `campanha:<id>` (m8-02). Chamado por
+   * `CampanhaService.alterarPapelMembro` após a mutação ser persistida — os membros conectados
+   * (mestre/jogador) recarregam a lista de membros. Não alcança a sala do espectador: papel de
+   * membro é dado de gestão, fora do recorte dele (decisão de produto #4).
+   */
+  emitirPapelMembroAlterado(evento: CampanhaMembroPapelAlteradoDto): void {
+    this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('campanha:membro-papel-alterado', evento);
+  }
+
+  /**
+   * Emite `encontro:alterado` na sala `campanha:<id>` **e** na sala do espectador (m8-05), **um
+   * payload por usuário** (m7-06).
    *
    * Diferente dos outros eventos, este não pode ser um `emit` único para a sala: o estado do
    * encontro carrega Vida, defesas e log de criaturas que o mestre talvez ainda não tenha revelado,
@@ -349,13 +393,21 @@ export class CampanhaGateway implements OnGatewayConnection {
    * socket. O resultado é memorizado por usuário — quem está com duas abas abertas custa uma
    * montagem só.
    *
+   * `campanha:<id>:espectador` entra na varredura pelo mesmo motivo de `emitirRolagemRegistrada`
+   * (m8-02): é a sala de quem entrou com o convite de espectador. O recorte por usuário acima já
+   * cobre a segurança — depois do fix de `montarEstadoParaUsuario` para `ESPECTADOR` (m8-05), o
+   * socket de um espectador real recebe o mesmo resultado (fichas visíveis vazio) que
+   * `EncontroService.recuperarEncontroAtivoParaEspectador` já devolve pelo REST.
+   *
    * Continua **broadcast-only**: nada entra por aqui, a service chama depois de persistir.
    */
   async emitirEncontroAlterado(
     campanhaId: number,
     montarParaUsuario: (usuario: JwtPayload) => Promise<EncontroAlteradoDto['encontro']>,
   ): Promise<void> {
-    const sockets = await this.servidor.in(this.salaCampanha(campanhaId)).fetchSockets();
+    const sockets = await this.servidor
+      .in([this.salaCampanha(campanhaId), this.salaCampanhaEspectador(campanhaId)])
+      .fetchSockets();
     const porUsuario = new Map<number, EncontroAlteradoDto['encontro']>();
     for (const socket of sockets) {
       const usuario = (socket.data as { usuario?: JwtPayload }).usuario;
@@ -435,5 +487,16 @@ export class CampanhaGateway implements OnGatewayConnection {
 
   private salaCampanha(campanhaId: number): string {
     return `campanha:${campanhaId}`;
+  }
+
+  /**
+   * Sala separada do espectador (m8-02) — nunca a mesma de mestre/jogador. Só recebe o que os
+   * métodos `emitir*` explicitamente encaminharem às duas salas (hoje, só `rolagem:registrada`
+   * pública); qualquer outro broadcast de conteúdo de jogo (`ficha:*`,
+   * `campanha:inventario-alterado`, `caderno-esquadrao:*`, `campanha:membro-papel-alterado`) fica
+   * de fora por construção — não depende de filtrar por permissão dentro de cada `emit()`.
+   */
+  private salaCampanhaEspectador(campanhaId: number): string {
+    return `campanha:${campanhaId}:espectador`;
   }
 }

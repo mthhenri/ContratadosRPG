@@ -1,0 +1,42 @@
+// Leitura do Encontro (m8-05) — Painel do espectador e Prévia de jogador. Só tokens do tema
+// "Terminal de Contenção" (proibição #29): nenhum hex, fonte ou raio literal. A grade de cartões
+// reproduz `.grade`/`--grade-colunas` de `painel-encontro.page.scss` (mesmo desenho, escopo
+// próprio — estilo de componente Angular não atravessa a fronteira do componente).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+}
+
+.iniciativa-leitura {
+    &__stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(var(--grade-colunas, 3), minmax(0, 1fr));
+        gap: 12px;
+
+        @include bp.tablet {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__vazio {
+        color: var(--text-mute);
+        font-size: 0.9rem;
+    }
+}
+
+app-log-encontro {
+    display: block;
+    margin-top: 16px;
+}

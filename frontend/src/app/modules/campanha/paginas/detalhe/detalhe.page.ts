@@ -53,11 +53,15 @@ import {
   FichaVisualizacao,
   type DestinoMobile,
 } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
-import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
-import { rotuloPatente } from '../../../ficha/status-derivado';
-import { CONDICOES_FICHA, type DescritorCondicao } from '../../../ficha/condicoes-ficha';
 import { clamparVitalidade, type CampoVitalidadeAtual } from '../../../ficha/ajuste-vitalidade';
+import {
+  agruparFichasPorMembro,
+  montarEquipeExibicao,
+  ordenarMembros,
+  type EquipeFichaExibicao,
+  type ItemFicha,
+} from '../../campanha-equipe.util';
 import { FichaVitalidadeRapidaService } from '../../../ficha/ficha-vitalidade-rapida.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
@@ -78,65 +82,13 @@ const MS_PREVIEW_AVATAR = 600;
 /** Tamanho do preview ampliado do avatar (px, quadrado) — `object-fit: contain`, sem recorte. */
 const PX_PREVIEW_AVATAR = 300;
 
-/** Uma das 3 condições no mini-card — sempre as 3, com `ativa` dizendo se está marcada (item 3). */
-interface ItemFichaCondicao extends DescritorCondicao {
-  readonly ativa: boolean;
-}
-
-/**
- * Ficha já enriquecida para o mini-card inline (m2-16 + m2-16b): id/nome/classe legível/nível +
- * Vida/Energia e as três condições (sempre as 3, com `ativa`), direto do recorte `FichaResumoDto`
- * (sem o documento completo — §14/§10.4, mesma listagem que já alimentava nome/classe/nível).
- * `classeTexto` já vem combinado via `rotuloClasseCompleto` ("Classe - Arquétipo" para as três
- * classes base, "Classe-base - Experimento Bestial/Artificial/Híbrido" para a subclasse — ela
- * ainda é daquela classe-base); só `CIVIL` (sem classe-base nem arquétipo) mostra a classe sozinha.
- */
-interface ItemFicha {
-  readonly id: number;
-  /** Dono da ficha — só precisou virar campo próprio no m2-19 (Esquadrão achatado, sem o loop por membro que antes dava esse dado de graça). */
-  readonly usuarioId: number;
-  /** URL do avatar da ficha (m3-62) — `null` sem imagem definida (cai no placeholder decorativo). */
-  readonly imagemUrl: string | null;
-  /** Cor de identidade visual (m3-61) — colore a borda/fundo listrado do avatar, ver SCSS. */
-  readonly cor: string | null;
-  readonly nome: string;
-  readonly classeTexto: string;
-  readonly nivel: number;
-  readonly vidaAtual: number;
-  readonly vidaMaxima?: number;
-  readonly energiaAtual: number;
-  readonly energiaMaxima?: number;
-  readonly condicoes: readonly ItemFichaCondicao[];
-  /**
-   * Vida ≤ 0 (o próprio limiar documentado pra entrar em "Morrendo" — sistema-v4.1.0.md) —
-   * destaque visual no cartão mesmo que ninguém tenha marcado a condição ainda (item 4: sinaliza
-   * antes do dono/mestre lembrar de marcar o checkbox).
-   */
-  readonly critico: boolean;
-  /** Patente legível, derivada do Prestígio no cliente (`rotuloPatente` — mesma fórmula da ficha completa). */
-  readonly patenteTexto: string;
-  /** Defesa/Esquiva/Bloqueio — `undefined` numa ficha sem `derivados` salvo ou de classe Civil (não os possui). */
-  readonly defesa?: number;
-  readonly esquiva?: number;
-  readonly bloqueio?: number;
-  /** Contra-Ataque — `undefined` numa ficha sem nenhuma habilidade que o conceda. */
-  readonly contraAtaque?: number;
-  /**
-   * Personalidade + nome da Origem (m3-23) já combinados para exibição ("Frio · Guarda-Costas") —
-   * `null` quando nenhum dos dois está definido (ficha sem Identidade ainda), pra esconder a linha
-   * inteira em vez de deixar um traço solto.
-   */
-  readonly identidadeTexto: string | null;
-  /** Peso do inventário acima do Inventário Máximo (aviso do backend — ver nota em `FichaResumoDto`). */
-  readonly sobrecarregado: boolean;
-}
-
 /**
  * Uma criatura na subseção "Criaturas" do Esquadrão (m4-04+) — recorte enxuto de `FichaResumoDto`
  * (`tipo === CRIATURA`), sem os campos jogador-específicos de {@link ItemFicha} (`classe`/
  * `arquetipo`/energia/condições/patente não existem numa criatura). Clicável desde a m4-04b —
  * abre `/campanhas/:campanhaId/criatura/:id` (`CriaturaVisualizar`), mesmo padrão de navegação do
- * card de ficha de jogador.
+ * card de ficha de jogador. Só a visão de **mestre** usa (a Prévia de jogador, m8-04, não tem
+ * coluna "Esquadrão"/"Criaturas" — essas são gestão de mestre, não parte da visão de jogador).
  */
 interface ItemCriatura {
   readonly id: number;
@@ -148,18 +100,6 @@ interface ItemCriatura {
   readonly vidaMaxima?: number;
   readonly defesa?: number;
 }
-
-/** Ficha da Equipe (m3-65) com acesso completo — mesmos campos de {@link ItemFicha}, clicável. */
-type EquipeFichaExibicao =
-  | ({ readonly tipo: 'completa' } & ItemFicha)
-  | {
-      readonly tipo: 'teaser';
-      readonly id: number;
-      readonly nome: string;
-      readonly imagemUrl: string | null;
-      readonly cor: string | null;
-      readonly classeTexto: string;
-    };
 
 /**
  * Detalhe de uma campanha (`/campanhas/:id`): nome/descrição, membros com o papel e — só para o
@@ -273,6 +213,15 @@ export class CampanhaDetalhe {
   protected readonly regenerado = signal(false);
   protected readonly copiado = signal(false);
 
+  /**
+   * Convite de espectador (m8-03) — mesmos três signals do convite de jogador acima, em par
+   * próprio: os dois códigos regeneram de forma independente (m8-01/m8-02), então cada UI de
+   * copiar/regenerar precisa do seu próprio estado efêmero.
+   */
+  protected readonly regenerandoEspectador = signal(false);
+  protected readonly regeneradoEspectador = signal(false);
+  protected readonly copiadoEspectador = signal(false);
+
   /** Edição inline de nome/descrição (só mestre) — alterna o card entre exibição e formulário. */
   protected readonly editando = signal(false);
   protected readonly salvando = signal(false);
@@ -286,6 +235,12 @@ export class CampanhaDetalhe {
 
   /** Bloqueia os botões enquanto a remoção/transferência do membro está em voo. */
   protected readonly processandoMembro = signal(false);
+
+  /**
+   * `usuarioId` do membro cuja troca de papel (m8-03, `JOGADOR ↔ ESPECTADOR`) está em voo —
+   * desabilita só o botão daquela linha, mesmo padrão de {@link revogandoAcesso}.
+   */
+  protected readonly alterandoPapel = signal<number | null>(null);
 
   /**
    * Fichas visíveis da campanha (m2-16) — o backend já filtra por §14; o front só agrupa.
@@ -372,10 +327,10 @@ export class CampanhaDetalhe {
   protected readonly menuCampanhaAberto = signal(false);
 
   /**
-   * `true` enquanto o menu kebab do mestre mostra a lista de jogadores (2º passo de "Ver como
-   * jogador"), em vez das ações normais (Editar/Excluir).
+   * `true` enquanto o menu kebab do mestre mostra a lista de jogadores (2º passo de "Prévia de
+   * jogador", m8-04), em vez das ações normais (Editar/Excluir).
    */
-  protected readonly escolhendoPreviewJogador = signal(false);
+  protected readonly escolhendoPreviaJogador = signal(false);
 
   /**
    * Salas `ficha:<id>` já ingressadas (item 1 — tempo real de `ficha:alterada`) — uma por ficha
@@ -450,30 +405,9 @@ export class CampanhaDetalhe {
     );
   });
 
-  /**
-   * Membro sendo emulado pelo "Ver como jogador" — `null` fora do preview. Puro estado de
-   * apresentação do cliente: nenhuma permissão real muda, o backend continua sendo a autoridade
-   * (§14). Não persiste (sem query param/`localStorage`) — um F5 sempre volta ao `null`.
-   */
-  protected readonly previewJogador = signal<CampanhaMembroResumoDto | null>(null);
-
-  /**
-   * Decide o layout mostrado (mestre vs. jogador) — `ehMestre()` continua sendo a role real,
-   * usada nas checagens de permissão de verdade; este computed é só para o template escolher
-   * entre o layout de mestre e o de jogador, considerando o preview ativo.
-   */
-  protected readonly exibirComoMestre = computed(() => this.ehMestre() && !this.previewJogador());
-
-  /**
-   * `id` "efetivo" para checagens de exibição (dono da ficha, `minhaFichaExibida`) — o do
-   * jogador emulado durante o preview, senão o do usuário real.
-   */
-  protected readonly usuarioIdPreview = computed(
-    () => this.previewJogador()?.usuarioId ?? this.usuarioAtivoId(),
-  );
   protected readonly fichasDestinoInventario = computed(() =>
     this.fichas()
-      .filter((ficha) => ficha.usuarioId === this.usuarioIdPreview())
+      .filter((ficha) => ficha.usuarioId === this.usuarioAtivoId())
       .map(({ id, nome }) => ({ id, nome })),
   );
 
@@ -481,105 +415,35 @@ export class CampanhaDetalhe {
    * Membros ordenados para a coluna "Membros" (item 4 — mestre primeiro, depois jogadores em
    * ordem alfabética pelo nome). O grid do "Esquadrão" ao lado acompanha esta mesma ordem
    * (`fichasEsquadrao` itera esta lista, não `membros()` cru), mantendo a decisão de design
-   * original de que os dois ficam sincronizados.
+   * original de que os dois ficam sincronizados. Extraído para `campanha-equipe.util.ts` (m8-04):
+   * a Prévia de jogador reusa a mesma função sobre os membros do alvo, não do mestre.
    */
-  protected readonly membrosOrdenados = computed<readonly CampanhaMembroResumoDto[]>(() => {
-    return [...this.membros()].sort((a, b) => {
-      if (a.papel !== b.papel) {
-        return a.papel === TipoCampanhaMembroPapelEnum.MESTRE ? -1 : 1;
-      }
-      return a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' });
-    });
-  });
+  protected readonly membrosOrdenados = computed<readonly CampanhaMembroResumoDto[]>(() =>
+    ordenarMembros(this.membros()),
+  );
 
-  /** Jogadores (papel `JOGADOR`) da campanha — opções do seletor "Ver como jogador". */
+  /** Jogadores (papel `JOGADOR`) da campanha — opções da ação "Prévia de jogador" (m8-04). */
   protected readonly jogadoresDaCampanha = computed<readonly CampanhaMembroResumoDto[]>(() =>
     this.membrosOrdenados().filter((membro) => membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR),
   );
 
   /**
    * Fichas visíveis agrupadas por dono (`usuarioId`), enriquecidas com o rótulo de classe e as
-   * três condições — sempre as 3, com `ativa` (item 3: mostra também as inativas, esmaecidas, em
-   * vez de sumir quando nada está marcado). O backend já resolve `morrendo`/`machucado`/
-   * `inconsciente` para `false` quando ausentes (`FichaResumoDto`).
+   * três condições — extraído para `campanha-equipe.util.ts` (m8-04), mesmo racional de
+   * `membrosOrdenados` acima.
    */
-  protected readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() => {
-    const mapa = new Map<number, ItemFicha[]>();
-    for (const ficha of this.fichas()) {
-      // Criaturas têm forma própria (`ItemCriatura`, ver `criaturasEsquadrao`) — nunca entram
-      // neste mapa de fichas de jogador (Membros/Equipe/Esquadrão as ignorariam de qualquer jeito
-      // por não terem classe/energia/condições, mas filtrar aqui evita o item malformado de saída).
-      if (ficha.tipo === TipoFichaEnum.CRIATURA) {
-        continue;
-      }
-      const item: ItemFicha = {
-        id: ficha.id,
-        usuarioId: ficha.usuarioId,
-        imagemUrl: ficha.imagemUrl,
-        cor: ficha.cor ?? null,
-        nome: ficha.nome,
-        classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
-        nivel: ficha.nivel,
-        vidaAtual: ficha.vidaAtual,
-        vidaMaxima: ficha.vidaMaxima,
-        energiaAtual: ficha.energiaAtual,
-        energiaMaxima: ficha.energiaMaxima,
-        condicoes: CONDICOES_FICHA.map((condicao) => ({ ...condicao, ativa: ficha[condicao.chave] })),
-        critico: ficha.vidaAtual <= 0,
-        patenteTexto: rotuloPatente(ficha.prestigio ?? 0),
-        // `?? undefined`: o JSON vindo da API traz `null` (não a chave ausente) quando a ficha não
-        // tem o campo salvo em `derivados` — o template abaixo só sabe esconder a linha com
-        // `!== undefined`, então normaliza aqui pra nunca vazar um "Defesa " em branco.
-        defesa: ficha.defesa ?? undefined,
-        esquiva: ficha.esquiva ?? undefined,
-        bloqueio: ficha.bloqueio ?? undefined,
-        contraAtaque: ficha.contraAtaque ?? undefined,
-        identidadeTexto: [ficha.personalidade, ficha.origemNome].filter(Boolean).join(' · ') || null,
-        sobrecarregado: ficha.sobrecarregado ?? false,
-      };
-      const listaDoDono = mapa.get(ficha.usuarioId);
-      if (listaDoDono) {
-        listaDoDono.push(item);
-      } else {
-        mapa.set(ficha.usuarioId, [item]);
-      }
-    }
-    return mapa;
-  });
+  protected readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() =>
+    agruparFichasPorMembro(this.fichas()),
+  );
 
   /**
    * Uma ficha exibida na Equipe (m3-65): `completa` reusa `ItemFicha` (clicável, com vida/energia
    * — mesmo dado de `fichasPorMembro`); `teaser` é só a carteirinha (nome/classe/foto, sem clique).
-   * O mestre nunca mostra ficha nenhuma aqui (nem carteirinha, mesmo que ele tenha alguma e ela não
-   * esteja oculta) — a Equipe é sobre os colegas de time, o card do mestre vira o chip "Mestre".
+   * Extraído para `campanha-equipe.util.ts` (m8-04) — mesmo racional de `membrosOrdenados` acima.
    */
   protected readonly equipeExibicao = computed<
     readonly { readonly membro: CampanhaMembroResumoDto; readonly fichas: readonly EquipeFichaExibicao[] }[]
-  >(() => {
-    const porMembroCompleto = this.fichasPorMembro();
-    return this.membrosOrdenados().map((membro) => ({
-      membro,
-      fichas:
-        membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
-          ? []
-          : membro.fichas.map((ficha): EquipeFichaExibicao => {
-              const completa = ficha.acessoCompleto
-                ? porMembroCompleto.get(membro.usuarioId)?.find((item) => item.id === ficha.id)
-                : undefined;
-              if (completa) {
-                return { tipo: 'completa', ...completa };
-              }
-              return {
-                tipo: 'teaser',
-                id: ficha.id,
-                nome: ficha.nome,
-                imagemUrl: ficha.imagemUrl,
-                cor: ficha.cor,
-                classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
-              };
-            }),
-    }));
-  });
+  >(() => montarEquipeExibicao(this.membrosOrdenados(), this.fichasPorMembro()));
 
   /**
    * Grid do "Esquadrão" (m2-19, item 5) — todas as fichas visíveis da campanha, achatadas (era
@@ -679,7 +543,7 @@ export class CampanhaDetalhe {
    */
   protected readonly minhaFichaExibida = computed<FichaRecuperadaDto | null>(() => {
     const fichaExibida = this.fichaExibidaDados();
-    return fichaExibida && fichaExibida.usuarioId === this.usuarioIdPreview() ? fichaExibida : null;
+    return fichaExibida && fichaExibida.usuarioId === this.usuarioAtivoId() ? fichaExibida : null;
   });
 
   /** Dialog "Acesso de visualização" da ficha exibida (menu do cabeçalho do jogador) aberta. */
@@ -1017,7 +881,7 @@ export class CampanhaDetalhe {
 
   protected alterarEstadoCampanha(): void {
     const campanha = this.campanha();
-    if (!campanha || !this.exibirComoMestre()) return;
+    if (!campanha || !this.ehMestre()) return;
     this.campanhaService.alterarEstado(this.id, !campanha.naBase).subscribe((estado) => {
       this.campanha.update((atual) => atual ? { ...atual, naBase: estado.naBase } : atual);
     });
@@ -1037,7 +901,23 @@ export class CampanhaDetalhe {
       });
   }
 
-  protected regenerarConvite(): void {
+  /** Pede confirmação (ui-15) antes de regenerar o convite de jogador — invalida o código atual. */
+  protected pedirRegenerarConvite(): void {
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Regenerar convite de jogador',
+        mensagem: 'O código atual deixa de funcionar. Quem ainda não entrou vai precisar do novo.',
+        rotuloConfirmar: 'Regenerar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.regenerarConvite();
+        }
+      });
+  }
+
+  private regenerarConvite(): void {
     if (this.regenerando()) {
       return;
     }
@@ -1059,6 +939,43 @@ export class CampanhaDetalhe {
       });
   }
 
+  /** Pede confirmação antes de regenerar o convite de espectador — espelha {@link pedirRegenerarConvite}. */
+  protected pedirRegenerarConviteEspectador(): void {
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Regenerar convite de espectador',
+        mensagem: 'O código atual deixa de funcionar. Quem ainda não entrou vai precisar do novo.',
+        rotuloConfirmar: 'Regenerar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.regenerarConviteEspectador();
+        }
+      });
+  }
+
+  private regenerarConviteEspectador(): void {
+    if (this.regenerandoEspectador()) {
+      return;
+    }
+    this.regenerandoEspectador.set(true);
+    this.campanhaService
+      .regenerarConviteEspectador(this.id)
+      .pipe(finalize(() => this.regenerandoEspectador.set(false)))
+      .subscribe({
+        next: (conviteRegenerado) => {
+          this.campanha.update((campanhaAtual) =>
+            campanhaAtual
+              ? { ...campanhaAtual, codigoConviteEspectador: conviteRegenerado.codigoConviteEspectador }
+              : campanhaAtual,
+          );
+          this.regeneradoEspectador.set(true);
+          setTimeout(() => this.regeneradoEspectador.set(false), 1500);
+        },
+      });
+  }
+
   /** Abre/fecha o menu de ações da campanha (kebab no cabeçalho, item 6). */
   protected alternarMenuCampanha(): void {
     this.menuCampanhaAberto.update((atual) => !atual);
@@ -1067,31 +984,24 @@ export class CampanhaDetalhe {
   /** Fecha o menu de ações da campanha — clique fora (fundo) ou ao escolher uma ação. */
   protected fecharMenuCampanha(): void {
     this.menuCampanhaAberto.set(false);
-    this.escolhendoPreviewJogador.set(false);
+    this.escolhendoPreviaJogador.set(false);
   }
 
-  /** Abre a lista de jogadores da campanha dentro do menu kebab (1º passo de "Ver como jogador"). */
-  protected abrirEscolhaPreviewJogador(): void {
-    this.escolhendoPreviewJogador.set(true);
+  /** Abre a lista de jogadores da campanha dentro do menu kebab (1º passo de "Prévia de jogador", m8-04). */
+  protected abrirEscolhaPreviaJogador(): void {
+    this.escolhendoPreviaJogador.set(true);
   }
 
   /**
-   * Entra no preview "Ver como jogador" (2º passo): troca o layout para o do jogador escolhido e
-   * mostra a ficha própria dele, se houver — mesma semeadura que `carregar` já faz para o jogador
-   * real. Puramente de apresentação (ver `previewJogador`); nenhuma chamada ao backend.
+   * Abre a Prévia de jogador (m8-04, 2º passo) — rota dedicada (`/campanhas/:id/previa/
+   * :usuarioAlvoId`), nunca um toggle local: os dados vêm da projeção do alvo
+   * (`recuperarPreviaJogador`), nunca dos privilégios de quem está olhando. Substitui o antigo
+   * `iniciarPreviewJogador`/`previewJogador` (signals + `pointer-events: none` — insuficiente, a
+   * prévia não tinha projeção própria).
    */
-  protected iniciarPreviewJogador(membro: CampanhaMembroResumoDto): void {
+  protected abrirPreviaJogador(membro: CampanhaMembroResumoDto): void {
     this.fecharMenuCampanha();
-    this.previewJogador.set(membro);
-    const propria = this.fichasPorMembro().get(membro.usuarioId)?.[0];
-    this.fichaExibidaId.set(propria?.id ?? null);
-  }
-
-  /** Sai do preview "Ver como jogador" e volta ao layout de mestre. */
-  protected sairPreviewJogador(): void {
-    this.previewJogador.set(null);
-    this.fichaExibidaId.set(null);
-    this.fichaExibidaDados.set(null);
+    void this.router.navigate(['/campanhas', this.id, 'previa', membro.usuarioId]);
   }
 
   /** Abre o formulário de edição preenchido com o nome/descrição atuais da campanha. */
@@ -1167,9 +1077,12 @@ export class CampanhaDetalhe {
     });
   }
 
-  /** `true` quando o mestre pode gerir este membro — só jogadores (nunca a própria linha). */
+  /**
+   * `true` quando o mestre pode gerir este membro — jogadores e espectadores (m8-03), nunca o
+   * mestre (nem a própria linha, já que o requisitante é sempre o mestre aqui).
+   */
   protected podeGerenciarMembro(membro: CampanhaMembroResumoDto): boolean {
-    return this.ehMestre() && membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR;
+    return this.ehMestre() && membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE;
   }
 
   /** Pede confirmação de remoção do jogador (ui-15, via `ConfirmacaoService`). */
@@ -1228,6 +1141,53 @@ export class CampanhaDetalhe {
   }
 
   /**
+   * Papel de destino do "Alternar papel" (m8-03) — o único par que o mestre gere por este botão é
+   * `JOGADOR ↔ ESPECTADOR`; promover a `MESTRE` é sempre {@link pedirTransferenciaMestre}, nunca
+   * este caminho (o backend recusaria de qualquer forma, mas o botão nem chega a oferecer).
+   */
+  protected papelAlvo(
+    membro: CampanhaMembroResumoDto,
+  ): TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR {
+    return membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR
+      ? TipoCampanhaMembroPapelEnum.ESPECTADOR
+      : TipoCampanhaMembroPapelEnum.JOGADOR;
+  }
+
+  /** Pede confirmação antes de alternar o papel de um membro entre `JOGADOR` e `ESPECTADOR`. */
+  protected pedirAlterarPapelMembro(membro: CampanhaMembroResumoDto): void {
+    const alvo = this.papelAlvo(membro);
+    const rotuloAlvo = alvo === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'Espectador' : 'Jogador';
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Alterar papel',
+        mensagem: `Tornar ${membro.nome} ${rotuloAlvo}?`,
+        entidade: membro.nome,
+        rotuloConfirmar: 'Confirmar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.alterarPapelMembro(membro.usuarioId, alvo);
+        }
+      });
+  }
+
+  /** Troca o papel e recarrega membros/fichas — um jogador rebaixado deixa de ver a própria ficha. */
+  private alterarPapelMembro(
+    usuarioId: number,
+    papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR,
+  ): void {
+    if (this.alterandoPapel() !== null) {
+      return;
+    }
+    this.alterandoPapel.set(usuarioId);
+    this.campanhaService
+      .alterarPapelMembro(this.id, usuarioId, papel)
+      .pipe(finalize(() => this.alterandoPapel.set(null)))
+      .subscribe({ next: () => this.recarregarMembrosEFichas() });
+  }
+
+  /**
    * Recarrega membros e fichas (após transferir o mestre, ou ao receber `ficha:criada`/
    * `ficha:alterada`/`membro:entrou` em tempo real) para refletir novos papéis/fichas/Vida-Energia-
    * condições sem piscar a tela — só a `campanha` (nome/descrição/convite) fica de fora, ela não
@@ -1282,13 +1242,37 @@ export class CampanhaDetalhe {
     });
   }
 
+  /** `aria-label` do botão de copiar convite — extraído para não estourar a linha do template. */
+  protected rotuloCopiarConvite(copiado: boolean, tipo: 'jogador' | 'espectador'): string {
+    return copiado ? 'Código copiado' : `Copiar código de convite de ${tipo}`;
+  }
+
+  /** `aria-label` do botão de regenerar convite — mesma razão de {@link rotuloCopiarConvite}. */
+  protected rotuloRegenerarConvite(regenerando: boolean, tipo: 'jogador' | 'espectador'): string {
+    return regenerando
+      ? `Regenerando código de convite de ${tipo}`
+      : `Regenerar código de convite de ${tipo}`;
+  }
+
+  /** Copia o código de convite de espectador — espelha {@link copiarConvite}. */
+  protected copiarConviteEspectador(): void {
+    const codigoConviteEspectador = this.campanha()?.codigoConviteEspectador;
+    if (!codigoConviteEspectador) {
+      return;
+    }
+    void navigator.clipboard.writeText(codigoConviteEspectador).then(() => {
+      this.copiadoEspectador.set(true);
+      setTimeout(() => this.copiadoEspectador.set(false), 1500);
+    });
+  }
+
   /**
    * `true` quando o usuário autenticado pode ajustar a Vida/Energia desta ficha na hora (m2-16g) —
    * mesma regra de edição da própria ficha (§14): dono ou mestre, nunca outro membro com só
    * visualização concedida.
    */
   protected podeAjustarFicha(usuarioIdDono: number): boolean {
-    return this.exibirComoMestre() || usuarioIdDono === this.usuarioIdPreview();
+    return this.ehMestre() || usuarioIdDono === this.usuarioAtivoId();
   }
 
   /**

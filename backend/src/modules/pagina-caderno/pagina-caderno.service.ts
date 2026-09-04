@@ -37,6 +37,7 @@ import {
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
+import { CampanhaService } from '../campanha/campanha.service';
 import { PaginaCadernoRepository } from './pagina-caderno.repository';
 import * as Y from 'yjs';
 
@@ -46,6 +47,7 @@ export class PaginaCadernoService {
   constructor(
     private readonly paginaCadernoRepositorio: PaginaCadernoRepository,
     private readonly campanhaRepositorio: CampanhaRepository,
+    private readonly campanhaService: CampanhaService,
     @Inject(forwardRef(() => CampanhaGateway))
     private readonly campanhaGateway: CampanhaGateway,
   ) {}
@@ -335,12 +337,19 @@ export class PaginaCadernoService {
         ];
   }
 
+  /**
+   * Resolve o papel do requisitante na campanha — gate único reusado por todo método deste
+   * service (criação, listagem, leitura, alteração e exclusão de página, caderno do Esquadrão e
+   * busca). **m8-02**: `ESPECTADOR` é sempre rejeitado, mesmo sendo membro — o caderno é conteúdo
+   * de jogo, fora do escopo do papel (decisão de produto #4 de `m8-espectadores-campanha`), e
+   * centralizar aqui evita repetir a checagem em cada um dos métodos públicos.
+   */
   private async recuperarPapelMembro(dto: {
     readonly campanhaId: number;
     readonly usuarioId: number;
   }): Promise<TipoCampanhaMembroPapelEnum> {
     const membro = await this.campanhaRepositorio.recuperarMembro(dto);
-    if (!membro) {
+    if (!membro || this.campanhaService.ehEspectador(membro.papel)) {
       throw new UnauthorizedAccessException();
     }
     return membro.papel;

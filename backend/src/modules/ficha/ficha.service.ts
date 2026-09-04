@@ -38,6 +38,7 @@ import type {
   FichaListarDto,
   FichaMediasEsquadraoDto,
   FichaOrigemDto,
+  FichaPreviaJogadorRecuperarDto,
   FichaRecuperadaDto,
   FichaRecuperarDto,
   FichaResumoDto,
@@ -171,7 +172,7 @@ export class FichaService {
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
     });
-    if (!membroAtivo) {
+    if (!membroAtivo || this.campanhaService.ehEspectador(membroAtivo.papel)) {
       throw new UnauthorizedAccessException();
     }
 
@@ -202,14 +203,16 @@ export class FichaService {
   /**
    * Lista as fichas de uma campanha respeitando a matriz de permissões (§14): o mestre vê todas; um
    * membro comum vê só as próprias e as concedidas (`usuario_ficha_acesso`). Exige que o autor seja
-   * membro da campanha (`UnauthorizedAccessException` caso contrário).
+   * `MESTRE` ou `JOGADOR` da campanha — **m8-02**: `ESPECTADOR` é sempre rejeitado
+   * (`UnauthorizedAccessException`), mesmo sendo membro (decisão de produto #4 —
+   * `m8-espectadores-campanha`: espectador nunca vê ficha).
    */
   async listarFichas(dto: FichaListarDto, usuarioAtivo: JwtPayload): Promise<FichaResumoDto[]> {
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
     });
-    if (!membroEncontrado) {
+    if (!membroEncontrado || this.campanhaService.ehEspectador(membroEncontrado.papel)) {
       throw new UnauthorizedAccessException();
     }
 
@@ -223,6 +226,80 @@ export class FichaService {
       usuarioId: usuarioAtivo.sub,
     });
     return fichas.map((ficha) => this.paraResumoPublico(ficha));
+  }
+
+  /**
+   * Lista as fichas de uma campanha visíveis a um **alvo** específico (m8-02, prévia de jogador
+   * — `CampanhaProjecaoService`) — a mesma regra de `listarFichas` no ramo não-mestre
+   * (`listarVisiveisParaUsuario`), mas calculada com a identidade do `usuarioAlvoId`, nunca do
+   * mestre que pede a prévia (decisão de produto #6: "a service calcula... exatamente com a
+   * identidade do alvo"). Quem pode pedir a prévia de quem já foi decidido pelo chamador; aqui
+   * só se confirma que o alvo é `JOGADOR` ativo da campanha — a mesma consulta que qualquer outro
+   * método deste service já faz, não uma regra nova. `UnauthorizedAccessException` se o alvo não
+   * for `JOGADOR` da campanha.
+   */
+  async listarFichasParaAlvo(dto: {
+    readonly campanhaId: number;
+    readonly usuarioAlvoId: number;
+  }): Promise<FichaResumoDto[]> {
+    const membroAlvo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: dto.usuarioAlvoId,
+    });
+    if (!membroAlvo || !this.campanhaService.ehJogador(membroAlvo.papel)) {
+      throw new UnauthorizedAccessException();
+    }
+
+    const fichas = await this.fichaRepositorio.listarVisiveisParaUsuario({
+      campanhaId: dto.campanhaId,
+      usuarioId: dto.usuarioAlvoId,
+    });
+    return fichas.map((ficha) => this.paraResumoPublico(ficha));
+  }
+
+  /**
+   * Ficha completa (com `dados`) calculada com a identidade do **alvo** (m8-04, `m8-espectadores-
+   * campanha`) — igual a `recuperarFicha`, mas a visibilidade/redação nunca usa `usuarioAtivo`, e
+   * sim `dto.usuarioAlvoId` (`avaliarVisibilidadePara`, a mesma regra de `recuperarFicha` — nunca
+   * reimplementada, só avaliada para outro usuário). Só o **mestre** da campanha da ficha pode
+   * requisitar; o alvo precisa ser `JOGADOR` ativo dessa campanha. Alimenta a Prévia de jogador
+   * (`CampanhaProjecaoService.recuperarFichaPreviaJogador`) — nunca chamado direto pela controller
+   * de ficha (proibido pedir a ficha de outra pessoa "por fora"; só via a projeção de prévia, que
+   * já valida mestre+alvo antes de chegar aqui). `ResourceNotFoundException` se a ficha não
+   * existir ou não tiver campanha (m3-28: prévia não se aplica a ficha solta);
+   * `UnauthorizedAccessException` se o requisitante não for mestre da campanha, o alvo não for
+   * `JOGADOR`, ou o alvo não tiver nenhuma visibilidade sobre a ficha.
+   */
+  async recuperarFichaParaAlvo(
+    dto: FichaPreviaJogadorRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<FichaRecuperadaDto> {
+    const fichaEncontrada = await this.fichaRepositorio.recuperarPorId({ id: dto.fichaId });
+    if (!fichaEncontrada || fichaEncontrada.campanhaId === null) {
+      throw new ResourceNotFoundException('Ficha');
+    }
+
+    const membroAtivo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: fichaEncontrada.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (!membroAtivo || !this.campanhaService.ehMestre(membroAtivo.papel)) {
+      throw new UnauthorizedAccessException();
+    }
+
+    const membroAlvo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: fichaEncontrada.campanhaId,
+      usuarioId: dto.usuarioAlvoId,
+    });
+    if (!membroAlvo || !this.campanhaService.ehJogador(membroAlvo.papel)) {
+      throw new UnauthorizedAccessException();
+    }
+
+    const ehSoVisualizador = await this.avaliarVisibilidadePara(fichaEncontrada, dto.usuarioAlvoId);
+    if (ehSoVisualizador) {
+      return { ...fichaEncontrada, dados: omitirCamposPrivados(fichaEncontrada.dados) };
+    }
+    return fichaEncontrada;
   }
 
   /**
@@ -241,7 +318,7 @@ export class FichaService {
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
     });
-    if (!membroEncontrado) {
+    if (!membroEncontrado || this.campanhaService.ehEspectador(membroEncontrado.papel)) {
       throw new UnauthorizedAccessException();
     }
 
@@ -1072,23 +1149,46 @@ export class FichaService {
     ficha: FichaRecuperadaDto,
     usuarioAtivo: JwtPayload,
   ): Promise<boolean> {
-    if (ficha.usuarioId === usuarioAtivo.sub) {
-      return false;
-    }
+    return this.avaliarVisibilidadePara(ficha, usuarioAtivo.sub);
+  }
 
+  /**
+   * Núcleo de `validarPermissaoVisualizacao` (§14), parametrizado por `usuarioId` em vez de
+   * `JwtPayload` — permite avaliar a visibilidade de uma ficha para **outro** usuário que não o
+   * requisitante (m8-04: `recuperarFichaParaAlvo` avalia para `usuarioAlvoId`, nunca para
+   * `usuarioAtivo.sub`). A regra em si é a mesma, uma única vez (proibição #28); só quem chama
+   * decide de qual identidade.
+   */
+  private async avaliarVisibilidadePara(
+    ficha: FichaRecuperadaDto,
+    usuarioId: number,
+  ): Promise<boolean> {
     if (ficha.campanhaId !== null) {
       const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
         campanhaId: ficha.campanhaId,
-        usuarioId: usuarioAtivo.sub,
+        usuarioId,
       });
+      // m8-02: um espectador nunca vê ficha — nem a própria, se o mestre o rebaixou de JOGADOR
+      // depois de ele já possuir uma (`CampanhaService.alterarPapelMembro`), nem por concessão
+      // (decisão de produto #4: "uma concessão em usuario_ficha_acesso não amplia este papel").
+      // Checado antes da posse para não deixar a ficha antiga do ex-jogador escapar pelo `return`
+      // logo abaixo.
+      if (membroEncontrado && this.campanhaService.ehEspectador(membroEncontrado.papel)) {
+        throw new UnauthorizedAccessException();
+      }
+      if (ficha.usuarioId === usuarioId) {
+        return false;
+      }
       if (membroEncontrado?.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
         return false;
       }
+    } else if (ficha.usuarioId === usuarioId) {
+      return false;
     }
 
     const acessoConcedido = await this.fichaRepositorio.recuperarAcesso({
       fichaId: ficha.id,
-      usuarioId: usuarioAtivo.sub,
+      usuarioId,
     });
     if (!acessoConcedido) {
       throw new UnauthorizedAccessException();
@@ -1108,26 +1208,35 @@ export class FichaService {
     ficha: FichaRecuperadaDto,
     usuarioAtivo: JwtPayload,
   ): Promise<void> {
-    if (ficha.usuarioId === usuarioAtivo.sub) {
+    if (ficha.campanhaId !== null) {
+      const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
+        campanhaId: ficha.campanhaId,
+        usuarioId: usuarioAtivo.sub,
+      });
+      // m8-02: mesmo racional de `validarPermissaoVisualizacao` — espectador nunca edita ficha,
+      // nem a própria, checado antes da posse.
+      if (membroEncontrado && this.campanhaService.ehEspectador(membroEncontrado.papel)) {
+        throw new UnauthorizedAccessException();
+      }
+      if (ficha.usuarioId === usuarioAtivo.sub) {
+        return;
+      }
+      if (membroEncontrado?.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+        throw new UnauthorizedAccessException();
+      }
       return;
     }
 
-    if (ficha.campanhaId === null) {
-      throw new UnauthorizedAccessException();
-    }
-
-    const membroEncontrado = await this.campanhaRepositorio.recuperarMembro({
-      campanhaId: ficha.campanhaId,
-      usuarioId: usuarioAtivo.sub,
-    });
-    if (membroEncontrado?.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+    if (ficha.usuarioId !== usuarioAtivo.sub) {
       throw new UnauthorizedAccessException();
     }
   }
 
   /**
-   * Garante que o **alvo** de uma concessão de acesso é membro da campanha da ficha (§14 — a
-   * concessão revela a ficha a "outro membro da campanha"). Alvo não-membro →
+   * Garante que o **alvo** de uma concessão de acesso (ou de uma atribuição de ficha de jogador a
+   * uma campanha) é membro `MESTRE`/`JOGADOR` da campanha (§14 — a concessão revela a ficha a
+   * "outro membro da campanha"). Alvo não-membro, ou alvo `ESPECTADOR` (m8-02, decisão de produto
+   * #4: "uma concessão em usuario_ficha_acesso não amplia este papel") →
    * `ResourceNotFoundException('Membro')` (mesmo tratamento da transferência de mestre em m2-10).
    */
   private async validarMembroAlvo(dto: { campanhaId: number | null; usuarioId: number }): Promise<void> {
@@ -1140,7 +1249,7 @@ export class FichaService {
       campanhaId: dto.campanhaId,
       usuarioId: dto.usuarioId,
     });
-    if (!membroEncontrado) {
+    if (!membroEncontrado || this.campanhaService.ehEspectador(membroEncontrado.papel)) {
       throw new ResourceNotFoundException('Membro');
     }
   }

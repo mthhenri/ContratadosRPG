@@ -121,7 +121,54 @@
 - **Desde:** encontrado ao verificar `painéis laterais: fecha de verdade a exclusão mútua e para
   de espremer a rota` (2026-09-02) — fora do recorte da task, `LayoutComponent` não foi tocado.
 
-### P-045 — Quatro telas recriam a identidade de `app-esqueleto` · `ABERTO` · frontend/design system
+### P-046 — `GET /campanha/:id` devolve os dois códigos de convite a qualquer JOGADOR · `ACEITO` · backend
+
+- **Sintoma:** `CampanhaRecuperadaDto.codigoConvite`/`codigoConviteEspectador` chegam sempre
+  preenchidos nessa consulta, mesmo para um `JOGADOR` — só o mestre gerou os códigos, mas qualquer
+  membro que chame `recuperarCampanha` (ou a tela que consome esse endpoint) os vê. Diferente de
+  `CampanhaResumoDto` (usado na listagem), que já gateia por `CASE WHEN papel = MESTRE` desde antes
+  do m8.
+- **Causa:** recorte pré-existente ao papel `ESPECTADOR` (m8-01/m8-02) — `m8-01` já registrou o gap
+  para `codigoConvite`, e `codigoConviteEspectador` nasceu com o mesmo recorte para não abrir uma
+  inconsistência entre os dois campos. O `m8-02` fechou a parte que lhe cabia (`ESPECTADOR` agora é
+  rejeitado neste endpoint inteiro, `UnauthorizedAccessException` — usa a projeção dedicada do
+  painel), mas decidiu não estender o fechamento ao recorte `JOGADOR`, que é comportamento em
+  produção anterior ao módulo M8 e fora do objetivo das duas specs.
+- **Contorno:** nenhum — não é urgente (um jogador já está dentro da campanha; o código de convite
+  não é um segredo capaz de dano fora dela).
+- **Correção:** gatear os dois campos por `this.ehMestre(papel)` em `recuperarCampanha`
+  (`CampanhaService`), devolvendo `null` para `JOGADOR` — mesma forma de `CampanhaResumoDto`. Exige
+  decidir se algum consumidor do frontend depende do valor não-nulo para não-mestre antes de mudar
+  o contrato.
+- **Desde:** comportamento anterior ao M8; registrado explicitamente em `m8-01` (2026-09-03) e
+  reafirmado como decisão consciente de escopo em `m8-02` (2026-09-03).
+
+### P-048 — Botões de ícone soltos sem passar por `app-botao-icone` · `ABERTO` · frontend
+
+- **Sintoma:** alguns controles clicáveis do app são `<button>`/`<a>` com classe BEM local e
+  estilo próprio em vez do primitivo `shared/ui/botao-icone` (ou `app-botao` quando o alvo é
+  `<a>`) — por exemplo `.detalhe__membro-acao` (ações "Transferir mestre"/"Alternar
+  papel"/"Remover" na lista de membros de `detalhe.page.html`), `.detalhe__cabecalho-voltar` e
+  `.espectador__voltar` (links de "voltar" com ícone), `.detalhe__cabecalho-menu-botao`/`⋯` (menu
+  de ações), `.rolagem-pill__d20`. Funcionam e usam tokens de design corretamente, mas não passam
+  pela biblioteca — cada um reimplementa hover/foco/tamanho na mão.
+- **Causa:** convenção antiga do projeto (a maioria desses controles é anterior à `shared/ui/`
+  atual) nunca revisitada; a `m8-03` seguiu o padrão já existente ao adicionar "Alternar papel"
+  ao invés de o corrigir, por estar fora do recorte da task.
+- **Contorno:** nenhum — o comportamento visual está correto hoje, é dívida de arquitetura/reuso,
+  não defeito visível.
+- **Correção:** decisão do autor pendente (2026-09-03): a intenção é que **todo** controle
+  clicável do app passe a usar o primitivo correspondente (ver "Biblioteca de componentes é
+  obrigatória" em `CLAUDE.md`/`AGENTS.md`) — inclusive os que hoje são exceção histórica. Exige um
+  levantamento completo de todos os controles fora do padrão (não só os listados acima, que foram
+  os encontrados durante a auditoria da `m8-03`) e provavelmente uma spec própria, já que
+  `app-botao-icone` só suporta `button` — controles que hoje são `<a>` (`.detalhe__cabecalho-voltar`,
+  `.espectador__voltar`) podem exigir ampliar o primitivo para aceitar âncora, o que é decisão do
+  autor por si só (ver a mesma seção do `CLAUDE.md`/`AGENTS.md`).
+- **Desde:** dívida pré-existente; nomeada e registrada explicitamente a pedido do autor após a
+  auditoria de conformidade da `m8-03` com a nova regra de biblioteca de componentes (2026-09-03).
+
+### P-051 — Quatro telas recriam a identidade de `app-esqueleto` · `ABERTO` · frontend/design system
 
 - **Sintoma:** Perfil, detalhe de campanha e as visualizações de jogador/criatura possuem
   `.esqueleto-bloco`, `@keyframes esqueleto-pulso` e tratamento de movimento reduzido locais.
@@ -132,7 +179,7 @@
   silhueta. Recorte e evidência em `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`.
 - **Desde:** confirmado na auditoria UI-27 (2026-09-03).
 
-### P-046 — Iniciativa recria o cabeçalho de `app-cartao` · `ABERTO` · frontend/design system
+### P-052 — Iniciativa recria o cabeçalho de `app-cartao` · `ABERTO` · frontend/design system
 
 - **Sintoma:** `painel-encontro.page` declara e monta localmente `cartao__cabecalho`, índice,
   título e régua, incluindo identidade tipográfica e de acabamento já pertencente a `app-cartao`.
@@ -142,7 +189,7 @@
   ao vivo provar a necessidade de uma variante estrutural.
 - **Desde:** confirmado na auditoria UI-27 (2026-09-03).
 
-### P-047 — Modais de campanha repetem cabeçalho e rodapé dentro de `app-modal` · `ABERTO` · frontend/design system
+### P-053 — Modais de campanha repetem cabeçalho e rodapé dentro de `app-modal` · `ABERTO` · frontend/design system
 
 - **Sintoma:** Vincular, Duplicar e Acesso de Visualização usam `app-modal`, mas projetam dentro
   dele outro painel com título, índice, régua e `.dialogo__acoes`.
@@ -153,7 +200,7 @@
   slot de ações precisa aceitar um wrapper condicional antes de ampliar a API.
 - **Desde:** confirmado na auditoria UI-27 (2026-09-03).
 
-### P-048 — Simulação mantém stats paralelos a `app-stat` · `ABERTO` · frontend/design system
+### P-054 — Simulação mantém stats paralelos a `app-stat` · `ABERTO` · frontend/design system
 
 - **Sintoma:** Agente, Novo Agente, Patente, Descanso e Compras mantêm `.agente-stat`/`.calc-stat`
   com a mesma anatomia de rótulo, valor, nota e tom do primitivo existente.
@@ -163,7 +210,7 @@
   consumidor real.
 - **Desde:** confirmado na auditoria UI-27 (2026-09-03).
 
-### P-049 — Estados vazios densos não cabem no primitivo atual · `ABERTO` · frontend/design system
+### P-055 — Estados vazios densos não cabem no primitivo atual · `ABERTO` · frontend/design system
 
 - **Sintoma:** listas compactas de Encontro e Ficha repetem parágrafos `__vazio`; o
   `app-estado-vazio` atual impõe uma caixa com 32px de respiro vertical, grande demais para elas.
@@ -173,7 +220,7 @@
   vazios de lista; mensagens de ajuda, carregamento e validação permanecem locais.
 - **Desde:** confirmado na auditoria UI-27 (2026-09-03).
 
-### P-050 — Três controles segmentados têm identidade local · `ABERTO` · frontend/design system
+### P-056 — Três controles segmentados têm identidade local · `ABERTO` · frontend/design system
 
 - **Sintoma:** Caderno, Leitor de Documentos e Inventário da ficha implementam separadamente grupo
   de seleção única, item ativo, foco, borda, raio e responsividade.

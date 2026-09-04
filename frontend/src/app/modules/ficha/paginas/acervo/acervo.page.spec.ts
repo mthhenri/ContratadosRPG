@@ -83,6 +83,7 @@ describe('FichaAcervo', () => {
       fichaCriticaNome: null,
       minhaFichaResumo: null,
       codigoConvite: 'ALFA1234',
+      codigoConviteEspectador: 'ALFAESP1234',
       alteradoEm: '2026-07-29T01:48:01.082Z',
     },
   ];

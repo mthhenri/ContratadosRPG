@@ -161,6 +161,27 @@ Antes de alterar código:
    pura. Se a extração não for proporcional ao escopo, registre no fecho da
    tarefa por que o acréscimo local é seguro.
 
+### Biblioteca de componentes é obrigatória
+
+Todo controle de interface — botão, campo, chip, cartão, modal, estado vazio, esqueleto,
+tooltip e qualquer outro átomo visual — usa o primitivo correspondente em `shared/ui/`
+(frontend) através da API completa dele (`[variante]`, `[estilo]`, `[tamanho]`,
+`[posicaoIcone]` etc.), nunca um elemento HTML nativo estilizado à mão nem uma receita
+local que reinventa o que o primitivo já oferece. Anexar a diretiva do primitivo
+(`app-botao`, `app-botao-icone`...) sem também usar os inputs que lhe dão densidade e
+forma não conta como reuso: um `app-botao` sem `[tamanho]` (ou sem a classe de receita
+que o consumidor tradicionalmente supre nesse papel) sai sem padding, peso ou caixa
+alta — ainda parece "nosso componente" no código, mas não parece um controle do produto
+na tela, e o defeito não aparece em build nem lint. Antes de declarar uma mudança de UI
+pronta, confirme, controle por controle, que ele usa o primitivo certo com os inputs
+certos — não só que a diretiva está presente no template.
+
+Se `shared/ui/` não cobrir o que a tela precisa — variante, tamanho, comportamento ou
+o primitivo inteiro ausente —, **pare e pergunte ao autor** antes de contornar com
+HTML/CSS locais. Ampliar um primitivo existente ou criar um novo é decisão do autor,
+nunca escolha unilateral do agente; proponha as opções com o trade-off de cada uma e
+implemente só depois da resposta.
+
 ### Processo obrigatório para qualquer UI ou estilo
 
 Toda mudança que crie ou altere UI, layout, componente visual ou estilo segue

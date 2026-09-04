@@ -1,0 +1,378 @@
+@use "tema/breakpoints" as bp;
+
+// Container de página própria (m8-04) — mesma medida de `.detalhe`/`.espectador`/`.iniciativa`:
+// 85vw centrado no desktop, largura total sem margem no mobile.
+.previa-jogador {
+    width: 85vw;
+    max-width: none;
+    margin: 0 7.5vw;
+    // `<app-ficha-visualizacao modo="compacto">` tem sua própria `.ficha-nav` fixa no rodapé no
+    // mobile — mesma variável de `.detalhe`/`.visualizar` (m2-20/m3-60): cada página que hospeda a
+    // ficha compacta **define** o próprio piso (não há cascata global), e o consome no padding
+    // abaixo. Sem isto, o fim da coluna lateral (Sessão) fica por baixo da barra ao rolar até o
+    // final da página (achado ao vivo, m8-04 — `var()` sem valor definido não aplica o `calc()`).
+    --piso-flutuante: 0px;
+
+    @include bp.mobile {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        --piso-flutuante: 57px;
+        padding-bottom: calc(var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+    }
+
+    // Barra de prévia persistente — mesma receita de `.espectador__preview-barra` (m8-03), com o
+    // tratamento mobile (`flex-wrap`/`min-height`) já desde o início — a versão original de
+    // `.detalhe__preview-*` nunca teve isso (P-047); esta task remove aquele código por completo
+    // ("Prévia de jogador" substitui "Ver como jogador") — o defeito não existe mais.
+    &__preview-barra {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 10px 16px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        color: var(--accent);
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+        }
+    }
+
+    &__preview-texto {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+
+        @include bp.mobile {
+            flex-basis: 100%;
+        }
+    }
+
+    // `app-botao` nasce deliberadamente sem `display`/`padding`/`font-size` (ui-01, ver
+    // `botao.component.scss`) — mesma receita de `.detalhe__acao`/`.espectador__preview-sair`.
+    &__preview-sair {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        @include bp.mobile {
+            width: 100%;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 16px;
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+            row-gap: 10px;
+        }
+    }
+
+    &__titulo {
+        margin: 0;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__regua {
+        flex: 1;
+        min-width: 20px;
+        height: 1px;
+        background: var(--border);
+    }
+
+    // `app-botao` sem `[tamanho]` nasce sem `display`/`padding`/`font-size` (ver comentário em
+    // `&__preview-sair` acima) — mesma receita, mas compacta o bastante para conviver com o selo
+    // "Prévia de jogador" na mesma linha do cabeçalho (m8-05 deixou de fora; corrigido no m8-06).
+    &__ver-iniciativa {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__selo {
+        flex: none;
+    }
+
+    &__estado {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    // === Corpo — mesma partição de `.detalhe__jogador` (ficha principal + lateral de Equipe/
+    // Rolagens/Sessão), o mesmo análogo aprovado (ui-visão-de-jogador, m2-20/m2-21).
+    &__corpo {
+        display: flex;
+        align-items: start;
+        gap: var(--gap-grid);
+
+        @include bp.tablet {
+            flex-direction: column;
+        }
+    }
+
+    &__principal {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    &__lateral {
+        flex: 0 0 450px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap-grid);
+        min-width: 0;
+
+        @include bp.tablet {
+            flex-basis: auto;
+            width: 100%;
+        }
+    }
+
+    &__ficha {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__alternar-inventario {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 12px;
+        font-size: 10px;
+        line-height: 1;
+
+        app-icone {
+            display: inline-flex;
+            flex: none;
+            width: 12px;
+            height: 12px;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__secao {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    &__secao-titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text);
+        white-space: nowrap;
+    }
+
+    &__secao-regua {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__esqueleto-linha {
+        display: block;
+        width: 100%;
+        height: 14px;
+        margin-bottom: 8px;
+    }
+
+    &__esqueleto-bloco {
+        display: block;
+        width: 100%;
+        height: 120px;
+    }
+
+    // === "Equipe" — mesma receita de `.detalhe__equipe-*` (m3-65), calculada aqui com a
+    // identidade do alvo (`CampanhaPreviaJogadorDto.membros`), nunca do mestre.
+    &__equipe-lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 420px;
+        overflow-y: auto;
+    }
+
+    &__equipe-membro {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__equipe-membro-corpo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__equipe-cabecalho {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__equipe-nome {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__equipe-ficha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 6px 8px;
+        background: var(--surface);
+        color: var(--text-dim);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+        text-align: left;
+        transition:
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover {
+            color: var(--text);
+            border-color: var(--accent-border);
+        }
+
+        &--ativa {
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__equipe-carteirinha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 6px 8px;
+        background: var(--surface);
+        color: var(--text-mute);
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-control);
+    }
+
+    &__equipe-ficha-corpo {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    &__equipe-ficha-nome {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__equipe-ficha-vitais {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__equipe-vazio {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-mute);
+        font-style: italic;
+    }
+
+    // === "Rolagens" — painel de presets/rolagem avulsa (`FichaRolagensPainel`), sempre
+    // `[podeRolar]="false"` (ver doc da classe). Sem o toggle mobile de `.detalhe__rolagens-painel`
+    // (não há barra de abas na prévia — mais simples, empilha com o resto no mobile).
+    &__rolagens-corpo {
+        max-height: 420px;
+        overflow-y: auto;
+        padding: 2px;
+    }
+
+    &__sessao-lista {
+        list-style: none;
+        margin: 0;
+        padding: 2px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 179px;
+        overflow-y: auto;
+
+        .rolagem-pill {
+            min-width: 0;
+            max-width: none;
+            width: 100%;
+        }
+    }
+}

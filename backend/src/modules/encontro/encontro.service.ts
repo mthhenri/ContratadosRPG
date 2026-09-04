@@ -1050,7 +1050,10 @@ export class EncontroService {
    *
    * O conjunto de fichas com números visíveis vem de `FichaService.listarFichas` — a **service
    * dona** da regra §14, que já distingue mestre de jogador e consulta `usuario_ficha_acesso`.
-   * Nada de uma segunda consulta de permissão aqui (proibição #28).
+   * Nada de uma segunda consulta de permissão aqui (proibição #28). `ESPECTADOR` é a única exceção:
+   * `listarFichas` sempre o rejeita (decisão de produto #4, m8-espectadores-campanha — espectador
+   * nunca vê ficha), então o conjunto sai vazio direto, sem chamar a service — não é uma segunda
+   * regra, é o mesmo fato já conhecido, só evitando a exceção.
    */
   private async montarEstadoParaUsuario(
     estado: EncontroRecuperadoDto,
@@ -1061,10 +1064,62 @@ export class EncontroService {
     if (membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
       return estado;
     }
-    const fichasVisiveis = await this.fichaService.listarFichas(
-      { campanhaId: estado.campanhaId },
-      usuarioAtivo,
+    const fichasVisiveis =
+      membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+        ? []
+        : await this.fichaService.listarFichas({ campanhaId: estado.campanhaId }, usuarioAtivo);
+    return ocultarNaoRevelados(
+      estado,
+      new Set(fichasVisiveis.map((ficha) => ficha.id)),
+      fichaIdsIdentidadeVisivel,
     );
+  }
+
+  /**
+   * Encontro não-encerrado da campanha redigido para o recorte comum do Painel do espectador
+   * (m8-05): `ESPECTADOR` real e `MESTRE` em prévia recebem exatamente o mesmo resultado — nenhuma
+   * ficha visível, igual ao ramo `ESPECTADOR` de {@link montarEstadoParaUsuario} acima, mas
+   * calculado **sem depender de quem pediu** (o mestre em prévia continua sendo mestre de verdade;
+   * usar a identidade real dele te devolveria o encontro sem redação nenhuma). Não valida o
+   * requisitante: quem chama (`CampanhaProjecaoService.recuperarPainelEspectador`) já validou
+   * mestre-ou-espectador antes de chegar aqui (proibição #28). `null` sem encontro em andamento.
+   */
+  async recuperarEncontroAtivoParaEspectador(dto: {
+    readonly campanhaId: number;
+  }): Promise<EncontroRecuperadoDto | null> {
+    return this.recuperarEncontroAbertoRedigido(dto.campanhaId, []);
+  }
+
+  /**
+   * Encontro não-encerrado da campanha redigido com a identidade do **alvo** (m8-05, prévia de
+   * jogador — `CampanhaProjecaoService.recuperarPreviaJogador`) — mesma regra de
+   * `montarEstadoParaUsuario`, mas a visibilidade de ficha nunca usa `usuarioAtivo`, e sim
+   * `FichaService.listarFichasParaAlvo` (que já valida o alvo `JOGADOR` ativo da campanha — não
+   * repetido aqui). Não valida o requisitante: quem chama já validou mestre requisitante + alvo
+   * (proibição #28). `null` sem encontro em andamento.
+   */
+  async recuperarEncontroAtivoParaAlvo(dto: {
+    readonly campanhaId: number;
+    readonly usuarioAlvoId: number;
+  }): Promise<EncontroRecuperadoDto | null> {
+    const fichasVisiveis = await this.fichaService.listarFichasParaAlvo(dto);
+    return this.recuperarEncontroAbertoRedigido(dto.campanhaId, fichasVisiveis);
+  }
+
+  /**
+   * Base comum das duas leituras acima: acha o encontro não-encerrado da campanha
+   * (`recuperarAbertoPorCampanha`, a mesma consulta que já arbitra "um encontro por campanha" em
+   * `criarEncontro` — proibição #28) e aplica a revelação (m7-06) com o conjunto de fichas dado.
+   */
+  private async recuperarEncontroAbertoRedigido(
+    campanhaId: number,
+    fichasVisiveis: readonly { readonly id: number }[],
+  ): Promise<EncontroRecuperadoDto | null> {
+    const encontroAberto = await this.encontroRepositorio.recuperarAbertoPorCampanha({ campanhaId });
+    if (!encontroAberto) {
+      return null;
+    }
+    const { estado, fichaIdsIdentidadeVisivel } = await this.montarEstado(encontroAberto);
     return ocultarNaoRevelados(
       estado,
       new Set(fichasVisiveis.map((ficha) => ficha.id)),

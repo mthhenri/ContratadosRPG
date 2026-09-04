@@ -27,6 +27,7 @@ describe('CampanhaLista', () => {
       fichaCriticaNome: null,
       minhaFichaResumo: null,
       codigoConvite: null,
+      codigoConviteEspectador: null,
       alteradoEm: new Date().toISOString(),
       ...sobrescritas,
     };

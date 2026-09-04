@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
   RolagemCampanhaInternoListarDto,
+  RolagemCampanhaPublicaInternoListarDto,
   RolagemInternoListarDto,
   RolagemInternoRegistrarDto,
   RolagemResumoDto,
@@ -130,5 +131,38 @@ export class RolagemRepository extends BaseRepository {
         visibilidadePublica: RolagemVisibilidadeEnum.PUBLICA,
       },
     );
+  }
+
+  /**
+   * Feed **paginado** de rolagens `PUBLICA` de uma campanha (m8-02) — alimenta o painel de
+   * espectador e a prévia de jogador (`CampanhaProjecaoService`). Diferente de `listarPorCampanha`
+   * (teto de 50, inclui `PRIVADA` do autor/mestre): aqui o filtro é sempre `PUBLICA`, sem depender
+   * de quem pede — por isso não recebe `usuarioId`/`ehMestre`.
+   */
+  async listarPublicasPorCampanha(
+    dto: RolagemCampanhaPublicaInternoListarDto,
+  ): Promise<PaginatedResult<RolagemResumoDto>> {
+    return this.executarConsultaPaginada<RolagemResumoDto>({
+      sqlSelect: `SELECT ${this.colunasResumo()}
+                  FROM rolagem
+                  ${this.juncoesResumo()}
+                  WHERE rolagem.campanha_id = :campanhaId AND rolagem.is_deleted = false
+                    AND tipo_rolagem_visibilidade.codigo = :visibilidadePublica`,
+      sqlContagem: `SELECT COUNT(*) AS total
+                    FROM rolagem
+                    INNER JOIN tipo_rolagem_visibilidade
+                      ON tipo_rolagem_visibilidade.id = rolagem.tipo_rolagem_visibilidade_id
+                     AND tipo_rolagem_visibilidade.is_deleted = false
+                    WHERE rolagem.campanha_id = :campanhaId AND rolagem.is_deleted = false
+                      AND tipo_rolagem_visibilidade.codigo = :visibilidadePublica`,
+      parametrosSql: {
+        campanhaId: dto.campanhaId,
+        visibilidadePublica: RolagemVisibilidadeEnum.PUBLICA,
+      },
+      pagina: dto.pagina,
+      itensPorPagina: dto.itensPorPagina,
+      ordenarPor: 'rolagem.created_date',
+      direcao: 'DESC',
+    });
   }
 }

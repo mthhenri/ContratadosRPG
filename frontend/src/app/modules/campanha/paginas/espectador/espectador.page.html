@@ -1,0 +1,127 @@
+<section class="espectador">
+    @if (ehMestrePreview()) {
+    <div class="espectador__preview-barra" role="status">
+        <app-icone nome="olho" />
+        <span class="espectador__preview-texto">
+            Modo prévia · você vê exatamente o recorte que um espectador vê
+        </span>
+        <a
+            app-botao
+            variante="secundario"
+            class="botao botao--secundario espectador__preview-sair"
+            [routerLink]="['/campanhas', id]"
+        >
+            Sair da visualização
+        </a>
+    </div>
+    }
+
+    <header class="espectador__cabecalho">
+        @if (!ehMestrePreview()) {
+        <a class="espectador__voltar" routerLink="/campanhas" aria-label="Voltar às campanhas">
+            <app-icone nome="voltar" />
+        </a>
+        } @if (carregando()) {
+        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        } @else if (campanha(); as campanhaAtual) {
+        <h1 class="espectador__titulo">{{ campanhaAtual.nome }}</h1>
+        }
+
+        <span class="espectador__regua"></span>
+
+        @if (encontroAtivo(); as encontro) {
+        <button
+            app-botao
+            variante="secundario"
+            type="button"
+            class="botao botao--secundario espectador__ver-iniciativa"
+            (click)="iniciativaAberta.set(true)"
+        >
+            <app-icone nome="d20" />
+            Ver Iniciativa
+        </button>
+        }
+
+        <app-chip severidade="secundario" class="espectador__selo">
+            <app-icone nome="olho" />
+            Modo espectador
+        </app-chip>
+    </header>
+
+    <app-cartao class="espectador__feed">
+        <header class="espectador__secao">
+            <h2 class="espectador__secao-titulo">Rolagens públicas</h2>
+            <span class="espectador__secao-regua"></span>
+            @if (!carregando()) {
+            <span class="espectador__secao-contagem" aria-hidden="true"
+                >{{ rolagens().length }}</span
+            >
+            }
+        </header>
+
+        <div class="espectador__corpo" appOverflowFade>
+            @if (carregando()) {
+            <div class="espectador__esqueleto" role="status" aria-label="Carregando rolagens">
+                @for (i of [0, 1, 2, 3]; track i) {
+                <div class="espectador__esqueleto-item">
+                    <div class="espectador__esqueleto-cabecalho">
+                        <app-esqueleto class="espectador__esqueleto-rotulo" />
+                        <app-esqueleto class="espectador__esqueleto-data" />
+                    </div>
+                    <app-esqueleto class="espectador__esqueleto-autor" />
+                    <app-esqueleto class="espectador__esqueleto-resultado" />
+                </div>
+                }
+            </div>
+            } @else if (semRolagens()) {
+            <app-estado-vazio
+                icone="d20"
+                titulo="Nenhuma rolagem pública ainda."
+                linhaApoio="Rolagens públicas feitas nesta campanha aparecem aqui ao vivo."
+            />
+            } @else {
+            <ul class="espectador__lista">
+                @for (item of rolagens(); track item.id) {
+                <li class="espectador__item" [style.--cor-ficha]="item.corFicha">
+                    <div class="espectador__meta">
+                        <span class="espectador__rotulo">{{ item.rotulo }}</span>
+                        <span class="espectador__autor">{{ autorRolagem(item) }}</span>
+                        <span class="espectador__data">{{ tempoRolagem(item) }}</span>
+                    </div>
+                    @if (item.formula) {
+                    <span class="espectador__formula">{{ item.formula }}</span>
+                    }
+                    <app-resultado-rolagem
+                        [resultado]="item.resultado"
+                        [corFicha]="item.corFicha"
+                        [compacto]="true"
+                    />
+                </li>
+                }
+            </ul>
+
+            @if (temMais()) {
+            <button
+                type="button"
+                app-botao
+                class="espectador__mais"
+                [disabled]="carregandoMais()"
+                (click)="carregarMais()"
+            >
+                {{ carregandoMais() ? "Carregando…" : "Carregar mais" }}
+            </button>
+            } }
+        </div>
+    </app-cartao>
+
+    @if (encontroAtivo(); as encontro) {
+    <app-modal
+        [aberto]="iniciativaAberta()"
+        titulo="Iniciativa"
+        largura="960px"
+        (fechou)="iniciativaAberta.set(false)"
+    >
+        <app-iniciativa-leitura [encontro]="encontro" />
+    </app-modal>
+    }
+</section>

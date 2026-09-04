@@ -2,7 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
   CampanhaAlteradaDto,
+  CampanhaConviteEspectadorInternoAlterarDto,
+  CampanhaConviteEspectadorRegeneradoDto,
   CampanhaConviteInternoAlterarDto,
+  CampanhaConviteInternoRecuperadoDto,
   CampanhaConviteRecuperarDto,
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
@@ -20,6 +23,8 @@ import type {
   CampanhaMembroInternoRecuperadoDto,
   CampanhaMembroInternoRecuperarDto,
   CampanhaMembroInternoRemoverDto,
+  CampanhaMembroPapelInternoAlterarDto,
+  CampanhaMembroPapelInternoAlteradoDto,
   CampanhaMembroResumoDto,
   CampanhaMembrosInternoListarDto,
   CampanhaMestreInternoTransferirDto,
@@ -203,18 +208,28 @@ export class CampanhaRepository extends BaseRepository {
   }
 
   /**
-   * Recupera a campanha ativa pelo `codigoConvite` (ou `null`) — alimenta o `entrarCampanha`.
-   * Como o índice único `uix_campanha_codigo_convite_ativo` é parcial (`WHERE is_deleted =
-   * false`), um código só resolve para uma campanha ativa; após regeneração, o antigo some.
+   * Recupera a campanha ativa por qualquer um dos dois convites (m8-02) e resolve o `papel`
+   * correspondente — alimenta o `entrarCampanha`. Os dois índices únicos parciais
+   * (`uix_campanha_codigo_convite_ativo`/equivalente do espectador) filtram por `is_deleted =
+   * false`, então um código só resolve para uma campanha ativa (após regeneração, o antigo
+   * some) e nunca bate nos dois `WHERE` ao mesmo tempo — o `CASE` do papel nunca é ambíguo.
    */
-  async recuperarPorCodigoConvite(
+  async recuperarPorCodigoConviteOuEspectador(
     dto: CampanhaConviteRecuperarDto,
-  ): Promise<CampanhaRecuperadaDto | null> {
-    const [campanhaEncontrada] = await this.executarConsulta<CampanhaRecuperadaDto>(
-      `SELECT id, nome, descricao, codigo_convite AS "codigoConvite"
+  ): Promise<CampanhaConviteInternoRecuperadoDto | null> {
+    const [campanhaEncontrada] = await this.executarConsulta<CampanhaConviteInternoRecuperadoDto>(
+      `SELECT id, nome, descricao,
+              CASE WHEN codigo_convite = :codigoConvite
+                   THEN :papelJogador ELSE :papelEspectador
+              END AS papel
        FROM campanha
-       WHERE codigo_convite = :codigoConvite AND is_deleted = false`,
-      { codigoConvite: dto.codigoConvite },
+       WHERE (codigo_convite = :codigoConvite OR codigo_convite_espectador = :codigoConvite)
+         AND is_deleted = false`,
+      {
+        codigoConvite: dto.codigoConvite,
+        papelJogador: TipoCampanhaMembroPapelEnum.JOGADOR,
+        papelEspectador: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      },
     );
     return campanhaEncontrada ?? null;
   }
@@ -335,6 +350,45 @@ export class CampanhaRepository extends BaseRepository {
       { id: dto.id, codigoConvite: dto.codigoConvite },
     );
     return conviteRegenerado;
+  }
+
+  /**
+   * Substitui o `codigoConviteEspectador` da campanha pelo novo (já gerado na service),
+   * invalidando o anterior — mesma forma de `alterarConvite`, para o segundo convite (m8-02). Só
+   * toca campanha ativa (`WHERE is_deleted = false`), sem `DEFAULT`.
+   */
+  async alterarConviteEspectador(
+    dto: CampanhaConviteEspectadorInternoAlterarDto,
+  ): Promise<CampanhaConviteEspectadorRegeneradoDto> {
+    const [conviteRegenerado] = await this.executarConsulta<CampanhaConviteEspectadorRegeneradoDto>(
+      `UPDATE campanha
+       SET codigo_convite_espectador = :codigoConviteEspectador, updated_date = NOW()
+       WHERE id = :id AND is_deleted = false
+       RETURNING id, codigo_convite_espectador AS "codigoConviteEspectador"`,
+      { id: dto.id, codigoConviteEspectador: dto.codigoConviteEspectador },
+    );
+    return conviteRegenerado;
+  }
+
+  /**
+   * Altera o `papel` (`JOGADOR ↔ ESPECTADOR`) do vínculo `campanha_membro` de um usuário — m8-02.
+   * Traduz `codigo → id` do papel por subconsulta (§10.2.12), mesmo padrão de `criarMembro`. Só
+   * toca vínculo ativo (`is_deleted = false`), sem `DEFAULT`. Todas as invariantes (não pode ser
+   * o próprio requisitante, não pode ser o único mestre, `papel` nunca é `MESTRE`) já foram
+   * verificadas pela service antes de chegar aqui.
+   */
+  async alterarPapelMembro(
+    dto: CampanhaMembroPapelInternoAlterarDto,
+  ): Promise<CampanhaMembroPapelInternoAlteradoDto> {
+    await this.executarComando(
+      `UPDATE campanha_membro
+       SET tipo_campanha_membro_papel_id =
+             (SELECT id FROM tipo_campanha_membro_papel WHERE codigo = :papel AND is_deleted = false),
+           updated_date = NOW()
+       WHERE campanha_id = :campanhaId AND usuario_id = :usuarioId AND is_deleted = false`,
+      { campanhaId: dto.campanhaId, usuarioId: dto.usuarioId, papel: dto.papel },
+    );
+    return { campanhaId: dto.campanhaId, usuarioId: dto.usuarioId, papel: dto.papel };
   }
 
   /**

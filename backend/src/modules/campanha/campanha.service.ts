@@ -3,6 +3,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ItemCategoriaEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   CampanhaAlteradaDto,
+  CampanhaConviteEspectadorRegeneradoDto,
+  CampanhaConviteEspectadorRegenerarDto,
   CampanhaConviteRegeneradoDto,
   CampanhaConviteRegenerarDto,
   CampanhaCriadaDto,
@@ -21,7 +23,10 @@ import type {
   CampanhaInventarioItemRemoverDto,
   CampanhaInventarioRecuperarDto,
   CampanhaListarDto,
+  CampanhaMembroInternoRecuperadoDto,
   CampanhaMembroInternoRecuperarDto,
+  CampanhaMembroPapelAlteradoDto,
+  CampanhaMembroPapelAlterarDto,
   CampanhaMembroRemoverDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
@@ -127,8 +132,11 @@ export class CampanhaService {
   }
 
   /**
-   * Recupera uma campanha pelo `id`. Exige que o usuário autenticado seja membro dela
-   * (`UnauthorizedAccessException` caso contrário); `ResourceNotFoundException` se a campanha
+   * Recupera uma campanha pelo `id`. Exige que o usuário autenticado seja `MESTRE` ou `JOGADOR`
+   * dela — **m8-02**: `ESPECTADOR` é rejeitado (`UnauthorizedAccessException`), porque este
+   * recorte inclui código de convite e outros dados de gestão que o papel nunca deveria ver
+   * (decisão de produto #4/#5 de `m8-espectadores-campanha`); o espectador usa a projeção
+   * dedicada do painel (`CampanhaProjecaoService`). `ResourceNotFoundException` se a campanha
    * não existir.
    */
   async recuperarCampanha(
@@ -140,8 +148,31 @@ export class CampanhaService {
       throw new ResourceNotFoundException('Campanha');
     }
 
-    await this.validarMembro({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+    const membroEncontrado = await this.validarMembro({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+    if (this.ehEspectador(membroEncontrado.papel)) {
+      throw new UnauthorizedAccessException();
+    }
     return campanhaEncontrada;
+  }
+
+  /**
+   * Garante que o usuário é membro ativo da campanha, **qualquer papel** (m8-02) — usado pelo
+   * `CampanhaGateway` para autorizar a entrada na sala `campanha:<id>`. Diferente de
+   * `recuperarCampanha` (REST, nega `ESPECTADOR` e devolve dados de gestão), aqui o espectador
+   * também entra: ele só recebe os broadcasts que o gateway deliberadamente lhe envia (rolagem
+   * `PUBLICA`), nunca dados privados — a sala em si não é o gate de conteúdo.
+   * `ResourceNotFoundException` se a campanha não existir; `UnauthorizedAccessException` se não
+   * for membro.
+   */
+  async validarAcessoSalaCampanha(
+    dto: CampanhaRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMembroInternoRecuperadoDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId(dto);
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+    return this.validarMembro({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
   }
 
   /**
@@ -178,16 +209,20 @@ export class CampanhaService {
   }
 
   /**
-   * Faz o usuário autenticado ingressar numa campanha pelo `codigoConvite`, com papel
-   * `JOGADOR` (SYSTEM.SPEC §14). Código inexistente/inválido → `ResourceNotFoundException`;
-   * usuário que já é membro → `BusinessException` (respeitando o índice único
-   * `uix_campanha_membro_campanha_usuario_ativo`).
+   * Faz o usuário autenticado ingressar numa campanha informando um `codigoConvite` — **m8-02**:
+   * o mesmo campo aceita tanto o convite de `JOGADOR` quanto o de `ESPECTADOR`; o repositório
+   * resolve qual dos dois bateu e devolve o papel correspondente
+   * (`recuperarPorCodigoConviteOuEspectador`), nunca o cliente. Código inexistente/inválido →
+   * `ResourceNotFoundException`; usuário que já é membro (com **qualquer** papel, inclusive
+   * quando o código informado corresponderia a um papel diferente do atual — sem autoelevação
+   * nem autorrebaixamento por convite, decisão de produto #3) → `BusinessException`, respeitando
+   * o índice único `uix_campanha_membro_campanha_usuario_ativo`.
    */
   async entrarCampanha(
     dto: CampanhaEntrarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<CampanhaEntradaDto> {
-    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorCodigoConvite({
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorCodigoConviteOuEspectador({
       codigoConvite: dto.codigoConvite,
     });
     if (!campanhaEncontrada) {
@@ -205,7 +240,7 @@ export class CampanhaService {
     await this.campanhaRepositorio.criarMembro({
       campanhaId: campanhaEncontrada.id,
       usuarioId: usuarioAtivo.sub,
-      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      papel: campanhaEncontrada.papel,
     });
 
     this.campanhaGateway.emitirMembroEntrou({
@@ -217,7 +252,7 @@ export class CampanhaService {
       id: campanhaEncontrada.id,
       nome: campanhaEncontrada.nome,
       descricao: campanhaEncontrada.descricao,
-      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      papel: campanhaEncontrada.papel,
     };
   }
 
@@ -244,11 +279,82 @@ export class CampanhaService {
   }
 
   /**
-   * Lista os membros da campanha (nome/papel/fichas — m3-65). Visível a qualquer membro da
-   * campanha (§14). Resolve o papel do requisitante via `recuperarMembro` (precisa dele de
-   * qualquer forma, pra decidir `acessoCompleto`/carteirinha no repositório) — substitui o antigo
-   * `validarMembro` só-checagem por essa mesma chamada. `ResourceNotFoundException` se a campanha
-   * não existir; `UnauthorizedAccessException` se o autor não for membro.
+   * Regenera o `codigoConviteEspectador` da campanha (m8-02) — mesma regra de `regenerarConvite`,
+   * para o segundo convite: só o mestre pode, gera um código novo e invalida o anterior, sem
+   * afetar o convite de `JOGADOR`. `ResourceNotFoundException` se a campanha não existir;
+   * `UnauthorizedAccessException` se o autor não for o mestre.
+   */
+  async regenerarConviteEspectador(
+    dto: CampanhaConviteEspectadorRegenerarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaConviteEspectadorRegeneradoDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.id });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    await this.validarMestre({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+    return this.campanhaRepositorio.alterarConviteEspectador({
+      id: dto.id,
+      codigoConviteEspectador: this.gerarCodigoConvite(),
+    });
+  }
+
+  /**
+   * Altera o papel de um membro entre `JOGADOR` e `ESPECTADOR` (m8-02, decisão de produto #3) —
+   * só o mestre pode (gate `validarMestre`, único árbitro — proibição #28). Não pode alterar a si
+   * mesmo (o único mestre da campanha — `BusinessException`); o alvo não pode ser o mestre
+   * (defensivo: por invariante, só o próprio requisitante poderia ser, já barrado acima). Para
+   * promover um espectador a mestre, o mestre primeiro o torna `JOGADOR` por aqui e só depois usa
+   * `transferirMestre` (que rejeita alvo `ESPECTADOR`). `ResourceNotFoundException` se a campanha
+   * ou o membro-alvo não existirem. Emite `campanha:membro-papel-alterado` após persistir, para os
+   * clientes recarregarem os dados de membro.
+   */
+  async alterarPapelMembro(
+    dto: CampanhaMembroPapelAlterarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMembroPapelAlteradoDto> {
+    const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.id });
+    if (!campanhaEncontrada) {
+      throw new ResourceNotFoundException('Campanha');
+    }
+
+    await this.validarMestre({ campanhaId: dto.id, usuarioId: usuarioAtivo.sub });
+
+    if (dto.usuarioId === usuarioAtivo.sub) {
+      throw new BusinessException(
+        'O mestre não pode alterar o próprio papel; transfira o papel de mestre ou exclua a campanha',
+      );
+    }
+
+    const membroAlvo = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.id,
+      usuarioId: dto.usuarioId,
+    });
+    if (!membroAlvo) {
+      throw new ResourceNotFoundException('Membro da campanha');
+    }
+    if (this.ehMestre(membroAlvo.papel)) {
+      throw new BusinessException('O mestre da campanha não tem o papel alterado por esta ação');
+    }
+
+    const papelAlterado = await this.campanhaRepositorio.alterarPapelMembro({
+      campanhaId: dto.id,
+      usuarioId: dto.usuarioId,
+      papel: dto.papel,
+    });
+    this.campanhaGateway.emitirPapelMembroAlterado(papelAlterado);
+    return papelAlterado;
+  }
+
+  /**
+   * Lista os membros da campanha (nome/papel/fichas — m3-65). Visível a `MESTRE`/`JOGADOR` — m8-02:
+   * `ESPECTADOR` é rejeitado (`UnauthorizedAccessException`), pela mesma decisão de produto #4 de
+   * `recuperarCampanha` ("nunca vê... membros"). Resolve o papel do requisitante via
+   * `recuperarMembro` (precisa dele de qualquer forma, pra decidir `acessoCompleto`/carteirinha no
+   * repositório) — substitui o antigo `validarMembro` só-checagem por essa mesma chamada.
+   * `ResourceNotFoundException` se a campanha não existir; `UnauthorizedAccessException` se o autor
+   * não for membro ou for `ESPECTADOR`.
    */
   async listarMembros(
     dto: CampanhaMembrosListarDto,
@@ -265,24 +371,26 @@ export class CampanhaService {
       campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
     });
-    if (!membroAtivo) {
+    if (!membroAtivo || this.ehEspectador(membroAtivo.papel)) {
       throw new UnauthorizedAccessException();
     }
 
     return this.campanhaRepositorio.listarMembros({
       campanhaId: dto.campanhaId,
       usuarioAtivoId: usuarioAtivo.sub,
-      usuarioAtivoEhMestre: membroAtivo.papel === TipoCampanhaMembroPapelEnum.MESTRE,
+      usuarioAtivoEhMestre: this.ehMestre(membroAtivo.papel),
     });
   }
 
   /**
    * Gate único do inventário de esquadrão (proibição #28 — árbitro único desta regra, chamado
-   * também pelo módulo `ficha` nas rotas de transferência): exige que o usuário seja membro da
-   * campanha; se for `JOGADOR`, exige `naBase = true` (o Mestre sempre acessa, mesmo Em Missão).
-   * Devolve a campanha (quem chama já precisa dela, evita reconsultar). `ResourceNotFoundException`
-   * se a campanha não existir; `UnauthorizedAccessException` se não for membro, ou for jogador com
-   * a campanha Em Missão.
+   * também pelo módulo `ficha` nas rotas de transferência): exige que o usuário seja `MESTRE` ou
+   * `JOGADOR` da campanha — **m8-02**: `ESPECTADOR` é sempre rejeitado, mesmo sendo membro (o
+   * inventário de esquadrão é conteúdo de jogo, fora do escopo do papel — decisão de produto #4).
+   * `JOGADOR` exige `naBase = true` (o Mestre sempre acessa, mesmo Em Missão). Devolve a campanha
+   * (quem chama já precisa dela, evita reconsultar). `ResourceNotFoundException` se a campanha não
+   * existir; `UnauthorizedAccessException` se não for membro, se for espectador, ou se for jogador
+   * com a campanha Em Missão.
    */
   async validarAcessoInventario(dto: CampanhaMembroInternoRecuperarDto): Promise<CampanhaRecuperadaDto> {
     const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.campanhaId });
@@ -291,10 +399,10 @@ export class CampanhaService {
     }
 
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
-    if (!membroEncontrado) {
+    if (!membroEncontrado || this.ehEspectador(membroEncontrado.papel)) {
       throw new UnauthorizedAccessException();
     }
-    if (membroEncontrado.papel === TipoCampanhaMembroPapelEnum.JOGADOR && !campanhaEncontrada.naBase) {
+    if (this.ehJogador(membroEncontrado.papel) && !campanhaEncontrada.naBase) {
       throw new UnauthorizedAccessException(
         'Inventário de esquadrão só pode ser acessado enquanto a campanha está na Base da Fundação',
       );
@@ -303,14 +411,17 @@ export class CampanhaService {
     return campanhaEncontrada;
   }
 
-  /** Valida somente a leitura do inventário de esquadrão: qualquer membro pode consultá-lo. */
+  /**
+   * Valida somente a leitura do inventário de esquadrão: `MESTRE`/`JOGADOR` podem consultá-lo —
+   * `ESPECTADOR` é rejeitado (m8-02, mesma decisão de produto #4 de `validarAcessoInventario`).
+   */
   async validarLeituraInventario(dto: CampanhaMembroInternoRecuperarDto): Promise<CampanhaRecuperadaDto> {
     const campanhaEncontrada = await this.campanhaRepositorio.recuperarPorId({ id: dto.campanhaId });
     if (!campanhaEncontrada) {
       throw new ResourceNotFoundException('Campanha');
     }
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
-    if (!membroEncontrado) {
+    if (!membroEncontrado || this.ehEspectador(membroEncontrado.papel)) {
       throw new UnauthorizedAccessException();
     }
     return campanhaEncontrada;
@@ -494,8 +605,11 @@ export class CampanhaService {
    * Transfere o papel de mestre para outro membro — só o mestre atual pode (§14, gate
    * `validarMestre`). Promove o `novoMestreUsuarioId` (que deve ser membro `JOGADOR`) a
    * `MESTRE` e rebaixa o mestre atual a `JOGADOR`, **atomicamente**, mantendo exatamente um
-   * mestre. Campanha inexistente / alvo não-membro → `ResourceNotFoundException`; alvo = o
-   * próprio mestre ou alvo já `MESTRE` → `BusinessException`.
+   * mestre. **m8-02**: um `ESPECTADOR` nunca vira mestre por aqui — o mestre precisa primeiro
+   * usar `alterarPapelMembro` pra torná-lo `JOGADOR` (decisão de produto #3: "para promover
+   * alguém a mestre, primeiro o torna jogador"). Campanha inexistente / alvo não-membro →
+   * `ResourceNotFoundException`; alvo = o próprio mestre, alvo já `MESTRE` ou alvo `ESPECTADOR` →
+   * `BusinessException`.
    */
   async transferirMestre(
     dto: CampanhaMestreTransferirDto,
@@ -519,8 +633,13 @@ export class CampanhaService {
     if (!membroAlvo) {
       throw new ResourceNotFoundException('Membro da campanha');
     }
-    if (membroAlvo.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+    if (this.ehMestre(membroAlvo.papel)) {
       throw new BusinessException('O usuário indicado já é o mestre desta campanha');
+    }
+    if (!this.ehJogador(membroAlvo.papel)) {
+      throw new BusinessException(
+        'Só um jogador pode ser promovido a mestre; torne o espectador jogador primeiro',
+      );
     }
 
     await this.campanhaRepositorio.transferirMestre({
@@ -560,14 +679,22 @@ export class CampanhaService {
   }
 
   /**
-   * Garante que o usuário é membro da campanha (dono/mestre ou jogador) — do contrário lança
-   * `UnauthorizedAccessException`. Base da visualização de campanha (§14).
+   * Garante que o usuário é membro da campanha, **qualquer papel** (mestre, jogador ou
+   * espectador) — do contrário lança `UnauthorizedAccessException`. Devolve o vínculo (com o
+   * `papel`) porque toda chamada precisa dele de qualquer forma para decidir a permissão
+   * específica (m8-02 — antes só confirmava a existência do vínculo, agora é a base dos
+   * predicados `ehMestre`/`ehJogador`/`ehEspectador` usados em todo o módulo, incluindo por
+   * `ficha`/`rolagem`/`pagina-caderno` via `CampanhaRepository.recuperarMembro` reusado sem
+   * duplicar a regra — proibição #28).
    */
-  private async validarMembro(dto: CampanhaMembroInternoRecuperarDto): Promise<void> {
+  async validarMembro(
+    dto: CampanhaMembroInternoRecuperarDto,
+  ): Promise<CampanhaMembroInternoRecuperadoDto> {
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
     if (!membroEncontrado) {
       throw new UnauthorizedAccessException();
     }
+    return membroEncontrado;
   }
 
   /**
@@ -576,9 +703,29 @@ export class CampanhaService {
    */
   private async validarMestre(dto: CampanhaMembroInternoRecuperarDto): Promise<void> {
     const membroEncontrado = await this.campanhaRepositorio.recuperarMembro(dto);
-    if (!membroEncontrado || membroEncontrado.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+    if (!membroEncontrado || !this.ehMestre(membroEncontrado.papel)) {
       throw new UnauthorizedAccessException();
     }
+  }
+
+  /**
+   * Predicados de papel de campanha (m8-02) — centralizados aqui para que `ficha`, `rolagem` e
+   * `pagina-caderno` nunca comparem `papel === TipoCampanhaMembroPapelEnum.X` por conta própria;
+   * todos reusam estes três métodos (injetando `CampanhaService`), evitando `if` equivalente
+   * espalhado pelos outros módulos (entregável 3 de `m8-02-backend-permissoes-projecoes`).
+   */
+  ehMestre(papel: TipoCampanhaMembroPapelEnum): boolean {
+    return papel === TipoCampanhaMembroPapelEnum.MESTRE;
+  }
+
+  /** V. `ehMestre`. */
+  ehJogador(papel: TipoCampanhaMembroPapelEnum): boolean {
+    return papel === TipoCampanhaMembroPapelEnum.JOGADOR;
+  }
+
+  /** V. `ehMestre`. */
+  ehEspectador(papel: TipoCampanhaMembroPapelEnum): boolean {
+    return papel === TipoCampanhaMembroPapelEnum.ESPECTADOR;
   }
 
   /**

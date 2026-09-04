@@ -85,4 +85,70 @@ describe('CampanhaRepository', () => {
     expect(parametros).toEqual({ campanhaId: 3, itens: JSON.stringify([{ id: 'a1', quantidade: 2 }]) });
     expect(resultado).toEqual({ itens: [{ id: 'a1', quantidade: 2 }] });
   });
+
+  it('recuperarPorCodigoConviteOuEspectador resolve o papel via CASE sobre os dois códigos (m8-02)', async () => {
+    const raw = vi.fn().mockResolvedValue({
+      rows: [{ id: 3, nome: 'Contenção Alfa', descricao: null, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR }],
+    });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.recuperarPorCodigoConviteOuEspectador({
+      codigoConvite: 'WXYZ6789',
+    });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('codigo_convite = :codigoConvite OR codigo_convite_espectador = :codigoConvite');
+    expect(sql).toContain('AND is_deleted = false');
+    expect(parametros).toEqual({
+      codigoConvite: 'WXYZ6789',
+      papelJogador: TipoCampanhaMembroPapelEnum.JOGADOR,
+      papelEspectador: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+    });
+    expect(resultado?.papel).toBe(TipoCampanhaMembroPapelEnum.ESPECTADOR);
+  });
+
+  it('recuperarPorCodigoConviteOuEspectador devolve null quando nenhum código bate', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.recuperarPorCodigoConviteOuEspectador({
+      codigoConvite: 'INVALIDO',
+    });
+
+    expect(resultado).toBeNull();
+  });
+
+  it('alterarConviteEspectador grava o novo código sem tocar o convite de jogador (m8-02)', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [{ id: 3, codigoConviteEspectador: 'NOVOCODE' }] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.alterarConviteEspectador({
+      id: 3,
+      codigoConviteEspectador: 'NOVOCODE',
+    });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('SET codigo_convite_espectador = :codigoConviteEspectador');
+    expect(sql).not.toContain('SET codigo_convite =');
+    expect(sql).toContain('WHERE id = :id AND is_deleted = false');
+    expect(parametros).toEqual({ id: 3, codigoConviteEspectador: 'NOVOCODE' });
+    expect(resultado).toEqual({ id: 3, codigoConviteEspectador: 'NOVOCODE' });
+  });
+
+  it('alterarPapelMembro traduz o papel por subconsulta e só toca o vínculo ativo (m8-02)', async () => {
+    const raw = vi.fn().mockResolvedValue({ rows: [] });
+    const repositorio = new CampanhaRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.alterarPapelMembro({
+      campanhaId: 3,
+      usuarioId: 42,
+      papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+    });
+
+    const [sql, parametros] = raw.mock.calls[0] as [string, Record<string, unknown>];
+    expect(sql).toContain('SELECT id FROM tipo_campanha_membro_papel WHERE codigo = :papel');
+    expect(sql).toContain('WHERE campanha_id = :campanhaId AND usuario_id = :usuarioId AND is_deleted = false');
+    expect(parametros).toEqual({ campanhaId: 3, usuarioId: 42, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+    expect(resultado).toEqual({ campanhaId: 3, usuarioId: 42, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+  });
 });

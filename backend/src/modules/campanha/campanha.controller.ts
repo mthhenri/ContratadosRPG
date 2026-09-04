@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put } 
 import type {
   CampanhaAlteradaDto,
   CampanhaAlterarDto,
+  CampanhaConviteEspectadorRegeneradoDto,
   CampanhaConviteRegeneradoDto,
   CampanhaCriadaDto,
   CampanhaCriarDto,
@@ -12,6 +13,8 @@ import type {
   CampanhaInventarioDto,
   CampanhaInventarioItemAdicionarDto,
   CampanhaInventarioItemAlterarDto,
+  CampanhaMembroPapelAlteradoDto,
+  CampanhaMembroPapelAlterarDto,
   CampanhaMembroRemovidoDto,
   CampanhaMembroResumoDto,
   CampanhaMestreTransferidoDto,
@@ -78,6 +81,26 @@ export class CampanhaController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<CampanhaConviteRegeneradoDto> {
     return this.campanhaService.regenerarConvite({ id }, usuarioAtivo);
+  }
+
+  /** Regenera o convite de espectador — independente do convite de jogador (m8-02). */
+  @Post(':id/convite-espectador/regenerar')
+  regenerarConviteEspectador(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaConviteEspectadorRegeneradoDto> {
+    return this.campanhaService.regenerarConviteEspectador({ id }, usuarioAtivo);
+  }
+
+  /** Troca o papel de um membro entre `JOGADOR` e `ESPECTADOR`, só o mestre pode (m8-02). */
+  @Patch(':id/membro/:usuarioId/papel')
+  alterarPapelMembro(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('usuarioId', ParseIntPipe) usuarioId: number,
+    @Body() dto: Omit<CampanhaMembroPapelAlterarDto, 'id' | 'usuarioId'>,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<CampanhaMembroPapelAlteradoDto> {
+    return this.campanhaService.alterarPapelMembro({ ...dto, id, usuarioId }, usuarioAtivo);
   }
 
   @Delete(':id/membro/:usuarioId')

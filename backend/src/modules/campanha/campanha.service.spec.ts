@@ -23,11 +23,13 @@ interface RepositorioDublado {
   criarCampanha: ReturnType<typeof vi.fn>;
   criarMembro: ReturnType<typeof vi.fn>;
   listarPorUsuario: ReturnType<typeof vi.fn>;
-  recuperarPorCodigoConvite: ReturnType<typeof vi.fn>;
+  recuperarPorCodigoConviteOuEspectador: ReturnType<typeof vi.fn>;
   recuperarPorId: ReturnType<typeof vi.fn>;
   recuperarMembro: ReturnType<typeof vi.fn>;
   alterarCampanha: ReturnType<typeof vi.fn>;
   alterarConvite: ReturnType<typeof vi.fn>;
+  alterarConviteEspectador: ReturnType<typeof vi.fn>;
+  alterarPapelMembro: ReturnType<typeof vi.fn>;
   listarMembros: ReturnType<typeof vi.fn>;
   excluirCampanha: ReturnType<typeof vi.fn>;
   removerMembro: ReturnType<typeof vi.fn>;
@@ -41,6 +43,7 @@ interface CampanhaGatewayDublado {
   emitirMembroEntrou: ReturnType<typeof vi.fn>;
   emitirEstadoAlterado: ReturnType<typeof vi.fn>;
   emitirInventarioAlterado: ReturnType<typeof vi.fn>;
+  emitirPapelMembroAlterado: ReturnType<typeof vi.fn>;
 }
 
 describe('CampanhaService', () => {
@@ -65,11 +68,13 @@ describe('CampanhaService', () => {
       criarCampanha: vi.fn(),
       criarMembro: vi.fn(),
       listarPorUsuario: vi.fn(),
-      recuperarPorCodigoConvite: vi.fn(),
+      recuperarPorCodigoConviteOuEspectador: vi.fn(),
       recuperarPorId: vi.fn(),
       recuperarMembro: vi.fn(),
       alterarCampanha: vi.fn(),
       alterarConvite: vi.fn(),
+      alterarConviteEspectador: vi.fn(),
+      alterarPapelMembro: vi.fn(),
       listarMembros: vi.fn(),
       excluirCampanha: vi.fn(),
       removerMembro: vi.fn(),
@@ -82,6 +87,7 @@ describe('CampanhaService', () => {
       emitirMembroEntrou: vi.fn(),
       emitirEstadoAlterado: vi.fn(),
       emitirInventarioAlterado: vi.fn(),
+      emitirPapelMembroAlterado: vi.fn(),
     };
     service = new CampanhaService(
       repositorio as unknown as CampanhaRepository,
@@ -189,6 +195,46 @@ describe('CampanhaService', () => {
         UnauthorizedAccessException,
       );
     });
+
+    it('lança UnauthorizedAccessException quando o usuário é ESPECTADOR (m8-02)', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+
+      await expect(service.recuperarCampanha({ id: 3 }, usuarioNaoMestre)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+    });
+  });
+
+  describe('validarAcessoSalaCampanha (m8-02, gate do CampanhaGateway)', () => {
+    it('devolve o vínculo quando o usuário é ESPECTADOR — diferente de recuperarCampanha', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      const vinculoEspectador = { papel: TipoCampanhaMembroPapelEnum.ESPECTADOR };
+      repositorio.recuperarMembro.mockResolvedValue(vinculoEspectador);
+
+      const resultado = await service.validarAcessoSalaCampanha({ id: 3 }, usuarioNaoMestre);
+
+      expect(resultado).toBe(vinculoEspectador);
+    });
+
+    it('lança ResourceNotFoundException quando a campanha não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.validarAcessoSalaCampanha({ id: 99 }, usuarioNaoMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
+    });
+
+    it('lança UnauthorizedAccessException quando o usuário não é membro', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue(null);
+
+      await expect(
+        service.validarAcessoSalaCampanha({ id: 3 }, usuarioNaoMestre),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
   });
 
   describe('alterarCampanha', () => {
@@ -263,9 +309,14 @@ describe('CampanhaService', () => {
     });
   });
 
-  describe('entrarCampanha', () => {
-    it('cria o campanha_membro do ingressante com papel JOGADOR', async () => {
-      repositorio.recuperarPorCodigoConvite.mockResolvedValue(campanhaPersistida);
+  describe('entrarCampanha (m8-02, dois códigos)', () => {
+    it('cria o campanha_membro do ingressante com papel JOGADOR pelo código de jogador', async () => {
+      repositorio.recuperarPorCodigoConviteOuEspectador.mockResolvedValue({
+        id: campanhaPersistida.id,
+        nome: campanhaPersistida.nome,
+        descricao: campanhaPersistida.descricao,
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
       repositorio.recuperarMembro.mockResolvedValue(null);
       repositorio.criarMembro.mockResolvedValue(undefined);
 
@@ -274,7 +325,7 @@ describe('CampanhaService', () => {
         usuarioNaoMestre,
       );
 
-      expect(repositorio.recuperarPorCodigoConvite).toHaveBeenCalledWith({
+      expect(repositorio.recuperarPorCodigoConviteOuEspectador).toHaveBeenCalledWith({
         codigoConvite: 'ABCD2345',
       });
       expect(repositorio.criarMembro).toHaveBeenCalledWith({
@@ -294,8 +345,31 @@ describe('CampanhaService', () => {
       });
     });
 
-    it('lança ResourceNotFoundException quando o código não existe', async () => {
-      repositorio.recuperarPorCodigoConvite.mockResolvedValue(null);
+    it('cria o campanha_membro do ingressante com papel ESPECTADOR pelo código de espectador', async () => {
+      repositorio.recuperarPorCodigoConviteOuEspectador.mockResolvedValue({
+        id: campanhaPersistida.id,
+        nome: campanhaPersistida.nome,
+        descricao: campanhaPersistida.descricao,
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+      repositorio.recuperarMembro.mockResolvedValue(null);
+      repositorio.criarMembro.mockResolvedValue(undefined);
+
+      const resultado = await service.entrarCampanha(
+        { codigoConvite: 'WXYZ6789' },
+        usuarioNaoMestre,
+      );
+
+      expect(repositorio.criarMembro).toHaveBeenCalledWith({
+        campanhaId: campanhaPersistida.id,
+        usuarioId: usuarioNaoMestre.sub,
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+      expect(resultado.papel).toBe(TipoCampanhaMembroPapelEnum.ESPECTADOR);
+    });
+
+    it('lança ResourceNotFoundException quando nenhum dos dois códigos existe', async () => {
+      repositorio.recuperarPorCodigoConviteOuEspectador.mockResolvedValue(null);
 
       await expect(
         service.entrarCampanha({ codigoConvite: 'INVALIDO' }, usuarioNaoMestre),
@@ -304,14 +378,19 @@ describe('CampanhaService', () => {
       expect(repositorio.criarMembro).not.toHaveBeenCalled();
     });
 
-    it('lança BusinessException quando o usuário já é membro', async () => {
-      repositorio.recuperarPorCodigoConvite.mockResolvedValue(campanhaPersistida);
+    it('lança BusinessException quando o usuário já é membro (mesmo tentando trocar de papel pelo outro código)', async () => {
+      repositorio.recuperarPorCodigoConviteOuEspectador.mockResolvedValue({
+        id: campanhaPersistida.id,
+        nome: campanhaPersistida.nome,
+        descricao: campanhaPersistida.descricao,
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
       repositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
       });
 
       await expect(
-        service.entrarCampanha({ codigoConvite: 'ABCD2345' }, usuarioNaoMestre),
+        service.entrarCampanha({ codigoConvite: 'WXYZ6789' }, usuarioNaoMestre),
       ).rejects.toThrow(BusinessException);
 
       expect(repositorio.criarMembro).not.toHaveBeenCalled();
@@ -357,6 +436,119 @@ describe('CampanhaService', () => {
       );
 
       expect(repositorio.recuperarMembro).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('regenerarConviteEspectador (m8-02, independente do convite de jogador)', () => {
+    it('gera um novo código de espectador quando o usuário é o mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      const conviteRegenerado = { id: 3, codigoConviteEspectador: 'ABCDEFGH' };
+      repositorio.alterarConviteEspectador.mockResolvedValue(conviteRegenerado);
+
+      const resultado = await service.regenerarConviteEspectador({ id: 3 }, usuarioMestre);
+
+      expect(repositorio.alterarConviteEspectador).toHaveBeenCalledWith({
+        id: 3,
+        codigoConviteEspectador: 'ABCDEFGH',
+      });
+      expect(repositorio.alterarConvite).not.toHaveBeenCalled();
+      expect(resultado).toBe(conviteRegenerado);
+    });
+
+    it('lança UnauthorizedAccessException quando o usuário não é o mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(
+        service.regenerarConviteEspectador({ id: 3 }, usuarioNaoMestre),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(repositorio.alterarConviteEspectador).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando a campanha não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(null);
+
+      await expect(
+        service.regenerarConviteEspectador({ id: 99 }, usuarioMestre),
+      ).rejects.toThrow(ResourceNotFoundException);
+    });
+  });
+
+  describe('alterarPapelMembro (m8-02, JOGADOR ↔ ESPECTADOR pelo mestre)', () => {
+    it('altera o papel do membro-alvo e emite campanha:membro-papel-alterado', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.MESTRE }) // requisitante
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.JOGADOR }); // alvo
+      const papelAlterado = {
+        campanhaId: 3,
+        usuarioId: usuarioNaoMestre.sub,
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      };
+      repositorio.alterarPapelMembro.mockResolvedValue(papelAlterado);
+
+      const resultado = await service.alterarPapelMembro(
+        { id: 3, usuarioId: usuarioNaoMestre.sub, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR },
+        usuarioMestre,
+      );
+
+      expect(repositorio.alterarPapelMembro).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuarioNaoMestre.sub,
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+      expect(campanhaGateway.emitirPapelMembroAlterado).toHaveBeenCalledWith(papelAlterado);
+      expect(resultado).toBe(papelAlterado);
+    });
+
+    it('lança BusinessException quando o mestre tenta alterar o próprio papel', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+
+      await expect(
+        service.alterarPapelMembro(
+          { id: 3, usuarioId: usuarioMestre.sub, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR },
+          usuarioMestre,
+        ),
+      ).rejects.toThrow(BusinessException);
+
+      expect(repositorio.alterarPapelMembro).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o requisitante não é o mestre', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+
+      await expect(
+        service.alterarPapelMembro(
+          { id: 3, usuarioId: 99, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR },
+          usuarioNaoMestre,
+        ),
+      ).rejects.toThrow(UnauthorizedAccessException);
+
+      expect(repositorio.alterarPapelMembro).not.toHaveBeenCalled();
+    });
+
+    it('lança ResourceNotFoundException quando o membro-alvo não existe', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.MESTRE })
+        .mockResolvedValueOnce(null);
+
+      await expect(
+        service.alterarPapelMembro(
+          { id: 3, usuarioId: 99, papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+          usuarioMestre,
+        ),
+      ).rejects.toThrow(ResourceNotFoundException);
+
+      expect(repositorio.alterarPapelMembro).not.toHaveBeenCalled();
     });
   });
 
@@ -421,6 +613,19 @@ describe('CampanhaService', () => {
       );
 
       expect(repositorio.recuperarMembro).not.toHaveBeenCalled();
+    });
+
+    it('lança UnauthorizedAccessException quando o usuário é ESPECTADOR (m8-02)', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+
+      await expect(service.listarMembros({ campanhaId: 3 }, usuarioNaoMestre)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+
+      expect(repositorio.listarMembros).not.toHaveBeenCalled();
     });
   });
 
@@ -561,6 +766,19 @@ describe('CampanhaService', () => {
       expect(repositorio.transferirMestre).not.toHaveBeenCalled();
     });
 
+    it('lança BusinessException quando o alvo é ESPECTADOR (m8-02 — precisa virar jogador antes)', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.MESTRE }) // validarMestre (autor)
+        .mockResolvedValueOnce({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR }); // alvo é espectador
+
+      await expect(
+        service.transferirMestre({ id: 3, novoMestreUsuarioId: usuarioNaoMestre.sub }, usuarioMestre),
+      ).rejects.toThrow(BusinessException);
+
+      expect(repositorio.transferirMestre).not.toHaveBeenCalled();
+    });
+
     it('lança ResourceNotFoundException quando a campanha não existe', async () => {
       repositorio.recuperarPorId.mockResolvedValue(null);
 
@@ -638,6 +856,35 @@ describe('CampanhaService', () => {
       await expect(
         service.validarAcessoInventario({ campanhaId: 3, usuarioId: 999 }),
       ).rejects.toThrow(UnauthorizedAccessException);
+    });
+
+    it('lança UnauthorizedAccessException quando é ESPECTADOR, mesmo com naBase=true (m8-02)', async () => {
+      repositorio.recuperarPorId.mockResolvedValue({ ...campanhaPersistida, naBase: true });
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+
+      await expect(
+        service.validarAcessoInventario({ campanhaId: 3, usuarioId: 999 }),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+  });
+
+  describe('validarLeituraInventario (m8-02, espectador nunca lê)', () => {
+    it('lança UnauthorizedAccessException quando é ESPECTADOR', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+
+      await expect(
+        service.validarLeituraInventario({ campanhaId: 3, usuarioId: 999 }),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+
+    it('permite o jogador', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+
+      await expect(
+        service.validarLeituraInventario({ campanhaId: 3, usuarioId: usuarioNaoMestre.sub }),
+      ).resolves.not.toThrow();
     });
   });
 

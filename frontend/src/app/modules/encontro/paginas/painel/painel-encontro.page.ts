@@ -62,6 +62,14 @@ import { FichaFlutuante } from '../../componentes/ficha-flutuante/ficha-flutuant
 import { SeletorCombatentes } from '../../componentes/seletor-combatentes/seletor-combatentes.component';
 import { RolagemAvulso } from '../../componentes/rolagem-avulso/rolagem-avulso.component';
 import { EncontroService } from '../../encontro.service';
+import {
+  calcularColunasGrade,
+  combatenteEhDaVez,
+  combatenteJaAgiu,
+  montarCombatentesVisuais,
+  resolverNivelAmeaca,
+  type CombatenteVisualDto,
+} from '../../encontro-leitura.util';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
 
 /**
@@ -82,14 +90,6 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
   social: 0,
   vontade: 0,
 };
-
-/** Uma posição visual da rodada, mantendo o estado no combatente original. */
-interface CombatenteVisualDto extends EncontroCombatenteResumoDto {
-  readonly ocorrencia: number;
-  readonly totalOcorrencias: number;
-  readonly indiceOrdem: number | null;
-  readonly chaveVisual: string;
-}
 
 /**
  * A tela **"Iniciativa"** (m7-05/m7-06), fiel a `docs/design/examples/iniciativa-desktop.html` —
@@ -401,93 +401,25 @@ export class PainelEncontro {
 
   /**
    * Posições visuais na ordem em que agem. Com a rodada calculada, cada slot vira um cartão: a
-   * repetição deixa a Cadência explícita sem duplicar o estado do combatente.
+   * repetição deixa a Cadência explícita sem duplicar o estado do combatente. Derivação pura
+   * (`montarCombatentesVisuais`, `encontro-leitura.util.ts`) — a mesma apresentação que a
+   * composição de leitura do espectador/prévia de jogador consome (m8-05), sem duplicá-la aqui.
    */
-  protected readonly combatentes = computed<readonly CombatenteVisualDto[]>(() => {
-    const encontroAtual = this.encontro();
-    if (!encontroAtual) {
-      return [];
-    }
-    if (encontroAtual.ordemRodada.length === 0) {
-      return [...encontroAtual.combatentes]
-        .sort((a, b) => (b.iniciativa ?? -Infinity) - (a.iniciativa ?? -Infinity))
-        .map((combatente) => ({
-          ...combatente,
-          ocorrencia: 1,
-          totalOcorrencias: 1,
-          indiceOrdem: null,
-          chaveVisual: `${combatente.id}-montagem`,
-        }));
-    }
-    const porId = new Map(encontroAtual.combatentes.map((combatente) => [combatente.id, combatente]));
-    const totais = new Map<number, number>();
-    for (const slot of encontroAtual.ordemRodada) {
-      totais.set(slot.combatenteId, (totais.get(slot.combatenteId) ?? 0) + 1);
-    }
-    const ordenados: CombatenteVisualDto[] = [];
-    const jaIncluidos = new Set<number>();
-    for (const [indiceOrdem, slot] of encontroAtual.ordemRodada.entries()) {
-      const combatente = porId.get(slot.combatenteId);
-      if (combatente) {
-        jaIncluidos.add(combatente.id);
-        ordenados.push({
-          ...combatente,
-          ocorrencia: slot.ocorrencia,
-          totalOcorrencias: totais.get(combatente.id) ?? 1,
-          indiceOrdem,
-          chaveVisual: `${combatente.id}-${slot.ocorrencia}`,
-        });
-      }
-    }
-    // Quem entrou depois do cálculo da ordem só age na próxima rodada — mas continua visível.
-    for (const combatente of encontroAtual.combatentes) {
-      if (!jaIncluidos.has(combatente.id)) {
-        ordenados.push({
-          ...combatente,
-          ocorrencia: 1,
-          totalOcorrencias: 1,
-          indiceOrdem: null,
-          chaveVisual: `${combatente.id}-pendente`,
-        });
-      }
-    }
-    return ordenados;
-  });
+  protected readonly combatentes = computed<readonly CombatenteVisualDto[]>(() =>
+    montarCombatentesVisuais(this.encontro()),
+  );
 
   /**
    * Quantidade de colunas da grade de cartões no desktop — cresce com o número de combatentes para
    * que uma Ameaça de Cadência alta ou um grupo grande não fiquem espremidos em 3 colunas fixas.
    * Tablet/mobile ignoram este valor (media query própria continua fixando 2/1 coluna).
    */
-  protected readonly colunasGrade = computed(() => {
-    const total = this.combatentes().length;
-    if (total >= 13) return 5;
-    if (total >= 9) return 4;
-    return 3;
-  });
+  protected readonly colunasGrade = computed(() => calcularColunasGrade(this.combatentes().length));
 
   /** `true` quando a grade deve usar o cartão compacto — divisão do jogador ou grade de 4+ colunas. */
   protected readonly gradeCompacta = computed(
     () => this.mostrarFichaLateral() || this.colunasGrade() > 3,
   );
-
-  /** Ids de quem já gastou todos os turnos desta rodada. */
-  private readonly jaAgiram = computed<ReadonlySet<number>>(() => {
-    const encontroAtual = this.encontro();
-    if (!encontroAtual || encontroAtual.status !== EncontroStatusEnum.ATIVO) {
-      return new Set<number>();
-    }
-    const pendentes = new Set(
-      encontroAtual.ordemRodada
-        .filter((_, indice) => indice >= encontroAtual.turnoIndice)
-        .map((slot) => slot.combatenteId),
-    );
-    return new Set(
-      encontroAtual.ordemRodada
-        .map((slot) => slot.combatenteId)
-        .filter((id) => !pendentes.has(id)),
-    );
-  });
 
   /** `true` quando falta iniciativa a alguém — o combate não pode começar assim. */
   protected readonly faltamIniciativas = computed(() =>
@@ -674,28 +606,17 @@ export class PainelEncontro {
 
   /** `true` quando é a vez deste combatente. */
   protected ehDaVez(combatente: CombatenteVisualDto): boolean {
-    const encontroAtual = this.encontro();
-    return encontroAtual?.status === EncontroStatusEnum.ATIVO
-      && combatente.indiceOrdem === encontroAtual.turnoIndice;
+    return combatenteEhDaVez(combatente, this.encontro());
   }
 
   /** `true` quando esta ocorrência visual já passou na rodada. */
-  protected jaAgiu(combatente: EncontroCombatenteResumoDto & { indiceOrdem?: number | null }): boolean {
-    const encontroAtual = this.encontro();
-    if (combatente.indiceOrdem !== undefined && combatente.indiceOrdem !== null && encontroAtual) {
-      return encontroAtual.status === EncontroStatusEnum.ATIVO
-        && combatente.indiceOrdem < encontroAtual.turnoIndice;
-    }
-    return this.jaAgiram().has(combatente.id);
+  protected jaAgiu(combatente: CombatenteVisualDto): boolean {
+    return combatenteJaAgiu(combatente, this.encontro());
   }
 
   /** Nível de Ameaça da criatura — vem do resumo da ficha, que a listagem da campanha já traz. */
   protected nivelAmeaca(combatente: EncontroCombatenteResumoDto): NivelAmeacaEnum | null {
-    if (combatente.tipoFicha !== TipoFichaEnum.CRIATURA || combatente.fichaId === null) {
-      return null;
-    }
-    const ficha = this.fichasCampanha().find((item) => item.id === combatente.fichaId);
-    return ficha?.na ?? null;
+    return resolverNivelAmeaca(combatente, this.fichasCampanha());
   }
 
   /** Abre a ficha do combatente clicado na janela flutuante (item novo). */
