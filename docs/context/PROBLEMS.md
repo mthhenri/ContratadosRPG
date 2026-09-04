@@ -89,38 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-019 — Barra de tempo da bandeja de dados não honra `prefers-reduced-motion` · `ABERTO` · frontend
-
-- **Sintoma:** `bandeja-dados.component.scss` tem `@media (prefers-reduced-motion: reduce)` para a
-  animação de entrada (`bandeja-entra`) e para a transição de saída, mas não para
-  `&__barra { animation: bandeja-esvazia 7s linear forwards; }` — com a preferência ligada, a barra
-  de tempo continua esvaziando animada.
-- **Causa:** a barra de tempo (`m3-22`) nasceu antes da `ui-20`, que introduziu o mesmo padrão em
-  `Notificacoes` e — lá, sim — com o `@media` correspondente na própria `&__barra`. O gap na
-  bandeja não foi visto até a comparação lado a lado.
-- **Contorno:** nenhum.
-- **Correção:** replicar em `bandeja-dados.component.scss` o mesmo bloco
-  `@media (prefers-reduced-motion: reduce) { animation: none; }` dentro de `&__barra` que
-  `notificacao.component.scss` já tem.
-- **Desde:** encontrado durante a `ui-20` (2026-09-02), fora do recorte da task (arquivo não
-  tocado pela spec).
-
-### P-044 — Itens da topbar se sobrepõem em telas por volta de 960px de largura · `ABERTO` · frontend
-
-- **Sintoma:** em `~960px` de largura (o viewport de "tela dividida" da verificação visual), o
-  item de navegação "Documentos" e o seletor de usuário (nome + avatar) do `LayoutComponent`
-  sobrepõem texto um do outro — sem relação com nenhum painel lateral aberto, reproduz igual com
-  Histórico/Inventário fechados.
-- **Causa:** não investigada. A faixa de navegação (`Campanhas · Fichas · Simulação ·
-  Documentos`) mais o seletor de usuário parecem não ter um breakpoint entre o desktop cheio e o
-  colapso mobile (`bp.mobile`, 560px) — 960px cai nesse vão.
-- **Contorno:** nenhum.
-- **Correção:** dar à faixa de navegação da topbar um tratamento intermediário (esconder rótulos,
-  virar menu, ou truncar) antes de `bp.mobile`, ou reavaliar o breakpoint de tablet (`1080px`) da
-  topbar especificamente.
-- **Desde:** encontrado ao verificar `painéis laterais: fecha de verdade a exclusão mútua e para
-  de espremer a rota` (2026-09-02) — fora do recorte da task, `LayoutComponent` não foi tocado.
-
 ### P-046 — `GET /campanha/:id` devolve os dois códigos de convite a qualquer JOGADOR · `ACEITO` · backend
 
 - **Sintoma:** `CampanhaRecuperadaDto.codigoConvite`/`codigoConviteEspectador` chegam sempre

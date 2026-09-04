@@ -122,6 +122,10 @@
         background: var(--accent);
         transform-origin: left;
         animation: bandeja-esvazia var(--bandeja-duracao) linear forwards;
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
     }
 
     &__carta:hover &__barra {

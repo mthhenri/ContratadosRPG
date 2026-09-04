@@ -133,14 +133,21 @@
             box-shadow: inset 0 -2px 0 var(--accent);
         }
 
+        // Degrau intermediário (P-044): entre `bp.tablet` (1080px) e `bp.mobile` (560px) a faixa
+        // de navegação (rótulos completos) e o seletor de usuário (nome + avatar) disputam o mesmo
+        // espaço sem nenhum breakpoint entre o desktop cheio e o colapso mobile — em ~960px
+        // "Documentos" chegava a sobrepor o seletor. Ícone-só já a partir do tablet resolve sem
+        // esperar o colapso mobile completo (que ainda soma o alvo de toque abaixo).
+        @include bp.tablet {
+            span {
+                display: none;
+            }
+        }
+
         @include bp.mobile {
             min-width: bp.$alvo-toque;
             min-height: bp.$alvo-toque;
             justify-content: center;
-
-            span {
-                display: none;
-            }
         }
     }
 

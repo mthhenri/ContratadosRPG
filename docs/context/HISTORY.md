@@ -1,5 +1,49 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-04 — Correção de P-019 e P-044: motion reduzido na bandeja de dados e sobreposição da topbar em ~960px
+
+Dois defeitos pequenos e já totalmente diagnosticados em `PROBLEMS.md`, corrigidos juntos por
+serem ambos CSS pontual sem decisão pendente do autor.
+
+**P-019** — `bandeja-dados.component.scss` (`&__barra`) esvaziava a barra de tempo com
+`animation: bandeja-esvazia var(--bandeja-duracao) linear forwards` sem checar
+`prefers-reduced-motion`, diferente de `notificacao.component.scss`, que já tinha o mesmo padrão
+(barra de duração, ui-20) com o `@media` correspondente. Adicionado o mesmo bloco
+`@media (prefers-reduced-motion: reduce) { animation: none; }` dentro de `&__barra` da bandeja —
+cópia exata do padrão já aprovado em produção.
+
+**P-044** — a faixa de navegação da topbar (`Campanhas · Fichas · Simulação · Documentos`, rótulos
+completos) e o seletor de usuário (nome + avatar) só tinham dois estados: desktop cheio e o
+colapso mobile de `bp.mobile` (560px, ícone-só). Entre 560px e o desktop não havia nenhum degrau
+intermediário, e por volta de ~960px o texto de "Documentos" chegava a sobrepor o seletor de
+usuário. Adicionado a `.topbar__item` um `@include bp.tablet` (1080px, breakpoint já existente em
+`_breakpoints.scss`) que esconde o rótulo (`span`) dos itens de navegação, deixando-os ícone-só
+mais cedo — mesmo tratamento visual que o colapso mobile já usa, só que disparado num limiar mais
+largo. O bloco de `span { display: none; }` que antes vivia dentro de `@include bp.mobile` foi
+retirado de lá (redundante: 560px já está coberto pelo novo bloco de 1080px).
+
+**Verificado ao vivo** (stack real — Postgres local + backend NestJS + `ng serve`, usuário e
+campanha reais criados via REST, sessão injetada em `localStorage` como o `verify` documenta):
+
+- **P-044**: nos três viewports padrão (`1920×1080`, `960×1080` — a zona do defeito relatado — e
+  `360×800`), `topbar__nav` e `topbar__acoes` não se sobrepõem (`bounding box` sem interseção em
+  nenhum dos três) e a captura de tela em `960×1080` mostra a nav em ícone-só, limpa, sem
+  overflow — mesma identidade visual do colapso mobile já aprovado (o análogo usado). Desktop e
+  mobile permanecem como antes (nenhuma regressão).
+- **P-019**: disparada uma rolagem real na bandeja de dados (`BandejaDadosService.mostrar`, via
+  componente montado em `/campanhas/:id`) com o browser emulando
+  `prefers-reduced-motion: reduce` — `getComputedStyle('.bandeja__barra').animationName` veio
+  `none` (barra fica estática, cheia). Como controle, a mesma rolagem sem a preferência mostrou
+  `animationName: bandeja-esvazia` rodando por `7s` — prova de que é a media query (e não outra
+  coisa) que gate a animação.
+
+**Testado**: `npm run lint --workspace=frontend` (0 erros; só os warnings pré-existentes de aspas
+do projeto inteiro). `npm run test --workspace=frontend -- --include=**/layout.component.spec.ts
+--include=**/bandeja-dados.component.spec.ts` — 2 arquivos, 20 testes, todos passando.
+
+Sem spec dedicada: os dois já vinham com Sintoma/Causa/Correção completos em `PROBLEMS.md`,
+suficientes para guiar a implementação sem abrir `docs/specs/`.
+
 ## 2026-09-04 — m8-06: Validação integrada do módulo `m8-espectadores-campanha` (M8, gate final)
 
 Sexta e última task do módulo — não é produto novo, é o gate que fecha `m8-01`…`m8-05` com
