@@ -230,3 +230,26 @@
   equivalente em `espectador.page`), com geometria própria no SCSS de cada arquivo.
 - **Desde:** achado durante a implementação de `P-051` (2026-09-05) — fora do escopo daquela task
   (que cobre só os quatro arquivos que duplicavam a identidade completa).
+
+### P-062 — `npm run openapi:gerar-contratos` produz diff enorme e espúrio num checkout Windows · `CONTORNADO` · backend/tooling
+
+- **Sintoma:** rodar o script depois de mudar só um DTO (`m8-07`, `CampanhaPainelEspectadorDto`)
+  reescreveu `contratos-gerados.ts` inteiro (356 linhas, ~185 DTOs): toda `description` ganhou `\r\n`
+  no lugar de `\n` dentro da string (poluição de fim de linha), e várias descrições por campo que já
+  estavam no arquivo comitado (ex. `CampanhaRecuperadaDto.codigoConvite`) somem, porque a fonte atual
+  (`shared/src/dtos/...`) não tem mais aquele JSDoc por campo — só o comentário do nível da interface.
+- **Causa:** `core.autocrlf` neste checkout Windows mantém os `.ts` fonte com `CRLF` na árvore de
+  trabalho (git converte para `LF` só no commit) — o gerador lê o arquivo fonte como está no disco e
+  embute o `\r` de cada quebra de linha do JSDoc na string JSON gerada. A perda de descrição por campo
+  é uma segunda causa, independente: o gerador está fiel à fonte atual, o arquivo comitado é que já
+  estava desatualizado antes desta task (provavelmente um JSDoc por campo foi removido/consolidado em
+  algum refactor anterior sem reexecutar o script).
+- **Contorno:** nesta task, o campo novo (`fichas`/`membros` em `CampanhaPainelEspectadorDto`) foi
+  aplicado manualmente ao JSON já comitado (mesma forma que o gerador produziria, com `\n` em vez de
+  `\r\n`), em vez de aceitar a saída bruta do script — evita tanto a poluição de CRLF quanto reverter
+  a perda de descrições de campos não relacionados a esta task.
+- **Correção:** rodar o script numa árvore com `core.autocrlf=false`/checkout Linux antes de commitar
+  a saída, ou o script normalizar `\r\n` → `\n` antes de serializar. Seguido disso, uma rodada de
+  "regenerar e revisar o diff inteiro" resolveria a segunda causa (descrições de campo desatualizadas)
+  de uma vez, mas é trabalho maior que qualquer task isolada deve assumir sozinha.
+- **Desde:** achado durante a implementação de `m8-07` (2026-09-05).

@@ -2,9 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
-import { EncontroStatusEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
-import type { CampanhaPainelEspectadorDto, CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import { ClasseEnum, EncontroStatusEnum, RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import type { CampanhaMembroResumoDto, CampanhaPainelEspectadorDto, CampanhaResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaEspectador } from './espectador.page';
@@ -13,9 +14,10 @@ import { CampanhaService } from '../../campanha.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 
 /**
- * Prova o Painel do espectador (m8-03): entrada no painel, visibilidade por papel (espectador vs.
- * mestre em prévia), prepend em tempo real com deduplicação, estados vazio/carregando e a ausência
- * de qualquer controle de escrita no template (fichas, convites, gestão, rolar).
+ * Prova o Painel do espectador (m8-03, painel de jogadores estendido na m8-07): entrada no painel,
+ * visibilidade por papel (espectador vs. mestre em prévia), prepend em tempo real com
+ * deduplicação, estados vazio/carregando e a ausência de qualquer controle de escrita no template
+ * (fichas, convites, gestão, rolar).
  */
 describe('CampanhaEspectador', () => {
   const CAMPANHA_ID = 8;
@@ -39,11 +41,47 @@ describe('CampanhaEspectador', () => {
     };
   }
 
+  function ficha(sobrescritas: Partial<FichaResumoDto> = {}): FichaResumoDto {
+    return {
+      id: 3,
+      campanhaId: CAMPANHA_ID,
+      campanhaNome: 'Contenção Delta',
+      usuarioId: 1,
+      nome: 'Kane',
+      cor: '#ff0000',
+      classe: ClasseEnum.COMBATENTE,
+      arquetipo: null,
+      nivel: 2,
+      vidaAtual: 8,
+      vidaMaxima: 20,
+      energiaAtual: 4,
+      energiaMaxima: 10,
+      morrendo: false,
+      machucado: false,
+      inconsciente: false,
+      imagemUrl: null,
+      defesa: 12,
+      ...sobrescritas,
+    };
+  }
+
+  function membro(sobrescritas: Partial<CampanhaMembroResumoDto> = {}): CampanhaMembroResumoDto {
+    return {
+      usuarioId: 1,
+      nome: 'Matheus',
+      papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      fichas: [],
+      ...sobrescritas,
+    };
+  }
+
   function painel(rolagens: RolagemResumoDto[] = [], paginaAtual = 1, totalPaginas = 1): CampanhaPainelEspectadorDto {
     return {
       campanha: { id: CAMPANHA_ID, nome: 'Contenção Delta', descricao: null, naBase: true },
       rolagens: { itens: rolagens, totalItens: rolagens.length, paginaAtual, totalPaginas },
       encontroAtivo: null,
+      fichas: [],
+      membros: [],
     };
   }
 
@@ -208,6 +246,8 @@ describe('CampanhaEspectador', () => {
         campanha: { id: CAMPANHA_ID, nome: 'Contenção Delta', descricao: null, naBase: true },
         rolagens: { itens: [rolagem({ id: 2 })], totalItens: 2, paginaAtual: 2, totalPaginas: 2 },
         encontroAtivo: null,
+        fichas: [],
+        membros: [],
       }),
     );
     (raiz.querySelector('.espectador__mais') as HTMLButtonElement).click();
@@ -227,6 +267,125 @@ describe('CampanhaEspectador', () => {
     expect(raiz.querySelector('input')).toBeNull();
     expect(raiz.querySelector('select')).toBeNull();
     expect(raiz.textContent).not.toContain('Rolar');
+  });
+
+  describe('Painel de jogadores (m8-07)', () => {
+    it('mostra estado vazio sem nenhuma ficha', () => {
+      const { raiz } = montar({ painelRetorno: painel([]) });
+      expect(raiz.querySelector('.espectador__ficha-grid')).toBeNull();
+      expect(raiz.querySelectorAll('app-estado-vazio')).toHaveLength(2);
+    });
+
+    it('mostra o esqueleto da grade de fichas enquanto carrega', () => {
+      const campanhaProjecaoService = {
+        recuperarPainelEspectador: vi.fn(() => new Subject<CampanhaPainelEspectadorDto>()),
+      };
+      TestBed.configureTestingModule({
+        imports: [CampanhaEspectador],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => String(CAMPANHA_ID) } } } },
+          { provide: CampanhaProjecaoService, useValue: campanhaProjecaoService },
+          { provide: CampanhaService, useValue: { listarCampanhas: vi.fn(() => of([])) } },
+          {
+            provide: TempoRealService,
+            useValue: {
+              conectar: vi.fn(),
+              entrarSalaCampanha: vi.fn(),
+              sairSalaCampanha: vi.fn(),
+              rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
+              encontroAlterado$: new Subject<{ encontro: { campanhaId: number } }>().asObservable(),
+            },
+          },
+        ],
+      });
+      const fixture = TestBed.createComponent(CampanhaEspectador);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+
+      expect(raiz.querySelector('.espectador__ficha-esqueleto-grid')).not.toBeNull();
+      expect(raiz.querySelector('app-espectador-ficha-card')).toBeNull();
+    });
+
+    it('renderiza um cartão por agente, com o nome do dono resolvido por usuarioId (via membros)', () => {
+      const { raiz } = montar({
+        painelRetorno: {
+          ...painel([]),
+          fichas: [ficha({ id: 3, usuarioId: 1, nome: 'Kane' }), ficha({ id: 4, usuarioId: 2, nome: 'Vera' })],
+          membros: [membro({ usuarioId: 1, nome: 'Matheus' }), membro({ usuarioId: 2, nome: 'Ana' })],
+        },
+      });
+
+      const cartoes = raiz.querySelectorAll('app-espectador-ficha-card');
+      expect(cartoes).toHaveLength(2);
+      // `ordenarMembros` ordena os dois JOGADOR por nome (Ana antes de Matheus) — mesma ordem de
+      // `fichasEsquadrao` de `CampanhaDetalhe`.
+      const donos = Array.from(raiz.querySelectorAll('.espectador-ficha__dono')).map((elemento) =>
+        elemento.textContent?.trim(),
+      );
+      expect(donos).toEqual(['Ana', 'Matheus']);
+    });
+
+    it('mostra "Nenhuma rolagem carregada ainda" quando nenhuma rolagem daquela ficha está na página carregada', () => {
+      const { raiz } = montar({
+        painelRetorno: {
+          ...painel([rolagem({ id: 1, fichaId: 99 })]), // rolagem de outra ficha, fora deste teste
+          fichas: [ficha({ id: 3, usuarioId: 1 })],
+          membros: [membro({ usuarioId: 1 })],
+        },
+      });
+
+      expect(raiz.querySelector('.espectador-ficha__ultima-rolagem-vazio')?.textContent).toBe(
+        'Nenhuma rolagem carregada ainda',
+      );
+      expect(raiz.textContent).not.toContain('nunca rolou');
+    });
+
+    it('deriva a última rolagem do feed já carregado (primeira ocorrência daquele fichaId)', () => {
+      const { raiz } = montar({
+        painelRetorno: {
+          ...painel([rolagem({ id: 5, fichaId: 3, rotulo: '2d6+3' }), rolagem({ id: 1, fichaId: 3, rotulo: '1d20' })]),
+          fichas: [ficha({ id: 3, usuarioId: 1 })],
+          membros: [membro({ usuarioId: 1 })],
+        },
+      });
+
+      // O feed vem mais-recente-primeiro — a primeira ocorrência (id 5) é a última rolagem, não a
+      // segunda (id 1), mesmo os dois pertencendo à mesma ficha.
+      expect(raiz.querySelector('.espectador-ficha__ultima-rolagem-texto')?.textContent).toContain(
+        '2d6+3',
+      );
+    });
+
+    it('mestre em prévia recebe o mesmo recorte de fichas que o espectador real', () => {
+      const fichasDoPainel = [ficha({ id: 3, usuarioId: 1 })];
+      const membrosDoPainel = [membro({ usuarioId: 1 })];
+
+      const espectadorReal = montar({
+        painelRetorno: { ...painel([]), fichas: fichasDoPainel, membros: membrosDoPainel },
+      });
+      const nomesReal = Array.from(espectadorReal.raiz.querySelectorAll('.espectador-ficha__nome')).map(
+        (elemento) => elemento.textContent?.trim(),
+      );
+
+      // Cada `montar()` chama `TestBed.configureTestingModule` — precisa resetar antes de montar
+      // uma segunda instância da página na mesma `it()`.
+      TestBed.resetTestingModule();
+
+      const mestreEmPrevia = montar({
+        painelRetorno: { ...painel([]), fichas: fichasDoPainel, membros: membrosDoPainel },
+        campanhas: [
+          { id: CAMPANHA_ID, nome: 'x', descricao: null, papel: TipoCampanhaMembroPapelEnum.MESTRE,
+            totalMembros: 2, totalFichas: 1, temFichaCritica: false, fichaCriticaNome: null,
+            minhaFichaResumo: null, codigoConvite: 'ABC', codigoConviteEspectador: 'DEF',
+            alteradoEm: new Date().toISOString() },
+        ],
+      });
+      const nomesPreview = Array.from(mestreEmPrevia.raiz.querySelectorAll('.espectador-ficha__nome')).map(
+        (elemento) => elemento.textContent?.trim(),
+      );
+      expect(nomesReal).toEqual(nomesPreview);
+    });
   });
 
   describe('"Ver Iniciativa" (m8-05)', () => {

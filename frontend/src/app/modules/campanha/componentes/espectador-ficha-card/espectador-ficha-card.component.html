@@ -1,0 +1,62 @@
+<article class="espectador-ficha" [class.espectador-ficha--critico]="ficha().critico">
+    <div class="espectador-ficha__cabecalho">
+        <span class="espectador-ficha__avatar" aria-hidden="true" [style.--cor-ficha]="ficha().cor">
+            @if (ficha().imagemUrl; as urlImagem) {
+            <img class="espectador-ficha__avatar-imagem" [src]="urlImagem" alt="" />
+            }
+        </span>
+
+        <div class="espectador-ficha__corpo">
+            <span class="espectador-ficha__dono">{{ ficha().donoNome }}</span>
+            <span class="espectador-ficha__nome">{{ ficha().nome }}</span>
+            <span class="espectador-ficha__classe">{{ ficha().classeTexto }}</span>
+
+            <div class="espectador-ficha__recursos">
+                <app-barra-recurso
+                    class="espectador-ficha__recurso-primitivo"
+                    rotulo="Vida"
+                    recurso="vida"
+                    tamanho="compacto"
+                    [atual]="ficha().vidaAtual"
+                    [maximo]="ficha().vidaMaxima ?? 0"
+                />
+                <app-barra-recurso
+                    class="espectador-ficha__recurso-primitivo"
+                    rotulo="Energia"
+                    recurso="energia"
+                    tamanho="compacto"
+                    [atual]="ficha().energiaAtual"
+                    [maximo]="ficha().energiaMaxima ?? 0"
+                />
+            </div>
+
+            @if (ficha().defesa !== undefined || ficha().esquiva !== undefined || ficha().bloqueio
+            !== undefined || ficha().contraAtaque !== undefined) {
+            <div class="espectador-ficha__reacoes">
+                @if (ficha().defesa !== undefined) {
+                <span>Def <strong>{{ ficha().defesa }}</strong></span>
+                } @if (ficha().esquiva !== undefined) {
+                <span>Esq <strong>{{ ficha().esquiva }}</strong></span>
+                } @if (ficha().bloqueio !== undefined) {
+                <span>Blo <strong>{{ ficha().bloqueio }}</strong></span>
+                } @if (ficha().contraAtaque !== undefined) {
+                <span>Con <strong>{{ ficha().contraAtaque }}</strong></span>
+                }
+            </div>
+            }
+        </div>
+    </div>
+
+    <div class="espectador-ficha__ultima-rolagem" [style.--cor-ficha]="ficha().cor">
+        @if (ultimaRolagem(); as rolagem) {
+        <span class="espectador-ficha__ultima-rolagem-rotulo">Última rolagem</span>
+        <span class="espectador-ficha__ultima-rolagem-texto"
+            >{{ rolagem.rotulo }} — {{ rolagem.resultado.total }}</span
+        >
+        @if (ultimaRolagemTempo(); as tempo) {
+        <span class="espectador-ficha__ultima-rolagem-tempo">{{ tempo }}</span>
+        } } @else {
+        <span class="espectador-ficha__ultima-rolagem-vazio">Nenhuma rolagem carregada ainda</span>
+        }
+    </div>
+</article>

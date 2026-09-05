@@ -1,0 +1,200 @@
+// Cartão de ficha do Painel do espectador (m8-07) — análogo `.detalhe__ficha-card` (avatar
+// lateral, identidade+recursos+reações à direita), com faixa "Última rolagem" full-width no
+// rodapé em vez do menu de ações que o análogo tem. Sem nenhum controle de escrita. Só tokens do
+// tema "Terminal de Contenção" (proibição #29).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+}
+
+.espectador-ficha {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    overflow: hidden;
+
+    // Vida ≤ 0 (mesmo limiar/receita de `.detalhe__ficha-card--critico`) — sinaliza antes do
+    // mestre/dono marcar a condição, mas sem condições/patente (v2, fora de escopo desta task).
+    &--critico {
+        border-color: var(--vida-border);
+
+        .espectador-ficha__ultima-rolagem {
+            box-shadow: inset 2px 0 0 var(--vida-border);
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-12);
+        padding: var(--space-12);
+    }
+
+    // Avatar quadrado (mesma receita hachurada de `.detalhe__ficha-avatar`, m2-19/m3-61/m3-62),
+    // fixo — não acompanha a altura do corpo de texto ao lado. 128×128 (contrato de design).
+    &__avatar {
+        position: relative;
+        width: 128px;
+        height: 128px;
+        flex: none;
+        border-radius: var(--radius-control);
+        background-color: color-mix(
+            in srgb,
+            var(--cor-ficha, var(--border-strong)) 14%,
+            var(--surface)
+        );
+        background-image: repeating-linear-gradient(
+            135deg,
+            color-mix(
+                    in srgb,
+                    color-mix(
+                            in srgb,
+                            var(--cor-ficha, var(--border-strong)) 60%,
+                            var(--border-strong)
+                        )
+                        20%,
+                    transparent
+                )
+                0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--cor-ficha, var(--border-strong));
+        overflow: hidden;
+    }
+
+    &__avatar-imagem {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &__corpo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        min-width: 0;
+        flex: 1;
+    }
+
+    &__dono {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__nome {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__classe {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+    }
+
+    // Vida e Energia lado a lado (contrato de design) — mesma regra de colapso de
+    // `.detalhe__ficha-recursos` (m2-19): abaixo de `bp.mobile` empilha, senão rótulo e valor
+    // ficam espremidos contra o vizinho na coluna estreita do cartão em 1 coluna no mobile.
+    &__recursos {
+        display: flex;
+        gap: var(--space-12);
+        margin-top: var(--space-4);
+
+        @include bp.mobile {
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+    }
+
+    &__recurso-primitivo {
+        min-width: 0;
+        flex: 1;
+    }
+
+    // Abreviado (Def/Esq/Blo/Con) e com separador `·` — contrato de design desta faixa
+    // (`.detalhe__ficha-reacoes`, o análogo, usa a palavra cheia e só espaçamento; aqui a task
+    // pediu o formato compacto).
+    &__reacoes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px var(--space-8);
+        margin-top: var(--space-4);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+
+        strong {
+            color: var(--text-dim);
+        }
+
+        span:not(:first-child)::before {
+            content: "· ";
+        }
+    }
+
+    // Faixa "Última rolagem" (contrato de design): full-width no rodapé do cartão, fundo neutro
+    // (não a cor da ficha) + risco de identidade lateral, mesma receita do item do histórico
+    // (`historico-rolagens__item`, ui-22).
+    &__ultima-rolagem {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-8);
+        padding: var(--space-8) var(--space-12);
+        background: var(--surface-2);
+        border-top: 1px solid var(--border);
+        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
+    }
+
+    &__ultima-rolagem-rotulo {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    // O texto/rótulo da rolagem fica colorido pela cor da ficha, não o fundo (contrato de design).
+    &__ultima-rolagem-texto {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--cor-ficha, var(--text));
+    }
+
+    &__ultima-rolagem-tempo {
+        flex: none;
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+    }
+
+    &__ultima-rolagem-vazio {
+        font-family: var(--font-sans);
+        font-size: 11px;
+        font-style: italic;
+        color: var(--text-mute);
+    }
+}

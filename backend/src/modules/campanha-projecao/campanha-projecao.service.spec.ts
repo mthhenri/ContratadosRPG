@@ -27,6 +27,7 @@ interface EncontroServicoDublado {
 
 interface FichaServicoDublado {
   listarFichasParaAlvo: ReturnType<typeof vi.fn>;
+  listarFichasParaEspectador: ReturnType<typeof vi.fn>;
   recuperarFichaParaAlvo: ReturnType<typeof vi.fn>;
 }
 
@@ -57,7 +58,7 @@ describe('CampanhaProjecaoService', () => {
   let service: CampanhaProjecaoService;
 
   beforeEach(() => {
-    campanhaRepositorio = { recuperarPorId: vi.fn(), listarMembros: vi.fn() };
+    campanhaRepositorio = { recuperarPorId: vi.fn(), listarMembros: vi.fn().mockResolvedValue([]) };
     campanhaServico = {
       validarMembro: vi.fn(),
       ehEspectador: vi.fn((papel: TipoCampanhaMembroPapelEnum) => papel === TipoCampanhaMembroPapelEnum.ESPECTADOR),
@@ -67,7 +68,11 @@ describe('CampanhaProjecaoService', () => {
       recuperarEncontroAtivoParaEspectador: vi.fn().mockResolvedValue(null),
       recuperarEncontroAtivoParaAlvo: vi.fn().mockResolvedValue(null),
     };
-    fichaServico = { listarFichasParaAlvo: vi.fn(), recuperarFichaParaAlvo: vi.fn() };
+    fichaServico = {
+      listarFichasParaAlvo: vi.fn(),
+      listarFichasParaEspectador: vi.fn().mockResolvedValue([]),
+      recuperarFichaParaAlvo: vi.fn(),
+    };
     rolagemRepositorio = { listarPublicasPorCampanha: vi.fn(), listarPorCampanha: vi.fn() };
     service = new CampanhaProjecaoService(
       campanhaRepositorio as unknown as CampanhaRepository,
@@ -99,7 +104,61 @@ describe('CampanhaProjecaoService', () => {
         campanha: { id: 3, nome: 'Contenção Alfa', descricao: 'Missão inaugural', naBase: true },
         rolagens: feed,
         encontroAtivo: null,
+        fichas: [],
+        membros: [],
       });
+    });
+
+    it('inclui o painel de jogadores (m8-07) — fichas via listarFichasParaEspectador (nunca a matriz de dono) e membros para resolver nome', async () => {
+      campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+      rolagemRepositorio.listarPublicasPorCampanha.mockResolvedValue({
+        itens: [],
+        totalItens: 0,
+        paginaAtual: 1,
+        totalPaginas: 0,
+      });
+      const fichasDoPainel = [{ id: 5, nome: 'Agente Beta' }];
+      fichaServico.listarFichasParaEspectador.mockResolvedValue(fichasDoPainel);
+      const membrosDoPainel = [
+        { usuarioId: usuarioJogador.sub, nome: 'Agente Beta', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+      ];
+      campanhaRepositorio.listarMembros.mockResolvedValue(membrosDoPainel);
+
+      const resultado = await service.recuperarPainelEspectador(
+        { campanhaId: 3, pagina: 1, itensPorPagina: 20 },
+        usuarioEspectador,
+      );
+
+      // Diferente de `recuperarPreviaJogador`: nenhum `usuarioAlvoId` — o recorte de fichas não
+      // depende de quem pede (é o mesmo cerne da paridade espectador/mestre-em-prévia).
+      expect(fichaServico.listarFichasParaEspectador).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(campanhaRepositorio.listarMembros).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioAtivoId: usuarioEspectador.sub,
+        usuarioAtivoEhMestre: false,
+      });
+      expect(resultado.fichas).toBe(fichasDoPainel);
+      expect(resultado.membros).toBe(membrosDoPainel);
+    });
+
+    it('o recorte de fichas não depende de quem pede — mesma chamada para ESPECTADOR e MESTRE em prévia', async () => {
+      campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      rolagemRepositorio.listarPublicasPorCampanha.mockResolvedValue({
+        itens: [],
+        totalItens: 0,
+        paginaAtual: 1,
+        totalPaginas: 0,
+      });
+
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+      await service.recuperarPainelEspectador({ campanhaId: 3, pagina: 1, itensPorPagina: 20 }, usuarioEspectador);
+
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      await service.recuperarPainelEspectador({ campanhaId: 3, pagina: 1, itensPorPagina: 20 }, usuarioMestre);
+
+      expect(fichaServico.listarFichasParaEspectador).toHaveBeenNthCalledWith(1, { campanhaId: 3 });
+      expect(fichaServico.listarFichasParaEspectador).toHaveBeenNthCalledWith(2, { campanhaId: 3 });
     });
 
     it('inclui o encontro ativo redigido para espectador (m8-05) — mesmo método para ESPECTADOR e MESTRE em prévia', async () => {

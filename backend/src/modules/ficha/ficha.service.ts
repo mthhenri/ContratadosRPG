@@ -258,6 +258,25 @@ export class FichaService {
   }
 
   /**
+   * Lista os agentes (`JOGADOR`) não ocultos de uma campanha inteira (m8-07, Painel do
+   * espectador) — diferente de `listarFichas`/`listarFichasParaAlvo`, aqui não há "dono" de
+   * referência: o espectador não possui ficha nenhuma na campanha, então a matriz de visibilidade
+   * por dono (§14) não se aplica. O único corte é a ocultação da própria ficha (m3-65, "Continua
+   * valendo" da spec da task): nenhuma ficha `oculta` aparece, sem exceção — nem para o mestre em
+   * prévia (`CampanhaProjecaoService` chama este método pros dois casos). Reusa `listarPorCampanha`
+   * (mesma consulta do mestre) e filtra tipo/ocultação em memória, sem SQL novo. Nunca chamado
+   * direto pela controller de ficha — só pela projeção do painel de espectador.
+   */
+  async listarFichasParaEspectador(dto: FichaListarDto): Promise<FichaResumoDto[]> {
+    const fichas = await this.fichaRepositorio.listarPorCampanha(dto);
+    return fichas
+      .filter(
+        (ficha) => (ficha.tipo ?? TipoFichaEnum.JOGADOR) === TipoFichaEnum.JOGADOR && !ficha.oculta,
+      )
+      .map((ficha) => this.paraResumoPublico(ficha));
+  }
+
+  /**
    * Ficha completa (com `dados`) calculada com a identidade do **alvo** (m8-04, `m8-espectadores-
    * campanha`) — igual a `recuperarFicha`, mas a visibilidade/redação nunca usa `usuarioAtivo`, e
    * sim `dto.usuarioAlvoId` (`avaliarVisibilidadePara`, a mesma regra de `recuperarFicha` — nunca

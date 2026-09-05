@@ -134,6 +134,10 @@ export class FichaRepository extends BaseRepository {
    * `amplificadores` saem como `jsonb` — o driver (`pg`) já entrega array/objeto JS, sem parse
    * manual. `inventarioMaximo` é o snapshot **bruto** de `derivados` (o service soma o ajuste de
    * amplificador antes de chamar a fórmula, mesmo passo que a aba Inventário já faz no cliente).
+   *
+   * `oculta` (m8-07): também não entra no `FichaResumoDto` público — só
+   * `FichaService.listarFichasParaEspectador` (Painel do espectador) a lê, pra excluir toda ficha
+   * oculta do recorte sem depender de "dono" (§14/m3-65).
    */
   private colunasResumo(): string {
     return `ficha.id,
@@ -141,6 +145,7 @@ export class FichaRepository extends BaseRepository {
               campanha.nome AS "campanhaNome",
               ficha.usuario_id AS "usuarioId", ficha.nome, ficha.cor,
               ficha.imagem_url AS "imagemUrl",
+              COALESCE(ficha.oculta, false) AS oculta,
               tipo_ficha.codigo AS tipo,
               ficha.dados->>'classe' AS classe,
               ficha.dados->>'arquetipo' AS arquetipo,

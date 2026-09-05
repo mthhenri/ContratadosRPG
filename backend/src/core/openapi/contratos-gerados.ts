@@ -940,15 +940,31 @@ export const schemasContratosPublicos = {
             "encontroAtivo": {
                 "$ref": "#/components/schemas/EncontroRecuperadoDto",
                 "description": "Encontro não-encerrado da campanha, redigido para quem não vê nenhuma ficha (m8-05) — `null`\nsem combate em andamento. Gatilha \"Ver Iniciativa\" no Painel do espectador; o mesmo payload\npara `ESPECTADOR` real e `MESTRE` em prévia (`EncontroService.recuperarEncontroAtivoParaEspectador`)."
+            },
+            "fichas": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/FichaResumoDto"
+                },
+                "description": "Painel de jogadores (m8-07, reversão parcial da decisão de produto #4 — ver a spec da task):\num cartão por agente (`JOGADOR`) não oculto da campanha, sem exceção — diferente de\n`CampanhaPreviaJogadorDto.fichas` (calculado com a identidade de um alvo específico), aqui não\nhá \"dono\" de referência, então o único corte é a ocultação da própria ficha (m3-65). Nunca\ninclui `CRIATURA`/NPC (`FichaService.listarFichasParaEspectador`)."
+            },
+            "membros": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/CampanhaMembroResumoDto"
+                },
+                "description": "Só para resolver o nome do dono de cada ficha acima por `usuarioId` (mesma forma de\n`CampanhaPreviaJogadorDto.membros`) — não alimenta gestão de membros nem controla visibilidade\nde ficha aqui (isso já é feito por `fichas`)."
             }
         },
         "required": [
             "campanha",
             "rolagens",
-            "encontroAtivo"
+            "encontroAtivo",
+            "fichas",
+            "membros"
         ],
         "additionalProperties": false,
-        "description": "Saída da projeção do painel de espectador (decisão de produto #5) — identidade segura + feed\npaginado de rolagens exclusivamente `PUBLICA`. Legível por `ESPECTADOR` e por `MESTRE` em modo\nde prévia (o payload é idêntico nos dois casos — privilégio de mestre nunca vaza aqui)."
+        "description": "Saída da projeção do painel de espectador (decisão de produto #5, `fichas`/`membros` estendidos\nna m8-07) — identidade segura + feed paginado de rolagens exclusivamente `PUBLICA` + o painel de\njogadores da campanha. Legível por `ESPECTADOR` e por `MESTRE` em modo de prévia (o payload é\nidêntico nos dois casos — privilégio de mestre nunca vaza aqui)."
     },
     "CampanhaPreviaJogadorRecuperarDto": {
         "type": "object",

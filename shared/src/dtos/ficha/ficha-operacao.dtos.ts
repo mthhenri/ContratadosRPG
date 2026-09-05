@@ -205,6 +205,14 @@ export interface FichaResumoInternoDto extends FichaResumoDto {
   readonly dinheiro?: number;
   readonly vontade: number;
   readonly inventarioMaximo?: number;
+  /**
+   * Ficha oculta (m3-65) — nunca exposta no `FichaResumoDto` público (§14: a matriz de
+   * visibilidade por dono já resolve quem vê o quê). Usada só internamente por
+   * `FichaService.listarFichasParaEspectador` (m8-07, Painel do espectador) para excluir toda
+   * ficha oculta do recorte, sem depender de "dono" — o espectador não possui ficha nenhuma, então
+   * a matriz de `listarFichas`/`listarFichasParaAlvo` não se aplica aqui.
+   */
+  readonly oculta: boolean;
 }
 
 /**

@@ -1,5 +1,123 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-05 — `EspectadorFichaCard` (m8-07): layout corrigido de vertical para horizontal
+
+Correção pontual pedida pelo autor logo após o fechamento de `m8-07-espectador-painel-jogadores`
+(entrada abaixo), com um screenshot mostrando o layout esperado: o layout **vertical** (foto
+128×128 no topo) descrito como "POC validado fora do repositório" na spec/HISTORY original não era,
+de fato, o que o autor queria — o card correto é **horizontal**, como o análogo
+`.detalhe__ficha-card` já é, e não uma variação dele.
+
+Reescrito `EspectadorFichaCard` (`.component.html`/`.scss`/`.ts`): avatar quadrado 96×96 fixo à
+esquerda (`__cabecalho`, `align-items: flex-start`), dono/nome/classe/recursos/reações em coluna à
+direita (`__corpo`, `flex:1`), faixa "Última rolagem" full-width no rodapé do cartão (fora do
+`__cabecalho`, não mais dentro do `__corpo`). Duas mudanças de conteúdo além do layout, também
+tiradas do screenshot: (1) reações abreviadas "Def/Esq/Blo/Con" com separador `·`
+(`span:not(:first-child)::before { content: "· " }`) em vez da palavra cheia que o análogo usa; (2)
+a faixa "Última rolagem" ganhou o tempo relativo (`há 8s`) que já existia no feed ao lado
+(`rotuloRelativo`, mesmo relógio de 5s) — antes o card não mostrava tempo nenhum. Novo input
+`ultimaRolagemTempo: string | null`, calculado pela página-mãe (`tempoUltimaRolagem(fichaId)`, novo
+método em `espectador.page.ts`) para não duplicar o `agora` que recomputa o relativo — o card
+continua só formatando o que recebe.
+
+Vida/Energia ficam lado a lado (contrato do screenshot) só a partir de `bp.mobile`; abaixo dele
+(`360×800`) `.espectador-ficha__recursos` empilha em coluna — mesma regra de colapso de
+`.detalhe__ficha-recursos` (m2-19). Sem essa regra, rótulo e valor de cada `app-barra-recurso`
+compacta ficavam espremidos um contra o outro na coluna estreita do cartão em 1 coluna do mobile —
+achado só na verificação ao vivo, não no código.
+
+Testes: `espectador-ficha-card.component.spec.ts` (7/7, classes/rótulos atualizados para o novo
+DOM) e `espectador.page.spec.ts` (18/18, idem) sem teste novo — mesma cobertura, markup diferente.
+Suíte completa do frontend: 1631/1631. Lint sem erro novo (só avisos de aspas preexistentes). Build
+limpo.
+
+Verificação ao vivo (mesmo cenário REST da task original, reaproveitado — campanha 6, Kane/Vera,
+uma rolagem pública nova registrada para provar a faixa preenchida) em `1920×1080`, `960×1080` e
+`360×800`, mais a prévia do mestre: layout bate com o screenshot do autor nos três viewports, sem
+overflow horizontal em nenhum, paridade espectador/mestre-em-prévia confirmada visualmente de novo
+após a reescrita.
+
+Segundo ajuste, mesma sessão: o autor apontou que o quadrado do avatar deveria ser 128×128, não
+96×96 (tamanho que eu tinha escolhido de olho, sem medir o screenshot original). Corrigido em
+`__avatar` e no esqueleto de carregamento (`espectador.page.scss`). Sem mudança de markup/teste —
+só dimensão. Reverificado ao vivo nos três viewports: `1920×1080`/`960×1080` sem regressão; em
+`360×800` a linha de reações (Def/Esq/Blo) passa a quebrar em 2 linhas por causa do avatar maior
+tomar mais largura da coluna de texto — sem overflow, sem truncamento, comportamento de
+`flex-wrap` que a faixa já tinha desde a primeira versão do card.
+
+## 2026-09-05 — `m8-07-espectador-painel-jogadores` concluída
+
+Task 7/7 do módulo `m8-espectadores-campanha`, entrando depois do fechamento original (`m8-01`…
+`m8-06`) como revisão pontual pedida explicitamente pelo autor: reverte **parte** da decisão de
+produto #4 do módulo ("espectador nunca vê ficha") para acrescentar um painel de jogadores ao
+Painel do espectador, ao lado do histórico de rolagens que já existia. As demais partes da decisão
+#4 continuam de pé — espectador segue sem ver ficha completa, inventário, caderno ou qualquer
+controle de mestre.
+
+**Backend.** `CampanhaPainelEspectadorDto` ganhou `fichas: readonly FichaResumoDto[]` e `membros:
+readonly CampanhaMembroResumoDto[]`. O desafio era que nenhum método existente servia: `listarFichas`/
+`listarFichasParaAlvo` (usados pela prévia de jogador, m8-04) aplicam a matriz de visibilidade **por
+dono** (§14) — mas o espectador não possui ficha nenhuma na campanha, então essa matriz não se aplica.
+Novo método `FichaService.listarFichasParaEspectador({ campanhaId })`: reusa `listarPorCampanha`
+(mesma consulta do mestre, sem SQL novo) e filtra em memória por `tipo === JOGADOR && !oculta` — nunca
+por dono, então o recorte é idêntico para `ESPECTADOR` real e `MESTRE` em prévia por construção (não
+depende de `usuarioAtivo`). Isso exigiu expor `oculta` em `FichaResumoInternoDto` (novo campo, só
+interno — nunca chega ao `FichaResumoDto` público) e adicionar `COALESCE(ficha.oculta, false) AS
+oculta` a `colunasResumo()` (SQL compartilhado por `listarPorCampanha`/`listarVisiveisParaUsuario`/
+`listarPorUsuario`, aditivo — nenhum dos três métodos existentes filtrava ou expunha essa coluna antes).
+`membros` reusa `CampanhaRepository.listarMembros` (mesmo padrão de `recuperarPreviaJogador`), só para
+resolver o nome do dono por `usuarioId` — `acessoCompleto`/`fichas` daquele DTO não são consumidos
+aqui. `CampanhaProjecaoService.recuperarPainelEspectador` compõe os dois lados do mesmo payload.
+
+**Frontend.** Novo componente `EspectadorFichaCard` (`shared/ui` não bastava sozinho — o card
+inteiro é um novo primitivo do módulo `campanha`, `app-espectador-ficha-card`): layout **vertical**
+(foto de identidade 128×128 quadrada no topo, POC validado fora do repositório) — diferente do
+análogo `.detalhe__ficha-card` (Esquadrão da visão de mestre), que é horizontal — mas reaproveitando
+a mesma receita de cor/hachura do avatar, `app-barra-recurso` para Vida/Energia (`ui-16`, sem
+`[editavel]`) e a régua de identidade lateral (`box-shadow: inset 2px 0 0 var(--cor-ficha, ...)`) da
+faixa "Última rolagem", copiada de `historico-rolagens__item` (ui-22). Sem nível/patente/condições/
+identidade (v2, fora de escopo) e sem nenhum controle de escrita — nem steppers de vitalidade, nem
+menu de ações, nem link para a ficha completa. `espectador.page` reusa `agruparFichasPorMembro`/
+`ordenarMembros` de `campanha-equipe.util.ts` (m8-04) — a mesma composição de `fichasEsquadrao` de
+`CampanhaDetalhe` — para montar a grade de 2 colunas a partir de `fichas`+`membros`, e ganhou uma
+segunda coluna (`--largura-painel-lateral`, mesmo token do sidebar) para o feed de rolagens que já
+existia, sem tocar sua composição interna (`.espectador__item` já seguia a mesma receita do
+`HistoricoRolagensSidebar`, comentário preexistente confirma). "Última rolagem" (entregável 7) é
+puramente derivada no cliente: primeira ocorrência de `rolagem.fichaId === ficha.id` no feed já
+paginado (mais-recente-primeiro) — `null` vira "Nenhuma rolagem carregada ainda", nunca "nunca
+rolou" (não dá para distinguir os dois sem uma consulta dedicada, deliberadamente fora de escopo).
+
+**Achado durante a implementação, registrado como `P-062`:** rodar `npm run openapi:gerar-contratos`
+neste checkout Windows reescreveu o arquivo inteiro (`core.autocrlf` grava `\r\n` nos `.ts` fonte,
+que o gerador embute nas `description` da saída) e apagou descrições de campo já desatualizadas na
+fonte atual (drift preexistente, não desta task). Contornado aplicando manualmente ao JSON já
+comitado só o trecho de `CampanhaPainelEspectadorDto` (mesmo texto que o gerador produziria, com
+`\n`), preservando o resto do arquivo intocado.
+
+Testes: `shared` 744/744 (sem teste novo — só os dois campos no DTO), `backend` 551/551 (13 novos:
+9 em `ficha.service.spec.ts` para `listarFichasParaEspectador`, 4 em
+`campanha-projecao.service.spec.ts` para o painel de jogadores/paridade), `frontend` 1631/1631 (18
+novos: 7 em `espectador-ficha-card.component.spec.ts`, 11 líquidos em `espectador.page.spec.ts`
+após consolidar helpers). Lint sem erro novo nos três workspaces (só avisos históricos de aspas).
+Build de `shared`/`backend`/`frontend` limpos (frontend com o aviso de budget conhecido, `P-004`).
+
+Verificação ao vivo (Postgres + backend + frontend reais, cenário próprio via REST cru: 1 mestre, 2
+jogadores com ficha visível, 1 jogador com uma 3ª ficha **oculta**, 1 espectador, 1 rolagem pública)
+em `1920×1080`, `960×1080` e `360×800`: painel do espectador mostrou exatamente Kane e Vera (nunca
+"Sombra", a ficha oculta), nome do dono resolvido corretamente por `usuarioId` (Ana/Matheus), "Última
+rolagem" preenchida para Kane e "Nenhuma rolagem carregada ainda" para Vera; o mestre em prévia
+(`/campanhas/:id/espectador` com a própria identidade de mestre) recebeu byte a byte o mesmo array de
+`fichas` do espectador real (conferido via REST antes da UI, e visualmente idêntico depois). Grade
+colapsa para 1 coluna em `960×1080`/`360×800` sem overflow horizontal em nenhum viewport. Comparado
+ao análogo `.detalhe__ficha-card` (capturado na mesma campanha, visão de mestre): mesma família visual
+(cor de identidade, hachura, tipografia mono, `app-barra-recurso`, linha Defesa/Esquiva/Bloqueio),
+layout deliberadamente vertical (POC da spec) em vez do horizontal do mestre, e nenhum controle de
+mestre (steppers, kebab, nível/patente/condições) vazou para o cartão do espectador. Achado só na
+verificação ao vivo: o avatar nasceu como uma faixa esticada pela largura do card (`width: 100%` +
+`aspect-ratio: 1/1` + `max-height: 128px` não produz um quadrado quando a largura do card excede
+128px) em vez do quadrado 128×128 literal do contrato de design — corrigido para `width`/`height`
+fixos de 128px, centralizado, antes do fecho.
+
 ## 2026-09-05 — Seed dev ganha criaturas de teste (`CENARIO_DEV.criaturas`)
 
 Pedido direto do autor (sem spec): incluir 2-3 criaturas nas campanhas do `npm run db:reset:dev`/

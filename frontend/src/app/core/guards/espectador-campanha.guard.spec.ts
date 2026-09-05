@@ -10,6 +10,8 @@ const PAINEL: CampanhaPainelEspectadorDto = {
   campanha: { id: 57, nome: 'Contenção', descricao: null, naBase: true },
   rolagens: { itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 },
   encontroAtivo: null,
+  fichas: [],
+  membros: [],
 };
 
 describe('espectadorCampanhaGuard', () => {

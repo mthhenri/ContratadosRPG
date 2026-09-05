@@ -1202,6 +1202,56 @@ describe('FichaService', () => {
     });
   });
 
+  describe('listarFichasParaEspectador (m8-07, Painel do espectador)', () => {
+    function fichaInterna(sobrescritas: Record<string, unknown>) {
+      return {
+        id: 5,
+        usuarioId: usuarioMembro.sub,
+        nome: 'Agente Beta',
+        classe: ClasseEnum.SUPORTE,
+        nivel: 2,
+        tipo: TipoFichaEnum.JOGADOR,
+        oculta: false,
+        atributos: ATRIBUTOS_RESUMO,
+        habilidades: [],
+        ...sobrescritas,
+      };
+    }
+
+    it('devolve os agentes não ocultos, sem checar dono/concessão', async () => {
+      fichaRepositorio.listarPorCampanha.mockResolvedValue([fichaInterna({})]);
+
+      const resultado = await service.listarFichasParaEspectador({ campanhaId: 3 });
+
+      expect(fichaRepositorio.listarPorCampanha).toHaveBeenCalledWith({ campanhaId: 3 });
+      expect(campanhaRepositorio.recuperarMembro).not.toHaveBeenCalled();
+      expect(resultado).toHaveLength(1);
+      expect(resultado[0].id).toBe(5);
+    });
+
+    it('exclui toda ficha oculta, sem exceção', async () => {
+      fichaRepositorio.listarPorCampanha.mockResolvedValue([
+        fichaInterna({ id: 5, oculta: false }),
+        fichaInterna({ id: 6, oculta: true }),
+      ]);
+
+      const resultado = await service.listarFichasParaEspectador({ campanhaId: 3 });
+
+      expect(resultado.map((ficha) => ficha.id)).toEqual([5]);
+    });
+
+    it('exclui ficha do tipo CRIATURA — o painel é só de agentes', async () => {
+      fichaRepositorio.listarPorCampanha.mockResolvedValue([
+        fichaInterna({ id: 5, tipo: TipoFichaEnum.JOGADOR }),
+        fichaInterna({ id: 7, tipo: TipoFichaEnum.CRIATURA, oculta: false }),
+      ]);
+
+      const resultado = await service.listarFichasParaEspectador({ campanhaId: 3 });
+
+      expect(resultado.map((ficha) => ficha.id)).toEqual([5]);
+    });
+  });
+
   describe('recuperarFichaParaAlvo (m8-04, prévia de jogador)', () => {
     /** `recuperarMembro` é chamado duas vezes (requisitante mestre, depois alvo) — cada teste
      * dubla por `usuarioId` para não depender da ordem das chamadas. */

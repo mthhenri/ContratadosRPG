@@ -54,71 +54,135 @@
         </app-chip>
     </header>
 
-    <app-cartao class="espectador__feed">
-        <header class="espectador__secao">
-            <h2 class="espectador__secao-titulo">Rolagens públicas</h2>
-            <span class="espectador__secao-regua"></span>
-            @if (!carregando()) {
-            <span class="espectador__secao-contagem" aria-hidden="true"
-                >{{ rolagens().length }}</span
-            >
-            }
-        </header>
+    <!--
+      m8-07: duas colunas — grade de fichas (painel de jogadores, análogo `.detalhe__ficha-card`)
+      à esquerda, histórico de rolagens (`HistoricoRolagensSidebar`, mesma composição, sem toggle/
+      overlay — aqui fica fixo) à direita, largura de `--largura-painel-lateral`.
+    -->
+    <div class="espectador__grade">
+        <app-cartao class="espectador__jogadores">
+            <header class="espectador__secao">
+                <h2 class="espectador__secao-titulo">Jogadores</h2>
+                <span class="espectador__secao-regua"></span>
+                @if (!carregando()) {
+                <span class="espectador__secao-contagem" aria-hidden="true"
+                    >{{ fichasEsquadrao().length }}</span
+                >
+                }
+            </header>
 
-        <div class="espectador__corpo" appOverflowFade>
-            @if (carregando()) {
-            <div class="espectador__esqueleto" role="status" aria-label="Carregando rolagens">
-                @for (i of [0, 1, 2, 3]; track i) {
-                <div class="espectador__esqueleto-item">
-                    <div class="espectador__esqueleto-cabecalho">
-                        <app-esqueleto class="espectador__esqueleto-rotulo" />
-                        <app-esqueleto class="espectador__esqueleto-data" />
+            <div class="espectador__corpo" appOverflowFade>
+                @if (carregando()) {
+                <div
+                    class="espectador__ficha-esqueleto-grid"
+                    role="status"
+                    aria-label="Carregando jogadores"
+                >
+                    @for (i of [0, 1, 2, 3]; track i) {
+                    <div class="espectador__ficha-esqueleto">
+                        <div class="espectador__ficha-esqueleto-cabecalho">
+                            <app-esqueleto class="espectador__ficha-esqueleto-avatar" />
+                            <div class="espectador__ficha-esqueleto-corpo">
+                                <app-esqueleto class="espectador__ficha-esqueleto-linha" />
+                                <app-esqueleto
+                                    class="espectador__ficha-esqueleto-linha espectador__ficha-esqueleto-curta"
+                                />
+                                <app-esqueleto class="espectador__ficha-esqueleto-recurso" />
+                                <app-esqueleto class="espectador__ficha-esqueleto-recurso" />
+                            </div>
+                        </div>
+                        <app-esqueleto class="espectador__ficha-esqueleto-rodape" />
                     </div>
-                    <app-esqueleto class="espectador__esqueleto-autor" />
-                    <app-esqueleto class="espectador__esqueleto-resultado" />
+                    }
                 </div>
+                } @else if (semFichas()) {
+                <app-estado-vazio
+                    icone="agente"
+                    titulo="Nenhum agente visível ainda."
+                    linhaApoio="Fichas de jogador não ocultas aparecem aqui."
+                />
+                } @else {
+                <ul class="espectador__ficha-grid">
+                    @for (ficha of fichasEsquadrao(); track ficha.id) {
+                    <li>
+                        <app-espectador-ficha-card
+                            [ficha]="ficha"
+                            [ultimaRolagem]="ultimaRolagemDe(ficha.id)"
+                            [ultimaRolagemTempo]="tempoUltimaRolagem(ficha.id)"
+                        />
+                    </li>
+                    }
+                </ul>
                 }
             </div>
-            } @else if (semRolagens()) {
-            <app-estado-vazio
-                icone="d20"
-                titulo="Nenhuma rolagem pública ainda."
-                linhaApoio="Rolagens públicas feitas nesta campanha aparecem aqui ao vivo."
-            />
-            } @else {
-            <ul class="espectador__lista">
-                @for (item of rolagens(); track item.id) {
-                <li class="espectador__item" [style.--cor-ficha]="item.corFicha">
-                    <div class="espectador__meta">
-                        <span class="espectador__rotulo">{{ item.rotulo }}</span>
-                        <span class="espectador__autor">{{ autorRolagem(item) }}</span>
-                        <span class="espectador__data">{{ tempoRolagem(item) }}</span>
-                    </div>
-                    @if (item.formula) {
-                    <span class="espectador__formula">{{ item.formula }}</span>
-                    }
-                    <app-resultado-rolagem
-                        [resultado]="item.resultado"
-                        [corFicha]="item.corFicha"
-                        [compacto]="true"
-                    />
-                </li>
-                }
-            </ul>
+        </app-cartao>
 
-            @if (temMais()) {
-            <button
-                type="button"
-                app-botao
-                class="espectador__mais"
-                [disabled]="carregandoMais()"
-                (click)="carregarMais()"
-            >
-                {{ carregandoMais() ? "Carregando…" : "Carregar mais" }}
-            </button>
-            } }
-        </div>
-    </app-cartao>
+        <app-cartao class="espectador__feed">
+            <header class="espectador__secao">
+                <h2 class="espectador__secao-titulo">Rolagens públicas</h2>
+                <span class="espectador__secao-regua"></span>
+                @if (!carregando()) {
+                <span class="espectador__secao-contagem" aria-hidden="true"
+                    >{{ rolagens().length }}</span
+                >
+                }
+            </header>
+
+            <div class="espectador__corpo" appOverflowFade>
+                @if (carregando()) {
+                <div class="espectador__esqueleto" role="status" aria-label="Carregando rolagens">
+                    @for (i of [0, 1, 2, 3]; track i) {
+                    <div class="espectador__esqueleto-item">
+                        <div class="espectador__esqueleto-cabecalho">
+                            <app-esqueleto class="espectador__esqueleto-rotulo" />
+                            <app-esqueleto class="espectador__esqueleto-data" />
+                        </div>
+                        <app-esqueleto class="espectador__esqueleto-autor" />
+                        <app-esqueleto class="espectador__esqueleto-resultado" />
+                    </div>
+                    }
+                </div>
+                } @else if (semRolagens()) {
+                <app-estado-vazio
+                    icone="d20"
+                    titulo="Nenhuma rolagem pública ainda."
+                    linhaApoio="Rolagens públicas feitas nesta campanha aparecem aqui ao vivo."
+                />
+                } @else {
+                <ul class="espectador__lista">
+                    @for (item of rolagens(); track item.id) {
+                    <li class="espectador__item" [style.--cor-ficha]="item.corFicha">
+                        <div class="espectador__meta">
+                            <span class="espectador__rotulo">{{ item.rotulo }}</span>
+                            <span class="espectador__autor">{{ autorRolagem(item) }}</span>
+                            <span class="espectador__data">{{ tempoRolagem(item) }}</span>
+                        </div>
+                        @if (item.formula) {
+                        <span class="espectador__formula">{{ item.formula }}</span>
+                        }
+                        <app-resultado-rolagem
+                            [resultado]="item.resultado"
+                            [corFicha]="item.corFicha"
+                            [compacto]="true"
+                        />
+                    </li>
+                    }
+                </ul>
+
+                @if (temMais()) {
+                <button
+                    type="button"
+                    app-botao
+                    class="espectador__mais"
+                    [disabled]="carregandoMais()"
+                    (click)="carregarMais()"
+                >
+                    {{ carregandoMais() ? "Carregando…" : "Carregar mais" }}
+                </button>
+                } }
+            </div>
+        </app-cartao>
+    </div>
 
     @if (encontroAtivo(); as encontro) {
     <app-modal

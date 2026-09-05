@@ -126,6 +126,105 @@
         flex: none;
     }
 
+    // === Duas colunas (m8-07, POC validado fora do repositório): grade de fichas (painel de
+    // jogadores) à esquerda, histórico de rolagens com largura fixa à direita — mesmo token
+    // `--largura-painel-lateral` que `HistoricoRolagensSidebar` já usa. Empilha no mobile.
+    &__grade {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) var(--largura-painel-lateral);
+        gap: var(--space-16);
+        min-height: 0;
+        flex: 1;
+
+        @include bp.tablet {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    &__jogadores {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    // Grade de cartões de ficha — mesma receita de 2 colunas de `.detalhe__esquadrao-grid` (m2-19).
+    &__ficha-grid {
+        list-style: none;
+        margin: 0;
+        padding: 2px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-8);
+        align-items: start;
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    // Esqueleto da grade de fichas — silhueta do cartão real (avatar quadrado à esquerda + linhas
+    // + duas barras de recurso, faixa de rodapé), geometria só (ui-14): `app-esqueleto` é dono de
+    // cor/pulso/`prefers-reduced-motion`.
+    &__ficha-esqueleto-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-8);
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    &__ficha-esqueleto {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        overflow: hidden;
+    }
+
+    &__ficha-esqueleto-cabecalho {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-12);
+        padding: var(--space-12);
+    }
+
+    &__ficha-esqueleto-avatar {
+        width: 128px;
+        height: 128px;
+        flex: none;
+    }
+
+    &__ficha-esqueleto-corpo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+        flex: 1;
+    }
+
+    &__ficha-esqueleto-linha {
+        width: 70%;
+        height: 12px;
+    }
+
+    &__ficha-esqueleto-curta {
+        width: 45%;
+    }
+
+    &__ficha-esqueleto-recurso {
+        width: 100%;
+        height: 10px;
+    }
+
+    // O cartão pai já corta com `overflow: hidden` — não precisa zerar o raio aqui.
+    &__ficha-esqueleto-rodape {
+        width: 100%;
+        height: 30px;
+    }
+
     // === Feed dominante de rolagens públicas — mesma densidade/receita de item do análogo
     // aprovado (`HistoricoRolagensSidebar`, ui-22), num cartão de página em vez de painel flutuante.
     &__feed {

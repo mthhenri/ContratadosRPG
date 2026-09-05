@@ -599,9 +599,10 @@ export interface CampanhaPainelEspectadorRecuperarDto {
 }
 
 /**
- * Saída da projeção do painel de espectador (decisão de produto #5) — identidade segura + feed
- * paginado de rolagens exclusivamente `PUBLICA`. Legível por `ESPECTADOR` e por `MESTRE` em modo
- * de prévia (o payload é idêntico nos dois casos — privilégio de mestre nunca vaza aqui).
+ * Saída da projeção do painel de espectador (decisão de produto #5, `fichas`/`membros` estendidos
+ * na m8-07) — identidade segura + feed paginado de rolagens exclusivamente `PUBLICA` + o painel de
+ * jogadores da campanha. Legível por `ESPECTADOR` e por `MESTRE` em modo de prévia (o payload é
+ * idêntico nos dois casos — privilégio de mestre nunca vaza aqui).
  */
 export interface CampanhaPainelEspectadorDto {
   readonly campanha: CampanhaIdentidadeSeguraDto;
@@ -612,6 +613,20 @@ export interface CampanhaPainelEspectadorDto {
    * para `ESPECTADOR` real e `MESTRE` em prévia (`EncontroService.recuperarEncontroAtivoParaEspectador`).
    */
   readonly encontroAtivo: EncontroRecuperadoDto | null;
+  /**
+   * Painel de jogadores (m8-07, reversão parcial da decisão de produto #4 — ver a spec da task):
+   * um cartão por agente (`JOGADOR`) não oculto da campanha, sem exceção — diferente de
+   * `CampanhaPreviaJogadorDto.fichas` (calculado com a identidade de um alvo específico), aqui não
+   * há "dono" de referência, então o único corte é a ocultação da própria ficha (m3-65). Nunca
+   * inclui `CRIATURA`/NPC (`FichaService.listarFichasParaEspectador`).
+   */
+  readonly fichas: readonly FichaResumoDto[];
+  /**
+   * Só para resolver o nome do dono de cada ficha acima por `usuarioId` (mesma forma de
+   * `CampanhaPreviaJogadorDto.membros`) — não alimenta gestão de membros nem controla visibilidade
+   * de ficha aqui (isso já é feito por `fichas`).
+   */
+  readonly membros: readonly CampanhaMembroResumoDto[];
 }
 
 /**

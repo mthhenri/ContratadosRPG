@@ -27,8 +27,9 @@ import { RolagemRepository } from '../rolagem/rolagem.repository';
  *
  * Nenhuma regra de permissão é reimplementada aqui (proibição #28): a identidade segura reusa
  * `CampanhaRepository.recuperarPorId` (dono da tabela `campanha`), a checagem de papel reusa os
- * predicados de `CampanhaService`, as fichas visíveis reusam `FichaService.listarFichasParaAlvo`,
- * o feed reusa `RolagemRepository` e o encontro ativo reusa
+ * predicados de `CampanhaService`, as fichas visíveis reusam `FichaService.listarFichasParaAlvo`
+ * (prévia de jogador) / `listarFichasParaEspectador` (painel de espectador, m8-07), o feed reusa
+ * `RolagemRepository` e o encontro ativo reusa
  * `EncontroService.recuperarEncontroAtivoParaEspectador`/`recuperarEncontroAtivoParaAlvo` — cada
  * um já dono da própria regra.
  */
@@ -43,9 +44,10 @@ export class CampanhaProjecaoService {
   ) {}
 
   /**
-   * Painel do espectador (decisão de produto #5): identidade segura + feed paginado de rolagens
-   * `PUBLICA` + encontro ativo redigido (m8-05). Legível por `ESPECTADOR` e por `MESTRE` em modo
-   * de prévia — o payload é idêntico nos dois casos, nunca vaza privilégio de mestre.
+   * Painel do espectador (decisão de produto #5, `fichas`/`membros` estendidos na m8-07):
+   * identidade segura + feed paginado de rolagens `PUBLICA` + encontro ativo redigido (m8-05) +
+   * painel de jogadores (m8-07). Legível por `ESPECTADOR` e por `MESTRE` em modo de prévia — o
+   * payload é idêntico nos dois casos, nunca vaza privilégio de mestre.
    * `UnauthorizedAccessException` para `JOGADOR` ou não-membro.
    */
   async recuperarPainelEspectador(
@@ -65,6 +67,20 @@ export class CampanhaProjecaoService {
       throw new UnauthorizedAccessException();
     }
 
+    // m8-07: nunca `listarFichas`/`listarFichasParaAlvo` (matriz de visibilidade por dono) — o
+    // espectador não possui ficha nenhuma na campanha, então o recorte é sempre "todo agente não
+    // oculto", independente de quem pede (espectador real ou mestre em prévia).
+    const fichas = await this.fichaService.listarFichasParaEspectador({ campanhaId: dto.campanhaId });
+
+    // `membros` só resolve o nome do dono de cada ficha acima (`usuarioId`) — mesma consulta que
+    // `recuperarPreviaJogador` já usa pra Equipe, `usuarioAtivoEhMestre: false` sempre (nunca
+    // amplia `acessoCompleto`, campo que este painel nem consome).
+    const membros = await this.campanhaRepositorio.listarMembros({
+      campanhaId: dto.campanhaId,
+      usuarioAtivoId: usuarioAtivo.sub,
+      usuarioAtivoEhMestre: false,
+    });
+
     const rolagens = await this.rolagemRepositorio.listarPublicasPorCampanha({
       campanhaId: dto.campanhaId,
       pagina: dto.pagina,
@@ -75,7 +91,7 @@ export class CampanhaProjecaoService {
       campanhaId: dto.campanhaId,
     });
 
-    return { campanha: identidade, rolagens, encontroAtivo };
+    return { campanha: identidade, fichas, membros, rolagens, encontroAtivo };
   }
 
   /**

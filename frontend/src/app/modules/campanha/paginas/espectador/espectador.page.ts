@@ -3,12 +3,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
-import type { CampanhaIdentidadeSeguraDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { CampanhaIdentidadeSeguraDto, CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaProjecaoService } from '../../campanha-projecao.service';
 import { CampanhaService } from '../../campanha.service';
+import { agruparFichasPorMembro, ordenarMembros, type ItemFicha } from '../../campanha-equipe.util';
+import { EspectadorFichaCard, type EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
 import { IniciativaLeitura } from '../../../encontro/componentes/iniciativa-leitura/iniciativa-leitura.component';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
@@ -51,6 +54,7 @@ const ITENS_POR_PAGINA = 20;
     BotaoIcone,
     Cartao,
     Chip,
+    EspectadorFichaCard,
     EstadoVazio,
     Esqueleto,
     IniciativaLeitura,
@@ -76,6 +80,54 @@ export class CampanhaEspectador {
   protected readonly rolagens = signal<readonly RolagemResumoDto[]>([]);
   private readonly paginaAtual = signal(0);
   protected readonly temMais = signal(false);
+
+  /**
+   * Painel de jogadores (m8-07) — `fichas`/`membros` vêm do mesmo payload do painel, sem consulta
+   * própria. `fichasEsquadrao` reusa `agruparFichasPorMembro`/`ordenarMembros`
+   * (`campanha-equipe.util.ts`, m8-04) — mesma composição de `CampanhaDetalhe.fichasEsquadrao` —,
+   * que já exclui `CRIATURA`: o painel do espectador é só de agentes (`JOGADOR`).
+   */
+  protected readonly fichas = signal<readonly FichaResumoDto[]>([]);
+  protected readonly membros = signal<readonly CampanhaMembroResumoDto[]>([]);
+  private readonly membrosOrdenados = computed<readonly CampanhaMembroResumoDto[]>(() =>
+    ordenarMembros(this.membros()),
+  );
+  private readonly fichasPorMembro = computed<ReadonlyMap<number, readonly ItemFicha[]>>(() =>
+    agruparFichasPorMembro(this.fichas()),
+  );
+  protected readonly fichasEsquadrao = computed<readonly EspectadorFichaCardDados[]>(() => {
+    const porMembro = this.fichasPorMembro();
+    const lista: EspectadorFichaCardDados[] = [];
+    for (const membro of this.membrosOrdenados()) {
+      for (const ficha of porMembro.get(membro.usuarioId) ?? []) {
+        lista.push({ ...ficha, donoNome: membro.nome });
+      }
+    }
+    return lista;
+  });
+  protected readonly semFichas = computed(
+    () => !this.carregando() && this.fichasEsquadrao().length === 0,
+  );
+
+  /**
+   * "Última rolagem" de uma ficha (entregável 7) — primeira ocorrência daquele `fichaId` no feed
+   * já carregado (`rolagens()` vem mais-recente-primeiro). `null` sem nenhuma rolagem carregada
+   * daquela ficha — o template mostra "Nenhuma rolagem carregada ainda", nunca "nunca rolou": não
+   * dá pra distinguir "nunca rolou" de "a última rolagem pública está fora desta página" sem uma
+   * consulta dedicada (fora de escopo — ver spec da task).
+   */
+  protected ultimaRolagemDe(fichaId: number): RolagemResumoDto | null {
+    return this.rolagens().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
+  }
+
+  /**
+   * Tempo relativo da última rolagem de uma ficha, ou `null` sem rolagem carregada — mesmo
+   * relógio de `tempoRolagem`.
+   */
+  protected tempoUltimaRolagem(fichaId: number): string | null {
+    const rolagem = this.ultimaRolagemDe(fichaId);
+    return rolagem && this.tempoRolagem(rolagem);
+  }
 
   /** `true` quando quem abriu esta rota é o mestre da campanha, em prévia (nunca um espectador real). */
   protected readonly ehMestrePreview = signal(false);
@@ -173,6 +225,10 @@ export class CampanhaEspectador {
         next: (painel) => {
           this.campanha.set(painel.campanha);
           this.encontroAtivo.set(painel.encontroAtivo);
+          // `fichas`/`membros` não são paginados (o painel de jogadores devolve o recorte inteiro
+          // sempre) — atualiza a cada página, inclusive em "Carregar mais", sem custo extra.
+          this.fichas.set(painel.fichas);
+          this.membros.set(painel.membros);
           this.rolagens.update((atuais) =>
             pagina === 1 ? painel.rolagens.itens : [...atuais, ...painel.rolagens.itens],
           );

@@ -4,20 +4,20 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-04 · **Última decisão registrada:** `m8-06` fechou o módulo
-> `m8-espectadores-campanha` com um gate de validação integrada — 4 identidades reais (mestre,
-> jogador com ficha, jogador dono de ficha nunca compartilhada, espectador) rodadas contra o
-> backend de verdade via REST cru + `socket.io-client` cru, não teste unitário com service dublada
-> (o próprio risco da spec: "teste unitário não prova isolamento de dados"). 30 verificações ao
-> vivo confirmaram que `m8-01`…`m8-05` compõem corretamente entre contas — nenhum bug de backend
-> encontrado. Dois achados reais, os dois corrigidos na própria task: (1) o botão "Ver Iniciativa"
-> (`espectador.page.html`/`previa-jogador.page.html`, m8-05) usava `app-botao` sem `[tamanho]` **e**
-> sem a classe local de receita que todo outro botão nessa densidade no projeto sempre teve —
-> renderizava como texto solto colado no chip ao lado; corrigido acrescentando `&__ver-iniciativa`
-> aos dois SCSS, mesma receita de `&__preview-sair`; (2) `backend/src/core/openapi/contratos-
-> gerados.ts` nunca tinha sido regenerado depois que a `m8-05` acrescentou `encontroAtivo` às duas
-> projeções — corrigido rodando `npm run openapi:gerar-contratos`. Detalhe completo, achados e
-> viewports verificados em `HISTORY.md`.
+> **Última revisão:** 2026-09-05 · **Última decisão registrada:** `m8-07` reverteu **parte** da
+> decisão de produto #4 do módulo `m8-espectadores-campanha` ("espectador nunca vê ficha"): o
+> Painel do espectador ganhou um painel de jogadores (grade de cartões — foto, Vida/Energia,
+> Defesa/Esquiva/Bloqueio, última rolagem) ao lado do histórico de rolagens que já existia. As
+> demais partes da decisão #4 continuam de pé (sem ficha completa, inventário, caderno ou controle
+> de mestre para o espectador). Novo `FichaService.listarFichasParaEspectador` — nunca a matriz de
+> visibilidade por dono que `listarFichas`/`listarFichasParaAlvo` aplicam, porque o espectador não
+> possui ficha nenhuma na campanha; o recorte é sempre "todo agente `JOGADOR` não oculto",
+> independente de quem pede (paridade espectador/mestre-em-prévia por construção, não por checagem
+> condicional). Achado ao vivo: o avatar 128×128 do novo cartão nasceu como uma faixa esticada
+> (não um quadrado) — corrigido antes do fecho. Registrado `P-062`: `npm run openapi:gerar-
+> contratos` neste checkout Windows produz um diff enorme e espúrio (CRLF + descrições de campo já
+> desatualizadas na fonte) — contornado aplicando manualmente só o trecho do DTO tocado. Detalhe
+> completo, achados e viewports verificados em `HISTORY.md`.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -32,6 +32,32 @@
 ---
 
 ## 1. Próxima Task
+
+**`m8-07-espectador-painel-jogadores` concluída** (spec em `docs/specs/done/`): Painel do
+espectador ganhou uma grade com o painel de jogadores da campanha — um cartão por agente
+(`JOGADOR`) não oculto, com avatar quadrado 96×96 à esquerda, dono/nome/classe, Vida/Energia lado a
+lado, Def/Esq/Blo/Con abreviados e faixa "Última rolagem" (com tempo relativo) no rodapé, mesmo
+layout **horizontal** do análogo `.detalhe__ficha-card` (corrigido de uma primeira versão vertical
+após feedback visual do autor) — ao lado do histórico de rolagens que já existia (layout de 2
+colunas, `--largura-painel-lateral`). Backend: `CampanhaPainelEspectadorDto` ganhou
+`fichas`/`membros`, alimentados por `FichaService.listarFichasParaEspectador` (novo — reusa
+`listarPorCampanha` e filtra `tipo === JOGADOR && !oculta` em memória, nunca a matriz de
+visibilidade por dono de `listarFichas`/`listarFichasParaAlvo`, porque o espectador não possui
+ficha nenhuma) e `CampanhaRepository.listarMembros` (mesmo padrão de `recuperarPreviaJogador`, só
+para o nome do dono). Frontend: novo componente `EspectadorFichaCard`, reusando
+`agruparFichasPorMembro`/`ordenarMembros` (`campanha-equipe.util.ts`, m8-04) para montar a grade.
+"Última rolagem" é derivada no cliente do feed já paginado (primeira ocorrência do `fichaId`),
+nunca uma consulta nova. Testes: `shared` 744/744, `backend` 551/551 (13 novos), `frontend`
+1631/1631 (18 novos); lint sem erro novo nos três workspaces; build limpo (frontend com o aviso de
+budget conhecido, `P-004`). Verificação ao vivo (Postgres + backend + frontend reais, cenário via
+REST cru) em `1920×1080`/`960×1080`/`360×800`: ficha oculta nunca apareceu, nome do dono resolvido
+por `usuarioId`, "Nenhuma rolagem carregada ainda" onde esperado, e paridade byte a byte entre
+espectador real e mestre em prévia confirmada tanto via REST quanto visualmente. Achado só na
+verificação ao vivo, corrigido antes do fecho: o avatar 128×128 nasceu como faixa esticada (não um
+quadrado) por causa de `width:100%` + `aspect-ratio` + `max-height` não produzirem um quadrado
+quando a largura do card excede o lado desejado. `P-062` (registrado em `PROBLEMS.md`): regenerar
+`contratos-gerados.ts` neste checkout Windows produz `\r\n` espúrio e apaga descrições de campo já
+desatualizadas na fonte — contornado com um patch manual só do trecho tocado.
 
 **Painéis laterais: vão real contra o conteúdo no desktop concluído** (relato ao vivo do autor,
 sem spec própria — duas faixas brancas marcadas em captura de `Campanha do Matheus`/`Sentinela

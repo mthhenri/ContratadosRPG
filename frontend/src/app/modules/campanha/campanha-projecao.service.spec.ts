@@ -37,6 +37,8 @@ describe('CampanhaProjecaoService', () => {
       campanha: { id: 8, nome: 'Contenção Delta', descricao: null, naBase: true },
       rolagens: { itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 },
       encontroAtivo: null,
+      fichas: [],
+      membros: [],
     };
 
     let recebido: CampanhaPainelEspectadorDto | undefined;
