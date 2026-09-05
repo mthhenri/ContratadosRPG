@@ -1,13 +1,10 @@
-import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { describe, expect, it } from 'vitest';
-import type {
-  DefinicaoCampanhaDev,
-  DefinicaoFichaDev,
-  DefinicaoUsuarioDev,
-} from './cenario-dev';
+import type { DefinicaoCampanhaDev, DefinicaoUsuarioDev } from './cenario-dev';
 import {
   executarSeedDevComPersistencia,
+  type FichaComumDev,
   type OperacoesSeedDev,
   type PersistenciaSeedDev,
 } from './seed-dev';
@@ -16,7 +13,7 @@ interface EstadoEmMemoria {
   usuarios: Map<string, { id: number; nome: string; senha: string }>;
   campanhas: Map<string, { id: number; nome: string }>;
   membros: Map<string, TipoCampanhaMembroPapelEnum>;
-  fichas: Map<string, { cor: string; dados: FichaJogadorDadosDto }>;
+  fichas: Map<string, { cor: string; dados: FichaJogadorDadosDto | FichaCriaturaDadosDto }>;
 }
 
 function copiarEstado(estado: EstadoEmMemoria): EstadoEmMemoria {
@@ -89,8 +86,8 @@ class PersistenciaEmMemoria implements PersistenciaSeedDev, OperacoesSeedDev {
   garantirFicha(
     campanhaId: number,
     usuarioId: number,
-    ficha: DefinicaoFichaDev,
-    dados: FichaJogadorDadosDto,
+    ficha: FichaComumDev,
+    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
   ): Promise<void> {
     this.fichasProcessadas += 1;
     if (this.falharNaFicha === this.fichasProcessadas) throw new Error('falha simulada na ficha');
@@ -100,7 +97,7 @@ class PersistenciaEmMemoria implements PersistenciaSeedDev, OperacoesSeedDev {
 }
 
 describe('executarSeedDevComPersistencia', () => {
-  it('preserva a senha do autor e aplica o hash às três contas dev', async () => {
+  it('preserva a senha do autor e aplica o hash às quatro contas dev', async () => {
     const persistencia = new PersistenciaEmMemoria();
 
     await executarSeedDevComPersistencia(persistencia, 'hash-dev');
@@ -109,10 +106,10 @@ describe('executarSeedDevComPersistencia', () => {
       'hash-pessoal-original',
     );
     expect(
-      ['codex.dev', 'jogador.stub.1', 'jogador.stub.2'].map(
+      ['codex.dev', 'jogador.stub.1', 'jogador.stub.2', 'espectador.stub'].map(
         (login) => persistencia.estado.usuarios.get(login)?.senha,
       ),
-    ).toEqual(['hash-dev', 'hash-dev', 'hash-dev']);
+    ).toEqual(['hash-dev', 'hash-dev', 'hash-dev', 'hash-dev']);
   });
 
   it('reconcilia o cenário duas vezes sem duplicar relações', async () => {
@@ -121,11 +118,11 @@ describe('executarSeedDevComPersistencia', () => {
     await executarSeedDevComPersistencia(persistencia, 'hash-dev');
     const resumo = await executarSeedDevComPersistencia(persistencia, 'hash-dev');
 
-    expect(resumo).toEqual({ usuarios: 4, campanhas: 2, membros: 8, fichas: 8 });
-    expect(persistencia.estado.usuarios.size).toBe(4);
+    expect(resumo).toEqual({ usuarios: 5, campanhas: 2, membros: 10, fichas: 8, criaturas: 3 });
+    expect(persistencia.estado.usuarios.size).toBe(5);
     expect(persistencia.estado.campanhas.size).toBe(2);
-    expect(persistencia.estado.membros.size).toBe(8);
-    expect(persistencia.estado.fichas.size).toBe(8);
+    expect(persistencia.estado.membros.size).toBe(10);
+    expect(persistencia.estado.fichas.size).toBe(11);
   });
 
   it('reverte toda a transação quando uma ficha falha', async () => {

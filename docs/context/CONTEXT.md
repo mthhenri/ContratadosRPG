@@ -1469,9 +1469,11 @@ jogador" acima e `docs/design/DESIGN.md`.
 14 migrations (`0001`…`0014`), Knex + Docker Compose local, CI de lint+testes em PR, deploy nativo.
 O ambiente local é descartável e reproduzível por `npm run db:reset:dev`: o comando trava o alvo em
 `development`/localhost/`contratados_rpg`/`postgres`/armazenamento local, remove o volume sem backup,
-reaplica migrations e semeia 4 usuários, 2 campanhas, 8 vínculos e 8 fichas coloridas. Cada
-usuário possui uma ficha diferente em cada campanha. O seed
-transacional isolado é `npm run db:seed:dev`; cenário e credenciais estão em `docs/DEVELOPMENT.md`.
+reaplica migrations e semeia 5 usuários (incluindo um espectador), 2 campanhas, 10 vínculos, 8
+fichas de jogador coloridas e 3 criaturas de teste (`CENARIO_DEV.criaturas`, sempre de posse do
+mestre da respectiva campanha, validadas contra `shared/regras/criatura`). Cada usuário possui uma
+ficha de jogador diferente em cada campanha. O seed transacional isolado é `npm run db:seed:dev`;
+cenário e credenciais estão em `docs/DEVELOPMENT.md`.
 
 ---
 

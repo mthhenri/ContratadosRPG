@@ -1,6 +1,10 @@
 import { resolve } from 'node:path';
-import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
-import { TipoUsuarioEnum, type TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import {
+  TipoUsuarioEnum,
+  type TipoCampanhaMembroPapelEnum,
+  type TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
 import * as bcrypt from 'bcrypt';
 import { config as carregarVariaveisDeAmbiente } from 'dotenv';
 import knex, { type Knex } from 'knex';
@@ -9,7 +13,6 @@ import {
   type ChaveCampanhaDev,
   type ChaveUsuarioDev,
   type DefinicaoCampanhaDev,
-  type DefinicaoFichaDev,
   type DefinicaoUsuarioDev,
   montarDadosFichaDev,
   SENHA_CONTAS_DEV,
@@ -21,6 +24,16 @@ export interface ResumoSeedDev {
   readonly campanhas: number;
   readonly membros: number;
   readonly fichas: number;
+  readonly criaturas: number;
+}
+
+/** Recorte comum entre `DefinicaoFichaDev` e `DefinicaoCriaturaDev` — o único usado por
+ * `garantirFicha`, agnóstico do formato do JSONB `dados` (mesma agnosticidade de
+ * `FichaRepository.criarFicha`). */
+export interface FichaComumDev {
+  readonly tipo: TipoFichaEnum;
+  readonly nome: string;
+  readonly cor: string;
 }
 
 export interface OperacoesSeedDev {
@@ -34,8 +47,8 @@ export interface OperacoesSeedDev {
   garantirFicha(
     campanhaId: number,
     usuarioId: number,
-    ficha: DefinicaoFichaDev,
-    dados: FichaJogadorDadosDto,
+    ficha: FichaComumDev,
+    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
   ): Promise<void>;
 }
 
@@ -80,11 +93,21 @@ export async function executarSeedDevComPersistencia(
       );
     }
 
+    for (const criatura of CENARIO_DEV.criaturas) {
+      await transacao.garantirFicha(
+        obterId(campanhas, criatura.campanha),
+        obterId(usuarios, criatura.usuario),
+        criatura,
+        criatura.dados,
+      );
+    }
+
     return {
       usuarios: CENARIO_DEV.usuarios.length,
       campanhas: CENARIO_DEV.campanhas.length,
       membros: CENARIO_DEV.membros.length,
       fichas: CENARIO_DEV.fichas.length,
+      criaturas: CENARIO_DEV.criaturas.length,
     };
   });
 }
@@ -150,8 +173,10 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
 
   async garantirCampanha(campanha: DefinicaoCampanhaDev): Promise<number> {
     await this.transacao.raw(
-      `INSERT INTO campanha (nome, descricao, codigo_convite, created_date, updated_date, is_deleted)
-       SELECT :nome, :descricao, :codigoConvite, NOW(), NOW(), false
+      `INSERT INTO campanha
+         (nome, descricao, codigo_convite, codigo_convite_espectador,
+          created_date, updated_date, is_deleted)
+       SELECT :nome, :descricao, :codigoConvite, :codigoConviteEspectador, NOW(), NOW(), false
        WHERE NOT EXISTS (
          SELECT 1 FROM campanha WHERE codigo_convite = :codigoConvite AND is_deleted = false
        )`,
@@ -159,15 +184,19 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
         nome: campanha.nome,
         descricao: campanha.descricao,
         codigoConvite: campanha.codigoConvite,
+        codigoConviteEspectador: campanha.codigoConviteEspectador,
       },
     );
     await this.transacao.raw(
-      `UPDATE campanha SET nome = :nome, descricao = :descricao, updated_date = NOW()
+      `UPDATE campanha
+       SET nome = :nome, descricao = :descricao,
+           codigo_convite_espectador = :codigoConviteEspectador, updated_date = NOW()
        WHERE codigo_convite = :codigoConvite AND is_deleted = false`,
       {
         nome: campanha.nome,
         descricao: campanha.descricao,
         codigoConvite: campanha.codigoConvite,
+        codigoConviteEspectador: campanha.codigoConviteEspectador,
       },
     );
     return this.exigirId(
@@ -214,8 +243,8 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
   async garantirFicha(
     campanhaId: number,
     usuarioId: number,
-    ficha: DefinicaoFichaDev,
-    dados: FichaJogadorDadosDto,
+    ficha: FichaComumDev,
+    dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
   ): Promise<void> {
     const tipoFichaId = this.exigirId(
       await this.selecionarId(
@@ -297,7 +326,7 @@ export async function main(): Promise<void> {
     const resumo = await executarSeedDev(conexao);
     console.log(
       `[db:seed:dev] ${resumo.usuarios} usuários, ${resumo.campanhas} campanhas, ` +
-        `${resumo.membros} membros, ${resumo.fichas} fichas.`,
+        `${resumo.membros} membros, ${resumo.fichas} fichas, ${resumo.criaturas} criaturas.`,
     );
   } finally {
     await conexao.destroy();

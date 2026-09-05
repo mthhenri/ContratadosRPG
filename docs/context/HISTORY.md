@@ -1,5 +1,37 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-05 — Seed dev ganha criaturas de teste (`CENARIO_DEV.criaturas`)
+
+Pedido direto do autor (sem spec): incluir 2-3 criaturas nas campanhas do `npm run db:reset:dev`/
+`npm run db:seed:dev` para dar material de teste ao painel Esquadrão×Criaturas e ao Encontro sem
+precisar criar Ameaças manualmente a cada reset.
+
+`backend/tools/database/cenario-dev.ts` ganhou `DefinicaoCriaturaDev` e `CENARIO_DEV.criaturas`:
+três `FichaCriaturaDadosDto` completos, cada um de posse do **mestre** da respectiva campanha (§14
+— dono de criatura é sempre o mestre) e **sem** linha em `usuario_ficha_acesso` — a mesma ausência
+que já torna qualquer criatura invisível aos demais membros em produção, não a coluna `oculta`
+(mecanismo à parte, m3-65). "A Estátua" (`campanha-matheus`) foi reaproveitada literalmente do caso
+de teste canônico de `shared/regras/criatura/a-estatua.spec.ts` (VD 30, já validado); "Enxame
+Ceifa-Drones" (`campanha-matheus`, VD 15) e "O Colecionador de Rostos" (`campanha-codex`, VD 45)
+foram compostos a mão seguindo as mesmas fórmulas do motor (`obterBaseELimitePorVd`,
+`calcularVidaMaxima`, `calcularDefesaBase`, `calcularLimiteResistencias`, `validarFraqueza`,
+`obterDanoReferenciaPorVd`) para não fabricar número fora da regra do `guia_de_mestre-v4.0.0.md`.
+
+`seed-dev.ts`: `OperacoesSeedDev.garantirFicha` generalizado para aceitar `FichaJogadorDadosDto |
+FichaCriaturaDadosDto` via um novo recorte comum `FichaComumDev` (`tipo`/`nome`/`cor`, os três únicos
+campos que o método já lia) — sem duplicar o método nem o SQL, que já era agnóstico de forma do
+JSONB. `ResumoSeedDev` ganhou `criaturas: number`; `main()` loga a contagem.
+
+Teste novo em `cenario-dev.spec.ts`: cada criatura do cenário roda contra
+`validarFichaCriatura` (`shared/regras/criatura`) esperando zero violações — a mesma validação que
+`FichaService.criarFichaCriatura` chamaria em produção, para garantir que a fixture nunca diverge da
+regra de domínio. `seed-dev.spec.ts` atualizado para a nova contagem (`fichas: 8, criaturas: 3`, Map
+em memória com 11 entradas). Build de `shared` limpo, suíte focada `cenario-dev.spec.ts` +
+`seed-dev.spec.ts` (22/22). Sem mudança de UI — sem gate visual. `npx tsc --noEmit` do backend tem
+erros preexistentes alheios a este recorte (`encontro-conducao.service.spec.ts`,
+`ficha.service.spec.ts`, `rolagem.service.spec.ts`, `gerar-openapi-contratos.ts`,
+`openapi.document.spec.ts`) — nenhum nos arquivos tocados aqui.
+
 ## 2026-09-05 — Corrige `P-046` (vazamento de código de convite) e `P-051` (adoção de `app-esqueleto`)
 
 Duas tarefas soltas pedidas pelo autor a partir de `docs/context/PROBLEMS.md`, cada uma com spec

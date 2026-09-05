@@ -1,8 +1,22 @@
-import type { FichaAtributosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAtributosDto,
+  FichaCriaturaDadosDto,
+  FichaJogadorDadosDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import {
   ArquetipoEnum,
+  CadenciaEnum,
   ClasseEnum,
+  ComportamentoCriaturaEnum,
+  CustoAcaoEnum,
+  HabilidadeTipoCriaturaEnum,
+  ModificadorCriaturaEnum,
+  NivelAmeacaEnum,
+  OrigemCriaturaEnum,
+  PorteCriaturaEnum,
+  TenacidadeEnum,
   TipoCampanhaMembroPapelEnum,
+  TipoDanoEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 import {
@@ -14,7 +28,7 @@ import {
 
 export const SENHA_CONTAS_DEV = 'contratados.dev';
 
-export type ChaveUsuarioDev = 'matheus' | 'codex' | 'stub1' | 'stub2';
+export type ChaveUsuarioDev = 'matheus' | 'codex' | 'stub1' | 'stub2' | 'espectador';
 export type ChaveCampanhaDev = 'campanha-matheus' | 'campanha-codex';
 
 export interface DefinicaoUsuarioDev {
@@ -29,6 +43,8 @@ export interface DefinicaoCampanhaDev {
   readonly nome: string;
   readonly descricao: string;
   readonly codigoConvite: string;
+  /** Convite de `ESPECTADOR` (m8-01) — independente de `codigoConvite`, de `JOGADOR`. */
+  readonly codigoConviteEspectador: string;
 }
 
 export interface DefinicaoMembroDev {
@@ -49,6 +65,21 @@ export interface DefinicaoFichaDev {
   readonly prestigio: number;
   readonly atributos: FichaAtributosDto;
   readonly dinheiro: number;
+}
+
+/**
+ * Criatura de teste (Ameaça, `m4-01`) — sempre pertence ao mestre da campanha (§14: dono é
+ * sempre o mestre, nunca delegado). Fica invisível aos demais membros pela ausência de linha
+ * em `usuario_ficha_acesso` (nenhuma criada aqui) — a coluna `oculta` é um recurso à parte
+ * (m3-65, ficha que o próprio dono esconde de si) e não entra neste cenário.
+ */
+export interface DefinicaoCriaturaDev {
+  readonly campanha: ChaveCampanhaDev;
+  readonly usuario: ChaveUsuarioDev;
+  readonly tipo: TipoFichaEnum.CRIATURA;
+  readonly nome: string;
+  readonly cor: string;
+  readonly dados: FichaCriaturaDadosDto;
 }
 
 const ATRIBUTOS_COMBATENTE: FichaAtributosDto = {
@@ -109,6 +140,7 @@ export const CENARIO_DEV = {
     { chave: 'codex', login: 'codex.dev', nome: 'Codex', alterarSenha: true },
     { chave: 'stub1', login: 'jogador.stub.1', nome: 'Jogador Stub 1', alterarSenha: true },
     { chave: 'stub2', login: 'jogador.stub.2', nome: 'Jogador Stub 2', alterarSenha: true },
+    { chave: 'espectador', login: 'espectador.stub', nome: 'Espectador Stub', alterarSenha: true },
   ],
   campanhas: [
     {
@@ -116,12 +148,14 @@ export const CENARIO_DEV = {
       nome: 'Campanha do Matheus',
       descricao: 'Fixture local do Matheus',
       codigoConvite: 'DEVMT001',
+      codigoConviteEspectador: 'DEVMTESP',
     },
     {
       chave: 'campanha-codex',
       nome: 'Campanha do Codex',
       descricao: 'Fixture local do Codex',
       codigoConvite: 'DEVCD001',
+      codigoConviteEspectador: 'DEVCDESP',
     },
   ],
   membros: [
@@ -129,10 +163,20 @@ export const CENARIO_DEV = {
     { campanha: 'campanha-matheus', usuario: 'codex', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
     { campanha: 'campanha-matheus', usuario: 'stub1', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
     { campanha: 'campanha-matheus', usuario: 'stub2', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+    {
+      campanha: 'campanha-matheus',
+      usuario: 'espectador',
+      papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+    },
     { campanha: 'campanha-codex', usuario: 'codex', papel: TipoCampanhaMembroPapelEnum.MESTRE },
     { campanha: 'campanha-codex', usuario: 'matheus', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
     { campanha: 'campanha-codex', usuario: 'stub1', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
     { campanha: 'campanha-codex', usuario: 'stub2', papel: TipoCampanhaMembroPapelEnum.JOGADOR },
+    {
+      campanha: 'campanha-codex',
+      usuario: 'espectador',
+      papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+    },
   ],
   fichas: [
     {
@@ -240,11 +284,314 @@ export const CENARIO_DEV = {
       dinheiro: 2050,
     },
   ],
+  criaturas: [
+    {
+      campanha: 'campanha-matheus',
+      usuario: 'matheus',
+      tipo: TipoFichaEnum.CRIATURA,
+      nome: 'A Estátua',
+      cor: '#78716C',
+      dados: {
+        identidade: {
+          designacao: 'A Estátua',
+          origem: OrigemCriaturaEnum.SCP_ADAPTADO,
+          conceito:
+            'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
+          naturezaFisica:
+            'Humanoide, altura entre 1,8m e 2,1m, aparência de pedra calcária escura. Sem feições definidas.',
+          comportamento: ComportamentoCriaturaEnum.CACADORA,
+          motivacao:
+            'Desconhecida. Não demonstra comunicação, territorialidade ou padrão de seleção de alvos.',
+          ganchoUnico: 'Imóvel enquanto observada. Letal em frações de segundo quando não é.',
+          temaHorror: 'Paranoia, atenção dividida, cooperação forçada.',
+        },
+        na: NivelAmeacaEnum.MEDIA,
+        vd: 30,
+        atributos: {
+          forca: 3,
+          destreza: 4,
+          luta: 5,
+          pontaria: 2,
+          vigor: 3,
+          intelecto: 2,
+          medicina: 2,
+          sentidos: 3,
+          social: 0,
+          vontade: 2,
+        },
+        modificadores: {
+          destreza: ModificadorCriaturaEnum.FORTE,
+          luta: ModificadorCriaturaEnum.FORTE,
+          forca: ModificadorCriaturaEnum.MEDIO,
+          vigor: ModificadorCriaturaEnum.MEDIO,
+          sentidos: ModificadorCriaturaEnum.MEDIO,
+          intelecto: ModificadorCriaturaEnum.FRACO,
+          medicina: ModificadorCriaturaEnum.FRACO,
+          vontade: ModificadorCriaturaEnum.FRACO,
+          pontaria: ModificadorCriaturaEnum.FRAGIL,
+          social: ModificadorCriaturaEnum.FRAGIL,
+        },
+        tenacidade: TenacidadeEnum.PADRAO,
+        vidaMaxima: 1050,
+        vidaAtual: 1050,
+        defesa: 30,
+        resistencias: [
+          { tipo: TipoDanoEnum.FISICO, subtipo: null, valor: 36 },
+          { tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 16 },
+        ],
+        fraquezas: [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: null, valor: 26 }],
+        porte: PorteCriaturaEnum.MEDIO,
+        deslocamento: { terrestre: 9 },
+        cadencia: CadenciaEnum.SINGULAR,
+        ataques: [
+          {
+            nome: 'Pancada',
+            teste: '5d20kh1+12',
+            custoAcao: CustoAcaoEnum.MOVIMENTO,
+            dano: '3D12+4',
+            danoCritico: '6D12+8',
+            area: false,
+          },
+          {
+            nome: 'Esmagamento',
+            teste: '5d20kh1+12',
+            custoAcao: CustoAcaoEnum.PADRAO,
+            dano: '4D12+10',
+            danoCritico: '8D12+20',
+            area: false,
+            efeito: 'O alvo realiza um teste de Vigor (DT 20) ou fica Imobilizado por 1 turno.',
+          },
+        ],
+        habilidades: [
+          {
+            nome: 'Imobilidade Absoluta',
+            tipo: HabilidadeTipoCriaturaEnum.PASSIVA,
+            descricao:
+              'Enquanto ao menos um agente mantiver contato visual direto com a criatura, ela não pode se mover, ' +
+              'atacar ou usar habilidades de nenhum tipo. Dano, condições e efeitos externos continuam a afetá-la normalmente.',
+          },
+          {
+            nome: 'Velocidade Impossível',
+            tipo: HabilidadeTipoCriaturaEnum.PASSIVA,
+            descricao:
+              'Quando não está sendo observada, a criatura ignora o custo de Ação de Movimento para se deslocar.',
+          },
+          {
+            nome: 'Ruptura de Observação',
+            tipo: HabilidadeTipoCriaturaEnum.GATILHO,
+            descricao:
+              'Quando o número de agentes com contato visual direto com a criatura cai para zero por qualquer ' +
+              'motivo, ela age imediatamente fora da ordem de iniciativa com uma Ação Padrão.',
+          },
+        ],
+      },
+    },
+    {
+      campanha: 'campanha-matheus',
+      usuario: 'matheus',
+      tipo: TipoFichaEnum.CRIATURA,
+      nome: 'Enxame Ceifa-Drones',
+      cor: '#94A3B8',
+      dados: {
+        identidade: {
+          designacao: 'Enxame Ceifa-Drones',
+          origem: OrigemCriaturaEnum.ORIGINAL,
+          conceito:
+            'Um enxame de pequenos drones autônomos que caça em grupo e se dispersa quando confrontado.',
+          naturezaFisica:
+            'Dezenas de drones metálicos do tamanho de um punho, movendo-se em formação sincronizada.',
+          comportamento: ComportamentoCriaturaEnum.OPORTUNISTA,
+          motivacao:
+            'Eliminar qualquer alvo isolado identificado como ameaça pelos protocolos de enxame.',
+          ganchoUnico:
+            'Destruir uma unidade não reduz a ameaça — o enxame se redistribui instantaneamente.',
+        },
+        na: NivelAmeacaEnum.BAIXA,
+        vd: 15,
+        atributos: {
+          forca: 1,
+          destreza: 4,
+          luta: 1,
+          pontaria: 3,
+          vigor: 2,
+          intelecto: 2,
+          medicina: 1,
+          sentidos: 3,
+          social: 0,
+          vontade: 1,
+        },
+        modificadores: {
+          destreza: ModificadorCriaturaEnum.FORTE,
+          pontaria: ModificadorCriaturaEnum.FORTE,
+          sentidos: ModificadorCriaturaEnum.MEDIO,
+          vigor: ModificadorCriaturaEnum.MEDIO,
+          intelecto: ModificadorCriaturaEnum.MEDIO,
+          luta: ModificadorCriaturaEnum.FRACO,
+          forca: ModificadorCriaturaEnum.FRACO,
+          medicina: ModificadorCriaturaEnum.FRACO,
+          vontade: ModificadorCriaturaEnum.FRAGIL,
+          social: ModificadorCriaturaEnum.FRAGIL,
+        },
+        tenacidade: TenacidadeEnum.FRAGIL,
+        vidaMaxima: 375,
+        vidaAtual: 375,
+        defesa: 22,
+        resistencias: [
+          { tipo: TipoDanoEnum.FISICO, subtipo: null, valor: 8 },
+          { tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 10 },
+        ],
+        fraquezas: [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: null, valor: 15 }],
+        porte: PorteCriaturaEnum.MINUSCULO,
+        deslocamento: { voador: 14 },
+        cadencia: CadenciaEnum.SINGULAR,
+        ataques: [
+          {
+            nome: 'Rajada',
+            teste: '3d20kh1+5',
+            custoAcao: CustoAcaoEnum.MOVIMENTO,
+            dano: '2D10',
+            danoCritico: '4D10',
+            area: false,
+          },
+          {
+            nome: 'Enxurrada de Fragmentos',
+            teste: '3d20kh1+5',
+            custoAcao: CustoAcaoEnum.PADRAO,
+            dano: '2D12+6',
+            danoCritico: '4D12+12',
+            area: true,
+            efeito:
+              'Todos os alvos num raio de 3m realizam um teste de Destreza (DT 15) ou ficam Sangrando por 1 turno.',
+          },
+        ],
+        habilidades: [
+          {
+            nome: 'Enxame Distribuído',
+            tipo: HabilidadeTipoCriaturaEnum.PASSIVA,
+            descricao:
+              'A perda de unidades individuais do enxame não reduz seus atributos, ataques ou Vida Máxima — ' +
+              'só a Vida Atual registra o desgaste acumulado.',
+          },
+          {
+            nome: 'Dispersão Evasiva',
+            tipo: HabilidadeTipoCriaturaEnum.GATILHO,
+            descricao:
+              'Quando sofre dano de Área pela primeira vez numa cena, o enxame se dispersa e ganha +10 de ' +
+              'Defesa até o fim do turno seguinte.',
+          },
+        ],
+      },
+    },
+    {
+      campanha: 'campanha-codex',
+      usuario: 'codex',
+      tipo: TipoFichaEnum.CRIATURA,
+      nome: 'O Colecionador de Rostos',
+      cor: '#7C2D12',
+      dados: {
+        identidade: {
+          designacao: 'O Colecionador de Rostos',
+          origem: OrigemCriaturaEnum.ORIGINAL,
+          conceito:
+            'Um predador humanoide que usa rostos arrancados de vítimas como máscaras para se aproximar de novos alvos.',
+          naturezaFisica:
+            'Humanoide magro e alto, pele cinzenta, rosto sem feições sob a máscara mais recente.',
+          comportamento: ComportamentoCriaturaEnum.CACADORA,
+          motivacao:
+            'Colecionar rostos de vítimas para ampliar seu repertório de disfarces e se aproximar de comunidades isoladas.',
+          ganchoUnico: 'Pode assumir a aparência e a voz de qualquer rosto que já colecionou.',
+          temaHorror:
+            'Identidade roubada, confiança traída, o rosto familiar que já não é quem parece.',
+        },
+        na: NivelAmeacaEnum.ALTA,
+        vd: 45,
+        atributos: {
+          forca: 4,
+          destreza: 5,
+          luta: 5,
+          pontaria: 2,
+          vigor: 4,
+          intelecto: 3,
+          medicina: 1,
+          sentidos: 4,
+          social: 2,
+          vontade: 3,
+        },
+        modificadores: {
+          luta: ModificadorCriaturaEnum.FORTE,
+          destreza: ModificadorCriaturaEnum.FORTE,
+          vigor: ModificadorCriaturaEnum.MEDIO,
+          forca: ModificadorCriaturaEnum.MEDIO,
+          sentidos: ModificadorCriaturaEnum.MEDIO,
+          intelecto: ModificadorCriaturaEnum.FRACO,
+          vontade: ModificadorCriaturaEnum.FRACO,
+          social: ModificadorCriaturaEnum.FRACO,
+          pontaria: ModificadorCriaturaEnum.FRAGIL,
+          medicina: ModificadorCriaturaEnum.FRAGIL,
+        },
+        tenacidade: TenacidadeEnum.ROBUSTA,
+        vidaMaxima: 2475,
+        vidaAtual: 2475,
+        defesa: 37,
+        resistencias: [
+          { tipo: TipoDanoEnum.FISICO, subtipo: null, valor: 40 },
+          { tipo: TipoDanoEnum.BALISTICO, subtipo: null, valor: 20 },
+        ],
+        fraquezas: [{ tipo: TipoDanoEnum.EXPLOSAO, subtipo: null, valor: 32 }],
+        porte: PorteCriaturaEnum.GRANDE,
+        deslocamento: { terrestre: 14 },
+        cadencia: CadenciaEnum.SINGULAR,
+        ataques: [
+          {
+            nome: 'Garras Longas',
+            teste: '5d20kh1+20',
+            custoAcao: CustoAcaoEnum.MOVIMENTO,
+            dano: '5D12+4',
+            danoCritico: '10D12+8',
+            area: false,
+          },
+          {
+            nome: 'Investida Predatória',
+            teste: '5d20kh1+20',
+            custoAcao: CustoAcaoEnum.PADRAO,
+            dano: '6D12+18',
+            danoCritico: '12D12+36',
+            area: false,
+            efeito: 'O alvo realiza um teste de Vigor (DT 25) ou fica Atordoado por 1 turno.',
+          },
+        ],
+        habilidades: [
+          {
+            nome: 'Camuflagem de Rostos',
+            tipo: HabilidadeTipoCriaturaEnum.PASSIVA,
+            descricao:
+              'Enquanto usa uma máscara de rosto colecionado, é tratado como um humano comum por qualquer ' +
+              'teste de Sentidos que não busque especificamente por ele.',
+          },
+          {
+            nome: 'Arrancar Face',
+            tipo: HabilidadeTipoCriaturaEnum.ATIVA,
+            descricao:
+              'Contra um alvo Imobilizado ou Inconsciente, arranca seu rosto e passa a poder usá-lo como nova máscara.',
+            restricao: 'uma vez por cena',
+          },
+          {
+            nome: 'Fúria ao Ser Reconhecido',
+            tipo: HabilidadeTipoCriaturaEnum.GATILHO,
+            descricao:
+              'Quando um agente identifica corretamente que está usando uma máscara, ganha uma Ação Padrão ' +
+              'extra imediata contra esse agente.',
+          },
+        ],
+      },
+    },
+  ],
 } as const satisfies {
   readonly usuarios: readonly DefinicaoUsuarioDev[];
   readonly campanhas: readonly DefinicaoCampanhaDev[];
   readonly membros: readonly DefinicaoMembroDev[];
   readonly fichas: readonly DefinicaoFichaDev[];
+  readonly criaturas: readonly DefinicaoCriaturaDev[];
 };
 
 export function montarDadosFichaDev(ficha: DefinicaoFichaDev): FichaJogadorDadosDto {

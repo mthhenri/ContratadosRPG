@@ -45,7 +45,9 @@ produção ou contra banco remoto.
 - Cada campanha contém uma ficha de agente de Matheus, Codex e de cada um dos dois stubs.
 - As oito fichas são diferentes entre as campanhas, têm cores de identidade distintas e conteúdo
   calculado pelo motor atual de `shared/regras`.
-- Não há criaturas, NPCs ou imagens nas fixtures.
+- Cada campanha também ganha ao menos uma criatura de teste (`CENARIO_DEV.criaturas`), sempre de
+  posse do mestre daquela campanha e validada contra `shared/regras/criatura` — sem NPCs nem
+  imagens nas fixtures.
 
 Os convites determinísticos são `DEVMT001` e `DEVCD001`. IDs seriais não fazem parte do contrato do
 cenário e não devem ser assumidos por testes ou ferramentas.
