@@ -157,10 +157,12 @@ export const schemasContratosPublicos = {
                 "type": "string"
             },
             "codigoConvite": {
-                "type": "string"
+                "type": "string",
+                "description": "Só preenchido quando `papel === MESTRE`; `null` para `JOGADOR` (`P-046`)."
             },
             "codigoConviteEspectador": {
-                "type": "string"
+                "type": "string",
+                "description": "Mesmo recorte de `codigoConvite`: só preenchido quando `papel === MESTRE`; `null` para\n`JOGADOR` (`P-046`)."
             },
             "naBase": {
                 "type": "boolean",
@@ -176,7 +178,7 @@ export const schemasContratosPublicos = {
             "naBase"
         ],
         "additionalProperties": false,
-        "description": "Saída da recuperação individual — a campanha completa, incluindo os dois convites. Segue o\nmesmo recorte de exposição que `codigoConvite` já tinha antes do m8-01 (não gateado por papel\nnesta consulta — diferente de `CampanhaResumoDto`, que só mostra o convite ao mestre); mudar\nesse recorte é fluxo de REST/permissão, fora do escopo desta task."
+        "description": "Saída da recuperação individual — a campanha completa. `codigoConvite`/\n`codigoConviteEspectador` só vêm preenchidos para o `MESTRE` (`CampanhaService.recuperarCampanha`\ngateia por `ehMestre(papel)`); `null` para `JOGADOR` — mesmo recorte que `CampanhaResumoDto` já\naplica na listagem (`P-046`)."
     },
     "CampanhaAlterarDto": {
         "type": "object",

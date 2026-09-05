@@ -89,17 +89,17 @@ export interface CampanhaRecuperarDto {
 }
 
 /**
- * Saída da recuperação individual — a campanha completa, incluindo os dois convites. Segue o
- * mesmo recorte de exposição que `codigoConvite` já tinha antes do m8-01 (não gateado por papel
- * nesta consulta — diferente de `CampanhaResumoDto`, que só mostra o convite ao mestre); mudar
- * esse recorte é fluxo de REST/permissão, fora do escopo desta task.
+ * Saída da recuperação individual — a campanha completa. `codigoConvite`/
+ * `codigoConviteEspectador` só vêm preenchidos para o `MESTRE` (`CampanhaService.recuperarCampanha`
+ * gateia por `ehMestre(papel)`); `null` para `JOGADOR` — mesmo recorte que `CampanhaResumoDto` já
+ * aplica na listagem (`P-046`).
  */
 export interface CampanhaRecuperadaDto {
   readonly id: number;
   readonly nome: string;
   readonly descricao: string | null;
-  readonly codigoConvite: string;
-  readonly codigoConviteEspectador: string;
+  readonly codigoConvite: string | null;
+  readonly codigoConviteEspectador: string | null;
   /**
    * Estado "Na Base da Fundação" (`true`) ou "Em Missão" (`false`) — gate do inventário de
    * esquadrão (§ inventário). Só o Mestre altera (`alterarEstado`). Campanha existente nasce

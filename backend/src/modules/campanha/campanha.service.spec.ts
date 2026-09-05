@@ -164,7 +164,20 @@ describe('CampanhaService', () => {
   });
 
   describe('recuperarCampanha', () => {
-    it('devolve a campanha quando o usuário é membro', async () => {
+    it('devolve a campanha com os dois convites quando o usuário é MESTRE', async () => {
+      repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      repositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+
+      const resultado = await service.recuperarCampanha({ id: 3 }, usuarioMestre);
+
+      expect(resultado).toBe(campanhaPersistida);
+      expect(resultado.codigoConvite).toBe('ABCD2345');
+      expect(resultado.codigoConviteEspectador).toBe('WXYZ6789');
+    });
+
+    it('devolve a campanha com os dois convites nulos quando o usuário é JOGADOR (P-046)', async () => {
       repositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
       repositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
@@ -176,7 +189,11 @@ describe('CampanhaService', () => {
         campanhaId: 3,
         usuarioId: usuarioNaoMestre.sub,
       });
-      expect(resultado).toBe(campanhaPersistida);
+      expect(resultado).not.toBe(campanhaPersistida);
+      expect(resultado.codigoConvite).toBeNull();
+      expect(resultado.codigoConviteEspectador).toBeNull();
+      expect(resultado.id).toBe(campanhaPersistida.id);
+      expect(resultado.nome).toBe(campanhaPersistida.nome);
     });
 
     it('lança ResourceNotFoundException quando a campanha não existe', async () => {

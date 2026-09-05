@@ -137,7 +137,8 @@ export class CampanhaService {
    * recorte inclui código de convite e outros dados de gestão que o papel nunca deveria ver
    * (decisão de produto #4/#5 de `m8-espectadores-campanha`); o espectador usa a projeção
    * dedicada do painel (`CampanhaProjecaoService`). `ResourceNotFoundException` se a campanha
-   * não existir.
+   * não existir. **`P-046`**: `codigoConvite`/`codigoConviteEspectador` só voltam preenchidos
+   * para o `MESTRE` — `null` para `JOGADOR`, mesmo recorte de `CampanhaResumoDto`.
    */
   async recuperarCampanha(
     dto: CampanhaRecuperarDto,
@@ -152,7 +153,10 @@ export class CampanhaService {
     if (this.ehEspectador(membroEncontrado.papel)) {
       throw new UnauthorizedAccessException();
     }
-    return campanhaEncontrada;
+    if (this.ehMestre(membroEncontrado.papel)) {
+      return campanhaEncontrada;
+    }
+    return { ...campanhaEncontrada, codigoConvite: null, codigoConviteEspectador: null };
   }
 
   /**
