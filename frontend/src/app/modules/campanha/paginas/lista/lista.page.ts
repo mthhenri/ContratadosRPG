@@ -124,6 +124,17 @@ export class CampanhaLista {
   }
 
   /**
+   * Rota de destino ao abrir a linha — `ESPECTADOR` não consegue carregar o detalhe
+   * (`recuperarCampanha`/`listarMembros` recusam esse papel desde o m8-02) e só pode abrir o
+   * Painel do espectador (m8-espectadores-campanha, matriz de permissões).
+   */
+  protected destinoCampanha(campanha: CampanhaResumoDto): (string | number)[] {
+    return campanha.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+      ? ['/campanhas', campanha.id, 'espectador']
+      : ['/campanhas', campanha.id];
+  }
+
+  /**
    * Copia o convite direto da linha (só mestre — item 1 do spec: `codigoConvite` só vem
    * preenchido nesse papel). Impede a navegação do link da linha (`preventDefault`/
    * `stopPropagation`) — o clique no botão não deve abrir o detalhe.

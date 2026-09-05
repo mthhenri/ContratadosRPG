@@ -51,6 +51,26 @@ describe('CampanhaLista', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement, campanhaService };
   }
 
+  describe('destino ao abrir a linha (m8-espectadores-campanha)', () => {
+    it('espectador abre o Painel do espectador, não o detalhe (que o backend recusa para o papel)', () => {
+      const { raiz } = montar([campanha({ id: 7, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR })]);
+
+      const links = [
+        raiz.querySelector('.campanhas__linha-principal'),
+        raiz.querySelector('.campanhas__linha-abrir'),
+      ];
+      for (const link of links) {
+        expect(link?.getAttribute('href')).toBe('/campanhas/7/espectador');
+      }
+    });
+
+    it('mestre/jogador continuam abrindo o detalhe normal', () => {
+      const { raiz } = montar([campanha({ id: 9, papel: TipoCampanhaMembroPapelEnum.JOGADOR })]);
+
+      expect(raiz.querySelector('.campanhas__linha-abrir')?.getAttribute('href')).toBe('/campanhas/9');
+    });
+  });
+
   describe('tira de estatísticas (item 4)', () => {
     it('soma total de campanhas, quantas você mestra, fichas em campo e alertas', () => {
       const { raiz } = montar([
