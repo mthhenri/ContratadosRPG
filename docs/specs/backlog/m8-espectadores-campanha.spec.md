@@ -4,7 +4,8 @@
 > Espectadores e Prévias de Campanha.** Nasce do pedido do autor em 2026-09-02 para permitir que
 > pessoas acompanhem uma sessão sem se tornarem jogadores e para tornar a prévia do mestre fiel à
 > visão real de um jogador. Este arquivo é guarda-chuva: implementar somente pelas tasks
-> `m8-01`…`m8-06` abaixo.
+> `m8-01`…`m8-07` abaixo. `m8-07` entra depois do fechamento original do módulo (`m8-01`…`m8-06`),
+> como revisão pontual de uma decisão de produto já fechada, pedida explicitamente pelo autor.
 
 ## Objetivo
 
@@ -28,9 +29,12 @@ servidor-orientada das permissões e dos dados que o jogador escolhido realmente
    tentativa é rejeitada. O mestre pode alterar explicitamente um membro entre JOGADOR e
    ESPECTADOR; transferência de mestre continua aceitando apenas JOGADOR.
 4. **Escopo de leitura mínimo.** O espectador vê a identidade pública da campanha e o histórico/
-   fluxo ao vivo de rolagens `PUBLICA`. Nunca vê rolagem `PRIVADA`, fichas, cadernos, inventário,
-   convites, membros, criação/edição de campanha ou qualquer controle de rolagem. Uma concessão
-   em `usuario_ficha_acesso` não amplia este papel; o backend a recusa para espectador.
+   fluxo ao vivo de rolagens `PUBLICA`. Nunca vê rolagem `PRIVADA`, cadernos, inventário,
+   convites, gestão de membros, criação/edição de campanha ou qualquer controle de rolagem. Uma
+   concessão em `usuario_ficha_acesso` não amplia este papel; o backend a recusa para espectador.
+   **Revisão em `m8-07`:** o espectador passa a ver um resumo read-only das fichas não ocultas
+   (foto, dono, classe/arquétipo, Vida/Energia, defesas, última rolagem) no painel; a ficha
+   completa continua fechada para ele.
 5. **Painel próprio e compartilhável pelo mestre.** O destino do espectador é uma rota dedicada,
    “Painel do espectador”, centrada no feed de sessão. O mestre pode abri-la como prévia, mas o
    payload é o mesmo recorte público recebido por uma conta espectadora; privilégios de mestre não
@@ -61,6 +65,10 @@ servidor-orientada das permissões e dos dados que o jogador escolhido realmente
 | Ver Iniciativa/Encontro ativo (leitura) | ✅ (condução) | ✅ | ✅, sem rolar |
 | Abrir prévia de jogador escolhido | ✅ | ❌ | ❌ |
 
+> "Ver ficha" nesta matriz é a ficha completa/acesso concedido — isso continua `❌` para
+> espectador depois de `m8-07`. O que `m8-07` adiciona é um resumo read-only (foto, classe,
+> Vida/Energia, defesas, última rolagem) no painel, não a ficha em si.
+
 ## Quebra em tasks
 
 | Task | Camada | Conteúdo | Depende de |
@@ -71,10 +79,12 @@ servidor-orientada das permissões e dos dados que o jogador escolhido realmente
 | `m8-04` | backend + frontend | Prévia fiel da visão de jogador, sem usar os privilégios do mestre. | `m8-02`, `m8-03` |
 | `m8-05` | backend + frontend | Visão read-only de Iniciativa/Encontro ativo, reaproveitando a tela do jogador. | `m8-02`, `m8-03` |
 | `m8-06` | integração + visual | Regressão de permissões, sessão em tempo real e gate visual desktop/mobile. | `m8-03`, `m8-04`, `m8-05` |
+| `m8-07` | backend + frontend | Painel de jogadores (grade de fichas resumidas) ao lado do histórico, revisando a decisão #4. | `m8-03`, `m8-04` |
 
 **Ordem:** `m8-01 → m8-02 → m8-03`, depois `m8-04` e `m8-05` em paralelo (independentes entre si),
 fechando com `m8-06`. A última task é obrigatória: a utilidade do módulo depende de confirmar a
-separação real entre os três papéis, não apenas de esconder controles no frontend.
+separação real entre os três papéis, não apenas de esconder controles no frontend. `m8-07` é uma
+revisão pontual pedida depois desse fechamento, sem reabrir `m8-01`…`m8-06`.
 
 ## Critérios de aceite do módulo
 
