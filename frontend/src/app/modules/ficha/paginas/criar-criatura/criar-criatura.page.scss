@@ -30,23 +30,9 @@
         min-width: 0;
     }
     &__sair {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 28px;
         height: 24px;
         flex: none;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition: 0.15s ease;
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
     }
     &__indice {
         display: inline-flex;
@@ -586,17 +572,9 @@
         }
     }
     &__formacao-remover {
-        display: grid;
-        place-items: center;
         width: 28px;
         height: 28px;
         flex: none;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition: 0.15s ease;
         &:hover {
             color: var(--vida);
             border-color: var(--vida-border);
@@ -1290,9 +1268,6 @@
             color: var(--text);
             background: transparent;
             border: 1px solid var(--border-strong);
-            border-radius: var(--radius-control);
-            cursor: pointer;
-            transition: 0.15s ease;
             span {
                 white-space: nowrap;
             }
@@ -1443,14 +1418,8 @@
                 z-index: 31;
                 top: 8px;
                 right: 8px;
-                width: bp.$alvo-toque;
-                height: bp.$alvo-toque;
                 font-size: 20px;
-                line-height: 1;
-                color: var(--text-dim);
                 background: var(--surface-2);
-                border: 1px solid var(--border-strong);
-                border-radius: var(--radius-control);
             }
         }
         &__rodape {

@@ -2,6 +2,7 @@
     <header class="ficha-pagina__topo">
         @if (campanhaId(); as campanhaAtualId) {
         <a
+            app-botao-icone
             class="ficha-pagina__voltar"
             [routerLink]="['/campanhas', campanhaAtualId]"
             aria-label="Voltar à campanha"
@@ -11,6 +12,7 @@
         </a>
         } @else {
         <a
+            app-botao-icone
             class="ficha-pagina__voltar"
             routerLink="/fichas"
             aria-label="Voltar ao acervo"
@@ -46,6 +48,7 @@
             } @if (ficha() && podeGerenciar()) {
             <div class="ficha-pagina__menu-container">
                 <button
+                    app-botao-icone
                     class="ficha-pagina__menu-botao"
                     type="button"
                     aria-label="Ações da ficha"
@@ -64,6 +67,7 @@
                 ></button>
                 <div class="ficha-pagina__menu" role="menu">
                     <button
+                        app-botao
                         class="ficha-pagina__menu-item"
                         type="button"
                         role="menuitem"
@@ -76,6 +80,7 @@
                         }
                     </button>
                     <button
+                        app-botao
                         class="ficha-pagina__menu-item"
                         type="button"
                         role="menuitem"
@@ -85,6 +90,7 @@
                         <span>{{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}</span>
                     </button>
                     <button
+                        app-botao
                         class="ficha-pagina__menu-item"
                         type="button"
                         role="menuitem"

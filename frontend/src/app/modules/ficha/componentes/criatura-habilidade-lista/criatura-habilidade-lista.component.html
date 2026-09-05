@@ -5,6 +5,7 @@
         <span class="habilidade-lista__regua"></span>
         @if (editavel()) {
             <button
+                app-botao-icone
                 class="habilidade-lista__cabecalho-acao"
                 type="button"
                 [class.habilidade-lista__cabecalho-acao--ativo]="modoEdicao()"
@@ -16,6 +17,7 @@
                 <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
             </button>
             <button
+                app-botao-icone
                 class="habilidade-lista__cabecalho-acao habilidade-lista__cabecalho-acao--adicionar"
                 type="button"
                 aria-label="Adicionar habilidade"
@@ -53,6 +55,7 @@
                     @if (editavel() && modoEdicao()) {
                         <div class="habilidade-lista__acoes">
                             <button
+                                app-botao-icone
                                 class="habilidade-lista__acao"
                                 type="button"
                                 aria-label="Editar"
@@ -62,6 +65,7 @@
                             </button>
                             @if (indiceRemovendo() === $index) {
                                 <button
+                                    app-botao
                                     class="habilidade-lista__acao habilidade-lista__acao--confirmar"
                                     type="button"
                                     (click)="remover($index)"
@@ -69,6 +73,7 @@
                                     Confirmar remoção
                                 </button>
                                 <button
+                                    app-botao
                                     class="habilidade-lista__acao"
                                     type="button"
                                     (click)="cancelarRemocao()"
@@ -77,6 +82,7 @@
                                 </button>
                             } @else {
                                 <button
+                                    app-botao-icone
                                     class="habilidade-lista__acao"
                                     type="button"
                                     aria-label="Remover"

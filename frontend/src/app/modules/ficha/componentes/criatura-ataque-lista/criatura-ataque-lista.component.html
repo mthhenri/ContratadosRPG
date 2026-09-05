@@ -5,6 +5,7 @@
         <span class="ataque-lista__regua"></span>
         @if (editavel()) {
             <button
+                app-botao-icone
                 class="ataque-lista__cabecalho-acao"
                 type="button"
                 [class.ataque-lista__cabecalho-acao--ativo]="modoEdicao()"
@@ -16,6 +17,7 @@
                 <app-icone [nome]="modoEdicao() ? 'check' : 'editar'" />
             </button>
             <button
+                app-botao-icone
                 class="ataque-lista__cabecalho-acao ataque-lista__cabecalho-acao--adicionar"
                 type="button"
                 aria-label="Adicionar ataque"
@@ -59,6 +61,7 @@
 
                     <div class="ataque-lista__rodape">
                         <button
+                            app-botao
                             class="ataque-lista__rolar ataque-lista__rolar--teste"
                             type="button"
                             (click)="testar(item)"
@@ -66,6 +69,7 @@
                             <app-icone nome="d20" /> Teste
                         </button>
                         <button
+                            app-botao
                             class="ataque-lista__rolar ataque-lista__rolar--dano"
                             type="button"
                             (click)="rolar(item)"
@@ -73,6 +77,7 @@
                             <app-icone nome="d20" /> Dano
                         </button>
                         <button
+                            app-botao
                             class="ataque-lista__rolar ataque-lista__rolar--critico"
                             type="button"
                             [appTooltip]="'Rolar dano crítico'"
@@ -83,6 +88,7 @@
                         @if (editavel() && modoEdicao()) {
                             <div class="ataque-lista__acoes">
                                 <button
+                                    app-botao-icone
                                     class="ataque-lista__acao"
                                     type="button"
                                     aria-label="Editar"
@@ -92,6 +98,7 @@
                                 </button>
                                 @if (indiceRemovendo() === $index) {
                                     <button
+                                        app-botao
                                         class="ataque-lista__acao ataque-lista__acao--confirmar"
                                         type="button"
                                         (click)="remover($index)"
@@ -99,6 +106,7 @@
                                         Confirmar remoção
                                     </button>
                                     <button
+                                        app-botao
                                         class="ataque-lista__acao"
                                         type="button"
                                         (click)="cancelarRemocao()"
@@ -107,6 +115,7 @@
                                     </button>
                                 } @else {
                                     <button
+                                        app-botao-icone
                                         class="ataque-lista__acao"
                                         type="button"
                                         aria-label="Remover"

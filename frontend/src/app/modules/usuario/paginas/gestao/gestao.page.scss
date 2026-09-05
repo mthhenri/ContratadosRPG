@@ -83,15 +83,6 @@
     font: 12px var(--font-mono);
     color: var(--text-mute);
 }
-.gestao__tipo {
-    padding: 5px 8px;
-    color: var(--accent);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-compact);
-    font: 600 10px var(--font-mono);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
 .gestao__acoes {
     display: flex;
     flex-wrap: wrap;
@@ -208,20 +199,7 @@
 .gestao__limpar-filtros {
     width: 42px;
     height: 42px;
-    display: inline-grid;
-    place-items: center;
-    padding: 0;
-    color: var(--text-dim);
     background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-        color: var(--accent);
-        border-color: var(--accent-border);
-    }
 }
 
 @include bp.mobile {
@@ -265,7 +243,6 @@
     font: 600 10px var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    cursor: pointer;
 }
 
 .gestao__tipo[data-tipo="ADMIN"],
@@ -436,26 +413,16 @@
 .gestao__tipo-cancelar {
     width: 34px;
     height: 34px;
-    display: inline-grid;
-    place-items: center;
+}
+
+.gestao__tipo-confirmar {
     color: var(--bg);
     background: var(--accent);
     border: 0;
-    border-radius: var(--radius-control);
-    cursor: pointer;
 }
 
 .gestao__tipo-cancelar {
-    color: var(--text-dim);
-    background: transparent;
-    border: 1px solid var(--border-strong);
     font: 20px/1 var(--font-sans);
-
-    &:hover,
-    &:focus-visible {
-        color: var(--text);
-        border-color: var(--accent-border);
-    }
 }
 
 @include bp.mobile {

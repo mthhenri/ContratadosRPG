@@ -115,6 +115,7 @@
         <div class="compras-custom-barra">
             <button
                 type="button"
+                app-botao
                 class="compras-limpar"
                 [class.selecionavel--ativo]="criandoItem()"
                 [attr.aria-expanded]="criandoItem()"
@@ -387,11 +388,12 @@
         <span cartaoIndice>{{ modo() === 'vender' ? 2 : 4 }}</span>
         <div cartaoFim class="compras-carrinho-acoes">
             @if (modo() === 'comprar') {
-            <button type="button" class="compras-limpar" (click)="abrirModalImportar()">
+            <button type="button" app-botao class="compras-limpar" (click)="abrirModalImportar()">
                 Importar
             </button>
             <button
                 type="button"
+                app-botao
                 class="compras-limpar"
                 [disabled]="carrinhoVazio()"
                 (click)="abrirModalExportarCodigo()"
@@ -401,17 +403,19 @@
             } @if (confirmandoEsvaziar()) {
             <button
                 type="button"
+                app-botao
                 class="compras-limpar compras-limpar--perigo"
                 (click)="confirmarEsvaziar()"
             >
                 Confirmar
             </button>
-            <button type="button" class="compras-limpar" (click)="cancelarEsvaziar()">
+            <button type="button" app-botao class="compras-limpar" (click)="cancelarEsvaziar()">
                 Cancelar
             </button>
             } @else {
             <button
                 type="button"
+                app-botao
                 class="compras-limpar"
                 [disabled]="carrinhoVazio()"
                 (click)="esvaziarCarrinho()"
@@ -440,6 +444,7 @@
                         @if (item.modificavel) {
                         <button
                             type="button"
+                            app-botao
                             class="compras-modificar"
                             [class.selecionavel--ativo]="item.painelAberto"
                             [attr.aria-expanded]="item.painelAberto"
@@ -462,6 +467,7 @@
                         } @if (item.ehArmazenamento) {
                         <button
                             type="button"
+                            app-botao
                             class="compras-porte"
                             [class.compras-porte--vestida]="!item.guardada"
                             [appTooltip]="item.guardada ? 'Guardada: ocupa slots, não amplia o inventário' : 'Vestida: amplia o inventário, não ocupa slots'"
@@ -664,6 +670,7 @@
                                         </select>
                                         <button
                                             type="button"
+                                            app-botao-icone
                                             class="compras-efeito__remover"
                                             aria-label="Remover efeito"
                                             [appTooltip]="'Remover efeito'"
@@ -753,6 +760,7 @@
                             </div>
                             <button
                                 type="button"
+                                app-botao
                                 class="compras-efeito__adicionar"
                                 (click)="adicionarEfeitoMod()"
                             >

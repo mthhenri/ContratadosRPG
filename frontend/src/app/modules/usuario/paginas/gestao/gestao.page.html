@@ -52,6 +52,7 @@
                     <option [value]="UsuarioSituacaoEnum.TODOS">Todos</option>
                 </select></label
             ><button
+                app-botao-icone
                 class="gestao__limpar-filtros"
                 type="button"
                 aria-label="Limpar filtros"
@@ -81,6 +82,7 @@
                     </div>
                     <div class="gestao__tipo-container">
                         <button
+                            app-botao
                             class="gestao__tipo"
                             type="button"
                             [attr.data-tipo]="tipoPendente()?.usuarioId === usuario.id ? tipoPendente()!.tipo : usuario.tipo"
@@ -103,13 +105,16 @@
                             >}}
                         </div>
                         }@if (tipoPendente()?.usuarioId === usuario.id) {<button
+                            app-botao-icone
                             class="gestao__tipo-confirmar"
                             type="button"
                             aria-label="Confirmar tipo"
+                            [appTooltip]="'Confirmar tipo'"
                             (click)="confirmarTipo(usuario)"
                         >
                             <app-icone nome="check" /></button
                         ><button
+                            app-botao-icone
                             class="gestao__tipo-cancelar"
                             type="button"
                             aria-label="Cancelar troca de tipo"

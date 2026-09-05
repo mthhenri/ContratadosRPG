@@ -26,6 +26,7 @@ import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service'
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { CampoRotulado } from '../../../../shared/ui/campo/campo.component';
 import { Stat } from '../../../../shared/ui/stat/stat.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
@@ -120,7 +121,7 @@ function normalizarEstado(estado: EstadoGuiaCriacao): EstadoGuiaCriacao {
   };
 }
 
-@Component({ selector: 'app-ficha-criar', imports: [Botao, CampoRotulado, Stat, StepInput, CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja, Tooltip], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
+@Component({ selector: 'app-ficha-criar', imports: [Botao, BotaoIcone, CampoRotulado, Stat, StepInput, CommonModule, Icone, FichaHabilidadeSeletor, GuiaEquipamentoLoja, Tooltip], templateUrl: './criar.page.html', styleUrl: './criar.page.scss' })
 export class FichaCriar {
   private readonly destroyRef = inject(DestroyRef);
   private readonly rota = inject(ActivatedRoute); private readonly router = inject(Router);

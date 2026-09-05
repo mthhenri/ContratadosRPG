@@ -46,6 +46,7 @@ import { GuiaCriacaoRascunhoService } from '../../guia-criacao-rascunho.service'
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { CampoRotulado } from '../../../../shared/ui/campo/campo.component';
 import { Stat } from '../../../../shared/ui/stat/stat.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
@@ -237,7 +238,7 @@ const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto =
  */
 @Component({
   selector: 'app-criatura-criar',
-  imports: [Botao, CampoRotulado, Stat, StepInput, CommonModule, Icone, Tooltip],
+  imports: [Botao, BotaoIcone, CampoRotulado, Stat, StepInput, CommonModule, Icone, Tooltip],
   templateUrl: './criar-criatura.page.html',
   styleUrl: './criar-criatura.page.scss',
 })

@@ -234,23 +234,17 @@
         opacity: 0;
         cursor: pointer;
     }
+    // ui-31: `app-botao-icone[redondo]` — raio, cor, borda, hover e piso de toque mobile são do
+    // primitivo; só sobram posição/tamanho do selo.
     &__avatar-remover {
         position: absolute;
         right: 5px;
         top: 5px;
         z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 16px;
         height: 16px;
-        border-radius: var(--radius-compact);
         background: color-mix(in srgb, var(--bg) 75%, transparent);
-        border: 1px solid var(--border-strong);
-        color: var(--text-dim);
         font-size: 9px;
-        padding: 0;
-        cursor: pointer;
         &:hover {
             color: var(--vida);
             border-color: var(--vida);
@@ -263,22 +257,10 @@
         left: 5px;
         top: 5px;
         z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 16px;
         height: 16px;
-        border-radius: var(--radius-compact);
         background: color-mix(in srgb, var(--bg) 75%, transparent);
-        border: 1px solid var(--border-strong);
-        color: var(--text-dim);
         font-size: 9px;
-        padding: 0;
-        cursor: pointer;
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
     }
 
     &__ident-texto {
@@ -473,32 +455,10 @@
     }
     // Botão "Receber dano" (m7-17), ao lado do rótulo "Vida".
     &__receber-dano {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 18px;
         height: 18px;
         font-size: 10px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
         border-radius: var(--radius-compact);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
     }
     &__vitalidade {
         display: flex;
@@ -633,36 +593,15 @@
         }
     }
     // Idêntico ao dadinho de rolar teste da ficha de jogador (`.ficha-atributo__rolar`).
+    // ui-31: `app-botao-icone[tamanho="mini"]` — cor/hover já são dele; só sobram posição e tamanho.
     &__atributo-rolar {
         position: absolute;
         top: 4px;
         right: 4px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 22px;
         height: 22px;
-        padding: 0;
         font-size: 13px;
         color: var(--text-mute);
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.12s ease,
-            border-color 0.12s ease,
-            background 0.12s ease;
-        &:hover:not(:disabled),
-        &:focus-visible {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--accent-dim);
-        }
-        &:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
     }
     // Idêntico a `.ficha-atributo__abrev`.
     &__atributo-abrev {
@@ -863,22 +802,9 @@
         background: var(--border);
     }
     &__info-acao {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 20px;
         height: 20px;
         flex: none;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition: 0.15s ease;
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
         &--remover:hover {
             color: var(--vida);
             border-color: var(--vida);
@@ -1083,17 +1009,11 @@
     background: var(--surface-2);
     color: var(--text-dim);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    cursor: pointer;
-    transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease,
-        color 0.15s ease;
 
     app-icone {
         font-size: 13px;

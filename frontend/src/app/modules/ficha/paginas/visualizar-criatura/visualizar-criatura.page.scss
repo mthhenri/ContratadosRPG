@@ -81,29 +81,12 @@
 
     &__voltar {
         flex: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 30px;
         height: 26px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         text-decoration: none;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
 
         app-icone {
             font-size: 13px;
-        }
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
         }
 
         @include bp.mobile {
@@ -118,28 +101,9 @@
     }
 
     &__menu-botao {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 34px;
         height: 30px;
         font-size: 18px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
 
         @include bp.mobile {
             width: bp.$alvo-toque;
@@ -180,12 +144,7 @@
         color: var(--text);
         background: transparent;
         border: 0;
-        border-radius: var(--radius-control);
-        cursor: pointer;
         text-align: left;
-        transition:
-            background-color 0.15s ease,
-            color 0.15s ease;
 
         &:hover {
             background: var(--surface-2);

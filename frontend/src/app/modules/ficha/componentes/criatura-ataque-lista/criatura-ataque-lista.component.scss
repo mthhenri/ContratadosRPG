@@ -47,27 +47,8 @@
     // só existem enquanto ativo (`__acoes` abaixo), pra não deixar ícone de edição/remoção sempre
     // visível na tela.
     &__cabecalho-acao {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         flex: none;
         font-size: 12px;
-        line-height: 1;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        padding: 4px 7px;
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease,
-            background-color 0.15s ease;
-        &:hover {
-            color: var(--accent);
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
         &--ativo {
             color: var(--accent);
             background: var(--accent-dim);
@@ -76,7 +57,6 @@
         &--adicionar {
             width: 20px;
             height: 20px;
-            padding: 0;
             color: var(--accent);
             border-color: var(--accent-border);
             &:hover {
@@ -167,17 +147,10 @@
         letter-spacing: 0.1em;
         background: var(--surface);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         color: var(--text-dim);
-        cursor: pointer;
-        transition: 0.15s ease;
         &:hover:not(:disabled) {
             border-color: var(--accent-border);
             color: var(--text);
-        }
-        &:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
         }
         // Teste fica no tom neutro e Dano no accent — mesma hierarquia dos dois botões do mockup.
         &--teste {
@@ -218,8 +191,6 @@
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
         &:hover {
             color: var(--accent);
             border-color: var(--accent-border);

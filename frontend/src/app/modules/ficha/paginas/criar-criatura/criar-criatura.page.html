@@ -2,6 +2,7 @@
     <header class="guia__cabecalho">
         <div class="guia__cabecalho-titulo">
             <button
+                app-botao-icone
                 class="guia__sair"
                 type="button"
                 aria-label="Sair do assistente"
@@ -17,6 +18,7 @@
             <span class="guia__regua"></span>
         </div>
         <button
+            app-botao
             class="guia__resumo-abrir"
             type="button"
             [class.guia__resumo-abrir--ativo]="resumoAberto()"
@@ -512,6 +514,7 @@
                         <div class="guia__formacao-cabecalho">
                             <span>Resistência {{ $index + 1 }}</span>
                             <button
+                                app-botao-icone
                                 class="guia__formacao-remover"
                                 type="button"
                                 [attr.aria-label]="'Remover resistência ' + ($index + 1)"
@@ -570,6 +573,7 @@
                         <div class="guia__formacao-cabecalho">
                             <span>Fraqueza {{ $index + 1 }}</span>
                             <button
+                                app-botao-icone
                                 class="guia__formacao-remover"
                                 type="button"
                                 [attr.aria-label]="'Remover fraqueza ' + ($index + 1)"
@@ -808,6 +812,7 @@
                         <div class="guia__formacao-cabecalho">
                             <span>{{ linha.nome || ('Ataque ' + ($index + 1)) }}</span>
                             <button
+                                app-botao-icone
                                 class="guia__formacao-remover"
                                 type="button"
                                 [attr.aria-label]="'Remover ' + (linha.nome || 'ataque ' + ($index + 1))"
@@ -907,6 +912,7 @@
                         <div class="guia__formacao-cabecalho">
                             <span>{{ linha.nome || ('Habilidade ' + ($index + 1)) }}</span>
                             <button
+                                app-botao-icone
                                 class="guia__formacao-remover"
                                 type="button"
                                 [attr.aria-label]="'Remover ' + (linha.nome || 'habilidade ' + ($index + 1))"
@@ -1043,6 +1049,7 @@
 
         <aside class="guia__resumo" [class.guia__resumo--aberto]="resumoAberto()">
             <button
+                app-botao
                 class="guia__resumo-toggle"
                 type="button"
                 [attr.aria-expanded]="resumoAberto()"
@@ -1063,6 +1070,7 @@
                 aria-label="Resumo operacional"
             >
                 <button
+                    app-botao-icone
                     class="guia__resumo-fechar"
                     type="button"
                     aria-label="Fechar resumo operacional"

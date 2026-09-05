@@ -1,5 +1,171 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-05 — `ui-32`: adota `app-botao`/`app-botao-icone` em `simulacao`/`usuario` — fecha a série e `P-048`
+
+Quinta e última tarefa da série `ui-28`…`ui-32` (`P-048`), conforme
+`docs/specs/backlog/ui-32-adocao-botao-icone-simulacao-usuario.spec.md` (movida para `done/` ao
+final, junto com `INDEX-adocao-total-botao-icone.md`, que também deixa de fazer sentido em
+`backlog/` com a série inteira fechada). Escopo: `modules/simulacao` (`compras.page`,
+`patente.page`) e `modules/usuario` (`gestao.page`) — o menor volume da série, sem dependência de
+outra tarefa além da fundação da `ui-28`.
+
+**Entregue (por arquivo):**
+
+1. `compras.page.html`/`.scss`: `.compras-efeito__remover` (ícone "×" de cada linha de efeito
+   mecânico da modificação custom) → `app-botao-icone`, mantendo só `width`/`height`/`font-size`
+   locais (36px, maior que o `padrao` de 32px do primitivo) — cor/borda/hover eram idênticos ao
+   default do primitivo, removidos. `.compras-limpar` (×6: "+ Item custom", Importar, Exportar,
+   Confirmar-esvaziar, Cancelar, Esvaziar — um nome de classe único cobrindo vários botões de
+   texto, como a spec já observava), `.compras-modificar` (toggle que revela o painel de mods,
+   com estado `selecionavel--ativo`) e `.compras-porte` (toggle Guardada/Vestida) →
+   `app-botao` puro (sem `[variante]`, já que nenhum mapeia num matiz da paleta — cor/fundo/borda
+   continuam locais, o primitivo bare só cobre raio/fonte/cursor/transição/opacidade
+   desabilitado). `.compras-efeito__adicionar` (linha tracejada "+ Adicionar efeito") também
+   `app-botao` puro. O bloco combinado `.compras-categoria:disabled, .compras-limpar:disabled,
+   .compras-mini-btn:disabled` perdeu `.compras-limpar` (o primitivo já cobre opacidade/cursor de
+   `:disabled`).
+2. `patente.page.html`/`.scss`: `.calc-stat__info` (ícone "ⓘ" ao lado do rótulo "Limite de
+   Crédito", com tooltip da descrição) → `app-botao-icone [redondo]="true"` — mesmo padrão que a
+   `ui-30` já usa para o selo "i" do avatar, citado no próprio comentário do primitivo como
+   exemplo canônico de `[redondo]`. Antes deste botão não tinha CSS nenhum de identidade dedicado
+   fora deste componente (era só a lista de propriedades locais); agora fica só
+   `width`/`height`/`font-size`/`color` (o `color: var(--text-mute)` diverge do `text-dim` default
+   do primitivo e foi mantido como override intencional).
+3. `gestao.page.html`/`.scss`: `.gestao__limpar-filtros` (ícone de vassoura que limpa os filtros)
+   → `app-botao-icone`, mantendo `width`/`height` (42px) e `background: var(--surface-2)` (diverge
+   do fundo transparente default do primitivo — mantido). `.gestao__tipo-confirmar`/
+   `-cancelar` (ícones de confirmar/cancelar a troca de tipo de um usuário) → `app-botao-icone`;
+   `-confirmar` mantém `color`/`background: var(--accent)`/`border: 0` (identidade sempre
+   preenchida, diferente do bare do primitivo) e ganhou o `[appTooltip]` que faltava (o primitivo
+   exige os dois quando há só ícone); `-cancelar` ficou só com `font: 20px/1 var(--font-sans)`
+   (tamanho do "×"), o resto (cor/fundo/borda/hover) já batia com o default do primitivo e saiu.
+   `.gestao__tipo` (chip com texto — "NORMAL"/"ADMIN"/etc.) → `app-botao` puro. Achado ao editar:
+   dois blocos CSS para `.gestao__tipo` já existiam no arquivo, o segundo repetindo 100% das
+   propriedades do primeiro mais algumas a mais (`display`/`gap`/`background`/`cursor`) — dead code
+   pré-existente (mesma especificidade, o segundo já vencia por ordem de declaração); consolidado
+   num só bloco ao tocar a classe para a migração.
+
+**Achado fora do escopo, registrado como `P-060`:** o botão de mostrar/ocultar senha em
+`gestao.page.html` (dentro do editor "Redefinir senha" de um usuário, `.gestao__senha button`) tem
+identidade própria em `gestao.page.scss` (posição absoluta, 44×44px, sem borda, fundo
+transparente) e não passa por `app-botao-icone` — o mesmo padrão que `perfil.page.html` já resolve
+com `app-botao-icone tamanho="padrao"` e a classe `perfil__olho`. Não estava no entregável 3 da
+spec (que só lista `.gestao__limpar-filtros`, `.gestao__tipo-confirmar`, `.gestao__tipo-cancelar`
+e `.gestao__tipo`) nem tinha sido pego pelo levantamento original do `P-048` (a exemplo do `P-059`
+da `ui-31`).
+
+**`P-048` fechado:** com os cinco entregáveis da série completos (fundação em `ui-28`, `encontro`
+na `ui-29`, `ficha` na `ui-30`, criatura/NPC na `ui-31`, simulação/usuário nesta `ui-32`) e o Grupo
+C ("valor editável" clicável) já rastreado à parte em `P-057`, e o Grupo D (seletor/dropdown
+customizado) documentado no `INDEX` como não precisando de entrada própria, a entrada `P-048` foi
+removida de `PROBLEMS.md` — a dívida original de 130 classes/201 ocorrências fora do padrão
+`app-botao`/`app-botao-icone` está resolvida.
+
+**Testes e lint:** suíte focada (`compras.page.spec.ts`, `patente.page.spec.ts`,
+`gestao.page.spec.ts`) — 3 arquivos/30 testes, sem regressão. Suíte completa do frontend — 117
+arquivos/1604 testes, todos passando. Lint do frontend — 0 erros novos (só os avisos
+pré-existentes de aspas simples/duplas em arquivos não tocados por esta task).
+
+**Verificação visual ao vivo** (`verify` + `design-fidelity`, análogo aprovado: `ui-28`/`ui-30`,
+mesmo uso de `app-botao-icone` sem variante e `app-botao` bare) em `1920×1080` e `360×800`:
+
+- **Compras** (rota pública, sem login): abri o "+ Item custom" e fechei de novo (`compras-limpar`
+  com estado `selecionavel--ativo`); adicionei um item ao carrinho e abri o painel "Modificar"
+  (`compras-modificar` ativo, chevron virado); criei uma "Modificação custom", adicionei um efeito
+  "Dano fixo" (`compras-efeito__adicionar`) e removi de volta (`compras-efeito__remover`),
+  confirmando visualmente o botão "×" com a caixa/hover do primitivo; testei a confirmação inline
+  de remoção do item (ícones de check/cancelar, já migrados em task anterior, continuam intactos);
+  abri o modal "Exportar Carrinho" pelo botão `compras-limpar`. Sem overflow em nenhum viewport; no
+  mobile, os `compras-limpar` do carrinho (Importar/Exportar/Esvaziar) ocupam a linha cheia em
+  chips de toque confortável, como já previsto pelo bloco mobile existente.
+- **Patente**: hover do ícone "ⓘ" circular ao lado de "Limite de Crédito" — cor muda para accent e
+  borda para accent-border, igual ao selo `[redondo]` já aprovado na ficha.
+- **Gestão de usuários** (`/admin/usuarios`, sessão `ADMIN`): como a conta admin fixa
+  (`senhor.contratados`, criada por migration) usa uma senha pessoal do autor sem valor conhecido
+  em dev, promovi uma conta de teste registrada via REST a `ADMIN` direto no Postgres local só
+  para esta verificação (mesmo padrão de acesso direto ao banco já usado em verificações
+  anteriores de tempo real). Hover e clique em `gestao__limpar-filtros` (broom, 44×44 no mobile,
+  confirmado por `boundingBox`); abri o dropdown de troca de tipo num usuário (`gestao__tipo`),
+  escolhi um tipo diferente e testei `gestao__tipo-confirmar`/`-cancelar` — o cancelar tem hover
+  sutil de borda accent; o confirmar, sempre preenchido em accent no estado de repouso, troca para
+  contorno accent no hover (o primitivo não tem variantes de cor como o `app-botao`, então seu
+  `:hover` incondicional prevalece sobre o preenchimento fixo local nesse estado) — visualmente
+  coerente e legível, sem quebra, registrado como observação no `CONTEXT.md` em vez de problema.
+
+## 2026-09-05 — `ui-31`: adota `app-botao`/`app-botao-icone` no lado Criatura/NPC
+
+Quarta tarefa da série `ui-28`…`ui-32` (`P-048`), conforme
+`docs/specs/backlog/ui-31-adocao-botao-icone-criatura.spec.md` (movida para `done/` ao final).
+Escopo: lado Criatura/NPC de `modules/ficha` — o lado jogador/geral já tinha fechado na `ui-30`.
+
+**Entregue (por arquivo):**
+
+1. `criatura-ataque-lista.component.html`: `.ataque-lista__cabecalho-acao` (×2, editar/adicionar)
+   e `.ataque-lista__acao` (×2 ícone — editar/remover) → `app-botao-icone`; `.ataque-lista__rolar`
+   (×3 — Teste/Dano/Crítico) e as duas ações de texto do fluxo de remoção (confirmar/cancelar, não
+   enumeradas explicitamente na spec mas do mesmo padrão) → `app-botao`.
+2. `criatura-habilidade-lista.component.html`: mesmo padrão do item 1 (cabeçalho editar/adicionar,
+   ações editar/remover por ícone, confirmar/cancelar por texto).
+3. `criatura-resistencia-lista.component.html`: `.resistencia-lista__alternar-edicao`,
+   `.resistencia-lista__adicionar` e `.resistencia-lista__acao` (×4 ícone, 2 variantes
+   Resistência/Fraqueza) → `app-botao-icone`; confirmar/cancelar por texto → `app-botao`.
+4. `criatura-visualizacao.component.html`: `.criatura__avatar-enquadrar`/`-remover` →
+   `app-botao-icone[redondo]` (mesmo tratamento circular da `ui-30`); `.criatura__receber-dano` →
+   `app-botao-icone`; `.criatura__atributo-rolar` → `app-botao-icone[tamanho="mini"]` (idêntico ao
+   `.ficha-atributo__rolar` da `ui-30`); `.criatura__info-acao` (×2 — adicionar/remover
+   Regeneração) → `app-botao-icone`; `.ficha-rolagem-oculta` (tem texto) → `app-botao`.
+5. `guia-equipamento-loja.component.html`: já migrado pela `ui-30` (arquivo compartilhado entre os
+   dois lados) — conferido, sem trabalho adicional.
+6. `criar.page.html`/`criar-criatura.page.html`: `.guia__sair` → `app-botao-icone`;
+   `.guia__formacao-remover` (×4 em `criar-criatura`, ausente em `criar`) → `app-botao-icone`;
+   `.guia__resumo-abrir`/`.guia__resumo-toggle` (têm texto) → `app-botao`; `.guia__resumo-fechar` →
+   `app-botao-icone`.
+7. `visualizar.page.html`/`visualizar-criatura.page.html`: `.ficha-pagina__voltar` (`<a
+   routerLink>`) → `app-botao-icone`; `.ficha-pagina__menu-botao` → `app-botao-icone`;
+   `.ficha-pagina__menu-item` (×4 em `visualizar`, ×3 em `visualizar-criatura`) → `app-botao`.
+8. CSS local das classes migradas: removida a identidade duplicada (cor/fundo/borda quando
+   idênticos ao padrão do primitivo, `border-radius`, `cursor`, `transition`, hover quando igual ao
+   padrão) — mantidos geometria, posicionamento e as divergências reais (cor/hover customizados,
+   `border-radius` diferente do padrão do primitivo). Classes compartilhadas entre `app-botao` (sem
+   variante, que não fornece cor/fundo/borda) e `app-botao-icone` no mesmo seletor BEM (ex.:
+   `.ataque-lista__acao`) mantiveram cor/fundo/borda/hover explícitos, já que só o ícone-botão os
+   receberia do primitivo.
+
+**Achado fora do escopo, registrado como `P-059`:** um botão "Remover" sem nenhuma classe CSS em
+`criar.page.html` (vaga de habilidade escolhida, dentro de `.guia__vaga-lista`) — invisível a um
+levantamento por classe CSS como o do `P-048`, por isso nunca apareceu em nenhuma spec da série.
+
+**Testes e lint:** suíte focada (8 arquivos tocados com spec própria) — 219 testes, todos
+passando. `npm run lint --workspace=frontend` sem erros novos (só os avisos pré-existentes de
+aspas, alheios ao diff).
+
+**Verificação visual ao vivo:** stack real (Postgres + `backend:dev` + `frontend:dev`), usuário,
+campanha, agente e criatura criados **pelo guia de verdade** (não por REST direto — o DTO de
+criatura tem validação demais para forjar à mão com confiança), Playwright em `1920×1080` e
+`360×800`. Percorrido do zero: guia de agente (Base → Classe → Novo agente → Atributos `[Modo
+livre]` → Habilidades `[Modo livre]` → Identidade completa → Recursos ignorados → Equipamento →
+Revisão → criar) e guia de criatura (Identidade → Ameaça → Atributos com pontos de ajuste líquidos
+fechados → Modificadores na cota 2 Frágil/3 Fraco/3 Médio/2 Forte → Saúde → Defesa → Resistências
+com duas Fraquezas adicionadas e uma removida pelo `guia__formacao-remover` → Regeneração → Porte e
+Deslocamento → Ataques → Habilidades → Revisão → registrar). Na ficha de criatura resultante:
+avatar com upload de teste (selos `[redondo]` confirmados circulares), "Receber dano" (abre o
+modal), `atributo-rolar` em `mini` posicionado sobre o card, "+"/"−" de Regeneração, "Rolagem
+oculta", o dropdown de ações da topbar (`menu-item` ×3) e as abas Ataques/Habilidades em modo de
+edição (ícones editar/remover por item). Guias de agente e criatura também abertos direto (`.guia
+__sair` com diálogo de confirmação, resumo mobile abrir/fechar) sem completar o fluxo, só para
+conferir o shell. Tudo consistente com o tema, sem overflow, alvos de toque corretos no mobile.
+
+**Achado só na verificação ao vivo, corrigido antes do fecho:** o primeiro corte de
+`.guia__resumo-fechar` (botão "×" que fecha o resumo operacional no mobile) removera `display:
+grid` junto com o resto da identidade duplicada — mas essa propriedade não duplicava o primitivo,
+era o mecanismo que trocava `display: none` (estado fechado, regra de especificidade menor) por
+visível quando `.guia__resumo--aberto`. Sem ela, o botão de fechar ficava permanentemente
+`display: none` mesmo com o resumo aberto — só apareceu ao clicar em "Resumo" no mobile e notar que
+o "×" não estava lá. Corrigido nos dois arquivos (`criar.page.scss`/`criar-criatura.page.scss`),
+reconferido com nova captura mostrando o "×" visível e funcional.
+
+`P-048` continua `ABERTO` — falta só `ui-32` (simulação/usuário), em `docs/specs/backlog/`.
+
 ## 2026-09-04 — `ui-30`: adota `app-botao`/`app-botao-icone` em `modules/ficha` (lado não-criatura)
 
 Terceira e maior tarefa da série `ui-28`…`ui-32` (`P-048`), conforme

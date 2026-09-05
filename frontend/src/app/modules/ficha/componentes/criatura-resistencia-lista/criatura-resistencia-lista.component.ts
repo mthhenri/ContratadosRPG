@@ -8,6 +8,7 @@ import type { FichaCriaturaResistenciaDto } from '@contratados-rpg/shared/dtos/f
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 
 const TIPOS: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoDanoEnum[];
 
@@ -30,7 +31,7 @@ const ABREVIACAO: Record<TipoDanoEnum, string> = {
  */
 @Component({
   selector: 'app-criatura-resistencia-lista',
-  imports: [ReactiveFormsModule, Botao, Icone, Tooltip, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, Botao, BotaoIcone, Icone, Tooltip, NgTemplateOutlet],
   templateUrl: './criatura-resistencia-lista.component.html',
   styleUrl: './criatura-resistencia-lista.component.scss',
 })

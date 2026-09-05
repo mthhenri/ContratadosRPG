@@ -292,8 +292,8 @@ compartilhado por 6 consumidores, papel diferente do primitivo — ficam de fora
 `INDEX` da série. Suíte completa frontend 1603/1603, lint sem erro novo. Gate visual ao vivo
 (Postgres nativo, Docker indisponível) em `1920×1080`/`360×800` no detalhe da campanha e no
 inventário de esquadrão, comparado com o análogo já aprovado (`.detalhe__copiar`/`.modal__fechar`).
-`ui-29` (encontro), `ui-30` (ficha), `ui-31` (criatura) e `ui-32` (simulação/usuário) seguem em
-`docs/specs/backlog/` — `P-048` continua `ABERTO` até a série inteira fechar.
+`ui-29` (encontro), `ui-30` (ficha), `ui-31` (criatura) e `ui-32` (simulação/usuário) fecharam a
+série depois — ver adiante; `P-048` está resolvido e não consta mais em `PROBLEMS.md`.
 
 **`ui-29-adocao-botao-icone-encontro` concluída** (spec em `docs/specs/done/`, 2/5 da série que
 fecha `P-048`): `modules/encontro` adota `app-botao`/`app-botao-icone` — `cartao-combatente`
@@ -324,8 +324,59 @@ em `1920×1080`/`360×800` cobrindo Habilidades, Rolagens (+ guia de fórmula), 
 confirmados); `ficha-combos` (componente sem rota/consumidor no app hoje) e
 `guia-equipamento-loja` (só na etapa 7/8 do guia de criação) não puderam ser abertos ao vivo —
 migrados conforme a spec e cobertos pela suíte própria, reusando padrões (`mini`/`compacto`) já
-confirmados ao vivo em outros arquivos desta mesma task. `ui-31`/`ui-32` seguem em
-`docs/specs/backlog/` — `P-048` continua `ABERTO`.
+confirmados ao vivo em outros arquivos desta mesma task. `ui-31`/`ui-32` fecharam a série depois —
+ver adiante.
+
+**`ui-31-adocao-botao-icone-criatura` concluída** (spec em `docs/specs/done/`, 4/5 da série que
+fecha `P-048`): lado Criatura/NPC de `modules/ficha` adota `app-botao`/`app-botao-icone` —
+`criatura-ataque-lista` (cabeçalho editar/adicionar, ×3 rolar Teste/Dano/Crítico, ações
+editar/confirmar/cancelar/remover por item), `criatura-habilidade-lista` e
+`criatura-resistencia-lista` (mesmo padrão cabeçalho + ações por item),
+`criatura-visualizacao` (`avatar-enquadrar`/`-remover` com `[redondo]`, `receber-dano`,
+`atributo-rolar` em `mini`, `info-acao` de Regeneração, `ficha-rolagem-oculta` com texto),
+`criar.page`/`criar-criatura.page` (`guia__sair`, `guia__formacao-remover` ×4,
+`guia__resumo-abrir`/`-toggle`/`-fechar`) e `visualizar.page`/`visualizar-criatura.page`
+(`ficha-pagina__voltar`, `__menu-botao`, `__menu-item` ×3–4). `guia-equipamento-loja` já estava
+migrado pela `ui-30`, sem trabalho adicional. Achado fora do escopo, registrado como `P-059`: um
+botão "Remover" sem classe nenhuma em `criar.page.html` (vaga de habilidade escolhida) — invisível
+a um levantamento por classe CSS. Suíte focada 8 arquivos/219 testes, lint sem erro novo. Gate
+visual ao vivo em `1920×1080`/`360×800`: guia completo de agente e de criatura do zero até o
+registro (incluindo `[Modo livre]` nos passos que aceitam, distribuição de Modificadores por cota
+2/3/3/2 e o orçamento de Atributos fechado em pontos líquidos, não em saldo zero), visualização da
+criatura criada com upload de avatar de teste (selos `[redondo]` confirmados), abas Ataques/
+Habilidades/Resistências em modo de edição, e o dropdown de ações da página em ambos os
+viewports — **achado só na verificação ao vivo**: o primeiro corte de `.guia__resumo-fechar`
+removera `display: grid` junto com o resto da identidade, mas essa propriedade não duplicava o
+primitivo — era o mecanismo que trocava `display: none` (estado fechado) por visível; sem ela o
+botão de fechar o resumo no mobile ficava permanentemente invisível. Corrigido nos dois arquivos
+(`criar.page.scss`/`criar-criatura.page.scss`) antes do fecho.
+
+**`ui-32-adocao-botao-icone-simulacao-usuario` concluída** (spec em `docs/specs/done/`, 5/5 e
+última da série — `P-048` fechado e removido de `PROBLEMS.md`; o `INDEX-adocao-total-botao-icone.md`
+também moveu para `docs/specs/done/`): `modules/simulacao` e `modules/usuario` adotam
+`app-botao`/`app-botao-icone` — `compras.page` (`compras-efeito__remover` ícone,
+`compras-limpar` ×6 — item custom/importar/exportar/confirmar-esvaziar/cancelar/esvaziar —,
+`compras-modificar`, `compras-porte`, `compras-efeito__adicionar`, todos `app-botao` puro exceto
+o `__remover`), `patente.page` (`calc-stat__info`, ícone "ⓘ" circular com `[redondo]`, mesmo
+padrão do selo de avatar da `ui-30`) e `gestao.page` (`gestao__limpar-filtros`,
+`gestao__tipo-confirmar`/`-cancelar` ícones, `gestao__tipo` com texto). Um bloco `.gestao__tipo`
+totalmente duplicado (mesmas propriedades repetidas em dois seletores idênticos, o segundo
+superset do primeiro) foi consolidado num só ao tocar a classe para a migração. Achado fora do
+escopo, registrado como `P-060`: o botão de mostrar/ocultar senha em `gestao.page` (`.gestao__senha
+button`) tem identidade própria (posição absoluta, 44×44px) e não passa por `app-botao-icone`,
+mesmo padrão que `perfil.page` já resolve com `perfil__olho` — não listado no entregável 3 da spec.
+Suíte focada 3 arquivos/30 testes, suíte completa 117 arquivos/1604 testes, lint sem erro novo.
+Gate visual ao vivo em `1920×1080`/`360×800`: Compras (toggle de item custom, adicionar item ao
+carrinho, abrir painel Modificar, criar modificação custom com efeito adicionado/removido,
+confirmação inline de remoção, modal Exportar), Patente (hover do ícone de informação do Limite de
+Crédito) e Gestão de usuários — sessão admin promovida via `UPDATE usuario` local, já que a conta
+admin fixa da migration usa senha pessoal do autor (login `senhor.contratados` não tem senha
+conhecida em dev) — com o menu de trocar tipo aberto, `Confirmar`/`Cancelar` do tipo pendente e
+`Limpar filtros` em ambos os viewports. Observação sem ação: o ícone de confirmar tipo (sempre
+preenchido em accent, sem variante equivalente em `app-botao-icone`) recebe o hover padrão do
+primitivo (troca para contorno) em vez de manter o preenchimento — limitação do primitivo (que não
+tem variantes de cor, ao contrário de `app-botao`), não regressão desta task; segue apenas como nota
+para uma eventual extensão do primitivo, sem abrir problema por não haver dano visual.
 
 **`ui-24-ordem-dos-controles-do-painel-flutuante` concluída** (spec em `docs/specs/done/`): o slot
 `[painelAcoesExtras]` do primitivo passou de antes de minimizar para entre minimizar e fechar. Assim,

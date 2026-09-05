@@ -8,6 +8,7 @@ import type { FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha'
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
 const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as CustoAcaoEnum[];
@@ -15,7 +16,7 @@ const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as Cu
 /** Editor no próprio lugar da lista `ataques` da ficha de criatura (m4-04b), com botão de rolagem por linha. */
 @Component({
   selector: 'app-criatura-ataque-lista',
-  imports: [ReactiveFormsModule, Botao, Icone, Tooltip, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, Botao, BotaoIcone, Icone, Tooltip, NgTemplateOutlet],
   templateUrl: './criatura-ataque-lista.component.html',
   styleUrl: './criatura-ataque-lista.component.scss',
 })

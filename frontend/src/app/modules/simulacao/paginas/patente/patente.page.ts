@@ -9,6 +9,7 @@ import { calcularPatente } from '@contratados-rpg/shared/regras/patente';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 import { ROTULOS_PATENTE } from '../../rotulos';
@@ -45,7 +46,7 @@ function formatarFaixa(prestigioMinimo: number, prestigioMaximo: number): string
  */
 @Component({
   selector: 'app-patente-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Tooltip, Cartao],
+  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Tooltip, Cartao, BotaoIcone],
   templateUrl: './patente.page.html',
   styleUrl: './patente.page.scss',
 })

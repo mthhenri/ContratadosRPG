@@ -1,7 +1,13 @@
 <main class="ficha-pagina guia">
     <header class="guia__cabecalho">
         <div class="guia__cabecalho-titulo">
-            <button class="guia__sair" type="button" aria-label="Sair do guia" (click)="sair()">
+            <button
+                app-botao-icone
+                class="guia__sair"
+                type="button"
+                aria-label="Sair do guia"
+                (click)="sair()"
+            >
                 <app-icone nome="voltar" />
             </button>
             <span class="guia__indice">//</span>
@@ -12,6 +18,7 @@
             <span class="guia__regua"></span>
         </div>
         <button
+            app-botao
             class="guia__resumo-abrir"
             type="button"
             [class.guia__resumo-abrir--ativo]="resumoAberto()"
@@ -1163,6 +1170,7 @@
 
         <aside class="guia__resumo" [class.guia__resumo--aberto]="resumoAberto()">
             <button
+                app-botao
                 class="guia__resumo-toggle"
                 type="button"
                 [attr.aria-expanded]="resumoAberto()"
@@ -1183,6 +1191,7 @@
                 aria-label="Resumo operacional"
             >
                 <button
+                    app-botao-icone
                     class="guia__resumo-fechar"
                     type="button"
                     aria-label="Fechar resumo operacional"

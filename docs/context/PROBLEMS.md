@@ -111,49 +111,6 @@
 - **Desde:** comportamento anterior ao M8; registrado explicitamente em `m8-01` (2026-09-03) e
   reafirmado como decisão consciente de escopo em `m8-02` (2026-09-03).
 
-### P-048 — Botões de ícone soltos sem passar por `app-botao-icone` · `ABERTO` · frontend
-
-- **Sintoma:** alguns controles clicáveis do app são `<button>`/`<a>` com classe BEM local e
-  estilo próprio em vez do primitivo `shared/ui/botao-icone` (ou `app-botao` quando o alvo é
-  `<a>`) — por exemplo `.detalhe__membro-acao` (ações "Transferir mestre"/"Alternar
-  papel"/"Remover" na lista de membros de `detalhe.page.html`), `.detalhe__cabecalho-voltar` e
-  `.espectador__voltar` (links de "voltar" com ícone), `.detalhe__cabecalho-menu-botao`/`⋯` (menu
-  de ações), `.rolagem-pill__d20`. Funcionam e usam tokens de design corretamente, mas não passam
-  pela biblioteca — cada um reimplementa hover/foco/tamanho na mão.
-- **Causa:** convenção antiga do projeto (a maioria desses controles é anterior à `shared/ui/`
-  atual) nunca revisitada; a `m8-03` seguiu o padrão já existente ao adicionar "Alternar papel"
-  ao invés de o corrigir, por estar fora do recorte da task.
-- **Contorno:** nenhum — o comportamento visual está correto hoje, é dívida de arquitetura/reuso,
-  não defeito visível.
-- **Correção:** levantamento completo feito em 2026-09-04 (agente de exploração): **130 classes
-  distintas / 201 ocorrências** fora do padrão em quase todo módulo do frontend — tamanho de
-  milestone. Dividido na série `ui-28`…`ui-32`
-  (`docs/specs/backlog/INDEX-adocao-total-botao-icone.md`), com duas decisões do autor já tomadas
-  (2026-09-04): `app-botao-icone` ganha suporte a `<a>` **e** um tamanho `mini` sem borda (padrão
-  "ícone inline", ex. `.rolagem-pill__d20`); o subconjunto "valor editável clicável" (Grupo C do
-  levantamento) fica fora desta série, registrado à parte em `P-057`. **`ui-28` concluída e movida
-  para `docs/specs/done/`** (fundação do primitivo + `shared/` + `modules/campanha`, inclui os 5
-  controles originais desta entrada) — ver `HISTORY.md` para o relato completo, inclusive uma
-  exceção descoberta só na implementação (`utilitario-flutuante`, botão de ação flutuante já
-  compartilhado por 6 consumidores, com posicionamento `fixed` que o primitivo não cobre).
-  **`ui-29` (`modules/encontro`) concluída** — `cartao-combatente`, `log-encontro`,
-  `rolagem-avulso` e `painel-encontro.page` adotam `app-botao`/`app-botao-icone`; achado à parte
-  na implementação e registrado em `P-058` (`ficha-flutuante.component` reimplementa a mesma
-  janela flutuante de `app-painel-flutuante`, ui-17 — os três botões de janela migraram para
-  `app-botao-icone`, mas a duplicação de componente fica de fora desta série). **`ui-30`
-  (`modules/ficha`, lado não-criatura) concluída** — os 12 arquivos do entregável adotam
-  `app-botao`/`app-botao-icone`, com três desvios do texto da spec resolvidos a favor do código/UX
-  real (`.sanidade__add` e `.ficha-hud__vitais` foram para `app-botao`, não `app-botao-icone` —
-  ambos têm estado com texto/conteúdo rico que a caixa fixa do ícone quebraria) e um achado que
-  virou extensão do primitivo, decidida pelo autor: `app-botao-icone` ganhou o input `[redondo]`
-  (raio 50%) para os selos circulares de `ficha-ident__avatar-enquadrar`/`-remover` e
-  `ficha-mini__info`, que sempre foram círculos, não retângulos arredondados. `ui-31`/`ui-32`
-  (criatura, simulação/usuário) seguem em `docs/specs/backlog/`, ainda não implementadas — a
-  entrada permanece `ABERTO` até a série inteira fechar.
-- **Desde:** dívida pré-existente; nomeada e registrada explicitamente a pedido do autor após a
-  auditoria de conformidade da `m8-03` com a nova regra de biblioteca de componentes (2026-09-03);
-  escopo completo medido e dividido em 2026-09-04.
-
 ### P-051 — Quatro telas recriam a identidade de `app-esqueleto` · `ABERTO` · frontend/design system
 
 - **Sintoma:** Perfil, detalhe de campanha e as visualizações de jogador/criatura possuem
@@ -252,3 +209,39 @@
   componente, não uma troca de classe CSS; maior que o escopo de "adotar `app-botao`/
   `app-botao-icone`" da série `ui-28`…`ui-32`.
 - **Desde:** achado durante a implementação de `ui-29` (2026-09-04), fora do escopo daquela tarefa.
+
+### P-059 — Botão "Remover" sem classe no guia de criação de agente · `ABERTO` · frontend/design system
+
+- **Sintoma:** `criar.page.html` (vaga de habilidade escolhida, dentro de `.guia__vaga-lista`) tem
+  um `<button aria-label="Remover ..." (click)="removerMelhoria(...)">✕</button>` sem nenhuma classe
+  CSS — nem `app-botao`/`app-botao-icone`, nem geometria própria — estilizado só pelo `<button>`
+  nativo do navegador.
+- **Causa:** o levantamento completo do `P-048` audita por classe CSS; um botão sem classe não
+  aparece na lista de ocorrências e não foi enumerado no entregável de nenhuma spec da série
+  `ui-28`…`ui-32`.
+- **Contorno:** funciona, mas destoa visualmente dos demais botões do guia.
+- **Correção:** dar ao botão a classe `guia__vaga-remover` (ou similar) e o atributo
+  `app-botao-icone`, com geometria própria no SCSS de `criar.page.scss`.
+- **Desde:** achado durante a implementação de `ui-31` (2026-09-04) — fora do escopo do entregável 6
+  daquela spec (que só lista `.guia__sair`, `.guia__formacao-remover`, `.guia__resumo-*`).
+
+### P-060 — Botão de mostrar/ocultar senha sem `app-botao-icone` em `gestao.page` · `ABERTO` · frontend/design system
+
+- **Sintoma:** `gestao.page.html` (formulário "Redefinir senha" de um usuário, dentro de
+  `.gestao__senha`) tem `<button type="button" (click)="alternarSenha()" [attr.aria-label]="...">`
+  sem `app-botao-icone`, com identidade própria em `.gestao__senha button` (`gestao.page.scss`:
+  posição absoluta, 44×44px, `border: 0`, fundo transparente, cor `--text-mute`) — o mesmo padrão
+  de olho de senha que `perfil.page.html` já resolve com `app-botao-icone tamanho="padrao"` e
+  classe `perfil__olho`.
+- **Causa:** o entregável 3 da `ui-32` (`docs/specs/done/ui-32-adocao-botao-icone-simulacao-
+  usuario.spec.md`) lista só `.gestao__limpar-filtros`, `.gestao__tipo-confirmar`,
+  `.gestao__tipo-cancelar` e `.gestao__tipo` — o botão de senha não estava no levantamento nem no
+  texto da spec.
+- **Contorno:** funciona; visualmente já é discreto (ícone solto, sem borda), então o desvio é
+  menor que o do `P-059`, mas ainda reimplementa hover/foco/tamanho na mão em vez de reusar o
+  primitivo.
+- **Correção:** trocar para `app-botao-icone` (mesmo padrão de `perfil__olho`), com `aria-label` já
+  existente e `[appTooltip]` a acrescentar (o primitivo exige os dois); ajustar
+  `.gestao__senha button` para manter só posição/tamanho.
+- **Desde:** achado durante a implementação de `ui-32` (2026-09-05) — fora do escopo do entregável 3
+  daquela spec.

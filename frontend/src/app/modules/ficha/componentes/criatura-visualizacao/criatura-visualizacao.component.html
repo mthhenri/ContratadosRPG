@@ -14,6 +14,7 @@
            "Ocultar ficha" do menu da página, que esconde a ficha inteira. Nasce oculta; revelar
            pede confirmação (ver `alternarRolagemOculta`). -->
             <button
+                app-botao
                 type="button"
                 class="ficha-rolagem-oculta"
                 [class.ficha-rolagem-oculta--ativa]="rolagemOculta()"
@@ -53,6 +54,8 @@
                                     />
                                 </div>
                                 <button
+                                    app-botao-icone
+                                    [redondo]="true"
                                     type="button"
                                     class="criatura__avatar-enquadrar"
                                     aria-label="Ajustar enquadramento"
@@ -62,6 +65,8 @@
                                     <app-icone nome="busca" />
                                 </button>
                                 <button
+                                    app-botao-icone
+                                    [redondo]="true"
                                     type="button"
                                     class="criatura__avatar-remover"
                                     aria-label="Remover imagem de registro"
@@ -398,6 +403,7 @@
                         <span class="criatura__vida-rotulo">Vida</span>
                         @if (ajustavel()) {
                             <button
+                                app-botao-icone
                                 class="criatura__receber-dano"
                                 type="button"
                                 aria-label="Receber dano"
@@ -648,6 +654,8 @@
                                 >
                                     @if (ajustavel()) {
                                         <button
+                                            app-botao-icone
+                                            tamanho="mini"
                                             class="criatura__atributo-rolar"
                                             type="button"
                                             [attr.aria-label]="'Rolar teste de ' + campo.nome"
@@ -1060,6 +1068,7 @@
                                 @if (ajustavel()) {
                                     @if (!dados().regeneracao) {
                                         <button
+                                            app-botao-icone
                                             class="criatura__info-acao"
                                             type="button"
                                             aria-label="Adicionar regeneração"
@@ -1070,6 +1079,7 @@
                                         </button>
                                     } @else {
                                         <button
+                                            app-botao-icone
                                             class="criatura__info-acao criatura__info-acao--remover"
                                             type="button"
                                             aria-label="Remover regeneração"
