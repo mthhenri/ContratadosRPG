@@ -1516,7 +1516,8 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   quatro telas, cabeçalho de cartão da Iniciativa, casca interna de três modais e stats da
   Simulação já são cobertos pelos primitivos; estados vazios densos pedem variante compacta; os
   três seletores segmentados justificam primitivo próprio. Matriz e ordem de correção estão em
-  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-051`…`P-056`.
+  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-052`…`P-056` (`P-051` — os
+  esqueletos das quatro telas — fechou em 2026-09-05, ver `HISTORY.md`).
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**

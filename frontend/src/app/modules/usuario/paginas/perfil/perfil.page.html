@@ -2,9 +2,9 @@
     @if (carregando()) {
     <app-cartao role="status" aria-label="Carregando perfil">
         <div class="perfil__esqueleto">
-            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+            <app-esqueleto class="perfil__esqueleto-titulo" />
+            <app-esqueleto class="perfil__esqueleto-linha" />
+            <app-esqueleto class="perfil__esqueleto-linha" />
         </div>
     </app-cartao>
     } @else {

@@ -420,10 +420,8 @@
 // === Esqueleto de carregamento (m3-56) ===
 // Silhueta do layout real de `FichaVisualizacao` (topo | identidade+atributos | status com barra
 // de abas) — mesmas larguras/breakpoints do componente real (`ficha-visualizacao.component.scss`),
-// pra não "pular" quando o conteúdo de verdade assenta. `.esqueleto-bloco`/`esqueleto-pulso` é o
-// mesmo padrão de `campanha/paginas/lista`, `campanha/paginas/detalhe` e `usuario/paginas/perfil`
-// (bloco base reusado, cor `--border-strong`, raio `--radius-control`) — reimplementado aqui porque
-// o encapsulamento de estilo do Angular não compartilha `.scss` entre componentes.
+// pra não "pular" quando o conteúdo de verdade assenta. Identidade (cor/raio/pulso) vem de
+// `app-esqueleto` (ui-14/P-051); aqui só a geometria de cada silhueta.
 .ficha-esqueleto {
     display: flex;
     flex-direction: column;
@@ -529,81 +527,58 @@
         border: 1px solid var(--border);
         border-radius: var(--radius-card);
     }
-}
 
-// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
-.esqueleto-bloco {
-    display: block;
-    border-radius: var(--radius-control);
-    background: var(--border-strong);
-    animation: esqueleto-pulso 1.4s ease-in-out infinite;
-
-    &--rotulo {
+    // Geometria dos blocos de esqueleto — identidade (cor/raio/pulso) vem de `app-esqueleto`.
+    &__esqueleto-rotulo {
         width: 130px;
         height: 12px;
     }
 
-    &--chip {
+    &__esqueleto-chip {
         width: 150px;
         height: 20px;
         margin-left: auto;
     }
 
-    &--avatar {
+    &__esqueleto-avatar {
         width: 44px;
         height: 44px;
         flex: none;
         border-radius: 50%;
     }
 
-    &--titulo {
+    &__esqueleto-titulo {
         width: 65%;
         max-width: 200px;
         height: 18px;
     }
 
-    &--linha {
+    &__esqueleto-linha {
         width: 100%;
         height: 14px;
-
-        &.esqueleto-bloco--curta {
-            width: 45%;
-        }
     }
 
-    &--barra {
+    &__esqueleto-curta {
+        width: 45%;
+    }
+
+    &__esqueleto-barra {
         width: 100%;
         height: 56px;
     }
 
-    &--mini {
+    &__esqueleto-mini {
         width: 100%;
         height: 48px;
     }
 
-    &--aba {
+    &__esqueleto-aba {
         flex: 1;
         height: 30px;
     }
 
-    &--bloco {
+    &__esqueleto-bloco {
         width: 100%;
         height: 160px;
-    }
-}
-
-@keyframes esqueleto-pulso {
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .esqueleto-bloco {
-        animation: none;
     }
 }

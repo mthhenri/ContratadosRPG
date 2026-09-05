@@ -26,6 +26,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -88,6 +89,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     HistoricoRolagensSidebar,
     Tooltip,
     Modal,
+    Esqueleto,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './visualizar.page.html',

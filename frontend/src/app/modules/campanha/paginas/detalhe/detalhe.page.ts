@@ -71,6 +71,7 @@ import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.compon
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Janela da tira "Rolagens Recentes" (item 3) — só rolagens feitas na última hora. */
@@ -146,6 +147,7 @@ interface ItemCriatura {
     Cartao,
     BarraRecurso,
     Modal,
+    Esqueleto,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './detalhe.page.html',

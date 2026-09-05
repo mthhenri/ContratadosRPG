@@ -2031,139 +2031,110 @@
     }
 }
 
-// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
-.esqueleto-bloco {
-    display: block;
-    border-radius: var(--radius-control);
-    background: var(--border-strong);
-    animation: esqueleto-pulso 1.4s ease-in-out infinite;
-
-    &--titulo {
+// Geometria dos blocos de `app-esqueleto` — identidade (cor/raio/pulso) vem do primitivo; aqui só
+// largura/altura/flex de cada silhueta do esqueleto de carregamento (mestre/jogador — ver HTML).
+.detalhe {
+    &__esqueleto-titulo {
         width: 240px;
         height: 20px;
     }
 
     // Título do cabeçalho do card de ficha embutida (visão jogador) — flexível (não `width` fixo),
     // pra não forçar overflow horizontal no mobile ao lado do avatar (item 6, `&__ficha-embutida`).
-    &--titulo-card {
+    &__esqueleto-titulo-card {
         flex: 1 1 auto;
         min-width: 70px;
         max-width: 200px;
         height: 16px;
     }
 
-    &--avatar {
+    &__esqueleto-avatar {
         width: 32px;
         height: 32px;
         flex: none;
     }
 
-    &--nome {
-        flex: 1;
-        max-width: 160px;
-        height: 14px;
-    }
-
-    // === Modificadores do esqueleto de carregamento (mestre/jogador — ver HTML) ===
-
-    &--chip {
+    &__esqueleto-chip {
         width: 64px;
         height: 22px;
         flex: none;
     }
 
-    &--icone {
+    &__esqueleto-icone {
         width: 26px;
         height: 22px;
         flex: none;
     }
 
-    &--rotulo {
+    &__esqueleto-rotulo {
         width: 60px;
         height: 10px;
         margin-bottom: 7px;
     }
 
-    &--secao-titulo {
+    &__esqueleto-secao-titulo {
         width: 90px;
         height: 11px;
     }
 
-    &--chip-papel {
+    &__esqueleto-chip-papel {
         width: 64px;
         height: 14px;
     }
 
-    // Nome em contexto de coluna (membro/equipe) — ao contrário de `&--nome` (linha, `flex:1`).
-    &--nome-linha {
+    // Nome em contexto de coluna (membro/equipe).
+    &__esqueleto-nome-linha {
         width: 60%;
         max-width: 140px;
         height: 13px;
     }
 
-    &--linha {
+    &__esqueleto-linha {
         width: 100%;
         height: 11px;
     }
 
-    &--curta {
+    &__esqueleto-curta {
         width: 55%;
     }
 
-    &--vital {
+    &__esqueleto-vital {
         width: 56px;
         height: 14px;
     }
 
     // Sem `flex: none` (propositalmente): no cabeçalho "Esquadrão" (visão mestre) este modificador
     // combina com `.detalhe__nova-ficha`, cujo `flex: 1 1 100%` do mobile empilha os dois botões em
-    // largura cheia — um `flex: none` aqui colidiria (mesma especificidade, `.esqueleto-bloco--botao`
-    // vem depois no arquivo) e cancelaria esse empilhamento real.
-    &--botao {
+    // largura cheia — um `flex: none` aqui cancelaria esse empilhamento real.
+    &__esqueleto-botao {
         width: 84px;
         height: 28px;
     }
 
-    &--barra {
+    &__esqueleto-barra {
         width: 100%;
         height: 10px;
     }
 
-    &--mini {
+    &__esqueleto-mini {
         height: 40px;
     }
 
-    &--aba {
+    &__esqueleto-aba {
         width: 64px;
         height: 26px;
         flex: none;
     }
 
-    &--bloco {
+    &__esqueleto-bloco {
         width: 100%;
         height: 60px;
     }
 
-    &--d20 {
+    &__esqueleto-d20 {
         width: 14px;
         height: 14px;
         border-radius: 50%;
         flex: none;
-    }
-}
-
-@keyframes esqueleto-pulso {
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .esqueleto-bloco {
-        animation: none;
     }
 }

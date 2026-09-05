@@ -17,32 +17,32 @@
         <header class="detalhe__cabecalho">
             <div class="detalhe__cabecalho-titulo-linha">
                 <span class="detalhe__cabecalho-indice">//</span>
-                <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+                <app-esqueleto class="detalhe__esqueleto-titulo" />
+                <app-esqueleto class="detalhe__esqueleto-chip" />
                 <span class="detalhe__cabecalho-regua"></span>
             </div>
             <div class="detalhe__cabecalho-acoes">
-                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
+                <app-esqueleto class="detalhe__esqueleto-icone" />
+                <app-esqueleto class="detalhe__esqueleto-icone" />
+                <app-esqueleto class="detalhe__esqueleto-icone" />
             </div>
         </header>
 
         <div class="detalhe__estatisticas">
             <div class="detalhe__estatistica detalhe__stat-convite">
-                <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                <app-esqueleto class="detalhe__esqueleto-rotulo" />
+                <app-esqueleto class="detalhe__esqueleto-linha" />
             </div>
             <div class="detalhe__estatistica detalhe__stat-encontro">
-                <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                <app-esqueleto class="detalhe__esqueleto-rotulo" />
+                <app-esqueleto class="detalhe__esqueleto-linha" />
             </div>
         </div>
 
         <div class="detalhe__grade">
             <app-cartao class="detalhe__coluna detalhe__coluna--membros">
                 <header class="detalhe__secao">
-                    <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                    <app-esqueleto class="detalhe__esqueleto-secao-titulo" />
                     <span class="detalhe__secao-regua"></span>
                 </header>
                 <ul class="detalhe__membros">
@@ -51,8 +51,8 @@
                         <div class="detalhe__membro-linha">
                             <span class="detalhe__avatar" aria-hidden="true"></span>
                             <div class="detalhe__membro-identidade">
-                                <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
-                                <span class="esqueleto-bloco esqueleto-bloco--chip-papel"></span>
+                                <app-esqueleto class="detalhe__esqueleto-nome-linha" />
+                                <app-esqueleto class="detalhe__esqueleto-chip-papel" />
                             </div>
                         </div>
                     </li>
@@ -62,10 +62,10 @@
 
             <app-cartao class="detalhe__coluna detalhe__coluna--esquadrao">
                 <header class="detalhe__secao">
-                    <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                    <app-esqueleto class="detalhe__esqueleto-secao-titulo" />
                     <span class="detalhe__secao-regua"></span>
-                    <span class="esqueleto-bloco esqueleto-bloco--botao detalhe__nova-ficha"></span>
-                    <span class="esqueleto-bloco esqueleto-bloco--botao detalhe__nova-ficha"></span>
+                    <app-esqueleto class="detalhe__esqueleto-botao detalhe__nova-ficha" />
+                    <app-esqueleto class="detalhe__esqueleto-botao detalhe__nova-ficha" />
                 </header>
                 <ul class="detalhe__esquadrao-grid">
                     @for (i of [0, 1, 2, 3]; track i) {
@@ -73,13 +73,13 @@
                         <div class="detalhe__ficha-card">
                             <span class="detalhe__ficha-avatar" aria-hidden="true"></span>
                             <div class="detalhe__ficha-conteudo">
-                                <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
-                                <span
-                                    class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
-                                ></span>
+                                <app-esqueleto class="detalhe__esqueleto-nome-linha" />
+                                <app-esqueleto
+                                    class="detalhe__esqueleto-linha detalhe__esqueleto-curta"
+                                />
                                 <div class="detalhe__ficha-vitais">
-                                    <span class="esqueleto-bloco esqueleto-bloco--vital"></span>
-                                    <span class="esqueleto-bloco esqueleto-bloco--vital"></span>
+                                    <app-esqueleto class="detalhe__esqueleto-vital" />
+                                    <app-esqueleto class="detalhe__esqueleto-vital" />
                                 </div>
                             </div>
                         </div>
@@ -94,13 +94,13 @@
         <header class="detalhe__cabecalho">
             <div class="detalhe__cabecalho-titulo-linha">
                 <span class="detalhe__cabecalho-indice">//</span>
-                <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+                <app-esqueleto class="detalhe__esqueleto-titulo" />
+                <app-esqueleto class="detalhe__esqueleto-chip" />
                 <span class="detalhe__cabecalho-regua"></span>
             </div>
             <div class="detalhe__cabecalho-acoes">
-                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
-                <span class="esqueleto-bloco esqueleto-bloco--icone"></span>
+                <app-esqueleto class="detalhe__esqueleto-icone" />
+                <app-esqueleto class="detalhe__esqueleto-icone" />
             </div>
         </header>
 
@@ -108,30 +108,30 @@
             <div class="detalhe__jogador-principal">
                 <app-cartao class="detalhe__ficha-embutida">
                     <div class="detalhe__esqueleto-ficha-topo">
-                        <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
-                        <span class="esqueleto-bloco esqueleto-bloco--titulo-card"></span>
+                        <app-esqueleto class="detalhe__esqueleto-avatar" />
+                        <app-esqueleto class="detalhe__esqueleto-titulo-card" />
                         <span class="detalhe__cabecalho-regua"></span>
                         <div class="detalhe__esqueleto-ficha-acoes">
-                            <span class="esqueleto-bloco esqueleto-bloco--botao"></span>
-                            <span class="esqueleto-bloco esqueleto-bloco--botao"></span>
+                            <app-esqueleto class="detalhe__esqueleto-botao" />
+                            <app-esqueleto class="detalhe__esqueleto-botao" />
                         </div>
                     </div>
                     <div class="detalhe__esqueleto-ficha-corpo">
                         <div class="detalhe__esqueleto-barras">
-                            <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
-                            <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+                            <app-esqueleto class="detalhe__esqueleto-barra" />
+                            <app-esqueleto class="detalhe__esqueleto-barra" />
                         </div>
                         <div class="detalhe__esqueleto-mini-grade">
                             @for (i of [0, 1, 2, 3]; track i) {
-                            <span class="esqueleto-bloco esqueleto-bloco--mini"></span>
+                            <app-esqueleto class="detalhe__esqueleto-mini" />
                             }
                         </div>
                         <div class="detalhe__esqueleto-abas">
                             @for (i of [0, 1, 2]; track i) {
-                            <span class="esqueleto-bloco esqueleto-bloco--aba"></span>
+                            <app-esqueleto class="detalhe__esqueleto-aba" />
                             }
                         </div>
-                        <span class="esqueleto-bloco esqueleto-bloco--bloco"></span>
+                        <app-esqueleto class="detalhe__esqueleto-bloco" />
                     </div>
                 </app-cartao>
             </div>
@@ -139,17 +139,17 @@
             <div class="detalhe__jogador-lateral">
                 <app-cartao class="detalhe__equipe">
                     <header class="detalhe__secao">
-                        <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                        <app-esqueleto class="detalhe__esqueleto-secao-titulo" />
                         <span class="detalhe__secao-regua"></span>
                     </header>
                     <ul class="detalhe__equipe-lista">
                         @for (i of [0, 1, 2]; track i) {
                         <li class="detalhe__equipe-membro">
                             <div class="detalhe__equipe-membro-corpo">
-                                <span class="esqueleto-bloco esqueleto-bloco--nome-linha"></span>
-                                <span
-                                    class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
-                                ></span>
+                                <app-esqueleto class="detalhe__esqueleto-nome-linha" />
+                                <app-esqueleto
+                                    class="detalhe__esqueleto-linha detalhe__esqueleto-curta"
+                                />
                             </div>
                         </li>
                         }
@@ -158,32 +158,32 @@
 
                 <app-cartao class="detalhe__rolagens-painel">
                     <header class="detalhe__secao">
-                        <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                        <app-esqueleto class="detalhe__esqueleto-secao-titulo" />
                         <span class="detalhe__secao-regua"></span>
                     </header>
                     <div class="detalhe__rolagens-painel-corpo">
                         @for (i of [0, 1]; track i) {
-                        <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                        <app-esqueleto class="detalhe__esqueleto-linha" />
                         }
                     </div>
                 </app-cartao>
 
                 <app-cartao class="detalhe__sessao">
                     <header class="detalhe__secao">
-                        <span class="esqueleto-bloco esqueleto-bloco--secao-titulo"></span>
+                        <app-esqueleto class="detalhe__esqueleto-secao-titulo" />
                         <span class="detalhe__secao-regua"></span>
-                        <span class="esqueleto-bloco esqueleto-bloco--botao"></span>
+                        <app-esqueleto class="detalhe__esqueleto-botao" />
                     </header>
                     <ul class="detalhe__sessao-lista">
                         @for (i of [0, 1]; track i) {
                         <li class="rolagem-pill">
                             <div class="rolagem-pill__topo">
-                                <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
-                                <span class="esqueleto-bloco esqueleto-bloco--d20"></span>
+                                <app-esqueleto class="detalhe__esqueleto-rotulo" />
+                                <app-esqueleto class="detalhe__esqueleto-d20" />
                             </div>
-                            <span
-                                class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
-                            ></span>
+                            <app-esqueleto
+                                class="detalhe__esqueleto-linha detalhe__esqueleto-curta"
+                            />
                         </li>
                         }
                     </ul>

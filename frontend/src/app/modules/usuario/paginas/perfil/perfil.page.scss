@@ -8,10 +8,20 @@
     gap: 16px;
 
     // Esqueleto de carregamento — título + duas linhas de campo, evitando o "flash" seco de texto.
+    // Identidade (cor/raio/pulso) vem de `app-esqueleto`; aqui só a geometria de cada silhueta.
     &__esqueleto {
         display: flex;
         flex-direction: column;
         gap: 12px;
+    }
+
+    &__esqueleto-titulo {
+        width: 200px;
+        height: 20px;
+    }
+
+    &__esqueleto-linha {
+        height: 44px;
     }
 
     &__descricao {
@@ -158,38 +168,5 @@
         font-family: var(--font-sans);
         font-size: 13px;
         color: var(--text);
-    }
-}
-
-// Blocos de esqueleto — reusados por qualquer estado de carregamento (proibição #29: só tokens).
-.esqueleto-bloco {
-    display: block;
-    border-radius: var(--radius-control);
-    background: var(--border-strong);
-    animation: esqueleto-pulso 1.4s ease-in-out infinite;
-
-    &--titulo {
-        width: 200px;
-        height: 20px;
-    }
-
-    &--linha {
-        height: 44px;
-    }
-}
-
-@keyframes esqueleto-pulso {
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .esqueleto-bloco {
-        animation: none;
     }
 }

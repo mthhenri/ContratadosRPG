@@ -1,5 +1,59 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-05 — Corrige `P-046` (vazamento de código de convite) e `P-051` (adoção de `app-esqueleto`)
+
+Duas tarefas soltas pedidas pelo autor a partir de `docs/context/PROBLEMS.md`, cada uma com spec
+própria (`docs/specs/done/p-046-gate-codigo-convite-recuperar-campanha.spec.md` e
+`docs/specs/done/p-051-adocao-app-esqueleto-quatro-telas.spec.md`).
+
+**`P-046`** — `GET /campanha/:id` (`CampanhaService.recuperarCampanha`) devolvia
+`codigoConvite`/`codigoConviteEspectador` preenchidos para qualquer membro, inclusive `JOGADOR`,
+diferente de `CampanhaResumoDto` (listagem), que já gateava por `papel === MESTRE`. Corrigido: a
+service devolve os dois campos como `null` quando `!ehMestre(papel)` (antes de retornar, sem tocar
+o repositório — regra de negócio, não SQL). `CampanhaRecuperadaDto.codigoConvite`/
+`codigoConviteEspectador` mudaram de `string` para `string | null` em `shared/`, com o contrato
+OpenAPI (`backend/src/core/openapi/contratos-gerados.ts`) atualizado a mão nos dois campos (rodar
+`npm run openapi:gerar-contratos` neste ambiente Windows reescreve `\n` como `\r\n` em **todas** as
+descrições do arquivo — ruído de 166 linhas alheio à mudança; a saída foi descartada e o trecho
+relevante editado à mão). Verificado que nenhum consumidor do frontend dependia do valor não-nulo
+para não-mestre: `detalhe.page.html` já esconde a seção inteira dos dois convites atrás de
+`@if (ehMestre())`. Teste que antes esperava `resultado === campanhaPersistida` mesmo para
+`JOGADOR` (`toBe`, identidade do objeto) foi corrigido para reconhecer que a service agora retorna
+um objeto novo nesse caso; acrescentado teste explícito de `MESTRE` recebendo os dois códigos.
+Build de `shared`+`backend` limpo, suíte focada de `campanha.service.spec.ts` (68/68), suíte
+completa do backend (541/541) e do frontend (1604/1604) sem regressão. Sem mudança de UI — sem
+gate visual.
+
+**`P-051`** — Perfil, detalhe de campanha, e as visualizações de ficha de jogador e de criatura
+recriavam `.esqueleto-bloco`/`@keyframes esqueleto-pulso`/`prefers-reduced-motion` localmente em
+vez de consumir `app-esqueleto` (`shared/ui/esqueleto`, `ui-14`). Migrados os quatro arquivos:
+cada `<span class="esqueleto-bloco esqueleto-bloco--X">` virou `<app-esqueleto class="<prefixo>
+__esqueleto-X" />`, com a geometria (`width`/`height`/`flex`/`margin`/`border-radius` quando a
+silhueta é redonda) movida para a classe BEM própria da página; o bloco base + `@keyframes` +
+media query de movimento reduzido saiu dos quatro `.scss` (agora só no primitivo). `detalhe.page`
+foi o maior recorte (19 modificadores, 38 usos, incluindo dois que combinam com a classe de layout
+`detalhe__nova-ficha` e um `--d20` com `border-radius: 50%`); ao migrar, um modificador
+`esqueleto-bloco--nome` (sem `-linha`) se revelou morto — nenhum HTML o usava — e foi descartado
+junto. Testes/lint sem regressão (perfil/detalhe/visualizar/visualizar-criatura: 196/196 focados;
+1604/1604 completo do frontend; lint sem erro novo).
+
+Achado fora do escopo, registrado como `P-061`: `previa-jogador.page` e `espectador.page` têm um
+`<span class="esqueleto-bloco esqueleto-bloco--titulo">` que **não** tem `.esqueleto-bloco`
+definido em lugar nenhum acessível (nem local, nem importado) — renderiza sem geometria nem
+identidade nenhuma. Não fazia parte do levantamento da `P-051` (que audita definição local da
+classe, não referência) e ficou registrado para correção futura.
+
+Verificação visual ao vivo (`verify`/`design-fidelity`) em `1920×1080` e `360×800`, análogo
+aprovado `acervo.page` (mesmo tom/densidade de skeleton já migrado): capturado o estado de
+carregamento das quatro telas via Playwright, forçando `carregando()` a ficar preso interceptando
+(sem nunca resolver) a requisição relevante de cada página — `GET /usuario/perfil` (perfil),
+`GET /campanha/:id` **e** `GET /ficha?campanhaId=:id` (detalhe — o `forkJoin` de `carregar()` inclui
+fichas da campanha; sem hangear as duas, um 403 daquele segundo endpoint já dispara o `finalize()`
+e derruba `carregando()` antes da hora), `GET /ficha/:id` (visualizar) e `GET /ficha/criatura/:id`
+(visualizar-criatura), todos com um `id` inexistente (o esqueleto não depende dos dados existirem).
+As quatro silhuetas batem com o layout real e com a "voz" visual do análogo — mesma cor de pulso,
+mesmo raio, sem overflow em nenhum viewport, mobile empilha corretamente.
+
 ## 2026-09-05 — `ui-32`: adota `app-botao`/`app-botao-icone` em `simulacao`/`usuario` — fecha a série e `P-048`
 
 Quinta e última tarefa da série `ui-28`…`ui-32` (`P-048`), conforme

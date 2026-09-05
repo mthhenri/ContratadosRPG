@@ -89,39 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-046 — `GET /campanha/:id` devolve os dois códigos de convite a qualquer JOGADOR · `ACEITO` · backend
-
-- **Sintoma:** `CampanhaRecuperadaDto.codigoConvite`/`codigoConviteEspectador` chegam sempre
-  preenchidos nessa consulta, mesmo para um `JOGADOR` — só o mestre gerou os códigos, mas qualquer
-  membro que chame `recuperarCampanha` (ou a tela que consome esse endpoint) os vê. Diferente de
-  `CampanhaResumoDto` (usado na listagem), que já gateia por `CASE WHEN papel = MESTRE` desde antes
-  do m8.
-- **Causa:** recorte pré-existente ao papel `ESPECTADOR` (m8-01/m8-02) — `m8-01` já registrou o gap
-  para `codigoConvite`, e `codigoConviteEspectador` nasceu com o mesmo recorte para não abrir uma
-  inconsistência entre os dois campos. O `m8-02` fechou a parte que lhe cabia (`ESPECTADOR` agora é
-  rejeitado neste endpoint inteiro, `UnauthorizedAccessException` — usa a projeção dedicada do
-  painel), mas decidiu não estender o fechamento ao recorte `JOGADOR`, que é comportamento em
-  produção anterior ao módulo M8 e fora do objetivo das duas specs.
-- **Contorno:** nenhum — não é urgente (um jogador já está dentro da campanha; o código de convite
-  não é um segredo capaz de dano fora dela).
-- **Correção:** gatear os dois campos por `this.ehMestre(papel)` em `recuperarCampanha`
-  (`CampanhaService`), devolvendo `null` para `JOGADOR` — mesma forma de `CampanhaResumoDto`. Exige
-  decidir se algum consumidor do frontend depende do valor não-nulo para não-mestre antes de mudar
-  o contrato.
-- **Desde:** comportamento anterior ao M8; registrado explicitamente em `m8-01` (2026-09-03) e
-  reafirmado como decisão consciente de escopo em `m8-02` (2026-09-03).
-
-### P-051 — Quatro telas recriam a identidade de `app-esqueleto` · `ABERTO` · frontend/design system
-
-- **Sintoma:** Perfil, detalhe de campanha e as visualizações de jogador/criatura possuem
-  `.esqueleto-bloco`, `@keyframes esqueleto-pulso` e tratamento de movimento reduzido locais.
-- **Causa:** os esqueletos extensos nasceram antes de `app-esqueleto`; a adoção da UI-14 cobriu
-  listas, mas não revisitou essas quatro telas.
-- **Contorno:** nenhum; a aparência funciona, mas quatro donos podem divergir.
-- **Correção:** usar `app-esqueleto` como bloco base e manter local somente a geometria de cada
-  silhueta. Recorte e evidência em `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`.
-- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
-
 ### P-052 — Iniciativa recria o cabeçalho de `app-cartao` · `ABERTO` · frontend/design system
 
 - **Sintoma:** `painel-encontro.page` declara e monta localmente `cartao__cabecalho`, índice,
@@ -245,3 +212,21 @@
   `.gestao__senha button` para manter só posição/tamanho.
 - **Desde:** achado durante a implementação de `ui-32` (2026-09-05) — fora do escopo do entregável 3
   daquela spec.
+
+### P-061 — Esqueleto de título sem estilo em `previa-jogador`/`espectador` · `ABERTO` · frontend
+
+- **Sintoma:** `previa-jogador.page.html` e `espectador.page.html` têm `<span class="esqueleto-bloco
+  esqueleto-bloco--titulo">` no cabeçalho de carregamento, mas nenhum dos dois `.scss` define
+  `.esqueleto-bloco` (nem localmente, nem importam um `.scss` que o faça) — com o encapsulamento de
+  estilo do Angular, esse `<span>` não recebe geometria, cor, raio nem pulso nenhum; renderiza como
+  um elemento vazio, sem altura. O resto de cada tela (`app-esqueleto` com classes próprias, ex.
+  `previa-jogador__esqueleto-linha`) já está correto.
+- **Causa:** provável resto de uma versão anterior ao `app-esqueleto`/BEM local (`ui-14`), não
+  migrada quando o resto da tela adotou o primitivo — não fazia parte do levantamento da `P-051`
+  (que audita `.esqueleto-bloco` **definido** localmente; aqui a classe só é referenciada).
+- **Contorno:** nenhum — a área do título de carregamento fica sem silhueta visível (invisível, não
+  quebrado), até o conteúdo real chegar.
+- **Correção:** trocar por `<app-esqueleto class="previa-jogador__esqueleto-titulo" />` (e
+  equivalente em `espectador.page`), com geometria própria no SCSS de cada arquivo.
+- **Desde:** achado durante a implementação de `P-051` (2026-09-05) — fora do escopo daquela task
+  (que cobre só os quatro arquivos que duplicavam a identidade completa).

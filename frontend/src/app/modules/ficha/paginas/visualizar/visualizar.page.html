@@ -134,34 +134,34 @@
     </header>
 
     @if (carregando()) {
-    <!-- Esqueleto de carregamento (m3-56) — mesmo padrão `.esqueleto-bloco`/`esqueleto-pulso` já
-         usado em campanha (lista/detalhe) e usuário (perfil); a silhueta espelha o layout real de
-         `FichaVisualizacao` (topo | identidade+atributos | status com barra de abas), inclusive no
-         mobile (mesmas larguras/breakpoints do componente real, ver `.ficha-esqueleto` no SCSS). -->
+    <!-- Esqueleto de carregamento (m3-56) — `app-esqueleto` (ui-14/P-051) dá a identidade, a
+         silhueta espelha o layout real de `FichaVisualizacao` (topo | identidade+atributos |
+         status com barra de abas), inclusive no mobile (mesmas larguras/breakpoints do
+         componente real, ver `.ficha-esqueleto` no SCSS). -->
     <div class="ficha-esqueleto" role="status" aria-label="Carregando ficha">
         <div class="ficha-esqueleto__topo">
-            <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+            <app-esqueleto class="ficha-esqueleto__esqueleto-rotulo" />
+            <app-esqueleto class="ficha-esqueleto__esqueleto-chip" />
         </div>
 
         <div class="ficha-esqueleto__linha">
             <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--identidade">
                 <div class="ficha-esqueleto__cartao">
                     <div class="ficha-esqueleto__ident-topo">
-                        <span class="esqueleto-bloco esqueleto-bloco--avatar"></span>
-                        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-avatar" />
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-titulo" />
                     </div>
-                    <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-                    <span
-                        class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
-                    ></span>
+                    <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
+                    <app-esqueleto
+                        class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
+                    />
                     <div class="ficha-esqueleto__barras">
-                        <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
-                        <span class="esqueleto-bloco esqueleto-bloco--barra"></span>
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
                     </div>
                     <div class="ficha-esqueleto__mini-grade">
                         @for (indice of [0, 1, 2, 3]; track indice) {
-                        <span class="esqueleto-bloco esqueleto-bloco--mini"></span>
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-mini" />
                         }
                     </div>
                 </div>
@@ -169,9 +169,9 @@
 
             <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--atributos">
                 <div class="ficha-esqueleto__cartao">
-                    <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+                    <app-esqueleto class="ficha-esqueleto__esqueleto-titulo" />
                     @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-                    <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
+                    <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
                     }
                 </div>
             </div>
@@ -179,15 +179,15 @@
             <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--status">
                 <div class="ficha-esqueleto__abas">
                     @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-                    <span class="esqueleto-bloco esqueleto-bloco--aba"></span>
+                    <app-esqueleto class="ficha-esqueleto__esqueleto-aba" />
                     }
                 </div>
                 <div class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
-                    <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-                    <span
-                        class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"
-                    ></span>
-                    <span class="esqueleto-bloco esqueleto-bloco--bloco"></span>
+                    <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
+                    <app-esqueleto
+                        class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
+                    />
+                    <app-esqueleto class="ficha-esqueleto__esqueleto-bloco" />
                 </div>
             </div>
         </div>

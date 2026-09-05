@@ -109,14 +109,16 @@
     @if (carregando()) {
     <div class="criatura-esqueleto" role="status" aria-label="Carregando ficha">
         <div class="criatura-esqueleto__topo">
-            <span class="esqueleto-bloco esqueleto-bloco--rotulo"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--chip"></span>
+            <app-esqueleto class="criatura-esqueleto__esqueleto-rotulo" />
+            <app-esqueleto class="criatura-esqueleto__esqueleto-chip" />
         </div>
         @for (indice of [0, 1, 2, 3, 4]; track indice) {
         <div class="criatura-esqueleto__secao">
-            <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha"></span>
-            <span class="esqueleto-bloco esqueleto-bloco--linha esqueleto-bloco--curta"></span>
+            <app-esqueleto class="criatura-esqueleto__esqueleto-titulo" />
+            <app-esqueleto class="criatura-esqueleto__esqueleto-linha" />
+            <app-esqueleto
+                class="criatura-esqueleto__esqueleto-linha criatura-esqueleto__esqueleto-curta"
+            />
         </div>
         }
     </div>
