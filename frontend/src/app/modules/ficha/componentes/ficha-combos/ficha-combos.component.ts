@@ -12,6 +12,8 @@ import type {
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
@@ -46,7 +48,7 @@ interface ComboVM {
  */
 @Component({
   selector: 'app-ficha-combos',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, Tooltip],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, Tooltip, Botao, BotaoIcone],
   templateUrl: './ficha-combos.component.html',
   styleUrl: './ficha-combos.component.scss',
 })

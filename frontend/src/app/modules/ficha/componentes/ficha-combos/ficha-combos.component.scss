@@ -7,15 +7,12 @@
 
     &__novo {
         align-self: flex-start;
-        font-family: var(--font-mono);
         font-size: 12px;
         font-weight: 600;
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 8px 14px;
-        cursor: pointer;
 
         &:hover {
             color: var(--accent);
@@ -201,14 +198,11 @@
 
     &__add-passo {
         align-self: flex-start;
-        font-family: var(--font-mono);
         font-size: 11px;
         color: var(--text-dim);
         background: transparent;
         border: 1px dashed var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 6px 10px;
-        cursor: pointer;
 
         &:hover {
             color: var(--accent);
@@ -239,21 +233,9 @@
 
     // === Botões ===
     &__btn {
-        font-family: var(--font-mono);
         font-size: 12px;
         font-weight: 600;
-        border-radius: var(--radius-control);
         padding: 7px 12px;
-        cursor: pointer;
-        transition:
-            filter 0.15s ease,
-            background-color 0.15s ease,
-            border-color 0.15s ease;
-
-        &:disabled {
-            opacity: 0.5;
-            cursor: default;
-        }
 
         &--principal {
             background: var(--accent);
@@ -285,33 +267,5 @@
         }
     }
 
-    &__mini-btn {
-        width: 24px;
-        height: 24px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease;
-
-        &:disabled {
-            opacity: 0.4;
-            cursor: default;
-        }
-        &:hover:not(:disabled) {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-        &--perigo:hover:not(:disabled) {
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-    }
+    // Geometria/cor/hover são de `app-botao-icone[tamanho="mini"]` (ui-30) — nada sobra aqui.
 }

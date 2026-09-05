@@ -34,7 +34,9 @@
     }
 
     @if (editavel()) {
-        <button type="button" class="ficha-rol__novo" (click)="abrirNovo()">+ Novo preset</button>
+        <button app-botao type="button" class="ficha-rol__novo" (click)="abrirNovo()">
+            + Novo preset
+        </button>
     }
 
     @if (vazio()) {
@@ -47,6 +49,8 @@
                 <div class="ficha-rol__preset-topo">
                     <div class="ficha-rol__preset-id">
                         <button
+                            app-botao-icone
+                            tamanho="mini"
                             type="button"
                             class="ficha-rol__mini-btn ficha-rol__mini-btn--chevron"
                             [class.ficha-rol__mini-btn--aberto]="
@@ -76,6 +80,8 @@
                             @if (indiceRemovendo() === preset.indice) {
                                 <span class="ficha-rol__remover">
                                     <button
+                                        app-botao-icone
+                                        tamanho="mini"
                                         type="button"
                                         class="ficha-rol__mini-btn ficha-rol__mini-btn--perigo"
                                         [appTooltip]="'Confirmar remoção'"
@@ -85,6 +91,8 @@
                                         ✓
                                     </button>
                                     <button
+                                        app-botao-icone
+                                        tamanho="mini"
                                         type="button"
                                         class="ficha-rol__mini-btn"
                                         [appTooltip]="'Cancelar'"
@@ -96,6 +104,8 @@
                                 </span>
                             } @else {
                                 <button
+                                    app-botao-icone
+                                    tamanho="mini"
                                     type="button"
                                     class="ficha-rol__mini-btn"
                                     [appTooltip]="'Duplicar'"
@@ -105,6 +115,8 @@
                                     <app-icone [nome]="'copiar'" />
                                 </button>
                                 <button
+                                    app-botao-icone
+                                    tamanho="mini"
                                     type="button"
                                     class="ficha-rol__mini-btn"
                                     [appTooltip]="'Editar'"
@@ -114,6 +126,8 @@
                                     ✎
                                 </button>
                                 <button
+                                    app-botao-icone
+                                    tamanho="mini"
                                     type="button"
                                     class="ficha-rol__mini-btn"
                                     [appTooltip]="'Remover'"
@@ -185,6 +199,7 @@
                                         }
                                         @if (podeRolar()) {
                                             <button
+                                                app-botao-icone
                                                 type="button"
                                                 class="ficha-rol__btn ficha-rol__btn--rolar ficha-rol__btn--icone"
                                                 [disabled]="!passo.interpretacao.valida"
@@ -200,6 +215,7 @@
                                             </button>
                                             @if (passo.critico) {
                                                 <button
+                                                    app-botao-icone
                                                     type="button"
                                                     class="ficha-rol__btn ficha-rol__btn--critico ficha-rol__btn--icone"
                                                     [disabled]="!passo.interpretacao.valida"
@@ -369,7 +385,12 @@
                 <span class="ficha-rol__rotulo">
                     Passos seguintes <span class="ficha-rol__rotulo-aux">(encadeamento)</span>
                 </span>
-                <button type="button" class="ficha-rol__add-passo" (click)="adicionarPasso()">
+                <button
+                    app-botao
+                    type="button"
+                    class="ficha-rol__add-passo"
+                    (click)="adicionarPasso()"
+                >
                     + Passo
                 </button>
             </span>
@@ -391,6 +412,8 @@
                             <span>Critável</span>
                         </label>
                         <button
+                            app-botao-icone
+                            tamanho="mini"
                             type="button"
                             class="ficha-rol__mini-btn"
                             [appTooltip]="'Remover passo'"

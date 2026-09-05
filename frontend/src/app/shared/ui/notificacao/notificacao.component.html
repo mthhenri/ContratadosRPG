@@ -35,9 +35,11 @@
                 </div>
 
                 <button
-                    type="button"
+                    app-botao-icone
                     class="notificacoes__fechar"
+                    type="button"
                     aria-label="Fechar notificação"
+                    [appTooltip]="'Fechar'"
                     (click)="servico.fechar(entrada.id)"
                 >
                     ×

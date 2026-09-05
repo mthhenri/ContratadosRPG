@@ -7,6 +7,7 @@
             <span class="sanidade__regua"></span>
             @if (editavel()) {
                 <button
+                    app-botao
                     class="sanidade__add"
                     type="button"
                     [class.sanidade__add--compacto]="apresentacao() === 'dialog'"
@@ -37,6 +38,7 @@
                             @if (editavel()) {
                                 <div class="sanidade__acoes">
                                     <button
+                                        app-botao-icone
                                         class="sanidade__acao"
                                         type="button"
                                         aria-label="Editar sequela"
@@ -45,6 +47,7 @@
                                         ✎
                                     </button>
                                     <button
+                                        app-botao-icone
                                         class="sanidade__acao sanidade__acao--remover"
                                         type="button"
                                         aria-label="Remover sequela"
@@ -68,6 +71,7 @@
                                 </span>
                                 <div class="sanidade__confirmar-acoes">
                                     <button
+                                        app-botao
                                         class="sanidade__salvar sanidade__salvar--remover"
                                         type="button"
                                         (click)="remover('sequela', $index)"
@@ -75,6 +79,7 @@
                                         Remover
                                     </button>
                                     <button
+                                        app-botao
                                         class="sanidade__cancelar"
                                         type="button"
                                         (click)="cancelarRemocao()"
@@ -101,6 +106,7 @@
             <span class="sanidade__regua"></span>
             @if (editavel()) {
                 <button
+                    app-botao
                     class="sanidade__add"
                     type="button"
                     [class.sanidade__add--compacto]="apresentacao() === 'dialog'"
@@ -141,6 +147,7 @@
                             @if (editavel()) {
                                 <div class="sanidade__acoes">
                                     <button
+                                        app-botao-icone
                                         class="sanidade__acao"
                                         type="button"
                                         aria-label="Editar trauma"
@@ -149,6 +156,7 @@
                                         ✎
                                     </button>
                                     <button
+                                        app-botao-icone
                                         class="sanidade__acao sanidade__acao--remover"
                                         type="button"
                                         aria-label="Remover trauma"
@@ -172,6 +180,7 @@
                                 </span>
                                 <div class="sanidade__confirmar-acoes">
                                     <button
+                                        app-botao
                                         class="sanidade__salvar sanidade__salvar--remover"
                                         type="button"
                                         (click)="remover('trauma', $index)"
@@ -179,6 +188,7 @@
                                         Remover
                                     </button>
                                     <button
+                                        app-botao
                                         class="sanidade__cancelar"
                                         type="button"
                                         (click)="cancelarRemocao()"
@@ -205,6 +215,7 @@
             <span class="sanidade__regua"></span>
             @if (editavel()) {
                 <button
+                    app-botao
                     class="sanidade__add"
                     type="button"
                     [class.sanidade__add--compacto]="apresentacao() === 'dialog'"
@@ -248,6 +259,7 @@
                             @if (editavel()) {
                                 <div class="sanidade__acoes">
                                     <button
+                                        app-botao-icone
                                         class="sanidade__acao"
                                         type="button"
                                         aria-label="Editar lesão"
@@ -256,6 +268,7 @@
                                         ✎
                                     </button>
                                     <button
+                                        app-botao-icone
                                         class="sanidade__acao sanidade__acao--remover"
                                         type="button"
                                         aria-label="Remover lesão"
@@ -279,6 +292,7 @@
                                 </span>
                                 <div class="sanidade__confirmar-acoes">
                                     <button
+                                        app-botao
                                         class="sanidade__salvar sanidade__salvar--remover"
                                         type="button"
                                         (click)="remover('lesao', $index)"
@@ -286,6 +300,7 @@
                                         Remover
                                     </button>
                                     <button
+                                        app-botao
                                         class="sanidade__cancelar"
                                         type="button"
                                         (click)="cancelarRemocao()"
@@ -346,10 +361,17 @@
             aria-label="Descrição da sequela"
         />
         <div class="sanidade__form-acoes">
-            <button class="sanidade__salvar" type="submit" [disabled]="sequelaForm.invalid">
+            <button
+                app-botao
+                class="sanidade__salvar"
+                type="submit"
+                [disabled]="sequelaForm.invalid"
+            >
                 Salvar
             </button>
-            <button class="sanidade__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+            <button app-botao class="sanidade__cancelar" type="button" (click)="cancelar()">
+                Cancelar
+            </button>
         </div>
     </form>
 </ng-template>
@@ -376,10 +398,17 @@
             <span>Tratado</span>
         </label>
         <div class="sanidade__form-acoes">
-            <button class="sanidade__salvar" type="submit" [disabled]="traumaForm.invalid">
+            <button
+                app-botao
+                class="sanidade__salvar"
+                type="submit"
+                [disabled]="traumaForm.invalid"
+            >
                 Salvar
             </button>
-            <button class="sanidade__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+            <button app-botao class="sanidade__cancelar" type="button" (click)="cancelar()">
+                Cancelar
+            </button>
         </div>
     </form>
 </ng-template>
@@ -450,8 +479,10 @@
             aria-label="Descrição da lesão"
         />
         <div class="sanidade__form-acoes">
-            <button class="sanidade__salvar" type="submit">Salvar</button>
-            <button class="sanidade__cancelar" type="button" (click)="cancelar()">Cancelar</button>
+            <button app-botao class="sanidade__salvar" type="submit">Salvar</button>
+            <button app-botao class="sanidade__cancelar" type="button" (click)="cancelar()">
+                Cancelar
+            </button>
         </div>
     </form>
 </ng-template>

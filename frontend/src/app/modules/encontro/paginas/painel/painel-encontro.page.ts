@@ -45,6 +45,7 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
@@ -130,6 +131,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     RolagemAvulso,
     BandejaDados,
     Botao,
+    BotaoIcone,
   ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',

@@ -18,7 +18,13 @@
 
     <header class="espectador__cabecalho">
         @if (!ehMestrePreview()) {
-        <a class="espectador__voltar" routerLink="/campanhas" aria-label="Voltar às campanhas">
+        <a
+            app-botao-icone
+            class="espectador__voltar"
+            routerLink="/campanhas"
+            aria-label="Voltar às campanhas"
+            [appTooltip]="'Voltar às campanhas'"
+        >
             <app-icone nome="voltar" />
         </a>
         } @if (carregando()) {

@@ -3,11 +3,12 @@ import type { CampanhaInventarioItemDto } from '@contratados-rpg/shared/dtos/cam
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
 import { Icone } from '../icone/icone.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
+import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import { InventarioEsquadrao } from '../../modules/campanha/componentes/inventario-esquadrao/inventario-esquadrao.component';
 
 @Component({
   selector: 'app-inventario-esquadrao-sidebar',
-  imports: [AutoFocus, Icone, Tooltip, InventarioEsquadrao],
+  imports: [AutoFocus, Icone, Tooltip, BotaoIcone, InventarioEsquadrao],
   templateUrl: './inventario-esquadrao-sidebar.component.html',
   styleUrl: './inventario-esquadrao-sidebar.component.scss',
 })

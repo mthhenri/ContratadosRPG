@@ -47,3 +47,24 @@
     height: 32px;
     font-size: 16px;
 }
+
+// `mini` (P-048, ui-28): ícone inline dentro de outro controle (ex.: dadinho de um pill de
+// rolagem) — sem borda nem fundo de hover, só a cor muda; os outros dois tamanhos são pensados
+// para ação isolada e sempre mostram a caixa.
+:host(.botao-icone--mini) {
+    width: 16px;
+    height: 16px;
+    font-size: 12px;
+    border-color: transparent;
+
+    &:hover:not(:disabled) {
+        background: transparent;
+        border-color: transparent;
+    }
+}
+
+// Selo circular (ui-30): badges sobre canto de foto/card (enquadrar/remover avatar, "i" de
+// informação) sempre foram círculos — só o raio muda, o tamanho continua vindo de `[tamanho]`.
+:host(.botao-icone--redondo) {
+    border-radius: 50%;
+}

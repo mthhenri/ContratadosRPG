@@ -452,18 +452,7 @@
         flex: none;
         width: 32px;
         height: 32px;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        background: transparent;
-        color: var(--text-dim);
         font-size: 18px;
-        line-height: 1;
-        cursor: pointer;
-
-        &:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
     }
     // Campos específicos do tipo, num grid que não deixa célula órfã.
     &__efeito-campos {
@@ -480,15 +469,12 @@
         width: 100%;
         padding: 9px;
         border: 1px dashed var(--border-strong);
-        border-radius: var(--radius-control);
         background: transparent;
         color: var(--text-dim);
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        cursor: pointer;
 
         &:hover {
             border-color: var(--accent-border);
@@ -659,9 +645,7 @@
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 5px 10px;
-        cursor: pointer;
 
         app-icone {
             display: inline-flex;
@@ -672,9 +656,7 @@
             color: var(--accent);
             border-color: var(--accent-border);
         }
-        &--leitura {
-            cursor: default;
-        }
+        // `&--leitura` (span, não `app-botao`): sem cursor pointer do primitivo para cancelar.
     }
 
     // === Ações do item (Modificar / Vestir-Guardar antes do X de remover) ===
@@ -709,7 +691,6 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
@@ -717,13 +698,7 @@
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 4px 9px;
-        cursor: pointer;
-        transition:
-            color 0.12s ease,
-            border-color 0.12s ease,
-            background 0.12s ease;
 
         app-icone {
             display: inline-flex;
@@ -770,15 +745,12 @@
         min-height: 30px;
         padding: 5px 10px;
         border: 1px solid var(--accent-border);
-        border-radius: var(--radius-control);
         background: var(--accent-dim);
         color: var(--accent);
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        cursor: pointer;
 
         app-icone {
             display: inline-flex;
@@ -891,9 +863,7 @@
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 7px 12px;
-        cursor: pointer;
 
         app-icone {
             display: inline-flex;
@@ -1733,18 +1703,9 @@
             font-size: 14px;
         }
 
-        // Lápis de apelido: 14×14 dentro da linha do nome do item. Aqui um piso de altura inflaria a
-        // linha de texto, então a área clicável cresce por padding com margem negativa — a caixa de
-        // toque vira 44×44 de verdade (não só um `::before`), mas a caixa de margem que a linha
-        // enxerga continua sendo a do ícone. A folga é derivada do token (`$alvo-toque` menos o ícone,
-        // dividido pelos dois lados), não um número solto.
-        &__item-apelido-lapis {
-            $folga: math.div(bp.$alvo-toque - 14px, 2);
-
-            padding: $folga;
-            // Esquerda: a folga desconta os 6px de `margin-left` que separam o lápis do nome.
-            margin: (-$folga) (-$folga) (-$folga) (6px - $folga);
-        }
+        // Lápis de apelido (ui-30): agora `app-botao-icone[tamanho="mini"]` — o próprio primitivo já
+        // garante `min-width`/`min-height: $alvo-toque` no mobile (`botao-icone.component.scss`),
+        // então o antigo truque de padding com margem negativa fica redundante.
 
         // Mesmo padrão no valor editável da carga (80×22): o piso de 44px empurraria a barra de
         // Inventário para baixo; padding com margem negativa mantém a linha na altura de hoje.

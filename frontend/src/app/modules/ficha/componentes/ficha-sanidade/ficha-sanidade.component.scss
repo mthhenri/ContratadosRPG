@@ -91,10 +91,13 @@
 
     // Botão adicionar: veste a cor da própria seção (herdada via `--marca`) — adicionar a Sequelas
     // fica cinza, a Traumas âmbar, a Lesões vermelho, casando com o filete do topo.
+    // ui-30: fica em `app-botao` (não `app-botao-icone`, apesar do que a spec sugeriu) — o rótulo
+    // "＋ Adicionar" só vira ícone-só em `--compacto`, e o primitivo de ícone é caixa fixa.
+    // `app-botao` não dá piso de toque mobile sozinho (ao contrário do de ícone), então o
+    // `::after`/`min-height` seguem sendo do consumidor.
     &__add {
         position: relative;
         flex: 0 0 auto;
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
@@ -102,10 +105,7 @@
         color: var(--marca);
         background: color-mix(in srgb, var(--marca) 14%, transparent);
         border: 1px solid color-mix(in srgb, var(--marca) 40%, transparent);
-        border-radius: var(--radius-control);
         padding: 5px 10px;
-        cursor: pointer;
-        transition: background-color 0.15s ease;
 
         // m3-60: sem alvo de toque mobile — corrigido por `::after` (não por padding) para não
         // depender do modelo de caixa do conteúdo variável (rótulo "Adicionar sequela/trauma/lesão").
@@ -123,11 +123,6 @@
 
         &:hover:not(:disabled) {
             background: color-mix(in srgb, var(--marca) 24%, transparent);
-        }
-
-        &:disabled {
-            opacity: 0.4;
-            cursor: default;
         }
 
         // m3-60: a m3-56 só cobriu a variante `--compacto`; o botão com o texto "＋ Adicionar" ficava
@@ -285,53 +280,12 @@
         flex: 0 0 auto;
     }
 
+    // ui-30: `app-botao-icone` (compacto) — geometria, hover e o piso de toque mobile já são dele,
+    // então o `::after` de área de toque sai.
     &__acao {
-        // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` encolheria o ícone
-        // em vez de crescer a caixa, então a área de toque cresce por `::after` (m3-60) — mesmo padrão
-        // de `alvo-de-toque` em `ficha-visualizacao.component.scss`, duplicado aqui porque o mixin não
-        // é compartilhado entre componentes standalone (encapsulamento do Angular).
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 24px;
         height: 24px;
-        padding: 0;
         font-size: 12px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
-        transition:
-            color 0.15s ease,
-            border-color 0.15s ease;
-
-        @include bp.mobile {
-            &::after {
-                content: "";
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: bp.$alvo-toque;
-                height: bp.$alvo-toque;
-            }
-        }
-
-        &:hover {
-            color: var(--text);
-            border-color: var(--accent-border);
-        }
-
-        &--remover:hover {
-            color: var(--accent);
-        }
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
     }
 
     // Trunca numa linha só (visual "sumarizado" — item compacto de altura previsível, necessário
@@ -476,7 +430,6 @@
     }
 
     &__salvar {
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -484,14 +437,7 @@
         color: var(--bg);
         background: var(--accent);
         border: 0;
-        border-radius: var(--radius-control);
         padding: 7px 14px;
-        cursor: pointer;
-
-        &:disabled {
-            opacity: 0.4;
-            cursor: default;
-        }
 
         @include bp.mobile {
             min-height: bp.$alvo-toque;
@@ -499,7 +445,6 @@
     }
 
     &__cancelar {
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         text-transform: uppercase;
@@ -507,9 +452,7 @@
         color: var(--text-dim);
         background: transparent;
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 7px 14px;
-        cursor: pointer;
 
         &:hover {
             color: var(--text);

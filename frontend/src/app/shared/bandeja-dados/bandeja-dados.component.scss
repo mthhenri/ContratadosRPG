@@ -122,6 +122,10 @@
         background: var(--accent);
         transform-origin: left;
         animation: bandeja-esvazia var(--bandeja-duracao) linear forwards;
+
+        @media (prefers-reduced-motion: reduce) {
+            animation: none;
+        }
     }
 
     &__carta:hover &__barra {
@@ -147,25 +151,6 @@
         letter-spacing: var(--tracking-label);
         text-transform: uppercase;
         color: var(--text-dim);
-    }
-
-    &__fechar {
-        border: 0;
-        background: transparent;
-        color: var(--text-mute);
-        font-size: 22px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 0 3px;
-
-        &:hover {
-            color: var(--text);
-        }
-
-        @include bp.mobile {
-            min-width: bp.$alvo-toque;
-            min-height: bp.$alvo-toque;
-        }
     }
 
     // Fórmula executada (m3-30): legenda mono discreta logo abaixo do rótulo.

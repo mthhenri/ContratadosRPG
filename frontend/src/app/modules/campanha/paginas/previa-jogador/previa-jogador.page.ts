@@ -33,6 +33,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
@@ -73,6 +74,7 @@ const UMA_HORA_MS = 60 * 60 * 1000;
     InventarioEsquadrao,
     IniciativaLeitura,
     Botao,
+    BotaoIcone,
     Cartao,
     Chip,
     EstadoVazio,

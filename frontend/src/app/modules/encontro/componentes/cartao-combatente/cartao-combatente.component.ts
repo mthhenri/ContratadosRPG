@@ -9,6 +9,8 @@ import { FocoImagem } from '../../../../shared/foco-imagem.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
@@ -54,7 +56,7 @@ const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
  */
 @Component({
   selector: 'app-cartao-combatente',
-  imports: [Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip, BarraRecurso],
+  imports: [Icone, Tooltip, FocoImagem, ReceberDanoDialog, Chip, BarraRecurso, Botao, BotaoIcone],
   templateUrl: './cartao-combatente.component.html',
   styleUrl: './cartao-combatente.component.scss',
 })

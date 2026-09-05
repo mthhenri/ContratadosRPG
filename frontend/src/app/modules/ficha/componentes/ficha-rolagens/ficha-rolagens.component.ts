@@ -24,6 +24,8 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
@@ -79,7 +81,17 @@ interface RolagemVM {
  */
 @Component({
   selector: 'app-ficha-rolagens',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, GuiaFormula, Icone, Tooltip, OverflowFade, Modal],
+  imports: [
+    ReactiveFormsModule,
+    NgTemplateOutlet,
+    GuiaFormula,
+    Icone,
+    Tooltip,
+    OverflowFade,
+    Modal,
+    Botao,
+    BotaoIcone,
+  ],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',
 })

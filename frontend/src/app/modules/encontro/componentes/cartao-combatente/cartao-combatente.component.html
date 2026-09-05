@@ -55,6 +55,7 @@
                     </label>
                     @if (combatente().imagemUrl) {
                         <button
+                            app-botao-icone
                             class="combatente__identidade-acao"
                             type="button"
                             [attr.aria-label]="'Remover imagem de ' + combatente().nome"
@@ -128,6 +129,7 @@
             }
             @if (combatente().fichaId !== null && (revelado() || ehMestre())) {
                 <button
+                    app-botao-icone
                     class="combatente__abrir-ficha"
                     type="button"
                     [attr.aria-label]="'Abrir ficha de ' + combatente().nome"
@@ -141,6 +143,7 @@
                 combatente().origem === CombatenteOrigemEnum.AVULSO && podeAjustar() && !emEdicao()
             ) {
                 <button
+                    app-botao-icone
                     class="combatente__rolar-avulso"
                     type="button"
                     [attr.aria-label]="'Rolar como ' + combatente().nome"
@@ -152,6 +155,7 @@
             }
             @if (podeAjustar()) {
                 <button
+                    app-botao-icone
                     class="combatente__receber-dano"
                     type="button"
                     [attr.aria-label]="'Receber dano — ' + combatente().nome"
@@ -163,6 +167,7 @@
             }
             @if (emEdicao()) {
                 <button
+                    app-botao-icone
                     class="combatente__remover"
                     type="button"
                     [attr.aria-label]="'Remover ' + combatente().nome + ' do combate'"
@@ -178,6 +183,7 @@
            para ele: o ganho de altura é justamente o que a task persegue. -->
             @if (podeAjustar() && revelado()) {
                 <button
+                    app-botao
                     class="combatente__ajustar"
                     type="button"
                     [attr.aria-expanded]="ajustando()"

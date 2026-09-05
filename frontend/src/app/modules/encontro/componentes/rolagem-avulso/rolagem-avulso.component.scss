@@ -80,11 +80,6 @@
         flex: none;
         width: 30px;
         height: 30px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
     }
 
     &__formulario {
@@ -131,11 +126,10 @@
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        font: 600 10px var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        cursor: pointer;
 
         &--ativa {
             color: var(--accent);

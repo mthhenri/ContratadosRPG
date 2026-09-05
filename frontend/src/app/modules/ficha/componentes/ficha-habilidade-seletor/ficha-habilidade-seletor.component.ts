@@ -12,6 +12,8 @@ import {
 import { ClampTruncado } from '../../../../shared/clamp-truncado/clamp-truncado.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 
 /** Rótulo de cada aba (grupo) do seletor. */
@@ -41,7 +43,7 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
  */
 @Component({
   selector: 'app-ficha-habilidade-seletor',
-  imports: [ReactiveFormsModule, OverflowFade, Tooltip, ClampTruncado],
+  imports: [ReactiveFormsModule, OverflowFade, Tooltip, ClampTruncado, Botao, BotaoIcone],
   templateUrl: './ficha-habilidade-seletor.component.html',
   styleUrl: './ficha-habilidade-seletor.component.scss',
 })

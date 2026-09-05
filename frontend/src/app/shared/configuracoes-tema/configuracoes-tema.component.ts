@@ -4,6 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Icone } from '../icone/icone.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
+import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import { Modal } from '../ui/modal/modal.component';
 import { BaseTema, TemaService } from '../../core/services/tema.service';
 
@@ -28,7 +29,7 @@ export type VarianteGatilhoTema = 'topbar' | 'menu';
  */
 @Component({
   selector: 'app-configuracoes-tema',
-  imports: [ReactiveFormsModule, Icone, Tooltip, Botao, Modal],
+  imports: [ReactiveFormsModule, Icone, Tooltip, Botao, BotaoIcone, Modal],
   templateUrl: './configuracoes-tema.component.html',
   styleUrl: './configuracoes-tema.component.scss',
 })

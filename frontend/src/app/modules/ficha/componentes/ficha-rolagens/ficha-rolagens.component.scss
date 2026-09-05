@@ -29,15 +29,12 @@
 
     &__novo {
         align-self: flex-start;
-        font-family: var(--font-mono);
         font-size: 12px;
         font-weight: 600;
         color: var(--text-dim);
         background: var(--surface-2);
         border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 8px 14px;
-        cursor: pointer;
 
         &:hover {
             color: var(--accent);
@@ -302,13 +299,9 @@
             font-size: 11px;
         }
         // Botão de rolar só-ícone (m3-38): usado nos passos da grade de 2 colunas — sem o texto
-        // "Rolar"/"Rolar crítico", que não cabia mais junto da fórmula truncada.
+        // "Rolar"/"Rolar crítico", que não cabia mais junto da fórmula truncada. Geometria/piso de
+        // toque no mobile já são do `app-botao-icone` (ui-30) — sobra só o tamanho da fonte.
         &--icone {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 26px;
-            height: 26px;
             padding: 0;
             font-size: 12px;
         }
@@ -318,14 +311,9 @@
         }
 
         // m3-56: "Rolar"/"Gastar" são a ação primária do card de preset — alvo de toque confortável
-        // no mobile, mesmo com o botão só-ícone (`--icone`) da grade de 2 colunas.
+        // no mobile. O botão só-ícone (`--icone`) já recebe o piso pelo primitivo.
         @include bp.mobile {
             min-height: bp.$alvo-toque;
-
-            &.ficha-rol__btn--icone {
-                width: bp.$alvo-toque;
-                height: bp.$alvo-toque;
-            }
         }
     }
 
@@ -352,63 +340,17 @@
         }
     }
     &__mini-btn {
-        // `width`/`height` explícitos + `box-sizing: border-box` global: `padding` aqui encolheria o
-        // ícone em vez de crescer a caixa (diferente do `apelido-lapis` do inventário, que é
-        // sized-to-content). Por isso a área de toque cresce por `::after`, não por padding — mesmo
-        // padrão de `alvo-de-toque` em `ficha-visualizacao.component.scss` (m3-60), duplicado aqui
-        // porque o mixin não é compartilhado entre componentes standalone (encapsulamento do Angular).
-        position: relative;
-        width: 26px;
-        height: 26px;
+        // Geometria/cor/hover são de `app-botao-icone[tamanho="mini"]` (ui-30), inclusive o piso de
+        // toque no mobile (`min-width`/`min-height` do próprio primitivo) — o antigo `::after` e o
+        // `width`/`height` por breakpoint saem daqui.
         flex: none;
-        font-size: 12px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        cursor: pointer;
 
-        @include bp.mobile {
-            &::after {
-                content: "";
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: bp.$alvo-toque;
-                height: bp.$alvo-toque;
-            }
-        }
-
-        &:hover {
-            color: var(--text);
-            border-color: var(--border-strong);
-        }
-        &--perigo {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-        // Toggle do accordion do preset (fechado por padrão) — sem borda, ícone rotaciona ao abrir.
-        &--chevron {
-            width: 20px;
-            height: 20px;
-            border-color: transparent;
-
-            svg {
-                transition: transform 0.15s ease;
-                transform: rotate(-90deg);
-            }
+        &--chevron svg {
+            transition: transform 0.15s ease;
+            transform: rotate(-90deg);
         }
         &--aberto svg {
             transform: rotate(0deg);
-        }
-
-        // m3-56: editar/duplicar/remover são controles primários repetidos por preset — mesmo padrão
-        // de `.ficha-cartao__lapis` (ficha-visualizacao, m3-26). O chevron de abrir/fechar entra
-        // também (é o toggle principal do card, não um ícone ocasional).
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
         }
     }
     &__remover {
@@ -526,15 +468,12 @@
     }
     &__add-passo {
         align-self: flex-start;
-        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
         color: var(--text-dim);
         background: transparent;
         border: 1px dashed var(--border-strong);
-        border-radius: var(--radius-control);
         padding: 7px 12px;
-        cursor: pointer;
 
         &:hover {
             color: var(--accent);

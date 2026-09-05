@@ -32,9 +32,11 @@
             <h2 class="inventario-sidebar__titulo">Inventário de Esquadrão</h2>
             <span class="inventario-sidebar__regua"></span>
             <button
+                app-botao-icone
                 class="inventario-sidebar__fechar"
                 type="button"
                 aria-label="Fechar inventário"
+                [appTooltip]="'Fechar'"
                 (click)="fechar()"
             >
                 ×

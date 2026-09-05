@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Uma linha do guia: um trecho de fórmula + o que ele significa. */
@@ -137,7 +138,7 @@ const SECOES: readonly SecaoGuia[] = [
  */
 @Component({
   selector: 'app-guia-formula',
-  imports: [Modal],
+  imports: [Modal, Botao],
   templateUrl: './guia-formula.component.html',
   styleUrl: './guia-formula.component.scss',
 })

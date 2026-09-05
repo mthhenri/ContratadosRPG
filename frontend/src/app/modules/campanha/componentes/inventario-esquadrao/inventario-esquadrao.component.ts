@@ -19,6 +19,7 @@ import {
 
 import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { CampanhaService } from '../../campanha.service';
@@ -64,7 +65,7 @@ const ICONES_CATEGORIA: Readonly<Record<ItemCategoriaEnum, IconeNome>> = {
 
 @Component({
   selector: 'app-inventario-esquadrao',
-  imports: [ReactiveFormsModule, Icone, Botao, Modal, EstadoVazio],
+  imports: [ReactiveFormsModule, Icone, Botao, BotaoIcone, Modal, EstadoVazio],
   templateUrl: './inventario-esquadrao.component.html',
   styleUrl: './inventario-esquadrao.component.scss',
 })

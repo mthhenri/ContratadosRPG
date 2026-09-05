@@ -68,7 +68,13 @@ export class Layout {
   });
   private leitorDocumentosMontado = false;
 
-  private readonly perfilGatilho = viewChild<ElementRef<HTMLButtonElement>>('perfilGatilho');
+  // `read: ElementRef` explícito (ui-28): sem ele, `#perfilGatilho` passaria a resolver a
+  // instância do componente `Botao` (agora que o botão leva `app-botao`), não o `ElementRef`
+  // nativo que `fecharPerfilPeloTeclado` precisa para devolver o foco.
+  private readonly perfilGatilho = viewChild<
+    ElementRef<HTMLButtonElement>,
+    ElementRef<HTMLButtonElement>
+  >('perfilGatilho', { read: ElementRef });
 
   /** Se o dropdown de perfil está aberto (fecha só por botão/ação/`Escape` — mesmo padrão do tema
    *  quanto a não fechar por clique-fora; `Escape` é diferente porque é o que modal e painel de

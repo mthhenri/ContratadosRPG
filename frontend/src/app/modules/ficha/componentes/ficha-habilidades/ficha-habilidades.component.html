@@ -5,6 +5,7 @@
         @if (editavel()) {
             <div class="habilidades__add-grupo">
                 <button
+                    app-botao
                     class="habilidades__add habilidades__add--primario"
                     type="button"
                     (click)="abrirSeletor()"
@@ -12,6 +13,7 @@
                     ＋ Do sistema
                 </button>
                 <button
+                    app-botao
                     class="habilidades__add"
                     type="button"
                     (click)="adicionar()"
@@ -83,6 +85,7 @@
             </button>
             @if (filtroCategoria().size > 0) {
                 <button
+                    app-botao-icone
                     type="button"
                     class="habilidades__limpar-filtro"
                     aria-label="Limpar filtro de tipos"
@@ -156,6 +159,7 @@
                         @if (editavel()) {
                             <div class="habilidades__acoes">
                                 <button
+                                    app-botao
                                     class="habilidades__utilizar"
                                     [class.habilidades__utilizar--gasto]="
                                         gastoRecente()?.indice === idx
@@ -179,6 +183,7 @@
                                     }
                                 </button>
                                 <button
+                                    app-botao-icone
                                     class="habilidades__acao"
                                     type="button"
                                     aria-label="Editar habilidade"
@@ -188,6 +193,7 @@
                                 </button>
                                 @if (indiceRemovendo() === idx) {
                                     <button
+                                        app-botao-icone
                                         class="habilidades__acao habilidades__acao--confirmar-remover"
                                         type="button"
                                         appAutoFocus
@@ -201,6 +207,7 @@
                                     </button>
                                 } @else {
                                     <button
+                                        app-botao-icone
                                         class="habilidades__acao habilidades__acao--remover"
                                         type="button"
                                         aria-label="Remover habilidade"
@@ -244,6 +251,7 @@
                             </div>
                             <div class="habilidades__confirmar-acoes">
                                 <button
+                                    app-botao
                                     class="habilidades__salvar"
                                     type="button"
                                     (click)="confirmarUtilizarVariavel()"
@@ -251,6 +259,7 @@
                                     Gastar
                                 </button>
                                 <button
+                                    app-botao
                                     class="habilidades__cancelar"
                                     type="button"
                                     (click)="cancelarUtilizar()"
@@ -283,6 +292,7 @@
             <header class="habilidades__dialog-topo">
                 <h3 class="habilidades__dialog-titulo">Nova habilidade</h3>
                 <button
+                    app-botao-icone
                     class="habilidades__dialog-fechar"
                     type="button"
                     aria-label="Fechar"
@@ -374,10 +384,15 @@
             aria-label="Descrição da habilidade"
         ></textarea>
         <div class="habilidades__form-acoes">
-            <button class="habilidades__salvar" type="submit" [disabled]="habilidadeForm.invalid">
+            <button
+                app-botao
+                class="habilidades__salvar"
+                type="submit"
+                [disabled]="habilidadeForm.invalid"
+            >
                 Salvar
             </button>
-            <button class="habilidades__cancelar" type="button" (click)="cancelar()">
+            <button app-botao class="habilidades__cancelar" type="button" (click)="cancelar()">
                 Cancelar
             </button>
         </div>

@@ -8,6 +8,7 @@
         <header class="seletor__topo">
             <h3 class="seletor__titulo">Adicionar do sistema</h3>
             <button
+                app-botao-icone
                 class="seletor__fechar"
                 type="button"
                 aria-label="Fechar"
@@ -103,6 +104,7 @@
                             </span>
                             @if (desc.truncado()) {
                                 <button
+                                    app-botao
                                     type="button"
                                     class="seletor__opcao-ver-mais"
                                     (click)="alternarExpansao(chaveHabilidade(habilidade))"
@@ -118,6 +120,7 @@
                     </div>
                     @if (estaNaFicha(habilidade.nome)) {
                         <button
+                            app-botao
                             class="seletor__opcao-remover"
                             type="button"
                             [attr.aria-label]="'Remover ' + habilidade.nome + ' da ficha'"
@@ -129,6 +132,7 @@
                         </button>
                     } @else {
                         <button
+                            app-botao-icone
                             class="seletor__opcao-add"
                             type="button"
                             [attr.aria-label]="'Adicionar ' + habilidade.nome"

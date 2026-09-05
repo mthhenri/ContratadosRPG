@@ -3,6 +3,7 @@ import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../icone/icone.component';
 import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
+import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import { Chip } from '../ui/chip/chip.component';
 import { BandejaDadosService } from './bandeja-dados.service';
 
@@ -20,7 +21,7 @@ const MARGEM_LATERAL_MINIMA = 32;
  */
 @Component({
   selector: 'app-bandeja-dados',
-  imports: [Icone, ResultadoRolagem, Chip],
+  imports: [Icone, ResultadoRolagem, Chip, BotaoIcone],
   templateUrl: './bandeja-dados.component.html',
   styleUrl: './bandeja-dados.component.scss',
 })

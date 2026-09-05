@@ -17,6 +17,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
@@ -47,6 +48,7 @@ const ITENS_POR_PAGINA = 20;
     OverflowFade,
     ResultadoRolagem,
     Botao,
+    BotaoIcone,
     Cartao,
     Chip,
     EstadoVazio,

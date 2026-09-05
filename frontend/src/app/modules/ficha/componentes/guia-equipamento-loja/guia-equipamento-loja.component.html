@@ -50,6 +50,7 @@
                         </div>
                     </div>
                     <button
+                        app-botao-icone
                         class="loja__item-add"
                         type="button"
                         [attr.aria-label]="'Adicionar ' + cartao.item.nome + ' ao kit'"
@@ -93,6 +94,7 @@
                                 (valorAlterado)="definirQuantidade($index, $event)"
                             />
                             <button
+                                app-botao-icone
                                 class="loja__carrinho-item-remover"
                                 type="button"
                                 [attr.aria-label]="'Remover ' + item.nome + ' do kit'"

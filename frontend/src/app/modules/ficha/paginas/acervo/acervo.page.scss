@@ -368,17 +368,11 @@
         gap: 9px;
         width: 100%;
         padding: 9px 10px;
-        font-family: var(--font-mono);
         font-size: 12px;
         color: var(--text);
         background: transparent;
         border: 0;
-        border-radius: var(--radius-control);
-        cursor: pointer;
         text-align: left;
-        transition:
-            background-color 0.15s ease,
-            color 0.15s ease;
 
         &:hover:not(:disabled) {
             background: var(--surface-2);

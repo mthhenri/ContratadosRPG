@@ -71,11 +71,10 @@ $largura-caderno-sobreposicao: 640px;
         color: var(--accent);
         background: transparent;
         border: 1px solid var(--accent-border);
-        border-radius: var(--radius-control);
-        font: 600 8px var(--font-mono);
+        font-size: 8px;
+        font-weight: 600;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        cursor: pointer;
     }
 
     &__escopo {
@@ -785,7 +784,8 @@ $largura-caderno-sobreposicao: 640px;
             background: var(--surface-2);
             border: 0;
             border-bottom: 1px solid var(--border);
-            font: 600 10px var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
             text-transform: uppercase;
         }
         &__editor-cabecalho {

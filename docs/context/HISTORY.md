@@ -1,5 +1,329 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-04 — `ui-30`: adota `app-botao`/`app-botao-icone` em `modules/ficha` (lado não-criatura)
+
+Terceira e maior tarefa da série `ui-28`…`ui-32` (`P-048`), conforme
+`docs/specs/backlog/ui-30-adocao-botao-icone-ficha.spec.md` (movida para `done/` ao final). Escopo:
+12 arquivos do lado jogador/geral de `modules/ficha` — lado Criatura/NPC fica para `ui-31`.
+
+**Entregue (por arquivo):**
+
+1. `cartao-ficha-acervo.component`: `.acervo__menu-botao` → `app-botao-icone` (compacto).
+2. `acervo.page.html`: os 4 `<button class="acervo__menu-item">` (Atribuir/Remover/Duplicar/Excluir)
+   → `app-botao` (têm texto). Achado à parte: `acervo.page.scss` ainda tem um `&__menu-botao`
+   morto (a classe real, do cartão, é estilizada só no SCSS do componente — encapsulamento do
+   Angular — então esse bloco na página nunca foi aplicado a nada); pré-existente, fora do escopo
+   desta task, não corrigido.
+3. `ficha-combos.component.html`: os 8 `.ficha-combos__mini-btn` (parar/confirmar-perigo/cancelar/
+   editar/remover/mover-cima/mover-baixo/remover-passo) → `app-botao-icone[tamanho="mini"]`;
+   `.ficha-combos__btn` (×4, incl. `--principal`/`--rolar`/`--secundario`), `.ficha-combos__novo` e
+   `.ficha-combos__add-passo` → `app-botao`. **Este componente não está referenciado por nenhum
+   template do app** (`grep -rln "ficha-combos.component" frontend/src --include=*.ts` só retorna
+   o próprio arquivo) — migração aplicada conforme a spec, mas o gate visual ao vivo não pôde
+   observá-la (ver seção de verificação abaixo).
+4. `ficha-habilidade-seletor.component.html`: `.seletor__fechar`, `.seletor__opcao-add` →
+   `app-botao-icone` (compacto); `.seletor__opcao-ver-mais`, `.seletor__opcao-remover` (têm texto)
+   → `app-botao`.
+5. `ficha-habilidades.component.html`: `.habilidades__limpar-filtro`, `.habilidades__acao` (×3,
+   incl. `--confirmar-remover`), `.habilidades__dialog-fechar` → `app-botao-icone`;
+   `.habilidades__add` (×2, incl. `--primario`), `.habilidades__utilizar`, `.habilidades__salvar`
+   (×2), `.habilidades__cancelar` (×2) → `app-botao`. `.habilidades__resumo-item` (chips de filtro
+   cumulativo) **não** migrou — é um toggle de filtro, não uma ação única/botão com texto, mesma
+   categoria de carve-out de `chip`/`stepper` do `INDEX`.
+6. `ficha-inventario.component.html`: `.ficha-inv__item-apelido-lapis` (×2) →
+   `app-botao-icone[tamanho="mini"]` (ícone inline de 14px sem borda hoje — o entregável da spec não
+   citava `mini` explicitamente para este item, mas o CSS real não tinha nenhuma identidade própria
+   além do glifo, então `mini` é o encaixe correto pela própria regra "sem borda hoje" que a spec
+   usa em outros itens); `.ficha-inv__efeito-remover` → `app-botao-icone`; `.ficha-inv__mandar-base`,
+   `.ficha-inv__porte` (×2), `.ficha-inv__modificar` (4 instâncias reais — item base, Fragmento
+   Construtor aplicar/consumir, munição recarregar —, a spec só citava a classe sem contar
+   instâncias), `.ficha-inv__item-rolar`, `.ficha-inv__efeito-adicionar` → `app-botao`. O antigo
+   truque de `padding`/margem-negativa para o alvo de toque mobile do apelido-lápis foi removido:
+   `app-botao-icone` já garante `min-width`/`min-height` no mobile no próprio primitivo.
+7. `ficha-rolagens.component.html`: os 7 `.ficha-rol__mini-btn` (parar/confirmar-perigo/cancelar/
+   duplicar/editar/remover/remover-passo, incl. o chevron do accordion) →
+   `app-botao-icone[tamanho="mini"]` (era 24-26px bordado; convergiu para o mini padrão de 16px sem
+   borda, mesma consolidação de `ui-30`/`ficha-combos`); os 2 `.ficha-rol__btn--icone` (rolar/rolar
+   crítico só-ícone) → `app-botao-icone` (compacto — a classe-base `.ficha-rol__btn` continua
+   compartilhada com 4 variantes de texto **fora** do escopo da spec — `--rolar` texto,
+   `--gastar`, `--principal`, `--secundario` — então só a CSS exclusiva de `--icone` foi trimada,
+   nunca a base, pra não repetir o vazamento de classe compartilhada já visto em `ui-28`/`ui-29`);
+   `.ficha-rol__novo`, `.ficha-rol__add-passo` → `app-botao`.
+8. `ficha-sanidade.component.html`: `.sanidade__acao` (×6, editar/confirmar-remover por
+   sequela/trauma/lesão) → `app-botao-icone`; `.sanidade__salvar` (×6) e `.sanidade__cancelar` (×6)
+   → `app-botao`. **Desvio da spec**: `.sanidade__add` (×3) foi para `app-botao`, não
+   `app-botao-icone` como o texto do entregável dizia — o botão alterna entre um estado com texto
+   ("＋ Adicionar") e um estado `--compacto` só-ícone (`apresentacao="dialog"`); a caixa fixa do
+   primitivo de ícone quebraria o estado com texto, então o código real venceu o mockup da spec
+   (mesmo precedente de `.iniciativa__historico` em `ui-29`). O `::after`/`min-height` do alvo de
+   toque mobile permanecem no consumidor (`app-botao` não garante piso de toque sozinho, diferente
+   do de ícone).
+9. `ficha-visualizacao.component.html` — o maior recorte, com um achado que virou decisão do autor:
+   - `.ficha-ident__chip-lapis` (×3), `.ficha-cartao__lapis` (×3), `.ficha-extras__mini-btn` (×3,
+     apesar do nome "mini", tinham borda hoje — foram para `compacto`, não `mini`, seguindo a regra
+     "mini só onde já não há borda"), `.ficha-barra__receber-dano` → `app-botao-icone` (compacto).
+   - `.ficha-mini__rolar` (×2, incl. `.ficha-atributo__rolar`) → `app-botao-icone[tamanho="mini"]`
+     (já eram sem borda; o hover com fundo `accent-dim` que tinham foi cedido ao hover padrão do
+     `mini`, só cor — mesma troca aceita em `ui-29`/`ficha-combos`).
+   - **Achado tratado como decisão do autor, não escolha unilateral**: `.ficha-ident__avatar-
+     enquadrar`, `.ficha-ident__avatar-remover` e `.ficha-mini__info` são selos **circulares**
+     (`border-radius: 50%`, badge sobre o canto da foto/card) — `app-botao-icone` força o raio de
+     controle padrão, sem variante circular. Perguntado, o autor escolheu **estender o primitivo**:
+     `app-botao-icone` ganhou um novo input booleano `[redondo]` (`botao-icone--redondo`, raio
+     50%), documentado no componente e coberto por um novo teste em
+     `botao-icone.component.spec.ts`. Os três selos migraram com `[redondo]="true"` — verificados
+     ao vivo com um avatar de teste enviado por upload (ver abaixo).
+   - `.ficha-hud__vitais` — **segundo desvio da spec**: o entregável pedia `app-botao-icone`, mas o
+     botão não tem nenhuma identidade visual própria (nem borda, nem fundo — é só um invólucro de
+     clique transparente ao redor de `<app-barra-recurso>`, sem CSS próprio no componente) e a caixa
+     fixa do primitivo de ícone quebraria o layout das duas barras internas; foi para `app-botao`
+     (bare), cujo `font-family`/`border-radius`/`cursor` de base são inofensivos aqui (o filho já
+     define a própria tipografia).
+   - `.ficha-ident__visibilidade`, `.ficha-condicoes__item` → `app-botao`, conforme a spec.
+10. `guia-equipamento-loja.component.html`: `.loja__item-add`, `.loja__carrinho-item-remover` →
+    `app-botao-icone` (eram sem borda; ganham a caixa compacta padrão, mesma "atualização" aceita em
+    fechar-buttons de `ui-29`).
+11. `guia-formula.component.html`: `.guia-gatilho` (tem texto, "? Guia") e `.guia-btn` ("Fechar") →
+    `app-botao`.
+12. `pagina-caderno/caderno-flutuante.component.html`: `.caderno__recarregar`, `.caderno__voltar`
+    (mobile) → `app-botao`. `.caderno__gatilho` excluído (usa `_utilitario-flutuante.scss`, mesma
+    nota de `ui-28`).
+
+**Primitivo estendido:** `BotaoIcone` ganhou `readonly redondo = input(false)` e a classe
+`botao-icone--redondo` (`border-radius: 50%` em `:host`), com teste novo confirmando a classe e a
+coexistência com `[tamanho]`. Decisão do autor via `AskUserQuestion` (não unilateral), registrada
+nesta entrada e no `P-048`.
+
+**Testes e lint:** suíte focada (`modules/ficha` + `modules/pagina-caderno` +
+`shared/ui/botao(-icone)`) — 38 arquivos / 868 testes, todos passando. `npm run lint
+--workspace=frontend` sem erros novos (só os ~15,8k avisos pré-existentes de aspas, alheios ao
+diff). `convencoes-check`: nenhuma violação real — o único acerto de `border-radius: 50%` é a
+própria definição do novo modificador `redondo` do primitivo (não um hardcode de consumidor);
+linhas longas corrigidas com `npm run format:html-scss` (prettier), escopado aos arquivos tocados.
+
+**Verificação visual ao vivo:** stack real (Postgres nativo + `backend:dev` + `frontend:dev`),
+usuário e ficha de jogador criados via REST (`FichaCriarDto` com um documento válido mínimo,
+inspirado no fixture de `ficha.service.spec.ts`), Playwright em `1920×1080` e `360×800`.
+Observado e comparado ao padrão já estabelecido: aba Habilidades (adicionar personalizada, estado
+de confirmação de remoção, seletor "Do sistema" completo), aba Rolagens (form "Novo preset", guia
+de fórmula, cancelar), aba Inventário (adicionar item do catálogo, painel "Modificar", apelido em
+`mini`), Sanidade (form "Adicionar sequela"), "Receber dano" pela barra de Vida, o selo `[redondo]`
+das duas ações do avatar **com um avatar de teste enviado de propósito** (upload de PNG 1×1 +
+confirmar enquadramento) — os dois selos renderizam perfeitamente circulares, e o caderno flutuante
+aberto numa campanha de teste (desktop e mobile). Tudo consistente com o tema, sem overflow, alvos
+de toque corretos no mobile.
+
+**Duas peças não puderam ser observadas ao vivo**, registradas em vez de fingidas prontas:
+`ficha-combos` (componente órfão, sem rota/consumidor no app — só a suíte de testes do próprio
+componente exercita o template) e `guia-equipamento-loja` (só existe na etapa 7/8 do guia de
+criação `/fichas/nova`, não navegada por proporcionalidade de esforço); ambas reusam exatamente os
+mesmos padrões (`mini` sem borda, `compacto` com borda nova) já confirmados ao vivo em outros
+arquivos desta mesma task, e têm suíte de componente própria passando.
+
+`P-048` continua `ABERTO` — falta `ui-31` (criatura/NPC) e `ui-32` (simulação/usuário), ambas em
+`docs/specs/backlog/`.
+
+## 2026-09-04 — `ui-29`: adota `app-botao`/`app-botao-icone` em `modules/encontro`
+
+Segunda tarefa da série `ui-28`…`ui-32` (`P-048`). Escopo: `cartao-combatente`, `log-encontro`,
+`rolagem-avulso` e `painel-encontro.page`, conforme
+`docs/specs/backlog/ui-29-adocao-botao-icone-encontro.spec.md` (movida para `done/` ao final).
+
+**Entregue:**
+
+- `cartao-combatente.component.html`: `.combatente__abrir-ficha`, `.combatente__rolar-avulso`,
+  `.combatente__receber-dano`, `.combatente__remover` e o `<button>` "remover imagem" de
+  `.combatente__identidade-acao` migrados para `app-botao-icone` (tamanho padrão `compacto`,
+  26×26); `.combatente__ajustar` (tem texto, "Ajustar"/"Fechar") para `app-botao`. Os dois
+  `<label class="combatente__identidade-acao">` (trocar imagem/cor) **não** migraram — não são
+  `<button>`/`<a>`, e o SCSS foi reorganizado para separar a geometria comum (compartilhada com o
+  `<label>`) da identidade própria do `<label>` (`label.combatente__identidade-acao`), evitando que
+  a classe BEM compartilhada vazasse cor/borda por cima do primitivo no `<button>`. Os quatro
+  `.combatente__stepper` (−/+) ficaram de fora — mesmo padrão de stepper já excluído na `ui-28`.
+- `log-encontro.component.html`: `.log__acao` (×2, "Rodada atual"/"Rodada anterior") e
+  `.log__gatilho` (mobile) migrados para `app-botao` (têm texto).
+- `rolagem-avulso.component.html`: `.rolagem-avulso__fechar` para `app-botao-icone`;
+  `.rolagem-avulso__visibilidade` para `app-botao` (ícone + texto). `.rolagem-avulso__rolar` e os
+  dois botões do modal de confirmação já usavam `app-botao` antes desta tarefa.
+- `painel-encontro.page.html`: `.iniciativa__voltar` (`<a routerLink>`, ícone-só) para
+  `app-botao-icone`; `.iniciativa__minha-ficha` (ícone + texto) para `app-botao`. A maioria dos
+  botões desta página (`.painel__acao`, `.secundarias__gatilho`/`__acao`, `.abertura__acao`,
+  `.adicionar__acao`) **já** usava `app-botao` antes desta tarefa — só faltavam os três acima.
+  **Desvio da spec:** `.iniciativa__historico` (×2: "Combate atual"/"N encerrados") foi migrado
+  para `app-botao`, não `app-botao-icone` como a spec original propunha — o levantamento que gerou
+  a spec classificou como "ícone-só", mas o markup real sempre teve texto ao lado do ícone; o
+  código venceu a spec (mesmo princípio de "a regra vence o mockup" já usado no domínio).
+- **Achado só na implementação, fora do escopo listado na spec:** `ficha-flutuante.component.html`
+  tem três botões de janela (minimizar/maximizar/fechar) sem classe própria, só com
+  `.ficha-flutuante__acoes-janela button` no SCSS — a spec só citava o `.ficha-flutuante__gatilho`
+  (excluído, `utilitario-flutuante`) e não via os três controles da janela. Migrados para
+  `app-botao-icone` com uma classe nova (`.ficha-flutuante__acao-janela`) para a geometria (32×32,
+  igual ao par minimizar/fechar de `app-painel-flutuante`); SCSS reduzido de um bloco `button { ... }`
+  para só largura/altura/`font-size`. Ao investigar essa janela descobriu-se que
+  `ficha-flutuante.component` reimplementa à mão a mesma mecânica de arraste/redimensionamento/
+  minimizar/maximizar de `shared/ui/painel-flutuante` (`app-painel-flutuante`, ui-17) — um
+  primitivo já compartilhado por `leitor-documentos`, `caderno-flutuante` e a calculadora
+  flutuante, cujos próprios botões de janela já usam `app-botao-icone`. Migrar `ficha-flutuante`
+  para hospedar seu conteúdo dentro de `app-painel-flutuante` é uma refatoração de componente
+  inteira (geometria, arraste, `[hidden]`), fora do escopo de "adotar `app-botao`/`app-botao-icone`"
+  desta série — registrado como **`P-058`**, decisão do autor pendente.
+- Todo CSS de identidade (cor, borda, hover, transição, `font-family`, `border-radius`, `cursor`)
+  removido dos seletores migrados, mantendo só geometria/posicionamento e os poucos overrides de
+  estado que divergem de propósito do padrão do primitivo (ex.: `.combatente--ajustando &` no botão
+  "Ajustar", que acende accent no estado aberto).
+
+**Testes e lint:** `npx ng test --include='src/app/modules/encontro/**/*.spec.ts' --watch=false` —
+8 arquivos / 126 testes, todos passando, sem nenhuma alteração de spec (as classes BEM usadas pelos
+testes via `querySelector` foram preservadas em todo controle migrado). `npx eslint` nos 8 arquivos
+tocados — 0 erros (avisos pré-existentes de aspas/`max-len` em trechos não tocados por esta tarefa).
+
+**Verificação ao vivo:** stack real (Postgres nativo + `backend:dev` + `frontend:dev`), fixture via
+REST (`/autenticacao/registro`+`login`, `POST /campanha`, `POST /campanha/entrar`,
+`POST /campanha/:id/encontro`, dois combatentes avulsos com iniciativa atribuída,
+`POST /encontro/:id/iniciar`). Descoberta útil: um combatente avulso nasce **não revelado** para o
+jogador (tag "NÃO REVELADO" na tela) — satisfaz sozinho o critério de aceite "pelo menos um
+combatente revelado e um não revelado" sem precisar montar uma ficha de criatura completa.
+Viewports `1920×1080` e `360×800`, mestre e jogador: painel de Iniciativa em modo de edição
+(remover/ajustar visíveis), diálogo "Receber dano", painel de rolagem avulsa (fechar + visibilidade),
+cabeçalho do jogador (voltar, "Você está assistindo a este combate"). Análogo: os controles de
+`ui-28` em `detalhe.page.html` (mesmo primitivo, mesmo tamanho `compacto`) — comparação positiva,
+sem overflow, alvo de toque e contraste corretos em ambos os viewports. `ficha-flutuante` não foi
+aberta ao vivo nesta verificação (exige uma ficha real; combatentes avulsos não têm `fichaId`) — a
+migração dos seus três botões foi conferida por leitura de código e por serem o mesmo primitivo já
+verificado ao vivo em `app-painel-flutuante` (par minimizar/fechar idêntico).
+
+**Documentação:** `P-048` atualizado (série continua `ABERTO`, agora com `ui-28` e `ui-29`
+concluídas); `P-058` criado para a duplicação `ficha-flutuante`/`app-painel-flutuante`. Spec movida
+para `docs/specs/done/`. `ui-30`…`ui-32` seguem em `docs/specs/backlog/`, não implementadas.
+
+## 2026-09-04 — `ui-28`: amplia `app-botao-icone` (âncora + tamanho `mini`) e adota em `shared/` + `modules/campanha`
+
+Primeira das cinco tarefas da série `ui-28`…`ui-32` que fecha o `P-048` (botões/links soltos sem
+passar pela biblioteca de componentes). O `P-048` original citava 5 controles (achados na
+auditoria da `m8-03`); pedido ao autor para decidir o escopo real antes de mexer em código —
+resposta: levantamento completo do app. Um agente de exploração varreu `frontend/src/app/**`
+e achou **130 classes distintas / 201 ocorrências** adicionais, além de dois padrões que não
+mapeiam em nenhum primitivo hoje (Grupo C "valor editável clicável", ~32 ocorrências, e Grupo D
+"seletor customizado", fora de escopo por ser campo de formulário). Dado o tamanho, o autor
+escolheu dividir em spec de milestone por módulo (`docs/specs/backlog/INDEX-adocao-total-botao-icone.md`)
+em vez de um diff único, e decidiu as duas lacunas do primitivo encontradas: `app-botao-icone`
+ganha suporte a `<a>` e um tamanho `mini` sem borda (padrão "ícone inline", como o dadinho de um
+pill de rolagem). Grupo C virou `P-057`, registrado à parte.
+
+**Entregue nesta tarefa (`ui-28`, fundação da série):**
+
+- `BotaoIcone` (`shared/ui/botao-icone/botao-icone.component.ts`): seletor
+  `button[app-botao-icone], a[app-botao-icone]`; `BotaoIconeTamanho` ganhou `'mini'` (16×16,
+  `border-color: transparent`, sem fundo no hover) além de `compacto`/`padrao`.
+- `shared/`: `bandeja-dados` (`__fechar`), `configuracoes-tema` (`__remover` do swatch salvo, agora
+  `mini`), `inventario-esquadrao-sidebar` (`__fechar`), `notificacao` (`__fechar`) migrados para
+  `app-botao-icone`; `layout` (`topbar__sessao`, `topbar__perfil-gatilho`, `topbar__perfil-item`
+  ×2) para `app-botao`. CSS de identidade duplicado (borda, hover, transição, cursor) removido de
+  cada um, mantendo só geometria/posicionamento e overrides de estado legítimos (ex.: hover
+  "perigo" em `.detalhe__membro-acao`/`.inventario-esquadrao__remover`, que diverge de propósito
+  do hover padrão do primitivo).
+- `modules/campanha`: os 5 controles originais do `P-048`
+  (`.detalhe__cabecalho-voltar`, `.espectador__voltar`, `.detalhe__membro-acao` ×3,
+  `.detalhe__cabecalho-menu-botao` ×2, `.rolagem-pill__d20` ×3 — duas cópias em `detalhe.page.html`
+  mais a de `previa-jogador.page.html`) e o resto do módulo achado no levantamento:
+  `.detalhe__ficha-menu-botao`, `.detalhe__estado-operacional`, `.detalhe__cabecalho-menu-item`
+  (11 ocorrências, um único `replace_all`), `.detalhe__banner-link`, `.detalhe__ficha-menu-item`
+  (3), e praticamente todos os botões de `inventario-esquadrao.component.html` (item custom,
+  adicionar, catálogo, editar item, remover, modificação, pegar).
+- **Exceção encontrada só na implementação** (não estava no levantamento original): os gatilhos
+  `.calc-flutuante__gatilho`/`.historico-rolagens__gatilho`/`.inventario-sidebar__gatilho` usam
+  `shared/utilitario-flutuante/_utilitario-flutuante.scss` — um botão de ação flutuante 48px,
+  `position: fixed`, com empilhamento entre si via CSS custom properties, já compartilhado por 6
+  consumidores. Papel genuinamente diferente de `app-botao-icone` (que é inline, sem
+  posicionamento próprio) — documentado como exclusão permanente no `INDEX` da série (vale também
+  para `.ficha-flutuante__gatilho` da `ui-29` e `.caderno__gatilho` da `ui-30`). O `__fechar` de
+  cada painel (diferente do `__gatilho`) seguiu no escopo normal.
+
+**Dois bugs próprios cometidos e corrigidos ainda na mesma tarefa** (achados pelos testes, não por
+inspeção manual — reforça por que rodar a suíte inteira antes de fechar importa):
+
+1. Ao migrar `.notificacoes__fechar`, `.bandeja__fechar` e `.inventario-sidebar__fechar` para
+   `app-botao-icone`, a classe BEM original foi derrubada por engano (sobrou só a diretiva do
+   primitivo). `notificacao.component.spec.ts` pegou a de notificação (o teste dependia da classe
+   para achar o botão); as outras duas não tinham teste cobrindo e só foram achadas revisando o
+   diff a fio depois do primeiro sinal.
+2. `layout.component.ts` tinha `viewChild<ElementRef<HTMLButtonElement>>('perfilGatilho')` sem
+   `read: ElementRef` explícito — funcionava porque o `<button>` não hospedava nenhum componente.
+   Ao adicionar `app-botao` ao mesmo botão, a referência de template sem `read` passou a resolver
+   a **instância do componente `Botao`** em vez do `ElementRef` nativo (regra do Angular: uma
+   referência de template sem qualificador aponta pro componente do host, quando existe um).
+   `fecharPerfilPeloTeclado` (`Escape` no dropdown de perfil) quebrou com
+   `Cannot read properties of undefined (reading 'focus')` — só apareceu como uma exceção não
+   tratada no `layout.component.spec.ts`, não como falha de asserção. Corrigido com
+   `viewChild<ElementRef<HTMLButtonElement>, ElementRef<HTMLButtonElement>>('perfilGatilho', {
+   read: ElementRef })`. Registrado aqui porque **qualquer** botão/link com referência de template
+   (`#algumRef`) que ganhar `app-botao`/`app-botao-icone` nas próximas tarefas da série corre o
+   mesmo risco — vale a pena checar antes de migrar.
+
+**Testado**: `npm run lint --workspace=frontend` (0 erros); suíte completa do frontend —
+`npm run test --workspace=frontend` — **117 arquivos, 1603 testes, todos passando** (gate de
+integração, não só os arquivos tocados).
+
+**Verificado ao vivo** (stack real — Postgres local + backend NestJS + `ng serve`, sessão real,
+campanha com dois membros e um item de inventário criados via REST): `1920×1080` e `360×800` em
+`/campanhas/:id` (cabeçalho com voltar/menu ⋯, lista de membros com ações, menu de ações aberto) e
+no inventário de esquadrão (vazio, catálogo aberto, item adicionado com pegar/estoque/remover) —
+identidade visual idêntica ao análogo já aprovado (`.detalhe__copiar`/`.detalhe__regenerar` em
+`app-botao-icone tamanho="padrao"`, e `.modal__fechar` sem tamanho explícito), sem overflow, alvo
+de toque de 44px no mobile herdado do primitivo. O tamanho `mini` novo foi verificado no badge de
+remoção de cor personalizada do painel de Tema (`config-swatch-slot__remover`) — aceita a pequena
+normalização de canto quadrado em vez de círculo perfeito, resultado esperado de unificar a
+identidade num primitivo só.
+
+**Pendente** (backlog, não desta tarefa): `ui-29` (encontro), `ui-30` (ficha), `ui-31` (criatura),
+`ui-32` (simulação/usuário) — specs já escritas em `docs/specs/backlog/`, dependem só de `ui-28`
+(pronta). `P-048` continua `ABERTO` até a série inteira fechar. `P-057` (Grupo C, "valor editável
+clicável") aberto à parte, sem spec ainda — decisão de criar primitivo novo pendente do autor.
+
+## 2026-09-04 — Correção de P-019 e P-044: motion reduzido na bandeja de dados e sobreposição da topbar em ~960px
+
+Dois defeitos pequenos e já totalmente diagnosticados em `PROBLEMS.md`, corrigidos juntos por
+serem ambos CSS pontual sem decisão pendente do autor.
+
+**P-019** — `bandeja-dados.component.scss` (`&__barra`) esvaziava a barra de tempo com
+`animation: bandeja-esvazia var(--bandeja-duracao) linear forwards` sem checar
+`prefers-reduced-motion`, diferente de `notificacao.component.scss`, que já tinha o mesmo padrão
+(barra de duração, ui-20) com o `@media` correspondente. Adicionado o mesmo bloco
+`@media (prefers-reduced-motion: reduce) { animation: none; }` dentro de `&__barra` da bandeja —
+cópia exata do padrão já aprovado em produção.
+
+**P-044** — a faixa de navegação da topbar (`Campanhas · Fichas · Simulação · Documentos`, rótulos
+completos) e o seletor de usuário (nome + avatar) só tinham dois estados: desktop cheio e o
+colapso mobile de `bp.mobile` (560px, ícone-só). Entre 560px e o desktop não havia nenhum degrau
+intermediário, e por volta de ~960px o texto de "Documentos" chegava a sobrepor o seletor de
+usuário. Adicionado a `.topbar__item` um `@include bp.tablet` (1080px, breakpoint já existente em
+`_breakpoints.scss`) que esconde o rótulo (`span`) dos itens de navegação, deixando-os ícone-só
+mais cedo — mesmo tratamento visual que o colapso mobile já usa, só que disparado num limiar mais
+largo. O bloco de `span { display: none; }` que antes vivia dentro de `@include bp.mobile` foi
+retirado de lá (redundante: 560px já está coberto pelo novo bloco de 1080px).
+
+**Verificado ao vivo** (stack real — Postgres local + backend NestJS + `ng serve`, usuário e
+campanha reais criados via REST, sessão injetada em `localStorage` como o `verify` documenta):
+
+- **P-044**: nos três viewports padrão (`1920×1080`, `960×1080` — a zona do defeito relatado — e
+  `360×800`), `topbar__nav` e `topbar__acoes` não se sobrepõem (`bounding box` sem interseção em
+  nenhum dos três) e a captura de tela em `960×1080` mostra a nav em ícone-só, limpa, sem
+  overflow — mesma identidade visual do colapso mobile já aprovado (o análogo usado). Desktop e
+  mobile permanecem como antes (nenhuma regressão).
+- **P-019**: disparada uma rolagem real na bandeja de dados (`BandejaDadosService.mostrar`, via
+  componente montado em `/campanhas/:id`) com o browser emulando
+  `prefers-reduced-motion: reduce` — `getComputedStyle('.bandeja__barra').animationName` veio
+  `none` (barra fica estática, cheia). Como controle, a mesma rolagem sem a preferência mostrou
+  `animationName: bandeja-esvazia` rodando por `7s` — prova de que é a media query (e não outra
+  coisa) que gate a animação.
+
+**Testado**: `npm run lint --workspace=frontend` (0 erros; só os warnings pré-existentes de aspas
+do projeto inteiro). `npm run test --workspace=frontend -- --include=**/layout.component.spec.ts
+--include=**/bandeja-dados.component.spec.ts` — 2 arquivos, 20 testes, todos passando.
+
+Sem spec dedicada: os dois já vinham com Sintoma/Causa/Correção completos em `PROBLEMS.md`,
+suficientes para guiar a implementação sem abrir `docs/specs/`.
+
 ## 2026-09-04 — m8-06: Validação integrada do módulo `m8-espectadores-campanha` (M8, gate final)
 
 Sexta e última task do módulo — não é produto novo, é o gate que fecha `m8-01`…`m8-05` com
