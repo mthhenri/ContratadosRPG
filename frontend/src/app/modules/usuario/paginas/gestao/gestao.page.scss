@@ -122,17 +122,10 @@
     color: var(--text-mute);
 }
 .gestao__paginacao {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
     margin-top: 16px;
-    font: 11px var(--font-mono);
-    color: var(--text-dim);
 }
 .gestao__comandos .botao,
-.gestao__acoes .botao,
-.gestao__paginacao .botao {
+.gestao__acoes .botao {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -171,8 +164,7 @@
         flex: 1;
         min-height: bp.$alvo-toque;
     }
-    .gestao__comandos .botao,
-    .gestao__paginacao .botao {
+    .gestao__comandos .botao {
         min-height: bp.$alvo-toque;
     }
     .gestao input,

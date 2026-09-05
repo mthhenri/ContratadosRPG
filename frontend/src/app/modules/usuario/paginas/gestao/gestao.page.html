@@ -278,24 +278,12 @@
             }
         </ul>
         } @if (totalPaginas() > 1) {
-        <nav class="gestao__paginacao" aria-label="Paginação">
-            <button
-                app-botao
-                variante="secundario"
-                [disabled]="pagina() === 1"
-                (click)="mudarPagina(-1)"
-            >
-                Anterior</button
-            ><span>Página {{ pagina() }} de {{ totalPaginas() }}</span
-            ><button
-                app-botao
-                variante="secundario"
-                [disabled]="pagina() === totalPaginas()"
-                (click)="mudarPagina(1)"
-            >
-                Próxima
-            </button>
-        </nav>
+        <app-paginador
+            class="gestao__paginacao"
+            [pagina]="pagina()"
+            [totalPaginas]="totalPaginas()"
+            (paginaAlterada)="irParaPagina($event)"
+        />
         }
     </app-cartao>
 </section>

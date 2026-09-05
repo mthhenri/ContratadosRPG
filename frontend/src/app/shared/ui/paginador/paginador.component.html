@@ -1,0 +1,55 @@
+<button
+    app-botao
+    variante="secundario"
+    type="button"
+    class="paginador__extremo"
+    [disabled]="pagina() === 1"
+    (click)="irPara(1)"
+>
+    Primeira</button
+><button
+    app-botao-icone
+    type="button"
+    class="paginador__seta"
+    aria-label="Página anterior"
+    [appTooltip]="'Página anterior'"
+    [disabled]="pagina() === 1"
+    (click)="irPara(pagina() - 1)"
+>
+    <app-icone nome="chevron" class="paginador__seta-icone paginador__seta-icone--anterior" /></button
+><ul class="paginador__paginas">
+    @for (numero of paginasVisiveis(); track numero) {
+    <li>
+        <button
+            app-botao
+            [variante]="numero === pagina() ? 'primario' : 'secundario'"
+            type="button"
+            class="paginador__pagina"
+            [attr.aria-current]="numero === pagina() ? 'page' : null"
+            (click)="irPara(numero)"
+        >
+            {{ numero }}
+        </button>
+    </li>
+    }
+</ul>
+<button
+    app-botao-icone
+    type="button"
+    class="paginador__seta"
+    aria-label="Próxima página"
+    [appTooltip]="'Próxima página'"
+    [disabled]="pagina() === totalPaginas()"
+    (click)="irPara(pagina() + 1)"
+>
+    <app-icone nome="chevron" class="paginador__seta-icone paginador__seta-icone--proxima" /></button
+><button
+    app-botao
+    variante="secundario"
+    type="button"
+    class="paginador__extremo"
+    [disabled]="pagina() === totalPaginas()"
+    (click)="irPara(totalPaginas())"
+>
+    Última
+</button>

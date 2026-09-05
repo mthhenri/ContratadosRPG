@@ -14,6 +14,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { Paginador } from '../../../../shared/ui/paginador/paginador.component';
 
 type ModoEditor = 'perfil' | 'senha' | 'tipo';
 interface EditorUsuario { readonly usuarioId: number; readonly modo: ModoEditor }
@@ -27,7 +28,7 @@ export class TipoRotuloPipe implements PipeTransform {
 
 @Component({
   selector: 'app-usuario-gestao',
-  imports: [ReactiveFormsModule, Icone, TipoRotuloPipe, Tooltip, Botao, BotaoIcone, Cartao],
+  imports: [ReactiveFormsModule, Icone, TipoRotuloPipe, Tooltip, Botao, BotaoIcone, Cartao, Paginador],
   templateUrl: './gestao.page.html',
   styleUrl: './gestao.page.scss',
 })
@@ -130,7 +131,7 @@ export class UsuarioGestao {
     );
     this.aplicarFiltros();
   }
-  protected mudarPagina(delta: number): void { this.pagina.update((valor) => valor + delta); this.carregarUsuarios(); }
+  protected irParaPagina(pagina: number): void { this.pagina.set(pagina); this.carregarUsuarios(); }
   protected alternarCriacao(): void { this.criacaoAberta.update((aberta) => !aberta); this.fecharEdicao(); }
   protected abrirEditor(usuario: UsuarioResumoDto, modo: ModoEditor): void {
     this.editorAberto.set({ usuarioId: usuario.id, modo }); this.criacaoAberta.set(false);

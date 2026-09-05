@@ -1,0 +1,56 @@
+@use "tema/breakpoints" as bp;
+
+// Identidade do paginador (`Primeira < […] [x] […] > Última`). O tamanho de cada controle mora
+// aqui, não em `app-botao`/`app-botao-icone` — os dois primitivos seguem sem dimensão própria por
+// padrão (`DESIGN.md`, "Degraus de tamanho").
+:host {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+}
+
+.paginador__extremo {
+    min-height: 32px;
+    padding: 0 var(--space-12);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+}
+
+.paginador__paginas {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.paginador__pagina {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 var(--space-4);
+    font: 11px var(--font-mono);
+    font-weight: 600;
+}
+
+// `chevron` é o glifo de seta-para-baixo compartilhado com dropdown/acordeão — girado aqui para
+// apontar na direção de cada seta, em vez de desenhar um glifo próprio.
+.paginador__seta-icone--anterior {
+    transform: rotate(90deg);
+}
+
+.paginador__seta-icone--proxima {
+    transform: rotate(-90deg);
+}
+
+@include bp.mobile {
+    .paginador__extremo,
+    .paginador__pagina {
+        min-width: bp.$alvo-toque;
+        min-height: bp.$alvo-toque;
+    }
+}
