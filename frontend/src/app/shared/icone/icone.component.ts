@@ -22,8 +22,11 @@ import { Component, input } from '@angular/core';
  * direito), pra não repetir o diamante puro: `link` (Aplicar em... — selo de elo de corrente) e
  * `chama` (Consumir — selo de chama, o fragmento é destruído); e `modificador` (±), rótulo do
  * stepper de modificador de teste na edição de atributos — mesmo papel que `dado` cumpre pro
- * rótulo do stepper de ajuste de dados, ao lado; e `carregando`, o giro do estado de carregamento
- * do primitivo de botão (`shared/ui/botao`, ui-01b) — primeiro spinner do projeto.
+ * rótulo do stepper de ajuste de dados, ao lado; `carregando`, o giro do estado de carregamento
+ * do primitivo de botão (`shared/ui/botao`, ui-01b) — primeiro spinner do projeto; e `fantasma`,
+ * identidade visual do papel `ESPECTADOR` (m8-01) — chip de papel na lista de Membros, botão
+ * "Painel" e selo "Modo espectador" — distinto de `olho`, que fica só para ações de
+ * visualização/prévia (não é uma identidade de papel).
  */
 export type IconeNome =
   | 'agente'
@@ -102,7 +105,8 @@ export type IconeNome =
   | 'linha-remover'
   | 'coluna-adicionar'
   | 'coluna-remover'
-  | 'carregando';
+  | 'carregando'
+  | 'fantasma';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

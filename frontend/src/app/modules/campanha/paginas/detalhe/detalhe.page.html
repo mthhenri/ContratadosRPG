@@ -549,17 +549,17 @@
                     >
                         <app-icone [nome]="regeneradoEspectador() ? 'check' : 'atualizar'" />
                     </button>
+                    <a
+                        app-botao
+                        variante="secundario"
+                        class="botao botao--secundario detalhe__abrir-painel-espectador"
+                        [routerLink]="['/campanhas', campanhaAtual.id, 'espectador']"
+                        [appTooltip]="'Abrir o Painel do espectador em modo de prévia'"
+                    >
+                        <app-icone nome="fantasma" />
+                        Painel
+                    </a>
                 </div>
-                <a
-                    app-botao
-                    variante="secundario"
-                    class="botao botao--secundario detalhe__abrir-painel-espectador"
-                    [routerLink]="['/campanhas', campanhaAtual.id, 'espectador']"
-                    [appTooltip]="'Abrir o Painel do espectador em modo de prévia'"
-                >
-                    <app-icone nome="olho" />
-                    Painel do espectador
-                </a>
             </div>
 
             <div class="detalhe__estatistica detalhe__stat-encontro">
@@ -655,7 +655,7 @@
                                             membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
                                                 ? 'coroa'
                                                 : membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
-                                                  ? 'olho'
+                                                  ? 'fantasma'
                                                   : 'protecoes'
                                         "
                                     />
