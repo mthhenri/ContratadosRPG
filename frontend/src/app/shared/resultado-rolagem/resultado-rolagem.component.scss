@@ -110,9 +110,17 @@
     // Valor rolado, empilhado sobre a silhueta do dado (mesma célula de grid do `&__dado`) — sem
     // z-index próprio: no fluxo normal, pinta depois do `app-icone` (que não tem z-index) e antes
     // do `::after` do risco de descartado (esse sim com `z-index: 1`), então cobre o dado mas fica
-    // por baixo do risco.
+    // por baixo do risco. O halo (`text-shadow` em várias direções, cor neutra escura) só existe
+    // pra legibilidade: sem ele, os traços da faceta do dado (que cruzam por baixo do dígito) somem
+    // sob a tinta do número mas continuam cheios nos vãos/contadores da fonte (ex.: dentro do "9",
+    // entre "1" e "9") — visualmente parece que a linha do dado "atravessa" o número por cima, ainda
+    // que a pilha esteja na ordem certa. O halo tampa esses vãos sem precisar casar com o fundo do
+    // consumidor (carta da bandeja `--surface`, item do feed/histórico `--surface-2`).
     &__dado-valor {
         line-height: 1;
+        text-shadow:
+            0 0 3px rgb(0 0 0 / 70%),
+            0 0 3px rgb(0 0 0 / 70%);
     }
 
     // Dadinho do pool (I-011/redesign SVG): a silhueta do dado (`app-icone`, `d4`..`d20`) empilhada
@@ -178,7 +186,8 @@
 
             .resultado-rolagem__dado-svg {
                 color: var(--accent);
-                opacity: 0.45;
+                opacity: 0.35; // mais discreto que os 0.4 do neutro — é o número mais importante de
+                // ler (o que decidiu o total), então o dado por trás não pode competir com ele
             }
         }
 
