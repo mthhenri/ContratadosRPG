@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { map, merge } from 'rxjs';
@@ -21,6 +21,7 @@ import {
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { Stat } from '../../../../shared/ui/stat/stat.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EstadoAbasSimulacaoService } from '../../estado-abas-simulacao.service';
 
@@ -73,7 +74,7 @@ const DURACAO_SCRAMBLE_MS = 650;
  */
 @Component({
   selector: 'app-descanso-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Botao, Cartao],
+  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Botao, Cartao, Stat],
   templateUrl: './descanso.page.html',
   styleUrl: './descanso.page.scss',
 })
@@ -225,9 +226,10 @@ export class DescansoPage {
   protected readonly energiaBreakdown = signal('');
   protected readonly vidaBreakdown = signal('');
 
-  private readonly valorEnergiaElemento =
-    viewChild<ElementRef<HTMLElement>>('valorEnergiaRolada');
-  private readonly valorVidaElemento = viewChild<ElementRef<HTMLElement>>('valorVidaRolada');
+  // `app-stat [pulso]` (P-054) dispara o pulso de escala internamente — cada incremento aqui
+  // pede um novo pulso, sem a página precisar alcançar o nó DOM do primitivo.
+  protected readonly pulsoEnergia = signal(0);
+  protected readonly pulsoVida = signal(0);
 
   private handleAnimacao = 0;
 
@@ -336,12 +338,12 @@ export class DescansoPage {
   private aplicarResultados(rolagem: RolagemDescanso): void {
     this.energiaRolada.set(rolagem.energia.total);
     this.energiaBreakdown.set(rolagem.energia.breakdown);
-    this.pulsar(this.valorEnergiaElemento());
+    this.pulsoEnergia.update((valor) => valor + 1);
 
     if (rolagem.vida) {
       this.vidaRolada.set(rolagem.vida.total);
       this.vidaBreakdown.set(rolagem.vida.breakdown);
-      this.pulsar(this.valorVidaElemento());
+      this.pulsoVida.update((valor) => valor + 1);
     } else {
       this.vidaRolada.set('Não recupera');
       this.vidaBreakdown.set('Descanso Curto não recupera Vida');
@@ -443,13 +445,5 @@ export class DescansoPage {
       .join('');
     const nivel = faixa.bonusNivel / 2;
     return `${notacao}${adicionais} + (${nivel}×2)${interrompido ? ' ÷ 2' : ''}`;
-  }
-
-  /** Pulso de escala no valor recém-assentado (guardado para ambientes sem `Element.animate`). */
-  private pulsar(elemento: ElementRef<HTMLElement> | undefined): void {
-    elemento?.nativeElement.animate?.(
-      [{ transform: 'scale(1.15)' }, { transform: 'scale(1)' }],
-      { duration: 220, easing: 'ease-out' },
-    );
   }
 }

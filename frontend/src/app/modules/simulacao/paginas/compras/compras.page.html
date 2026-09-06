@@ -57,44 +57,38 @@
         <span cartaoIndice>2</span>
 
         <div class="calc-stats compras-resumo">
-            <div class="calc-stat">
-                <div class="calc-stat__rotulo">Patente</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">{{ patenteTexto() }}</div>
-            </div>
-            <div
-                class="calc-stat"
-                [class.compras-negativo]="semDinheiro()"
-                [class.compras-positivo]="!semDinheiro()"
-            >
-                <div class="calc-stat__rotulo">Dinheiro Restante</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">
-                    {{ dinheiroRestanteTexto() }}
-                </div>
-            </div>
-            <div class="calc-stat compras-negativo">
-                <div class="calc-stat__rotulo">Gasto Total</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">{{ gastoTexto() }}</div>
-            </div>
-            <div class="calc-stat" [class.compras-negativo]="excedeInventario()">
-                <div class="calc-stat__rotulo">Inventário Usado</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">{{ inventarioTexto() }}</div>
-            </div>
-            <div class="calc-stat" [class.compras-negativo]="excedeAmplificadores()">
-                <div class="calc-stat__rotulo">Amplificadores</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">
-                    {{ amplificadoresTexto() }}
-                </div>
-            </div>
-            <div class="calc-stat">
-                <div class="calc-stat__rotulo">Mods por Item</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">{{ limiteModsTexto() }}</div>
-            </div>
-            <div class="calc-stat" [class.compras-negativo]="resumo().penalidadeVontade > 0">
-                <div class="calc-stat__rotulo">Penalidade Amps</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">
-                    {{ penalidadeVontadeTexto() }}
-                </div>
-            </div>
+            <app-stat tamanho="compacto" rotulo="Patente" [valor]="patenteTexto()" />
+            <app-stat
+                tamanho="compacto"
+                rotulo="Dinheiro Restante"
+                [valor]="dinheiroRestanteTexto()"
+                [variante]="semDinheiro() ? 'alerta' : 'positivo'"
+            />
+            <app-stat
+                tamanho="compacto"
+                rotulo="Gasto Total"
+                [valor]="gastoTexto()"
+                variante="alerta"
+            />
+            <app-stat
+                tamanho="compacto"
+                rotulo="Inventário Usado"
+                [valor]="inventarioTexto()"
+                [variante]="excedeInventario() ? 'alerta' : undefined"
+            />
+            <app-stat
+                tamanho="compacto"
+                rotulo="Amplificadores"
+                [valor]="amplificadoresTexto()"
+                [variante]="excedeAmplificadores() ? 'alerta' : undefined"
+            />
+            <app-stat tamanho="compacto" rotulo="Mods por Item" [valor]="limiteModsTexto()" />
+            <app-stat
+                tamanho="compacto"
+                rotulo="Penalidade Amps"
+                [valor]="penalidadeVontadeTexto()"
+                [variante]="resumo().penalidadeVontade > 0 ? 'alerta' : undefined"
+            />
         </div>
     </app-cartao>
     }
@@ -1024,20 +1018,23 @@
             </div>
 
             <div class="calc-stats">
-                <div class="calc-stat compras-positivo">
-                    <div class="calc-stat__rotulo">Valor de Venda dos Itens</div>
-                    <div class="calc-stat__valor calc-stat__valor--texto">
-                        {{ valorVendaItensTexto() }}
-                    </div>
-                </div>
-                <div class="calc-stat compras-positivo">
-                    <div class="calc-stat__rotulo">Total de Fragmentos</div>
-                    <div class="calc-stat__valor calc-stat__valor--texto">
-                        {{ totalFragmentosTexto() }}
-                    </div>
-                </div>
+                <app-stat
+                    tamanho="compacto"
+                    rotulo="Valor de Venda dos Itens"
+                    [valor]="valorVendaItensTexto()"
+                    variante="positivo"
+                />
+                <app-stat
+                    tamanho="compacto"
+                    rotulo="Total de Fragmentos"
+                    [valor]="totalFragmentosTexto()"
+                    variante="positivo"
+                />
             </div>
 
+            <!-- Fundo preenchido (accent-dim) — tratamento de "credencial de valor" que nenhuma
+                 variante do app-stat cobre hoje; fica local em vez de ampliar o primitivo para um
+                 único consumidor (P-054). -->
             <div class="calc-stats">
                 <div class="calc-stat compras-venda-total">
                     <div class="calc-stat__rotulo">Total de Venda</div>

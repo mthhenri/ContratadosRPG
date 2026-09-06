@@ -48,23 +48,24 @@
         <span cartaoIndice>2</span>
 
         <div class="calc-stats">
-            <div class="calc-stat calc-stat--destaque">
-                <div class="calc-stat__rotulo">Nível Inicial</div>
-                <div class="calc-stat__valor">{{ nivelInicial() }}</div>
-                <div class="calc-stat__detalhe">{{ subNivel() }}</div>
-            </div>
-            <div class="calc-stat calc-stat--energia">
-                <div class="calc-stat__rotulo">Prestígio Inicial</div>
-                <div class="calc-stat__valor">{{ prestigioInicial() }}</div>
-                <div class="calc-stat__detalhe">{{ subPrestigio() }}</div>
-            </div>
-            <div class="calc-stat calc-stat--positivo">
-                <div class="calc-stat__rotulo">Patente Resultante</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">
-                    {{ patenteResultante() }}
-                </div>
-                <div class="calc-stat__detalhe">{{ subPatente() }}</div>
-            </div>
+            <app-stat
+                rotulo="Nível Inicial"
+                [valor]="nivelInicial()"
+                [nota]="subNivel()"
+                variante="alerta"
+            />
+            <app-stat
+                rotulo="Prestígio Inicial"
+                [valor]="prestigioInicial()"
+                [nota]="subPrestigio()"
+                variante="energia"
+            />
+            <app-stat
+                rotulo="Patente Resultante"
+                [valor]="patenteResultante()"
+                [nota]="subPatente()"
+                variante="positivo"
+            />
         </div>
 
         <div class="calc-lista">

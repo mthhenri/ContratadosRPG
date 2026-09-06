@@ -88,7 +88,9 @@
     }
 }
 
-// === Stats do resumo ===
+// === Stats — a caixa/identidade dos stats comuns são do `app-stat` (`P-054`); `.calc-stat` só
+// sobrevive aqui para "Total de Venda" (`.compras-venda-total`, abaixo), que tem fundo preenchido
+// sem variante equivalente no primitivo. `.calc-stats` (grid) segue usado por todos os grupos. ===
 .calc-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -107,12 +109,6 @@
         color: var(--text);
         line-height: 1.2;
     }
-}
-.compras-negativo .calc-stat__valor {
-    color: var(--accent);
-}
-.compras-positivo .calc-stat__valor {
-    color: var(--positive);
 }
 
 // === Catálogo ===

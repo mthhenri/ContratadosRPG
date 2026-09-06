@@ -42,6 +42,7 @@ import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Stat } from '../../../../shared/ui/stat/stat.component';
 import { AjudaSimulacao } from '../../componentes/ajuda-simulacao/ajuda-simulacao.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ICONES_CATEGORIA, ROTULOS_PATENTE } from '../../rotulos';
@@ -318,7 +319,18 @@ function fragmentosZerados(): GradeFragmentos {
  */
 @Component({
   selector: 'app-compras-page',
-  imports: [ReactiveFormsModule, StepInput, AjudaSimulacao, Cartao, Botao, BotaoIcone, Icone, OverflowFade, Tooltip],
+  imports: [
+    ReactiveFormsModule,
+    StepInput,
+    AjudaSimulacao,
+    Cartao,
+    Botao,
+    BotaoIcone,
+    Stat,
+    Icone,
+    OverflowFade,
+    Tooltip,
+  ],
   templateUrl: './compras.page.html',
   styleUrl: './compras.page.scss',
 })

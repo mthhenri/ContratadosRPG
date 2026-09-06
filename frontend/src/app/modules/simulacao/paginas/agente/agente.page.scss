@@ -111,7 +111,7 @@
     }
 }
 
-// === Card 3: stats (copiado de _componentes.scss .stat) ===
+// === Card 3: stats — a caixa/identidade são do `app-stat` (`P-054`); aqui só o grid. ===
 .agente-hero {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -123,72 +123,6 @@
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
     margin-top: 12px;
-}
-
-.agente-stat {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 13px 14px;
-
-    &__rotulo {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
-        margin-bottom: 7px;
-    }
-
-    &__valor {
-        font-family: var(--font-mono);
-        font-size: 22px;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1.1;
-
-        &--medio {
-            font-size: 18px;
-        }
-    }
-
-    &__detalhe {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--text-mute);
-        margin-top: 5px;
-    }
-
-    // Destaque (hero): caixa maior e número grande.
-    &--hero {
-        padding: 16px 14px;
-
-        .agente-stat__valor {
-            font-size: 30px;
-            line-height: 1;
-        }
-    }
-
-    // Tons semânticos.
-    &--vida {
-        border-color: var(--vida-border);
-        .agente-stat__valor {
-            color: var(--vida);
-        }
-    }
-
-    &--energia {
-        border-color: color-mix(in srgb, var(--energy) 35%, transparent);
-        .agente-stat__valor {
-            color: var(--energy);
-        }
-    }
-
-    &--furtivo {
-        .agente-stat__valor {
-            color: var(--positive);
-        }
-    }
 }
 
 // === Card 4: benefícios ===

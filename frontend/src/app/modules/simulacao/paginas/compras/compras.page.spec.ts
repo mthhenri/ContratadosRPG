@@ -29,11 +29,11 @@ describe('ComprasPage', () => {
   }
 
   function statResumo(raiz: HTMLElement, rotulo: string): string {
-    const cartoes = Array.from(raiz.querySelectorAll('.compras-resumo .calc-stat'));
+    const cartoes = Array.from(raiz.querySelectorAll('.compras-resumo app-stat'));
     const alvo = cartoes.find(
-      (cartao) => cartao.querySelector('.calc-stat__rotulo')?.textContent?.trim() === rotulo,
+      (cartao) => cartao.querySelector('.stat__rotulo')?.textContent?.trim() === rotulo,
     );
-    return alvo?.querySelector('.calc-stat__valor')?.textContent?.trim() ?? '';
+    return alvo?.querySelector('.stat__valor')?.textContent?.trim() ?? '';
   }
 
   function clicarPorTexto(raiz: HTMLElement, seletor: string, texto: string): void {
@@ -43,12 +43,15 @@ describe('ComprasPage', () => {
     alvo?.click();
   }
 
-  /** Lê o valor de um stat pelo rótulo, procurando em qualquer `.calc-stat` da página. */
+  /** Lê o valor de um stat pelo rótulo, em qualquer `app-stat` ou `.calc-stat` da página — a
+   *  maioria migrou para o primitivo (`P-054`); "Total de Venda" continua local (fundo
+   *  preenchido sem variante equivalente). */
   function statPorRotulo(raiz: HTMLElement, rotulo: string): string {
-    const alvo = Array.from(raiz.querySelectorAll('.calc-stat')).find(
-      (cartao) => cartao.querySelector('.calc-stat__rotulo')?.textContent?.trim() === rotulo,
+    const alvo = Array.from(raiz.querySelectorAll('app-stat, .calc-stat')).find(
+      (cartao) =>
+        cartao.querySelector('.stat__rotulo, .calc-stat__rotulo')?.textContent?.trim() === rotulo,
     );
-    return alvo?.querySelector('.calc-stat__valor')?.textContent?.trim() ?? '';
+    return alvo?.querySelector('.stat__valor, .calc-stat__valor')?.textContent?.trim() ?? '';
   }
 
   /** Clica o botão "+ Adicionar" do cartão de catálogo cujo nome é exatamente `nome`. */

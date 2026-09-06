@@ -16,18 +16,21 @@ describe('NovoAgentePage', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
 
-  function valorStat(raiz: HTMLElement, modificador: string): string {
-    return (
-      raiz.querySelector(`.calc-stat--${modificador} .calc-stat__valor`)?.textContent?.trim() ?? ''
+  /** Lê o valor do `app-stat` do Card 2 pelo rótulo — a cor virou `[variante]`, não mais uma
+   *  classe modificadora própria da página (`P-054`). */
+  function valorStat(raiz: HTMLElement, rotulo: string): string {
+    const alvo = Array.from(raiz.querySelectorAll('app-stat')).find(
+      (box) => box.querySelector('.stat__rotulo')?.textContent?.trim() === rotulo,
     );
+    return alvo?.querySelector('.stat__valor')?.textContent?.trim() ?? '';
   }
 
   it('exibe Nível, Prestígio e Patente iniciais do preset padrão', async () => {
     const { raiz } = await montar();
     expect(raiz.querySelectorAll('app-cartao')).toHaveLength(3);
-    expect(valorStat(raiz, 'destaque')).toBe('4');
-    expect(valorStat(raiz, 'energia')).toBe('9');
-    expect(valorStat(raiz, 'positivo')).toBe('Experiente');
+    expect(valorStat(raiz, 'Nível Inicial')).toBe('4');
+    expect(valorStat(raiz, 'Prestígio Inicial')).toBe('9');
+    expect(valorStat(raiz, 'Patente Resultante')).toBe('Experiente');
   });
 
   it('auto-preenche o bônus monetário a partir do Prestígio inicial calculado', async () => {

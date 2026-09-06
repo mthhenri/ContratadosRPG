@@ -22,12 +22,34 @@ describe('DescansoPage', () => {
     campo.dispatchEvent(new Event('change'));
   }
 
-  function valorFaixa(raiz: HTMLElement, track: 'destaque' | 'energia'): string {
+  /** Rótulo de cada `app-stat` por trilha — a cor virou `[variante]`, não mais uma classe
+   *  modificadora própria da página (`P-054`). */
+  const ROTULOS_FAIXA: Record<'destaque' | 'energia', string> = {
+    destaque: 'Recuperação de Vida',
+    energia: 'Recuperação de Energia',
+  };
+  const ROTULOS_ROLAGEM: Record<'destaque' | 'energia', string> = {
+    destaque: 'Vida Recuperada',
+    energia: 'Energia Recuperada',
+  };
+
+  function statPorRotulo(escopo: Element | null, rotulo: string): Element | null {
     return (
-      raiz
-        .querySelector(`.descanso-faixas .calc-stat--${track} .calc-stat__valor`)
-        ?.textContent?.trim() ?? ''
+      Array.from(escopo?.querySelectorAll('app-stat') ?? []).find(
+        (box) => box.querySelector('.stat__rotulo')?.textContent?.trim() === rotulo,
+      ) ?? null
     );
+  }
+
+  function valorFaixa(raiz: HTMLElement, track: 'destaque' | 'energia'): string {
+    const escopo = raiz.querySelector('.descanso-faixas');
+    const alvo = statPorRotulo(escopo, ROTULOS_FAIXA[track]);
+    return alvo?.querySelector('.stat__valor')?.textContent?.trim() ?? '';
+  }
+
+  function statRolagem(raiz: HTMLElement, track: 'destaque' | 'energia'): Element | null {
+    const escopo = raiz.querySelector('.descanso-rolagem');
+    return statPorRotulo(escopo, ROTULOS_ROLAGEM[track]);
   }
 
   it('exibe a faixa determinística do preset padrão (Curto, Adequado, atributos 1, Nível 0)', async () => {
@@ -75,10 +97,10 @@ describe('DescansoPage', () => {
     fixture.detectChanges();
     aleatorio.mockRestore();
     expect(
-      raiz.querySelector('.descanso-rolagem .calc-stat--energia .calc-stat__valor')?.textContent?.trim(),
+      statRolagem(raiz, 'energia')?.querySelector('.stat__valor')?.textContent?.trim(),
     ).toBe('8');
     expect(
-      raiz.querySelector('.descanso-rolagem .calc-stat--destaque .calc-stat__valor')?.textContent?.trim(),
+      statRolagem(raiz, 'destaque')?.querySelector('.stat__valor')?.textContent?.trim(),
     ).toBe('8');
   });
 
@@ -97,12 +119,12 @@ describe('DescansoPage', () => {
     aleatorio.mockRestore();
 
     // Energia: [1] + 6 = 7. Vida: [1] + 6 = 7.
-    const energia = raiz.querySelector('.descanso-rolagem .calc-stat--energia .calc-stat__valor');
-    const vida = raiz.querySelector('.descanso-rolagem .calc-stat--destaque .calc-stat__valor');
+    const energia = statRolagem(raiz, 'energia')?.querySelector('.stat__valor');
+    const vida = statRolagem(raiz, 'destaque')?.querySelector('.stat__valor');
     expect(energia?.textContent?.trim()).toBe('7');
     expect(vida?.textContent?.trim()).toBe('7');
     expect(
-      raiz.querySelector('.descanso-rolagem .calc-stat--energia .calc-stat__detalhe')?.textContent,
+      statRolagem(raiz, 'energia')?.querySelector('.stat__nota')?.textContent,
     ).toContain('[1] + 6 = 7');
   });
 

@@ -109,65 +109,12 @@
     }
 }
 
-// === Stats (faixa determinística e rolagem) ===
+// === Stats (faixa determinística e rolagem) — a caixa/identidade/pulso são do `app-stat`
+// (`P-054`); aqui só o grid. ===
 .calc-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
-}
-
-.calc-stat {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-    padding: 14px;
-
-    &__rotulo {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
-        margin-bottom: 7px;
-    }
-
-    &__valor {
-        font-family: var(--font-mono);
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1.05;
-
-        &--texto {
-            font-size: 22px;
-        }
-
-        &--grande {
-            font-size: 32px;
-        }
-    }
-
-    &__detalhe {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-mute);
-        margin-top: 8px;
-    }
-
-    &--destaque {
-        // Recuperação/Vida Recuperada = stat Vida → vermelho fixo (não acompanha o accent).
-        border-color: var(--vida-border);
-        .calc-stat__valor {
-            color: var(--vida);
-        }
-    }
-
-    &--energia {
-        border-color: color-mix(in srgb, var(--energy) 35%, transparent);
-        .calc-stat__valor {
-            color: var(--energy);
-        }
-    }
 }
 
 // === Notas (memória contextual) ===

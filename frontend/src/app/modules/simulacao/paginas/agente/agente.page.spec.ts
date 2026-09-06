@@ -16,9 +16,20 @@ describe('AgentePage', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
 
+  /** Lê o valor do `app-stat` do Card 3 (hero) pelo rótulo — a cor virou `[variante]`, não mais
+   *  uma classe modificadora própria da página (`P-054`). */
   function valor(raiz: HTMLElement, modificador: string): string {
-    const alvo = raiz.querySelector(`.agente-stat--${modificador} .agente-stat__valor`);
-    return alvo?.textContent?.trim() ?? '';
+    const rotulos: Record<string, string> = {
+      vida: 'Vida',
+      energia: 'Energia',
+      defesa: 'Defesa Base',
+      proficiencia: 'Proficiência',
+    };
+    const rotulo = rotulos[modificador] ?? modificador;
+    const alvo = Array.from(raiz.querySelectorAll('app-stat')).find(
+      (box) => box.querySelector('.stat__rotulo')?.textContent?.trim() === rotulo,
+    );
+    return alvo?.querySelector('.stat__valor')?.textContent?.trim() ?? '';
   }
 
   function selecionarClasse(raiz: HTMLElement, valorClasse: string): void {

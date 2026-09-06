@@ -4,21 +4,17 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-05 · **Última decisão registrada:** `m8-07` reverteu **parte** da
-> decisão de produto #4 do módulo `m8-espectadores-campanha` ("espectador nunca vê ficha"): o
-> Painel do espectador ganhou um painel de jogadores (grade de cartões — foto, Vida/Energia,
-> Defesa/Esquiva/Bloqueio, última rolagem) ao lado do histórico de rolagens que já existia. As
-> demais partes da decisão #4 continuam de pé (sem ficha completa, inventário, caderno ou controle
-> de mestre para o espectador). Novo `FichaService.listarFichasParaEspectador` — nunca a matriz de
-> visibilidade por dono que `listarFichas`/`listarFichasParaAlvo` aplicam, porque o espectador não
-> possui ficha nenhuma na campanha; o recorte é sempre "todo agente `JOGADOR` não oculto",
-> independente de quem pede (paridade espectador/mestre-em-prévia por construção, não por checagem
-> condicional). Achado ao vivo: o avatar 128×128 do novo cartão nasceu como uma faixa esticada
-> (não um quadrado) — corrigido antes do fecho. `npm run openapi:gerar-contratos` produzia um diff
-> espúrio de CRLF neste checkout Windows — corrigido em seguida (`gerar-openapi-contratos.ts`
-> normaliza `\r\n`→`\n` antes de serializar); `P-062` fechado. Mesma sessão: `P-052` (Iniciativa
-> recriava o cabeçalho de `app-cartao`) fechou com `app-cartao` ganhando `[semCaixa]`. Detalhe
-> completo, achados e viewports verificados em `HISTORY.md`.
+> **Última revisão:** 2026-09-06 · **Última decisão registrada:** dívida de adoção da UI-27 segue
+> fechando — `P-053` (três modais de campanha duplicavam a casca de `app-modal`) e `P-054` (5 telas
+> de Simulação mantinham `.agente-stat`/`.calc-stat` paralelos a `app-stat`) fecharam na mesma
+> sessão. `app-stat` ganhou `[tamanho]="hero"` (30px), `[statInfo]` (slot de ícone no rótulo) e
+> `[pulso]` (contador que dispara o pulso de escala internamente, sem `ElementRef` externo) — as
+> três ampliações decididas pelo autor via `AskUserQuestion` antes de implementar. Um 5º stat
+> (`compras-venda-total`, fundo preenchido) ficou local por não ter variante equivalente —
+> registrado como `P-064`. Antes disso: `m8-07` deu ao Painel do espectador um painel de jogadores
+> (grade de cartões); `P-062` (diff espúrio de CRLF no gerador OpenAPI) e `P-052` (cabeçalho de
+> `app-cartao` duplicado na Iniciativa, que ganhou `[semCaixa]`) também fecharam. Detalhe completo,
+> achados e viewports verificados de cada um em `HISTORY.md`.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -64,6 +60,16 @@ descrições extraídas de JSDoc antes de serializar — o diff espúrio de CRLF
 agora como `P-063`). `painel-encontro.page` (Iniciativa) passou a consumir `app-cartao` nos 3
 estados; o 3º (combate aberto) precisava de cabeçalho sem caixa, então `app-cartao` ganhou
 `[semCaixa]`. Suíte completa do frontend depois da mudança no primitivo: 1632/1632.
+
+**`P-053`/`P-054` fechados (2026-09-06, mesma sessão):** os três modais de campanha (Vincular,
+Duplicar, Acesso de visualização) pararam de projetar um segundo cabeçalho/rodapé dentro de
+`app-modal` — passaram a usar `[titulo]` (já correto) + `[modalIcone]`/`[modalAcoes]`, como
+`confirmacao.component` já fazia. As 5 telas de Simulação (Agente, Novo Agente, Patente, Descanso,
+Compras) adotaram `app-stat` no lugar de `.agente-stat`/`.calc-stat`; o primitivo ganhou 3
+ampliações decididas pelo autor antes de implementar — `[tamanho]="hero"` (30px), `[statInfo]`
+(ícone no rótulo) e `[pulso]` (pulso de escala interno, sem `ElementRef` externo da página). Um 5º
+stat (`compras-venda-total`, fundo preenchido) não tem variante equivalente e ficou local —
+`P-064`. Suíte completa do frontend depois das duas mudanças: 1635/1635.
 
 **Painéis laterais: vão real contra o conteúdo no desktop concluído** (relato ao vivo do autor,
 sem spec própria — duas faixas brancas marcadas em captura de `Campanha do Matheus`/`Sentinela
@@ -1461,8 +1467,11 @@ A `ui-03` (2026-08-29) fechou o conjunto de composição visual: **`app-cartao`*
 opcional — sem ele é só a caixa; índice do cabeçalho por projeção `[cartaoIndice]`, cobre texto e
 ícone com um mecanismo só; `[semCaixa]`, adicionado na `P-052`, larga fundo/borda/padding e deixa
 só o cabeçalho como divisor de seção solto), **`app-stat`** (`[rotulo]`/`[valor]`/`variante` em
-`vida`/`energia`/`positivo` — só exibição pura; um campo editável com rolagem de dado é outro
-primitivo, ainda não construído, `IDEAS.md` `I-025`), **`app-chip`** (`variante` `padrao`/`sutil`
+`vida`/`energia`/`positivo`/`alerta` — só exibição pura; um campo editável com rolagem de dado é
+outro primitivo, ainda não construído, `IDEAS.md` `I-025`; a `P-054`, 2026-09-06, ampliou
+`[tamanho]` com `hero` (30px, destaque das simulações), `[statInfo]` — `ng-content` opcional ao
+lado do rótulo para um botão de ajuda — e `[pulso]` — contador que dispara internamente o mesmo
+pulso de escala que uma página antes fazia via `ElementRef`), **`app-chip`** (`variante` `padrao`/`sutil`
 para rótulo; `severidade` `primario`/`secundario`/`aviso`/`perigo` + `tom` `sutil`/`contorno` para
 estado, com slot opcional de `app-icone` — a `ui-13`, 2026-09-01, migrou as cinco cópias locais da
 mesma receita para esse modo)
@@ -1551,9 +1560,11 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   quatro telas, cabeçalho de cartão da Iniciativa, casca interna de três modais e stats da
   Simulação já são cobertos pelos primitivos; estados vazios densos pedem variante compacta; os
   três seletores segmentados justificam primitivo próprio. Matriz e ordem de correção estão em
-  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-053`…`P-056` (`P-051` — os
+  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-055`…`P-056` (`P-051` — os
   esqueletos das quatro telas — fechou em 2026-09-05; `P-052` — cabeçalho de cartão da Iniciativa —
-  fechou em 2026-09-06, `app-cartao` ganhou `[semCaixa]` para o estado sem caixa, ver `HISTORY.md`).
+  fechou em 2026-09-06, `app-cartao` ganhou `[semCaixa]` para o estado sem caixa; `P-053` — casca
+  interna dos três modais de campanha — e `P-054` — stats da Simulação — fecharam também em
+  2026-09-06, `app-stat` ganhou `hero`/`[statInfo]`/`[pulso]`, ver `HISTORY.md`).
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**

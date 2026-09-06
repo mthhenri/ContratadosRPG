@@ -1,6 +1,9 @@
 <div [class]="classes()">
-    <div class="stat__rotulo">{{ rotulo() }}</div>
-    <div class="stat__valor">
+    <div class="stat__rotulo-linha">
+        <div class="stat__rotulo">{{ rotulo() }}</div>
+        <ng-content select="[statInfo]" />
+    </div>
+    <div class="stat__valor" #nodoValor>
         @if (temValor()) {
             {{ valor() }}
         } @else {

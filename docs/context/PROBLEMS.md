@@ -89,27 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-053 — Modais de campanha repetem cabeçalho e rodapé dentro de `app-modal` · `ABERTO` · frontend/design system
-
-- **Sintoma:** Vincular, Duplicar e Acesso de Visualização usam `app-modal`, mas projetam dentro
-  dele outro painel com título, índice, régua e `.dialogo__acoes`.
-- **Causa:** a migração para o modal nativo trocou o overlay sem adotar integralmente os slots
-  `modalIcone` e `modalAcoes`.
-- **Contorno:** nenhum; visualmente existe um modal dentro do contrato de outro modal.
-- **Correção:** remover a segunda casca e projetar ícone/conteúdo/ações nos slots; confirmar se o
-  slot de ações precisa aceitar um wrapper condicional antes de ampliar a API.
-- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
-
-### P-054 — Simulação mantém stats paralelos a `app-stat` · `ABERTO` · frontend/design system
-
-- **Sintoma:** Agente, Novo Agente, Patente, Descanso e Compras mantêm `.agente-stat`/`.calc-stat`
-  com a mesma anatomia de rótulo, valor, nota e tom do primitivo existente.
-- **Causa:** o primitivo nasceu dessa família, mas os consumidores originais não foram migrados.
-- **Contorno:** nenhum; alterações de densidade, semântica e acessibilidade precisam ser repetidas.
-- **Correção:** adotar `app-stat` nos casos cobertos e ampliar somente a lacuna comprovada por um
-  consumidor real.
-- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
-
 ### P-055 — Estados vazios densos não cabem no primitivo atual · `ABERTO` · frontend/design system
 
 - **Sintoma:** listas compactas de Encontro e Ficha repetem parágrafos `__vazio`; o
@@ -237,3 +216,16 @@
   DTO) — trabalho maior que qualquer task isolada deve assumir sozinha; pode haver mais casos além
   desses dois.
 - **Desde:** achado durante a verificação do `P-062` (2026-09-05).
+
+### P-064 — "Total de Venda" (Compras/Vendas) continua com `.calc-stat` local · `ACEITO` · frontend/design system
+
+- **Sintoma:** `compras.page` migrou todos os demais stats para `app-stat` (`P-054`), mas o card
+  "Total de Venda" (aba Vendas) continua com `.calc-stat.compras-venda-total` local.
+- **Causa:** esse stat tem fundo **preenchido** (`background: var(--accent-dim)`, "credencial de
+  valor") — nenhuma variante do `app-stat` pinta fundo, só borda/cor de texto (`vida`/`energia`/
+  `positivo`/`alerta`). Ampliar o primitivo para um único consumidor não foi decisão unilateral
+  cabível; ficou de fora da ampliação de `hero`/`[statInfo]`/`[pulso]` que a mesma task aprovou.
+- **Contorno:** nenhum necessário — o stat local funciona e é visualmente idêntico ao de antes.
+- **Correção:** se aparecer um segundo consumidor real que precise de fundo preenchido, ampliar
+  `app-stat` com uma variante própria (ex.: `destaque`) nessa hora, não antes.
+- **Desde:** achado durante a implementação do `P-054` (2026-09-06).

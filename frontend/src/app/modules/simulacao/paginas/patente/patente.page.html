@@ -22,32 +22,21 @@
         </div>
 
         <div class="calc-stats">
-            <div class="calc-stat calc-stat--positivo">
-                <div class="calc-stat__rotulo">Salário / Missão</div>
-                <div class="calc-stat__valor">{{ atual().salario }}</div>
-            </div>
-            <div class="calc-stat">
-                <div class="calc-stat__rotulo">Limite de Modificações</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">
-                    {{ atual().modificacoes }}
-                </div>
-            </div>
-            <div class="calc-stat">
-                <div class="calc-stat__rotulo-linha">
-                    <span class="calc-stat__rotulo">Limite de Crédito</span>
-                    <button
-                        type="button"
-                        app-botao-icone
-                        [redondo]="true"
-                        class="calc-stat__info"
-                        aria-label="Descrição do Limite de Crédito"
-                        [appTooltip]="atual().creditoDescricao"
-                    >
-                        ⓘ
-                    </button>
-                </div>
-                <div class="calc-stat__valor calc-stat__valor--texto">{{ atual().credito }}</div>
-            </div>
+            <app-stat rotulo="Salário / Missão" [valor]="atual().salario" variante="positivo" />
+            <app-stat rotulo="Limite de Modificações" [valor]="atual().modificacoes" />
+            <app-stat rotulo="Limite de Crédito" [valor]="atual().credito">
+                <button
+                    statInfo
+                    type="button"
+                    app-botao-icone
+                    [redondo]="true"
+                    class="patente__stat-info"
+                    aria-label="Descrição do Limite de Crédito"
+                    [appTooltip]="atual().creditoDescricao"
+                >
+                    ⓘ
+                </button>
+            </app-stat>
         </div>
     </app-cartao>
 

@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, ElementRef, computed, effect, input, viewChild } from '@angular/core';
 
 /**
  * Cor semântica do valor. Auditoria da `ui-03` sobre as 3 famílias que replicam o padrão puro de
@@ -16,11 +16,12 @@ import { Component, computed, input } from '@angular/core';
  * desatualizado. O primitivo fixa a variante no valor correto.
  */
 export type StatVariante = 'vida' | 'energia' | 'positivo' | 'alerta';
-export type StatTamanho = 'compacto' | 'padrao';
+/** `hero` (`P-054`) é o degrau de destaque das simulações — valor maior que `padrao`. */
+export type StatTamanho = 'compacto' | 'padrao' | 'hero';
 
 /**
- * Primitivo de caixa de estatística (`ui-03` · `P-034`): rótulo pequeno uppercase + valor grande,
- * ambos mono, com cor semântica opcional.
+ * Primitivo de caixa de estatística (`ui-03` · `P-034` · `P-054`): rótulo pequeno uppercase +
+ * valor grande, ambos mono, com cor semântica opcional.
  */
 @Component({
   selector: 'app-stat',
@@ -43,8 +44,15 @@ export class Stat {
   /** Cor semântica. Sem valor, o valor usa a cor de texto neutra. */
   readonly variante = input<StatVariante>();
 
-  /** Densidade compacta usada nos resumos dos guias de criação. */
+  /** Densidade compacta ou destaque `hero`. Sem valor, usa `padrao`. */
   readonly tamanho = input<StatTamanho>('padrao');
+
+  /**
+   * Contador que o consumidor incrementa para disparar um pulso de destaque (escala) no valor —
+   * usado por resultados de rolagem (`Descanso`, `P-054`). A primeira emissão (montagem do
+   * componente) nunca pulsa; só incrementos depois disso.
+   */
+  readonly pulso = input(0);
 
   protected readonly temValor = computed(() => {
     const valor = this.valor();
@@ -53,7 +61,25 @@ export class Stat {
 
   protected readonly classes = computed(() => {
     const variante = this.variante();
-    const tamanho = this.tamanho() === 'compacto' ? ' stat--compacto' : '';
-    return `${variante ? `stat stat--${variante}` : 'stat'}${tamanho}`;
+    const tamanho = this.tamanho();
+    const classeTamanho = tamanho !== 'padrao' ? ` stat--${tamanho}` : '';
+    return `${variante ? `stat stat--${variante}` : 'stat'}${classeTamanho}`;
   });
+
+  private readonly valorElemento = viewChild.required<ElementRef<HTMLElement>>('nodoValor');
+  private pulsoEhInicial = true;
+
+  constructor() {
+    effect(() => {
+      this.pulso();
+      if (this.pulsoEhInicial) {
+        this.pulsoEhInicial = false;
+        return;
+      }
+      this.valorElemento().nativeElement.animate?.(
+        [{ transform: 'scale(1.15)' }, { transform: 'scale(1)' }],
+        { duration: 220, easing: 'ease-out' },
+      );
+    });
+  }
 }

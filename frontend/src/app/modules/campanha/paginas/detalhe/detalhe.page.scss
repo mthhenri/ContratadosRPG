@@ -1856,43 +1856,13 @@
     }
 }
 
-// Conteúdo complementar dos modais nativos de ficha.
+// Conteúdo complementar dos modais nativos de ficha — cabeçalho (índice/título/régua) e caixa são
+// do `app-modal` que os envolve (`P-053`); aqui só o que a página projeta dentro dele.
 .dialogo {
-    &__cabecalho {
+    // Ícone do cabeçalho, projetado em `[modalIcone]` — mesmo padrão de `confirmacao.component`.
+    &__icone {
         display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 16px;
-    }
-
-    &__indice {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 700;
         color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: var(--radius-compact);
-    }
-
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-    }
-
-    &__titulo {
-        font-family: var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-        margin: 0;
     }
 
     &__aviso {
@@ -1902,12 +1872,8 @@
         color: var(--text);
     }
 
-    &__acoes {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
+    // Botões de rodapé, projetados em `[modalAcoes]` — o alinhamento/borda/gap do rodapé são do
+    // `app-modal`; aqui só o padding/tipografia de cada botão.
     &__acao {
         display: inline-flex;
         align-items: center;
@@ -1920,9 +1886,8 @@
     }
 }
 
-// === Painel "Acesso de visualização" (dentro de `.dialogo__painel.acesso`) — mesmo bloco de
-// `visualizar.page.scss`, copiado aqui (view encapsulation não deixa reusar o `.scss` de outro
-// componente). ===
+// === Painel "Acesso de visualização" — mesmo bloco de `visualizar.page.scss`, copiado aqui (view
+// encapsulation não deixa reusar o `.scss` de outro componente). ===
 .acesso {
     &__ajuda {
         font-family: var(--font-sans);

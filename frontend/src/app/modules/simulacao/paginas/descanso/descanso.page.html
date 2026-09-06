@@ -122,16 +122,18 @@
         <span cartaoIndice>2</span>
 
         <div class="calc-stats descanso-faixas">
-            <div class="calc-stat calc-stat--destaque">
-                <div class="calc-stat__rotulo">Recuperação de Vida</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">{{ vidaFaixa() }}</div>
-                <div class="calc-stat__detalhe">{{ vidaFormula() }}</div>
-            </div>
-            <div class="calc-stat calc-stat--energia">
-                <div class="calc-stat__rotulo">Recuperação de Energia</div>
-                <div class="calc-stat__valor calc-stat__valor--texto">{{ energiaFaixa() }}</div>
-                <div class="calc-stat__detalhe">{{ energiaFormula() }}</div>
-            </div>
+            <app-stat
+                rotulo="Recuperação de Vida"
+                [valor]="vidaFaixa()"
+                [nota]="vidaFormula()"
+                variante="vida"
+            />
+            <app-stat
+                rotulo="Recuperação de Energia"
+                [valor]="energiaFaixa()"
+                [nota]="energiaFormula()"
+                variante="energia"
+            />
         </div>
 
         <div class="calc-lista">
@@ -191,20 +193,22 @@
 
         @if (rolagemVisivel()) {
         <div class="calc-stats descanso-rolagem">
-            <div class="calc-stat calc-stat--destaque">
-                <div class="calc-stat__rotulo">Vida Recuperada</div>
-                <div #valorVidaRolada class="calc-stat__valor calc-stat__valor--grande">
-                    {{ vidaRolada() }}
-                </div>
-                <div class="calc-stat__detalhe">{{ vidaBreakdown() }}</div>
-            </div>
-            <div class="calc-stat calc-stat--energia">
-                <div class="calc-stat__rotulo">Energia Recuperada</div>
-                <div #valorEnergiaRolada class="calc-stat__valor calc-stat__valor--grande">
-                    {{ energiaRolada() }}
-                </div>
-                <div class="calc-stat__detalhe">{{ energiaBreakdown() }}</div>
-            </div>
+            <app-stat
+                tamanho="hero"
+                rotulo="Vida Recuperada"
+                [valor]="vidaRolada()"
+                [nota]="vidaBreakdown()"
+                [pulso]="pulsoVida()"
+                variante="vida"
+            />
+            <app-stat
+                tamanho="hero"
+                rotulo="Energia Recuperada"
+                [valor]="energiaRolada()"
+                [nota]="energiaBreakdown()"
+                [pulso]="pulsoEnergia()"
+                variante="energia"
+            />
         </div>
         }
     </app-cartao>

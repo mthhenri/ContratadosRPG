@@ -4,13 +4,22 @@
     border-radius: var(--radius-control);
     padding: var(--space-12) var(--space-16);
 
+    // Linha do rótulo — acomoda `[statInfo]` opcional (ex.: botão de ajuda) ao lado, sem mudar a
+    // aparência quando nada é projetado (`P-054`).
+    &__rotulo-linha {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-8);
+        margin-bottom: var(--space-8);
+    }
+
     &__rotulo {
         font-family: var(--font-mono);
         font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--text-mute);
-        margin-bottom: var(--space-8);
     }
 
     &__valor {
@@ -64,8 +73,11 @@
     &--compacto {
         padding: var(--space-12);
 
-        .stat__rotulo {
+        .stat__rotulo-linha {
             margin-bottom: var(--space-4);
+        }
+
+        .stat__rotulo {
             font-size: 9px;
         }
 
@@ -76,6 +88,15 @@
         .stat__nota {
             margin-top: var(--space-4);
             font: 9px/1.35 var(--font-mono);
+        }
+    }
+
+    // Destaque das simulações (`P-054`) — mesma caixa, valor maior.
+    &--hero {
+        padding: var(--space-16);
+
+        .stat__valor {
+            font-size: 30px;
         }
     }
 }

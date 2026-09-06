@@ -1,5 +1,83 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-06 — Modais de campanha param de duplicar a casca de `app-modal` (P-053); `app-stat` ganha `hero`/`[statInfo]`/`[pulso]` e adota nas 5 telas de simulação (P-054)
+
+Correção do `P-053`: em `detalhe.page` (campanha), os modais "Vincular ficha", "Duplicar ficha" e
+"Acesso de visualização" já usavam `app-modal`, mas projetavam **outro** painel completo dentro
+dele — `<div class="dialogo__painel">` com seu próprio `<header class="dialogo__cabecalho">`
+(índice/título/régua) e `<div class="dialogo__acoes">` (rodapé de botões), duplicando exatamente o
+que `app-modal` já desenha via `[titulo]` + slots `[modalIcone]`/`[modalAcoes]`. Análogo registrado
+antes de editar: `confirmacao.component.html` (`ui-15`), o consumidor canônico de `app-modal` que já
+projeta `<span modalIcone>` e botões `modalAcoes` direto, sem casca própria. Os três modais foram
+migrados para esse padrão — `[titulo]` já estava correto em todos (o bug era só o cabeçalho/rodapé
+duplicado por cima); o ícone (`app-icone` duplicar/olho) passou a `<span modalIcone>`, e os botões
+de ação a `modalAcoes` direto no `<app-modal>`, sem `<div>` de agrupamento. `.dialogo__cabecalho`/
+`__indice`/`__regua`/`__titulo`/`__acoes` (mortas) saíram do `detalhe.page.scss`; `.dialogo__acao`
+(sizing real dos botões) e a nova `.dialogo__icone` ficaram. Classes `botao`/`botao--primario`/
+`botao--secundario` nos botões desses 3 modais também saíram — eram cópias redundantes do que o
+próprio `app-botao` já gera via `[variante]` (`botao.component.ts`: `host: {'[class]':'classes()'}`),
+não estilo próprio (confirmado: nenhuma delas tem regra em nenhum `.scss` importado pelo build,
+só existem como exemplo histórico em `docs/design/tema/_componentes.scss`).
+
+Correção do `P-054`: `agente`/`novo-agente`/`patente`/`descanso`/`compras` (simulação) mantinham
+`.agente-stat`/`.calc-stat` paralelos ao primitivo `app-stat` (`ui-03`). Antes de migrar, o
+levantamento achou 4 lacunas reais que o primitivo não cobria — todas decididas pelo autor via
+`AskUserQuestion` antes de implementar (nunca escolha unilateral, por regra de
+`CLAUDE.md`/`AGENTS.md` "Biblioteca de componentes é obrigatória"):
+
+1. **Tamanho `hero`** (30px) — Card 3 de `agente.page` (Vida/Energia/Defesa/Proficiência) e o
+   resultado da rolagem em `descanso.page` usavam um valor maior que o `padrao` (22px) do
+   primitivo. Autor decidiu ampliar: `StatTamanho` ganhou `'hero'`, com `padding: var(--space-16)`
+   e `.stat__valor` a 30px.
+2. **Slot de ícone no rótulo** — `patente.page` tem um botão `app-botao-icone` de tooltip (ⓘ) colado
+   ao lado do rótulo de "Limite de Crédito", sem onde projetar no `app-stat`. Autor decidiu ampliar:
+   novo `<div class="stat__rotulo-linha">` (flex, `justify-content: space-between`) envolve o
+   rótulo e um `<ng-content select="[statInfo]" />` opcional — invisível quando nada é projetado.
+3. **Pulso de destaque no valor** — `descanso.page` chamava `elemento.animate()` via `ElementRef`
+   apontado para o nó DOM do valor ao concluir uma rolagem; `app-stat` encapsula o próprio template,
+   então a página não alcança esse nó. Autor decidiu ampliar: `input pulso` (contador) — a página
+   incrementa a cada resultado novo, e um `effect()` interno do `Stat` dispara o mesmo
+   `scale(1.15)→1` via `viewChild` do próprio `#nodoValor`; a primeira emissão (montagem) nunca
+   pulsa.
+4. **Densidade de Compras** — `.calc-stat` do card "Resumo de Limites e Gastos" roda a 15px de
+   valor (7 stats na mesma grade), mais apertado que o próprio `compacto` do primitivo (19px).
+   Autor decidiu usar `compacto` mesmo assim, sem criar um 4º degrau só para essa tela — a diferença
+   de 4px não seria perceptível, confirmado na verificação ao vivo.
+
+Um 5º caso (`compras-venda-total`, aba "Vendas") tem fundo **preenchido** (`--accent-dim`) como
+"credencial de valor" — nenhuma variante do primitivo pinta fundo (todas só mudam borda/cor de
+texto). Como afeta um único consumidor, ficou local (`.calc-stat.compras-venda-total`) em vez de
+virar mais uma ampliação — confirmado ao vivo que o fundo tingido continua presente. Todo o resto
+(cores hero/compacto/padrao das 5 telas) mapeou 1:1 para as variantes existentes (`vida`/`energia`/
+`positivo`/`alerta` — `alerta` cobre tanto "destaque" quanto "negativo", que já usavam a mesma cor
+accent). Em `agente.page`, a `nota` do `app-stat` (mono só no tamanho `compacto`) coincidiu por
+acaso com `.agente-stat__detalhe`, que também só existia nos stats compactos da tela.
+
+Testes: `stat.component.spec.ts` ganhou 3 casos (`hero`, `[statInfo]`, pulso — não dispara na
+montagem, dispara a cada incremento — 8/8). `agente.page.spec.ts` (4/4) e `novo-agente.page.spec.ts`
+(5/5) tiveram o helper de leitura de stat trocado de seletor de classe modificadora para busca por
+rótulo (a cor virou `[variante]`, não mais uma classe própria da página). `descanso.page.spec.ts`
+(6/6) idem, mais troca de `.calc-stat__detalhe` para `.stat__nota`. `compras.page.spec.ts` (19/19)
+teve os dois helpers (`statResumo`/`statPorRotulo`) ampliados para aceitar `app-stat` **e**
+`.calc-stat` (o único stat que ainda ficou local). `detalhe.page.spec.ts` (119/119) não precisou de
+nenhum ajuste — nenhum teste dependia das classes internas removidas dos modais. Suíte completa do
+frontend depois das duas mudanças: 1635/1635. Lint sem erro novo. Build limpo (mesmo aviso
+preexistente de budget do `P-004`).
+
+Verificação ao vivo em `1920×1080` e `360×800`: os 3 modais de `detalhe.page` (mestre duplicando a
+própria ficha; jogador sem ficha vinculando uma solta; jogador concedendo acesso à própria ficha),
+via REST direto (`/autenticacao/registro`+`/login`, `POST /campanha`, `POST /campanha/entrar`,
+`POST /ficha`) — cabeçalho único (ícone+título, sem duplicata), rodapé com borda/alinhamento
+canônicos do `app-modal`, sem overflow. As 5 telas de simulação (`/simulacao/agente`, `/novo-agente`,
+`/patente`, `/descanso` com rolagem disparada, `/compras` e `/vendas`) — hero visivelmente maior que
+os stats compactos ao lado, ⓘ de "Limite de Crédito" alinhado ao rótulo, fundo preenchido de "Total
+de Venda" preservado, sem overflow em nenhum viewport. Achado só na verificação: um clique síncrono
+do Playwright no botão "⋯" de ações de ficha, quando o elemento está fora do viewport inicial,
+dispara o auto-scroll do próprio clique e um listener de fechamento por scroll do menu (comentado em
+`detalhe.page.ts` como proteção contra o dropdown descolar do gatilho) fecha o menu que acabou de
+abrir — sem relação com o código de produto, só uma armadilha de automação (scroll explícito e um
+`waitForTimeout` antes do clique resolveu).
+
 ## 2026-09-06 — Iniciativa consome `app-cartao` nos 3 estados; primitivo ganha `[semCaixa]` (P-052)
 
 Correção do `P-052`: `painel-encontro.page` (tela "Iniciativa") recriava localmente o cabeçalho
