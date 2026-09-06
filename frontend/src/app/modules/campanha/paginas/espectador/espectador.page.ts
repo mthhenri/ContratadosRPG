@@ -30,6 +30,9 @@ import { Modal } from '../../../../shared/ui/modal/modal.component';
 /** Tamanho de página do feed — mesmo degrau do histórico de rolagens da ficha (`visualizar.page.ts`). */
 const ITENS_POR_PAGINA = 20;
 
+/** Acima disso, "Última rolagem" do cartão de ficha volta a ficar vazia (rolagem velha demais). */
+const UM_DIA_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Painel do espectador (m8-03) — destino dedicado de quem entrou com o convite de espectador, e
  * prévia do mestre para conferir exatamente esse recorte (`espectadorCampanhaGuard`; decisão de
@@ -114,10 +117,15 @@ export class CampanhaEspectador {
    * já carregado (`rolagens()` vem mais-recente-primeiro). `null` sem nenhuma rolagem carregada
    * daquela ficha — o template mostra "Nenhuma rolagem carregada ainda", nunca "nunca rolou": não
    * dá pra distinguir "nunca rolou" de "a última rolagem pública está fora desta página" sem uma
-   * consulta dedicada (fora de escopo — ver spec da task).
+   * consulta dedicada (fora de escopo — ver spec da task). Também `null` quando a rolagem existe
+   * mas passou de `UM_DIA_MS` — rolagem velha demais para valer como "última" no cartão.
    */
   protected ultimaRolagemDe(fichaId: number): RolagemResumoDto | null {
-    return this.rolagens().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
+    const rolagem = this.rolagens().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
+    if (!rolagem || Date.now() - new Date(rolagem.createdDate).getTime() > UM_DIA_MS) {
+      return null;
+    }
+    return rolagem;
   }
 
   /**

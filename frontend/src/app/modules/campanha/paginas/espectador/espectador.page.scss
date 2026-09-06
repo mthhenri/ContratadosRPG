@@ -231,6 +231,43 @@
         display: flex;
         flex-direction: column;
         min-height: 0;
+
+        // Teto de 85vh a pedido do autor — sem isso o feed cresce com a página inteira e o card
+        // de "Jogadores" ao lado fica baixo demais em campanhas com muita rolagem. Rola por
+        // dentro (`appOverflowFade` já vinha aplicado no corpo, sem estilo — corrigido aqui).
+        // Descendente, não filho direto — `app-cartao` projeta `<ng-content>` dentro do próprio
+        // `.cartao` (`cartao.component.html`), então `.espectador__corpo` é neto de `&__feed`,
+        // não filho.
+        .espectador__corpo {
+            max-height: 85vh;
+            overflow-y: auto;
+
+            --fade-topo: 0px;
+            --fade-base: 0px;
+            &.overflow-fade--topo,
+            &.overflow-fade--base {
+                -webkit-mask-image: linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    #000 var(--fade-topo),
+                    #000 calc(100% - var(--fade-base)),
+                    transparent 100%
+                );
+                mask-image: linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    #000 var(--fade-topo),
+                    #000 calc(100% - var(--fade-base)),
+                    transparent 100%
+                );
+            }
+            &.overflow-fade--topo {
+                --fade-topo: 16px;
+            }
+            &.overflow-fade--base {
+                --fade-base: 16px;
+            }
+        }
     }
 
     &__secao {

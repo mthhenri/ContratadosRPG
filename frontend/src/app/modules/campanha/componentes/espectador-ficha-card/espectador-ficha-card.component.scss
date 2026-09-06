@@ -150,7 +150,11 @@
 
     // Faixa "Última rolagem" (contrato de design): full-width no rodapé do cartão, fundo neutro
     // (não a cor da ficha) + risco de identidade lateral, mesma receita do item do histórico
-    // (`historico-rolagens__item`, ui-22).
+    // (`historico-rolagens__item`, ui-22) — "a mesma curvinha" (`HISTORY.md` 2026-09-02): o
+    // `box-shadow` inset só curva de verdade com `border-radius` **no próprio elemento**, não
+    // herdado do `overflow: hidden` do cartão (a pedido do autor, curva em cima e embaixo, não só
+    // no canto que toca a borda de fora do cartão — por isso o raio vai nos 4 cantos, mesmo o topo
+    // encostando no cabeçalho acima).
     &__ultima-rolagem {
         display: flex;
         align-items: baseline;
@@ -158,6 +162,7 @@
         padding: var(--space-8) var(--space-12);
         background: var(--surface-2);
         border-top: 1px solid var(--border);
+        border-radius: var(--radius-control);
         box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
     }
 
