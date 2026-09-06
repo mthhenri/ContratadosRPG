@@ -89,42 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-057 — "Valor editável" clicável não tem primitivo próprio · `ABERTO` · frontend/design system
-
-- **Sintoma:** ~15 classes/32 ocorrências (`criatura__designacao`, `criatura__stat-valor`,
-  `criatura__vitalidade-valor`/`-maxima`, `criatura__tag-valor`, `criatura__info-nota-texto`,
-  `ficha-inv__carga-valor`/`__municao-valor`, `ficha-ident__nome`/`__contrato`/`__meta-valor`,
-  `ficha-mini__valor`, `ficha-resistencia__valor`, `barra-recurso__valor-atual`/`__max`) mostram um
-  valor/dado da ficha e, ao clicar, viram um `<input>` de edição inline — reimplementam cursor,
-  hover e foco na mão, mas não são bem uma "ação única" (`app-botao-icone`) nem um "botão com
-  texto" (`app-botao`): é mais perto de um campo de formulário disfarçado de valor.
-- **Causa:** nenhum primitivo de `shared/ui/` cobre esse papel; nasceram como CSS local em cada
-  tela que precisou do padrão.
-- **Contorno:** funcionam, mas cada tela reimplementa a mesma identidade separadamente.
-- **Correção:** decisão do autor pendente — criar um primitivo próprio (`app-valor-editavel`?) ou
-  esticar `app-botao` (`estilo="texto"`) para cobrir o papel. Nenhuma das duas é escolha
-  unilateral do agente (ver "Biblioteca de componentes é obrigatória" em `CLAUDE.md`/`AGENTS.md`).
-- **Desde:** encontrado no levantamento completo do `P-048` (2026-09-04) — fora do escopo da série
-  `ui-28`…`ui-32` (`docs/specs/backlog/INDEX-adocao-total-botao-icone.md`) por decisão do autor.
-
-### P-058 — `ficha-flutuante.component` reimplementa `app-painel-flutuante` · `ABERTO` · frontend/design system
-
-- **Sintoma:** `modules/encontro/componentes/ficha-flutuante` tem sua própria janela arrastável,
-  redimensionável, minimizável e maximizável (geometria, arraste, `[hidden]`, cabeçalho com "//" +
-  régua + botões de minimizar/maximizar/fechar) — a mesma anatomia e mecânica de
-  `shared/ui/painel-flutuante` (ui-17), que já é a versão compartilhada dessa janela e hospeda
-  `leitor-documentos`, `caderno-flutuante` e a calculadora flutuante.
-- **Causa:** não confirmado se `ficha-flutuante` nasceu antes de `app-painel-flutuante` existir ou
-  se só não foi revisitado depois — o comentário do componente já cita "mesma mecânica de
-  `leitor-documentos`" sem apontar para o primitivo.
-- **Contorno:** funciona; os três botões de janela já adotam `app-botao-icone` (`ui-29`), mas a
-  geometria/arraste/redimensionamento continuam duplicados à mão.
-- **Correção:** decisão do autor pendente — migrar `ficha-flutuante` para hospedar seu conteúdo
-  dentro de `app-painel-flutuante` (como os demais três consumidores já fazem) é uma refatoração de
-  componente, não uma troca de classe CSS; maior que o escopo de "adotar `app-botao`/
-  `app-botao-icone`" da série `ui-28`…`ui-32`.
-- **Desde:** achado durante a implementação de `ui-29` (2026-09-04), fora do escopo daquela tarefa.
-
 ### P-059 — Botão "Remover" sem classe no guia de criação de agente · `ABERTO` · frontend/design system
 
 - **Sintoma:** `criar.page.html` (vaga de habilidade escolhida, dentro de `.guia__vaga-lista`) tem

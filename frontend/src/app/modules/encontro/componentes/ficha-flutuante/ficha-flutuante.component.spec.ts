@@ -40,6 +40,10 @@ describe('FichaFlutuante', () => {
   } as unknown as FichaRecuperadaDto;
 
   function montar() {
+    // `app-painel-flutuante` persiste posição/minimizado em `localStorage` por `[id]`
+    // ("ficha-flutuante") — sem isso, um teste anterior que minimiza vazaria o estado para o
+    // próximo (P-058).
+    localStorage.clear();
     const recuperarFicha = vi.fn(() => of(fichaJogador));
     TestBed.configureTestingModule({
       providers: [
@@ -58,7 +62,7 @@ describe('FichaFlutuante', () => {
 
   it('fica fechada até `abrir()` ser chamado', () => {
     const { fixture } = montar();
-    expect((fixture.nativeElement as HTMLElement).querySelector('.ficha-flutuante__janela')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.painel-flutuante__janela')).toBeNull();
   });
 
   it('`abrir()` mostra a janela com o conteúdo do alvo', () => {
@@ -67,7 +71,7 @@ describe('FichaFlutuante', () => {
     fixture.detectChanges();
 
     const elemento = fixture.nativeElement as HTMLElement;
-    expect(elemento.querySelector('.ficha-flutuante__janela')).not.toBeNull();
+    expect(elemento.querySelector('.painel-flutuante__janela')).not.toBeNull();
     expect(elemento.querySelector('app-ficha-flutuante-conteudo')).not.toBeNull();
   });
 
@@ -83,7 +87,7 @@ describe('FichaFlutuante', () => {
       fixture.detectChanges();
 
       const janela = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
-        '.ficha-flutuante__janela',
+        '.painel-flutuante__janela',
       );
       expect(janela?.style.width).toBe('1100px');
       expect(janela?.style.height).toBe('600px');
@@ -99,14 +103,16 @@ describe('FichaFlutuante', () => {
     fixture.detectChanges();
 
     const elemento = fixture.nativeElement as HTMLElement;
-    elemento.querySelector<HTMLButtonElement>('[aria-label="Minimizar ficha"]')?.click();
+    elemento
+      .querySelector<HTMLButtonElement>('[aria-label="Minimizar Ficha do combatente"]')
+      ?.click();
     fixture.detectChanges();
-    expect(elemento.querySelector('.ficha-flutuante__janela')?.hasAttribute('hidden')).toBe(true);
+    expect(elemento.querySelector('.painel-flutuante__janela')?.hasAttribute('hidden')).toBe(true);
     expect(elemento.querySelector('.ficha-flutuante__gatilho')).not.toBeNull();
 
     elemento.querySelector<HTMLButtonElement>('.ficha-flutuante__gatilho')?.click();
     fixture.detectChanges();
-    expect(elemento.querySelector('.ficha-flutuante__janela')?.hasAttribute('hidden')).toBe(false);
+    expect(elemento.querySelector('.painel-flutuante__janela')?.hasAttribute('hidden')).toBe(false);
     expect(elemento.querySelector('.ficha-flutuante__gatilho')).toBeNull();
   });
 
@@ -116,11 +122,11 @@ describe('FichaFlutuante', () => {
     fixture.detectChanges();
 
     (fixture.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>('[aria-label="Fechar ficha"]')
+      .querySelector<HTMLButtonElement>('[aria-label="Fechar Ficha do combatente"]')
       ?.click();
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('.ficha-flutuante__janela')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.painel-flutuante__janela')).toBeNull();
   });
 
   it('reabrir a mesma ficha não refaz a busca', () => {

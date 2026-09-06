@@ -280,16 +280,6 @@
         font: 700 21px/1.15 var(--font-mono);
         color: var(--text);
     }
-    &__designacao--editavel {
-        background: transparent;
-        border: 0;
-        padding: 0;
-        cursor: pointer;
-        text-align: left;
-        &:hover {
-            color: var(--accent);
-        }
-    }
     &__designacao-entrada {
         min-width: 0;
         padding: 3px 8px;
@@ -397,39 +387,28 @@
             }
         }
     }
+    // Identidade (cursor/hover/disabled) e moldura (`display: block; width: 100%`, via
+    // `[bloco]`) são do `app-valor-editavel` (`P-057`); aqui só sobra tipografia, que atravessa o
+    // `display: contents` do host por herança.
     &__stat-botao {
-        display: block;
-        width: 100%;
-        padding: 0;
-        text-align: left;
         font-family: var(--font-mono);
         font-size: 16px;
         font-weight: 700;
         color: var(--text);
-        background: transparent;
-        border: 0;
-        cursor: pointer;
         line-height: 1.2;
-        &:hover:not(:disabled) {
-            color: var(--accent);
-        }
-        &:disabled {
-            cursor: default;
-        }
         &--texto {
             font-size: 14px;
-        }
-        &--tenacidade {
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            flex-wrap: wrap;
         }
     }
     &__stat-sufixo {
         font: 12px var(--font-mono);
         font-weight: 400;
         color: var(--text-mute);
+        // `--tenacidade` alinhava valor+sufixo num flex-row com gap — layout que agora é do
+        // botão interno do primitivo (`[bloco]`, `display: block`), então o sufixo é conteúdo
+        // projetado (mantém a própria escopagem de estilo, ver `P-057`) fluindo inline; a margem
+        // substitui o `gap` que o flex antigo dava.
+        margin-left: 8px;
     }
 
     // --- Vida ---
@@ -493,33 +472,13 @@
         }
     }
     &__vitalidade-valor {
-        padding: 0;
         font: 700 19px var(--font-mono);
         text-align: center;
-        color: var(--vida);
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        &:hover:not(:disabled) {
-            color: var(--accent);
-        }
-        &:disabled {
-            cursor: default;
-        }
     }
     &__vitalidade-maxima {
-        padding: 0;
         font: 13px var(--font-mono);
         color: var(--text-mute);
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        &:hover:not(:disabled) {
-            color: var(--text-dim);
-        }
-        &:disabled {
-            cursor: default;
-        }
+        text-align: center;
     }
     &__barra-vida {
         width: 100%;
@@ -843,22 +802,8 @@
         }
     }
     &__info-nota-texto {
-        flex: 1 1 200px;
-        min-width: 0;
-        margin: 0;
-        padding: 0;
-        text-align: left;
         font: 13px/1.5 var(--font-sans);
         color: var(--text-dim);
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        &:hover:not(:disabled) {
-            color: var(--text);
-        }
-        &:disabled {
-            cursor: default;
-        }
     }
 
     &__tags {
@@ -888,19 +833,8 @@
         color: var(--text-mute);
     }
     &__tag-valor {
-        padding: 0;
         font: 700 13px var(--font-mono);
         color: var(--text);
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        text-align: left;
-        &:hover:not(:disabled) {
-            color: var(--accent);
-        }
-        &:disabled {
-            cursor: default;
-        }
     }
 
     // --- Controles genéricos (select/input/textarea) ---

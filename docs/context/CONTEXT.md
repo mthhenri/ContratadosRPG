@@ -4,21 +4,26 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-06 · **Última decisão registrada:** a dívida de adoção da UI-27
-> fechou por completo — `P-055` (estados vazios densos sem variante compacta) e `P-056` (três
-> controles segmentados com identidade local) fecharam na mesma sessão de `P-053`/`P-054`.
-> `app-estado-vazio` ganhou `[tamanho]="compacto"` (mesma moldura tracejada, padding menor); nasceu
-> o primitivo `app-segmentado`/`app-segmentado-item` (`role="group"`/`aria-pressed`, diferente de
-> `app-abas`), com a identidade pill/`--accent-dim` já usada por Caderno e Leitor de Documentos —
-> Inventário da ficha migrou pra ela. Antes disso, na mesma sessão: `P-053` (três modais de
-> campanha duplicavam a casca de `app-modal`) e `P-054` (5 telas de Simulação mantinham
-> `.agente-stat`/`.calc-stat` paralelos a `app-stat`, que ganhou `[tamanho]="hero"`, `[statInfo]` e
-> `[pulso]`; um 5º stat ficou local, registrado como `P-064`). Antes ainda: `m8-07` deu ao Painel do
-> espectador um painel de jogadores (grade de cartões); `P-062` (diff espúrio de CRLF no gerador
-> OpenAPI) e `P-052` (cabeçalho de `app-cartao` duplicado na Iniciativa, que ganhou `[semCaixa]`)
-> também fecharam. Detalhe completo, achados e viewports verificados de cada um em `HISTORY.md`.
-> Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
-> seção 1.
+> **Última revisão:** 2026-09-06 · **Última decisão registrada:** `P-057` e `P-058` fecharam.
+> Nasceu o primitivo `app-valor-editavel` (`shared/ui/valor-editavel/`) — máquina de estado
+> exibição↔edição + identidade do estado de exibição (via `app-botao[estilo="texto"]` interno),
+> adotado nas ~30 ocorrências de "valor clicável" de `barra-recurso`, `ficha-visualizacao`,
+> `criatura-visualizacao` e `ficha-inventario`. `ficha-flutuante` (módulo Encontro) migrou para
+> hospedar seu conteúdo dentro de `app-painel-flutuante` (ui-17), como os outros três consumidores.
+> Antes disso: a dívida de adoção da UI-27 fechou por completo — `P-055` (estados vazios densos sem
+> variante compacta) e `P-056` (três controles segmentados com identidade local) fecharam na mesma
+> sessão de `P-053`/`P-054`. `app-estado-vazio` ganhou `[tamanho]="compacto"` (mesma moldura
+> tracejada, padding menor); nasceu o primitivo `app-segmentado`/`app-segmentado-item`
+> (`role="group"`/`aria-pressed`, diferente de `app-abas`), com a identidade pill/`--accent-dim` já
+> usada por Caderno e Leitor de Documentos — Inventário da ficha migrou pra ela. Antes disso, na
+> mesma sessão: `P-053` (três modais de campanha duplicavam a casca de `app-modal`) e `P-054` (5
+> telas de Simulação mantinham `.agente-stat`/`.calc-stat` paralelos a `app-stat`, que ganhou
+> `[tamanho]="hero"`, `[statInfo]` e `[pulso]`; um 5º stat ficou local, registrado como `P-064`).
+> Antes ainda: `m8-07` deu ao Painel do espectador um painel de jogadores (grade de cartões);
+> `P-062` (diff espúrio de CRLF no gerador OpenAPI) e `P-052` (cabeçalho de `app-cartao` duplicado
+> na Iniciativa, que ganhou `[semCaixa]`) também fecharam. Detalhe completo, achados e viewports
+> verificados de cada um em `HISTORY.md`. Ainda pendente: desligar o Render e reescrever
+> `docs/DEPLOY.md` (cutover pro Cloud Run) — ver seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
 >
 > Este arquivo diz **o que é verdade agora**. Ele é **reescrito**, nunca acrescido — teto de
@@ -31,6 +36,55 @@
 ---
 
 ## 1. Próxima Task
+
+**`P-057`/`P-058` fechados (2026-09-06):** nasceu `app-valor-editavel`
+(`frontend/src/app/shared/ui/valor-editavel/`) — primitivo de "valor da ficha que vira campo de
+edição ao clicar". Não genereciza o **tipo** do campo (`number`/`text`/`select`/`textarea` — cada
+consumidor projeta o próprio, via `<ng-content />`); o primitivo só é dono da máquina de estado
+exibição↔edição (`[editando]`, controlado como `[aberto]` do `app-modal`) e da identidade visual do
+estado de exibição, que reaproveita `app-botao[estilo="texto"]` interno em vez de duplicar cor/
+hover/cursor. API: `[variante]` (cor semântica — `perigo`/`aviso` mapeiam exatamente pra `--vida`/
+`--warning` que os consumidores já usavam), `[desabilitado]`, `[tooltip]` (não dá pra anexar
+`appTooltip` direto no host porque ele é `display: contents`, retângulo zerado), `[alinhamento]`
+(`inicio`/`centro`/`auto` — evita que o botão interno estique preenchendo o contêiner flex/grid do
+consumidor, já que o host `display: contents` não participa do layout), `[bloco]` (cartão inteiro
+clicável, ex. VD/Tenacidade/Defesa da Criatura) e `[flex]` (escape-hatch de `flex` bruto pro caso
+de crescer/encolher num flex-row, ex. Gancho Único/Motivação). Migrado nas ~30 ocorrências que o
+`P-057` mapeou: `barra-recurso` (atual/máximo), `ficha-visualizacao` (Nome, Contrato, Personalidade,
+Nível, Prestígio, Dinheiro, Derivados, Contra-ataque, Resistências), `criatura-visualizacao`
+(Designação, VD, Tenacidade, Defesa, Vida atual/máxima, Cadência, Turnos por Rodada, Bônus de
+Iniciativa, 4 tags de Deslocamento, 4 campos de Regeneração, Gancho Único, Motivação) e
+`ficha-inventario` (carga do inventário, contagem de munição atual/máxima). Achado só no gate
+visual: os botões `[bloco]` (VD/Tenacidade/Defesa) ficavam com hover **invisível** — a superfície
+do próprio card já é `--surface-2`, a mesma cor do `dim` de hover da variante `secundario` — corrigido
+com um contorno (`outline`) em vez de preenchimento, único pro modificador `--bloco`. Convergência
+de identidade aceita conscientemente: cor de repouso de campos que eram `--text-dim`/`--text-mute`
+(ex. `ficha-ident__contrato`, `ficha-resistencia__valor`, o campo "máximo" de `barra-recurso`)
+passou a `--text` (o `secundario` do primitivo) — ganho de legibilidade, perda de hierarquia
+tipográfica sutil; nenhuma queixa esperada, mas é a mudança visual mais visível do corte. Achado
+incidental corrigido como efeito colateral (não uma correção deliberada à parte): Cadência/Turnos
+por Rodada da Criatura, que antes podiam mostrar botão de exibição E campo de edição
+simultaneamente (estrutura `@if`/`@else` com uma condição solta fora do par), viraram XOR limpo ao
+adotar o primitivo. `ficha-flutuante` (`modules/encontro/`) migrou pra hospedar seu conteúdo dentro
+de `app-painel-flutuante` (ui-17) — arraste, posição, empilhamento de z-index, minimizar e focus-
+trap vieram de graça; só redimensionar por arraste e maximizar continuam do consumidor, mesmo
+padrão de `leitor-documentos`/`caderno-flutuante`. Posição da ficha agora persiste em
+`localStorage` entre reloads (decisão do autor — antes não persistia); pro mestre isso é invisível
+na prática, porque `abrir()` sempre reposiciona pra geometria ampla (`GEOMETRIA_INICIAL_FICHA_
+FLUTUANTE_MESTRE`) quando a janela estava fechada, como já fazia antes da migração. Efeito
+colateral aceito conscientemente (não pedido explícito, mas inerente a adotar o primitivo): no
+mobile, minimizar deixou de fechar a ficha (armadilha de UX pré-`ui-17`, já resolvida pro gatilho
+padronizado) — agora minimizar/restaurar funciona igual aos outros três consumidores. Testes:
+`frontend` 1644/1644 (suíte completa; a falha ocasional isolada de
+`painel-flutuante.component.spec.ts` por vazamento de `window.innerWidth` entre specs é conhecida,
+não reproduz sozinha, não relacionada a este diff); lint sem erro novo; build limpo (aviso de
+budget conhecido, `P-004`). Verificação ao vivo (Postgres + backend + frontend reais, cenário via
+REST cru — usuário/campanha/ficha de Agente/ficha de Criatura/encontro criados e depois removidos)
+em `1920×1080`/`360×800`: exibição, hover, clique→edição, `Enter`/`Escape`→confirma/cancela em
+Agente e Criatura; arraste, redimensionar, minimizar, restaurar, maximizar, restaurar tamanho,
+fechar, reabrir (mesma geometria), abrir junto do Caderno (z-index correto ao focar cada um),
+Escape fecha com foco preso dentro da janela, mobile full-sheet da ficha e minimizar/restaurar no
+mobile — todos conferidos, sem regressão pendente.
 
 **`m8-07-espectador-painel-jogadores` concluída** (spec em `docs/specs/done/`): Painel do
 espectador ganhou uma grade com o painel de jogadores da campanha — um cartão por agente

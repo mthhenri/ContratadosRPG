@@ -53,31 +53,14 @@
     }
 
     // Maior que o rótulo e que o máximo — é o número que se lê de longe numa mesa (o HUD mobile
-    // que este primitivo substitui já usava um atual maior que o resto por esse motivo).
+    // que este primitivo substitui já usava um atual maior que o resto por esse motivo). Cursor,
+    // hover e a moldura do estado clicável são do `app-valor-editavel` (`P-057`) — aqui só sobra
+    // tipografia/cor, que atravessam o `display: contents` dele por herança.
     &__valor-atual {
         font-size: 14px;
         font-weight: 700;
         color: inherit;
         line-height: 1;
-
-        // Valor clicável (digitação direta) — parece o texto do valor, com alvo de clique discreto.
-        &--editavel {
-            font: inherit;
-            color: inherit;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 0 var(--space-4);
-            cursor: text;
-            transition:
-                border-color 0.15s ease,
-                background-color 0.15s ease;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface-2);
-            }
-        }
     }
 
     &__sep {
@@ -86,24 +69,6 @@
 
     &__max {
         color: var(--text-mute);
-
-        &--editavel {
-            font: inherit;
-            color: inherit;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 0 var(--space-4);
-            cursor: text;
-            transition:
-                border-color 0.15s ease,
-                background-color 0.15s ease;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface-2);
-            }
-        }
     }
 
     // Campo de digitação direta (clicou no número) — sem as setinhas do number nativo.

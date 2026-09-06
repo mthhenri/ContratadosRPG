@@ -2,6 +2,8 @@ import { Component, computed, input, output, signal } from '@angular/core';
 
 import { AutoFocus } from '../../auto-focus/auto-focus.directive';
 import { Tooltip } from '../../tooltip/tooltip.directive';
+import { ValorEditavel } from '../valor-editavel/valor-editavel.component';
+import type { BotaoVariante } from '../botao/botao.component';
 
 /** Recurso com máximo que o primitivo sabe desenhar hoje — Sanidade não é um par atual/máximo. */
 export type BarraRecursoTipo = 'vida' | 'energia';
@@ -23,7 +25,7 @@ export type BarraRecursoTamanho = 'padrao' | 'compacto';
  */
 @Component({
   selector: 'app-barra-recurso',
-  imports: [Tooltip, AutoFocus],
+  imports: [Tooltip, AutoFocus, ValorEditavel],
   templateUrl: './barra-recurso.component.html',
   styleUrl: './barra-recurso.component.scss',
 })
@@ -63,6 +65,16 @@ export class BarraRecurso {
 
   /** Abaixo de 25%, o recurso vira alerta (`--warning`) — mesmo limiar para Vida e Energia. */
   protected readonly emAlerta = computed(() => this.percentual() < 25);
+
+  /**
+   * Cor do valor atual, delegada ao `[variante]` de `app-valor-editavel`/`app-botao` — a paleta
+   * própria já cobre exatamente as três cores que este primitivo precisa (`perigo` = `--erro` =
+   * `--vida`; `info` = `--energy`; `aviso` = `--warning`), então não duplica token nenhum aqui.
+   */
+  protected readonly varianteAtual = computed<BotaoVariante>(() => {
+    if (this.emAlerta()) return 'aviso';
+    return this.recurso() === 'vida' ? 'perigo' : 'info';
+  });
 
   protected readonly classes = computed(() => {
     const partes = ['barra-recurso', `barra-recurso--${this.recurso()}`];

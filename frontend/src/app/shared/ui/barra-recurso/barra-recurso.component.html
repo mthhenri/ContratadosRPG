@@ -12,56 +12,55 @@
         </span>
 
         <span class="barra-recurso__valor">
-            @if (editando() === "atual") {
-                <input
-                    class="barra-recurso__entrada"
-                    type="number"
-                    inputmode="numeric"
-                    min="0"
-                    appAutoFocus
-                    [value]="atual()"
-                    [attr.aria-label]="rotulo() + ' atual'"
-                    (keydown.enter)="confirmar('atual', $any($event.target).value)"
-                    (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmar('atual', $any($event.target).value)"
-                />
-            } @else if (editavel()) {
-                <button
-                    class="barra-recurso__valor-atual barra-recurso__valor-atual--editavel"
-                    type="button"
-                    [attr.aria-label]="'Editar ' + rotulo() + ' atual'"
-                    (click)="editar('atual')"
+            @if (editavel()) {
+                <app-valor-editavel
+                    class="barra-recurso__valor-atual"
+                    [valor]="atual()"
+                    [editando]="editando() === 'atual'"
+                    [variante]="varianteAtual()"
+                    [rotuloAria]="rotulo() + ' atual'"
+                    (editarSolicitado)="editar('atual')"
                 >
-                    <strong>{{ atual() }}</strong>
-                </button>
+                    <input
+                        class="barra-recurso__entrada"
+                        type="number"
+                        inputmode="numeric"
+                        min="0"
+                        appAutoFocus
+                        [value]="atual()"
+                        [attr.aria-label]="rotulo() + ' atual'"
+                        (keydown.enter)="confirmar('atual', $any($event.target).value)"
+                        (keydown.escape)="cancelarEdicao()"
+                        (blur)="confirmar('atual', $any($event.target).value)"
+                    />
+                </app-valor-editavel>
             } @else {
                 <strong class="barra-recurso__valor-atual">{{ atual() }}</strong>
             }
 
             <span class="barra-recurso__sep">/</span>
 
-            @if (editando() === "maximo") {
-                <input
-                    class="barra-recurso__entrada"
-                    type="number"
-                    inputmode="numeric"
-                    min="0"
-                    appAutoFocus
-                    [value]="maximoParaEdicao()"
-                    [attr.aria-label]="rotulo() + ' máximo'"
-                    (keydown.enter)="confirmar('maximo', $any($event.target).value)"
-                    (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmar('maximo', $any($event.target).value)"
-                />
-            } @else if (editavel()) {
-                <button
-                    class="barra-recurso__max barra-recurso__max--editavel"
-                    type="button"
-                    [attr.aria-label]="'Editar ' + rotulo() + ' máximo'"
-                    (click)="editar('maximo')"
+            @if (editavel()) {
+                <app-valor-editavel
+                    class="barra-recurso__max"
+                    [valor]="maximo()"
+                    [editando]="editando() === 'maximo'"
+                    [rotuloAria]="rotulo() + ' máximo'"
+                    (editarSolicitado)="editar('maximo')"
                 >
-                    {{ maximo() }}
-                </button>
+                    <input
+                        class="barra-recurso__entrada"
+                        type="number"
+                        inputmode="numeric"
+                        min="0"
+                        appAutoFocus
+                        [value]="maximoParaEdicao()"
+                        [attr.aria-label]="rotulo() + ' máximo'"
+                        (keydown.enter)="confirmar('maximo', $any($event.target).value)"
+                        (keydown.escape)="cancelarEdicao()"
+                        (blur)="confirmar('maximo', $any($event.target).value)"
+                    />
+                </app-valor-editavel>
             } @else {
                 <span class="barra-recurso__max">{{ maximo() }}</span>
             }

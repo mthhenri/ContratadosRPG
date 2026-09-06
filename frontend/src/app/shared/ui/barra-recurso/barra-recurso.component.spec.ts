@@ -101,7 +101,7 @@ describe('BarraRecurso', () => {
   it('sem edição por padrão: valor atual não é clicável', () => {
     const elemento = raiz(montar());
 
-    expect(elemento.querySelector('.barra-recurso__valor-atual--editavel')).toBeNull();
+    expect(elemento.querySelector('.barra-recurso__valor-atual .valor-editavel__botao')).toBeNull();
     expect(elemento.querySelector('.barra-recurso__entrada')).toBeNull();
   });
 
@@ -112,7 +112,7 @@ describe('BarraRecurso', () => {
     const elemento = raiz(fixture);
 
     const botaoValor = elemento.querySelector(
-      '.barra-recurso__valor-atual--editavel',
+      '.barra-recurso__valor-atual .valor-editavel__botao',
     ) as HTMLButtonElement;
     expect(botaoValor).not.toBeNull();
     botaoValor.click();
@@ -138,7 +138,9 @@ describe('BarraRecurso', () => {
 
     expect(elemento.querySelector('.barra-recurso__max')?.textContent?.trim()).toBe('24');
 
-    (elemento.querySelector('.barra-recurso__max--editavel') as HTMLButtonElement).click();
+    (
+      elemento.querySelector('.barra-recurso__max .valor-editavel__botao') as HTMLButtonElement
+    ).click();
     fixture.detectChanges();
 
     const entrada = elemento.querySelector('.barra-recurso__entrada') as HTMLInputElement;

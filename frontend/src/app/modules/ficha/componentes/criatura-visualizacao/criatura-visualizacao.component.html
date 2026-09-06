@@ -127,33 +127,39 @@
 
                     <div class="criatura__ident-texto">
                         <span class="criatura__ident-rotulo">Criatura</span>
-                        @if (editando("identidade.designacao")) {
-                            <input
-                                #entradaDesignacao
-                                appAutoFocus
-                                class="criatura__designacao-entrada"
-                                type="text"
-                                [value]="dados().identidade.designacao"
-                                aria-label="Designação"
-                                [disabled]="!ajustavel()"
-                                (keydown.enter)="
-                                    confirmarCampoIdentidade('designacao', entradaDesignacao.value);
-                                    cancelarEdicao()
-                                "
-                                (keydown.escape)="cancelarEdicao()"
-                                (blur)="
-                                    confirmarCampoIdentidade('designacao', entradaDesignacao.value);
-                                    cancelarEdicao()
-                                "
-                            />
-                        } @else if (ajustavel()) {
-                            <button
-                                class="criatura__designacao criatura__designacao--editavel"
-                                type="button"
-                                (click)="editar('identidade.designacao')"
+                        @if (ajustavel()) {
+                            <app-valor-editavel
+                                class="criatura__designacao"
+                                [valor]="dados().identidade.designacao"
+                                [editando]="editando('identidade.designacao')"
+                                rotuloAria="designação"
+                                (editarSolicitado)="editar('identidade.designacao')"
                             >
-                                {{ dados().identidade.designacao }}
-                            </button>
+                                <input
+                                    #entradaDesignacao
+                                    appAutoFocus
+                                    class="criatura__designacao-entrada"
+                                    type="text"
+                                    [value]="dados().identidade.designacao"
+                                    aria-label="Designação"
+                                    [disabled]="!ajustavel()"
+                                    (keydown.enter)="
+                                        confirmarCampoIdentidade(
+                                            'designacao',
+                                            entradaDesignacao.value
+                                        );
+                                        cancelarEdicao()
+                                    "
+                                    (keydown.escape)="cancelarEdicao()"
+                                    (blur)="
+                                        confirmarCampoIdentidade(
+                                            'designacao',
+                                            entradaDesignacao.value
+                                        );
+                                        cancelarEdicao()
+                                    "
+                                />
+                            </app-valor-editavel>
                         } @else {
                             <h1 class="criatura__designacao">
                                 {{ dados().identidade.designacao }}
@@ -303,7 +309,15 @@
                 <div class="criatura__stats">
                     <div class="criatura__stat criatura__stat--vd">
                         <span class="criatura__stat-rotulo">VD</span>
-                        @if (editando("vd")) {
+                        <app-valor-editavel
+                            class="criatura__stat-valor criatura__stat-botao"
+                            [valor]="dados().vd"
+                            [editando]="editando('vd')"
+                            [desabilitado]="!ajustavel()"
+                            rotuloAria="valor de desafio"
+                            [bloco]="true"
+                            (editarSolicitado)="editar('vd')"
+                        >
                             <input
                                 #entradaVd
                                 appAutoFocus
@@ -317,21 +331,20 @@
                                 (keydown.escape)="cancelarEdicao()"
                                 (blur)="confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()"
                             />
-                        } @else {
-                            <button
-                                class="criatura__stat-valor criatura__stat-botao"
-                                type="button"
-                                [disabled]="!ajustavel()"
-                                (click)="editar('vd')"
-                            >
-                                {{ dados().vd }}
-                            </button>
-                        }
+                        </app-valor-editavel>
                     </div>
 
                     <div class="criatura__stat">
                         <span class="criatura__stat-rotulo">Tenacidade</span>
-                        @if (editando("tenacidade")) {
+                        <app-valor-editavel
+                            class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--tenacidade"
+                            [valor]="nomeTenacidade(dados().tenacidade)"
+                            [editando]="editando('tenacidade')"
+                            [desabilitado]="!ajustavel()"
+                            rotuloAria="tenacidade"
+                            [bloco]="true"
+                            (editarSolicitado)="editar('tenacidade')"
+                        >
                             <select
                                 #entradaTenacidade
                                 appAutoFocus
@@ -349,27 +362,25 @@
                                     </option>
                                 }
                             </select>
-                        } @else {
-                            <button
-                                class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--tenacidade"
-                                type="button"
-                                [disabled]="!ajustavel()"
-                                (click)="editar('tenacidade')"
-                            >
-                                {{ nomeTenacidade(dados().tenacidade) }}
-                                @if (
-                                    multiplicadorTenacidade(dados().tenacidade);
-                                    as multiplicador
-                                ) {
-                                    <span class="criatura__stat-sufixo">{{ multiplicador }}</span>
-                                }
-                            </button>
-                        }
+                            @if (multiplicadorTenacidade(dados().tenacidade); as multiplicador) {
+                                <span valorEditavelSufixo class="criatura__stat-sufixo">{{
+                                    multiplicador
+                                }}</span>
+                            }
+                        </app-valor-editavel>
                     </div>
 
                     <div class="criatura__stat">
                         <span class="criatura__stat-rotulo">Defesa</span>
-                        @if (editando("defesa")) {
+                        <app-valor-editavel
+                            class="criatura__stat-valor criatura__stat-botao"
+                            [valor]="dados().defesa"
+                            [editando]="editando('defesa')"
+                            [desabilitado]="!ajustavel()"
+                            rotuloAria="defesa"
+                            [bloco]="true"
+                            (editarSolicitado)="editar('defesa')"
+                        >
                             <input
                                 #entradaDefesa
                                 appAutoFocus
@@ -385,16 +396,7 @@
                                     confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()
                                 "
                             />
-                        } @else {
-                            <button
-                                class="criatura__stat-valor criatura__stat-botao"
-                                type="button"
-                                [disabled]="!ajustavel()"
-                                (click)="editar('defesa')"
-                            >
-                                {{ dados().defesa }}
-                            </button>
-                        }
+                        </app-valor-editavel>
                     </div>
                 </div>
 
@@ -424,7 +426,16 @@
                         >
                             −
                         </button>
-                        @if (editando("vidaAtual")) {
+                        <app-valor-editavel
+                            class="criatura__vitalidade-valor"
+                            [valor]="dados().vidaAtual"
+                            [editando]="editando('vidaAtual')"
+                            [desabilitado]="!ajustavel()"
+                            rotuloAria="vida atual"
+                            variante="perigo"
+                            alinhamento="centro"
+                            (editarSolicitado)="editar('vidaAtual')"
+                        >
                             <input
                                 #entradaVidaAtual
                                 appAutoFocus
@@ -442,17 +453,16 @@
                                     cancelarEdicao()
                                 "
                             />
-                        } @else {
-                            <button
-                                class="criatura__vitalidade-valor"
-                                type="button"
-                                [disabled]="!ajustavel()"
-                                (click)="editar('vidaAtual')"
-                            >
-                                {{ dados().vidaAtual }}
-                            </button>
-                        }
-                        @if (editando("vidaMaxima")) {
+                        </app-valor-editavel>
+                        <app-valor-editavel
+                            class="criatura__vitalidade-maxima"
+                            [valor]="'/ ' + dados().vidaMaxima"
+                            [editando]="editando('vidaMaxima')"
+                            [desabilitado]="!ajustavel()"
+                            rotuloAria="vida máxima"
+                            alinhamento="centro"
+                            (editarSolicitado)="editar('vidaMaxima')"
+                        >
                             <input
                                 #entradaVidaMaxima
                                 appAutoFocus
@@ -470,16 +480,7 @@
                                     cancelarEdicao()
                                 "
                             />
-                        } @else {
-                            <button
-                                class="criatura__vitalidade-maxima"
-                                type="button"
-                                [disabled]="!ajustavel()"
-                                (click)="editar('vidaMaxima')"
-                            >
-                                / {{ dados().vidaMaxima }}
-                            </button>
-                        }
+                        </app-valor-editavel>
                         <button
                             class="criatura__passo"
                             type="button"
@@ -757,7 +758,16 @@
                         <div class="criatura__stats criatura__stats--info">
                             <div class="criatura__stat criatura__stat--info">
                                 <span class="criatura__stat-rotulo">Cadência</span>
-                                @if (editando("cadencia")) {
+                                <app-valor-editavel
+                                    class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--texto"
+                                    [valor]="nomeCadencia(dados().cadencia)"
+                                    [editando]="editando('cadencia')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="cadência"
+                                    [tooltip]="ritmoCadencia(dados().cadencia) ?? 'Cadência'"
+                                    [bloco]="true"
+                                    (editarSolicitado)="editar('cadencia')"
+                                >
                                     <select
                                         #entradaCadencia
                                         appAutoFocus
@@ -775,47 +785,41 @@
                                             </option>
                                         }
                                     </select>
-                                } @else {
-                                    <button
+                                </app-valor-editavel>
+                                @if (dados().cadencia === "FRENETICA") {
+                                    <app-valor-editavel
                                         class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--texto"
-                                        type="button"
-                                        [disabled]="!ajustavel()"
-                                        [appTooltip]="ritmoCadencia(dados().cadencia) ?? 'Cadência'"
-                                        (click)="editar('cadencia')"
+                                        [valor]="(dados().turnosPorRodada ?? 4) + ' turnos'"
+                                        [editando]="editando('turnosPorRodada')"
+                                        [desabilitado]="!ajustavel()"
+                                        rotuloAria="turnos por rodada"
+                                        tooltip="Turnos por rodada"
+                                        [bloco]="true"
+                                        (editarSolicitado)="editar('turnosPorRodada')"
                                     >
-                                        {{ nomeCadencia(dados().cadencia) }}
-                                    </button>
-                                    @if (dados().cadencia === "FRENETICA") {
-                                        <button
-                                            class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--texto"
-                                            type="button"
-                                            [disabled]="!ajustavel()"
-                                            appTooltip="Turnos por rodada"
-                                            (click)="editar('turnosPorRodada')"
-                                        >
-                                            {{ dados().turnosPorRodada ?? 4 }} turnos
-                                        </button>
-                                    }
-                                }
-                                @if (editando("turnosPorRodada")) {
-                                    <input
-                                        #entradaTurnos
-                                        appAutoFocus
-                                        class="criatura__entrada-numero criatura__entrada-numero--stat"
-                                        type="number"
-                                        min="4"
-                                        step="1"
-                                        [value]="dados().turnosPorRodada ?? 4"
-                                        aria-label="Turnos por rodada da Cadência Frenética"
-                                        (keydown.enter)="
-                                            confirmarTurnosPorRodada(entradaTurnos.valueAsNumber);
-                                            cancelarEdicao()
-                                        "
-                                        (blur)="
-                                            confirmarTurnosPorRodada(entradaTurnos.valueAsNumber);
-                                            cancelarEdicao()
-                                        "
-                                    />
+                                        <input
+                                            #entradaTurnos
+                                            appAutoFocus
+                                            class="criatura__entrada-numero criatura__entrada-numero--stat"
+                                            type="number"
+                                            min="4"
+                                            step="1"
+                                            [value]="dados().turnosPorRodada ?? 4"
+                                            aria-label="Turnos por rodada da Cadência Frenética"
+                                            (keydown.enter)="
+                                                confirmarTurnosPorRodada(
+                                                    entradaTurnos.valueAsNumber
+                                                );
+                                                cancelarEdicao()
+                                            "
+                                            (blur)="
+                                                confirmarTurnosPorRodada(
+                                                    entradaTurnos.valueAsNumber
+                                                );
+                                                cancelarEdicao()
+                                            "
+                                        />
+                                    </app-valor-editavel>
                                 }
                             </div>
 
@@ -823,7 +827,21 @@
                                 class="criatura__stat criatura__stat--info criatura__stat--flexivel"
                             >
                                 <span class="criatura__stat-rotulo">Bônus de Iniciativa</span>
-                                @if (editando("iniciativaBonus")) {
+                                <app-valor-editavel
+                                    class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--texto"
+                                    [valor]="
+                                        dados().iniciativaBonus !== undefined &&
+                                        dados().iniciativaBonus !== null
+                                            ? (dados().iniciativaBonus! >= 0 ? '+' : '') +
+                                              dados().iniciativaBonus
+                                            : '—'
+                                    "
+                                    [editando]="editando('iniciativaBonus')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="bônus de iniciativa"
+                                    [bloco]="true"
+                                    (editarSolicitado)="editar('iniciativaBonus')"
+                                >
                                     <input
                                         #entradaIniciativa
                                         appAutoFocus
@@ -845,22 +863,7 @@
                                             cancelarEdicao()
                                         "
                                     />
-                                } @else {
-                                    <button
-                                        class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--texto"
-                                        type="button"
-                                        [disabled]="!ajustavel()"
-                                        (click)="editar('iniciativaBonus')"
-                                    >
-                                        {{
-                                            dados().iniciativaBonus !== undefined &&
-                                            dados().iniciativaBonus !== null
-                                                ? (dados().iniciativaBonus! >= 0 ? "+" : "") +
-                                                  dados().iniciativaBonus
-                                                : "—"
-                                        }}
-                                    </button>
-                                }
+                                </app-valor-editavel>
                             </div>
 
                             <!-- Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (em vez de card cheio
@@ -875,7 +878,19 @@
                                         "
                                     >
                                         <span class="criatura__tag-rotulo">Terrestre</span>
-                                        @if (editando("deslocamento.terrestre")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="
+                                                dados().deslocamento.terrestre
+                                                    ? dados().deslocamento.terrestre + 'm'
+                                                    : '—'
+                                            "
+                                            [editando]="editando('deslocamento.terrestre')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="deslocamento terrestre"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('deslocamento.terrestre')"
+                                        >
                                             <input
                                                 #entradaDeslTerrestre
                                                 appAutoFocus
@@ -899,20 +914,7 @@
                                                     cancelarEdicao()
                                                 "
                                             />
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('deslocamento.terrestre')"
-                                            >
-                                                {{
-                                                    dados().deslocamento.terrestre
-                                                        ? dados().deslocamento.terrestre + "m"
-                                                        : "—"
-                                                }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
 
                                     <span
@@ -920,7 +922,19 @@
                                         [class.criatura__tag--vazia]="!dados().deslocamento.voador"
                                     >
                                         <span class="criatura__tag-rotulo">Voador</span>
-                                        @if (editando("deslocamento.voador")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="
+                                                dados().deslocamento.voador
+                                                    ? dados().deslocamento.voador + 'm'
+                                                    : '—'
+                                            "
+                                            [editando]="editando('deslocamento.voador')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="deslocamento voador"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('deslocamento.voador')"
+                                        >
                                             <input
                                                 #entradaDeslVoador
                                                 appAutoFocus
@@ -944,20 +958,7 @@
                                                     cancelarEdicao()
                                                 "
                                             />
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('deslocamento.voador')"
-                                            >
-                                                {{
-                                                    dados().deslocamento.voador
-                                                        ? dados().deslocamento.voador + "m"
-                                                        : "—"
-                                                }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
 
                                     <span
@@ -967,7 +968,19 @@
                                         "
                                     >
                                         <span class="criatura__tag-rotulo">Aquático</span>
-                                        @if (editando("deslocamento.aquatico")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="
+                                                dados().deslocamento.aquatico
+                                                    ? dados().deslocamento.aquatico + 'm'
+                                                    : '—'
+                                            "
+                                            [editando]="editando('deslocamento.aquatico')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="deslocamento aquático"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('deslocamento.aquatico')"
+                                        >
                                             <input
                                                 #entradaDeslAquatico
                                                 appAutoFocus
@@ -993,20 +1006,7 @@
                                                     cancelarEdicao()
                                                 "
                                             />
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('deslocamento.aquatico')"
-                                            >
-                                                {{
-                                                    dados().deslocamento.aquatico
-                                                        ? dados().deslocamento.aquatico + "m"
-                                                        : "—"
-                                                }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
 
                                     <span
@@ -1016,7 +1016,19 @@
                                         "
                                     >
                                         <span class="criatura__tag-rotulo">Sobrenatural</span>
-                                        @if (editando("deslocamento.sobrenatural")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="
+                                                dados().deslocamento.sobrenatural
+                                                    ? dados().deslocamento.sobrenatural + 'm'
+                                                    : '—'
+                                            "
+                                            [editando]="editando('deslocamento.sobrenatural')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="deslocamento sobrenatural"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('deslocamento.sobrenatural')"
+                                        >
                                             <input
                                                 #entradaDeslSobrenatural
                                                 appAutoFocus
@@ -1042,20 +1054,7 @@
                                                     cancelarEdicao()
                                                 "
                                             />
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('deslocamento.sobrenatural')"
-                                            >
-                                                {{
-                                                    dados().deslocamento.sobrenatural
-                                                        ? dados().deslocamento.sobrenatural + "m"
-                                                        : "—"
-                                                }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
                                 </div>
                             </div>
@@ -1097,7 +1096,17 @@
                                 <div class="criatura__tags">
                                     <span class="criatura__tag">
                                         <span class="criatura__tag-rotulo">Modo</span>
-                                        @if (editando("regeneracao.modo")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="
+                                                rotuloRegeneracaoModo(dados().regeneracao!.modo)
+                                            "
+                                            [editando]="editando('regeneracao.modo')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="modo de regeneração"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('regeneracao.modo')"
+                                        >
                                             <select
                                                 #entradaModoRegen
                                                 appAutoFocus
@@ -1121,23 +1130,24 @@
                                                     </option>
                                                 }
                                             </select>
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('regeneracao.modo')"
-                                            >
-                                                {{
-                                                    rotuloRegeneracaoModo(dados().regeneracao!.modo)
-                                                }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
 
                                     <span class="criatura__tag">
                                         <span class="criatura__tag-rotulo">Intensidade</span>
-                                        @if (editando("regeneracao.intensidade")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="
+                                                rotuloRegeneracaoIntensidade(
+                                                    dados().regeneracao!.intensidade
+                                                )
+                                            "
+                                            [editando]="editando('regeneracao.intensidade')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="intensidade de regeneração"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('regeneracao.intensidade')"
+                                        >
                                             <select
                                                 #entradaIntensidadeRegen
                                                 appAutoFocus
@@ -1163,25 +1173,20 @@
                                                     </option>
                                                 }
                                             </select>
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('regeneracao.intensidade')"
-                                            >
-                                                {{
-                                                    rotuloRegeneracaoIntensidade(
-                                                        dados().regeneracao!.intensidade
-                                                    )
-                                                }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
 
                                     <span class="criatura__tag">
                                         <span class="criatura__tag-rotulo">Valor</span>
-                                        @if (editando("regeneracao.valor")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="dados().regeneracao!.valor"
+                                            [editando]="editando('regeneracao.valor')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="valor de regeneração"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('regeneracao.valor')"
+                                        >
                                             <input
                                                 #entradaValorRegen
                                                 appAutoFocus
@@ -1205,16 +1210,7 @@
                                                     cancelarEdicao()
                                                 "
                                             />
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('regeneracao.valor')"
-                                            >
-                                                {{ dados().regeneracao!.valor }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
 
                                     <span
@@ -1224,7 +1220,15 @@
                                         "
                                     >
                                         <span class="criatura__tag-rotulo">Condição</span>
-                                        @if (editando("regeneracao.condicao")) {
+                                        <app-valor-editavel
+                                            class="criatura__tag-valor"
+                                            [valor]="dados().regeneracao!.condicao ?? '—'"
+                                            [editando]="editando('regeneracao.condicao')"
+                                            [desabilitado]="!ajustavel()"
+                                            rotuloAria="condição de regeneração"
+                                            alinhamento="auto"
+                                            (editarSolicitado)="editar('regeneracao.condicao')"
+                                        >
                                             <input
                                                 #entradaCondicaoRegen
                                                 appAutoFocus
@@ -1248,16 +1252,7 @@
                                                     cancelarEdicao()
                                                 "
                                             />
-                                        } @else {
-                                            <button
-                                                class="criatura__tag-valor"
-                                                type="button"
-                                                [disabled]="!ajustavel()"
-                                                (click)="editar('regeneracao.condicao')"
-                                            >
-                                                {{ dados().regeneracao!.condicao ?? "—" }}
-                                            </button>
-                                        }
+                                        </app-valor-editavel>
                                     </span>
                                 </div>
                             }
@@ -1350,7 +1345,16 @@
                                     class="criatura__info-nota-rotulo criatura__info-nota-rotulo--destaque"
                                     >Gancho</span
                                 >
-                                @if (editando("identidade.ganchoUnico")) {
+                                <app-valor-editavel
+                                    class="criatura__info-nota-texto"
+                                    [valor]="dados().identidade.ganchoUnico"
+                                    [editando]="editando('identidade.ganchoUnico')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="gancho único"
+                                    alinhamento="auto"
+                                    flex="1 1 200px"
+                                    (editarSolicitado)="editar('identidade.ganchoUnico')"
+                                >
                                     <textarea
                                         #entradaGancho
                                         appAutoFocus
@@ -1365,21 +1369,21 @@
                                             cancelarEdicao()
                                         "
                                         >{{ dados().identidade.ganchoUnico }}</textarea>
-                                } @else {
-                                    <button
-                                        class="criatura__info-nota-texto"
-                                        type="button"
-                                        [disabled]="!ajustavel()"
-                                        (click)="editar('identidade.ganchoUnico')"
-                                    >
-                                        {{ dados().identidade.ganchoUnico }}
-                                    </button>
-                                }
+                                </app-valor-editavel>
                             </div>
 
                             <div class="criatura__info-nota">
                                 <span class="criatura__info-nota-rotulo">Motivação</span>
-                                @if (editando("identidade.motivacao")) {
+                                <app-valor-editavel
+                                    class="criatura__info-nota-texto"
+                                    [valor]="dados().identidade.motivacao"
+                                    [editando]="editando('identidade.motivacao')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="motivação"
+                                    alinhamento="auto"
+                                    flex="1 1 200px"
+                                    (editarSolicitado)="editar('identidade.motivacao')"
+                                >
                                     <textarea
                                         #entradaMotivacao
                                         appAutoFocus
@@ -1394,16 +1398,7 @@
                                             cancelarEdicao()
                                         "
                                         >{{ dados().identidade.motivacao }}</textarea>
-                                } @else {
-                                    <button
-                                        class="criatura__info-nota-texto"
-                                        type="button"
-                                        [disabled]="!ajustavel()"
-                                        (click)="editar('identidade.motivacao')"
-                                    >
-                                        {{ dados().identidade.motivacao }}
-                                    </button>
-                                }
+                                </app-valor-editavel>
                             </div>
                         </div>
 

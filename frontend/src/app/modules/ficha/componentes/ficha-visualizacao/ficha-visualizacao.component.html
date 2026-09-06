@@ -207,65 +207,69 @@
                             <div class="ficha-ident__coluna-texto">
                                 <div class="ficha-ident__texto">
                                     <span class="ficha-ident__rotulo">Agente</span>
-                                    @if (ajustavelAmplo() && editandoIdentidade() === "nome") {
-                                        <input
-                                            #entradaIdentidade
-                                            class="ficha-ident__entrada"
-                                            type="text"
-                                            [value]="nome()"
-                                            aria-label="Agente"
-                                            (keydown.enter)="
-                                                confirmarIdentidade('nome', entradaIdentidade.value)
-                                            "
-                                            (keydown.escape)="cancelarIdentidade()"
-                                            (blur)="
-                                                confirmarIdentidade('nome', entradaIdentidade.value)
-                                            "
-                                        />
-                                    } @else if (ajustavelAmplo()) {
-                                        <button
-                                            class="ficha-ident__nome ficha-ident__nome--editavel"
-                                            type="button"
-                                            aria-label="Editar agente"
-                                            (click)="editarIdentidade('nome')"
+                                    @if (ajustavelAmplo()) {
+                                        <app-valor-editavel
+                                            class="ficha-ident__nome"
+                                            [valor]="nome()"
+                                            [editando]="editandoIdentidade() === 'nome'"
+                                            rotuloAria="agente"
+                                            (editarSolicitado)="editarIdentidade('nome')"
                                         >
-                                            {{ nome() }}
-                                        </button>
+                                            <input
+                                                #entradaIdentidade
+                                                class="ficha-ident__entrada"
+                                                type="text"
+                                                [value]="nome()"
+                                                aria-label="Agente"
+                                                (keydown.enter)="
+                                                    confirmarIdentidade(
+                                                        'nome',
+                                                        entradaIdentidade.value
+                                                    )
+                                                "
+                                                (keydown.escape)="cancelarIdentidade()"
+                                                (blur)="
+                                                    confirmarIdentidade(
+                                                        'nome',
+                                                        entradaIdentidade.value
+                                                    )
+                                                "
+                                            />
+                                        </app-valor-editavel>
                                     } @else {
                                         <h2 class="ficha-ident__nome">{{ nome() }}</h2>
                                     }
 
                                     <!-- Contrato (m3-40): mesmo padrão de edição no lugar; só o mestre edita. -->
-                                    @if (editandoIdentidade() === "contrato") {
-                                        <input
-                                            #entradaIdentidade
-                                            class="ficha-ident__contrato-entrada"
-                                            type="text"
-                                            [value]="dados().contrato ?? ''"
-                                            aria-label="Contrato"
-                                            (keydown.enter)="
-                                                confirmarIdentidade(
-                                                    'contrato',
-                                                    entradaIdentidade.value
-                                                )
-                                            "
-                                            (keydown.escape)="cancelarIdentidade()"
-                                            (blur)="
-                                                confirmarIdentidade(
-                                                    'contrato',
-                                                    entradaIdentidade.value
-                                                )
-                                            "
-                                        />
-                                    } @else if (contratoEditavel()) {
-                                        <button
-                                            class="ficha-ident__contrato ficha-ident__contrato--editavel"
-                                            type="button"
-                                            aria-label="Editar contrato"
-                                            (click)="editarIdentidade('contrato')"
+                                    @if (contratoEditavel()) {
+                                        <app-valor-editavel
+                                            class="ficha-ident__contrato"
+                                            [valor]="contratoTexto()"
+                                            [editando]="editandoIdentidade() === 'contrato'"
+                                            rotuloAria="contrato"
+                                            (editarSolicitado)="editarIdentidade('contrato')"
                                         >
-                                            {{ contratoTexto() }}
-                                        </button>
+                                            <input
+                                                #entradaIdentidade
+                                                class="ficha-ident__contrato-entrada"
+                                                type="text"
+                                                [value]="dados().contrato ?? ''"
+                                                aria-label="Contrato"
+                                                (keydown.enter)="
+                                                    confirmarIdentidade(
+                                                        'contrato',
+                                                        entradaIdentidade.value
+                                                    )
+                                                "
+                                                (keydown.escape)="cancelarIdentidade()"
+                                                (blur)="
+                                                    confirmarIdentidade(
+                                                        'contrato',
+                                                        entradaIdentidade.value
+                                                    )
+                                                "
+                                            />
+                                        </app-valor-editavel>
                                     } @else {
                                         <span class="ficha-ident__contrato">{{
                                             contratoTexto()
@@ -281,36 +285,41 @@
                                 <div class="ficha-ident__meta">
                                     <div class="ficha-ident__meta-linha">
                                         <span class="ficha-ident__meta-rotulo">Personalidade</span>
-                                        @if (editandoIdentidade() === "personalidade") {
-                                            <input
-                                                #entradaIdentidade
-                                                class="ficha-ident__select"
-                                                type="text"
-                                                [value]="identidade().personalidade ?? ''"
-                                                aria-label="Personalidade"
-                                                (keydown.enter)="
-                                                    confirmarIdentidade(
-                                                        'personalidade',
-                                                        entradaIdentidade.value
-                                                    )
+                                        @if (personalidadeEditavel()) {
+                                            <app-valor-editavel
+                                                class="ficha-ident__meta-valor"
+                                                [valor]="
+                                                    identidade().personalidade ?? '— Definir —'
                                                 "
-                                                (keydown.escape)="cancelarIdentidade()"
-                                                (blur)="
-                                                    confirmarIdentidade(
-                                                        'personalidade',
-                                                        entradaIdentidade.value
-                                                    )
+                                                [editando]="
+                                                    editandoIdentidade() === 'personalidade'
                                                 "
-                                            />
-                                        } @else if (personalidadeEditavel()) {
-                                            <button
-                                                class="ficha-ident__meta-valor ficha-ident__meta-valor--editavel"
-                                                type="button"
-                                                aria-label="Editar personalidade"
-                                                (click)="editarIdentidade('personalidade')"
+                                                rotuloAria="personalidade"
+                                                (editarSolicitado)="
+                                                    editarIdentidade('personalidade')
+                                                "
                                             >
-                                                {{ identidade().personalidade ?? "— Definir —" }}
-                                            </button>
+                                                <input
+                                                    #entradaIdentidade
+                                                    class="ficha-ident__select"
+                                                    type="text"
+                                                    [value]="identidade().personalidade ?? ''"
+                                                    aria-label="Personalidade"
+                                                    (keydown.enter)="
+                                                        confirmarIdentidade(
+                                                            'personalidade',
+                                                            entradaIdentidade.value
+                                                        )
+                                                    "
+                                                    (keydown.escape)="cancelarIdentidade()"
+                                                    (blur)="
+                                                        confirmarIdentidade(
+                                                            'personalidade',
+                                                            entradaIdentidade.value
+                                                        )
+                                                    "
+                                                />
+                                            </app-valor-editavel>
                                         } @else {
                                             <span class="ficha-ident__meta-valor">{{
                                                 identidade().personalidade ?? "Não definida"
@@ -744,39 +753,39 @@
                                 @if (modo() !== "compacto") {
                                     <div class="ficha-mini ficha-mini--fino">
                                         <span class="ficha-mini__rotulo">{{ rotuloNivel() }}</span>
-                                        @if (ajustavel() && editandoIdentidade() === "nivel") {
-                                            <input
-                                                #entradaIdentidade
-                                                class="ficha-mini__entrada"
-                                                type="number"
-                                                inputmode="numeric"
-                                                [value]="dados().nivel"
-                                                [attr.min]="limitesNivel().nivelMinimo"
-                                                [attr.max]="limitesNivel().nivelMaximo"
-                                                aria-label="Nível"
-                                                (keydown.enter)="
-                                                    confirmarIdentidade(
-                                                        'nivel',
-                                                        entradaIdentidade.value
-                                                    )
-                                                "
-                                                (keydown.escape)="cancelarIdentidade()"
-                                                (blur)="
-                                                    confirmarIdentidade(
-                                                        'nivel',
-                                                        entradaIdentidade.value
-                                                    )
-                                                "
-                                            />
-                                        } @else if (ajustavel()) {
-                                            <button
-                                                class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
-                                                type="button"
-                                                aria-label="Editar nível"
-                                                (click)="editarIdentidade('nivel')"
+                                        @if (ajustavel()) {
+                                            <app-valor-editavel
+                                                class="ficha-mini__valor ficha-mini__valor--warning"
+                                                [valor]="dados().nivel"
+                                                [editando]="editandoIdentidade() === 'nivel'"
+                                                rotuloAria="nível"
+                                                variante="aviso"
+                                                (editarSolicitado)="editarIdentidade('nivel')"
                                             >
-                                                {{ dados().nivel }}
-                                            </button>
+                                                <input
+                                                    #entradaIdentidade
+                                                    class="ficha-mini__entrada"
+                                                    type="number"
+                                                    inputmode="numeric"
+                                                    [value]="dados().nivel"
+                                                    [attr.min]="limitesNivel().nivelMinimo"
+                                                    [attr.max]="limitesNivel().nivelMaximo"
+                                                    aria-label="Nível"
+                                                    (keydown.enter)="
+                                                        confirmarIdentidade(
+                                                            'nivel',
+                                                            entradaIdentidade.value
+                                                        )
+                                                    "
+                                                    (keydown.escape)="cancelarIdentidade()"
+                                                    (blur)="
+                                                        confirmarIdentidade(
+                                                            'nivel',
+                                                            entradaIdentidade.value
+                                                        )
+                                                    "
+                                                />
+                                            </app-valor-editavel>
                                         } @else {
                                             <span
                                                 class="ficha-mini__valor ficha-mini__valor--warning"
@@ -788,37 +797,36 @@
                                 @if (modo() !== "compacto") {
                                     <div class="ficha-mini ficha-mini--fino">
                                         <span class="ficha-mini__rotulo">Prestígio</span>
-                                        @if (ajustavel() && editandoIdentidade() === "prestigio") {
-                                            <input
-                                                #entradaIdentidade
-                                                class="ficha-mini__entrada"
-                                                type="number"
-                                                inputmode="numeric"
-                                                [value]="dados().prestigio"
-                                                aria-label="Prestígio"
-                                                (keydown.enter)="
-                                                    confirmarIdentidade(
-                                                        'prestigio',
-                                                        entradaIdentidade.value
-                                                    )
-                                                "
-                                                (keydown.escape)="cancelarIdentidade()"
-                                                (blur)="
-                                                    confirmarIdentidade(
-                                                        'prestigio',
-                                                        entradaIdentidade.value
-                                                    )
-                                                "
-                                            />
-                                        } @else if (ajustavel()) {
-                                            <button
-                                                class="ficha-mini__valor ficha-mini__valor--editavel"
-                                                type="button"
-                                                aria-label="Editar prestígio"
-                                                (click)="editarIdentidade('prestigio')"
+                                        @if (ajustavel()) {
+                                            <app-valor-editavel
+                                                class="ficha-mini__valor"
+                                                [valor]="dados().prestigio"
+                                                [editando]="editandoIdentidade() === 'prestigio'"
+                                                rotuloAria="prestígio"
+                                                (editarSolicitado)="editarIdentidade('prestigio')"
                                             >
-                                                {{ dados().prestigio }}
-                                            </button>
+                                                <input
+                                                    #entradaIdentidade
+                                                    class="ficha-mini__entrada"
+                                                    type="number"
+                                                    inputmode="numeric"
+                                                    [value]="dados().prestigio"
+                                                    aria-label="Prestígio"
+                                                    (keydown.enter)="
+                                                        confirmarIdentidade(
+                                                            'prestigio',
+                                                            entradaIdentidade.value
+                                                        )
+                                                    "
+                                                    (keydown.escape)="cancelarIdentidade()"
+                                                    (blur)="
+                                                        confirmarIdentidade(
+                                                            'prestigio',
+                                                            entradaIdentidade.value
+                                                        )
+                                                    "
+                                                />
+                                            </app-valor-editavel>
                                         } @else {
                                             <span class="ficha-mini__valor">{{
                                                 dados().prestigio
@@ -828,32 +836,35 @@
                                 }
                                 <div class="ficha-mini ficha-mini--fino">
                                     <span class="ficha-mini__rotulo">Dinheiro</span>
-                                    @if (ajustavel() && editandoDinheiro()) {
-                                        <input
-                                            #entradaDinheiro
-                                            class="ficha-mini__entrada ficha-mini__entrada--larga"
-                                            type="number"
-                                            [value]="dinheiro()"
-                                            aria-label="Editar dinheiro"
-                                            [appTooltip]="'Editar dinheiro'"
-                                            (keydown.enter)="
-                                                confirmarDinheiro(entradaDinheiro.value)
-                                            "
-                                            (keydown.escape)="cancelarDinheiro()"
-                                            (blur)="confirmarDinheiro(entradaDinheiro.value)"
-                                        />
-                                    } @else if (ajustavel()) {
-                                        <button
-                                            type="button"
-                                            class="ficha-mini__valor ficha-mini__valor--warning ficha-mini__valor--editavel"
-                                            aria-label="Editar dinheiro"
-                                            (click)="editarDinheiro()"
+                                    @if (ajustavel()) {
+                                        <app-valor-editavel
+                                            class="ficha-mini__valor ficha-mini__valor--warning"
+                                            [valor]="'$' + dinheiro().toLocaleString('pt-BR')"
+                                            [editando]="editandoDinheiro()"
+                                            rotuloAria="dinheiro"
+                                            variante="aviso"
+                                            (editarSolicitado)="editarDinheiro()"
                                         >
-                                            ${{ dinheiro().toLocaleString("pt-BR") }}
-                                            <span class="ficha-mini__lapis" aria-hidden="true"
+                                            <input
+                                                #entradaDinheiro
+                                                class="ficha-mini__entrada ficha-mini__entrada--larga"
+                                                type="number"
+                                                [value]="dinheiro()"
+                                                aria-label="Editar dinheiro"
+                                                [appTooltip]="'Editar dinheiro'"
+                                                (keydown.enter)="
+                                                    confirmarDinheiro(entradaDinheiro.value)
+                                                "
+                                                (keydown.escape)="cancelarDinheiro()"
+                                                (blur)="confirmarDinheiro(entradaDinheiro.value)"
+                                            />
+                                            <span
+                                                valorEditavelSufixo
+                                                class="ficha-mini__lapis"
+                                                aria-hidden="true"
                                                 >✎</span
                                             >
-                                        </button>
+                                        </app-valor-editavel>
                                     } @else {
                                         <span class="ficha-mini__valor ficha-mini__valor--warning"
                                             >${{ dinheiro().toLocaleString("pt-BR") }}</span
@@ -1043,29 +1054,31 @@
                                     [class.ficha-mini--somente-leitura]="!ajustavelAmplo()"
                                 >
                                     <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
-                                    @if (ajustavelAmplo() && editandoDerivado() === linha.chave) {
-                                        <input
-                                            #entradaDerivado
-                                            class="ficha-mini__entrada"
-                                            type="number"
-                                            inputmode="numeric"
-                                            [value]="linha.bruto"
-                                            [attr.aria-label]="'Editar ' + linha.rotulo"
-                                            (keydown.enter)="
-                                                confirmarDerivado(linha, entradaDerivado.value)
-                                            "
-                                            (keydown.escape)="cancelarDerivado()"
-                                            (blur)="confirmarDerivado(linha, entradaDerivado.value)"
-                                        />
-                                    } @else if (ajustavelAmplo()) {
-                                        <button
-                                            type="button"
-                                            class="ficha-mini__valor ficha-mini__valor--editavel"
-                                            [attr.aria-label]="'Editar ' + linha.rotulo"
-                                            (click)="editarDerivado(linha.chave)"
+                                    @if (ajustavelAmplo()) {
+                                        <app-valor-editavel
+                                            class="ficha-mini__valor"
+                                            [valor]="linha.display"
+                                            [editando]="editandoDerivado() === linha.chave"
+                                            [rotuloAria]="linha.rotulo"
+                                            alinhamento="centro"
+                                            (editarSolicitado)="editarDerivado(linha.chave)"
                                         >
-                                            {{ linha.display }}
-                                        </button>
+                                            <input
+                                                #entradaDerivado
+                                                class="ficha-mini__entrada"
+                                                type="number"
+                                                inputmode="numeric"
+                                                [value]="linha.bruto"
+                                                [attr.aria-label]="'Editar ' + linha.rotulo"
+                                                (keydown.enter)="
+                                                    confirmarDerivado(linha, entradaDerivado.value)
+                                                "
+                                                (keydown.escape)="cancelarDerivado()"
+                                                (blur)="
+                                                    confirmarDerivado(linha, entradaDerivado.value)
+                                                "
+                                            />
+                                        </app-valor-editavel>
                                     } @else {
                                         <span class="ficha-mini__valor">{{ linha.display }}</span>
                                     }
@@ -1088,39 +1101,37 @@
                             >
                                 <span class="ficha-mini__rotulo">Contra-ataque</span>
                                 @if (temHabilidadeContraAtaque()) {
-                                    @if (
-                                        ajustavelAmplo() && editandoDerivado() === "contraAtaque"
-                                    ) {
-                                        <input
-                                            #entradaDerivado
-                                            class="ficha-mini__entrada"
-                                            type="number"
-                                            inputmode="numeric"
-                                            [value]="contraAtaqueLinha().bruto"
-                                            aria-label="Editar Contra-ataque"
-                                            (keydown.enter)="
-                                                confirmarDerivado(
-                                                    contraAtaqueLinha(),
-                                                    entradaDerivado.value
-                                                )
-                                            "
-                                            (keydown.escape)="cancelarDerivado()"
-                                            (blur)="
-                                                confirmarDerivado(
-                                                    contraAtaqueLinha(),
-                                                    entradaDerivado.value
-                                                )
-                                            "
-                                        />
-                                    } @else if (ajustavelAmplo()) {
-                                        <button
-                                            type="button"
-                                            class="ficha-mini__valor ficha-mini__valor--editavel"
-                                            aria-label="Editar Contra-ataque"
-                                            (click)="editarDerivado('contraAtaque')"
+                                    @if (ajustavelAmplo()) {
+                                        <app-valor-editavel
+                                            class="ficha-mini__valor"
+                                            [valor]="contraAtaqueLinha().display"
+                                            [editando]="editandoDerivado() === 'contraAtaque'"
+                                            rotuloAria="Contra-ataque"
+                                            alinhamento="centro"
+                                            (editarSolicitado)="editarDerivado('contraAtaque')"
                                         >
-                                            {{ contraAtaqueLinha().display }}
-                                        </button>
+                                            <input
+                                                #entradaDerivado
+                                                class="ficha-mini__entrada"
+                                                type="number"
+                                                inputmode="numeric"
+                                                [value]="contraAtaqueLinha().bruto"
+                                                aria-label="Editar Contra-ataque"
+                                                (keydown.enter)="
+                                                    confirmarDerivado(
+                                                        contraAtaqueLinha(),
+                                                        entradaDerivado.value
+                                                    )
+                                                "
+                                                (keydown.escape)="cancelarDerivado()"
+                                                (blur)="
+                                                    confirmarDerivado(
+                                                        contraAtaqueLinha(),
+                                                        entradaDerivado.value
+                                                    )
+                                                "
+                                            />
+                                        </app-valor-editavel>
                                     } @else {
                                         <span class="ficha-mini__valor">{{
                                             contraAtaqueLinha().display
@@ -1148,43 +1159,17 @@
                                     <span class="ficha-resistencia__abrev">{{
                                         abreviacaoResistencia[resistencia.tipo]
                                     }}</span>
-                                    @if (
-                                        ajustavelAmplo() &&
-                                        editandoResistencia() === resistencia.tipo
-                                    ) {
-                                        <input
-                                            #entradaResistencia
-                                            class="ficha-resistencia__entrada"
-                                            type="number"
-                                            inputmode="numeric"
-                                            [value]="resistencia.manual"
-                                            [attr.aria-label]="
-                                                'Editar resistência ' +
+                                    @if (ajustavelAmplo()) {
+                                        <app-valor-editavel
+                                            class="ficha-resistencia__valor"
+                                            alinhamento="centro"
+                                            [valor]="resistencia.total"
+                                            [editando]="editandoResistencia() === resistencia.tipo"
+                                            [rotuloAria]="
+                                                'resistência ' +
                                                 abreviacaoResistencia[resistencia.tipo]
                                             "
-                                            (keydown.enter)="
-                                                confirmarResistencia(
-                                                    resistencia.tipo,
-                                                    entradaResistencia.value
-                                                )
-                                            "
-                                            (keydown.escape)="cancelarResistencia()"
-                                            (blur)="
-                                                confirmarResistencia(
-                                                    resistencia.tipo,
-                                                    entradaResistencia.value
-                                                )
-                                            "
-                                        />
-                                    } @else if (ajustavelAmplo()) {
-                                        <button
-                                            type="button"
-                                            class="ficha-resistencia__valor ficha-resistencia__valor--editavel"
-                                            [attr.aria-label]="
-                                                'Editar resistência ' +
-                                                abreviacaoResistencia[resistencia.tipo]
-                                            "
-                                            [appTooltip]="
+                                            [tooltip]="
                                                 'Base manual ' +
                                                 resistencia.manual +
                                                 ' + equipamento ' +
@@ -1198,10 +1183,33 @@
                                                     ? ' + formação ' + resistencia.formacao
                                                     : '')
                                             "
-                                            (click)="editarResistencia(resistencia.tipo)"
+                                            (editarSolicitado)="editarResistencia(resistencia.tipo)"
                                         >
-                                            {{ resistencia.total }}
-                                        </button>
+                                            <input
+                                                #entradaResistencia
+                                                class="ficha-resistencia__entrada"
+                                                type="number"
+                                                inputmode="numeric"
+                                                [value]="resistencia.manual"
+                                                [attr.aria-label]="
+                                                    'Editar resistência ' +
+                                                    abreviacaoResistencia[resistencia.tipo]
+                                                "
+                                                (keydown.enter)="
+                                                    confirmarResistencia(
+                                                        resistencia.tipo,
+                                                        entradaResistencia.value
+                                                    )
+                                                "
+                                                (keydown.escape)="cancelarResistencia()"
+                                                (blur)="
+                                                    confirmarResistencia(
+                                                        resistencia.tipo,
+                                                        entradaResistencia.value
+                                                    )
+                                                "
+                                            />
+                                        </app-valor-editavel>
                                     } @else {
                                         <span class="ficha-resistencia__valor">{{
                                             resistencia.total
@@ -1822,38 +1830,43 @@
                      leitura, mantendo a restrição pós-entrega da m2-20 (o card de equipe edita
                      Dinheiro/Vida/Energia/Condições/Inventário; o resto exige "Abrir ficha
                      completa"). O dadinho de rolar dano acima segue valendo nos dois modos. -->
-                                        @if (
-                                            ajustavelAmplo() && editandoDerivado() === linha.chave
-                                        ) {
-                                            <input
-                                                #entradaDerivado
-                                                class="ficha-mini__entrada"
-                                                [class.ficha-mini__entrada--larga]="
-                                                    linha.tipo === 'texto'
-                                                "
-                                                [class.ficha-mini__entrada--cheia]="
-                                                    linha.chave === 'danoCorpoACorpo'
-                                                "
-                                                [type]="linha.tipo === 'numero' ? 'number' : 'text'"
-                                                [value]="linha.bruto"
-                                                [attr.aria-label]="'Editar ' + linha.rotulo"
-                                                (keydown.enter)="
-                                                    confirmarDerivado(linha, entradaDerivado.value)
-                                                "
-                                                (keydown.escape)="cancelarDerivado()"
-                                                (blur)="
-                                                    confirmarDerivado(linha, entradaDerivado.value)
-                                                "
-                                            />
-                                        } @else if (ajustavelAmplo() && linha.bruto !== null) {
-                                            <button
-                                                type="button"
-                                                class="ficha-mini__valor ficha-mini__valor--editavel"
-                                                [attr.aria-label]="'Editar ' + linha.rotulo"
-                                                (click)="editarDerivado(linha.chave)"
+                                        @if (ajustavelAmplo() && linha.bruto !== null) {
+                                            <app-valor-editavel
+                                                class="ficha-mini__valor"
+                                                [valor]="linha.display"
+                                                [editando]="editandoDerivado() === linha.chave"
+                                                [rotuloAria]="linha.rotulo"
+                                                (editarSolicitado)="editarDerivado(linha.chave)"
                                             >
-                                                {{ linha.display }}
-                                            </button>
+                                                <input
+                                                    #entradaDerivado
+                                                    class="ficha-mini__entrada"
+                                                    [class.ficha-mini__entrada--larga]="
+                                                        linha.tipo === 'texto'
+                                                    "
+                                                    [class.ficha-mini__entrada--cheia]="
+                                                        linha.chave === 'danoCorpoACorpo'
+                                                    "
+                                                    [type]="
+                                                        linha.tipo === 'numero' ? 'number' : 'text'
+                                                    "
+                                                    [value]="linha.bruto"
+                                                    [attr.aria-label]="'Editar ' + linha.rotulo"
+                                                    (keydown.enter)="
+                                                        confirmarDerivado(
+                                                            linha,
+                                                            entradaDerivado.value
+                                                        )
+                                                    "
+                                                    (keydown.escape)="cancelarDerivado()"
+                                                    (blur)="
+                                                        confirmarDerivado(
+                                                            linha,
+                                                            entradaDerivado.value
+                                                        )
+                                                    "
+                                                />
+                                            </app-valor-editavel>
                                         } @else {
                                             <span class="ficha-mini__valor">{{
                                                 linha.display

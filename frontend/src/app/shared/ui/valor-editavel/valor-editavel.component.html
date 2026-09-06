@@ -1,0 +1,23 @@
+@if (editando()) {
+    <ng-content />
+} @else {
+    <button
+        app-botao
+        [variante]="variante()"
+        estilo="texto"
+        class="valor-editavel__botao"
+        [class.valor-editavel__botao--centro]="alinhamento() === 'centro'"
+        [class.valor-editavel__botao--auto]="alinhamento() === 'auto'"
+        [class.valor-editavel__botao--bloco]="bloco()"
+        type="button"
+        [disabled]="desabilitado()"
+        [attr.aria-label]="'Editar ' + rotuloAria()"
+        [appTooltip]="tooltip()"
+        [style.flex]="flex()"
+        [style.min-width]="flex() ? '0' : null"
+        (click)="editarSolicitado.emit()"
+    >
+        {{ valor() }}
+        <ng-content select="[valorEditavelSufixo]" />
+    </button>
+}

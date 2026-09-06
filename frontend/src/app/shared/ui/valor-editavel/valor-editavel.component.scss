@@ -1,0 +1,67 @@
+@use "tema/breakpoints" as bp;
+
+// Primitivo de "valor editável" (`P-057`). Sem caixa própria — a classe-companheira do
+// consumidor (`font-size`/`color`/`font-weight`) atravessa o `display: contents` por herança.
+:host {
+    display: contents;
+}
+
+.valor-editavel__botao {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    // Pequena folga para o hover do `app-botao` não abraçar o texto rente — sem deslocar layout
+    // (margem negativa cancela o padding, mesmo truque de `ficha-ident__nome--editavel`).
+    padding: 1px 4px;
+    margin: -1px -4px;
+    // Sem isso, o botão (item de flex/grid de verdade — o host `display: contents` não participa)
+    // esticaria pra preencher o eixo cruzado do contêiner do consumidor (`align-items`/
+    // `justify-items: stretch` é o padrão), alargando o alvo de hover além do texto.
+    align-self: flex-start;
+    justify-self: start;
+    // Alvo de toque de 44px (WCAG 2.5.5) SEM inflar o desenho (era `alvo-de-toque` duplicado em
+    // até 6 seletores por consumidor, ex. `ficha-visualizacao.component.scss`): o botão é texto
+    // no meio de uma frase, então quem cresce no mobile é a área clicável (`::after` centrado),
+    // não a caixa visível.
+    position: relative;
+
+    @include bp.mobile {
+        &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    &--centro {
+        align-self: center;
+        justify-self: center;
+    }
+
+    // Não sobrescreve o alinhamento herdado — o consumidor já decidiu (`align-items` do próprio
+    // contêiner, ex. `baseline` das tags de Deslocamento).
+    &--auto {
+        align-self: auto;
+        justify-self: auto;
+    }
+
+    // `[bloco]` cobre a caixa inteira de um card cuja própria superfície já é `--surface-2` (ex.:
+    // `.criatura__stat`) — igual ao `dim` de hover que `estilo="texto"` usa pra severidades neutras,
+    // o preenchimento ficaria invisível encostado nele. Um contorno, não um preenchimento, garante
+    // o feedback em qualquer superfície de fundo, sem depender da variante escolhida.
+    &--bloco {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border-radius: var(--radius-control);
+
+        &:hover:not(:disabled) {
+            outline: 1px solid var(--border-strong);
+            outline-offset: -1px;
+        }
+    }
+}

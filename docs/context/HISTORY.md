@@ -1,5 +1,124 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-06 — Nasce `app-valor-editavel` e adota nas ~30 ocorrências de "valor clicável" (P-057); `ficha-flutuante` migra para `app-painel-flutuante` (P-058)
+
+Duas dívidas de design system encontradas fora do escopo de tasks anteriores (`P-057` no
+levantamento do `P-048`, 2026-09-04; `P-058` durante a `ui-29`, mesma data). Decisão do autor via
+`AskUserQuestion`, já que "biblioteca de componentes é obrigatória" torna as duas escolhas do
+autor, não do agente: criar o primitivo novo (em vez de esticar `app-botao`) para `P-057`; migrar
+`ficha-flutuante` aceitando que a posição passe a persistir entre reloads para `P-058`.
+
+**`P-057`.** Investigação prévia (subagent Explore) mapeou o padrão real antes de desenhar a API:
+`app-botao` é seletor de atributo sobre um elemento já existente no template do consumidor — não
+pode alternar entre dois elementos DOM diferentes (botão de exibição vs. `<input>`/`<select>` de
+edição), então esticar sua API não bastava. O novo primitivo, `frontend/src/app/shared/ui/
+valor-editavel/`, não genereciza o **tipo** do campo — cada ocorrência projeta o próprio `<input>`/
+`<select>`/`<textarea>` via `<ng-content />`, exatamente como já escrevia; o primitivo só é dono da
+máquina de estado exibição↔edição (`[editando]`, controlado como `[aberto]` do `app-modal`) e da
+identidade visual do estado de exibição, delegada a um `button[app-botao][estilo="texto"]` interno.
+
+API desenhada indo e voltando contra os consumidores reais, não especificada de antemão:
+- `[variante]` (`BotaoVariante`, default `secundario`) — cor semântica. Descoberta feliz: `perigo`
+  (`--erro` = `--vida`) e `aviso` (`--warning`) já são exatamente as cores que `barra-recurso`,
+  `criatura__vitalidade-valor` e `ficha-mini__valor--warning` (Nível/Dinheiro) precisavam, sem
+  precisar de token novo.
+- `[tooltip]` — não dá pra anexar `appTooltip` direto no `<app-valor-editavel>` do consumidor
+  porque o `Tooltip` mede `getBoundingClientRect()` do host, e o host é `display: contents`
+  (retângulo zerado); precisou virar input do primitivo, aplicado no botão interno de verdade.
+- `[alinhamento]` (`inicio`/`centro`/`auto`) — o achado mais sutil: como o host é `display:
+  contents`, ele não participa do layout flex/grid do consumidor — quem vira o item de verdade é o
+  botão interno, que herdaria `align-items: stretch` (o padrão do CSS) de qualquer contêiner que
+  não declare o próprio alinhamento, esticando o alvo de hover além do texto. `inicio` (força
+  `flex-start`) é o certo pra contêineres column sem `align-items` (a maioria); `centro` pros boxes
+  que já centralizam (Reações, Contra-ataque, Resistências, Vida/Vida-máxima da Criatura); `auto`
+  (não sobrescreve) pros que já declaram o próprio alinhamento (`baseline` das tags de
+  Deslocamento/Regeneração).
+- `[bloco]` (`display: block; width: 100%`) — padrão distinto do "texto no meio de uma frase":
+  VD/Tenacidade/Defesa da Criatura são cartões de grid **inteiros** clicáveis, não só o número.
+- `[flex]` — escape-hatch de `flex` bruto (shorthand CSS) pro botão interno, pro caso de um item
+  de flex-row que precisa crescer/encolher com base própria (Gancho Único/Motivação da Criatura,
+  `flex: 1 1 200px`, replicando o que a classe local já fazia).
+
+Migrado em `barra-recurso` (atual/máximo — variante calculada de `recurso()`/`emAlerta()`),
+`ficha-visualizacao` (Nome, Contrato, Personalidade, Nível, Prestígio, Dinheiro com lápis via
+`[valorEditavelSufixo]`, Derivados, Contra-ataque, Resistências com tooltip de composição),
+`criatura-visualizacao` (Designação, VD, Tenacidade com sufixo de multiplicador, Defesa, Vida
+atual/máxima, Cadência, Turnos por Rodada, Bônus de Iniciativa, as 4 tags de Deslocamento, os 4
+campos de Regeneração, Gancho Único e Motivação — os dois últimos com `<textarea>`, confirmando que
+o primitivo não precisa saber o tipo do campo) e `ficha-inventario` (carga do inventário — variante
+condicional por excesso —, contagem de munição atual/máxima). Fora de escopo, mantido: os gatilhos
+de troca de avatar/foto (`__avatar--editavel`) — papel diferente ("trocar imagem"), não "valor que
+vira input".
+
+Achado só no gate visual ao vivo, corrigido antes do fecho: os botões `[bloco]` (VD/Tenacidade/
+Defesa/Cadência/Turnos/Bônus de Iniciativa) tinham hover **completamente invisível** — a superfície
+do próprio `.criatura__stat` já é `--surface-2`, a mesma cor do `dim` de hover que a variante
+`secundario` do `app-botao` usa; preenchimento sobre preenchimento idêntico não pinta nada visível.
+Corrigido com um `outline` (contorno, não preenchimento) só no modificador `--bloco` — visível em
+qualquer cor de fundo, sem depender da variante escolhida. Confirmado ao vivo antes e depois do
+ajuste (screenshot recortado na área exata do botão).
+
+Convergência de identidade aceita conscientemente, não uma regressão silenciosa: cor de repouso de
+campos que eram `--text-dim`/`--text-mute` no CSS local (`ficha-ident__contrato`,
+`ficha-ident__meta-valor` de Personalidade, `ficha-resistencia__valor`, o campo "máximo" de
+`barra-recurso`, `criatura__info-nota-texto`) passou a `--text` (a cor do `secundario`, o default do
+primitivo) — não existe variante de `app-botao` equivalente a `--text-dim`, e criar uma só pra isso
+seria ampliar `app-botao` sem necessidade real. Ganho de legibilidade, perda de uma hierarquia
+tipográfica sutil que ninguém tinha pedido para ser sutil; nenhum dos ~30 pontos ficou ilegível ou
+confuso na verificação ao vivo.
+
+Achado incidental corrigido como efeito colateral de adotar o primitivo, não uma correção
+deliberada à parte: Cadência/Turnos por Rodada da Criatura tinham uma estrutura `@if`/`@else` com
+uma condição de edição solta fora do par (`@if (editando('cadencia')) {…} @else {…}` seguido de um
+`@if (editando('turnosPorRodada'))` **irmão**, não aninhado) — na teoria, editar turnos podia
+mostrar o botão de exibição de turnos E o campo de edição ao mesmo tempo. Virou XOR limpo
+naturalmente, porque `app-valor-editavel` não tem como expressar "os dois ao mesmo tempo".
+
+**`P-058`.** Migração mecânica, no mesmo molde já provado por `leitor-documentos`/
+`caderno-flutuante`: `<section #janela>` (moldura própria — arraste, posição, z-index fixo em 1200,
+minimizar/fechar manuais) virou `<app-painel-flutuante id="ficha-flutuante" …>`, com o botão de
+maximizar no slot `[painelAcoesExtras]` e a alça de redimensionar em `[painelRedimensionar]` — os
+dois que continuam do consumidor por decisão da própria `ui-17`. `ficha-flutuante.component.ts`
+perdeu `arrastando`/`origemArraste`/`iniciarArraste` (posição passa a ser do primitivo) e o
+`x`/`y` do estado `geometria` (só `largura`/`altura` continuam, pro redimensionamento). A posição
+inicial diferenciada do mestre (`GEOMETRIA_INICIAL_FICHA_FLUTUANTE_MESTRE`, mais larga) precisou de
+um ajuste real: como `app-painel-flutuante` só consome `[posicaoInicial]` uma vez (primeira carga,
+antes de existir estado persistido), replicar "mestre abre mais largo toda vez que abre do zero"
+passou a chamar `painelRef()?.moverPara({x, y}, {persistir: false})` dentro de `abrir()`, mesmo
+padrão que `LeitorDocumentos.alternarMaximizacao()` já usa pra reposicionar via comando externo.
+
+Ganhos automáticos do primitivo, sem código novo: empilhamento de z-index compartilhado com
+Caderno/Leitor/Calculadora (antes `z-index: 1200` fixo, sem responder a foco), focus-trap
+`Tab`/`Shift+Tab`, `Escape` fecha (antes só um handler de teclado manual que fazia a mesma coisa,
+removido). Efeito colateral aceito conscientemente (decisão do autor, não pedido explícito, mas
+inerente ao `[id]` fixo do primitivo): a posição/estado minimizado agora persistem em
+`localStorage` entre reloads — na prática invisível para o mestre, porque `abrir()` sempre força a
+geometria ampla quando a janela estava fechada (mesma lógica de antes da migração, só que agora
+comunicada ao primitivo via `moverPara()` em vez de um `signal` local). Efeito colateral adicional,
+também aceito: no mobile, minimizar deixava de ser "fechar de vez" (comentário do código citava uma
+UX ruim pré-`ui-17`, onde o gatilho reaparecia sobreposto à lista de combatentes) — o gatilho de
+`ficha-flutuante` já usa o mixin `utilitario-flutuante` padronizado desde antes desta task, então o
+problema original não existe mais; minimizar/restaurar no mobile passou a se comportar como os
+outros três consumidores, confirmado ao vivo sem sobreposição.
+
+**Verificação ao vivo dos dois** (Postgres + backend + frontend reais, `1920×1080`/`360×800`):
+cenário montado via REST cru — usuário, campanha, ficha de Agente (`POST /ficha`), ficha de
+Criatura (`POST /ficha/criatura`), encontro com os dois como combatentes (`POST campanha/:id/
+encontro` → `POST encontro/:id/combatente` ×2 → `PUT encontro/combatente/:id/iniciativa` ×2 →
+`POST encontro/:id/iniciar`) — removido ao final (`DELETE` nas três entidades). `P-057`: exibição,
+hover, clique→edição, `Enter`/`Escape`→confirma/cancela conferidos em pelo menos um campo de cada
+padrão (`bloco`, `centro`, `auto`, sufixo, tooltip, `flex`) nas duas fichas. `P-058`: abrir (mestre,
+1100×600 confirmado por `getBoundingClientRect()`), arrastar, redimensionar, maximizar, restaurar
+tamanho, minimizar, reabrir pelo gatilho (mesma geometria), abrir junto do Caderno (z-index correto
+ao focar cada um), `Escape` fecha com foco preso dentro da janela ao abrir, mobile full-sheet e
+minimizar/restaurar no mobile — todos conferidos sem regressão pendente.
+
+Testes: `frontend` 1644/1644 suíte completa (a falha isolada e intermitente de
+`painel-flutuante.component.spec.ts`, já registrada em sessões anteriores desta `HISTORY.md`, não
+reproduz sozinha e não tem relação com este diff — vazamento de `window.innerWidth` entre specs de
+outro arquivo). Lint sem erro novo (só os warnings de `quotes`/`max-len` já conhecidos em todo o
+código `.ts` do repositório). Build limpo, aviso de budget conhecido (`P-004`).
+
 ## 2026-09-06 — `app-estado-vazio` ganha `[tamanho]="compacto"` e adota em 15 listas densas (P-055); nasce `app-segmentado`/`app-segmentado-item` e adota nos 3 controles reais (P-056)
 
 Fecha a auditoria `UI-27` por completo — `P-055`/`P-056` eram os dois últimos itens ativos, na

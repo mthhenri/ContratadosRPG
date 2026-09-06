@@ -2,7 +2,6 @@
 // reusando o catálogo e as regras das compras (m1). Só tokens do tema "Terminal de Contenção" — nenhum
 // hex/fonte/raio solto (proibição #29). O padrão de card/controle/botão espelha a aba Compras (m1-10).
 
-@use "sass:math";
 @use "tema/breakpoints" as bp;
 
 .ficha-inv {
@@ -89,6 +88,8 @@
             background: var(--accent);
         }
     }
+    // A cor de aviso (`--accent`) é escolhida pelo `[variante]="'primario'"` do
+    // `app-valor-editavel` (`P-057`) — o `&:hover`/identidade do estado clicável são dele.
     &__carga-valor {
         display: inline-flex;
         align-items: baseline;
@@ -96,27 +97,6 @@
         font-weight: 700;
         color: var(--text);
         white-space: nowrap;
-
-        .ficha-inv__carga--aviso & {
-            color: var(--accent);
-        }
-
-        &--editavel {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 0 4px;
-            margin: 0 -4px;
-            cursor: text;
-            transition:
-                border-color 0.15s ease,
-                background-color 0.15s ease;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface-2);
-            }
-        }
     }
     &__carga-entrada {
         width: 5ch;
@@ -729,19 +709,11 @@
         }
     }
 
+    // Identidade do estado clicável (cursor/hover/alvo de toque) é do `app-valor-editavel`
+    // (`P-057`).
     &__municao-valor {
         font: inherit;
         font-weight: 700;
-    }
-
-    &__municao-valor--editavel {
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-        text-decoration: underline dotted var(--border-strong);
-        text-underline-offset: 3px;
     }
 
     &__municao-separador,
@@ -797,10 +769,6 @@
             width: bp.$alvo-toque;
             height: bp.$alvo-toque;
             margin: -6px 6px -6px 0;
-        }
-
-        &__municao-valor--editavel {
-            position: relative;
         }
     }
     &__mod-tag-desc {
@@ -1662,16 +1630,8 @@
 
         // Lápis de apelido (ui-30): agora `app-botao-icone[tamanho="mini"]` — o próprio primitivo já
         // garante `min-width`/`min-height: $alvo-toque` no mobile (`botao-icone.component.scss`),
-        // então o antigo truque de padding com margem negativa fica redundante.
-
-        // Mesmo padrão no valor editável da carga (80×22): o piso de 44px empurraria a barra de
-        // Inventário para baixo; padding com margem negativa mantém a linha na altura de hoje.
-        &__carga-valor--editavel {
-            $folga: math.div(bp.$alvo-toque - 22px, 2);
-
-            padding: $folga 4px;
-            margin: (-$folga) -4px;
-        }
+        // então o antigo truque de padding com margem negativa fica redundante. O alvo de toque do
+        // valor editável da carga é do `app-valor-editavel` (`P-057`), mesmo raciocínio.
 
         &__item-cabecalho,
         &__mod-tag,

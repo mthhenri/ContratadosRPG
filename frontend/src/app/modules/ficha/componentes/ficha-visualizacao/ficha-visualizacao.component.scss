@@ -1633,26 +1633,6 @@
         color: var(--text);
         line-height: 1.1;
         margin: 0;
-
-        // Codinome clicável (edição no lugar): mesmo visual, com alvo de clique discreto.
-        &--editavel {
-            display: inline-block;
-            text-align: left;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 1px 6px;
-            margin-left: -6px;
-            cursor: text;
-            transition:
-                border-color 0.15s ease,
-                background-color 0.15s ease;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface-2);
-            }
-        }
     }
 
     &__entrada {
@@ -1703,24 +1683,6 @@
         font-size: 13px;
         color: var(--text-dim);
         overflow-wrap: anywhere;
-
-        // Personalidade clicável (mesmo padrão do Codinome/Nível) — botão-texto, sem estilo nativo.
-        &--editavel {
-            display: block;
-            width: 100%;
-            text-align: left;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 0 4px;
-            margin-left: -4px;
-            cursor: text;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface-2);
-            }
-        }
     }
 
     // Origem: valor + lápis na mesma linha (o rótulo já fica acima, em `&__meta-rotulo`).
@@ -1761,25 +1723,6 @@
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--text-dim);
-
-        &--editavel {
-            display: inline-block;
-            text-align: left;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 1px 5px;
-            margin-left: -5px;
-            cursor: text;
-            transition:
-                border-color 0.15s ease,
-                background-color 0.15s ease;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface-2);
-            }
-        }
     }
 
     &__contrato-entrada {
@@ -1989,21 +1932,15 @@
             text-overflow: ellipsis;
         }
 
-        // m3-60: no mobile o valor quebra linha em vez de cortar com "…". Duas razões, e a segunda
-        // é a que obriga: (a) a reticência aqui esconde informação sem aviso (Patente "Força Tarefa
-        // Especial", Dinheiro com muitos dígitos) e no toque não há hover que a revele; (b) o
-        // `overflow: hidden` acima **clipa o `::after`** com que `alvo-de-toque` estende a área
-        // clicável — medido ao vivo, o valor editável seguia com 17px de altura de toque mesmo com o
-        // mixin aplicado. Especificidade (0,2,0) igual à regra acima, vencendo por ordem.
+        // m3-60: no mobile o valor quebra linha em vez de cortar com "…" — a reticência esconde
+        // informação sem aviso (Patente "Força Tarefa Especial", Dinheiro com muitos dígitos) e
+        // no toque não há hover que a revele. Especificidade (0,2,0) igual à regra acima, vencendo
+        // por ordem. O alvo de toque do valor editável é do `app-valor-editavel` (`P-057`) — não
+        // corre mais risco de ser clipado por este `overflow: hidden`, já que vive noutro elemento.
         @include bp.mobile {
             .ficha-mini__valor {
                 white-space: normal;
                 overflow-wrap: anywhere;
-            }
-
-            .ficha-mini__valor--editavel {
-                overflow: visible;
-                text-overflow: clip;
             }
         }
 
@@ -2035,13 +1972,10 @@
         align-items: center;
         text-align: center;
 
-        // O valor editável tem `align-self: flex-start` lá embaixo (pensado pros boxes alinhados à
-        // esquerda, tipo Nível/Prestígio) — aqui teria puxado o número de volta pra esquerda. O campo
-        // de digitação também centraliza o texto, em vez do padrão do navegador (à esquerda).
-        .ficha-mini__valor--editavel {
-            align-self: center;
-        }
-
+        // O `app-valor-editavel` (`P-057`) nasce alinhado à esquerda (pensado pros boxes tipo
+        // Nível/Prestígio) — aqui pede `alinhamento="centro"` no template pra não puxar o número
+        // de volta pra esquerda. O campo de digitação também centraliza o texto, em vez do
+        // padrão do navegador (à esquerda).
         .ficha-mini__entrada {
             text-align: center;
         }
@@ -2101,39 +2035,15 @@
         &--warning {
             color: var(--warning);
         }
-
-        // Valor clicável (Nível/Prestígio/Dinheiro no lugar): mesmo visual, alvo de clique discreto.
-        &--editavel {
-            display: inline-flex;
-            align-items: baseline;
-            gap: 5px;
-            align-self: flex-start;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 0 5px;
-            margin-left: -5px;
-            cursor: text;
-            transition:
-                border-color 0.15s ease,
-                background-color 0.15s ease;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface);
-            }
-        }
     }
 
     // ✎ do valor editável (hoje só o Dinheiro combina lápis — Nível/Prestígio seguem sem ícone,
     // o clique no próprio número já bastava antes; manter os dois padrões evita mexer nos demais).
+    // Projetado em `[valorEditavelSufixo]` do `app-valor-editavel` (`P-057`) — identidade/hover do
+    // botão são dele; aqui só sobra a cor de repouso do ícone.
     &__lapis {
         font-size: 10px;
         color: var(--text-mute);
-    }
-
-    &__valor--editavel:hover &__lapis {
-        color: var(--text-dim);
     }
 
     // Largura no tamanho do texto (não do box) — clicar pra editar não deve "pular" o valor pra um
@@ -2484,23 +2394,6 @@
         font-size: 15px;
         font-weight: 700;
         color: var(--text-dim);
-
-        // Valor clicável (edição no próprio lugar, m3-36): mesmo padrão de `.ficha-mini__valor--editavel`.
-        &--editavel {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-control);
-            padding: 0 3px;
-            cursor: text;
-            transition:
-                border-color 0.15s ease,
-                background-color 0.15s ease;
-
-            &:hover {
-                border-color: var(--border-strong);
-                background: var(--surface);
-            }
-        }
     }
 
     // Campo de digitação direta da base manual — mesma filosofia de `.ficha-mini__entrada`: largura
@@ -3010,16 +2903,8 @@
 }
 
 // Valores clicáveis da edição no próprio lugar (m3-10): Nível, Prestígio, Dinheiro, Vida/Energia
-// atual e máxima, derivados de combate, resistências, Personalidade, Contrato e Codinome. Entre
-// 17 e 27px de altura — texto, não botão, e é justamente por isso que a caixa não pode crescer.
-.ficha-mini__valor--editavel,
-.ficha-barra__valor--editavel,
-.ficha-resistencia__valor--editavel,
-.ficha-ident__nome--editavel,
-.ficha-ident__meta-valor--editavel,
-.ficha-ident__contrato--editavel {
-    @include alvo-de-toque;
-}
+// atual e máxima, derivados de combate, resistências, Personalidade, Contrato e Codinome — o
+// alvo de toque de 44px de cada um agora é do `app-valor-editavel` (`P-057`), não deste arquivo.
 
 // m2-21: `.ficha-rolagem-oculta` (toggle de visibilidade) mudou de arquivo junto com a marcação —
 // vive em `ficha-rolagens-painel.component.scss`, o componente que agora renderiza o botão nos dois

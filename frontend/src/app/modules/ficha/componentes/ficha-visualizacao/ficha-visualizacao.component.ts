@@ -100,6 +100,7 @@ import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
@@ -399,6 +400,7 @@ export interface AjusteClasse {
     Botao,
     BotaoIcone,
     Modal,
+    ValorEditavel,
     AjusteEnquadramentoImagem,
     FocoImagem,
     ReceberDanoDialog,

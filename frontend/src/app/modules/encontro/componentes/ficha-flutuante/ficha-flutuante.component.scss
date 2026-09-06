@@ -1,6 +1,10 @@
 @use "tema/breakpoints" as bp;
 @use "../../../../shared/utilitario-flutuante/utilitario-flutuante" as utilitario-flutuante;
 
+// Moldura da janela (superfície, borda, sombra, cabeçalho, minimizar/fechar) mora em
+// `app-painel-flutuante` (ui-17) — este arquivo só cuida do gatilho, do conteúdo projetado e do
+// botão de maximizar/alça de redimensionar, que continuam do consumidor.
+
 :host {
     display: contents;
 }
@@ -26,93 +30,8 @@
         }
     }
 
-    &__janela {
-        position: fixed;
-        z-index: 1200;
-        min-width: 0;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-card);
-        box-shadow: 0 22px 64px color-mix(in srgb, var(--bg) 78%, transparent);
-        overflow: hidden;
-
-        &[hidden] {
-            display: none;
-        }
-
-        &--mobile {
-            inset: 0;
-            width: auto;
-            height: auto;
-            border: 0;
-            border-radius: 0;
-        }
-
-        &--maximizada {
-            border-radius: 0;
-        }
-    }
-
-    &__cabecalho {
-        min-height: 54px;
-        flex: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 9px 12px 9px 15px;
-        background: color-mix(in srgb, var(--surface-2) 52%, var(--surface));
-        border-bottom: 1px solid var(--border);
-        cursor: grab;
-        touch-action: none;
-
-        &:active {
-            cursor: grabbing;
-        }
-    }
-
-    &__identidade {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex: 1;
-    }
-
-    &__marca {
-        color: var(--accent);
-        font: 700 18px/1 var(--font-mono);
-    }
-
-    h2 {
-        margin: 0;
-        color: var(--text);
-        font: 700 13px/1.2 var(--font-mono);
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    &__regua {
-        min-width: 24px;
-        height: 1px;
-        flex: 1;
-        background: var(--border-strong);
-    }
-
-    &__acoes-janela {
-        flex: none;
-        display: flex;
-        gap: 6px;
-    }
-
     // Identidade (cor/borda/hover) é do `app-botao-icone` (ui-29); aqui só sobra o tamanho, igual
-    // ao par minimizar/fechar de `app-painel-flutuante` (ui-17), a versão compartilhada da mesma
-    // janela flutuante que esta ficha ainda reimplementa à mão — ver `P-058`.
+    // ao par minimizar/fechar de `app-painel-flutuante` (ui-17).
     &__acao-janela {
         width: 32px;
         height: 32px;
@@ -158,12 +77,6 @@
 
 @media (max-width: 560px) {
     .ficha-flutuante {
-        &__cabecalho {
-            min-height: 56px;
-            padding-top: calc(8px + env(safe-area-inset-top));
-            cursor: default;
-        }
-
         &__acao-janela {
             width: bp.$alvo-toque;
             height: bp.$alvo-toque;

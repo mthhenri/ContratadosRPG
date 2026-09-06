@@ -82,6 +82,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
 import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
@@ -467,6 +468,7 @@ interface AmpInventarioVM {
     StepInput,
     NgTemplateOutlet,
     AutoFocus,
+    ValorEditavel,
   ],
   templateUrl: './ficha-inventario.component.html',
   styleUrl: './ficha-inventario.component.scss',

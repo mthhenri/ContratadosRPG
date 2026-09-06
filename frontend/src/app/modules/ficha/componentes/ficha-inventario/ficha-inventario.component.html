@@ -10,8 +10,16 @@
         <div class="ficha-inv__carga-topo">
             <span class="ficha-inv__carga-rotulo">Inventário</span>
             <span class="ficha-inv__carga-direita">
-                @if (editavel() && editandoInventarioMaximo()) {
-                    <span class="ficha-inv__carga-valor">
+                @if (editavel()) {
+                    <app-valor-editavel
+                        class="ficha-inv__carga-valor"
+                        [valor]="inventarioTexto()"
+                        [editando]="editandoInventarioMaximo()"
+                        rotuloAria="inventário máximo"
+                        [variante]="excedeInventario() ? 'primario' : 'secundario'"
+                        alinhamento="auto"
+                        (editarSolicitado)="editarInventarioMaximo()"
+                    >
                         {{ pesoUsadoTexto() }} /
                         <input
                             #entradaInventarioMaximo
@@ -25,16 +33,7 @@
                             (keydown.escape)="cancelarInventarioMaximo()"
                             (blur)="confirmarInventarioMaximo(entradaInventarioMaximo.value)"
                         />
-                    </span>
-                } @else if (editavel()) {
-                    <button
-                        type="button"
-                        class="ficha-inv__carga-valor ficha-inv__carga-valor--editavel"
-                        aria-label="Editar inventário máximo"
-                        (click)="editarInventarioMaximo()"
-                    >
-                        {{ inventarioTexto() }}
-                    </button>
+                    </app-valor-editavel>
                 } @else {
                     <span class="ficha-inv__carga-valor">{{ inventarioTexto() }}</span>
                 }
@@ -1320,10 +1319,17 @@
                             </button>
                         }
                         @if (editavel()) {
-                            @if (
-                                contagemMunicaoEditando()?.indice === item.indice &&
-                                contagemMunicaoEditando()?.campo === "atual"
-                            ) {
+                            <app-valor-editavel
+                                class="ficha-inv__municao-valor"
+                                [valor]="item.contagemMunicao.atual"
+                                [editando]="
+                                    contagemMunicaoEditando()?.indice === item.indice &&
+                                    contagemMunicaoEditando()?.campo === 'atual'
+                                "
+                                [rotuloAria]="'contagem atual de ' + item.nomeExibido"
+                                alinhamento="auto"
+                                (editarSolicitado)="editarContagemMunicao(item.indice, 'atual')"
+                            >
                                 <input
                                     #entradaContagemMunicao
                                     class="ficha-inv__municao-entrada"
@@ -1347,23 +1353,19 @@
                                         )
                                     "
                                 />
-                            } @else {
-                                <button
-                                    type="button"
-                                    class="ficha-inv__municao-valor ficha-inv__municao-valor--editavel"
-                                    [attr.aria-label]="
-                                        'Editar contagem atual de ' + item.nomeExibido
-                                    "
-                                    (click)="editarContagemMunicao(item.indice, 'atual')"
-                                >
-                                    {{ item.contagemMunicao.atual }}
-                                </button>
-                            }
+                            </app-valor-editavel>
                             <span class="ficha-inv__municao-separador">/</span>
-                            @if (
-                                contagemMunicaoEditando()?.indice === item.indice &&
-                                contagemMunicaoEditando()?.campo === "maxima"
-                            ) {
+                            <app-valor-editavel
+                                class="ficha-inv__municao-valor"
+                                [valor]="item.contagemMunicao.maxima"
+                                [editando]="
+                                    contagemMunicaoEditando()?.indice === item.indice &&
+                                    contagemMunicaoEditando()?.campo === 'maxima'
+                                "
+                                [rotuloAria]="'contagem máxima de ' + item.nomeExibido"
+                                alinhamento="auto"
+                                (editarSolicitado)="editarContagemMunicao(item.indice, 'maxima')"
+                            >
                                 <input
                                     #entradaContagemMunicao
                                     class="ficha-inv__municao-entrada"
@@ -1387,18 +1389,7 @@
                                         )
                                     "
                                 />
-                            } @else {
-                                <button
-                                    type="button"
-                                    class="ficha-inv__municao-valor ficha-inv__municao-valor--editavel"
-                                    [attr.aria-label]="
-                                        'Editar contagem máxima de ' + item.nomeExibido
-                                    "
-                                    (click)="editarContagemMunicao(item.indice, 'maxima')"
-                                >
-                                    {{ item.contagemMunicao.maxima }}
-                                </button>
-                            }
+                            </app-valor-editavel>
                         }
                         <span class="ficha-inv__municao-unidade">{{
                             item.contagemMunicao.unidade === "CENA" ? "cena(s)" : "disparo(s)"

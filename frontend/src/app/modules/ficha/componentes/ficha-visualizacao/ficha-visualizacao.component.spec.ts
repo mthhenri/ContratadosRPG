@@ -231,7 +231,7 @@ describe('FichaVisualizacao', () => {
       alvo.fixture.componentInstance.ajusteCampoDados.subscribe((c) => campos.push(c));
 
       const botao = boxDoRotulo(alvo.raiz, 'Dinheiro')!.querySelector<HTMLButtonElement>(
-        '.ficha-mini__valor--editavel',
+        '.ficha-mini__valor .valor-editavel__botao',
       )!;
       botao.click();
       alvo.fixture.detectChanges();
@@ -357,7 +357,7 @@ describe('FichaVisualizacao', () => {
       alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
 
       const linhaDefesa = alvo.raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
-      const botao = Array.from(linhaDefesa.querySelectorAll('.ficha-mini__valor--editavel')).find(
+      const botao = Array.from(linhaDefesa.querySelectorAll('.ficha-mini__valor .valor-editavel__botao')).find(
         (b) => b.getAttribute('aria-label') === 'Editar Defesa',
       ) as HTMLButtonElement;
       botao.click();
@@ -404,7 +404,7 @@ describe('FichaVisualizacao', () => {
       )!;
       expect(contraAtaque.classList.contains('ficha-mini--contra')).toBe(false);
 
-      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor--editavel')!;
+      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor .valor-editavel__botao')!;
       botao.click();
       alvo.fixture.detectChanges();
       const entrada = contraAtaque.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
@@ -431,7 +431,7 @@ describe('FichaVisualizacao', () => {
       const contraAtaque = Array.from(linhaDefesa.querySelectorAll('.ficha-mini')).find(
         (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Contra-ataque',
       )!;
-      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor--editavel')!;
+      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor .valor-editavel__botao')!;
       // dados.nivel = 3, classe COMBATENTE → Defesa Base = 10 + 3 = 13.
       // dados.atributos.luta = 2 (ver fixture no topo do arquivo) → floor(2 / 2) = 1. Total = 14.
       expect(botao.textContent?.trim()).toBe('14');
@@ -532,7 +532,7 @@ describe('FichaVisualizacao', () => {
       const fisico = Array.from(alvo.raiz.querySelectorAll('.ficha-resistencia')).find(
         (box) => box.querySelector('.ficha-resistencia__abrev')?.textContent?.trim() === 'Físico',
       )!;
-      fisico.querySelector<HTMLButtonElement>('.ficha-resistencia__valor--editavel')!.click();
+      fisico.querySelector<HTMLButtonElement>('.ficha-resistencia__valor .valor-editavel__botao')!.click();
       alvo.fixture.detectChanges();
       const entrada = fisico.querySelector<HTMLInputElement>('.ficha-resistencia__entrada')!;
       entrada.value = '2';
@@ -569,7 +569,7 @@ describe('FichaVisualizacao', () => {
 
       const ajustes: { chave: string; valor: number | string }[] = [];
       alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
-      defesa.querySelector<HTMLButtonElement>('.ficha-mini__valor--editavel')!.click();
+      defesa.querySelector<HTMLButtonElement>('.ficha-mini__valor .valor-editavel__botao')!.click();
       alvo.fixture.detectChanges();
       // A edição mostra a base (13), não o efetivo (14) — evita commitar o delta de volta.
       const entrada = defesa.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
@@ -930,7 +930,11 @@ describe('FichaVisualizacao', () => {
     fixture.componentInstance.ajusteVitalidade.subscribe((a) => ajustes.push(a));
 
     // Clica no valor da Vida → abre o campo de digitação.
-    raiz.querySelector<HTMLButtonElement>('.ficha-barra--vida .barra-recurso__valor-atual--editavel')!.click();
+    raiz
+      .querySelector<HTMLButtonElement>(
+        '.ficha-barra--vida .barra-recurso__valor-atual .valor-editavel__botao',
+      )!
+      .click();
     fixture.detectChanges();
     const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--vida .barra-recurso__entrada');
     expect(entrada).not.toBeNull();
@@ -949,7 +953,9 @@ describe('FichaVisualizacao', () => {
     fixture.componentInstance.ajusteVitalidade.subscribe((a) => ajustes.push(a));
 
     const vidaMaximaBase = calcularVida({ classe: ClasseEnum.COMBATENTE, nivel: 3, vigor: 4 });
-    raiz.querySelector<HTMLButtonElement>('.ficha-barra--vida .barra-recurso__max--editavel')!.click();
+    raiz
+      .querySelector<HTMLButtonElement>('.ficha-barra--vida .barra-recurso__max .valor-editavel__botao')!
+      .click();
     fixture.detectChanges();
 
     const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--vida .barra-recurso__entrada')!;
@@ -1047,13 +1053,13 @@ describe('FichaVisualizacao', () => {
 
   it('mostra os alvos de edição de identidade (Codinome/Nível/Prestígio/Dinheiro) quando ajustável', () => {
     const { raiz } = montar(dados, 'Corvo', 42, true);
-    expect(raiz.querySelector('.ficha-ident__nome--editavel')).not.toBeNull();
+    expect(raiz.querySelector('.ficha-ident__nome .valor-editavel__botao')).not.toBeNull();
     // Nível, Prestígio, Dinheiro, Defesa, Esquiva e Bloqueio editáveis (Patente e Salário seguem
     // derivados, não editáveis; Contra-ataque só entra com a habilidade — fora deste fixture).
     // Escopado ao card de Identidade — o card de Status tem seus próprios editáveis (Deslocamento
     // e cia., redesenho de comparação visual).
     expect(
-      raiz.querySelectorAll('.ficha-visao__coluna--identidade .ficha-mini__valor--editavel').length,
+      raiz.querySelectorAll('.ficha-visao__coluna--identidade .ficha-mini__valor .valor-editavel__botao').length,
     ).toBe(6);
   });
 
@@ -1111,7 +1117,11 @@ describe('FichaVisualizacao', () => {
     const ajustes: unknown[] = [];
     fixture.componentInstance.ajusteVitalidade.subscribe((a) => ajustes.push(a));
 
-    raiz.querySelector<HTMLButtonElement>('.ficha-barra--energia .barra-recurso__valor-atual--editavel')!.click();
+    raiz
+      .querySelector<HTMLButtonElement>(
+        '.ficha-barra--energia .barra-recurso__valor-atual .valor-editavel__botao',
+      )!
+      .click();
     fixture.detectChanges();
     const entrada = raiz.querySelector<HTMLInputElement>('.ficha-barra--energia .barra-recurso__entrada');
     entrada!.value = '1';
@@ -1448,7 +1458,7 @@ describe('FichaVisualizacao', () => {
 
     it('dono vê o Contrato só leitura, sem lápis', () => {
       const { raiz } = montar(dados, 'Corvo', 42, true, false);
-      expect(raiz.querySelector('.ficha-ident__contrato--editavel')).toBeNull();
+      expect(raiz.querySelector('.ficha-ident__contrato .valor-editavel__botao')).toBeNull();
     });
 
     it('mestre vê o Contrato editável e emite o ajuste ao confirmar', () => {
@@ -1456,7 +1466,7 @@ describe('FichaVisualizacao', () => {
       const contratos: string[] = [];
       alvo.fixture.componentInstance.ajusteContrato.subscribe((c) => contratos.push(c));
 
-      expect(alvo.raiz.querySelector('.ficha-ident__contrato--editavel')).not.toBeNull();
+      expect(alvo.raiz.querySelector('.ficha-ident__contrato .valor-editavel__botao')).not.toBeNull();
       const componente = alvo.fixture.componentInstance;
       componente['editarIdentidade']('contrato');
       componente['confirmarIdentidade']('contrato', '1234');
