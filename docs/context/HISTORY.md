@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-06 — Esqueleto de título em `previa-jogador`/`espectador` ganha geometria (P-061)
+
+`previa-jogador.page.html` e `espectador.page.html` tinham `<span class="esqueleto-bloco
+esqueleto-bloco--titulo">` no cabeçalho de carregamento, mas nenhum dos dois `.scss` definia
+`.esqueleto-bloco` — resto de uma versão anterior ao primitivo `app-esqueleto`/BEM local (`ui-14`),
+achado fora do escopo da `P-051` (que auditou só classe **definida** localmente, não referenciada).
+Com o encapsulamento de estilo do Angular, o `<span>` não recebia cor, raio nem pulso: renderizava
+sem altura, invisível.
+
+Correção: trocado por `<app-esqueleto class="previa-jogador__esqueleto-titulo" />` (e
+`espectador__esqueleto-titulo` no outro arquivo), com geometria própria (`width: 220px; height:
+22px`) no SCSS de cada página — mesma largura fixa de `.detalhe__esqueleto-titulo` (`detalhe.page`,
+análogo direto: mesmo módulo `campanha`, mesmo `&__titulo` de 18px/700 no cabeçalho, corrigido na
+própria `P-051`). `app-esqueleto` já estava importado nos dois `.ts` (usado em outros blocos da
+mesma tela).
+
+Testado: focado (`previa-jogador.page.spec.ts` + `espectador.page.spec.ts`, 32/32) e suíte completa
+do frontend (1644/1644, sem regressão); lint sem erro novo (só os warnings pré-existentes de aspas);
+`format:html-scss` sem alteração (já formatado). Verificado ao vivo (skill `verify`): stack real
+(Postgres + backend + frontend já em execução), cenário montado por REST (mestre + jogador +
+campanha), rota interceptada via Playwright para segurar a segunda chamada a
+`previa-jogador/:usuarioAlvoId`/`painel-espectador` (a primeira é do guard, que já teria resolvido
+antes da tela renderizar) e capturar o estado `carregando()` de verdade — não só o código. Confirmado
+em `1920×1080` e `360×800` nas duas páginas: o bloco de título agora pulsa com `--surface-2`,
+arredondado, mesma densidade dos demais blocos do esqueleto ao lado; sem overflow em nenhum
+viewport.
+
 ## 2026-09-06 — Dois botões sem `app-botao-icone` adotam o primitivo: remover melhoria no guia de agente (P-059) e olho de senha em `gestao.page` (P-060)
 
 Duas dívidas pequenas e independentes de "biblioteca de componentes é obrigatória", cada uma achada

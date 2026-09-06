@@ -28,7 +28,7 @@
             <app-icone nome="voltar" />
         </a>
         } @if (carregando()) {
-        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        <app-esqueleto class="espectador__esqueleto-titulo" />
         } @else if (campanha(); as campanhaAtual) {
         <h1 class="espectador__titulo">{{ campanhaAtual.nome }}</h1>
         }

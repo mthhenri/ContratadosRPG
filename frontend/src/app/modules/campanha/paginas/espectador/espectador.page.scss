@@ -96,6 +96,13 @@
         white-space: nowrap;
     }
 
+    // Substitui `.esqueleto-bloco` (nunca definido neste arquivo — P-061): silhueta do `&__titulo`
+    // acima, mesma largura fixa de `.detalhe__esqueleto-titulo` (análogo de cabeçalho de campanha).
+    &__esqueleto-titulo {
+        width: 220px;
+        height: 22px;
+    }
+
     &__regua {
         flex: 1;
         min-width: 20px;

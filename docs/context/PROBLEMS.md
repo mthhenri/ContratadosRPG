@@ -89,24 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-061 — Esqueleto de título sem estilo em `previa-jogador`/`espectador` · `ABERTO` · frontend
-
-- **Sintoma:** `previa-jogador.page.html` e `espectador.page.html` têm `<span class="esqueleto-bloco
-  esqueleto-bloco--titulo">` no cabeçalho de carregamento, mas nenhum dos dois `.scss` define
-  `.esqueleto-bloco` (nem localmente, nem importam um `.scss` que o faça) — com o encapsulamento de
-  estilo do Angular, esse `<span>` não recebe geometria, cor, raio nem pulso nenhum; renderiza como
-  um elemento vazio, sem altura. O resto de cada tela (`app-esqueleto` com classes próprias, ex.
-  `previa-jogador__esqueleto-linha`) já está correto.
-- **Causa:** provável resto de uma versão anterior ao `app-esqueleto`/BEM local (`ui-14`), não
-  migrada quando o resto da tela adotou o primitivo — não fazia parte do levantamento da `P-051`
-  (que audita `.esqueleto-bloco` **definido** localmente; aqui a classe só é referenciada).
-- **Contorno:** nenhum — a área do título de carregamento fica sem silhueta visível (invisível, não
-  quebrado), até o conteúdo real chegar.
-- **Correção:** trocar por `<app-esqueleto class="previa-jogador__esqueleto-titulo" />` (e
-  equivalente em `espectador.page`), com geometria própria no SCSS de cada arquivo.
-- **Desde:** achado durante a implementação de `P-051` (2026-09-05) — fora do escopo daquela task
-  (que cobre só os quatro arquivos que duplicavam a identidade completa).
-
 ### P-063 — `contratos-gerados.ts` tem descrições de campo desatualizadas em relação ao JSDoc fonte · `ACEITO` · backend/tooling
 
 - **Sintoma:** ao rodar `openapi:gerar-contratos` de verdade (verificação do `P-062`), duas

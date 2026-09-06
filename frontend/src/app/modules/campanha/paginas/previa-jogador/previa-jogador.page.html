@@ -16,7 +16,7 @@
 
     <header class="previa-jogador__cabecalho">
         @if (carregando()) {
-        <span class="esqueleto-bloco esqueleto-bloco--titulo"></span>
+        <app-esqueleto class="previa-jogador__esqueleto-titulo" />
         } @else {
         <h1 class="previa-jogador__titulo">{{ previa()?.campanha?.nome }}</h1>
         }
