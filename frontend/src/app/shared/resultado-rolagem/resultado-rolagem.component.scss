@@ -117,6 +117,7 @@
     // que a pilha esteja na ordem certa. O halo tampa esses vãos sem precisar casar com o fundo do
     // consumidor (carta da bandeja `--surface`, item do feed/histórico `--surface-2`).
     &__dado-valor {
+        z-index: 0;
         line-height: 1;
         text-shadow:
             0 0 3px rgb(0 0 0 / 70%),
