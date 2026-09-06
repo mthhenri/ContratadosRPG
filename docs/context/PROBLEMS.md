@@ -89,42 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-059 — Botão "Remover" sem classe no guia de criação de agente · `ABERTO` · frontend/design system
-
-- **Sintoma:** `criar.page.html` (vaga de habilidade escolhida, dentro de `.guia__vaga-lista`) tem
-  um `<button aria-label="Remover ..." (click)="removerMelhoria(...)">✕</button>` sem nenhuma classe
-  CSS — nem `app-botao`/`app-botao-icone`, nem geometria própria — estilizado só pelo `<button>`
-  nativo do navegador.
-- **Causa:** o levantamento completo do `P-048` audita por classe CSS; um botão sem classe não
-  aparece na lista de ocorrências e não foi enumerado no entregável de nenhuma spec da série
-  `ui-28`…`ui-32`.
-- **Contorno:** funciona, mas destoa visualmente dos demais botões do guia.
-- **Correção:** dar ao botão a classe `guia__vaga-remover` (ou similar) e o atributo
-  `app-botao-icone`, com geometria própria no SCSS de `criar.page.scss`.
-- **Desde:** achado durante a implementação de `ui-31` (2026-09-04) — fora do escopo do entregável 6
-  daquela spec (que só lista `.guia__sair`, `.guia__formacao-remover`, `.guia__resumo-*`).
-
-### P-060 — Botão de mostrar/ocultar senha sem `app-botao-icone` em `gestao.page` · `ABERTO` · frontend/design system
-
-- **Sintoma:** `gestao.page.html` (formulário "Redefinir senha" de um usuário, dentro de
-  `.gestao__senha`) tem `<button type="button" (click)="alternarSenha()" [attr.aria-label]="...">`
-  sem `app-botao-icone`, com identidade própria em `.gestao__senha button` (`gestao.page.scss`:
-  posição absoluta, 44×44px, `border: 0`, fundo transparente, cor `--text-mute`) — o mesmo padrão
-  de olho de senha que `perfil.page.html` já resolve com `app-botao-icone tamanho="padrao"` e
-  classe `perfil__olho`.
-- **Causa:** o entregável 3 da `ui-32` (`docs/specs/done/ui-32-adocao-botao-icone-simulacao-
-  usuario.spec.md`) lista só `.gestao__limpar-filtros`, `.gestao__tipo-confirmar`,
-  `.gestao__tipo-cancelar` e `.gestao__tipo` — o botão de senha não estava no levantamento nem no
-  texto da spec.
-- **Contorno:** funciona; visualmente já é discreto (ícone solto, sem borda), então o desvio é
-  menor que o do `P-059`, mas ainda reimplementa hover/foco/tamanho na mão em vez de reusar o
-  primitivo.
-- **Correção:** trocar para `app-botao-icone` (mesmo padrão de `perfil__olho`), com `aria-label` já
-  existente e `[appTooltip]` a acrescentar (o primitivo exige os dois); ajustar
-  `.gestao__senha button` para manter só posição/tamanho.
-- **Desde:** achado durante a implementação de `ui-32` (2026-09-05) — fora do escopo do entregável 3
-  daquela spec.
-
 ### P-061 — Esqueleto de título sem estilo em `previa-jogador`/`espectador` · `ABERTO` · frontend
 
 - **Sintoma:** `previa-jogador.page.html` e `espectador.page.html` têm `<span class="esqueleto-bloco

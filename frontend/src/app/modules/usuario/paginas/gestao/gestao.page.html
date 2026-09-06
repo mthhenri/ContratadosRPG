@@ -198,9 +198,14 @@
                                     autocomplete="new-password"
                                     required
                                 /><button
+                                    app-botao-icone
+                                    tamanho="padrao"
+                                    class="gestao__senha-olho"
                                     type="button"
                                     (click)="alternarSenha()"
                                     [attr.aria-label]="senhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+                                    [appTooltip]="senhaVisivel() ? 'Ocultar senha' : 'Mostrar senha'"
+                                    [attr.aria-pressed]="senhaVisivel()"
                                 >
                                     <app-icone [nome]="senhaVisivel() ? 'olho-fechado' : 'olho'" />
                                 </button></div

@@ -1,5 +1,48 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-06 — Dois botões sem `app-botao-icone` adotam o primitivo: remover melhoria no guia de agente (P-059) e olho de senha em `gestao.page` (P-060)
+
+Duas dívidas pequenas e independentes de "biblioteca de componentes é obrigatória", cada uma achada
+fora do escopo de uma spec anterior (`P-059` na `ui-31`, `P-060` na `ui-32`) e sem decisão do autor
+pendente — o análogo aprovado já existia no próprio repositório para as duas.
+
+**`P-059`.** O botão "✕" de remover uma habilidade já escolhida em `criar.page.html`
+(`.guia__vaga-lista` → `.guia__vaga-item`, passo // Habilidades) não tinha classe CSS nenhuma —
+por isso escapou do levantamento por classe da série `ui-28`…`ui-32`. Virou `app-botao-icone
+tamanho="mini"` com a classe `guia__vaga-remover` e `app-icone nome="excluir"` no lugar do glifo
+`✕` solto; `tamanho="mini"` (ui-28: "ícone inline dentro de outro controle, sem borda") reproduz
+exatamente a geometria antiga (16×16px, ícone 12px) sem precisar de override, e o primitivo já
+resolve o alvo de toque de 44px no mobile sozinho — a regra manual equivalente em `criar.page.scss`
+(`.guia__vaga-item button { min-width/height: bp.$alvo-toque }`) virou código morto e foi removida
+junto. Cor de repouso (`--text-mute`) preservada com um override de uma linha; hover herda `--accent`
+do próprio primitivo, idêntico ao comportamento anterior (conferido via `getComputedStyle` no
+Playwright: `rgb(101,106,114)` em repouso, `rgb(213,48,48)` no hover, batendo com os tokens
+`--text-mute`/`--accent`).
+
+**`P-060`.** O botão de mostrar/ocultar a nova senha em `gestao.page.html` (aba "Redefinir senha")
+tinha identidade própria em `.gestao__senha button` (posição absoluta, 44×44px, sem borda) — o
+mesmo padrão que `perfil.page.html` já resolve com `app-botao-icone tamanho="padrao"` e a classe
+`perfil__olho`. Copiado o padrão quase literalmente: `app-botao-icone tamanho="padrao"`, classe
+`gestao__senha-olho`, `[appTooltip]` acrescentado (o primitivo exige `aria-label` **e**
+`appTooltip`; só o primeiro já existia) e `[attr.aria-pressed]` novo, mesmo trio de atributos do
+análogo. `.gestao__senha-olho` no SCSS ficou só com posição/tamanho/`font-size` do ícone — cor,
+borda e hover vieram de graça do primitivo.
+
+Sem escopo de UI nova — as duas são substituições ponto a ponto de HTML cru por um primitivo já
+adotado em outro lugar do produto, então o gate visual comparou contra o próprio análogo citado em
+cada `PROBLEMS.md` (`guia__formacao-remover` de `criar-criatura.page` para o `P-059`, `perfil__olho`
+de `perfil.page` para o `P-060`). Testes: `frontend` focado (`criar.page.spec.ts` +
+`gestao.page.spec.ts`, 90/90) e suíte completa depois (121 arquivos/1644 testes, sem regressão);
+lint sem erro novo; `format:html-scss` já batia (sem mudança). Verificação ao vivo (Postgres +
+backend + frontend reais) em `1920×1080`/`360×800`: sessão admin fabricada via `tipo_usuario_id`
+promovido a `ADMIN` direto no Postgres (não existe fluxo de produto para virar admin) para alcançar
+`/admin/usuarios`; o passo // Habilidades do guia de agente foi alcançado chamando os métodos
+internos do componente (`alterar`/`selecionarPacoteHabilidades`/`adicionarMelhoria`, os mesmos que
+`criar.page.spec.ts` já usa) via `window.ng.getComponent()` em vez de navegar o wizard inteiro
+campo a campo — atalho de automação, não de verificação: o DOM renderizado e capturado é o app real
+rodando, só o caminho até o estado foi mais curto. Confirmados nos dois viewports: ícone, tooltip,
+hover, `aria-pressed`/`aria-expanded`, alvo de toque e ausência de overflow.
+
 ## 2026-09-06 — Nasce `app-valor-editavel` e adota nas ~30 ocorrências de "valor clicável" (P-057); `ficha-flutuante` migra para `app-painel-flutuante` (P-058)
 
 Duas dívidas de design system encontradas fora do escopo de tasks anteriores (`P-057` no

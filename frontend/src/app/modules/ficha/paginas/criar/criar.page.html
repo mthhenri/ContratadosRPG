@@ -908,11 +908,15 @@
                             <li class="guia__vaga-item">
                                 {{ habilidade.nome }}
                                 <button
+                                    app-botao-icone
+                                    tamanho="mini"
+                                    class="guia__vaga-remover"
                                     type="button"
                                     [attr.aria-label]="'Remover ' + habilidade.nome"
+                                    [appTooltip]="'Remover ' + habilidade.nome"
                                     (click)="removerMelhoria(habilidade.nome)"
                                 >
-                                    ✕
+                                    <app-icone nome="excluir" />
                                 </button>
                             </li>
                             }

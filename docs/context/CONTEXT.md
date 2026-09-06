@@ -37,6 +37,19 @@
 
 ## 1. Próxima Task
 
+**`P-059`/`P-060` fechados (2026-09-06):** dois botões sem `app-botao-icone`, achados fora do
+escopo de `ui-31`/`ui-32`. `P-059` — o "✕" solto de remover uma melhoria escolhida
+(`criar.page.html`, `.guia__vaga-item`) virou `app-botao-icone tamanho="mini"` (`guia__vaga-remover`)
+com `app-icone nome="excluir"`; `tamanho="mini"` já reproduz a geometria antiga sem override e
+resolve o alvo de toque mobile sozinho, então a regra manual equivalente em `criar.page.scss` saiu.
+`P-060` — o olho de mostrar/ocultar senha em `gestao.page.html` (`.gestao__senha button`) virou
+`app-botao-icone tamanho="padrao"` (`gestao__senha-olho`), copiando ponto a ponto o `perfil__olho`
+de `perfil.page.html` (mesmo análogo já citado no `PROBLEMS.md`). Testes: `frontend` focado 90/90 e
+suíte completa 1644/1644; lint sem erro novo. Verificação ao vivo em `1920×1080`/`360×800`: sessão
+admin fabricada via `tipo_usuario_id` no Postgres para alcançar `/admin/usuarios`; passo //
+Habilidades do guia alcançado via `window.ng.getComponent()` chamando os mesmos métodos que
+`criar.page.spec.ts` já usa (atalho até o estado, não até o DOM — o app rodando é o real).
+
 **`P-057`/`P-058` fechados (2026-09-06):** nasceu `app-valor-editavel`
 (`frontend/src/app/shared/ui/valor-editavel/`) — primitivo de "valor da ficha que vira campo de
 edição ao clicar". Não genereciza o **tipo** do campo (`number`/`text`/`select`/`textarea` — cada

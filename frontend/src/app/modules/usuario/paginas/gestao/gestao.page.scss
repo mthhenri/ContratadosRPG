@@ -111,15 +111,16 @@
     width: 100%;
     padding-right: 44px;
 }
-.gestao__senha button {
+.gestao__senha-olho {
     position: absolute;
     right: 0;
     top: 0;
     width: 44px;
     height: 100%;
-    border: 0;
-    background: transparent;
-    color: var(--text-mute);
+
+    app-icone {
+        font-size: 17px;
+    }
 }
 .gestao__paginacao {
     margin-top: 16px;
