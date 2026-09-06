@@ -1,0 +1,36 @@
+// Mesma identidade byte-a-byte já usada por Caderno e Leitor de Documentos antes desta task
+// (`P-056`). Foco visível já vem do global `button:focus-visible` (`_base.scss`) — nada aqui.
+:host {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    min-height: 32px;
+    padding: 0 11px;
+    color: var(--text-mute);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        color: var(--text);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+:host(.segmentado__item--ativo) {
+    color: var(--accent);
+    background: var(--accent-dim);
+    box-shadow: inset 0 0 0 1px var(--accent-border);
+}

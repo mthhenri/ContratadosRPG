@@ -12,7 +12,12 @@ import { EstadoVazio } from './estado-vazio.component';
 @Component({
   imports: [EstadoVazio],
   template: `
-    <app-estado-vazio [icone]="icone()" [titulo]="titulo()" [linhaApoio]="linhaApoio()">
+    <app-estado-vazio
+      [icone]="icone()"
+      [titulo]="titulo()"
+      [linhaApoio]="linhaApoio()"
+      [tamanho]="tamanho()"
+    >
       @if (comAcao()) {
         <button type="button" estadoVazioAcao>Criar campanha</button>
       }
@@ -24,6 +29,7 @@ class Hospedeiro {
   readonly titulo = signal('Nenhuma campanha ainda.');
   readonly linhaApoio = signal<string | undefined>(undefined);
   readonly comAcao = signal(false);
+  readonly tamanho = signal<'padrao' | 'compacto'>('padrao');
 }
 
 describe('EstadoVazio', () => {
@@ -74,5 +80,14 @@ describe('EstadoVazio', () => {
 
     const acao = raiz(fixture).querySelector('button[estadovazioacao]');
     expect(acao?.textContent?.trim()).toBe('Criar campanha');
+  });
+
+  it('aplica o modificador compacto sem perder a moldura', () => {
+    const fixture = montar();
+    fixture.componentInstance.tamanho.set('compacto');
+    fixture.detectChanges();
+
+    const raizElemento = raiz(fixture).querySelector('.estado-vazio');
+    expect(raizElemento?.classList.contains('estado-vazio--compacto')).toBe(true);
   });
 });

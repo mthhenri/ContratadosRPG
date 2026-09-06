@@ -82,6 +82,8 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { EFEITO_TIPOS, EfeitoTipoMeta, metaEfeitoTipo } from '../../../../shared/inventario/efeito-modificacao.ui';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
@@ -460,6 +462,8 @@ interface AmpInventarioVM {
     BotaoIcone,
     EstadoVazio,
     Modal,
+    Segmentado,
+    SegmentadoItem,
     StepInput,
     NgTemplateOutlet,
     AutoFocus,

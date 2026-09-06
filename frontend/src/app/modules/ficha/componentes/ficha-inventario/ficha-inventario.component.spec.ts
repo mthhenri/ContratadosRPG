@@ -2823,7 +2823,7 @@ describe('FichaInventario', () => {
 
     /** Localiza o botão pelo nome acessível, que permanece por extenso nos dois viewports. */
     function botaoFiltro(raiz: HTMLElement, rotulo: string): HTMLButtonElement {
-      return Array.from(raiz.querySelectorAll('.ficha-inv__filtro-item')).find(
+      return Array.from(raiz.querySelectorAll('.ficha-inv__filtro button[app-segmentado-item]')).find(
         (b) => b.getAttribute('aria-label') === rotulo,
       ) as HTMLButtonElement;
     }

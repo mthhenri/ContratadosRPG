@@ -7,6 +7,7 @@ import { CATALOGO_CATEGORIAS, CATALOGO_ITENS, type CarrinhoItemDto, type ItemCat
 import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 
 /** Categorias com item comprável separadamente empilhável (mesmo critério de `ComprasPage`, m1-10). */
@@ -65,7 +66,7 @@ interface CartaoItemVM {
  */
 @Component({
   selector: 'app-guia-equipamento-loja',
-  imports: [ReactiveFormsModule, OverflowFade, Icone, StepInput, BotaoIcone],
+  imports: [ReactiveFormsModule, OverflowFade, Icone, StepInput, BotaoIcone, EstadoVazio],
   templateUrl: './guia-equipamento-loja.component.html',
   styleUrl: './guia-equipamento-loja.component.scss',
 })

@@ -44,30 +44,26 @@
 
     <div class="leitor-documentos__conteudo">
         <div class="leitor-documentos__toolbar" role="toolbar" aria-label="Escolher documento">
-            <div class="leitor-documentos__segmentado" role="group" aria-label="Documento">
+            <app-segmentado class="leitor-documentos__segmentado" rotulo="Documento">
                 <button
+                    app-segmentado-item
                     type="button"
-                    [class.leitor-documentos__segmentado-item--ativo]="
-                        estado().documentoAtivo === 'sistema'
-                    "
-                    [attr.aria-pressed]="estado().documentoAtivo === 'sistema'"
+                    [ativo]="estado().documentoAtivo === 'sistema'"
                     aria-label="Selecionar Sistema"
                     (click)="selecionarDocumento('sistema')"
                 >
                     Sistema
                 </button>
                 <button
+                    app-segmentado-item
                     type="button"
-                    [class.leitor-documentos__segmentado-item--ativo]="
-                        estado().documentoAtivo === 'guia-mestre'
-                    "
-                    [attr.aria-pressed]="estado().documentoAtivo === 'guia-mestre'"
+                    [ativo]="estado().documentoAtivo === 'guia-mestre'"
                     aria-label="Selecionar Guia do Mestre"
                     (click)="selecionarDocumento('guia-mestre')"
                 >
                     Guia do Mestre
                 </button>
-            </div>
+            </app-segmentado>
             <span class="leitor-documentos__dica">
                 Busca, páginas e zoom ficam na barra do PDF.
             </span>

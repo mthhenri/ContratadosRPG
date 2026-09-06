@@ -551,7 +551,7 @@ describe('FichaHabilidades', () => {
       botaoResumo(raiz, 'Geral').click();
       botaoResumo(raiz, 'Outras classes/arquétipos').click();
       fixture.detectChanges();
-      const vazio = raiz.querySelector('.habilidades__vazio')?.textContent?.trim();
+      const vazio = raiz.querySelector('.estado-vazio__titulo')?.textContent?.trim();
       expect(vazio).toBe('Nenhuma habilidade de Geral ou Outra classe/arquétipo.');
     });
   });

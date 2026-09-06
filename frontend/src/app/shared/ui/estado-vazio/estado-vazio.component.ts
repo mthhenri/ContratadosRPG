@@ -1,6 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 import { Icone, type IconeNome } from '../../icone/icone.component';
+
+export type EstadoVazioTamanho = 'padrao' | 'compacto';
 
 /**
  * Primitivo de estado vazio de lista (`ui-14` · `P-034`). Substitui as cópias locais de
@@ -12,6 +14,10 @@ import { Icone, type IconeNome } from '../../icone/icone.component';
  * já decidiu. A ação é opcional e projetada (não um input de rótulo): quando existe, o consumidor
  * decide o próprio `app-botao` (`estilo="contorno"` ou `"link"`, nunca `"preenchido"` — um estado
  * vazio não compete visualmente com a ação principal da tela, que já mora na barra acima da lista).
+ *
+ * `tamanho="compacto"` (`P-055`) reduz o respiro vertical para caber dentro de listas já contidas
+ * por outro cartão/moldura (iniciativa, log de encontro, habilidades/ataques/resistências de
+ * criatura, sanidade, inventário) — mantém a moldura tracejada, só encolhe o padding.
  */
 @Component({
   selector: 'app-estado-vazio',
@@ -28,4 +34,11 @@ export class EstadoVazio {
 
   /** Segunda linha opcional, mais discreta, com o contexto ou o próximo passo sugerido. */
   readonly linhaApoio = input<string>();
+
+  /** `padrao` (32px de respiro) para estados vazios de página; `compacto` para dentro de listas. */
+  readonly tamanho = input<EstadoVazioTamanho>('padrao');
+
+  protected readonly classes = computed(() =>
+    this.tamanho() === 'compacto' ? 'estado-vazio estado-vazio--compacto' : 'estado-vazio',
+  );
 }

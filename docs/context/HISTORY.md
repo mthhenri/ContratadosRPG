@@ -1,5 +1,112 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-06 — `app-estado-vazio` ganha `[tamanho]="compacto"` e adota em 15 listas densas (P-055); nasce `app-segmentado`/`app-segmentado-item` e adota nos 3 controles reais (P-056)
+
+Fecha a auditoria `UI-27` por completo — `P-055`/`P-056` eram os dois últimos itens ativos, na
+mesma sessão de `P-053`/`P-054` (ver bloco abaixo).
+
+**`P-055`.** Análogo registrado antes de editar: os 16 consumidores já existentes de
+`app-estado-vazio` (`ui-14`), todos "amplo" — ícone + título mono + linha de apoio, moldura
+tracejada com 32px de respiro vertical. O achado da auditoria: 15 ocorrências reais de
+`<p class="…__vazio">`/`<li class="…__vazio">` **locais**, sempre dentro de uma lista já contida
+por outro cartão/moldura (nunca soltas na página) — `iniciativa__vazio` (ordem de iniciativa),
+`seletor__vazio` ×2 (agentes/criaturas do seletor de combatentes), `iniciativa-leitura__vazio`,
+`log__vazio`, `habilidade-lista__vazio`/`ataque-lista__vazio`/`resistencia-lista__vazio` (listas de
+criatura), `habilidades__vazio` ×2 (vazio de verdade e vazio por filtro), `ficha-inv__vazio` ×3
+(catálogo, busca sem resultado, subcontêiner "Mover para"), `sanidade__vazio` ×3
+(sequelas/traumas/lesões), `ficha-rol__vazio`, `ficha-combos__vazio`, e dois `@empty` de grade —
+`seletor__vazio` (seletor de habilidade) e `loja__vazio` (loja de equipamento), ambos `<li>` com
+`grid-column: 1 / -1`. Ficou de fora (não é lista): `criatura__vazio` em `criatura-visualizacao`
+("Sem regeneração."/"Sem anotações.") — placeholder de campo único, não vazio de lista; nenhuma
+entrada nova em `PROBLEMS.md`, só fora do recorte que a correção do `P-055` já delimitava
+("migrar apenas vazios de lista; mensagens de ajuda, carregamento e validação permanecem locais").
+
+Decisão do autor via `AskUserQuestion` (ampliar o primitivo nunca é escolha unilateral): manter a
+moldura tracejada em todos os tamanhos, só reduzir o padding — não remover a borda como os
+consumidores reais já faziam. `EstadoVazio` ganhou `tamanho = input<'padrao'|'compacto'>('padrao')`;
+`.estado-vazio--compacto` troca `padding: calc(var(--space-16) * 2) var(--space-20)` (32px) por
+`gap: var(--space-4); padding: var(--space-8) var(--space-12)`, mantendo `border: 1px dashed
+var(--border-strong)`. As 15 ocorrências reais migraram para `<app-estado-vazio tamanho="compacto"
+titulo="…">` (ou `[titulo]` quando o texto era condicional — `ehMestre()`/`mensagemListaVazia()`);
+os dois `@empty` de grade mantiveram o `<li>` (só com `grid-column: 1/-1`, sem mais nada) envolvendo
+o `app-estado-vazio` por dentro. Todo `.scss` com a regra `__vazio` morta (padding/font/cor
+duplicados do primitivo) foi limpo; specs que buscavam a classe antiga (`.seletor__vazio`,
+`.log__vazio`, `.habilidades__vazio`) passaram a procurar `.estado-vazio__titulo`.
+
+**`P-056`.** A auditoria achou três controles reais com o mesmo papel funcional — grupo de seleção
+única com item `aria-pressed` — mas três implementações locais divergentes: Caderno
+(`caderno-flutuante.component`) e Leitor de Documentos (`leitor-documentos.component`) tinham CSS
+**idêntico byte a byte** (`padding: 2px`, `background: var(--surface-2)`, item ativo
+`color: var(--accent); background: var(--accent-dim); box-shadow: inset 0 0 0 1px
+var(--accent-border)`); Inventário da ficha (`ficha-inventario.component`, filtro
+Equipamentos/Amplificadores/Fragmentos) copiava outro padrão — o comentário do próprio código já
+citava a origem: "Mesmo padrão visual da barra de abas do Status" (bloco preenchido `--accent`,
+sem `box-shadow`). Análogo de arquitetura: `Abas`/`Aba` (`ui-03`) — seletor de atributo
+(`button[app-aba]`) com o host sendo o próprio botão do consumidor, sem nó extra, e a seleção
+continuando do consumidor (`(click)` já decide). `app-segmentado` difere de `app-abas` no papel
+ARIA: `role="group"` + item `aria-pressed`, não `tablist`/`tab` — é um alternador de modo/filtro
+que troca dado no lugar (ou nem isso), não uma troca de painel dona de `tabpanel`; por isso não
+cabia ampliar `Abas`, e a `PROBLEMS.md` já pedia primitivo próprio.
+
+Duas decisões do autor via `AskUserQuestion` antes de implementar:
+1. **Identidade canônica** — pill com fundo `--accent-dim` (Caderno/Leitor), não o bloco preenchido
+   do Inventário: 2 dos 3 consumidores reais já batiam byte a byte, e a migração troca a aparência
+   de só um consumidor (Inventário) em vez de dois.
+2. *(P-055, mesma rodada)* manter a moldura tracejada do `app-estado-vazio` compacto — já registrada
+   acima.
+
+`Segmentado` (`app-segmentado`, `role="group"`, `[attr.aria-label]="rotulo()"`) e `SegmentadoItem`
+(`button[app-segmentado-item]`, host do próprio botão) nasceram em `shared/ui/segmentado/`. A
+identidade (fundo/borda do container; cor/fundo/`box-shadow` do item ativo; hover; `:disabled` com
+opacidade 0.5) mora inteira no primitivo — foco visível já vem do `button:focus-visible` global
+(`_base.scss`), nada novo precisou ser escrito para isso. Tamanho e conteúdo (ícone só, ícone+texto,
+texto só) ficam pela classe BEM do consumidor no **mesmo elemento** (`Aba`/`app-stat`/`app-esqueleto`
+já seguem esse padrão) — por isso o primitivo não tem `[tamanho]` próprio: densidade aqui é função
+do conteúdo projetado, não de um degrau fixo. `[desabilitado]` (novo — nenhum dos 3 consumidores
+reais tinha esse estado antes) trava o item sem removê-lo do grupo, atendendo à correção do
+`PROBLEMS.md` ("seleção única, foco, desabilitado e densidade compacta").
+
+Migração dos 3 consumidores: Caderno e Leitor trocaram o `<div role="group">`/botões nus por
+`<app-segmentado class="…__segmentado">`/`<button app-segmentado-item [ativo]="…">` — identidade
+idêntica à anterior, então **nenhuma mudança visual** nos dois (só a casca interna). Inventário da
+ficha migrou as duas versões (compacta — só ícone, 30×30, usada na "Ficha do combatente" flutuante
+do Encontro — e completa — ícone + texto responsivo, usada na ficha de página inteira) para o novo
+primitivo; a variante `--compacto`/o texto duplo (`--desktop`/`--mobile`) ficaram como classes locais
+no mesmo elemento, só a identidade de cor/fundo/ativo saiu do `.ficha-inv__filtro-item` local. CSS
+morta removida em todos os três `.scss` (identidade duplicada); a especificidade de classe+atributo
+do consumidor (`.ficha-inv__filtro-item--compacto[_ngcontent-x]`, 0-2-0) já vence a do primitivo
+(`:host`, 0-1-0) sem depender de ordem de carregamento — mesmo mecanismo já usado por
+`app-esqueleto`/`app-stat` (`DESIGN.md`).
+
+**Testes** (workspace `frontend`, focados por arquivo e depois suíte completa): `estado-vazio` 6/6
+(1 novo — modificador compacto sem perder a moldura); `segmentado` 4/4 (novo — grupo `role="group"`,
+`aria-pressed` só no ativo, seleção pelo `(click)` do consumidor, item desabilitado); batches de
+migração do `P-055` — encontro (`seletor-combatentes`/`iniciativa-leitura`/`log-encontro`/
+`painel-encontro`) 84/84, listas de criatura 18/18, ficha (`habilidades`/`sanidade`/`inventario`)
+214/214, batch final (`rolagens`/`combos`/`habilidade-seletor`/`guia-equipamento-loja`) 48/48;
+`P-056` — `caderno-flutuante` 31/31, `leitor-documentos` 11/11, `ficha-inventario` 167/167 (helper
+`botaoFiltro` trocou de `.ficha-inv__filtro-item` para `button[app-segmentado-item]`). Suíte
+completa: 1640/1640 (+5 sobre a marca do `P-053`/`P-054`: os 2 novos specs de `estado-vazio`/
+`segmentado`, líquido de zero specs perdidos). Lint: 0 erro novo nos três workspaces (warnings
+pré-existentes de `quotes` inalterados). Build: limpo, aviso de budget conhecido (`P-004`)
+inalterado.
+
+**Verificação ao vivo** (Postgres + backend + frontend reais, cenários via REST cru, `1920×1080` e
+`360×800`): iniciativa vazia (`POST campanha/:id/encontro` sem combatente) — moldura compacta sem
+overflow nos dois viewports; ficha de jogador, aba Informações — `Sem sequelas.`/`Sem traumas.`/
+`Sem lesões.` como caixas compactas dentro dos três cartões de Sanidade; Caderno flutuante (gatilho
+"Abrir caderno") e Leitor de Documentos (gatilho global "Abrir documentos" da topbar) — pill
+idêntica nos dois, ativo em vermelho sobre fundo dim, sem mudança perceptível em relação ao "antes";
+Inventário da ficha nas duas densidades — completa (aba Inventário da ficha de página inteira,
+rótulo abreviado no mobile) e compacta (só ícone 30×30, aberta pela "Ficha do combatente" dentro do
+Encontro — precisou de um combatente real via `POST encontro/:id/combatente` para existir). Nenhuma
+divergência encontrada nos dois viewports; nenhuma correção necessária antes do fecho. Os dois
+`@empty` de grade (`ficha-habilidade-seletor`, `guia-equipamento-loja`) ficam atrás de fluxos mais
+profundos (criação de ficha) e não foram exercitados ao vivo nesta sessão — o primitivo que
+desenham já foi confirmado em múltiplos outros contextos (parágrafo solto, cartão, grade), e a
+única diferença desses dois é `grid-column: 1/-1` puro, sem risco comportamental; considerado
+coberto por leitura de código + o gate visual dos demais consumidores.
+
 ## 2026-09-06 — Modais de campanha param de duplicar a casca de `app-modal` (P-053); `app-stat` ganha `hero`/`[statInfo]`/`[pulso]` e adota nas 5 telas de simulação (P-054)
 
 Correção do `P-053`: em `detalhe.page` (campanha), os modais "Vincular ficha", "Duplicar ficha" e

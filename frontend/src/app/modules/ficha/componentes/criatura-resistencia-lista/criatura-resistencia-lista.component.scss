@@ -56,11 +56,6 @@
             border-color: var(--accent);
         }
     }
-    &__vazio {
-        margin: 0;
-        font: 12px var(--font-sans);
-        color: var(--text-mute);
-    }
 
     // Fraquezas: o rótulo e a régua ganham o tom de perigo do mockup.
     &--fraqueza {

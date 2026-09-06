@@ -66,10 +66,10 @@
     }
 
     @if (vazio() && indiceEmEdicao() !== -1) {
-        <p class="ficha-combos__vazio">
-            Nenhum combo salvo. Um combo é uma sequência de rolagens já existentes, executada passo
-            a passo.
-        </p>
+        <app-estado-vazio
+            tamanho="compacto"
+            titulo="Nenhum combo salvo. Um combo é uma sequência de rolagens já existentes, executada passo a passo."
+        />
     }
 
     <div class="ficha-combos__lista">

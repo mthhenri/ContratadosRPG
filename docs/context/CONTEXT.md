@@ -4,17 +4,19 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-06 · **Última decisão registrada:** dívida de adoção da UI-27 segue
-> fechando — `P-053` (três modais de campanha duplicavam a casca de `app-modal`) e `P-054` (5 telas
-> de Simulação mantinham `.agente-stat`/`.calc-stat` paralelos a `app-stat`) fecharam na mesma
-> sessão. `app-stat` ganhou `[tamanho]="hero"` (30px), `[statInfo]` (slot de ícone no rótulo) e
-> `[pulso]` (contador que dispara o pulso de escala internamente, sem `ElementRef` externo) — as
-> três ampliações decididas pelo autor via `AskUserQuestion` antes de implementar. Um 5º stat
-> (`compras-venda-total`, fundo preenchido) ficou local por não ter variante equivalente —
-> registrado como `P-064`. Antes disso: `m8-07` deu ao Painel do espectador um painel de jogadores
-> (grade de cartões); `P-062` (diff espúrio de CRLF no gerador OpenAPI) e `P-052` (cabeçalho de
-> `app-cartao` duplicado na Iniciativa, que ganhou `[semCaixa]`) também fecharam. Detalhe completo,
-> achados e viewports verificados de cada um em `HISTORY.md`.
+> **Última revisão:** 2026-09-06 · **Última decisão registrada:** a dívida de adoção da UI-27
+> fechou por completo — `P-055` (estados vazios densos sem variante compacta) e `P-056` (três
+> controles segmentados com identidade local) fecharam na mesma sessão de `P-053`/`P-054`.
+> `app-estado-vazio` ganhou `[tamanho]="compacto"` (mesma moldura tracejada, padding menor); nasceu
+> o primitivo `app-segmentado`/`app-segmentado-item` (`role="group"`/`aria-pressed`, diferente de
+> `app-abas`), com a identidade pill/`--accent-dim` já usada por Caderno e Leitor de Documentos —
+> Inventário da ficha migrou pra ela. Antes disso, na mesma sessão: `P-053` (três modais de
+> campanha duplicavam a casca de `app-modal`) e `P-054` (5 telas de Simulação mantinham
+> `.agente-stat`/`.calc-stat` paralelos a `app-stat`, que ganhou `[tamanho]="hero"`, `[statInfo]` e
+> `[pulso]`; um 5º stat ficou local, registrado como `P-064`). Antes ainda: `m8-07` deu ao Painel do
+> espectador um painel de jogadores (grade de cartões); `P-062` (diff espúrio de CRLF no gerador
+> OpenAPI) e `P-052` (cabeçalho de `app-cartao` duplicado na Iniciativa, que ganhou `[semCaixa]`)
+> também fecharam. Detalhe completo, achados e viewports verificados de cada um em `HISTORY.md`.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
 > O relato de cada decisão anterior (o *porquê* e o *como*, task a task) está em `HISTORY.md`.
@@ -70,6 +72,19 @@ ampliações decididas pelo autor antes de implementar — `[tamanho]="hero"` (3
 (ícone no rótulo) e `[pulso]` (pulso de escala interno, sem `ElementRef` externo da página). Um 5º
 stat (`compras-venda-total`, fundo preenchido) não tem variante equivalente e ficou local —
 `P-064`. Suíte completa do frontend depois das duas mudanças: 1635/1635.
+
+**`P-055`/`P-056` fechados (2026-09-06, mesma sessão):** 15 ocorrências de `<p class="…__vazio">`/
+`<li class="…__vazio">` locais (iniciativa, seletor de combatentes, log de encontro, listas de
+habilidade/ataque/resistência de criatura, habilidades/inventário/sanidade/presets/combos da
+ficha, e os dois `@empty` de grade — seletor de habilidade e loja de equipamento) migraram para
+`app-estado-vazio tamanho="compacto"` (decisão do autor: manter a moldura tracejada, só reduzir o
+padding). Caderno, Leitor de Documentos e Inventário da ficha (nas versões completa e "só ícone")
+pararam de reimplementar cada um seu próprio grupo `role="group"`/`aria-pressed` — passaram a usar
+o novo `app-segmentado`/`app-segmentado-item`, com a identidade pill (fundo `--surface-2`, item
+ativo `--accent-dim` + `box-shadow` interno) que Caderno e Leitor já usavam byte a byte antes
+(decisão do autor); Inventário mudou de aparência (era um bloco preenchido copiado das abas do
+Status) para casar com o par. Suíte completa do frontend depois das duas mudanças: 1640/1640; lint
+sem erro novo; build limpo (aviso de budget conhecido, `P-004`).
 
 **Painéis laterais: vão real contra o conteúdo no desktop concluído** (relato ao vivo do autor,
 sem spec própria — duas faixas brancas marcadas em captura de `Campanha do Matheus`/`Sentinela
@@ -1478,7 +1493,14 @@ mesma receita para esse modo)
 e **`app-abas`**/**`app-aba`**/**`AbaPainel`** (tablist/tab/tabpanel — só para troca de painel no
 lugar, não navegação de rota; setas/Home/End com ativação automática, recuperado de um algoritmo
 que já existia **escrito e correto** mas nunca ligado a nenhum template em
-`ficha-visualizacao.component.ts`, m3-11). O `StepInput` (`app-step-input`) foi promovido de
+`ficha-visualizacao.component.ts`, m3-11). A `P-056` (2026-09-06) deu ao mesmo par um irmão:
+**`app-segmentado`**/**`app-segmentado-item`** (`role="group"`/item `aria-pressed` — grupo de
+seleção única que troca dado ou filtro no lugar, não `tablist`/`tab`; sem `tabpanel` dono, sem
+navegação por seta) — Caderno, Leitor de Documentos e Inventário da ficha reimplementavam cada um
+o próprio grupo; a identidade (pill, fundo `--surface-2`, item ativo `--accent-dim` + `box-shadow`
+interno) seguiu Caderno/Leitor (2 dos 3 consumidores reais já batiam byte a byte); tamanho/conteúdo
+do item (ícone só, ícone+texto) ficam pela classe BEM do consumidor no mesmo elemento, como `Aba`.
+O `StepInput` (`app-step-input`) foi promovido de
 `modules/simulacao/componentes/step-input/` para `shared/ui/stepper/` com o contrato intocado —
 mesmo seletor, sem piloto novo (as 4 cópias locais restantes têm obstáculo real: duas mostram um
 valor **derivado** — atributo + bônus — que digitação direta editaria errado, duas outras
@@ -1556,15 +1578,17 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   copiados de `_componentes.scss` (`P-034`). Série `ui-01`…`ui-05`; `ui-01`…`ui-04`
   fecharam (ver acima). A `ui-05` removeu a última dependência de biblioteca de componentes e o
   tema segue exclusivamente pelas CSS custom properties.
-  A reauditoria estática UI-27 (2026-09-03) encontrou dívida de adoção posterior: esqueletos em
-  quatro telas, cabeçalho de cartão da Iniciativa, casca interna de três modais e stats da
-  Simulação já são cobertos pelos primitivos; estados vazios densos pedem variante compacta; os
-  três seletores segmentados justificam primitivo próprio. Matriz e ordem de correção estão em
-  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-055`…`P-056` (`P-051` — os
-  esqueletos das quatro telas — fechou em 2026-09-05; `P-052` — cabeçalho de cartão da Iniciativa —
-  fechou em 2026-09-06, `app-cartao` ganhou `[semCaixa]` para o estado sem caixa; `P-053` — casca
-  interna dos três modais de campanha — e `P-054` — stats da Simulação — fecharam também em
-  2026-09-06, `app-stat` ganhou `hero`/`[statInfo]`/`[pulso]`, ver `HISTORY.md`).
+  A reauditoria estática UI-27 (2026-09-03), aberta desde então, **fechou por completo em
+  2026-09-06**: esqueletos em quatro telas, cabeçalho de cartão da Iniciativa, casca interna de
+  três modais, stats da Simulação, estados vazios densos e os três seletores segmentados — todos
+  já cobertos pelos primitivos (o último par, `P-055`/`P-056`, ganhou `[tamanho]="compacto"` em
+  `app-estado-vazio` e o novo primitivo `app-segmentado`, ver `HISTORY.md`). Matriz original em
+  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md` (registro histórico — os itens já não estão mais
+  ativos): `P-051` — esqueletos — fechou em 2026-09-05; `P-052` — cabeçalho de cartão da Iniciativa
+  — fechou em 2026-09-06, `app-cartao` ganhou `[semCaixa]`; `P-053` — casca interna dos três modais
+  — e `P-054` — stats da Simulação — fecharam também em 2026-09-06, `app-stat` ganhou
+  `hero`/`[statInfo]`/`[pulso]`; `P-055` — estados vazios densos — e `P-056` — três segmentados com
+  identidade local — fecharam na mesma data.
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**

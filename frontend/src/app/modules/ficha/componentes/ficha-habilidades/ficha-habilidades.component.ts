@@ -24,6 +24,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { FichaHabilidadeSeletor } from '../ficha-habilidade-seletor/ficha-habilidade-seletor.component';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 
@@ -98,6 +99,7 @@ function juntarComOu(rotulos: readonly string[]): string {
     Botao,
     BotaoIcone,
     FichaHabilidadeSeletor,
+    EstadoVazio,
   ],
   templateUrl: './ficha-habilidades.component.html',
   styleUrl: './ficha-habilidades.component.scss',

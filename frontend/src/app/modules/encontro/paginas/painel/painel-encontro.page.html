@@ -564,11 +564,14 @@
                     }
                 </div>
                 } @else {
-                <p class="iniciativa__vazio">
-                    @if (ehMestre()) { Nenhum combatente ainda. Adicione as fichas da campanha, as
-                    Ameaças e os avulsos que entram neste combate. } @else { O mestre ainda está
-                    montando a ordem de iniciativa. }
-                </p>
+                <app-estado-vazio
+                    tamanho="compacto"
+                    [titulo]="
+                        ehMestre()
+                            ? 'Nenhum combatente ainda. Adicione as fichas da campanha, as Ameaças e os avulsos que entram neste combate.'
+                            : 'O mestre ainda está montando a ordem de iniciativa.'
+                    "
+                />
                 }
 
                 <!-- Log da rodada (m7-07): oculto por enquanto, a pedido, tanto para o mestre quanto para o

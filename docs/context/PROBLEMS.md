@@ -89,27 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-055 — Estados vazios densos não cabem no primitivo atual · `ABERTO` · frontend/design system
-
-- **Sintoma:** listas compactas de Encontro e Ficha repetem parágrafos `__vazio`; o
-  `app-estado-vazio` atual impõe uma caixa com 32px de respiro vertical, grande demais para elas.
-- **Causa:** UI-14 centralizou somente os estados vazios amplos e não definiu densidade compacta.
-- **Contorno:** manter texto local evita inflar as listas, mas fragmenta tipografia e semântica.
-- **Correção:** acrescentar variante compacta baseada nos consumidores reais e migrar apenas
-  vazios de lista; mensagens de ajuda, carregamento e validação permanecem locais.
-- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
-
-### P-056 — Três controles segmentados têm identidade local · `ABERTO` · frontend/design system
-
-- **Sintoma:** Caderno, Leitor de Documentos e Inventário da ficha implementam separadamente grupo
-  de seleção única, item ativo, foco, borda, raio e responsividade.
-- **Causa:** `app-abas` tem semântica de tabpanel e corretamente não cobre seletores de modo com
-  `aria-pressed`; falta um primitivo com papel próprio.
-- **Contorno:** os três funcionam, mas acumulam deriva visual e de interação.
-- **Correção:** criar `app-segmentado` a partir dos três contratos reais, com item por diretiva,
-  seleção única, foco, desabilitado e densidade compacta.
-- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
-
 ### P-057 — "Valor editável" clicável não tem primitivo próprio · `ABERTO` · frontend/design system
 
 - **Sintoma:** ~15 classes/32 ocorrências (`criatura__designacao`, `criatura__stat-valor`,

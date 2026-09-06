@@ -181,9 +181,9 @@ describe('SeletorCombatentes', () => {
 
   it('avisa quando a campanha ainda não tem agente/criatura nenhum', () => {
     const fixture = montar([]);
-    const vazios = Array.from(elemento(fixture).querySelectorAll('.seletor__vazio')).map((p) =>
-      p.textContent?.trim(),
-    );
+    const vazios = Array.from(
+      elemento(fixture).querySelectorAll('.estado-vazio__titulo'),
+    ).map((p) => p.textContent?.trim());
     expect(vazios).toEqual([
       'Nenhum agente na campanha ainda.',
       'Nenhuma criatura na campanha ainda.',

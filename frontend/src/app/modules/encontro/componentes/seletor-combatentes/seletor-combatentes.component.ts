@@ -6,6 +6,7 @@ import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
 
@@ -23,7 +24,7 @@ import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
  */
 @Component({
   selector: 'app-seletor-combatentes',
-  imports: [Icone, Tooltip],
+  imports: [Icone, Tooltip, EstadoVazio],
   templateUrl: './seletor-combatentes.component.html',
   styleUrl: './seletor-combatentes.component.scss',
 })

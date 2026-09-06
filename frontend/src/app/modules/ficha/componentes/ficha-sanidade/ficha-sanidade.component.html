@@ -94,7 +94,7 @@
             }
         </ul>
         @if (!sequelas().length && !editando("sequela", -1)) {
-            <p class="sanidade__vazio">Sem sequelas.</p>
+            <app-estado-vazio tamanho="compacto" titulo="Sem sequelas." />
         }
     </section>
 
@@ -203,7 +203,7 @@
             }
         </ul>
         @if (!traumas().length && !editando("trauma", -1)) {
-            <p class="sanidade__vazio">Sem traumas.</p>
+            <app-estado-vazio tamanho="compacto" titulo="Sem traumas." />
         }
     </section>
 
@@ -315,7 +315,7 @@
             }
         </ul>
         @if (!lesoes().length && !editando("lesao", -1)) {
-            <p class="sanidade__vazio">Sem lesões.</p>
+            <app-estado-vazio tamanho="compacto" titulo="Sem lesões." />
         }
     </section>
 </div>

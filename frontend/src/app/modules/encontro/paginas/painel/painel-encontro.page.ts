@@ -47,6 +47,7 @@ import { NotificacaoService } from '../../../../shared/ui/notificacao/notificaca
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
@@ -134,6 +135,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     Botao,
     BotaoIcone,
     Cartao,
+    EstadoVazio,
   ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',

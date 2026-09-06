@@ -63,20 +63,20 @@
     }
 
     <div class="caderno__escopo">
-        <div class="caderno__segmentado" role="group" aria-label="Caderno consultado">
+        <app-segmentado class="caderno__segmentado" rotulo="Caderno consultado">
             <button
+                app-segmentado-item
                 type="button"
-                [class.caderno__segmentado-item--ativo]="modoCaderno() === 'MEU'"
-                [attr.aria-pressed]="modoCaderno() === 'MEU'"
+                [ativo]="modoCaderno() === 'MEU'"
                 aria-label="Selecionar meu caderno"
                 (click)="selecionarModo('MEU')"
             >
                 Meu caderno
             </button>
             <button
+                app-segmentado-item
                 type="button"
-                [class.caderno__segmentado-item--ativo]="modoCaderno() === 'ESQUADRAO'"
-                [attr.aria-pressed]="modoCaderno() === 'ESQUADRAO'"
+                [ativo]="modoCaderno() === 'ESQUADRAO'"
                 aria-label="Selecionar caderno do esquadrão"
                 (click)="selecionarModo('ESQUADRAO')"
             >
@@ -84,16 +84,16 @@
             </button>
             @if (ehMestre()) {
                 <button
+                    app-segmentado-item
                     type="button"
-                    [class.caderno__segmentado-item--ativo]="modoCaderno() === 'JOGADORES'"
-                    [attr.aria-pressed]="modoCaderno() === 'JOGADORES'"
+                    [ativo]="modoCaderno() === 'JOGADORES'"
                     aria-label="Selecionar cadernos dos jogadores"
                     (click)="selecionarModo('JOGADORES')"
                 >
                     Jogadores
                 </button>
             }
-        </div>
+        </app-segmentado>
         @if (modoCaderno() === "JOGADORES") {
             <label class="caderno__jogador">
                 <span>Jogador</span>

@@ -31,6 +31,8 @@ import { Tooltip } from '../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../shared/ui/estado-vazio/estado-vazio.component';
+import { Segmentado } from '../../shared/ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../../shared/ui/segmentado/segmentado-item.component';
 import {
   PainelFlutuante,
   type PainelFlutuantePosicao,
@@ -69,6 +71,8 @@ interface TrocaPaginaPendente {
     Icone,
     PainelFlutuante,
     ReactiveFormsModule,
+    Segmentado,
+    SegmentadoItem,
     Tooltip,
   ],
   providers: [CadernoFlutuanteStore, CadernoEsquadraoColaborativoService],

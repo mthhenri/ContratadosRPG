@@ -6,6 +6,7 @@ import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import {
   calcularColunasGrade,
   combatenteEhDaVez,
@@ -37,7 +38,7 @@ import { LogEncontro } from '../log-encontro/log-encontro.component';
  */
 @Component({
   selector: 'app-iniciativa-leitura',
-  imports: [Cartao, Chip, CartaoCombatente, LogEncontro],
+  imports: [Cartao, Chip, CartaoCombatente, LogEncontro, EstadoVazio],
   templateUrl: './iniciativa-leitura.component.html',
   styleUrl: './iniciativa-leitura.component.scss',
 })

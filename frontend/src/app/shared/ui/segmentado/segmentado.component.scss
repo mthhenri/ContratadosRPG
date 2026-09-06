@@ -1,0 +1,9 @@
+// Mesma identidade byte-a-byte já usada por Caderno e Leitor de Documentos antes desta task
+// (`P-056`) — pill com respiro de 2px ao redor dos itens.
+:host {
+    display: inline-flex;
+    padding: 2px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+}

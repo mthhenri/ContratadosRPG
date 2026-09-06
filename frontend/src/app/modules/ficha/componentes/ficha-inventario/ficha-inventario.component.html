@@ -111,14 +111,12 @@
                     </button>
                 </div>
 
-                <div class="ficha-inv__filtro" role="group" aria-label="Filtrar o inventário">
+                <app-segmentado class="ficha-inv__filtro" rotulo="Filtrar o inventário">
                     <button
+                        app-segmentado-item
                         type="button"
-                        class="ficha-inv__filtro-item ficha-inv__filtro-item--compacto"
-                        [class.ficha-inv__filtro-item--ativo]="
-                            filtroInventario() === 'equipamentos'
-                        "
-                        [attr.aria-pressed]="filtroInventario() === 'equipamentos'"
+                        class="ficha-inv__filtro-item--compacto"
+                        [ativo]="filtroInventario() === 'equipamentos'"
                         aria-label="Equipamentos"
                         [appTooltip]="'Equipamentos'"
                         (click)="selecionarFiltroInventario('equipamentos')"
@@ -126,12 +124,10 @@
                         <app-icone nome="corpo-a-corpo" />
                     </button>
                     <button
+                        app-segmentado-item
                         type="button"
-                        class="ficha-inv__filtro-item ficha-inv__filtro-item--compacto"
-                        [class.ficha-inv__filtro-item--ativo]="
-                            filtroInventario() === 'amplificadores'
-                        "
-                        [attr.aria-pressed]="filtroInventario() === 'amplificadores'"
+                        class="ficha-inv__filtro-item--compacto"
+                        [ativo]="filtroInventario() === 'amplificadores'"
                         aria-label="Amplificadores"
                         [appTooltip]="'Amplificadores'"
                         (click)="selecionarFiltroInventario('amplificadores')"
@@ -139,17 +135,17 @@
                         <app-icone nome="amplificador" />
                     </button>
                     <button
+                        app-segmentado-item
                         type="button"
-                        class="ficha-inv__filtro-item ficha-inv__filtro-item--compacto"
-                        [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'fragmentos'"
-                        [attr.aria-pressed]="filtroInventario() === 'fragmentos'"
+                        class="ficha-inv__filtro-item--compacto"
+                        [ativo]="filtroInventario() === 'fragmentos'"
                         aria-label="Fragmentos"
                         [appTooltip]="'Fragmentos'"
                         (click)="selecionarFiltroInventario('fragmentos')"
                     >
                         <app-icone nome="fragmento" />
                     </button>
-                </div>
+                </app-segmentado>
 
                 <ng-container [ngTemplateOutlet]="botaoBuscaTemplate" />
             </div>
@@ -178,14 +174,11 @@
                 </button>
                 <!-- Controle segmentado: acompanha as ações de adição no desktop e usa rótulos compactos
            em uma linha própria no mobile, antes de Esvaziar/Custos/busca. -->
-                <div class="ficha-inv__filtro" role="group" aria-label="Filtrar o inventário">
+                <app-segmentado class="ficha-inv__filtro" rotulo="Filtrar o inventário">
                     <button
+                        app-segmentado-item
                         type="button"
-                        class="ficha-inv__filtro-item"
-                        [class.ficha-inv__filtro-item--ativo]="
-                            filtroInventario() === 'equipamentos'
-                        "
-                        [attr.aria-pressed]="filtroInventario() === 'equipamentos'"
+                        [ativo]="filtroInventario() === 'equipamentos'"
                         aria-label="Equipamentos"
                         (click)="selecionarFiltroInventario('equipamentos')"
                     >
@@ -198,12 +191,9 @@
                         >
                     </button>
                     <button
+                        app-segmentado-item
                         type="button"
-                        class="ficha-inv__filtro-item"
-                        [class.ficha-inv__filtro-item--ativo]="
-                            filtroInventario() === 'amplificadores'
-                        "
-                        [attr.aria-pressed]="filtroInventario() === 'amplificadores'"
+                        [ativo]="filtroInventario() === 'amplificadores'"
                         aria-label="Amplificadores"
                         (click)="selecionarFiltroInventario('amplificadores')"
                     >
@@ -216,10 +206,9 @@
                         >
                     </button>
                     <button
+                        app-segmentado-item
                         type="button"
-                        class="ficha-inv__filtro-item"
-                        [class.ficha-inv__filtro-item--ativo]="filtroInventario() === 'fragmentos'"
-                        [attr.aria-pressed]="filtroInventario() === 'fragmentos'"
+                        [ativo]="filtroInventario() === 'fragmentos'"
                         aria-label="Fragmentos"
                         (click)="selecionarFiltroInventario('fragmentos')"
                     >
@@ -231,7 +220,7 @@
                             >Frag.</span
                         >
                     </button>
-                </div>
+                </app-segmentado>
             </div>
 
             <div class="ficha-inv__acoes">
@@ -741,7 +730,7 @@
                 }
 
                 @if (catalogoVazio()) {
-                    <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
+                    <app-estado-vazio tamanho="compacto" titulo="Nenhum item encontrado." />
                 }
 
                 @if (itensCatalogo().length > 0) {
@@ -2292,7 +2281,7 @@
 
         @if (!inventarioVazio() && !mostrandoSoAmplificadores() && !mostrandoSoFragmentos()) {
             @if (buscaItensSemResultado()) {
-                <p class="ficha-inv__vazio">Nenhum item encontrado.</p>
+                <app-estado-vazio tamanho="compacto" titulo="Nenhum item encontrado." />
             }
             @for (item of itensListaPrincipal(); track item.indice) {
                 <ng-container
@@ -2335,9 +2324,10 @@
                         }
                     </div>
                     @if (sub.itens.length === 0) {
-                        <p class="ficha-inv__vazio">
-                            Vazio — use "Mover para" num item da lista para guardar aqui.
-                        </p>
+                        <app-estado-vazio
+                            tamanho="compacto"
+                            titulo='Vazio — use "Mover para" num item da lista para guardar aqui.'
+                        />
                     }
                     @for (item of sub.itens; track item.indice) {
                         <ng-container

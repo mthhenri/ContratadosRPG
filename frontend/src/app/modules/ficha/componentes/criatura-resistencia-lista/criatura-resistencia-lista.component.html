@@ -32,7 +32,7 @@
     </header>
 
     @if (!itens().length) {
-        <p class="resistencia-lista__vazio">Nenhum item.</p>
+        <app-estado-vazio tamanho="compacto" titulo="Nenhum item." />
     }
 
     @if (variante() === "resistencia") {

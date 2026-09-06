@@ -60,7 +60,9 @@
                     </button>
                 </li>
             } @empty {
-                <li class="loja__vazio">Nenhum item encontrado.</li>
+                <li class="loja__vazio">
+                    <app-estado-vazio tamanho="compacto" titulo="Nenhum item encontrado." />
+                </li>
             }
         </ul>
     </section>

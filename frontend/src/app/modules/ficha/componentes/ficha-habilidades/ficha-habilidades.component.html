@@ -274,9 +274,9 @@
         }
     </ul>
     @if (!habilidades().length && !editando(-1)) {
-        <p class="habilidades__vazio">Nenhuma habilidade cadastrada.</p>
+        <app-estado-vazio tamanho="compacto" titulo="Nenhuma habilidade cadastrada." />
     } @else if (habilidades().length && !habilidadesFiltradas().length) {
-        <p class="habilidades__vazio">{{ mensagemListaVazia() }}</p>
+        <app-estado-vazio tamanho="compacto" [titulo]="mensagemListaVazia()" />
     }
 </div>
 

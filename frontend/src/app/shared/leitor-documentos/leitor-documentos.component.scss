@@ -45,37 +45,8 @@
         border-bottom: 1px solid var(--border);
     }
 
-    &__segmentado {
-        display: inline-flex;
-        padding: 2px;
-        background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-
-        button {
-            min-height: 32px;
-            padding: 0 11px;
-            color: var(--text-mute);
-            background: transparent;
-            border: 0;
-            border-radius: var(--radius-control);
-            font: 600 9px var(--font-mono);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            white-space: nowrap;
-            cursor: pointer;
-
-            &:hover {
-                color: var(--text);
-            }
-        }
-    }
-
-    &__segmentado button#{&}__segmentado-item--ativo {
-        color: var(--accent);
-        background: var(--accent-dim);
-        box-shadow: inset 0 0 0 1px var(--accent-border);
-    }
+    // Identidade (fundo/borda/item ativo) mora em `app-segmentado`/`app-segmentado-item`
+    // (`P-056`) — só o colapso mobile deste consumidor fica aqui, mais abaixo.
 
     &__dica {
         margin-left: auto;

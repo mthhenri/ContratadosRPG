@@ -33,11 +33,6 @@
         height: 1px;
         background: var(--border);
     }
-    &__vazio {
-        margin: 0;
-        font: 12px var(--font-sans);
-        color: var(--text-mute);
-    }
 
     // Gatilho do modo de edição — mesmo lápis de seção `.criatura__lapis` (CriaturaVisualizacao,
     // usado em Classificação/Atributos/Descrição/Natureza/Tema de Horror/Anotações), replicado

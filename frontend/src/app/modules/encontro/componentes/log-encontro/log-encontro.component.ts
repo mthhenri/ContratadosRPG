@@ -8,6 +8,7 @@ import { EncontroEventoTipoEnum } from '@contratados-rpg/shared/enums';
 
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 
 /**
  * Uma linha do log já pronta para desenhar. O `texto` chega do backend como uma frase inteira
@@ -50,7 +51,7 @@ interface EntradaLogExibidaDto {
  */
 @Component({
   selector: 'app-log-encontro',
-  imports: [Tooltip, Botao],
+  imports: [Tooltip, Botao, EstadoVazio],
   templateUrl: './log-encontro.component.html',
   styleUrl: './log-encontro.component.scss',
 })

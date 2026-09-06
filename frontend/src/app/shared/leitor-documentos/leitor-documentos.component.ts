@@ -13,6 +13,8 @@ import { Icone } from '../icone/icone.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
 import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
+import { Segmentado } from '../ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../ui/segmentado/segmentado-item.component';
 import {
   PainelFlutuante,
   type PainelFlutuantePosicao,
@@ -36,7 +38,7 @@ const BREAKPOINT_MOBILE = 560;
 @Component({
   selector: 'app-leitor-documentos',
   standalone: true,
-  imports: [Icone, Tooltip, LeitorPdfMobile, Botao, BotaoIcone, PainelFlutuante],
+  imports: [Icone, Tooltip, LeitorPdfMobile, Botao, BotaoIcone, PainelFlutuante, Segmentado, SegmentadoItem],
   templateUrl: './leitor-documentos.component.html',
   styleUrl: './leitor-documentos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

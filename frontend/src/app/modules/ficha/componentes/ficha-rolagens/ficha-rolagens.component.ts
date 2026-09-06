@@ -26,6 +26,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
@@ -91,6 +92,7 @@ interface RolagemVM {
     Modal,
     Botao,
     BotaoIcone,
+    EstadoVazio,
   ],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',

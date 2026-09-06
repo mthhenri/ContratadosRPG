@@ -202,7 +202,7 @@ describe('LogEncontro', () => {
   it('avisa quando a rodada corrente ainda não registrou nada', () => {
     const fixture = montar([evento({ id: 1, rodada: 1, texto: 'começo' })], 3);
     expect(linhas(fixture)).toEqual([]);
-    expect(elemento(fixture).querySelector('.log__vazio')?.textContent?.trim()).toBe(
+    expect(elemento(fixture).querySelector('.estado-vazio__titulo')?.textContent?.trim()).toBe(
       'Nada registrado nesta rodada ainda.',
     );
   });

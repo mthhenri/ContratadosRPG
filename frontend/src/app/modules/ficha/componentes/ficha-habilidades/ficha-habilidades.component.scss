@@ -487,13 +487,6 @@
         color: var(--text-dim);
     }
 
-    &__vazio {
-        margin: 0;
-        font-family: var(--font-sans);
-        font-size: 13px;
-        font-style: italic;
-        color: var(--text-mute);
-    }
 
     // Limpa o filtro cumulativo de tipos (m3-48) — ícone só (↺, glifo mono como os demais botões de
     // ação do tema — `&__acao` usa ✎/✕, o form usa ＋ — nada de emoji colorido destoando da

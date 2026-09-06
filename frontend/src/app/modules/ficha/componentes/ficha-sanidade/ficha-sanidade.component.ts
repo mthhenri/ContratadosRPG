@@ -16,6 +16,7 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** As três listas de Sanidade do `estado`, emitidas juntas a cada mutação (a página persiste o trio). */
@@ -89,6 +90,7 @@ const ROTULO_LISTA: Record<ListaSanidade, string> = {
     Modal,
     Botao,
     BotaoIcone,
+    EstadoVazio,
   ],
   templateUrl: './ficha-sanidade.component.html',
   styleUrl: './ficha-sanidade.component.scss',

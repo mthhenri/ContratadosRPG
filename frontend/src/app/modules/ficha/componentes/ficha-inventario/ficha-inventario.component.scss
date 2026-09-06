@@ -196,20 +196,19 @@
     // Controle segmentado de 3 opções, sempre uma ativa (revisão de UX — eram dois botões-toggle
     // soltos na linha de ações, cujo rótulo trocava para "Equipamentos" no estado ativo: ambíguo
     // sobre qual filtro estava ligado, e os dois quebravam linha sozinhos sem se conectar
-    // visualmente). Mesmo padrão visual da barra de abas do Status (`ficha-visualizacao` —
-    // `.ficha-status__abas`/`.ficha-status__aba`), só que os itens ficam do tamanho do próprio
-    // conteúdo (`width: auto`) — é um filtro de 3 opções lado a lado, não uma barra de navegação de
-    // largura fixa.
+    // visualmente). Identidade (fundo/borda/item ativo) mora em `app-segmentado`/
+    // `app-segmentado-item` (`P-056`) — só o que é deste consumidor (posição na barra, ícone,
+    // rótulo responsivo, tamanho compacto) fica aqui.
     &__filtro {
-        display: inline-flex;
         align-self: flex-start;
         // Consome o espaço livre da barra no desktop e fixa o grupo de filtros na ponta direita.
         margin-inline-start: auto;
-        gap: 4px;
-        padding: 4px;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-card);
+
+        button[app-segmentado-item] app-icone {
+            display: inline-flex;
+            width: 13px;
+            height: 13px;
+        }
 
         // Rótulos compactos mantêm os três filtros na mesma linha no mobile, sem overflow.
         @include bp.mobile {
@@ -217,59 +216,10 @@
             margin-inline-start: 0;
             flex-wrap: nowrap;
             max-width: 100%;
-        }
-    }
 
-    &__filtro-texto--mobile {
-        display: none;
-    }
-
-    &__filtro-item {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-dim);
-        background: transparent;
-        border: 0;
-        border-radius: var(--radius-control);
-        padding: 6px 11px;
-        cursor: pointer;
-        transition:
-            color 0.12s ease,
-            background-color 0.12s ease;
-
-        app-icone {
-            display: inline-flex;
-            width: 13px;
-            height: 13px;
-        }
-
-        &:hover:not(&--ativo) {
-            color: var(--text);
-            background: var(--surface);
-        }
-
-        &--ativo {
-            font-weight: 700;
-            color: var(--bg);
-            background: var(--accent);
-        }
-
-        // Card compacto (m2-20): só o ícone, botão quadrado — mesmo tratamento pedido para
-        // Adicionar/Item custom (ver `&--quadrado` abaixo). Coluna estreita demais pro rótulo.
-        &--compacto {
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            padding: 0;
-            gap: 0;
-        }
-
-        @include bp.mobile {
-            min-height: bp.$alvo-toque;
+            button[app-segmentado-item] {
+                min-height: bp.$alvo-toque;
+            }
 
             .ficha-inv__filtro-texto--desktop {
                 display: none;
@@ -277,10 +227,24 @@
             .ficha-inv__filtro-texto--mobile {
                 display: inline;
             }
+        }
+    }
 
-            &--compacto {
-                min-width: bp.$alvo-toque;
-            }
+    &__filtro-texto--mobile {
+        display: none;
+    }
+
+    // Card compacto (m2-20): só o ícone, botão quadrado — mesmo tratamento pedido para
+    // Adicionar/Item custom (ver `&--quadrado` abaixo). Coluna estreita demais pro rótulo.
+    &__filtro-item--compacto {
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        gap: 0;
+
+        @include bp.mobile {
+            min-width: bp.$alvo-toque;
         }
     }
 
@@ -1060,13 +1024,6 @@
             color: var(--text);
         }
     }
-    &__vazio {
-        font-family: var(--font-sans);
-        color: var(--text-mute);
-        text-align: center;
-        padding: 16px 0;
-    }
-
     // === Grades roláveis (catálogo/mods) + fade-out vertical (via [appOverflowFade]) ===
     &__grade,
     &__mod-grade {
