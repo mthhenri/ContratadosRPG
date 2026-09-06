@@ -1,4 +1,4 @@
-<div class="cartao">
+<div class="cartao" [class.cartao--sem-caixa]="semCaixa()">
     @if (titulo(); as tituloTexto) {
         <div class="cartao__cabecalho" [class.cartao__cabecalho--quebravel]="cabecalhoQuebravel()">
             <span class="cartao__indice"><ng-content select="[cartaoIndice]" /></span>

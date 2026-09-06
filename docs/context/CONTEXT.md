@@ -14,9 +14,10 @@
 > possui ficha nenhuma na campanha; o recorte é sempre "todo agente `JOGADOR` não oculto",
 > independente de quem pede (paridade espectador/mestre-em-prévia por construção, não por checagem
 > condicional). Achado ao vivo: o avatar 128×128 do novo cartão nasceu como uma faixa esticada
-> (não um quadrado) — corrigido antes do fecho. Registrado `P-062`: `npm run openapi:gerar-
-> contratos` neste checkout Windows produz um diff enorme e espúrio (CRLF + descrições de campo já
-> desatualizadas na fonte) — contornado aplicando manualmente só o trecho do DTO tocado. Detalhe
+> (não um quadrado) — corrigido antes do fecho. `npm run openapi:gerar-contratos` produzia um diff
+> espúrio de CRLF neste checkout Windows — corrigido em seguida (`gerar-openapi-contratos.ts`
+> normaliza `\r\n`→`\n` antes de serializar); `P-062` fechado. Mesma sessão: `P-052` (Iniciativa
+> recriava o cabeçalho de `app-cartao`) fechou com `app-cartao` ganhando `[semCaixa]`. Detalhe
 > completo, achados e viewports verificados em `HISTORY.md`.
 > Ainda pendente: desligar o Render e reescrever `docs/DEPLOY.md` (cutover pro Cloud Run) — ver
 > seção 1.
@@ -55,9 +56,14 @@ por `usuarioId`, "Nenhuma rolagem carregada ainda" onde esperado, e paridade byt
 espectador real e mestre em prévia confirmada tanto via REST quanto visualmente. Achado só na
 verificação ao vivo, corrigido antes do fecho: o avatar 128×128 nasceu como faixa esticada (não um
 quadrado) por causa de `width:100%` + `aspect-ratio` + `max-height` não produzirem um quadrado
-quando a largura do card excede o lado desejado. `P-062` (registrado em `PROBLEMS.md`): regenerar
-`contratos-gerados.ts` neste checkout Windows produz `\r\n` espúrio e apaga descrições de campo já
-desatualizadas na fonte — contornado com um patch manual só do trecho tocado.
+quando a largura do card excede o lado desejado.
+
+**`P-062`/`P-052` fechados (2026-09-06):** `gerar-openapi-contratos.ts` normaliza `\r\n`→`\n` nas
+descrições extraídas de JSDoc antes de serializar — o diff espúrio de CRLF em checkout Windows some
+(o diff residual de descrições de campo desatualizadas na fonte é causa independente, registrada
+agora como `P-063`). `painel-encontro.page` (Iniciativa) passou a consumir `app-cartao` nos 3
+estados; o 3º (combate aberto) precisava de cabeçalho sem caixa, então `app-cartao` ganhou
+`[semCaixa]`. Suíte completa do frontend depois da mudança no primitivo: 1632/1632.
 
 **Painéis laterais: vão real contra o conteúdo no desktop concluído** (relato ao vivo do autor,
 sem spec própria — duas faixas brancas marcadas em captura de `Campanha do Matheus`/`Sentinela
@@ -1453,7 +1459,8 @@ fila em Signals de `BandejaDadosService` (sem RxJS); a severidade `erro` usa `--
 
 A `ui-03` (2026-08-29) fechou o conjunto de composição visual: **`app-cartao`** (`[titulo]`
 opcional — sem ele é só a caixa; índice do cabeçalho por projeção `[cartaoIndice]`, cobre texto e
-ícone com um mecanismo só), **`app-stat`** (`[rotulo]`/`[valor]`/`variante` em
+ícone com um mecanismo só; `[semCaixa]`, adicionado na `P-052`, larga fundo/borda/padding e deixa
+só o cabeçalho como divisor de seção solto), **`app-stat`** (`[rotulo]`/`[valor]`/`variante` em
 `vida`/`energia`/`positivo` — só exibição pura; um campo editável com rolagem de dado é outro
 primitivo, ainda não construído, `IDEAS.md` `I-025`), **`app-chip`** (`variante` `padrao`/`sutil`
 para rótulo; `severidade` `primario`/`secundario`/`aviso`/`perigo` + `tom` `sutil`/`contorno` para
@@ -1544,8 +1551,9 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   quatro telas, cabeçalho de cartão da Iniciativa, casca interna de três modais e stats da
   Simulação já são cobertos pelos primitivos; estados vazios densos pedem variante compacta; os
   três seletores segmentados justificam primitivo próprio. Matriz e ordem de correção estão em
-  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-052`…`P-056` (`P-051` — os
-  esqueletos das quatro telas — fechou em 2026-09-05, ver `HISTORY.md`).
+  `docs/design/AUDITORIA-COMPONENTES-FANTASMA.md`; itens ativos `P-053`…`P-056` (`P-051` — os
+  esqueletos das quatro telas — fechou em 2026-09-05; `P-052` — cabeçalho de cartão da Iniciativa —
+  fechou em 2026-09-06, `app-cartao` ganhou `[semCaixa]` para o estado sem caixa, ver `HISTORY.md`).
   Decisão associada: **não** migrar para React — o estudo de esforço (6–9 meses-dev) está no
   `HISTORY.md` de 2026-08-28 e concluiu que o problema real é o design system, não o framework.
 - **Na biblioteca própria, o primitivo é dono da identidade e o consumidor é dono do tamanho**

@@ -71,6 +71,10 @@ function argumentoTexto(decorator: ts.Decorator): string | undefined {
     return ts.isStringLiteral(argumento) ? argumento.text : undefined;
 }
 
+function normalizarQuebrasDeLinha(texto: string): string {
+    return texto.replace(/\r\n/g, "\n");
+}
+
 function nomeSchema(typeNode: ts.TypeNode | undefined): string {
     if (!typeNode) {
         return "object";
@@ -160,7 +164,9 @@ function gerarSchemasPublicos(programa: ts.Program): Record<string, unknown> {
             if (!declaracaoPropriedade) continue;
             const tipoPropriedade = checker.getTypeOfSymbolAtLocation(propriedade, declaracaoPropriedade);
             const schemaPropriedade = schemaParaTipo(checker, tipoPropriedade, nomesPublicos);
-            const descricao = ts.displayPartsToString(propriedade.getDocumentationComment(checker));
+            const descricao = normalizarQuebrasDeLinha(
+                ts.displayPartsToString(propriedade.getDocumentationComment(checker)),
+            );
             if (descricao) {
                 schemaPropriedade.description = descricao;
             }
@@ -174,8 +180,10 @@ function gerarSchemasPublicos(programa: ts.Program): Record<string, unknown> {
             properties: propriedades,
             ...(obrigatorios.length > 0 ? { required: obrigatorios } : {}),
             additionalProperties: false,
-            description: ts.displayPartsToString(
-                (checker.getSymbolAtLocation(declaracao.name)?.getDocumentationComment(checker)) ?? [],
+            description: normalizarQuebrasDeLinha(
+                ts.displayPartsToString(
+                    (checker.getSymbolAtLocation(declaracao.name)?.getDocumentationComment(checker)) ?? [],
+                ),
             ) || undefined,
         };
     }

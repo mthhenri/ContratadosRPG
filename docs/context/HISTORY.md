@@ -1,5 +1,80 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-06 — Iniciativa consome `app-cartao` nos 3 estados; primitivo ganha `[semCaixa]` (P-052)
+
+Correção do `P-052`: `painel-encontro.page` (tela "Iniciativa") recriava localmente o cabeçalho
+de `app-cartao` (índice/título/régua) nos 3 estados da tela, com identidade quase idêntica à do
+primitivo mas ligeiramente divergente (título 15px em vez de 13px no desktop, `gap` 11px em vez de
+`var(--space-12)`).
+
+Análogo registrado antes de editar: `app-cartao` como já usado com `[titulo]`/`nivelTitulo="h1"`
+em `perfil.page`/`gestao.page`/`lista.page`/`acervo.page` (cartão-é-cabeçalho-da-página), e
+especialmente `app-iniciativa-leitura` (usado pelo Painel do espectador e pela Prévia de jogador),
+que já compõe "Iniciativa" com `app-cartao` + `[cartaoFim]` para os mesmos dados (status/rodada/
+turno).
+
+Os dois estados "abertura" (sem encontro — vazio para quem não é mestre, formulário de criação
+para o mestre) eram cópias completas da caixa do `app-cartao` (fundo/borda/raio/padding idênticos
+a `.abertura`) — migração direta para `<app-cartao [titulo]="…" nivelTitulo="h1">`, com
+`.abertura` reduzida a só o layout interno (flex/gap) do formulário, já que a caixa passou a ser
+responsabilidade do primitivo.
+
+O 3º estado (combate já aberto) expôs um caso que o primitivo não cobria: o cabeçalho aparece
+**sem nenhuma caixa** ao redor — um divisor de seção solto sobre o fundo da página, seguido de
+blocos com borda própria (`.painel__bloco`) e da lista de combatentes — bem diferente do
+`app-iniciativa-leitura`, que é só cabeçalho + grade dentro de uma caixa única. `app-cartao` sempre
+desenhava a caixa; perguntado ao autor (`AskUserQuestion`), a decisão foi criar uma variante nova
+em vez de forçar a caixa ou deixar a duplicação. Adicionado `[semCaixa]` ao `Cartao`
+(`shared/ui/cartao/`): quando `true`, `.cartao--sem-caixa` zera fundo/borda/raio/padding e mantém
+só cabeçalho + conteúdo projetado — documentado em `docs/design/DESIGN.md` §Blocos migrados. O
+conteúdo do 3º estado (faixa de condução, ações secundárias, seletor/avulso, grade de combatentes)
+passou a viver dentro de um `<div class="iniciativa__corpo">` com o mesmo `flex column + gap:
+var(--gap-grid)` que `.iniciativa` já dava a esses blocos como filhos diretos — sem isso, perderiam
+o espaçamento vertical ao virar filhos do `<app-cartao>` em vez de irmãos dentro de `.iniciativa`.
+`.cartao__meta`/`.cartao__meta--compacta` locais viraram `.iniciativa__meta`/`--compacta` (não são
+parte do BEM do primitivo, são metadado projetado via `[cartaoFim]`, mesmo padrão de
+`gestao__contagem`/`agente-cartao__meta` em outras páginas).
+
+Testes: `cartao.component.spec.ts` ganhou um teste para `[semCaixa]` (9/9 → cobrindo caixa
+presente/ausente com cabeçalho intacto). `painel-encontro.page.spec.ts` teve 4 seletores
+`.cartao__meta*` trocados para `.iniciativa__meta*` (57/57). Suíte completa do frontend depois da
+mudança no primitivo compartilhado: 1632/1632 (nenhuma outra tela que consome `app-cartao`
+quebrou). Lint sem erro novo (só avisos de aspas preexistentes). Build limpo (budget de bundle
+com o mesmo aviso preexistente do `P-004`, não agravado).
+
+Verificação ao vivo em `1920×1080` e `360×800`, mestre e jogador, cobrindo os 3 estados (vazio sem
+mestre, formulário de criação, carregado sem combatente e com 1 combatente avulso): título/índice/
+régua idênticos visualmente ao antes (a normalização de 15px→13px no título do 3º estado no
+desktop não é perceptível na captura e alinha a tela com todo o resto do app que usa
+`nivelTitulo="h1"`), caixa presente nos 2 primeiros estados e ausente no 3º como antes, sem
+overflow em nenhum viewport, espaçamento entre faixa de condução/ações/grade preservado
+pixel-a-pixel.
+
+## 2026-09-05 — `gerar-openapi-contratos.ts`: corrigido diff espúrio de CRLF (P-062)
+
+Correção do `P-062`: `npm run openapi:gerar-contratos` reescrevia o arquivo inteiro
+(`contratos-gerados.ts`, 356 linhas/~185 DTOs) num checkout Windows, porque o script lê a
+`description` de cada propriedade direto do JSDoc do arquivo fonte em disco — e `core.autocrlf`
+mantém os `.ts` fonte com `CRLF` na árvore de trabalho, então cada quebra de linha de um comentário
+multi-linha embutia um `\r` na string serializada.
+
+Adicionado `normalizarQuebrasDeLinha()` em `backend/tools/gerar-openapi-contratos.ts`, aplicado às
+duas extração de `description` (propriedade de DTO e interface/classe inteira) antes de montar o
+schema — substitui `\r\n` por `\n` na string, independente do que o disco entrega. Corrige a causa
+raiz (não é contorno de ambiente): funciona igual em qualquer `core.autocrlf`.
+
+Verificado rodando o gerador de verdade: antes da correção o diff cobria o arquivo inteiro; depois,
+rodando com a mesma árvore de trabalho, o diff caiu para 6 linhas — exatamente as duas descrições de
+campo (`codigoConvite`/`codigoConviteEspectador` de `CampanhaRecuperadaDto`) que a fonte atual não
+tem mais como JSDoc por campo (só no comentário da interface). Essa perda é a **segunda causa**,
+independente, já registrada no `P-062` como fora de escopo desta correção — revertido o arquivo
+gerado (`git checkout`) para não misturar as duas causas num único diff; regenerar e revisar as 185
+DTOs por completo continua sendo tarefa própria, maior que esta.
+
+`npx tsc --noEmit` no backend aponta 3 erros preexistentes em `gerar-openapi-contratos.ts` (linhas
+deslocadas pela edição, confirmado comparando com `git stash`) — nenhum introduzido pela correção;
+o script roda normalmente via `ts-node` porque não passa pelo mesmo tsconfig estrito.
+
 ## 2026-09-05 — `EspectadorFichaCard` (m8-07): layout corrigido de vertical para horizontal
 
 Correção pontual pedida pelo autor logo após o fechamento de `m8-07-espectador-painel-jogadores`

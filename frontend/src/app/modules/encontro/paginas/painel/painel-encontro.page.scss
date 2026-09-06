@@ -294,49 +294,16 @@
     }
 }
 
-// ── Cabeçalho de seção (mesmo par índice + régua da ficha de criatura) ───────
-.cartao {
-    &__cabecalho {
+// ── Iniciativa carregada: cabeçalho/caixa são do `app-cartao [semCaixa]` (`P-052`) ───────────
+// só o layout do que a página projeta dentro dele fica aqui.
+.iniciativa {
+    // Espaçamento entre a faixa de condução, os controles e a lista de combatentes — o mesmo
+    // `gap` que `.iniciativa` já dava a esses blocos quando eram filhos diretos dela, antes de
+    // migrarem para dentro do `<app-cartao>` (`P-052`).
+    &__corpo {
         display: flex;
-        align-items: center;
-        gap: 11px;
-    }
-
-    &__indice {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--accent);
-        border: 1px solid var(--accent);
-        border-radius: var(--radius-compact);
-    }
-
-    &__titulo {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 15px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text);
-
-        // 13px é o tamanho do mockup mobile — em 360px o nome do encontro cabe em menos linhas sem
-        // deixar de ser o título da tela.
-        @include bp.mobile {
-            font-size: 13px;
-        }
-    }
-
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
+        flex-direction: column;
+        gap: var(--gap-grid);
     }
 
     &__meta {
@@ -699,14 +666,12 @@
     }
 }
 
+// A caixa (fundo, borda, raio, respiro) é do `app-cartao` que envolve este formulário — aqui só o
+// layout interno dele.
 .abertura {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: var(--pad-card);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
 
     &__ajuda {
         margin: 0;

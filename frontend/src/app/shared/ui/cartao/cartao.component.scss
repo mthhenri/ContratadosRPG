@@ -6,6 +6,14 @@
     border-radius: var(--radius-card);
     padding: var(--pad-card);
 
+    // Divisor de seção "solto": só o cabeçalho, sem caixa ao redor (`P-052`).
+    &--sem-caixa {
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+    }
+
     &__cabecalho {
         display: flex;
         align-items: center;

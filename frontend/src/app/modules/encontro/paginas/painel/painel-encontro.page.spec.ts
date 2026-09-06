@@ -424,7 +424,7 @@ describe('PainelEncontro', () => {
     expect(cartoes[2].querySelector('.combatente--ativo')).not.toBeNull();
     expect(cartoes[0].querySelector('.combatente__iniciativa-campo')).not.toBeNull();
     expect(cartoes[2].querySelector('.combatente__iniciativa-campo')).toBeNull();
-    expect(elemento.querySelector('.cartao__meta')?.textContent).toContain('3 participantes');
+    expect(elemento.querySelector('.iniciativa__meta')?.textContent).toContain('3 participantes');
   });
 
   it('resolve o Nível de Ameaça do contexto já carregado, sem consulta extra', () => {
@@ -1248,13 +1248,14 @@ describe('PainelEncontro', () => {
     it('carrega o contador condensado `R · T` ao lado da contagem de participantes', () => {
       const { fixture } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      const compacta = (elemento.querySelector('.cartao__meta--compacta')?.textContent ?? '')
+      const compacta = (elemento.querySelector('.iniciativa__meta--compacta')?.textContent ?? '')
         .replace(/\s+/g, ' ')
         .trim();
       // Rodada 2, 3º dos 4 slots da ordem intercalada.
       expect(compacta).toBe('R2 · T3/4');
-      expect(elemento.querySelector('.cartao__meta:not(.cartao__meta--compacta)')?.textContent)
-        .toContain('participantes');
+      expect(
+        elemento.querySelector('.iniciativa__meta:not(.iniciativa__meta--compacta)')?.textContent,
+      ).toContain('participantes');
     });
 
     it('marca como redundante no mobile o bloco de contadores durante o combate', () => {
@@ -1267,7 +1268,7 @@ describe('PainelEncontro', () => {
     it('mantém o bloco de contadores no mobile em montagem, onde ele carrega a "Situação"', () => {
       // O cabeçalho compacto só mostra `R · T`, que em montagem ainda não existe.
       const elemento = montar(emMontagem).fixture.nativeElement as HTMLElement;
-      expect(elemento.querySelector('.cartao__meta--compacta')).toBeNull();
+      expect(elemento.querySelector('.iniciativa__meta--compacta')).toBeNull();
       expect(
         elemento.querySelector('.painel__bloco--contadores')?.classList,
       ).not.toContain('painel__bloco--redundante-mobile');

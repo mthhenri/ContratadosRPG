@@ -82,8 +82,7 @@ mockup mantido à mão, `/painel/:campanhaId/criatura/*` segue fora do ciclo nor
 ## Nota anti-`P-020`
 
 O corte visual entregue precisa ser legível no fonte — sem template HTML nem bloco SCSS
-compactado numa linha só, o sintoma exato do `P-020`. Hoje isso é disciplina manual: nenhum
-formatador automático está configurado para `.html`/`.scss` ainda — o script
-`npm run format:html-scss -w frontend` que resolveria isso é proposto em
-`docs/specs/backlog/formatacao-legibilidade-frontend.spec.md`, **ainda não implementada**; não
-cite esse comando como se já existisse.
+compactado numa linha só, o sintoma exato do `P-020`. `npm run format:html-scss --workspace=frontend`
+(Prettier, `frontend/.prettierrc.json`) resolve isso — rode-o sobre `.html`/`.scss` tocados antes de
+apresentar o corte; `docs/specs/done/formatacao-legibilidade-frontend.spec.md` é o registro
+histórico da implementação.

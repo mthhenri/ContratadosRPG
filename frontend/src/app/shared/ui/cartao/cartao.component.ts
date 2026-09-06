@@ -33,4 +33,13 @@ export class Cartao {
 
   /** Permite que conteúdo projetado no fim do cabeçalho ocupe uma segunda linha no mobile. */
   readonly cabecalhoQuebravel = input(false);
+
+  /**
+   * Renderiza só o cabeçalho (índice/título/régua/fim), sem a caixa (fundo, borda, raio,
+   * padding) nem o rodapé — um divisor de seção "solto" sobre o fundo da página, em vez de um
+   * cartão (`P-052`). O conteúdo padrão (`<ng-content>`) continua sendo projetado normalmente;
+   * quem consome é responsável pelo próprio layout/espaçamento do conteúdo, como em qualquer
+   * outro uso do `app-cartao`.
+   */
+  readonly semCaixa = input(false);
 }

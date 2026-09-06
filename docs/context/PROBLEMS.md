@@ -89,16 +89,6 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-052 — Iniciativa recria o cabeçalho de `app-cartao` · `ABERTO` · frontend/design system
-
-- **Sintoma:** `painel-encontro.page` declara e monta localmente `cartao__cabecalho`, índice,
-  título e régua, incluindo identidade tipográfica e de acabamento já pertencente a `app-cartao`.
-- **Causa:** a tela foi construída com a anatomia visual do cartão, sem consumir o primitivo.
-- **Contorno:** nenhum; hoje as duas implementações precisam evoluir em paralelo.
-- **Correção:** compor os estados da Iniciativa com `app-cartao`; só evoluir sua API se a inspeção
-  ao vivo provar a necessidade de uma variante estrutural.
-- **Desde:** confirmado na auditoria UI-27 (2026-09-03).
-
 ### P-053 — Modais de campanha repetem cabeçalho e rodapé dentro de `app-modal` · `ABERTO` · frontend/design system
 
 - **Sintoma:** Vincular, Duplicar e Acesso de Visualização usam `app-modal`, mas projetam dentro
@@ -231,25 +221,19 @@
 - **Desde:** achado durante a implementação de `P-051` (2026-09-05) — fora do escopo daquela task
   (que cobre só os quatro arquivos que duplicavam a identidade completa).
 
-### P-062 — `npm run openapi:gerar-contratos` produz diff enorme e espúrio num checkout Windows · `CONTORNADO` · backend/tooling
+### P-063 — `contratos-gerados.ts` tem descrições de campo desatualizadas em relação ao JSDoc fonte · `ACEITO` · backend/tooling
 
-- **Sintoma:** rodar o script depois de mudar só um DTO (`m8-07`, `CampanhaPainelEspectadorDto`)
-  reescreveu `contratos-gerados.ts` inteiro (356 linhas, ~185 DTOs): toda `description` ganhou `\r\n`
-  no lugar de `\n` dentro da string (poluição de fim de linha), e várias descrições por campo que já
-  estavam no arquivo comitado (ex. `CampanhaRecuperadaDto.codigoConvite`) somem, porque a fonte atual
-  (`shared/src/dtos/...`) não tem mais aquele JSDoc por campo — só o comentário do nível da interface.
-- **Causa:** `core.autocrlf` neste checkout Windows mantém os `.ts` fonte com `CRLF` na árvore de
-  trabalho (git converte para `LF` só no commit) — o gerador lê o arquivo fonte como está no disco e
-  embute o `\r` de cada quebra de linha do JSDoc na string JSON gerada. A perda de descrição por campo
-  é uma segunda causa, independente: o gerador está fiel à fonte atual, o arquivo comitado é que já
-  estava desatualizado antes desta task (provavelmente um JSDoc por campo foi removido/consolidado em
-  algum refactor anterior sem reexecutar o script).
-- **Contorno:** nesta task, o campo novo (`fichas`/`membros` em `CampanhaPainelEspectadorDto`) foi
-  aplicado manualmente ao JSON já comitado (mesma forma que o gerador produziria, com `\n` em vez de
-  `\r\n`), em vez de aceitar a saída bruta do script — evita tanto a poluição de CRLF quanto reverter
-  a perda de descrições de campos não relacionados a esta task.
-- **Correção:** rodar o script numa árvore com `core.autocrlf=false`/checkout Linux antes de commitar
-  a saída, ou o script normalizar `\r\n` → `\n` antes de serializar. Seguido disso, uma rodada de
-  "regenerar e revisar o diff inteiro" resolveria a segunda causa (descrições de campo desatualizadas)
-  de uma vez, mas é trabalho maior que qualquer task isolada deve assumir sozinha.
-- **Desde:** achado durante a implementação de `m8-07` (2026-09-05).
+- **Sintoma:** ao rodar `openapi:gerar-contratos` de verdade (verificação do `P-062`), duas
+  descrições de campo saem do arquivo comitado — `CampanhaRecuperadaDto.codigoConvite` e
+  `.codigoConviteEspectador` perdem a `description` que o JSON gerado hoje carrega.
+- **Causa:** a fonte (`shared/src/dtos/campanha/campanha.dtos.ts`) não tem mais JSDoc por campo
+  para essas duas propriedades — só um comentário no nível da interface (`CampanhaRecuperadaDto`,
+  linhas ~91-95) que descreve as duas juntas. O arquivo gerado comitado ficou com a descrição de
+  uma versão anterior do DTO, de antes desse comentário ser consolidado, e nunca foi regenerado.
+- **Contorno:** nenhum — é só o JSON gerado ficando um pouco atrás da fonte; não afeta o contrato
+  de tipo/schema, só o texto de documentação.
+- **Correção:** regenerar `contratos-gerados.ts` de verdade e revisar o diff inteiro (agora que o
+  `P-062` corrigiu a poluição de CRLF, o diff deve mostrar só drift de `description` real, DTO por
+  DTO) — trabalho maior que qualquer task isolada deve assumir sozinha; pode haver mais casos além
+  desses dois.
+- **Desde:** achado durante a verificação do `P-062` (2026-09-05).

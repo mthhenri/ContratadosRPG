@@ -15,6 +15,7 @@ import { Cartao, CartaoNivelTitulo } from './cartao.component';
       [titulo]="titulo()"
       [nivelTitulo]="nivelTitulo()"
       [cabecalhoQuebravel]="cabecalhoQuebravel()"
+      [semCaixa]="semCaixa()"
     >
       <span cartaoIndice>{{ indice() }}</span>
       <span cartaoFim class="fim">{{ fim() }}</span>
@@ -29,6 +30,7 @@ class Hospedeiro {
   readonly titulo = signal<string | undefined>(undefined);
   readonly nivelTitulo = signal<CartaoNivelTitulo>('h2');
   readonly cabecalhoQuebravel = signal(false);
+  readonly semCaixa = signal(false);
   readonly mostrarRodape = signal(false);
   readonly indice = signal('1');
   readonly fim = signal('12');
@@ -120,5 +122,18 @@ describe('Cartao', () => {
 
     expect(rodape).not.toBeNull();
     expect(rodape?.querySelector('[cartaoRodape]')).toBeNull();
+  });
+
+  it('em [semCaixa], mantém o cabeçalho mas larga a caixa (P-052)', () => {
+    const fixture = montar();
+    fixture.componentInstance.titulo.set('Iniciativa');
+    fixture.componentInstance.semCaixa.set(true);
+    fixture.detectChanges();
+
+    const elemento = raiz(fixture);
+
+    expect(elemento.querySelector('.cartao--sem-caixa')).not.toBeNull();
+    expect(elemento.querySelector('.cartao__cabecalho')).not.toBeNull();
+    expect(elemento.querySelector('.cartao__titulo')?.textContent?.trim()).toBe('Iniciativa');
   });
 });
