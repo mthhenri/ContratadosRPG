@@ -362,55 +362,23 @@
                 <div class="ficha-inv__form-linha">
                     <div class="ficha-inv__campo">
                         <span class="ficha-inv__campo-rotulo">Custo ($)</span>
-                        <div class="ficha-inv__stepper">
-                            <button
-                                type="button"
-                                class="ficha-inv__mini-btn"
-                                aria-label="Diminuir custo"
-                                (click)="ajustarCampoItem('custo', -100)"
-                            >
-                                −
-                            </button>
-                            <input
-                                class="ficha-inv__entrada ficha-inv__entrada--num"
-                                type="number"
-                                formControlName="custo"
-                            />
-                            <button
-                                type="button"
-                                class="ficha-inv__mini-btn"
-                                aria-label="Aumentar custo"
-                                (click)="ajustarCampoItem('custo', 100)"
-                            >
-                                +
-                            </button>
-                        </div>
+                        <app-step-input
+                            formControlName="custo"
+                            [min]="0"
+                            [passo]="100"
+                            tamanho="compacto"
+                            ariaRotulo="Custo"
+                        />
                     </div>
                     <div class="ficha-inv__campo">
                         <span class="ficha-inv__campo-rotulo">Peso (slots)</span>
-                        <div class="ficha-inv__stepper">
-                            <button
-                                type="button"
-                                class="ficha-inv__mini-btn"
-                                aria-label="Diminuir peso"
-                                (click)="ajustarCampoItem('peso', -1)"
-                            >
-                                −
-                            </button>
-                            <input
-                                class="ficha-inv__entrada ficha-inv__entrada--num"
-                                type="number"
-                                formControlName="peso"
-                            />
-                            <button
-                                type="button"
-                                class="ficha-inv__mini-btn"
-                                aria-label="Aumentar peso"
-                                (click)="ajustarCampoItem('peso', 1)"
-                            >
-                                +
-                            </button>
-                        </div>
+                        <app-step-input
+                            formControlName="peso"
+                            [min]="0"
+                            [passo]="1"
+                            tamanho="compacto"
+                            ariaRotulo="Peso"
+                        />
                     </div>
                 </div>
                 @if (mostraEmprestimo() || mostraModulo()) {

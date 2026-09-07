@@ -1584,12 +1584,6 @@ export class FichaInventario {
     controles.resistencia.setValue('');
   }
 
-  /** Passo − / + num campo numérico do formulário de item custom (piso 0). */
-  protected ajustarCampoItem(campo: 'custo' | 'peso', delta: number): void {
-    const controle = this.itemCustomForm.controls[campo];
-    controle.setValue(Math.max(0, controle.value + delta));
-  }
-
   /**
    * Adiciona um item, empilhando a quantidade quando a categoria é empilhável e o item já existe
    * **com o mesmo apelido** (m3-33) — um item apelidado não absorve silenciosamente um item sem

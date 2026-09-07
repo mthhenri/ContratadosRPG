@@ -188,8 +188,8 @@ describe('FichaInventario', () => {
     expect(alvo.raiz.querySelector('.ficha-inv__form--edicao')).toBeNull();
     expect((dialogo.querySelector('[formControlName="nome"]') as HTMLInputElement).value).toBe('Amuleto Caseiro');
     expect((dialogo.querySelector('[formControlName="descricao"]') as HTMLTextAreaElement).value).toBe('Brilha no escuro');
-    expect((dialogo.querySelector('[formControlName="custo"]') as HTMLInputElement).value).toBe('300');
-    expect((dialogo.querySelector('[formControlName="peso"]') as HTMLInputElement).value).toBe('2');
+    expect((dialogo.querySelector('[formControlName="custo"] input') as HTMLInputElement).value).toBe('300');
+    expect((dialogo.querySelector('[formControlName="peso"] input') as HTMLInputElement).value).toBe('2');
     expect((dialogo.querySelector('.ficha-inv__categoria-select-gatilho') as HTMLButtonElement).disabled).toBe(true);
   });
 
