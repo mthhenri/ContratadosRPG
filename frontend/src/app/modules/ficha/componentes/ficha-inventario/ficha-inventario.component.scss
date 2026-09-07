@@ -256,6 +256,16 @@
             padding: 5px 8px;
             font-size: 11px;
         }
+        // Lupa de busca / "Fechar busca": `app-botao-icone` sem `[tamanho]` cai no `compacto`
+        // (26px) do primitivo — menor que a altura real dos botões de texto vizinhos (34px, de
+        // `font-size`+`padding`+borda acima). Trava o quadrado na mesma altura pra não ficar
+        // baixo demais ao lado de "Custos"/"Esvaziar". Precisa do seletor de elemento+atributo
+        // (`button[app-botao-icone]`) pra vencer o empate de especificidade com
+        // `:host(.botao-icone--compacto)` — só a classe local não bastava.
+        &--icone[app-botao-icone] {
+            width: 34px;
+            height: 34px;
+        }
         // Feedback de adição: a cor vem de `variante="positivo"`; fica local apenas a animação.
         &--feito {
             animation: ficha-inv-pulso 0.9s ease-out;

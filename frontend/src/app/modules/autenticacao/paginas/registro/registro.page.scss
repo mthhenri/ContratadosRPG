@@ -212,7 +212,11 @@
         position: relative;
     }
 
-    &__olho {
+    // Especificidade elemento+atributo+classe para vencer o tamanho fixo que o primitivo
+    // aplica via `:host(.botao-icone--padrao)` — mesma especificidade de uma classe simples,
+    // e o empate deixava o botão preso em 32×32 no topo do campo (mais baixo que a altura do
+    // campo, "olhinho" com folga embaixo em vez de preencher a altura toda).
+    button[app-botao-icone].autenticacao__olho {
         position: absolute;
         top: 0;
         right: 0;
