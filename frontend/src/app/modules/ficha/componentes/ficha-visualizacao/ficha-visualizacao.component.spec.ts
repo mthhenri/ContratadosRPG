@@ -976,7 +976,7 @@ describe('FichaVisualizacao', () => {
     componente['editarAtributos']();
     // Vigor 4 → sobe para 6 e habilita a Maestria; Luta (2) segue desabilitada.
     expect(componente['maestriaHabilitada']('vigor')).toBe(false);
-    componente['ajustarAtributoRascunho']('vigor', 2);
+    componente['definirAtributoRascunho']('vigor', 6);
     expect(componente['maestriaHabilitada']('vigor')).toBe(true);
     expect(componente['maestriaHabilitada']('luta')).toBe(false);
     componente['alternarMaestria']('vigor');
@@ -996,9 +996,8 @@ describe('FichaVisualizacao', () => {
     // Antes de qualquer ajuste, o rascunho completo nasce zerado (as 10 chaves).
     expect(componente['rascunhoDadosTeste']()!.destreza).toBe(0);
 
-    componente['ajustarDadosTesteRascunho']('destreza', 1);
-    componente['ajustarDadosTesteRascunho']('destreza', 1);
-    componente['ajustarDadosTesteRascunho']('forca', -1);
+    componente['definirDadosTesteRascunho']('destreza', 2);
+    componente['definirDadosTesteRascunho']('forca', -1);
     componente['confirmarAtributos']();
 
     expect(ajustes).toHaveLength(1);
@@ -1031,7 +1030,7 @@ describe('FichaVisualizacao', () => {
 
     componente['editarAtributos']();
     expect(componente['rascunhoMaestria']()).toBe('forca');
-    componente['ajustarAtributoRascunho']('forca', -1); // 6 → 5
+    componente['definirAtributoRascunho']('forca', 5); // 6 → 5
     expect(componente['rascunhoMaestria']()).toBeNull();
   });
 

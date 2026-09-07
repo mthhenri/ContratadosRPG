@@ -77,6 +77,20 @@
         }
     }
 
+    // Modo `digitavel=false`: valor é texto, não campo — sem cursor de digitação nem seleção.
+    &__valor--exibicao {
+        cursor: default;
+        user-select: none;
+    }
+
+    &__valor--ativo {
+        color: var(--accent);
+    }
+
+    &__valor--desabilitado {
+        color: var(--text-mute);
+    }
+
     &--compacto {
         background: var(--surface);
 

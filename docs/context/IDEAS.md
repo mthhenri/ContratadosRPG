@@ -25,36 +25,33 @@
 
 ---
 
-## Abertas
+## Promovidas
 
-### I-026 — `[tamanho]` compacto opt-in no `StepInput` · frontend/design system
+### I-024 — `perigo` e `primario` são a mesma cor · frontend/design system
 
-- **Ideia:** dar ao `app-step-input` (`shared/ui/stepper/`) um `[tamanho]="'compacto'"` opcional,
-  mesmo padrão do `[tamanho]` do `Botao` (`ui-01b`) — sem valor, o primitivo continua do tamanho
-  atual (30px/19px, usado pelas 6 páginas da simulação).
-- **Origem:** auditoria da `ui-03` sobre as 4 cópias locais de `.stepper` fora do `StepInput`:
-  `guia-equipamento-loja` (28px/14px) e a variante `.ficha-passo` de `ficha-visualizacao` são
-  visivelmente menores que o canônico — adotar o primitivo ali sem essa variante estufaria a
-  densidade de um carrinho de compras/tabela de atributos.
-- **Por quê:** sem essa variante, esses dois consumidores não têm como adotar `app-step-input` sem
-  regressão visual — a `ui-04` (migração módulo a módulo) vai bater nisso de qualquer forma.
-- **Custo aparente:** só CSS (dois degraus de padding/font-size, como o `Botao` já faz) — não
-  toca no contrato `ControlValueAccessor`/clamp/digitação direta.
+- Fechada em 2026-09-07 **sem spec própria**: ao investigar para implementar, `perigo` já não usa
+  `--accent` — `ui-12-tokens-semanticos-de-estado` (`docs/specs/done/`) desacoplou a severidade
+  antes desta ideia ser revisitada (`Botao`/`Chip` usam `--erro`, `app-valor-editavel` usa `--vida`,
+  ambos vermelho fixo). Nenhuma cópia local de `.botao--perigo` restava (`ui-04`/`ui-28`…`ui-32` já
+  tinham migrado os 3 usos citados). Nada a implementar — só o registro de que já está resolvida.
 
 ### I-025 — Primitivo de "stat editável" para `ficha-mini`/`ficha-atributo` · frontend/design system
 
-- **Ideia:** um segundo primitivo (ou uma variante bem mais rica do `app-stat`) que cubra rótulo +
-  valor **editável in-line** + botão de rolagem de dado — o padrão de `ficha-mini`/`ficha-atributo`
-  em `ficha-visualizacao.component.scss`.
-- **Origem:** auditoria da `ui-03` sobre as "5 declarações" de `.stat` da spec original: 3 delas
-  (`.stat`, `.agente-stat`, `.calc-stat`) são display puro e viraram `app-stat`; as outras 2
-  (`ficha-mini`, `ficha-atributo`) têm `__entrada` (edição) e `__rolar` (dado) — um componente
-  estruturalmente diferente, não uma variante de estilo.
-- **Por quê:** forçar essas duas dentro do `app-stat` misturaria uma caixa de exibição com um
-  campo de formulário + ação de jogo, contrariando "não crie primitivo pra bloco sem duplicação
-  medida" — mas a duplicação existe (é o controle mais repetido da ficha em mesa) e fica sem dono.
-- **Custo aparente:** desenho de API novo (não é só CSS): estado de edição, `ControlValueAccessor`
-  ou output de alteração, e a integração com `appHoldRepeat` que `ficha-atributo` já usa.
+- Fundida com `I-026` e fechada por
+  `docs/specs/done/i-024-025-026-stepper-passo-e-cores-perigo.spec.md` (2026-09-07). Metade da ideia
+  original (editar in-line + dadinho de rolar em `ficha-mini`) já tinha virado composição de
+  `app-valor-editavel` + `app-botao-icone` (`P-057`/`P-058`), sem precisar de primitivo novo. A
+  metade que sobrou — o stepper de segurar-repetir sem digitação de `ficha-atributo` — ganhou
+  `[digitavel]="false"`/`[comSinal]` no `app-step-input` existente, em vez de um primitivo à parte.
+
+### I-026 — `[tamanho]` compacto opt-in no `StepInput` · frontend/design system
+
+- Ver `I-025` acima — a mesma spec fechou as duas: o `[tamanho]` já existia (`padrao`/`compacto`/
+  `mini`) antes desta ideia ser revisitada, mas o problema real tinha mudado de forma (`.ficha-passo`
+  não é mais um stepper completo, só um botão avulso) — o que faltava era o modo `digitavel=false`,
+  não uma variante de tamanho.
+
+## Abertas
 
 ### I-023 — Gate automático de convenções no CI · processo/qualidade
 

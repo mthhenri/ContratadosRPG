@@ -1344,46 +1344,22 @@
                                                                 >{{ campo.nome }}</span
                                                             >
                                                             <div class="ficha-atributo__stepper">
-                                                                <button
-                                                                    class="ficha-passo"
-                                                                    type="button"
-                                                                    appHoldRepeat
-                                                                    [attr.aria-label]="
-                                                                        'Reduzir ' + campo.nome
-                                                                    "
-                                                                    (passo)="
-                                                                        ajustarAtributoRascunho(
-                                                                            campo.chave,
-                                                                            -1
-                                                                        )
-                                                                    "
-                                                                >
-                                                                    −
-                                                                </button>
-                                                                <span
-                                                                    class="ficha-atributo-linha__valor"
-                                                                    >{{
+                                                                <app-step-input
+                                                                    [valorExterno]="
                                                                         rascunhoAtributos()?.[
                                                                             campo.chave
-                                                                        ]
-                                                                    }}</span
-                                                                >
-                                                                <button
-                                                                    class="ficha-passo"
-                                                                    type="button"
-                                                                    appHoldRepeat
-                                                                    [attr.aria-label]="
-                                                                        'Aumentar ' + campo.nome
+                                                                        ] ?? 0
                                                                     "
-                                                                    (passo)="
-                                                                        ajustarAtributoRascunho(
+                                                                    [digitavel]="false"
+                                                                    tamanho="mini"
+                                                                    [ariaRotulo]="campo.nome"
+                                                                    (valorAlterado)="
+                                                                        definirAtributoRascunho(
                                                                             campo.chave,
-                                                                            1
+                                                                            $event
                                                                         )
                                                                     "
-                                                                >
-                                                                    +
-                                                                </button>
+                                                                />
                                                             </div>
                                                         </div>
                                                         <div
@@ -1404,60 +1380,26 @@
                                                                 <div
                                                                     class="ficha-atributo__modificador"
                                                                 >
-                                                                    <button
-                                                                        class="ficha-atributo__mod-passo"
-                                                                        type="button"
-                                                                        appHoldRepeat
-                                                                        [attr.aria-label]="
-                                                                            'Reduzir modificador de teste de ' +
-                                                                            campo.nome
-                                                                        "
-                                                                        (passo)="
-                                                                            ajustarModificadorTesteRascunho(
-                                                                                campo.chave,
-                                                                                -1
-                                                                            )
-                                                                        "
-                                                                    >
-                                                                        −
-                                                                    </button>
-                                                                    <span
-                                                                        class="ficha-atributo__mod-valor"
-                                                                        [class.ficha-atributo__mod-valor--ativo]="
-                                                                            rascunhoModificadoresTeste()?.[
-                                                                                campo.chave
-                                                                            ] !== 0
-                                                                        "
-                                                                    >
-                                                                        {{
-                                                                            (rascunhoModificadoresTeste()?.[
-                                                                                campo.chave
-                                                                            ] ?? 0) >= 0
-                                                                                ? "+"
-                                                                                : ""
-                                                                        }}{{
+                                                                    <app-step-input
+                                                                        [valorExterno]="
                                                                             rascunhoModificadoresTeste()?.[
                                                                                 campo.chave
                                                                             ] ?? 0
-                                                                        }}
-                                                                    </span>
-                                                                    <button
-                                                                        class="ficha-atributo__mod-passo"
-                                                                        type="button"
-                                                                        appHoldRepeat
-                                                                        [attr.aria-label]="
-                                                                            'Aumentar modificador de teste de ' +
+                                                                        "
+                                                                        [digitavel]="false"
+                                                                        [comSinal]="true"
+                                                                        tamanho="mini"
+                                                                        [ariaRotulo]="
+                                                                            'modificador de teste de ' +
                                                                             campo.nome
                                                                         "
-                                                                        (passo)="
-                                                                            ajustarModificadorTesteRascunho(
+                                                                        (valorAlterado)="
+                                                                            definirModificadorTesteRascunho(
                                                                                 campo.chave,
-                                                                                1
+                                                                                $event
                                                                             )
                                                                         "
-                                                                    >
-                                                                        +
-                                                                    </button>
+                                                                    />
                                                                 </div>
                                                             </div>
                                                             <!-- Ajuste manual de dados: quantos D20 o atributo rola nos testes/rolagens,
@@ -1473,60 +1415,26 @@
                                                                     Dados
                                                                 </span>
                                                                 <div class="ficha-atributo__dados">
-                                                                    <button
-                                                                        class="ficha-atributo__dados-passo"
-                                                                        type="button"
-                                                                        appHoldRepeat
-                                                                        [attr.aria-label]="
-                                                                            'Reduzir dados de teste de ' +
-                                                                            campo.nome
-                                                                        "
-                                                                        (passo)="
-                                                                            ajustarDadosTesteRascunho(
-                                                                                campo.chave,
-                                                                                -1
-                                                                            )
-                                                                        "
-                                                                    >
-                                                                        −
-                                                                    </button>
-                                                                    <span
-                                                                        class="ficha-atributo__dados-valor"
-                                                                        [class.ficha-atributo__dados-valor--ativo]="
-                                                                            rascunhoDadosTeste()?.[
-                                                                                campo.chave
-                                                                            ] !== 0
-                                                                        "
-                                                                    >
-                                                                        {{
-                                                                            (rascunhoDadosTeste()?.[
-                                                                                campo.chave
-                                                                            ] ?? 0) >= 0
-                                                                                ? "+"
-                                                                                : ""
-                                                                        }}{{
+                                                                    <app-step-input
+                                                                        [valorExterno]="
                                                                             rascunhoDadosTeste()?.[
                                                                                 campo.chave
                                                                             ] ?? 0
-                                                                        }}
-                                                                    </span>
-                                                                    <button
-                                                                        class="ficha-atributo__dados-passo"
-                                                                        type="button"
-                                                                        appHoldRepeat
-                                                                        [attr.aria-label]="
-                                                                            'Aumentar dados de teste de ' +
+                                                                        "
+                                                                        [digitavel]="false"
+                                                                        [comSinal]="true"
+                                                                        tamanho="mini"
+                                                                        [ariaRotulo]="
+                                                                            'dados de teste de ' +
                                                                             campo.nome
                                                                         "
-                                                                        (passo)="
-                                                                            ajustarDadosTesteRascunho(
+                                                                        (valorAlterado)="
+                                                                            definirDadosTesteRascunho(
                                                                                 campo.chave,
-                                                                                1
+                                                                                $event
                                                                             )
                                                                         "
-                                                                    >
-                                                                        +
-                                                                    </button>
+                                                                    />
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1908,7 +1816,9 @@
                                                 [editando]="editandoFormulaIniciativa()"
                                                 rotuloAria="fórmula de iniciativa"
                                                 [tooltip]="
-                                                    'Fórmula: ' + preset.formula + ' — clique para editar'
+                                                    'Fórmula: ' +
+                                                    preset.formula +
+                                                    ' — clique para editar'
                                                 "
                                                 (editarSolicitado)="editarFormulaIniciativa()"
                                             >

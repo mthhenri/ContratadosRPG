@@ -592,27 +592,16 @@
                                             campo.nome
                                         }}</span>
                                         <div class="criatura__atributo-linha-stepper">
-                                            <button
-                                                class="criatura__passo"
-                                                type="button"
-                                                appHoldRepeat
-                                                [attr.aria-label]="'Reduzir ' + campo.nome"
-                                                (passo)="ajustarAtributoRascunho(campo.chave, -1)"
-                                            >
-                                                −
-                                            </button>
-                                            <span class="criatura__atributo-linha-valor">{{
-                                                atributoRascunho(campo.chave)
-                                            }}</span>
-                                            <button
-                                                class="criatura__passo"
-                                                type="button"
-                                                appHoldRepeat
-                                                [attr.aria-label]="'Aumentar ' + campo.nome"
-                                                (passo)="ajustarAtributoRascunho(campo.chave, 1)"
-                                            >
-                                                +
-                                            </button>
+                                            <app-step-input
+                                                [valorExterno]="atributoRascunho(campo.chave)"
+                                                [min]="0"
+                                                [digitavel]="false"
+                                                tamanho="mini"
+                                                [ariaRotulo]="campo.nome"
+                                                (valorAlterado)="
+                                                    definirAtributoRascunho(campo.chave, $event)
+                                                "
+                                            />
                                         </div>
                                     </div>
                                     <div

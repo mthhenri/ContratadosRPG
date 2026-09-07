@@ -4,8 +4,17 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-06 · **Última decisão registrada:** `P-057` e `P-058` fecharam.
-> Nasceu o primitivo `app-valor-editavel` (`shared/ui/valor-editavel/`) — máquina de estado
+> **Última revisão:** 2026-09-07 · **Última decisão registrada:** `I-024`/`I-025`/`I-026`
+> fecharam. `I-024` (perigo = primário) já estava resolvida por `ui-12`, sem diff — só o registro
+> em `IDEAS.md`. `I-025`/`I-026` (fundidas) deram ao `app-step-input` um modo sem digitação —
+> `[digitavel]="false"` troca o `<input>` central por texto só-leitura e os botões passam a
+> segurar-para-repetir (`appHoldRepeat`); `[comSinal]` antepõe `+`/marca `--ativo`. Substitui o
+> stepper de "segurar" duplicado em 7 lugares (`ficha-visualizacao` ×3, `criatura-visualizacao` ×1,
+> `ficha-habilidades` ×2, `ficha-sanidade` ×1), convergindo pra `tamanho="mini"`. Antes disso,
+> na mesma sessão: `app-valor-editavel` ganhou foco real (era no-op num app zoneless) e a fórmula de
+> Iniciativa virou editável (commit `34c87a7`, sessão concorrente).
+> Antes: `P-057`/`P-058` fecharam. Nasceu o primitivo `app-valor-editavel` (`shared/ui/
+> valor-editavel/`) — máquina de estado
 > exibição↔edição + identidade do estado de exibição (via `app-botao[estilo="texto"]` interno),
 > adotado nas ~30 ocorrências de "valor clicável" de `barra-recurso`, `ficha-visualizacao`,
 > `criatura-visualizacao` e `ficha-inventario`. `ficha-flutuante` (módulo Encontro) migrou para
@@ -38,6 +47,22 @@
 ---
 
 ## 1. Próxima Task
+
+**`I-024`/`I-025`/`I-026` fechados (2026-09-07):** as três ideias abertas mais recentes de
+`IDEAS.md`, a pedido do autor. `I-024` (perigo = primário) já estava resolvida por `ui-12` —
+fechada sem diff de código, só bookkeeping em `IDEAS.md`. `I-025`/`I-026` foram fundidas: o
+`StepInput` (`shared/ui/stepper/`) ganhou `[digitavel]` (default `true`, idêntico aos 6
+consumidores atuais) e `[comSinal]` — com `digitavel=false` o valor central vira texto só-leitura
+e os botões usam `appHoldRepeat` em vez de clique único, cobrindo o padrão de "ajuste rápido sem
+digitação" duplicado em 7 lugares (`ficha-visualizacao` ×3 — valor/modificador/dados do atributo,
+`criatura-visualizacao` ×1, `ficha-habilidades` ×2, `ficha-sanidade` ×1), todos convergidos pra
+`tamanho="mini"`. Spec em `docs/specs/done/i-024-025-026-stepper-passo-e-cores-perigo.spec.md`.
+Testes: focado 254/254, suíte completa `frontend` 1648/1648 (duas rodadas — um `git checkout --`
+sem conferir diff antes derrubou o SCSS desta task no meio da sessão, redigitado); lint sem erro
+novo. Verificado ao vivo (Postgres + backend + frontend reais, REST cru) em `1920×1080`/`360×800`:
+os três steppers de Atributos (Agente e Criatura), segurar-para-repetir, formatação `+`/`--ativo`,
+sem overflow no card de Atributos (coluna mais estreita do app); custo de habilidade e pontos de
+lesão confirmados no desktop.
 
 **`P-063`/`P-064` fechados (2026-09-06):** duas dívidas `ACEITO` pequenas, a pedido do autor.
 `P-063` — `npm run openapi:gerar-contratos --workspace=backend` rodado de verdade; o diff confirmou

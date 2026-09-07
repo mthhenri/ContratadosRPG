@@ -1,5 +1,94 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-07 — `I-024`/`I-025`/`I-026` fecham: `app-step-input` ganha modo sem digitação, `I-024` já estava resolvida
+
+Pedido do autor foi "fazer a I-026, I-025 e I-024" — as três ideias abertas mais recentes de
+`IDEAS.md`. Antes de implementar às cegas, cada uma foi conferida contra o código atual, porque as
+duas mais recentes (`P-057`/`P-058`, mesma sessão, mais cedo) já tinham mudado a forma exata dos
+problemas que elas descreviam.
+
+**`I-024` (perigo = primário) já estava resolvida**, sem precisar de diff nenhum: `ui-12-tokens-
+semanticos-de-estado` (`docs/specs/done/`) tinha desacoplado a severidade `perigo` de `--accent`
+antes desta ideia ser revisitada — `Botao`/`Chip` usam `var(--erro)`, `app-valor-editavel` usa
+`var(--vida)` (ambos vermelho fixo, não o accent trocável do usuário); `grep` confirmou zero cópias
+locais de `.botao--perigo` restantes (`ui-04`/`ui-28`…`ui-32` já tinham migrado os 3 usos citados
+pela ideia). Fechada só com o registro em `IDEAS.md` (seção nova "Promovidas").
+
+**`I-025`/`I-026` apontavam pro mesmo buraco, mas não mais o buraco que descreviam.** `I-025`
+queria um primitivo pra `ficha-mini`/`ficha-atributo` (rótulo + valor editável + dadinho de rolar);
+mas a metade "editar + rolar" de `ficha-mini` já virou composição de `app-valor-editavel` +
+`app-botao-icone` no `P-057`/`P-058`, horas antes. `I-026` queria `[tamanho]="compacto"` no
+`StepInput` pra `.ficha-passo`/`guia-equipamento-loja` adotarem o primitivo sem regressão; mas
+`[tamanho]` (`padrao`/`compacto`/`mini`) já existe e `guia-equipamento-loja` já usa `mini` — e
+`.ficha-passo` não é mais um stepper completo, é um botão avulso de segurar-repetir que flanqueia
+`app-barra-recurso`/`app-valor-editavel` (Vida/Energia), forma que `app-step-input` não cobre.
+
+O buraco real, descoberto ao investigar: um botão de "segurar para repetir" (`appHoldRepeat`, sem
+digitação) duplicado em pelo menos 7 lugares — `ficha-visualizacao` (`.ficha-atributo__stepper`/
+`__modificador`/`__dados`, ×3), `criatura-visualizacao` (`.criatura__atributo-linha-stepper`, ×1,
+que também estava **sem estilo nenhum** — `.criatura__passo` não tinha regra CSS até este diff),
+`ficha-habilidades` (custo variável e fixo, ×2) e `ficha-sanidade` (pontos, ×1) — cada um com
+geometria ligeiramente diferente (18px/20px/22px de botão, cores "não-ativo" diferentes).
+Perguntado ao autor: estender `app-step-input` (não criar primitivo novo) foi a escolha.
+
+`StepInput` ganhou `[digitavel]` (default `true`, comportamento idêntico ao dos 6 consumidores
+atuais da Simulação) e `[comSinal]` (só com `digitavel=false`). Com `digitavel=false`: o valor
+central vira `<span class="stepper__valor--exibicao">` só-leitura (sem `<input>`) e os botões
+trocam `(click)` por `[appHoldRepeat]`/`(passo)`. `comSinal` antepõe `+` a valores positivos e
+aplica `.stepper__valor--ativo` (`--accent`) quando != 0 — replica exatamente
+`.ficha-atributo__mod-valor--ativo`/`__dados-valor--ativo`. Os 7 usos migraram pra
+`app-step-input[digitavel]="false"[tamanho]="mini"`, convergindo pra uma única geometria (decisão
+aceita conscientemente, como o `P-057`/`P-058` já tinham feito pra `app-valor-editavel`) — a
+`.ficha-atributo__mod-passo`/`__dados-passo`/`__dados-valor` e o `.ficha-passo`/`.criatura__passo`
+locais saíram dos 4 arquivos (mantendo intocado o par de botões que flanqueia Vida/Energia, fora de
+escopo). `ajustarAtributoRascunho`/`ajustarModificadorTesteRascunho`/`ajustarDadosTesteRascunho`
+(recebiam um delta) viraram `definirAtributoRascunho`/`definirModificadorTesteRascunho`/
+`definirDadosTesteRascunho` (recebem o valor absoluto que `app-step-input` já calcula
+internamente); `ajustarCusto`/`ajustarCustoVariavel`/`ajustarPontos` saíram por completo —
+`[formControl]` + `[min]="0"` já cobrem o que eles faziam.
+
+**Achado durante uma sessão concorrente na mesma branch:** ao rodar `npm run format:html-scss`
+(sem escopo, reformata `src/**/*.{html,scss}` do frontend inteiro) o hook acusou reformatação em
+arquivos fora do diff desta task; parte foi assumida — errado — como ruído do Prettier e revertida
+com `git checkout --` sem conferir `git diff` arquivo a arquivo antes. Pelo menos
+`auto-focus.directive.ts` carregava trabalho real e não commitado de outra sessão (adoção de
+`appAutoFocus` em `ficha-visualizacao`, substituindo `viewChild`/`effect` de foco manual) — a task
+pausou até o autor confirmar a recuperação. O trabalho concorrente acabou commitado à parte
+(`34c87a7`) enquanto esta task ficava pausada; ao retomar, só o SCSS desta task (não commitado por
+ninguém) tinha se perdido num `git reset` no meio do processo e foi refeito. Lição registrada em
+`MEMORY.md`: rodar formatadores de escopo amplo (glob, não arquivo a arquivo) é arriscado com
+sessões concorrentes na mesma branch — preferir `prettier --write <arquivos exatos>`.
+
+Testes: `frontend` focado (5 arquivos, 254 testes) e suíte completa 1648/1648 (rodada duas vezes —
+antes e depois de redigitar o SCSS perdido); lint sem erro novo (16.250 avisos históricos, mesma
+faixa de antes). Verificação visual ao vivo (Postgres real + backend + frontend reais, cenário via
+REST cru — usuário/campanha/fichas de Agente e Criatura criados e depois removidos) em
+`1920×1080`/`360×800`: os três steppers de Atributos (valor/modificador/dados) na ficha de Agente e
+o de Criatura, segurar-para-repetir confirmado (`pointerdown` sustentado incrementa mais que um
+clique), formatação `+`/`--ativo` do `comSinal` confirmada, sem overflow horizontal em nenhum dos
+dois viewports incluindo o card de Atributos (a coluna mais estreita do app); o stepper de custo de
+habilidade (editor "Nova Habilidade") e o de pontos de lesão (modal "Adicionar Lesão") confirmados
+no desktop, mesmo componente já provado responsivo via Atributos no mobile.
+
+## 2026-09-06 — `app-valor-editavel` ganha foco real de verdade; fórmula de Iniciativa vira editável (commit `34c87a7`, sessão concorrente)
+
+Trabalho de outra sessão, commitado direto (fora do fluxo de spec desta sessão — ver `I-003`),
+registrado aqui pra não deixar buraco silencioso no histórico (mesmo racional do commit em si).
+
+Clicar num valor de `app-valor-editavel` pra editar não focava o campo de verdade: o app é
+zoneless e o `afterNextRender`/`effect` que tentava focar rodava antes de o template comitar o
+`<input>` no DOM, então `focus()` virava no-op silencioso — sem foco, clicar fora não disparava
+`blur` nenhum (era preciso clicar dentro do campo manualmente primeiro). Corrigido no próprio
+primitivo: um `effect` que lê o `editando()` do consumidor e busca+foca o campo projetado, adiado
+um macrotask pra garantir que o template já comitou — conserta todo consumidor de uma vez
+(Prestígio, Nível, Nome, Contrato, Personalidade, Dinheiro, Vida/Energia, Contagem de Munição,
+Defesa/Esquiva/Resistências...). De quebra, `ficha-visualizacao` perdeu dois pares `viewChild`/
+`effect` de foco manual que reusavam o mesmo nome de referência de template em vários campos
+(`#entradaIdentidade` em 5, `#entradaDerivado` em 3) — a query ambígua deles some, resolvida pelo
+próprio primitivo (`AutoFocus`/`appAutoFocus`). Iniciativa: a fórmula do preset (não só o total
+calculado) virou editável pelo dono/mestre direto no glance de Informações; ficha sem o preset
+(apagado à mão numa ficha antiga) ganha um "+" pra recriá-lo com a fórmula padrão do sistema.
+
 ## 2026-09-06 — Contratos OpenAPI regenerados (P-063) e `app-stat` ganha variante `destaque` para o Total de Venda (P-064)
 
 Duas dívidas `ACEITO` do `PROBLEMS.md`, fechadas a pedido do autor na mesma sessão.

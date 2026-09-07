@@ -19,12 +19,12 @@ import {
 import type { AmplificadorAplicadoDto } from '@contratados-rpg/shared/regras/compras';
 
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
-import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { FichaHabilidadeSeletor } from '../ficha-habilidade-seletor/ficha-habilidade-seletor.component';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
 
@@ -93,13 +93,13 @@ function juntarComOu(rotulos: readonly string[]): string {
     NgTemplateOutlet,
     ReactiveFormsModule,
     AutoFocus,
-    HoldRepeat,
     OverflowFade,
     Tooltip,
     Botao,
     BotaoIcone,
     FichaHabilidadeSeletor,
     EstadoVazio,
+    StepInput,
   ],
   templateUrl: './ficha-habilidades.component.html',
   styleUrl: './ficha-habilidades.component.scss',
@@ -426,12 +426,6 @@ export class FichaHabilidades {
     this.indiceEmEdicao.set(null);
   }
 
-  /** Passo − / + no custo de Energia em edição (piso 0, sem teto — liberdade total). */
-  protected ajustarCusto(delta: number): void {
-    const atual = this.habilidadeForm.controls.custoEnergia.value;
-    this.habilidadeForm.controls.custoEnergia.setValue(Math.max(0, atual + delta));
-  }
-
   /** Confirma o editor aberto: adiciona (índice −1) ou substitui, e emite a lista. */
   protected confirmar(): void {
     const indice = this.indiceEmEdicao();
@@ -595,11 +589,6 @@ export class FichaHabilidades {
   /** Fecha o mini-campo de custo variável sem gastar. */
   protected cancelarUtilizar(): void {
     this.indiceUtilizando.set(null);
-  }
-
-  /** Passo − / + no custo variável em digitação (piso 0). */
-  protected ajustarCustoVariavel(delta: number): void {
-    this.custoVariavel.setValue(Math.max(0, this.custoVariavel.value + delta));
   }
 
   /** Custo em notação do documento: `[N E]` / `[0 E]`, ou `[X E]` para custo variável (`null`). */

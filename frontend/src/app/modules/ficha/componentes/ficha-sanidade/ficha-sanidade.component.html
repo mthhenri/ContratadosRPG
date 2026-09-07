@@ -445,26 +445,14 @@
         <div class="sanidade__form-linha">
             <div class="sanidade__stepper">
                 <span class="sanidade__rotulo-inline">Pontos</span>
-                <button
-                    class="ficha-passo"
-                    type="button"
-                    appHoldRepeat
-                    aria-label="Reduzir pontos"
-                    [disabled]="lesaoForm.controls.pontos.value <= 0"
-                    (passo)="ajustarPontos(-1)"
-                >
-                    −
-                </button>
-                <span class="sanidade__pontos">{{ lesaoForm.controls.pontos.value }}</span>
-                <button
-                    class="ficha-passo"
-                    type="button"
-                    appHoldRepeat
-                    aria-label="Aumentar pontos"
-                    (passo)="ajustarPontos(1)"
-                >
-                    +
-                </button>
+                <app-step-input
+                    [formControl]="lesaoForm.controls.pontos"
+                    [min]="0"
+                    [bloquearDiminuir]="lesaoForm.controls.pontos.value <= 0"
+                    [digitavel]="false"
+                    tamanho="mini"
+                    ariaRotulo="pontos"
+                />
             </div>
             <label class="sanidade__checkbox">
                 <input type="checkbox" formControlName="permanente" />

@@ -36,7 +36,6 @@ import {
 
 import { TemaService, hexParaHsl } from '../../../../core/services/tema.service';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
-import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -48,6 +47,7 @@ import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.compon
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -134,7 +134,6 @@ const COR_FICHA_PADRAO = '#d53030';
     Icone,
     Tooltip,
     AutoFocus,
-    HoldRepeat,
     ReactiveFormsModule,
     BandejaDados,
     CriaturaResistenciaLista,
@@ -147,6 +146,7 @@ const COR_FICHA_PADRAO = '#d53030';
     Aba,
     AbaPainel,
     Modal,
+    StepInput,
     ValorEditavel,
   ],
   templateUrl: './criatura-visualizacao.component.html',
@@ -312,11 +312,6 @@ export class CriaturaVisualizacao {
     if (atual && Number.isFinite(valor)) {
       this.rascunhoAtributos.set({ ...atual, [chave]: Math.max(0, valor) });
     }
-  }
-
-  /** Passo −/+ do valor de atributo em edição — mesmo stepper de `FichaVisualizacao`. */
-  protected ajustarAtributoRascunho(chave: ChaveAtributo, delta: number): void {
-    this.definirAtributoRascunho(chave, this.atributoRascunho(chave) + delta);
   }
 
   protected definirModificadorRascunho(chave: ChaveAtributo, valor: ModificadorCriaturaEnum): void {

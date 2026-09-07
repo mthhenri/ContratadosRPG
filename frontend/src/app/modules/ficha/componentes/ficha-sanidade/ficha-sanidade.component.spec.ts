@@ -109,7 +109,7 @@ describe('FichaSanidade', () => {
     expect(alvo.emitidos).toHaveLength(0);
   });
 
-  it('lesão: sugere pontos por severidade (documento) e ajusta com o stepper; efeito derivado', () => {
+  it('lesão: sugere pontos por severidade (documento); efeito derivado', () => {
     const alvo = montar(true);
     const componente = alvo.fixture.componentInstance;
     componente['adicionar']('lesao');
@@ -117,10 +117,8 @@ describe('FichaSanidade', () => {
     componente['lesaoForm'].controls.severidade.setValue(SeveridadeLesaoEnum.MORTAL);
     componente['sugerirPontos']();
     expect(componente['lesaoForm'].controls.pontos.value).toBe(5);
-    // Stepper baixa até 0 e trava no piso.
-    componente['ajustarPontos'](-5);
-    componente['ajustarPontos'](-1);
-    expect(componente['lesaoForm'].controls.pontos.value).toBe(0);
+    // O piso 0 do stepper é responsabilidade do `app-step-input[min]="0"` — testado no primitivo.
+    componente['lesaoForm'].controls.pontos.setValue(0);
     // Efeito exibido.
     expect(
       componente['efeitoLesao']({

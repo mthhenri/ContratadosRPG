@@ -664,14 +664,6 @@
         align-items: center;
         gap: 6px;
     }
-    &__atributo-linha-valor {
-        font-family: var(--font-mono);
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--text);
-        min-width: 20px;
-        text-align: center;
-    }
     // Barrinhas de sinal (4 níveis) — mesmo widget de `.atributo__modificador` do assistente de
     // criação (`criar-criatura.page.scss`, m4-05), preservado sem mudança de interação.
     &__atributo-modificadores {

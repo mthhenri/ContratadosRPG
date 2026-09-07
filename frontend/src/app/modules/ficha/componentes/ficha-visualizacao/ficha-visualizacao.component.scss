@@ -2516,20 +2516,14 @@
             font-size: 10px;
             line-height: 1;
         }
-
-        // Ajuste manual de dados: mesma compactação do modificador — a grade de 5 linhas x 2 colunas
-        // não pode empurrar o card além da altura da coluna de Identidade.
-        .ficha-atributo__dados-valor {
-            font-size: 10px;
-            line-height: 1;
-        }
     }
 }
 
 // Lista vertical em edição do card de Atributos (troca a grade de caixas — ver design em
 // docs/superpowers/specs/2026-08-02-layout-lista-edicao-atributos-design.md): cada atributo é uma
-// linha de duas sub-linhas. Reusa as classes de stepper/maestria/modificador/dados já existentes em
-// `.ficha-atributo` (mod-passo, dados-passo, maestria, stepper) — só a moldura da linha é nova.
+// linha de duas sub-linhas. Reusa a classe de Maestria já existente em `.ficha-atributo`; os três
+// steppers (valor, modificador, dados) são `app-step-input[digitavel=false]` — só a moldura da
+// linha é nova.
 .ficha-atributos__lista {
     display: flex;
     flex-direction: column;
@@ -2559,15 +2553,6 @@
         font-family: var(--font-mono);
         font-size: 13px;
         color: var(--text);
-    }
-
-    &__valor {
-        font-family: var(--font-mono);
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--text);
-        min-width: 20px;
-        text-align: center;
     }
 
     &__secundaria {
@@ -2721,32 +2706,12 @@
         gap: 6px;
     }
 
-    // Modificador de teste (redesenho de comparação visual, coluna de Atributos): passo -/+ que soma
-    // direto na fórmula rolada — não muta o atributo base nem a Maestria (ex.: Amplificador aplicado).
-    // Sempre visível (mesmo só-leitura) — por isso `@extend .ficha-passo` (que só reaparece na
-    // marcação quando `ajustavel()`) em vez de reusar a classe, que quebraria esse contrato.
+    // Modificador de teste — só leitura na grade (glance); a edição usa `app-step-input` no modo
+    // `digitavel=false`, que já é dono do stepper. Este badge só existe pro glance.
     &__modificador {
         display: flex;
         align-items: center;
         gap: 4px;
-    }
-
-    &__mod-passo {
-        @extend .ficha-passo;
-        width: 18px;
-        height: 18px;
-        font-size: 12px;
-
-        // Na lista de edição (ao contrário da antiga caixa de grade, onde 44px reais espremeriam o
-        // card) sobra espaço vertical de sobra por atributo — o botão cresce de verdade no mobile, não
-        // só a área invisível de toque (`alvo-de-toque`, mais abaixo). 40px (não os 44px cheios do
-        // `alvo-toque`): full size deixava a proporção botão/texto estranha e forçava a sub-linha 2 a
-        // empilhar sempre; 40 ainda é bem maior que os 18px antigos e cabe lado a lado com mais folga.
-        @include bp.mobile {
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
-        }
     }
 
     &__mod-valor {
@@ -2775,41 +2740,6 @@
         display: flex;
         align-items: center;
         gap: 4px;
-    }
-
-    &__dados-passo {
-        @extend .ficha-passo;
-        width: 18px;
-        height: 18px;
-        font-size: 12px;
-
-        // Mesmo raciocínio do `__mod-passo` acima: cresce de verdade no mobile (não só a área de
-        // toque, e não os 44px cheios do `alvo-toque` — 40px mantém a proporção com o texto e cabe
-        // lado a lado com mais folga), já que a lista de edição tem espaço de sobra por atributo.
-        @include bp.mobile {
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
-        }
-    }
-
-    &__dados-valor {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-mute);
-        min-width: 17px;
-        text-align: center;
-
-        // Acompanha o crescimento do stepper no mobile — mesmo ajuste do `__mod-valor`.
-        @include bp.mobile {
-            font-size: 14px;
-            min-width: 22px;
-        }
-
-        &--ativo {
-            color: var(--accent);
-        }
     }
 
     // Badge de leitura (só renderizado quando há ajuste ativo — ver template) — mesmo tratamento
@@ -2885,20 +2815,6 @@
 
 // Estrela de Maestria — ~21×26.
 .ficha-atributo__maestria {
-    @include alvo-de-toque;
-}
-
-// − / + do modificador de teste do atributo. `@extend .ficha-passo` já injeta este seletor no
-// media query que dá 44×44, mas o `width: 18px` declarado depois, com a MESMA especificidade,
-// vencia dentro do media query — parecia corrigido pela m3-56 e não estava. Aqui a caixa segue
-// 18px de propósito (44px reais espremeriam o card compacto de Atributos) e quem cresce é a área.
-.ficha-atributo__mod-passo {
-    @include alvo-de-toque;
-}
-
-// − / + do ajuste manual de dados do atributo — mesmo raciocínio do `__mod-passo` logo acima:
-// caixa visual de 18px, área de toque de 44px por cima.
-.ficha-atributo__dados-passo {
     @include alvo-de-toque;
 }
 

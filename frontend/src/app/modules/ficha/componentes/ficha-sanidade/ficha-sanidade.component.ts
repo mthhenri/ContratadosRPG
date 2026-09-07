@@ -10,7 +10,6 @@ import type {
   FichaTraumaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 
-import { HoldRepeat } from '../../../../shared/hold-repeat/hold-repeat.directive';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -18,6 +17,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 
 /** As três listas de Sanidade do `estado`, emitidas juntas a cada mutação (a página persiste o trio). */
 export interface EstadoSanidade {
@@ -83,7 +83,6 @@ const ROTULO_LISTA: Record<ListaSanidade, string> = {
   imports: [
     NgTemplateOutlet,
     ReactiveFormsModule,
-    HoldRepeat,
     Icone,
     OverflowFade,
     Tooltip,
@@ -91,6 +90,7 @@ const ROTULO_LISTA: Record<ListaSanidade, string> = {
     Botao,
     BotaoIcone,
     EstadoVazio,
+    StepInput,
   ],
   templateUrl: './ficha-sanidade.component.html',
   styleUrl: './ficha-sanidade.component.scss',
@@ -210,12 +210,6 @@ export class FichaSanidade {
     if (opcao) {
       this.lesaoForm.controls.pontos.setValue(opcao.pontos);
     }
-  }
-
-  /** Passo − / + nos pontos da lesão em edição (piso 0, sem teto — liberdade total). */
-  protected ajustarPontos(delta: number): void {
-    const atual = this.lesaoForm.controls.pontos.value;
-    this.lesaoForm.controls.pontos.setValue(Math.max(0, atual + delta));
   }
 
   /** Confirma o editor aberto: adiciona (índice −1) ou substitui, e emite o trio. */

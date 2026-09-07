@@ -313,7 +313,6 @@
         }
     }
 
-
     // === Confirmação de remoção (inline) ===
     &__confirmar {
         display: flex;
@@ -396,15 +395,6 @@
         color: var(--text-mute);
     }
 
-    &__pontos {
-        font-family: var(--font-mono);
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--text);
-        min-width: 20px;
-        text-align: center;
-    }
-
     &__checkbox {
         display: inline-flex;
         align-items: center;
@@ -454,48 +444,5 @@
         @include bp.mobile {
             min-height: bp.$alvo-toque;
         }
-    }
-}
-
-// Stepper de pontos (mesmo padrão do tema — copiado dos steppers da ficha).
-.ficha-passo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    touch-action: none;
-    transition:
-        color 0.15s ease,
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-
-    &:hover:not(:disabled) {
-        color: var(--accent);
-        border-color: var(--accent-border);
-        background: var(--surface);
-    }
-
-    &:disabled {
-        opacity: 0.4;
-        cursor: default;
-    }
-
-    @include bp.mobile {
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
-        font-size: 18px;
     }
 }

@@ -1,34 +1,66 @@
 <div class="stepper" [class.stepper--desabilitado]="desabilitado()" [class]="classeTamanho()">
-    <button
-        type="button"
-        class="stepper__botao"
-        [attr.aria-label]="rotuloDiminuir"
-        [disabled]="desabilitado() || bloquearDiminuir()"
-        (click)="decrementar()"
-    >
-        −
-    </button>
+    @if (digitavel()) {
+        <button
+            type="button"
+            class="stepper__botao"
+            [attr.aria-label]="rotuloDiminuir"
+            [disabled]="desabilitado() || bloquearDiminuir()"
+            (click)="decrementar()"
+        >
+            −
+        </button>
 
-    <input
-        class="stepper__valor"
-        type="number"
-        [value]="valorAtual()"
-        [attr.min]="minAtributo"
-        [attr.max]="maxAtributo"
-        [step]="passo()"
-        [attr.aria-label]="ariaRotulo() || null"
-        [disabled]="desabilitado()"
-        (input)="aoDigitar($event)"
-        (blur)="aoSair()"
-    />
+        <input
+            class="stepper__valor"
+            type="number"
+            [value]="valorAtual()"
+            [attr.min]="minAtributo"
+            [attr.max]="maxAtributo"
+            [step]="passo()"
+            [attr.aria-label]="ariaRotulo() || null"
+            [disabled]="desabilitado()"
+            (input)="aoDigitar($event)"
+            (blur)="aoSair()"
+        />
 
-    <button
-        type="button"
-        class="stepper__botao"
-        [attr.aria-label]="rotuloAumentar"
-        [disabled]="desabilitado() || bloquearAumentar()"
-        (click)="incrementar()"
-    >
-        +
-    </button>
+        <button
+            type="button"
+            class="stepper__botao"
+            [attr.aria-label]="rotuloAumentar"
+            [disabled]="desabilitado() || bloquearAumentar()"
+            (click)="incrementar()"
+        >
+            +
+        </button>
+    } @else {
+        <button
+            type="button"
+            class="stepper__botao"
+            appHoldRepeat
+            [attr.aria-label]="rotuloDiminuir"
+            [disabled]="desabilitado() || bloquearDiminuir()"
+            (passo)="decrementar()"
+        >
+            −
+        </button>
+
+        <span
+            class="stepper__valor stepper__valor--exibicao"
+            [class.stepper__valor--ativo]="comSinal() && valorAtual() !== 0"
+            [class.stepper__valor--desabilitado]="desabilitado()"
+            [attr.aria-label]="ariaRotulo() || null"
+            >{{ valorExibicao() }}</span
+        >
+
+        <button
+            type="button"
+            class="stepper__botao"
+            appHoldRepeat
+            [attr.aria-label]="rotuloAumentar"
+            [disabled]="desabilitado() || bloquearAumentar()"
+            (passo)="incrementar()"
+        >
+            +
+        </button>
+    }
 </div>

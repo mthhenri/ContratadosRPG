@@ -109,16 +109,6 @@ describe('FichaHabilidades', () => {
     expect(alvo.fixture.componentInstance['habilidadeForm'].controls.variavel.value).toBe(true);
   });
 
-  it('stepper de custo trava no piso 0', () => {
-    const alvo = montar(true);
-    const componente = alvo.fixture.componentInstance;
-    componente['adicionar']();
-    componente['habilidadeForm'].controls.custoEnergia.setValue(1);
-    componente['ajustarCusto'](-1);
-    componente['ajustarCusto'](-1);
-    expect(componente['habilidadeForm'].controls.custoEnergia.value).toBe(0);
-  });
-
   it('remove uma habilidade só após a confirmação inline', () => {
     const alvo = montar(true);
     // Pedir a remoção não emite nada ainda.

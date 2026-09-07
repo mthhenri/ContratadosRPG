@@ -100,6 +100,7 @@ import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
@@ -400,6 +401,7 @@ export interface AjusteClasse {
     Botao,
     BotaoIcone,
     Modal,
+    StepInput,
     ValorEditavel,
     AjusteEnquadramentoImagem,
     FocoImagem,
@@ -1425,22 +1427,22 @@ export class FichaVisualizacao {
     return completo;
   }
 
-  /** Passo −/+ no modificador de teste do rascunho (sem clamp — mesma liberdade dos demais steppers). */
-  protected ajustarModificadorTesteRascunho(chave: ChaveAtributo, delta: number): void {
+  /** Modificador de teste do rascunho (sem clamp — mesma liberdade dos demais steppers). */
+  protected definirModificadorTesteRascunho(chave: ChaveAtributo, valor: number): void {
     const atual = this.rascunhoModificadoresTeste();
     if (!atual) {
       return;
     }
-    this.rascunhoModificadoresTeste.set({ ...atual, [chave]: atual[chave] + delta });
+    this.rascunhoModificadoresTeste.set({ ...atual, [chave]: valor });
   }
 
-  /** Passo −/+ no ajuste manual de dados do rascunho (sem clamp — mesma liberdade dos demais). */
-  protected ajustarDadosTesteRascunho(chave: ChaveAtributo, delta: number): void {
+  /** Ajuste manual de dados do rascunho (sem clamp — mesma liberdade dos demais). */
+  protected definirDadosTesteRascunho(chave: ChaveAtributo, valor: number): void {
     const atual = this.rascunhoDadosTeste();
     if (!atual) {
       return;
     }
-    this.rascunhoDadosTeste.set({ ...atual, [chave]: atual[chave] + delta });
+    this.rascunhoDadosTeste.set({ ...atual, [chave]: valor });
   }
 
   /** Sufixo `" + N"`/`" − N"` do modificador de teste na fórmula — vazio quando zerado. */
@@ -2285,13 +2287,12 @@ export class FichaVisualizacao {
     this.rascunhoDadosTeste.set(null);
   }
 
-  /** Passo − / + num atributo do rascunho (sem clamp — liberdade total, m3-10). */
-  protected ajustarAtributoRascunho(chave: ChaveAtributo, delta: number): void {
+  /** Valor de um atributo do rascunho (sem clamp — liberdade total, m3-10). */
+  protected definirAtributoRascunho(chave: ChaveAtributo, valor: number): void {
     const atual = this.rascunhoAtributos();
     if (!atual) {
       return;
     }
-    const valor = atual[chave] + delta;
     this.rascunhoAtributos.set({ ...atual, [chave]: valor });
     // Se o atributo com Maestria cair abaixo do mínimo, a Maestria deixa de valer.
     if (this.rascunhoMaestria() === chave && !maestriaAtingivel(valor)) {

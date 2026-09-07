@@ -487,7 +487,6 @@
         color: var(--text-dim);
     }
 
-
     // Limpa o filtro cumulativo de tipos (m3-48) — ícone só (↺, glifo mono como os demais botões de
     // ação do tema — `&__acao` usa ✎/✕, o form usa ＋ — nada de emoji colorido destoando da
     // identidade visual), na linha do resumo logo depois de "Outras classes/arquétipos", empurrado
@@ -692,51 +691,6 @@
     &__dialog-fechar {
         margin-left: auto;
         font-size: 20px;
-    }
-}
-
-// Stepper de custo (mesmo padrão do tema — copiado dos steppers da ficha).
-.ficha-passo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--text-dim);
-    background: var(--surface-2);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    touch-action: none;
-    transition:
-        color 0.15s ease,
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-
-    &:hover:not(:disabled) {
-        color: var(--accent);
-        border-color: var(--accent-border);
-        background: var(--surface);
-    }
-
-    &:disabled {
-        opacity: 0.4;
-        cursor: default;
-    }
-
-    // Alvo de toque confortável no mobile (m3-56) — mesmo padrão do stepper equivalente na Visão
-    // Geral (`ficha-visualizacao.component.scss`, m3-26).
-    @include bp.mobile {
-        width: bp.$alvo-toque;
-        height: bp.$alvo-toque;
-        font-size: 18px;
     }
 }
 

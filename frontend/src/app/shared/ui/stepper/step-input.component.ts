@@ -1,6 +1,8 @@
 import { Component, effect, forwardRef, input, output, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
+import { HoldRepeat } from '../../hold-repeat/hold-repeat.directive';
+
 /**
  * Stepper / input numérico reutilizável da simulacao, em paridade com os helpers
  * `stepInput`/`stepInputFloat` do site antigo (botões − / +, clamp em [min, max], passo
@@ -16,7 +18,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
  */
 @Component({
   selector: 'app-step-input',
-  imports: [],
+  imports: [HoldRepeat],
   templateUrl: './step-input.component.html',
   styleUrl: './step-input.component.scss',
   providers: [
@@ -36,6 +38,17 @@ export class StepInput implements ControlValueAccessor {
   readonly passo = input<number>(1);
   /** Densidade do controle, sem duplicar a estrutura de botões e valor. */
   readonly tamanho = input<'padrao' | 'compacto' | 'mini'>('padrao');
+  /**
+   * Quando `false`, o valor central vira texto só-leitura (sem `<input>`) e os botões trocam o
+   * clique único por segurar-para-repetir (`appHoldRepeat`) — o padrão de "ajuste rápido" sem
+   * digitação da ficha (atributo, modificador de teste, custo de habilidade...).
+   */
+  readonly digitavel = input<boolean>(true);
+  /**
+   * Só com `digitavel=false`: antepõe `+` a valores positivos e marca o estado "alterado"
+   * (`.stepper__valor--ativo`) quando o valor é diferente de zero.
+   */
+  readonly comSinal = input<boolean>(false);
   /** Rótulo acessível do campo (`aria-label`), já que o stepper não tem `<label>` próprio. */
   readonly ariaRotulo = input<string>('');
   /** Valor para uso fora de formulários reativos (por exemplo, estado em Signals). */
@@ -50,6 +63,13 @@ export class StepInput implements ControlValueAccessor {
   protected readonly desabilitado = signal<boolean>(false);
 
   protected readonly classeTamanho = () => `stepper stepper--${this.tamanho()}`;
+
+  /** Texto do valor em `digitavel=false` — com sinal `+`/`−` quando `comSinal`. */
+  protected readonly valorExibicao = () => {
+    const valor = this.valorAtual();
+    if (!this.comSinal()) return `${valor}`;
+    return valor > 0 ? `+${valor}` : `${valor}`;
+  };
 
   private aoAlterar: (valor: number) => void = () => {};
   private aoTocar: () => void = () => {};

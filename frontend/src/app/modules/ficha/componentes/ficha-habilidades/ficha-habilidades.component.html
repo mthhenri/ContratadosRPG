@@ -228,26 +228,14 @@
                                 >Gastar quanto de Energia?</span
                             >
                             <div class="habilidades__stepper">
-                                <button
-                                    class="ficha-passo"
-                                    type="button"
-                                    appHoldRepeat
-                                    aria-label="Reduzir gasto"
-                                    [disabled]="custoVariavel.value <= 0"
-                                    (passo)="ajustarCustoVariavel(-1)"
-                                >
-                                    −
-                                </button>
-                                <span class="habilidades__valor">{{ custoVariavel.value }}</span>
-                                <button
-                                    class="ficha-passo"
-                                    type="button"
-                                    appHoldRepeat
-                                    aria-label="Aumentar gasto"
-                                    (passo)="ajustarCustoVariavel(1)"
-                                >
-                                    +
-                                </button>
+                                <app-step-input
+                                    [formControl]="custoVariavel"
+                                    [min]="0"
+                                    [bloquearDiminuir]="custoVariavel.value <= 0"
+                                    [digitavel]="false"
+                                    tamanho="mini"
+                                    ariaRotulo="gasto"
+                                />
                             </div>
                             <div class="habilidades__confirmar-acoes">
                                 <button
@@ -346,28 +334,14 @@
                     <span class="habilidades__custo habilidades__custo--variavel">[X E]</span>
                 } @else {
                     <div class="habilidades__stepper">
-                        <button
-                            class="ficha-passo"
-                            type="button"
-                            appHoldRepeat
-                            aria-label="Reduzir custo"
-                            [disabled]="habilidadeForm.controls.custoEnergia.value <= 0"
-                            (passo)="ajustarCusto(-1)"
-                        >
-                            −
-                        </button>
-                        <span class="habilidades__valor">{{
-                            habilidadeForm.controls.custoEnergia.value
-                        }}</span>
-                        <button
-                            class="ficha-passo"
-                            type="button"
-                            appHoldRepeat
-                            aria-label="Aumentar custo"
-                            (passo)="ajustarCusto(1)"
-                        >
-                            +
-                        </button>
+                        <app-step-input
+                            [formControl]="habilidadeForm.controls.custoEnergia"
+                            [min]="0"
+                            [bloquearDiminuir]="habilidadeForm.controls.custoEnergia.value <= 0"
+                            [digitavel]="false"
+                            tamanho="mini"
+                            ariaRotulo="custo"
+                        />
                     </div>
                 }
             </div>
