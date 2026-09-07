@@ -1032,16 +1032,8 @@
                 />
             </div>
 
-            <!-- Fundo preenchido (accent-dim) — tratamento de "credencial de valor" que nenhuma
-                 variante do app-stat cobre hoje; fica local em vez de ampliar o primitivo para um
-                 único consumidor (P-054). -->
             <div class="calc-stats">
-                <div class="calc-stat compras-venda-total">
-                    <div class="calc-stat__rotulo">Total de Venda</div>
-                    <div class="calc-stat__valor calc-stat__valor--texto">
-                        {{ totalVendaTexto() }}
-                    </div>
-                </div>
+                <app-stat rotulo="Total de Venda" [valor]="totalVendaTexto()" variante="destaque" />
             </div>
         </div>
     </app-cartao>

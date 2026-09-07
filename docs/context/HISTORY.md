@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-06 — Contratos OpenAPI regenerados (P-063) e `app-stat` ganha variante `destaque` para o Total de Venda (P-064)
+
+Duas dívidas `ACEITO` do `PROBLEMS.md`, fechadas a pedido do autor na mesma sessão.
+
+**`P-063`.** `contratos-gerados.ts` estava um passo atrás da fonte: `CampanhaRecuperadaDto.
+codigoConvite`/`.codigoConviteEspectador` carregavam uma `description` de uma versão anterior do
+DTO, de antes do JSDoc por campo virar um único comentário no nível da interface. Rodado
+`npm run openapi:gerar-contratos --workspace=backend` de verdade; o diff resultante confirmou a
+hipótese do `P-063` — só essas duas `description` somem, nada além (o `P-062`, fechado antes,
+já tinha eliminado o ruído de CRLF que poderia mascarar um diff maior). Testado:
+`backend/src/core/openapi` focado, 3/3.
+
+**`P-064`.** "Total de Venda" (`compras.page`, aba Vendas) era o único stat de exibição pura da
+Simulação que continuava `.calc-stat` local, porque tem fundo preenchido (`--accent-dim`) e
+nenhuma variante do `app-stat` cobria isso — a correção prevista no `PROBLEMS.md` só autorizava
+ampliar o primitivo "se aparecer um segundo consumidor real". Busca no frontend não achou um
+segundo consumidor hoje; perguntado ao autor se ampliar mesmo assim ou manter aceito — respondeu
+para ampliar. `Stat` (`shared/ui/stat/`) ganhou a variante `destaque` (`StatVariante`): borda
+`--accent-border` + fundo `--accent-dim` + valor `--accent`, replicando ponto a ponto o
+`.compras-venda-total` antigo. `compras.page.html` passou a usar
+`<app-stat variante="destaque" rotulo="Total de Venda" .../>`; o `.calc-stat`/`.compras-venda-total`
+locais (regra, seletores agrupados e o comentário que os justificava) saíram de
+`compras.page.scss`. Testado: `Stat` focado (8/8, variante nova incluída no loop de cores) e
+`compras.page` focado (19/19); lint do workspace `frontend` sem erro novo (só os warnings
+pré-existentes de aspas/comprimento de linha). Verificado ao vivo (Postgres + backend + frontend
+já em execução) em `1920×1080` e `360×800`, rota pública `/simulacao/vendas` (sem guard): o card
+renderiza com o mesmo fundo/borda/cor de antes, alinhado à mesma grade dos outros dois stats do
+grupo; testado também com valor não-zero (incremento de contador de fragmento → "$30.000"), sem
+overflow em nenhum viewport.
+
 ## 2026-09-06 — Esqueleto de título em `previa-jogador`/`espectador` ganha geometria (P-061)
 
 `previa-jogador.page.html` e `espectador.page.html` tinham `<span class="esqueleto-bloco

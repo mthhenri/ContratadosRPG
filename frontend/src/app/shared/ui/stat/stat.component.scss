@@ -70,6 +70,15 @@
         }
     }
 
+    // Fundo preenchido — "credencial de valor" (P-064), único caso do primitivo com background.
+    &--destaque {
+        border-color: var(--accent-border);
+        background: var(--accent-dim);
+        .stat__valor {
+            color: var(--accent);
+        }
+    }
+
     &--compacto {
         padding: var(--space-12);
 

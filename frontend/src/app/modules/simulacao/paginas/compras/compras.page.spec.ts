@@ -43,15 +43,13 @@ describe('ComprasPage', () => {
     alvo?.click();
   }
 
-  /** Lê o valor de um stat pelo rótulo, em qualquer `app-stat` ou `.calc-stat` da página — a
-   *  maioria migrou para o primitivo (`P-054`); "Total de Venda" continua local (fundo
-   *  preenchido sem variante equivalente). */
+  /** Lê o valor de um stat pelo rótulo, em qualquer `app-stat` da página — todos os stats da
+   *  página, incluindo "Total de Venda" (`variante="destaque"`, P-064), já são o primitivo. */
   function statPorRotulo(raiz: HTMLElement, rotulo: string): string {
-    const alvo = Array.from(raiz.querySelectorAll('app-stat, .calc-stat')).find(
-      (cartao) =>
-        cartao.querySelector('.stat__rotulo, .calc-stat__rotulo')?.textContent?.trim() === rotulo,
+    const alvo = Array.from(raiz.querySelectorAll('app-stat')).find(
+      (cartao) => cartao.querySelector('.stat__rotulo')?.textContent?.trim() === rotulo,
     );
-    return alvo?.querySelector('.stat__valor, .calc-stat__valor')?.textContent?.trim() ?? '';
+    return alvo?.querySelector('.stat__valor')?.textContent?.trim() ?? '';
   }
 
   /** Clica o botão "+ Adicionar" do cartão de catálogo cujo nome é exatamente `nome`. */

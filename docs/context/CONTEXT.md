@@ -18,7 +18,9 @@
 > usada por Caderno e Leitor de Documentos — Inventário da ficha migrou pra ela. Antes disso, na
 > mesma sessão: `P-053` (três modais de campanha duplicavam a casca de `app-modal`) e `P-054` (5
 > telas de Simulação mantinham `.agente-stat`/`.calc-stat` paralelos a `app-stat`, que ganhou
-> `[tamanho]="hero"`, `[statInfo]` e `[pulso]`; um 5º stat ficou local, registrado como `P-064`).
+> `[tamanho]="hero"`, `[statInfo]` e `[pulso]`; um 5º stat ficou local, registrado como `P-064` —
+> fechado em 2026-09-06 com a variante `destaque` do `app-stat`, junto do `P-063` (drift de
+> `description` em `contratos-gerados.ts`)).
 > Antes ainda: `m8-07` deu ao Painel do espectador um painel de jogadores (grade de cartões);
 > `P-062` (diff espúrio de CRLF no gerador OpenAPI) e `P-052` (cabeçalho de `app-cartao` duplicado
 > na Iniciativa, que ganhou `[semCaixa]`) também fecharam. Detalhe completo, achados e viewports
@@ -36,6 +38,18 @@
 ---
 
 ## 1. Próxima Task
+
+**`P-063`/`P-064` fechados (2026-09-06):** duas dívidas `ACEITO` pequenas, a pedido do autor.
+`P-063` — `npm run openapi:gerar-contratos --workspace=backend` rodado de verdade; o diff confirmou
+que só `CampanhaRecuperadaDto.codigoConvite`/`.codigoConviteEspectador` tinham `description`
+desatualizada (nada além, já sem o ruído de CRLF que o `P-062` eliminou antes). `P-064` — `Stat`
+(`shared/ui/stat/`) ganhou a variante `destaque` (fundo `--accent-dim`, borda `--accent-border`,
+valor `--accent`) depois de o autor confirmar ampliar o primitivo mesmo com um único consumidor
+real; `compras.page` ("Total de Venda") migrou pra ela e o `.calc-stat`/`.compras-venda-total`
+locais saíram do SCSS. Testes: `backend/src/core/openapi` focado 3/3; `Stat` focado 8/8;
+`compras.page` focado 19/19; lint do `frontend` sem erro novo. Verificado ao vivo em
+`1920×1080`/`360×800` (`/simulacao/vendas`, rota pública): mesmo visual de antes, alinhado à
+mesma grade dos outros stats, inclusive com valor não-zero.
 
 **`P-059`/`P-060` fechados (2026-09-06):** dois botões sem `app-botao-icone`, achados fora do
 escopo de `ui-31`/`ui-32`. `P-059` — o "✕" solto de remover uma melhoria escolhida

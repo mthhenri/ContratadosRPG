@@ -82,7 +82,7 @@ describe('Stat', () => {
     const fixture = montar();
     const stat = () => raiz(fixture).querySelector('.stat') as HTMLElement;
 
-    for (const variante of ['vida', 'energia', 'positivo'] as const) {
+    for (const variante of ['vida', 'energia', 'positivo', 'destaque'] as const) {
       fixture.componentInstance.variante.set(variante);
       fixture.detectChanges();
       expect(stat().classList.contains(`stat--${variante}`)).toBe(true);

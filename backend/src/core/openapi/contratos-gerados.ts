@@ -157,12 +157,10 @@ export const schemasContratosPublicos = {
                 "type": "string"
             },
             "codigoConvite": {
-                "type": "string",
-                "description": "Só preenchido quando `papel === MESTRE`; `null` para `JOGADOR` (`P-046`)."
+                "type": "string"
             },
             "codigoConviteEspectador": {
-                "type": "string",
-                "description": "Mesmo recorte de `codigoConvite`: só preenchido quando `papel === MESTRE`; `null` para\n`JOGADOR` (`P-046`)."
+                "type": "string"
             },
             "naBase": {
                 "type": "boolean",

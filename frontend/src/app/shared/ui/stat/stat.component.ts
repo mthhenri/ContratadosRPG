@@ -15,7 +15,10 @@ import { Component, ElementRef, computed, effect, input, viewChild } from '@angu
  * `--vida` corretamente; as outras duas (`criar.page`, `criar-criatura.page`) copiaram o exemplo
  * desatualizado. O primitivo fixa a variante no valor correto.
  */
-export type StatVariante = 'vida' | 'energia' | 'positivo' | 'alerta';
+// `destaque` (P-064) é a única variante com fundo preenchido (--accent-dim) — "credencial de
+// valor" usada por compras.page ("Total de Venda"), migrada do `.calc-stat` local que existia só
+// por essa lacuna no primitivo.
+export type StatVariante = 'vida' | 'energia' | 'positivo' | 'alerta' | 'destaque';
 /** `hero` (`P-054`) é o degrau de destaque das simulações — valor maior que `padrao`. */
 export type StatTamanho = 'compacto' | 'padrao' | 'hero';
 

@@ -1,7 +1,7 @@
 // Aba "Compras" da simulacao (m1-10). Consome só os tokens do tema "Terminal de Contenção"
-// (proibição #29). O cartão vem de shared/ui; .calc-config/.calc-campo/.calc-stat continuam locais
-// porque o campo é composto e as estatísticas têm variantes além da exibição pura. Para caber no
-// budget de estilo por componente, o SCSS é
+// (proibição #29). O cartão vem de shared/ui; .calc-config/.calc-campo continuam locais porque o
+// campo é composto (o stat de exibição pura já é `app-stat`, inclusive `variante="destaque"`
+// para "Total de Venda" — P-064). Para caber no budget de estilo por componente, o SCSS é
 // enxuto: a fonte mono é herdada do container (a maioria dos textos é mono; só o corpo reabre
 // --font-sans) e os padrões repetidos (caixa em surface-2, controle com borda forte, estado
 // desabilitado) são agrupados em listas de seletores em vez de redeclarados por bloco.
@@ -16,7 +16,6 @@
 }
 
 // Padrão "caixa": fundo surface-2, borda hairline, raio de controle.
-.calc-stat,
 .compras-info,
 .compras-item,
 .compras-mod-tag,
@@ -38,7 +37,6 @@
 
 // Rótulos mono uppercase reutilizados.
 .calc-campo__rotulo,
-.calc-stat__rotulo,
 .compras-carrinho-item__categoria,
 .compras-mod-secao,
 .compras-fragmentos__tipo-rotulo {
@@ -88,27 +86,12 @@
     }
 }
 
-// === Stats — a caixa/identidade dos stats comuns são do `app-stat` (`P-054`); `.calc-stat` só
-// sobrevive aqui para "Total de Venda" (`.compras-venda-total`, abaixo), que tem fundo preenchido
-// sem variante equivalente no primitivo. `.calc-stats` (grid) segue usado por todos os grupos. ===
+// === Stats — a caixa/identidade dos stats é do `app-stat` (`P-054`); `.calc-stats` (grid) segue
+// local porque agrupa/espaça os cartões do primitivo. ===
 .calc-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
-}
-.calc-stat {
-    padding: 13px 14px;
-
-    &__rotulo {
-        font-size: 10px;
-        margin-bottom: 7px;
-    }
-    &__valor {
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1.2;
-    }
 }
 
 // === Catálogo ===
@@ -747,17 +730,6 @@
     &__subtotal {
         text-align: right;
         font-size: 13px;
-    }
-}
-
-// Stat box de destaque do total de venda (borda accent, como uma credencial de valor).
-.compras-venda-total {
-    border-color: var(--accent-border);
-    background: var(--accent-dim);
-
-    .calc-stat__valor {
-        color: var(--accent);
-        font-size: 22px;
     }
 }
 
