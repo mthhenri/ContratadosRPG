@@ -1006,9 +1006,14 @@ export class FichaVisualizacao {
   /** Estado do dialog "Receber dano" (m7-17) — aqui a resistência automática está disponível. */
   protected readonly receberDanoAberto = signal(false);
 
-  /** Derivado em digitação direta (clicou no valor da coluna), ou `null` fora de edição. */
+  /**
+   * Derivado em digitação direta (clicou no valor da coluna), ou `null` fora de edição. Sem
+   * `viewChild`/`effect` de foco: várias linhas da tabela reusam o mesmo `#entradaDerivado`
+   * (mutuamente exclusivas em tempo de execução, mas o mesmo nome em várias posições do template
+   * confunde a query, achando o campo errado ou nenhum) — `app-valor-editavel` agora foca o campo
+   * projetado sozinho ao entrar em edição, sem precisar de nada aqui.
+   */
   protected readonly editandoDerivado = signal<ChaveInfoExtra | null>(null);
-  private readonly entradaDerivado = viewChild<ElementRef<HTMLInputElement>>('entradaDerivado');
 
   /** Edição em grupo dos atributos (um lápis abre todos ao mesmo tempo — m3-10). */
   protected readonly editandoAtributos = signal(false);
@@ -1019,16 +1024,22 @@ export class FichaVisualizacao {
   /** Pontos mínimos para marcar Maestria (`sistema-v4.1.0.md`). */
   protected readonly limiteMaestria = MAESTRIA_PONTOS_MINIMO;
 
-  /** Campo de identidade em digitação (Agente/Nível/Prestígio/Personalidade/Contrato), ou `null` fora de edição. */
+  /**
+   * Campo de identidade em digitação (Agente/Nível/Prestígio/Personalidade/Contrato), ou `null`
+   * fora de edição. Sem `viewChild`/`effect` de foco pelo mesmo motivo de `editandoDerivado` acima
+   * — os 5 campos compartilham `#entradaIdentidade`.
+   */
   protected readonly editandoIdentidade = signal<'nome' | 'personalidade' | 'contrato' | CampoDadosEscalar | null>(
     null,
   );
-  private readonly entradaIdentidade = viewChild<ElementRef<HTMLInputElement>>('entradaIdentidade');
-  private readonly entradaAnotacoes = viewChild<ElementRef<HTMLTextAreaElement>>('entradaAnotacoes');
-  private readonly entradaHistoria = viewChild<ElementRef<HTMLTextAreaElement>>('entradaHistoria');
   /** `true` enquanto o Dinheiro (m3-34, Informações Extras) está em edição. */
   protected readonly editandoDinheiro = signal(false);
-  private readonly entradaDinheiro = viewChild<ElementRef<HTMLInputElement>>('entradaDinheiro');
+  /**
+   * `true` enquanto a fórmula do preset "Iniciativa" está em edição — dono/mestre (`ajustavelAmplo()`)
+   * pode ajustá-la (ex.: um item/habilidade que dá ou tira bônus de dados de Iniciativa) direto no
+   * glance de Informações, sem passar pela aba Rolagens (que a esconde, ver `presetIniciativa`).
+   */
+  protected readonly editandoFormulaIniciativa = signal(false);
 
   /** Editor de Classe/Arquétipo aberto (mini-editor com dois `<select>`). */
   protected readonly editandoClasse = signal(false);
@@ -1119,46 +1130,6 @@ export class FichaVisualizacao {
     });
     this.corFichaForm.valueChanges.subscribe((cor) => this.ajusteCor.emit(cor));
 
-    // Ao abrir a digitação direta de um derivado, foca e seleciona para trocar já. Vida/Energia
-    // usam `appAutoFocus` dentro do próprio `app-barra-recurso` (ui-16), sem precisar de effect.
-    effect(() => {
-      if (this.editandoDerivado() !== null) {
-        const elemento = this.entradaDerivado()?.nativeElement;
-        elemento?.focus();
-        elemento?.select();
-      }
-    });
-    effect(() => {
-      if (this.editandoIdentidade() !== null) {
-        const elemento = this.entradaIdentidade()?.nativeElement;
-        elemento?.focus();
-        elemento?.select();
-      }
-    });
-    effect(() => {
-      if (this.editandoAnotacoes()) {
-        this.entradaAnotacoes()?.nativeElement.focus();
-      }
-    });
-    effect(() => {
-      if (this.editandoHistoria()) {
-        this.entradaHistoria()?.nativeElement.focus();
-      }
-    });
-    effect(() => {
-      if (this.editandoDinheiro()) {
-        const elemento = this.entradaDinheiro()?.nativeElement;
-        elemento?.focus();
-        elemento?.select();
-      }
-    });
-    effect(() => {
-      if (this.editandoResistencia() !== null) {
-        const elemento = this.entradaResistencia()?.nativeElement;
-        elemento?.focus();
-        elemento?.select();
-      }
-    });
     // m3-56.1: a mini barra de abas do Status rola horizontalmente (6 rótulos nem sempre cabem —
     // achado ao vivo tanto no mobile quanto no desktop, onde a coluna Status pode ser mais estreita
     // que os 6 rótulos completos). Sem isso, trocar para uma aba fora da área visível deixava o
@@ -1595,6 +1566,53 @@ export class FichaVisualizacao {
         : RolagemVisibilidadeEnum.PUBLICA,
     });
     this.registrarRolagem({ rotulo: executado.rotulo, formula: executado.formula, resultado: executado.resultado });
+  }
+
+  /** Abre a digitação da fórmula de Iniciativa (preset já existe). */
+  protected editarFormulaIniciativa(): void {
+    if (!this.ajustavelAmplo() || !this.presetIniciativa()) {
+      return;
+    }
+    this.editandoFormulaIniciativa.set(true);
+  }
+
+  /** Cancela a digitação da fórmula de Iniciativa (Escape) sem alterar. */
+  protected cancelarFormulaIniciativa(): void {
+    this.editandoFormulaIniciativa.set(false);
+  }
+
+  /**
+   * Confirma a fórmula editada do preset "Iniciativa" (Enter/blur) — substitui só o `formula` do
+   * preset existente, preservando `descricao`/demais campos, e reemite a lista inteira de
+   * `rolagens` (único formato que `ajusteRolagens` aceita). Vazio ou sem mudança não emite.
+   */
+  protected confirmarFormulaIniciativa(formula: string): void {
+    if (!this.editandoFormulaIniciativa()) {
+      return;
+    }
+    this.editandoFormulaIniciativa.set(false);
+    const aparada = formula.trim();
+    const preset = this.presetIniciativa();
+    if (!aparada || !preset || aparada === preset.formula) {
+      return;
+    }
+    const rolagens = this.dados().rolagens ?? [];
+    this.ajusteRolagens.emit(
+      rolagens.map((item) => (item.nome === NOME_PRESET_INICIATIVA ? { ...item, formula: aparada } : item)),
+    );
+  }
+
+  /**
+   * Recria o preset "Iniciativa" numa ficha que o perdeu (`presetIniciativa` nulo — apagado à mão
+   * numa ficha antiga, ver docstring de `presetIniciativa`) com a fórmula padrão do sistema
+   * (`DESd6`, mesma semente que o backend aplica em toda ficha nova). Só dono/mestre (`ajustavelAmplo()`).
+   */
+  protected adicionarFormulaIniciativa(): void {
+    if (!this.ajustavelAmplo() || this.presetIniciativa()) {
+      return;
+    }
+    const rolagens = this.dados().rolagens ?? [];
+    this.ajusteRolagens.emit([...rolagens, { nome: NOME_PRESET_INICIATIVA, formula: 'DESd6' }]);
   }
 
   /** Penalidade de lesão por atributo (0 quando não lesionado) — badge "−N" na leitura. */
@@ -2448,7 +2466,6 @@ export class FichaVisualizacao {
 
   /** Tipo de dano em digitação direta na linha de Resistências, ou `null` fora de edição. */
   protected readonly editandoResistencia = signal<TipoDanoEnum | null>(null);
-  private readonly entradaResistencia = viewChild<ElementRef<HTMLInputElement>>('entradaResistencia');
 
   /** Abre a digitação direta da base manual de uma Resistência (clique na linha). */
   protected editarResistencia(tipo: TipoDanoEnum): void {

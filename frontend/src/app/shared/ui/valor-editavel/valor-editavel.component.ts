@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, ElementRef, effect, inject, input, output } from '@angular/core';
 
 import { Botao, type BotaoVariante } from '../botao/botao.component';
 import { Tooltip } from '../../tooltip/tooltip.directive';
@@ -74,4 +74,49 @@ export class ValorEditavel {
   readonly flex = input<string | null>(null);
 
   readonly editarSolicitado = output<void>();
+
+  /**
+   * O host é o próprio `<app-valor-editavel>` — `querySelector` nele acha o campo projetado via
+   * `<ng-content />` assim que o `@else`/`@if` interno troca pro estado de edição.
+   */
+  private readonly elementoHost = inject(ElementRef<HTMLElement>);
+
+  /**
+   * Foca (e seleciona) o campo projetado ao entrar em edição — sem isso, `(blur)` nunca dispara
+   * no primeiro clique fora, porque nada estava focado pra disparar o cancelamento (o consumidor
+   * tinha de clicar *dentro* do campo primeiro pra focar de verdade, só então clicar fora fechava).
+   *
+   * **Por que este `effect` mora aqui, e não um `appAutoFocus` no `<input>` do consumidor**: o
+   * campo projetado vive atrás do `@if (editando())` **deste** componente — é conteúdo passado por
+   * `<ng-content />`, não filho direto do consumidor. Achado ao vivo (Playwright, não coberto por
+   * teste unitário — `TestBed` sempre insere a fixture já montada no DOM real, mascarando a
+   * corrida): um hook de disparo único no próprio `<input>` (`afterNextRender`, base do
+   * `appAutoFocus`) só roda a primeira vez que aquele nó é criado; como o conteúdo projetado é
+   * criado uma única vez (na instanciação da view do consumidor) e só *reaproveitado* — nunca
+   * recriado — a cada alternância de `editando()`, esse hook nunca dispara de novo nas alternâncias
+   * seguintes.
+   *
+   * Um `effect()` aqui, lendo o próprio `editando()`, **é** re-executado a cada alternância — mas
+   * mesmo lendo `editando()` do próprio componente, o `effect` roda antes de o `@if` deste mesmo
+   * template ter trocado o botão pelo campo (o input de um `signal` é aplicado antes do refresh do
+   * template que o consome, não depois): `querySelector` **no mesmo tick** ainda encontra o
+   * `<button>` do estado de exibição. Adiar a busca+foco para o próximo macrotask (`setTimeout`)
+   * resolve — dá tempo do commit do template acontecer antes da query rodar.
+   */
+  constructor() {
+    effect(() => {
+      if (!this.editando()) {
+        return;
+      }
+      setTimeout(() => {
+        const campo = this.elementoHost.nativeElement.querySelector('input, textarea, select');
+        if (campo instanceof HTMLInputElement || campo instanceof HTMLTextAreaElement) {
+          campo.focus();
+          campo.select();
+        } else if (campo instanceof HTMLSelectElement) {
+          campo.focus();
+        }
+      });
+    });
+  }
 }

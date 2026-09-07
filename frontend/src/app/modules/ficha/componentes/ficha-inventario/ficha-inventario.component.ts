@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -640,7 +640,6 @@ export class FichaInventario {
   /** Feedback breve depois de consumir uma cena/disparo, igual à confirmação de cópia. */
   protected readonly contagemMunicaoConsumidaIndice = signal<number | null>(null);
   private temporizadorContagemMunicao: ReturnType<typeof setTimeout> | null = null;
-  private readonly entradaContagemMunicao = viewChild<ElementRef<HTMLInputElement>>('entradaContagemMunicao');
 
   /** Categorias disponíveis para um item custom (todas menos Amplificador, que não é item). */
   protected readonly categoriasItem = CATALOGO_CATEGORIAS.filter(
@@ -922,13 +921,6 @@ export class FichaInventario {
       }
       if (this.temporizadorContagemMunicao !== null) {
         clearTimeout(this.temporizadorContagemMunicao);
-      }
-    });
-    effect(() => {
-      if (this.contagemMunicaoEditando() !== null) {
-        const entrada = this.entradaContagemMunicao()?.nativeElement;
-        entrada?.focus();
-        entrada?.select();
       }
     });
   }

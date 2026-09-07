@@ -1877,9 +1877,12 @@
                                 <!-- Iniciativa (redesenho — saiu da aba Rolagens, que agora esconde este preset na
                  ficha completa): não é um derivado de `FichaDerivadosDto`, então não passa pelo
                  `@for` de `statusRapido()` acima — é o preset "Iniciativa" (m3-47) + o dado extra de
-                 amplificador/Formação (`dadoExtraIniciativa`). Some se o preset foi apagado
-                 manualmente (ficha antiga). -->
-                                @if (presetIniciativa()) {
+                 amplificador/Formação (`dadoExtraIniciativa`). A fórmula (não o total calculado)
+                 vira editável pro dono/mestre — item/habilidade pode dar ou tirar bônus de dados;
+                 sem o preset (apagado manualmente numa ficha antiga), dono/mestre recria com a
+                 fórmula padrão (`adicionarFormulaIniciativa`); qualquer outro viewer não vê nada,
+                 igual antes. -->
+                                @if (presetIniciativa(); as preset) {
                                     <div
                                         class="ficha-mini ficha-mini--fino"
                                         [class.ficha-mini--com-rolar]="podeRolar()"
@@ -1898,20 +1901,68 @@
                                             </button>
                                         }
                                         <span class="ficha-mini__rotulo">Iniciativa</span>
-                                        <span
-                                            class="ficha-mini__valor"
-                                            [appTooltip]="
-                                                dadoExtraIniciativa() > 0
-                                                    ? 'Destreza ' +
-                                                      atributosEfetivos().destreza +
-                                                      ' + ' +
-                                                      dadoExtraIniciativa() +
-                                                      ' (amplificador/Formação)'
-                                                    : 'Destreza ' + atributosEfetivos().destreza
-                                            "
+                                        @if (ajustavelAmplo()) {
+                                            <app-valor-editavel
+                                                class="ficha-mini__valor"
+                                                [valor]="dadosIniciativa() + 'd6'"
+                                                [editando]="editandoFormulaIniciativa()"
+                                                rotuloAria="fórmula de iniciativa"
+                                                [tooltip]="
+                                                    'Fórmula: ' + preset.formula + ' — clique para editar'
+                                                "
+                                                (editarSolicitado)="editarFormulaIniciativa()"
+                                            >
+                                                <input
+                                                    #entradaFormulaIniciativa
+                                                    class="ficha-mini__entrada ficha-mini__entrada--larga"
+                                                    type="text"
+                                                    [value]="preset.formula"
+                                                    aria-label="Fórmula de Iniciativa"
+                                                    (keydown.enter)="
+                                                        confirmarFormulaIniciativa(
+                                                            entradaFormulaIniciativa.value
+                                                        )
+                                                    "
+                                                    (keydown.escape)="cancelarFormulaIniciativa()"
+                                                    (blur)="
+                                                        confirmarFormulaIniciativa(
+                                                            entradaFormulaIniciativa.value
+                                                        )
+                                                    "
+                                                />
+                                            </app-valor-editavel>
+                                        } @else {
+                                            <span
+                                                class="ficha-mini__valor"
+                                                [appTooltip]="
+                                                    dadoExtraIniciativa() > 0
+                                                        ? 'Destreza ' +
+                                                          atributosEfetivos().destreza +
+                                                          ' + ' +
+                                                          dadoExtraIniciativa() +
+                                                          ' (amplificador/Formação)'
+                                                        : 'Destreza ' + atributosEfetivos().destreza
+                                                "
+                                            >
+                                                {{ dadosIniciativa() }}d6
+                                            </span>
+                                        }
+                                    </div>
+                                } @else if (ajustavelAmplo()) {
+                                    <div class="ficha-mini ficha-mini--fino ficha-mini--com-rolar">
+                                        <button
+                                            app-botao-icone
+                                            tamanho="mini"
+                                            class="ficha-mini__rolar"
+                                            type="button"
+                                            aria-label="Adicionar rolagem de Iniciativa"
+                                            [appTooltip]="'Esta ficha não tem rolagem de Iniciativa — adicionar'"
+                                            (click)="adicionarFormulaIniciativa()"
                                         >
-                                            {{ dadosIniciativa() }}d6
-                                        </span>
+                                            <app-icone [nome]="'mais'" />
+                                        </button>
+                                        <span class="ficha-mini__rotulo">Iniciativa</span>
+                                        <span class="ficha-mini__valor">—</span>
                                     </div>
                                 }
                             </div>
