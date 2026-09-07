@@ -1371,12 +1371,19 @@
                                                             <div class="ficha-atributo-linha__mini">
                                                                 <span
                                                                     class="ficha-atributo-linha__rotulo-mini"
+                                                                    [appTooltip]="
+                                                                        'Modificador de teste de ' +
+                                                                        campo.nome
+                                                                    "
                                                                 >
                                                                     <app-icone
                                                                         [nome]="'modificador'"
                                                                         class="ficha-atributo-linha__rotulo-icone"
                                                                     />
-                                                                    Mod.
+                                                                    <span
+                                                                        class="ficha-atributo-linha__rotulo-texto"
+                                                                        >Mod.</span
+                                                                    >
                                                                 </span>
                                                                 <div
                                                                     class="ficha-atributo__modificador"
@@ -1408,12 +1415,19 @@
                                                             <div class="ficha-atributo-linha__mini">
                                                                 <span
                                                                     class="ficha-atributo-linha__rotulo-mini"
+                                                                    [appTooltip]="
+                                                                        'Ajuste manual de dados de ' +
+                                                                        campo.nome
+                                                                    "
                                                                 >
                                                                     <app-icone
                                                                         [nome]="'d20'"
                                                                         class="ficha-atributo-linha__rotulo-icone"
                                                                     />
-                                                                    Dados
+                                                                    <span
+                                                                        class="ficha-atributo-linha__rotulo-texto"
+                                                                        >Dados</span
+                                                                    >
                                                                 </span>
                                                                 <div class="ficha-atributo__dados">
                                                                     <app-step-input

@@ -2530,6 +2530,17 @@
         }
     }
 
+    // Texto do rótulo ("Mod."/"Dados"): no desktop a coluna de Atributos é estreita (uma de 3 lado
+    // a lado) e o par ícone+texto+stepper não tem folga — só o ícone fica, com o texto virando
+    // `[appTooltip]` no `&__rotulo-mini` pai. No mobile (largura cheia) sobra espaço e o texto volta.
+    &__rotulo-texto {
+        display: none;
+
+        @include bp.mobile {
+            display: inline;
+        }
+    }
+
     // Ícone do rótulo (± pro modificador, dado pro ajuste de dados) — mesma cor discreta do texto,
     // acompanha o tamanho dele.
     &__rotulo-icone {
@@ -2554,8 +2565,9 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
 
-    // Dadinho de rolar teste (m3-22): canto superior direito do box, discreto até o hover/foco.
-    // ui-30: `app-botao-icone[tamanho="mini"]` — cor/hover já são dele; só sobram posição e tamanho.
+    // Dadinho de rolar teste (m3-22): canto superior direito do box no desktop (esquerdo no mobile,
+    // ver abaixo), discreto até o hover/foco. ui-30: `app-botao-icone[tamanho="mini"]` — cor/hover
+    // já são dele; só sobram posição e tamanho.
     &__rolar {
         position: absolute;
         top: 4px;
@@ -2564,6 +2576,24 @@
         height: 22px;
         font-size: 13px;
         color: var(--text-mute);
+
+        // `app-botao-icone[tamanho="mini"]` infla o próprio host pra 44×44 no mobile (piso de toque
+        // — ver `:host` em `botao-icone.component.scss`); `min-width`/`min-height` viram um piso que
+        // o `width`/`height` de 22px acima não derruba, então o desenho crescia sem mudar a âncora
+        // (top/right), e o dadinho ficava boiando longe do canto (centro do host inflado), não
+        // encostado nele — exatamente o desalinhamento visto na caixa de atributo estreita (3
+        // colunas). Aqui o desenho volta a 22×22 e ganha a área de toque como pseudo-elemento
+        // (`alvo-de-toque($posicionar: false)`, mesmo padrão do `&__avatar-upload`), e a âncora muda
+        // pro canto superior ESQUERDO — o direito já tem o próprio valor do atributo por perto.
+        @include bp.mobile {
+            top: 4px;
+            left: 4px;
+            right: auto;
+            min-width: 22px;
+            min-height: 22px;
+        }
+
+        @include alvo-de-toque($posicionar: false);
     }
 
     &__abrev {
