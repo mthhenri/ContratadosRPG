@@ -531,11 +531,11 @@ confirmação inline de remoção, modal Exportar), Patente (hover do ícone de 
 Crédito) e Gestão de usuários — sessão admin promovida via `UPDATE usuario` local, já que a conta
 admin fixa da migration usa senha pessoal do autor (login `senhor.contratados` não tem senha
 conhecida em dev) — com o menu de trocar tipo aberto, `Confirmar`/`Cancelar` do tipo pendente e
-`Limpar filtros` em ambos os viewports. Observação sem ação: o ícone de confirmar tipo (sempre
-preenchido em accent, sem variante equivalente em `app-botao-icone`) recebe o hover padrão do
+`Limpar filtros` em ambos os viewports. Observação sem ação (limitação resolvida depois — ver
+`ui-29b-variante-botao-icone` em `HISTORY.md`, 2026-09-07): o ícone de confirmar tipo (sempre
+preenchido em accent, sem variante equivalente em `app-botao-icone`) recebia o hover padrão do
 primitivo (troca para contorno) em vez de manter o preenchimento — limitação do primitivo (que não
-tem variantes de cor, ao contrário de `app-botao`), não regressão desta task; segue apenas como nota
-para uma eventual extensão do primitivo, sem abrir problema por não haver dano visual.
+tinha variantes de cor, ao contrário de `app-botao`), não regressão desta task.
 
 **`ui-24-ordem-dos-controles-do-painel-flutuante` concluída** (spec em `docs/specs/done/`): o slot
 `[painelAcoesExtras]` do primitivo passou de antes de minimizar para entre minimizar e fechar. Assim,

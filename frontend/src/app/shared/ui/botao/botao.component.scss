@@ -1,4 +1,5 @@
 @use "sass:map";
+@use "variantes" as v;
 
 // Primitivo de botão (ui-01, completado na ui-01b). A base e as cores saem das 20 cópias de
 // `.botao` que existiam nos SCSS de página/componente — interseção medida, não releitura. As
@@ -6,137 +7,9 @@
 //
 // Só identidade mora na base: tamanho e layout seguem sendo do consumidor, a menos que ele peça
 // `[tamanho]`/`[posicaoIcone]`/`[fluido]` — tudo opt-in, para não mover nenhuma tela existente.
-
-// Cor de cada severidade. `cor` é o matiz; `dim` o preenchimento suave (12%); `borda` o contorno
-// (40%) — mesma receita das cores semânticas do tema.
-$variantes: (
-    "primario": (
-        cor: var(--accent),
-        texto: var(--accent-text),
-        hover: var(--accent-hover),
-        press: var(--accent-press),
-        dim: var(--accent-dim),
-        borda: var(--accent-border),
-    ),
-    "secundario": (
-        cor: var(--text),
-        texto: var(--bg),
-        dim: var(--surface-2),
-        borda: var(--border-strong),
-    ),
-    "positivo": (
-        cor: var(--positive),
-        texto: var(--bg),
-        dim: color-mix(in srgb, var(--positive) 12%, transparent),
-        borda: color-mix(in srgb, var(--positive) 40%, transparent),
-    ),
-    "info": (
-        cor: var(--energy),
-        texto: var(--bg),
-        dim: color-mix(in srgb, var(--energy) 12%, transparent),
-        borda: color-mix(in srgb, var(--energy) 40%, transparent),
-    ),
-    "aviso": (
-        cor: var(--warning),
-        texto: var(--bg),
-        dim: color-mix(in srgb, var(--warning) 12%, transparent),
-        borda: color-mix(in srgb, var(--warning) 40%, transparent),
-    ),
-    "perigo": (
-        cor: var(--erro),
-        texto: var(--contrast),
-        press: var(--erro),
-        dim: color-mix(in srgb, var(--erro) 12%, transparent),
-        borda: color-mix(in srgb, var(--erro) 40%, transparent),
-    ),
-    "ajuda": (
-        cor: var(--help),
-        texto: var(--bg),
-        dim: var(--help-dim),
-        borda: var(--help-border),
-    ),
-    "contraste": (
-        cor: var(--contrast),
-        texto: var(--bg),
-        dim: var(--contrast-dim),
-        borda: var(--contrast-border),
-    ),
-);
-
-// Estilo padrão de cada variante — o que o produto já pratica. `secundario` e `perigo` nascem
-// contornados; as demais, preenchidas. Informar `[estilo]` sobrescreve.
-$estilo-padrao: (
-    "primario": "preenchido",
-    "secundario": "contorno",
-    "positivo": "preenchido",
-    "info": "preenchido",
-    "aviso": "preenchido",
-    "perigo": "contorno",
-    "ajuda": "preenchido",
-    "contraste": "preenchido",
-);
-
-@mixin pintar($estilo, $cor, $dim, $borda, $texto, $hover: null, $press: null) {
-    @if $estilo == "preenchido" {
-        background: $cor;
-        color: $texto;
-        border: 0;
-
-        // O accent usa token de hover calculado em runtime; as cores estáveis mantêm o clareamento
-        // já praticado pelo produto.
-        &:hover:not(:disabled) {
-            @if $hover {
-                background: $hover;
-            } @else {
-                filter: brightness(1.08);
-            }
-        }
-
-        &:active:not(:disabled) {
-            @if $press {
-                background: $press;
-            } @else {
-                filter: brightness(0.92);
-            }
-        }
-    } @else if $estilo == "contorno" {
-        background: transparent;
-        color: $cor;
-        border: 1px solid $borda;
-
-        &:hover:not(:disabled) {
-            background: $dim;
-        }
-
-        &:active:not(:disabled) {
-            @if $press {
-                background: $press;
-                color: $texto;
-                border-color: $press;
-            } @else {
-                background: color-mix(in srgb, $cor 20%, transparent);
-            }
-        }
-    } @else if $estilo == "texto" {
-        background: transparent;
-        color: $cor;
-        border: 0;
-
-        &:hover:not(:disabled) {
-            background: $dim;
-        }
-    } @else if $estilo == "link" {
-        background: transparent;
-        color: $cor;
-        border: 0;
-        text-decoration: underline;
-        text-underline-offset: 3px;
-
-        &:hover:not(:disabled) {
-            filter: brightness(1.12);
-        }
-    }
-}
+//
+// Mapas de cor e mixin de pintura em `./_variantes.scss` (ui-29b): `app-botao-icone` precisa da
+// mesma paleta de severidade para o próprio `[variante]`, então a cor vive num só lugar.
 
 // Base — exatamente o que a ui-01 entregou. Não acrescentar dimensão aqui: `login`/`registro`
 // dependem de a base continuar sem `display`, `padding` ou `font-size`.
@@ -157,7 +30,7 @@ $estilo-padrao: (
     cursor: default;
 }
 
-@each $nome, $paleta in $variantes {
+@each $nome, $paleta in v.$variantes {
     $cor: map.get($paleta, cor);
     $dim: map.get($paleta, dim);
     $borda: map.get($paleta, borda);
@@ -167,14 +40,22 @@ $estilo-padrao: (
 
     // Estilo padrão da variante, sem classe de estilo no host.
     :host(.botao--#{$nome}) {
-        @include pintar(map.get($estilo-padrao, $nome), $cor, $dim, $borda, $texto, $hover, $press);
+        @include v.pintar(
+            map.get(v.$estilo-padrao, $nome),
+            $cor,
+            $dim,
+            $borda,
+            $texto,
+            $hover,
+            $press
+        );
     }
 
     // Estilo explícito — dois seletores de classe, então sempre vence o padrão acima,
     // independente da ordem em que o navegador leu as regras.
     @each $estilo in ("preenchido", "contorno", "texto", "link") {
         :host(.botao--#{$nome}.botao--estilo-#{$estilo}) {
-            @include pintar($estilo, $cor, $dim, $borda, $texto, $hover, $press);
+            @include v.pintar($estilo, $cor, $dim, $borda, $texto, $hover, $press);
         }
     }
 }

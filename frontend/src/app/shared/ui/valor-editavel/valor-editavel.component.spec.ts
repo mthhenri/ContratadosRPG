@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { ValorEditavel } from './valor-editavel.component';
+import { ValorEditavel, type ValorEditavelVariante } from './valor-editavel.component';
 
 @Component({
   selector: 'app-anfitriao-teste',
@@ -11,6 +11,7 @@ import { ValorEditavel } from './valor-editavel.component';
       [valor]="valor()"
       [editando]="editando()"
       [desabilitado]="desabilitado()"
+      [variante]="variante()"
       rotuloAria="Vida atual"
       (editarSolicitado)="editando.set(true)"
     >
@@ -22,6 +23,7 @@ class AnfitriaoTeste {
   readonly valor = signal<number>(20);
   readonly editando = signal(false);
   readonly desabilitado = signal(false);
+  readonly variante = signal<ValorEditavelVariante>('secundario');
 }
 
 describe('ValorEditavel', () => {
@@ -70,5 +72,29 @@ describe('ValorEditavel', () => {
       '.valor-editavel__botao',
     );
     expect(botao?.disabled).toBe(true);
+  });
+
+  it('sem `[variante]`, o botão interno recebe a classe `botao--secundario`', () => {
+    const fixture = montar();
+    const botao = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.valor-editavel__botao',
+    );
+    expect(botao?.classList).toContain('botao--secundario');
+  });
+
+  it('`variante="herdado"` (ui-29d) não aplica nenhuma classe de severidade — cor vem por herança', () => {
+    const fixture = montar();
+    fixture.componentInstance.variante.set('herdado');
+    fixture.detectChanges();
+
+    const botao = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.valor-editavel__botao',
+    );
+    // `botao--estilo-texto` continua (é `[estilo]`, não `[variante]`); nenhuma severidade aplicada.
+    const classesSeveridade = [...(botao?.classList ?? [])].filter(
+      (c) => c.startsWith('botao--') && !c.startsWith('botao--estilo-'),
+    );
+    expect(classesSeveridade).toEqual([]);
+    expect(botao?.classList).toContain('botao--estilo-texto');
   });
 });

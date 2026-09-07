@@ -28,6 +28,15 @@ import { BotaoIcone } from './botao-icone.component';
     >
       <span aria-hidden="true">✕</span>
     </button>
+    <button
+      app-botao-icone
+      variante="primario"
+      aria-label="Adicionar itens"
+      [appTooltip]="'Adicionar itens'"
+      type="button"
+    >
+      <span aria-hidden="true">+</span>
+    </button>
   `,
   imports: [BotaoIcone, RouterLink],
 })
@@ -71,6 +80,14 @@ describe('BotaoIcone', () => {
 
     expect(redondo.classList).toContain('botao-icone--redondo');
     expect(redondo.classList).toContain('botao-icone--compacto');
+  });
+
+  it('veste a severidade com `variante` (ui-29b)', () => {
+    const fixture = montar();
+    const botoes = (fixture.nativeElement as HTMLElement).querySelectorAll('button');
+    const primario = botoes[2];
+
+    expect(primario.classList).toContain('botao-icone--primario');
   });
 
   it('preserva o estado desabilitado nativo', () => {

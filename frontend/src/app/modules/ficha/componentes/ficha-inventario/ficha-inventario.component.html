@@ -88,6 +88,7 @@
                     <button
                         type="button"
                         app-botao-icone
+                        variante="primario"
                         class="ficha-inv__btn ficha-inv__btn--principal ficha-inv__btn--quadrado"
                         [attr.aria-expanded]="catalogoAberto()"
                         [attr.aria-label]="catalogoAberto() ? 'Fechar catálogo' : 'Adicionar itens'"
@@ -99,6 +100,7 @@
                     <button
                         type="button"
                         app-botao-icone
+                        [variante]="criandoItem() ? 'primario' : undefined"
                         class="ficha-inv__btn ficha-inv__btn--secundario ficha-inv__btn--quadrado"
                         [class.ficha-inv__btn--ativo]="criandoItem()"
                         [attr.aria-expanded]="criandoItem()"

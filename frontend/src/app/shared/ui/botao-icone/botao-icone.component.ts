@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 
 import { Tooltip } from '../../tooltip/tooltip.directive';
+import { BotaoVariante } from '../botao/botao.component';
 
 /**
  * Tamanhos reais das ações compactas encontradas na auditoria visual UI-06, mais `mini` (`P-048`,
@@ -40,9 +41,30 @@ export class BotaoIcone {
    */
   readonly redondo = input(false);
 
+  /**
+   * Severidade/cor (ui-29b), mesma paleta de `app-botao` (`./_variantes.scss` compartilhado).
+   * Sem valor, o host mantém a identidade original do primitivo (contorno neutro) — opt-in para
+   * não mover nenhuma tela existente. Cada variante nasce no estilo padrão da paleta (`primario`
+   * preenchido, `secundario` contorno...); `app-botao-icone` não expõe `[estilo]` porque nenhum
+   * consumidor até hoje precisou sobrescrever o padrão de uma severidade.
+   */
+  readonly variante = input<BotaoVariante>();
+
+  /**
+   * Fundo neutro (ui-29c): troca o `background: transparent` padrão por `var(--surface-2)`, sem
+   * mexer em cor/borda. Cobre a "caixa" que ações unitárias vizinhas de um controle já preenchido
+   * (ex.: `.ficha-passo`, o −/+ de ajuste rápido) esperam — sem ela, o mesmo cinza de ícone lê mais
+   * claro que o vizinho por estar direto sobre o fundo da página (contraste simultâneo), não porque
+   * a cor esteja errada. Independente de `[variante]`: é só a superfície atrás do ícone.
+   */
+  readonly preenchido = input(false);
+
   protected readonly classes = computed(() => {
     const partes = ['botao-icone', `botao-icone--${this.tamanho()}`];
     if (this.redondo()) partes.push('botao-icone--redondo');
+    if (this.preenchido()) partes.push('botao-icone--preenchido');
+    const variante = this.variante();
+    if (variante) partes.push(`botao-icone--${variante}`);
     return partes.join(' ');
   });
 }

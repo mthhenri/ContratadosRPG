@@ -1,7 +1,10 @@
-import { Component, ElementRef, effect, inject, input, output } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, input, output } from '@angular/core';
 
 import { Botao, type BotaoVariante } from '../botao/botao.component';
 import { Tooltip } from '../../tooltip/tooltip.directive';
+
+/** `'herdado'` (ui-29d) pede ao botão interno para não aplicar variante nenhuma — ver `variante`. */
+export type ValorEditavelVariante = BotaoVariante | 'herdado';
 
 /**
  * Primitivo de "valor da ficha que vira campo de edição ao clicar" (`P-057`). Absorve a máquina de
@@ -17,14 +20,20 @@ import { Tooltip } from '../../tooltip/tooltip.directive';
  *
  * O estado de exibição é um `button[app-botao][estilo="texto"]` interno — reaproveita cor/hover/
  * cursor do primitivo de botão em vez de duplicá-los. `[variante]` deixa o consumidor pedir uma
- * cor semântica (ex.: `aviso` para um valor em alerta); sem valor, cai em `secundario` (neutro).
- * `[desabilitado]` desabilita o botão interno (herda o esmaecido `opacity: 0.55` do `app-botao`) —
- * cobre o padrão `[disabled]="!ajustavel()"` que várias ocorrências já usam.
+ * cor semântica (ex.: `aviso` para um valor em alerta); sem valor, cai em `secundario` (neutro, mas
+ * ainda `var(--text)` explícito — não é "sem cor"). `'herdado'` (ui-29d) é o valor pra quando nem
+ * isso serve: o botão interno não recebe variante nenhuma, então não aplica `color` próprio e a
+ * cor de fato atravessa por herança (ver nota de tamanho/tipografia abaixo) — cobre um consumidor
+ * que quer uma cor diferente de toda a paleta de severidade (`barra-recurso__max`, que quer o
+ * mesmo `var(--text-mute)` do `<span>` do modo não-editável ao lado). `[desabilitado]` desabilita
+ * o botão interno (herda o esmaecido `opacity: 0.55` do `app-botao`) — cobre o padrão
+ * `[disabled]="!ajustavel()"` que várias ocorrências já usam.
  *
  * Tamanho/tipografia continuam do consumidor: propriedades herdáveis (`font-size`, `color`,
  * `font-weight`) atravessam o `display: contents` do host a partir da classe-companheira que o
  * consumidor já aplica no próprio `<app-valor-editavel>` (mesma divisão de responsabilidade do
- * `app-botao`).
+ * `app-botao`) — só que essa herança só chega ao botão interno de fato quando `variante` não
+ * sobrescreve `color` por conta própria, ou seja, só com `'herdado'`.
  */
 @Component({
   selector: 'app-valor-editavel',
@@ -39,7 +48,21 @@ export class ValorEditavel {
   readonly desabilitado = input(false);
   /** Vira `aria-label="Editar " + rotuloAria()` no botão do estado de exibição. */
   readonly rotuloAria = input.required<string>();
-  readonly variante = input<BotaoVariante>('secundario');
+  /**
+   * `'herdado'` (ui-29d) é o escape hatch pra quando `secundario` (`var(--text)`, quase branco)
+   * não é a cor que o consumidor quer — em vez de outra severidade, ele pede pra não aplicar
+   * variante nenhuma no botão interno, deixando `color` de fato atravessar por herança a partir da
+   * classe-companheira que o consumidor já põe no próprio `<app-valor-editavel>` (o comentário da
+   * classe já prometia essa herança; sem `'herdado'` ela nunca se cumpria, porque o padrão
+   * `secundario` sempre aplicava sua própria cor). Achado ao vivo: `barra-recurso__max` queria
+   * `var(--text-mute)` como o `<span>` do modo não-editável ao lado, e `secundario` sempre vencia.
+   */
+  readonly variante = input<ValorEditavelVariante>('secundario');
+  /** `undefined` quando `'herdado'` — sem variante, `app-botao` não aplica cor/fundo/borda nenhum. */
+  protected readonly varianteBotao = computed<BotaoVariante | undefined>(() => {
+    const valor = this.variante();
+    return valor === 'herdado' ? undefined : valor;
+  });
   /**
    * Texto de `appTooltip` no botão do estado de exibição — precisa ser um input do primitivo
    * (não algo que o consumidor anexe direto no `<app-valor-editavel>`) porque o `Tooltip` mede

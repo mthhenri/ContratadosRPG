@@ -1,5 +1,108 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-07 — `ui-29b`…`ui-29d`: `app-botao-icone` ganha `[variante]`/`[preenchido]`, `app-valor-editavel` ganha `'herdado'`, mixin de severidade corrige vazamento de hover; `app-step-input` corrige número grudado no `mini`
+
+Autor reportou 3 quebras visuais por screenshot, sem spec aberta: (1) o número central do
+`app-step-input` "muito grudado" nas bordas verticais, visível na modal "Nova habilidade" (`Custo
+de Energia`, `tamanho="mini"`) e no painel Atributos (steppers `mini` de valor/Mod./Dados); (2) os
+dois botões quadrados "Adicionar itens"/"Item custom" do card compacto do inventário
+(`app-ficha-visualizacao modo="compacto"`, embutido em `/campanhas/:id` — "painel de campanha de
+player") saindo visualmente idênticos, quando o do catálogo do sistema deveria ser preenchido e o
+custom, contorno; depois, revendo o mesmo screenshot original (bloco de vitalidade), um quarto item:
+(3) o ícone do botão "Receber dano" (ao lado do rótulo "VIDA") lendo branco, quando deveria ser
+cinza como o `−`/`+` vizinho.
+
+**Causa #1:** `.stepper__valor` (`shared/ui/stepper/step-input.component.scss`) sempre teve
+`padding` só vertical (`var(--space-8) 0`/`var(--space-4) 0`) — o dígito centralizado ficava colado
+ao `border-inline` sempre que o container encolhia ao conteúdo (caso de `mini`, usado em ambas as
+telas citadas). Igual no bloco canônico (`docs/design/tema/_componentes.scss`) — não era desvio de
+spec, e sim um buraco na spec original. Corrigido nos três tamanhos (`padrao`/`compacto`/`mini`,
+desktop e mobile) para `padding` também horizontal; doc canônico atualizado junto.
+
+**Causa #2:** `ficha-inv__btn--principal`/`--secundario` no template (`ficha-inventario.component
+.html`, ramo `compacto()`) eram classes BEM sem CSS nenhum — o padrão do projeto (visto no ramo
+desktop do mesmo arquivo, que usa `app-botao [variante]`) é a cor vir do primitivo, não da classe
+local. Mas `app-botao-icone` não tinha conceito de variante de cor — gap já registrado como
+observação sem ação na `ui-32` (`CONTEXT.md`, 2026-09-05): "limitação do primitivo... nota para uma
+eventual extensão". Perguntado ao autor (três opções: ampliar o primitivo / trocar por `app-botao`
+sem rótulo visível / override local só nesta tela) — escolheu ampliar o primitivo, mesma decisão
+já tomada na `ui-30` para `[redondo]`.
+
+`app-botao-icone` ganhou `[variante]` (tipo `BotaoVariante`, reexportado de `app-botao`): sem valor,
+mantém a identidade neutra original (nenhuma das ~45 chamadas existentes muda); com valor, pinta
+como `app-botao` pintaria no estilo padrão da severidade. Para não duplicar a paleta de cor entre
+os dois primitivos, o mapa `$variantes`/`$estilo-padrao` e o mixin `pintar()` saíram de
+`botao.component.scss` para um partial novo, `shared/ui/botao/_variantes.scss`, que os dois
+`@use`am — `app-botao` ficou com o mesmo resultado visual, só a fonte da cor mudou de lugar.
+`ficha-inventario.component.html` (ramo compacto) ganhou `[variante]="'primario'"` no botão
+"Adicionar itens" e `[variante]="criandoItem() ? 'primario' : undefined"` no "Item custom",
+espelhando exatamente a lógica já usada no ramo desktop com `app-botao`.
+
+**Causa #3, achada só ao investigar (a cor "branca" não era bem isso):** medido o `color`
+computado ao vivo do ícone "Receber dano" (`ficha-barra__receber-dano`,
+`ficha-visualizacao.component.html`) contra o `−`/`+` vizinho (`.ficha-passo`) — os dois já
+calculavam `rgb(150,155,163)` (`--text-dim`), byte-idêntico. A diferença real era o fundo:
+`.ficha-passo` tem `background: var(--surface-2)` (caixa preenchida), enquanto o botão do
+primitivo `app-botao-icone` nasce com `background: transparent` — o mesmo cinza, sem caixa atrás,
+lê mais claro por contraste simultâneo direto contra o fundo quase preto da página. `criatura-
+visualizacao` (a versão de Criatura/NPC do mesmo botão) foi conferida e **não** precisava do mesmo
+ajuste: lá o `.criatura__passo` vizinho já nasce transparente também, então já estava consistente.
+Perguntado ao autor de novo (mesma decisão da causa #2: ampliar o primitivo / reusar `[variante]
+="secundario"` já existente, que ficaria mais claro que o `--text-dim` desejado / override local) —
+de novo escolheu ampliar. `app-botao-icone` ganhou `[preenchido]` (booleano, opt-in): troca só o
+`background` (transparente → `var(--surface-2)`, hover para `var(--surface)`), sem mexer em
+cor/borda — combinável com `[variante]` mas usado aqui sozinho. `ficha-barra__receber-dano` ganhou
+`[preenchido]="true"`.
+
+**Causa #4, achada só depois de olhar de novo o mesmo botão "Adicionar itens" já corrigido na
+causa #2:** autor reportou "o hover desse botão tá ruim". Medido ao vivo: em hover, `color`/
+`stroke` do ícone iam pra `rgb(213,48,48)` (`--accent`) sobre um fundo `rgb(196,44,44)`
+(`--accent-hover`, só um tom mais escuro do mesmo vermelho) — o "+" quase sumia, as duas cores
+convergindo. Causa: o mixin `pintar()` (`_variantes.scss`) só redeclarava `background` no hover de
+cada estilo — correto pra `app-botao` (sem hover genérico competindo), mas incompleto pra
+`app-botao-icone`, cujo `:host` base tem hover próprio (`color: var(--accent)`, achado da `ui-29`)
+que vence por propriedade sempre que a regra da variante não redeclara aquela mesma propriedade —
+independente de especificidade de regra, CSS resolve conflito propriedade a propriedade. Corrigido
+sem perguntar (bug de implementação, não decisão de design): os ramos `preenchido`/`contorno` do
+mixin agora redeclaram `color` (e `contorno` também `border-color`) dentro de `:hover`/`:active`,
+sem alterar nenhum resultado visual de `app-botao` (que já não tinha regra concorrente — a
+redeclaração aí é um no-op) nem da `secundario`-contorno de `app-botao` (override específico dela
+continua vencendo por ordem de fonte, textualmente depois do loop).
+
+**Causa #5, achada ao comparar o mesmo screenshot original com a visão de mestre (anexada pelo
+autor como referência de "intenção de cor"):** o "/máximo" de Vida/Energia (`barra-recurso__max`)
+saía branco (`var(--text)`, quase branco) na ficha embutida do jogador, mas cinza discreto
+(`var(--text-mute)`) no card "Esquadrão" do mestre — mesmo primitivo `app-barra-recurso`, mesmo
+`tamanho="compacto"`, nenhum dos dois sobrescreve cor. Causa: o card do mestre é `[editavel]=false`
+(renderiza um `<span>` puro, que herda `.barra-recurso__max { color: var(--text-mute) }`); a ficha
+do jogador é `[editavel]=true` (renderiza `<app-valor-editavel>`, cujo botão interno **sempre**
+aplica sua própria variante — padrão `secundario`, `color: var(--text)`), o que quebra a promessa
+do próprio comentário de `ValorEditavel` ("cor atravessa por herança da classe-companheira"):
+sempre que o consumidor quer algo diferente de `secundario`, a herança nunca chega, porque o botão
+já define `color` explícito antes disso importar. Perguntado ao autor (ampliar `app-valor-editavel`
+com um modo que não aplica variante nenhuma / override local em `barra-recurso.component.scss`) —
+escolheu ampliar de novo. `ValorEditavel.variante` aceita agora `BotaoVariante | 'herdado'`
+(`ValorEditavelVariante`); com `'herdado'`, o `<app-botao>` interno recebe `[variante]="undefined"`
+(computado à parte, `varianteBotao()`) — sem classe de severidade, `app-botao` não aplica cor/fundo/
+borda nenhum, e `color` finalmente atravessa por herança como o comentário sempre prometeu.
+`barra-recurso.component.html` passou a usar `variante="herdado"` no valor "máximo" (o "atual"
+continua com `[variante]="varianteAtual()"`, que já funcionava — sempre teve uma severidade real
+pra aplicar).
+
+Suíte focada (`botao`/`botao-icone`/`step-input`/`ficha-inventario`/`ficha-visualizacao`/
+`valor-editavel`/`barra-recurso`, incluindo 2 casos novos pro `'herdado'`) + suíte completa
+(121 arquivos/1651 testes) verde, `ng build` sem erro novo (warning de orçamento de bundle é
+pré-existente), `prettier --check`/`eslint` sem problema introduzido (warnings de aspas em
+`botao-icone.component.ts`/`.spec.ts` são padrão do arquivo, já presentes em `botao.component.ts`
+antes desta task). Gate visual ao vivo (Postgres/backend/frontend já no ar) em `1920×1080` e
+`360×800`, repetido em cada rodada de correção: painel Atributos em edição, modal "Nova
+habilidade", o toolbar compacto do inventário e o botão "Adicionar itens" em hover, o botão
+"Receber dano" e o "/máximo" de Vida/Energia — todos em `/campanhas/:id` (jogador **e** mestre, pra
+comparar a "intenção de cor" do card Esquadrão) — número com respiro nas três telas, "Adicionar
+itens" preenchido em accent com o "+" legível em hover, "Item custom" em contorno, ícone de
+"Receber dano" na mesma caixa cinza do `−`/`+` vizinho, "/máximo" no mesmo cinza do card de mestre,
+sem overflow em nenhum dos dois viewports.
+
 ## 2026-09-07 — `I-024`/`I-025`/`I-026` fecham: `app-step-input` ganha modo sem digitação, `I-024` já estava resolvida
 
 Pedido do autor foi "fazer a I-026, I-025 e I-024" — as três ideias abertas mais recentes de

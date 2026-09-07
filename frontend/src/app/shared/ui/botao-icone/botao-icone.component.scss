@@ -1,7 +1,11 @@
+@use "sass:map";
 @use "tema/breakpoints" as bp;
+@use "../botao/variantes" as v;
 
 // Identidade compartilhada das ações unitárias que mostram somente um ícone (UI-08). O layout
 // que posiciona cada ação continua na classe BEM do consumidor; este primitivo só veste o host.
+// `[variante]` (ui-29b) reusa a paleta de `app-botao` (`shared/ui/botao/_variantes.scss`) — sem
+// valor, o host mantém a identidade original abaixo (contorno neutro).
 :host {
     display: inline-flex;
     align-items: center;
@@ -67,4 +71,33 @@
 // informação) sempre foram círculos — só o raio muda, o tamanho continua vindo de `[tamanho]`.
 :host(.botao-icone--redondo) {
     border-radius: 50%;
+}
+
+// Fundo neutro (ui-29c, `[preenchido]`): mesma caixa de `.ficha-passo` (o −/+ de ajuste rápido que
+// flanqueia uma ação unitária em várias telas) — só a superfície muda, cor/borda continuam as da
+// identidade base (ou da severidade, se `[variante]` também estiver presente).
+:host(.botao-icone--preenchido) {
+    background: var(--surface-2);
+
+    &:hover:not(:disabled) {
+        background: var(--surface);
+    }
+}
+
+// === Severidade (opt-in, ui-29b) ===
+// Mesma paleta de `app-botao`; cada variante nasce no estilo padrão da paleta (sem `[estilo]`
+// próprio — nenhum consumidor até hoje precisou sobrescrever). Especificidade extra da classe
+// vence a identidade neutra da base acima.
+@each $nome, $paleta in v.$variantes {
+    :host(.botao-icone--#{$nome}) {
+        @include v.pintar(
+            map.get(v.$estilo-padrao, $nome),
+            map.get($paleta, cor),
+            map.get($paleta, dim),
+            map.get($paleta, borda),
+            map.get($paleta, texto),
+            map.get($paleta, hover),
+            map.get($paleta, press)
+        );
+    }
 }

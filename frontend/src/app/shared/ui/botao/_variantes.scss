@@ -1,0 +1,149 @@
+@use "sass:map";
+
+// Mapa de cor + mixin de pintura compartilhados entre `app-botao` e `app-botao-icone` (ui-29b):
+// as duas identidades de botão do produto usam a mesma paleta de severidade, então a cor vive
+// aqui uma única vez — cada primitivo só decide como aplica (tamanho/forma continuam locais).
+
+// Cor de cada severidade. `cor` é o matiz; `dim` o preenchimento suave (12%); `borda` o contorno
+// (40%) — mesma receita das cores semânticas do tema.
+$variantes: (
+    "primario": (
+        cor: var(--accent),
+        texto: var(--accent-text),
+        hover: var(--accent-hover),
+        press: var(--accent-press),
+        dim: var(--accent-dim),
+        borda: var(--accent-border),
+    ),
+    "secundario": (
+        cor: var(--text),
+        texto: var(--bg),
+        dim: var(--surface-2),
+        borda: var(--border-strong),
+    ),
+    "positivo": (
+        cor: var(--positive),
+        texto: var(--bg),
+        dim: color-mix(in srgb, var(--positive) 12%, transparent),
+        borda: color-mix(in srgb, var(--positive) 40%, transparent),
+    ),
+    "info": (
+        cor: var(--energy),
+        texto: var(--bg),
+        dim: color-mix(in srgb, var(--energy) 12%, transparent),
+        borda: color-mix(in srgb, var(--energy) 40%, transparent),
+    ),
+    "aviso": (
+        cor: var(--warning),
+        texto: var(--bg),
+        dim: color-mix(in srgb, var(--warning) 12%, transparent),
+        borda: color-mix(in srgb, var(--warning) 40%, transparent),
+    ),
+    "perigo": (
+        cor: var(--erro),
+        texto: var(--contrast),
+        press: var(--erro),
+        dim: color-mix(in srgb, var(--erro) 12%, transparent),
+        borda: color-mix(in srgb, var(--erro) 40%, transparent),
+    ),
+    "ajuda": (
+        cor: var(--help),
+        texto: var(--bg),
+        dim: var(--help-dim),
+        borda: var(--help-border),
+    ),
+    "contraste": (
+        cor: var(--contrast),
+        texto: var(--bg),
+        dim: var(--contrast-dim),
+        borda: var(--contrast-border),
+    ),
+);
+
+// Estilo padrão de cada variante — o que o produto já pratica. `secundario` e `perigo` nascem
+// contornados; as demais, preenchidas. Informar `[estilo]` (só em `app-botao`) sobrescreve.
+$estilo-padrao: (
+    "primario": "preenchido",
+    "secundario": "contorno",
+    "positivo": "preenchido",
+    "info": "preenchido",
+    "aviso": "preenchido",
+    "perigo": "contorno",
+    "ajuda": "preenchido",
+    "contraste": "preenchido",
+);
+
+@mixin pintar($estilo, $cor, $dim, $borda, $texto, $hover: null, $press: null) {
+    @if $estilo == "preenchido" {
+        background: $cor;
+        color: $texto;
+        border: 0;
+
+        // `color`/`border-color` se redeclaram aqui — não só `background` — porque `app-botao-icone`
+        // (ao contrário de `app-botao`) tem um hover genérico próprio (`color: var(--accent)`) na
+        // base do primitivo, que senão vaza por trás do hover de severidade: mesma especificidade de
+        // seletor, uma classe cada, decidida por propriedade, não por regra inteira (achado ao vivo,
+        // `ui-29c` — o "+" ficava quase invisível no hover do `primario`, ícone e fundo convergindo
+        // pro mesmo vermelho). O accent usa token de hover calculado em runtime; as cores estáveis
+        // mantêm o clareamento já praticado pelo produto.
+        &:hover:not(:disabled) {
+            color: $texto;
+
+            @if $hover {
+                background: $hover;
+            } @else {
+                filter: brightness(1.08);
+            }
+        }
+
+        &:active:not(:disabled) {
+            color: $texto;
+
+            @if $press {
+                background: $press;
+            } @else {
+                filter: brightness(0.92);
+            }
+        }
+    } @else if $estilo == "contorno" {
+        background: transparent;
+        color: $cor;
+        border: 1px solid $borda;
+
+        // Mesmo motivo do ramo `preenchido` acima: sem redeclarar, o hover genérico de
+        // `app-botao-icone` (`color`/`border-color` fixos em accent) venceria por propriedade.
+        &:hover:not(:disabled) {
+            color: $cor;
+            border-color: $borda;
+            background: $dim;
+        }
+
+        &:active:not(:disabled) {
+            @if $press {
+                background: $press;
+                color: $texto;
+                border-color: $press;
+            } @else {
+                background: color-mix(in srgb, $cor 20%, transparent);
+            }
+        }
+    } @else if $estilo == "texto" {
+        background: transparent;
+        color: $cor;
+        border: 0;
+
+        &:hover:not(:disabled) {
+            background: $dim;
+        }
+    } @else if $estilo == "link" {
+        background: transparent;
+        color: $cor;
+        border: 0;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+
+        &:hover:not(:disabled) {
+            filter: brightness(1.12);
+        }
+    }
+}
