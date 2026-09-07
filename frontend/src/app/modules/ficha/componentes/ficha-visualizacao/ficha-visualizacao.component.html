@@ -1618,11 +1618,20 @@
            Rolagens/Extras/História somem — a primeira porque foi pra coluna lateral da página (quem
            não tem essa lateral pode reabri-la com `mostrarRolagensCompacto`, ex.: a tela de
            Iniciativa), as outras duas porque seguem exclusivas da ficha completa. -->
-                <div class="ficha-status__abas" #abasStatusContainer appOverflowFade>
+                <app-abas
+                    class="ficha-status__abas"
+                    rotulo="Abas de status da ficha"
+                    #abasStatusContainer
+                    appOverflowFade
+                    (navegou)="aoNavegarAbaStatus($event)"
+                >
                     <button
+                        app-aba
                         type="button"
+                        valor="informacoes"
                         class="ficha-status__aba"
                         data-aba-status="informacoes"
+                        [ativa]="abaStatusEfetiva() === 'informacoes'"
                         [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'informacoes'"
                         (click)="selecionarAbaStatus('informacoes')"
                     >
@@ -1630,9 +1639,12 @@
                         <span class="ficha-status__aba-texto">Informações</span>
                     </button>
                     <button
+                        app-aba
                         type="button"
+                        valor="inventario"
                         class="ficha-status__aba"
                         data-aba-status="inventario"
+                        [ativa]="abaStatusEfetiva() === 'inventario'"
                         [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'inventario'"
                         (click)="selecionarAbaStatus('inventario')"
                     >
@@ -1640,9 +1652,12 @@
                         <span class="ficha-status__aba-texto">Inventário</span>
                     </button>
                     <button
+                        app-aba
                         type="button"
+                        valor="habilidades"
                         class="ficha-status__aba"
                         data-aba-status="habilidades"
+                        [ativa]="abaStatusEfetiva() === 'habilidades'"
                         [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'habilidades'"
                         (click)="selecionarAbaStatus('habilidades')"
                     >
@@ -1651,9 +1666,12 @@
                     </button>
                     @if (mostraAbaStatus("rolagens")) {
                         <button
+                            app-aba
                             type="button"
+                            valor="rolagens"
                             class="ficha-status__aba"
                             data-aba-status="rolagens"
+                            [ativa]="abaStatusEfetiva() === 'rolagens'"
                             [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'rolagens'"
                             (click)="selecionarAbaStatus('rolagens')"
                         >
@@ -1663,9 +1681,12 @@
                     }
                     @if (mostraAbaStatus("extras")) {
                         <button
+                            app-aba
                             type="button"
+                            valor="extras"
                             class="ficha-status__aba"
                             data-aba-status="extras"
+                            [ativa]="abaStatusEfetiva() === 'extras'"
                             [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'extras'"
                             (click)="selecionarAbaStatus('extras')"
                         >
@@ -1676,9 +1697,12 @@
                     @if (mostraAbaStatus("historia") && ajustavel()) {
                         <!-- Só dono/mestre (m3-50) — o backend já nem manda `dados.historia` pro visualizador. -->
                         <button
+                            app-aba
                             type="button"
+                            valor="historia"
                             class="ficha-status__aba"
                             data-aba-status="historia"
+                            [ativa]="abaStatusEfetiva() === 'historia'"
                             [class.ficha-status__aba--ativa]="abaStatusEfetiva() === 'historia'"
                             (click)="selecionarAbaStatus('historia')"
                         >
@@ -1686,7 +1710,7 @@
                             <span class="ficha-status__aba-texto">História</span>
                         </button>
                     }
-                </div>
+                </app-abas>
 
                 <section class="ficha-cartao ficha-cartao--status">
                     @if (abaStatusEfetiva() === "informacoes") {

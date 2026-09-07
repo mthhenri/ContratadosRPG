@@ -95,6 +95,8 @@ import { Icone, IconeNome } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { ReceberDanoDialog } from '../../../../shared/receber-dano/receber-dano-dialog.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Aba } from '../../../../shared/ui/abas/aba.component';
+import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
@@ -389,6 +391,8 @@ export interface AjusteClasse {
     ReactiveFormsModule,
     HoldRepeat,
     Icone,
+    Abas,
+    Aba,
     FichaSanidade,
     FichaInventario,
     FichaHabilidades,
@@ -874,6 +878,13 @@ export class FichaVisualizacao {
     this.abaStatusMudou.emit(aba);
   }
 
+  /** `(navegou)` do `app-abas`: setas/Home/End já ativam a aba, como o clique (P-034). */
+  protected aoNavegarAbaStatus(valor: string): void {
+    if (this.abasStatusVisiveis().includes(valor as AbaStatus)) {
+      this.selecionarAbaStatus(valor as AbaStatus);
+    }
+  }
+
   /** Troca somente o recorte apresentado dentro de Extras. */
   protected selecionarAbaExtras(aba: AbaExtras): void {
     this.abaExtrasAtiva.set(aba);
@@ -995,7 +1006,7 @@ export class FichaVisualizacao {
    * **e** desktop, ver SCSS) quando os 6 rótulos não cabem; usado pelo `effect` abaixo pra trazer
    * a aba ativa pra dentro da área visível.
    */
-  private readonly abasStatusContainer = viewChild<ElementRef<HTMLElement>>('abasStatusContainer');
+  private readonly abasStatusContainer = viewChild('abasStatusContainer', { read: ElementRef });
 
   /**
    * Container da tira de passos da Habilidade de Personalidade (ver SCSS/HTML) — rola na
@@ -1148,7 +1159,7 @@ export class FichaVisualizacao {
     // ou à direita).
     effect(() => {
       const aba = this.abaStatusEfetiva();
-      const container = this.abasStatusContainer()?.nativeElement;
+      const container: HTMLElement | undefined = this.abasStatusContainer()?.nativeElement;
       if (!container) {
         return;
       }
