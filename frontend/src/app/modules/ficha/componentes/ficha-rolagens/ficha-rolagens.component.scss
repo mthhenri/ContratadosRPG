@@ -261,7 +261,7 @@
 
         &--principal {
             background: var(--accent);
-            color: var(--bg);
+            color: var(--accent-text);
         }
         &--secundario {
             background: transparent;
@@ -278,7 +278,7 @@
         &--critico {
             background: var(--accent);
             border-color: var(--accent);
-            color: var(--bg);
+            color: var(--accent-text);
             padding: 5px 12px;
             box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
         }

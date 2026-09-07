@@ -714,7 +714,7 @@
         &:hover,
         &:focus-visible {
             background: var(--accent);
-            color: var(--bg);
+            color: var(--accent-text);
             outline: none;
         }
     }
@@ -750,7 +750,7 @@
 
     // Mesma força do `__mini-btn` base: sem isso o fundo transparente posterior apagava a confirmação.
     &__mini-btn.ficha-inv__municao-consumir--feito {
-        color: var(--bg);
+        color: var(--accent-text);
         background: var(--accent);
         border-color: var(--accent);
         transform: scale(1.08);

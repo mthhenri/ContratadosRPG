@@ -163,12 +163,12 @@
 
         // "Do sistema": ação primária em accent sólido.
         &--primario {
-            color: var(--bg);
+            color: var(--accent-text);
             background: var(--accent);
             border-color: var(--accent);
 
             &:hover:not(:disabled) {
-                color: var(--bg);
+                color: var(--accent-text);
                 background: color-mix(in srgb, var(--accent) 86%, black);
             }
         }
@@ -468,12 +468,12 @@
         // Confirmação de remover: o próprio ✕ vira ✓ sólido no lugar (sem texto/linha extra); o
         // rótulo "Remover NOME?" mora no title/aria-label. Perde o foco (clique fora) ou Esc cancela.
         &--confirmar-remover {
-            color: var(--bg);
+            color: var(--accent-text);
             background: var(--accent);
             border-color: var(--accent);
 
             &:hover {
-                color: var(--bg);
+                color: var(--accent-text);
                 background: color-mix(in srgb, var(--accent) 86%, black);
             }
         }
@@ -619,7 +619,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--bg);
+        color: var(--accent-text);
         background: var(--accent);
         border: 0;
         padding: 7px 14px;

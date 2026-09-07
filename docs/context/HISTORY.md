@@ -1,5 +1,39 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-07 — Botões `SALVAR`/`+ Do sistema` em accent sólido com texto quase preto em 18 arquivos
+
+Autor perguntou, olhando 5 prints (Atributos, Habilidades, Adicionar Sequela/Trauma/Lesão), se os
+botões vermelhos "não deveriam ter o esquema do contraste" — pattern-matching direto com o fix de
+contraste branco/vermelho das abas ativas do mesmo dia (`fddf9c2`).
+
+**Causa:** exatamente o mesmo bug da `fddf9c2`, mas nunca varrido pra fora de
+`ficha-visualizacao`/`app-aba`/`app-segmentado`. Onde um botão pinta `background: var(--accent)`
+localmente (fora da API `[variante]` do `app-botao`), o par de cor do texto foi copiado como
+`color: var(--bg)` (quase preto, `#0a0c0f`) em vez de `var(--accent-text)` (branco, o token que a
+paleta de severidade `primario` usa em `shared/ui/botao/_variantes.scss`) — herança de cópias
+manuais anteriores ao primitivo de botão (`ui-01`), nunca corrigida quando o primitivo chegou.
+`color: var(--bg)` sozinho não é o bug — é o padrão correto quando o fundo é claro (`positivo`/
+`aviso`/`info`/`secundario`); o bug é especificamente o par `background: var(--accent)` +
+`color: var(--bg)`, os dois escuros, no mesmo elemento.
+
+Varredura (`grep` por `background: var(--accent)` seguido/precedido de `color: var(--bg)`) achou o
+par em mais 15 arquivos além dos 3 já flagrados pelo autor: `ficha-rolagens`, `ficha-combos`,
+`ficha-inventario`, `criatura-ataque-lista`, `inventario-esquadrao`, `criar.page`,
+`criar-criatura.page`, `compras.page` (glifo "✓" do checkbox marcado), `detalhe.page`, `lista.page`,
+`gestao.page`, `receber-dano-dialog`, `editor-markdown`, `ajuda-simulacao` (marca "!" de
+confirmação, que já usava `[variante]="'primario'"` do `app-botao` pro botão em si — só o `<span>`
+interno tinha o override local errado), `acesso-negado.page`. 25 ocorrências ao todo — troca
+mecânica de `var(--bg)` por `var(--accent-text)`, sem mudança de layout.
+
+Verificado ao vivo (`1920×1080` e `360×800`) criando um agente Civil completo pelo guia
+`/fichas/nova` e abrindo a ficha real: Atributos (editar), Habilidades (`+ Do sistema`), Adicionar
+Sequela/Trauma/Lesão — os 5 prints do autor — todos com `SALVAR` em branco legível sobre vermelho.
+Os outros 15 arquivos receberam a mesma troca de token, confirmada contra `docs/design/tema/
+_tokens.scss` (`--bg: #0a0c0f`, `--accent-text: #ffffff`), mas não foram renderizados ao vivo
+individualmente — telas fora do escopo da pergunta original (gestão de usuários, simulação de
+compras, inventário de esquadrão, caderno, acesso negado) ficam pendentes de uma verificação visual
+dedicada se algo divergir.
+
 ## 2026-09-07 — `ui-29b`…`ui-29d`: `app-botao-icone` ganha `[variante]`/`[preenchido]`, `app-valor-editavel` ganha `'herdado'`, mixin de severidade corrige vazamento de hover; `app-step-input` corrige número grudado no `mini`
 
 Autor reportou 3 quebras visuais por screenshot, sem spec aberta: (1) o número central do

@@ -38,7 +38,7 @@
         border: 0;
         border-radius: var(--radius-control);
         background: var(--accent);
-        color: var(--bg);
+        color: var(--accent-text);
         font: 600 11px var(--font-mono);
         cursor: pointer;
         white-space: nowrap;
@@ -267,7 +267,7 @@
     &__form-btn--principal {
         border-color: var(--accent-border);
         background: var(--accent);
-        color: var(--bg);
+        color: var(--accent-text);
     }
     &__form-btn:disabled {
         opacity: 0.45;
@@ -439,7 +439,7 @@
     }
     &__catalogo-adicionar:hover:not(:disabled) {
         background: var(--accent);
-        color: var(--bg);
+        color: var(--accent-text);
     }
     &__catalogo-adicionar--feito {
         border-color: var(--positive);
@@ -602,7 +602,7 @@
     &__pegar:hover:not(:disabled),
     &__pegar:focus-visible {
         background: var(--accent);
-        color: var(--bg);
+        color: var(--accent-text);
         outline: none;
     }
     &__pegar:disabled {
@@ -694,14 +694,14 @@
     &__dialogo .dialogo__acoes .botao--primario {
         border-color: var(--accent-border);
         background: var(--accent);
-        color: var(--bg);
+        color: var(--accent-text);
     }
     &__dialogo .dialogo__acoes .botao:hover {
         border-color: var(--accent-border);
         color: var(--text);
     }
     &__dialogo .dialogo__acoes .botao--primario:hover {
-        color: var(--bg);
+        color: var(--accent-text);
         filter: brightness(1.08);
     }
     &__dialogo label {

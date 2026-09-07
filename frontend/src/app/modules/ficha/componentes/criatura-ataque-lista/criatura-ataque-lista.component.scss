@@ -163,7 +163,7 @@
         // Rolar crítico (m3-30, ajuste pós-mockup) — mesmo tratamento de destaque do botão análogo em
         // `FichaRolagens` (`.ficha-rol__btn--critico`): accent sólido + brilho.
         &--critico {
-            color: var(--bg);
+            color: var(--accent-text);
             background: var(--accent);
             border-color: var(--accent);
             box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
