@@ -3,27 +3,30 @@
     <div cartaoFim class="iniciativa-leitura__stats">
         <app-chip>{{ rotuloStatus() }}</app-chip>
         @if (emCombate()) {
-        <app-chip severidade="primario">Rodada {{ encontro().rodadaAtual }}</app-chip>
-        <app-chip>Turno {{ encontro().turnoIndice + 1 }}/{{ totalDeTurnos() }}</app-chip>
+            <app-chip severidade="primario">Rodada {{ encontro().rodadaAtual }}</app-chip>
+            <app-chip>Turno {{ encontro().turnoIndice + 1 }}/{{ totalDeTurnos() }}</app-chip>
         }
     </div>
 
     @if (combatentesVisuais().length) {
-    <div class="iniciativa-leitura__grade" [style.--grade-colunas]="colunasGrade()">
-        @for (combatente of combatentesVisuais(); track combatente.chaveVisual) {
-        <app-cartao-combatente
-            [combatente]="combatente"
-            [ocorrencia]="combatente.ocorrencia"
-            [totalOcorrencias]="combatente.totalOcorrencias"
-            [ehTurnoAtual]="ehDaVez(combatente)"
-            [jaAgiu]="jaAgiu(combatente)"
-            [emCombate]="emCombate()"
-            [nivelAmeaca]="nivelAmeaca(combatente)"
-        />
-        }
-    </div>
+        <div class="iniciativa-leitura__grade" [style.--grade-colunas]="colunasGrade()">
+            @for (combatente of combatentesVisuais(); track combatente.chaveVisual) {
+                <app-cartao-combatente
+                    [combatente]="combatente"
+                    [ocorrencia]="combatente.ocorrencia"
+                    [totalOcorrencias]="combatente.totalOcorrencias"
+                    [ehTurnoAtual]="ehDaVez(combatente)"
+                    [jaAgiu]="jaAgiu(combatente)"
+                    [emCombate]="emCombate()"
+                    [nivelAmeaca]="nivelAmeaca(combatente)"
+                />
+            }
+        </div>
     } @else {
-    <app-estado-vazio tamanho="compacto" titulo="O mestre ainda está montando a ordem de iniciativa." />
+        <app-estado-vazio
+            tamanho="compacto"
+            titulo="O mestre ainda está montando a ordem de iniciativa."
+        />
     }
 </app-cartao>
 
