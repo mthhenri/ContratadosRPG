@@ -4,11 +4,15 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-08 · **Última decisão registrada:** `campanha-detalhe-mestre-coluna-
-> acoes` concluída — `CampanhaDetalhe` monolítico dividido em `CampanhaDetalheShell`/
-> `CampanhaDetalheJogador`/`CampanhaDetalheMestre`; o mestre ganhou `app-coluna-acoes` (primitivo
-> novo), dialogs Membros/Convites, grid de 3 colunas reusando `EspectadorFichaCard` (modo
-> interativo novo) e o painel fixo Rolagens/Inventário. Detalhe completo em `HISTORY.md`.
+> **Última revisão:** 2026-09-08 · **Última decisão registrada:** correção pós-entrega do
+> `CampanhaDetalheMestre` — nove `app-botao` sem `[tamanho]`/classe-companheira (renderizavam nus),
+> `.chip-papel`/`.dialogo` referenciados no HTML sem CSS, e `app-coluna-acoes` desgrudada da topbar
+> (`:host { margin: -24px -20px }` cancela o padding de `.conteudo` só nesta página). Painel
+> Rolagens/Inventário confirmado em 400px (já estava certo). Detalhe completo em `HISTORY.md`.
+> Antes: `campanha-detalhe-mestre-coluna-acoes` concluída — `CampanhaDetalhe` monolítico dividido em
+> `CampanhaDetalheShell`/`CampanhaDetalheJogador`/`CampanhaDetalheMestre`; o mestre ganhou
+> `app-coluna-acoes` (primitivo novo), dialogs Membros/Convites, grid de 3 colunas reusando
+> `EspectadorFichaCard` (modo interativo novo) e o painel fixo Rolagens/Inventário.
 > Antes: `I-024`/`I-025`/`I-026` fecharam (2026-09-07). `I-024` (perigo = primário) já estava
 > resolvida por `ui-12`, sem diff — só o registro em `IDEAS.md`. `I-025`/`I-026` (fundidas) deram
 > ao `app-step-input` um modo sem digitação — `[digitavel]="false"` troca o `<input>` central por

@@ -80,10 +80,10 @@
             <textarea class="detalhe-mestre__entrada detalhe-mestre__entrada--area" formControlName="descricao" rows="3"></textarea>
         </label>
         <div class="detalhe-mestre__edicao-acoes">
-            <button app-botao variante="primario" type="submit" [disabled]="salvando()">
+            <button app-botao variante="primario" class="detalhe-mestre__acao" type="submit" [disabled]="salvando()">
                 {{ salvando() ? 'Salvando…' : 'Salvar' }}
             </button>
-            <button app-botao variante="secundario" type="button" [disabled]="salvando()" (click)="cancelarEdicao()">
+            <button app-botao variante="secundario" class="detalhe-mestre__acao" type="button" [disabled]="salvando()" (click)="cancelarEdicao()">
                 Cancelar
             </button>
         </div>
@@ -98,11 +98,11 @@
             <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
             <span class="detalhe-mestre__secao-regua"></span>
             <span class="detalhe-mestre__secao-contagem" aria-hidden="true">{{ fichasEsquadrao().length }}</span>
-            <button app-botao variante="secundario" type="button" (click)="abrirCriarCriatura()">
+            <button app-botao variante="secundario" class="detalhe-mestre__nova-ficha" type="button" (click)="abrirCriarCriatura()">
                 <app-icone nome="alerta" />
                 Nova Criatura
             </button>
-            <button app-botao variante="primario" type="button" (click)="abrirCriarFicha()">
+            <button app-botao variante="primario" class="detalhe-mestre__nova-ficha" type="button" (click)="abrirCriarFicha()">
                 <app-icone nome="novo-agente" />
                 Novo Agente
             </button>
@@ -282,11 +282,11 @@
     <p class="dialogo__aviso">
         Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong>{{ pendenteDuplicar.donoNome }}</strong>"?
     </p>
-    <button app-botao modalAcoes variante="primario" type="button" [disabled]="duplicando() === pendenteDuplicar.id" (click)="confirmarDuplicar()">
+    <button app-botao modalAcoes variante="primario" class="dialogo__acao" type="button" [disabled]="duplicando() === pendenteDuplicar.id" (click)="confirmarDuplicar()">
         <app-icone nome="duplicar" />
         {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
     </button>
-    <button app-botao modalAcoes variante="secundario" type="button" [disabled]="duplicando() === pendenteDuplicar.id" (click)="cancelarDuplicar()">
+    <button app-botao modalAcoes variante="secundario" class="dialogo__acao" type="button" [disabled]="duplicando() === pendenteDuplicar.id" (click)="cancelarDuplicar()">
         Cancelar
     </button>
 </app-modal>
@@ -382,11 +382,11 @@
                     Passar o papel de mestre para <strong>{{ membro.nome }}</strong>? Você deixará de ser o mestre e passará a jogador.
                 </p>
                 <div class="detalhe-mestre__membro-confirmacao-acoes">
-                    <button app-botao variante="primario" type="button" [disabled]="processandoMembro()" (click)="confirmarTransferenciaMestre(membro.usuarioId)">
+                    <button app-botao variante="primario" class="detalhe-mestre__acao" type="button" [disabled]="processandoMembro()" (click)="confirmarTransferenciaMestre(membro.usuarioId)">
                         <app-icone nome="coroa" />
                         {{ processandoMembro() ? 'Transferindo…' : 'Confirmar transferência' }}
                     </button>
-                    <button app-botao variante="secundario" type="button" [disabled]="processandoMembro()" (click)="cancelarAcaoMembro()">
+                    <button app-botao variante="secundario" class="detalhe-mestre__acao" type="button" [disabled]="processandoMembro()" (click)="cancelarAcaoMembro()">
                         Cancelar
                     </button>
                 </div>
@@ -470,6 +470,7 @@
             <a
                 app-botao
                 variante="secundario"
+                class="detalhe-mestre__abrir-painel-espectador"
                 [routerLink]="['/campanhas', campanhaAtual.id, 'espectador']"
                 [appTooltip]="'Abrir o Painel do espectador em modo de prévia'"
             >

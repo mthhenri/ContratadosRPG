@@ -1,5 +1,49 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-08 — CampanhaDetalheMestre: corrige botões sem `[tamanho]`, chip/dialogo sem CSS e coluna de ações desgrudada da topbar
+
+Correção pedida direto pelo autor com screenshot da tela recém-entregue (`campanha-detalhe-
+mestre-coluna-acoes`, task acima): "a tela não está usando os nossos botões... a barra lateral
+esquerda pode ser conectada com a topbar... a lateral direita fica como a print (400px)".
+Investigação de código (sem spec formal — correção pontual pós-entrega) achou três defeitos reais:
+
+1. **Nove `app-botao` sem dimensão nenhuma.** `Botao` só define raio/fonte/cor — padding, `display`
+   e tipografia dependem de `[tamanho]` (que o produto não adota) ou de uma classe-companheira local
+   (padrão estabelecido em `detalhe-jogador.page.scss`/monolito, ex. `.detalhe__acao`,
+   `.detalhe__nova-ficha`). Nove botões da página nasceram sem nenhum dos dois: Salvar/Cancelar da
+   edição inline, Nova Criatura/Novo Agente do cabeçalho do Esquadrão, Confirmar/Cancelar do modal
+   Duplicar ficha, Confirmar transferência/Cancelar da confirmação de membro, e o link "Painel" do
+   convite de espectador — todos renderizavam como `<button>` nu do navegador, só com cor/borda da
+   variante. Corrigido copiando as classes-companheiras exatas do monolito que deu origem a esta
+   página (`.detalhe-mestre__acao`, `.detalhe-mestre__nova-ficha`, `.dialogo__acao`,
+   `.detalhe-mestre__abrir-painel-espectador`) para `detalhe-mestre.page.html`/`.scss`.
+2. **`.chip-papel` e `.dialogo` (`__icone`/`__aviso`/`__acao`) referenciados no HTML sem nunca terem
+   sido definidos em `detalhe-mestre.page.scss`.** O selo de papel do membro (Mestre/Jogador/
+   Espectador) e o cabeçalho dos dois modais (Duplicar ficha, e os `modalIcone`/`modalAcoes` que os
+   dois projetam) renderizavam sem nenhum estilo — encapsulamento de view do Angular não deixa
+   reusar o `.scss` de `detalhe-jogador.page.scss`, que já tinha as duas receitas certas; copiadas
+   de lá.
+3. **`app-coluna-acoes` flutuava solta, sem tocar a topbar nem a borda esquerda do viewport.**
+   `.conteudo` (`layout.component.scss`, compartilhado por toda página do sistema) tem
+   `padding: 24px 20px`; a casca desta página vivia dentro dele sem compensar. Corrigido com
+   `margin: -24px -20px` no `:host` (resetado a `margin: 0` dentro de `bp.mobile`, onde a coluna vira
+   barra fixa e não precisa encostar) — cancela o padding só para esta página, sem tocar
+   `layout.component.scss`/outras telas — e `.detalhe-mestre__conteudo` reassume o padding sozinho
+   (`24px var(--space-20) var(--space-20)`, replicando o valor anterior).
+
+A largura de 400px do painel Rolagens/Inventário (item 4 do pedido) já estava correta em
+`.detalhe-mestre__corpo { grid-template-columns: minmax(0,1fr) 400px }` desde a task original —
+confirmado ao vivo (`getBoundingClientRect().width === 400`), sem diff necessário.
+
+**Testado:** suíte de `detalhe-mestre.page.spec.ts` (19/19), lint (raiz, 0 erros), build de produção
+(`ng build`, sem erro novo — o aviso de budget é o `P-004` preexistente). **Verificado ao vivo**
+(skill `verify`, campanha semeada via REST) em `1920×1080` e `360×800`: coluna de ações grudada na
+topbar (`top === topbar.bottom === 52px`) e na borda esquerda (`left === 0`) no desktop; coluna
+expandida com rótulos; dialogs Membros (chip-papel estilizado) e Convites (botão "Painel"
+estilizado); menu "⋯" de um cartão do Esquadrão; mobile sem overflow horizontal e com a barra
+inferior de `app-coluna-acoes` intacta (a margem negativa é resetada nesse breakpoint, então o
+mobile não mudou visualmente).
+
 ## 2026-09-08 — campanha-detalhe-mestre-coluna-acoes: divide CampanhaDetalhe em mestre/jogador, redesenha o mestre
 
 Task avulsa pedida direto pelo autor (spec já trazia layout/proporções validados num POC visual

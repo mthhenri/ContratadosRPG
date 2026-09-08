@@ -7,17 +7,27 @@
     display: flex;
     align-items: stretch;
     min-height: calc(100dvh - var(--altura-topbar));
+    // Cancela o padding de `.conteudo` (`layout.component.scss`, 24px 20px) — a coluna de ações
+    // gruda na topbar e na borda esquerda do viewport (pedido do autor), sem alterar `.conteudo`
+    // em si (afetaria toda página do sistema). `.detalhe-mestre__conteudo` abaixo reassume o
+    // padding sozinho.
+    margin: -24px -20px;
 
     @include bp.mobile {
         flex-direction: column;
         min-height: 0;
+        // No mobile a coluna de ações vira barra fixa (`position: fixed`, fora do fluxo) — não
+        // precisa encostar por margem negativa, e `.conteudo` já tem padding menor aqui (16px 12px).
+        margin: 0;
     }
 }
 
 .detalhe-mestre__conteudo {
     flex: 1;
     min-width: 0;
-    padding: var(--space-20);
+    // 24px no topo replica o padding vertical que `.conteudo` tinha antes da margem negativa acima
+    // cancelá-lo; `var(--space-20)` nos demais lados replica o horizontal.
+    padding: 24px var(--space-20) var(--space-20);
     display: flex;
     flex-direction: column;
     gap: var(--space-16);
@@ -142,6 +152,26 @@
     gap: 8px;
 }
 
+// Companion de tamanho/tipografia do `app-botao` (primitivo não dá dimensão sem `[tamanho]`,
+// que o produto não adota — ver `botao.component.ts`) para os botões de ação de formulário/diálogo
+// desta página: Salvar/Cancelar da edição inline e Confirmar/Cancelar da confirmação de membro.
+// Mesma receita de `.detalhe__acao` do monolito que deu origem a esta página.
+.detalhe-mestre__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+}
+
 .detalhe-mestre__estado {
     margin: 0;
     padding: var(--space-16);
@@ -191,6 +221,24 @@
     font-family: var(--font-mono);
     font-size: 10px;
     color: var(--text-mute);
+}
+
+// Companion de tamanho do `app-botao` (mesmo racional de `.detalhe-mestre__acao` acima) para
+// "Nova Criatura"/"Novo Agente" no cabeçalho do Esquadrão — mesma receita de `.detalhe__nova-ficha`.
+.detalhe-mestre__nova-ficha {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
 }
 
 // Corpo em 2 colunas: Esquadrão/Criaturas (principal) + painel fixo Rolagens⇆Inventário — nunca
@@ -447,6 +495,34 @@
     }
 }
 
+// Conteúdo complementar dos modais desta página (ícone/aviso/rodapé de ação projetados em
+// `[modalIcone]`/`[modalAcoes]`) — cabeçalho e caixa são do `app-modal`; aqui só o que a página
+// projeta dentro dele. Mesma receita de `.dialogo` em `detalhe-jogador.page.scss` (`P-053`).
+.dialogo {
+    &__icone {
+        display: flex;
+        color: var(--accent);
+    }
+
+    &__aviso {
+        margin: 0 0 16px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__acao {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+}
+
 // === Dialog "Membros" — mesma receita do antigo `.detalhe__membro*`/`.detalhe__equipe-carteirinha`
 // (componente análogo aprovado desta task: a lista de membros que existia ao lado do Esquadrão). ===
 .detalhe-mestre__membros-lista {
@@ -491,6 +567,30 @@
     font-size: 14px;
     color: var(--text);
     overflow-wrap: anywhere;
+}
+
+// Selo de papel do membro (Mestre/Espectador/Jogador) — mesma receita de `.chip-papel`, já
+// estabelecida em `detalhe-jogador.page.scss`/`lista.page.scss`. Global (não `&__`) porque nasceu
+// assim no monolito e as demais cópias seguem o mesmo nome.
+.chip-papel {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-compact);
+    padding: 4px 8px;
+    width: fit-content;
+
+    app-icone {
+        font-size: 11px;
+    }
 }
 
 .detalhe-mestre__membro-acoes {
@@ -607,6 +707,25 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+// Companion de tamanho do `app-botao` (mesmo racional de `.detalhe-mestre__acao`) para o link
+// "Painel" do convite de espectador — mesma receita de `.detalhe__abrir-painel-espectador`.
+.detalhe-mestre__abrir-painel-espectador {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    text-decoration: none;
+
+    app-icone {
+        font-size: 13px;
+    }
 }
 
 .detalhe-mestre__codigo {
