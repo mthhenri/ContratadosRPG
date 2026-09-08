@@ -270,6 +270,7 @@
 .detalhe-mestre__painel-rolagens,
 .detalhe-mestre__painel-inventario {
     min-height: 0;
+    max-height: 69vh;
     overflow-y: auto;
 }
 
