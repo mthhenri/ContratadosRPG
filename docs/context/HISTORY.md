@@ -1,5 +1,27 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-08 — `CampanhaDetalheMestre`: "Abrir ficha completa" no menu "..." do cartão do Esquadrão
+
+Pedido direto do autor: o menu de ações (kebab) de uma ficha do Esquadrão, na visão do mestre
+(`/campanhas/:id`), só tinha Duplicar/Remover da campanha/Excluir — nenhuma delas leva à página
+cheia da ficha (`/fichas/:id`, mesma rota do acervo), só o painel flutuante (`ficha-flutuante`,
+sobreposto, sem histórico de navegação próprio). Adicionado "Abrir ficha completa" como primeiro
+item do menu, reusando o mesmo padrão dos irmãos (`app-botao.detalhe-mestre__ficha-menu-item` +
+`app-icone`, `role="menuitem"`) — análogo aprovado foi o próprio item "Duplicar ficha" ao lado,
+sem CSS novo. Ícone `olho` (mesma semântica documentada em `icone.component.ts`: "ações de
+visualização/prévia"). A navegação usa `Router.createUrlTree(['/fichas', fichaId])` +
+`Router.serializeUrl` para montar a URL e `window.open(url, '_blank', 'noopener')` — não há
+precedente de abrir rota em nova aba no projeto; `routerLink target="_blank"` não foi usado porque
+o item é um `<button>` de menu, não um link.
+
+Verificação ao vivo (skill `verify`): usuário/campanha/ficha de teste descartáveis criados via
+REST + uma linha inserida direto por SQL (o `dados` completo de uma ficha de jogador precisa
+passar por `validarDadosContraRegras`, que exige maestria/identidade/munição válidas — para
+validar só a renderização do card e do menu, um `dados` mínimo com `classe`/`estado` já basta,
+já que a listagem lê só esse recorte). Capturado `1920×1080` e `360×800`: item visível, mesma
+densidade do menu, sem overflow; clique confirmado abrindo `/fichas/:id` numa `Page` nova do
+Playwright. Fixtures de teste removidos do banco de dev ao final.
+
 ## 2026-09-08 — `PainelFlutuante`: Calculadora/Caderno realmente não abriam — `minimizado:true` persistido de sessão anterior herdado silenciosamente numa 1ª abertura sem "Reabrir" nenhum pra alcançá-lo
 
 Depois da rodada anterior (achado do bug de `:host`/tooltip), o autor confirmou que Calculadora/
