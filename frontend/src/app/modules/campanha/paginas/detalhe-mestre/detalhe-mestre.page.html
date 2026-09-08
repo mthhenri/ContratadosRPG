@@ -17,7 +17,12 @@
 } @else if (dados.campanha(); as campanhaAtual) {
 <app-coluna-acoes id="campanha-detalhe-mestre" rotulo="Ações da campanha">
     <div class="coluna-acoes__categoria">Campanha</div>
-    <button app-coluna-acoes-item icone="membros" appTooltip="Membros" (click)="dialogMembrosAberta.set(true)">
+    <button
+        app-coluna-acoes-item
+        icone="membros"
+        appTooltip="Membros"
+        (click)="dialogMembrosAberta.set(true)"
+    >
         Membros
     </button>
     <a
@@ -28,21 +33,46 @@
     >
         Iniciativa
     </a>
-    <button app-coluna-acoes-item icone="convite" appTooltip="Convites" (click)="dialogConvitesAberta.set(true)">
+    <button
+        app-coluna-acoes-item
+        icone="convite"
+        appTooltip="Convites"
+        (click)="dialogConvitesAberta.set(true)"
+    >
         Convites
     </button>
     <div class="coluna-acoes__categoria">Gestão</div>
-    <button app-coluna-acoes-item icone="editar" appTooltip="Editar campanha" (click)="abrirEdicao()">
+    <button
+        app-coluna-acoes-item
+        icone="editar"
+        appTooltip="Editar campanha"
+        (click)="abrirEdicao()"
+    >
         Editar
     </button>
-    <button app-coluna-acoes-item icone="excluir" appTooltip="Excluir campanha" (click)="pedirExclusao()">
+    <button
+        app-coluna-acoes-item
+        icone="excluir"
+        appTooltip="Excluir campanha"
+        (click)="pedirExclusao()"
+    >
         Excluir
     </button>
     <div class="coluna-acoes__categoria">Ferramentas</div>
-    <button app-coluna-acoes-item icone="calculadora" appTooltip="Calculadora" (click)="alternarCalculadora()">
+    <button
+        app-coluna-acoes-item
+        icone="calculadora"
+        appTooltip="Calculadora"
+        (click)="alternarCalculadora()"
+    >
         Calculadora
     </button>
-    <button app-coluna-acoes-item icone="anotacoes" appTooltip="Caderno" (click)="alternarCaderno()">
+    <button
+        app-coluna-acoes-item
+        icone="anotacoes"
+        appTooltip="Caderno"
+        (click)="alternarCaderno()"
+    >
         Caderno
     </button>
 </app-coluna-acoes>
@@ -77,144 +107,200 @@
     }
 
     <div class="detalhe-mestre__corpo">
-    <section class="detalhe-mestre__esquadrao">
-        <header class="detalhe-mestre__secao">
-            <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
-            <span class="detalhe-mestre__secao-regua"></span>
-            <span class="detalhe-mestre__secao-contagem" aria-hidden="true">{{ fichasEsquadrao().length }}</span>
-            <button app-botao variante="secundario" class="detalhe-mestre__nova-ficha" type="button" (click)="abrirCriarCriatura()">
-                <app-icone nome="alerta" />
-                Nova Criatura
-            </button>
-            <button app-botao variante="primario" class="detalhe-mestre__nova-ficha" type="button" (click)="abrirCriarFicha()">
-                <app-icone nome="novo-agente" />
-                Novo Agente
-            </button>
-            @if (dados.textoAtualizacao(); as texto) {
-            <span class="detalhe-mestre__secao-atualizado">{{ texto }}</span>
-            }
-        </header>
-
-        @if (fichasEsquadrao().length === 0) {
-        <p class="detalhe-mestre__estado">Nenhuma ficha na campanha ainda.</p>
-        } @else {
-        <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
-            @for (ficha of fichasEsquadrao(); track ficha.id) {
-            <li>
-                <app-espectador-ficha-card
-                    [ficha]="ficha"
-                    [mostrarAcoes]="true"
-                    [menuAberto]="menuFichaAberto()?.id === ficha.id"
-                    (abrirFicha)="abrirFichaFlutuante(ficha, TipoFichaEnum.JOGADOR)"
-                    (alternarMenu)="alternarMenuFicha(ficha, $event)"
-                />
-            </li>
-            }
-        </ul>
-        }
-
-        <header class="detalhe-mestre__secao detalhe-mestre__secao--criaturas">
-            <h2 class="detalhe-mestre__secao-titulo">Criaturas</h2>
-            <span class="detalhe-mestre__secao-regua"></span>
-            <span class="detalhe-mestre__secao-contagem" aria-hidden="true">{{ criaturasEsquadrao().length }}</span>
-        </header>
-
-        @if (criaturasEsquadrao().length === 0) {
-        <p class="detalhe-mestre__estado">Nenhuma criatura registrada ainda.</p>
-        } @else {
-        <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
-            @for (criatura of criaturasEsquadrao(); track criatura.id) {
-            <li>
-                <div
-                    class="detalhe-mestre__criatura-card"
-                    (dblclick)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
+        <section class="detalhe-mestre__esquadrao">
+            <header class="detalhe-mestre__secao">
+                <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
+                <span class="detalhe-mestre__secao-regua"></span>
+                <span class="detalhe-mestre__secao-contagem" aria-hidden="true"
+                    >{{ fichasEsquadrao().length }}</span
                 >
-                    <div class="detalhe-mestre__criatura-cabecalho">
-                        <span class="detalhe-mestre__criatura-avatar" aria-hidden="true" [style.--cor-ficha]="criatura.cor">
-                            @if (criatura.imagemUrl; as urlImagem) {
-                            <img [src]="urlImagem" alt="" />
-                            }
-                            <button
-                                app-botao-icone
-                                [redondo]="true"
-                                tamanho="mini"
-                                type="button"
-                                class="detalhe-mestre__criatura-abrir"
-                                [attr.aria-label]="'Abrir ficha de ' + criatura.nome"
-                                [appTooltip]="'Abrir ficha'"
-                                (click)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
-                            >
-                                <app-icone nome="visao-geral" />
-                            </button>
-                        </span>
-                        <div class="detalhe-mestre__criatura-corpo">
-                            <span class="detalhe-mestre__criatura-dono">Ameaça</span>
-                            <span class="detalhe-mestre__criatura-nome">{{ criatura.nome }}</span>
-                            <span class="detalhe-mestre__criatura-meta">NA {{ criatura.naTexto }}</span>
-                            <span class="detalhe-mestre__criatura-vitais">
-                                Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—' }}
-                                @if (criatura.defesa !== undefined) { · Defesa {{ criatura.defesa }} }
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </li>
-            }
-        </ul>
-        }
-    </section>
-
-    <aside class="detalhe-mestre__painel-lateral">
-        <app-segmentado rotulo="Painel lateral" [fluido]="true">
-            <button app-segmentado-item [ativo]="painelLateralAtivo() === 'rolagens'" (click)="painelLateralAtivo.set('rolagens')">
-                <app-icone nome="d20" /> Rolagens
-            </button>
-            <button app-segmentado-item [ativo]="painelLateralAtivo() === 'inventario'" (click)="painelLateralAtivo.set('inventario')">
-                <app-icone nome="inventario" /> Inventário
-            </button>
-        </app-segmentado>
-
-        <div class="detalhe-mestre__painel-rolagens" [hidden]="painelLateralAtivo() !== 'rolagens'" appOverflowFade>
-            @if (dados.carregandoRolagens()) {
-            <div class="detalhe-mestre__rolagens-esqueleto" role="status" aria-label="Carregando rolagens">
-                @for (i of [0, 1, 2]; track i) {
-                <app-esqueleto class="detalhe-mestre__rolagens-esqueleto-item" />
+                <button
+                    app-botao
+                    variante="secundario"
+                    class="detalhe-mestre__nova-ficha"
+                    type="button"
+                    (click)="abrirCriarCriatura()"
+                >
+                    <app-icone nome="alerta" />
+                    Nova Criatura
+                </button>
+                <button
+                    app-botao
+                    variante="primario"
+                    class="detalhe-mestre__nova-ficha"
+                    type="button"
+                    (click)="abrirCriarFicha()"
+                >
+                    <app-icone nome="novo-agente" />
+                    Novo Agente
+                </button>
+                @if (dados.textoAtualizacao(); as texto) {
+                <span class="detalhe-mestre__secao-atualizado">{{ texto }}</span>
                 }
-            </div>
-            } @else if (dados.rolagensFeed().length === 0) {
-            <app-estado-vazio icone="d20" titulo="Nenhuma rolagem ainda." linhaApoio="Rolagens feitas nesta campanha aparecem aqui." />
+            </header>
+
+            @if (fichasEsquadrao().length === 0) {
+            <p class="detalhe-mestre__estado">Nenhuma ficha na campanha ainda.</p>
             } @else {
-            <ul class="detalhe-mestre__rolagens-lista">
-                @for (item of dados.rolagensFeed(); track item.id) {
-                <li class="detalhe-mestre__rolagens-item" [style.--cor-ficha]="item.corFicha">
-                    <div class="detalhe-mestre__rolagens-meta">
-                        <span class="detalhe-mestre__rolagens-rotulo">{{ item.rotulo }}</span>
-                        <span class="detalhe-mestre__rolagens-autor">{{ item.nomeAutor }} · {{ item.nomeFicha }}</span>
-                        @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
-                        <app-chip severidade="aviso" tom="contorno">privada</app-chip>
-                        }
-                        <span class="detalhe-mestre__rolagens-data">{{ item.createdDate | date: 'dd/MM HH:mm' }}</span>
-                    </div>
-                    @if (item.formula) {
-                    <span class="detalhe-mestre__rolagens-formula">{{ item.formula }}</span>
-                    }
-                    <app-resultado-rolagem [resultado]="item.resultado" [corFicha]="item.corFicha" [compacto]="true" />
+            <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
+                @for (ficha of fichasEsquadrao(); track ficha.id) {
+                <li>
+                    <app-espectador-ficha-card
+                        [ficha]="ficha"
+                        [mostrarAcoes]="true"
+                        [menuAberto]="menuFichaAberto()?.id === ficha.id"
+                        (abrirFicha)="abrirFichaFlutuante(ficha, TipoFichaEnum.JOGADOR)"
+                        (alternarMenu)="alternarMenuFicha(ficha, $event)"
+                    />
                 </li>
                 }
             </ul>
             }
-        </div>
 
-        <div class="detalhe-mestre__painel-inventario" [hidden]="painelLateralAtivo() !== 'inventario'">
-            <app-inventario-esquadrao
-                [campanhaId]="campanhaAtual.id"
-                [itens]="dados.inventarioEsquadrao()"
-                [fichas]="dados.fichasDestinoInventario()"
-                [somenteLeitura]="!campanhaAtual.naBase"
-                (alterado)="dados.inventarioEsquadrao.set($event)"
-            />
-        </div>
-    </aside>
+            <header class="detalhe-mestre__secao detalhe-mestre__secao--criaturas">
+                <h2 class="detalhe-mestre__secao-titulo">Criaturas</h2>
+                <span class="detalhe-mestre__secao-regua"></span>
+                <span class="detalhe-mestre__secao-contagem" aria-hidden="true"
+                    >{{ criaturasEsquadrao().length }}</span
+                >
+            </header>
+
+            @if (criaturasEsquadrao().length === 0) {
+            <p class="detalhe-mestre__estado">Nenhuma criatura registrada ainda.</p>
+            } @else {
+            <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
+                @for (criatura of criaturasEsquadrao(); track criatura.id) {
+                <li>
+                    <div
+                        class="detalhe-mestre__criatura-card"
+                        (dblclick)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
+                    >
+                        <div class="detalhe-mestre__criatura-cabecalho">
+                            <span
+                                class="detalhe-mestre__criatura-avatar"
+                                aria-hidden="true"
+                                [style.--cor-ficha]="criatura.cor"
+                            >
+                                @if (criatura.imagemUrl; as urlImagem) {
+                                <img [src]="urlImagem" alt="" />
+                                }
+                                <button
+                                    app-botao-icone
+                                    [redondo]="true"
+                                    tamanho="mini"
+                                    type="button"
+                                    class="detalhe-mestre__criatura-abrir"
+                                    [attr.aria-label]="'Abrir ficha de ' + criatura.nome"
+                                    [appTooltip]="'Abrir ficha'"
+                                    (click)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
+                                >
+                                    <app-icone nome="visao-geral" />
+                                </button>
+                            </span>
+                            <div class="detalhe-mestre__criatura-corpo">
+                                <span class="detalhe-mestre__criatura-dono">Ameaça</span>
+                                <span class="detalhe-mestre__criatura-nome"
+                                    >{{ criatura.nome }}</span
+                                >
+                                <span class="detalhe-mestre__criatura-meta"
+                                    >NA {{ criatura.naTexto }}</span
+                                >
+                                <span class="detalhe-mestre__criatura-vitais">
+                                    Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—' }}
+                                    @if (criatura.defesa !== undefined) { · Defesa {{
+                                    criatura.defesa }} }
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                }
+            </ul>
+            }
+        </section>
+
+        <aside class="detalhe-mestre__painel-lateral">
+            <app-segmentado rotulo="Painel lateral" [fluido]="true">
+                <button
+                    app-segmentado-item
+                    [ativo]="painelLateralAtivo() === 'rolagens'"
+                    (click)="painelLateralAtivo.set('rolagens')"
+                >
+                    <app-icone nome="d20" /> Rolagens
+                </button>
+                <button
+                    app-segmentado-item
+                    [ativo]="painelLateralAtivo() === 'inventario'"
+                    (click)="painelLateralAtivo.set('inventario')"
+                >
+                    <app-icone nome="inventario" /> Inventário
+                </button>
+            </app-segmentado>
+
+            <div
+                class="detalhe-mestre__painel-rolagens"
+                [hidden]="painelLateralAtivo() !== 'rolagens'"
+                appOverflowFade
+            >
+                @if (dados.carregandoRolagens()) {
+                <div
+                    class="detalhe-mestre__rolagens-esqueleto"
+                    role="status"
+                    aria-label="Carregando rolagens"
+                >
+                    @for (i of [0, 1, 2]; track i) {
+                    <app-esqueleto class="detalhe-mestre__rolagens-esqueleto-item" />
+                    }
+                </div>
+                } @else if (dados.rolagensFeed().length === 0) {
+                <app-estado-vazio
+                    icone="d20"
+                    titulo="Nenhuma rolagem ainda."
+                    linhaApoio="Rolagens feitas nesta campanha aparecem aqui."
+                />
+                } @else {
+                <ul class="detalhe-mestre__rolagens-lista">
+                    @for (item of dados.rolagensFeed(); track item.id) {
+                    <li class="detalhe-mestre__rolagens-item" [style.--cor-ficha]="item.corFicha">
+                        <div class="detalhe-mestre__rolagens-meta">
+                            <span class="detalhe-mestre__rolagens-rotulo">{{ item.rotulo }}</span>
+                            <span class="detalhe-mestre__rolagens-autor"
+                                >{{ item.nomeAutor }} · {{ item.nomeFicha }}</span
+                            >
+                            @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
+                            <app-chip severidade="aviso" tom="contorno">privada</app-chip>
+                            }
+                            <span class="detalhe-mestre__rolagens-data"
+                                >{{ item.createdDate | date: 'dd/MM HH:mm' }}</span
+                            >
+                        </div>
+                        @if (item.formula) {
+                        <span class="detalhe-mestre__rolagens-formula">{{ item.formula }}</span>
+                        }
+                        <app-resultado-rolagem
+                            [resultado]="item.resultado"
+                            [corFicha]="item.corFicha"
+                            [compacto]="true"
+                        />
+                    </li>
+                    }
+                </ul>
+                }
+            </div>
+
+            <div
+                class="detalhe-mestre__painel-inventario"
+                [hidden]="painelLateralAtivo() !== 'inventario'"
+            >
+                <app-inventario-esquadrao
+                    [campanhaId]="campanhaAtual.id"
+                    [itens]="dados.inventarioEsquadrao()"
+                    [fichas]="dados.fichasDestinoInventario()"
+                    [somenteLeitura]="!campanhaAtual.naBase"
+                    (alterado)="dados.inventarioEsquadrao.set($event)"
+                />
+            </div>
+        </aside>
     </div>
 </div>
 
@@ -239,7 +325,12 @@
   padrão do antigo `menuFichaAberto` de `CampanhaDetalhe`.
 -->
 @if (menuFichaAberto(); as menuAberto) {
-<button class="detalhe-mestre__ficha-menu-fundo" type="button" aria-label="Fechar menu" (click)="fecharMenuFicha()"></button>
+<button
+    class="detalhe-mestre__ficha-menu-fundo"
+    type="button"
+    aria-label="Fechar menu"
+    (click)="fecharMenuFicha()"
+></button>
 <div
     class="detalhe-mestre__ficha-menu"
     role="menu"
@@ -247,15 +338,44 @@
     [style.bottom.px]="menuFichaPosicao()?.bottom"
     [style.right.px]="menuFichaPosicao()?.right"
 >
-    <button app-botao class="detalhe-mestre__ficha-menu-item" type="button" role="menuitem" (click)="pedirDuplicar(menuAberto.id, menuAberto.nome, menuAberto.donoNome)">
+    <button
+        app-botao
+        class="detalhe-mestre__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        (click)="abrirFichaCompletaNovaAba(menuAberto.id)"
+    >
+        <app-icone nome="olho" />
+        <span>Abrir ficha completa</span>
+    </button>
+    <button
+        app-botao
+        class="detalhe-mestre__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        (click)="pedirDuplicar(menuAberto.id, menuAberto.nome, menuAberto.donoNome)"
+    >
         <app-icone nome="duplicar" />
         <span>Duplicar ficha</span>
     </button>
-    <button app-botao class="detalhe-mestre__ficha-menu-item" type="button" role="menuitem" [disabled]="removendo() === menuAberto.id" (click)="removerDaCampanha(menuAberto.id)">
+    <button
+        app-botao
+        class="detalhe-mestre__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        [disabled]="removendo() === menuAberto.id"
+        (click)="removerDaCampanha(menuAberto.id)"
+    >
         <app-icone nome="voltar" />
         <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
     </button>
-    <button app-botao class="detalhe-mestre__ficha-menu-item" type="button" role="menuitem" (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)">
+    <button
+        app-botao
+        class="detalhe-mestre__ficha-menu-item"
+        type="button"
+        role="menuitem"
+        (click)="pedirExcluirFicha(menuAberto.id, menuAberto.nome)"
+    >
         <app-icone nome="excluir" />
         <span>Excluir ficha</span>
     </button>
@@ -264,37 +384,65 @@
 <app-modal [aberto]="true" titulo="Duplicar ficha" (fechou)="cancelarDuplicar()">
     <span modalIcone class="dialogo__icone"><app-icone nome="duplicar" /></span>
     <p class="dialogo__aviso">
-        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong>{{ pendenteDuplicar.donoNome }}</strong>"?
+        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong
+            >{{ pendenteDuplicar.donoNome }}</strong
+        >"?
     </p>
-    <button app-botao modalAcoes variante="primario" class="dialogo__acao" type="button" [disabled]="duplicando() === pendenteDuplicar.id" (click)="confirmarDuplicar()">
+    <button
+        app-botao
+        modalAcoes
+        variante="primario"
+        class="dialogo__acao"
+        type="button"
+        [disabled]="duplicando() === pendenteDuplicar.id"
+        (click)="confirmarDuplicar()"
+    >
         <app-icone nome="duplicar" />
         {{ duplicando() === pendenteDuplicar.id ? 'Duplicando…' : 'Confirmar duplicação' }}
     </button>
-    <button app-botao modalAcoes variante="secundario" class="dialogo__acao" type="button" [disabled]="duplicando() === pendenteDuplicar.id" (click)="cancelarDuplicar()">
+    <button
+        app-botao
+        modalAcoes
+        variante="secundario"
+        class="dialogo__acao"
+        type="button"
+        [disabled]="duplicando() === pendenteDuplicar.id"
+        (click)="cancelarDuplicar()"
+    >
         Cancelar
     </button>
 </app-modal>
 } @if (dialogMembrosAberta()) {
-<app-modal [aberto]="true" titulo="Membros" [largura]="'960px'" (fechou)="dialogMembrosAberta.set(false)">
+<app-modal
+    [aberto]="true"
+    titulo="Membros"
+    [largura]="'960px'"
+    (fechou)="dialogMembrosAberta.set(false)"
+>
     <span modalIcone class="dialogo__icone"><app-icone nome="membros" /></span>
 
     <div class="detalhe-mestre__membros-grade" appOverflowFade>
         @if (membroMestre(); as mestre) {
-        <ng-container [ngTemplateOutlet]="itemMembro" [ngTemplateOutletContext]="{ $implicit: mestre }" />
+        <ng-container
+            [ngTemplateOutlet]="itemMembro"
+            [ngTemplateOutletContext]="{ $implicit: mestre }"
+        />
         <div class="detalhe-mestre__membro-vazio" aria-hidden="true"></div>
-        }
-        @if (membrosJogadores().length) {
+        } @if (membrosJogadores().length) {
         <h3 class="detalhe-mestre__membros-categoria">Jogadores</h3>
         @for (membro of membrosJogadores(); track membro.usuarioId) {
-        <ng-container [ngTemplateOutlet]="itemMembro" [ngTemplateOutletContext]="{ $implicit: membro }" />
-        }
-        }
-        @if (membrosEspectadores().length) {
+        <ng-container
+            [ngTemplateOutlet]="itemMembro"
+            [ngTemplateOutletContext]="{ $implicit: membro }"
+        />
+        } } @if (membrosEspectadores().length) {
         <h3 class="detalhe-mestre__membros-categoria">Espectadores</h3>
         @for (membro of membrosEspectadores(); track membro.usuarioId) {
-        <ng-container [ngTemplateOutlet]="itemMembro" [ngTemplateOutletContext]="{ $implicit: membro }" />
-        }
-        }
+        <ng-container
+            [ngTemplateOutlet]="itemMembro"
+            [ngTemplateOutletContext]="{ $implicit: membro }"
+        />
+        } }
     </div>
 </app-modal>
 } @if (dialogConvitesAberta()) {
@@ -379,13 +527,33 @@
         </label>
         <label class="detalhe-mestre__campo">
             <span class="detalhe-mestre__rotulo">Descrição (opcional)</span>
-            <textarea class="detalhe-mestre__entrada detalhe-mestre__entrada--area" formControlName="descricao" rows="3"></textarea>
+            <textarea
+                class="detalhe-mestre__entrada detalhe-mestre__entrada--area"
+                formControlName="descricao"
+                rows="3"
+            ></textarea>
         </label>
     </div>
-    <button app-botao modalAcoes variante="primario" class="dialogo__acao" type="button" [disabled]="salvando()" (click)="salvarEdicao()">
+    <button
+        app-botao
+        modalAcoes
+        variante="primario"
+        class="dialogo__acao"
+        type="button"
+        [disabled]="salvando()"
+        (click)="salvarEdicao()"
+    >
         {{ salvando() ? 'Salvando…' : 'Salvar' }}
     </button>
-    <button app-botao modalAcoes variante="secundario" class="dialogo__acao" type="button" [disabled]="salvando()" (click)="cancelarEdicao()">
+    <button
+        app-botao
+        modalAcoes
+        variante="secundario"
+        class="dialogo__acao"
+        type="button"
+        [disabled]="salvando()"
+        (click)="cancelarEdicao()"
+    >
         Cancelar
     </button>
 </app-modal>
@@ -418,9 +586,7 @@
             >
                 <app-icone nome="olho" />
             </button>
-            }
-
-            @if (podeGerenciarMembro(membro) && acaoMembro() !== membro.usuarioId) {
+            } @if (podeGerenciarMembro(membro) && acaoMembro() !== membro.usuarioId) {
             <div class="detalhe-mestre__membro-acoes">
                 @if (membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR) {
                 <button
@@ -469,30 +635,57 @@
         </div>
 
         @if (acaoMembro() === membro.usuarioId) {
-        <div class="detalhe-mestre__membro-confirmacao" role="alertdialog" aria-label="Confirmar transferência do papel de mestre">
+        <div
+            class="detalhe-mestre__membro-confirmacao"
+            role="alertdialog"
+            aria-label="Confirmar transferência do papel de mestre"
+        >
             <p class="detalhe-mestre__membro-aviso">
-                Passar o papel de mestre para <strong>{{ membro.nome }}</strong>? Você deixará de ser o mestre e passará a jogador.
+                Passar o papel de mestre para <strong>{{ membro.nome }}</strong>? Você deixará de
+                ser o mestre e passará a jogador.
             </p>
             <div class="detalhe-mestre__membro-confirmacao-acoes">
-                <button app-botao variante="primario" class="detalhe-mestre__acao" type="button" [disabled]="processandoMembro()" (click)="confirmarTransferenciaMestre(membro.usuarioId)">
+                <button
+                    app-botao
+                    variante="primario"
+                    class="detalhe-mestre__acao"
+                    type="button"
+                    [disabled]="processandoMembro()"
+                    (click)="confirmarTransferenciaMestre(membro.usuarioId)"
+                >
                     <app-icone nome="coroa" />
                     {{ processandoMembro() ? 'Transferindo…' : 'Confirmar transferência' }}
                 </button>
-                <button app-botao variante="secundario" class="detalhe-mestre__acao" type="button" [disabled]="processandoMembro()" (click)="cancelarAcaoMembro()">
+                <button
+                    app-botao
+                    variante="secundario"
+                    class="detalhe-mestre__acao"
+                    type="button"
+                    [disabled]="processandoMembro()"
+                    (click)="cancelarAcaoMembro()"
+                >
                     Cancelar
                 </button>
             </div>
         </div>
-        }
-
-        @if (dados.fichasPorMembro().get(membro.usuarioId); as fichasDoMembro) { @for (ficha of fichasDoMembro; track ficha.id) {
-        <span class="detalhe-mestre__membro-carteirinha" [attr.aria-label]="'Ficha de ' + ficha.nome">
-            <span class="detalhe-mestre__membro-carteirinha-avatar" aria-hidden="true" [style.--cor-ficha]="ficha.cor">
+        } @if (dados.fichasPorMembro().get(membro.usuarioId); as fichasDoMembro) { @for (ficha of
+        fichasDoMembro; track ficha.id) {
+        <span
+            class="detalhe-mestre__membro-carteirinha"
+            [attr.aria-label]="'Ficha de ' + ficha.nome"
+        >
+            <span
+                class="detalhe-mestre__membro-carteirinha-avatar"
+                aria-hidden="true"
+                [style.--cor-ficha]="ficha.cor"
+            >
                 @if (ficha.imagemUrl; as urlImagem) { <img [src]="urlImagem" alt="" /> }
             </span>
             <span class="detalhe-mestre__membro-carteirinha-corpo">
                 <span class="detalhe-mestre__membro-carteirinha-nome">{{ ficha.nome }}</span>
-                <span class="detalhe-mestre__membro-carteirinha-classe">{{ ficha.classeTexto }}</span>
+                <span class="detalhe-mestre__membro-carteirinha-classe"
+                    >{{ ficha.classeTexto }}</span
+                >
             </span>
         </span>
         } }

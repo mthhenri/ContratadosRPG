@@ -210,6 +210,13 @@ export class CampanhaDetalheMestre {
     this.menuFichaPosicao.set(null);
   }
 
+  /** Abre a ficha completa (`/fichas/:id`) em outra aba — mesma rota do acervo. */
+  protected abrirFichaCompletaNovaAba(fichaId: number): void {
+    this.fecharMenuFicha();
+    const url = this.router.serializeUrl(this.router.createUrlTree(['/fichas', fichaId]));
+    window.open(url, '_blank', 'noopener');
+  }
+
   protected readonly confirmandoDuplicar = signal<{ id: number; nome: string; donoNome: string } | null>(null);
   protected readonly duplicando = signal<number | null>(null);
 
