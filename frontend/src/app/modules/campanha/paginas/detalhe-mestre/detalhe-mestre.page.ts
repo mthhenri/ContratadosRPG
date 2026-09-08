@@ -1,18 +1,323 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, viewChild } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
+import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
+import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
+import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
+import { EspectadorFichaCard, type EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Icone } from '../../../../shared/icone/icone.component';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { CampanhaService } from '../../campanha.service';
+import { FichaService } from '../../../ficha/ficha.service';
+import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 
 /**
- * Visão do MESTRE em `/campanhas/:id` — redesenho em andamento
- * (`campanha-detalhe-mestre-coluna-acoes.spec.md`). Placeholder mínimo nesta task (só o suficiente
- * para `CampanhaDetalheShell` compilar) — o redesenho completo (coluna de ações, Esquadrão em
- * grid, dialogs Membros/Convites, painel fixo Rolagens/Inventário) chega nas próximas tasks desta
- * série.
+ * Uma criatura na grade do Esquadrão — recorte enxuto de `FichaResumoDto` (`tipo === CRIATURA`),
+ * mesmo formato que o antigo `CampanhaDetalhe.ItemCriatura` já usava.
+ */
+interface ItemCriatura {
+  readonly id: number;
+  readonly usuarioId: number;
+  readonly imagemUrl: string | null;
+  readonly cor: string | null;
+  readonly nome: string;
+  readonly naTexto: string;
+  readonly vidaAtual: number;
+  readonly vidaMaxima?: number;
+  readonly defesa?: number;
+}
+
+/**
+ * Visão do MESTRE em `/campanhas/:id` — redesenho (`campanha-detalhe-mestre-coluna-acoes.spec.md`).
+ * Cabeçalho enxuto, `app-coluna-acoes` substituindo o menu kebab + os botões flutuantes de
+ * calculadora/caderno, Esquadrão/Criaturas em grid de 3 colunas reusando `EspectadorFichaCard` em
+ * modo interativo. Sem banner de crítico, sem coluna "Membros" ao lado (entregável 3 — removidos,
+ * não apenas reposicionados). Dado e tempo real compartilhados vêm de `CampanhaDetalheDadosService`.
  */
 @Component({
   selector: 'app-campanha-detalhe-mestre',
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    ColunaAcoes,
+    ColunaAcoesItem,
+    EspectadorFichaCard,
+    FichaFlutuante,
+    CalculadoraFlutuante,
+    CadernoFlutuante,
+    Botao,
+    BotaoIcone,
+    Icone,
+    OverflowFade,
+    Esqueleto,
+    Modal,
+  ],
   templateUrl: './detalhe-mestre.page.html',
+  styleUrl: './detalhe-mestre.page.scss',
 })
 export class CampanhaDetalheMestre {
   protected readonly dados = inject(CampanhaDetalheDadosService);
+  private readonly campanhaService = inject(CampanhaService);
+  private readonly fichaService = inject(FichaService);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly router = inject(Router);
+
+  protected readonly TipoFichaEnum = TipoFichaEnum;
+
+  protected readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
+  private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+
+  protected readonly calculadoraAberta = signal(false);
+
+  protected abrirCaderno(): void {
+    this.cadernoRef()?.abrir();
+  }
+
+  /** Placeholders desta task — o conteúdo das dialogs chega nas próximas tasks da série. */
+  protected readonly dialogMembrosAberta = signal(false);
+  protected readonly dialogConvitesAberta = signal(false);
+
+  /**
+   * Grid do "Esquadrão" — todas as fichas de jogador visíveis da campanha, achatadas com o nome
+   * do dono anexado. Itera `membrosOrdenados()` (não `fichas()` cru) para a ordem do grid
+   * acompanhar a ordem da dialog "Membros" — mesmo dado de `fichasPorMembro()`.
+   */
+  protected readonly fichasEsquadrao = () => {
+    const porMembro = this.dados.fichasPorMembro();
+    const lista: EspectadorFichaCardDados[] = [];
+    for (const membro of this.dados.membrosOrdenados()) {
+      for (const ficha of porMembro.get(membro.usuarioId) ?? []) {
+        lista.push({ ...ficha, donoNome: membro.nome });
+      }
+    }
+    return lista;
+  };
+
+  /** Criaturas da campanha — mesma subseção da grade, `na`/`defesa` já resolvidos por `FichaResumoDto`. */
+  protected readonly criaturasEsquadrao = (): readonly ItemCriatura[] =>
+    this.dados
+      .fichas()
+      .filter((ficha) => ficha.tipo === TipoFichaEnum.CRIATURA)
+      .map((ficha): ItemCriatura => ({
+        id: ficha.id,
+        usuarioId: ficha.usuarioId,
+        imagemUrl: ficha.imagemUrl,
+        cor: ficha.cor ?? null,
+        nome: ficha.nome,
+        naTexto: ficha.na ? rotuloNivelAmeaca(ficha.na) : '—',
+        vidaAtual: ficha.vidaAtual,
+        vidaMaxima: ficha.vidaMaxima,
+        defesa: ficha.defesa,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+
+  /** Alterna Na Base/Em Missão — só o mestre altera; o jogador só lê (`CampanhaDetalheJogador`). */
+  protected alterarEstadoCampanha(): void {
+    const campanhaAtual = this.dados.campanha();
+    if (!campanhaAtual) {
+      return;
+    }
+    this.campanhaService.alterarEstado(this.dados.id, !campanhaAtual.naBase).subscribe((estado) => {
+      this.dados.campanha.update((atual) => (atual ? { ...atual, naBase: estado.naBase } : atual));
+    });
+  }
+
+  /** Abre a ficha (jogador ou criatura) na janela flutuante — "Abrir ficha" do cartão do Esquadrão. */
+  protected abrirFichaFlutuante(
+    ficha: { readonly id: number; readonly usuarioId: number },
+    tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA,
+  ): void {
+    this.fichaFlutuanteRef()?.abrir({ fichaId: ficha.id, tipo, usuarioIdDono: ficha.usuarioId });
+  }
+
+  // === Menu "⋯" por cartão do Esquadrão (duplicar/remover/excluir) — dropdown na raiz do
+  // template (não dentro do grid, que tem overflow+mask-image e recortaria um `position: fixed`
+  // filho na pintura), mesmo padrão do antigo `menuFichaAberto` de `CampanhaDetalhe`.
+
+  protected readonly menuFichaAberto = signal<{ id: number; nome: string; donoNome: string } | null>(null);
+  protected readonly menuFichaPosicao = signal<{ top?: number; bottom?: number; right: number } | null>(null);
+
+  protected alternarMenuFicha(ficha: EspectadorFichaCardDados, evento: MouseEvent): void {
+    if (this.menuFichaAberto()?.id === ficha.id) {
+      this.fecharMenuFicha();
+      return;
+    }
+    const retangulo = (evento.currentTarget as HTMLElement).getBoundingClientRect();
+    const espacoAbaixo = window.innerHeight - retangulo.bottom;
+    const espacoAcima = retangulo.top;
+    const right = window.innerWidth - retangulo.right;
+    this.menuFichaPosicao.set(
+      espacoAbaixo < 130 && espacoAcima > espacoAbaixo
+        ? { bottom: window.innerHeight - retangulo.top + 6, right }
+        : { top: retangulo.bottom + 6, right },
+    );
+    this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome: ficha.donoNome });
+  }
+
+  protected fecharMenuFicha(): void {
+    this.menuFichaAberto.set(null);
+    this.menuFichaPosicao.set(null);
+  }
+
+  protected readonly confirmandoDuplicar = signal<{ id: number; nome: string; donoNome: string } | null>(null);
+  protected readonly duplicando = signal<number | null>(null);
+
+  protected pedirDuplicar(fichaId: number, fichaNome: string, donoNome: string): void {
+    this.fecharMenuFicha();
+    this.confirmandoDuplicar.set({ id: fichaId, nome: fichaNome, donoNome });
+  }
+
+  protected cancelarDuplicar(): void {
+    if (this.duplicando() === null) {
+      this.confirmandoDuplicar.set(null);
+    }
+  }
+
+  /** Duplica uma ficha — o clone nasce na mesma campanha, dono é sempre quem duplicou (§14). */
+  protected confirmarDuplicar(): void {
+    const pendente = this.confirmandoDuplicar();
+    if (!pendente || this.duplicando() !== null) {
+      return;
+    }
+    this.duplicando.set(pendente.id);
+    this.fichaService
+      .duplicarFicha(pendente.id)
+      .pipe(finalize(() => this.duplicando.set(null)))
+      .subscribe({
+        next: () => {
+          this.confirmandoDuplicar.set(null);
+          this.dados.recarregarMembrosEFichas();
+        },
+      });
+  }
+
+  protected readonly removendo = signal<number | null>(null);
+
+  /** Desatribui a ficha da campanha (ela volta ao acervo solto do dono) — via menu do cartão. */
+  protected removerDaCampanha(fichaId: number): void {
+    this.fecharMenuFicha();
+    if (this.removendo() !== null) {
+      return;
+    }
+    this.removendo.set(fichaId);
+    this.fichaService
+      .atribuirCampanha(fichaId, null)
+      .pipe(finalize(() => this.removendo.set(null)))
+      .subscribe({
+        next: () => this.dados.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId)),
+      });
+  }
+
+  protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
+    this.fecharMenuFicha();
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Excluir ficha',
+        mensagem: `Excluir ${fichaNome}? Esta ação não pode ser desfeita.`,
+        entidade: fichaNome,
+        rotuloConfirmar: 'Confirmar exclusão',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.excluirFicha(fichaId);
+        }
+      });
+  }
+
+  private excluirFicha(fichaId: number): void {
+    this.fichaService.excluirFicha(fichaId).subscribe({
+      next: () => this.dados.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId)),
+    });
+  }
+
+  /** Abre o assistente de criação de ficha/criatura — botões do cabeçalho do Esquadrão. */
+  protected abrirCriarFicha(): void {
+    void this.router.navigate(['/campanhas', this.dados.id, 'ficha', 'nova']);
+  }
+
+  protected abrirCriarCriatura(): void {
+    void this.router.navigate(['/campanhas', this.dados.id, 'criatura', 'nova']);
+  }
+
+  // === Editar/Excluir campanha — itens da coluna de ações. O formulário de edição continua
+  // inline no conteúdo (comportamento interno inalterado), só o gatilho mudou de lugar.
+
+  protected readonly editando = signal(false);
+  protected readonly salvando = signal(false);
+
+  protected readonly formularioEdicao = this.formBuilder.nonNullable.group({
+    nome: ['', [Validators.required]],
+    descricao: [''],
+  });
+
+  protected abrirEdicao(): void {
+    const campanhaAtual = this.dados.campanha();
+    if (!campanhaAtual) {
+      return;
+    }
+    this.formularioEdicao.reset({ nome: campanhaAtual.nome, descricao: campanhaAtual.descricao ?? '' });
+    this.editando.set(true);
+  }
+
+  protected cancelarEdicao(): void {
+    this.editando.set(false);
+  }
+
+  protected salvarEdicao(): void {
+    if (this.formularioEdicao.invalid || this.salvando()) {
+      this.formularioEdicao.markAllAsTouched();
+      return;
+    }
+    this.salvando.set(true);
+    const { nome, descricao } = this.formularioEdicao.getRawValue();
+    this.campanhaService
+      .alterarCampanha(this.dados.id, { nome, descricao: descricao || undefined })
+      .pipe(finalize(() => this.salvando.set(false)))
+      .subscribe({
+        next: (campanhaAlterada) => {
+          this.dados.campanha.update((atual) =>
+            atual ? { ...atual, nome: campanhaAlterada.nome, descricao: campanhaAlterada.descricao } : atual,
+          );
+          this.editando.set(false);
+        },
+      });
+  }
+
+  protected pedirExclusao(): void {
+    this.editando.set(false);
+    const campanhaAtual = this.dados.campanha();
+    if (!campanhaAtual) {
+      return;
+    }
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Excluir campanha',
+        mensagem: `Excluir ${campanhaAtual.nome}? Esta ação não pode ser desfeita.`,
+        entidade: campanhaAtual.nome,
+        rotuloConfirmar: 'Confirmar exclusão',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.campanhaService
+            .excluirCampanha(this.dados.id)
+            .subscribe({ next: () => void this.router.navigate(['/campanhas']) });
+        }
+      });
+  }
+
+  protected abrirAnotacoesFicha(fichaId: number): void {
+    void this.router.navigate(['/campanhas', this.dados.id, 'ficha', fichaId], { fragment: 'anotacoes' });
+  }
 }

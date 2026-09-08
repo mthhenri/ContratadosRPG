@@ -1,0 +1,355 @@
+@use "tema/breakpoints" as bp;
+
+// Casca da página: coluna de ações (flex item fixo, largura própria) + conteúdo, que usa toda a
+// largura restante do viewport — sem `max-width`/`90vw` artificial (diferente das demais páginas
+// do sistema, contrato de design desta task).
+:host {
+    display: flex;
+    align-items: stretch;
+    min-height: calc(100dvh - var(--altura-topbar));
+
+    @include bp.mobile {
+        flex-direction: column;
+        min-height: 0;
+    }
+}
+
+.detalhe-mestre__conteudo {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-20);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+
+    @include bp.mobile {
+        padding: 12px;
+        // Piso reservado para a barra inferior de app-coluna-acoes no mobile.
+        padding-bottom: calc(12px + 56px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+.detalhe-mestre__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    @include bp.mobile {
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+}
+
+.detalhe-mestre__titulo {
+    margin: 0;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.detalhe-mestre__cabecalho-regua {
+    flex: 1;
+    min-width: 20px;
+    height: 1px;
+    background: var(--border);
+}
+
+.detalhe-mestre__estado-operacional {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 28px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface-2);
+    color: var(--text);
+    font: 600 0.66rem var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+
+    app-icone {
+        display: inline-flex;
+        width: 12px;
+        height: 12px;
+    }
+
+    &--base {
+        color: var(--text);
+    }
+
+    &--missao {
+        color: var(--vida);
+        border-color: var(--vida-border);
+        background: color-mix(in srgb, var(--vida) 12%, transparent);
+    }
+}
+
+.detalhe-mestre__descricao {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+// Formulário de edição inline — mesma receita do antigo `.detalhe__edicao`.
+.detalhe-mestre__edicao {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    max-width: 480px;
+}
+
+.detalhe-mestre__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detalhe-mestre__rotulo {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+}
+
+.detalhe-mestre__entrada {
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+
+    &--area {
+        resize: vertical;
+        min-height: 64px;
+    }
+}
+
+.detalhe-mestre__edicao-acoes {
+    display: flex;
+    gap: 8px;
+}
+
+.detalhe-mestre__estado {
+    margin: 0;
+    padding: var(--space-16);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-mute);
+    text-align: center;
+}
+
+// === Esquadrão / Criaturas ===
+.detalhe-mestre__secao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.detalhe-mestre__secao-titulo {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.detalhe-mestre__secao-regua {
+    flex: 1;
+    min-width: 20px;
+    height: 1px;
+    background: var(--border);
+}
+
+.detalhe-mestre__secao-contagem {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mute);
+}
+
+.detalhe-mestre__secao-atualizado {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+}
+
+.detalhe-mestre__esquadrao {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+// Grid de 3 colunas — colapsa a 2 no tablet, 1 no mobile (mesmo padrão de `.espectador__ficha-grid`,
+// uma coluna a mais por conta da coluna Membros ter saído de perto do Esquadrão).
+.detalhe-mestre__esquadrao-grid {
+    list-style: none;
+    margin: 0 0 var(--space-16);
+    padding: 2px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-8);
+    align-items: start;
+
+    @include bp.tablet {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include bp.mobile {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+// Cartão de criatura — mesma composição visual do `EspectadorFichaCard`, mas com dado próprio
+// (`ItemCriatura` não tem a forma de `ItemFicha`, então não reusa o primitivo diretamente).
+.detalhe-mestre__criatura-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    overflow: hidden;
+}
+
+.detalhe-mestre__criatura-avatar {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-height: 128px;
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 14%, var(--surface));
+    background-image: repeating-linear-gradient(
+        135deg,
+        color-mix(in srgb, color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 60%, var(--border-strong)) 20%, transparent) 0 3px,
+        transparent 3px 9px
+    );
+    border-bottom: 1px solid var(--cor-ficha, var(--border-strong));
+
+    img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.detalhe-mestre__criatura-abrir {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+.detalhe-mestre__criatura-corpo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-12);
+}
+
+.detalhe-mestre__criatura-nome {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.detalhe-mestre__criatura-meta,
+.detalhe-mestre__criatura-vitais {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+}
+
+// === Menu "⋯" por cartão do Esquadrão (raiz do template) ===
+.detalhe-mestre__ficha-menu-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: transparent;
+    border: 0;
+    cursor: default;
+}
+
+.detalhe-mestre__ficha-menu {
+    position: fixed;
+    z-index: 61;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 200px;
+    padding: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+}
+
+.detalhe-mestre__ficha-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    text-align: left;
+    width: 100%;
+
+    &:hover:not(:disabled) {
+        background: var(--surface-2);
+    }
+}
+
+// === Esqueleto de carregamento ===
+.detalhe-mestre__esqueleto {
+    display: flex;
+    width: 100%;
+}
+
+.detalhe-mestre__esqueleto-coluna {
+    flex: none;
+    width: 56px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+}
+
+.detalhe-mestre__esqueleto-corpo {
+    flex: 1;
+    padding: var(--space-20);
+}
+
+.detalhe-mestre__esqueleto-titulo {
+    width: 240px;
+    height: 24px;
+}
+
+.detalhe-mestre__esqueleto-card {
+    height: 180px;
+}
+
+.detalhe-mestre__esqueleto-avatar {
+    width: 100%;
+    height: 100%;
+}

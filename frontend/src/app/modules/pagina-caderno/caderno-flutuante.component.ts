@@ -98,6 +98,13 @@ export class CadernoFlutuante implements OnDestroy {
    * `true` preserva o comportamento na campanha, onde o mestre vê o inventário e o jogador não.
    */
   readonly temInventario = input(true);
+  /**
+   * `false` esconde o círculo `.utilitario-flutuante` próprio (`campanha-detalhe-mestre-coluna-
+   * acoes.spec.md`) — usado só pelo mestre da campanha, que abre por um item de `app-coluna-acoes`
+   * (via {@link abrir}) em vez do gatilho flutuante. `true` por padrão: os outros consumidores
+   * continuam com o gatilho próprio, fora do escopo dessa migração.
+   */
+  readonly mostrarGatilho = input(true);
   readonly abrirFicha = output<number>();
 
   protected readonly store = inject(CadernoFlutuanteStore);
@@ -292,7 +299,10 @@ export class CadernoFlutuante implements OnDestroy {
     this.store.descartarCampanha();
   }
 
-  protected abrir(): void {
+  /** Abre a janela — pública (não `protected`) para que um consumidor externo dispare a abertura
+   *  via referência de template, mesmo padrão de `FichaFlutuante.abrir()` (ex.: o item "Caderno"
+   *  da coluna de ações do mestre da campanha, que substitui o gatilho flutuante próprio). */
+  abrir(): void {
     this.store.abrir(this.campanhaId());
   }
 

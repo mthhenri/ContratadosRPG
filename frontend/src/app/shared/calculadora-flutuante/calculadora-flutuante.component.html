@@ -1,4 +1,4 @@
-@if (!aberta() || painel.minimizado()) {
+@if (mostrarGatilho() && (!aberta() || painel.minimizado())) {
     <button
         #gatilho
         class="calc-flutuante__gatilho utilitario-flutuante utilitario-flutuante--calculadora utilitario-flutuante--inline-mobile"

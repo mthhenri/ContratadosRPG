@@ -1,12 +1,10 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import {
   ArquetipoEnum,
   ClasseEnum,
-  RolagemVisibilidadeEnum,
   TipoCampanhaMembroPapelEnum,
 } from '@contratados-rpg/shared/enums';
 import { CampanhaMembroResumoDto, CampanhaRecuperadaDto } from '@contratados-rpg/shared/dtos/campanha';

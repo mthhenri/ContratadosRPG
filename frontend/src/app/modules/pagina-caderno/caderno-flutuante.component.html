@@ -1,4 +1,4 @@
-@if (!estado().aberto || painelRef()?.minimizado()) {
+@if (mostrarGatilho() && (!estado().aberto || painelRef()?.minimizado())) {
     <button
         #gatilho
         class="caderno__gatilho utilitario-flutuante utilitario-flutuante--caderno utilitario-flutuante--inline-mobile"

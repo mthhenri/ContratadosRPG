@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, model, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, input, model, signal, viewChild } from '@angular/core';
 
 import { Icone } from '../icone/icone.component';
 import { Botao } from '../ui/botao/botao.component';
@@ -53,6 +53,15 @@ export class CalculadoraFlutuante {
    * como nas telas que não pareiam com o histórico).
    */
   readonly aberta = model(false);
+
+  /**
+   * `false` esconde o círculo `.utilitario-flutuante` próprio (`campanha-detalhe-mestre-coluna-
+   * acoes.spec.md`) — usado só pelo mestre da campanha, que abre por um item de `app-coluna-acoes`
+   * em vez do gatilho flutuante. `true` por padrão: os outros consumidores (ficha, Iniciativa,
+   * jogador da campanha) continuam com o gatilho próprio, fora do escopo dessa migração.
+   */
+  readonly mostrarGatilho = input(true);
+
   protected readonly expressao = signal('');
   protected readonly erro = signal(false);
   protected readonly historico = signal<readonly EntradaHistoricoCalculadora[]>([]);
