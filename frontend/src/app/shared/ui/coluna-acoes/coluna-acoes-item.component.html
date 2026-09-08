@@ -1,0 +1,5 @@
+<app-icone [nome]="icone()" class="coluna-acoes__item-icone" />
+<span class="coluna-acoes__item-rotulo"><ng-content /></span>
+@if (contagem(); as n) {
+    <span class="coluna-acoes__item-contagem">{{ n }}</span>
+}

@@ -1,0 +1,14 @@
+<button
+    app-botao-icone
+    type="button"
+    class="coluna-acoes__alternar"
+    [attr.aria-label]="expandida() ? 'Retrair coluna de ações' : 'Expandir coluna de ações'"
+    [appTooltip]="expandida() ? 'Retrair' : 'Expandir'"
+    (click)="alternar()"
+>
+    <app-icone [nome]="expandida() ? 'voltar' : 'chevron'" />
+</button>
+
+<div class="coluna-acoes__itens">
+    <ng-content />
+</div>

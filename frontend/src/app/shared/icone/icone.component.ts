@@ -26,7 +26,8 @@ import { Component, input } from '@angular/core';
  * do primitivo de botão (`shared/ui/botao`, ui-01b) — primeiro spinner do projeto; e `fantasma`,
  * identidade visual do papel `ESPECTADOR` (m8-01) — chip de papel na lista de Membros, botão
  * "Painel" e selo "Modo espectador" — distinto de `olho`, que fica só para ações de
- * visualização/prévia (não é uma identidade de papel).
+ * visualização/prévia (não é uma identidade de papel); e `membros`, grupo de pessoas — item
+ * "Membros" de `app-coluna-acoes` e a dialog homônima do painel de mestre da campanha.
  */
 export type IconeNome =
   | 'agente'
@@ -106,7 +107,8 @@ export type IconeNome =
   | 'coluna-adicionar'
   | 'coluna-remover'
   | 'carregando'
-  | 'fantasma';
+  | 'fantasma'
+  | 'membros';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

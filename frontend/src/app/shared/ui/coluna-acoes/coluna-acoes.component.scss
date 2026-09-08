@@ -1,0 +1,82 @@
+@use "tema/breakpoints" as bp;
+
+:host {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 56px;
+    padding: var(--space-8);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    align-self: stretch;
+    transition: width 0.2s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+
+:host(.coluna-acoes--expandida) {
+    width: 200px;
+}
+
+.coluna-acoes__alternar {
+    align-self: flex-end;
+    flex: none;
+    margin-bottom: var(--space-8);
+}
+
+.coluna-acoes__itens {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+// Mobile: barra inferior fixa (mesmo racional de `.ficha-nav`) — rótulo sempre visível abaixo do
+// ícone, sem o botão de alternar (decisão validada no POC visual do autor).
+@include bp.mobile {
+    :host {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 15;
+        flex-direction: row;
+        width: auto;
+        height: auto;
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+        border-right: 0;
+        border-top: 1px solid var(--border-strong);
+    }
+
+    .coluna-acoes__alternar {
+        display: none;
+    }
+
+    .coluna-acoes__itens {
+        flex-direction: row;
+        flex: 1;
+        overflow: visible;
+    }
+
+    ::ng-deep .coluna-acoes__item {
+        flex-direction: column;
+        gap: 3px;
+        min-height: bp.$alvo-toque;
+        padding: 5px 1px;
+    }
+
+    ::ng-deep .coluna-acoes__item-rotulo {
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+        clip: auto !important;
+        overflow: visible !important;
+        white-space: normal !important;
+        font-size: 9px;
+        text-align: center;
+    }
+}

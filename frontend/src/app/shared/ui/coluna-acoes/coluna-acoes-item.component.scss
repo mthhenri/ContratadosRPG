@@ -1,0 +1,66 @@
+.coluna-acoes__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-12);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-dim);
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+        color: var(--text);
+        background: var(--surface-2);
+    }
+
+    &--ativo {
+        color: var(--text);
+        background: var(--accent-dim);
+        box-shadow: inset 2px 0 0 var(--accent);
+    }
+}
+
+.coluna-acoes__item-icone {
+    flex: none;
+    font-size: 18px;
+}
+
+.coluna-acoes__item-rotulo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-align: left;
+
+    // Retraído: só o ícone conta como conteúdo visível — o rótulo textual existe no DOM (leitor
+    // de tela lê sempre) mas não ocupa espaço; o `appTooltip` do host cobre a leitura visual.
+    :host-context(.coluna-acoes:not(.coluna-acoes--expandida)) & {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}
+
+.coluna-acoes__item-contagem {
+    flex: none;
+    min-width: 18px;
+    padding: 1px 5px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+}

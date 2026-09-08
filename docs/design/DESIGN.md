@@ -320,6 +320,13 @@ some com `[hidden]`, não `@if`, ao minimizar — o iframe do leitor de document
 zoom e rolagem do PDF em vez de recarregar ao restaurar, e a mesma escolha beneficia de graça
 qualquer conteúdo futuro que se importe com o próprio estado interno.
 
+`app-coluna-acoes` (`shared/ui/coluna-acoes/`, `campanha-detalhe-mestre-coluna-acoes.spec.md`) é uma
+quarta forma, mais próxima do painel lateral de 500px que do painel flutuante: participa do fluxo
+normal do layout (flex, nunca `position: fixed`) e empurra o conteúdo ao expandir/retrair em vez de
+sobrepor. Substitui `.utilitario-flutuante` só na visão de mestre da campanha por ora — os outros 6
+consumidores de `.utilitario-flutuante` (ficha, Iniciativa, campanha do jogador) migram em specs
+futuras, mesmo padrão de rollout gradual de `ui-28`…`ui-32`.
+
 O corpo projetado pelo primitivo é uma **coluna flexível** (`flex: 1; min-height: 0`): controles
 fixos de cada consumidor ficam no fluxo normal, e a região que deve preencher o restante declara
 o seu próprio `flex: 1; min-height: 0`. Esse contrato mantém caderno, leitor e futuros utilitários
