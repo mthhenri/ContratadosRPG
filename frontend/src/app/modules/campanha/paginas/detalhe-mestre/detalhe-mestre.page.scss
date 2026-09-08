@@ -193,6 +193,106 @@
     color: var(--text-mute);
 }
 
+// Corpo em 2 colunas: Esquadrão/Criaturas (principal) + painel fixo Rolagens⇆Inventário — nunca
+// overlay, sempre montado (entregável 3). Colapsa a 1 coluna no tablet/mobile (o painel desce
+// abaixo do conteúdo principal em vez de sumir).
+.detalhe-mestre__corpo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: var(--space-16);
+    flex: 1;
+    min-height: 0;
+
+    @include bp.tablet {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.detalhe-mestre__painel-lateral {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    min-height: 0;
+    padding: var(--space-16);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+}
+
+.detalhe-mestre__painel-rolagens,
+.detalhe-mestre__painel-inventario {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.detalhe-mestre__rolagens-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.detalhe-mestre__rolagens-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    padding: var(--space-12) var(--space-16);
+    background: var(--surface-2);
+    border-radius: var(--radius-control);
+    box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
+}
+
+.detalhe-mestre__rolagens-meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    line-height: 1.2;
+}
+
+.detalhe-mestre__rolagens-rotulo {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+}
+
+.detalhe-mestre__rolagens-formula {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    opacity: 75%;
+    overflow-wrap: anywhere;
+}
+
+.detalhe-mestre__rolagens-autor {
+    font-size: 11px;
+    color: var(--text-dim);
+    overflow-wrap: anywhere;
+}
+
+.detalhe-mestre__rolagens-data {
+    flex: none;
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-mute);
+    white-space: nowrap;
+}
+
+.detalhe-mestre__rolagens-esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.detalhe-mestre__rolagens-esqueleto-item {
+    height: 64px;
+}
+
 .detalhe-mestre__esquadrao {
     display: flex;
     flex-direction: column;

@@ -405,4 +405,34 @@ describe('CampanhaDetalheMestre', () => {
       expect(link?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador`);
     });
   });
+
+  describe('painel lateral fixo Rolagens ⇆ Inventário', () => {
+    it('está sempre montado (não é overlay) e começa em Rolagens', () => {
+      const { raiz } = montar();
+      expect(raiz.querySelector('.detalhe-mestre__painel-lateral')).not.toBeNull();
+      expect(
+        (raiz.querySelector('.detalhe-mestre__painel-rolagens') as HTMLElement).hidden,
+      ).toBe(false);
+      expect(
+        (raiz.querySelector('.detalhe-mestre__painel-inventario') as HTMLElement).hidden,
+      ).toBe(true);
+    });
+
+    it('alterna para Inventário mantendo os dois montados no DOM (só [hidden] muda)', () => {
+      const { raiz, fixture } = montar();
+      const itemInventario = Array.from(raiz.querySelectorAll('[app-segmentado-item]')).find((el) =>
+        el.textContent?.includes('Inventário'),
+      ) as HTMLButtonElement;
+      itemInventario.click();
+      fixture.detectChanges();
+
+      expect(
+        (raiz.querySelector('.detalhe-mestre__painel-rolagens') as HTMLElement).hidden,
+      ).toBe(true);
+      expect(
+        (raiz.querySelector('.detalhe-mestre__painel-inventario') as HTMLElement).hidden,
+      ).toBe(false);
+      expect(raiz.querySelector('app-inventario-esquadrao')).not.toBeNull();
+    });
+  });
 });

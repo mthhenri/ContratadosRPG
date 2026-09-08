@@ -92,6 +92,7 @@
     <p class="detalhe-mestre__descricao">{{ campanhaAtual.descricao }}</p>
     }
 
+    <div class="detalhe-mestre__corpo">
     <section class="detalhe-mestre__esquadrao">
         <header class="detalhe-mestre__secao">
             <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
@@ -175,6 +176,59 @@
         </ul>
         }
     </section>
+
+    <aside class="detalhe-mestre__painel-lateral">
+        <app-segmentado rotulo="Painel lateral">
+            <button app-segmentado-item [ativo]="painelLateralAtivo() === 'rolagens'" (click)="painelLateralAtivo.set('rolagens')">
+                <app-icone nome="d20" /> Rolagens
+            </button>
+            <button app-segmentado-item [ativo]="painelLateralAtivo() === 'inventario'" (click)="painelLateralAtivo.set('inventario')">
+                <app-icone nome="inventario" /> Inventário
+            </button>
+        </app-segmentado>
+
+        <div class="detalhe-mestre__painel-rolagens" [hidden]="painelLateralAtivo() !== 'rolagens'" appOverflowFade>
+            @if (dados.carregandoRolagens()) {
+            <div class="detalhe-mestre__rolagens-esqueleto" role="status" aria-label="Carregando rolagens">
+                @for (i of [0, 1, 2]; track i) {
+                <app-esqueleto class="detalhe-mestre__rolagens-esqueleto-item" />
+                }
+            </div>
+            } @else if (dados.rolagensFeed().length === 0) {
+            <app-estado-vazio icone="d20" titulo="Nenhuma rolagem ainda." linhaApoio="Rolagens feitas nesta campanha aparecem aqui." />
+            } @else {
+            <ul class="detalhe-mestre__rolagens-lista">
+                @for (item of dados.rolagensFeed(); track item.id) {
+                <li class="detalhe-mestre__rolagens-item" [style.--cor-ficha]="item.corFicha">
+                    <div class="detalhe-mestre__rolagens-meta">
+                        <span class="detalhe-mestre__rolagens-rotulo">{{ item.rotulo }}</span>
+                        <span class="detalhe-mestre__rolagens-autor">{{ item.nomeAutor }} · {{ item.nomeFicha }}</span>
+                        @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
+                        <app-chip severidade="aviso" tom="contorno">privada</app-chip>
+                        }
+                        <span class="detalhe-mestre__rolagens-data">{{ item.createdDate | date: 'dd/MM HH:mm' }}</span>
+                    </div>
+                    @if (item.formula) {
+                    <span class="detalhe-mestre__rolagens-formula">{{ item.formula }}</span>
+                    }
+                    <app-resultado-rolagem [resultado]="item.resultado" [corFicha]="item.corFicha" [compacto]="true" />
+                </li>
+                }
+            </ul>
+            }
+        </div>
+
+        <div class="detalhe-mestre__painel-inventario" [hidden]="painelLateralAtivo() !== 'inventario'">
+            <app-inventario-esquadrao
+                [campanhaId]="campanhaAtual.id"
+                [itens]="dados.inventarioEsquadrao()"
+                [fichas]="dados.fichasDestinoInventario()"
+                [somenteLeitura]="!campanhaAtual.naBase"
+                (alterado)="dados.inventarioEsquadrao.set($event)"
+            />
+        </div>
+    </aside>
+    </div>
 </div>
 
 <app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />
