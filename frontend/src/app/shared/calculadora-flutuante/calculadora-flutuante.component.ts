@@ -98,8 +98,17 @@ export class CalculadoraFlutuante {
   private redimensionando = false;
   private origemRedimensionamento = { x: 0, y: 0, largura: 0, altura: 0 };
 
-  /** Gatilho: abre se fechada, fecha se aberta — o "×" no cabeçalho do painel também fecha. */
-  protected alternar(): void {
+  /**
+   * Abre se fechada, fecha se aberta — mas se estiver aberta **minimizada**, restaura em vez de
+   * fechar (senão o clique fecha uma janela que já estava escondida, sem nunca mostrar nada:
+   * achado ao vivo — o consumidor que usa `[mostrarGatilho]="false"`, como o item "Calculadora"
+   * da coluna de ações do mestre da campanha, precisa chamar este método via referência de
+   * template para herdar essa checagem; setar `[(aberta)]` direto do lado de fora, como o template
+   * fazia antes, pula essa lógica por completo). Pública (não `protected`) por isso — mesmo padrão
+   * de `CadernoFlutuante.abrir()`/`alternar()`. O "×" no cabeçalho do painel continua fechando
+   * direto (`fechar()`), sem passar por aqui.
+   */
+  alternar(): void {
     if (this.aberta() && this.painelRef()?.minimizado()) {
       this.painelRef()?.restaurar();
       return;

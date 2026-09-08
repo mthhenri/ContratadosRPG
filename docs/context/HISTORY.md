@@ -1,5 +1,52 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-08 — `PainelFlutuante`: Calculadora/Caderno realmente não abriam — `minimizado:true` persistido de sessão anterior herdado silenciosamente numa 1ª abertura sem "Reabrir" nenhum pra alcançá-lo
+
+Depois da rodada anterior (achado do bug de `:host`/tooltip), o autor confirmou que Calculadora/
+Caderno **continuavam** sem abrir mesmo após hard refresh — evidência forte de que não era bundle
+desatualizado (hipótese da rodada anterior), e sim um bug real que a bateria de testes anteriores
+não tinha reproduzido. Achado ao vivo com uma reprodução mais fiel (persistindo
+`minimizado: true` em `localStorage` antes de carregar a página, simulando uma sessão anterior em
+que o autor minimizou a janela em vez de fechá-la):
+
+- **Causa raiz:** `PainelFlutuante` persiste `minimizado` por `[id]` entre sessões — contrato
+  intencional pros consumidores com gatilho próprio (`[mostrarGatilho]="true"`: o botão flutuante
+  vira "Reabrir X" quando minimizado, então o estado herdado continua alcançável). Mas
+  `CalculadoraFlutuante`/`CadernoFlutuante` com `[mostrarGatilho]="false"` (o item "Calculadora"/
+  "Caderno" da coluna de ações do mestre da campanha) não têm gatilho próprio nenhum — a única
+  interação é o item da coluna. Numa sessão nova, a primeira transição fechado→aberto herdava o
+  `minimizado: true` salvo silenciosamente: a janela "abria" (`aberto=true`) mas continuava oculta
+  (`hidden`), e não havia nenhum "Reabrir" visível pra alcançá-la — o clique em "Calculadora"/
+  "Caderno" literalmente não mostrava nada, para sempre, até o autor limpar o `localStorage` na
+  mão (o que um hard refresh não faz).
+- **Segundo defeito, no mesmo caminho:** `CalculadoraFlutuante.alternar()` já tinha uma checagem
+  pra restaurar em vez de fechar quando já aberta e minimizada — mas o item "Calculadora" da coluna
+  de ações **não chamava esse método**: `(click)="calculadoraAberta.set(!calculadoraAberta())"`
+  manipulava o sinal `[(aberta)]` direto, pulando a checagem por completo. `CadernoFlutuante.
+  alternar()` nem tinha a checagem (só `CalculadoraFlutuante` tinha, de origem).
+- **Correção em três camadas:**
+  1. `PainelFlutuante` ganhou `[ignorarMinimizadoPersistido]` — quando `true`, toda transição
+     fechado→aberto zera `minimizado` herdado (nasce sempre visível); `false` por padrão preserva o
+     contrato testado dos demais consumidores (`LeitorDocumentos`, ficha, Iniciativa, jogador da
+     campanha). `CalculadoraFlutuante`/`CadernoFlutuante` passam
+     `[ignorarMinimizadoPersistido]="!mostrarGatilho()"`.
+  2. `CalculadoraFlutuante.alternar()` virou público (era `protected`, só usado pelo próprio
+     gatilho interno) — item "Calculadora" da coluna de ações ganhou uma referência de template
+     (`#calculadora`) e `alternarCalculadora()` no componente, mesmo padrão que `alternarCaderno()`
+     já usava, em vez de manipular `calculadoraAberta` direto.
+  3. `CadernoFlutuante.alternar()` ganhou a mesma checagem de minimizado que `CalculadoraFlutuante`
+     já tinha (restaurar em vez de fechar quando aberto-e-minimizado) — cobre o caso de minimizar
+     **dentro** da mesma sessão e clicar no item de novo (`ignorarMinimizadoPersistido` só cobre a
+     1ª abertura da sessão).
+
+Testado ao vivo o ciclo completo — abrir, minimizar, clicar de novo (restaura), clicar de novo
+(fecha) — e a reprodução original (posição `minimizado: true` persistida antes de carregar a
+página): calculadora e caderno agora abrem visíveis na primeira tentativa em ambos os casos.
+Regressão completa: `npm run test --workspace=frontend` — 1601/1601 (era 1596; +5 testes novos:
+2 de `[ignorarMinimizadoPersistido]` em `painel-flutuante.component.spec.ts`, 1 de restaurar-ao-
+alternar em cada um de `calculadora-flutuante.component.spec.ts`/`caderno-flutuante.component.spec.ts`,
+mais o teste de toggle público da calculadora). Lint e build de produção limpos.
+
 ## 2026-09-08 — `ColunaAcoesItem`: achada a causa raiz de "os botões não parecem os nossos" — `:host` sem seletor `:host()`, nunca aplicava; tooltip invisível atrás de `<dialog>`; chip-papel removido
 
 Quarta rodada de polimento pedida direto pelo autor sobre `CampanhaDetalheMestre`, com um pedido

@@ -24,6 +24,7 @@
     [altura]="ehMobile() ? null : estado().tamanho.altura"
     [posicaoInicial]="posicaoInicial()"
     [pisoX]="pisoX()"
+    [ignorarMinimizadoPersistido]="!mostrarGatilho()"
     (fechar)="fechar()"
     (minimizadoChange)="aoMinimizadoChange($event)"
 >

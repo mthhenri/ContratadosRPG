@@ -102,11 +102,24 @@ export class CampanhaDetalheMestre {
 
   protected readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
 
   protected readonly calculadoraAberta = signal(false);
 
-  /** Alterna a janela do caderno — clicar de novo no item "Caderno" da coluna de ações fecha,
-   *  mesmo comportamento do toggle da calculadora (`[(aberta)]` + `calculadoraAberta.set(!...)`). */
+  /**
+   * Alterna a janela da calculadora via o método do próprio componente, não `calculadoraAberta.
+   * set(!calculadoraAberta())` direto — só `CalculadoraFlutuante.alternar()` sabe restaurar em vez
+   * de fechar quando a janela está aberta **minimizada** (achado ao vivo: com o painel minimizado
+   * de uma sessão anterior, `aberta` já valia `true`, então setar `!aberta()` fechava uma janela
+   * que já estava escondida — o clique em "Calculadora" nunca mostrava nada, indefinidamente, até
+   * limpar o `localStorage` na mão).
+   */
+  protected alternarCalculadora(): void {
+    this.calculadoraRef()?.alternar();
+  }
+
+  /** Alterna a janela do caderno — mesmo racional de `alternarCalculadora()` acima:
+   *  `CadernoFlutuante.alternar()` também restaura em vez de fechar quando minimizado. */
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
   }

@@ -89,6 +89,17 @@ export class PainelFlutuante {
    * ao vivo (o usuário via os botões "pararem de funcionar" depois de já ter aberto a janela antes).
    */
   readonly pisoX = input(0);
+  /**
+   * `true` faz toda transição fechado→aberto nascer visível, mesmo que `localStorage` tenha
+   * `minimizado: true` de uma sessão passada. Persistir minimizado entre sessões é intencional
+   * pros consumidores com gatilho próprio (`[mostrarGatilho]="true"`: o botão flutuante muda pra
+   * "Reabrir X" quando minimizado, então o estado herdado ainda é alcançável) — mas
+   * `CalculadoraFlutuante`/`CadernoFlutuante` com `[mostrarGatilho]="false"` (o item da coluna de
+   * ações do mestre da campanha) não têm esse "Reabrir" nenhum: herdar minimizado silenciosamente
+   * deixava o clique em "abrir" sem mostrar nada, achado ao vivo. `false` por padrão preserva o
+   * comportamento testado dos outros consumidores.
+   */
+  readonly ignorarMinimizadoPersistido = input(false);
 
   readonly fechar = output<void>();
   /** Emitido a cada troca de minimizado — o consumidor decide focar o próprio gatilho ao minimizar. */
@@ -130,6 +141,12 @@ export class PainelFlutuante {
       if (aberto && !this.abertoAnterior) {
         this.origemFoco = this.documento.activeElement as HTMLElement | null;
         this.trazerParaFrente();
+        // Ver doc de `ignorarMinimizadoPersistido` — zera só a herança de uma sessão passada nos
+        // consumidores que pedem (ex.: `mostrarGatilho=false`); minimizar de novo dentro da mesma
+        // sessão continua persistindo normalmente pros demais.
+        if (this.ignorarMinimizadoPersistido()) {
+          this.minimizadoInterno.set(false);
+        }
         if (!this.minimizadoInterno()) {
           untracked(() =>
             setTimeout(() => {

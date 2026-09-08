@@ -4,24 +4,27 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-08 · **Última decisão registrada:** 4ª rodada de polimento do
-> `CampanhaDetalheMestre` — achada a causa raiz da série inteira de queixas "os botões não parecem
-> os nossos": `coluna-acoes-item.component.scss` estilizava `.coluna-acoes__item` como classe pura
-> em vez de `:host(.coluna-acoes__item)`; sob encapsulamento emulado do Angular essa regra nunca
-> batia no host (que só carrega `_nghost`, não `_ngcontent` do próprio escopo) — **nenhum item da
-> coluna jamais teve `display:flex`/padding/cor/hover aplicados**, só o CSS nativo do navegador
-> (por isso só "Iniciativa", o único `<a>` da lista, saltava aos olhos — `<button>` tem chrome nativo
-> embutido que `<a>` não tem). Corrigido para `:host`/`:host(.coluna-acoes__item--ativo)`, mesmo
-> padrão já correto em `ColunaAcoes` (o pai). Segundo bug real: tooltip de ação invisível sempre que
-> o balão caía dentro do retângulo de um `<dialog>` aberto — `<dialog>` pinta na top layer do
-> navegador, acima de QUALQUER elemento normal por `z-index` que seja; `Tooltip.mostrar()` agora
-> porta o balão pro próprio `<dialog>` aberto (`host.closest('dialog[open]')`) em vez de sempre
-> `document.body`. Dialog "Membros": chip de texto "MESTRE"/"JOGADOR"/"ESPECTADOR" removido — o
-> papel agora só aparece no avatar (ícone + tooltip); cores simplificadas (jogador = accent sem
-> glow, mestre = mesma cor + glow, espectador = só cinza, sem cor do tema). Calculadora/Caderno
-> reportados quebrados de novo — reproduzido em toda combinação plausível sem sucesso, toggle
-> funciona; hipótese mais provável é bundle desatualizado na aba do autor. Detalhe completo em
-> `HISTORY.md`.
+> **Última revisão:** 2026-09-08 · **Última decisão registrada:** Calculadora/Caderno do mestre da
+> campanha realmente não abriam — causa raiz achada depois que o autor confirmou que o problema
+> sobrevivia a um hard refresh (descartando a hipótese de bundle desatualizado da rodada anterior).
+> `PainelFlutuante` persiste `minimizado` entre sessões por `[id]` (contrato intencional pros
+> consumidores com gatilho próprio, que viram "Reabrir X"), mas `[mostrarGatilho]="false"`
+> (Calculadora/Caderno da coluna de ações) não tem gatilho nenhum — a 1ª abertura de uma sessão nova
+> herdava `minimizado: true` salvo silenciosamente e não mostrava nada, para sempre, até limpar o
+> `localStorage` na mão. Corrigido com `[ignorarMinimizadoPersistido]` novo em `PainelFlutuante`
+> (zera minimizado herdado só na 1ª abertura, só quando o consumidor pede); descoberto no caminho
+> que o item "Calculadora" da coluna de ações manipulava `calculadoraAberta` direto em vez de
+> chamar `CalculadoraFlutuante.alternar()` (que já sabia restaurar-em-vez-de-fechar quando
+> minimizado **na mesma sessão** — `CadernoFlutuante.alternar()` nem tinha essa checagem). Ciclo
+> completo (abrir/minimizar/restaurar/fechar) testado ao vivo. Detalhe completo em `HISTORY.md`.
+> Antes: 4ª rodada — achada a causa raiz da série inteira de queixas "os botões não parecem os
+> nossos": `coluna-acoes-item.component.scss` estilizava `.coluna-acoes__item` como classe pura em
+> vez de `:host(.coluna-acoes__item)`; sob encapsulamento emulado do Angular essa regra nunca batia
+> no host — nenhum item da coluna jamais teve `display:flex`/padding/cor/hover aplicados, só o CSS
+> nativo do navegador. Segundo bug real: tooltip de ação invisível sempre que o balão caía dentro do
+> retângulo de um `<dialog>` aberto (`<dialog>` pinta na top layer do navegador, acima de qualquer
+> `z-index`) — `Tooltip.mostrar()` passou a portar o balão pro próprio `<dialog>` aberto. Dialog
+> "Membros": chip de texto do papel removido (vira tooltip do avatar); cores simplificadas.
 > Antes: 3ª rodada — separadores da coluna ganharam título/subtítulo ("Gestão"/"Ferramentas") e mais
 > espaçamento; dialog "Membros" trocou o quadrado cinza decorativo por ícone de papel com contorno
 > quadrado; popup de Calculadora/Caderno preso atrás da coluna corrigido com `[pisoX]` em

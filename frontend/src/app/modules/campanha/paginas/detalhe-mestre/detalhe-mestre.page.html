@@ -16,6 +16,7 @@
 </div>
 } @else if (dados.campanha(); as campanhaAtual) {
 <app-coluna-acoes id="campanha-detalhe-mestre" rotulo="Ações da campanha">
+    <div class="coluna-acoes__categoria">Campanha</div>
     <button app-coluna-acoes-item icone="membros" appTooltip="Membros" (click)="dialogMembrosAberta.set(true)">
         Membros
     </button>
@@ -38,7 +39,7 @@
         Excluir
     </button>
     <div class="coluna-acoes__categoria">Ferramentas</div>
-    <button app-coluna-acoes-item icone="calculadora" appTooltip="Calculadora" (click)="calculadoraAberta.set(!calculadoraAberta())">
+    <button app-coluna-acoes-item icone="calculadora" appTooltip="Calculadora" (click)="alternarCalculadora()">
         Calculadora
     </button>
     <button app-coluna-acoes-item icone="anotacoes" appTooltip="Caderno" (click)="alternarCaderno()">
@@ -218,7 +219,7 @@
 </div>
 
 <app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />
-<app-calculadora-flutuante [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+<app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
 @if (dados.usuarioAtivoId(); as usuarioId) {
 <app-caderno-flutuante
     #caderno

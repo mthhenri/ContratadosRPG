@@ -143,6 +143,23 @@ describe('CadernoFlutuante', () => {
     expect(raiz().querySelector('.painel-flutuante__janela')).toBeNull();
   });
 
+  it('alternar() restaura em vez de fechar quando a janela está aberta minimizada', () => {
+    // Achado ao vivo: `store.estado().aberto` continua `true` enquanto só minimizado — sem essa
+    // checagem, um segundo clique em "Caderno" fechava uma janela que já estava escondida, e o
+    // usuário nunca via nada abrir (o mesmo defeito que `CalculadoraFlutuante.alternar()` já
+    // evitava desde sempre, checando `painelRef()?.minimizado()`).
+    fixture.componentInstance.alternar();
+    fixture.detectChanges();
+    clicar('[aria-label="Minimizar Caderno · Operação Eclipse"]');
+    fixture.detectChanges();
+    expect(obter('.painel-flutuante__janela').hidden).toBe(true);
+
+    fixture.componentInstance.alternar();
+    fixture.detectChanges();
+
+    expect(obter('.painel-flutuante__janela').hidden).toBe(false);
+  });
+
   it('ocupa a vaga do inventário ausente na pilha de utilitários do jogador', () => {
     expect(obter('[aria-label="Abrir caderno"]').classList).toContain(
       'caderno__gatilho--sem-inventario',

@@ -320,9 +320,18 @@ export class CadernoFlutuante implements OnDestroy {
     this.store.abrir(this.campanhaId());
   }
 
-  /** Abre se fechado, fecha se aberto — mesmo padrão de toggle de `CalculadoraFlutuante.alternar()`,
-   *  usado pelo item "Caderno" da coluna de ações do mestre (que substitui o gatilho flutuante). */
+  /**
+   * Abre se fechado, fecha se aberto — mas se estiver aberto **minimizado**, restaura em vez de
+   * fechar (senão o clique fecha uma janela que já estava escondida, sem nunca mostrar nada:
+   * `store.estado().aberto` continua `true` enquanto só minimizado, então o toggle simples caía
+   * direto em `fechar()` — achado ao vivo, o mesmo defeito que `CalculadoraFlutuante.alternar()`
+   * já evitava checando `painelRef()?.minimizado()`, e que faltava aqui). Mesmo padrão de toggle.
+   */
   alternar(): void {
+    if (this.store.estado().aberto && this.painelRef()?.minimizado()) {
+      this.painelRef()?.restaurar();
+      return;
+    }
     if (this.store.estado().aberto) {
       this.fechar();
     } else {

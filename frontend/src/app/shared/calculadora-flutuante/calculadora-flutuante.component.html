@@ -21,6 +21,7 @@
     [altura]="tamanho()?.height ?? null"
     [posicaoInicial]="posicaoInicial()"
     [pisoX]="pisoX()"
+    [ignorarMinimizadoPersistido]="!mostrarGatilho()"
     [style.--calc-escala]="escala()"
     (fechar)="fechar()"
     (minimizadoChange)="aoMinimizadoChange($event)"

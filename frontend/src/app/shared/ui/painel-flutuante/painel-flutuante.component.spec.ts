@@ -28,6 +28,7 @@ interface DefinicaoComponenteComEstilos {
       [aberto]="aberto()"
       [posicaoInicial]="posicaoInicial()"
       [pisoX]="pisoX()"
+      [ignorarMinimizadoPersistido]="ignorarMinimizadoPersistido()"
       (fechar)="fechamentos.set(fechamentos() + 1)"
       (minimizadoChange)="minimizadoEmitido.set($event)"
     >
@@ -43,6 +44,7 @@ class Hospedeiro {
   readonly minimizadoEmitido = signal<boolean | null>(null);
   readonly posicaoInicial = signal({ x: 16, y: 88 });
   readonly pisoX = signal(0);
+  readonly ignorarMinimizadoPersistido = signal(false);
   readonly painel = viewChild.required(PainelFlutuante);
 }
 
@@ -309,6 +311,43 @@ describe('PainelFlutuante', () => {
 
     expect(janela(fixture)!.style.left).toBe('220px');
   });
+
+  it(
+    '[ignorarMinimizadoPersistido] nasce visível na 1ª abertura mesmo com minimizado:true ' +
+      'persistido de sessão anterior — achado ao vivo: sem consumidor com gatilho próprio pra ' +
+      'restaurar, o clique em "abrir" não mostrava nada',
+    () => {
+      localStorage.setItem(
+        'contratados-rpg:painel-flutuante:teste-painel',
+        JSON.stringify({ x: 16, y: 88, minimizado: true }),
+      );
+      TestBed.configureTestingModule({ imports: [Hospedeiro] });
+      const fixture = TestBed.createComponent(Hospedeiro);
+      fixture.componentInstance.ignorarMinimizadoPersistido.set(true);
+      fixture.componentInstance.aberto.set(true);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.painel().minimizado()).toBe(false);
+      expect(janela(fixture)?.hidden).toBe(false);
+    },
+  );
+
+  it(
+    'sem [ignorarMinimizadoPersistido] (padrão), a 1ª abertura herda minimizado:true persistido ' +
+      '— contrato intencional pros consumidores com gatilho próprio (vira "Reabrir X")',
+    () => {
+      localStorage.setItem(
+        'contratados-rpg:painel-flutuante:teste-painel',
+        JSON.stringify({ x: 16, y: 88, minimizado: true }),
+      );
+      const fixture = montar();
+      fixture.componentInstance.aberto.set(true);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.painel().minimizado()).toBe(true);
+      expect(janela(fixture)?.hidden).toBe(true);
+    },
+  );
 
   it('instâncias com [id] diferentes não compartilham posição/minimizado', () => {
     const primeira = montar('painel-x');
