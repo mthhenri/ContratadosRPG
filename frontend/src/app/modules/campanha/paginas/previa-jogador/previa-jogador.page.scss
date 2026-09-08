@@ -1,11 +1,11 @@
 @use "tema/breakpoints" as bp;
 
 // Container de página própria (m8-04) — mesma medida de `.detalhe`/`.espectador`/`.iniciativa`:
-// 85vw centrado no desktop, largura total sem margem no mobile.
+// 90vw centrado no desktop, largura total sem margem no mobile.
 .previa-jogador {
-    width: 85vw;
+    width: 90vw;
     max-width: none;
-    margin: 0 7.5vw;
+    margin: 0 5vw;
     // `<app-ficha-visualizacao modo="compacto">` tem sua própria `.ficha-nav` fixa no rodapé no
     // mobile — mesma variável de `.detalhe`/`.visualizar` (m2-20/m3-60): cada página que hospeda a
     // ficha compacta **define** o próprio piso (não há cascata global), e o consome no padding

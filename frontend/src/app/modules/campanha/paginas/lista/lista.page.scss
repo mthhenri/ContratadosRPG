@@ -3,7 +3,7 @@
 .campanhas {
     // m2-18: painel de controle — mesmo padrão de largura já em produção na visualização de ficha
     // (`visualizar.page.scss`), que aproveita mais a tela que o teto fixo de 1160px da m2-17.
-    max-width: 80vw;
+    max-width: 90vw;
     margin: 0 auto;
 
     @include bp.mobile {

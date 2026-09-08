@@ -13,8 +13,8 @@
     display: flex;
     align-items: flex-start;
     gap: var(--gap-grid);
-    width: 85vw;
-    margin: 0 7.5vw;
+    width: 90vw;
+    margin: 0 5vw;
     transition:
         width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
         margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);
@@ -139,7 +139,7 @@
 }
 
 .iniciativa {
-    width: 85vw;
+    width: 90vw;
     margin: 0 auto;
     padding: 12px 20px 40px;
     display: flex;

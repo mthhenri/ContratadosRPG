@@ -1,13 +1,13 @@
 @use "tema/breakpoints" as bp;
 
-// Container de página própria (m8-03) — mesma medida de `.detalhe`/`.iniciativa`: 85vw centrado
+// Container de página própria (m8-03) — mesma medida de `.detalhe`/`.iniciativa`: 90vw centrado
 // no desktop, largura total sem margem no mobile (decisão registrada em `campanha-mobile-margem-
 // conteudo`). Sem painel lateral aqui (nenhuma consulta/histórico flutuante), então nunca precisa
 // do estado `--lateral-aberta` que `.detalhe` tem.
 .espectador {
-    width: 85vw;
+    width: 90vw;
     max-width: none;
-    margin: 0 7.5vw;
+    margin: 0 5vw;
 
     @include bp.mobile {
         width: 100%;

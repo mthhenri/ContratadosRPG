@@ -60,9 +60,9 @@
     }
     // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
     // (m2-18), que aproveita mais a tela que o teto fixo.
-    width: 85vw;
+    width: 90vw;
     max-width: none;
-    margin: 0 7.5vw;
+    margin: 0 5vw;
     transition:
         width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
         margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);

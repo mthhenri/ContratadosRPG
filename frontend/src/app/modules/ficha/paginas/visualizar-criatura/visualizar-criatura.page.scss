@@ -9,9 +9,9 @@
     // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
     // (identidade | atributos | status com abas), mesmo racional de `visualizar.page.scss`
     // (ficha de jogador) e alvo de fidelidade `docs/design/examples/ficha-de-criatura.html`.
-    width: 85vw;
+    width: 90vw;
     max-width: none;
-    margin: 0 7.5vw;
+    margin: 0 5vw;
     transition:
         width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
         margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);

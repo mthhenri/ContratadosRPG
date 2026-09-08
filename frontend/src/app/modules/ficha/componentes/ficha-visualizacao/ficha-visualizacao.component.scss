@@ -96,7 +96,7 @@
 
         // Status (m3-27-visual, terceira coluna): ocupa o resto da largura da página — Identidade e
         // Atributos são fixas, então é a única que aproveita o `max-width` maior do `.ficha-pagina`.
-        // min-width evita que ela fique espremida quando o `80vw` do `.ficha-pagina` é pequeno (telas
+        // min-width evita que ela fique espremida quando o `90vw` do `.ficha-pagina` é pequeno (telas
         // estreitas) — abaixo disso, prefere estourar a largura da página a espremer o card de Status.
         &--status {
             flex: 1 1 auto;

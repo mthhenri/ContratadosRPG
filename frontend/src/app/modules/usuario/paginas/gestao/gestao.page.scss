@@ -1,6 +1,6 @@
 @use "tema/breakpoints" as bp;
 .gestao {
-    max-width: 80vw;
+    max-width: 90vw;
     margin: 0 auto;
 }
 @include bp.mobile {
