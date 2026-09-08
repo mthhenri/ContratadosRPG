@@ -16,6 +16,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
@@ -61,6 +62,7 @@ interface ItemCriatura {
     BotaoIcone,
     Icone,
     OverflowFade,
+    Tooltip,
     Esqueleto,
     Modal,
   ],
@@ -427,5 +429,115 @@ export class CampanhaDetalheMestre {
   protected abrirPreviaJogador(membro: CampanhaMembroResumoDto): void {
     this.dialogMembrosAberta.set(false);
     void this.router.navigate(['/campanhas', this.dados.id, 'previa', membro.usuarioId]);
+  }
+
+  // === Dialog "Convites" — os dois códigos (jogador/espectador) saem da tira de estatísticas
+  // sempre visível e viram dialog aberta pela coluna de ações. Mesmo comportamento de copiar/
+  // regenerar de hoje, só de local.
+
+  protected readonly regenerando = signal(false);
+  protected readonly regenerado = signal(false);
+  protected readonly copiado = signal(false);
+
+  protected readonly regenerandoEspectador = signal(false);
+  protected readonly regeneradoEspectador = signal(false);
+  protected readonly copiadoEspectador = signal(false);
+
+  protected copiarConvite(): void {
+    const codigoConvite = this.dados.campanha()?.codigoConvite;
+    if (!codigoConvite) {
+      return;
+    }
+    void navigator.clipboard.writeText(codigoConvite).then(() => {
+      this.copiado.set(true);
+      setTimeout(() => this.copiado.set(false), 1500);
+    });
+  }
+
+  protected rotuloCopiarConvite(copiado: boolean, tipo: 'jogador' | 'espectador'): string {
+    return copiado ? 'Código copiado' : `Copiar código de convite de ${tipo}`;
+  }
+
+  protected rotuloRegenerarConvite(regenerando: boolean, tipo: 'jogador' | 'espectador'): string {
+    return regenerando ? `Regenerando código de convite de ${tipo}` : `Regenerar código de convite de ${tipo}`;
+  }
+
+  protected pedirRegenerarConvite(): void {
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Regenerar convite de jogador',
+        mensagem: 'O código atual deixa de funcionar. Quem ainda não entrou vai precisar do novo.',
+        rotuloConfirmar: 'Regenerar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.regenerarConvite();
+        }
+      });
+  }
+
+  private regenerarConvite(): void {
+    if (this.regenerando()) {
+      return;
+    }
+    this.regenerando.set(true);
+    this.campanhaService
+      .regenerarConvite(this.dados.id)
+      .pipe(finalize(() => this.regenerando.set(false)))
+      .subscribe({
+        next: (conviteRegenerado) => {
+          this.dados.campanha.update((atual) =>
+            atual ? { ...atual, codigoConvite: conviteRegenerado.codigoConvite } : atual,
+          );
+          this.regenerado.set(true);
+          setTimeout(() => this.regenerado.set(false), 1500);
+        },
+      });
+  }
+
+  protected copiarConviteEspectador(): void {
+    const codigoConviteEspectador = this.dados.campanha()?.codigoConviteEspectador;
+    if (!codigoConviteEspectador) {
+      return;
+    }
+    void navigator.clipboard.writeText(codigoConviteEspectador).then(() => {
+      this.copiadoEspectador.set(true);
+      setTimeout(() => this.copiadoEspectador.set(false), 1500);
+    });
+  }
+
+  protected pedirRegenerarConviteEspectador(): void {
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Regenerar convite de espectador',
+        mensagem: 'O código atual deixa de funcionar. Quem ainda não entrou vai precisar do novo.',
+        rotuloConfirmar: 'Regenerar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.regenerarConviteEspectador();
+        }
+      });
+  }
+
+  private regenerarConviteEspectador(): void {
+    if (this.regenerandoEspectador()) {
+      return;
+    }
+    this.regenerandoEspectador.set(true);
+    this.campanhaService
+      .regenerarConviteEspectador(this.dados.id)
+      .pipe(finalize(() => this.regenerandoEspectador.set(false)))
+      .subscribe({
+        next: (conviteRegenerado) => {
+          this.dados.campanha.update((atual) =>
+            atual ? { ...atual, codigoConviteEspectador: conviteRegenerado.codigoConviteEspectador } : atual,
+          );
+          this.regeneradoEspectador.set(true);
+          setTimeout(() => this.regeneradoEspectador.set(false), 1500);
+        },
+      });
   }
 }

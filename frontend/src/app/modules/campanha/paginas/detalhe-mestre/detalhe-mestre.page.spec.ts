@@ -106,6 +106,8 @@ describe('CampanhaDetalheMestre', () => {
       alterarPapelMembro: vi.fn((_id: number, usuarioId: number, papel: TipoCampanhaMembroPapelEnum) =>
         of({ campanhaId: CAMPANHA_ID, usuarioId, papel }),
       ),
+      regenerarConvite: vi.fn(() => of({ id: CAMPANHA_ID, codigoConvite: 'NOVO' })),
+      regenerarConviteEspectador: vi.fn(() => of({ id: CAMPANHA_ID, codigoConviteEspectador: 'NOVOESP' })),
     };
     const fichaService = {
       listarFichas: vi.fn(() => of(fichas)),
@@ -155,6 +157,11 @@ describe('CampanhaDetalheMestre', () => {
     };
     const confirmacaoService = { confirmar: vi.fn(() => Promise.resolve(true)) };
     const topbarContexto = { definir: vi.fn(), limpar: vi.fn() };
+
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn(() => Promise.resolve()) },
+      configurable: true,
+    });
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
@@ -203,7 +210,15 @@ describe('CampanhaDetalheMestre', () => {
 
     const fixture = TestBed.createComponent(CampanhaDetalheMestre);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, fichaService, campanhaService, dados, navegar };
+    return {
+      fixture,
+      raiz: fixture.nativeElement as HTMLElement,
+      fichaService,
+      campanhaService,
+      confirmacaoService,
+      dados,
+      navegar,
+    };
   }
 
   function abrirDialogMembros(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) {
@@ -336,6 +351,58 @@ describe('CampanhaDetalheMestre', () => {
       (raiz.querySelector('.detalhe-mestre__membro-confirmacao-acoes button') as HTMLButtonElement).click();
 
       expect(campanhaService.transferirMestre).toHaveBeenCalledWith(CAMPANHA_ID, 2);
+    });
+  });
+
+  describe('dialog "Convites"', () => {
+    function abrirDialogConvites(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) {
+      (Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find((el) => el.textContent?.trim() === 'Convites') as HTMLButtonElement).click();
+      fixture.detectChanges();
+    }
+
+    it('abre e mostra os dois códigos de convite', () => {
+      const { raiz, fixture } = montar();
+      abrirDialogConvites(raiz, fixture);
+
+      expect(raiz.querySelector('app-modal')?.textContent).toContain(campanhaBase.codigoConvite);
+      expect(raiz.querySelector('app-modal')?.textContent).toContain(campanhaBase.codigoConviteEspectador);
+    });
+
+    it('copia o código de convite de jogador', async () => {
+      const { raiz, fixture } = montar();
+      abrirDialogConvites(raiz, fixture);
+
+      const copiar = raiz.querySelector('.detalhe-mestre__convite button') as HTMLButtonElement;
+      copiar.click();
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(campanhaBase.codigoConvite);
+    });
+
+    it('pede confirmação antes de regenerar o convite de espectador e chama o serviço ao confirmar', async () => {
+      const { raiz, fixture, campanhaService, confirmacaoService } = montar();
+      abrirDialogConvites(raiz, fixture);
+
+      const regenerarEspectador = Array.from(raiz.querySelectorAll('button')).find(
+        (el) => el.getAttribute('aria-label') === 'Regenerar código de convite de espectador',
+      ) as HTMLButtonElement;
+      regenerarEspectador.click();
+
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Regenerar convite de espectador' }),
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(campanhaService.regenerarConviteEspectador).toHaveBeenCalledWith(CAMPANHA_ID);
+    });
+
+    it('tem o link "Painel" para o Painel do espectador em modo de prévia', () => {
+      const { raiz, fixture } = montar();
+      abrirDialogConvites(raiz, fixture);
+
+      const link = Array.from(raiz.querySelectorAll('a')).find((el) => el.textContent?.includes('Painel'));
+      expect(link?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador`);
     });
   });
 });

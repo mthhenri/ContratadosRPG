@@ -351,5 +351,76 @@
         }
     </ul>
 </app-modal>
+} @if (dialogConvitesAberta()) {
+<app-modal [aberto]="true" titulo="Convites" (fechou)="dialogConvitesAberta.set(false)">
+    <span modalIcone class="dialogo__icone"><app-icone nome="convite" /></span>
+
+    <div class="detalhe-mestre__convite">
+        <span class="detalhe-mestre__convite-rotulo">Convite de jogador</span>
+        <div class="detalhe-mestre__convite-linha">
+            <code class="detalhe-mestre__codigo">{{ campanhaAtual.codigoConvite }}</code>
+            <button
+                app-botao-icone
+                tamanho="padrao"
+                type="button"
+                [class.detalhe-mestre__copiar--copiado]="copiado()"
+                [attr.aria-label]="rotuloCopiarConvite(copiado(), 'jogador')"
+                [appTooltip]="copiado() ? 'Código copiado' : 'Copiar código de convite'"
+                (click)="copiarConvite()"
+            >
+                <app-icone [nome]="copiado() ? 'check' : 'copiar'" />
+            </button>
+            <button
+                app-botao-icone
+                tamanho="padrao"
+                type="button"
+                [disabled]="regenerando()"
+                [attr.aria-label]="rotuloRegenerarConvite(regenerando(), 'jogador')"
+                [appTooltip]="'Regenerar convite'"
+                (click)="pedirRegenerarConvite()"
+            >
+                <app-icone [nome]="regenerado() ? 'check' : 'atualizar'" />
+            </button>
+        </div>
+    </div>
+
+    <div class="detalhe-mestre__convite">
+        <span class="detalhe-mestre__convite-rotulo">Convite de espectador</span>
+        <div class="detalhe-mestre__convite-linha">
+            <code class="detalhe-mestre__codigo">{{ campanhaAtual.codigoConviteEspectador }}</code>
+            <button
+                app-botao-icone
+                tamanho="padrao"
+                type="button"
+                [class.detalhe-mestre__copiar--copiado]="copiadoEspectador()"
+                [attr.aria-label]="rotuloCopiarConvite(copiadoEspectador(), 'espectador')"
+                [appTooltip]="copiadoEspectador() ? 'Código copiado' : 'Copiar código de convite'"
+                (click)="copiarConviteEspectador()"
+            >
+                <app-icone [nome]="copiadoEspectador() ? 'check' : 'copiar'" />
+            </button>
+            <button
+                app-botao-icone
+                tamanho="padrao"
+                type="button"
+                [disabled]="regenerandoEspectador()"
+                [attr.aria-label]="rotuloRegenerarConvite(regenerandoEspectador(), 'espectador')"
+                [appTooltip]="'Regenerar convite'"
+                (click)="pedirRegenerarConviteEspectador()"
+            >
+                <app-icone [nome]="regeneradoEspectador() ? 'check' : 'atualizar'" />
+            </button>
+            <a
+                app-botao
+                variante="secundario"
+                [routerLink]="['/campanhas', campanhaAtual.id, 'espectador']"
+                [appTooltip]="'Abrir o Painel do espectador em modo de prévia'"
+            >
+                <app-icone nome="fantasma" />
+                Painel
+            </a>
+        </div>
+    </div>
+</app-modal>
 }
 }
