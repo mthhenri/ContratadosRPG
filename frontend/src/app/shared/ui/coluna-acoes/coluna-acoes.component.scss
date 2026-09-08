@@ -35,6 +35,18 @@
     overflow-y: auto;
 }
 
+// Separador entre categorias de itens — projetado pelo consumidor (`<hr class="coluna-acoes__
+// separador" />` dentro de `<app-coluna-acoes>`), estilizado aqui via `::ng-deep` porque a
+// encapsulação de view não alcança conteúdo projetado (mesmo recurso já usado abaixo, no bloco
+// mobile, para `.coluna-acoes__item`/`.coluna-acoes__item-rotulo`).
+::ng-deep .coluna-acoes__separador {
+    flex: none;
+    height: 1px;
+    margin: var(--space-4) var(--space-8);
+    background: var(--border);
+    border: 0;
+}
+
 // Mobile: barra inferior fixa (mesmo racional de `.ficha-nav`) — rótulo sempre visível abaixo do
 // ícone, sem o botão de alternar (decisão validada no POC visual do autor).
 @include bp.mobile {
@@ -78,5 +90,14 @@
         white-space: normal !important;
         font-size: 9px;
         text-align: center;
+    }
+
+    // A barra virou linha horizontal (`flex-direction: row`) — o separador acompanha: vira um
+    // traço vertical (largura 1px, altura do próprio item) em vez do traço horizontal do desktop.
+    ::ng-deep .coluna-acoes__separador {
+        width: 1px;
+        height: auto;
+        align-self: stretch;
+        margin: 0 2px;
     }
 }

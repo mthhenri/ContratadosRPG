@@ -2,6 +2,7 @@ import { Component, ElementRef, computed, input, model, signal, viewChild } from
 
 import { Icone } from '../icone/icone.component';
 import { Botao } from '../ui/botao/botao.component';
+import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
 import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
 import {
   avaliarExpressao,
@@ -61,6 +62,16 @@ export class CalculadoraFlutuante {
    * jogador da campanha) continuam com o gatilho próprio, fora do escopo dessa migração.
    */
   readonly mostrarGatilho = input(true);
+
+  /**
+   * Posição inicial do popup — desloca pra longe da coluna esquerda (`app-coluna-acoes`) quando
+   * `mostrarGatilho` é `false`: o padrão `{ x: 16, y: 88 }` (canto superior esquerdo) fica embaixo
+   * da própria coluna de ações nesse caso, e o item que abre a calculadora (e fecharia de novo)
+   * fica atrás do popup — achado ao vivo desta task (clique de fechar não alcançava o botão).
+   */
+  protected readonly posicaoInicial = computed<PainelFlutuantePosicao>(() =>
+    this.mostrarGatilho() ? { x: 16, y: 88 } : { x: 280, y: 88 },
+  );
 
   protected readonly expressao = signal('');
   protected readonly erro = signal(false);

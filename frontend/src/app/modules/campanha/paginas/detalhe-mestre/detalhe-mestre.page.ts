@@ -1,5 +1,5 @@
 import { Component, inject, signal, viewChild } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -79,6 +79,7 @@ interface ItemCriatura {
     Esqueleto,
     Modal,
     DatePipe,
+    NgTemplateOutlet,
   ],
   templateUrl: './detalhe-mestre.page.html',
   styleUrl: './detalhe-mestre.page.scss',
@@ -103,8 +104,10 @@ export class CampanhaDetalheMestre {
 
   protected readonly calculadoraAberta = signal(false);
 
-  protected abrirCaderno(): void {
-    this.cadernoRef()?.abrir();
+  /** Alterna a janela do caderno — clicar de novo no item "Caderno" da coluna de ações fecha,
+   *  mesmo comportamento do toggle da calculadora (`[(aberta)]` + `calculadoraAberta.set(!...)`). */
+  protected alternarCaderno(): void {
+    this.cadernoRef()?.alternar();
   }
 
   /** Placeholders desta task — o conteúdo das dialogs chega nas próximas tasks da série. */
@@ -273,10 +276,10 @@ export class CampanhaDetalheMestre {
     void this.router.navigate(['/campanhas', this.dados.id, 'criatura', 'nova']);
   }
 
-  // === Editar/Excluir campanha — itens da coluna de ações. O formulário de edição continua
-  // inline no conteúdo (comportamento interno inalterado), só o gatilho mudou de lugar.
+  // === Editar/Excluir campanha — itens da coluna de ações. A edição é uma dialog (decisão do
+  // autor, 2026-09-08 — o formulário passou de inline no conteúdo para `app-modal`).
 
-  protected readonly editando = signal(false);
+  protected readonly dialogEdicaoAberta = signal(false);
   protected readonly salvando = signal(false);
 
   protected readonly formularioEdicao = this.formBuilder.nonNullable.group({
@@ -290,11 +293,11 @@ export class CampanhaDetalheMestre {
       return;
     }
     this.formularioEdicao.reset({ nome: campanhaAtual.nome, descricao: campanhaAtual.descricao ?? '' });
-    this.editando.set(true);
+    this.dialogEdicaoAberta.set(true);
   }
 
   protected cancelarEdicao(): void {
-    this.editando.set(false);
+    this.dialogEdicaoAberta.set(false);
   }
 
   protected salvarEdicao(): void {
@@ -312,13 +315,13 @@ export class CampanhaDetalheMestre {
           this.dados.campanha.update((atual) =>
             atual ? { ...atual, nome: campanhaAlterada.nome, descricao: campanhaAlterada.descricao } : atual,
           );
-          this.editando.set(false);
+          this.dialogEdicaoAberta.set(false);
         },
       });
   }
 
   protected pedirExclusao(): void {
-    this.editando.set(false);
+    this.dialogEdicaoAberta.set(false);
     const campanhaAtual = this.dados.campanha();
     if (!campanhaAtual) {
       return;
@@ -355,6 +358,20 @@ export class CampanhaDetalheMestre {
   protected podeGerenciarMembro(membro: CampanhaMembroResumoDto): boolean {
     return membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE;
   }
+
+  /**
+   * Grade da dialog "Membros" em 3 categorias (decisão do autor, 2026-09-08): mestre sozinho na
+   * primeira linha (a 2ª coluna fica vazia), depois jogadores, depois espectadores — cada grupo
+   * mantém a ordem alfabética que `dados.membrosOrdenados()` já entrega dentro do papel.
+   */
+  protected readonly membroMestre = () =>
+    this.dados.membrosOrdenados().find((membro) => membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) ?? null;
+
+  protected readonly membrosJogadores = () =>
+    this.dados.membrosOrdenados().filter((membro) => membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR);
+
+  protected readonly membrosEspectadores = () =>
+    this.dados.membrosOrdenados().filter((membro) => membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR);
 
   protected pedirRemocaoMembro(membro: CampanhaMembroResumoDto): void {
     this.confirmacaoService

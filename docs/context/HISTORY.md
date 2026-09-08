@@ -1,6 +1,72 @@
 # HISTORY.md — Histórico do Projeto
 
-## 2026-09-08 — CampanhaDetalheMestre: corrige botões sem `[tamanho]`, chip/dialogo sem CSS e coluna de ações desgrudada da topbar
+## 2026-09-08 — CampanhaDetalheMestre: separadores na coluna de ações, painel 100%, dialog Membros em grade, Editar em dialog, toggle de Calculadora/Caderno
+
+Segunda rodada de polimento pedida direto pelo autor com screenshots, sobre a mesma tela da task
+anterior (`campanha-detalhe-mestre-coluna-acoes`). Seis pedidos, todos implementados e verificados
+ao vivo (skill `verify`, `1920×1080` e `360×800`):
+
+1. **Separadores categorizando a coluna de ações.** `app-coluna-acoes` ganhou suporte a
+   `<hr class="coluna-acoes__separador" />` como conteúdo projetado (estilizado via `::ng-deep`,
+   mesmo recurso já usado no bloco mobile do próprio primitivo) — traço horizontal no desktop,
+   traço vertical no mobile (a barra vira linha horizontal lá, `flex-direction: row`). A página
+   agrupa os 7 itens em 3 categorias: Membros/Iniciativa/Convites (navegação), Editar/Excluir
+   (CRUD da campanha), Calculadora/Caderno (utilitários).
+2. **`app-segmentado` ganhou `[fluido]` (opt-in).** Sem ele, o grupo continua do tamanho do
+   próprio conteúdo (`Caderno`/Leitor de Documentos/Inventário da ficha, que não pediram mudança);
+   com ele, o grupo ocupa 100% do container e cada item divide o espaço igualmente — `SegmentadoItem`
+   lê a classe do grupo ancestral via `:host-context` (mesmo padrão que `ColunaAcoesItem` já usa
+   pro rótulo retraído). Aplicado só no painel Rolagens⇆Inventário desta página, que antes sobrava
+   espaço vazio depois de "Inventário".
+3. **Dialog "Membros" 2× mais larga (`960px`) e reorganizada em grade de 2 colunas por categoria**
+   (decisão do autor): mestre sozinho na 1ª linha com a 2ª coluna vazia, depois "Jogadores", depois
+   "Espectadores" — cada categoria com cabeçalho `grid-column: 1 / -1`. O card de cada membro virou
+   um `<ng-template #itemMembro let-membro>` reusado via `NgTemplateOutlet` nas 3 seções (mestre
+   sozinho, `@for` de jogadores, `@for` de espectadores) — evita triplicar a mesma marcação. Novos
+   computeds em `CampanhaDetalheMestre`: `membroMestre()`, `membrosJogadores()`,
+   `membrosEspectadores()`, filtrando `dados.membrosOrdenados()` (mestre primeiro, resto alfabético,
+   já existente) por papel.
+4. **"Editar campanha" virou dialog** (decisão do autor) — o formulário inline (`@if (editando())`
+   substituindo a descrição) saiu do fluxo do conteúdo e virou `app-modal` aberta pelo item "Editar"
+   da coluna de ações, mesmo padrão de Membros/Convites/Duplicar ficha. `editando` renomeado para
+   `dialogEdicaoAberta`; a descrição da campanha agora aparece sempre (não some mais ao entrar em
+   edição, já que edição não ocupa mais o mesmo espaço).
+5. **Calculadora e Caderno alternam (abre/fecha) ao clicar de novo no mesmo item** da coluna de
+   ações — antes só abriam (`calculadoraAberta.set(true)`/`cadernoRef().abrir()`), sem jeito de
+   fechar pelo mesmo lugar. `CalculadoraFlutuante` já usava `model(false)` pra `aberta` (bastou virar
+   `calculadoraAberta.set(!calculadoraAberta())` na página); `CadernoFlutuante` ganhou um novo método
+   público `alternar()` (abre se `store.estado().aberto` for falso, fecha se for verdadeiro),
+   chamado por `alternarCaderno()` na página (renomeado de `abrirCaderno()`).
+6. **Achado só na verificação ao vivo, não no código** (item 5): com o toggle funcionando, o popup
+   da Calculadora/Caderno abre exatamente por cima do próprio item que o abriu — `posicaoInicial`
+   das duas é fixa em `{x:16,y:88}`/`{x:80,y:72}` (canto superior esquerdo), que cai embaixo da
+   coluna de ações quando `mostrarGatilho` é `false` (só esta página usa `false`; as demais têm o
+   círculo flutuante próprio, numa posição que nunca conflitava). Clique de fechar não alcançava o
+   botão (Playwright reproduziu o mesmo problema que um mouse real teria: "element intercepts
+   pointer events"). Corrigido com um `posicaoInicial` computado em cada componente
+   (`mostrarGatilho() ? posição-padrão : posição-deslocada-pra-x:280`) — as duas continuam com o
+   padrão de sempre pros outros consumidores, só esta página muda.
+7. **Achado só na verificação ao vivo, mobile** (não pedido, pré-existente): a grade de Membros
+   em 1 coluna no mobile deixava `.detalhe-mestre__membro-linha` (avatar + nome + até 4 botões de
+   ação) mais estreita que antes; `min-width: 0` na identidade + `overflow-wrap: anywhere` no nome
+   faziam o flexbox encolher o nome a zero em vez de quebrar a linha — "Jogador Dois" saía uma letra
+   por linha. Corrigido com `flex-wrap: wrap` na linha e `min-width: 140px` na identidade, só no
+   mobile — as ações caem pra uma 2ª linha em vez de espremer o nome.
+
+**Testado:** `detalhe-mestre.page.spec.ts` (25/25, 6 novos: separadores, toggle Calculadora/toggle
+Caderno, dialog Editar abre/salva/fecha, dialog Membros 960px+grade+categorias), `segmentado.
+component.spec.ts` (+1, `[fluido]`), `caderno-flutuante.component.spec.ts` (+1, `alternar()`),
+suíte completa do frontend (1591/1591; a única falha na 1ª rodada foi a flakiness já documentada de
+`painel-flutuante.component.spec.ts`, confirmada isolada — reexecução limpa passou 1591/1591), lint
+(0 erros), build de produção (aviso de budget é o `P-004` preexistente). **Verificado ao vivo**
+(campanha semeada via REST com mestre + 2 jogadores + 1 espectador) em `1920×1080` e `360×800`:
+separadores visíveis nos dois viewports (traço vertical no mobile), painel Rolagens/Inventário sem
+sobra à direita, dialog Membros a `960px` com mestre|vazio/Jogadores/Espectadores confirmado,
+dialog Editar campanha funcional, toggle de Calculadora e Caderno confirmado abrindo E fechando
+(`{x:280,...}` sem mais colidir com a coluna de ações), mobile sem overflow horizontal e com o nome
+do membro corrigido.
+
+## 2026-09-08 — campanha-detalhe-mestre-coluna-acoes: divide CampanhaDetalhe em mestre/jogador, redesenha o mestre
 
 Correção pedida direto pelo autor com screenshot da tela recém-entregue (`campanha-detalhe-
 mestre-coluna-acoes`, task acima): "a tela não está usando os nossos botões... a barra lateral

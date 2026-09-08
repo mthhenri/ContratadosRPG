@@ -524,16 +524,45 @@
 }
 
 // === Dialog "Membros" — mesma receita do antigo `.detalhe__membro*`/`.detalhe__equipe-carteirinha`
-// (componente análogo aprovado desta task: a lista de membros que existia ao lado do Esquadrão). ===
-.detalhe-mestre__membros-lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
+// (componente análogo aprovado desta task: a lista de membros que existia ao lado do Esquadrão),
+// reorganizada em grade de 2 colunas por categoria (Mestre isolado na 1ª linha, depois Jogadores,
+// depois Espectadores — decisão do autor, 2026-09-08). ===
+.detalhe-mestre__membros-grade {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-8);
-    max-height: 60vh;
+    max-height: 70vh;
     overflow-y: auto;
+
+    @include bp.mobile {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+// Cabeçalho de categoria (Jogadores/Espectadores) — ocupa as 2 colunas da grade, mesma receita de
+// `.detalhe-mestre__secao-titulo`. A 1ª linha (Mestre) não tem cabeçalho próprio: o papel já
+// aparece no `.chip-papel` do card, e a categoria fica óbvia por ser a única linha isolada.
+.detalhe-mestre__membros-categoria {
+    grid-column: 1 / -1;
+    margin: var(--space-8) 0 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-dim);
+
+    &:first-child {
+        margin-top: 0;
+    }
+}
+
+// Célula vazia ao lado do card do Mestre (contrato de design: "mestre | vazio") — sem conteúdo
+// nem estilo, só reserva a 2ª coluna da 1ª linha da grade.
+.detalhe-mestre__membro-vazio {
+    @include bp.mobile {
+        display: none;
+    }
 }
 
 .detalhe-mestre__membro {
@@ -550,6 +579,15 @@
     display: flex;
     align-items: flex-start;
     gap: 12px;
+
+    // Achado ao vivo desta task: no mobile, a grade de membros vira 1 coluna (card mais estreito)
+    // e a linha (avatar + nome + até 4 botões de ação) não cabia mais lado a lado — `min-width: 0`
+    // da identidade deixava o flexbox encolher o nome a zero em vez de quebrar a linha, e
+    // `overflow-wrap: anywhere` then partia "Jogador Dois" letra a letra. `flex-wrap` + o
+    // `min-width` abaixo forçam as ações pra uma 2ª linha em vez de espremer o nome.
+    @include bp.mobile {
+        flex-wrap: wrap;
+    }
 }
 
 .detalhe-mestre__membro-identidade {
@@ -559,6 +597,10 @@
     gap: 4px;
     flex: 1;
     min-width: 0;
+
+    @include bp.mobile {
+        min-width: 140px;
+    }
 }
 
 .detalhe-mestre__membro-nome {

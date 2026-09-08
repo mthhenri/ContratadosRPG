@@ -7,3 +7,10 @@
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-control);
 }
+
+// Opt-in `[fluido]` — grupo ocupa 100% do container, cada item (via `:host-context` no próprio
+// `SegmentadoItem`) divide o espaço em partes iguais, sem sobra de fundo depois do último item.
+:host(.segmentado--fluido) {
+    display: flex;
+    width: 100%;
+}

@@ -107,6 +107,16 @@ export class CadernoFlutuante implements OnDestroy {
   readonly mostrarGatilho = input(true);
   readonly abrirFicha = output<number>();
 
+  /**
+   * Posição inicial da janela — desloca pra longe da coluna esquerda (`app-coluna-acoes`) quando
+   * `mostrarGatilho` é `false`: o padrão `{ x: 80, y: 72 }` fica embaixo da própria coluna de
+   * ações nesse caso, e o item que abre o caderno (e fecharia de novo) fica atrás da janela —
+   * mesmo achado ao vivo desta task já corrigido em `CalculadoraFlutuante`.
+   */
+  protected readonly posicaoInicial = computed<PainelFlutuantePosicao>(() =>
+    this.mostrarGatilho() ? { x: 80, y: 72 } : { x: 280, y: 72 },
+  );
+
   protected readonly store = inject(CadernoFlutuanteStore);
   private readonly api = inject(PaginaCadernoService);
   private readonly tempoReal = inject(TempoRealService);
@@ -304,6 +314,16 @@ export class CadernoFlutuante implements OnDestroy {
    *  da coluna de ações do mestre da campanha, que substitui o gatilho flutuante próprio). */
   abrir(): void {
     this.store.abrir(this.campanhaId());
+  }
+
+  /** Abre se fechado, fecha se aberto — mesmo padrão de toggle de `CalculadoraFlutuante.alternar()`,
+   *  usado pelo item "Caderno" da coluna de ações do mestre (que substitui o gatilho flutuante). */
+  alternar(): void {
+    if (this.store.estado().aberto) {
+      this.fechar();
+    } else {
+      this.abrir();
+    }
   }
 
   protected aoMinimizadoChange(minimizado: boolean): void {

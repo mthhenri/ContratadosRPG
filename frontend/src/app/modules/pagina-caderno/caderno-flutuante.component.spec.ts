@@ -131,6 +131,18 @@ describe('CadernoFlutuante', () => {
     expect(raiz().textContent).toContain('Operação Eclipse');
   });
 
+  it('alternar() abre se fechado e fecha se aberto — mesmo padrão de toggle da calculadora', () => {
+    expect(raiz().querySelector('.painel-flutuante__janela')).toBeNull();
+
+    fixture.componentInstance.alternar();
+    fixture.detectChanges();
+    expect(raiz().querySelector('.painel-flutuante__janela')).not.toBeNull();
+
+    fixture.componentInstance.alternar();
+    fixture.detectChanges();
+    expect(raiz().querySelector('.painel-flutuante__janela')).toBeNull();
+  });
+
   it('ocupa a vaga do inventário ausente na pilha de utilitários do jogador', () => {
     expect(obter('[aria-label="Abrir caderno"]').classList).toContain(
       'caderno__gatilho--sem-inventario',

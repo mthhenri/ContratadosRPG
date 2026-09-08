@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * Grupo de seleção única (`P-056`), companion de `app-segmentado-item`. Diferente de `app-abas`
@@ -17,7 +17,7 @@ import { Component, input } from '@angular/core';
   template: `<ng-content />`,
   styleUrl: './segmentado.component.scss',
   host: {
-    class: 'segmentado',
+    '[class]': 'classes()',
     role: 'group',
     '[attr.aria-label]': 'rotulo()',
   },
@@ -25,4 +25,12 @@ import { Component, input } from '@angular/core';
 export class Segmentado {
   /** Rótulo acessível do grupo (`aria-label`). */
   readonly rotulo = input.required<string>();
+
+  /** Ocupa 100% da largura disponível, cada item dividindo o espaço em partes iguais — opt-in
+   *  (mesmo racional de `Botao.fluido`); sem ele, o grupo continua do tamanho do próprio conteúdo. */
+  readonly fluido = input(false);
+
+  protected readonly classes = computed(() =>
+    this.fluido() ? 'segmentado segmentado--fluido' : 'segmentado',
+  );
 }

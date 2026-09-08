@@ -80,3 +80,26 @@ describe('Segmentado', () => {
     expect(c.disabled).toBe(true);
   });
 });
+
+/** `[fluido]` (opt-in) — grupo ocupa 100% do container, itens dividem o espaço igualmente. */
+@Component({
+  imports: [Segmentado, SegmentadoItem],
+  template: `
+    <app-segmentado rotulo="Modo fluido" [fluido]="true">
+      <button app-segmentado-item>A</button>
+      <button app-segmentado-item>B</button>
+    </app-segmentado>
+  `,
+})
+class HospedeiroFluido {}
+
+describe('Segmentado — [fluido]', () => {
+  it('marca o container com a classe de largura cheia', () => {
+    TestBed.configureTestingModule({ imports: [HospedeiroFluido] });
+    const fixture = TestBed.createComponent(HospedeiroFluido);
+    fixture.detectChanges();
+
+    const container = (fixture.nativeElement as HTMLElement).querySelector('app-segmentado');
+    expect(container?.classList.contains('segmentado--fluido')).toBe(true);
+  });
+});

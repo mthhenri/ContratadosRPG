@@ -19,7 +19,7 @@
     [compacta]="true"
     [largura]="tamanho()?.width ?? null"
     [altura]="tamanho()?.height ?? null"
-    [posicaoInicial]="{ x: 16, y: 88 }"
+    [posicaoInicial]="posicaoInicial()"
     [style.--calc-escala]="escala()"
     (fechar)="fechar()"
     (minimizadoChange)="aoMinimizadoChange($event)"

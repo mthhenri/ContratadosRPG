@@ -34,3 +34,9 @@
     color: var(--accent-text);
     background: var(--accent);
 }
+
+// Lê a classe do grupo ancestral (mesmo padrão de `ColunaAcoesItem`/`:host-context` para o rótulo
+// retraído) — dentro de `app-segmentado[fluido]`, cada item divide o espaço igualmente.
+:host-context(.segmentado--fluido) {
+    flex: 1;
+}

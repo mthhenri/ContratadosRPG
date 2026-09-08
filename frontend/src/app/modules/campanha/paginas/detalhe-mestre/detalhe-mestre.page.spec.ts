@@ -47,6 +47,7 @@ describe('CampanhaDetalheMestre', () => {
   const membros: CampanhaMembroResumoDto[] = [
     { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
     { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+    { usuarioId: 3, nome: 'Espião', papel: TipoCampanhaMembroPapelEnum.ESPECTADOR, fichas: [] },
   ];
 
   const fichas: FichaResumoDto[] = [
@@ -351,6 +352,101 @@ describe('CampanhaDetalheMestre', () => {
       (raiz.querySelector('.detalhe-mestre__membro-confirmacao-acoes button') as HTMLButtonElement).click();
 
       expect(campanhaService.transferirMestre).toHaveBeenCalledWith(CAMPANHA_ID, 2);
+    });
+
+    it('é o dobro da largura padrão e organiza os membros em grade de 2 colunas por categoria (mestre | vazio, jogadores, espectadores)', () => {
+      const { raiz, fixture } = montar();
+      abrirDialogMembros(raiz, fixture);
+
+      const modal = raiz.querySelector('.modal') as HTMLElement;
+      expect(modal.style.getPropertyValue('--modal-largura')).toBe('960px');
+
+      const grade = raiz.querySelector('.detalhe-mestre__membros-grade') as HTMLElement;
+      expect(getComputedStyle(grade).display).toBe('grid');
+
+      const filhos = Array.from(grade.children);
+      // 1ª linha: card do Mestre seguido da célula vazia (contrato "mestre | vazio").
+      expect(filhos[0].classList.contains('detalhe-mestre__membro')).toBe(true);
+      expect(filhos[0].textContent).toContain('Mestre');
+      expect(filhos[1].classList.contains('detalhe-mestre__membro-vazio')).toBe(true);
+
+      const categorias = Array.from(grade.querySelectorAll('.detalhe-mestre__membros-categoria')).map(
+        (el) => el.textContent?.trim(),
+      );
+      expect(categorias).toEqual(['Jogadores', 'Espectadores']);
+    });
+  });
+
+  describe('dialog "Editar campanha"', () => {
+    it('abre como dialog (não mais formulário inline) ao clicar em "Editar" na coluna de ações', () => {
+      const { raiz, fixture } = montar();
+      expect(raiz.querySelector('app-modal')).toBeNull();
+
+      (Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find((el) => el.textContent?.trim() === 'Editar') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('app-modal')?.textContent).toContain('Editar campanha');
+      expect((raiz.querySelector('input[formControlName="nome"]') as HTMLInputElement).value).toBe(campanhaBase.nome);
+    });
+
+    it('Salvar chama CampanhaService.alterarCampanha e fecha a dialog', () => {
+      const { raiz, fixture, campanhaService } = montar();
+      (Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find((el) => el.textContent?.trim() === 'Editar') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      const nome = raiz.querySelector('input[formControlName="nome"]') as HTMLInputElement;
+      nome.value = 'Contenção Delta II';
+      nome.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      const salvar = Array.from(raiz.querySelectorAll('app-modal button')).find((el) =>
+        el.textContent?.includes('Salvar'),
+      ) as HTMLButtonElement;
+      salvar.click();
+
+      expect(campanhaService.alterarCampanha).toHaveBeenCalledWith(
+        CAMPANHA_ID,
+        expect.objectContaining({ nome: 'Contenção Delta II' }),
+      );
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-modal')).toBeNull();
+    });
+  });
+
+  describe('coluna de ações', () => {
+    it('tem separadores categorizando os itens', () => {
+      const { raiz } = montar();
+      expect(raiz.querySelectorAll('.coluna-acoes__separador').length).toBeGreaterThan(0);
+    });
+
+    it('Calculadora alterna aberta/fechada ao clicar de novo no mesmo item', () => {
+      const { raiz, fixture } = montar();
+      const itemCalculadora = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+        (el) => el.textContent?.trim() === 'Calculadora',
+      ) as HTMLButtonElement;
+
+      itemCalculadora.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).not.toBeNull();
+
+      itemCalculadora.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).toBeNull();
+    });
+
+    it('Caderno alterna aberto/fechado ao clicar de novo no mesmo item', () => {
+      const { raiz, fixture } = montar();
+      const itemCaderno = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+        (el) => el.textContent?.trim() === 'Caderno',
+      ) as HTMLButtonElement;
+
+      itemCaderno.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-caderno-flutuante .painel-flutuante__janela')).not.toBeNull();
+
+      itemCaderno.click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-caderno-flutuante .painel-flutuante__janela')).toBeNull();
     });
   });
 
