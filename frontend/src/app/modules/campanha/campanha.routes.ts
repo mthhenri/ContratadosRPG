@@ -16,6 +16,6 @@ export const campanhaRoutes: Routes = [
   {
     path: ':id',
     loadComponent: () =>
-      import('./paginas/detalhe/detalhe.page').then((modulo) => modulo.CampanhaDetalhe),
+      import('./paginas/detalhe/detalhe-shell.page').then((modulo) => modulo.CampanhaDetalheShell),
   },
 ];

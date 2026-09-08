@@ -1,0 +1,7 @@
+@if (dados.carregando()) {
+    <app-campanha-detalhe-jogador />
+} @else if (dados.ehMestre()) {
+    <app-campanha-detalhe-mestre />
+} @else {
+    <app-campanha-detalhe-jogador />
+}
