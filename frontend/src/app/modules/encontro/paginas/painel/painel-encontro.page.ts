@@ -61,7 +61,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { rolarIniciativaDaFicha } from '../../../ficha/rolar-iniciativa';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
-import { FichaFlutuante } from '../../componentes/ficha-flutuante/ficha-flutuante.component';
+import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { SeletorCombatentes } from '../../componentes/seletor-combatentes/seletor-combatentes.component';
 import { RolagemAvulso } from '../../componentes/rolagem-avulso/rolagem-avulso.component';
 import { EncontroService } from '../../encontro.service';

@@ -16,8 +16,8 @@ import {
 import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
-import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
-import { FichaService } from '../../../ficha/ficha.service';
+import { FichaVisualizacao } from '../ficha-visualizacao/ficha-visualizacao.component';
+import { FichaService } from '../../ficha.service';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
 
 /**

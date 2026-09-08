@@ -4,12 +4,12 @@ import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
-import { CriaturaVisualizacao } from '../../../ficha/componentes/criatura-visualizacao/criatura-visualizacao.component';
-import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
-import { FichaEdicaoCriaturaService } from '../../../ficha/ficha-edicao-criatura.service';
-import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
-import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
-import { FichaService } from '../../../ficha/ficha.service';
+import { CriaturaVisualizacao } from '../criatura-visualizacao/criatura-visualizacao.component';
+import { FichaVisualizacao } from '../ficha-visualizacao/ficha-visualizacao.component';
+import { FichaEdicaoCriaturaService } from '../../ficha-edicao-criatura.service';
+import { FichaEdicaoService } from '../../ficha-edicao.service';
+import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
+import { FichaService } from '../../ficha.service';
 import type { FichaFlutuanteAlvo } from './ficha-flutuante.model';
 
 /**

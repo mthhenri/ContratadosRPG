@@ -5,7 +5,7 @@ import { ClasseEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
-import { FichaService } from '../../../ficha/ficha.service';
+import { FichaService } from '../../ficha.service';
 import { FichaFlutuante } from './ficha-flutuante.component';
 import type { FichaFlutuanteAlvo } from './ficha-flutuante.model';
 
