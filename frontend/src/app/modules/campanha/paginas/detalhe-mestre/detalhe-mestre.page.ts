@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { IconeNome } from '../../../../shared/icone/icone.component';
 
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
@@ -357,6 +358,25 @@ export class CampanhaDetalheMestre {
 
   protected podeGerenciarMembro(membro: CampanhaMembroResumoDto): boolean {
     return membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE;
+  }
+
+  /** Ícone de identidade do papel do membro — mesmo mapa do `chip-papel` e do avatar do card na
+   *  dialog "Membros" (`m8-01`: `fantasma` é a identidade visual do ESPECTADOR). */
+  protected iconePapel(papel: TipoCampanhaMembroPapelEnum): IconeNome {
+    if (papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+      return 'coroa';
+    }
+    return papel === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'fantasma' : 'protecoes';
+  }
+
+  /** Rótulo humano do papel — o selo de texto (`chip-papel`) saiu do card do membro (decisão do
+   *  autor, 2026-09-08: o avatar com ícone já identifica o papel); este rótulo vira o tooltip do
+   *  próprio avatar em vez de ficar como texto sempre visível. */
+  protected rotuloPapel(papel: TipoCampanhaMembroPapelEnum): string {
+    if (papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+      return 'Mestre';
+    }
+    return papel === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'Espectador' : 'Jogador';
   }
 
   /**

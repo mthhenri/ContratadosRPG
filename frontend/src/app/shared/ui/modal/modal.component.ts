@@ -77,6 +77,13 @@ export class Modal {
       if (this.aberto()) {
         if (!elemento.open) {
           elemento.showModal();
+          // `showModal()` foca sozinho o primeiro elemento focável de dentro (o "×" no cabeçalho,
+          // que tem `appTooltip="Fechar"`) — o `focusin` desse foco automático abre o balão do
+          // tooltip, que fica preso ali (nada move o foco embora até o 1º clique) em todo modal do
+          // sistema, achado ao vivo nesta task. `[tabindex="-1"]` no próprio `<dialog>` + focar ele
+          // em vez disso pousa o foco num alvo neutro, mesmo padrão que `PainelFlutuante` já usa
+          // pra focar a própria janela ao abrir.
+          elemento.focus();
         }
         travarRolagemDoBody();
         aoLimpar(() => destravarRolagemDoBody());

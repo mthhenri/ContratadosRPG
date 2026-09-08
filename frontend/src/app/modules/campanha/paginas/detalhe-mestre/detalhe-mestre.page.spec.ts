@@ -414,9 +414,11 @@ describe('CampanhaDetalheMestre', () => {
   });
 
   describe('coluna de ações', () => {
-    it('tem separadores categorizando os itens', () => {
+    it('tem separadores categorizando os itens, cada um com um título/subtítulo', () => {
       const { raiz } = montar();
-      expect(raiz.querySelectorAll('.coluna-acoes__separador').length).toBeGreaterThan(0);
+      const categorias = Array.from(raiz.querySelectorAll('.coluna-acoes__categoria'));
+      expect(categorias.length).toBeGreaterThan(0);
+      expect(categorias.every((el) => el.textContent?.trim().length)).toBe(true);
     });
 
     it('Calculadora alterna aberta/fechada ao clicar de novo no mesmo item', () => {

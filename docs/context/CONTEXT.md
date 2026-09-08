@@ -4,15 +4,35 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-08 · **Última decisão registrada:** 2ª rodada de polimento do
-> `CampanhaDetalheMestre` — `app-coluna-acoes` ganhou separadores categorizando os 7 itens em 3
-> grupos; `app-segmentado` ganhou `[fluido]` (opt-in, só usado no painel Rolagens/Inventário);
+> **Última revisão:** 2026-09-08 · **Última decisão registrada:** 4ª rodada de polimento do
+> `CampanhaDetalheMestre` — achada a causa raiz da série inteira de queixas "os botões não parecem
+> os nossos": `coluna-acoes-item.component.scss` estilizava `.coluna-acoes__item` como classe pura
+> em vez de `:host(.coluna-acoes__item)`; sob encapsulamento emulado do Angular essa regra nunca
+> batia no host (que só carrega `_nghost`, não `_ngcontent` do próprio escopo) — **nenhum item da
+> coluna jamais teve `display:flex`/padding/cor/hover aplicados**, só o CSS nativo do navegador
+> (por isso só "Iniciativa", o único `<a>` da lista, saltava aos olhos — `<button>` tem chrome nativo
+> embutido que `<a>` não tem). Corrigido para `:host`/`:host(.coluna-acoes__item--ativo)`, mesmo
+> padrão já correto em `ColunaAcoes` (o pai). Segundo bug real: tooltip de ação invisível sempre que
+> o balão caía dentro do retângulo de um `<dialog>` aberto — `<dialog>` pinta na top layer do
+> navegador, acima de QUALQUER elemento normal por `z-index` que seja; `Tooltip.mostrar()` agora
+> porta o balão pro próprio `<dialog>` aberto (`host.closest('dialog[open]')`) em vez de sempre
+> `document.body`. Dialog "Membros": chip de texto "MESTRE"/"JOGADOR"/"ESPECTADOR" removido — o
+> papel agora só aparece no avatar (ícone + tooltip); cores simplificadas (jogador = accent sem
+> glow, mestre = mesma cor + glow, espectador = só cinza, sem cor do tema). Calculadora/Caderno
+> reportados quebrados de novo — reproduzido em toda combinação plausível sem sucesso, toggle
+> funciona; hipótese mais provável é bundle desatualizado na aba do autor. Detalhe completo em
+> `HISTORY.md`.
+> Antes: 3ª rodada — separadores da coluna ganharam título/subtítulo ("Gestão"/"Ferramentas") e mais
+> espaçamento; dialog "Membros" trocou o quadrado cinza decorativo por ícone de papel com contorno
+> quadrado; popup de Calculadora/Caderno preso atrás da coluna corrigido com `[pisoX]` em
+> `PainelFlutuante`; tooltip "Fechar" grudado em todo `app-modal` corrigido focando o próprio
+> `<dialog>` ao abrir. Achado e não corrigido: barra inferior de `app-coluna-acoes` estoura 360px no
+> mobile (`PROBLEMS.md` `P-066`, ainda aberto).
+> Antes: 2ª rodada — `app-coluna-acoes` ganhou separadores (sem título) categorizando os 7 itens em
+> 3 grupos; `app-segmentado` ganhou `[fluido]` (opt-in, só usado no painel Rolagens/Inventário);
 > dialog "Membros" virou `960px`/grade de 2 colunas por categoria (mestre|vazio, Jogadores,
 > Espectadores); "Editar campanha" virou dialog (era formulário inline); Calculadora/Caderno
-> alternam abre/fecha no mesmo item da coluna de ações. Achados só na verificação ao vivo: a
-> posição padrão do popup de Calculadora/Caderno colidia com a própria coluna de ações (corrigido
-> com `posicaoInicial` deslocado quando `mostrarGatilho=false`), e o nome do membro quebrava letra a
-> letra na dialog "Membros" no mobile (corrigido com `flex-wrap`). Detalhe completo em `HISTORY.md`.
+> alternam abre/fecha no mesmo item da coluna de ações.
 > Antes: `campanha-detalhe-mestre-coluna-acoes` concluída — `CampanhaDetalhe` monolítico dividido em
 > `CampanhaDetalheShell`/`CampanhaDetalheJogador`/`CampanhaDetalheMestre`; o mestre ganhou
 > `app-coluna-acoes` (primitivo novo), dialogs Membros/Convites, grid de 3 colunas reusando

@@ -1,5 +1,139 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-08 — `ColunaAcoesItem`: achada a causa raiz de "os botões não parecem os nossos" — `:host` sem seletor `:host()`, nunca aplicava; tooltip invisível atrás de `<dialog>`; chip-papel removido
+
+Quarta rodada de polimento pedida direto pelo autor sobre `CampanhaDetalheMestre`, com um pedido
+específico que virou a investigação mais importante da série: "a Iniciativa tá desalinhada porque
+ela é um `<a>`, corrija isso". A causa raiz não era o `<a>` em si — era um bug estrutural no
+primitivo `ColunaAcoesItem`, presente desde a task que o criou, nunca detectado.
+
+1. **Bug real, o maior da série: `.coluna-acoes__item` nunca aplicava a NENHUM item.**
+   `coluna-acoes-item.component.ts` aplica a classe `coluna-acoes__item` ao próprio host via
+   `host: { '[class]': 'classes()' }`, mas `coluna-acoes-item.component.scss` estilizava um seletor
+   de classe puro (`.coluna-acoes__item { ... }`), não `:host(.coluna-acoes__item)`. Sob
+   encapsulamento emulado do Angular, um seletor de classe comum vira
+   `.coluna-acoes__item[_ngcontent-<id>]` — e o HOST de um componente nunca carrega o atributo
+   `_ngcontent` do PRÓPRIO escopo (só `_nghost`); ele só carrega `_ngcontent` do escopo do PAI. A
+   regra nunca batia em lugar nenhum. Confirmado ao vivo por três ângulos: `getComputedStyle`
+   mostrando `display: block`/`padding: 0`/`align-items: normal` em TODOS os 7 itens (não só
+   Iniciativa); hover não mudando `background-color`; `matches('.coluna-acoes__item')` retornando
+   `true` (a classe existe no elemento) enquanto a regra simplesmente não casava. Sem
+   `display:flex`/padding/cor/hover nenhum, cada item renderizava só com o CSS nativo do navegador
+   — e como `<button>` tem chrome nativo (`appearance: button`, ~52px de espaço embutido) e `<a>`
+   não tem nenhum, os dois ficavam visualmente bem diferentes: só "Iniciativa" (o único `<a>`) saltava
+   aos olhos, mas TODOS os itens estavam sem o estilo do primitivo. Essa é a causa raiz mais provável
+   de toda a queixa "os botões não estão usando os nossos componentes" desde a task que criou
+   `ColunaAcoesItem`. Corrigido trocando `.coluna-acoes__item` por `:host` (base) e
+   `.coluna-acoes__item--ativo` por `:host(.coluna-acoes__item--ativo)`, mesmo padrão já usado
+   corretamente pelo componente pai (`ColunaAcoes`, `:host`/`:host(.coluna-acoes--expandida)`). O
+   bloco mobile (flex-direction:column/gap/min-height/padding), que vivia em `::ng-deep` na
+   `ColunaAcoes` pai (também dependente do mesmo bug pra fazer sentido, e arriscando perder a
+   queda de braço de especificidade/ordem contra o `:host` agora corrigido), migrou para dentro do
+   próprio `coluna-acoes-item.component.scss`, num `@include bp.mobile { }` dentro do `:host` —
+   cada componente estiliza o próprio host. Resultado ao vivo: os 7 itens (button e `<a>`) agora
+   têm `display:flex`/`padding-left:12px` idênticos, hover mostra o fundo `surface-2` esperado, e
+   "Iniciativa" alinha perfeitamente com os demais — em 1920×1080 (expandida/colapsada) e 360×800.
+2. **Bug real: tooltip de ação invisível dentro de qualquer `<dialog>` aberto.** O autor reportou
+   "os botões de ação (prévia/promover/rebaixar/excluir) ainda não têm tooltip" mesmo depois do
+   `appTooltip` já estar corretamente ligado a todos os 4 (confirmado por leitura de código). A causa
+   real: `Tooltip.mostrar()` sempre portava o balão pra `document.body` — mas o `<dialog>` nativo
+   (`showModal()`) pinta na **top layer** do navegador, acima do documento normal por completo,
+   **sem exceção de `z-index`** (comportamento documentado, não um bug do Chromium). Um balão em
+   `<body>` cujo retângulo caísse dentro da área do dialog ficava visualmente atrás do próprio
+   conteúdo do dialog — invisível, mesmo com `z-index: 3000`. Provado com um teste A/B rigoroso:
+   `git stash` da correção, screenshot recortado exatamente no retângulo do balão (texto
+   "Tornar espectador") — **nenhum pixel visível**; `git stash pop`, mesmo recorte — texto nítido.
+   (Uma primeira tentativa de prova via `document.elementFromPoint()` no centro do balão foi
+   descartada por dar falso positivo nos dois lados: o balão tem `pointer-events: none` de
+   propósito, e `elementFromPoint` ignora elementos com `pointer-events: none` na hit-test,
+   independente da pintura real — típica armadilha de usar a API errada pra provar visibilidade.)
+   Corrigido em `Tooltip.mostrar()`: `this.host.closest('dialog[open]') ?? this.documento.body` como
+   pai do balão — dentro de um dialog aberto, o balão nasce como filho dele (mesma promoção de top
+   layer, ainda `position: fixed` relativo à janela real, já que `.modal` não cria containing block
+   próprio) em vez de em `<body>`; fora de um dialog, comportamento idêntico a antes.
+   `esconder()` guarda o pai real (`balaoPai`) em vez de assumir `document.body` sempre, pra
+   `removeChild` sempre acertar o nó certo. Esse mesmo bug provavelmente explica todo "sumiço" de
+   tooltip dentro de QUALQUER `app-modal` do sistema, não só a dialog Membros.
+3. **Chip de papel removido da dialog Membros; papel vira tooltip do avatar.** O selo de texto
+   "MESTRE"/"JOGADOR"/"ESPECTADOR" (`.chip-papel`) saiu do card — o avatar com ícone de papel (já
+   entregue na rodada anterior) e um `[appTooltip]`/`aria-label` novos no próprio avatar assumem
+   essa informação sozinhos. `.chip-papel` (só usado aqui neste arquivo) foi removido do SCSS por
+   ficar morto.
+4. **Cores do avatar simplificadas** (pedido explícito do autor, substituindo a receita "esmaecida"
+   da rodada anterior): jogador é a cor base do avatar (accent, sem glow, sem modificador — a
+   receita de mestre é a MESMA cor + glow por cima); espectador vira só cinza
+   (`var(--text-mute)`/`var(--border-strong)`), sem nenhuma cor do tema — não mais accent esmaecido.
+5. **Calculadora/Caderno "ainda não funcionam"?** Reproduzido de toda forma plausível — navegador
+   limpo, posição antiga persistida simulada, coluna expandida, clique via `mouse.click()` real em
+   coordenadas de tela, navegação SPA dupla — em todos os casos o toggle abre e fecha
+   corretamente com o código atual (`[pisoX]` da rodada anterior confirmado intacto e funcionando).
+   Nenhuma causa adicional encontrada; hipótese mais provável é bundle desatualizado na aba do
+   autor no momento do teste (o `ng serve` só recarrega depois que o rebuild — ~8s — termina).
+   Nenhuma mudança de código para este item; pedir um recarregamento forçado (Ctrl+Shift+R) antes
+   de reabrir o achado.
+
+Regressão completa: `npm run test --workspace=frontend` — 1596/1596 (era 1594; +2 testes novos em
+`tooltip.directive.spec.ts` cobrindo o anexo dentro de `<dialog open>`). Lint e build de produção
+limpos (warning de budget é o `P-004` pré-existente). Verificado ao vivo em `1920×1080`
+(expandida/colapsada/hover) e `360×800` — a barra inferior mobile mede o mesmo `~481-491px` de
+antes (`P-066`, inalterado por esta rodada, ainda aberto).
+
+## 2026-09-08 — CampanhaDetalheMestre: título nos separadores da coluna, avatar de papel na dialog Membros, corrige popup de Calculadora/Caderno preso e tooltip "Fechar" grudado em todo modal
+
+Terceira rodada de polimento pedida direto pelo autor com screenshots, sobre a mesma tela das duas
+tasks anteriores (`campanha-detalhe-mestre-coluna-acoes`). Pedido também reportou "os botões de
+caderno e calculadora pararam de funcionar" — investigado e corrigido como bug, não feature.
+Tudo verificado ao vivo (skill `verify`, `1920×1080` e `360×800`, campanha semeada via REST com
+mestre + jogador + espectador):
+
+1. **Separadores da coluna de ações ganharam título.** O `<hr class="coluna-acoes__separador" />`
+   mudo da task anterior virou `<div class="coluna-acoes__categoria">Rótulo</div>` — uma régua
+   (`border-top`) com um rótulo mono maiúsculo por cima (mesma receita de
+   `.detalhe-mestre__membros-categoria`, já usada na dialog Membros). "Editar"/"Excluir" ganhou o
+   rótulo "Gestão"; "Calculadora"/"Caderno" ganhou "Ferramentas". Retraído (56px), o texto some pro
+   olho (mesma técnica de invisibilidade de `.coluna-acoes__item-rotulo`) e só a régua permanece;
+   no mobile vira um traço vertical mudo, como o `<hr>` antigo. `.coluna-acoes__itens` também
+   ganhou mais respiro entre os itens (`gap: 2px` → `var(--space-8)`, pedido explícito do autor).
+2. **Dialog "Membros": ícone do papel em vez do quadrado cinza decorativo.** O quadrado 32×32 que
+   só tinha uma textura diagonal placeholder agora mostra o ícone do papel do membro (coroa/
+   escudo/fantasma) com contorno quadrado, cor por papel — mestre: cor do tema com glow
+   (`filter: drop-shadow`), jogador: cor neutra padrão, espectador: cor do tema esmaecida
+   (`opacity` + `grayscale` + leve `blur`, "morta"/desfocada, pedido literal do autor). O botão de
+   ação "tornar espectador" trocou o ícone `olho` por `fantasma` — `olho` fica reservado para ações
+   de visualização/prévia, não identidade de papel (mesma distinção que `fantasma` já documenta em
+   `IconeNome`). Extraído `iconePapel()` no componente pra não duplicar o mapa papel→ícone entre o
+   avatar novo e o `chip-papel` que já existia.
+3. **Bug real: Calculadora/Caderno "pararam de funcionar".** Reproduzido ao vivo: com uma posição
+   antiga persistida em `localStorage` (de antes do desvio anti-colisão da task anterior existir —
+   ex.: `{x:16,y:88}`), o popup nasce **atrás** da própria coluna de ações, cobrindo o item que o
+   fecharia — o segundo clique não alcança mais o botão. A correção da task anterior só cobria a
+   primeira abertura (`posicaoInicial`), nunca uma posição já salva. `PainelFlutuante` ganhou
+   `[pisoX]` — um piso horizontal que a janela nunca nasce antes de, aplicado tanto à posição
+   inicial quanto a uma persistida — e `CalculadoraFlutuante`/`CadernoFlutuante` passam `220` só
+   quando `mostrarGatilho=false`. Testado: com a posição antiga simulada, o popup agora abre à
+   direita da coluna e o segundo clique fecha normalmente.
+4. **Bug real: tooltip "Fechar" grudado em todo `app-modal` do sistema.** Achado verificando os
+   tooltips da dialog Membros (pedido do autor) — `showModal()` do `<dialog>` nativo foca sozinho o
+   primeiro elemento focável de dentro, que é o botão "×" (`appTooltip="Fechar"`); o `focusin`
+   consequente abre o balão do tooltip, que fica visualmente preso ali até o primeiro clique em
+   qualquer lugar (nada move o foco embora antes disso) — em **todo** modal do sistema, não só
+   Membros. Corrigido dando `tabindex="-1"` ao próprio `<dialog>` e chamando `elemento.focus()`
+   depois do `showModal()`, pousando o foco inicial num alvo neutro — mesmo padrão que
+   `PainelFlutuante` já usa pra focar a própria janela ao abrir. Os tooltips de ação da dialog
+   Membros (Prévia/Transferir mestre/Tornar espectador-jogador/Remover) já existiam no código desde
+   a task anterior e sempre funcionaram; o balão "Fechar" grudado ao lado é que mascarava a
+   percepção.
+
+Regressão completa: `npm run test --workspace=frontend` — 1594/1594 (era 1591; +3 testes novos:
+2 de `[pisoX]` em `painel-flutuante.component.spec.ts`, 1 de foco inicial em
+`modal.component.spec.ts`). Lint e build de produção limpos (warning de budget é o `P-004`
+pré-existente, inalterado). Achado ao vivo e **não corrigido** (fora do escopo deste pedido,
+registrado em `PROBLEMS.md` como `P-066`): a barra inferior de `app-coluna-acoes` no mobile
+(360×800) estoura a largura da tela com os 7 itens — mede ~481-491px contra 360px disponíveis,
+sem rolagem — "Calculadora"/"Caderno" ficam inacessíveis num celular; pré-existente (medido com e
+sem os divisores desta task, a diferença é de só 10px), não introduzido por nenhuma das três
+rodadas desta tela.
+
 ## 2026-09-08 — CampanhaDetalheMestre: separadores na coluna de ações, painel 100%, dialog Membros em grade, Editar em dialog, toggle de Calculadora/Caderno
 
 Segunda rodada de polimento pedida direto pelo autor com screenshots, sobre a mesma tela da task

@@ -105,3 +105,24 @@
   classe BEM não aparece em `detalhe-jogador.page.html`.
 - **Desde:** `campanha-detalhe-mestre-coluna-acoes`, 2026-09-08.
 
+### P-066 — Barra inferior de `app-coluna-acoes` estoura 360px no mobile · `ABERTO` · frontend
+
+- **Sintoma:** em `CampanhaDetalheMestre` a 360×800, a barra inferior fixa de `app-coluna-acoes`
+  (7 itens: Membros/Iniciativa/Convites/Editar/Excluir/Calculadora/Caderno) mede ~491px de
+  largura útil contra 360px de viewport — "Calculadora" e "Caderno" ficam fora da tela, sem
+  scroll (`.coluna-acoes__itens` usa `overflow: visible` no bloco mobile). O mestre não consegue
+  abrir a calculadora nem o caderno num celular.
+- **Causa:** cada item do bloco mobile (`coluna-acoes.component.scss`, `@include bp.mobile`) tem
+  largura livre (pelo conteúdo do rótulo abaixo do ícone, ~50-60px), sem `flex:1` nem limite —
+  7 itens somados já excedem 360px mesmo sem os divisores de categoria (que somam só 10px do
+  total). Não é regressão desta task: medido com e sem os divisores novos, a largura sem eles já
+  era 481px — o estouro já existia com os mesmos 7 itens antes dos divisores ganharem título.
+- **Contorno:** nenhum no momento — Calculadora/Caderno continuam abríveis normalmente no desktop
+  e tablet (breakpoint `bp.mobile` é 560px).
+- **Correção:** decisão de design do autor entre 3 caminhos — rolagem horizontal com fade (mesmo
+  padrão de `.ficha-visualizacao__abas`), um item "mais" que abre um menu com o excedente, ou
+  itens mais compactos (ícone só, sem rótulo, no mobile). Nenhum foi escolhido; aguarda o autor.
+- **Desde:** achado ao vivo na verificação obrigatória de 360×800 da task de polimento visual da
+  coluna de ações (separadores titulados/espaçamento), 2026-09-08 — pré-existente, não introduzido
+  por ela.
+

@@ -61,6 +61,19 @@ describe('Modal', () => {
     expect(dialogo(fixture).open).toBe(false);
   });
 
+  it(
+    'foca o próprio <dialog> ao abrir, não o botão "×" — showModal() foca sozinho o primeiro ' +
+      'focável (o "×", que tem appTooltip="Fechar") e prendia o balão do tooltip aberto até o ' +
+      '1º clique em todo modal do sistema (achado ao vivo)',
+    () => {
+      const fixture = montar();
+      fixture.componentInstance.aberto.set(true);
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(dialogo(fixture));
+    },
+  );
+
   it('projeta o conteúdo do consumidor e o título no aria-labelledby', () => {
     const fixture = montar();
     fixture.componentInstance.aberto.set(true);

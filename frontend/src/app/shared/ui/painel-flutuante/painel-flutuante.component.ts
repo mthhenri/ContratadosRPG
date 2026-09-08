@@ -80,6 +80,15 @@ export class PainelFlutuante {
   /** Só acabamento (some o raio dos cantos) — o próprio maximizar (posição/tamanho) é do consumidor. */
   readonly maximizada = input(false);
   readonly posicaoInicial = input<PainelFlutuantePosicao>({ x: 16, y: 88 });
+  /**
+   * Piso horizontal (px) que a janela nunca nasce antes de — cobre tanto `[posicaoInicial]` quanto
+   * uma posição já persistida em `localStorage` de uma sessão anterior. Sem isso, um consumidor que
+   * muda sua zona reservada (ex.: `CalculadoraFlutuante`/`CadernoFlutuante` ganhando o desvio da
+   * coluna de ações do mestre da campanha) não corrige quem já tinha uma posição antiga salva ali:
+   * a janela nasce presa atrás da coluna pra sempre, cobrindo o próprio item que a fecharia — achado
+   * ao vivo (o usuário via os botões "pararem de funcionar" depois de já ter aberto a janela antes).
+   */
+  readonly pisoX = input(0);
 
   readonly fechar = output<void>();
   /** Emitido a cada troca de minimizado — o consumidor decide focar o próprio gatilho ao minimizar. */
@@ -111,7 +120,8 @@ export class PainelFlutuante {
       if (this.carregouEstadoPersistido) return;
       this.carregouEstadoPersistido = true;
       const persistido = carregarEstado(id);
-      this.posicaoInterna.set(persistido ? { x: persistido.x, y: persistido.y } : posicaoInicial);
+      const posicao = persistido ? { x: persistido.x, y: persistido.y } : posicaoInicial;
+      this.posicaoInterna.set({ ...posicao, x: Math.max(posicao.x, this.pisoX()) });
       this.minimizadoInterno.set(persistido?.minimizado ?? false);
     });
 

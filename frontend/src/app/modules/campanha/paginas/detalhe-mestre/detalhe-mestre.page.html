@@ -30,14 +30,14 @@
     <button app-coluna-acoes-item icone="convite" appTooltip="Convites" (click)="dialogConvitesAberta.set(true)">
         Convites
     </button>
-    <hr class="coluna-acoes__separador" />
+    <div class="coluna-acoes__categoria">Gestão</div>
     <button app-coluna-acoes-item icone="editar" appTooltip="Editar campanha" (click)="abrirEdicao()">
         Editar
     </button>
     <button app-coluna-acoes-item icone="excluir" appTooltip="Excluir campanha" (click)="pedirExclusao()">
         Excluir
     </button>
-    <hr class="coluna-acoes__separador" />
+    <div class="coluna-acoes__categoria">Ferramentas</div>
     <button app-coluna-acoes-item icone="calculadora" appTooltip="Calculadora" (click)="calculadoraAberta.set(!calculadoraAberta())">
         Calculadora
     </button>
@@ -393,21 +393,17 @@
 <ng-template #itemMembro let-membro>
     <div class="detalhe-mestre__membro">
         <div class="detalhe-mestre__membro-linha">
-            <span class="detalhe-mestre__avatar" aria-hidden="true"></span>
+            <span
+                class="detalhe-mestre__avatar"
+                [class.detalhe-mestre__avatar--mestre]="membro.papel === TipoCampanhaMembroPapelEnum.MESTRE"
+                [class.detalhe-mestre__avatar--espectador]="membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR"
+                [attr.aria-label]="'Papel: ' + rotuloPapel(membro.papel)"
+                [appTooltip]="rotuloPapel(membro.papel)"
+            >
+                <app-icone [nome]="iconePapel(membro.papel)" />
+            </span>
             <div class="detalhe-mestre__membro-identidade">
                 <span class="detalhe-mestre__membro-nome">{{ membro.nome }}</span>
-                <span class="chip-papel">
-                    <app-icone
-                        [nome]="
-                            membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
-                                ? 'coroa'
-                                : membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
-                                  ? 'fantasma'
-                                  : 'protecoes'
-                        "
-                    />
-                    {{ membro.papel }}
-                </span>
             </div>
 
             @if (membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR) {
@@ -454,7 +450,7 @@
                     (click)="pedirAlterarPapelMembro(membro)"
                 >
                     <app-icone
-                        [nome]="papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'olho' : 'protecoes'"
+                        [nome]="papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'fantasma' : 'protecoes'"
                     />
                 </button>
                 <button

@@ -109,6 +109,9 @@ export class Tooltip {
   private readonly documento = inject(DOCUMENT);
 
   private balao: HTMLElement | null = null;
+  /** Onde `balao` foi de fato anexado — `mostrar()`/`esconder()` precisam do mesmo nó pros dois
+   *  lados de `Renderer2.appendChild`/`removeChild`. Ver comentário de `mostrar()`. */
+  private balaoPai: Element | null = null;
   private temporizador: ReturnType<typeof setTimeout> | null = null;
   private temporizadorClique: ReturnType<typeof setTimeout> | null = null;
 
@@ -323,8 +326,9 @@ export class Tooltip {
     this.encerrarOuvintesGlobais();
     if (this.balao) {
       this.restaurarDescricao();
-      this.renderer.removeChild(this.documento.body, this.balao);
+      this.renderer.removeChild(this.balaoPai ?? this.documento.body, this.balao);
       this.balao = null;
+      this.balaoPai = null;
     }
   }
 
@@ -370,7 +374,16 @@ export class Tooltip {
       this.renderer.setStyle(balao, propriedade, valor);
     }
 
-    this.renderer.appendChild(this.documento.body, balao);
+    // O `<dialog>` nativo pinta na "top layer" do navegador — acima do documento normal por
+    // completo, **sem exceção de `z-index`** (achado ao vivo: `elementFromPoint` no centro do
+    // balão devolvia o conteúdo do próprio dialog, não o balão, mesmo com `z-index: 3000`). Um
+    // host dentro de um `<dialog aberto>` precisa do balão anexado ali dentro, não em `<body>` —
+    // ele continua `position: fixed` relativo à janela (mesma matemática de `posicionar()`: nada
+    // no `.modal` cria containing block próprio) e escapa do `overflow-y: auto` do dialog do mesmo
+    // jeito que escaparia do `<body>`, só que agora participa da MESMA promoção de top layer.
+    const pai = this.host.closest('dialog[open]') ?? this.documento.body;
+    this.renderer.appendChild(pai, balao);
+    this.balaoPai = pai;
     this.posicionar(balao);
     this.balao = balao;
     this.descrever(identificador);

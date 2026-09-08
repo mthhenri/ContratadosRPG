@@ -541,7 +541,8 @@
 
 // Cabeçalho de categoria (Jogadores/Espectadores) — ocupa as 2 colunas da grade, mesma receita de
 // `.detalhe-mestre__secao-titulo`. A 1ª linha (Mestre) não tem cabeçalho próprio: o papel já
-// aparece no `.chip-papel` do card, e a categoria fica óbvia por ser a única linha isolada.
+// aparece no avatar/ícone do card (com tooltip), e a categoria fica óbvia por ser a única linha
+// isolada.
 .detalhe-mestre__membros-categoria {
     grid-column: 1 / -1;
     margin: var(--space-8) 0 0;
@@ -611,30 +612,6 @@
     overflow-wrap: anywhere;
 }
 
-// Selo de papel do membro (Mestre/Espectador/Jogador) — mesma receita de `.chip-papel`, já
-// estabelecida em `detalhe-jogador.page.scss`/`lista.page.scss`. Global (não `&__`) porque nasceu
-// assim no monolito e as demais cópias seguem o mesmo nome.
-.chip-papel {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-compact);
-    padding: 4px 8px;
-    width: fit-content;
-
-    app-icone {
-        font-size: 11px;
-    }
-}
-
 .detalhe-mestre__membro-acoes {
     flex: none;
     display: inline-flex;
@@ -661,14 +638,32 @@
     gap: 10px;
 }
 
+// Ícone do papel do membro (mestre/jogador/espectador) num contorno quadrado — substitui o
+// quadrado cinza decorativo original e o selo de texto `.chip-papel` (removido: o papel agora só
+// aparece aqui, com tooltip — decisão do autor, 2026-09-08). Cor por papel: jogador é a base (cor
+// do tema, sem glow), mestre é a mesma base com glow (halo do `drop-shadow`) por cima, espectador é
+// só cinza — nenhuma cor do tema, pedido literal do autor ("cinza apenas").
 .detalhe-mestre__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 32px;
     height: 32px;
     flex: none;
     border-radius: var(--radius-control);
-    background-color: var(--surface-2);
-    background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 3px, transparent 3px 9px);
-    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    font-size: 15px;
+
+    &--mestre {
+        filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 65%, transparent));
+    }
+
+    &--espectador {
+        color: var(--text-mute);
+        border-color: var(--border-strong);
+    }
 }
 
 // Carteirinha da(s) ficha(s) do membro — mesma receita não-interativa de `.detalhe__equipe-carteirinha`.

@@ -73,6 +73,10 @@ export class CalculadoraFlutuante {
     this.mostrarGatilho() ? { x: 16, y: 88 } : { x: 280, y: 88 },
   );
 
+  /** Mesmo racional de `posicaoInicial` acima, mas cobrindo também uma posição já persistida de
+   *  antes desse desvio existir — ver `PainelFlutuante.pisoX`. */
+  protected readonly pisoX = computed(() => (this.mostrarGatilho() ? 0 : 220));
+
   protected readonly expressao = signal('');
   protected readonly erro = signal(false);
   protected readonly historico = signal<readonly EntradaHistoricoCalculadora[]>([]);

@@ -42,6 +42,23 @@ class Hospedeiro {
   readonly rolagens = signal(0);
 }
 
+/**
+ * Host dentro de um `<dialog open>` — reproduz o achado ao vivo de `campanha-detalhe-mestre-
+ * coluna-acoes`: o `<dialog>` nativo pinta na top layer do navegador, acima do documento normal
+ * por completo, sem exceção de `z-index`. Um balão portado pra `<body>` (comportamento antigo)
+ * ficava visualmente atrás de qualquer conteúdo do dialog que ele sobrepusesse — `document.body`
+ * segue sendo o pai certo fora de um dialog, mas dentro de um precisa ser o próprio `<dialog>`.
+ */
+@Component({
+  imports: [Tooltip],
+  template: `
+    <dialog open>
+      <button data-teste="dentro-do-dialog" type="button" [appTooltip]="'Fechar'">×</button>
+    </dialog>
+  `,
+})
+class HospedeiroComDialog {}
+
 describe('Tooltip', () => {
   function montar() {
     TestBed.configureTestingModule({ imports: [Hospedeiro] });
@@ -296,5 +313,47 @@ describe('Tooltip', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe('dentro de <dialog open>', () => {
+    it('anexa o balão dentro do <dialog>, não em <body> — a top layer nativa pintaria por cima dele', () => {
+      vi.useFakeTimers();
+      try {
+        TestBed.configureTestingModule({ imports: [HospedeiroComDialog] });
+        const fixture = TestBed.createComponent(HospedeiroComDialog);
+        fixture.detectChanges();
+        const dialogo = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+        const botao = dialogo.querySelector<HTMLButtonElement>('[data-teste="dentro-do-dialog"]')!;
+
+        botao.dispatchEvent(new Event('pointerenter'));
+        vi.advanceTimersByTime(300);
+
+        const bolha = dialogo.querySelector('[role="tooltip"]');
+        expect(bolha?.textContent).toBe('Fechar');
+        expect(document.body.querySelector(':scope > [role="tooltip"]')).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('remove o balão do <dialog> ao fechar (mesmo pai usado pra anexar e desanexar)', () => {
+      vi.useFakeTimers();
+      try {
+        TestBed.configureTestingModule({ imports: [HospedeiroComDialog] });
+        const fixture = TestBed.createComponent(HospedeiroComDialog);
+        fixture.detectChanges();
+        const dialogo = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+        const botao = dialogo.querySelector<HTMLButtonElement>('[data-teste="dentro-do-dialog"]')!;
+
+        botao.dispatchEvent(new Event('pointerenter'));
+        vi.advanceTimersByTime(300);
+        expect(dialogo.querySelector('[role="tooltip"]')).not.toBeNull();
+
+        botao.dispatchEvent(new Event('pointerleave'));
+        expect(dialogo.querySelector('[role="tooltip"]')).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });

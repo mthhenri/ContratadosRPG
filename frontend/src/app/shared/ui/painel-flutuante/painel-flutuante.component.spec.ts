@@ -26,6 +26,8 @@ interface DefinicaoComponenteComEstilos {
       [id]="idPainel()"
       titulo="Painel de teste"
       [aberto]="aberto()"
+      [posicaoInicial]="posicaoInicial()"
+      [pisoX]="pisoX()"
       (fechar)="fechamentos.set(fechamentos() + 1)"
       (minimizadoChange)="minimizadoEmitido.set($event)"
     >
@@ -39,6 +41,8 @@ class Hospedeiro {
   readonly aberto = signal(false);
   readonly fechamentos = signal(0);
   readonly minimizadoEmitido = signal<boolean | null>(null);
+  readonly posicaoInicial = signal({ x: 16, y: 88 });
+  readonly pisoX = signal(0);
   readonly painel = viewChild.required(PainelFlutuante);
 }
 
@@ -281,6 +285,30 @@ describe('PainelFlutuante', () => {
       ).toMatchObject({ x: xEsperado, y: yEsperado });
     },
   );
+
+  it('[pisoX] eleva a posição inicial quando ela nasce antes do piso', () => {
+    TestBed.configureTestingModule({ imports: [Hospedeiro] });
+    const fixture = TestBed.createComponent(Hospedeiro);
+    fixture.componentInstance.pisoX.set(220);
+    fixture.componentInstance.aberto.set(true);
+    fixture.detectChanges();
+
+    expect(janela(fixture)!.style.left).toBe('220px');
+  });
+
+  it('[pisoX] também eleva uma posição já persistida de antes do piso existir', () => {
+    localStorage.setItem(
+      'contratados-rpg:painel-flutuante:teste-painel',
+      JSON.stringify({ x: 16, y: 88, minimizado: false }),
+    );
+    TestBed.configureTestingModule({ imports: [Hospedeiro] });
+    const fixture = TestBed.createComponent(Hospedeiro);
+    fixture.componentInstance.pisoX.set(220);
+    fixture.componentInstance.aberto.set(true);
+    fixture.detectChanges();
+
+    expect(janela(fixture)!.style.left).toBe('220px');
+  });
 
   it('instâncias com [id] diferentes não compartilham posição/minimizado', () => {
     const primeira = montar('painel-x');

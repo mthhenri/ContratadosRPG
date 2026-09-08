@@ -117,6 +117,10 @@ export class CadernoFlutuante implements OnDestroy {
     this.mostrarGatilho() ? { x: 80, y: 72 } : { x: 280, y: 72 },
   );
 
+  /** Mesmo racional de `posicaoInicial` acima, mas cobrindo também uma posição já persistida de
+   *  antes desse desvio existir — ver `PainelFlutuante.pisoX`. */
+  protected readonly pisoX = computed(() => (this.mostrarGatilho() ? 0 : 220));
+
   protected readonly store = inject(CadernoFlutuanteStore);
   private readonly api = inject(PaginaCadernoService);
   private readonly tempoReal = inject(TempoRealService);

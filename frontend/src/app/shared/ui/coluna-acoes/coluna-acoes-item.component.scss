@@ -1,4 +1,15 @@
-.coluna-acoes__item {
+@use "tema/breakpoints" as bp;
+
+// `:host`, não `.coluna-acoes__item` puro — a classe é aplicada ao próprio host via
+// `host: { '[class]': 'classes()' }` (`coluna-acoes-item.component.ts`), e o host NUNCA carrega o
+// atributo `_ngcontent-*` de conteúdo do próprio template (só `_nghost-*`); um seletor de classe
+// simples, escopado pelo Angular, nunca bate nele. Achado ao vivo (2026-09-08): sem nenhuma dessas
+// regras aplicando, `<button>` e `<a>` renderizavam só com o CSS nativo do navegador — sem
+// `display: flex`/padding/hover/cor nenhuma — e como `<button>` tem chrome nativo (`appearance:
+// button`, padding embutido) e `<a>` não tem nenhum, os dois ficavam visualmente bem diferentes
+// entre si ("Iniciativa", o único item que é `<a>`, desalinhado dos outros) — a causa raiz de toda
+// a série de queixas "os botões não parecem os nossos" desde a task que criou este primitivo.
+:host {
     position: relative;
     display: flex;
     align-items: center;
@@ -12,17 +23,29 @@
     color: var(--text-dim);
     text-decoration: none;
     cursor: pointer;
+    appearance: none;
 
     &:hover {
         color: var(--text);
         background: var(--surface-2);
     }
 
-    &--ativo {
-        color: var(--text);
-        background: var(--accent-dim);
-        box-shadow: inset 2px 0 0 var(--accent);
+    // A coluna vira barra inferior fixa em linha no mobile (`ColunaAcoes`, `@include bp.mobile`) —
+    // cada item empilha ícone sobre rótulo em vez de lado a lado, mesmo racional de `.ficha-nav`.
+    // Vive aqui (não em `::ng-deep` na `ColunaAcoes` pai, como antes) pelo mesmo motivo do
+    // `:host` acima: só o próprio componente estiliza o próprio host de forma confiável.
+    @include bp.mobile {
+        flex-direction: column;
+        gap: 3px;
+        min-height: bp.$alvo-toque;
+        padding: 5px 1px;
     }
+}
+
+:host(.coluna-acoes__item--ativo) {
+    color: var(--text);
+    background: var(--accent-dim);
+    box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .coluna-acoes__item-icone {
