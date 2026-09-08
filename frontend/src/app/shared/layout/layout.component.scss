@@ -7,7 +7,10 @@
 }
 
 .topbar {
-    position: relative;
+    // Sticky (não fixed): rola normalmente com a página e só gruda no topo da viewport ao passar
+    // do próprio ponto de origem — pedido do autor para não ocupar espaço permanente na tela.
+    position: sticky;
+    top: 0;
     z-index: 70;
     display: flex;
     align-items: center;
@@ -344,7 +347,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    z-index: 50; // acima da topbar e do dropdown de perfil (z-index 30)
+    z-index: 80; // acima da topbar sticky (z-index 70) e do dropdown de perfil (z-index 30)
     overflow: hidden;
     pointer-events: none;
 
