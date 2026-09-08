@@ -1,5 +1,92 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-08 — campanha-detalhe-mestre-coluna-acoes: divide CampanhaDetalhe em mestre/jogador, redesenha o mestre
+
+Task avulsa pedida direto pelo autor (spec já trazia layout/proporções validados num POC visual
+fora do repo). `CampanhaDetalhe` (1707 linhas TS + 1596 HTML) renderizava mestre e jogador no mesmo
+componente, alternando por `@if (ehMestre())` em quase todo o template — dificultava evoluir as
+duas visões separadamente e deixava o mestre com informação sempre visível que o autor não queria
+(Membros sempre expandido, convites como stat card, botões flutuantes soltos de calculadora/
+caderno). Doze tasks, cada uma commitada e testada em separado:
+
+1. **`CampanhaDetalheDadosService`** — extrai fetch/tempo-real compartilhado (campanha/membros/
+   fichas/rolagens/inventário, salas de socket) do monolito antigo, provido por rota, ainda sem
+   consumidor.
+2. **Move `FichaFlutuante`** de `modules/encontro/componentes/` pra `modules/ficha/componentes/` —
+   não tinha nada específico de encontro, precisava ser reusada pela campanha sem um módulo
+   depender do outro.
+3. **Novo primitivo `app-coluna-acoes`** (`shared/ui/coluna-acoes/`) — coluna lateral expansível/
+   retrátil que participa do fluxo do layout (nunca sobrepõe, empurra o conteúdo), estado
+   persistido em `localStorage` por `[id]` (mesmo padrão de `app-painel-flutuante`), vira barra
+   inferior no mobile. Ícone `membros` novo (Tabler Icons, MIT).
+4. **`EspectadorFichaCard` ganha modo interativo** (`[mostrarAcoes]`, default `false` — espectador
+   inalterado) — ícone "Abrir ficha" sobre o avatar e gatilho do menu "⋯", pro mestre reusar o
+   cartão no Esquadrão em vez de duplicar a receita visual.
+5. **`CampanhaDetalheJogador`** — reprodução byte a byte do antigo ramo `@else` de `ehMestre()`.
+   **Achado na extração:** `removerDaCampanha`/`excluirFicha` precisavam continuar filtrando
+   `dados.fichas()` localmente (otimista) antes de escolher a próxima ficha exibida — um
+   `recarregarMembrosEFichas()` (refetch) chegaria tarde demais e reescolheria a ficha recém-
+   removida, porque o mock/estado da lista ainda não refletia a remoção no instante da escolha.
+6. **`CampanhaDetalheShell` + rota** — resolve o papel via `dados.ehMestre()` e monta
+   `CampanhaDetalheMestre` ou `CampanhaDetalheJogador`; o monolito antigo sai do repositório.
+7. **Redesenho de `CampanhaDetalheMestre`** — cabeçalho enxuto, `app-coluna-acoes` no lugar do menu
+   kebab + botões flutuantes de calculadora/caderno, Esquadrão/Criaturas em grid de 3 colunas
+   reusando `EspectadorFichaCard`, "Abrir ficha" via `FichaFlutuante`, sem banner de crítico nem
+   coluna "Membros" ao lado (removidos, não só reposicionados). Duas extensões pequenas em
+   primitivos existentes: `CalculadoraFlutuante`/`CadernoFlutuante` ganham `[mostrarGatilho]`
+   (default `true`, os outros 6 consumidores de `.utilitario-flutuante` inalterados) pra esconder o
+   círculo próprio quando dirigidos pela coluna de ações; `CadernoFlutuante.abrir()` vira público
+   (mesmo padrão de `FichaFlutuante.abrir()`) pra ser chamado via referência de template. **Achado
+   no gate:** `Tooltip` (hostDirective de `BotaoIcone`) já excluía `[app-botao-icone]` do próprio
+   seletor pra evitar match duplicado quando a tela também importa `Tooltip` standalone — faltava a
+   mesma exclusão pra `[app-coluna-acoes-item]` (NG0309 ao montar a coluna com `appTooltip` nos
+   itens), corrigido no mesmo commit.
+8. **Dialog "Membros"** — gestão de membros (transferir mestre, alternar papel, remover) sai da
+   coluna sempre visível; cada jogador ganha a ação "Prévia" por linha (decisão do autor, tomada
+   nesta sessão: por linha na dialog, não um item novo na coluna de ações nem removida) —
+   substitui o fluxo de 2 passos do menu kebab antigo.
+9. **Dialog "Convites"** — os dois códigos (jogador/espectador) saem da tira de estatísticas sempre
+   visível, mesmo conteúdo/comportamento de copiar/regenerar de hoje, incluindo o link "Painel".
+10. **Painel fixo Rolagens ⇆ Inventário** — segunda coluna sempre montada (`app-segmentado`
+    alternando via `[hidden]`, nunca overlay) substitui os dois `.utilitario-flutuante` de
+    histórico/inventário do mestre; a visão de jogador continua com o padrão atual de overlay
+    (fora de escopo). Conteúdo do item de rolagem reaproveita a receita visual de
+    `HistoricoRolagensSidebar` (análogo aprovado), sem o gatilho/overlay que este painel não usa.
+11. **Gate de integração** — `shared` 744/744, `backend` 551/551, `frontend` 1583/1583, lint 0 erros
+    (15996 avisos, dentro do histórico do repositório), build limpo (só o aviso de budget conhecido,
+    `P-004`), grep confirmando zero referência ao `CampanhaDetalhe` monolítico ou ao caminho antigo
+    de `FichaFlutuante` fora de comentários/prosa histórica.
+12. **Verificação ao vivo obrigatória** (Postgres + backend + frontend reais, cenário via REST cru —
+    mestre + jogador registrados, campanha criada, jogador entrou por convite, ficha "Vera" e
+    criatura "A Estátua" criadas) em `1920×1080` e `360×800`: coluna de ações retraída/expandida
+    (mobile vira barra inferior, sem overflow horizontal nos dois papéis), dialogs Membros
+    (carteirinha sem clique, ação "Prévia" só em linhas `JOGADOR`) e Convites (dois códigos +
+    "Painel"), alternância Rolagens⇆Inventário, "Abrir ficha" abrindo `FichaFlutuante` de verdade
+    com o documento completo e editável, comparação lado a lado com o análogo aprovado
+    (`CampanhaEspectador`/`EspectadorFichaCard` em modo espectador) confirmando mesma densidade e
+    receita visual, e regressão do jogador (ficha embutida, Equipe, Rolagens, Sessão, barra móvel)
+    idêntica ao comportamento anterior. **Achado só na verificação ao vivo, corrigido antes do
+    fecho:** o avatar da criatura (`.detalhe-mestre__criatura-avatar`) nasceu esticado, não
+    quadrado — `width:100% + aspect-ratio:1 + max-height:128px` não produz um quadrado quando a
+    largura do card excede o lado desejado, o mesmo pitfall já documentado no histórico do projeto
+    (`m8-07`) pro avatar do `EspectadorFichaCard`, reincidente aqui por não ter sido consultado
+    antes de escrever a regra nova. Corrigido reestruturando o card de criatura pro mesmo layout
+    horizontal do `EspectadorFichaCard` (avatar 100×100px fixo à esquerda, identidade à direita) —
+    os dois tipos de card do Esquadrão agora são visualmente da mesma família, não só o bug pontual
+    do quadrado corrigido isoladamente.
+
+**Decisão tomada nesta sessão** (não estava na spec, resolvida com o autor antes de implementar):
+"Prévia de jogador" — ausente da lista de itens de `app-coluna-acoes` da spec e não citada em Fora
+de Escopo — vira ação por linha na dialog "Membros" (opção escolhida entre 3 alternativas
+apresentadas).
+
+**Dívida aceita, registrada como `P-065`:** `detalhe-jogador.page.scss` foi copiado por inteiro do
+antigo `detalhe.page.scss` (Task 5) para não arriscar quebrar a regressão do jogador sob pressão de
+tempo; carrega seletores `.detalhe__*` que só o mestre usava (grid do Esquadrão antigo, tira de
+convites, etc.) e que a página do jogador nunca referencia. Sem efeito funcional ou visual — só
+peso morto de CSS — mas é uma trilha de trim mecânico (comparar cada seletor contra o HTML real do
+jogador) que não teve tempo de rigor proporcional nesta sessão.
+
 ## 2026-09-07 — Botões `SALVAR`/`+ Do sistema` em accent sólido com texto quase preto em 18 arquivos
 
 Autor perguntou, olhando 5 prints (Atributos, Habilidades, Adicionar Sequela/Trauma/Lesão), se os

@@ -4,15 +4,20 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-07 · **Última decisão registrada:** `I-024`/`I-025`/`I-026`
-> fecharam. `I-024` (perigo = primário) já estava resolvida por `ui-12`, sem diff — só o registro
-> em `IDEAS.md`. `I-025`/`I-026` (fundidas) deram ao `app-step-input` um modo sem digitação —
-> `[digitavel]="false"` troca o `<input>` central por texto só-leitura e os botões passam a
-> segurar-para-repetir (`appHoldRepeat`); `[comSinal]` antepõe `+`/marca `--ativo`. Substitui o
-> stepper de "segurar" duplicado em 7 lugares (`ficha-visualizacao` ×3, `criatura-visualizacao` ×1,
-> `ficha-habilidades` ×2, `ficha-sanidade` ×1), convergindo pra `tamanho="mini"`. Antes disso,
-> na mesma sessão: `app-valor-editavel` ganhou foco real (era no-op num app zoneless) e a fórmula de
-> Iniciativa virou editável (commit `34c87a7`, sessão concorrente).
+> **Última revisão:** 2026-09-08 · **Última decisão registrada:** `campanha-detalhe-mestre-coluna-
+> acoes` concluída — `CampanhaDetalhe` monolítico dividido em `CampanhaDetalheShell`/
+> `CampanhaDetalheJogador`/`CampanhaDetalheMestre`; o mestre ganhou `app-coluna-acoes` (primitivo
+> novo), dialogs Membros/Convites, grid de 3 colunas reusando `EspectadorFichaCard` (modo
+> interativo novo) e o painel fixo Rolagens/Inventário. Detalhe completo em `HISTORY.md`.
+> Antes: `I-024`/`I-025`/`I-026` fecharam (2026-09-07). `I-024` (perigo = primário) já estava
+> resolvida por `ui-12`, sem diff — só o registro em `IDEAS.md`. `I-025`/`I-026` (fundidas) deram
+> ao `app-step-input` um modo sem digitação — `[digitavel]="false"` troca o `<input>` central por
+> texto só-leitura e os botões passam a segurar-para-repetir (`appHoldRepeat`); `[comSinal]`
+> antepõe `+`/marca `--ativo`. Substitui o stepper de "segurar" duplicado em 7 lugares
+> (`ficha-visualizacao` ×3, `criatura-visualizacao` ×1, `ficha-habilidades` ×2, `ficha-sanidade`
+> ×1), convergindo pra `tamanho="mini"`. Antes disso, na mesma sessão: `app-valor-editavel` ganhou
+> foco real (era no-op num app zoneless) e a fórmula de Iniciativa virou editável (commit
+> `34c87a7`, sessão concorrente).
 > Antes: `P-057`/`P-058` fecharam. Nasceu o primitivo `app-valor-editavel` (`shared/ui/
 > valor-editavel/`) — máquina de estado
 > exibição↔edição + identidade do estado de exibição (via `app-botao[estilo="texto"]` interno),
@@ -47,6 +52,32 @@
 ---
 
 ## 1. Próxima Task
+
+**`campanha-detalhe-mestre-coluna-acoes` concluída (2026-09-08):** `CampanhaDetalhe` (o componente
+monolítico que renderizava mestre e jogador no mesmo lugar) virou três: `CampanhaDetalheShell`
+(resolve o papel, provê `CampanhaDetalheDadosService` — fetch/tempo-real compartilhado),
+`CampanhaDetalheJogador` (reprodução byte a byte do comportamento antigo) e `CampanhaDetalheMestre`
+(redesenho completo). O mestre ganhou o primitivo novo `app-coluna-acoes` (`shared/ui/coluna-acoes/`,
+expansível/retrátil, empurra o conteúdo, vira barra inferior no mobile) no lugar do menu kebab e
+dos botões flutuantes de calculadora/caderno; Esquadrão/Criaturas viraram grid de 3 colunas reusando
+`EspectadorFichaCard` (que ganhou o modo interativo `[mostrarAcoes]`, default `false`, espectador
+inalterado); Membros e Convites saíram da área sempre visível e viraram dialogs; Rolagens/Inventário
+viraram um painel fixo de 2ª coluna (nunca mais overlay, `app-segmentado` alternando por
+`[hidden]`); "Abrir ficha" dispara `FichaFlutuante` (realocada de `modules/encontro` pra
+`modules/ficha`) em vez de navegar. Decisão tomada com o autor durante a implementação: "Prévia de
+jogador" (ausente da lista de itens da coluna de ações na spec) virou ação por linha na dialog
+"Membros". Testes: `shared` 744/744, `backend` 551/551, `frontend` 1583/1583 (~280 novos entre os
+arquivos desta task); lint 0 erros; build limpo (só o aviso de budget conhecido, `P-004`).
+Verificação ao vivo (Postgres + backend + frontend reais, cenário via REST cru) em
+`1920×1080`/`360×800`, mestre e jogador, comparada ao análogo aprovado `CampanhaEspectador`:
+coluna de ações, as duas dialogs, alternância do painel lateral, `FichaFlutuante` abrindo com
+documento real editável, regressão do jogador confirmada idêntica. Achado só na verificação ao
+vivo, corrigido antes do fecho: avatar de criatura nascia esticado (não quadrado) — mesmo pitfall
+de `width:100%+aspect-ratio+max-height` já documentado em `m8-07`; card de criatura reestruturado
+pro mesmo layout horizontal do `EspectadorFichaCard`. Dívida aceita e registrada em `PROBLEMS.md`
+(`P-065`): `detalhe-jogador.page.scss` foi copiado por inteiro do monolito antigo, carrega
+seletores mortos que só o mestre usava — sem efeito funcional, pendente de um trim mecânico
+futuro. Detalhe completo, achados por task e viewports verificados em `HISTORY.md`.
 
 **`I-024`/`I-025`/`I-026` fechados (2026-09-07):** as três ideias abertas mais recentes de
 `IDEAS.md`, a pedido do autor. `I-024` (perigo = primário) já estava resolvida por `ui-12` —

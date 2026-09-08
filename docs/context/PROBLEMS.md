@@ -89,3 +89,19 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
+### P-065 — `detalhe-jogador.page.scss` carrega seletores mortos herdados do monolito · `ACEITO` · frontend
+
+- **Sintoma:** `frontend/src/app/modules/campanha/paginas/detalhe-jogador/detalhe-jogador.page.scss`
+  foi copiado por inteiro do antigo `detalhe.page.scss` (2099 linhas) ao extrair
+  `CampanhaDetalheJogador` do monolito `CampanhaDetalhe`, pra não arriscar quebrar a regressão do
+  jogador sob pressão de tempo. Carrega seletores `.detalhe__*` que só a visão de mestre usava
+  (grid antigo do Esquadrão, tira de convites, coluna Membros etc.) e que
+  `detalhe-jogador.page.html` nunca referencia.
+- **Causa:** decisão deliberada de escopo da task `campanha-detalhe-mestre-coluna-acoes` — o plano
+  previa o trim, mas comparar cada seletor contra o HTML real do jogador não teve o rigor
+  proporcional dentro do tempo da sessão.
+- **Contorno:** nenhum necessário — sem efeito funcional ou visual, só peso morto de CSS no bundle.
+- **Correção:** percorrer `detalhe-jogador.page.scss` seletor a seletor, remover todo bloco cuja
+  classe BEM não aparece em `detalhe-jogador.page.html`.
+- **Desde:** `campanha-detalhe-mestre-coluna-acoes`, 2026-09-08.
+
