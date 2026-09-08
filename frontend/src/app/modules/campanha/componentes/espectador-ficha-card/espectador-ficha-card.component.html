@@ -4,6 +4,20 @@
             @if (ficha().imagemUrl; as urlImagem) {
                 <img class="espectador-ficha__avatar-imagem" [src]="urlImagem" alt="" />
             }
+            @if (mostrarAcoes()) {
+                <button
+                    app-botao-icone
+                    [redondo]="true"
+                    tamanho="mini"
+                    type="button"
+                    class="espectador-ficha__abrir-ficha"
+                    [attr.aria-label]="'Abrir ficha de ' + ficha().nome"
+                    [appTooltip]="'Abrir ficha'"
+                    (click)="abrirFicha.emit()"
+                >
+                    <app-icone nome="visao-geral" />
+                </button>
+            }
         </span>
 
         <div class="espectador-ficha__corpo">
@@ -60,6 +74,21 @@
                 </div>
             }
         </div>
+
+        @if (mostrarAcoes()) {
+            <button
+                app-botao-icone
+                type="button"
+                class="espectador-ficha__menu-botao"
+                [attr.aria-label]="'Ações de ' + ficha().nome"
+                [appTooltip]="'Ações de ' + ficha().nome"
+                aria-haspopup="menu"
+                [attr.aria-expanded]="menuAberto()"
+                (click)="alternarMenu.emit($event)"
+            >
+                ⋯
+            </button>
+        }
     </div>
 
     <div class="espectador-ficha__ultima-rolagem" [style.--cor-ficha]="ficha().cor">

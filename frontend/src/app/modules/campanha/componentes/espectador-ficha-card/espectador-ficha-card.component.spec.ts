@@ -147,4 +147,43 @@ describe('EspectadorFichaCard', () => {
     const raiz = montar(ficha({ critico: true }));
     expect(raiz.querySelector('.espectador-ficha--critico')).not.toBeNull();
   });
+
+  it('não renderiza abrir-ficha nem o gatilho do menu quando mostrarAcoes é false (padrão)', () => {
+    const raiz = montar(ficha());
+    expect(raiz.querySelector('.espectador-ficha__abrir-ficha')).toBeNull();
+    expect(raiz.querySelector('.espectador-ficha__menu-botao')).toBeNull();
+  });
+
+  it('renderiza abrir-ficha e o gatilho do menu quando mostrarAcoes é true', () => {
+    montar(ficha());
+    fixture.componentRef.setInput('mostrarAcoes', true);
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.espectador-ficha__abrir-ficha')).not.toBeNull();
+    expect(raiz.querySelector('.espectador-ficha__menu-botao')).not.toBeNull();
+  });
+
+  it('emite abrirFicha ao clicar no ícone de abrir', () => {
+    montar(ficha());
+    fixture.componentRef.setInput('mostrarAcoes', true);
+    fixture.detectChanges();
+    const emitido = vi.fn();
+    fixture.componentInstance.abrirFicha.subscribe(emitido);
+    (
+      fixture.nativeElement.querySelector('.espectador-ficha__abrir-ficha') as HTMLButtonElement
+    ).click();
+    expect(emitido).toHaveBeenCalled();
+  });
+
+  it('emite alternarMenu ao clicar no gatilho "⋯"', () => {
+    montar(ficha());
+    fixture.componentRef.setInput('mostrarAcoes', true);
+    fixture.detectChanges();
+    const emitido = vi.fn();
+    fixture.componentInstance.alternarMenu.subscribe(emitido);
+    (
+      fixture.nativeElement.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement
+    ).click();
+    expect(emitido).toHaveBeenCalled();
+  });
 });

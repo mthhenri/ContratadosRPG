@@ -74,6 +74,23 @@
         object-fit: cover;
     }
 
+    // Modo interativo (campanha-detalhe-mestre-coluna-acoes.spec.md) — "Abrir ficha" ancorado no
+    // canto superior direito da própria foto do avatar (chip pequeno sobre a imagem, contrato de
+    // design da task).
+    &__abrir-ficha {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+    }
+
+    &__menu-botao {
+        align-self: flex-start;
+        margin-left: auto;
+        font-size: 16px;
+        line-height: 1;
+    }
+
     &__corpo {
         display: flex;
         flex-direction: column;
