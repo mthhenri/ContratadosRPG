@@ -2,7 +2,8 @@ import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
@@ -75,6 +76,7 @@ export class CampanhaDetalheMestre {
   private readonly router = inject(Router);
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
+  protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
 
   protected readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
@@ -319,5 +321,111 @@ export class CampanhaDetalheMestre {
 
   protected abrirAnotacoesFicha(fichaId: number): void {
     void this.router.navigate(['/campanhas', this.dados.id, 'ficha', fichaId], { fragment: 'anotacoes' });
+  }
+
+  // === Dialog "Membros" — gestão de membros (transferir mestre, alternar papel, remover) sai da
+  // coluna sempre visível e vira dialog aberta pela coluna de ações. Cada jogador ganha a ação
+  // "Prévia" por linha (decisão do autor, 2026-09-08 — substitui o fluxo de 2 passos do antigo
+  // menu kebab "Prévia de jogador").
+
+  protected readonly acaoMembro = signal<number | null>(null);
+  protected readonly processandoMembro = signal(false);
+  protected readonly alterandoPapel = signal<number | null>(null);
+
+  protected podeGerenciarMembro(membro: CampanhaMembroResumoDto): boolean {
+    return membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE;
+  }
+
+  protected pedirRemocaoMembro(membro: CampanhaMembroResumoDto): void {
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Remover membro',
+        mensagem: `Remover ${membro.nome} da campanha?`,
+        entidade: membro.nome,
+        rotuloConfirmar: 'Confirmar remoção',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.removerMembro(membro.usuarioId);
+        }
+      });
+  }
+
+  private removerMembro(usuarioId: number): void {
+    this.campanhaService.removerMembro(this.dados.id, usuarioId).subscribe({
+      next: () => this.dados.membros.update((lista) => lista.filter((membro) => membro.usuarioId !== usuarioId)),
+    });
+  }
+
+  protected pedirTransferenciaMestre(membro: CampanhaMembroResumoDto): void {
+    this.acaoMembro.set(membro.usuarioId);
+  }
+
+  protected cancelarAcaoMembro(): void {
+    this.acaoMembro.set(null);
+  }
+
+  /** Transfere o papel de mestre — `dados.ehMestre` recomputa e `CampanhaDetalheShell` troca pra `CampanhaDetalheJogador`. */
+  protected confirmarTransferenciaMestre(usuarioId: number): void {
+    if (this.processandoMembro()) {
+      return;
+    }
+    this.processandoMembro.set(true);
+    this.campanhaService
+      .transferirMestre(this.dados.id, usuarioId)
+      .pipe(finalize(() => this.processandoMembro.set(false)))
+      .subscribe({
+        next: () => {
+          this.acaoMembro.set(null);
+          this.dados.recarregarMembrosEFichas();
+        },
+      });
+  }
+
+  /** O único par que o mestre gere por este botão é `JOGADOR ↔ ESPECTADOR` — promover a `MESTRE` é sempre {@link pedirTransferenciaMestre}. */
+  protected papelAlvo(
+    membro: CampanhaMembroResumoDto,
+  ): TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR {
+    return membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR
+      ? TipoCampanhaMembroPapelEnum.ESPECTADOR
+      : TipoCampanhaMembroPapelEnum.JOGADOR;
+  }
+
+  protected pedirAlterarPapelMembro(membro: CampanhaMembroResumoDto): void {
+    const alvo = this.papelAlvo(membro);
+    const rotuloAlvo = alvo === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'Espectador' : 'Jogador';
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Alterar papel',
+        mensagem: `Tornar ${membro.nome} ${rotuloAlvo}?`,
+        entidade: membro.nome,
+        rotuloConfirmar: 'Confirmar',
+        severidade: 'padrao',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.alterarPapelMembro(membro.usuarioId, alvo);
+        }
+      });
+  }
+
+  private alterarPapelMembro(
+    usuarioId: number,
+    papel: TipoCampanhaMembroPapelEnum.JOGADOR | TipoCampanhaMembroPapelEnum.ESPECTADOR,
+  ): void {
+    if (this.alterandoPapel() !== null) {
+      return;
+    }
+    this.alterandoPapel.set(usuarioId);
+    this.campanhaService
+      .alterarPapelMembro(this.dados.id, usuarioId, papel)
+      .pipe(finalize(() => this.alterandoPapel.set(null)))
+      .subscribe({ next: () => this.dados.recarregarMembrosEFichas() });
+  }
+
+  /** "Prévia" — navega para a rota dedicada (`recuperarPreviaJogador`), nunca um toggle local. */
+  protected abrirPreviaJogador(membro: CampanhaMembroResumoDto): void {
+    this.dialogMembrosAberta.set(false);
+    void this.router.navigate(['/campanhas', this.dados.id, 'previa', membro.usuarioId]);
   }
 }

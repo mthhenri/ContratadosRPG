@@ -1,7 +1,7 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { signal } from '@angular/core';
 import {
@@ -99,6 +99,13 @@ describe('CampanhaDetalheMestre', () => {
       alterarEstado: vi.fn((_id: number, naBase: boolean) => of({ id: CAMPANHA_ID, naBase })),
       alterarCampanha: vi.fn(() => of({ ...campanhaBase })),
       excluirCampanha: vi.fn(() => of(undefined)),
+      removerMembro: vi.fn(() => of({ campanhaId: CAMPANHA_ID, usuarioId: 0 })),
+      transferirMestre: vi.fn(() =>
+        of({ campanhaId: CAMPANHA_ID, mestreAnteriorUsuarioId: 0, novoMestreUsuarioId: 0 }),
+      ),
+      alterarPapelMembro: vi.fn((_id: number, usuarioId: number, papel: TipoCampanhaMembroPapelEnum) =>
+        of({ campanhaId: CAMPANHA_ID, usuarioId, papel }),
+      ),
     };
     const fichaService = {
       listarFichas: vi.fn(() => of(fichas)),
@@ -191,9 +198,17 @@ describe('CampanhaDetalheMestre', () => {
     dados.inicializar(CAMPANHA_ID);
     TestBed.inject(ApplicationRef).tick();
 
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
     const fixture = TestBed.createComponent(CampanhaDetalheMestre);
     fixture.detectChanges();
-    return { fixture, raiz: fixture.nativeElement as HTMLElement, fichaService, dados };
+    return { fixture, raiz: fixture.nativeElement as HTMLElement, fichaService, campanhaService, dados, navegar };
+  }
+
+  function abrirDialogMembros(raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) {
+    (Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find((el) => el.textContent?.trim() === 'Membros') as HTMLButtonElement).click();
+    fixture.detectChanges();
   }
 
   it('renderiza a coluna de ações com Membros, Iniciativa, Convites, Editar, Excluir, Calculadora, Caderno', () => {
@@ -259,5 +274,68 @@ describe('CampanhaDetalheMestre', () => {
     const el = fixture.debugElement.query(By.css('.detalhe-mestre__conteudo')).nativeElement as HTMLElement;
     const estilo = getComputedStyle(el);
     expect(estilo.maxWidth === 'none' || estilo.maxWidth === '').toBe(true);
+  });
+
+  describe('dialog "Membros"', () => {
+    it('abre ao clicar no item da coluna de ações e lista os membros com carteirinha, sem clique', () => {
+      const { raiz, fixture } = montar();
+      abrirDialogMembros(raiz, fixture);
+
+      expect(raiz.querySelector('app-modal')?.textContent).toContain('Membros');
+      const carteirinhas = raiz.querySelectorAll('.detalhe-mestre__membro-carteirinha');
+      expect(carteirinhas.length).toBeGreaterThan(0);
+      expect(Array.from(carteirinhas).some((el) => el.tagName === 'BUTTON')).toBe(false);
+    });
+
+    it('mostra a ação "Prévia" só para membros com papel JOGADOR', () => {
+      const { raiz, fixture } = montar();
+      abrirDialogMembros(raiz, fixture);
+
+      const acoesPrevia = raiz.querySelectorAll('[aria-label^="Pré-visualizar como"]');
+      // membros fixture: 1 MESTRE + 1 JOGADOR
+      expect(acoesPrevia.length).toBe(1);
+    });
+
+    it('"Prévia" navega para a rota de prévia do jogador e fecha a dialog', () => {
+      const { raiz, fixture, navegar } = montar();
+      abrirDialogMembros(raiz, fixture);
+
+      (raiz.querySelector('[aria-label^="Pré-visualizar como"]') as HTMLButtonElement).click();
+
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'previa', 2]);
+      fixture.detectChanges();
+      expect(raiz.querySelector('app-modal')).toBeNull();
+    });
+
+    it('"Remover" pede confirmação e, ao confirmar, chama CampanhaService.removerMembro', async () => {
+      const { raiz, fixture, campanhaService } = montar();
+      abrirDialogMembros(raiz, fixture);
+
+      const remover = Array.from(raiz.querySelectorAll('.detalhe-mestre__membro-acoes button')).find(
+        (el) => el.getAttribute('aria-label')?.startsWith('Remover'),
+      ) as HTMLButtonElement;
+      remover.click();
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(campanhaService.removerMembro).toHaveBeenCalledWith(CAMPANHA_ID, 2);
+    });
+
+    it('"Transferir mestre" pede confirmação inline e chama CampanhaService.transferirMestre', () => {
+      const { raiz, fixture, campanhaService } = montar();
+      abrirDialogMembros(raiz, fixture);
+
+      const transferir = Array.from(raiz.querySelectorAll('.detalhe-mestre__membro-acoes button')).find(
+        (el) => el.getAttribute('aria-label')?.startsWith('Transferir'),
+      ) as HTMLButtonElement;
+      transferir.click();
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.detalhe-mestre__membro-confirmacao')).not.toBeNull();
+      (raiz.querySelector('.detalhe-mestre__membro-confirmacao-acoes button') as HTMLButtonElement).click();
+
+      expect(campanhaService.transferirMestre).toHaveBeenCalledWith(CAMPANHA_ID, 2);
+    });
   });
 });

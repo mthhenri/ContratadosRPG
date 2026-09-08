@@ -233,5 +233,123 @@
         Cancelar
     </button>
 </app-modal>
+} @if (dialogMembrosAberta()) {
+<app-modal [aberto]="true" titulo="Membros" (fechou)="dialogMembrosAberta.set(false)">
+    <span modalIcone class="dialogo__icone"><app-icone nome="membros" /></span>
+
+    <ul class="detalhe-mestre__membros-lista" appOverflowFade>
+        @for (membro of dados.membrosOrdenados(); track membro.usuarioId) {
+        <li class="detalhe-mestre__membro">
+            <div class="detalhe-mestre__membro-linha">
+                <span class="detalhe-mestre__avatar" aria-hidden="true"></span>
+                <div class="detalhe-mestre__membro-identidade">
+                    <span class="detalhe-mestre__membro-nome">{{ membro.nome }}</span>
+                    <span class="chip-papel">
+                        <app-icone
+                            [nome]="
+                                membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
+                                    ? 'coroa'
+                                    : membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+                                      ? 'fantasma'
+                                      : 'protecoes'
+                            "
+                        />
+                        {{ membro.papel }}
+                    </span>
+                </div>
+
+                @if (membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR) {
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    [attr.aria-label]="'Pré-visualizar como ' + membro.nome"
+                    [appTooltip]="'Prévia de jogador'"
+                    (click)="abrirPreviaJogador(membro)"
+                >
+                    <app-icone nome="olho" />
+                </button>
+                }
+
+                @if (podeGerenciarMembro(membro) && acaoMembro() !== membro.usuarioId) {
+                <div class="detalhe-mestre__membro-acoes">
+                    @if (membro.papel === TipoCampanhaMembroPapelEnum.JOGADOR) {
+                    <button
+                        app-botao-icone
+                        tamanho="padrao"
+                        type="button"
+                        [attr.aria-label]="'Transferir o papel de mestre para ' + membro.nome"
+                        [appTooltip]="'Transferir mestre'"
+                        (click)="pedirTransferenciaMestre(membro)"
+                    >
+                        <app-icone nome="coroa" />
+                    </button>
+                    }
+                    <button
+                        app-botao-icone
+                        tamanho="padrao"
+                        type="button"
+                        [disabled]="alterandoPapel() === membro.usuarioId"
+                        [attr.aria-label]="
+                            'Tornar ' + membro.nome + ' ' +
+                            (papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'Espectador' : 'Jogador')
+                        "
+                        [appTooltip]="
+                            papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR
+                                ? 'Tornar espectador'
+                                : 'Tornar jogador'
+                        "
+                        (click)="pedirAlterarPapelMembro(membro)"
+                    >
+                        <app-icone
+                            [nome]="papelAlvo(membro) === TipoCampanhaMembroPapelEnum.ESPECTADOR ? 'olho' : 'protecoes'"
+                        />
+                    </button>
+                    <button
+                        app-botao-icone
+                        tamanho="padrao"
+                        type="button"
+                        [attr.aria-label]="'Remover ' + membro.nome + ' da campanha'"
+                        [appTooltip]="'Remover'"
+                        (click)="pedirRemocaoMembro(membro)"
+                    >
+                        <app-icone nome="excluir" />
+                    </button>
+                </div>
+                }
+            </div>
+
+            @if (acaoMembro() === membro.usuarioId) {
+            <div class="detalhe-mestre__membro-confirmacao" role="alertdialog" aria-label="Confirmar transferência do papel de mestre">
+                <p class="detalhe-mestre__membro-aviso">
+                    Passar o papel de mestre para <strong>{{ membro.nome }}</strong>? Você deixará de ser o mestre e passará a jogador.
+                </p>
+                <div class="detalhe-mestre__membro-confirmacao-acoes">
+                    <button app-botao variante="primario" type="button" [disabled]="processandoMembro()" (click)="confirmarTransferenciaMestre(membro.usuarioId)">
+                        <app-icone nome="coroa" />
+                        {{ processandoMembro() ? 'Transferindo…' : 'Confirmar transferência' }}
+                    </button>
+                    <button app-botao variante="secundario" type="button" [disabled]="processandoMembro()" (click)="cancelarAcaoMembro()">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+            }
+
+            @if (dados.fichasPorMembro().get(membro.usuarioId); as fichasDoMembro) { @for (ficha of fichasDoMembro; track ficha.id) {
+            <span class="detalhe-mestre__membro-carteirinha" [attr.aria-label]="'Ficha de ' + ficha.nome">
+                <span class="detalhe-mestre__membro-carteirinha-avatar" aria-hidden="true" [style.--cor-ficha]="ficha.cor">
+                    @if (ficha.imagemUrl; as urlImagem) { <img [src]="urlImagem" alt="" /> }
+                </span>
+                <span class="detalhe-mestre__membro-carteirinha-corpo">
+                    <span class="detalhe-mestre__membro-carteirinha-nome">{{ ficha.nome }}</span>
+                    <span class="detalhe-mestre__membro-carteirinha-classe">{{ ficha.classeTexto }}</span>
+                </span>
+            </span>
+            } }
+        </li>
+        }
+    </ul>
+</app-modal>
 }
 }
