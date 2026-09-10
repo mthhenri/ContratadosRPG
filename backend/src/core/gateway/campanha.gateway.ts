@@ -16,7 +16,7 @@ import type {
   CampanhaMembroPapelAlteradoDto,
   CampanhaRecuperarDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
@@ -131,6 +131,11 @@ export class CampanhaGateway implements OnGatewayConnection {
    * nunca `ficha:criada`, `campanha:inventario-alterado`, `caderno-esquadrao:*` ou qualquer outro
    * broadcast de conteúdo de jogo que a sala cheia recebe. Sem permissão (a service lança), a
    * entrada é negada e nenhuma sala é ingressada.
+   *
+   * **Rolagem `PRIVADA` (m3-27, correção)**: quem entra como `MESTRE` também ingressa em
+   * `campanha:<id>:mestre` — a terceira sala de papel, ao lado da sala cheia e da do espectador.
+   * É a única sala que recebe rolagens `PRIVADA` (`emitirRolagemRegistrada`); jogador e espectador
+   * nunca a ingressam, então uma rolagem privada de outro jogador nunca chega ao socket dele.
    */
   @SubscribeMessage('campanha:entrar')
   async entrarSalaCampanha(
@@ -154,6 +159,9 @@ export class CampanhaGateway implements OnGatewayConnection {
         ? this.salaCampanhaEspectador(dto.id)
         : this.salaCampanha(dto.id);
     await cliente.join(sala);
+    if (membroEncontrado.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+      await cliente.join(this.salaCampanhaMestre(dto.id));
+    }
     return { sucesso: true };
   }
 
@@ -339,37 +347,42 @@ export class CampanhaGateway implements OnGatewayConnection {
   }
 
   /**
-   * Emite `rolagem:registrada` (m3-27). Chamado por `RolagemService.registrarRolagem` após a
-   * rolagem ser persistida. **Só rolagens `PUBLICA` chegam aqui** — o `emit()` é único pra sala
-   * inteira, sem emissão direcionada por permissão (§9); broadcastar uma `PRIVADA` vazaria o
-   * conteúdo a quem não deveria vê-la. O autor/mestre de uma rolagem privada a recebe via REST no
-   * próximo carregamento do feed (decisão de design v1).
+   * Emite `rolagem:registrada` (m3-27; m3-27 correção). Chamado por `RolagemService.registrarRolagem`
+   * e `registrarRolagemAvulso` após a rolagem ser persistida, com **qualquer visibilidade** — quem
+   * recebe o evento depende da sala escolhida abaixo, nunca de um filtro dentro do `emit()` (o
+   * `emit()` continua único pra sala inteira, sem distinguir socket por permissão).
    *
-   * **Duas salas, mutuamente exclusivas (m3-77)**: com campanha, emite só em `campanha:<id>` (como
-   * sempre) — quem tem a ficha aberta por lá entra também nessa sala (`entrarSalaCampanha`,
+   * **`PUBLICA`, com campanha (m3-77/m8-02)**: emite em `campanha:<id>` e `campanha:<id>:espectador`
+   * — quem tem a ficha aberta por lá já entra também nessa sala (`entrarSalaCampanha`,
    * `visualizar.page.ts`/`visualizar-criatura.page.ts`), então emitir de novo em `ficha:<id>`
    * entregaria o mesmo evento duas vezes a quem está nas duas salas ao mesmo tempo (ex.:
-   * `campanha/detalhe`, que já assina ambas por ficha visível). **Ficha solta (m3-28)**:
-   * `campanhaId === null` não tem sala de campanha — a ficha aberta em `/fichas/:id` só está em
-   * `ficha:<id>` (`entrarSalaFicha`, sempre ingressada), então é essa sala que recebe o evento;
-   * sem `fichaId` (rolagem de combatente avulso), não há sala nenhuma — no-op.
+   * `campanha/detalhe`). **`PUBLICA`, ficha solta (m3-28)**: `campanhaId === null` não tem sala de
+   * campanha — a ficha aberta em `/fichas/:id` só está em `ficha:<id>` (`entrarSalaFicha`, sempre
+   * ingressada), então é essa sala que recebe o evento; sem `fichaId` (rolagem de combatente
+   * avulso) não há sala nenhuma — no-op.
    *
-   * **m8-02**: com campanha, também emite na sala `campanha:<id>:espectador` — quem entrou como
-   * `ESPECTADOR` (`entrarSalaCampanha`) nunca está na sala cheia, então sem este segundo `.to()`
-   * ele nunca receberia rolagem pública nenhuma. Como este método só é chamado com `PUBLICA`
-   * (`RolagemService.registrarRolagem`/`registrarRolagemAvulso` só chamam aqui depois de checar a
-   * visibilidade), o payload é seguro para as duas salas.
+   * **`PRIVADA` (correção)**: broadcastar para a sala cheia vazaria o conteúdo a jogadores que não
+   * deveriam vê-la (§14 — só autor e mestre enxergam uma `PRIVADA`, `RolagemRepository.
+   * listarPorCampanha`). O autor já a recebe pela resposta REST do próprio POST; falta o mestre, que
+   * hoje só descobria no próximo refresh do feed. Em vez de filtrar por socket, emite só na sala
+   * `campanha:<id>:mestre` (ingressada só por quem entrou como `MESTRE`, ver `entrarSalaCampanha`) —
+   * jogador e espectador nunca a recebem. `campanhaId === null` (ficha solta) não tem essa sala:
+   * uma `PRIVADA` avulsa não tem mestre de campanha para notificar — no-op, como antes.
    */
   emitirRolagemRegistrada(rolagem: RolagemResumoDto): void {
     if (rolagem.campanhaId === null) {
-      if (rolagem.fichaId !== null) {
+      if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA && rolagem.fichaId !== null) {
         this.servidor.to(this.salaFicha(rolagem.fichaId)).emit('rolagem:registrada', rolagem);
       }
       return;
     }
-    this.servidor
-      .to([this.salaCampanha(rolagem.campanhaId), this.salaCampanhaEspectador(rolagem.campanhaId)])
-      .emit('rolagem:registrada', rolagem);
+    if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
+      this.servidor
+        .to([this.salaCampanha(rolagem.campanhaId), this.salaCampanhaEspectador(rolagem.campanhaId)])
+        .emit('rolagem:registrada', rolagem);
+      return;
+    }
+    this.servidor.to(this.salaCampanhaMestre(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
   }
 
   /**
@@ -498,5 +511,14 @@ export class CampanhaGateway implements OnGatewayConnection {
    */
   private salaCampanhaEspectador(campanhaId: number): string {
     return `campanha:${campanhaId}:espectador`;
+  }
+
+  /**
+   * Sala própria do mestre (m3-27, correção) — ingressada só por quem entra em `campanha:entrar`
+   * com papel `MESTRE`, além da sala cheia. Hoje só recebe `rolagem:registrada` `PRIVADA`
+   * (`emitirRolagemRegistrada`); qualquer outro broadcast continua pela sala cheia normal.
+   */
+  private salaCampanhaMestre(campanhaId: number): string {
+    return `campanha:${campanhaId}:mestre`;
   }
 }

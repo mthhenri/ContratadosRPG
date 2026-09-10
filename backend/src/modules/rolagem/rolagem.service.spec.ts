@@ -180,7 +180,7 @@ describe('RolagemService', () => {
       expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(rolagemRegistrada);
     });
 
-    it('NÃO emite rolagem:registrada quando PRIVADA', async () => {
+    it('também emite rolagem:registrada quando PRIVADA (m3-27 correção — o gateway decide a sala pela visibilidade)', async () => {
       fichaService.recuperarFicha.mockResolvedValue({ id: 10, campanhaId: 5, usuarioId: 99, nome: 'Ficha' });
       const rolagemRegistrada = criarResumo({ visibilidade: RolagemVisibilidadeEnum.PRIVADA });
       rolagemRepositorio.registrarRolagem.mockResolvedValue(rolagemRegistrada);
@@ -196,7 +196,7 @@ describe('RolagemService', () => {
         usuarioAtivo,
       );
 
-      expect(campanhaGateway.emitirRolagemRegistrada).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(rolagemRegistrada);
     });
 
     it('propaga a negação de permissão de recuperarFicha sem persistir', async () => {
@@ -217,7 +217,7 @@ describe('RolagemService', () => {
       expect(rolagemRepositorio.registrarRolagem).not.toHaveBeenCalled();
     });
 
-    it('ficha solta (sem campanha) registra com campanhaId null, sem emissão', async () => {
+    it('ficha solta (sem campanha) registra com campanhaId null', async () => {
       fichaService.recuperarFicha.mockResolvedValue({ id: 10, campanhaId: null, usuarioId: 99, nome: 'Ficha' });
       const rolagemRegistrada = criarResumo({ campanhaId: null });
       rolagemRepositorio.registrarRolagem.mockResolvedValue(rolagemRegistrada);

@@ -6,7 +6,7 @@ import type {
   RolagemRegistrarDto,
   RolagemResumoDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { UnauthorizedAccessException } from '../../core/exceptions';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
@@ -45,9 +45,9 @@ export class RolagemService {
    * controller); `campanhaId`/o dono da ficha são resolvidos por `recuperarFicha`, que já garante
    * a permissão de **visualização** (§14) — quem pode ver a ficha pode rolar. O **autor** é sempre
    * quem disparou a rolagem (`usuarioAtivo.sub`), não necessariamente o dono da ficha. Após
-   * persistir, emite `rolagem:registrada` na sala da campanha **só se `PUBLICA`** — uma `PRIVADA`
-   * nunca broadcasta (o autor/mestre a vê via este mesmo retorno REST, ou no próximo refresh do
-   * feed).
+   * persistir, sempre chama `emitirRolagemRegistrada` — é o gateway que decide a sala pela
+   * visibilidade (`PUBLICA` vai à sala cheia/espectador; `PRIVADA` só à sala do mestre, m3-27
+   * correção); a service não decide mais se emite ou não.
    */
   async registrarRolagem(
     dto: RolagemRegistrarDto & { fichaId: number },
@@ -66,9 +66,7 @@ export class RolagemService {
       resultado: dto.resultado,
     });
 
-    if (rolagemRegistrada.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
-      this.campanhaGateway.emitirRolagemRegistrada(rolagemRegistrada);
-    }
+    this.campanhaGateway.emitirRolagemRegistrada(rolagemRegistrada);
     return rolagemRegistrada;
   }
 
@@ -103,9 +101,7 @@ export class RolagemService {
       visibilidade: dto.visibilidade,
       resultado: dto.resultado,
     });
-    if (registrada.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
-      this.campanhaGateway.emitirRolagemRegistrada(registrada);
-    }
+    this.campanhaGateway.emitirRolagemRegistrada(registrada);
     return registrada;
   }
 

@@ -131,8 +131,10 @@ export class CampanhaDetalheDadosService {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: () => this.recarregarMembrosEFichas() });
 
-    // Feed de rolagens em tempo real (m3-27): só rolagens `PUBLICA` chegam por aqui (o backend não
-    // broadcasta privadas — §9); prepend direto, sem refetch (o payload já vem completo).
+    // Feed de rolagens em tempo real (m3-27; correção): rolagens `PUBLICA` chegam para qualquer
+    // membro; `PRIVADA` só chega aqui quando esta tela é a do mestre (backend emite só na sala
+    // `campanha:<id>:mestre` — jogador/espectador nunca recebem). Prepend direto, sem refetch (o
+    // payload já vem completo).
     this.tempoRealService.rolagemRegistrada$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: (rolagem) => this.rolagensFeed.update((atuais) => [rolagem, ...atuais]) });

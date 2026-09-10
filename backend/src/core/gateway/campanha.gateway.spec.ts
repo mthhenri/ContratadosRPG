@@ -173,6 +173,29 @@ describe('CampanhaGateway', () => {
       expect(join).toHaveBeenCalledWith('campanha:3');
     });
 
+    it('m3-27 (correção): MESTRE também ingressa em campanha:<id>:mestre, além da sala cheia', async () => {
+      campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      });
+      const { cliente, join } = criarSocket({ usuario });
+
+      await gateway.entrarSalaCampanha(cliente, { id: 3 });
+
+      expect(join).toHaveBeenCalledWith('campanha:3');
+      expect(join).toHaveBeenCalledWith('campanha:3:mestre');
+    });
+
+    it('JOGADOR não ingressa em campanha:<id>:mestre', async () => {
+      campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      const { cliente, join } = criarSocket({ usuario });
+
+      await gateway.entrarSalaCampanha(cliente, { id: 3 });
+
+      expect(join).not.toHaveBeenCalledWith('campanha:3:mestre');
+    });
+
     it('m8-02: entra numa sala própria (campanha:<id>:espectador), não na sala cheia, quando o vínculo é ESPECTADOR', async () => {
       campanhaService.validarAcessoSalaCampanha.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
@@ -425,9 +448,9 @@ describe('CampanhaGateway', () => {
       expect(emitir).toHaveBeenCalledWith('ficha:acesso-revogado', { fichaId: 5, usuarioId: 42 });
     });
 
-    describe('emitirRolagemRegistrada (m3-27/m3-77)', () => {
-      it('com campanha, emite na sala campanha:<id> e na sala do espectador — nunca em ficha:<id>', () => {
-        const rolagem = { id: 9, fichaId: 5, campanhaId: 3 };
+    describe('emitirRolagemRegistrada (m3-27/m3-77; m3-27 correção)', () => {
+      it('PUBLICA com campanha emite na sala campanha:<id> e na sala do espectador — nunca em ficha:<id>', () => {
+        const rolagem = { id: 9, fichaId: 5, campanhaId: 3, visibilidade: 'PUBLICA' };
 
         gateway.emitirRolagemRegistrada(rolagem as never);
 
@@ -437,8 +460,8 @@ describe('CampanhaGateway', () => {
         expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
       });
 
-      it('ficha solta (m3-28, campanhaId null) emite na sala ficha:<id> — só sala que existe pra ela', () => {
-        const rolagem = { id: 9, fichaId: 5, campanhaId: null };
+      it('PUBLICA de ficha solta (m3-28, campanhaId null) emite na sala ficha:<id> — só sala que existe pra ela', () => {
+        const rolagem = { id: 9, fichaId: 5, campanhaId: null, visibilidade: 'PUBLICA' };
 
         gateway.emitirRolagemRegistrada(rolagem as never);
 
@@ -448,8 +471,28 @@ describe('CampanhaGateway', () => {
         expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
       });
 
-      it('rolagem de avulso sem ficha nem campanha (registrarRolagemAvulso solto) não emite em lugar nenhum', () => {
-        const rolagem = { id: 9, fichaId: null, campanhaId: null };
+      it('PUBLICA de avulso sem ficha nem campanha (registrarRolagemAvulso solto) não emite em lugar nenhum', () => {
+        const rolagem = { id: 9, fichaId: null, campanhaId: null, visibilidade: 'PUBLICA' };
+
+        gateway.emitirRolagemRegistrada(rolagem as never);
+
+        expect(paraSala).not.toHaveBeenCalled();
+        expect(emitir).not.toHaveBeenCalled();
+      });
+
+      it('PRIVADA com campanha emite só na sala campanha:<id>:mestre — nunca na sala cheia nem no espectador', () => {
+        const rolagem = { id: 9, fichaId: 5, campanhaId: 3, visibilidade: 'PRIVADA' };
+
+        gateway.emitirRolagemRegistrada(rolagem as never);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith('campanha:3:mestre');
+        expect(emitir).toHaveBeenCalledTimes(1);
+        expect(emitir).toHaveBeenCalledWith('rolagem:registrada', rolagem);
+      });
+
+      it('PRIVADA de ficha solta (campanhaId null) não emite em lugar nenhum — sem mestre de campanha', () => {
+        const rolagem = { id: 9, fichaId: 5, campanhaId: null, visibilidade: 'PRIVADA' };
 
         gateway.emitirRolagemRegistrada(rolagem as never);
 
