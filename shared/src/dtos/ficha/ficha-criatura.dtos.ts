@@ -2,6 +2,7 @@ import type {
   CadenciaEnum,
   ComportamentoCriaturaEnum,
   CustoAcaoEnum,
+  DeslocamentoValorEspecialEnum,
   HabilidadeTipoCriaturaEnum,
   ModificadorCriaturaEnum,
   NivelAmeacaEnum,
@@ -155,14 +156,16 @@ export interface FichaCriaturaRegeneracaoDto {
  * Deslocamento da criatura — ao menos um modo preenchido (validado por
  * `shared/regras/criatura`). Cada modo é independente e trocar entre os declarados não
  * consome ação. `terrestre` tem uma tabela de sugestão por Destreza no guia, mas o valor é
- * sempre declarado pelo Mestre, nunca calculado automaticamente a partir do atributo.
+ * sempre declarado pelo Mestre, nunca calculado automaticamente a partir do atributo. Cada modo
+ * aceita `DeslocamentoValorEspecialEnum.INDETERMINADO` no lugar do número, para quando o Mestre
+ * declara o modo como sem limite prático (ex.: Sobrenatural sem alcance definido).
  */
 export interface FichaCriaturaDeslocamentoDto {
-  readonly terrestre?: number | null;
-  readonly voador?: number | null;
-  readonly aquatico?: number | null;
+  readonly terrestre?: number | DeslocamentoValorEspecialEnum | null;
+  readonly voador?: number | DeslocamentoValorEspecialEnum | null;
+  readonly aquatico?: number | DeslocamentoValorEspecialEnum | null;
   /** Ignora terreno/obstáculos e reações; ver guia para as regras especiais de uso em jogo. */
-  readonly sobrenatural?: number | null;
+  readonly sobrenatural?: number | DeslocamentoValorEspecialEnum | null;
 }
 
 /**

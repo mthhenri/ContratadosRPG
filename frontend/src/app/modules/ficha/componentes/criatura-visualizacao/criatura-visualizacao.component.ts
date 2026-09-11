@@ -3,6 +3,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import {
   CadenciaEnum,
+  DeslocamentoValorEspecialEnum,
   ModificadorCriaturaEnum,
   NivelAmeacaEnum,
   OrigemCriaturaEnum,
@@ -551,6 +552,22 @@ export class CriaturaVisualizacao {
     valor: FichaCriaturaDeslocamentoDto[K],
   ): void {
     this.confirmarDeslocamento({ ...this.dados().deslocamento, [campo]: valor });
+  }
+
+  /** Sentinela exposto ao template — Angular não referencia membros de enum importado direto. */
+  protected readonly deslocamentoIndeterminado = DeslocamentoValorEspecialEnum.INDETERMINADO;
+
+  protected ehDeslocamentoIndeterminado(valor: number | DeslocamentoValorEspecialEnum | null | undefined): boolean {
+    return valor === DeslocamentoValorEspecialEnum.INDETERMINADO;
+  }
+
+  /** Texto da tag de leitura de um modo de Deslocamento — número declarado, "Indeterminado" (sem
+   * limite prático, doc — "Deslocamento": valor sempre livre pelo Mestre) ou "—" quando ausente. */
+  protected rotuloDeslocamento(valor: number | DeslocamentoValorEspecialEnum | null | undefined): string {
+    if (this.ehDeslocamentoIndeterminado(valor)) {
+      return 'Indeterminado';
+    }
+    return valor ? `${valor}m` : '—';
   }
 
   protected confirmarCadencia(cadencia: CadenciaEnum): void {

@@ -502,6 +502,26 @@
                 color: var(--text-mute);
             }
         }
+        // Variante de 1 linha (sem título/descrição) para caber sob um campo estreito de grid —
+        // Deslocamento (`&__campo-com-opcao`), em vez do cartão cheio usado para "Possui
+        // Regeneração"/"Ataque de área".
+        &--compacto {
+            min-height: 0;
+            margin: 0;
+            padding: 6px 10px;
+            gap: 8px;
+            span {
+                font: 600 9px var(--font-mono);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--text-mute);
+            }
+        }
+    }
+    // Campo numérico de Deslocamento + toggle "Indeterminado" na mesma coluna do grid de 4.
+    &__campo-com-opcao {
+        display: grid;
+        gap: 8px;
     }
     &__subsecao {
         display: flex;

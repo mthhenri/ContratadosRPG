@@ -6,6 +6,7 @@ import {
   CadenciaEnum,
   ComportamentoCriaturaEnum,
   CustoAcaoEnum,
+  DeslocamentoValorEspecialEnum,
   HabilidadeTipoCriaturaEnum,
   ModificadorCriaturaEnum,
   NivelAmeacaEnum,
@@ -134,9 +135,10 @@ const regeneracaoVazia = (): EstadoRegeneracao => ({
   ativa: false, modo: RegeneracaoModoEnum.PASSIVA, intensidade: RegeneracaoIntensidadeEnum.RESIDUAL, condicao: '',
 });
 
+type ValorDeslocamento = number | DeslocamentoValorEspecialEnum | null;
 interface EstadoDeslocamento {
-  readonly terrestre: number | null; readonly voador: number | null;
-  readonly aquatico: number | null; readonly sobrenatural: number | null;
+  readonly terrestre: ValorDeslocamento; readonly voador: ValorDeslocamento;
+  readonly aquatico: ValorDeslocamento; readonly sobrenatural: ValorDeslocamento;
 }
 const deslocamentoVazio = (): EstadoDeslocamento => ({
   terrestre: null, voador: null, aquatico: null, sobrenatural: null,
@@ -531,8 +533,18 @@ export class CriaturaCriar {
   protected alterarRegeneracao(parcial: Partial<EstadoRegeneracao>): void {
     this.alterar({ regeneracao: { ...this.estado().regeneracao, ...parcial } });
   }
-  protected alterarDeslocamento(campo: keyof EstadoDeslocamento, valor: number | null): void {
+  protected alterarDeslocamento(campo: keyof EstadoDeslocamento, valor: ValorDeslocamento): void {
     this.alterar({ deslocamento: { ...this.estado().deslocamento, [campo]: valor } });
+  }
+
+  protected ehDeslocamentoIndeterminado(valor: ValorDeslocamento): boolean {
+    return valor === DeslocamentoValorEspecialEnum.INDETERMINADO;
+  }
+
+  /** Alterna um modo entre "número declarado" e "sem limite definido" — desliga volta a `null`,
+   * nunca reaproveita o número anterior (mesmo tratamento de troca de modo em outros passos). */
+  protected alternarDeslocamentoIndeterminado(campo: keyof EstadoDeslocamento, marcado: boolean): void {
+    this.alterarDeslocamento(campo, marcado ? DeslocamentoValorEspecialEnum.INDETERMINADO : null);
   }
 
   protected vdTipico(na: NivelAmeacaEnum): string { return VD_TIPICO_POR_NA[na]; }

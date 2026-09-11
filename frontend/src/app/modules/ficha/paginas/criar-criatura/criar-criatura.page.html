@@ -724,42 +724,124 @@
                     o valor final é sempre declarado livremente.
                 </p>
                 <div class="guia__campos guia__campos--quatro-colunas">
-                    <label app-campo
-                        ><span class="campo__rotulo">Terrestre (m)</span
-                        ><input
-                            class="campo__controle campo__controle--numero"
-                            type="number"
-                            min="0"
-                            [value]="estado().deslocamento.terrestre ?? ''"
-                            (input)="alterarDeslocamento('terrestre', valor($event) ? numero($event) : null)"
-                    /></label>
-                    <label app-campo
-                        ><span class="campo__rotulo">Voador (m)</span
-                        ><input
-                            class="campo__controle campo__controle--numero"
-                            type="number"
-                            min="0"
-                            [value]="estado().deslocamento.voador ?? ''"
-                            (input)="alterarDeslocamento('voador', valor($event) ? numero($event) : null)"
-                    /></label>
-                    <label app-campo
-                        ><span class="campo__rotulo">Aquático (m)</span
-                        ><input
-                            class="campo__controle campo__controle--numero"
-                            type="number"
-                            min="0"
-                            [value]="estado().deslocamento.aquatico ?? ''"
-                            (input)="alterarDeslocamento('aquatico', valor($event) ? numero($event) : null)"
-                    /></label>
-                    <label app-campo
-                        ><span class="campo__rotulo">Sobrenatural (m)</span
-                        ><input
-                            class="campo__controle campo__controle--numero"
-                            type="number"
-                            min="0"
-                            [value]="estado().deslocamento.sobrenatural ?? ''"
-                            (input)="alterarDeslocamento('sobrenatural', valor($event) ? numero($event) : null)"
-                    /></label>
+                    <div class="guia__campo-com-opcao">
+                        <label app-campo
+                            ><span class="campo__rotulo">Terrestre (m)</span
+                            ><input
+                                class="campo__controle campo__controle--numero"
+                                type="number"
+                                min="0"
+                                [disabled]="ehDeslocamentoIndeterminado(estado().deslocamento.terrestre)"
+                                [value]="
+                                    ehDeslocamentoIndeterminado(estado().deslocamento.terrestre)
+                                        ? ''
+                                        : estado().deslocamento.terrestre ?? ''
+                                "
+                                (input)="alterarDeslocamento('terrestre', valor($event) ? numero($event) : null)"
+                        /></label>
+                        <label class="guia__modo-livre guia__modo-livre--compacto">
+                            <input
+                                type="checkbox"
+                                [checked]="ehDeslocamentoIndeterminado(estado().deslocamento.terrestre)"
+                                (change)="
+                                    alternarDeslocamentoIndeterminado(
+                                        'terrestre',
+                                        !ehDeslocamentoIndeterminado(estado().deslocamento.terrestre)
+                                    )
+                                "
+                            />
+                            <span>Indeterminado</span>
+                        </label>
+                    </div>
+                    <div class="guia__campo-com-opcao">
+                        <label app-campo
+                            ><span class="campo__rotulo">Voador (m)</span
+                            ><input
+                                class="campo__controle campo__controle--numero"
+                                type="number"
+                                min="0"
+                                [disabled]="ehDeslocamentoIndeterminado(estado().deslocamento.voador)"
+                                [value]="
+                                    ehDeslocamentoIndeterminado(estado().deslocamento.voador)
+                                        ? ''
+                                        : estado().deslocamento.voador ?? ''
+                                "
+                                (input)="alterarDeslocamento('voador', valor($event) ? numero($event) : null)"
+                        /></label>
+                        <label class="guia__modo-livre guia__modo-livre--compacto">
+                            <input
+                                type="checkbox"
+                                [checked]="ehDeslocamentoIndeterminado(estado().deslocamento.voador)"
+                                (change)="
+                                    alternarDeslocamentoIndeterminado(
+                                        'voador',
+                                        !ehDeslocamentoIndeterminado(estado().deslocamento.voador)
+                                    )
+                                "
+                            />
+                            <span>Indeterminado</span>
+                        </label>
+                    </div>
+                    <div class="guia__campo-com-opcao">
+                        <label app-campo
+                            ><span class="campo__rotulo">Aquático (m)</span
+                            ><input
+                                class="campo__controle campo__controle--numero"
+                                type="number"
+                                min="0"
+                                [disabled]="ehDeslocamentoIndeterminado(estado().deslocamento.aquatico)"
+                                [value]="
+                                    ehDeslocamentoIndeterminado(estado().deslocamento.aquatico)
+                                        ? ''
+                                        : estado().deslocamento.aquatico ?? ''
+                                "
+                                (input)="alterarDeslocamento('aquatico', valor($event) ? numero($event) : null)"
+                        /></label>
+                        <label class="guia__modo-livre guia__modo-livre--compacto">
+                            <input
+                                type="checkbox"
+                                [checked]="ehDeslocamentoIndeterminado(estado().deslocamento.aquatico)"
+                                (change)="
+                                    alternarDeslocamentoIndeterminado(
+                                        'aquatico',
+                                        !ehDeslocamentoIndeterminado(estado().deslocamento.aquatico)
+                                    )
+                                "
+                            />
+                            <span>Indeterminado</span>
+                        </label>
+                    </div>
+                    <div class="guia__campo-com-opcao">
+                        <label app-campo
+                            ><span class="campo__rotulo">Sobrenatural (m)</span
+                            ><input
+                                class="campo__controle campo__controle--numero"
+                                type="number"
+                                min="0"
+                                [disabled]="ehDeslocamentoIndeterminado(estado().deslocamento.sobrenatural)"
+                                [value]="
+                                    ehDeslocamentoIndeterminado(estado().deslocamento.sobrenatural)
+                                        ? ''
+                                        : estado().deslocamento.sobrenatural ?? ''
+                                "
+                                (input)="
+                                    alterarDeslocamento('sobrenatural', valor($event) ? numero($event) : null)
+                                "
+                        /></label>
+                        <label class="guia__modo-livre guia__modo-livre--compacto">
+                            <input
+                                type="checkbox"
+                                [checked]="ehDeslocamentoIndeterminado(estado().deslocamento.sobrenatural)"
+                                (change)="
+                                    alternarDeslocamentoIndeterminado(
+                                        'sobrenatural',
+                                        !ehDeslocamentoIndeterminado(estado().deslocamento.sobrenatural)
+                                    )
+                                "
+                            />
+                            <span>Indeterminado</span>
+                        </label>
+                    </div>
                 </div>
                 } @case ('Ataques') {
                 <div class="guia__campos guia__campos--duas-colunas">

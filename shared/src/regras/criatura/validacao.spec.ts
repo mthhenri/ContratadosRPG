@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CadenciaEnum,
   ComportamentoCriaturaEnum,
+  DeslocamentoValorEspecialEnum,
   ModificadorCriaturaEnum,
   NivelAmeacaEnum,
   OrigemCriaturaEnum,
@@ -113,5 +114,12 @@ describe('validarFichaCriatura', () => {
   it('acusa ausência de deslocamento', () => {
     const { violacoes } = validarFichaCriatura(construirFichaValida({ deslocamento: {} }));
     expect(violacoes).toContain('deslocamento: ao menos um modo deve ser declarado');
+  });
+
+  it('aceita INDETERMINADO como modo de deslocamento declarado', () => {
+    const { violacoes } = validarFichaCriatura(
+      construirFichaValida({ deslocamento: { sobrenatural: DeslocamentoValorEspecialEnum.INDETERMINADO } }),
+    );
+    expect(violacoes).not.toContain('deslocamento: ao menos um modo deve ser declarado');
   });
 });

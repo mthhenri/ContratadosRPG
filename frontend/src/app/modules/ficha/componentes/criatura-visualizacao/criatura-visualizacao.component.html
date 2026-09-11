@@ -869,11 +869,7 @@
                                         <span class="criatura__tag-rotulo">Terrestre</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="
-                                                dados().deslocamento.terrestre
-                                                    ? dados().deslocamento.terrestre + 'm'
-                                                    : '—'
-                                            "
+                                            [valor]="rotuloDeslocamento(dados().deslocamento.terrestre)"
                                             [editando]="editando('deslocamento.terrestre')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento terrestre"
@@ -885,7 +881,12 @@
                                                 appAutoFocus
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
-                                                [value]="dados().deslocamento.terrestre ?? 0"
+                                                [disabled]="ehDeslocamentoIndeterminado(dados().deslocamento.terrestre)"
+                                                [value]="
+                                                    ehDeslocamentoIndeterminado(dados().deslocamento.terrestre)
+                                                        ? ''
+                                                        : dados().deslocamento.terrestre ?? 0
+                                                "
                                                 aria-label="Deslocamento Terrestre"
                                                 (keydown.enter)="
                                                     confirmarCampoDeslocamento(
@@ -903,6 +904,24 @@
                                                     cancelarEdicao()
                                                 "
                                             />
+                                            <label class="criatura__deslocamento-indeterminado">
+                                                <input
+                                                    #caixaDeslTerrestre
+                                                    type="checkbox"
+                                                    [checked]="
+                                                        ehDeslocamentoIndeterminado(dados().deslocamento.terrestre)
+                                                    "
+                                                    aria-label="Deslocamento Terrestre indeterminado"
+                                                    (change)="
+                                                        confirmarCampoDeslocamento(
+                                                            'terrestre',
+                                                            caixaDeslTerrestre.checked ? deslocamentoIndeterminado : 0
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                                <span>Indeterminado</span>
+                                            </label>
                                         </app-valor-editavel>
                                     </span>
 
@@ -913,11 +932,7 @@
                                         <span class="criatura__tag-rotulo">Voador</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="
-                                                dados().deslocamento.voador
-                                                    ? dados().deslocamento.voador + 'm'
-                                                    : '—'
-                                            "
+                                            [valor]="rotuloDeslocamento(dados().deslocamento.voador)"
                                             [editando]="editando('deslocamento.voador')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento voador"
@@ -929,7 +944,12 @@
                                                 appAutoFocus
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
-                                                [value]="dados().deslocamento.voador ?? 0"
+                                                [disabled]="ehDeslocamentoIndeterminado(dados().deslocamento.voador)"
+                                                [value]="
+                                                    ehDeslocamentoIndeterminado(dados().deslocamento.voador)
+                                                        ? ''
+                                                        : dados().deslocamento.voador ?? 0
+                                                "
                                                 aria-label="Deslocamento Voador"
                                                 (keydown.enter)="
                                                     confirmarCampoDeslocamento(
@@ -947,6 +967,24 @@
                                                     cancelarEdicao()
                                                 "
                                             />
+                                            <label class="criatura__deslocamento-indeterminado">
+                                                <input
+                                                    #caixaDeslVoador
+                                                    type="checkbox"
+                                                    [checked]="
+                                                        ehDeslocamentoIndeterminado(dados().deslocamento.voador)
+                                                    "
+                                                    aria-label="Deslocamento Voador indeterminado"
+                                                    (change)="
+                                                        confirmarCampoDeslocamento(
+                                                            'voador',
+                                                            caixaDeslVoador.checked ? deslocamentoIndeterminado : undefined
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                                <span>Indeterminado</span>
+                                            </label>
                                         </app-valor-editavel>
                                     </span>
 
@@ -959,11 +997,7 @@
                                         <span class="criatura__tag-rotulo">Aquático</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="
-                                                dados().deslocamento.aquatico
-                                                    ? dados().deslocamento.aquatico + 'm'
-                                                    : '—'
-                                            "
+                                            [valor]="rotuloDeslocamento(dados().deslocamento.aquatico)"
                                             [editando]="editando('deslocamento.aquatico')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento aquático"
@@ -975,7 +1009,12 @@
                                                 appAutoFocus
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
-                                                [value]="dados().deslocamento.aquatico ?? 0"
+                                                [disabled]="ehDeslocamentoIndeterminado(dados().deslocamento.aquatico)"
+                                                [value]="
+                                                    ehDeslocamentoIndeterminado(dados().deslocamento.aquatico)
+                                                        ? ''
+                                                        : dados().deslocamento.aquatico ?? 0
+                                                "
                                                 aria-label="Deslocamento Aquático"
                                                 (keydown.enter)="
                                                     confirmarCampoDeslocamento(
@@ -995,6 +1034,26 @@
                                                     cancelarEdicao()
                                                 "
                                             />
+                                            <label class="criatura__deslocamento-indeterminado">
+                                                <input
+                                                    #caixaDeslAquatico
+                                                    type="checkbox"
+                                                    [checked]="
+                                                        ehDeslocamentoIndeterminado(dados().deslocamento.aquatico)
+                                                    "
+                                                    aria-label="Deslocamento Aquático indeterminado"
+                                                    (change)="
+                                                        confirmarCampoDeslocamento(
+                                                            'aquatico',
+                                                            caixaDeslAquatico.checked
+                                                                ? deslocamentoIndeterminado
+                                                                : undefined
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                                <span>Indeterminado</span>
+                                            </label>
                                         </app-valor-editavel>
                                     </span>
 
@@ -1007,11 +1066,7 @@
                                         <span class="criatura__tag-rotulo">Sobrenatural</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="
-                                                dados().deslocamento.sobrenatural
-                                                    ? dados().deslocamento.sobrenatural + 'm'
-                                                    : '—'
-                                            "
+                                            [valor]="rotuloDeslocamento(dados().deslocamento.sobrenatural)"
                                             [editando]="editando('deslocamento.sobrenatural')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento sobrenatural"
@@ -1023,7 +1078,14 @@
                                                 appAutoFocus
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
-                                                [value]="dados().deslocamento.sobrenatural ?? 0"
+                                                [disabled]="
+                                                    ehDeslocamentoIndeterminado(dados().deslocamento.sobrenatural)
+                                                "
+                                                [value]="
+                                                    ehDeslocamentoIndeterminado(dados().deslocamento.sobrenatural)
+                                                        ? ''
+                                                        : dados().deslocamento.sobrenatural ?? 0
+                                                "
                                                 aria-label="Deslocamento Sobrenatural"
                                                 (keydown.enter)="
                                                     confirmarCampoDeslocamento(
@@ -1043,6 +1105,26 @@
                                                     cancelarEdicao()
                                                 "
                                             />
+                                            <label class="criatura__deslocamento-indeterminado">
+                                                <input
+                                                    #caixaDeslSobrenatural
+                                                    type="checkbox"
+                                                    [checked]="
+                                                        ehDeslocamentoIndeterminado(dados().deslocamento.sobrenatural)
+                                                    "
+                                                    aria-label="Deslocamento Sobrenatural indeterminado"
+                                                    (change)="
+                                                        confirmarCampoDeslocamento(
+                                                            'sobrenatural',
+                                                            caixaDeslSobrenatural.checked
+                                                                ? deslocamentoIndeterminado
+                                                                : undefined
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                                <span>Indeterminado</span>
+                                            </label>
                                         </app-valor-editavel>
                                     </span>
                                 </div>

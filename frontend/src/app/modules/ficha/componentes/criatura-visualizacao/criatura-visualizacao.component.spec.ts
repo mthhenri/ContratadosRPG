@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import {
-  CadenciaEnum, ComportamentoCriaturaEnum, ModificadorCriaturaEnum, NivelAmeacaEnum,
-  OrigemCriaturaEnum, PorteCriaturaEnum, TenacidadeEnum, TipoDanoEnum, CustoAcaoEnum,
+  CadenciaEnum, ComportamentoCriaturaEnum, DeslocamentoValorEspecialEnum, ModificadorCriaturaEnum,
+  NivelAmeacaEnum, OrigemCriaturaEnum, PorteCriaturaEnum, TenacidadeEnum, TipoDanoEnum, CustoAcaoEnum,
 } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 
@@ -186,6 +186,44 @@ describe('CriaturaVisualizacao', () => {
     expect(linha.textContent).toContain('Cadência');
     expect(linha.textContent).toContain('Bônus de Iniciativa');
     expect(linha.textContent).toContain('Deslocamento');
+  });
+
+  it('rotuloDeslocamento mostra "Indeterminado", o número em metros ou "—"', () => {
+    const { fixture } = montar();
+    const instancia = fixture.componentInstance as unknown as { rotuloDeslocamento: (v: unknown) => string };
+    const rotulo = instancia.rotuloDeslocamento.bind(instancia);
+    expect(rotulo(DeslocamentoValorEspecialEnum.INDETERMINADO)).toBe('Indeterminado');
+    expect(rotulo(9)).toBe('9m');
+    expect(rotulo(null)).toBe('—');
+    expect(rotulo(undefined)).toBe('—');
+  });
+
+  it('confirmarCampoDeslocamento emite INDETERMINADO ao marcar um modo como sem limite', () => {
+    const { fixture, eventos } = montar();
+    (fixture.componentInstance as unknown as { confirmarCampoDeslocamento: (c: string, v: unknown) => void })
+      .confirmarCampoDeslocamento('voador', DeslocamentoValorEspecialEnum.INDETERMINADO);
+    expect(eventos['deslocamentoMudou'].at(-1)).toEqual({
+      terrestre: 9,
+      voador: DeslocamentoValorEspecialEnum.INDETERMINADO,
+    });
+  });
+
+  it('marcar "Indeterminado" na tag de Deslocamento Terrestre emite o valor especial e some o "m"', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['editar']('deslocamento.terrestre');
+    fixture.detectChanges();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    const caixa = raiz.querySelector<HTMLInputElement>(
+      '.criatura__tag .criatura__deslocamento-indeterminado input[type="checkbox"]',
+    )!;
+    expect(caixa).not.toBeNull();
+    caixa.checked = true;
+    caixa.dispatchEvent(new Event('change'));
+
+    expect(eventos['deslocamentoMudou'].at(-1)).toEqual({
+      terrestre: DeslocamentoValorEspecialEnum.INDETERMINADO,
+    });
   });
 
   it('a grade de Atributos só vira lista editável depois do lápis do cabeçalho', () => {

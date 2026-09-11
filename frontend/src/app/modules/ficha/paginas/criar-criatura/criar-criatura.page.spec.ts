@@ -265,6 +265,32 @@ describe('CriaturaCriar', () => {
     expect(componente['passoValido']()).toBe(false);
   });
 
+  it('libera o passo Porte e Deslocamento com um modo marcado Indeterminado, sem número', () => {
+    const { componente } = montar();
+    componente['alterar']({ porte: PorteCriaturaEnum.MEDIO, passo: 8 });
+    (componente['alternarDeslocamentoIndeterminado'] as (campo: string, marcado: boolean) => void)(
+      'sobrenatural',
+      true,
+    );
+    expect(componente['passoValido']()).toBe(true);
+  });
+
+  it('alterna um modo de Deslocamento entre número e Indeterminado', () => {
+    const { componente } = montar();
+    const alternar = (
+      componente['alternarDeslocamentoIndeterminado'] as (campo: string, marcado: boolean) => void
+    ).bind(componente);
+    const ehIndeterminado = (componente['ehDeslocamentoIndeterminado'] as (valor: unknown) => boolean).bind(
+      componente,
+    );
+
+    alternar('terrestre', true);
+    expect(ehIndeterminado(componente['estado']().deslocamento.terrestre)).toBe(true);
+
+    alternar('terrestre', false);
+    expect(componente['estado']().deslocamento.terrestre).toBeNull();
+  });
+
   it('solicita a quantidade de turnos ao escolher Cadência Frenética', () => {
     const { fixture, raiz, componente } = montar();
     componente['alterar']({ passo: 9, cadencia: CadenciaEnum.FRENETICA, turnosPorRodada: 6 });

@@ -53,6 +53,29 @@
 
 ## Abertas
 
+### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
+
+- **Ideia:** permitir buscar/filtrar habilidades pelo texto da descrição, não só pelo nome, no
+  seletor de habilidades da ficha (e possivelmente no catálogo do guia de criação).
+- **Origem:** pedido do autor em conversa (2026-09-11), junto de outros ajustes de ficha.
+- **Por quê:** com o catálogo de habilidades crescendo, lembrar o efeito mas não o nome exato
+  força uma busca manual item a item; buscar pela descrição encontraria a habilidade pelo que ela
+  faz.
+- **Custo aparente:** só frontend — provavelmente extends o filtro de texto já existente no
+  seletor de habilidades para também casar contra o campo de descrição, sem schema novo.
+
+### I-027 — Janela externa para anotações/histórico de dados · frontend/UX
+
+- **Ideia:** permitir abrir o histórico de rolagens (ou outro painel de anotações/dados) numa
+  janela separada do navegador ("por fora"), em vez de só como painel lateral/flutuante dentro da
+  mesma aba.
+- **Origem:** pedido do autor em conversa (2026-09-11), junto de outros ajustes de ficha.
+- **Por quê:** mestres e jogadores que mantêm a mesa em uma tela e preferem acompanhar histórico/
+  anotações em outro monitor ou janela, sem competir por espaço com a ficha/campanha principal.
+- **Custo aparente:** a definir — depende de qual painel (histórico de rolagens, caderno) e se a
+  janela externa usa `window.open` com a mesma SPA roteada para aquele painel, mantendo sincronia
+  em tempo real (WebSocket) com a janela principal.
+
 ### I-023 — Gate automático de convenções no CI · processo/qualidade
 
 - **Ideia:** executar o passe mecânico de `convencoes-check` automaticamente no CI para avisar sobre violações novas antes do merge, preservando a classificação manual para falsos positivos e regras semânticas.

@@ -76,6 +76,13 @@ label[app-campo] .campo__rotulo {
             min-height: 78px;
             resize: vertical;
         }
+        // Mesma opacidade canônica de desabilitado do produto (`app-botao`, ui-19) — o primitivo
+        // não tinha estado `:disabled` próprio até o toggle "Indeterminado" de Deslocamento
+        // (criatura) precisar de um campo numérico desabilitável dentro da grade.
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
     }
 
     &__ajuda {

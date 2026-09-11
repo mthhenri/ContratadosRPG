@@ -1,5 +1,85 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-11 — Deslocamento Indeterminado na ficha de criatura; investigação do Limite de Resistências por Fraqueza (sem defeito); duas ideias registradas
+
+Lista de ajustes trazida pelo autor em conversa, sem spec prévia no backlog — trabalho pequeno o
+suficiente para não passar por `docs/specs/TEMPLATE.spec.md` (decisão de escopo desta sessão, não
+uma isenção geral da regra). Cinco itens; três eram trabalho real, dois eram só ideias a anotar.
+
+**Feature nova — Deslocamento Indeterminado/Infinito (criatura):** cada um dos quatro modos de
+Deslocamento (Terrestre/Voador/Aquático/Sobrenatural) da ficha de criatura passa a aceitar um valor
+especial "Indeterminado" no lugar de um número em metros — cobre o caso de um Mestre que quer
+declarar um modo sem limite prático (ex.: um Deslocamento Sobrenatural de teletransporte sem
+alcance definido), hoje só descrito no doc como "valor sempre livre pelo Mestre"
+(`docs/core/guia_de_mestre-v4.0.0.md` — "Deslocamento"), nunca modelado como opção explícita. Novo
+enum `DeslocamentoValorEspecialEnum` (`shared/src/enums/`, um só valor `INDETERMINADO`);
+`FichaCriaturaDeslocamentoDto` (`shared/src/dtos/ficha/ficha-criatura.dtos.ts`) amplia cada campo
+para `number | DeslocamentoValorEspecialEnum | null`. `validarFichaCriatura` (`shared/regras/
+criatura/validacao.ts`) não precisou de mudança — o `!= null` que já checava "ao menos um modo
+declarado" trata o valor especial como preenchido de graça. Frontend: `criar-criatura.page`
+(assistente de criação) ganhou um checkbox "Indeterminado" por coluna do grid de Deslocamento
+(`.guia__campo-com-opcao`, `.guia__modo-livre--compacto` — variante compacta de 1 linha do toggle
+grande já usado por "Possui Regeneração"/"Ataque de área"), desabilitando o campo numérico da
+coluna ao marcar; `criatura-visualizacao` (ficha salva) ganhou o mesmo par checkbox+número dentro
+do conteúdo projetado de cada `app-valor-editavel` das 4 tags de Deslocamento — marcar confirma e
+sai do modo de edição na hora (mesmo padrão de blur/enter dos campos numéricos vizinhos),
+desmarcar volta ao estado "—" (0/null, mesma semântica que os campos já tratavam como vazio).
+Achado durante o próprio gate visual: nem `app-campo` (`shared/ui/campo/`, primitivo) nem o
+`.criatura__entrada-numero` local de `criatura-visualizacao` tinham **nenhum** estado `:disabled`
+— sem ele, o campo desabilitado ficava visualmente idêntico a um ativo. Os dois ganharam
+`opacity: 0.55` (a mesma opacidade canônica de desabilitado do produto, já documentada em
+`app-botao`, ui-19), a de `app-campo` beneficiando qualquer consumidor futuro do primitivo, não só
+esta task. Testes: `shared` focado 60/60 (`criatura`), suíte completa 745/745; `frontend` focado
+61/61 (`criar-criatura.page`, `criatura-visualizacao.component`, `campo.component`), suíte completa
+1605/1606 (a falha, `detalhe-mestre.page.spec.ts` "abre a dialog de duplicar…", é pré-existente e
+sem relação — reproduz isolada, em arquivo não tocado por este diff); lint dos dois workspaces sem
+erro novo (só os avisos históricos de aspas/max-len); build de produção limpo (só o aviso de budget
+conhecido, `P-004`). Verificação ao vivo (Postgres 16 nativo — Docker sem daemon disponível no
+ambiente —, backend e frontend reais, cenário via REST cru: usuário, campanha e ficha de criatura
+"A Estátua" criados) em `1920×1080` e `360×800`: ficha salva (marcar/desmarcar Indeterminado na tag
+Voador, texto "Indeterminado" aparecendo/sumindo, sem overflow no mobile) e assistente de criação
+(pulado direto pro passo // Porte e Deslocamento via `window.ng.getComponent()`, mesma técnica de
+atalho-até-o-estado das sessões `P-059`/`P-060` — campo numérico desabilitado ao marcar, sem
+overflow nos dois viewports).
+
+**Investigação — "Fraqueza não aumenta o Limite de Resistências" (sem defeito encontrado):** o
+pedido do autor descrevia a regra "cada Fraqueza extra além da 1ª soma 25% ao Limite de
+Resistências" (`docs/core/guia_de_mestre-v4.0.0.md` — "Múltiplas Fraquezas") como não-funcional na
+ficha de criatura. Auditoria de código (motor `calcularLimiteResistencias` em `shared/regras/
+criatura/resistencia.ts`, `validarFichaCriatura`, e os dois consumidores — `criar-criatura.page` e
+`criatura-visualizacao.component`, ambos com `computed(() => calcularLimiteResistencias({ vd,
+quantidadeFraquezasExtras: Math.max(0, fraquezas.length - 1) }))`) não achou nenhuma fórmula
+divergente ou duplicada. Verificação ao vivo confirmou o comportamento correto: ficha criada via
+REST com 1 Fraqueza (VD 30) mostrou "Limite 60 pts" (2×VD, 0 extras); adicionar uma 2ª Fraqueza
+pela própria UI (editar itens → Adicionar → Químico 26 → Adicionar) atualizou a tela na hora para
+"Limite 75 pts" (60×1,25) — screenshot em `1920×1080` confirmando os dois números lado a lado com
+as duas Fraquezas listadas. **Nenhuma mudança de código feita** — a regra já está correta e
+reativa em todo o caminho (motor → validação → os dois formulários). Hipótese mais provável do
+relato original: o autor testou com só 1 Fraqueza (que é obrigatória, mas não soma bônus — só a
+2ª em diante soma) e leu a ausência de mudança como o recurso não funcionando. Não virou `P-0NN`
+por não haver defeito a registrar.
+
+**Duas ideias registradas em `IDEAS.md`, sem implementação** (o pedido do autor as marcava
+explicitamente como "(IDEIA)", não como trabalho a fazer): `I-027` — janela externa (fora da SPA)
+para histórico de rolagens/anotações, pensada para uma segunda tela de mesa; `I-028` — buscar
+habilidades pelo texto da descrição, não só pelo nome, no seletor de habilidades da ficha.
+
+**Fora desta sessão, aguardando decisão do autor:** "Espaço Reservado ter feature funcional (mod
+de mochila)" — a modificação de armazenamento "Espaço Reservado" (`docs/core/sistema-v4.1.0.md` —
+tabela "Modificações" de Armazenamento: "permite a seleção de um item [Operacional ou Medicinal]
+para que sua 2ª repetição não contabilize peso") existe hoje só como dado descritivo do catálogo
+(`shared/src/regras/compras/compras.dados.ts`), sem nenhum motor por trás — mesmo estado de
+"Bolso Tático"/"Arsenal Reserva"/"Distribuição de Peso", que também não têm efeito mecânico
+aplicado (só `Compartimentos Extras`, via `ModificacaoEfeitoTipoEnum.INVENTARIO`, e `Camadas
+Extras`/resistência de item, via `ModificacaoEfeitoTipoEnum.RESISTENCIA`, são de fato calculados).
+Tornar "Espaço Reservado" funcional de verdade exige escolher **qual item do inventário** a
+modificação mira — não existe hoje nenhum mecanismo de "modificação de armazenamento aponta para
+um item específico do próprio inventário" no schema (`ficha.dados`) nem na UI —, e como esse alvo
+interage com o cálculo de peso usado (`pesoBruto = (item.peso + pesoMods) * item.quantidade` em
+`ficha-inventario.component.ts`) quando o item-alvo muda, é removido ou tem a quantidade reduzida
+abaixo do limite isento. É uma decisão de desenho de schema/UI, não uma correção de bug — combinado
+não implementar sem essa decisão do autor.
+
 ## 2026-09-11 — Barra inferior de `app-coluna-acoes`: o estado "expandida" do desktop vazava pro mobile
 
 Continuação direta do `P-066` (bloco abaixo, mesma sessão). Com a correção do `P-066` no ar, o autor

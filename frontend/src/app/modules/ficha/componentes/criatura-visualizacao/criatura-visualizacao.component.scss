@@ -843,6 +843,12 @@
         border: 1px solid var(--accent);
         border-radius: var(--radius-control);
         outline: 0;
+        // Mesma opacidade canônica de desabilitado do produto (`app-botao`, ui-19) — o campo
+        // numérico de uma tag de Deslocamento desabilita ao marcar "Indeterminado".
+        &:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
     }
     &__select--stat,
     &__select--tag {
@@ -878,6 +884,26 @@
         min-height: 0;
         padding: 2px 6px;
         font-size: 12px;
+    }
+    // Toggle "Indeterminado" ao lado do campo numérico de uma tag de Deslocamento em edição —
+    // mesmo par checkbox+rótulo do rótulo de tag ao lado (`&__tag-rotulo`), só clicável.
+    &__deslocamento-indeterminado {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        input {
+            width: 13px;
+            height: 13px;
+            accent-color: var(--accent);
+        }
+        span {
+            font: 10px var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-mute);
+            white-space: nowrap;
+        }
     }
     &__entrada-textarea {
         min-height: 76px;
