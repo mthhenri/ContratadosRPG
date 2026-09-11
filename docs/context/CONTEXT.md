@@ -4,19 +4,30 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-08 · **Última decisão registrada:** Calculadora/Caderno do mestre da
-> campanha realmente não abriam — causa raiz achada depois que o autor confirmou que o problema
-> sobrevivia a um hard refresh (descartando a hipótese de bundle desatualizado da rodada anterior).
-> `PainelFlutuante` persiste `minimizado` entre sessões por `[id]` (contrato intencional pros
-> consumidores com gatilho próprio, que viram "Reabrir X"), mas `[mostrarGatilho]="false"`
-> (Calculadora/Caderno da coluna de ações) não tem gatilho nenhum — a 1ª abertura de uma sessão nova
-> herdava `minimizado: true` salvo silenciosamente e não mostrava nada, para sempre, até limpar o
-> `localStorage` na mão. Corrigido com `[ignorarMinimizadoPersistido]` novo em `PainelFlutuante`
-> (zera minimizado herdado só na 1ª abertura, só quando o consumidor pede); descoberto no caminho
-> que o item "Calculadora" da coluna de ações manipulava `calculadoraAberta` direto em vez de
-> chamar `CalculadoraFlutuante.alternar()` (que já sabia restaurar-em-vez-de-fechar quando
-> minimizado **na mesma sessão** — `CadernoFlutuante.alternar()` nem tinha essa checagem). Ciclo
-> completo (abrir/minimizar/restaurar/fechar) testado ao vivo. Detalhe completo em `HISTORY.md`.
+> **Última revisão:** 2026-09-11 · **Última decisão registrada:** `P-066` fechado — a barra
+> inferior de `app-coluna-acoes` estourava 360px no mobile (7 itens com rótulo abaixo do ícone
+> somavam mais largura que o viewport, sem rolagem). O autor escolheu, entre 3 caminhos propostos
+> (rolagem com fade / menu "mais" / ícone só), **itens compactos (só ícone) no mobile**. Cada item
+> ganhou `flex: 1 1 0` (divide a barra em partes iguais e encolhe junto — nenhuma contagem de itens
+> consegue estourar o container) e o rótulo passou a ficar visualmente oculto no mobile com a
+> mesma técnica já usada no retraído do desktop (posição absoluta/clip, mas presente no DOM pro
+> leitor de tela); o `appTooltip` (já presente em todo item) cobre a leitura visual. Verificado ao
+> vivo em 360×800: `scrollWidth === clientWidth === 360`, os 7 itens com `height: 44px`
+> (`$alvo-toque`) e nenhum corte de conteúdo; 1920×1080 sem mudança (o ajuste é só `@include
+> bp.mobile`).
+> Antes: Calculadora/Caderno do mestre da campanha realmente não abriam — causa raiz achada depois
+> que o autor confirmou que o problema sobrevivia a um hard refresh (descartando a hipótese de
+> bundle desatualizado da rodada anterior). `PainelFlutuante` persiste `minimizado` entre sessões
+> por `[id]` (contrato intencional pros consumidores com gatilho próprio, que viram "Reabrir X"),
+> mas `[mostrarGatilho]="false"` (Calculadora/Caderno da coluna de ações) não tem gatilho nenhum —
+> a 1ª abertura de uma sessão nova herdava `minimizado: true` salvo silenciosamente e não mostrava
+> nada, para sempre, até limpar o `localStorage` na mão. Corrigido com
+> `[ignorarMinimizadoPersistido]` novo em `PainelFlutuante` (zera minimizado herdado só na 1ª
+> abertura, só quando o consumidor pede); descoberto no caminho que o item "Calculadora" da coluna
+> de ações manipulava `calculadoraAberta` direto em vez de chamar `CalculadoraFlutuante.alternar()`
+> (que já sabia restaurar-em-vez-de-fechar quando minimizado **na mesma sessão** —
+> `CadernoFlutuante.alternar()` nem tinha essa checagem). Ciclo completo
+> (abrir/minimizar/restaurar/fechar) testado ao vivo.
 > Antes: 4ª rodada — achada a causa raiz da série inteira de queixas "os botões não parecem os
 > nossos": `coluna-acoes-item.component.scss` estilizava `.coluna-acoes__item` como classe pura em
 > vez de `:host(.coluna-acoes__item)`; sob encapsulamento emulado do Angular essa regra nunca batia
@@ -29,8 +40,8 @@
 > espaçamento; dialog "Membros" trocou o quadrado cinza decorativo por ícone de papel com contorno
 > quadrado; popup de Calculadora/Caderno preso atrás da coluna corrigido com `[pisoX]` em
 > `PainelFlutuante`; tooltip "Fechar" grudado em todo `app-modal` corrigido focando o próprio
-> `<dialog>` ao abrir. Achado e não corrigido: barra inferior de `app-coluna-acoes` estoura 360px no
-> mobile (`PROBLEMS.md` `P-066`, ainda aberto).
+> `<dialog>` ao abrir. Achado nesta rodada, corrigido depois (ver acima): barra inferior de
+> `app-coluna-acoes` estourava 360px no mobile (`P-066`).
 > Antes: 2ª rodada — `app-coluna-acoes` ganhou separadores (sem título) categorizando os 7 itens em
 > 3 grupos; `app-segmentado` ganhou `[fluido]` (opt-in, só usado no painel Rolagens/Inventário);
 > dialog "Membros" virou `960px`/grade de 2 colunas por categoria (mestre|vazio, Jogadores,

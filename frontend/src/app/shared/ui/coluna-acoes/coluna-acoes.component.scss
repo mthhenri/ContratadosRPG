@@ -38,7 +38,7 @@
 // Cabeçalho de categoria entre grupos de itens — projetado pelo consumidor
 // (`<div class="coluna-acoes__categoria">Rótulo</div>` dentro de `<app-coluna-acoes>`), estilizado
 // aqui via `::ng-deep` porque a encapsulação de view não alcança conteúdo projetado (mesmo recurso
-// já usado abaixo, no bloco mobile, para `.coluna-acoes__item`/`.coluna-acoes__item-rotulo`). A
+// usado abaixo, no bloco mobile, para o próprio `::ng-deep .coluna-acoes__categoria`). A
 // régua (`border-top`) é o divisor em si; o texto por cima é o título/subtítulo pedido pelo autor
 // (2026-09-08) — antes era um `<hr>` mudo, sem dizer o que separava.
 ::ng-deep .coluna-acoes__categoria {
@@ -64,8 +64,9 @@
     color: transparent;
 }
 
-// Mobile: barra inferior fixa (mesmo racional de `.ficha-nav`) — rótulo sempre visível abaixo do
-// ícone, sem o botão de alternar (decisão validada no POC visual do autor).
+// Mobile: barra inferior fixa (mesmo racional de `.ficha-nav`), sem o botão de alternar (decisão
+// validada no POC visual do autor). P-066: rótulo passou a ficar oculto (ícone só) — ver
+// `coluna-acoes-item.component.scss`.
 @include bp.mobile {
     :host {
         position: fixed;
@@ -91,22 +92,15 @@
         overflow: visible;
     }
 
-    // `.coluna-acoes__item` (flex-direction/gap/min-height/padding do mobile) mora agora em
+    // `.coluna-acoes__item` (flex/min-height/padding do mobile) mora agora em
     // `coluna-acoes-item.component.scss`, no próprio `:host` do item — não aqui via `::ng-deep`
     // (achado ao vivo 2026-09-08: um `::ng-deep .coluna-acoes__item` history daqui nunca tinha
     // como vencer com segurança a especificidade/ordem do `:host` corrigido do próprio item; cada
     // componente estiliza o próprio host).
 
-    ::ng-deep .coluna-acoes__item-rotulo {
-        position: static !important;
-        width: auto !important;
-        height: auto !important;
-        clip: auto !important;
-        overflow: visible !important;
-        white-space: normal !important;
-        font-size: 9px;
-        text-align: center;
-    }
+    // P-066: o rótulo deixou de aparecer no mobile (ícone só, `flex:1` distribuindo a largura —
+    // ver `coluna-acoes-item.component.scss`). A regra que reexibia o rótulo aqui (`position:
+    // static !important`) foi removida; o esconder-visualmente vive no próprio item agora.
 
     // A barra virou linha horizontal (`flex-direction: row`) — a categoria acompanha: vira um
     // traço vertical mudo (a barra não tem espaço pro título) em vez da régua horizontal com

@@ -30,15 +30,20 @@
         background: var(--surface-2);
     }
 
-    // A coluna vira barra inferior fixa em linha no mobile (`ColunaAcoes`, `@include bp.mobile`) —
-    // cada item empilha ícone sobre rótulo em vez de lado a lado, mesmo racional de `.ficha-nav`.
-    // Vive aqui (não em `::ng-deep` na `ColunaAcoes` pai, como antes) pelo mesmo motivo do
-    // `:host` acima: só o próprio componente estiliza o próprio host de forma confiável.
+    // A coluna vira barra inferior fixa em linha no mobile (`ColunaAcoes`, `@include bp.mobile`).
+    // P-066: com rótulo visível, os 7 itens de `CampanhaDetalheMestre` somados estouravam 360px
+    // (`overflow: visible` do pai não rolava — só cortava sem aviso). Correção escolhida pelo
+    // autor entre 3 caminhos (rolagem com fade / menu "mais" / ícone só): ícone só, sem rótulo —
+    // o `appTooltip` do host cobre a leitura visual, mesmo racional do retraído no desktop
+    // (`.coluna-acoes__item-rotulo` abaixo). `flex: 1 1 0` faz os itens dividirem a largura da
+    // barra em partes iguais e encolherem juntos — nenhuma combinação de contagem de itens
+    // consegue estourar o container, ao contrário da largura por conteúdo de antes.
     @include bp.mobile {
-        flex-direction: column;
-        gap: 3px;
+        flex: 1 1 0;
+        min-width: 0;
+        justify-content: center;
         min-height: bp.$alvo-toque;
-        padding: 5px 1px;
+        padding: 6px 2px;
     }
 }
 
@@ -66,6 +71,17 @@
     // Retraído: só o ícone conta como conteúdo visível — o rótulo textual existe no DOM (leitor
     // de tela lê sempre) mas não ocupa espaço; o `appTooltip` do host cobre a leitura visual.
     :host-context(.coluna-acoes:not(.coluna-acoes--expandida)) & {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    // P-066: mobile aplica a mesma técnica do retraído acima, independente do estado de
+    // expansão (que só existe no desktop — a barra mobile nunca alterna).
+    @include bp.mobile {
         position: absolute;
         width: 1px;
         height: 1px;

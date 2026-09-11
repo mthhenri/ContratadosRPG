@@ -1,5 +1,46 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-11 — `P-066`: barra inferior de `app-coluna-acoes` estourava 360px no mobile
+
+Corrigido o defeito registrado ao vivo em 2026-09-08 (task `campanha-detalhe-mestre-coluna-acoes`,
+polimento visual): em `CampanhaDetalheMestre` a 360×800, os 7 itens da barra inferior fixa
+(Membros/Iniciativa/Convites/Editar/Excluir/Calculadora/Caderno) somavam ~491px de largura útil
+contra 360px de viewport — Calculadora e Caderno ficavam fora da tela, sem rolagem
+(`.coluna-acoes__itens` usava `overflow: visible`). A correção dependia de uma decisão de design
+entre 3 caminhos (registrados em `PROBLEMS.md` `P-066`): rolagem horizontal com fade, item "mais"
+com menu do excedente, ou itens compactos (ícone só, sem rótulo) no mobile. Perguntado ao autor via
+`AskUserQuestion`: **itens compactos (só ícone)**.
+
+Implementação em dois arquivos (`shared/ui/coluna-acoes/`):
+
+- `coluna-acoes-item.component.scss` — `:host` no bloco `@include bp.mobile` trocou
+  `flex-direction: column` (ícone empilhado sobre rótulo) por `flex: 1 1 0; min-width: 0;
+  justify-content: center`. Com `flex-basis: 0`, os 7 itens dividem a largura da barra em partes
+  iguais e encolhem juntos — a largura deixa de depender do conteúdo (rótulo), então nenhuma
+  contagem de itens consegue estourar o container, ao contrário de antes (largura por
+  conteúdo, sem `flex:1` nem limite). `min-height: bp.$alvo-toque` (44px) preservado. O rótulo
+  ganhou a mesma técnica de ocultação visual (mas presente no DOM) já usada no estado retraído do
+  desktop — `position: absolute; clip: rect(0 0 0 0)` etc. — dentro de um novo `@include
+  bp.mobile` em `.coluna-acoes__item-rotulo`. O `appTooltip` (já presente em todo item consumidor,
+  conferido em `detalhe-mestre.page.html`) cobre a leitura visual, mesmo racional do retraído.
+- `coluna-acoes.component.scss` — removida a regra `::ng-deep .coluna-acoes__item-rotulo` do
+  bloco mobile que reexibia o rótulo (`position: static !important`, `font-size: 9px`), hoje morta
+  e contraditória com o ocultamento acima; comentários da vizinhança atualizados (a referência a
+  "rótulo sempre visível" datava da versão anterior).
+
+Verificado: `npm run test --workspace=frontend -- --include=coluna-acoes.component.spec.ts` (5/5,
+nenhum depende de CSS de mídia) e `npm run lint --workspace=frontend` (0 erros; os ~16k warnings de
+aspas são preexistentes em todo o repositório, não introduzidos aqui). Verificação ao vivo (skill
+`verify`) com mestre real via REST (`/autenticacao/registro`, `/autenticacao/login`, `/campanha`)
+em `1920×1080` (sem mudança visual — o ajuste é só `@include bp.mobile`, coluna lateral retraída
+idêntica a antes) e `360×800`: os 7 itens renderizam lado a lado, sem rolagem e sem corte —
+`page.evaluate` confirmou `scrollWidth === clientWidth === 360` no host e cada item com
+`height: 44px` (`$alvo-toque`) e `appTooltip` correto (Membros/Iniciativa/Convites/Editar
+campanha/Excluir campanha/Calculadora/Caderno). Trade-off aceito pela opção escolhida: a largura
+por item ficou em ~37px (abaixo do alvo de toque ideal de 44px de largura) — inerente a caber 7
+itens + 2 divisores de categoria em 360px mantendo a altura de 44px; não é regressão desta task,
+é o preço da opção "ícone só" que o autor escolheu diante do trade-off explícito.
+
 ## 2026-09-11 — `P-065`: trim de seletores mortos em `detalhe-jogador.page.scss`
 
 Dívida aceita registrada em `campanha-detalhe-mestre-coluna-acoes` (2026-09-08): o SCSS da visão
