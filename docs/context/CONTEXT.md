@@ -4,17 +4,24 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-11 · **Última decisão registrada:** `P-066` fechado — a barra
-> inferior de `app-coluna-acoes` estourava 360px no mobile (7 itens com rótulo abaixo do ícone
-> somavam mais largura que o viewport, sem rolagem). O autor escolheu, entre 3 caminhos propostos
-> (rolagem com fade / menu "mais" / ícone só), **itens compactos (só ícone) no mobile**. Cada item
-> ganhou `flex: 1 1 0` (divide a barra em partes iguais e encolhe junto — nenhuma contagem de itens
-> consegue estourar o container) e o rótulo passou a ficar visualmente oculto no mobile com a
-> mesma técnica já usada no retraído do desktop (posição absoluta/clip, mas presente no DOM pro
-> leitor de tela); o `appTooltip` (já presente em todo item) cobre a leitura visual. Verificado ao
-> vivo em 360×800: `scrollWidth === clientWidth === 360`, os 7 itens com `height: 44px`
-> (`$alvo-toque`) e nenhum corte de conteúdo; 1920×1080 sem mudança (o ajuste é só `@include
-> bp.mobile`).
+> **Última revisão:** 2026-09-11 · **Última decisão registrada:** `P-066` fechado em duas rodadas.
+> 1ª: a barra inferior de `app-coluna-acoes` estourava 360px no mobile (7 itens com rótulo abaixo
+> do ícone somavam mais largura que o viewport, sem rolagem); o autor escolheu, entre 3 caminhos
+> propostos (rolagem com fade / menu "mais" / ícone só), **itens compactos (só ícone) no mobile** —
+> `flex: 1 1 0` por item e rótulo visualmente oculto (presente no DOM pro leitor de tela; o
+> `appTooltip` cobre a leitura), mesma técnica do retraído no desktop. 2ª: com isso no ar, o autor
+> viu a barra "zoada" no celular — os 7 ícones espremidos à esquerda. Causa raiz: a barra nascia
+> com **200px** porque `:host(.coluna-acoes--expandida)` (declarado fora do bloco mobile, (0,2,0))
+> vence o `:host { width: auto }` de dentro do `@include bp.mobile` ((0,1,0)) — **media query não
+> soma especificidade** — e a classe vem persistida do desktop por `localStorage`. Defeito
+> pré-existente que a 1ª rodada só desmascarou (antes os itens transbordavam os 200px e fingiam
+> largura cheia). Corrigido com o reset explícito do estado expandido dentro do bloco mobile, mais
+> `gap: 2px` (era `var(--space-8)`, herdado da pilha vertical, comendo 64px dos 348px úteis — 2px é
+> o valor da `.ficha-nav`, a barra inferior canônica) e o sumiço do divisor de categoria que abria
+> a lista (tique mudo encostado na borda, separando nada). Medido a 360×800 nos dois estados:
+> barra de 360px, itens de **44.84 × 44px** — cumpre o alvo de toque nas duas dimensões, superando
+> o trade-off de ~37px anotado na 1ª rodada. Desktop conferido sem regressão (56px retraída,
+> 200px expandida, 960×1080 expandida).
 > Antes: Calculadora/Caderno do mestre da campanha realmente não abriam — causa raiz achada depois
 > que o autor confirmou que o problema sobrevivia a um hard refresh (descartando a hipótese de
 > bundle desatualizado da rodada anterior). `PainelFlutuante` persiste `minimizado` entre sessões

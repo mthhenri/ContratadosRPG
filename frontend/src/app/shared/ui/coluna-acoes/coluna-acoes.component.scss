@@ -82,13 +82,28 @@
         border-top: 1px solid var(--border-strong);
     }
 
+    // Expandir/retrair é conceito exclusivo da coluna lateral do desktop (o botão que alterna some
+    // logo abaixo), mas a classe persiste em `localStorage` por `[id]` e vem junto pro mobile.
+    // Sem este reset, `:host(.coluna-acoes--expandida)` (0,2,0) vence o `:host` do bloco mobile
+    // (0,1,0) — media query não soma especificidade — e a barra inferior nasce com 200px presa à
+    // esquerda em vez da largura da tela. Achado ao vivo pelo autor (2026-09-11): quem tinha
+    // expandido a coluna no desktop via os 7 ícones espremidos em 14px cada no celular.
+    :host(.coluna-acoes--expandida) {
+        width: auto;
+    }
+
     .coluna-acoes__alternar {
         display: none;
     }
 
+    // `gap` de 2px, não o `var(--space-8)` da pilha vertical do desktop: com 7 itens + 2 divisores
+    // são 8 vãos, e a 8px eles comiam 64px dos 348px úteis (item ficava em 37px, abaixo do alvo de
+    // toque). Mesmo valor da `.ficha-nav` (`ficha-visualizacao.component.scss`), a barra inferior
+    // canônica do projeto, que também divide 7 destinos com `flex: 1 1 0` a 360px.
     .coluna-acoes__itens {
         flex-direction: row;
         flex: 1;
+        gap: 2px;
         overflow: visible;
     }
 
@@ -110,11 +125,20 @@
         align-self: stretch;
         width: 1px;
         height: auto;
-        margin: 0 2px;
+        // 4px de cada lado somados ao `gap` de 2px: o vão do divisor (6px) fica 3× o vão entre
+        // itens do mesmo grupo (2px), que é o que faz a separação ser lida como grupo.
+        margin: 0 4px;
         padding: 0;
         border-top: 0;
         border-left: 1px solid var(--border);
         color: transparent;
         font-size: 0;
+    }
+
+    // A categoria que abre a lista (no desktop é o título "Campanha" do 1º grupo) não separa nada
+    // quando vira traço mudo: sobra um tique de 1px encostado na borda esquerda da barra, sem
+    // nenhum item antes dele. Some no mobile — e os 9px que ele ocupava voltam pros itens.
+    ::ng-deep .coluna-acoes__categoria:first-child {
+        display: none;
     }
 }

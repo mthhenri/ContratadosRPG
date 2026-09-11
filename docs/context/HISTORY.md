@@ -1,5 +1,64 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-11 — Barra inferior de `app-coluna-acoes`: o estado "expandida" do desktop vazava pro mobile
+
+Continuação direta do `P-066` (bloco abaixo, mesma sessão). Com a correção do `P-066` no ar, o autor
+mandou um screenshot da barra no celular **zoada**: os 7 ícones espremidos num bloco de ~175px
+encostado na borda esquerda, sobrando metade da tela vazia à direita. Não era regressão de estilo —
+era um defeito **pré-existente** que a correção anterior desmascarou.
+
+**Causa raiz** (reproduzida antes de qualquer fix, medindo os dois estados a 360×800): a barra
+nascia com `width: 200px` em vez da largura da tela. `:host(.coluna-acoes--expandida) { width:
+200px }` mora fora do bloco mobile e tem especificidade (0,2,0); o `:host { width: auto }` de dentro
+do `@include bp.mobile` tem (0,1,0) — **media query não soma especificidade**, então o estado
+expandido vencia. Expandir/retrair é conceito exclusivo da coluna lateral do desktop (no mobile o
+botão que alterna é `display: none`), mas a classe vem de `localStorage` por `[id]`: quem tinha
+expandido a coluna no desktop carregava uma barra de 200px pro celular. Medido: `hostWidth: 200`,
+item com `14.42px` de largura. Antes do `P-066` o defeito existia igual, mas ficava **invisível** —
+sem `flex: 1 1 0`, os itens (largura por conteúdo, com rótulo) transbordavam os 200px via
+`overflow: visible` e se espalhavam pela tela, dando a ilusão de uma barra de largura cheia.
+
+Três ajustes, todos no bloco `@include bp.mobile` de `coluna-acoes.component.scss` — os três são a
+mesma classe de defeito: **valor da pilha vertical do desktop herdado pela barra horizontal sem
+ninguém revisitar**:
+
+1. `:host(.coluna-acoes--expandida) { width: auto }` dentro do bloco mobile (mesma especificidade,
+   ordem de fonte depois → vence). Neutraliza o estado expandido só no mobile; a preferência
+   continua persistida e válida quando a viewport volta pro desktop.
+2. `gap: 2px` em `.coluna-acoes__itens` no lugar do `var(--space-8)` (8px) herdado da pilha
+   vertical. Com 7 itens + divisores são 8-9 vãos: a 8px eles comiam 64px dos 348px úteis. 2px é o
+   valor da `.ficha-nav` (`ficha-visualizacao.component.scss`), a barra inferior canônica do
+   projeto — analógico escolhido pro gate visual, que também divide 7 destinos com `flex: 1 1 0` a
+   360px.
+3. `::ng-deep .coluna-acoes__categoria:first-child { display: none }`. A medição pós-fix não batia
+   com a conta (44.84px previstos, 43.28px medidos) e a diferença revelou um **terceiro** divisor:
+   o consumidor abre a lista com `<div class="coluna-acoes__categoria">Campanha</div>`, que no
+   desktop é o título do 1º grupo e no mobile degenerava num tique mudo de 1px encostado na borda
+   esquerda, separando nada. Sumiu do mobile, e os 9px voltaram pros itens.
+
+Resultado medido a 360×800, **nos dois estados** (retraída e expandida persistida): `hostWidth:
+360`, itens de `44.84 × 44px`, primeiro item em `x=6` e último terminando em `x=354` (exatamente o
+padding de 6px da barra), `scrollWidth === clientWidth === 360`. Isso **supera o trade-off
+registrado no bloco abaixo**: os ~37px de largura por item anotados lá como preço da opção "ícone
+só" eram, na verdade, o `gap` de 8px herdado — com o gap correto o item cumpre o alvo de toque de
+44px nas **duas** dimensões, sem rótulo e sem rolagem.
+
+Verificado: teste focado (`coluna-acoes.component.spec.ts`, 5/5), `prettier --check` nos dois SCSS
+e `npm run lint --workspace=frontend` (0 erros; contagem de warnings idêntica à de antes da
+mudança — nenhum introduzido). Ao vivo (skill `verify`): 360×800 no cenário quebrado do autor
+(`localStorage` com o estado expandido) — barra cheia, 7 ícones distribuídos, 2 divisores de grupo
+legíveis, tique da esquerda ausente; estados interativos percorridos pela própria barra
+(Calculadora abre o painel flutuante, Membros abre o `<dialog>`), com o hover do item encaixado na
+célula de 44px. Sem regressão no desktop, o risco real desta mudança por tocar
+`:host(.coluna-acoes--expandida)`: 1920×1080 retraída (56px, rótulo oculto), 1920×1080 expandida
+(200px, rótulos e títulos "CAMPANHA"/"GESTÃO"/"FERRAMENTAS" intactos) e 960×1080 expandida (200px)
+conferidas uma a uma.
+
+**Lição que sobrevive à task:** um `:host(.classe)` declarado fora de um `@include bp.mobile` vence
+o `:host` declarado dentro dele — media query não soma especificidade. Todo primitivo que muda de
+forma no breakpoint (coluna→barra) precisa neutralizar explicitamente, dentro do bloco mobile, os
+estados que só existem no desktop.
+
 ## 2026-09-11 — `P-066`: barra inferior de `app-coluna-acoes` estourava 360px no mobile
 
 Corrigido o defeito registrado ao vivo em 2026-09-08 (task `campanha-detalhe-mestre-coluna-acoes`,
