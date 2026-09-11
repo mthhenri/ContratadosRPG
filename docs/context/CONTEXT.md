@@ -105,10 +105,10 @@ coluna de ações, as duas dialogs, alternância do painel lateral, `FichaFlutua
 documento real editável, regressão do jogador confirmada idêntica. Achado só na verificação ao
 vivo, corrigido antes do fecho: avatar de criatura nascia esticado (não quadrado) — mesmo pitfall
 de `width:100%+aspect-ratio+max-height` já documentado em `m8-07`; card de criatura reestruturado
-pro mesmo layout horizontal do `EspectadorFichaCard`. Dívida aceita e registrada em `PROBLEMS.md`
-(`P-065`): `detalhe-jogador.page.scss` foi copiado por inteiro do monolito antigo, carrega
-seletores mortos que só o mestre usava — sem efeito funcional, pendente de um trim mecânico
-futuro. Detalhe completo, achados por task e viewports verificados em `HISTORY.md`.
+pro mesmo layout horizontal do `EspectadorFichaCard`. Dívida `P-065` (`detalhe-jogador.page.scss`
+copiado por inteiro do monolito antigo, com seletores mortos do mestre) corrigida em 2026-09-11 —
+arquivo caiu de 2099 para 1238 linhas; ver `HISTORY.md`. Detalhe completo, achados por task e
+viewports verificados em `HISTORY.md`.
 
 **`I-024`/`I-025`/`I-026` fechados (2026-09-07):** as três ideias abertas mais recentes de
 `IDEAS.md`, a pedido do autor. `I-024` (perigo = primário) já estava resolvida por `ui-12` —

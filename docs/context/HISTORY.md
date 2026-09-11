@@ -1,5 +1,37 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-11 — `P-065`: trim de seletores mortos em `detalhe-jogador.page.scss`
+
+Dívida aceita registrada em `campanha-detalhe-mestre-coluna-acoes` (2026-09-08): o SCSS da visão
+do jogador (`CampanhaDetalheJogador`, extraída do monolito `CampanhaDetalhe`) tinha sido copiado
+por inteiro do antigo `detalhe.page.scss` (2099 linhas) e carregava seletores `.detalhe__*` que só
+a visão de MESTRE usava (grid antigo do Esquadrão, Membros, tira de convites/estatísticas, cards
+de ficha do Esquadrão com passos −/+, menu de ficha, edição/exclusão inline etc.) — sem efeito
+funcional ou visual, só peso morto de CSS no bundle da página do jogador.
+
+Trim mecânico: extraídas todas as classes referenciadas em `detalhe-jogador.page.html` (via
+`class`/`[class.x]`) e comparado contra cada seletor de topo (`&__xxx`/`&--xxx`) do SCSS; todo
+bloco cuja classe não aparece no HTML foi removido. Removidos blocos inteiros de: estatísticas/
+convite/combate do cabeçalho, tira de rolagens horizontal, grade Membros|Esquadrão, coluna
+Membros, coluna Esquadrão (grid, card de ficha, menu de ficha, passos −/+), edição/exclusão
+inline de campanha, `&__secao-contagem`/`&__nova-ficha`/`&__secao-atualizado`, `.detalhe__estatistica`
+(bloco à parte) e dois esqueletos de carregamento órfãos (`&__esqueleto-chip-papel`,
+`&__esqueleto-vital`) — nenhum desses tem contraparte em `detalhe-jogador.page.html`. Arquivo caiu
+de 2099 para 1238 linhas (41% menor). `.chip-papel`, `.rolagem-pill`, `.dialogo`, `.acesso` e todos
+os blocos de `&__jogador`/`&__equipe-*`/`&__rolagens-painel`/`&__sessao-*`/esqueleto (jogador) —
+todos com contraparte real no HTML — ficaram intactos.
+
+Verificado: `npm run build --workspace=frontend` (verde, sem erro; warning de budget preexistente
+e não relacionado) e `npm run lint --workspace=frontend` (0 erros; warnings preexistentes de aspas
+em arquivos não tocados). Verificação ao vivo (skill `verify`) com mestre+jogador reais via REST
+(`/autenticacao/registro`, `/campanha`, `/campanha/entrar`) em `1920×1080` e `360×800`: cabeçalho
+(título/estado operacional/men. "⋯"), Equipe com chip "Mestre", painel Sessão/Iniciativa e o
+estado vazio "Você ainda não tem uma ficha" (botões Criar/Vincular) renderizam idênticos ao layout
+anterior, sem overflow nem quebra visual — confirma a dívida original ("sem efeito funcional ou
+visual, só peso morto"). Áreas com ficha ativa (`&__ficha-embutida*`) não foram exercitadas com uma
+ficha completa nesta verificação (fluxo de criação é um wizard de 8 passos, fora do escopo do
+trim), mas nenhum seletor usado por elas foi tocado — permaneceram intactos no diff.
+
 ## 2026-09-08 — `CampanhaDetalheMestre`: "Abrir ficha completa" no menu "..." do cartão do Esquadrão
 
 Pedido direto do autor: o menu de ações (kebab) de uma ficha do Esquadrão, na visão do mestre
