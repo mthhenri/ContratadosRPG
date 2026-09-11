@@ -1404,6 +1404,77 @@
                                             mod.descricao
                                         }}</span>
                                     }
+                                    @if (mod.itemAlvo; as itemAlvo) {
+                                        <div class="ficha-inv__mod-alvo">
+                                            @if (editavel()) {
+                                                <label class="ficha-inv__campo">
+                                                    <span class="ficha-inv__campo-rotulo"
+                                                        >Item-alvo</span
+                                                    >
+                                                    <select
+                                                        class="ficha-inv__entrada"
+                                                        [attr.aria-label]="
+                                                            'Item-alvo de ' + mod.nome
+                                                        "
+                                                        (change)="
+                                                            definirItemAlvoEspacoReservado(
+                                                                item.indice,
+                                                                $any($event.target).value
+                                                            )
+                                                        "
+                                                    >
+                                                        <option
+                                                            value=""
+                                                            [selected]="!itemAlvo.selecionado"
+                                                        >
+                                                            — Escolha o item-alvo —
+                                                        </option>
+                                                        @for (
+                                                            opcao of itemAlvo.opcoes;
+                                                            track opcao
+                                                        ) {
+                                                            <option
+                                                                [value]="opcao"
+                                                                [selected]="
+                                                                    opcao === itemAlvo.selecionado
+                                                                "
+                                                            >
+                                                                {{ opcao }}
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                </label>
+                                            } @else if (itemAlvo.selecionado) {
+                                                <span class="ficha-inv__mod-alvo-texto"
+                                                    >Item-alvo: {{ itemAlvo.selecionado }}</span
+                                                >
+                                            }
+                                            @if (
+                                                itemAlvo.selecionado && !itemAlvo.alvoAusente
+                                            ) {
+                                                <span class="ficha-inv__mod-alvo-nota">
+                                                    Isenta {{ itemAlvo.itensIsentos }} unidade{{
+                                                        itemAlvo.itensIsentos === 1 ? "" : "s"
+                                                    }}
+                                                    de peso
+                                                </span>
+                                            }
+                                            @if (itemAlvo.alvoAusente) {
+                                                <span
+                                                    class="ficha-inv__mod-alvo-aviso"
+                                                    role="alert"
+                                                >
+                                                    <app-icone
+                                                        nome="alerta"
+                                                        [appTooltip]="
+                                                            'Item removido do inventário — a isenção de peso não se aplica.'
+                                                        "
+                                                    />
+                                                    Item removido do inventário
+                                                </span>
+                                            }
+                                        </div>
+                                    }
                                     @if (editavel() && !mod.fixa) {
                                         <div class="ficha-inv__mod-flags">
                                             <button

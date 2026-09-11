@@ -5,6 +5,7 @@ import { CATALOGO_ITENS } from './catalogo.dados';
 import { CarrinhoItemDto, ModificacaoAplicadaDto } from './compras.dtos';
 import {
   calcularCustoAmplificador,
+  calcularItensIsentosEspacoReservado,
   alterarContagemMunicao,
   calcularResumoCompras,
   calcularStatItem,
@@ -570,6 +571,109 @@ describe('calcularTotaisCarrinho', () => {
     // Guardada: pesa só o item base (mods de armazenamento têm peso 0) e não amplia inventário.
     expect(totais.pesoUsado).toBe(0.5);
     expect(totais.bonusInventario).toBe(0);
+  });
+
+  describe('"Espaço Reservado" isenta unidades de peso do item-alvo', () => {
+    it('no mínimo (2 empilhamentos), isenta 1 unidade do item-alvo do peso', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [
+          montarItem({
+            nome: 'Mochila Mediana',
+            categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+            peso: 0.5,
+            guardada: false,
+            modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2, itemAlvo: 'Kit Médico' }],
+          }),
+          montarItem({
+            nome: 'Kit Médico',
+            categoria: ItemCategoriaEnum.MEDICINAL,
+            peso: 1,
+            quantidade: 3,
+          }),
+        ],
+        amplificadores: [],
+      });
+
+      // Armazenamento vestida não pesa (0) + Kit Médico: 3 unidades − 1 isenta = 2 × peso 1.
+      expect(totais.pesoUsado).toBe(2);
+    });
+
+    it('empilhamento extra soma mais 1 unidade isenta (calcularItensIsentosEspacoReservado)', () => {
+      expect(calcularItensIsentosEspacoReservado(2)).toBe(1);
+      expect(calcularItensIsentosEspacoReservado(4)).toBe(3);
+
+      const totais = calcularTotaisCarrinho({
+        itens: [
+          montarItem({
+            nome: 'Mochila Mediana',
+            categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+            peso: 0.5,
+            guardada: false,
+            modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 4, itemAlvo: 'Ração' }],
+          }),
+          montarItem({ nome: 'Ração', categoria: ItemCategoriaEnum.OPERACIONAL, peso: 0.5, quantidade: 5 }),
+        ],
+        amplificadores: [],
+      });
+
+      // Ração: 5 unidades − 3 isentas = 2 × peso 0,5 = 1.
+      expect(totais.pesoUsado).toBe(1);
+    });
+
+    it('nunca isenta a última unidade (piso 1), mesmo com isenção sobrando', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [
+          montarItem({
+            nome: 'Mochila Mediana',
+            categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+            peso: 0.5,
+            guardada: false,
+            modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 4, itemAlvo: 'Kit Médico' }],
+          }),
+          montarItem({ nome: 'Kit Médico', categoria: ItemCategoriaEnum.MEDICINAL, peso: 1, quantidade: 1 }),
+        ],
+        amplificadores: [],
+      });
+
+      expect(totais.pesoUsado).toBe(1);
+    });
+
+    it('item-alvo removido do carrinho não quebra o cálculo — isenção simplesmente não se aplica', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [
+          montarItem({
+            nome: 'Mochila Mediana',
+            categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+            peso: 0.5,
+            guardada: false,
+            modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2, itemAlvo: 'Kit Médico' }],
+          }),
+        ],
+        amplificadores: [],
+      });
+
+      expect(totais.pesoUsado).toBe(0);
+    });
+
+    it('a isenção reduz só o peso — o gasto continua cobrando a quantidade cheia', () => {
+      const totais = calcularTotaisCarrinho({
+        itens: [
+          montarItem({
+            nome: 'Mochila Mediana',
+            categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+            peso: 0.5,
+            guardada: false,
+            modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2, itemAlvo: 'Kit Médico' }],
+          }),
+          montarItem({ nome: 'Kit Médico', categoria: ItemCategoriaEnum.MEDICINAL, custo: 100, peso: 1, quantidade: 3 }),
+        ],
+        amplificadores: [],
+      });
+
+      // Espaço Reservado (1 compra × $300) + Kit Médico 3 × $100 = 600.
+      expect(totais.gasto).toBe(600);
+      expect(totais.pesoUsado).toBe(2);
+    });
   });
 
   /** Bug de m3-44 (item 14): Pochete/Bolso de Corpo têm inventário separado, não ampliam o principal. */

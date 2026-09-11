@@ -4,12 +4,13 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-11 · **Última decisão registrada:** lote de ajustes do autor — 3 de 5
-> itens fechados (Deslocamento Indeterminado/Infinito na ficha de criatura implementado; "Fraqueza
+> **Última revisão:** 2026-09-11 · **Última decisão registrada:** lote de ajustes do autor — os 5
+> itens fechados. Deslocamento Indeterminado/Infinito na ficha de criatura implementado; "Fraqueza
 > não aumenta o Limite de Resistências" investigado e fechado **sem defeito**, a regra já
-> funcionava; duas ideias só registradas em `IDEAS.md`), 1 aberto ("Espaço Reservado" funcional
-> aguarda decisão do autor sobre como a modificação referencia um item do inventário). Detalhe em
-> `HISTORY.md` e `CONTEXT.md` §1.
+> funcionava; "Espaço Reservado" (mod de mochila) ganhou efeito mecânico de verdade — autor
+> escolheu "selecionar item no inventário" (via `AskUserQuestion`) entre as 3 opções de desenho
+> propostas; duas ideias só registradas em `IDEAS.md`, sem código. Detalhe em `HISTORY.md` e
+> `CONTEXT.md` §1.
 > Antes: `P-066` fechado em duas rodadas.
 > 1ª: a barra inferior de `app-coluna-acoes` estourava 360px no mobile (7 itens com rótulo abaixo
 > do ícone somavam mais largura que o viewport, sem rolagem); o autor escolheu, entre 3 caminhos
@@ -108,20 +109,22 @@
 
 ## 1. Próxima Task
 
-**Lote de ajustes do autor (2026-09-11) — 3 de 5 itens fechados, 1 aberto aguardando decisão:**
-Deslocamento Indeterminado/Infinito na ficha de criatura **concluído** — cada um dos 4 modos
-(Terrestre/Voador/Aquático/Sobrenatural) aceita o valor especial `DeslocamentoValorEspecialEnum.
-INDETERMINADO` no lugar de um número, via checkbox "Indeterminado" no assistente de criação e nas
-tags editáveis da ficha salva; `app-campo` (primitivo) e o campo numérico local de
-`criatura-visualizacao` ganharam estado `:disabled` que não existia antes. "Fraqueza não aumenta o
-Limite de Resistências" **investigado e fechado sem defeito** — a regra (+25% por Fraqueza extra
-além da 1ª) já funciona corretamente em todo o caminho (motor, validação, os dois formulários),
-confirmado ao vivo; hipótese é o relato ter testado com só 1 Fraqueza, que não soma bônus por
-regra. Duas ideias (janela externa de histórico/anotações; busca por descrição de habilidade)
-só registradas em `IDEAS.md` (`I-027`/`I-028`), sem código. **Aberto:** "Espaço Reservado" (mod de
-mochila) funcional — depende de o autor decidir como a modificação referencia um item específico
-do inventário (schema/UI ainda não têm esse mecanismo); não implementado nesta sessão. Detalhe
-completo, achados e viewports verificados em `HISTORY.md`.
+**Lote de ajustes do autor (2026-09-11) — os 5 itens fechados:** Deslocamento Indeterminado/
+Infinito na ficha de criatura **concluído** — cada um dos 4 modos (Terrestre/Voador/Aquático/
+Sobrenatural) aceita o valor especial `DeslocamentoValorEspecialEnum.INDETERMINADO` no lugar de um
+número, via checkbox "Indeterminado" no assistente de criação e nas tags editáveis da ficha salva;
+`app-campo` (primitivo) e o campo numérico local de `criatura-visualizacao` ganharam estado
+`:disabled` que não existia antes. "Fraqueza não aumenta o Limite de Resistências" **investigado e
+fechado sem defeito** — a regra (+25% por Fraqueza extra além da 1ª) já funciona corretamente em
+todo o caminho (motor, validação, os dois formulários), confirmado ao vivo; hipótese é o relato ter
+testado com só 1 Fraqueza, que não soma bônus por regra. "Espaço Reservado" (mod de mochila)
+**ganhou efeito mecânico** — `ModificacaoAplicadaDto.itemAlvo` referencia o `nome` de um item
+Operacional/Medicinal do inventário (autor escolheu "selecionar item no inventário" entre 3 opções
+de desenho, via `AskUserQuestion`); `calcularTotaisCarrinho` isenta de peso as unidades que a mod
+concede (`calcularItensIsentosEspacoReservado`), item removido do carrinho não quebra nada — a
+isenção só para de valer. Duas ideias (janela externa de histórico/anotações; busca por descrição
+de habilidade) só registradas em `IDEAS.md` (`I-027`/`I-028`), sem código. Detalhe completo,
+achados, testes e viewports verificados em `HISTORY.md`.
 
 **`campanha-detalhe-mestre-coluna-acoes` concluída (2026-09-08):** `CampanhaDetalhe` (o componente
 monolítico que renderizava mestre e jogador no mesmo lugar) virou três: `CampanhaDetalheShell`

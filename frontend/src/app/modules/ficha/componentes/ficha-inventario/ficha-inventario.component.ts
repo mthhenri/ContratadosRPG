@@ -32,6 +32,7 @@ import {
   bonusMunicaoConstrutor,
   calcularAfinidade,
   calcularCustoAmplificador,
+  calcularItensIsentosEspacoReservado,
   calcularResumoCompras,
   calcularStatItem,
   criarContagemMunicao,
@@ -289,6 +290,20 @@ interface ModAtivaVM {
    * "fora do limite de mods da patente" do doc).
    */
   readonly fixa: boolean;
+  /**
+   * Só "Espaço Reservado" (`ModificacaoAplicadaDto.itemAlvo`) — as demais mods ficam com `null`.
+   * `opcoes` lista os itens Operacional/Medicinal do inventário elegíveis a receber a isenção de
+   * peso; `itensIsentos` é quantas unidades do alvo ficam isentas com os empilhamentos atuais
+   * (`calcularItensIsentosEspacoReservado`); `alvoAusente` é `true` quando `itemAlvo` está
+   * preenchido mas não bate mais com nenhuma opção (item removido/renomeado do inventário — a
+   * isenção simplesmente para de valer, `calcularTotaisCarrinho` não quebra).
+   */
+  readonly itemAlvo: {
+    readonly selecionado: string | null;
+    readonly opcoes: readonly string[];
+    readonly itensIsentos: number;
+    readonly alvoAusente: boolean;
+  } | null;
 }
 
 /** Uma entrada do painel de modificações (mod disponível para o item). */
@@ -2738,6 +2753,20 @@ export class FichaInventario {
 
     const statComputado = calcularStatItem({ item });
     const definicoes = listarModificacoesDisponiveis(item);
+    // "Espaço Reservado" mira um item Operacional/Medicinal do **inventário inteiro** (não só
+    // deste item) — opções vêm da lista cheia, sem repetir `nome` (essas categorias nunca ganham
+    // `apelido`, `nome` já é identidade única dentro delas — ver `ModificacaoAplicadaDto.itemAlvo`).
+    const opcoesEspacoReservado = Array.from(
+      new Set(
+        this.inventario()
+          .itens.filter(
+            (candidato) =>
+              candidato.categoria === ItemCategoriaEnum.OPERACIONAL ||
+              candidato.categoria === ItemCategoriaEnum.MEDICINAL,
+          )
+          .map((candidato) => candidato.nome),
+      ),
+    );
     // Acumula os empilhamentos na ordem para marcar como "excedente" o que passa do limite da patente.
     let acumuladoStacks = 0;
     const modsAtivas: ModAtivaVM[] = item.modificacoes.map((modificacao) => {
@@ -2779,6 +2808,15 @@ export class FichaInventario {
             .join(' — ') || null,
         deFragmento: !!modificacao.origemFragmento,
         fixa: modificacao.origemFragmento?.tipo === FragmentoTipoEnum.CONSTRUTOR,
+        itemAlvo:
+          modificacao.nome === 'Espaço Reservado'
+            ? {
+                selecionado: modificacao.itemAlvo ?? null,
+                opcoes: opcoesEspacoReservado,
+                itensIsentos: calcularItensIsentosEspacoReservado(modificacao.empilhamentos),
+                alvoAusente: !!modificacao.itemAlvo && !opcoesEspacoReservado.includes(modificacao.itemAlvo),
+              }
+            : null,
       };
     });
     const construtorMunicao =
@@ -2943,6 +2981,26 @@ export class FichaInventario {
         const maxima = Math.max(0, contagem.maxima + delta);
         return { ...item, modificacoes, contagemMunicao: { ...contagem, maxima, atual: Math.min(maxima, Math.max(0, contagem.atual + delta)) } };
       }),
+    );
+  }
+
+  /**
+   * Define o item-alvo de "Espaço Reservado" (`ModificacaoAplicadaDto.itemAlvo`) — a isenção de
+   * peso em si é calculada pelo motor (`calcularTotaisCarrinho`), aqui só se grava a seleção.
+   * `itemAlvo` vazio (opção "Selecione") volta a `null`, desligando a isenção sem remover a mod.
+   */
+  protected definirItemAlvoEspacoReservado(indice: number, itemAlvo: string): void {
+    this.emitirItens(
+      this.inventario().itens.map((item, i) =>
+        i !== indice
+          ? item
+          : {
+              ...item,
+              modificacoes: item.modificacoes.map((modificacao) =>
+                modificacao.nome === 'Espaço Reservado' ? { ...modificacao, itemAlvo: itemAlvo || null } : modificacao,
+              ),
+            },
+      ),
     );
   }
 

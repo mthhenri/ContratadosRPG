@@ -831,6 +831,16 @@ export function calcularCustoAmplificador(dto: CustoAmplificadorCalcularDto): nu
 }
 
 /**
+ * Unidades do item-alvo de "Espaço Reservado" isentas de peso: a 1ª compra (2 empilhamentos, o
+ * mínimo pra adquirir a mod) isenta 1 unidade ("sua segunda repetição não contabiliza peso");
+ * cada empilhamento além disso isenta mais 1 (doc — tabela "Modificações" de Armazenamento:
+ * "Empilhamentos adicionais aumentam o limite de itens desconsiderados em +1").
+ */
+export function calcularItensIsentosEspacoReservado(empilhamentos: number): number {
+  return Math.max(0, empilhamentos - 1);
+}
+
+/**
  * Totais brutos do carrinho: gasto (itens + modificações + amplificadores), peso
  * ocupado, empilhamentos de amplificador somados e bônus de inventário dos
  * armazenamentos vestidos. Um armazenamento vestido (`guardada = false`) amplia o
@@ -841,12 +851,33 @@ export function calcularCustoAmplificador(dto: CustoAmplificadorCalcularDto): nu
  * um armazenamento dentro de outro (`!item.ehArmazenamento` no seletor "Mover para"), mas o motor
  * não confia só nisso. Um container com `inventarioProprio` (Pochete/Bolso de Corpo) também **não
  * soma** seu próprio bônus em `bonusInventario` — vestido, o bônus vira a capacidade do
- * sub-inventário, não amplia o principal. Espelha `getCmpTotals` do site antigo.
+ * sub-inventário, não amplia o principal. "Espaço Reservado" isenta de peso algumas unidades do
+ * item que mira (`ModificacaoAplicadaDto.itemAlvo`, resolvido por `nome` — ver o comentário do
+ * campo): a isenção só alcança o pool principal (`pesoUsado` aqui), não o peso de um sub-
+ * inventário (`listarSubInventarios`), que seria um segundo cálculo espelhado sem consumidor real
+ * hoje. Espelha `getCmpTotals` do site antigo.
  */
 export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCarrinhoDto {
   let gasto = 0;
   let pesoUsado = 0;
   let bonusInventario = 0;
+
+  // "Espaço Reservado": soma, por `nome` de item-alvo, quantas unidades ficam isentas de peso —
+  // resolvida antes do loop principal porque o item-alvo pode vir antes OU depois do item que
+  // carrega a mod no array (a ordem no carrinho não é significativa).
+  const itensIsentosPorAlvo = new Map<string, number>();
+  dto.itens.forEach((item) => {
+    item.modificacoes.forEach((modificacao) => {
+      if (modificacao.nome !== 'Espaço Reservado' || !modificacao.itemAlvo) {
+        return;
+      }
+      const atual = itensIsentosPorAlvo.get(modificacao.itemAlvo) ?? 0;
+      itensIsentosPorAlvo.set(
+        modificacao.itemAlvo,
+        atual + calcularItensIsentosEspacoReservado(modificacao.empilhamentos),
+      );
+    });
+  });
 
   dto.itens.forEach((item) => {
     const quantidade = item.quantidade;
@@ -855,9 +886,12 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
     const ocupaPeso = (!ehArmazenamento || item.guardada) && !item.containerId;
     const itemCatalogo = resolverDadosItem(item);
     const temInventarioProprio = ehArmazenamento && !!itemCatalogo?.inventarioProprio;
+    // Nunca isenta a própria unidade indispensável (piso 1) nem além do que "Espaço Reservado" concede.
+    const isentas = Math.min(itensIsentosPorAlvo.get(item.nome) ?? 0, Math.max(0, quantidade - 1));
+    const quantidadeComPeso = quantidade - isentas;
 
     if (ocupaPeso) {
-      pesoUsado += item.peso * quantidade;
+      pesoUsado += item.peso * quantidadeComPeso;
     }
     if (ehArmazenamento && !item.guardada && !temInventarioProprio && !item.containerId) {
       // Custom (fora do catálogo) usa o bônus embutido no próprio item — o armazenamento inventado
@@ -880,7 +914,7 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
             origemFragmento: modificacao.origemFragmento,
             pesoCustom: modificacao.pesoCustom,
           }) *
-          quantidade;
+          quantidadeComPeso;
       }
     });
   });

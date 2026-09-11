@@ -1,5 +1,56 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-11 — "Espaço Reservado" (mod de mochila) ganha efeito mecânico de verdade
+
+Último item aberto do lote de ajustes do autor (bloco anterior, mesma data): a modificação de
+Armazenamento "Espaço Reservado" (`docs/core/sistema-v4.1.0.md` — tabela "Modificações": "Permite
+a seleção de um item [Operacional ou Medicinal] para que sua segunda repetição não contabilize
+peso. Empilhamentos adicionais aumentam o limite de itens desconsiderados em +1") existia só como
+texto descritivo do catálogo, sem nenhum motor por trás — mesmo estado de "Bolso Tático"/"Arsenal
+Reserva"/"Distribuição de Peso" (registrado no fecho anterior). Design perguntado ao autor antes de
+implementar (`AskUserQuestion`): como a modificação deveria referenciar o item-alvo — escolher entre
+"selecionar item no inventário" (dropdown, some sozinho se o alvo for removido), "nome livre
+digitado" ou "aguardar". Autor escolheu **selecionar item no inventário**.
+
+Implementação: `ModificacaoAplicadaDto.itemAlvo?: string | null` (`shared/regras/compras/
+compras.dtos.ts`) guarda o `nome` do item-alvo — casa por `nome` porque Operacional/Medicinal
+(`CATEGORIAS_EMPILHAVEIS` no consumidor) nunca ganham `apelido`, então `nome` já é identidade única
+dentro dessas categorias (confirmado lendo `inserirItem`/`podeApelidar` do componente antes de
+desenhar o campo — não precisou de `id` estável novo, ao contrário do que o precedente
+`containerId` de Pochete/Bolso de Corpo sugeria à primeira vista). Nova função pura
+`calcularItensIsentosEspacoReservado(empilhamentos)` = `max(0, empilhamentos − 1)` (2 empilhamentos,
+o mínimo pra adquirir a mod, isenta 1 unidade; cada extra isenta mais 1).
+`calcularTotaisCarrinho` (`shared/regras/compras/compras.ts`) resolve um mapa `nome do alvo →
+unidades isentas` a partir de todas as mods "Espaço Reservado" do carrinho antes do loop principal,
+e usa uma quantidade efetiva (`quantidade − isentas`, nunca abaixo de 1 — a unidade indispensável
+nunca é isenta) só para o **peso** do item-alvo (base + suas próprias modificações); o **gasto**
+continua cobrando a quantidade cheia. Item-alvo removido do carrinho não quebra nada — o mapa
+simplesmente não encontra correspondência, a isenção para de valer sozinha. Escopo deliberadamente
+não estendido a `listarSubInventarios` (peso dentro de Pochete/Bolso de Corpo) — segundo cálculo
+espelhado sem consumidor real hoje, registrado como decisão consciente no comentário da função.
+
+Frontend (`ficha-inventario.component.ts/html/scss`): `ModAtivaVM.itemAlvo` (só populado para
+"Espaço Reservado") carrega `selecionado`, `opcoes` (nomes Operacional/Medicinal do inventário
+inteiro, não só deste item), `itensIsentos` e `alvoAusente` (item selecionado que sumiu do
+inventário). O chip da mod ganha um `<select>` reaproveitando a identidade visual já existente
+(`.ficha-inv__campo`/`.ficha-inv__entrada`, mesmo par usado pelo seletor "Aplicar em" do painel de
+Fragmento) — nenhum HTML/CSS genérico novo para o próprio controle, só o wrapper e as duas notas
+(unidades isentas, aviso de alvo removido com `--vida`, mesmo token de "estado crítico" já usado no
+badge "Vazia" da munição). `definirItemAlvoEspacoReservado(indice, itemAlvo)` grava a seleção; o
+cálculo de fato continua 100% no motor compartilhado — o componente nunca soma/subtrai peso por
+conta própria (proibição #26). Testes: `shared` focado 5 novos (`compras.spec.ts` — isenção mínima,
+empilhamento extra, piso de 1 unidade, alvo removido não quebra, gasto não afetado), suíte completa
+750/750; `frontend` focado 6 novos (`ficha-inventario.component.spec.ts` — VM `itemAlvo` nulo fora
+da mod, opções+contagem, alvo ausente, mutação, seletor no DOM), suíte completa 1611/1612 (única
+falha, `detalhe-mestre.page.spec.ts`, pré-existente e sem relação — reproduz isolada); lint dos dois
+workspaces sem erro novo; build de produção limpo (só o aviso de budget conhecido, `P-004`).
+Verificação ao vivo (Postgres nativo, backend e frontend reais, cenário via REST cru: ficha de
+agente com Mochila Mediana `Espaço Reservado ×2` + Kit Médico `×3`) em `1920×1080` e `360×800`:
+antes da seleção, "3 / 31 (base 25 +6 vest.)"; ao escolher "Kit Médico" no seletor, o chip mostrou
+"Isenta 1 unidade de peso" e o total caiu em tempo real para "2 / 31" — a mesma unidade de conta
+(REST cru → UI → motor) confirmada ponta a ponta. Mobile sem overflow (`scrollWidth` igual à
+viewport nos dois estados).
+
 ## 2026-09-11 — Deslocamento Indeterminado na ficha de criatura; investigação do Limite de Resistências por Fraqueza (sem defeito); duas ideias registradas
 
 Lista de ajustes trazida pelo autor em conversa, sem spec prévia no backlog — trabalho pequeno o

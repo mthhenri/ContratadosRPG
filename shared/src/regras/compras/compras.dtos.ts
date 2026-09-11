@@ -97,6 +97,16 @@ export interface ModificacaoAplicadaDto {
    * este campo mesmo se vier preenchido; o peso do catálogo é sempre a fonte de verdade (m3-76).
    */
   readonly pesoCustom?: number;
+  /**
+   * `nome` do item (Operacional ou Medicinal) que esta modificação mira — só "Espaço Reservado"
+   * usa este campo (`docs/core/sistema-v4.1.0.md` — tabela "Modificações" de Armazenamento:
+   * "Permite a seleção de um item... para que sua segunda repetição não contabilize peso"). Casa
+   * por `nome` porque Operacional/Medicinal (`CATEGORIAS_EMPILHAVEIS`) nunca ganham `apelido` —
+   * `nome` já é identidade única dentro dessas categorias (mesma chave que `inserirItem`, no
+   * consumidor, usa para empilhar). Ausente/item removido do carrinho = a isenção não se aplica
+   * (`calcularTotaisCarrinho` resolve o alvo por busca, nunca falha por referência solta).
+   */
+  readonly itemAlvo?: string | null;
 }
 
 /** Um amplificador acoplado ao agente, com sua quantidade de empilhamentos. */

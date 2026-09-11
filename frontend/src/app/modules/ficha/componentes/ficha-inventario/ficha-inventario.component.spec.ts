@@ -769,6 +769,81 @@ describe('FichaInventario', () => {
     expect(atento?.podeAdicionar).toBe(true);
   });
 
+  describe('"Espaço Reservado" — item-alvo (mod de mochila)', () => {
+    const mochila: CarrinhoItemDto = {
+      nome: 'Mochila Mediana',
+      categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+      custo: 750,
+      peso: 0.5,
+      quantidade: 1,
+      guardada: false,
+      modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2 }],
+    };
+    const kitMedico: CarrinhoItemDto = {
+      nome: 'Kit Médico',
+      categoria: ItemCategoriaEnum.MEDICINAL,
+      custo: 100,
+      peso: 1,
+      quantidade: 3,
+      guardada: false,
+      modificacoes: [],
+    };
+
+    it('mod diferente de "Espaço Reservado" não ganha itemAlvo', () => {
+      const alvo = montar({ itens: [itemLeve], amplificadores: [] });
+      const item: CarrinhoItemDto = { ...itemLeve, modificacoes: [{ nome: 'Pesada', empilhamentos: 1 }] };
+      alvo.fixture.componentRef.setInput('inventario', { itens: [item], amplificadores: [] });
+      alvo.fixture.detectChanges();
+      expect(alvo.componentInstance['itensInventario']()[0].modsAtivas[0].itemAlvo).toBeNull();
+    });
+
+    it('lista as opções (Operacional/Medicinal do inventário inteiro) e a contagem de unidades isentas', () => {
+      const alvo = montar({ itens: [mochila, kitMedico], amplificadores: [] });
+      const vm = alvo.componentInstance['itensInventario']()[0].modsAtivas[0];
+      expect(vm.itemAlvo).toEqual({
+        selecionado: null,
+        opcoes: ['Kit Médico'],
+        itensIsentos: 1,
+        alvoAusente: false,
+      });
+    });
+
+    it('empilhamento extra sobe a contagem de unidades isentas (calcularItensIsentosEspacoReservado)', () => {
+      const item: CarrinhoItemDto = { ...mochila, modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 4 }] };
+      const alvo = montar({ itens: [item, kitMedico], amplificadores: [] });
+      expect(alvo.componentInstance['itensInventario']()[0].modsAtivas[0].itemAlvo?.itensIsentos).toBe(3);
+    });
+
+    it('itemAlvo preenchido sem correspondência no inventário fica "alvoAusente"', () => {
+      const item: CarrinhoItemDto = {
+        ...mochila,
+        modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2, itemAlvo: 'Ração' }],
+      };
+      const alvo = montar({ itens: [item, kitMedico], amplificadores: [] });
+      const vm = alvo.componentInstance['itensInventario']()[0].modsAtivas[0].itemAlvo;
+      expect(vm?.selecionado).toBe('Ração');
+      expect(vm?.alvoAusente).toBe(true);
+    });
+
+    it('definirItemAlvoEspacoReservado grava a seleção no item que carrega a mod', () => {
+      const alvo = montar({ itens: [mochila, kitMedico], amplificadores: [] });
+      alvo.componentInstance['definirItemAlvoEspacoReservado'](0, 'Kit Médico');
+      const modificacao = alvo.emitidos.at(-1)!.itens[0].modificacoes[0];
+      expect(modificacao.itemAlvo).toBe('Kit Médico');
+    });
+
+    it('o seletor "Item-alvo" aparece no chip e escolher uma opção emite a mudança', () => {
+      const alvo = montar({ itens: [mochila, kitMedico], amplificadores: [] });
+      const select = alvo.raiz.querySelector<HTMLSelectElement>('select[aria-label="Item-alvo de Espaço Reservado"]');
+      expect(select).not.toBeNull();
+
+      select!.value = 'Kit Médico';
+      select!.dispatchEvent(new Event('change'));
+
+      expect(alvo.emitidos.at(-1)!.itens[0].modificacoes[0].itemAlvo).toBe('Kit Médico');
+    });
+  });
+
   describe('equipado — Proteções (m3-36)', () => {
     const colete: CarrinhoItemDto = {
       nome: 'Colete Kevlar',
