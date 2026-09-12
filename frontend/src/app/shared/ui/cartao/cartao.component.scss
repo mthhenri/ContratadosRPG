@@ -1,5 +1,3 @@
-@use "tema/breakpoints" as bp;
-
 .cartao {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -20,11 +18,16 @@
         gap: var(--space-12);
         margin-bottom: var(--space-20);
 
+        // Incondicional, não só `bp.mobile` (achado ao vivo num card `[titulo]` dinâmico — nome de
+        // ficha — dentro da coluna de ações expandida, notebook): título comprido sem `--quebravel`
+        // squeeze-safe simplesmente quebrava a palavra sozinho dentro do `h2`, encavalando a linha
+        // de baixo — o mesmo defeito nasce em qualquer largura de card apertada, não só na de um
+        // viewport de celular. `flex-wrap: wrap` não muda nada quando cabe tudo numa linha só; ele
+        // só age quando falta espaço — dispensa medir um breakpoint específico pra este primitivo,
+        // que não controla o texto do título nem o conteúdo de `[cartaoFim]`.
         &--quebravel {
-            @include bp.mobile {
-                flex-wrap: wrap;
-                row-gap: var(--space-12);
-            }
+            flex-wrap: wrap;
+            row-gap: var(--space-12);
         }
     }
 

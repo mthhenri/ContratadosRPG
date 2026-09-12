@@ -22,6 +22,14 @@ $bp-tablet: 1080px;
 // Alvo de toque confortável (WCAG 2.5.5 / diretrizes de mobile): 44px.
 $alvo-toque: 44px;
 
+// Altura do viewport "Notebook" da skill `verify` (1366×768) — o único dos 4 viewports padrão do
+// projeto com bem menos altura que os 1080px dos outros dois desktop. Existe porque conteúdo
+// pensado pra caber "de sobra" num FullHD (grades de 2 colunas, tetos de altura fixos em px) parte
+// de uma folga vertical que 768px não tem — o mesmo tipo de squeeze que os mixins acima cobrem em
+// largura, só que no eixo vertical. Usar `max-height`, não `max-width`: dispara em qualquer janela
+// baixa (não só a 1366px de largura exata), que é a condição real que importa aqui.
+$altura-notebook: 768px;
+
 @mixin mobile {
     @media (max-width: $bp-mobile) {
         @content;
@@ -30,6 +38,12 @@ $alvo-toque: 44px;
 
 @mixin tablet {
     @media (max-width: $bp-tablet) {
+        @content;
+    }
+}
+
+@mixin altura-notebook {
+    @media (max-height: $altura-notebook) {
         @content;
     }
 }

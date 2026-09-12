@@ -10,22 +10,21 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAcessoResumoDto, FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
-import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
-import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
+import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
-import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
@@ -46,12 +45,15 @@ import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.comp
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
+import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
-
-/** Janela da tira "Rolagens Recentes" da coluna Sessão — só rolagens feitas na última hora. */
-const UMA_HORA_MS = 60 * 60 * 1000;
+import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
 
 /** Hover sustentado antes do preview ampliado do avatar de um colega abrir ("um segundinho"). */
 const MS_PREVIEW_AVATAR = 600;
@@ -74,19 +76,26 @@ const PX_PREVIEW_AVATAR = 300;
     ReactiveFormsModule,
     Icone,
     OverflowFade,
-    HistoricoRolagensSidebar,
     InventarioEsquadrao,
     BandejaDados,
     CalculadoraFlutuante,
     CadernoFlutuante,
     FichaVisualizacao,
     FichaRolagensPainel,
+    ResultadoRolagem,
     Tooltip,
     Botao,
     BotaoIcone,
     Cartao,
+    Chip,
+    ColunaAcoes,
+    ColunaAcoesItem,
+    EstadoVazio,
     Modal,
     Esqueleto,
+    Segmentado,
+    SegmentadoItem,
+    DatePipe,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './detalhe-jogador.page.html',
@@ -94,7 +103,6 @@ const PX_PREVIEW_AVATAR = 300;
 })
 export class CampanhaDetalheJogador {
   protected readonly dados = inject(CampanhaDetalheDadosService);
-  private readonly bandejaDadosService = inject(BandejaDadosService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` da ficha embutida — mesmo composable de `VisualizarPage`. */
@@ -111,14 +119,16 @@ export class CampanhaDetalheJogador {
 
   /** Exposto ao template só para o chip "Mestre" na lista de Equipe. */
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
+  protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
 
-  protected readonly exibindoInventarioJogador = signal(false);
+  /** Painel lateral fixo (Rolagens/Esquadrão/Inv. Esquadrão) — sempre montado, nunca overlay (mesmo padrão do mestre). */
+  protected readonly painelLateralAtivo = signal<'rolar' | 'esquadrao' | 'inventario'>('rolar');
 
-  /** Bloqueia os botões enquanto a bandeja de dados está aberta — ver `mostrarPreviaRolagem`. */
+  private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
+
+  /** Bloqueia os botões enquanto a bandeja de dados está aberta. */
   protected readonly calculadoraAberta = signal(false);
-  /** A página reserva a faixa da direita enquanto uma das consultas laterais está aberta. */
-  protected readonly historicoSidebarAberto = signal(false);
-  protected readonly inventarioSidebarAberto = signal(false);
   /** Destino da barra inferior da ficha compacta; Rolagens mora fora do card. */
   protected readonly destinoMobileFicha = signal<DestinoMobile>('agente');
 
@@ -185,6 +195,9 @@ export class CampanhaDetalheJogador {
     if (destino !== 'rolagens') {
       return;
     }
+    // A aba "Rolar" precisa estar ativa antes do scroll — o alvo fica `[hidden]` (0 de altura)
+    // enquanto outra aba do painel segmentado está selecionada.
+    this.painelLateralAtivo.set('rolar');
     const alvo = this.cardRolagens()?.nativeElement;
     if (!alvo || typeof window === 'undefined') {
       return;
@@ -250,16 +263,6 @@ export class CampanhaDetalheJogador {
     effect(() => {
       this.fichaExibidaId();
       this.destinoMobileFicha.set('agente');
-    });
-    effect(() => {
-      if (this.historicoSidebarAberto()) {
-        this.inventarioSidebarAberto.set(false);
-      }
-    });
-    effect(() => {
-      if (this.inventarioSidebarAberto()) {
-        this.historicoSidebarAberto.set(false);
-      }
     });
 
     // Semeia `fichaExibidaId` com a própria ficha do usuário assim que `dados.fichas()` carrega
@@ -327,41 +330,6 @@ export class CampanhaDetalheJogador {
     this.destroyRef.onDestroy(() => this.cancelarPreviewAvatar());
   }
 
-  /** `id` da prévia atualmente aberta na bandeja de dados (hover no d20 de um pill) — `null` se nenhuma. */
-  private previaRolagemId: number | null = null;
-
-  /**
-   * Hover/foco no dadinho d20 de um pill da coluna Sessão: mostra o resultado completo daquela
-   * rolagem já registrada na bandeja de dados flutuante, sem esperar uma nova rolagem acontecer.
-   */
-  protected mostrarPreviaRolagem(rolagem: RolagemResumoDto): void {
-    this.previaRolagemId = this.bandejaDadosService.mostrar({
-      rotulo: rolagem.rotulo,
-      resultado: rolagem.resultado,
-      visibilidade: rolagem.visibilidade,
-      corFicha: rolagem.corFicha,
-      semAutoSumir: true,
-    });
-  }
-
-  /** Fim do hover/foco no dadinho d20 — fecha a prévia aberta por {@link mostrarPreviaRolagem}. */
-  protected esconderPreviaRolagem(): void {
-    if (this.previaRolagemId !== null) {
-      this.bandejaDadosService.fechar(this.previaRolagemId);
-      this.previaRolagemId = null;
-    }
-  }
-
-  /** Rolagens da última hora (coluna Sessão) — reavalia a cada tick de `dados.agora()` (5s). */
-  protected readonly rolagensRecentes = computed(() => {
-    const limite = this.dados.agora() - UMA_HORA_MS;
-    return this.dados.rolagensFeed().filter((item) => new Date(item.createdDate).getTime() >= limite);
-  });
-
-  protected tempoRolagem(rolagem: RolagemResumoDto): string {
-    return rotuloRelativo(new Date(rolagem.createdDate).getTime(), this.dados.agora());
-  }
-
   /** Fichas com Vida ≤ 0 visíveis (banner do topo — não é gated por papel, aparece pro jogador também). */
   private readonly fichasCriticas = computed(() => this.dados.fichas().filter((ficha) => ficha.vidaAtual <= 0));
 
@@ -413,6 +381,21 @@ export class CampanhaDetalheJogador {
 
   protected fecharMenu(): void {
     this.menuAberto.set(false);
+  }
+
+  /**
+   * Alterna a janela da calculadora via o método do próprio componente, não
+   * `calculadoraAberta.set(!calculadoraAberta())` direto — só `CalculadoraFlutuante.alternar()`
+   * sabe restaurar em vez de fechar quando a janela está aberta minimizada (mesmo racional de
+   * `CampanhaDetalheMestre.alternarCalculadora`).
+   */
+  protected alternarCalculadora(): void {
+    this.calculadoraRef()?.alternar();
+  }
+
+  /** Alterna a janela do caderno — mesmo racional de `alternarCalculadora()` acima. */
+  protected alternarCaderno(): void {
+    this.cadernoRef()?.alternar();
   }
 
   /** Abre o assistente de criação de ficha, disparado do próprio detalhe. */

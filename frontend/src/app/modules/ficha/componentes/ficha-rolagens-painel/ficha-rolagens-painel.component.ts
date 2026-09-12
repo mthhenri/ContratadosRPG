@@ -54,10 +54,14 @@ export class FichaRolagensPainel {
   /** Cor de identidade visual da ficha (m3-61) — repassada ao editor `FichaRolagens`. */
   readonly cor = input<string | null>(null);
   /**
-   * `true` esconde o preset "Iniciativa" da lista editável do `FichaRolagens` (redesenho — a ficha
-   * completa passou a rolar Iniciativa direto da aba Informações, `FichaVisualizacao.rolarIniciativa`).
-   * Só a ficha completa liga essa flag: a coluna lateral de `CampanhaDetalhe` não tem aba Informações
-   * pra hospedar o preset, então continua mostrando-o aqui normalmente (default `false`).
+   * `true` esconde o preset "Iniciativa" da lista editável do `FichaRolagens` — evita duplicar com o
+   * "Rolar Iniciativa" da aba Informações (`FichaVisualizacao.rolarIniciativa`/`presetIniciativa()`),
+   * visível em `modo="padrao"` **e** `modo="compacto"` (glance de Combate, ver
+   * `ficha-visualizacao.component.html`). Toda tela que embute `FichaVisualizacao` ao lado deste
+   * painel — `FichaVisualizacao` propriamente dita, `CampanhaDetalhe`/`detalhe-jogador` e
+   * `previa-jogador` — liga essa flag; default `false` só cobre um consumidor hipotético que
+   * mostrasse o painel **sem** a ficha ao lado (nenhum existe hoje, mas o preset seria a única forma
+   * de rolar Iniciativa nesse caso).
    */
   readonly esconderIniciativa = input(false);
 

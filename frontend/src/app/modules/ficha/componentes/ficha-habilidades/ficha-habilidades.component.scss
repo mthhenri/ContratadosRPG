@@ -238,6 +238,18 @@
             overflow-y: visible;
         }
 
+        // Notebook (pedido do autor, `1366×768`): 1 coluna em vez de 2 — cartões de habilidade mais
+        // largos e legíveis quando a coluna Status já divide a largura com Identidade/Atributos — e
+        // sem teto de altura, mesmo raciocínio do `bp.mobile` acima (768px de janela é bem menos
+        // folga vertical que os 1080px de FullHD/tela dividida, onde o teto de 476/490px "cabe de
+        // graça"; aqui ele cortava a lista bem mais cedo). A página passa a rolar como uma coisa só
+        // em vez de um teto + rolagem aninhada.
+        @include bp.altura-notebook {
+            grid-template-columns: 1fr;
+            max-height: none;
+            overflow-y: visible;
+        }
+
         --fade-topo: 0px;
         --fade-base: 0px;
         &.overflow-fade--topo,
@@ -742,6 +754,16 @@
         // Mesmo raciocínio do teto padrão (m3-60, acima): no mobile não há coluna vizinha, a página
         // inteira já rola, e um teto aqui vira rolagem aninhada sem barra visível.
         @include bp.mobile {
+            .habilidades__lista {
+                max-height: none;
+            }
+        }
+
+        // Notebook (mesmo pedido do teto padrão, acima): o seletor `.habilidades--compacto
+        // .habilidades__lista` (0,2,0) vence o `.habilidades__lista` sozinho (0,1,0) mesmo dentro do
+        // `@include bp.altura-notebook` de lá — precisa repetir aqui, senão os 490px do compacto
+        // continuam cortando a lista mais cedo do que o teto padrão já corrigido.
+        @include bp.altura-notebook {
             .habilidades__lista {
                 max-height: none;
             }

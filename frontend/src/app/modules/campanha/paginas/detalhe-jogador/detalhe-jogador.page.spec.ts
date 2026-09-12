@@ -5,10 +5,12 @@ import { Subject, of } from 'rxjs';
 import {
   ArquetipoEnum,
   ClasseEnum,
+  RolagemVisibilidadeEnum,
   TipoCampanhaMembroPapelEnum,
 } from '@contratados-rpg/shared/enums';
 import { CampanhaMembroResumoDto, CampanhaRecuperadaDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CampanhaDetalheJogador } from './detalhe-jogador.page';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
@@ -123,6 +125,7 @@ describe('CampanhaDetalheJogador', () => {
     usuarioId: number;
     membros: CampanhaMembroResumoDto[];
     fichas?: FichaResumoDto[];
+    rolagens?: RolagemResumoDto[];
     confirmarResultado?: boolean;
   }) {
     // Em produção `membro.fichas` (listarMembros) e `fichas()` (listarFichas) vêm da mesma
@@ -202,7 +205,7 @@ describe('CampanhaDetalheJogador', () => {
       revogarAcesso: vi.fn((fichaId: number, usuarioId: number) => of({ fichaId, usuarioId })),
       mandarItemInventarioParaBase: vi.fn(() => of({ id: 1 })),
     };
-    const rolagemService = { listarPorCampanha: vi.fn(() => of([])) };
+    const rolagemService = { listarPorCampanha: vi.fn(() => of(opts.rolagens ?? [])) };
     const sessaoService = { usuario: () => ({ id: opts.usuarioId, login: 'x', nome: 'x' }) };
     const paginaCadernoService = {
       listarPaginas: vi.fn(() => of([])),
@@ -473,5 +476,89 @@ describe('CampanhaDetalheJogador', () => {
       modal.textContent?.includes('Solta'),
     );
     expect(dialog).not.toBeUndefined();
+  });
+
+  it('coluna de ações inclui "Calculadora" e "Caderno", sem o gatilho flutuante próprio deles', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    const rotulos = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(rotulos).toEqual(expect.arrayContaining(['Calculadora', 'Caderno']));
+    expect(raiz.querySelector('.calc-flutuante__gatilho')).toBeNull();
+    expect(raiz.querySelector('.caderno__gatilho')).toBeNull();
+  });
+
+  it('Calculadora alterna aberta/fechada ao clicar de novo no mesmo item da coluna de ações', () => {
+    const { raiz, fixture } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    const item = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+      (el) => el.textContent?.trim() === 'Calculadora',
+    ) as HTMLButtonElement;
+
+    item.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).not.toBeNull();
+
+    item.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).toBeNull();
+  });
+
+  // === ui-33: painel de 3 abas (Rolagens/Esquadrão/Inv. Esquadrão), fusão Rolar+Histórico e
+  // remoção da aba "Sessão" — ver docs/specs/active/ui-33-esquadrao-aba-detalhe-jogador.spec.md.
+
+  it('painel lateral tem 3 abas — Rolagens, Esquadrão e Inv. Esquadrão —, sem "Sessão"', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+    const abas = Array.from(raiz.querySelectorAll('.detalhe__painel-lateral .segmentado__item')).map(
+      (botao) => botao.textContent?.replace(/\s+/g, ' ').trim(),
+    );
+    expect(abas).toEqual(['Rolagens', 'Esquadrão', 'Inv. Esquadrão']);
+  });
+
+  it('não duplica "Iniciativa" ao lado das abas — a ação mora só na coluna de ações/kebab', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    expect(raiz.querySelector('.detalhe__painel-iniciativa')).toBeNull();
+  });
+
+  it('aba "Rolagens" funde o painel de rolar com o Histórico completo no mesmo container, sem aba/painel de Sessão', () => {
+    const rolagem: RolagemResumoDto = {
+      id: 1,
+      fichaId: 4,
+      encontroCombatenteId: null,
+      campanhaId: CAMPANHA_ID,
+      usuarioId: 2,
+      nomeAutor: 'Jogador',
+      nomeFicha: 'Vera',
+      rotulo: 'Pontaria',
+      formula: '1d20+3',
+      visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+      resultado: { dados: [], atributos: [], constante: 3, total: 14 },
+      createdDate: new Date().toISOString(),
+      corFicha: null,
+    };
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas, rolagens: [rolagem] });
+
+    const painelRolar = raiz.querySelector('.detalhe__painel-rolar');
+    expect(painelRolar?.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
+    expect(painelRolar?.querySelector('.detalhe__historico-item')?.textContent).toContain('Pontaria');
+    expect(raiz.querySelector('.detalhe__painel-historico')).toBeNull();
+    expect(raiz.querySelector('.detalhe__painel-sessao')).toBeNull();
+    expect(raiz.querySelector('.rolagem-pill')).toBeNull();
+  });
+
+  it('a aba "Esquadrão" (antigo cartão Equipe) fica sempre montada, com o avatar da ficha', () => {
+    const { fixture, raiz } = montar({
+      usuarioId: 2,
+      membros: membrosTres(),
+      fichas: fichasComColegaJogador(),
+    });
+
+    const painelEsquadrao = raiz.querySelector('.detalhe__painel-esquadrao');
+    expect(painelEsquadrao).not.toBeNull();
+    expect(painelEsquadrao?.querySelector('.detalhe__equipe-ficha-avatar')).not.toBeNull();
+
+    fixture.componentInstance['painelLateralAtivo'].set('esquadrao');
+    fixture.detectChanges();
+    expect((painelEsquadrao as HTMLElement).hidden).toBe(false);
   });
 });

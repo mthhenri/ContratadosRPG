@@ -56,16 +56,21 @@ tamanho arbitrário:
 - **Mobile:** `360×800` (Galaxy S20 FE) — telefone de referência do projeto.
 - **Tela dividida:** `960×1080` — metade de um Full HD; valida uma ficha ou campanha aberta ao
   lado de mapa, chamada ou painel de apoio antes de o layout entrar no mobile.
+- **Notebook:** `1366×768` — resolução de notebook mais comum; altura bem menor que os 1080px
+  dos outros dois viewports desktop, pega conteúdo que assume sobra vertical de FullHD.
 - **Desktop:** `1920×1080` (FullHD).
 
 ```js
-await browser.newContext({ viewport: { width: 360, height: 800 } });  // mobile
-await browser.newContext({ viewport: { width: 960, height: 1080 } }); // tela dividida
+await browser.newContext({ viewport: { width: 360, height: 800 } });   // mobile
+await browser.newContext({ viewport: { width: 960, height: 1080 } });  // tela dividida
+await browser.newContext({ viewport: { width: 1366, height: 768 } });  // notebook
 await browser.newContext({ viewport: { width: 1920, height: 1080 } }); // desktop
 ```
 
 O breakpoint mobile do CSS (`$bp-mobile`) é `560px` — 360px está bem dentro dele, enquanto
-960px exerce deliberadamente a zona intermediária, antes do mobile.
+960px exerce deliberadamente a zona intermediária, antes do mobile. `1366×768` não cruza nenhum
+breakpoint novo (fica acima de `$bp-tablet`, `1080px`), mas com só 768px de altura — use-o para
+achar conteúdo cortado por `100vh`/altura fixa que os viewports de 1080px de altura escondem.
 
 ## Dirigir a UI
 

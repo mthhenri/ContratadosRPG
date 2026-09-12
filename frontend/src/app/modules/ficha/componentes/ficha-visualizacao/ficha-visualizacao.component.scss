@@ -283,6 +283,15 @@
         // empilhada embaixo agora, então aperta mais um degrau que o `--2col` padrão — valor um pouco
         // menor e o glance de Combate (`ficha-combate-rapido--seis`, ver HTML) mais denso também.
         .ficha-cartao--atributos {
+            // `@container` em vez de `bp.*` (achado ao vivo em `1366×768`, ui-33 follow-up): a régua de
+            // 5 colunas abaixo assume a "folga de largura" do comentário — verdade nos 500px do card
+            // largo, falsa na mesma coluna espremida pelas duas colunas do `--compacto` (agente+status)
+            // num viewport que não chega a empilhar pelo `bp.tablet` (1080px). Sem isso, a caixa de
+            // atributo encolhia a ~61px e o dadinho de rolar (`&__rolar`, 22px no canto) cobria a sigla
+            // (ex.: "DES") por baixo — a mesma classe de bug do bloco de Personalidade/Origem, só que
+            // aqui a largura de sobra depende do card, não do viewport.
+            container-type: inline-size;
+
             // Proficiência + Maestria lado a lado (a pedido do autor) — a coluna larga do compacto
             // (500px) sobra espaço de sobra pra isso, ao contrário do `--atributos` estreito (260px) do
             // card padrão, que continua empilhado.
@@ -303,24 +312,23 @@
             }
 
             .ficha-atributos--2col {
-                // 5 colunas em vez das 2 do `--2col` padrão (a pedido do autor) — a mesma folga de largura
-                // do bloco acima permite a grade "original" (`&__grade` sem modificador, ver base) em vez
-                // da versão estreita. O 5º atributo não é mais órfão (enche a linha), então a centralização
-                // do `--2col` desktop precisa ser desfeita aqui — senão ele pula pra uma 2ª linha sozinho.
+                // 5 colunas em vez das 2 do `--2col` padrão (a pedido do autor) — só quando o card mede
+                // pelo menos 440px (5 × 80px de coluna segura contra o dadinho + 4 × 10px de gap; 80px é
+                // a largura mínima medida ao vivo pra "DES" + `&__rolar` não se tocarem). Abaixo disso —
+                // caso da coluna do `--compacto` espremida a `1366×768`, ver `container-type` acima — a
+                // regra nem entra em vigor e a caixa cai de volta pro `--2col` padrão (2 colunas), a mesma
+                // régua que o `modo="padrao"` já usa sem problema nessa largura. O 5º atributo não é mais
+                // órfão em 5 colunas (enche a linha), então a centralização do `--2col` desktop precisa ser
+                // desfeita aqui — senão ele pula pra uma 2ª linha sozinho.
                 .ficha-atributos__grade {
-                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                    @container (min-width: 440px) {
+                        grid-template-columns: repeat(5, minmax(0, 1fr));
 
-                    > *:nth-child(5) {
-                        grid-column: auto;
-                        justify-self: stretch;
-                        width: auto;
-                    }
-
-                    // No destino "Agente" do mobile (m3-60) a coluna vira a largura inteira do viewport
-                    // (~360-430px) — 5 colunas ali ficam finas demais pro abrev+valor+modificador. Volta pro
-                    // mesmo fallback de 3 que o `--2col` já usa no mobile fora do compacto.
-                    @include bp.mobile {
-                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                        > *:nth-child(5) {
+                            grid-column: auto;
+                            justify-self: stretch;
+                            width: auto;
+                        }
                     }
                 }
 
@@ -1350,7 +1358,7 @@
     // é por isso que Personalidade/Origem (`__meta`) mudou de irmã de `.ficha-ident` pra filha de
     // `__coluna-texto` (ver HTML): as duas passam a compartilhar o mesmo eixo vertical do avatar.
     // No mobile empilha (foto centralizada no topo, nome/contrato centralizados abaixo dela) — a
-    // coluna de texto ao lado do avatar de 100px sobraria estreita demais pra caber com conforto.
+    // coluna de texto ao lado do avatar de 150px sobraria estreita demais pra caber com conforto.
     @include bp.mobile {
         flex-direction: column;
         align-items: center;
@@ -1366,14 +1374,15 @@
     // idêntico ao cinza neutro de antes; não usa os tokens globais `--cor-ficha-dim`/`-border`
     // (`_tokens.scss`) porque o fallback deles é `--accent`, não neutro — tingiria o placeholder de
     // toda ficha sem cor escolhida.
-    // 100px (era 52px, m3-62 follow-up) — dobrado a pedido do autor; a foto era pequena demais pra
-    // reconhecer o agente de relance.
+    // 150px (era 100px, ui-33 follow-up — pedido do autor, validado no mockup poc-jogador.html) —
+    // raio também subiu pra `--radius-card` (era `--radius-control`), mesma identidade do avatar
+    // maior do Esquadrão (80px, mesmo raio).
     &__avatar {
-        width: 100px;
-        height: 100px;
+        width: 150px;
+        height: 150px;
         flex: none;
         position: relative; // ancora o <input type="color"> invisível, quando editável (--editavel)
-        border-radius: var(--radius-control);
+        border-radius: var(--radius-card);
         background-color: color-mix(
             in srgb,
             var(--cor-ficha, var(--border-strong)) 14%,
@@ -1425,7 +1434,7 @@
 
     // Nome/Contrato + Personalidade/Origem lado a lado do avatar (m3-62 follow-up) — `gap` (não
     // margin-bottom em cada filho) espaça `__texto` e `__meta` uniformemente, e é ela quem decide o
-    // quanto a coluna "estica" pra acompanhar a altura do avatar de 100px.
+    // quanto a coluna "estica" pra acompanhar a altura do avatar de 150px.
     &__coluna-texto {
         display: flex;
         flex-direction: column;
@@ -1447,7 +1456,7 @@
         position: absolute;
         inset: 0;
         overflow: hidden;
-        border-radius: calc(var(--radius-control) - 2px);
+        border-radius: calc(var(--radius-card) - 2px);
     }
 
     // A foto propriamente dita, por cima do fundo tracejado decorativo. `transform-origin: 0 0` —
@@ -1464,7 +1473,8 @@
 
     // Selo de lápis no canto inferior direito — alvo de clique próprio para o `<input type="file">`,
     // por cima do `<input type="color">` que cobre o resto da caixa (não aninha `<label>`s). 28px
-    // (era 20px) — acompanha o avatar de 100px; no mobile ganha só a ÁREA DE TOQUE de 44×44 via
+    // (era 20px, depois o avatar cresceu de 100px pra 150px no ui-33 sem escalar o selo junto — sem
+    // pedido nesse sentido) — no mobile ganha só a ÁREA DE TOQUE de 44×44 via
     // `alvo-de-toque($posicionar: false)` (o host já é `position: absolute`), sem inflar o desenho —
     // mesmo padrão que o resto do componente já usa pros controles pequenos (m3-62 follow-up: este
     // selo e o `&__avatar-remover` eram os únicos dois que tinham ficado de fora dessa regra).
@@ -1576,13 +1586,19 @@
         }
     }
 
-    // Personalidade/Origem lado a lado — atalho de leitura (redesenho de comparação visual); a
-    // edição completa continua só no card "Identidade" mais abaixo na página. Sem margin-bottom
-    // própria (m3-62 follow-up): agora mora dentro de `__coluna-texto`, cujo `gap` já espaça ela do
-    // `__texto` acima — e `.ficha-ident` continua com o `margin-bottom` que separa tudo dos chips.
+    // Personalidade e Origem empilhados, não lado a lado (ui-33 follow-up — era `flex` em linha,
+    // duas colunas; achado ao vivo em `1366×768`). Dentro de `&__coluna-texto`, ao lado do avatar de
+    // 150px, essa faixa nunca tem muita largura sobrando (~165-215px em qualquer desktop que não
+    // empilhe pelo `bp.tablet`) — dividida em 2 colunas ficava sempre apertada (lápis de Origem
+    // pulando de linha, rótulo "PERSONALIDADE" invadindo a coluna vizinha). Empilhado, cada campo
+    // ganha a largura inteira disponível e sobra espaço de sobra pro valor + lápis na mesma linha
+    // em qualquer viewport. Sem margin-bottom própria (m3-62 follow-up): mora dentro de
+    // `__coluna-texto`, cujo `gap` já espaça ela do `__texto` acima — e `.ficha-ident` continua com
+    // o `margin-bottom` que separa tudo dos chips.
     &__meta {
         display: flex;
-        gap: 16px;
+        flex-direction: column;
+        gap: 8px;
     }
 
     &__meta-linha {
@@ -1600,6 +1616,12 @@
         letter-spacing: 0.1em;
         color: var(--text-mute);
         flex: 0 0 auto;
+        // `overflow-wrap` (achado em `1366×768`, ui-33 follow-up): a coluna de Personalidade/Origem
+        // dentro de `&__coluna-texto` pode encolher a ~75px (menos espaço que os 1080px de altura
+        // dos outros dois viewports desktop deixam sobrar em largura) — sem isso, "PERSONALIDADE"
+        // (mono maiúsculo) não quebra nem corta, só invade visualmente a coluna vizinha por cima
+        // (a caixa em si encolhe certo, só o texto que ultrapassa sem `overflow:hidden`).
+        overflow-wrap: anywhere;
     }
 
     &__meta-valor {
@@ -1609,15 +1631,36 @@
         overflow-wrap: anywhere;
     }
 
-    // Origem: valor + lápis na mesma linha (o rótulo já fica acima, em `&__meta-rotulo`).
+    // Origem: valor + lápis na mesma linha (o rótulo já fica acima, em `&__meta-rotulo`). `nowrap`
+    // (era `wrap`, ui-33 follow-up bug): dentro de `&__coluna-texto` a coluna de Origem/Personalidade
+    // ficou estreita (~100px, competindo com o avatar de 150px) — "Não definida" + o lápis de 24px
+    // não cabiam mais na mesma linha, e o lápis pulava pra uma 2ª linha sozinho, órfão. Trunca o
+    // valor com ellipsis em vez de quebrar — o lápis (`flex: 0 0 auto` nele mesmo) nunca mais some
+    // de onde devia estar.
     &__meta-valor-linha {
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 6px;
+        min-width: 0;
 
+        > .ficha-ident__meta-valor {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        > .ficha-ident__chip-lapis {
+            flex: 0 0 auto;
+        }
+
+        // O chip de "substituída por Peculiaridade" (`&__origem-substituida`, sem `&__meta-valor`
+        // nem lápis neste ramo) pode ser mais longo — mantém a quebra normal de linha.
         &--substituida {
             align-items: flex-start;
+            flex-wrap: wrap;
         }
     }
 
@@ -1669,12 +1712,14 @@
         }
     }
 
+    // Ao lado do avatar (ui-33 follow-up; antes ficava numa linha abaixo de todo o bloco de
+    // identidade, longe do nome — pedido do autor pra bater com `poc-jogador.html`). O
+    // `margin-bottom` de antes saiu: o `gap: 10px` de `&__coluna-texto` já espaça de `&__meta`.
     &__chips {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
-        margin-bottom: 16px;
     }
 
     // Lápis para editar classe/arquétipo, ao lado dos chips. ui-30: `app-botao-icone` (compacto).
@@ -1687,7 +1732,6 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        margin-bottom: 16px;
     }
 
     // Classe + Arquétipo lado a lado (em vez de empilhados) — ocupa menos altura; cada select
@@ -1775,10 +1819,22 @@
         }
     }
 
-    // Nível/Prestígio/Dinheiro/Salário dividem uma linha de 4 (números curtos); Patente (texto,
-    // pode ser longa — "Força Tarefa Especial") ocupa a linha inteira abaixo, nunca espremida ao
-    // lado de outro box — é a única forma de garantir que não quebre nem corte (redesenho de
-    // comparação visual).
+    // Nível/Prestígio (ui-33 follow-up: subiram pra ao lado do avatar, junto dos chips de
+    // classe — mesmo agrupamento do `poc-jogador.html`) em boxes `ficha-mini` normais, só que numa
+    // linha própria dentro de `&__coluna-texto` em vez de dividir grade com Dinheiro/Salário.
+    &__stats-topo {
+        display: flex;
+        gap: 8px;
+
+        .ficha-mini {
+            flex: 1;
+            min-width: 0;
+        }
+    }
+
+    // Dinheiro/Salário dividem uma linha; Patente (texto, pode ser longa — "Força Tarefa Especial")
+    // ocupa a linha inteira abaixo, nunca espremida ao lado de outro box — é a única forma de
+    // garantir que não quebre nem corte (redesenho de comparação visual).
     &__stats {
         display: flex;
         flex-direction: column;
@@ -1789,6 +1845,9 @@
         display: grid;
         // Nível ganhou um pouco mais (o rótulo "NÍVEL" é mais largo que o valor de 2 dígitos, sobrava
         // espaço desigual nas laterais) — compensado tirando de Dinheiro, que ainda cabe valor + ✎.
+        // Vale só pro modo compacto, onde a linha ainda tem 4 boxes (Dinheiro/Salário/Patente/
+        // Crédito) — no padrão, Nível/Prestígio saíram daqui (ui-33 follow-up) e sobraram só
+        // Dinheiro/Salário, cobertos por `&--dois-itens` abaixo.
         grid-template-columns: 0.85fr 1fr 1.25fr 1fr;
         gap: 8px;
 
@@ -1797,6 +1856,14 @@
         // (Nível/Prestígio na primeira linha, Dinheiro/Salário na segunda — mesma ordem do HTML, o
         // grid só refluiu) dá a cada box quase o dobro da largura.
         @include bp.mobile {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        // Modo padrão (ui-33 follow-up): só Dinheiro/Salário restam nesta linha — a grade de 4
+        // colunas tuneada pra Nível/Prestígio/Dinheiro/Salário deixaria os dois boxes espremidos à
+        // esquerda com metade da linha vazia. Coincide com a mesma proporção do fallback mobile
+        // acima, então não precisa de `@include bp.mobile` própria.
+        &--dois-itens {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }

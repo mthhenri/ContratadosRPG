@@ -143,11 +143,13 @@ fica mais estreita que a viewport sozinha sugere — os mixins `bp.tablet-latera
 dispare pela largura que sobrou ao conteúdo, não pela tela inteira. Use-os em vez de `bp.tablet`/
 `bp.mobile` sempre que o CSS estiver sob um modificador de painel lateral aberto.
 
-Toda verificação visual do projeto usa três viewports fixos — nunca a janela padrão do navegador:
-**mobile `360×800`** (Galaxy S20 FE), **tela dividida `960×1080`** (metade de um FullHD, para
-ficha/campanha ao lado de mapa ou chamada) e **desktop `1920×1080`** (FullHD) — ver
-`.agents/skills/verify/`. As capturas de [`examples/`](examples/README.md) seguem os dois formatos
-de referência principais; a tela dividida é uma validação interativa obrigatória.
+Toda verificação visual do projeto usa quatro viewports fixos — nunca a janela padrão do
+navegador: **mobile `360×800`** (Galaxy S20 FE), **tela dividida `960×1080`** (metade de um
+FullHD, para ficha/campanha ao lado de mapa ou chamada), **notebook `1366×768`** (resolução de
+notebook mais comum, bem mais baixa que os 1080px dos outros dois viewports desktop) e
+**desktop `1920×1080`** (FullHD) — ver `.agents/skills/verify/`. As capturas de
+[`examples/`](examples/README.md) seguem os dois formatos de referência principais; a tela
+dividida e o notebook são validações interativas obrigatórias.
 
 O shell de página (`app-layout`) usa `padding: 24px 20px` no desktop e `16px 12px` no mobile,
 sem largura máxima fixa — cada tela decide sua própria grade de colunas.

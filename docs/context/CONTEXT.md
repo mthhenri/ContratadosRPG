@@ -4,13 +4,37 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-11 · **Última decisão registrada:** lote de ajustes do autor — os 5
-> itens fechados. Deslocamento Indeterminado/Infinito na ficha de criatura implementado; "Fraqueza
-> não aumenta o Limite de Resistências" investigado e fechado **sem defeito**, a regra já
-> funcionava; "Espaço Reservado" (mod de mochila) ganhou efeito mecânico de verdade — autor
-> escolheu "selecionar item no inventário" (via `AskUserQuestion`) entre as 3 opções de desenho
-> propostas; duas ideias só registradas em `IDEAS.md`, sem código. Detalhe em `HISTORY.md` e
+> **Última revisão:** 2026-09-12 · **Última decisão registrada:** `ui-33` concluída — painel
+> lateral do jogador vira 3 abas (Rolagens/Esquadrão/Inv. Esquadrão): Rolar+Histórico fundidos,
+> aba Sessão removida, card "Equipe" virou a aba "Esquadrão" com avatar 60px (era 28px, passou por
+> 80px) e teto de altura casando com a ficha só no desktop. Dez rodadas de revisão do autor sobre
+> o resultado, 19 achados reais no total (a maioria variações do mesmo tema — squeeze de largura ou
+> altura sem `overflow`/`min-width`/teto defensivo, em telas e no primitivo `shared/ui/cartao`),
+> todos corrigidos na mesma sessão. Um não era bug: a "Iniciativa" na aba Rolagens é o preset comum
+> semeado por decisão de produto já implementada (`m3-47`) — perguntado ao autor via
+> `AskUserQuestion`, escolheu **esconder só na campanha** (`[esconderIniciativa]`, input que já
+> existia em `FichaRolagensPainel` mas só era ligado pela ficha completa), mantendo o botão próprio
+> "Rolar Iniciativa" no glance de Combate do card. Três pedidos de design (não bug): título da
+> página de jogador igualado ao do mestre (20px, sem caixa alta); lista de Habilidades vira
+> **1 coluna sem teto de altura** no viewport Notebook (`@include bp.altura-notebook`, 1º
+> breakpoint de *altura* do tema — `max-height: 768px`, mesma folga vertical menor que os outros
+> dois desktops); seta "Voltar" do jogador movida pra dentro de `&__cabecalho-titulo-linha`, antes
+> do "//" — mesma ordem do mestre (antes vivia num grupo `&__cabecalho-acoes` separado, na ponta
+> direita do cabeçalho). Destaques
+> de bug: Personalidade/Origem empilham em vez de dividir 2 colunas
+> estreitas; Atributos do card compacto usam `@container (min-width: 440px)` pra só ligar 5 colunas
+> quando cabe; `.cartao__cabecalho--quebravel` e o `h1` do cabeçalho da página de jogador (que já
+> existia no de mestre) ganharam a mesma proteção contra squeeze; "//" adicionado ao cabeçalho do
+> mestre (só o jogador tinha); ícone da aba Rolagens trocado de `dado` pra `d20`. Verificado ao vivo
+> nos 4 viewports padrão, tela de campanha (`modo="compacto"`), ficha completa (`modo="padrao"`) e
+> varreduras de largura pontuais; spec movida para `docs/specs/done/`. Detalhe em `HISTORY.md` e
 > `CONTEXT.md` §1.
+> Antes: lote de ajustes do autor (2026-09-11) — os 5 itens fechados. Deslocamento Indeterminado/
+> Infinito na ficha de criatura implementado; "Fraqueza não aumenta o Limite de Resistências"
+> investigado e fechado **sem defeito**, a regra já funcionava; "Espaço Reservado" (mod de mochila)
+> ganhou efeito mecânico de verdade — autor escolheu "selecionar item no inventário" (via
+> `AskUserQuestion`) entre as 3 opções de desenho propostas; duas ideias só registradas em
+> `IDEAS.md`, sem código.
 > Antes: `P-066` fechado em duas rodadas.
 > 1ª: a barra inferior de `app-coluna-acoes` estourava 360px no mobile (7 itens com rótulo abaixo
 > do ícone somavam mais largura que o viewport, sem rolagem); o autor escolheu, entre 3 caminhos
@@ -108,6 +132,155 @@
 ---
 
 ## 1. Próxima Task
+
+**`ui-33-esquadrao-aba-detalhe-jogador` concluída (2026-09-12):** painel lateral do jogador
+(`CampanhaDetalheJogador`) reorganizado de 4 abas (Rolar/Sessão/Histórico/Invent.) + o card sempre
+visível "Equipe" para **três** abas — Rolagens, Esquadrão, Inv. Esquadrão. Rolar e Histórico se
+fundiram num só container rolável (`app-ficha-rolagens-painel` no topo, rótulo "Histórico" + feed
+completo logo abaixo); a aba Sessão saiu — só sobrevive o link Iniciativa, agora um botão fixo
+(ícone + tooltip) ao lado das abas, sempre alcançável. O card "Equipe" virou a aba "Esquadrão",
+preservando sem alteração de regra toda a lógica (cabeçalho do mestre, colega sem ficha, múltiplas
+fichas, ficha completa vs. carteirinha sem acesso, preview de avatar no hover) — só o avatar da
+ficha saiu de 28px (`--radius-control`) para 60px `--radius-card` (passou por 80px numa rodada
+intermediária, calibrado ao vivo contra um esquadrão de 6 pessoas, depois reduzido a pedido do
+autor). Altura da lista casa com a altura do card da ficha só acima de `bp.tablet`
+(`max-height: 800px`, contra ~913px medidos da ficha em 1920×1080, com folga visível abaixo do
+último colega); em tablet/mobile volta a ser um teto de conteúdo próprio (420px, inalterado). Fora
+de escopo, deliberado: o cabeçalho do mestre na lista manteve o `chip-papel` "Mestre" + nome — o
+mockup que validou o resto testou uma linha única "Nome (Mestre)" só como atalho de protótipo, não
+decisão aprovada. Spec em `docs/specs/done/ui-33-esquadrao-aba-detalhe-jogador.spec.md`. Testes:
+`frontend` focado 3 novos (3 abas sem Sessão, fusão Rolagens+Histórico sem painel de Sessão
+separado, aba Esquadrão sempre montada) + suíte completa 1613/1615 (2 falhas pré-existentes,
+`painel-flutuante`/`detalhe-mestre` duplicar-ficha, sem relação, reproduzem isoladas); lint 0
+erros; `tsc --noEmit` limpo. Verificação ao vivo (Postgres + backend + frontend reais, cenário via
+REST cru com 1 mestre + 5 colegas com ficha + 1 sem ficha) em `1920×1080`/`960×1080`/`360×800`, as
+3 abas, os 3 estados de colega (ficha ativa destacada, carteirinha sem acesso, sem ficha), botão de
+Iniciativa (tooltip + navegação), nome de ficha muito longo (ellipsis limpo, sem overflow em
+nenhum viewport) — sem rolagem horizontal em nenhum dos três.
+
+**Revisão do autor sobre `ui-33` (mesmo dia) achou 4 divergências, todas corrigidas:** espectador
+na aba Esquadrão ganhou chip cinza próprio (`fantasma`/"Espectador", era tratado como jogador sem
+ficha); "Iniciativa" entrou em `app-coluna-acoes` do jogador (categoria "Campanha", espelhada no
+kebab mobile) — faltava, só o mestre tinha; botão de Iniciativa do painel ganhou `[tamanho]="padrao"`
+(era `compacto`, destoava do `app-segmentado` ao lado); avatar principal da ficha
+(`FichaVisualizacao`) foi de 100px/`--radius-control` para 150px/`--radius-card` — **em toda tela**
+que usa o componente (autor confirmado via `AskUserQuestion`, componente não diferencia `[modo]`).
+Detalhe em `HISTORY.md`.
+
+**Segunda revisão do autor sobre `ui-33` (mesmo dia) achou mais 5 divergências, todas corrigidas:**
+Calculadora/Caderno entraram na categoria "Ferramentas" de `app-coluna-acoes` do jogador (+ kebab
+mobile), com `[mostrarGatilho]="false"` nos dois — mesmo padrão já usado pelo mestre, faltava só no
+jogador; ícone de "Vincular ficha" trocou de `duplicar` (emprestado, sem relação semântica) para um
+`vincular` novo (glifo "link" da Tabler Icons); o botão fixo de Iniciativa ao lado das abas — que a
+revisão anterior tinha acabado de ajustar de tamanho — saiu de vez, por duplicar a mesma ação que já
+mora em `app-coluna-acoes`/kebab; avatar do Esquadrão foi de 80px para 60px; e classe/subclasse
+(`&__chips`) + Nível/Prestígio subiram de uma faixa abaixo do bloco de identidade pra **ao lado** do
+avatar, dentro de `&__coluna-texto` — mesmo agrupamento do `poc-jogador.html`. Nome/contrato
+continuam ao lado do avatar (não embaixo, como no POC): decisão de m3-62, mais antiga que o POC e
+fora do pedido desta rodada. Detalhe em `HISTORY.md`.
+
+**Terceira e quarta revisão do autor sobre `ui-33` (mesmo dia) acharam 2 divergências no mesmo
+bloco, corrigidas:** efeito colateral do reagrupamento acima — Personalidade/Origem, dividindo
+`&__coluna-texto` com o avatar em 2 colunas, ficaram estreitas demais em qualquer viewport desktop
+real (~99px em `1920×1080`, ~75px em `1366×768` — este último **mais** estreito que o FullHD por
+ficar entre os breakpoints, acima do `$bp-tablet` mas sem a largura de um FullHD). Dois sintomas
+distintos da mesma causa: o lápis de editar Origem pulava pra uma 2ª linha sozinho (`1920×1080`) e
+o rótulo "PERSONALIDADE" invadia visualmente a coluna vizinha sem quebrar (`1366×768`, achado só
+depois que o autor cobrou o 4º viewport padrão do projeto — os 3 primeiros não expunham esse
+sintoma). Corrigido na raiz, não sintoma a sintoma: **Personalidade e Origem empilham** (`&__meta`
+virou `flex-direction: column`) em vez de dividir em 2 colunas — cada campo fica com a largura
+inteira disponível (sempre ≥165px em qualquer viewport real do produto) e nunca mais disputa
+espaço com o outro nem com o lápis. Diferença assumida do `poc-jogador.html` (que mostra as duas
+colunas lado a lado): o POC não tinha a restrição real de largura da coluna "solo" da ficha.
+Verificado nos 4 viewports padrão do projeto. Detalhe em `HISTORY.md`.
+
+**Quinta revisão do autor sobre `ui-33` achou um 3º bug, em outro bloco da mesma tela (Atributos),
+mesma largura `1366×768`, corrigido:** o dadinho de rolar teste (`&__rolar`, posição absoluta no
+canto superior direito, 22px) cobria a sigla do atributo (ex.: "DES") — "o dado de rolagem tá quase
+em cima do nome dele". Causa: `.ficha-atributos--2col` do card `--compacto` força 5 colunas em vez
+das 2 do `--2col` padrão (decisão de uma rodada anterior, assumindo folga de largura sempre
+disponível na coluna "agente", `max-width: 500px`) — verdade em `1920×1080`/`960×1080`, falsa em
+`1366×768`, onde a caixa de atributo encolhia a 61px. Em vez de outro breakpoint de viewport (a
+lição da rodada anterior: a largura que quebra é a do card, não a do viewport), a régua de 5
+colunas agora só entra em vigor dentro de `@container (min-width: 440px)`
+(`container-type: inline-size` no `.ficha-cartao--atributos`); fora disso cai pro `--2col` padrão,
+a mesma régua que `modo="padrao"` já usa sem problema nessa largura. O fallback mobile local
+duplicado (`repeat(3, ...)`) ficou redundante e foi removido — o fallback mobile *base* volta a
+vencer sozinho. Verificado nos 4 viewports padrão, tela de campanha (`modo="compacto"`) e ficha
+completa (`modo="padrao"`). Detalhe em `HISTORY.md`.
+
+**Sexta revisão do autor sobre `ui-33` achou o mesmo defeito de squeeze num 3º bloco — desta vez no
+primitivo compartilhado, não numa tela — corrigida:** com a coluna de ações lateral expandida
+(`app-coluna-acoes`) numa tela de notebook, o título do card do personagem (nome dinâmico, ex.:
+"Paramédico Matheus") quebrava no meio do nome, encavalando a linha seguinte. Causa:
+`.cartao__titulo` (`shared/ui/cartao`) é um item flex comum na régua do cabeçalho (ícone + título +
+régua + botão "Abrir completa") — sem espaço de sobra, o `h2` encolhe até seu min-content e quebra
+ali. O primitivo já tinha uma saída pra isso (`[cabecalhoQuebravel]`, usado aqui e em
+`previa-jogador`/`iniciativa-leitura`/`compras`), mas só ligava `flex-wrap: wrap` dentro de
+`bp.mobile` — a mesma lição das duas rodadas anteriores, tratando a largura de um elemento como se
+fosse a do viewport. Ficou **incondicional**: `flex-wrap: wrap` não muda nada quando cabe tudo numa
+linha, só age quando falta espaço — sem precisar escolher um breakpoint, já que o primitivo não
+controla o tamanho do título nem do conteúdo que o consumidor põe no cabeçalho. Verificado numa
+varredura de largura do card (618px → 333px, sem quebra feia em nenhum ponto) e nos 4 viewports
+padrão. Detalhe em `HISTORY.md`.
+
+**Sétima revisão do autor sobre `ui-33` trouxe 3 pedidos numa mensagem, mais uma investigação —
+todos fechados nesta rodada:** (1) o mesmo defeito de squeeze das duas rodadas anteriores, agora no
+**cabeçalho da página** — `.detalhe__titulo` (`detalhe-jogador.page.html`) sem `overflow`/
+`white-space`/`min-width`, igual aos casos anteriores, com um detalhe a mais: `.detalhe-mestre__titulo`
+(página do mestre, mesmo módulo) **já tinha** a tríade certa (`min-width: 0; overflow: hidden;
+text-overflow: ellipsis; white-space: nowrap`) desde sempre — só faltou aplicar a mesma coisa no
+jogador. Corrigido copiando a tríade; verificado forçando um nome de campanha comprido em `700×768`
+com a coluna de ações expandida (`scrollWidth` 853px vs. `clientWidth` 288px truncado, zero overlap
+com o botão Voltar). (2) o cabeçalho do mestre nunca teve o índice `"//"` que o do jogador sempre
+teve — adicionado `.detalhe-mestre__cabecalho-indice`, réplica do estilo do jogador. (3) ícone da
+aba "Rolagens" trocado de `nome="dado"` (cubo genérico) pra `nome="d20"` (icosaedro, já usado no
+dadinho de rolar teste de atributo). **Investigação:** por que a "Iniciativa" aparece na aba
+Rolagens da campanha — não é defeito, é o preset `PRESET_INICIATIVA_PADRAO` (`ficha.service.ts`,
+decisão `m3-47` já implementada e documentada), semeado em toda ficha nova e tratado como preset
+comum, editável/removível, sem UI própria — aparece em qualquer lista de rolagens da ficha,
+campanha incluída. Distinto do link "Iniciativa" de `app-coluna-acoes` (rastreador de combate,
+`m7`) e do campo "INICIATIVA · 1d6" do bloco Combate (referência fixa, não preset rolável).
+Perguntado ao autor (`AskUserQuestion`, já que esconder desfaria parte de uma decisão de produto):
+**esconder só na campanha**. `FichaRolagensPainel` já tinha `[esconderIniciativa]` pronto pra isso
+(usado pela ficha completa, que tem "Rolar Iniciativa" na aba Informações) — só faltava ligar nos
+outros dois consumidores do painel: `detalhe-jogador.page.html` (o pedido) e `previa-jogador.page.html`
+(mesmo padrão de ficha embutida + painel ao lado, achado por analogia). Docstring do input
+corrigida (dizia que a lateral da campanha "não tem aba Informações pra hospedar o preset" — não é
+mais verdade desde que Informações entrou no trio de abas do compacto). Verificado: aba Rolagens
+sem menção a "Iniciativa"; botão "Rolar Iniciativa" próprio continua no glance de Combate do card —
+ninguém perde a capacidade de rolar. Testes: `detalhe-jogador`/`detalhe-mestre`/`previa-jogador`/
+`ficha-visualizacao` 199/199; suíte completa 1617/1618 (mesma falha pré-existente). Detalhe em
+`HISTORY.md`.
+
+**Oitava e nona rodadas do autor sobre `ui-33` — dois pedidos de design, não bug, fechados:**
+(1) mandou o cabeçalho do mestre ("Campanha do Matheus", mono 20px, sem caixa alta) como referência
+pro jogador — `.detalhe__titulo` (jogador) usava `font-size: 15px` + caixa alta + tracking,
+diferente de `.detalhe-mestre__titulo` (mesmo módulo, 20px, sem nenhum dos dois). Igualado ao
+mestre; overflow-protection da rodada anterior mantida. (2) aba Habilidades em 2 colunas ficando
+apertada "na visão de Notebook" (`1366×768`) — pediu 1 coluna + a lista consumindo "a altura
+completa que pode consumir". `.habilidades__lista` tinha `grid-template-columns: repeat(2,...)` e
+`max-height: 476px` (490px no `--compacto`) fixos, sem nenhum tratamento pra 768px de altura — só
+existia fallback de 1 coluna por LARGURA (`640px`) e um precedente de remover o teto em
+`bp.mobile` pela mesma razão ("768px é bem menos folga vertical que os 1080px dos outros dois
+desktops"). Novo `@mixin altura-notebook` em `tema/_breakpoints.scss` (1º breakpoint de altura do
+tema, `max-height: 768px`) — dentro dele, 1 coluna + `max-height: none` + `overflow-y: visible`,
+repetido dentro de `&--compacto` (mesma armadilha de especificidade do `bp.mobile` ali). Verificado
+com 6 habilidades reais: `1366×768` sem rolagem interna, página rolando como uma coisa só;
+`1920×1080`/`960×1080` sem regressão (ainda 2 colunas, ainda 476px de teto). Testes:
+`ficha-habilidades` 37/37, `detalhe-jogador` 18/18; suíte completa 1617/1618. Detalhe em
+`HISTORY.md`.
+
+**Décima rodada do autor sobre `ui-33`: seta de Voltar do jogador ao lado do "//", como no mestre —
+fechada.** "A seta de voltar no player deveria ficar atrás do '//'", seguindo a mesma referência do
+mestre da rodada anterior. O botão "Voltar às campanhas" vivia em `&__cabecalho-acoes`, um grupo
+flex separado na ponta direita do cabeçalho (junto dos gatilhos ocultos de Calculadora/Caderno e do
+menu "⋯" mobile) — o mestre nunca teve essa separação, é uma linha flex única (voltar → "//" →
+título → chip → régua). Movido o `<a class="detalhe__cabecalho-voltar">` pro primeiro filho de
+`&__cabecalho-titulo-linha`, antes do índice — mesma ordem do mestre, sem CSS novo (classe BEM não
+depende de onde no DOM mora). Verificado em `1920×1080` (seta encostada no "//") e `360×800` (seta
+e "//" na mesma linha do título, que trunca um pouco mais cedo, esperado). Testes:
+`detalhe-jogador` 18/18; suíte completa 1617/1618. Detalhe em `HISTORY.md`.
 
 **Lote de ajustes do autor (2026-09-11) — os 5 itens fechados:** Deslocamento Indeterminado/
 Infinito na ficha de criatura **concluído** — cada um dos 4 modos (Terrestre/Voador/Aquático/
@@ -1084,23 +1257,42 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
   botão no rodapé) → `/painel/:campanhaId/ficha/:id` (`modo="padrao"`, sem corte). Inventário e
   Habilidades rolam por dentro com teto de 420px (subiu de 230/250px pós-m2-21, a pedido do autor —
   o teto antigo datava de quando Atributos ainda morava na coluna ao lado). Ao lado, uma coluna
-  lateral de 450px com **três** cards: **Equipe** (roster compacto — Vida/Energia resumidas + um
-  botão "Ver ficha" por ficha visível de cada colega, trocando a ficha exibida sem navegar),
-  **Rolagens** (`<app-ficha-rolagens-painel>` — presets/rolagem avulsa + o toggle "Rolagem oculta";
-  saiu do card na m2-21 pra ficar ao lado do histórico; **só rola** os presets existentes —
-  `editavel` fixo em `false` aqui, criar/duplicar/editar/remover preset continua exclusivo da
-  ficha completa) e **Sessão** (as mesmas rolagens da última hora, empilhadas em vez da tira
-  horizontal, com teto de 3 pills — 179px — antes de rolar). O cabeçalho dá ao jogador um menu "⋯" próprio (mesmo
-  lugar do kebab do mestre) com **Criar nova ficha** e **Vincular ficha existente** (`PUT
-  /ficha/:id/campanha` da m3-28, só fichas com `campanhaId === null`); as duas ações também
-  aparecem no estado vazio, e nenhuma delas tira o jogador da página. No mobile a barra inferior
-  (`.ficha-nav`, m3-60) lista 5 destinos (Agente/Status/Inventário/Habilidades/Rolagens) — e
-  `Rolagens` é o **único que não é uma aba**: rola a página até o card da lateral. Os handlers de
+  lateral de 450px com um único painel segmentado de **três** abas — **Rolagens**, **Esquadrão** e
+  **Inv. Esquadrão** (`ui-33`, substitui os antigos cards separados Equipe/Rolagens/Sessão) —
+  sempre montado, cada aba em `[hidden]` (nunca `@if`, não perde scroll/formulário ao trocar),
+  mesmo padrão `app-segmentado` do painel do mestre. **Rolagens** funde num só container rolável o
+  `<app-ficha-rolagens-painel>` (presets/rolagem avulsa + o toggle "Rolagem oculta"; **só rola** os
+  presets existentes — `editavel` fixo em `false`, criar/duplicar/editar/remover preset continua
+  exclusivo da ficha completa) com o Histórico completo da campanha logo abaixo (rótulo de seção +
+  feed de `rolagensFeed()`, mesmo conteúdo que antes vivia numa aba própria); a antiga tira
+  "Sessão" (rolagens da última hora) saiu — o Histórico completo está sempre a um scroll de
+  distância. O link **Iniciativa** mora só na categoria "Campanha" de `app-coluna-acoes` (espelhado
+  no kebab "⋯" mobile) — mesma convenção do mestre. Chegou a ganhar também um botão fixo ao lado do
+  `app-segmentado`, mas isso duplicava a mesma ação dentro da própria barra lateral (achado da
+  revisão do autor) e foi removido. **Esquadrão** é o antigo card "Equipe" — roster com avatar
+  quadrado maior (60px, `var(--radius-card)`, era 28px; passou por 80px numa rodada intermediária)
+  para reconhecer o colega à distância da mesa; preserva sem mudança de regra o cabeçalho do mestre
+  (chip vermelho, ícone `coroa`), o cabeçalho do espectador (chip cinza — "cinza apenas", decisão
+  do autor desde o m8-01 —, ícone `fantasma`, mesma identidade de `detalhe-mestre__avatar--
+  espectador`), colega sem ficha, múltiplas fichas por colega, ficha completa (clicável, troca a
+  ficha exibida) vs. carteirinha sem acesso, e o preview ampliado de avatar no hover sustentado.
+  Acima de `bp.tablet` (lateral ao lado da ficha, só `1920×1080`), o teto de altura da lista
+  acompanha a altura do card da ficha, com folga visível abaixo do último colega; empilhado
+  (tablet/mobile) volta a ser um teto dimensionado só pro próprio conteúdo. **Inv. Esquadrão** é o
+  antigo "Invent.", sem mudança de comportamento. `app-coluna-acoes` (espelhada no kebab "⋯" mobile,
+  mesmo lugar do kebab do mestre — a coluna some no mobile desta página por colidir com a
+  `.ficha-nav` da ficha embutida) reúne **Iniciativa**; **Criar nova ficha** e **Vincular ficha
+  existente** (`PUT /ficha/:id/campanha` da m3-28, só fichas com `campanhaId === null`, ícone
+  `vincular` dedicado — não mais o `duplicar` emprestado de clonar ficha; as duas ações também
+  aparecem no estado vazio, e nenhuma delas tira o jogador da página); **Acesso de visualização**,
+  **Remover da campanha**/**Excluir ficha**; e, na categoria "Ferramentas", **Calculadora**/
+  **Caderno** (`[mostrarGatilho]="false"` nos dois — mesmo padrão do mestre, sem gatilho flutuante
+  próprio solto na tela). No mobile a barra inferior (`.ficha-nav`, m3-60) lista 5 destinos (Agente/
+  Status/Inventário/Habilidades/Rolagens) — e `Rolagens` é o **único que não é uma aba**: rola a
+  página até o card da lateral (forçando a aba "Rolagens" ativa antes do scroll). Os handlers de
   edição (`ajustar*`) vêm de `FichaEdicaoService` e a flag/registro de rolagem de
   `FichaRolagemRegistroService`, os dois composables reusados com `VisualizarPage` — a ficha de um
-  colega aparece só leitura (`ajustavel=false`) quando o usuário não é dono nem mestre. O cabeçalho
-  também traz `<app-calculadora-flutuante>` ao lado do gatilho de histórico de rolagens, pros dois
-  papéis.
+  colega aparece só leitura (`ajustavel=false`) quando o usuário não é dono nem mestre.
 
 O cabeçalho tem nome da campanha em linha própria (mais destaque no mobile) e, abaixo/ao lado,
 indicador de tempo real, botão "Voltar às campanhas", gatilho de histórico de rolagens e (mestre)

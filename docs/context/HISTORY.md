@@ -1,5 +1,463 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-12 — `ui-33`: 10ª rodada — seta de voltar do jogador ao lado do "//", como no mestre
+
+Autor: "a seta de voltar no player deveria ficar atrás do '//'" — mais um ajuste seguindo a
+referência do mestre já usada na rodada anterior (`← // Campanha do Matheus`). No jogador o botão
+"Voltar às campanhas" vivia em `&__cabecalho-acoes`, um grupo flex separado no fim da régua
+(`titulo-linha` com `flex:1` de um lado, `acoes` com `flex:none` do outro) — resultado: a seta ficava
+longe do "//", na ponta direita do cabeçalho, junto dos gatilhos de Calculadora/Caderno (invisíveis
+no cabeçalho, `[mostrarGatilho]="false"`) e do menu "⋯" (só mobile). O mestre nunca teve essa
+separação: uma única linha flex com voltar → "//" → título → chip → régua, sem agrupador.
+
+Fix: movido o `<a class="detalhe__cabecalho-voltar">` de `&__cabecalho-acoes` para o primeiro filho
+de `&__cabecalho-titulo-linha`, antes do `<span>` do índice — mesma ordem do mestre. `&__cabecalho-
+acoes` continua existindo (ainda hospeda os gatilhos ocultos de Calculadora/Caderno e o menu "⋯" do
+mobile), só perdeu o botão de voltar. Nenhuma mudança de CSS necessária — `.detalhe__cabecalho-
+voltar` é uma classe BEM, não depende de onde no DOM ela mora.
+
+Verificado ao vivo: `1920×1080` — seta encostada no "//", igual à referência do mestre;
+`360×800` — seta e "//" na mesma linha do título (que trunca um pouco mais cedo agora, esperado,
+sobra o menu "⋯" sozinho na 2ª linha, sem buraco nem duplicidade). Testes: `detalhe-jogador` 18/18;
+suíte completa do frontend 1617/1618 (mesma falha pré-existente).
+
+## 2026-09-12 — `ui-33`: 8ª e 9ª rodadas — título do jogador igual ao do mestre, Habilidades em 1 coluna no notebook
+
+Duas mensagens do autor, ambas de design (não bug).
+
+**Tipografia do cabeçalho.** Depois do "//" ter sido adicionado ao cabeçalho do mestre na rodada
+anterior, o autor mandou um recorte do cabeçalho do MESTRE ("Campanha do Matheus", mono grande,
+sem caixa alta) e disse "o de player deveria ficar meio que assim" — comparado ao cabeçalho real do
+jogador (capturado ao vivo pra confirmar: "CAMPANHA FB4" em CAIXA ALTA, 15px), a diferença era
+puramente tipográfica: `.detalhe__titulo` (jogador) tinha `font-size: 15px` +
+`text-transform: uppercase` + `letter-spacing: var(--tracking-label)`; `.detalhe-mestre__titulo`
+(mesmo módulo) já usava `font-size: 20px`, sem caixa alta nem tracking. Igualado o jogador ao
+mestre — removido `text-transform`/`letter-spacing`, `font-size` 15px → 20px. Mantida a tríade de
+overflow (`min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap`) da rodada
+anterior. Verificado ao vivo (`Campanha FB4`, mono 20px, mixed case, igual à referência).
+
+**Habilidades em 2 colunas apertando no notebook.** Autor mandou 2 recortes (rolados) da aba
+Habilidades mostrando cards de 2 colunas moderadamente estreitos, com um 5º item órfão sozinho na
+coluna esquerda de uma 3ª linha — pediu 1 coluna em vez de 2 "na visão de Notebook", e que a lista
+"consuma a altura completa que pode consumir". Causa: `.habilidades__lista` usa
+`grid-template-columns: repeat(2, minmax(0,1fr))` e `max-height: 476px` (490px no card `--compacto`)
+fixos, sem nenhum ajuste pra `1366×768` — só havia fallback de 1 coluna por LARGURA (`max-width:
+640px`, bem abaixo de 1366) e o teto já tinha um precedente de remoção total em `bp.mobile` ("a
+página inteira rola como uma coisa só — um teto aqui viraria rolagem dentro de rolagem"), pelo
+mesmo motivo que agora se aplica ao notebook: `768px` de altura é bem menos folga vertical que os
+`1080px` dos outros dois viewports desktop, e o teto de 476/490px partia dessa folga que não existe
+aqui — media ao vivo: a lista real (6 habilidades) tinha `scrollHeight` 486-541px contra um teto de
+476-490px, cortando 1-2 cards com rolagem interna aninhada.
+
+Fix, em vez de outro valor mágico: novo `$altura-notebook: 768px` +
+`@mixin altura-notebook` em `tema/_breakpoints.scss` (primeiro breakpoint de **altura**, não largura,
+do arquivo — comentado explicitamente como o eixo vertical do mesmo tipo de squeeze que os mixins de
+largura já cobrem, `max-height` em vez de `max-width` porque a condição real é qualquer janela baixa,
+não só a largura exata de 1366px). Dentro dele: 1 coluna + `max-height: none` + `overflow-y: visible`
+— mesmo tratamento do `bp.mobile` (a página passa a rolar como uma coisa só). Repetido dentro de
+`&--compacto` (o card compacto tem seu próprio seletor mais específico, `max-height: 490px`, que
+vence o teto padrão mesmo dentro do mixin — mesma armadilha de especificidade já documentada ali
+pro `bp.mobile`).
+
+Verificado ao vivo com 6 habilidades reais na ficha de teste: `1366×768` (`modo="compacto"` e
+`modo="padrao"`) — 1 coluna, `max-height: none`, lista inteira visível sem rolagem interna, página
+rolando como uma coisa só; `1920×1080`/`960×1080` sem regressão (`grid-template-columns` ainda
+`461px 461px`/`385px 385px`, `max-height` ainda `476px`). Testes: `ficha-habilidades` 37/37,
+`detalhe-jogador` 18/18; suíte completa do frontend 1617/1618 (mesma falha pré-existente).
+
+## 2026-09-12 — `ui-33`: 7ª revisão — mesmo defeito no cabeçalho da página, "//" faltando no mestre, ícone da aba Rolagens
+
+Autor mandou um recorte da aba Rolagens e pediu 3 coisas numa mensagem só: (1) "o botão de voltar
+da campanha pode ficar atrás do nome com o '//'" — mesma classe de bug da entrada anterior, agora
+no **cabeçalho da página** (`.detalhe__cabecalho`, `detalhe-jogador.page.html`), não no card
+embutido; (2) "no de mestre adicione o '//' atrás do nome da campanha" — o cabeçalho do mestre
+nunca teve o índice `//` que o do jogador sempre teve; (3) "na tab de rolagens, mude para ser o
+dado d20" — o ícone da aba usava `nome="dado"` (cubo genérico) em vez de `nome="d20"` (icosaedro,
+já existente na paleta de ícones e já usado no dadinho de rolar teste de atributo).
+
+Item 1, causa: `.detalhe__titulo` (`h1`, nome da campanha) é item flex de `&__cabecalho-titulo-linha`
+sem `overflow`/`white-space`/`min-width` próprios — comparando com `.detalhe-mestre__titulo`
+(página do mestre), que **já tinha** exatamente essa tríade (`min-width: 0; overflow: hidden;
+text-overflow: ellipsis; white-space: nowrap`) desde sempre. A página do jogador nunca ganhou a
+mesma proteção quando foi escrita — mesmo padrão de regressão-por-omissão das duas entradas
+anteriores desta sessão (`ficha-visualizacao`/`cartao`), só que aqui a referência correta (mestre)
+já existia lado a lado no mesmo módulo. Fix: copiada a mesma tríade pro `.detalhe__titulo` do
+jogador. Verificado ao vivo forçando um nome de campanha bem comprido em `700×768` com a coluna de
+ações expandida: `scrollWidth` (853px) bem maior que `clientWidth` (288px, truncado) e zero overlap
+com `&__cabecalho-acoes` (botão Voltar) — antes do fix o texto vazava a própria caixa.
+
+Item 2: adicionado `.detalhe-mestre__cabecalho-indice` (span `"//"`, réplica exata do estilo de
+`.detalhe__cabecalho-indice` da página do jogador — 22×22, borda accent, mono) entre o botão Voltar
+e o `<h1>` do título.
+
+Item 3: `<app-icone nome="dado" />` → `nome="d20"` na aba "Rolagens" de `app-segmentado`
+(`detalhe-jogador.page.html`) — troca de um ícone por outro já existente na paleta, sem código novo.
+
+O autor também pediu pra investigar por que a "Iniciativa" aparece na aba Rolagens da campanha, já
+que ela acha que deveria só existir dentro da ficha, na área de Combate. Investigado: **não é
+defeito** — é o preset `PRESET_INICIATIVA_PADRAO` (`backend/src/modules/ficha/ficha.service.ts`,
+decisão `m3-47`, `docs/specs/done/m3-47-ficha-iniciativa-automatica.spec.md`), semeado
+automaticamente em toda ficha de jogador nova (`nome: "Iniciativa"`, `formula: "DESd6"`) e tratado
+como **um preset comum, editável/removível como qualquer outro** — não tem UI própria, aparece em
+qualquer lugar que renderize a lista de rolagens da ficha (`FichaRolagens`), incluindo a aba
+Rolagens da campanha. É distinto de dois outros elementos com nome parecido: o link "Iniciativa" da
+`app-coluna-acoes` (leva pro rastreador de combate/encontro, `m7-encontro-combate`) e o campo
+"INICIATIVA · 1d6" do bloco Combate da ficha (referência fixa da taxa por ponto de Destreza, não um
+preset rolável). Perguntado ao autor (via `AskUserQuestion`) o que fazer, já que esconder o preset
+desfaria parte de uma decisão de produto (m3-47) — resposta: **esconder só na campanha**, mantendo
+visível dentro da ficha completa.
+
+Implementação: `FichaRolagensPainel` já tinha exatamente essa saída pronta — `[esconderIniciativa]`,
+um input que filtra o preset da lista do editor sem apagá-lo do documento (`rolagensExibidas()`
+filtra; `aoRolagensMudou` reinjeta o preset original antes de emitir, pra uma edição qualquer não
+apagá-lo da ficha). Já ligado como `true` no uso de `FichaVisualizacao` dentro da própria ficha
+completa (que tem "Rolar Iniciativa" na aba Informações) — só faltava ligar nos outros dois
+consumidores do painel: `detalhe-jogador.page.html` (a aba Rolagens da campanha, o pedido desta
+rodada) e `previa-jogador.page.html` (mesmo padrão — ficha embutida em `modo="compacto"` + painel de
+rolagens ao lado, achado por analogia ao revisar os `grep` de uso do componente). A docstring do
+input estava desatualizada (dizia que "a coluna lateral de `CampanhaDetalhe` não tem aba Informações
+pra hospedar o preset" — não é mais verdade desde que o redesenho do `ui-33` colocou Informações no
+trio de abas do compacto) — corrigida. Verificado ao vivo: aba Rolagens da campanha sem menção a
+"Iniciativa" (`"Nenhum preset de rolagem salvo"`, ficha sem outro preset), e o botão próprio "Rolar
+Iniciativa" (ícone `d20`) continua no glance de Combate do card compacto — o jogador não perde a
+capacidade de rolar, só para de ver o preset duplicado na lateral.
+
+Testes: `detalhe-jogador`/`detalhe-mestre`/`previa-jogador`/`ficha-visualizacao` 199/199 (specs
+específicas); suíte completa do frontend 1617/1618 (mesma falha pré-existente de "duplicar ficha",
+sem relação).
+
+## 2026-09-12 — `ui-33`: 6ª revisão, título do card quebrando no meio do nome com a coluna de ações expandida
+
+Autor corrigiu antes uma confusão minha: pedi pra ver "a campanha visão de player" e mandei a
+ficha completa (`modo="padrao"`, `/fichas/:id`) por engano — recapturado o card certo
+(`modo="compacto"` dentro de `/campanhas/:id`). Em seguida apontou um 3º bug (dadinho cobrindo
+sigla de atributo, ver entrada seguinte) e, depois de resolvido, um 4º: com a coluna de ações
+lateral expandida (`app-coluna-acoes`, botão "Expandir coluna de ações", 56px → 200px) numa tela de
+notebook, o título do card do personagem quebrava "no meio do nome" — a sigla some, sobra o nome
+sozinho numa 2ª linha encavalada contra "FICHA DE JOGADOR" embaixo.
+
+Causa: `.cartao__titulo` (primitivo `shared/ui/cartao`, mono maiúsculo, sem `white-space`/overflow
+configurado) é um item flex comum na régua `.cartao__cabecalho` (ícone + título + régua de
+preenchimento + slot `[cartaoFim]`, aqui o botão "Abrir completa"). Sem espaço de sobra, o `h2`
+encolhe até o próprio min-content (a palavra mais longa do nome) e quebra ali — o mesmo mecanismo
+de toda quebra ruim já corrigida nesta sessão, só que no primitivo compartilhado, não numa tela
+específica. O primitivo já tem uma via de escape pra isso — `[cabecalhoQuebravel]="true"` (usado
+neste card via `detalhe-jogador.page.html`, e também em `previa-jogador`/`iniciativa-leitura`/
+`compras`, todos com título dinâmico ou potencialmente longo) — só que ela só ligava
+`flex-wrap: wrap` dentro de `bp.mobile` (viewport ≤560px): o mesmo erro de sempre, tratar a largura
+de um elemento como se fosse a largura do viewport. Reproduzido ao vivo isolando a largura do
+`.cartao__cabecalho` (não a do viewport): título de uma linha só até ~400px de cabeçalho, quebra
+feia a partir de ~350px — faixa alcançável em notebook com a coluna expandida sem precisar de
+mobile de verdade.
+
+Fix: tornou-se **incondicional** — `&--quebravel { flex-wrap: wrap; row-gap: ... }`, sem media
+query nenhuma (removido o `@use "tema/breakpoints"`, que ficou sem uso). `flex-wrap: wrap` não
+muda nada quando cabe tudo numa linha (nenhuma das 4 telas que usam a flag mudou visualmente em
+largura normal); ele só entra em ação quando falta espaço — dispensa escolher um breakpoint, porque
+o primitivo não tem como saber o tamanho do título nem o conteúdo do slot `[cartaoFim]` de quem o
+consome. Resultado: o botão "Abrir completa" desce pra uma 2ª linha e o título fica inteiro,
+numa linha só, na primeira — nunca mais quebra a palavra.
+
+Verificado ao vivo: varredura de largura do cabeçalho (618px → 333px) confirmando altura de uma
+linha só do título em todos os pontos (antes quebrava abaixo de ~400px); card renderizado limpo em
+1100px de viewport (pior caso reproduzido). Sem regressão em `1366×768`/`960×1080`/`1920×1080` com
+a coluna recolhida ou expandida — nesses casos o cabeçalho sempre teve espaço de sobra. Testes:
+`cartao`/`detalhe-jogador`/`previa-jogador`/`iniciativa-leitura`/`compras` 68/68; suíte completa do
+frontend 1617/1618 (mesma falha pré-existente e não relacionada de `detalhe-mestre.page.spec.ts`).
+
+## 2026-09-12 — `ui-33`: 5ª revisão, dadinho de rolar cobrindo a sigla do atributo em `1366×768`
+
+Autor apontou que enviei a tela errada ("essa era a tela da ficha completa... queria a tela de
+campanha na visão do jogador") — a captura anterior tinha sido de `/fichas/:id` (`modo="padrao"`),
+não do card compacto dentro de `/campanhas/:id`. Recapturada a tela certa nos 4 viewports; o autor
+então apontou um 3º bug, também só visível em `1366×768`: "os atributos ficaram meio encavalados...
+o dado de rolagem tá quase em cima do nome dele" — o ícone de rolar teste (`&__rolar`, `d20`,
+posição absoluta no canto superior direito, 22px) sobrepunha ~6px da sigla do atributo (ex.: "DES").
+
+Causa raiz: `.ficha-atributos--2col` dentro do card `--compacto` força 5 colunas em vez das 2 do
+`--2col` padrão — decisão explícita do autor numa rodada anterior ("a mesma folga de largura do
+bloco acima permite"), assumindo que a coluna "agente" (identidade+atributos, `max-width: 500px`)
+sempre tem espaço de sobra. Verdade em `1920×1080` (758px) e `960×1080` (780px, empilhado — a
+coluna vira a largura toda da página); falsa em `1366×768`, onde as duas colunas do `--compacto`
+(agente+status) não empilham (`$bp-tablet` é 1080px) mas dividem uma largura bem menor que FullHD —
+a mesma "zona de aperto" da entrada anterior, agora atingindo um bloco diferente. Medido ao vivo: a
+caixa de atributo encolhia a 61px (5 colunas em 331px de card), e com a sigla centralizada e o
+dadinho fixo no canto (`right: 4px`, 22px de largura), sobrava menos de 20px de vão — no mundo real,
+overlap.
+
+Fix: em vez de mais um breakpoint de viewport (a lição da entrada anterior — a largura que quebra
+não é a do viewport, é a do card), a régua de 5 colunas agora vive dentro de `@container (min-width:
+440px)` (`container-type: inline-size` no `.ficha-cartao--atributos`; 440px = 5 × 80px de coluna
+segura, medida ao vivo como o mínimo sem a sigla tocar o dadinho, + 4 × 10px de gap). Abaixo de
+440px a regra local simplesmente não entra em vigor e a caixa cai de volta pro `--2col` padrão (2
+colunas) — a mesma régua que `modo="padrao"` já usa sem problema nessa largura (confirmado no
+`padrao-full-1366.png` da rodada anterior). Consequência colateral limpa: o fallback mobile local
+(`@include bp.mobile` duplicando `repeat(3, ...)`) ficou redundante — sem a regra de 5 colunas
+incondicional disputando especificidade, o fallback mobile *base* (`--2col` genérico, já usado fora
+do compacto) volta a vencer sozinho; removido em vez de deixado como código morto.
+
+Verificação ao vivo nos 4 viewports (mesmo cenário REST "FB4"): `1920×1080` e `960×1080` idênticos a
+antes (5 colunas, sem regressão); `1366×768` cai pra 2 colunas, sigla e dadinho com ~45px de vão;
+`360×800` (aba "Status" do mobile, onde o bloco de Atributos mora nesse layout) segue com as 3
+colunas de sempre, mesmo sem o fallback local duplicado. Testes: suíte de `FichaVisualizacao`
+167/167; suíte completa do frontend 1617/1618 (mesma falha pré-existente e não relacionada de
+`detalhe-mestre.page.spec.ts`).
+
+## 2026-09-12 — `ui-33`: 4º viewport (notebook, `1366×768`) achou um 2º bug no mesmo bloco
+
+Autor pediu a tela inteira da campanha (visão jogador) e notou a falta do 4º viewport padrão do
+projeto ("não são 4 visões?") — `verify/SKILL.md` lista `1920×1080`/`960×1080`/`1366×768`/
+`360×800`, e a verificação da entrada anterior só tinha coberto 3. O 4º revelou um bug **diferente**
+no mesmo bloco (Personalidade/Origem dentro de `&__coluna-texto`): em `1366×768` a coluna de
+Identidade mede só 331px — **menos** que em `1920×1080` (378px), porque 1366px de largura fica
+acima do `$bp-tablet` (1080px, não empilha as 3 colunas da grade) mas tem bem menos espaço total
+que um FullHD. Com a coluna de Identidade a 331px, cada `&__meta-linha` (Personalidade/Origem lado
+a lado) encolhia a 75.5px — estreito o bastante pra `&__meta-rotulo` ("PERSONALIDADE", mono
+maiúsculo, `flex: 0 0 auto`, sem quebra configurada) ultrapassar visualmente a própria caixa e
+invadir a coluna vizinha por cima (a caixa em si encolhia certo, só o texto que não). Distinto do
+achado da entrada anterior (lápis de Origem pulando linha) — mesma causa raiz (2 colunas competindo
+por pouco espaço), sintoma diferente.
+
+Em vez de emendar outro band-aid pontual (`overflow-wrap: anywhere` no rótulo resolvia esse
+sintoma, testado e confirmado), a correção definitiva foi outra: **Personalidade e Origem
+empilham** (`&__meta` de `display: flex` em linha para `flex-direction: column`) em vez de dividir
+em 2 colunas. Isso substitui o trade-off "trunca com ellipsis" registrado na entrada anterior — com
+a largura *inteira* da coluna disponível pra um campo por vez (sempre ≥165px em qualquer viewport
+desktop real do produto, contra os ~75-99px de antes divididos em 2), o valor cabe por extenso e o
+lápis nunca mais disputa espaço com ele; o `nowrap`/ellipsis/`flex:0 0 auto` da entrada anterior
+ficaram como cinto de segurança, mas na prática não acionam mais. Diferença assumida em relação ao
+`poc-jogador.html` (que mostra as duas caixas lado a lado): o POC foi feito num mockup solto sem a
+restrição real de largura da coluna "solo" da ficha — replicar literalmente as 2 colunas exigiria
+alargar a coluna de Identidade em si (fora do pedido desta rodada) ou aceitar o truncamento/overflow
+já descartados.
+
+Verificação ao vivo nos 4 viewports padrão (cenário novo via REST, campanha "FB4"): `1920×1080`,
+`960×1080`, `1366×768` e `360×800`, card compacto (campanha) e ficha completa (`modo="padrao"`) —
+Personalidade/Origem empilhados, valores completos sem truncar, lápis sempre na mesma linha do
+valor, sem overflow em nenhum dos quatro. Testes: suíte de `FichaVisualizacao` 167/167.
+
+## 2026-09-12 — `ui-33`: terceira revisão do autor, lápis de Origem quebrando linha
+
+Terceira rodada sobre o mesmo redesenho ("sinto que ficou muito emcavalado", comparando duas
+screenshots — o card real vs. `poc-jogador.html`). O achado nº5 da rodada anterior (subir
+classe/subclasse e Nível/Prestígio pra dentro de `&__coluna-texto`, ao lado do avatar) teve um
+efeito colateral que só apareceu ao vivo, não nos testes: `&__meta-valor-linha` (Origem: valor +
+botão de lápis na mesma linha, `&__chip-lapis`) usava `flex-wrap: wrap`. Antes, Personalidade/
+Origem tinham a largura **total** do card (fora da coluna do avatar); depois de subir pra dentro
+de `&__coluna-texto`, cada uma passou a dividir uma coluna de só ~99px (378px de card − 150px de
+avatar − 14px de gap, ÷2) — "Não definida" (13px sans) mais o lápis de 24px não cabem mais juntos
+nessa largura, e o lápis pulava pra uma 2ª linha, sozinho, órfão (o defeito visual relatado).
+Corrigido trocando `flex-wrap` de `wrap` pra `nowrap` em `&__meta-valor-linha`, com o valor
+(`&__meta-valor`, filho direto) ganhando `flex: 1 1 auto; min-width: 0; overflow: hidden;
+text-overflow: ellipsis; white-space: nowrap` (trunca em vez de quebrar) e o lápis
+`flex: 0 0 auto` (nunca encolhe/nunca sai da linha). O ramo `--substituida` (chip mais longo de
+"substituída por Peculiaridade", sem `&__meta-valor` nem lápis) manteve `flex-wrap: wrap` —
+intocado. Trade-off aceito: em `1920×1080` (card "solo" de 378px), um valor de Origem/
+Personalidade mais longo que ~90px trunca com "…" — não há espaço pra mostrar os dois campos
+lado a lado por extenso nessa largura fixa; `960×1080` (empilha, card ganha largura própria) e
+`360×800` (mobile, avatar sobe pro topo) sobra espaço de sobra e nunca truncam.
+
+Verificação ao vivo (cenário novo via REST, `poc-jogador.html` como referência): antes/depois do
+fix em `1920×1080` (lápis de Origem alinhado com o valor, sem 2ª linha órfã), `960×1080` (Nível/
+Prestígio com folga, sem truncar) e `360×800` (empilhado, sem truncar). Testes: suíte de
+`FichaVisualizacao` 167/167; suíte completa do `frontend` 1617/1618 (a 1 falha é a mesma
+pré-existente e sem relação, "duplicar ficha" do mestre, já registrada nas entradas anteriores).
+
+## 2026-09-12 — `ui-33`: segunda revisão do autor, 5 achados novos na mesma tela
+
+Segunda rodada de revisão visual sobre o mesmo redesenho do jogador (a primeira gerou a entrada
+abaixo, "4 divergências reais"). Cinco achados, todos corrigidos:
+
+1. **Calculadora/Caderno não estavam na "barra lateral"** — o jogador só tinha o gatilho flutuante
+   próprio de cada componente (`app-calculadora-flutuante`/`app-caderno-flutuante` sem
+   `[mostrarGatilho]="false"`); o mestre já consolida os dois numa categoria "Ferramentas" de
+   `app-coluna-acoes`, chamando `alternar*()` por `viewChild`. Corrigido espelhando exatamente o
+   padrão do mestre — `mostrarGatilho` desligado, categoria "Ferramentas" nova na coluna do jogador
+   e, como a coluna some no mobile desta página (`app-coluna-acoes { @include bp.mobile { display:
+   none } }` — colide com a `.ficha-nav` da ficha embutida), os dois itens entraram também no menu
+   "⋯" mobile, senão ficariam inacessíveis nesse viewport. Efeito colateral pego na verificação ao
+   vivo, não no código: no mobile o gatilho de `CalculadoraFlutuante`/`CadernoFlutuante` também é um
+   botão **inline** no cabeçalho (só no desktop é círculo `position: fixed`); com
+   `[mostrarGatilho]="false"` os dois somem da linha, o botão "⋯" fica colado no "Voltar", e o menu
+   (`right: 0` relativo a ele) passou a abrir cortado pela borda esquerda de 360px — corrigido com
+   `margin-left: auto` no envoltório do "⋯" só no mobile, pra ele sempre ficar na ponta direita da
+   linha independente de quantos botões o precedem.
+2. **Ícone de "Vincular ficha" era o de "duplicar"** — `icone="duplicar"` (dois retângulos
+   sobrepostos, m3-52, ação real de clonar ficha) estava emprestado pra uma ação sem nenhuma relação
+   semântica. Criado um ícone `vincular` novo em `app-icone` (glifo "link" inteiro da Tabler Icons,
+   MIT — o projeto já usa um recorte dele em `link`/fragmento Potencializador), igual ao
+   `#i-vincular` do `poc-jogador.html`; trocado nos 5 lugares que mostravam "Vincular ficha" (coluna
+   de ações, kebab mobile, estado vazio, ícone e botão do modal).
+3. **Botão de Iniciativa ao lado das abas virou duplicata** — depois do achado nº2 da rodada
+   anterior (Iniciativa entrando em `app-coluna-acoes`), o botão fixo ao lado do
+   `app-segmentado` (adicionado *naquela* rodada) passou a expor a mesma ação duas vezes na mesma
+   barra lateral. Removido o botão e a classe `&__painel-iniciativa`; o wrapper `&__painel-topo` que
+   sobrou com um filho só foi removido também (o mestre nunca teve esse wrapper — `<app-segmentado>`
+   direto). Mesmo relato do autor explica o achado irmão "iniciativa aparecendo em rolagens": o botão
+   ficava sempre visível ao lado das abas, inclusive com "Rolagens" ativa — não é o preset de rolagem
+   "Iniciativa" (dado extra de Destreza, `esconderIniciativa`), que é uma feature legítima e
+   preexistente, sem relação com o achado.
+4. **Avatar do Esquadrão pra 60px** — pedido direto do autor; era 80px (calibrado na rodada anterior
+   contra o teto de altura da lista). Só a medida mudou; borda/raio/textura ficaram como estavam.
+5. **Bloco de identidade da ficha ainda não seguia o agrupamento do POC** — o achado nº4 da rodada
+   anterior corrigiu tamanho/raio do avatar (150px/`--radius-card`), mas o `poc-jogador.html` também
+   agrupa classe/subclasse, Nível/Prestígio e Personalidade/Origem **ao lado do avatar**; o app real
+   jogava classe/subclasse (`&__chips`) e Nível/Prestígio pra uma faixa **abaixo** de todo o bloco de
+   identidade, junto de Dinheiro/Salário/Patente. Corrigido movendo os dois blocos (`&__chips`/
+   `&__classe-editor` e um `&__stats-topo` novo só com Nível/Prestígio) pra dentro de
+   `&__coluna-texto`, entre o nome e Personalidade/Origem — mesma ordem do POC. `&__stats-linha`
+   (Dinheiro/Salário, mais Patente/Crédito só no `compacto`) ficou só com os itens que sobraram;
+   como o modo `compacto` nunca teve Nível/Prestígio nessa linha (`@if (modo() !== "compacto")` já
+   os escondia), o grid de 4 colunas tunado pro compacto (`0.85fr 1fr 1.25fr 1fr`) não mudou — só o
+   modo `padrao`, que ficou com 2 itens, ganhou um modificador `--dois-itens` (`repeat(2, minmax(0,
+   1fr))`, mesma proporção do fallback mobile que já existia). Escopo deliberadamente **não**
+   estendido: o nome/contrato continuam ao lado do avatar (não embaixo, como no POC) — essa posição é
+   decisão histórica de m3-62, mais antiga que o `poc-jogador.html` e fora do pedido desta rodada.
+
+Verificação ao vivo (mesmo cenário REST da `ui-33`, campanha 88): coluna de ações com "Ferramentas"
+(Calculadora/Caderno abrindo via `viewChild.alternar()`), ícone `vincular` renderizando o path novo,
+`.detalhe__painel-iniciativa` ausente do DOM, avatar do Esquadrão medindo 60×60, bloco de identidade
+com chips/Nível/Prestígio/Personalidade/Origem ao lado do avatar nos dois modos (`compacto` na
+campanha, `padrao` na ficha completa) e nos dois viewports (`1920×1080`/`360×800`), sem overflow.
+Testes: suíte de `detalhe-jogador.page.spec.ts` 18/18 (3 novos: coluna com
+Calculadora/Caderno+ausência do gatilho flutuante, toggle da Calculadora, ausência do botão de
+Iniciativa duplicado); suíte de `FichaVisualizacao` 167/167; consumidores afetados
+(`visualizar.page`, `previa-jogador.page`, `ficha-flutuante-conteudo`, `detalhe-mestre.page`)
+101/102 (a 1 falha é a mesma pré-existente e sem relação de "duplicar ficha" já registrada na
+entrada anterior); `tsc --noEmit` limpo; `prettier` só reformatou os 2 arquivos `.html` tocados
+(sem mudança de conteúdo).
+
+## 2026-09-12 — `ui-33`: revisão do autor achou 4 divergências reais, corrigidas na mesma sessão
+
+Revisão visual do autor sobre a `ui-33` já entregue (bloco abaixo), com screenshots da aplicação
+real — não do POC. Quatro achados, todos corrigidos:
+
+1. **Espectador na aba Esquadrão caía no ramo "sem ficha"** — `montarEquipeExibicao`/o `@if` do
+   template só tratava `MESTRE` como caso especial; um membro `ESPECTADOR` (que nunca tem ficha)
+   renderizava como jogador comum sem ficha ("Sem ficha nesta campanha"), perdendo a identidade de
+   papel. Corrigido com um `@else if` novo espelhando o bloco do Mestre — ícone `fantasma`, rótulo
+   "Espectador" — e uma variante `.chip-papel--espectador` em cinza (`--text-mute`/`--border-
+   strong`), mesmos tokens de `detalhe-mestre__avatar--espectador` (decisão preexistente do autor,
+   "cinza apenas", m8-01 — nenhuma cor de tema pro papel espectador).
+2. **Iniciativa não estava na "barra lateral"** — a visão de mestre já tem "Iniciativa" dentro de
+   `app-coluna-acoes` (categoria "Campanha"); a visão de jogador nunca ganhou o equivalente. Corrigido
+   adicionando a mesma categoria/item em `app-coluna-acoes` do jogador (antes de "Ficha") e o
+   espelho no menu "⋯" mobile (mesmo padrão de duplicação já usado pelos outros itens da coluna).
+3. **Botão de Iniciativa do painel (ao lado das abas) destoava em tamanho** — `app-botao-icone` sem
+   `[tamanho]` cai no padrão `compacto` (26px); ao lado do `app-segmentado` (itens de 32px, grupo de
+   38px) ficava visivelmente menor. `[tamanho]="padrao"` (32px) resolve — o botão continua existindo
+   (validado no `poc-jogador.html`), só o tamanho mudou.
+4. **Avatar da própria ficha não seguiu o ajuste do POC** — `poc-jogador.html` mostrava o avatar
+   principal (`.ficha-avatar`) a 150px com `var(--radius-card)`; o real (`FichaVisualizacao.
+   ficha-ident__avatar`) seguia a 100px com `var(--radius-control)` (design de m3-62, 2026-08-10).
+   Perguntado ao autor antes de mexer (`AskUserQuestion`, duas perguntas): (a) qual "imagem do
+   usuário" — confirmado que é o avatar principal, não o do Esquadrão; (b) escopo — o componente não
+   diferencia `[modo]`, então o ajuste vale pra **toda** tela que usa `FichaVisualizacao` (ficha
+   completa, jogador/mestre embutido, espectador, prévia), não só a campanha do jogador — autor
+   confirmou "em todo lugar". Aplicado só tamanho (100→150px) e raio (`--radius-control` →
+   `--radius-card`); borda por `--cor-ficha`, upload/enquadrar/remover e crop-pan ficaram intocados
+   (nenhum pedido nesse sentido) — comentários com "100px"/"--radius-control" no arquivo atualizados
+   pra não ficarem factualmente errados.
+
+Verificação ao vivo (mesmo cenário REST cru da `ui-33`, mais um usuário `ESPECTADOR` novo entrando
+pelo `codigoConviteEspectador`): aba Esquadrão com o chip cinza "Espectador"; coluna de ações
+retraída/expandida com "Iniciativa" navegando pra `/campanhas/:id/iniciativa`; kebab mobile com o
+mesmo item; botão do painel agora 32×32 (igual ao item do `app-segmentado`); avatar de 150px sem
+overflow em `1920×1080`/`360×800` nos dois modos (`compacto` via campanha do jogador, `padrao` via
+ficha completa) e na ficha flutuante do mestre. Testes: `frontend` completo 1614/1615 (1 falha
+pré-existente sem relação, `detalhe-mestre.page.spec.ts` duplicar ficha — mesma reproduzida isolada
+antes desta sessão); suíte própria de `FichaVisualizacao` 167/167; `tsc --noEmit` limpo; `prettier`
+sem mudanças pendentes nos arquivos tocados.
+
+## 2026-09-12 — `ui-33`: painel lateral do jogador vira 3 abas, Equipe absorvida em "Esquadrão"
+
+Spec escrita nesta mesma sessão a pedido do autor ("pode fazer a spec de ajuste dessa tela"),
+portando pro código real o resultado de várias rodadas de iteração visual num mockup solto
+(`poc-jogador.html`, fora do repositório) — regra da sessão: iteração visual vai pro POC até o
+autor validar, só então a spec formal define o que entra no código de verdade. Ao ler o código
+real pra escrever a spec, a lateral do jogador já estava no meio de uma migração não commitada
+(sidebars overlay → painel segmentado fixo `Rolar/Sessão/Histórico/Invent.`, mesmo padrão do
+mestre) — a spec documentou esse estado "de hoje" como ponto de partida, e a implementação desta
+task herdou esse working tree sem tentar separar ou reverter o que já estava lá.
+
+**Painel de 3 abas.** `app-segmentado` da lateral passa de 4 itens (Rolar/Sessão/Histórico/
+Invent.) para 3: Rolagens, Esquadrão, Inv. Esquadrão. `painelLateralAtivo` (signal) muda de
+`'rolar' | 'sessao' | 'historico' | 'inventario'` para `'rolar' | 'esquadrao' | 'inventario'` —
+`'rolar'` continua sendo o valor interno da 1ª aba (só o rótulo virou "Rolagens").
+
+**Rolagens = Rolar + Histórico fundidos.** Um único container rolável
+(`&__rolagens-painel-corpo`, `appOverflowFade`) com `<app-ficha-rolagens-painel>` no topo (preset/
+rolagem avulsa + toggle "Rolagem oculta", inalterado) e um rótulo de seção "Histórico" + o feed
+completo de `dados.rolagensFeed()` logo abaixo (mesmo conteúdo, esqueleto e estado vazio que antes
+viviam na aba "Histórico" separada, sem mudança de regra). max-height subiu de `420px` (Rolar
+sozinho) para `69vh` (viewport-relativo, cobre o conteúdo bem maior).
+
+**Aba "Sessão" removida.** `rolagensRecentes()` (computed de rolagens da última hora),
+`tempoRolagem()`, `mostrarPreviaRolagem()`/`esconderPreviaRolagem()`/`previaRolagemId` e a injeção
+de `BandejaDadosService` saíram do `.ts` — existiam só para o feed/pills da Sessão. `.rolagem-pill`
+(SCSS) removido deste arquivo (permanece intocado em `previa-jogador.page.scss`, cópia
+independente por causa do encapsulamento do Angular). O link **Iniciativa** (antes rodapé da aba
+Sessão) virou um `app-botao-icone` fixo ao lado do `app-segmentado`, dentro de um novo
+`.detalhe__painel-topo` (flex row: abas `flex:1`, botão `flex:none`) — sempre visível,
+independente da aba ativa, com `[appTooltip]="'Iniciativa'"`.
+
+**Cartão "Equipe" → aba "Esquadrão".** O `<app-cartao class="detalhe__equipe">` sempre-visível foi
+removido; seu `<ul class="detalhe__equipe-lista" appOverflowFade>` passou a viver dentro de
+`.detalhe__painel-esquadrao` (`[hidden]` como as outras abas), sem o `<h2>Equipe</h2>` de
+cabeçalho próprio — o rótulo já está na aba. Toda a lógica de branching foi movida byte a byte:
+cabeçalho do mestre (`chip-papel`), colega sem ficha, múltiplas fichas por colega, ficha
+`tipo:'completa'` (botão, troca `fichaExibidaId`) vs. sem acesso (carteirinha `<span>` com
+`classeTexto`), e o preview ampliado de avatar no hover sustentado
+(`agendarPreviewAvatar`/`cancelarPreviewAvatar`, portal `.detalhe__avatar-preview` na raiz do
+template, já fora do alcance do `mask-image` da lista — mesma armadilha documentada no Esquadrão
+do mestre, sem regressão porque o portal não mudou de lugar).
+
+**Avatar 28px → 80px.** `&__equipe-ficha-avatar` ganhou `width`/`height: 80px` (era 28px) e
+`border-radius: var(--radius-card)` (era `--radius-control`) — moldura quadrada preservada (nunca
+circular), borda/textura/`object-fit: cover` inalterados. Testado ao vivo com nome de ficha muito
+longo: `text-overflow: ellipsis` já existente segura a linha sem overflow em nenhum dos 3
+viewports — não precisou trocar para quebra de linha (risco antecipado na spec, descartado após
+medição).
+
+**Altura da aba Esquadrão casa com a ficha, só no desktop.** `&__equipe-lista` ganhou
+`max-height: 800px` no bloco base (desktop, acima de `bp.tablet`) e `@include bp.tablet { max-
+height: 420px }` sobrepondo para tablet/mobile (960×1080 tela dividida e 360×800 mobile caem nesse
+`max-width` mixin igualmente, empilhados). Calibrado medindo ao vivo: `.detalhe__ficha-embutida`
+renderiza ~913px em 1920×1080 com uma ficha de exemplo; com um esquadrão de 6 (1 mestre + 5
+fichas), `800px` de teto fecha o painel em ~884px — próximo da ficha, com folga visível abaixo do
+último colega renderizado por completo (sem cortar nenhuma linha no meio), e sem reservar espaço
+vazio quando o esquadrão é pequeno (é um teto, não uma altura fixa).
+
+**Testes:** 3 novos focados em `detalhe-jogador.page.spec.ts` — 3 abas sem "Sessão", fusão
+Rolagens+Histórico sem `.detalhe__painel-historico`/`.detalhe__painel-sessao`/`.rolagem-pill` no
+DOM, aba Esquadrão sempre montada (com avatar) independente de qual aba está ativa. Suíte
+`frontend` completa: 1613/1615 (2 falhas pré-existentes sem relação —
+`painel-flutuante.component.spec.ts` posição fora do viewport, `detalhe-mestre.page.spec.ts`
+duplicar ficha — reproduzem isoladas antes desta task). Lint 0 erros (mesmos ~195 warnings de
+aspas/`max-len` já presentes em qualquer arquivo do projeto, config do linter, não desta task).
+`tsc --noEmit` limpo. `npm run format:html-scss --workspace=frontend` rodado sobre os dois
+arquivos tocados.
+
+**Verificação ao vivo** (Postgres + backend + frontend reais, cenário via REST cru: 1 mestre + 5
+colegas com ficha completa + 1 sem ficha, campanha nova) em `1920×1080`, `960×1080` e `360×800`:
+as 3 abas, os 3 estados de colega na aba Esquadrão (ficha ativa destacada em vermelho — accent do
+usuário —, carteirinha sem acesso sem ícone de olho nem vitais, "Sem ficha nesta campanha"),
+botão de Iniciativa (tooltip "Iniciativa" ao hover, navega para `/campanhas/:id/iniciativa` ao
+clicar), alvo de toque do botão de Iniciativa 44×44px no mobile (`app-botao-icone` cuida sozinho,
+sem CSS extra desta task), altura do painel Esquadrão vs. ficha embutida em 1920×1080. Sem rolagem
+horizontal em nenhum dos três viewports (`scrollWidth === clientWidth` em todos). Preview de
+avatar no hover não testado com imagem real (nenhuma ficha do cenário tinha avatar enviado) — não
+reexecutado porque o template/handlers são cópia idêntica do card "Equipe" original, já provados
+em produção; risco residual mínimo, registrado aqui por transparência.
+
+**Fora de escopo, deliberado:** o cabeçalho do mestre na lista manteve o `chip-papel` "Mestre" +
+nome (padrão já usado em várias telas) — o mockup que validou o resto da spec testou uma linha
+única "Nome (Mestre)" só como atalho de protótipo, nunca uma decisão aprovada com o autor.
+
+Spec `docs/specs/backlog/ui-33-esquadrao-aba-detalhe-jogador.spec.md` → `active/` → `done/` na
+mesma sessão (fluxo completo backlog→implementação→done sem interrupção, a pedido do autor logo
+após a spec ser aprovada implicitamente com "execute a spec").
+
 ## 2026-09-11 — "Espaço Reservado" (mod de mochila) ganha efeito mecânico de verdade
 
 Último item aberto do lote de ajustes do autor (bloco anterior, mesma data): a modificação de

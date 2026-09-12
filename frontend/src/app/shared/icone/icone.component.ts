@@ -27,7 +27,10 @@ import { Component, input } from '@angular/core';
  * identidade visual do papel `ESPECTADOR` (m8-01) — chip de papel na lista de Membros, botão
  * "Painel" e selo "Modo espectador" — distinto de `olho`, que fica só para ações de
  * visualização/prévia (não é uma identidade de papel); e `membros`, grupo de pessoas — item
- * "Membros" de `app-coluna-acoes` e a dialog homônima do painel de mestre da campanha.
+ * "Membros" de `app-coluna-acoes` e a dialog homônima do painel de mestre da campanha; e
+ * `vincular`, ícone "link" inteiro da Tabler Icons (MIT) — ação "Vincular ficha existente" do
+ * jogador (ui-33 follow-up; antes reaproveitava `duplicar`, que já tem sentido próprio de clonar
+ * uma ficha, m3-52), distinto do selo elo-de-corrente recortado usado em `link`.
  */
 export type IconeNome =
   | 'agente'
@@ -108,7 +111,8 @@ export type IconeNome =
   | 'coluna-remover'
   | 'carregando'
   | 'fantasma'
-  | 'membros';
+  | 'membros'
+  | 'vincular';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

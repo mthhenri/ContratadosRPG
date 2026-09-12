@@ -11,15 +11,44 @@
 // (não só na visão do jogador): a visão do MESTRE não tem `.ficha-nav` pra desviar, então o único
 // efeito ali é a bandeja flutuar 57px acima do canto — inofensivo, e mais simples que sinalizar a
 // visão ativa só para isto.
+// Casca da página: coluna de ações (flex item fixo, largura própria, só desktop/tablet — ver
+// `app-coluna-acoes` abaixo) + conteúdo, mesmo contrato de `detalhe-mestre.page.scss`. No mobile a
+// coluna de ações não existe nesta página (colidiria com a `.ficha-nav` da ficha embutida, mesma
+// faixa fixa no rodapé) — o `margin`/`flex-direction` seguem incondicionais porque não têm efeito
+// sozinhos sem a coluna, e a viewport ganha o padding normal de volta.
 :host {
+    display: flex;
+    align-items: stretch;
+    min-height: calc(100dvh - var(--altura-topbar));
+    margin: -24px -20px;
     --piso-flutuante: 0px;
 
     @include bp.mobile {
+        flex-direction: column;
+        min-height: 0;
+        margin: 0;
         --piso-flutuante: 57px;
     }
 }
 
+// A coluna de ações (item A) é exclusiva do desktop/tablet — ver comentário acima do `:host`.
+app-coluna-acoes {
+    @include bp.mobile {
+        display: none;
+    }
+}
+
 .detalhe {
+    flex: 1;
+    min-width: 0;
+    padding: 24px var(--space-20) var(--space-20);
+    display: flex;
+    flex-direction: column;
+
+    @include bp.mobile {
+        padding: 0;
+    }
+
     &__estado-operacional {
         display: inline-flex;
         align-items: center;
@@ -53,76 +82,6 @@
 
     &__estado-operacional--leitura {
         cursor: default;
-    }
-    &__inventario-jogador {
-        min-height: 0;
-        overflow: auto;
-    }
-    // m2-19: era 1160px fixo (m2-17) — mesmo padrão de `visualizar.page.scss`/`lista.page.scss`
-    // (m2-18), que aproveita mais a tela que o teto fixo.
-    width: 90vw;
-    max-width: none;
-    margin: 0 5vw;
-    transition:
-        width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
-        margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);
-
-    @media (prefers-reduced-motion: reduce) {
-        transition: none;
-    }
-
-    // A consulta lateral deixa de encobrir a campanha: a área de trabalho usa o espaço restante
-    // da viewport e continua acionável. `width: auto` (não `calc(100vw - ...)`) é proposital: a
-    // conta em `vw` ignorava o padding horizontal de `.conteudo` (`layout.component.scss`), então
-    // a equação ficava sobre-restringida e o navegador descartava a `margin-right` (regra do
-    // box model p/ bloco não-flutuante com as três propriedades explícitas) — o painel encostava
-    // sem vão nenhum no conteúdo. Com `width: auto`, a única incógnita é a largura, que o
-    // navegador resolve a partir das margens de verdade.
-    &--lateral-aberta {
-        width: auto;
-        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
-
-        // O painel lateral encolhe `.detalhe` sem encolher a **viewport** — as grades internas
-        // (`&__grade`/`&__esquadrao-grid`/`&__jogador`) não caem sozinhas pro layout de 1 coluna
-        // via media query (ela olha a tela inteira, não a faixa que sobrou). `bp.tablet-lateral-
-        // aberta`/`bp.mobile-lateral-aberta` (`tema/_breakpoints.scss`) somam a reserva do painel
-        // aos limiares normais, disparando o MESMO arranjo que `bp.tablet`/`bp.mobile` já usam —
-        // só pela largura que sobrou, não incondicionalmente: um desktop cheio com o painel aberto
-        // ainda tem espaço de sobra pra 2 colunas e não deve perder a grade à toa.
-        @include bp.tablet-lateral-aberta {
-            .detalhe__grade {
-                grid-template-columns: minmax(0, 1fr);
-            }
-
-            .detalhe__coluna--esquadrao {
-                order: -1;
-            }
-
-            .detalhe__jogador {
-                flex-direction: column;
-            }
-        }
-
-        // Limiar mais apertado: o grid fixo de 2 colunas dos cartões do Esquadrão só precisa cair
-        // pra 1 quando a largura que sobrou já é tão estreita quanto o mobile de verdade — o mesmo
-        // ponto em que `&__esquadrao-grid` já colapsa sem nenhum painel aberto.
-        @include bp.mobile-lateral-aberta {
-            .detalhe__esquadrao-grid {
-                grid-template-columns: minmax(0, 1fr);
-            }
-        }
-
-        @include bp.mobile {
-            width: 100%;
-            max-width: 100%;
-            margin: 0;
-        }
-    }
-
-    @include bp.mobile {
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
     }
 
     // === Cabeçalho da página (m2-19, item 6; reflow mobile do "1"/próxima leva) — substitui o antigo
@@ -196,14 +155,43 @@
         }
     }
 
+    // Tipografia igual à de `.detalhe-mestre__titulo` (pedido do autor, mesmo módulo — as duas
+    // visões têm a mesma régua `//` + título + chip + régua, e o título deve combinar): 20px, sem
+    // caixa alta nem tracking, em vez do mono maiúsculo de 15px que a página tinha desde sempre.
     &__titulo {
         margin: 0;
+        min-width: 0;
         font-family: var(--font-mono);
-        font-size: 15px;
+        font-size: 20px;
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
         color: var(--text);
+        // Sem isso (achado ao vivo, mesma classe de bug do card `shared/ui/cartao` desta sessão): o
+        // `h1` é item flex de `&__cabecalho-titulo-linha` (`min-width: 0`, mas isso só afeta o
+        // próprio item — o conteúdo dele continua medido pelo min-content, aqui a palavra mais
+        // longa do nome da campanha) sem `overflow`/`white-space` próprios. Numa coluna de ações
+        // expandida ou card estreito o texto ultrapassava a própria caixa e visualmente colidia com
+        // `&__cabecalho-acoes` (botão "Voltar") ao lado — `.detalhe-mestre__titulo` já tinha essa
+        // mesma tríade, só faltava aqui.
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    // Visível só no mobile — no desktop/tablet as mesmas ações moram em `app-coluna-acoes` (ver
+    // `:host`/`app-coluna-acoes` no topo do arquivo).
+    &__cabecalho-menu-envoltorio--mobile {
+        display: none;
+
+        @include bp.mobile {
+            display: block;
+            // `margin-left: auto` empurra o botão "⋯" pra ponta direita da linha de 100% de largura
+            // (ui-33 follow-up): antes disso dependia, sem querer, dos gatilhos inline de Calculadora/
+            // Caderno (que também viram botão de cabeçalho no mobile, `calc-flutuante__gatilho`)
+            // ocuparem espaço à esquerda — com `[mostrarGatilho]="false"` nos dois (consolidados na
+            // coluna de ações/kebab), o "⋯" ficava colado no botão "Voltar" e o menu (`right: 0`
+            // relativo a ele) abria cortado pela borda esquerda da tela.
+            margin-left: auto;
+        }
     }
 
     &__cabecalho-menu-envoltorio {
@@ -334,8 +322,14 @@
         align-items: start;
         gap: var(--gap-grid);
 
+        // `align-items: start` acima existe pra desktop (linha): impede que a ficha e a lateral se
+        // esticassem uma pela altura da outra. Em coluna (tablet/mobile) o mesmo `start` vira eixo
+        // cruzado HORIZONTAL — sem `stretch`, `&__jogador-principal` (sem largura própria, só
+        // `flex: 1 1 auto`) encolhe pro conteúdo em vez de ocupar a linha inteira, sobrando largura
+        // ao lado da ficha (achado ao vivo: 508px de 864px disponíveis na tela dividida).
         @include bp.tablet {
             flex-direction: column;
+            align-items: stretch;
         }
 
         // m2-20: a ficha embutida (`modo="compacto"`) tem sua própria `.ficha-nav` fixa no rodapé no
@@ -391,8 +385,7 @@
         flex-direction: column;
     }
 
-    &__abrir-completa,
-    &__alternar-inventario {
+    &__abrir-completa {
         flex: none;
         display: inline-flex;
         align-items: center;
@@ -427,8 +420,8 @@
         }
     }
 
-    // === "Equipe" (item 8) — roster compacto da lateral: por colega com ficha visível, um item por
-    // ficha (item 7 — "Ver ficha"); colega sem nenhuma ficha visível nem entra na lista.
+    // === "Esquadrão" (ui-33; era o cartão "Equipe") — roster da lateral: por colega com ficha
+    // visível, um item por ficha ("Ver ficha"); colega sem nenhuma ficha visível nem entra na lista.
     &__equipe-lista {
         list-style: none;
         margin: 0;
@@ -436,8 +429,18 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        max-height: 420px;
+        // Acima de `bp.tablet` a lateral fica ao lado da ficha (item 7, ui-33): o teto acompanha a
+        // altura de `&__ficha-embutida`, com folga visível abaixo do último colega — calibrado ao
+        // vivo (`ficha-embutida` ≈913px em 1920×1080 com uma ficha de exemplo; painel fica ≈889px
+        // com um esquadrão de 6, sem cortar nenhuma linha no meio). `@include bp.tablet` abaixo
+        // cobre tanto 960×1080 (tela dividida) quanto 360×800 (mobile), onde a lateral empilha e o
+        // teto volta a ser só "own content", sem relação com a ficha.
+        max-height: 800px;
         overflow-y: auto;
+
+        @include bp.tablet {
+            max-height: 420px;
+        }
 
         --fade-topo: 0px;
         --fade-base: 0px;
@@ -566,15 +569,17 @@
         white-space: nowrap;
     }
 
+    // 60px (ui-33 follow-up; era 80px, e antes disso 28px com `--radius-control`) — pedido do autor
+    // depois de ver ao vivo: 80px pesava demais na lista de itens compactos do Esquadrão.
     &__equipe-ficha-avatar {
         position: relative;
-        width: 28px;
-        height: 28px;
+        width: 60px;
+        height: 60px;
         flex: none;
         // Cursor de mão só nele (não no card inteiro): é o gatilho do preview ampliado no hover
         // sustentado (`agendarPreviewAvatar`) — sinaliza que dá pra "ficar em cima" e ver a imagem.
         cursor: pointer;
-        border-radius: var(--radius-control);
+        border-radius: var(--radius-card);
         background-color: color-mix(
             in srgb,
             var(--cor-ficha, var(--border-strong)) 14%,
@@ -628,74 +633,111 @@
         font-style: italic;
     }
 
-    // === "Rolagens" (m2-21, item 3) — o painel de presets/rolagem avulsa que era a aba "Rolagens"
-    // do card compacto, agora entre Equipe e Sessão: rolar e ler o histórico recente na mesma coluna.
-    // Nome com sufixo `-painel` de propósito — `&__rolagens` (bem acima) já é a tira horizontal do
-    // topo, compartilhada pelos dois papéis.
-    //
-    // O corpo rola por dentro pelo mesmo motivo (e com a mesma receita) de Equipe/Sessão: com os três
-    // cards empilhados, um painel de presets alto empurraria Sessão pra fora da tela. 420px é a régua
-    // que os dois vizinhos já usam.
-    &__rolagens-painel {
-        @include bp.mobile {
-            display: none;
+    // === Painel lateral unificado (Rolagens/Esquadrão/Inv. Esquadrão, ui-33) — mesmo padrão
+    // `detalhe-mestre__painel-lateral` (`app-segmentado`, sempre montado, nunca overlay). Cada aba
+    // fica em `[hidden]`, não `@if` — troca de aba não perde estado de scroll/formulário.
+    &__painel-lateral {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+        min-height: 0;
+        padding: var(--space-16);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+    }
 
-            &.detalhe__rolagens-painel--mobile-ativo {
-                display: block;
-            }
-        }
+    &__painel-inventario {
+        min-height: 0;
+        max-height: 69vh;
+        overflow-y: auto;
+    }
+
+    // === "Rolagens" (ui-33) — Rolar + Histórico fundidos num só container rolável
+    // (`&__rolagens-painel-corpo`): rolar no topo, "Histórico" completo logo abaixo, mesma receita
+    // de `detalhe-mestre__rolagens-*`. Era um overlay autocontido (`app-historico-rolagens-
+    // sidebar`) antes da unificação do painel lateral; a fusão elimina a 2ª aba e o 2º scroll.
+    &__historico-lista {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__historico-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        padding: var(--space-12) var(--space-16);
+        background: var(--surface-2);
+        border-radius: var(--radius-control);
+        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
+    }
+
+    &__historico-meta {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+        line-height: 1.2;
+    }
+
+    &__historico-rotulo {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    &__historico-formula {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-dim);
+        opacity: 75%;
+        overflow-wrap: anywhere;
+    }
+
+    &__historico-autor {
+        font-size: 11px;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
+    &__historico-data {
+        flex: none;
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+        white-space: nowrap;
+    }
+
+    &__historico-esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__historico-esqueleto-item {
+        height: 64px;
     }
 
     &__rolagens-painel-corpo {
-        max-height: 420px;
-        overflow-y: auto;
-        padding: 2px;
-
-        --fade-topo: 0px;
-        --fade-base: 0px;
-        &.overflow-fade--topo,
-        &.overflow-fade--base {
-            -webkit-mask-image: linear-gradient(
-                to bottom,
-                transparent 0,
-                #000 var(--fade-topo),
-                #000 calc(100% - var(--fade-base)),
-                transparent 100%
-            );
-            mask-image: linear-gradient(
-                to bottom,
-                transparent 0,
-                #000 var(--fade-topo),
-                #000 calc(100% - var(--fade-base)),
-                transparent 100%
-            );
-        }
-        &.overflow-fade--topo {
-            --fade-topo: 16px;
-        }
-        &.overflow-fade--base {
-            --fade-base: 16px;
-        }
-    }
-
-    // === "Sessão" (item 8) — mesmas rolagens da última hora da tira do topo (`rolagensRecentes()`),
-    // reaproveitando o `.rolagem-pill` canônico (abaixo), só empilhado em vez de rolar na horizontal
-    // (a lateral é estreita demais para uma tira).
-    //
-    // Teto de 3 pills (a pedido do autor — antes 420px, ~8 pills, empurrava a lateral pra baixo e
-    // exagerava o scroll da página). `.rolagem-pill` mede 53px de altura (medido ao vivo, sempre
-    // igual — 2 linhas de texto fixas: rótulo + meta); com `gap: 8px` entre eles e os 4px de
-    // `padding` do container, 3 pills fecham em 53×3 + 8×2 + 4 = 179px. Mais rolagens continuam
-    // alcançáveis pelo scroll (fade + `appOverflowFade`, sem mudar).
-    &__sessao-lista {
-        list-style: none;
-        margin: 0;
-        padding: 2px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        max-height: 179px;
+        gap: var(--space-16);
+        max-height: 69vh;
         overflow-y: auto;
+        padding: 2px;
+
+        // A régua "Histórico" já ganha respiro do `gap` acima — zera a margem própria do
+        // `&__secao` (pensada pra ser o 1º filho do container) pra não somar os dois.
+        .detalhe__secao {
+            margin: 0;
+        }
 
         --fade-topo: 0px;
         --fade-base: 0px;
@@ -721,33 +763,6 @@
         }
         &.overflow-fade--base {
             --fade-base: 16px;
-        }
-
-        .rolagem-pill {
-            min-width: 0;
-            max-width: none;
-            width: 100%;
-        }
-    }
-
-    &__sessao-iniciativa {
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 10px;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        text-decoration: none;
-
-        app-icone {
-            font-size: 13px;
-        }
-
-        @include bp.mobile {
-            min-height: bp.$alvo-toque;
         }
     }
 
@@ -923,9 +938,8 @@
             gap: 12px;
         }
 
-        &__alternar-inventario,
         &__abrir-completa {
-            flex: 1 1 calc(50% - 6px);
+            flex: 1 1 auto;
             min-width: 0;
             min-height: bp.$alvo-toque;
             justify-content: center;
@@ -953,55 +967,12 @@
     app-icone {
         font-size: 11px;
     }
-}
 
-// Pill de rolagem (item 3, nome sancionado pela spec) — item da tira horizontal de rolagens
-// recentes do cabeçalho. Não segue o BEM `.detalhe__*` porque é o nome que a própria spec exige.
-.rolagem-pill {
-    flex: none;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 140px;
-    max-width: 220px;
-    padding: 8px 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-
-    // Linha do topo: rótulo + dadinho d20 lado a lado — `align-items: center` alinha o centro vertical
-    // dos dois (o d20 sozinho como `position: absolute` desalinhava do texto por alguns px, dependendo
-    // da métrica da fonte; numa linha flex comum os dois compartilham o mesmo eixo cruzado).
-    &__topo {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 6px;
-    }
-
-    // Dadinho d20 (item 3, ajuste pós-m2-19): hover/foco mostra o resultado completo da rolagem na
-    // bandeja de dados flutuante (`BandejaDadosService`, o mesmo container das rolagens ao vivo).
-    &__d20 {
-        flex-shrink: 0;
-    }
-
-    &__rotulo {
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--text);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    &__meta {
-        font-family: var(--font-mono);
-        font-size: 10px;
+    // Espectador (m8-01): cinza apenas, nenhuma cor do tema — mesma decisão e mesmos tokens de
+    // `detalhe-mestre__avatar--espectador` (pedido literal do autor, "cinza apenas").
+    &--espectador {
         color: var(--text-mute);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        border-color: var(--border-strong);
     }
 }
 
@@ -1180,25 +1151,9 @@
         margin-bottom: 7px;
     }
 
-    &__esqueleto-secao-titulo {
-        width: 90px;
-        height: 11px;
-    }
-
-    // Nome em contexto de coluna (membro/equipe).
-    &__esqueleto-nome-linha {
-        width: 60%;
-        max-width: 140px;
-        height: 13px;
-    }
-
     &__esqueleto-linha {
         width: 100%;
         height: 11px;
-    }
-
-    &__esqueleto-curta {
-        width: 55%;
     }
 
     &__esqueleto-botao {
