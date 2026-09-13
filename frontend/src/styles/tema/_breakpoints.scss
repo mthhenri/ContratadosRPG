@@ -19,6 +19,15 @@ $bp-mobile: 560px;
 // media-query mágico de 1080px que existia solto no componente antes da m3-26.
 $bp-tablet: 1080px;
 
+// Terceiro degrau: a diferença de largura entre o notebook (1366×768) e o desktop Full HD
+// (1920×1080) some no critério de `$bp-tablet` acima — os dois ficam do lado "largo" dele, já que
+// a grade de 3 colunas da Visão Geral não estoura em nenhum dos dois. Mas como essa grade divide o
+// viewport em 3 (identidade | atributos | status), a COLUNA de cada card ainda encolhe bastante de
+// 1920 pra 1366 — o bastante pra apertar conteúdo que assume a largura confortável do Full HD (ex.:
+// DT/Proficiência/Maestria lado a lado, texto longo). `$bp-desktop` marca esse limiar: só o Full HD
+// "de verdade" fica acima dele.
+$bp-desktop: 1600px;
+
 // Alvo de toque confortável (WCAG 2.5.5 / diretrizes de mobile): 44px.
 $alvo-toque: 44px;
 
@@ -38,6 +47,16 @@ $altura-notebook: 768px;
 
 @mixin tablet {
     @media (max-width: $bp-tablet) {
+        @content;
+    }
+}
+
+// Só o Full HD "de verdade" (≥1600px) — o inverso de todos os outros mixins de largura acima, que
+// disparam abaixo de um limiar. Existe pra conteúdo que só cabe confortável na largura de coluna
+// que o Full HD dá numa grade de 3 colunas, e que degrada melhor ficando empilhado (não espremido)
+// em qualquer coisa abaixo disso — mobile, tela dividida ou notebook.
+@mixin desktop-amplo {
+    @media (min-width: $bp-desktop) {
         @content;
     }
 }

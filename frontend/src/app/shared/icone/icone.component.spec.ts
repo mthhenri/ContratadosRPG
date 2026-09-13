@@ -54,4 +54,10 @@ describe('Icone', () => {
     expect(assinatura(nome)).not.toBe('');
     expect(assinatura(nome)).not.toBe(assinatura('anotacoes'));
   });
+
+  it('distingue o caderno da campanha das anotações da própria ficha', () => {
+    expect(assinatura('caderno')).not.toBe('');
+    expect(assinatura('caderno')).not.toBe(assinatura('anotacoes'));
+    expect(assinatura('caderno')).not.toBe(assinatura('documentos'));
+  });
 });

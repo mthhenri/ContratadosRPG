@@ -167,3 +167,24 @@ describe('StepInput — digitavel=false', () => {
     expect(valor.classList.contains('stepper__valor--ativo')).toBe(true);
   });
 });
+
+describe('StepInput — variante="discreto"', () => {
+  @Component({
+    selector: 'app-step-input-hospedeiro-discreto',
+    imports: [ReactiveFormsModule, StepInput],
+    template: `<app-step-input [formControl]="controle" tamanho="mini" variante="discreto" />`,
+  })
+  class HospedeiroDiscreto {
+    controle = new FormControl(0);
+  }
+
+  it('acrescenta a classe stepper--discreto sem perder a classe de tamanho', async () => {
+    await TestBed.configureTestingModule({ imports: [HospedeiroDiscreto] }).compileComponents();
+    const fixture = TestBed.createComponent(HospedeiroDiscreto);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const stepper = (fixture.nativeElement as HTMLElement).querySelector('.stepper');
+    expect(stepper?.classList.contains('stepper--mini')).toBe(true);
+    expect(stepper?.classList.contains('stepper--discreto')).toBe(true);
+  });
+});

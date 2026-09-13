@@ -1,18 +1,20 @@
-<button
-    type="button"
-    class="historico-rolagens__gatilho utilitario-flutuante utilitario-flutuante--historico utilitario-flutuante--inline-mobile"
-    [class.historico-rolagens__gatilho--ativo]="aberto()"
-    [class.historico-rolagens__gatilho--empilhado]="acimaDaCalculadora()"
-    [class.utilitario-flutuante--acima]="acimaDaCalculadora()"
-    [attr.aria-expanded]="aberto()"
-    [attr.aria-label]="
-        aberto() ? 'Fechar ' + titulo().toLowerCase() : 'Abrir ' + titulo().toLowerCase()
-    "
-    [appTooltip]="titulo()"
-    (click)="alternar()"
->
-    <app-icone nome="d20" />
-</button>
+@if (mostrarGatilho()) {
+    <button
+        type="button"
+        class="historico-rolagens__gatilho utilitario-flutuante utilitario-flutuante--historico utilitario-flutuante--inline-mobile"
+        [class.historico-rolagens__gatilho--ativo]="aberto()"
+        [class.historico-rolagens__gatilho--empilhado]="acimaDaCalculadora()"
+        [class.utilitario-flutuante--acima]="acimaDaCalculadora()"
+        [attr.aria-expanded]="aberto()"
+        [attr.aria-label]="
+            aberto() ? 'Fechar ' + titulo().toLowerCase() : 'Abrir ' + titulo().toLowerCase()
+        "
+        [appTooltip]="titulo()"
+        (click)="alternar()"
+    >
+        <app-icone nome="d20" />
+    </button>
+}
 
 @if (painelRenderizado()) {
     <button

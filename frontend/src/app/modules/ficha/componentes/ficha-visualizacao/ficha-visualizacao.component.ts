@@ -102,6 +102,7 @@ import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
@@ -176,6 +177,14 @@ const COR_FICHA_PADRAO = '#d53030';
 /** Avatar da ficha (m3-62) — mesmos limites validados no backend (`FichaService.alterarImagem`). */
 const TIPOS_IMAGEM_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 const TAMANHO_MAXIMO_IMAGEM_BYTES = 2 * 1024 * 1024;
+
+/** Mesmo limiar de `CadernoFlutuante`/`_breakpoints.scss` ($bp-mobile) — abaixo disso o painel de
+ *  Anotações vira folha cheia (sem arraste/redimensionar); acima, janela flutuante comum. */
+const ANOTACOES_BREAKPOINT_MOBILE = 560;
+/** Largura de abertura do painel de Anotações (igual ao `[largura]="420"` fixo de antes). */
+const ANOTACOES_LARGURA_PADRAO = 420;
+const ANOTACOES_LARGURA_MINIMA = 320;
+const ANOTACOES_ALTURA_MINIMA = 260;
 
 /**
  * Aba da ficha (m3-11). **Combate** (m3-37) absorveu **Rolagens** — hoje hospeda os stats de
@@ -380,6 +389,7 @@ export interface AjusteClasse {
     Botao,
     BotaoIcone,
     Modal,
+    PainelFlutuante,
     StepInput,
     ValorEditavel,
     AjusteEnquadramentoImagem,
@@ -388,6 +398,12 @@ export interface AjusteClasse {
   ],
   templateUrl: './ficha-visualizacao.component.html',
   styleUrl: './ficha-visualizacao.component.scss',
+  host: {
+    '(window:pointermove)': 'aoMoverPonteiroAnotacoes($event)',
+    '(window:pointerup)': 'encerrarRedimensionamentoAnotacoes()',
+    '(window:pointercancel)': 'encerrarRedimensionamentoAnotacoes()',
+    '(window:resize)': 'aoRedimensionarViewportAnotacoes()',
+  },
 })
 export class FichaVisualizacao {
   /** A janela flutuante do Encontro é o único scroll vertical no mobile. */
@@ -426,6 +442,23 @@ export class FichaVisualizacao {
    * sem entrar em edição. A página só liga para dono/mestre; o backend revalida o `alterarFicha`.
    */
   readonly ajustavel = input(false);
+  /** O painel de Anotações é aberto pela coluna de ações da ficha completa. */
+  readonly anotacoesPainelAberto = input(false);
+  readonly anotacoesPainelAbertoChange = output<boolean>();
+
+  /**
+   * `[mobile]` de `app-painel-flutuante` para o painel de Anotações — reage à largura real da
+   * janela (mesmo padrão de `CadernoFlutuante.ehMobile`), em vez do `true` fixo de antes: fixo
+   * fazia a janela nascer sempre em "folha cheia" (sem arraste nem redimensionar), mesmo em
+   * desktop/tablet — achado ao vivo pelo autor ("não deveria ser fullscreen").
+   */
+  protected readonly anotacoesEhMobile = signal(this.verificarAnotacoesMobile());
+  /** `null` até o primeiro redimensionamento manual — a janela nasce no tamanho padrão do CSS. */
+  protected readonly anotacoesTamanho = signal<{ largura: number; altura: number } | null>(null);
+  protected readonly anotacoesLarguraPadrao = ANOTACOES_LARGURA_PADRAO;
+  private readonly painelAnotacoesRef = viewChild<PainelFlutuante>('painelAnotacoes');
+  private redimensionandoAnotacoes = false;
+  private origemRedimensionamentoAnotacoes = { ponteiroX: 0, ponteiroY: 0, largura: 0, altura: 0 };
 
   /**
    * `true` quando o autor pode **rolar dados** desta ficha (m3-51, item 24) — teste de atributo, dano
@@ -1584,6 +1617,59 @@ export class FichaVisualizacao {
     }
   }
 
+  /** Início do redimensionamento do painel de Anotações (pointerdown na alça do canto). */
+  protected iniciarRedimensionamentoAnotacoes(evento: PointerEvent): void {
+    if (this.anotacoesEhMobile() || evento.button !== 0) {
+      return;
+    }
+    const atual = this.anotacoesTamanho() ?? { largura: ANOTACOES_LARGURA_PADRAO, altura: 0 };
+    const retangulo = this.painelAnotacoesRef()?.obterElemento()?.getBoundingClientRect();
+    evento.preventDefault();
+    this.redimensionandoAnotacoes = true;
+    this.origemRedimensionamentoAnotacoes = {
+      ponteiroX: evento.clientX,
+      ponteiroY: evento.clientY,
+      largura: retangulo?.width ?? atual.largura,
+      altura: retangulo?.height ?? atual.altura,
+    };
+  }
+
+  protected aoMoverPonteiroAnotacoes(evento: PointerEvent): void {
+    if (!this.redimensionandoAnotacoes) {
+      return;
+    }
+    const origem = this.origemRedimensionamentoAnotacoes;
+    this.anotacoesTamanho.set({
+      largura: limitarDimensaoAnotacoes(
+        origem.largura + (evento.clientX - origem.ponteiroX),
+        ANOTACOES_LARGURA_MINIMA,
+        window.innerWidth,
+      ),
+      altura: limitarDimensaoAnotacoes(
+        origem.altura + (evento.clientY - origem.ponteiroY),
+        ANOTACOES_ALTURA_MINIMA,
+        window.innerHeight,
+      ),
+    });
+  }
+
+  protected encerrarRedimensionamentoAnotacoes(): void {
+    this.redimensionandoAnotacoes = false;
+  }
+
+  protected aoRedimensionarViewportAnotacoes(): void {
+    this.anotacoesEhMobile.set(this.verificarAnotacoesMobile());
+  }
+
+  private verificarAnotacoesMobile(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return typeof window.matchMedia === 'function'
+      ? window.matchMedia(`(max-width: ${ANOTACOES_BREAKPOINT_MOBILE}px)`).matches
+      : window.innerWidth <= ANOTACOES_BREAKPOINT_MOBILE;
+  }
+
   /**
    * `historia` (m3-50) é opcional — ausente para um visualizador (omitida no backend) e em fichas
    * sem texto definido; `??` cobre os dois casos antes do `.trim()`.
@@ -2392,6 +2478,26 @@ export class FichaVisualizacao {
     [TipoDanoEnum.GERAL]: 'Geral',
   };
 
+  /**
+   * Modificador BEM (`ficha-resistencia--<sufixo>`) por tipo de dano — mesma paleta `--dano-*` já
+   * usada no chip de resumo de `resultado-rolagem.component.ts` e em `FichaCampanhaCard`
+   * (`SUFIXO_TIPO_DANO`/`classeResistencia`). Precisa de um sufixo ASCII à parte porque
+   * `TipoDanoEnum` guarda o rótulo acentuado ("Balístico") — um `.toLowerCase()` direto no valor
+   * do enum não bate com o modificador `&--balistico` do SCSS.
+   */
+  private static readonly SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
+    [TipoDanoEnum.FISICO]: 'fisico',
+    [TipoDanoEnum.BALISTICO]: 'balistico',
+    [TipoDanoEnum.EXPLOSAO]: 'explosao',
+    [TipoDanoEnum.QUIMICO]: 'quimico',
+    [TipoDanoEnum.GERAL]: 'geral',
+  };
+
+  /** Classe da caixa de uma Resistência — combina o modificador base com o sufixo do tipo de dano. */
+  protected classeResistencia(tipo: TipoDanoEnum): string {
+    return `ficha-resistencia ficha-resistencia--${FichaVisualizacao.SUFIXO_TIPO_DANO[tipo]}`;
+  }
+
   /** Tipo de dano em digitação direta na linha de Resistências, ou `null` fora de edição. */
   protected readonly editandoResistencia = signal<TipoDanoEnum | null>(null);
 
@@ -2660,4 +2766,9 @@ export class FichaVisualizacao {
       lesoes: estado.lesoes,
     });
   }
+}
+
+/** Trava `valor` entre `minimo` e `maximo` (redimensionamento do painel de Anotações). */
+function limitarDimensaoAnotacoes(valor: number, minimo: number, maximo: number): number {
+  return Math.min(Math.max(valor, minimo), Math.max(minimo, maximo));
 }

@@ -29,6 +29,8 @@ import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.compon
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
@@ -39,6 +41,7 @@ import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.servic
 import { lerParamRota } from '../../ler-param-rota';
 import { mesclarFicha } from '../../mesclar-ficha';
 import { RolagemService } from '../../rolagem.service';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 
 import {
   AbaFicha,
@@ -87,6 +90,9 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     FichaVisualizacao,
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
+    CadernoFlutuante,
+    ColunaAcoes,
+    ColunaAcoesItem,
     Tooltip,
     Modal,
     Esqueleto,
@@ -97,6 +103,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
 })
 export class FichaVisualizar {
   private readonly fichaVisualizacao = viewChild(FichaVisualizacao);
+  private readonly cadernoRef = viewChild(CadernoFlutuante);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
@@ -165,7 +172,9 @@ export class FichaVisualizar {
 
   protected readonly carregando = signal(true);
   protected readonly ficha = signal<FichaRecuperadaDto | null>(null);
-  private readonly membros = signal<CampanhaMembroResumoDto[]>([]);
+  /** Nome da campanha no cabeçalho e no caderno; ficha solta não o resolve. */
+  protected readonly campanhaNome = signal<string | null>(null);
+  protected readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   protected readonly acessos = signal<FichaAcessoResumoDto[]>([]);
 
   /**
@@ -182,14 +191,22 @@ export class FichaVisualizar {
 
   /** P-021: botão "Abrir calculadora" de dentro do painel do histórico (só existe no mobile). */
   protected readonly calculadoraAberta = signal(false);
+  protected readonly anotacoesAbertas = signal(false);
+  protected readonly cadernoHabilitado = signal(false);
   /** A página reserva a faixa da direita enquanto o histórico está aberto. */
   protected readonly historicoSidebarAberto = signal(false);
+
+  /**
+   * Menu "⋯" do cabeçalho — só existe no mobile (CSS): `app-coluna-acoes` vira barra fixa no
+   * rodapé nessa largura (mesmo racional de `ColunaAcoes`) e colide com a `.ficha-nav` da própria
+   * ficha (m3-60), tornando a coluna inalcançável. Duplica ali as mesmas ações da coluna — mesmo
+   * padrão do menu "⋯" de `CampanhaDetalheJogador` para o mesmo problema.
+   */
+  protected readonly menuAberto = signal(false);
 
   /** Rolagens desta tela ainda em voo no REST (m3-77) — ver `onRolagemRemota`. */
   private rolagensLocaisEmVoo = 0;
 
-  /** Menu de ações no cabeçalho (kebab) aberto. */
-  protected readonly menuAberto = signal(false);
   /** Dialog de gestão de acesso aberta (m3-10 — tira o painel do corpo da tela). */
   protected readonly dialogAcesso = signal(false);
   /** Dialog de confirmação de exclusão aberta (m3-52). */
@@ -197,6 +214,8 @@ export class FichaVisualizar {
   /** Desatribuição da campanha em voo. */
   protected readonly removendoDaCampanha = signal(false);
   protected readonly excluindo = signal(false);
+
+  protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? 0);
 
   /** Membro selecionado para receber acesso (Reactive Forms — sem `ngModel`). */
   protected readonly membroParaConceder = new FormControl<number | null>(null);
@@ -253,6 +272,12 @@ export class FichaVisualizar {
         switchMap((ficha) => {
           const campanhaId = this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : ficha.campanhaId;
           this.campanhaId.set(campanhaId);
+          if (campanhaId !== null) {
+            this.campanhaService
+              .recuperarCampanha(campanhaId)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({ next: (campanha) => this.campanhaNome.set(campanha.nome) });
+          }
           const membros$ =
             campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]);
           return membros$.pipe(map((membros) => ({ ficha, membros })));
@@ -417,25 +442,23 @@ export class FichaVisualizar {
     void this.router.navigate(this.rotaDeSaida());
   }
 
-  /** Abre/fecha o menu de ações do cabeçalho. */
-  protected alternarMenu(): void {
-    this.menuAberto.update((aberto) => !aberto);
-  }
-
-  /** Fecha o menu de ações. */
-  protected fecharMenu(): void {
-    this.menuAberto.set(false);
-  }
-
-  /** No mobile, encaminha a ação do menu para a mesma confirmação da ficha. */
+  /** Encaminha a ação da coluna para a mesma confirmação da ficha. */
   protected solicitarAlteracaoVisibilidade(): void {
     this.fecharMenu();
     this.fichaVisualizacao()?.solicitarAlteracaoVisibilidade();
   }
 
-  /** Abre a dialog de gestão de acesso (a partir do menu). */
-  protected abrirAcesso(): void {
+  protected alternarMenu(): void {
+    this.menuAberto.update((atual) => !atual);
+  }
+
+  protected fecharMenu(): void {
     this.menuAberto.set(false);
+  }
+
+  /** Abre a dialog de gestão de acesso. */
+  protected abrirAcesso(): void {
+    this.fecharMenu();
     this.dialogAcesso.set(true);
   }
 
@@ -449,10 +472,10 @@ export class FichaVisualizar {
    * menus análogos do painel da campanha e do acervo; o backend confirma a permissão de dono/mestre.
    */
   protected removerDaCampanha(): void {
+    this.fecharMenu();
     if (this.campanhaId() === null || this.removendoDaCampanha()) {
       return;
     }
-    this.fecharMenu();
     this.removendoDaCampanha.set(true);
     this.fichaService
       .atribuirCampanha(this.fichaId, null)
@@ -460,10 +483,24 @@ export class FichaVisualizar {
       .subscribe({ next: () => void this.router.navigate(['/fichas']) });
   }
 
-  /** Abre a dialog de confirmação de exclusão (a partir do menu, m3-52). */
+  /** Abre a dialog de confirmação de exclusão. */
   protected abrirExclusao(): void {
-    this.menuAberto.set(false);
+    this.fecharMenu();
     this.dialogExclusao.set(true);
+  }
+
+  protected alternarCalculadora(): void {
+    this.calculadoraAberta.update((aberta) => !aberta);
+  }
+
+
+  protected alternarCaderno(): void {
+    if (!this.cadernoHabilitado()) {
+      this.cadernoHabilitado.set(true);
+      setTimeout(() => this.cadernoRef()?.abrir());
+      return;
+    }
+    this.cadernoRef()?.alternar();
   }
 
   /** Fecha a dialog de exclusão — inócuo enquanto a exclusão está em voo. */

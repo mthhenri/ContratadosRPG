@@ -1,249 +1,396 @@
 <section class="ficha-pagina" [class.ficha-pagina--lateral-aberta]="historicoSidebarAberto()">
-    <header class="ficha-pagina__topo">
-        @if (campanhaId(); as campanhaAtualId) {
-        <a
-            app-botao-icone
-            class="ficha-pagina__voltar"
-            [routerLink]="['/campanhas', campanhaAtualId]"
-            aria-label="Voltar à campanha"
-            [appTooltip]="'Voltar à campanha'"
+    <app-coluna-acoes id="ficha-completa" rotulo="Ações da ficha">
+        <div class="coluna-acoes__categoria">Ficha</div>
+        <button
+            app-coluna-acoes-item
+            icone="d20"
+            appTooltip="Histórico"
+            (click)="historicoSidebarAberto.update((aberto) => !aberto)"
         >
-            <app-icone nome="voltar" />
-        </a>
-        } @else {
-        <a
-            app-botao-icone
-            class="ficha-pagina__voltar"
-            routerLink="/fichas"
-            aria-label="Voltar ao acervo"
-            [appTooltip]="'Voltar ao acervo'"
+            Histórico
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="anotacoes"
+            appTooltip="Anotações"
+            (click)="anotacoesAbertas.update((abertas) => !abertas)"
         >
-            <app-icone nome="voltar" />
-        </a>
+            Anotações
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="calculadora"
+            appTooltip="Calculadora"
+            (click)="alternarCalculadora()"
+        >
+            Calculadora
+        </button>
+        @if (campanhaId() !== null) {
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+        } @if (podeGerenciar()) {
+        <div class="coluna-acoes__categoria">Gestão</div>
+        <button
+            app-coluna-acoes-item
+            icone="olho"
+            appTooltip="Acesso de visualização"
+            (click)="abrirAcesso()"
+        >
+            Acesso de visualização
+        </button>
+        <button
+            app-coluna-acoes-item
+            [icone]="ficha()?.oculta ? 'olho' : 'olho-fechado'"
+            [appTooltip]="ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha'"
+            (click)="solicitarAlteracaoVisibilidade()"
+        >
+            {{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}
+        </button>
+        @if (campanhaId() !== null) {
+        <button
+            app-coluna-acoes-item
+            icone="voltar"
+            appTooltip="Remover da campanha"
+            [disabled]="removendoDaCampanha()"
+            (click)="removerDaCampanha()"
+        >
+            {{ removendoDaCampanha() ? 'Removendo…' : 'Remover da campanha' }}
+        </button>
         }
+        <button
+            app-coluna-acoes-item
+            icone="excluir"
+            appTooltip="Excluir ficha"
+            (click)="abrirExclusao()"
+        >
+            Excluir ficha
+        </button>
+        }
+    </app-coluna-acoes>
 
-        <!-- Ações do cabeçalho agrupadas (m3-62): um único container flex, não mais itens soltos
+    <div class="ficha-pagina__conteudo">
+        <header class="ficha-pagina__cabecalho">
+            @if (campanhaId(); as campanhaAtualId) {
+            <a
+                app-botao-icone
+                class="ficha-pagina__voltar"
+                [routerLink]="['/campanhas', campanhaAtualId]"
+                aria-label="Voltar à campanha"
+                [appTooltip]="'Voltar à campanha'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            } @else {
+            <a
+                app-botao-icone
+                class="ficha-pagina__voltar"
+                routerLink="/fichas"
+                aria-label="Voltar ao acervo"
+                [appTooltip]="'Voltar ao acervo'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            }
+
+            <!-- Ações do cabeçalho agrupadas (m3-62): um único container flex, não mais itens soltos
          direto em `.ficha-pagina__topo` — no mobile, quando a linha não cabe, o grupo inteiro
          quebra pra baixo (e quebra internamente entre si) sempre colado à direita, em vez de cada
          item quebrar isolado (o kebab acabava sozinho grudado na esquerda). Ver `&__acoes` no
          SCSS. O selo de tempo real offline saiu daqui na ui-21 — mora fixo na topbar agora. -->
-        <div class="ficha-pagina__acoes">
-            <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
-            @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
-            <span
-                class="ficha-pagina__persistencia"
-                [class.ficha-pagina__persistencia--salvo]="fichaEdicao.estadoPersistencia() === 'salvo'"
-                role="status"
-            >
-                {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
-            </span>
-            } @if (ficha()) {
-            <!-- Gatilhos flutuantes (m3-61): no desktop cada um vira um círculo fixo no canto inferior
+            <span class="ficha-pagina__cabecalho-indice">//</span>
+            @if (ficha(); as fichaAtual) {
+            <h1 class="ficha-pagina__titulo">{{ fichaAtual.nome }}</h1>
+            @if (campanhaNome(); as nomeCampanha) {
+            <span class="ficha-pagina__campanha">{{ nomeCampanha }}</span>
+            } }
+            <span class="ficha-pagina__cabecalho-regua"></span>
+            <div class="ficha-pagina__acoes">
+                <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
+                @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
+                <span
+                    class="ficha-pagina__persistencia"
+                    [class.ficha-pagina__persistencia--salvo]="fichaEdicao.estadoPersistencia() === 'salvo'"
+                    role="status"
+                >
+                    {{ fichaEdicao.estadoPersistencia() === 'salvando' ? 'Salvando…' : 'Salvo' }}
+                </span>
+                } @if (ficha()) {
+                <!-- Gatilhos flutuantes (m3-61): no desktop cada um vira um círculo fixo no canto inferior
              direito (Histórico empilhado ACIMA da Calculadora); no mobile os dois voltam a ser
              botões inline aqui no cabeçalho, lado a lado — ver `@include bp.mobile` no SCSS de cada
              um. Precisam ficar juntos no DOM para o `flex` do grupo colocá-los um do lado do outro
              nessa faixa. -->
-            <app-historico-rolagens-sidebar
-                [(aberto)]="historicoSidebarAberto"
-                titulo="Histórico de Rolagens da Ficha"
-                [itens]="historicoRolagens()"
-                [carregando]="historicoCarregando()"
-                [carregandoMais]="historicoCarregandoMais()"
-                [temMais]="historicoTemMais()"
-                [mostrarFicha]="false"
-                [acimaDaCalculadora]="true"
-                (carregarMais)="carregarMaisHistorico()"
-                (abrirCalculadora)="calculadoraAberta.set(true)"
-            />
-            <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
-            } @if (ficha() && podeGerenciar()) {
-            <div class="ficha-pagina__menu-container">
-                <button
-                    app-botao-icone
-                    class="ficha-pagina__menu-botao"
-                    type="button"
-                    aria-label="Ações da ficha"
-                    aria-haspopup="menu"
-                    [attr.aria-expanded]="menuAberto()"
-                    (click)="alternarMenu()"
-                >
-                    ⋯
-                </button>
-                @if (menuAberto()) {
-                <button
-                    class="ficha-pagina__menu-fundo"
-                    type="button"
-                    aria-label="Fechar menu"
-                    (click)="fecharMenu()"
-                ></button>
-                <div class="ficha-pagina__menu" role="menu">
-                    <button
-                        app-botao
-                        class="ficha-pagina__menu-item"
-                        type="button"
-                        role="menuitem"
-                        (click)="abrirAcesso()"
-                    >
-                        <app-icone nome="olho" />
-                        <span>Acesso de visualização</span>
-                        @if (acessos().length) {
-                        <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
-                        }
-                    </button>
-                    <button
-                        app-botao
-                        class="ficha-pagina__menu-item ficha-pagina__menu-item--visibilidade"
-                        type="button"
-                        role="menuitem"
-                        (click)="solicitarAlteracaoVisibilidade()"
-                    >
-                        <app-icone [nome]="ficha()?.oculta ? 'olho' : 'olho-fechado'" />
-                        <span>{{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}</span>
-                    </button>
-                    @if (campanhaId() !== null) {
-                    <button
-                        app-botao
-                        class="ficha-pagina__menu-item"
-                        type="button"
-                        role="menuitem"
-                        [disabled]="removendoDaCampanha()"
-                        (click)="removerDaCampanha()"
-                    >
-                        <app-icone nome="voltar" />
-                        <span
-                            >{{ removendoDaCampanha() ? 'Removendo…' : 'Remover da campanha'
-                            }}</span
-                        >
-                    </button>
-                    }
-                    <button
-                        app-botao
-                        class="ficha-pagina__menu-item"
-                        type="button"
-                        role="menuitem"
-                        (click)="abrirExclusao()"
-                    >
-                        <app-icone nome="excluir" />
-                        <span>Excluir ficha</span>
-                    </button>
-                </div>
+                <app-historico-rolagens-sidebar
+                    [(aberto)]="historicoSidebarAberto"
+                    titulo="Histórico de Rolagens da Ficha"
+                    [itens]="historicoRolagens()"
+                    [carregando]="historicoCarregando()"
+                    [carregandoMais]="historicoCarregandoMais()"
+                    [temMais]="historicoTemMais()"
+                    [mostrarFicha]="false"
+                    [mostrarGatilho]="false"
+                    (carregarMais)="carregarMaisHistorico()"
+                    (abrirCalculadora)="calculadoraAberta.set(true)"
+                />
+                <app-calculadora-flutuante
+                    [(aberta)]="calculadoraAberta"
+                    [mostrarGatilho]="false"
+                />
                 }
-            </div>
-            }
-        </div>
-    </header>
 
-    @if (carregando()) {
-    <!-- Esqueleto de carregamento (m3-56) — `app-esqueleto` (ui-14/P-051) dá a identidade, a
+                <!-- Menu "⋯" — só existe no mobile (CSS): `app-coluna-acoes` vira barra fixa no rodapé
+             nessa largura e colide com a `.ficha-nav` da própria ficha (m3-60), tornando a coluna
+             inalcançável. Duplica aqui as mesmas ações da coluna (mesmo padrão do menu "⋯" de
+             `CampanhaDetalheJogador` para o mesmo problema). -->
+                <div class="ficha-pagina__menu-container">
+                    <button
+                        app-botao-icone
+                        class="ficha-pagina__menu-botao"
+                        type="button"
+                        aria-label="Ações da ficha"
+                        aria-haspopup="menu"
+                        [attr.aria-expanded]="menuAberto()"
+                        [appTooltip]="'Ações da ficha'"
+                        (click)="alternarMenu()"
+                    >
+                        ⋯
+                    </button>
+                    @if (menuAberto()) {
+                    <button
+                        class="ficha-pagina__menu-fundo"
+                        type="button"
+                        aria-label="Fechar menu"
+                        (click)="fecharMenu()"
+                    ></button>
+                    <div class="ficha-pagina__menu" role="menu">
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="historicoSidebarAberto.update((aberto) => !aberto); fecharMenu()"
+                        >
+                            <app-icone nome="d20" />
+                            <span>Histórico</span>
+                        </button>
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="anotacoesAbertas.update((abertas) => !abertas); fecharMenu()"
+                        >
+                            <app-icone nome="anotacoes" />
+                            <span>Anotações</span>
+                        </button>
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="alternarCalculadora(); fecharMenu()"
+                        >
+                            <app-icone nome="calculadora" />
+                            <span>Calculadora</span>
+                        </button>
+                        @if (campanhaId() !== null) {
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="alternarCaderno(); fecharMenu()"
+                        >
+                            <app-icone nome="caderno" />
+                            <span>Caderno</span>
+                        </button>
+                        } @if (podeGerenciar()) {
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="abrirAcesso()"
+                        >
+                            <app-icone nome="olho" />
+                            <span>Acesso de visualização</span>
+                            @if (acessos().length) {
+                            <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
+                            }
+                        </button>
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="solicitarAlteracaoVisibilidade()"
+                        >
+                            <app-icone [nome]="ficha()?.oculta ? 'olho' : 'olho-fechado'" />
+                            <span>{{ ficha()?.oculta ? 'Exibir ficha' : 'Ocultar ficha' }}</span>
+                        </button>
+                        @if (campanhaId() !== null) {
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            [disabled]="removendoDaCampanha()"
+                            (click)="removerDaCampanha()"
+                        >
+                            <app-icone nome="voltar" />
+                            <span
+                                >{{ removendoDaCampanha() ? 'Removendo…' : 'Remover da campanha'
+                                }}</span
+                            >
+                        </button>
+                        }
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="abrirExclusao()"
+                        >
+                            <app-icone nome="excluir" />
+                            <span>Excluir ficha</span>
+                        </button>
+                        }
+                    </div>
+                    }
+                </div>
+            </div>
+        </header>
+
+        @if (carregando()) {
+        <!-- Esqueleto de carregamento (m3-56) — `app-esqueleto` (ui-14/P-051) dá a identidade, a
          silhueta espelha o layout real de `FichaVisualizacao` (topo | identidade+atributos |
          status com barra de abas), inclusive no mobile (mesmas larguras/breakpoints do
          componente real, ver `.ficha-esqueleto` no SCSS). -->
-    <div class="ficha-esqueleto" role="status" aria-label="Carregando ficha">
-        <div class="ficha-esqueleto__topo">
-            <app-esqueleto class="ficha-esqueleto__esqueleto-rotulo" />
-            <app-esqueleto class="ficha-esqueleto__esqueleto-chip" />
-        </div>
+        <div class="ficha-esqueleto" role="status" aria-label="Carregando ficha">
+            <div class="ficha-esqueleto__topo">
+                <app-esqueleto class="ficha-esqueleto__esqueleto-rotulo" />
+                <app-esqueleto class="ficha-esqueleto__esqueleto-chip" />
+            </div>
 
-        <div class="ficha-esqueleto__linha">
-            <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--identidade">
-                <div class="ficha-esqueleto__cartao">
-                    <div class="ficha-esqueleto__ident-topo">
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-avatar" />
+            <div class="ficha-esqueleto__linha">
+                <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--identidade">
+                    <div class="ficha-esqueleto__cartao">
+                        <div class="ficha-esqueleto__ident-topo">
+                            <app-esqueleto class="ficha-esqueleto__esqueleto-avatar" />
+                            <app-esqueleto class="ficha-esqueleto__esqueleto-titulo" />
+                        </div>
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
+                        <app-esqueleto
+                            class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
+                        />
+                        <div class="ficha-esqueleto__barras">
+                            <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
+                            <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
+                        </div>
+                        <div class="ficha-esqueleto__mini-grade">
+                            @for (indice of [0, 1, 2, 3]; track indice) {
+                            <app-esqueleto class="ficha-esqueleto__esqueleto-mini" />
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--atributos">
+                    <div class="ficha-esqueleto__cartao">
                         <app-esqueleto class="ficha-esqueleto__esqueleto-titulo" />
-                    </div>
-                    <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
-                    <app-esqueleto
-                        class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
-                    />
-                    <div class="ficha-esqueleto__barras">
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
-                    </div>
-                    <div class="ficha-esqueleto__mini-grade">
-                        @for (indice of [0, 1, 2, 3]; track indice) {
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-mini" />
+                        @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
                         }
                     </div>
                 </div>
-            </div>
 
-            <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--atributos">
-                <div class="ficha-esqueleto__cartao">
-                    <app-esqueleto class="ficha-esqueleto__esqueleto-titulo" />
-                    @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-                    <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
-                    }
-                </div>
-            </div>
-
-            <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--status">
-                <div class="ficha-esqueleto__abas">
-                    @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-                    <app-esqueleto class="ficha-esqueleto__esqueleto-aba" />
-                    }
-                </div>
-                <div class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
-                    <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
-                    <app-esqueleto
-                        class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
-                    />
-                    <app-esqueleto class="ficha-esqueleto__esqueleto-bloco" />
+                <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--status">
+                    <div class="ficha-esqueleto__abas">
+                        @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-aba" />
+                        }
+                    </div>
+                    <div class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
+                        <app-esqueleto
+                            class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
+                        />
+                        <app-esqueleto class="ficha-esqueleto__esqueleto-bloco" />
+                    </div>
                 </div>
             </div>
         </div>
+        } @else if (ficha(); as fichaAtual) {
+        <!-- Edição no próprio lugar (m3-10): cada campo tem seu lápis; não há mais botão global. -->
+        <app-ficha-visualizacao
+            [fichaId]="fichaAtual.id"
+            [nome]="fichaAtual.nome"
+            [cor]="fichaAtual.cor"
+            [imagemUrl]="fichaAtual.imagemUrl"
+            [foco]="fichaAtual.imagemFoco"
+            [oculta]="fichaAtual.oculta"
+            [dados]="fichaAtual.dados"
+            [ajustavel]="podeGerenciar()"
+            [anotacoesPainelAberto]="anotacoesAbertas()"
+            (anotacoesPainelAbertoChange)="anotacoesAbertas.set($event)"
+            [podeRolar]="podeGerenciar()"
+            [ehMestre]="ehMestre()"
+            [apertado]="historicoSidebarAberto()"
+            [abaInicial]="abaInicial"
+            (abaMudou)="mudarAba($event)"
+            [abaStatusInicial]="abaStatusInicial"
+            (abaStatusMudou)="mudarAbaStatus($event)"
+            [destinoMobileInicial]="destinoMobileInicial"
+            (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+            (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+            (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+            (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+            (ajusteNome)="fichaEdicao.ajustarNome($event)"
+            (ajusteCor)="fichaEdicao.ajustarCor($event)"
+            (ajusteOculta)="fichaEdicao.ajustarOculta($event)"
+            (ajusteImagem)="fichaEdicao.ajustarImagem($event)"
+            (removerImagem)="fichaEdicao.removerImagem()"
+            (focoMudou)="fichaEdicao.ajustarImagemFoco($event)"
+            (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+            (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+            (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+            (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+            (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+            (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+            (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+            (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+            (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
+            (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+            (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+            (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+            (ajusteHabilidadePersonalidade)="fichaEdicao.ajustarHabilidadePersonalidade($event)"
+            (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+            (origemLimpa)="fichaEdicao.limparOrigem()"
+            (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
+        />
+        } @else {
+        <p class="ficha-pagina__carregando">Ficha não encontrada.</p>
+        }
     </div>
-    } @else if (ficha(); as fichaAtual) {
-    <!-- Edição no próprio lugar (m3-10): cada campo tem seu lápis; não há mais botão global. -->
-    <app-ficha-visualizacao
-        [fichaId]="fichaAtual.id"
-        [nome]="fichaAtual.nome"
-        [cor]="fichaAtual.cor"
-        [imagemUrl]="fichaAtual.imagemUrl"
-        [foco]="fichaAtual.imagemFoco"
-        [oculta]="fichaAtual.oculta"
-        [dados]="fichaAtual.dados"
-        [ajustavel]="podeGerenciar()"
-        [podeRolar]="podeGerenciar()"
-        [ehMestre]="ehMestre()"
-        [apertado]="historicoSidebarAberto()"
-        [abaInicial]="abaInicial"
-        (abaMudou)="mudarAba($event)"
-        [abaStatusInicial]="abaStatusInicial"
-        (abaStatusMudou)="mudarAbaStatus($event)"
-        [destinoMobileInicial]="destinoMobileInicial"
-        (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
-        (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
-        (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
-        (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
-        (ajusteNome)="fichaEdicao.ajustarNome($event)"
-        (ajusteCor)="fichaEdicao.ajustarCor($event)"
-        (ajusteOculta)="fichaEdicao.ajustarOculta($event)"
-        (ajusteImagem)="fichaEdicao.ajustarImagem($event)"
-        (removerImagem)="fichaEdicao.removerImagem()"
-        (focoMudou)="fichaEdicao.ajustarImagemFoco($event)"
-        (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
-        (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
-        (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
-        (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
-        (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
-        (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
-        (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
-        (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
-        (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
-        (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
-        (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
-        (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
-        (ajusteHabilidadePersonalidade)="fichaEdicao.ajustarHabilidadePersonalidade($event)"
-        (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
-        (origemLimpa)="fichaEdicao.limparOrigem()"
-        (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
-    />
-    } @else {
-    <p class="ficha-pagina__carregando">Ficha não encontrada.</p>
-    }
 </section>
 
-@if (dialogAcesso()) {
+@if (cadernoHabilitado() && campanhaId(); as campanhaAtualId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="campanhaAtualId"
+    [campanhaNome]="campanhaNome() ?? ''"
+    [usuarioAtivoId]="usuarioAtivoId()"
+    [ehMestre]="ehMestre()"
+    [membros]="membros()"
+/>
+} @if (dialogAcesso()) {
 <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcesso()">
     <div class="acesso">
         <p class="acesso__ajuda">

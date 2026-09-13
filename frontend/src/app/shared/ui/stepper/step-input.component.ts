@@ -37,7 +37,13 @@ export class StepInput implements ControlValueAccessor {
   /** Incremento aplicado pelos botões − / +. */
   readonly passo = input<number>(1);
   /** Densidade do controle, sem duplicar a estrutura de botões e valor. */
-  readonly tamanho = input<'padrao' | 'compacto' | 'mini'>('padrao');
+  readonly tamanho = input<'padrao' | 'compacto' | 'mini' | 'micro' | 'grande'>('padrao');
+  /**
+   * `discreto` remove o fundo/cápsula unida do controle: o valor fica sem caixa por trás e cada
+   * botão vira um contorno solto (fundo só aparece no hover) — usado onde vários steppers convivem
+   * lado a lado e o fundo cheio de cada um pesa visualmente (ex.: edição de Atributos da ficha).
+   */
+  readonly variante = input<'padrao' | 'discreto'>('padrao');
   /**
    * Quando `false`, o valor central vira texto só-leitura (sem `<input>`) e os botões trocam o
    * clique único por segurar-para-repetir (`appHoldRepeat`) — o padrão de "ajuste rápido" sem
@@ -62,7 +68,9 @@ export class StepInput implements ControlValueAccessor {
   protected readonly valorAtual = signal<number>(0);
   protected readonly desabilitado = signal<boolean>(false);
 
-  protected readonly classeTamanho = () => `stepper stepper--${this.tamanho()}`;
+  protected readonly classeTamanho = () =>
+    `stepper stepper--${this.tamanho()}` +
+    (this.variante() === 'discreto' ? ' stepper--discreto' : '');
 
   /** Texto do valor em `digitavel=false` — com sinal `+`/`−` quando `comSinal`. */
   protected readonly valorExibicao = () => {

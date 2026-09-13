@@ -1,5 +1,123 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — pós-`ui-34`: menu "⋯" no mobile, ícone do Caderno e Anotações redimensionável
+
+Três rodadas de feedback do autor sobre a ficha completa recém-migrada para `app-coluna-acoes`
+(`ui-34`), sem spec própria — ajustes diretos em conversa.
+
+**Ações inalcançáveis no mobile.** `app-coluna-acoes` vira barra fixa no rodapé abaixo de
+`bp.mobile` (mesmo racional usado em `CampanhaDetalheJogador`/`CampanhaDetalheMestre`), mas
+`visualizar.page` embute `FichaVisualizacao`, cuja própria `.ficha-nav` (m3-60) ocupa exatamente a
+mesma faixa com o mesmo `z-index` — a coluna ficava coberta e inalcançável nessa largura. Antes da
+`ui-34` havia um menu "⋯" no cabeçalho para as ações de Gestão; ele foi removido quando tudo migrou
+para a coluna, sem o mobile ganhar uma via alternativa. Restaurado (reaproveitando o SCSS órfão que
+tinha sobrado no arquivo) como duplicata **mobile-only** de toda a coluna — Histórico, Anotações,
+Calculadora, Caderno e Gestão —, exatamente o padrão já usado por `CampanhaDetalheJogador` para o
+mesmo conflito. `.ficha-pagina__topo` (shell antigo, substituído por `.ficha-pagina__cabecalho` na
+`ui-34`) também estava órfão e foi removido.
+
+**Cabeçalho fora do padrão.** `.ficha-pagina__titulo` usava `--font-sans` num `clamp(20px, 2vw,
+28px)` e o chip `//` era texto solto colorido — destoava de `detalhe-mestre`/`detalhe-jogador`
+(mono 20px/700, `//` numa caixa 22×22 com borda `--accent`). Alinhado aos dois.
+
+**Ícone do Caderno igual ao de Anotações.** Os dois usavam o mesmo glifo (`anotacoes`, folha de
+papel) em toda coluna/menu que oferece as duas ações lado a lado. Novo ícone `caderno` (caderno de
+espiral: lombada + furos), aplicado a todo consumidor que representa o Caderno da campanha
+(`ColunaAcoes` das três telas, o menu "⋯", e o próprio `CadernoFlutuante`); `anotacoes` seguiu
+intocado nos demais usos (aba Anotações, Descrição da criatura, aba História).
+
+**Anotações sempre em tela cheia.** O `[mobile]` de `app-painel-flutuante` estava fixo em `true`,
+então a janela nascia em "folha cheia" (sem arrastar/redimensionar) em qualquer largura, não só no
+mobile. Trocado por um sinal reativo à largura real (mesmo padrão de `CadernoFlutuante.ehMobile`,
+limiar 560px) e adicionada a alça de redimensionar arrastável (mesmo visual/comportamento de
+`CadernoFlutuante.__redimensionar`), livre nos dois eixos com piso mínimo — sem handle no mobile
+real, que continua em folha cheia.
+
+**Evidência.** `icone.component.spec.ts` (nova prova de que `caderno` difere de `anotacoes` e de
+`documentos`), `visualizar.page.spec.ts` (59/59, duas expectativas do menu "⋯" reescritas para o
+novo papel dele) e `ficha-visualizacao.component.spec.ts` passando; suíte completa com 1 falha
+pré-existente e não relacionada em `detalhe-mestre.page.spec.ts` (confirmada também sem estas
+mudanças). Lint sem erros nos arquivos tocados. Verificado ao vivo (Playwright) nos 4 viewports
+padrão: menu "⋯" com as 8 ações só no mobile, coluna intacta nos demais, ícones visualmente
+distintos na coluna expandida, e o painel de Anotações arrastando/redimensionando no desktop
+(420×186 → 570×306) enquanto permanece folha cheia a 360×800.
+
+## 2026-09-13 — pós-`ui-34`: edição de Atributos vira grade de caixas, DT/Prof/Maestria e grade fluida
+
+Quatro rodadas de feedback do autor sobre o card de Atributos da ficha completa, sem spec própria.
+
+**Edição vira grade de caixas.** A edição de Atributos usava uma lista vertical de linhas
+(`.ficha-atributos__lista`); o pedido foi que se parecesse com a leitura (grade de caixas
+`.ficha-atributos__grade`/`.ficha-atributo`). Reconstruída reaproveitando o mesmo shell da leitura
+— cada caixa com o toggle de Maestria + abreviação, o valor do atributo, e modificador/dados abaixo
+— sem nenhuma lógica nova (os mesmos sinais/handlers de rascunho de antes, só outro template).
+
+**Variante `discreto` do stepper.** Pedido: fundo removido, número do atributo maior, botões
+quadrados só-contorno com hover, modificador/dados menores e tudo centralizado. `shared/ui/stepper`
+não tinha essa combinação — parado e perguntado ao autor (regra da "biblioteca de componentes
+obrigatória"), que escolheu ampliar o primitivo em vez de um `::ng-deep` local. Novos inputs
+`variante` (`padrao`/`discreto`, sem cápsula) e dois tamanhos (`micro`, `grande`); `grande` levou um
+`min-width` no valor depois de um achado ao vivo (a caixa mais estreita do notebook, ~85px,
+espremia o dígito a ~9px sem esse piso).
+
+**DT/Proficiência/Maestria e grade de atributos por viewport.** A linha de resumo (DT +
+Proficiência + Maestria) ficava estranha empilhada em tela dividida/notebook/mobile; um novo
+breakpoint `$bp-desktop` (1600px, só Full HD "de verdade") decide quando os três cabem numa linha
+só — abaixo disso, DT ocupa a linha inteira e Prof/Maestria dividem a debaixo. Não deu pra resolver
+com `@container` (a caixa de tela dividida, 960px de viewport, é mais larga que a de desktop 1920px
+nessa página, porque a grade de 3 colunas da página colapsa para 1 coluna abaixo de `$bp-tablet`).
+A grade de 5 atributos (leitura) trocou a régua fixa por `repeat(auto-fit, minmax(120px, 1fr))`,
+com o reset do "centralizar órfão" do 5º item que já existia para a grade fixa (senão ele esticava
+sozinho). A edição manteve a régua fixa (2 colunas em tela dividida/notebook, 1 no mobile),
+inalterada de propósito.
+
+**Dado de rolagem sempre no canto superior direito.** Uma decisão anterior (m3-60) movia o d20 pro
+canto superior esquerdo só no mobile; revertida a pedido do autor — agora fixo no canto superior
+direito em qualquer viewport.
+
+**Evidência.** `step-input.component.spec.ts` (nova prova da variante `discreto`) e os specs de
+`ficha-visualizacao`/`visualizar.page` passando; verificado ao vivo nos 4 viewports padrão, leitura
+e edição, sem overflow.
+
+## 2026-09-13 — `ui-34-ficha-completa-redesenho`: ficha completa alinhada ao shell de campanha
+
+**Referência visual e composição.** O análogo aprovado foi `detalhe-mestre`: a rota completa agora
+projeta `app-coluna-acoes` como lateral (barra inferior no mobile), e o conteúdo usa o mesmo shell
+horizontal. O cabeçalho passou a ter voltar contextual, `//`, nome da ficha, chip com o nome real da
+campanha, régua e estado de persistência. A primeira integração deixou a lateral como filha de uma
+coluna flex e empurrou o conteúdo para baixo; a inspeção real encontrou isso e a correção fez a
+casca participar como linha, com o conteúdo flexível ao lado.
+
+**Ações e conteúdo.** A coluna agrupa Histórico, Anotações, Calculadora e Caderno; a gestão reúne
+acesso, visibilidade, remoção da campanha e exclusão. Os gatilhos antigos dos dois utilitários foram
+ocultados, preservando seus painéis. Anotações saíram de Informações e ganharam `PainelFlutuante`;
+o texto e a edição existente foram preservados. Nível, Prestígio, Dinheiro, Salário e Patente foram
+movidos para uma grade de cinco mini-cards em Informações. A ficha completa usa Identidade+Atributos
+à esquerda e Status à direita (2/3, cerca de 40/60), empilhando no tablet; atributos têm DT,
+Proficiência e Maestria em uma linha de mini-cards e grade densa de cinco colunas quando há espaço.
+Resistências usam o mesmo formato compacto de Reações, com borda e valor por `--dano-*-*`.
+
+**Ajuste solicitado pelo autor.** A coluna esquerda foi aproximada da referência anexada: cada
+cartão agora abre com o símbolo `//` numa caixa compacta (sem a numeração), e Identidade ganhou uma grade com o
+perfil à esquerda e o resumo tático à direita. Reações, Vitalidade e Resistências seguem em
+sequência com suas próprias réguas; Atributos mantém os cinco itens por grupo em desktop. A
+primeira inspeção deste ajuste revelou que os hosts invisíveis dos modais ocupavam células da
+grade; eles passaram a ser transparentes ao fluxo, preservando os diálogos nativos no top layer.
+
+**Densidade do resumo de Atributos.** DT, Proficiência e Maestria passaram a usar faixas de uma
+linha com apenas 2px de respiro vertical. A fórmula de DT perdeu o rótulo redundante e a borda
+interna do chip, ficando apresentada diretamente dentro da faixa externa.
+
+**Evidência.** Testes focados: `visualizar.page.spec.ts` 58/58 e
+`ficha-visualizacao.component.spec.ts` 163/163. A suíte completa chegou a 1 falha externa,
+pré-existente, em `detalhe-mestre.page.spec.ts` (duplicação de ficha); as duas expectativas antigas
+da ficha completa foram atualizadas e os seus recortes passam. Build de produção do frontend passou;
+mantém apenas o aviso conhecido de orçamento inicial P-004 (533,05 kB contra 450 kB). Lint do
+repositório permanece bloqueado por 1 erro e 17.440 avisos históricos; o lint dos arquivos
+TypeScript alterados não encontrou erro após a correção do teste. Na aplicação real, com o mestre
+local, foram observados 1920×1080, 1366×768, 960×1080 e 360×800, inclusive colapso de colunas,
+barra móvel, ausência de overflow e abertura de Histórico, Anotações, Calculadora e Caderno.
+
 ## 2026-09-13 — `ficha-campanha-card-resistencias-coloridas`: Reações+Resistências numa legenda só, cor por tipo de dano
 
 Task solta, pedida em conversa pelo autor com uma imagem de referência (não salva no repositório):

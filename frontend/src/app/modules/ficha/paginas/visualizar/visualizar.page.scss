@@ -14,19 +14,23 @@
 // então nas outras telas nada muda.
 :host {
     --piso-flutuante: 0px;
+    display: block;
+    // A ficha completa é uma casca de painel, não uma página centralizada: a coluna de ações deve
+    // começar junto da borda do conteúdo e da topbar. Cancela somente o padding de `.conteudo`;
+    // o conteúdo principal recompõe seu próprio respiro abaixo.
+    margin: -24px -20px;
 
     @include bp.mobile {
         // altura da barra: 44px de alvo + 6px de padding em cima e embaixo + 1px de borda
         --piso-flutuante: 57px;
+        margin: 0;
     }
 }
 
 .ficha-pagina {
-    // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
-    // (identidade+vitalidade | atributos | status derivado), como o protótipo de fidelidade.
-    width: 90vw;
-    max-width: none;
-    margin: 0 5vw;
+    width: 100%;
+    min-height: calc(100dvh - var(--altura-topbar));
+    margin: 0;
     transition:
         width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
         margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);
@@ -34,10 +38,15 @@
     @media (prefers-reduced-motion: reduce) {
         transition: none;
     }
-    padding: 12px 20px 40px;
+    padding: 0;
     display: flex;
-    flex-direction: column;
-    gap: var(--gap-grid);
+    align-items: stretch;
+    // Sem `gap` aqui (era `var(--gap-grid)`, 16px): junto com o padding esquerdo próprio de
+    // `.ficha-pagina__conteudo` (`var(--space-20)` abaixo) isso somava 36px entre a borda da
+    // coluna de ações e o conteúdo — mais que os 20px do mesmo par em `detalhe-mestre.page.scss`/
+    // `detalhe-jogador.page.scss` (`:host` sem gap + só o padding do próprio conteúdo). Pedido do
+    // autor: o espaçamento aqui estava fora do padrão das telas de campanha.
+    gap: 0;
 
     // O histórico ocupa uma coluna de apoio em desktop; a ficha usa somente a largura livre.
     // `width: auto` (não `calc(100vw - ...)`): a conta em `vw` ignorava o padding horizontal de
@@ -46,7 +55,7 @@
     // de `detalhe.page.scss`.
     &--lateral-aberta {
         width: auto;
-        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
+        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 0;
 
         @include bp.mobile {
             width: 100%;
@@ -59,6 +68,7 @@
     // estreita — a página passa a usar a largura inteira (menos o padding lateral) abaixo de
     // `$bp-mobile`, mesmo racional das demais páginas da ficha.
     @include bp.mobile {
+        display: block;
         width: 100%;
         max-width: 100%;
         margin: 0;
@@ -81,16 +91,6 @@
 
         &--salvo {
             color: var(--positive);
-        }
-    }
-
-    &__topo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-
-        @include bp.mobile {
-            flex-wrap: wrap;
         }
     }
 
@@ -134,21 +134,26 @@
         }
     }
 
-    // Menu de ações do cabeçalho (kebab) — abre um dropdown com "Acesso de visualização" (m3-10).
+    // Menu "⋯" do cabeçalho — duplica as ações de `app-coluna-acoes` (Histórico/Anotações/
+    // Calculadora/Caderno/Gestão) só no mobile: nessa largura a coluna vira barra fixa no rodapé
+    // (mesmo racional de `ColunaAcoes`) e colide com a `.ficha-nav` da própria ficha (m3-60), que
+    // ocupa exatamente a mesma faixa — sem este menu as ações ficam inalcançáveis no mobile. No
+    // desktop/tablet a coluna já cobre tudo, então o botão nem existe (mesmo padrão do menu "⋯" de
+    // `CampanhaDetalheJogador` para o mesmo problema).
     &__menu-container {
+        display: none;
         position: relative;
         flex: 0 0 auto;
+
+        @include bp.mobile {
+            display: block;
+        }
     }
 
     &__menu-botao {
-        width: 34px;
-        height: 30px;
+        width: bp.$alvo-toque;
+        height: bp.$alvo-toque;
         font-size: 18px;
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
     }
 
     // Camada invisível que fecha o menu ao clicar fora.
@@ -197,14 +202,6 @@
         }
     }
 
-    &__menu-item--visibilidade {
-        display: none;
-
-        @include bp.mobile {
-            display: flex;
-        }
-    }
-
     &__menu-contagem {
         margin-left: auto;
         font-size: 11px;
@@ -217,6 +214,88 @@
         font-style: italic;
         color: var(--text-mute);
         margin: 0;
+    }
+}
+
+// ui-34: mesmo shell do detalhe de campanha — a coluna participa do layout e o cabeçalho deixa
+// claro em qual ficha/campanha a pessoa está antes do conteúdo denso.
+.ficha-pagina__conteudo {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 24px var(--space-20) var(--space-20);
+
+    @include bp.mobile {
+        padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+.ficha-pagina__cabecalho {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    min-width: 0;
+}
+
+// Mesmo "chip" `//` de `.detalhe-mestre__cabecalho-indice`/`.detalhe__cabecalho-indice` (campanha)
+// — era texto solto em 18px; a caixa com borda alinha esta tela ao mesmo padrão visual das demais
+// telas com este cabeçalho.
+.ficha-pagina__cabecalho-indice {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-compact);
+}
+
+// Mesma tipografia de `.detalhe-mestre__titulo`/`.detalhe__titulo` (campanha) — era `--font-sans`
+// fluido (`clamp`), destoando das demais telas com este cabeçalho, que usam mono 20px/700.
+.ficha-pagina__titulo {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ficha-pagina__campanha {
+    flex: 0 1 auto;
+    padding: var(--space-4) var(--space-8);
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+}
+
+.ficha-pagina__cabecalho-regua {
+    flex: 1 1 auto;
+    min-width: var(--space-12);
+    height: 1px;
+    background: var(--border);
+}
+
+@include bp.mobile {
+    .ficha-pagina__cabecalho {
+        flex-wrap: wrap;
+    }
+
+    .ficha-pagina__cabecalho-regua {
+        order: 3;
+        flex-basis: 100%;
     }
 }
 

@@ -110,7 +110,10 @@ describe('FichaVisualizar', () => {
       atribuirCampanha: vi.fn(() => of({ id: 42, campanhaId: null })),
       excluirFicha: vi.fn(() => of(undefined)),
     };
-    const campanhaService = { listarMembros: vi.fn(() => of(membros)) };
+    const campanhaService = {
+      listarMembros: vi.fn(() => of(membros)),
+      recuperarCampanha: vi.fn(() => of({ nome: 'Operação de teste' })),
+    };
     const sessaoService = {
       usuario: () => ({ id: opcoes.usuarioLogadoId, login: 'u', nome: 'U', token: 't' }),
     };
@@ -195,6 +198,57 @@ describe('FichaVisualizar', () => {
     expect(fichaService.listarAcessos).not.toHaveBeenCalled();
   });
 
+  it('concentra as ferramentas da ficha na coluna de ações', () => {
+    const { raiz } = montar({ usuarioLogadoId: 7 });
+
+    const rotulos = Array.from(raiz.querySelectorAll('.coluna-acoes__item')).map((item) =>
+      item.textContent?.trim(),
+    );
+
+    expect(rotulos).toEqual(expect.arrayContaining(['Histórico', 'Anotações', 'Calculadora', 'Caderno']));
+    // O gatilho flutuante próprio de cada painel some (mostrarGatilho=false) — a coluna de ações é
+    // o único lugar deles no desktop/tablet.
+    expect(raiz.querySelector('.historico-rolagens__gatilho')).toBeNull();
+    expect(raiz.querySelector('.calc-flutuante__gatilho')).toBeNull();
+  });
+
+  // O menu "⋯" do cabeçalho existe no DOM em qualquer largura (CSS o esconde fora do mobile) —
+  // duplica as mesmas ferramentas da coluna de ações para quando ela vira barra fixa no rodapé do
+  // mobile e colide com a `.ficha-nav` da própria ficha (m3-60).
+  it('duplica as mesmas ferramentas no menu "⋯" do cabeçalho, para o mobile', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    const botaoMenu = raiz.querySelector<HTMLButtonElement>('.ficha-pagina__menu-botao');
+    expect(botaoMenu).not.toBeNull();
+    botaoMenu?.click();
+    fixture.detectChanges();
+
+    const rotulosMenu = Array.from(raiz.querySelectorAll('.ficha-pagina__menu-item')).map((item) =>
+      item.textContent?.trim(),
+    );
+    expect(rotulosMenu).toEqual(
+      expect.arrayContaining(['Histórico', 'Anotações', 'Calculadora', 'Caderno']),
+    );
+  });
+
+  it('abre Histórico, Anotações e Calculadora pelos itens da coluna de ações', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    const acionar = (rotulo: string) => {
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item'))
+        .find((item) => item.textContent?.includes(rotulo))
+        ?.click();
+      fixture.detectChanges();
+    };
+
+    acionar('Histórico');
+    expect(raiz.querySelector('.historico-rolagens__painel')).not.toBeNull();
+
+    acionar('Anotações');
+    expect(raiz.querySelector('app-painel-flutuante .painel-flutuante__janela')).not.toBeNull();
+
+    acionar('Calculadora');
+    expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).not.toBeNull();
+  });
+
   it('gere o acesso via menu → dialog para o dono, com elegíveis corretos', () => {
     const { raiz, fixture, fichaService } = montar({ usuarioLogadoId: 7 });
     // Edição no próprio lugar: a leitura recebe ajustavel = true (dono/mestre).
@@ -216,35 +270,29 @@ describe('FichaVisualizar', () => {
     expect(rotulos).not.toContain('Dono');
   });
 
-  it('oferece o menu de acesso também para o mestre', () => {
+  it('oferece a ação de acesso também para o mestre', () => {
     const { raiz, fixture } = montar({ usuarioLogadoId: 99 });
     expect(fixture.componentInstance['podeGerenciar']()).toBe(true);
-    // O botão de menu (kebab) aparece; a dialog abre por ele.
-    expect(raiz.querySelector('.ficha-pagina__menu-botao')).not.toBeNull();
+    expect(raiz.textContent).toContain('Acesso de visualização');
     fixture.componentInstance['abrirAcesso']();
     fixture.detectChanges();
     expect(raiz.querySelector('app-modal .acesso')).not.toBeNull();
   });
 
-  describe('visibilidade no menu mobile', () => {
-    it('oferece Ocultar ficha no menu quando a ficha está visível', () => {
-      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
-      fixture.componentInstance['alternarMenu']();
-      fixture.detectChanges();
-
-      const item = raiz.querySelector('.ficha-pagina__menu-item--visibilidade');
-      expect(item?.textContent?.trim()).toBe('Ocultar ficha');
+  describe('visibilidade na coluna de ações', () => {
+    it('oferece Ocultar ficha quando a ficha está visível', () => {
+      const { raiz } = montar({ usuarioLogadoId: 7 });
+      expect(raiz.textContent).toContain('Ocultar ficha');
     });
 
-    it('abre a mesma dialog de confirmação da ficha e fecha o menu', () => {
+    it('abre a mesma dialog de confirmação da ficha', () => {
       const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
-      fixture.componentInstance['alternarMenu']();
+      const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find(
+        (item) => item.textContent?.includes('Ocultar ficha'),
+      );
+      botao?.click();
       fixture.detectChanges();
 
-      (raiz.querySelector('.ficha-pagina__menu-item--visibilidade') as HTMLButtonElement).click();
-      fixture.detectChanges();
-
-      expect(fixture.componentInstance['menuAberto']()).toBe(false);
       expect(document.body.textContent).toContain('Ocultar ficha?');
       expect(document.body.textContent).toContain(
         'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
@@ -253,9 +301,13 @@ describe('FichaVisualizar', () => {
   });
 
   describe('excluir ficha (m3-52)', () => {
-    it('não oferece "Excluir ficha" a um membro comum (sem menu de ações)', () => {
-      const { raiz } = montar({ usuarioLogadoId: 11 });
-      expect(raiz.querySelector('.ficha-pagina__menu-botao')).toBeNull();
+    it('não oferece "Excluir ficha" a um membro comum, nem na coluna nem no menu "⋯"', () => {
+      const { raiz, fixture } = montar({ usuarioLogadoId: 11 });
+      expect(raiz.textContent).not.toContain('Excluir ficha');
+
+      raiz.querySelector<HTMLButtonElement>('.ficha-pagina__menu-botao')?.click();
+      fixture.detectChanges();
+      expect(raiz.textContent).not.toContain('Excluir ficha');
     });
 
     it('abre a confirmação de exclusão pelo menu para o dono', () => {
@@ -288,11 +340,8 @@ describe('FichaVisualizar', () => {
 
   describe('remover da campanha', () => {
     it('oferece a ação quando a ficha está vinculada e remove antes de voltar ao acervo', () => {
-      const { raiz, fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
-      fixture.componentInstance['alternarMenu']();
-      fixture.detectChanges();
-
-      const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.ficha-pagina__menu-item')).find(
+      const { raiz, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+      const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find(
         (item) => item.textContent?.includes('Remover da campanha'),
       );
       expect(botao).toBeDefined();
@@ -303,14 +352,11 @@ describe('FichaVisualizar', () => {
     });
 
     it('não oferece a ação quando a ficha já está solta no acervo', () => {
-      const { raiz, fixture } = montar({
+      const { raiz } = montar({
         usuarioLogadoId: 7,
         semCampanhaNaRota: true,
         fichaCampanhaId: null,
       });
-      fixture.componentInstance['alternarMenu']();
-      fixture.detectChanges();
-
       expect(raiz.textContent).not.toContain('Remover da campanha');
     });
   });

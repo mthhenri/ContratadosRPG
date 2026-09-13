@@ -5,7 +5,27 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-13 · **Última decisão registrada:**
-> `ficha-campanha-card-resistencias-coloridas` concluída — no card de Identidade do
+> pós-`ui-34`, rodadas de feedback do autor concluídas — edição de Atributos virou grade de caixas
+> (mesmo shell da leitura), com nova variante `discreto` e tamanhos `micro`/`grande` em
+> `shared/ui/stepper`; DT/Proficiência/Maestria só ficam lado a lado acima de um novo
+> `$bp-desktop` (1600px), a grade de 5 atributos (leitura) usa `repeat(auto-fit, minmax(120px,
+> 1fr))`, e o d20 de rolagem voltou a ficar sempre no canto superior direito (revertendo m3-60 só
+> pro mobile). Em seguida: `app-coluna-acoes` ficava inalcançável no mobile (colidia com a
+> `.ficha-nav` própria da ficha) — restaurado um menu "⋯" mobile-only que duplica a coluna inteira,
+> mesmo padrão de `CampanhaDetalheJogador`; o cabeçalho ganhou a tipografia mono 20px/700 e o chip
+> `//` em caixa, iguais a `detalhe-mestre`; novo ícone `caderno` (antes reaproveitava `anotacoes`,
+> indistinguível ao lado de "Anotações"); e o painel de Anotações deixou de forçar `[mobile]`
+> fixo — agora arrasta/redimensiona como Calculadora/Caderno fora do mobile real. Verificado ao
+> vivo nos 4 viewports padrão. Detalhe em `HISTORY.md`.
+> Antes: `ui-34-ficha-completa-redesenho` concluída — a ficha completa agora usa a mesma casca do
+> detalhe de campanha: `app-coluna-acoes`, cabeçalho com contexto da campanha, duas colunas 40/60
+> no desktop e colapso no tablet. Histórico, Anotações, Calculadora e Caderno são acionados pela
+> coluna; Nível, Prestígio, Dinheiro, Salário e Patente ficaram reunidos em Informações. Anotações
+> passaram ao painel flutuante. A coluna esquerda usa `//` numa caixa compacta nos cabeçalhos e põe o perfil ao lado
+> do resumo tático, com cinco atributos por grupo no desktop. O resumo de Atributos usa faixas de
+> 2px verticais; DT mostra só a fórmula, sem título duplicado. Verificado na aplicação real em
+> 1920×1080, 1366×768, 960×1080 e 360×800; detalhe em `HISTORY.md`.
+> Antes: `ficha-campanha-card-resistencias-coloridas` concluída — no card de Identidade do
 > `FichaCampanhaCard` (visão de campanha do jogador), "Reações" e "Resistências" (antes duas
 > legendas "só leitura" separadas por um divisor) viraram uma legenda única "Reações e
 > Resistências" sem divisor entre os dois blocos; cada caixa de Resistência ganhou cor por
@@ -20,9 +40,8 @@
 > comportamento/regra, só descompartilhamento; os 5 consumidores reais trocaram a tag/import,
 > `visualizar.page` sem mudança de atributo. Extração de sub-componentes (Identidade/Reações/
 > Resistências, item 2 da spec) avaliada e **adiada** por decisão consciente — ver `HISTORY.md` e
-> `IDEAS.md`. Pré-requisito de `ui-34-ficha-completa-redesenho` (ainda em `docs/specs/active/`,
-> aguardando a próxima sessão atualizar suas referências de linha, que hoje apontam pro
-> `FichaVisualizacao` de antes da separação).
+> `IDEAS.md`. Pré-requisito de `ui-34-ficha-completa-redesenho`, já consumido pela tarefa concluída
+> acima.
 > Antes: `ui-33` concluída — painel
 > lateral do jogador vira 3 abas (Rolagens/Esquadrão/Inv. Esquadrão): Rolar+Histórico fundidos,
 > aba Sessão removida, card "Equipe" virou a aba "Esquadrão" com avatar 60px (era 28px, passou por
@@ -204,9 +223,8 @@ encontro de Iniciativa) nos 4 viewports padrão e nos 5 consumidores: ficha comp
 do jogador (+ edição de Dinheiro no próprio lugar, + aba Inventário), prévia do mestre, painel de
 Iniciativa e ficha flutuante — todos idênticos ao comportamento documentado, sem overflow, sem
 regressão. Spec em `docs/specs/done/ficha-separar-completa-e-campanha-card.spec.md`.
-`ui-34-ficha-completa-redesenho` (`docs/specs/active/`) ainda cita linhas do `FichaVisualizacao`
-compartilhado de antes desta separação — precisa ser reconferida/atualizada antes de começar a
-implementação.
+`ui-34-ficha-completa-redesenho` já foi concluída (ver entrada no topo deste arquivo e em
+`HISTORY.md`) — spec em `docs/specs/done/`.
 
 **Antes: `ui-33-esquadrao-aba-detalhe-jogador` concluída (2026-09-12):** painel lateral do jogador
 (`CampanhaDetalheJogador`) reorganizado de 4 abas (Rolar/Sessão/Histórico/Invent.) + o card sempre

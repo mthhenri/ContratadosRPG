@@ -142,4 +142,105 @@
             }
         }
     }
+
+    // Menor que `--mini` — pro caso de vários steppers secundários convivendo lado a lado com um
+    // principal maior (`--grande`) e precisando ceder ainda mais espaço a ele (ex.: modificador/
+    // dados na edição de Atributos da ficha, ao lado do valor do atributo).
+    &--micro {
+        background: var(--surface);
+
+        .stepper__botao {
+            width: 20px;
+            font-size: 11px;
+        }
+
+        .stepper__valor {
+            padding: var(--space-4);
+            font-size: 10px;
+        }
+
+        @include bp.mobile {
+            .stepper__botao {
+                width: bp.$alvo-toque;
+                font-size: 20px;
+            }
+
+            .stepper__valor {
+                padding: var(--space-12) var(--space-8);
+                font-size: 20px;
+            }
+        }
+    }
+
+    // Maior que `--padrao` — pro caso de um valor central ser o protagonista visual do grupo (ex.:
+    // valor do atributo na edição, ao lado dos steppers `--micro` de modificador/dados). O botão
+    // cresce pouco (a caixa mais estreita do card de Atributos em 5 colunas, ~85px a 1366×768, não
+    // sobra espaço pra um botão bem maior sem espremer o valor) — o ganho de destaque vem do
+    // `font-size` do valor, não do botão.
+    &--grande {
+        background: var(--surface);
+
+        .stepper__botao {
+            width: 28px;
+            font-size: 20px;
+        }
+
+        .stepper__valor {
+            // Chão de largura: numa caixa estreita (5 colunas a 1366×768, ~85px de caixa), sem isso
+            // o valor (`flex:1`, `min-width:0` na regra base) cede espaço demais aos botões e o
+            // dígito quase some. Com o chão, quem cede é o botão (ainda encolhe, só que fica pequeno
+            // em vez do valor ficar ilegível) — o quadrado shrinka mas continua quadrado
+            // (`aspect-ratio` no `--discreto`).
+            min-width: 22px;
+            padding: var(--space-4) var(--space-8);
+            font-size: 22px;
+        }
+
+        @include bp.mobile {
+            .stepper__botao {
+                width: bp.$alvo-toque;
+            }
+
+            .stepper__valor {
+                font-size: 26px;
+            }
+        }
+    }
+
+    // Sem cápsula: cada peça (botão/botão/valor) solta, sem fundo — pro valor central ficar "livre"
+    // e os botões virarem contorno simples que só ganha preenchimento no hover. Pensado pra convívio
+    // de vários steppers lado a lado (edição de Atributos da ficha), onde o fundo cheio de cada
+    // cápsula pesava. Sobrescreve o `background` que os outros modificadores de tamanho fixam acima
+    // — por vir depois no arquivo, com a mesma especificidade (uma classe), a cascata resolve a
+    // favor deste.
+    &--discreto {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        overflow: visible;
+        gap: 4px;
+
+        .stepper__botao {
+            // `aspect-ratio` (em vez de uma altura fixa por tamanho) mantém o botão quadrado com
+            // qualquer `width` — inclusive o do alvo de toque no mobile — sem precisar repetir a
+            // régua de altura em cada `&--*` acima. Sem o `align-items: stretch` do container base
+            // (que esticava os botões pra acompanhar a altura do valor), o botão fica livre pra
+            // assumir a própria altura via `aspect-ratio`.
+            aspect-ratio: 1 / 1;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-control);
+
+            &:hover:not(:disabled) {
+                background: rgba(255, 255, 255, 0.05);
+                border-color: var(--accent-border);
+                color: var(--text);
+            }
+        }
+
+        .stepper__valor {
+            border-inline: 0;
+            padding-inline: var(--space-4);
+        }
+    }
 }

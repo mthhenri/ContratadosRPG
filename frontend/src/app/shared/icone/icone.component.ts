@@ -31,6 +31,11 @@ import { Component, input } from '@angular/core';
  * `vincular`, ícone "link" inteiro da Tabler Icons (MIT) — ação "Vincular ficha existente" do
  * jogador (ui-33 follow-up; antes reaproveitava `duplicar`, que já tem sentido próprio de clonar
  * uma ficha, m3-52), distinto do selo elo-de-corrente recortado usado em `link`.
+ * `caderno`, caderno espiral: ação "Caderno" (registro compartilhado da campanha) na coluna de
+ * ações/menu "⋯" da ficha — antes reaproveitava `anotacoes`, o mesmo glifo já usado para as
+ * Anotações da própria ficha (achado ao vivo pelo autor: os dois itens ficavam indistinguíveis
+ * lado a lado no menu), distinto também de `documentos` (livro aberto, reservado ao leitor global
+ * de Sistema/Guia do Mestre).
  */
 export type IconeNome =
   | 'agente'
@@ -112,7 +117,8 @@ export type IconeNome =
   | 'carregando'
   | 'fantasma'
   | 'membros'
-  | 'vincular';
+  | 'vincular'
+  | 'caderno';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

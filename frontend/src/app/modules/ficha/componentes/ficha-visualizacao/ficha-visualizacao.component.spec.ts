@@ -112,6 +112,15 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('select')).toBeNull();
   });
 
+  it('marca Identidade e Atributos com o símbolo // em caixa compacta', () => {
+    const { raiz } = montar(dados);
+    const indices = Array.from(raiz.querySelectorAll('.ficha-cartao__indice')).map((indice) =>
+      indice.textContent?.trim(),
+    );
+
+    expect(indices).toEqual(['//', '//']);
+  });
+
   it('repassa a disponibilidade e a solicitação de mandar item para a base', () => {
     const alvo = montar(dados, 'Corvo', 42, true);
     alvo.fixture.componentRef.setInput('podeMandarParaBase', true);
@@ -656,27 +665,40 @@ describe('FichaVisualizacao', () => {
     expect(raiz.querySelector('.ficha-passo')).toBeNull();
   });
 
-  describe('ficha oculta (m3-65)', () => {
-    it('mostra Ocultar com nome acessível de ação quando a ficha está visível', () => {
+  // O toggle de fato (m3-65) migrou para a barra de ações da página (`visualizar.page.html`,
+  // "Ocultar ficha"/"Exibir ficha") — ela já chama `solicitarAlteracaoVisibilidade()` neste
+  // componente (`visualizar.page.ts`). O card de Identidade só mostra um selo somente leitura no
+  // cabeçalho; o fluxo de confirmação (dialog + emissão de `ajusteOculta`) continua aqui e
+  // passou a ser exercitado chamando o método público diretamente, no lugar do clique no botão
+  // removido.
+  describe('selo de visibilidade no cabeçalho (m3-65)', () => {
+    it('mostra "Ficha visível" com o ícone de olho aberto quando não está oculta', () => {
       const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
 
-      const botao = raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement;
-      expect(botao.textContent?.trim()).toBe('Ocultar');
-      expect(botao.getAttribute('aria-label')).toBe('Ocultar ficha de outros jogadores');
-      const icone = fixture.debugElement.query(By.css('.ficha-ident__visibilidade app-icone'));
-      expect(icone.componentInstance.nome()).toBe('olho-fechado');
+      const selo = raiz.querySelector('.ficha-identidade__visibilidade-selo')!;
+      expect(selo.textContent?.trim()).toBe('Ficha visível');
+      expect(selo.classList.contains('ficha-identidade__visibilidade-selo--oculta')).toBe(false);
+      const icone = fixture.debugElement.query(By.css('.ficha-identidade__visibilidade-selo app-icone'));
+      expect(icone.componentInstance.nome()).toBe('olho');
     });
 
-    it('mostra Exibir com nome acessível de ação quando a ficha está oculta', () => {
+    it('mostra "Ficha oculta" com o ícone de olho fechado quando está oculta', () => {
       const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
       fixture.componentRef.setInput('oculta', true);
       fixture.detectChanges();
 
-      const botao = raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement;
-      expect(botao.textContent?.trim()).toBe('Exibir');
-      expect(botao.getAttribute('aria-label')).toBe('Exibir ficha para outros jogadores');
-      const icone = fixture.debugElement.query(By.css('.ficha-ident__visibilidade app-icone'));
-      expect(icone.componentInstance.nome()).toBe('olho');
+      const selo = raiz.querySelector('.ficha-identidade__visibilidade-selo')!;
+      expect(selo.textContent?.trim()).toBe('Ficha oculta');
+      expect(selo.classList.contains('ficha-identidade__visibilidade-selo--oculta')).toBe(true);
+      const icone = fixture.debugElement.query(By.css('.ficha-identidade__visibilidade-selo app-icone'));
+      expect(icone.componentInstance.nome()).toBe('olho-fechado');
+    });
+
+    it('mostra o selo mesmo quando não é ajustável (só leitura) — não é mais um controle', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, false);
+      expect(raiz.querySelector('.ficha-identidade__visibilidade-selo')?.textContent?.trim()).toBe(
+        'Ficha visível',
+      );
     });
 
     it('abre o aviso de ocultar sem emitir antes da confirmação', () => {
@@ -684,7 +706,7 @@ describe('FichaVisualizacao', () => {
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.componentInstance.solicitarAlteracaoVisibilidade();
       fixture.detectChanges();
 
       expect(raiz.textContent).toContain('Ocultar ficha?');
@@ -699,7 +721,7 @@ describe('FichaVisualizacao', () => {
       fixture.componentRef.setInput('oculta', true);
       fixture.detectChanges();
 
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.componentInstance.solicitarAlteracaoVisibilidade();
       fixture.detectChanges();
 
       expect(raiz.textContent).toContain('Exibir ficha?');
@@ -713,7 +735,7 @@ describe('FichaVisualizacao', () => {
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.componentInstance.solicitarAlteracaoVisibilidade();
       fixture.detectChanges();
       (raiz.querySelector('[data-testid="cancelar-visibilidade"]') as HTMLButtonElement).click();
       fixture.detectChanges();
@@ -735,7 +757,7 @@ describe('FichaVisualizacao', () => {
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
+      fixture.componentInstance.solicitarAlteracaoVisibilidade();
       fixture.detectChanges();
       (raiz.querySelector('[data-testid="confirmar-visibilidade"]') as HTMLButtonElement).click();
       fixture.detectChanges();
@@ -744,11 +766,6 @@ describe('FichaVisualizacao', () => {
       expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
         false,
       );
-    });
-
-    it('não mostra o toggle quando não é ajustável (só leitura)', () => {
-      const { raiz } = montar(dados, 'Corvo', 42, false);
-      expect(raiz.querySelector('.ficha-ident__visibilidade')).toBeNull();
     });
   });
 
@@ -975,16 +992,17 @@ describe('FichaVisualizacao', () => {
     expect(ajustes).toEqual([{ classe: ClasseEnum.CIVIL, arquetipo: null }]);
   });
 
-  it('mostra os alvos de edição de identidade (Codinome/Nível/Prestígio/Dinheiro) quando ajustável', () => {
+  it('mantém os alvos de Identidade e leva a progressão editável para Informações', () => {
     const { raiz } = montar(dados, 'Corvo', 42, true);
     expect(raiz.querySelector('.ficha-ident__nome .valor-editavel__botao')).not.toBeNull();
-    // Nível, Prestígio, Dinheiro, Defesa, Esquiva e Bloqueio editáveis (Patente e Salário seguem
-    // derivados, não editáveis; Contra-ataque só entra com a habilidade — fora deste fixture).
-    // Escopado ao card de Identidade — o card de Status tem seus próprios editáveis (Deslocamento
-    // e cia., redesenho de comparação visual).
+    // Na Identidade sobram apenas as três reações editáveis. Nível, Prestígio e Dinheiro pertencem
+    // ao grupo de progressão da aba Informações; Patente e Salário seguem derivados.
     expect(
       raiz.querySelectorAll('.ficha-visao__coluna--identidade .ficha-mini__valor .valor-editavel__botao').length,
-    ).toBe(6);
+    ).toBe(3);
+    expect(
+      raiz.querySelectorAll('.ficha-status__progressao .valor-editavel__botao').length,
+    ).toBe(3);
   });
 
   it('emite os eventos certos ao confirmar Codinome/Nível/Prestígio', () => {
@@ -2496,10 +2514,13 @@ describe('FichaVisualizacao', () => {
       expect(raiz.textContent).not.toContain('Veterano de contenção.');
     });
 
-    it('mostra a caixa de anotações para dono/mestre (ajustavel)', () => {
-      const { raiz } = montar(dados, 'Corvo', 42, true, false);
-      expect(raiz.querySelector('.ficha-status__anotacoes-caixa')).not.toBeNull();
-      expect(raiz.textContent).toContain('Veterano de contenção.');
+    it('mostra as anotações no painel flutuante para dono/mestre', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false);
+      alvo.fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      alvo.fixture.detectChanges();
+
+      expect(alvo.raiz.querySelector('#ficha-anotacoes .painel-flutuante__janela')).not.toBeNull();
+      expect(alvo.raiz.textContent).toContain('Veterano de contenção.');
     });
 
     it('anotacoes ausente (omitida no backend pro visualizador) não quebra a leitura', () => {
@@ -2611,5 +2632,13 @@ describe('FichaVisualizacao', () => {
       expect(alvo.ajusteImagem).toEqual([arquivo]);
       expect(alvo.focoMudou).toEqual([{ x: 5, y: 15, escala: 1 }]);
     });
+  });
+
+  it('resume a DT apenas pela fórmula, sem repetir o rótulo da caixa', () => {
+    const { raiz } = montar(dados);
+    const formula = raiz.querySelector('.ficha-atributos__formula')!;
+
+    expect(formula.querySelector('.ficha-mini__rotulo')).toBeNull();
+    expect(formula.querySelector('.chip-formula')?.textContent?.trim()).toContain('DT = 10');
   });
 });

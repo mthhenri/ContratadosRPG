@@ -8,7 +8,7 @@
         aria-expanded="false"
         (click)="estado().aberto ? painelRef()?.restaurar() : abrir()"
     >
-        <app-icone nome="anotacoes" />
+        <app-icone nome="caderno" />
     </button>
 }
 
@@ -295,7 +295,7 @@
                     <p class="caderno__estado">Escolha um jogador para consultar o caderno.</p>
                 } @else if (store.paginas().length === 0) {
                     <app-estado-vazio
-                        icone="anotacoes"
+                        icone="caderno"
                         titulo="Nenhuma página ainda"
                         [linhaApoio]="
                             modoCaderno() === 'MEU'
@@ -543,7 +543,7 @@
                     }
                 } @else {
                     <div class="caderno__vazio caderno__vazio--editor">
-                        <app-icone nome="anotacoes" />
+                        <app-icone nome="caderno" />
                         <strong>Selecione uma página</strong>
                         <span>Escolha uma página ao lado para ler ou continuar escrevendo.</span>
                     </div>

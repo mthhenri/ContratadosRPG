@@ -443,6 +443,174 @@
     }
 }
 
+// ui-34: a ficha completa reúne Identidade e Atributos na faixa esquerda (40%) e deixa Status
+// ocupar a faixa de leitura (60%). O agrupador deixa de ser transparente só nesta apresentação;
+// no card de campanha ele já desempenha esta mesma função.
+.ficha-visao:not(.ficha-visao--compacto) {
+    .ficha-visao__coluna-agente {
+        display: flex;
+        flex: 2 1 0;
+        flex-direction: column;
+        gap: var(--gap-grid);
+        min-width: 0;
+    }
+
+    .ficha-visao__coluna--identidade,
+    .ficha-visao__coluna--atributos {
+        width: 100%;
+    }
+
+    .ficha-visao__coluna--status {
+        flex: 3 1 0;
+        min-width: 0;
+    }
+
+    .ficha-visao__linha-colunas {
+        @include bp.tablet {
+            .ficha-visao__coluna-agente {
+                flex: 1 1 auto;
+            }
+        }
+    }
+}
+
+// Dentro do `app-painel-flutuante` (m3-32/redimensionamento): `flex:1` deixa a caixa (e, por
+// tabela, o campo de texto) crescer junto com a janela ao arrastar a alça de redimensionar — sem
+// isso a caixa ficava presa no `min-height` e sobrava vão em branco abaixo dela.
+.ficha-status__anotacoes-caixa--painel {
+    flex: 1 1 auto;
+    min-height: 220px;
+
+    .ficha-status__anotacoes-campo {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+}
+
+// Alça de redimensionar do painel de Anotações — mesmo visual/comportamento de
+// `CadernoFlutuante.__redimensionar` (canto inferior direito, arraste livre nos dois eixos).
+.ficha-status__anotacoes-redimensionar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    touch-action: none;
+
+    &::after {
+        content: "";
+        position: absolute;
+        right: 4px;
+        bottom: 4px;
+        width: 8px;
+        height: 8px;
+        border-right: 1px solid var(--accent);
+        border-bottom: 1px solid var(--accent);
+    }
+}
+
+// Cinco valores que contextualizam a progressão pertencem à aba Informações: a grade mantém o
+// mesmo mini-card do sistema e cai para duas colunas quando o painel fica estreito.
+.ficha-status__progressao {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+
+    .ficha-ident__stats-linha {
+        display: contents;
+    }
+
+    .ficha-mini--largo {
+        grid-column: auto;
+    }
+
+    @include bp.tablet {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.ficha-visao:not(.ficha-visao--compacto) {
+    // DT/Proficiência/Maestria lado a lado só no Full HD "de verdade" (`bp.desktop-amplo`,
+    // ≥1600px): abaixo disso a coluna de Atributos (1 das 3 da Visão Geral) encolhe demais pro
+    // texto longo da fórmula de DT conviver com Proficiência e Maestria na mesma linha sem apertar
+    // — inclusive no notebook (1366×768), que já fica do lado "largo" de `bp.tablet` mas ainda é
+    // estreito demais aqui. Por padrão a fórmula ocupa a linha inteira sozinha (`grid-column`) e
+    // Proficiência/Maestria dividem a linha de baixo.
+    .ficha-atributos__resumo {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 10px;
+
+        @include bp.desktop-amplo {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    .ficha-atributos__formula {
+        grid-column: 1 / -1;
+        margin: 0;
+        text-align: left;
+
+        @include bp.desktop-amplo {
+            grid-column: auto;
+        }
+    }
+
+    .ficha-atributos__prof-maestria {
+        display: contents;
+    }
+
+    // Leitura: sem régua de breakpoint — o container decide quantas colunas cabem (5 a 1920px,
+    // menos onde a coluna de Atributos é mais estreita: 3+2 no notebook, ou o que couber na tela
+    // dividida). Resolve o mesmo problema do bloco acima (texto/caixa espremidos ou colunas largas
+    // demais sobrando espaço), só que de um jeito fluido — aqui os 5 itens são só números, sem
+    // texto longo que precise de um corte binário estampado/empilhado.
+    .ficha-atributos--2col .ficha-atributos__grade:not(.ficha-atributos__grade--edicao) {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+
+        // Desfaz a centralização do 5º órfão que `--2col` (regra genérica, fora deste bloco) fixa
+        // pra grade fixa de 2 colunas — com `auto-fit` o número de colunas varia, então o item
+        // sempre cair na 1ª coluna da última linha (sem span nem 50% de largura) é o que continua
+        // parecendo natural em qualquer contagem de colunas.
+        > *:nth-child(5) {
+            grid-column: auto;
+            justify-self: stretch;
+            width: auto;
+        }
+    }
+
+    // Edição: mantém a régua fixa de antes (5 colunas, 2 na faixa de `bp.tablet`) — o valor
+    // `--grande` + os steppers `--micro` de modificador/dados não convivem tão bem com colunas de
+    // largura fluida (`auto-fit`) quanto o texto simples da leitura acima.
+    .ficha-atributos--2col .ficha-atributos__grade.ficha-atributos__grade--edicao {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+
+        > *:nth-child(5) {
+            grid-column: auto;
+            justify-self: stretch;
+            width: auto;
+        }
+
+        @include bp.tablet {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    // Em edição, cada caixa ganha 3 steppers (valor, modificador, dados) — os botões incham pro
+    // alvo de toque (44px, `step-input.component.scss`) só em `bp.mobile` (560px); 2 colunas nessa
+    // faixa não cabem 3 steppers de 44px cada. `--edicao` vira 1 coluna só aqui — precisa de 5
+    // classes no seletor pra vencer a regra de 2 colunas do `bp.tablet` logo acima (3 classes, e
+    // `bp.mobile` é subconjunto de `bp.tablet`: as duas media queries batem ao mesmo tempo a
+    // 360px, então quem decide é a especificidade, não a ordem no arquivo).
+    @include bp.mobile {
+        .ficha-atributos--2col .ficha-atributos__grade.ficha-atributos__grade--edicao {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
 // Dentro da ficha flutuante do Encontro, o corpo da janela é a única superfície que rola no
 // mobile. Extras normalmente ganha um painel interno limitado para coexistir com a coluna lateral;
 // nessa janela essa coluna não existe, portanto o limite só criaria uma segunda barra concorrente.
@@ -494,6 +662,22 @@
             text-transform: none;
             letter-spacing: 0;
         }
+    }
+
+    &__indice {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-compact);
     }
 
     &__regua {
@@ -573,6 +757,166 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+}
+
+// A coluna da ficha segue o recorte de leitura da referência: perfil permanente à esquerda e
+// consulta tática concentrada à direita. Os modais permanecem fora da grade para não criar um
+// contexto de empilhamento novo para os diálogos nativos.
+.ficha-cartao--identidade {
+    // Menos respiro embaixo de Personalidade/Origem (pedido do autor, reduzido de novo — era 20px,
+    // depois 12px) — essa faixa é o último item do card, então sobra do `--pad-card` padrão vira
+    // espaço morto abaixo dela.
+    padding-bottom: 6px;
+
+    // Selo de visibilidade no cabeçalho (pedido do autor): o botão que ficava na coluna do avatar
+    // saiu — o toggle de verdade já mora na barra de ações (`visualizar.page.html`) — e virou só
+    // leitura, no canto oposto ao `//`/título, depois da régua (mesmo lugar do lápis de Atributos).
+    .ficha-identidade__visibilidade-selo {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex: 0 0 auto;
+        color: var(--text-mute);
+
+        app-icone {
+            font-size: 12px;
+        }
+
+        &--oculta {
+            color: var(--warning);
+        }
+    }
+
+    // Nome + Contrato numa linha só, ocupando a largura inteira do card (pedido do autor): antes
+    // moravam dentro de `.ficha-ident__coluna-texto`, ao lado do avatar, o que espremia os dois.
+    // `space-between` com só os dois filhos já empurra o Contrato pro fim da linha sem precisar de
+    // `margin-left: auto`; `flex-wrap` deixa o Contrato cair pra uma 2ª linha em vez de espremer o
+    // Nome quando não cabem os dois (nome muito comprido + viewport estreito).
+    .ficha-identidade__nome-linha {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        margin-bottom: 16px;
+
+        @include bp.mobile {
+            justify-content: center;
+            text-align: center;
+        }
+    }
+
+    // Era 50/50 (`1fr 1fr`); a coluna da foto encolheu pra um valor fixo (pedido do autor: caixa de
+    // 190px + ~20px de respiro de cada lado ≈ 230px) e Reações/Vitalidade absorve o resto — a
+    // coluna da foto não precisa acompanhar a largura do card, só a da própria foto.
+    .ficha-identidade__corpo {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: var(--gap-grid);
+        align-items: start;
+    }
+
+    .ficha-identidade__perfil,
+    .ficha-identidade__combate {
+        min-width: 0;
+    }
+
+    .ficha-identidade__perfil {
+        display: flex;
+        flex-direction: column;
+    }
+
+    // Os dois `app-modal` pertencem semanticamente ao perfil, mas ficam entre os dois blocos no
+    // DOM para preservar o foco e os eventos existentes. No layout em grade, o host não pode
+    // reservar uma célula invisível; o diálogo nativo continua no top layer quando aberto.
+    > .ficha-identidade__corpo > app-modal {
+        display: contents;
+    }
+
+    > .ficha-identidade__corpo > .ficha-cartao__divisor {
+        display: none;
+    }
+
+    // Centralizado (era `flex-start`, pedido do autor): com a coluna da foto fixa em 230px (acima),
+    // a foto de 190px sobra ~20px de cada lado só se ficar no meio — o chip de classe/arquétipo
+    // centraliza junto, como um bloco só (não estica, então "seguir o centro" é automático).
+    .ficha-ident {
+        align-items: center;
+        margin-bottom: 0;
+    }
+
+    .ficha-identidade__combate {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        // `@container`, não `bp.*` (achado ao vivo em `1366×768`, mesma classe de bug já documentada
+        // em `ficha-campanha-card.component.scss`): a Identidade divide a linha com Atributos/Status
+        // nesse viewport, então essa coluna fica com ~214px de sobra mesmo acima do `bp.mobile`
+        // (560px) — a largura de sobra depende do card, não do viewport. Vida/Energia lado a lado
+        // (`.ficha-vitalidade` abaixo) só ativa quando o container realmente tem espaço.
+        container-type: inline-size;
+
+        .ficha-condicoes {
+            margin-top: 0;
+        }
+
+        .ficha-cartao__subrotulo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+
+            &::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: var(--border);
+            }
+        }
+    }
+
+    // Linha de fechamento (pedido do autor): cobre a largura inteira do card, da coluna da foto até
+    // a das Resistências — 3º item direto de `.ficha-identidade__corpo` (grid de 2 colunas), por
+    // isso o próprio `grid-column`. Cai numa linha nova abaixo das duas colunas (a mais alta das
+    // duas manda), então não precisa acompanhar a altura de nenhuma das duas.
+    .ficha-identidade__divisor-rodape {
+        grid-column: 1 / -1;
+        height: 1px;
+        // 6px (era 14px, pedido do autor) — menos respiro entre Resistências e a linha.
+        margin-top: 6px;
+        background: var(--border);
+    }
+
+    // Personalidade/Origem (pedido do autor): desceu pra baixo da linha de fechamento acima — não
+    // mais dentro de `__perfil` (coluna estreita de 230px) — e virou o 4º item direto de
+    // `.ficha-identidade__corpo`, com o mesmo `grid-column` do divisor. Lado a lado, ocupando a
+    // largura inteira do card (bem mais espaço que a coluna da foto sozinha).
+    .ficha-identidade__meta-bloco {
+        grid-column: 1 / -1;
+        // 4px (era 14px, depois 8px, pedido do autor): menos respiro entre a linha de fechamento e
+        // o texto.
+        margin-top: 4px;
+
+        .ficha-ident__meta {
+            flex-direction: row;
+            gap: 32px;
+
+            @include bp.mobile {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    }
+
+    @include bp.tablet {
+        .ficha-identidade__corpo {
+            grid-template-columns: 1fr;
+        }
+
+        .ficha-ident {
+            margin-bottom: 0;
+        }
+    }
 }
 
 // Card de Status (terceira coluna, redesenho de comparação visual): a barra de abas substitui o
@@ -1347,23 +1691,15 @@
 
 // === Card de identidade ===
 .ficha-ident {
+    // Coluna (era `flex` em linha + `bp.mobile` virando coluna): Nome/Contrato saíram pra
+    // `__nome-linha`, no topo do card (pedido do autor) — sobrou só a foto e, embaixo dela, o chip
+    // de classe/arquétipo (`__chips-coluna`), então a mesma pilha vertical já serve pras duas
+    // larguras, sem precisar de um breakpoint só pra trocar a direção do flex.
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     margin-bottom: 16px;
-
-    // Avatar maior "gira" a Identidade pra um layout de duas colunas (m3-62 follow-up, design
-    // 2026-08-10-avatar-maior-ficha-design.md): no desktop a foto vira uma coluna própria e
-    // `__coluna-texto` (Nome/Contrato + Personalidade/Origem) ocupa o resto da linha ao lado dela —
-    // é por isso que Personalidade/Origem (`__meta`) mudou de irmã de `.ficha-ident` pra filha de
-    // `__coluna-texto` (ver HTML): as duas passam a compartilhar o mesmo eixo vertical do avatar.
-    // No mobile empilha (foto centralizada no topo, nome/contrato centralizados abaixo dela) — a
-    // coluna de texto ao lado do avatar de 150px sobraria estreita demais pra caber com conforto.
-    @include bp.mobile {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
 
     // Cor de identidade visual da ficha (m3-61): a borda do avatar carrega a cor (onde a foto do
     // agente entra, m3-62) — `var(--cor-ficha, var(--border-strong))` mantém a moldura neutra de
@@ -1374,12 +1710,11 @@
     // idêntico ao cinza neutro de antes; não usa os tokens globais `--cor-ficha-dim`/`-border`
     // (`_tokens.scss`) porque o fallback deles é `--accent`, não neutro — tingiria o placeholder de
     // toda ficha sem cor escolhida.
-    // 150px (era 100px, ui-33 follow-up — pedido do autor, validado no mockup poc-jogador.html) —
-    // raio também subiu pra `--radius-card` (era `--radius-control`), mesma identidade do avatar
-    // maior do Esquadrão (80px, mesmo raio).
+    // 175px (era 135px — antes, 190px, 150px e 100px, nessa ordem; pedido do autor foi e voltou
+    // aumentando) — raio continua `--radius-card`.
     &__avatar {
-        width: 150px;
-        height: 150px;
+        width: 175px;
+        height: 175px;
         flex: none;
         position: relative; // ancora o <input type="color"> invisível, quando editável (--editavel)
         border-radius: var(--radius-card);
@@ -1425,27 +1760,22 @@
     }
 
     // Avatar da ficha (m3-62) — coluna só para acomodar o aviso de validação abaixo da caixa do
-    // avatar sem desalinhar o `.ficha-ident` (flex-row, align-items: center).
+    // avatar sem desalinhar `.ficha-ident` (coluna, ver acima).
     &__avatar-coluna {
         display: flex;
         flex-direction: column;
         gap: 4px;
     }
 
-    // Nome/Contrato + Personalidade/Origem lado a lado do avatar (m3-62 follow-up) — `gap` (não
-    // margin-bottom em cada filho) espaça `__texto` e `__meta` uniformemente, e é ela quem decide o
-    // quanto a coluna "estica" pra acompanhar a altura do avatar de 150px.
-    &__coluna-texto {
+    // Chip de Classe/Arquétipo embaixo da foto (pedido do autor — era ao lado, em `__coluna-texto`,
+    // que saiu junto com Nome/Contrato pra `__nome-linha`). Só o chip mesmo mora aqui agora; o
+    // `<ng-template>` de Nível/Prestígio nem chega a renderizar neste ponto do template (outlet fica
+    // na aba Informações do Status).
+    &__chips-coluna {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        gap: 10px;
-        flex: 1 1 0;
+        gap: 8px;
         min-width: 0;
-
-        @include bp.mobile {
-            width: 100%;
-        }
     }
 
     // Moldura própria pro crop — o `overflow: hidden` não pode ficar direto em `&__avatar`, porque
@@ -1537,36 +1867,15 @@
         font-size: 11px;
     }
 
-    &__texto {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        min-width: 0;
-
-        // Só o Nome/Contrato centraliza no mobile (avatar empilhado em cima, m3-62 follow-up) —
-        // Personalidade/Origem (`__meta`, mais abaixo) fica de fora de propósito: ela mantém a leitura
-        // rótulo-em-cima/valor-embaixo de sempre, à esquerda, ocupando a largura toda do card.
-        @include bp.mobile {
-            align-items: center;
-            text-align: center;
-        }
-    }
-
-    &__rotulo {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--text-mute);
-    }
-
     &__nome {
         font-family: var(--font-mono);
-        font-size: 24px;
+        font-size: 28px;
         font-weight: 700;
         color: var(--text);
         line-height: 1.1;
         margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
     }
 
     &__entrada {
@@ -1586,25 +1895,23 @@
         }
     }
 
-    // Personalidade e Origem empilhados, não lado a lado (ui-33 follow-up — era `flex` em linha,
-    // duas colunas; achado ao vivo em `1366×768`). Dentro de `&__coluna-texto`, ao lado do avatar de
-    // 150px, essa faixa nunca tem muita largura sobrando (~165-215px em qualquer desktop que não
-    // empilhe pelo `bp.tablet`) — dividida em 2 colunas ficava sempre apertada (lápis de Origem
-    // pulando de linha, rótulo "PERSONALIDADE" invadindo a coluna vizinha). Empilhado, cada campo
-    // ganha a largura inteira disponível e sobra espaço de sobra pro valor + lápis na mesma linha
-    // em qualquer viewport. Sem margin-bottom própria (m3-62 follow-up): mora dentro de
-    // `__coluna-texto`, cujo `gap` já espaça ela do `__texto` acima — e `.ficha-ident` continua com
-    // o `margin-bottom` que separa tudo dos chips.
+    // Personalidade e Origem empilhados, não lado a lado (ui-33 follow-up). Hoje mora em
+    // `.ficha-identidade__meta-bloco` (irmã de `.ficha-ident`, ver HTML e o bloco `.ficha-cartao--
+    // identidade` acima) — o nome da classe ficou de `.ficha-ident` por histórico, mas a regra vale
+    // onde quer que `&__meta` apareça.
     &__meta {
         display: flex;
         flex-direction: column;
         gap: 8px;
     }
 
+    // Rótulo e valor na mesma linha (era empilhado) — pedido do autor pra ficar "mais fininho" agora
+    // que Personalidade/Origem viraram uma faixa de rodapé (largura de sobra, não precisa mais do
+    // rótulo numa linha própria acima do valor).
     &__meta-linha {
         display: flex;
-        flex-direction: column;
-        gap: 3px;
+        align-items: baseline;
+        gap: 8px;
         min-width: 0;
         flex: 1 1 0;
     }
@@ -1684,6 +1991,7 @@
 
     // Contrato (m3-40): rótulo + número ao lado do nome do Agente, edição só para o mestre.
     &__contrato {
+        flex: 0 0 auto;
         font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 600;
@@ -1786,39 +2094,6 @@
         margin-bottom: 4px;
     }
 
-    // Ação de visibilidade (m3-65a) — mesma receita compacta do toggle "Rolagem oculta", mas com
-    // verbo curto e confirmação antes de persistir. Fica na coluna do avatar para nunca roubar
-    // largura dos textos de Identidade. No mobile, a ação migra para o menu da página.
-    &__visibilidade {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        align-self: flex-start;
-        max-width: 100%;
-        padding: 6px 10px;
-        background: var(--surface-2);
-        border: 1px solid var(--border-strong);
-        font-size: 11px;
-        font-weight: 600;
-        line-height: 1;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-dim);
-        white-space: nowrap;
-
-        app-icone {
-            font-size: 13px;
-        }
-
-        &:hover {
-            border-color: var(--accent-border);
-            color: var(--text);
-        }
-
-        @include bp.mobile {
-            display: none;
-        }
-    }
-
     // Nível/Prestígio (ui-33 follow-up: subiram pra ao lado do avatar, junto dos chips de
     // classe — mesmo agrupamento do `poc-jogador.html`) em boxes `ficha-mini` normais, só que numa
     // linha própria dentro de `&__coluna-texto` em vez de dividir grade com Dinheiro/Salário.
@@ -1914,6 +2189,22 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        // Contra-ataque no mobile (2×2, cada caixa ~metade da coluna): quebra em duas linhas
+        // ("Contra-"/"ataque") em vez de cortar com "…" — a largura fixa força a quebra no próprio
+        // hífen. Especificidade (0,3,0) vence a regra `nowrap` acima de propósito. Só no mobile: no
+        // desktop/tablet (4 caixas numa fileira só) a caixa de Contra-ataque cresceu o bastante
+        // (`flex-grow` maior, ver `.ficha-combate-rapido--com-contra`) pra caber numa linha via o
+        // `nowrap` normal, sem precisar da quebra manual.
+        .ficha-mini__rotulo.ficha-mini__rotulo--duas-linhas {
+            @include bp.mobile {
+                width: 46px;
+                margin: 0 auto;
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+            }
         }
 
         .ficha-mini__valor {
@@ -2084,22 +2375,32 @@
     }
 }
 
-// Proficiência (destaque, acima da grade de Atributos) e o resumo redundante "Maestria: Nome"
-// abaixo dela (redesenho de comparação visual) — `.ficha-mini` em linha (rótulo + valor lado a
-// lado) em vez de empilhado, pra nunca quebrar mesmo com a coluna estreita.
+// Resumo de DT, Proficiência e Maestria no topo de Atributos. São faixas de leitura rápida:
+// borda única, rótulo e valor na mesma linha e só 2px de respiro vertical.
+.ficha-atributos__formula,
 .ficha-proficiencia,
 .ficha-maestria-resumo {
     flex-direction: row;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 5px 10px;
-    margin-bottom: 8px;
+    min-height: 0;
+    padding: 2px 8px;
+    margin-bottom: 0;
 
     .ficha-mini__valor {
         font-size: 14px;
         white-space: nowrap;
         color: var(--accent);
+    }
+}
+
+.ficha-atributos__formula {
+    .chip-formula {
+        padding: 0;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
     }
 }
 
@@ -2149,14 +2450,22 @@
     white-space: nowrap;
 }
 
-// Vida/Energia lado a lado quando a própria coluna comporta as duas. A ficha também aparece em
-// painéis e larguras intermediárias de desktop, portanto o viewport não é uma medida confiável:
-// abaixo de duas faixas de 192px, Energia reflui para a próxima linha em vez de deixar o stepper
-// `+` ultrapassar o cartão.
+// Vida embaixo/em cima por padrão (empilhada) — lado a lado só quando o container (`.ficha-
+// identidade__combate`, `container-type: inline-size` acima) realmente tem espaço. Era
+// `@include bp.mobile` (pedido original do autor): funcionava a 1920px, mas a 1366×768 essa coluna
+// mede só ~214px (Identidade divide a linha com Atributos/Status nesse viewport) e ainda assim
+// fica acima do breakpoint mobile — rótulo/valor/trilho de `app-barra-recurso` sobrepunham por
+// cima um do outro. `@container` resolve pela largura real da coluna, não pela do viewport (mesma
+// classe de bug já documentada em `ficha-atributos__grade`, `ficha-campanha-card.component.scss`).
 .ficha-vitalidade {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 176px), 1fr));
-    gap: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    @container (min-width: 340px) {
+        flex-direction: row;
+        gap: 16px;
+    }
 }
 
 // === Barras de Vida/Energia ===
@@ -2170,16 +2479,19 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    // `width: 100%` por padrão (`.ficha-vitalidade` empilhada) — vira `flex: 1` só quando o
+    // container ativa o lado a lado acima, pra dividir a largura em duas.
     width: 100%;
+
+    @container (min-width: 340px) {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+    }
 
     &__primitivo {
         flex: 1 1 auto;
         min-width: 0;
-        max-width: 184px;
-
-        @include bp.mobile {
-            max-width: none;
-        }
     }
 
     // Botão "Receber dano" (m7-17) — projetado no slot `[barraRecursoAcao]` do primitivo, só na
@@ -2319,12 +2631,24 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
 
-    // Contra-ataque tinha coluna própria em `auto` (largura do rótulo, o mais longo dos quatro),
-    // que destoava das outras três e quebrava a simetria da fileira; o rótulo mais longo agora
-    // corta com "…" (`.ficha-mini--fino .ficha-mini__rotulo` abaixo), mesmo padrão já usado no
-    // valor da Patente.
+    // Reações (pedido do autor, revisto depois de estreitar a coluna de Reações/Vitalidade/
+    // Resistências): `flex: 1` em vez de `max-content` — a coluna ficou estreita o bastante para a
+    // versão "quadradinha" sobrar vão morto à direita; agora as 4 caixas preenchem o espaço
+    // disponível. Defesa/Esquiva/Bloqueio encolheram um pouco (`flex-grow` menor, pedido do autor)
+    // pra Contra-ataque crescer o suficiente e caber numa linha só — sem o texto quebrado em
+    // "Contra-"/"ataque" de antes (`.ficha-mini__rotulo--duas-linhas` saiu, não faz mais falta).
     &--com-contra {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        display: flex;
+        gap: 8px;
+
+        > .ficha-mini {
+            flex: 0.85 1 0;
+            min-width: 0;
+
+            &:last-child {
+                flex: 1.45 1 0;
+            }
+        }
     }
 
     // Status: Deslocamento/Dano C. a C./Dano Furtivo/Percepção — nenhuma precisa de mais espaço.
@@ -2341,50 +2665,100 @@
         grid-template-columns: repeat(5, max-content) minmax(0, 1fr);
     }
 
-    &--com-contra,
     &--quatro,
     &--seis {
         @include bp.mobile {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
+
+    // `--com-contra` é flex (não grid, ver acima) — o equivalente mobile a "2 por linha" é
+    // `flex-wrap` com cada caixa presa a ~metade da largura, não `grid-template-columns`. Reseta o
+    // `:last-child` mais largo do desktop (ver regra acima) — no 2×2 do mobile as 4 caixas voltam a
+    // dividir espaço igualmente, e Contra-ataque quebra em duas linhas de novo (ver
+    // `.ficha-mini__rotulo--duas-linhas`).
+    &--com-contra {
+        @include bp.mobile {
+            flex-wrap: wrap;
+
+            > .ficha-mini,
+            > .ficha-mini:last-child {
+                flex: 1 1 calc(50% - 4px);
+            }
+        }
+    }
 }
 
 // Resistências em miniatura no card de identidade (redesenho de comparação visual) — glance
-// somente leitura das 5 linhas de `TipoDanoEnum`; a edição continua na aba Combate.
+// somente leitura das 5 linhas de `TipoDanoEnum`; a edição continua na aba Combate. Mesmo
+// tratamento "quadradinho" das Reações vizinhas (pedido do autor): `max-content` em vez de `1fr`,
+// caixas sem esticar pra preencher a coluna.
 .ficha-resistencias {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    // `flex: 1` nas 5 caixas (era `max-content`, pedido do round anterior) — pedido do autor agora:
+    // a fileira de Resistências ficava mais curta que a de Reações acima dela (menos conteúdo por
+    // caixa) e sobrava um vão morto até a borda direita do card. Mesmo tratamento de
+    // `.ficha-combate-rapido--com-contra` (Reações): cresce pra preencher, sem exagerar (não é
+    // `justify-content` nem largura fixa, só o espaço que sobrar dividido entre as 5).
+    display: flex;
     gap: 6px;
 
-    @include bp.mobile {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+    > .ficha-resistencia {
+        flex: 1 1 0;
+        min-width: 0;
     }
 }
 
 .ficha-resistencia {
+    // Cor por tipo de dano — mesma paleta `--dano-*` das Reações; o padrão pega o próprio
+    // `--dano-fisico` porque a caixa de Físico não carrega modificador (`FISICO` é o sufixo base
+    // de `classeResistencia()`, ver ficha-visualizacao.component.ts).
+    --cor-resistencia: var(--dano-fisico);
+    --borda-resistencia: var(--dano-fisico-border);
+
+    &--balistico {
+        --cor-resistencia: var(--dano-balistico);
+        --borda-resistencia: var(--dano-balistico-border);
+    }
+
+    &--explosao {
+        --cor-resistencia: var(--dano-explosao);
+        --borda-resistencia: var(--dano-explosao-border);
+    }
+
+    &--quimico {
+        --cor-resistencia: var(--dano-quimico);
+        --borda-resistencia: var(--dano-quimico-border);
+    }
+
+    &--geral {
+        --cor-resistencia: var(--dano-geral);
+        --borda-resistencia: var(--dano-geral-border);
+    }
+
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px 4px;
+    gap: 2px;
+    // Fininha como em `FichaCampanhaCard` (pedido do autor) — padding vertical bem menor que o
+    // `.ficha-mini--fino` das Reações vizinhas, de propósito: aqui o glance é secundário.
+    padding: 3px 4px;
     background: var(--surface-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--borda-resistencia, var(--border));
     border-radius: var(--radius-control);
 
     &__abrev {
         font-family: var(--font-mono);
-        font-size: 9px;
+        font-size: 8px;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         color: var(--text-mute);
     }
 
     &__valor {
         font-family: var(--font-mono);
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 700;
-        color: var(--text-dim);
+        color: var(--cor-resistencia);
     }
 
     // Campo de digitação direta da base manual — mesma filosofia de `.ficha-mini__entrada`: largura
@@ -2394,7 +2768,7 @@
         min-width: 2.5ch;
         field-sizing: content;
         font-family: var(--font-mono);
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 700;
         text-align: center;
         color: var(--text);
@@ -2510,115 +2884,23 @@
     }
 }
 
-// Lista vertical em edição do card de Atributos (troca a grade de caixas — ver design em
-// docs/superpowers/specs/2026-08-02-layout-lista-edicao-atributos-design.md): cada atributo é uma
-// linha de duas sub-linhas. Reusa a classe de Maestria já existente em `.ficha-atributo`; os três
-// steppers (valor, modificador, dados) são `app-step-input[digitavel=false]` — só a moldura da
-// linha é nova.
-.ficha-atributos__lista {
-    display: flex;
-    flex-direction: column;
+// Edição do card de Atributos: reusa a mesma caixa da leitura (`.ficha-atributo`, ver regras
+// abaixo) em vez de uma lista à parte — a pedido, pra edição parecer visualmente a mesma tela da
+// leitura, só com os três valores (atributo, modificador, dados) virando steppers
+// `app-step-input[digitavel=false]` no lugar do texto estático. `--edicao` só ajusta o que muda:
+// mais respiro entre as 4 sub-linhas (identidade, valor, modificador, dados) do que a leitura, que
+// tem no máximo 3 (a de dados só aparece com ajuste ativo).
+.ficha-atributo--edicao {
+    gap: 7px;
 }
 
-.ficha-atributo-linha {
+// Estrela de Maestria (alterna, ao contrário da leitura, onde só decora) + abreviação na mesma
+// sub-linha — mesma combinação ícone+texto da leitura (★ DES ★), só com um botão em vez de dois
+// spans decorativos.
+.ficha-atributo__identidade {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 8px 2px;
-
-    // Separador fino entre atributos (substitui a borda por caixa da grade) — o primeiro item do
-    // grupo não ganha borda: já é delimitado pelo rótulo do grupo acima.
-    & + & {
-        border-top: 1px solid var(--border);
-    }
-
-    &__principal {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    &__nome {
-        flex: 1 1 auto;
-        min-width: 0;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        color: var(--text);
-    }
-
-    &__secundaria {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        // Sem `gap` fixo: `justify-content: space-between` já separa os dois grupos quando sobra
-        // largura; um `gap` mínimo forçava overflow na coluna estreita do desktop quando os rótulos
-        // ganharam ícone (conteúdo já preenche 100% da largura disponível, sem folga pro gap).
-
-        // "Nunca empilha" no desktop só é seguro porque a edição de atributos é inacessível no card
-        // estreito (`modo="compacto"`) — `ajustavelAmplo()` (que trava o lápis de edição) exige
-        // `modo() !== 'compacto'`. Se a edição um dia for liberada no compacto, revisitar esta regra.
-        // Mobile: empilha as duas mini-steppers só se não couberem lado a lado — desktop nunca empilha
-        // (ver design, seção Responsivo). Sem `padding-left`: a coluna de Atributos é estreita mesmo
-        // no desktop (uma de 3 colunas lado a lado) — o recuo pra alinhar com o nome da sub-linha 1
-        // estourava a largura disponível com os dois mini-steppers lado a lado.
-        @include bp.mobile {
-            flex-wrap: wrap;
-            gap: 8px; // mobile é largura cheia (não a coluna estreita do desktop) — sobra espaço pro gap
-        }
-    }
-
-    &__mini {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-
-        // Rótulo em cima do stepper (não do lado) no mobile: com os botões maiores (40px) o rótulo
-        // colado do lado ficava espremido contra eles na mesma linha.
-        @include bp.mobile {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 2px;
-        }
-    }
-
-    &__rotulo-mini {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        font-family: var(--font-mono);
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-dim);
-
-        // No mobile os steppers ao lado crescem (40px) — rótulo de 9px ficava minúsculo perto deles.
-        @include bp.mobile {
-            font-size: 11px;
-        }
-    }
-
-    // Texto do rótulo ("Mod."/"Dados"): no desktop a coluna de Atributos é estreita (uma de 3 lado
-    // a lado) e o par ícone+texto+stepper não tem folga — só o ícone fica, com o texto virando
-    // `[appTooltip]` no `&__rotulo-mini` pai. No mobile (largura cheia) sobra espaço e o texto volta.
-    &__rotulo-texto {
-        display: none;
-
-        @include bp.mobile {
-            display: inline;
-        }
-    }
-
-    // Ícone do rótulo (± pro modificador, dado pro ajuste de dados) — mesma cor discreta do texto,
-    // acompanha o tamanho dele.
-    &__rotulo-icone {
-        width: 10px;
-        height: 10px;
-
-        @include bp.mobile {
-            width: 12px;
-            height: 12px;
-        }
-    }
+    align-items: center;
+    gap: 4px;
 }
 
 .ficha-atributo {
@@ -2632,9 +2914,9 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
 
-    // Dadinho de rolar teste (m3-22): canto superior direito do box no desktop (esquerdo no mobile,
-    // ver abaixo), discreto até o hover/foco. ui-30: `app-botao-icone[tamanho="mini"]` — cor/hover
-    // já são dele; só sobram posição e tamanho.
+    // Dadinho de rolar teste (m3-22): sempre no canto superior direito do box, discreto até o
+    // hover/foco. ui-30: `app-botao-icone[tamanho="mini"]` — cor/hover já são dele; só sobram
+    // posição e tamanho.
     &__rolar {
         position: absolute;
         top: 4px;
@@ -2648,14 +2930,10 @@
         // — ver `:host` em `botao-icone.component.scss`); `min-width`/`min-height` viram um piso que
         // o `width`/`height` de 22px acima não derruba, então o desenho crescia sem mudar a âncora
         // (top/right), e o dadinho ficava boiando longe do canto (centro do host inflado), não
-        // encostado nele — exatamente o desalinhamento visto na caixa de atributo estreita (3
-        // colunas). Aqui o desenho volta a 22×22 e ganha a área de toque como pseudo-elemento
-        // (`alvo-de-toque($posicionar: false)`, mesmo padrão do `&__avatar-upload`), e a âncora muda
-        // pro canto superior ESQUERDO — o direito já tem o próprio valor do atributo por perto.
+        // encostado nele. Aqui o desenho volta a 22×22 e ganha a área de toque como pseudo-elemento
+        // (`alvo-de-toque($posicionar: false)`, mesmo padrão do `&__avatar-upload`) sem mudar a
+        // âncora — sempre no canto superior direito, em qualquer viewport.
         @include bp.mobile {
-            top: 4px;
-            left: 4px;
-            right: auto;
             min-width: 22px;
             min-height: 22px;
         }
@@ -2724,15 +3002,26 @@
     &__stepper {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
+        width: 100%;
     }
 
-    // Modificador de teste — só leitura na grade (glance); a edição usa `app-step-input` no modo
-    // `digitavel=false`, que já é dono do stepper. Este badge só existe pro glance.
+    // Modificador de teste — envolve o texto só-leitura na grade (glance) ou o
+    // `app-step-input[digitavel=false]` na edição, mesma caixa nos dois modos. `font-size` menor
+    // que o corpo pra escalar o ícone (`app-icone`, 1.15em) junto — sem isso ele herda o tamanho
+    // do card e fica grande demais perto do stepper mini. `width: 100%` + `justify-content: center`
+    // centraliza o grupo ícone+stepper na largura da caixa, e não só o bloco como um todo (que já
+    // saía centralizado pelo `align-items` da caixa, mas com o ícone puxando o conjunto pra esquerda
+    // visualmente).
     &__modificador {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 4px;
+        width: 100%;
+        font-size: 10px;
+        color: var(--text-dim);
     }
 
     &__mod-valor {
@@ -2760,7 +3049,11 @@
     &__dados {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 4px;
+        width: 100%;
+        font-size: 10px;
+        color: var(--text-dim);
     }
 
     // Badge de leitura (só renderizado quando há ajuste ativo — ver template) — mesmo tratamento

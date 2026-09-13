@@ -254,6 +254,15 @@
             <path d="M15 3v5h5" />
             <path d="M8 12h8M8 15.5h8M8 19h5" />
         }
+        @case ("caderno") {
+            <!-- Caderno de espiral: distinto de `anotacoes` (folha solta, aba de Anotações da própria
+           ficha) e de `documentos` (livro aberto, leitor global) — ação "Caderno" (registro
+           compartilhado da campanha). -->
+            <rect x="7" y="3" width="14" height="18" rx="1.5" />
+            <path d="M7 3v18" />
+            <path d="M3.5 6h2M3.5 10h2M3.5 14h2M3.5 18h2" />
+            <path d="M10.5 8h7M10.5 12h7M10.5 16h4" />
+        }
         @case ("importar") {
             <!-- Arquivo com seta de entrada — recorte de "file-import" da Tabler Icons (MIT). -->
             <path d="M14 3v4a1 1 0 0 0 1 1h4" />

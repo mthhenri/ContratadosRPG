@@ -60,6 +60,8 @@ export class HistoricoRolagensSidebar {
    * `false`) não há calculadora para dar espaço, então o gatilho fica direto no rodapé, sem o vão.
    */
   readonly acimaDaCalculadora = input(false);
+  /** Oculta o gatilho próprio quando a página oferece a ação pela coluna lateral. */
+  readonly mostrarGatilho = input(true);
 
   readonly carregarMais = output<void>();
   /**
