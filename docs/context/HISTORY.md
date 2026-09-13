@@ -1,5 +1,129 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — `ficha-separar-completa-e-campanha-card`: bifurcação de `FichaVisualizacao`
+
+Spec do autor, pré-requisito decidido antes de `ui-34-ficha-completa-redesenho`: `app-ficha-
+visualizacao` era um componente só (2767 linhas de HTML, 2747 de TS) com `@Input() modo: 'padrao' |
+'compacto'` alternando layout via `@if (modo() ...)`/`@else` espalhados pelo template inteiro —
+qualquer ajuste visual num dos dois modos exigia decorar quais desses `@if` tocar sem vazar pro
+outro. A spec pediu separação total, sem compartilhar arquivo.
+
+**Mapeamento antes de tocar em código.** `git grep -n "app-ficha-visualizacao"` (fora `out-tsc`)
+confirmou os 5 consumidores já catalogados na spec — nenhum 6º apareceu: rota de ficha completa
+(`visualizar.page.html`, `modo` implícito/`padrao`, sem `[modo]`), ficha embutida do jogador
+(`detalhe-jogador.page.html`, `modo="compacto"`), "Prévia de jogador"
+(`previa-jogador.page.html`, `modo="compacto"`), painel de Iniciativa/Encontro
+(`painel-encontro.page.html`, `modo="compacto"` + `[mostrarRolagensCompacto]="true"`) e ficha
+flutuante do mestre (`ficha-flutuante-conteudo.component.html`, `modo="compacto"` +
+`[mostrarRolagensCompacto]="true"` + `[rolagemExterna]="true"`). Um "6º consumidor" apareceu só
+depois, indireto: `ficha-edicao.service.ts` importa os tipos `AjusteVitalidade`/`AjusteDerivado`/
+`AjusteResistencia`/`AjusteAtributos`/`AjusteCampoDados`/`AjusteClasse`/`CampoVitalidade`/
+`CampoDadosEscalar` do `ficha-visualizacao.component.ts` — usados por serviços injetados em
+páginas que hoje hospedam `FichaCampanhaCard`. Resolvido sem acoplar os dois componentes: as
+interfaces continuam declaradas (idênticas, por duplicação) nos dois arquivos, e
+`ficha-edicao.service.ts` segue importando só de `FichaVisualizacao` — TypeScript por forma
+estrutural aceita valores de `FichaCampanhaCard` sem um import cruzado.
+
+**Item 1 — bifurcação sem perda.** Todo o conteúdo de `ficha-visualizacao/` foi duplicado
+verbatim para `frontend/src/app/modules/ficha/componentes/ficha-campanha-card/` (`.ts`/`.html`/
+`.scss`/`.spec.ts`) antes de qualquer remoção — "zero regressão garantida por construção", porque
+cada ramo mantido em cada cópia é literalmente o código de hoje. Só depois, em cada cópia, os 12
+pontos de template com `modo()` (classe raiz `--compacto`, classe de linha `--rolagens`, o bloco
+Nível/Prestígio, a linha de stats com Patente/Crédito 2×2 vs. Patente solta, o chip da fórmula de
+DT dentro de `#blocoAtributos`, o outlet de `#blocoAtributos` na coluna 1 vs. dentro da aba
+Informações, `<app-ficha-sanidade>`, e os dois `[compacto]` repassados a `FichaInventario`/
+`FichaHabilidades`) e os 6 pontos de TS (`ajustavelAmplo`, `abaStatusEfetiva`, `abasStatusVisiveis`,
+`destinosMobile`, `selecionarDestinoMobile`, o próprio `@Input() modo`) foram resolvidos pro valor
+fixo de cada componente — sem tocar em nada mais. O SCSS **não precisou de nenhuma mudança**: a
+classe `.ficha-visao--compacto` (que já controlava sozinha `&--compacto`/`:not(&--compacto)`, sem
+depender de `modo()` diretamente) virou estática no HTML de `FichaCampanhaCard`
+(`class="ficha-visao ficha-visao--compacto"`) em vez de um `[class.]` condicional — os seletores
+SCSS continuam corretos e idênticos nos dois arquivos, porque nunca precisaram saber de `modo`
+para começar.
+
+Achado durante o mapeamento, preservado por decisão consciente (não "corrigido"): um cluster de
+API pública inteiramente morto no template — `AbaFicha`/`ABAS_FICHA`/`ehAbaFicha`/`abaInicial`/
+`abaAtiva`/`abaMudou`/`abas`/`selecionarAba`, resquício de uma navegação por abas removida numa
+rodada de redesenho anterior (o próprio doc comment da classe já registrava isso). Zero uso no
+HTML de nenhum dos dois modos, hoje ou antes desta spec — mantido duplicado nos dois componentes
+sem alteração, porque não é modo-dependente e mexer nele seria extrapolar o escopo desta spec.
+
+**Item 2 — extração de sub-componentes, avaliada e adiada.** Os três candidatos citados pela spec
+(Identidade sem quick-stats, Reações, Resistências) foram avaliados um a um, não em bloco: todos
+os três compensariam pelo critério da spec (props/inputs necessários bem abaixo das linhas hoje
+duplicadas — a diferença real entre as duas cópias, depois da bifurcação, é só a origem do booleano
+`ajustavelAmplo`, o resto é HTML idêntico). Mas a própria spec veta fazer bifurcação e extração
+"na mesma leva de commits" — exatamente o risco que motivou fazer o item 1 primeiro, isolado. Fica
+como ideia registrada para uma tarefa futura, não perdida (ver `IDEAS.md`).
+
+**Achado só na conversão dos testes — `ajustavelAmplo` sempre acoplado a `ajustavel` no fixture
+antigo.** Ao portar `ficha-campanha-card.component.spec.ts` (duplicado do spec antigo), ~15 testes
+falharam por assumirem que `ajustavel=true` libera edição de Defesa/Esquiva/Bloqueio/Contra-ataque/
+Resistências/Codinome/Nível/Prestígio/Contrato/avatar — comportamento que só valia porque o
+componente original, sem `modo` fixado, tinha `ajustavelAmplo = ajustavel() && modo() !== 'compacto'`
+sempre `true` no `montar()` default (`modo` nunca setado nesses testes = `'padrao'`). Em
+`FichaCampanhaCard`, `ajustavelAmplo` é sempre `false` — exatamente o mesmo valor que já tinha em
+produção sempre que `modo="compacto"` (zero regressão real, só um blind spot da suíte antiga que
+nunca exercitava o componente compartilhado com `modo="compacto"` **e** `ajustavel=true` ao mesmo
+tempo pra essas seções específicas). Os testes reescritos agora afirmam explicitamente "isso é só
+leitura aqui, mesmo ajustável — exclusivo da ficha completa" em vez de testar uma UI que nunca
+existiu no card de equipe.
+
+**Testes:** `ficha-visualizacao`/`ficha-campanha-card` focado 282/282 (specs remodelados conforme
+item 6 da spec — casos de `modo="compacto"` migraram integralmente pro spec novo; `describe`s
+inteiros de Extras/História/Anomalia Biológica/enquadramento de avatar removidos do spec de
+`FichaCampanhaCard` por testarem UI exclusiva da ficha completa, inalcançável ali); suíte completa
+`frontend` 1732/1733 (a 1 falha é `detalhe-mestre.page.spec.ts` "duplicar ficha", pré-existente,
+sem relação com este diff — reproduz isolada, mesmo padrão de falha conhecida já registrado em
+entradas anteriores deste arquivo); lint 0 erros; `npm run build --workspace=frontend` limpo, sem
+avisos de import não usado.
+
+**Verificação ao vivo:** Postgres + backend + frontend reais, cenário montado via REST cru (mestre
++ jogador, campanha, ficha de jogador com inventário/habilidades/atributos preenchidos, encontro de
+Iniciativa com o jogador como combatente). Percorridos os 5 consumidores nos 4 viewports padrão
+(`1920×1080`/`960×1080`/`1366×768`/`360×800`), inspecionados pessoalmente (não só relatados por
+subagente): ficha completa (`FichaVisualizacao`, 3 colunas, 6 abas, Nível/Prestígio, Sequelas/
+Traumas/Lesões); ficha embutida do jogador (`FichaCampanhaCard`, 2 colunas, 3 abas, grade 2×2 de
+Dinheiro/Salário/Patente/Crédito, "só leitura" em Reações/Resistências) — incluindo edição de
+Dinheiro no próprio lugar e a aba Inventário abertas; prévia do mestre (mesmo card, somente
+leitura); painel de Iniciativa (card na lateral, 4 abas com `mostrarRolagensCompacto`); ficha
+flutuante do mestre (mesmo card dentro da janela flutuante). Nenhum erro de console em nenhuma
+navegação; nenhuma tela em branco; sem overflow horizontal em nenhum viewport. Spec movida para
+`docs/specs/done/ficha-separar-completa-e-campanha-card.spec.md`.
+
+**Pendência aberta, fora do escopo desta spec:** `ui-34-ficha-completa-redesenho.spec.md`
+(`docs/specs/active/`) cita arquivo/linha do `FichaVisualizacao` de antes desta separação — precisa
+ser reconferida antes de começar a implementação (a própria spec já previa isso).
+
+## 2026-09-12 — `ui-33`: 11ª rodada — painel de Rolagens do mobile aparecia com qualquer destino selecionado
+
+Autor mandou um recorte mobile do painel Rolagens (segmentado + Rolagem rápida + Histórico) com a
+barra inferior mostrando "AGENTE" ativo — "essa parte de rolagens só deveria aparecer quando tiver
+com o Rolagens selecionado". Causa: `.detalhe__jogador-lateral` (a coluna que hospeda o painel
+Rolagens/Esquadrão/Inv. Esquadrão) nunca teve tratamento condicional — sempre montada e visível,
+documentada como tal ("sempre montado, nunca overlay"). No desktop/tablet isso é o comportamento
+certo (não existe barra de destino ali, a lateral é uma coluna/faixa sempre visível). No mobile,
+porém, `FichaVisualizacao` desenha sua própria barra inferior (`.ficha-nav`, `bp.mobile`) com 5
+destinos — Agente/Status/Invent./Habilid./**Rolagens** — e o próprio código já documentava que
+"Rolagens" é "o único destino que não é uma aba": tocá-lo só avisa a página, que rola até o painel
+(sempre lá, só mais embaixo) — as outras 4 abas escondem/mostram de verdade (`@if` interno da
+ficha), só Rolagens não. Resultado: rolar manualmente a página com qualquer OUTRO destino
+"selecionado" (destaque vermelho na barra) revela o painel Rolagens do mesmo jeito — a barra mente
+sobre o que está visível.
+
+Fix: `[class.detalhe__jogador-lateral--oculto-mobile]="destinoMobileFicha() !== 'rolagens'"` no
+wrapper, com `display: none` só dentro de `@include bp.mobile` (SCSS) — no tablet/desktop a classe
+não faz nada (sem barra de destino, painel sempre visível, sem mudança). Mantido o
+`scrollIntoView` existente em `aoMudarDestinoFicha` (já corria depois de setar o signal, mesmo
+padrão que a troca de aba interna do painel — `painelLateralAtivo` — já usava antes de rolar).
+
+Verificado ao vivo em `360×800`: destino inicial "Agente" — `.detalhe__jogador-lateral` com
+`display: none`, painel fora da página inteira (`fullPage` sem nenhum traço de Rolagens); toque em
+"Rolagens" — `display: flex`, painel visível, aba "ROLAGENS" da barra inferior ativa; volta para
+"Agente" — oculta de novo. Sem regressão em `1920×1080`/`960×1080`/`1366×768` (lateral sempre
+`display: flex`, como antes). Testes: `detalhe-jogador` 18/18; suíte completa do frontend
+1617/1618 (mesma falha pré-existente).
+
 ## 2026-09-12 — `ui-33`: 10ª rodada — seta de voltar do jogador ao lado do "//", como no mestre
 
 Autor: "a seta de voltar no player deveria ficar atrás do '//'" — mais um ajuste seguindo a

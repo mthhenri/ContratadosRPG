@@ -1,7 +1,6 @@
 <div
-    class="ficha-visao"
+    class="ficha-visao ficha-visao--compacto"
     [class.ficha-visao--rolagem-externa]="rolagemExterna()"
-    [class.ficha-visao--apertado]="apertado()"
 >
     <!-- Barra superior: rótulo + chip de classificação -->
     <header class="ficha-visao__topo">
@@ -73,6 +72,7 @@
         <div
             class="ficha-visao__linha-colunas"
             [class.ficha-visao__linha-colunas--agente]="mostrandoAgente()"
+            [class.ficha-visao__linha-colunas--rolagens]="destinoMobile() === 'rolagens'"
         >
             <!-- Agrupa Identidade+Atributos num único item de flex/grid da linha (só o `modo="compacto"`
          usa isso pra empilhar as duas — ver SCSS): sem o agrupamento, a Status (mais alta, sem
@@ -372,95 +372,6 @@
                                         }
                                     </div>
                                 }
-
-                                <div class="ficha-ident__stats-topo">
-                                    <div class="ficha-mini ficha-mini--fino">
-                                        <span class="ficha-mini__rotulo">{{
-                                            rotuloNivel()
-                                        }}</span>
-                                            @if (ajustavel()) {
-                                                <app-valor-editavel
-                                                    class="ficha-mini__valor ficha-mini__valor--warning"
-                                                    [valor]="dados().nivel"
-                                                    [editando]="editandoIdentidade() === 'nivel'"
-                                                    rotuloAria="nível"
-                                                    variante="aviso"
-                                                    (editarSolicitado)="editarIdentidade('nivel')"
-                                                >
-                                                    <input
-                                                        #entradaIdentidade
-                                                        class="ficha-mini__entrada"
-                                                        type="number"
-                                                        inputmode="numeric"
-                                                        [value]="dados().nivel"
-                                                        [attr.min]="limitesNivel().nivelMinimo"
-                                                        [attr.max]="limitesNivel().nivelMaximo"
-                                                        aria-label="Nível"
-                                                        (keydown.enter)="
-                                                            confirmarIdentidade(
-                                                                'nivel',
-                                                                entradaIdentidade.value
-                                                            )
-                                                        "
-                                                        (keydown.escape)="cancelarIdentidade()"
-                                                        (blur)="
-                                                            confirmarIdentidade(
-                                                                'nivel',
-                                                                entradaIdentidade.value
-                                                            )
-                                                        "
-                                                    />
-                                                </app-valor-editavel>
-                                            } @else {
-                                                <span
-                                                    class="ficha-mini__valor ficha-mini__valor--warning"
-                                                    >{{ dados().nivel }}</span
-                                                >
-                                            }
-                                        </div>
-                                        <div class="ficha-mini ficha-mini--fino">
-                                            <span class="ficha-mini__rotulo">Prestígio</span>
-                                            @if (ajustavel()) {
-                                                <app-valor-editavel
-                                                    class="ficha-mini__valor"
-                                                    [valor]="dados().prestigio"
-                                                    [editando]="
-                                                        editandoIdentidade() === 'prestigio'
-                                                    "
-                                                    rotuloAria="prestígio"
-                                                    (editarSolicitado)="
-                                                        editarIdentidade('prestigio')
-                                                    "
-                                                >
-                                                    <input
-                                                        #entradaIdentidade
-                                                        class="ficha-mini__entrada"
-                                                        type="number"
-                                                        inputmode="numeric"
-                                                        [value]="dados().prestigio"
-                                                        aria-label="Prestígio"
-                                                        (keydown.enter)="
-                                                            confirmarIdentidade(
-                                                                'prestigio',
-                                                                entradaIdentidade.value
-                                                            )
-                                                        "
-                                                        (keydown.escape)="cancelarIdentidade()"
-                                                        (blur)="
-                                                            confirmarIdentidade(
-                                                                'prestigio',
-                                                                entradaIdentidade.value
-                                                            )
-                                                        "
-                                                    />
-                                                </app-valor-editavel>
-                                            } @else {
-                                                <span class="ficha-mini__valor">{{
-                                                    dados().prestigio
-                                                }}</span>
-                                            }
-                                        </div>
-                                    </div>
 
                                 <!-- Personalidade/Origem (m3-23/m3-25) — trava de imutabilidade refletida (m3-24): livre
                pro mestre sempre, pro dono só até a primeira definição. Mora dentro de
@@ -843,7 +754,7 @@
                         </app-modal>
 
                         <div class="ficha-ident__stats">
-                            <div class="ficha-ident__stats-linha ficha-ident__stats-linha--dois-itens">
+                            <div class="ficha-ident__stats-linha">
                                 <div class="ficha-mini ficha-mini--fino">
                                     <span class="ficha-mini__rotulo">Dinheiro</span>
                                     @if (ajustavel()) {
@@ -887,12 +798,33 @@
                                         >${{ salario().toLocaleString("pt-BR") }}</span
                                     >
                                 </div>
-                            </div>
-                            <div class="ficha-mini ficha-mini--fino ficha-mini--largo">
-                                <span class="ficha-mini__rotulo">Patente</span>
-                                <span class="ficha-mini__valor ficha-mini__valor--accent">{{
-                                    patenteTexto()
-                                }}</span>
+                                <div class="ficha-mini ficha-mini--fino">
+                                    <span class="ficha-mini__rotulo">Patente</span>
+                                    <span class="ficha-mini__valor ficha-mini__valor--accent">{{
+                                        patenteTexto()
+                                    }}</span>
+                                </div>
+                                <!-- O card de equipe não tem aba Extras pra mostrar a seção Patente inteira, então o
+                 Limite de Crédito ganha um lugar aqui — com o ízinho pra descrição, já que o box
+                 "fino" não cabe a frase inteira. -->
+                                <div class="ficha-mini ficha-mini--fino">
+                                    <span class="ficha-mini__rotulo-linha">
+                                        <span class="ficha-mini__rotulo">Crédito</span>
+                                        <button
+                                            app-botao-icone
+                                            [redondo]="true"
+                                            type="button"
+                                            class="ficha-mini__info"
+                                            aria-label="Descrição do Limite de Crédito"
+                                            [appTooltip]="patenteInfo().descricaoLimiteCredito"
+                                        >
+                                            ⓘ
+                                        </button>
+                                    </span>
+                                    <span class="ficha-mini__valor ficha-mini__valor--accent">{{
+                                        patenteInfo().limiteCredito
+                                    }}</span>
+                                </div>
                             </div>
                         </div>
 
@@ -1254,10 +1186,6 @@
                                     </button>
                                 </div>
                             } @else {
-                                <div class="ficha-atributos__formula">
-                                    <span class="chip-formula">{{ formulaDt }}</span>
-                                </div>
-
                                 <div class="ficha-atributos__prof-maestria">
                                     <div class="ficha-mini ficha-proficiencia">
                                         <span class="ficha-mini__rotulo">Proficiência</span>
@@ -1588,9 +1516,8 @@
                     </div>
                 </ng-template>
 
-                <!-- Ficha completa: Atributos segue sendo a 2ª coluna, ao lado de Identidade (em
-                     `FichaCampanhaCard` o mesmo `#blocoAtributos` é renderizado dentro da aba Informações). -->
-                <ng-container [ngTemplateOutlet]="blocoAtributos" />
+                <!-- Sem outlet aqui: no card de equipe o `#blocoAtributos` é renderizado dentro da aba
+                     Informações do card de Status (ver abaixo), não como coluna própria. -->
             </div>
 
             <!-- Status — terceira coluna (redesenho de comparação visual): Informações (glance de
@@ -1706,6 +1633,14 @@
                 <section class="ficha-cartao ficha-cartao--status">
                     @if (abaStatusEfetiva() === "informacoes") {
                         <div class="ficha-status__conteudo">
+                            <!-- m2-21, aba Informações: Atributos (o mesmo `#blocoAtributos` que na ficha completa
+               fica na coluna 1) + o glance de Combate como seção própria. Sem `app-ficha-sanidade`
+               nem Nível/Prestígio: continuam exclusivos da ficha completa. -->
+                            <div class="ficha-status__bloco-atributos">
+                                <ng-container [ngTemplateOutlet]="blocoAtributos" />
+                            </div>
+                            <div class="ficha-cartao__divisor"></div>
+                            <p class="ficha-cartao__subrotulo">Combate</p>
                             <div class="ficha-combate-rapido ficha-combate-rapido--seis">
                                 @for (linha of statusRapido(); track linha.chave) {
                                     <div
@@ -1882,14 +1817,8 @@
                                 }
                             </div>
 
-                            <app-ficha-sanidade
-                                [sequelas]="estado().sequelas"
-                                [traumas]="estado().traumas"
-                                [lesoes]="estado().lesoes"
-                                [editavel]="ajustavel()"
-                                [apresentacao]="'dialog'"
-                                (sanidadeMudou)="ajusteSanidade.emit($event)"
-                            />
+                            <!-- Sequelas/Traumas/Lesões seguem exclusivas da ficha completa (m2-21, fora de escopo
+               do card de equipe) — o card de equipe pula direto do glance de Combate pras Anotações. -->
 
                             <!-- Anotações (m3-51): gate de visualização igual à História (m3-50) — só dono/mestre; o
                backend já nem manda `dados.anotacoes` pro visualizador (`omitirCamposPrivados`). -->
@@ -1955,6 +1884,7 @@
                                 [possuiAnomalia]="possuiAnomalia()"
                                 [fragmentosConsumidos]="fragmentosConsumidos()"
                                 [apresentacao]="'dialog'"
+                                [compacto]="true"
                                 [podeMandarParaBase]="podeMandarParaBase()"
                                 (inventarioMudou)="ajusteInventario.emit($event)"
                                 (mandarParaBase)="mandarParaBase.emit($event)"
@@ -1976,6 +1906,7 @@
                                 [arquetipo]="dados().arquetipo"
                                 [energiaAtual]="estado().energiaAtual"
                                 [amplificadores]="dados().inventario.amplificadores"
+                                [compacto]="true"
                                 [cor]="cor()"
                                 (habilidadesMudou)="mudarHabilidades($event)"
                                 (habilidadeUtilizada)="aoUtilizarHabilidade($event)"

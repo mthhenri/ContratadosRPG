@@ -1,7 +1,7 @@
 @use "tema/breakpoints" as bp;
 
 // Piso reservado no rodapé (mesmo problema do m3-60 em `visualizar.page.scss`, só que chegou aqui
-// depois, no m2-20): a visão do JOGADOR embute `<app-ficha-visualizacao modo="compacto">`, que tem
+// depois, no m2-20): a visão do JOGADOR embute `<app-ficha-campanha-card>`, que tem
 // sua própria `.ficha-nav` fixa no rodapé no mobile — sem reservar o piso, a bandeja de dados
 // (`app-bandeja-dados`, raiz do template, fora de `.detalhe__jogador`) cobria a barra inteira ao
 // rolar um dado (medido ao vivo: carta descendo até y=824 por cima da barra em y=785–844). Mesma
@@ -312,7 +312,7 @@ app-coluna-acoes {
     }
 
     // === Visão do JOGADOR (m2-20) — a irmã de `&__grade` acima (só mestre): coluna principal com a
-    // ficha embutida (sem largura fixa aqui, o `<app-ficha-visualizacao modo="compacto">` já trava
+    // ficha embutida (sem largura fixa aqui, o `<app-ficha-campanha-card>` já trava
     // as próprias colunas internas, sempre — própria ficha ou de colega) e uma lateral larga de
     // 450px (era 260px, depois 500px, ~10% mais estreita a pedido do autor) com Equipe + Sessão.
     // Empilha abaixo de `bp.tablet` — mesma ficha primeiro (ordem do DOM, sem `order`), lateral
@@ -332,9 +332,9 @@ app-coluna-acoes {
             align-items: stretch;
         }
 
-        // m2-20: a ficha embutida (`modo="compacto"`) tem sua própria `.ficha-nav` fixa no rodapé no
-        // mobile (herdada de `FichaVisualizacao`) — sem este respiro, o fim da coluna lateral (Sessão)
-        // ficava por baixo da barra ao rolar até o final da página.
+        // m2-20: a ficha embutida (`FichaCampanhaCard`) tem sua própria `.ficha-nav` fixa no rodapé
+        // no mobile — sem este respiro, o fim da coluna lateral (Sessão) ficava por baixo da barra
+        // ao rolar até o final da página.
         @include bp.mobile {
             padding-bottom: calc(var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
         }
@@ -355,6 +355,17 @@ app-coluna-acoes {
         @include bp.tablet {
             flex-basis: auto;
             width: 100%;
+        }
+
+        // Achado ao vivo (autor): no mobile a `.ficha-nav` (barra inferior "Agente/Status/.../
+        // Rolagens" de `FichaCampanhaCard`) sugere abas de verdade, mas "Rolagens" nunca escondia
+        // nada — o painel ficava sempre montado e visível rolando a página, mesmo com outro destino
+        // "selecionado". Só esconde dentro de `bp.mobile`: acima disso (tablet/desktop) não existe
+        // barra de destino, então a lateral sempre aparece (empilhada ou em coluna própria).
+        @include bp.mobile {
+            &--oculto-mobile {
+                display: none;
+            }
         }
     }
 
@@ -379,7 +390,7 @@ app-coluna-acoes {
     }
 
     // Card da ficha embutida — cabeçalho próprio (nome + "Abrir completa") no topo do
-    // `<app-ficha-visualizacao modo="compacto">` (item 6); o card canônico já dá fundo/borda/padding.
+    // `<app-ficha-campanha-card>` (item 6); o card canônico já dá fundo/borda/padding.
     &__ficha-embutida {
         display: flex;
         flex-direction: column;

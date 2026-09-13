@@ -53,6 +53,26 @@
 
 ## Abertas
 
+### I-029 — Extrair sub-componentes de apresentação de `FichaVisualizacao`/`FichaCampanhaCard` · frontend/ficha
+
+- **Ideia:** extrair pra sub-componentes próprios os três blocos que `ficha-separar-completa-e-
+  campanha-card` avaliou e decidiu **não** tocar na mesma tarefa: bloco de Identidade (sem os
+  quick-stats que divergem de posição entre os dois componentes), bloco de Reações (Defesa/
+  Esquiva/Bloqueio/Contra-ataque) e bloco de Resistências (os 5 tipos de dano) — hoje duplicados
+  byte a byte entre `FichaVisualizacao` e `FichaCampanhaCard`, divergindo só na origem do booleano
+  `ajustavelAmplo` (sempre `ajustavel()` num, sempre `false` no outro).
+- **Origem:** item 2 da spec `ficha-separar-completa-e-campanha-card` (`docs/specs/done/`),
+  avaliado individualmente pra cada candidato e adiado por decisão consciente — a própria spec veta
+  fazer bifurcação e extração "na mesma leva de commits" (risco de mexer nos dois ao mesmo tempo
+  antes de ver os templates lado a lado sem `@if`).
+- **Por quê:** os três compensariam pelo critério da spec (menos props/inputs do que linhas hoje
+  duplicadas em cada arquivo — a divergência real é mínima, só o `ajustavelAmplo`); manter a
+  duplicação por muito tempo arrisca as duas cópias divergirem de verdade num ajuste futuro que
+  toque só uma.
+- **Custo aparente:** só frontend, 3 componentes novos (`.ts`/`.html`/`.scss`/`.spec.ts` cada),
+  props para os dados + `ajustavelAmplo` + outputs (`ajusteDerivado`/`ajusteResistencia`) — sem
+  schema novo, sem regra de domínio nova.
+
 ### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
 
 - **Ideia:** permitir buscar/filtrar habilidades pelo texto da descrição, não só pelo nome, no

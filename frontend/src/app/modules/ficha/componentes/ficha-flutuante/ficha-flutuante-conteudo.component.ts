@@ -5,7 +5,7 @@ import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratado
 
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { CriaturaVisualizacao } from '../criatura-visualizacao/criatura-visualizacao.component';
-import { FichaVisualizacao } from '../ficha-visualizacao/ficha-visualizacao.component';
+import { FichaCampanhaCard } from '../ficha-campanha-card/ficha-campanha-card.component';
 import { FichaEdicaoCriaturaService } from '../../ficha-edicao-criatura.service';
 import { FichaEdicaoService } from '../../ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
@@ -27,7 +27,7 @@ import type { FichaFlutuanteAlvo } from './ficha-flutuante.model';
  */
 @Component({
   selector: 'app-ficha-flutuante-conteudo',
-  imports: [FichaVisualizacao, CriaturaVisualizacao],
+  imports: [FichaCampanhaCard, CriaturaVisualizacao],
   templateUrl: './ficha-flutuante-conteudo.component.html',
   styleUrl: './ficha-flutuante-conteudo.component.scss',
   providers: [FichaEdicaoService, FichaEdicaoCriaturaService, FichaRolagemRegistroService],

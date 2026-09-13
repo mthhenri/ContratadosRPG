@@ -82,7 +82,7 @@
                 </button>
                 }
 
-                <app-ficha-visualizacao
+                <app-ficha-campanha-card
                     [fichaId]="fichaExibida.id"
                     [nome]="fichaExibida.nome"
                     [cor]="fichaExibida.cor"
@@ -91,7 +91,6 @@
                     [ajustavel]="podeAjustarFichaExibida()"
                     [podeRolar]="false"
                     [ehMestre]="false"
-                    modo="compacto"
                 />
             </app-cartao>
             } @else if (carregandoFichaExibida()) {

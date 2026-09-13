@@ -34,9 +34,9 @@ import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-regist
 import { mesclarFicha } from '../../../ficha/mesclar-ficha';
 import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
 import {
-  FichaVisualizacao,
+  FichaCampanhaCard,
   type DestinoMobile,
-} from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
+} from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
 import {
   montarEquipeExibicao,
   type EquipeFichaExibicao,
@@ -80,7 +80,7 @@ const PX_PREVIEW_AVATAR = 300;
     BandejaDados,
     CalculadoraFlutuante,
     CadernoFlutuante,
-    FichaVisualizacao,
+    FichaCampanhaCard,
     FichaRolagensPainel,
     ResultadoRolagem,
     Tooltip,
@@ -294,7 +294,7 @@ export class CampanhaDetalheJogador {
 
     // Fetch da ficha completa sempre que `fichaExibidaId` muda (seleção inicial da própria ficha,
     // ou troca via "Ver ficha") — `dados.fichas()`/`FichaResumoDto` não tem `dados` completo pra
-    // alimentar `<app-ficha-visualizacao>`.
+    // alimentar `<app-ficha-campanha-card>`.
     effect(() => {
       const fichaId = this.fichaExibidaId();
       // Acesso de visualização: as concessões carregadas por `carregarAcessosFichaExibida` ficam

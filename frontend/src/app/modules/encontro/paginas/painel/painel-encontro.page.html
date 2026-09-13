@@ -600,7 +600,7 @@
        largar a tela de Iniciativa — 70% da largura em desktop; some no mobile (ver SCSS). -->
     <aside class="iniciativa-tela__ficha">
         @if (meuFichaDados(); as ficha) {
-        <app-ficha-visualizacao
+        <app-ficha-campanha-card
             [fichaId]="ficha.id"
             [nome]="ficha.nome"
             [cor]="ficha.cor"
@@ -610,7 +610,6 @@
             [podeRolar]="true"
             [ehMestre]="false"
             [mostrarRolagensCompacto]="true"
-            modo="compacto"
             (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
             (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
             (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"

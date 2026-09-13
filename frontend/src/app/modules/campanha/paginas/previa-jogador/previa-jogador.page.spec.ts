@@ -183,13 +183,13 @@ describe('CampanhaPreviaJogador', () => {
     const { raiz, campanhaProjecaoService } = montar();
 
     expect(campanhaProjecaoService.recuperarFichaPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID, 10);
-    expect(raiz.querySelector('app-ficha-visualizacao')).not.toBeNull();
+    expect(raiz.querySelector('app-ficha-campanha-card')).not.toBeNull();
   });
 
   it('estado vazio quando o alvo não tem ficha nesta campanha', () => {
     const { raiz } = montar({ previaResposta: previa({ fichas: [] }) });
 
-    expect(raiz.querySelector('app-ficha-visualizacao')).toBeNull();
+    expect(raiz.querySelector('app-ficha-campanha-card')).toBeNull();
     expect(raiz.textContent).toContain('não tem uma ficha nesta campanha');
   });
 
@@ -281,13 +281,13 @@ describe('CampanhaPreviaJogador', () => {
     expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
   });
 
-  it('nenhum controle de mutação está conectado: FichaVisualizacao/FichaRolagensPainel sempre com podeRolar=false, InventarioEsquadrao sempre somenteLeitura', () => {
+  it('nenhum controle de mutação está conectado: FichaCampanhaCard/FichaRolagensPainel sempre com podeRolar=false, InventarioEsquadrao sempre somenteLeitura', () => {
     const { fixture } = montar();
 
-    const fichaVisualizacao = fixture.debugElement.query(By.css('app-ficha-visualizacao'))
+    const fichaCampanhaCard = fixture.debugElement.query(By.css('app-ficha-campanha-card'))
       .componentInstance as { podeRolar(): boolean; ehMestre(): boolean };
-    expect(fichaVisualizacao.podeRolar()).toBe(false);
-    expect(fichaVisualizacao.ehMestre()).toBe(false);
+    expect(fichaCampanhaCard.podeRolar()).toBe(false);
+    expect(fichaCampanhaCard.ehMestre()).toBe(false);
 
     const rolagensPainel = fixture.debugElement.query(By.css('app-ficha-rolagens-painel'))
       .componentInstance as { podeRolar(): boolean; editavel(): boolean };

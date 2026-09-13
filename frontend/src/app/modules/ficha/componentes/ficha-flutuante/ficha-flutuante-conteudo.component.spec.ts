@@ -16,7 +16,7 @@ import {
 import type { FichaCriaturaRecuperadaDto, FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
-import { FichaVisualizacao } from '../ficha-visualizacao/ficha-visualizacao.component';
+import { FichaCampanhaCard } from '../ficha-campanha-card/ficha-campanha-card.component';
 import { FichaService } from '../../ficha.service';
 import { FichaFlutuanteConteudo } from './ficha-flutuante-conteudo.component';
 
@@ -120,7 +120,7 @@ describe('FichaFlutuanteConteudo', () => {
     return { fixture, recuperarFicha, recuperarFichaCriatura };
   }
 
-  it('busca `recuperarFicha` e desenha `app-ficha-visualizacao` pro alvo JOGADOR', () => {
+  it('busca `recuperarFicha` e desenha `app-ficha-campanha-card` pro alvo JOGADOR', () => {
     const { fixture, recuperarFicha, recuperarFichaCriatura } = montar(
       { fichaId: 10, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 7 },
       false,
@@ -128,7 +128,7 @@ describe('FichaFlutuanteConteudo', () => {
     expect(recuperarFicha).toHaveBeenCalledWith(10);
     expect(recuperarFichaCriatura).not.toHaveBeenCalled();
     expect(
-      (fixture.nativeElement as HTMLElement).querySelector('app-ficha-visualizacao'),
+      (fixture.nativeElement as HTMLElement).querySelector('app-ficha-campanha-card'),
     ).not.toBeNull();
   });
 
@@ -190,8 +190,8 @@ describe('FichaFlutuanteConteudo', () => {
       false,
       99,
     );
-    const ficha = fixture.debugElement.query(By.directive(FichaVisualizacao))
-      .componentInstance as FichaVisualizacao;
+    const ficha = fixture.debugElement.query(By.directive(FichaCampanhaCard))
+      .componentInstance as FichaCampanhaCard;
 
     expect(ficha.podeRolar()).toBe(false);
   });

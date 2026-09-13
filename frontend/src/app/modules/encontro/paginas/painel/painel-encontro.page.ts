@@ -53,7 +53,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
-import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
+import { FichaCampanhaCard } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
@@ -128,7 +128,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     CadernoFlutuante,
     CartaoCombatente,
     FichaFlutuante,
-    FichaVisualizacao,
+    FichaCampanhaCard,
     SeletorCombatentes,
     RolagemAvulso,
     BandejaDados,
@@ -310,7 +310,7 @@ export class PainelEncontro {
 
   /**
    * Documento completo da própria ficha — `fichasCampanha()`/`FichaResumoDto` não carrega `dados`,
-   * que é o que `<app-ficha-visualizacao>` da coluna lateral (item novo) precisa. Buscado pelo
+   * que é o que `<app-ficha-campanha-card>` da coluna lateral (item novo) precisa. Buscado pelo
    * `effect` do construtor sempre que `meuFichaId` muda (o mesmo padrão de `CampanhaDetalhe`).
    */
   protected readonly meuFichaDados = signal<FichaRecuperadaDto | null>(null);

@@ -349,7 +349,7 @@
                         </a>
                     </span>
 
-                    <app-ficha-visualizacao
+                    <app-ficha-campanha-card
                         [fichaId]="fichaExibida.id"
                         [nome]="fichaExibida.nome"
                         [cor]="fichaExibida.cor"
@@ -359,7 +359,6 @@
                         [podeRolar]="podeAjustarFichaExibida()"
                         [ehMestre]="false"
                         [podeMandarParaBase]="campanhaAtual.naBase && podeAjustarFichaExibida()"
-                        modo="compacto"
                         [destinoMobileInicial]="destinoMobileFicha()"
                         (abaStatusMudou)="aoMudarDestinoFicha($event)"
                         (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
@@ -430,14 +429,20 @@
                 }
             </div>
 
-            <div class="detalhe__jogador-lateral">
+            <div
+                class="detalhe__jogador-lateral"
+                [class.detalhe__jogador-lateral--oculto-mobile]="destinoMobileFicha() !== 'rolagens'"
+            >
                 <!-- Painel lateral unificado (Rolagens/Esquadrão/Inv. Esquadrão) — mesmo padrão
              `app-segmentado` da visão de mestre (`detalhe-mestre__painel-lateral`): sempre
              montado, nunca overlay. Cada aba fica em `[hidden]`, não `@if`, para não perder
              estado de scroll/formulário ao trocar. A Equipe (ui-33) deixou de ser um cartão à
              parte e virou a aba "Esquadrão". Iniciativa mora só em `app-coluna-acoes`/kebab
              (categoria "Campanha") — chegou a ganhar um botão fixo ao lado das abas também, mas
-             isso duplicava a mesma ação dentro da própria barra lateral (feedback do autor). -->
+             isso duplicava a mesma ação dentro da própria barra lateral (feedback do autor).
+             `--oculto-mobile` (achado ao vivo, autor): no mobile o painel ficava sempre visível
+             rolando a página, mesmo com "Agente"/"Status"/etc. selecionado na `.ficha-nav` — só
+             `bp.mobile` esconde (desktop/tablet mostram sempre, sem barra de destino). -->
                 <div class="detalhe__painel-lateral">
                     <app-segmentado
                         rotulo="Rolagens, Esquadrão e Inventário do Esquadrão"

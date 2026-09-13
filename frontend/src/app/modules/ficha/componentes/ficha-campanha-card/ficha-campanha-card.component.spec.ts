@@ -5,19 +5,15 @@ import {
   ClasseEnum,
   FormacaoBonusEnum,
   FragmentoModuloEnum,
-  FragmentoTipoEnum,
   HabilidadeCategoriaEnum,
   ItemCategoriaEnum,
-  PersonalidadeEstagioEnum,
   SeveridadeLesaoEnum,
-  TipoDanoEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaFragmentoConsumidoDto,
   FichaHabilidadeDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
-  FichaPersonalidadeHabilidadeDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
@@ -25,21 +21,22 @@ import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
-import { FichaVisualizacao } from './ficha-visualizacao.component';
+import { FichaCampanhaCard } from './ficha-campanha-card.component';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 
 /**
- * Prova a exibição read-only da ficha (m3-07): apresenta identidade (codinome, classe/arquétipo,
- * patente derivada), vitalidade e os status derivados **via `shared/regras`** (mesma fonte da
- * edição, sem duplicar fórmula) e **não** expõe nenhum controle de formulário fora do card.
+ * Prova a exibição read-only do card de equipe (m3-07/m2-20/m2-21): apresenta identidade (codinome,
+ * classe/arquétipo, patente derivada), vitalidade e os status derivados **via `shared/regras`**
+ * (mesma fonte da edição, sem duplicar fórmula) e **não** expõe nenhum controle de formulário fora
+ * do card.
  *
- * Redesenho de comparação visual (branch `claude/redesign-ficha-screen-*`): a tela ficou reduzida
- * a este único card — abas, Atributos, Informações Extras e o card "Identidade" detalhado saíram
- * da tela por ora. Os testes que cobriam exclusivamente essas seções removidas saíram junto; os
- * que exercitam lógica pura do componente (sem depender do DOM removido) foram mantidos.
+ * Nasceu por bifurcação de `FichaVisualizacao` (`docs/specs/done/ficha-separar-completa-e-campanha-card.spec.md`):
+ * os testes que cobriam exclusivamente Extras/História/Sanidade e o bloco Nível/Prestígio da
+ * Identidade (todos exclusivos da ficha completa) saíram daqui; os que exercitam lógica ou UI
+ * compartilhada foram mantidos.
  */
-describe('FichaVisualizacao', () => {
+describe('FichaCampanhaCard', () => {
   const dados: FichaJogadorDadosDto = {
     classe: ClasseEnum.COMBATENTE,
     arquetipo: ArquetipoEnum.MERCENARIO,
@@ -85,10 +82,10 @@ describe('FichaVisualizacao', () => {
     // oculta" e o caminho de registro são compartilhados entre o card e o painel de Rolagens da
     // lateral, mas presos a uma ficha só. Aqui o TestBed faz o papel da página.
     TestBed.configureTestingModule({
-      imports: [FichaVisualizacao],
+      imports: [FichaCampanhaCard],
       providers: [FichaRolagemRegistroService],
     });
-    const fixture = TestBed.createComponent(FichaVisualizacao);
+    const fixture = TestBed.createComponent(FichaCampanhaCard);
     fixture.componentRef.setInput('fichaId', fichaId);
     fixture.componentRef.setInput('nome', nome);
     fixture.componentRef.setInput('dados', documento);
@@ -243,22 +240,77 @@ describe('FichaVisualizacao', () => {
       expect(campos).toEqual([{ campo: 'dinheiro', valor: 4200 }]);
     });
 
-    it('não mostra o Limite de Crédito na linha de Identidade (exclusivo de FichaCampanhaCard)', () => {
-      const { raiz } = montar({ ...dados, prestigio: 12 });
-      expect(boxDoRotulo(raiz, 'Crédito')).toBeUndefined();
+    it('organiza Dinheiro, Salário, Patente e Crédito em uma grade 2×2', () => {
+      // No card de equipe, a Patente precisa acompanhar o Limite de Crédito sem reduzir a leitura
+      // de Dinheiro e Salário no mobile.
+      const alvo = montar({ ...dados, prestigio: 12 });
+      alvo.fixture.detectChanges();
+
+      const rotulos = Array.from(
+        alvo.raiz.querySelectorAll('.ficha-ident__stats-linha .ficha-mini__rotulo'),
+      ).map((rotulo) => rotulo.textContent?.trim());
+      expect(rotulos).toEqual(['Dinheiro', 'Salário', 'Patente', 'Crédito']);
+
+      const boxCredito = boxDoRotulo(alvo.raiz, 'Crédito');
+      expect(boxCredito?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('Alto');
+      const botaoInfo = boxCredito?.querySelector<HTMLButtonElement>('.ficha-mini__info');
+      expect(botaoInfo?.getAttribute('aria-label')).toBe('Descrição do Limite de Crédito');
+      const dica = botaoInfo && alvo.fixture.debugElement
+        .query(By.css('.ficha-mini__info'))
+        .injector.get(Tooltip).appTooltip();
+      expect(dica).toContain('Status de "cliente vip".');
     });
   });
 
-  describe('abas do card de Status', () => {
-    it('mostra as seis abas — Rolagens sempre presente (distinto de FichaCampanhaCard)', () => {
-      // `ajustavel: true` só pra "História" entrar na conta (m3-50, condicional a dono/mestre).
-      const { raiz } = montar(dados, 'Corvo', 42, true);
-      const rotulos = Array.from(raiz.querySelectorAll('.ficha-status__aba')).map(
+  describe('aba Rolagens (`mostrarRolagensCompacto`)', () => {
+    /** Rótulos da barra de abas do card de Status, na ordem em que aparecem. */
+    function rotulosDasAbas(raiz: HTMLElement): (string | undefined)[] {
+      return Array.from(raiz.querySelectorAll('.ficha-status__aba')).map(
         (aba) => aba.querySelector('.ficha-status__aba-texto')?.textContent?.trim(),
       );
-      expect(rotulos).toEqual([
-        'Informações', 'Inventário', 'Habilidades', 'Rolagens', 'Extras', 'História',
+    }
+
+    it('some por padrão — o trio de sempre (m2-21), sem regressão pra CampanhaDetalhe', () => {
+      const alvo = montar(dados);
+      alvo.fixture.detectChanges();
+      expect(rotulosDasAbas(alvo.raiz)).toEqual(['Informações', 'Inventário', 'Habilidades']);
+    });
+
+    it('aparece como quarta aba quando `mostrarRolagensCompacto` está ligado', () => {
+      const alvo = montar(dados);
+      alvo.fixture.componentRef.setInput('mostrarRolagensCompacto', true);
+      alvo.fixture.detectChanges();
+      expect(rotulosDasAbas(alvo.raiz)).toEqual([
+        'Informações', 'Inventário', 'Habilidades', 'Rolagens',
       ]);
+    });
+
+    it('clicar em Rolagens troca a aba ativa e desenha o painel de rolagens', () => {
+      const alvo = montar(dados);
+      alvo.fixture.componentRef.setInput('mostrarRolagensCompacto', true);
+      alvo.fixture.detectChanges();
+
+      alvo.raiz.querySelector<HTMLButtonElement>('[data-aba-status="rolagens"]')?.click();
+      alvo.fixture.detectChanges();
+
+      expect(
+        alvo.raiz.querySelector('[data-aba-status="rolagens"]')?.classList,
+      ).toContain('ficha-status__aba--ativa');
+      expect(alvo.raiz.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
+    });
+
+    it('abre Rolagens pela navegação mobile quando o card hospeda o painel', () => {
+      const alvo = montar(dados);
+      alvo.fixture.componentRef.setInput('mostrarRolagensCompacto', true);
+      alvo.fixture.detectChanges();
+
+      alvo.raiz.querySelector<HTMLButtonElement>('[data-destino="rolagens"]')?.click();
+      alvo.fixture.detectChanges();
+
+      expect(
+        alvo.raiz.querySelector('[data-aba-status="rolagens"]')?.classList,
+      ).toContain('ficha-status__aba--ativa');
+      expect(alvo.raiz.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
     });
   });
 
@@ -276,23 +328,10 @@ describe('FichaVisualizacao', () => {
       expect(linhaDefesa.querySelector('input')).toBeNull();
     });
 
-    it('Defesa/Esquiva/Bloqueio ficam editáveis quando ajustável e emitem via ajusteDerivado', () => {
-      const alvo = montar(dados, 'Corvo', 42, true);
-      const ajustes: { chave: string; valor: number | string }[] = [];
-      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
-
-      const linhaDefesa = alvo.raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
-      const botao = Array.from(linhaDefesa.querySelectorAll('.ficha-mini__valor .valor-editavel__botao')).find(
-        (b) => b.getAttribute('aria-label') === 'Editar Defesa',
-      ) as HTMLButtonElement;
-      botao.click();
-      alvo.fixture.detectChanges();
-
-      const entrada = linhaDefesa.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
-      entrada.value = '15';
-      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-
-      expect(ajustes).toEqual([{ chave: 'defesa', valor: 15 }]);
+    it('Defesa/Esquiva/Bloqueio seguem só leitura mesmo ajustável — edição exclusiva da ficha completa', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true);
+      const linhaDefesa = raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
+      expect(linhaDefesa.querySelector('.ficha-mini__valor .valor-editavel__botao')).toBeNull();
     });
 
     it('Contra-ataque segue placeholder tracejado, não editável, sem a habilidade "Contra-Ataque"', () => {
@@ -307,39 +346,7 @@ describe('FichaVisualizacao', () => {
       expect(contraAtaque.querySelector('input')).toBeNull();
     });
 
-    it('Contra-ataque fica editável quando o jogador tem a habilidade "Contra-Ataque"', () => {
-      const documento: FichaJogadorDadosDto = {
-        ...dados,
-        habilidades: [
-          {
-            nome: 'Contra-Ataque',
-            categoria: HabilidadeCategoriaEnum.CLASSE,
-            custoEnergia: 2,
-            descricao: '(Reação)…',
-          },
-        ],
-      };
-      const alvo = montar(documento, 'Corvo', 42, true);
-      const ajustes: { chave: string; valor: number | string }[] = [];
-      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
-
-      const linhaDefesa = alvo.raiz.querySelector('.ficha-visao__coluna--identidade .ficha-combate-rapido')!;
-      const contraAtaque = Array.from(linhaDefesa.querySelectorAll('.ficha-mini')).find(
-        (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Contra-ataque',
-      )!;
-      expect(contraAtaque.classList.contains('ficha-mini--contra')).toBe(false);
-
-      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor .valor-editavel__botao')!;
-      botao.click();
-      alvo.fixture.detectChanges();
-      const entrada = contraAtaque.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
-      entrada.value = '4';
-      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-
-      expect(ajustes).toEqual([{ chave: 'contraAtaque', valor: 4 }]);
-    });
-
-    it('Contra-ataque mostra a Defesa Final calculada (Defesa + Luta ÷ 2) sem precisar de edição manual', () => {
+    it('Contra-ataque mostra a Defesa Final calculada (Defesa + Luta ÷ 2), sempre só leitura aqui', () => {
       const documento: FichaJogadorDadosDto = {
         ...dados,
         habilidades: [
@@ -356,10 +363,11 @@ describe('FichaVisualizacao', () => {
       const contraAtaque = Array.from(linhaDefesa.querySelectorAll('.ficha-mini')).find(
         (box) => box.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Contra-ataque',
       )!;
-      const botao = contraAtaque.querySelector<HTMLButtonElement>('.ficha-mini__valor .valor-editavel__botao')!;
+      expect(contraAtaque.classList.contains('ficha-mini--contra')).toBe(false);
+      expect(contraAtaque.querySelector('.ficha-mini__valor .valor-editavel__botao')).toBeNull();
       // dados.nivel = 3, classe COMBATENTE → Defesa Base = 10 + 3 = 13.
       // dados.atributos.luta = 2 (ver fixture no topo do arquivo) → floor(2 / 2) = 1. Total = 14.
-      expect(botao.textContent?.trim()).toBe('14');
+      expect(contraAtaque.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('14');
     });
 
     it('mostra sempre as cinco linhas de Resistência, mesmo sem nenhum equipamento (tudo em 0)', () => {
@@ -449,21 +457,13 @@ describe('FichaVisualizacao', () => {
       expect(fisico?.querySelector('.ficha-resistencia__valor')?.textContent?.trim()).toBe('2');
     });
 
-    it('Resistências ficam editáveis quando ajustável e emitem via ajusteResistencia (base manual)', () => {
-      const alvo = montar(dados, 'Corvo', 42, true);
-      const ajustes: { tipo: TipoDanoEnum; valor: number }[] = [];
-      alvo.fixture.componentInstance.ajusteResistencia.subscribe((a) => ajustes.push(a));
-
-      const fisico = Array.from(alvo.raiz.querySelectorAll('.ficha-resistencia')).find(
+    it('Resistências seguem só leitura mesmo ajustável — edição exclusiva da ficha completa', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true);
+      expect(raiz.querySelector('.ficha-cartao__subrotulo-nota')?.textContent?.trim()).toBe('só leitura');
+      const fisico = Array.from(raiz.querySelectorAll('.ficha-resistencia')).find(
         (box) => box.querySelector('.ficha-resistencia__abrev')?.textContent?.trim() === 'Físico',
       )!;
-      fisico.querySelector<HTMLButtonElement>('.ficha-resistencia__valor .valor-editavel__botao')!.click();
-      alvo.fixture.detectChanges();
-      const entrada = fisico.querySelector<HTMLInputElement>('.ficha-resistencia__entrada')!;
-      entrada.value = '2';
-      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-
-      expect(ajustes).toEqual([{ tipo: TipoDanoEnum.FISICO, valor: 2 }]);
+      expect(fisico.querySelector('.ficha-resistencia__valor .valor-editavel__botao')).toBeNull();
     });
   });
 
@@ -482,26 +482,16 @@ describe('FichaVisualizacao', () => {
       );
     }
 
-    it('Defesa (amplificador) soma +1 fixo à Defesa exibida, sem mexer no valor editável (base)', () => {
+    it('Defesa (amplificador) soma +1 fixo à Defesa exibida (aqui, sempre só leitura)', () => {
       const documento: FichaJogadorDadosDto = {
         ...dados,
         inventario: { itens: [], amplificadores: [{ nome: 'Defesa', empilhamentos: 1 }] },
       };
       // calcularDefesa: 10 + nível(3) = 13 de base; +1 do amplificador → 14 exibido.
-      const alvo = montar(documento, 'Corvo', 42, true);
-      const defesa = boxDefesa(alvo.raiz, 'Defesa')!;
+      const { raiz } = montar(documento, 'Corvo', 42, true);
+      const defesa = boxDefesa(raiz, 'Defesa')!;
       expect(defesa.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('14');
-
-      const ajustes: { chave: string; valor: number | string }[] = [];
-      alvo.fixture.componentInstance.ajusteDerivado.subscribe((a) => ajustes.push(a));
-      defesa.querySelector<HTMLButtonElement>('.ficha-mini__valor .valor-editavel__botao')!.click();
-      alvo.fixture.detectChanges();
-      // A edição mostra a base (13), não o efetivo (14) — evita commitar o delta de volta.
-      const entrada = defesa.querySelector<HTMLInputElement>('.ficha-mini__entrada')!;
-      expect(entrada.value).toBe('13');
-      entrada.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-      // Sem alterar o valor, blur/enter no mesmo número não emite nada.
-      expect(ajustes).toEqual([]);
+      expect(defesa.querySelector('.valor-editavel__botao')).toBeNull();
     });
 
     it('Defesa (amplificador) cascateia para Esquiva e Bloqueio (doc — "Defesa": reações somam sobre a Defesa Final)', () => {
@@ -657,96 +647,12 @@ describe('FichaVisualizacao', () => {
   });
 
   describe('ficha oculta (m3-65)', () => {
-    it('mostra Ocultar com nome acessível de ação quando a ficha está visível', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-
-      const botao = raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement;
-      expect(botao.textContent?.trim()).toBe('Ocultar');
-      expect(botao.getAttribute('aria-label')).toBe('Ocultar ficha de outros jogadores');
-      const icone = fixture.debugElement.query(By.css('.ficha-ident__visibilidade app-icone'));
-      expect(icone.componentInstance.nome()).toBe('olho-fechado');
+    it('nunca mostra o toggle de visibilidade aqui quando ajustável — exclusivo da ficha completa', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true);
+      expect(raiz.querySelector('.ficha-ident__visibilidade')).toBeNull();
     });
 
-    it('mostra Exibir com nome acessível de ação quando a ficha está oculta', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-      fixture.componentRef.setInput('oculta', true);
-      fixture.detectChanges();
-
-      const botao = raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement;
-      expect(botao.textContent?.trim()).toBe('Exibir');
-      expect(botao.getAttribute('aria-label')).toBe('Exibir ficha para outros jogadores');
-      const icone = fixture.debugElement.query(By.css('.ficha-ident__visibilidade app-icone'));
-      expect(icone.componentInstance.nome()).toBe('olho');
-    });
-
-    it('abre o aviso de ocultar sem emitir antes da confirmação', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-      const emitidos: boolean[] = [];
-      fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
-
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
-      fixture.detectChanges();
-
-      expect(raiz.textContent).toContain('Ocultar ficha?');
-      expect(raiz.textContent).toContain(
-        'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
-      );
-      expect(emitidos).toEqual([]);
-    });
-
-    it('abre o aviso de exibir com a mensagem correspondente', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-      fixture.componentRef.setInput('oculta', true);
-      fixture.detectChanges();
-
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
-      fixture.detectChanges();
-
-      expect(raiz.textContent).toContain('Exibir ficha?');
-      expect(raiz.textContent).toContain(
-        'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
-      );
-    });
-
-    it('cancelar ou fechar a dialog não emite ajusteOculta', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-      const emitidos: boolean[] = [];
-      fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
-
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      (raiz.querySelector('[data-testid="cancelar-visibilidade"]') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      fixture.componentInstance['cancelarAlteracaoVisibilidade']();
-
-      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
-        false,
-      );
-      expect(emitidos).toEqual([]);
-    });
-
-    it.each([
-      { oculta: false, esperado: true, acao: 'Ocultar ficha' },
-      { oculta: true, esperado: false, acao: 'Exibir ficha' },
-    ])('confirmar $acao emite exatamente o estado oposto e fecha a dialog', ({ oculta, esperado }) => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
-      fixture.componentRef.setInput('oculta', oculta);
-      fixture.detectChanges();
-      const emitidos: boolean[] = [];
-      fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
-
-      (raiz.querySelector('.ficha-ident__visibilidade') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      (raiz.querySelector('[data-testid="confirmar-visibilidade"]') as HTMLButtonElement).click();
-      fixture.detectChanges();
-
-      expect(emitidos).toEqual([esperado]);
-      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
-        false,
-      );
-    });
-
-    it('não mostra o toggle quando não é ajustável (só leitura)', () => {
+    it('nunca mostra o toggle de visibilidade aqui quando só leitura', () => {
       const { raiz } = montar(dados, 'Corvo', 42, false);
       expect(raiz.querySelector('.ficha-ident__visibilidade')).toBeNull();
     });
@@ -975,16 +881,17 @@ describe('FichaVisualizacao', () => {
     expect(ajustes).toEqual([{ classe: ClasseEnum.CIVIL, arquetipo: null }]);
   });
 
-  it('mostra os alvos de edição de identidade (Codinome/Nível/Prestígio/Dinheiro) quando ajustável', () => {
+  it('mostra só o alvo de edição de Dinheiro quando ajustável — Codinome/Defesa/Esquiva/Bloqueio são exclusivos da ficha completa', () => {
     const { raiz } = montar(dados, 'Corvo', 42, true);
-    expect(raiz.querySelector('.ficha-ident__nome .valor-editavel__botao')).not.toBeNull();
-    // Nível, Prestígio, Dinheiro, Defesa, Esquiva e Bloqueio editáveis (Patente e Salário seguem
-    // derivados, não editáveis; Contra-ataque só entra com a habilidade — fora deste fixture).
+    expect(raiz.querySelector('.ficha-ident__nome .valor-editavel__botao')).toBeNull();
+    // Só Dinheiro editável aqui (Patente e Crédito seguem derivados, não editáveis; Defesa/
+    // Esquiva/Bloqueio/Contra-ataque e Codinome/Nível/Prestígio seguem exclusivos da ficha
+    // completa, `FichaVisualizacao`, via `ajustavelAmplo`).
     // Escopado ao card de Identidade — o card de Status tem seus próprios editáveis (Deslocamento
     // e cia., redesenho de comparação visual).
     expect(
       raiz.querySelectorAll('.ficha-visao__coluna--identidade .ficha-mini__valor .valor-editavel__botao').length,
-    ).toBe(6);
+    ).toBe(1);
   });
 
   it('emite os eventos certos ao confirmar Codinome/Nível/Prestígio', () => {
@@ -1385,17 +1292,9 @@ describe('FichaVisualizacao', () => {
       expect(raiz.querySelector('.ficha-ident__contrato .valor-editavel__botao')).toBeNull();
     });
 
-    it('mestre vê o Contrato editável e emite o ajuste ao confirmar', () => {
-      const alvo = montar(dados, 'Corvo', 42, true, true);
-      const contratos: string[] = [];
-      alvo.fixture.componentInstance.ajusteContrato.subscribe((c) => contratos.push(c));
-
-      expect(alvo.raiz.querySelector('.ficha-ident__contrato .valor-editavel__botao')).not.toBeNull();
-      const componente = alvo.fixture.componentInstance;
-      componente['editarIdentidade']('contrato');
-      componente['confirmarIdentidade']('contrato', '1234');
-
-      expect(contratos).toEqual(['1234']);
+    it('mestre também vê o Contrato só leitura — edição exclusiva da ficha completa (FichaVisualizacao)', () => {
+      const { raiz } = montar(dados, 'Corvo', 42, true, true);
+      expect(raiz.querySelector('.ficha-ident__contrato .valor-editavel__botao')).toBeNull();
     });
   });
 
@@ -1657,607 +1556,8 @@ describe('FichaVisualizacao', () => {
     });
   });
 
-  describe('Extras (m3-49) — Origem/Personalidade/afinidade de fragmentos na aba "Extras" do Status', () => {
-    const origemExemplo: FichaOrigemDto = {
-      nome: 'Ex-Militar',
-      descricao: 'Serviu nas forças armadas antes de ser recrutado.',
-      saberDeCampo: 'Táticas de combate urbano',
-      formacao: [
-        { bonus: FormacaoBonusEnum.MOVIMENTO_DESLOCAMENTO, parametro: null, texto: '+1m de Deslocamento' },
-      ],
-      especialidade: { gatilho: 'Sob fogo direto', efeito: '+1 dado em um teste' },
-    };
-
-    /** Monta já na aba "Extras" (evita depender de clique na barra do card de Status). */
-    function montarExtras(documento: FichaJogadorDadosDto, ajustavel = false) {
-      const alvo = montar(documento, 'Corvo', 42, ajustavel);
-      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
-      alvo.fixture.detectChanges();
-      return alvo;
-    }
-
-    function selecionarAbaExtras(raiz: HTMLElement, rotulo: 'Identidade' | 'Fragmentos'): void {
-      const botao = Array.from(
-        raiz.querySelectorAll<HTMLButtonElement>('.ficha-extras__navegacao-botao'),
-      ).find((item) => item.textContent?.trim() === rotulo);
-      expect(botao).toBeTruthy();
-      botao!.click();
-    }
-
-    function montarFragmentos(documento: FichaJogadorDadosDto, ajustavel = false) {
-      const alvo = montarExtras(documento, ajustavel);
-      selecionarAbaExtras(alvo.raiz, 'Fragmentos');
-      alvo.fixture.detectChanges();
-      return alvo;
-    }
-
-    it('inicia Extras em Identidade e anuncia a seleção na subbarra', () => {
-      const { raiz } = montarExtras({
-        ...dados,
-        identidade: { personalidade: 'Destemido', origem: origemExemplo },
-      });
-      const extras = raiz.querySelector('.ficha-extras') as HTMLElement;
-      const botoes = Array.from(
-        extras.querySelectorAll<HTMLButtonElement>('.ficha-extras__navegacao-botao'),
-      );
-
-      expect(botoes.map((botao) => botao.textContent?.trim())).toEqual(['Identidade', 'Fragmentos']);
-      expect(botoes.map((botao) => botao.getAttribute('aria-pressed'))).toEqual(['true', 'false']);
-      expect(extras.textContent).toContain('Patente');
-      expect(extras.textContent).toContain('Origem');
-      expect(extras.textContent).toContain('Personalidade');
-      expect(extras.textContent).not.toContain('Fragmentos Consumidos');
-      expect(extras.textContent).not.toContain('Afinidade de Fragmentos');
-      expect(extras.textContent).not.toContain('Anomalia Biológica');
-    });
-
-    it('mantém a subbarra com ícones fora do painel rolável', () => {
-      const { raiz } = montarExtras(dados);
-      const extras = raiz.querySelector('.ficha-extras') as HTMLElement;
-      const navegacao = extras.querySelector('.ficha-extras__navegacao') as HTMLElement;
-      const painel = extras.querySelector('.ficha-extras__painel') as HTMLElement;
-
-      expect(navegacao.querySelectorAll('.ficha-extras__navegacao-icone')).toHaveLength(2);
-      expect(painel).toBeTruthy();
-      expect(painel.contains(navegacao)).toBe(false);
-      expect(painel.textContent).toContain('Patente');
-      expect(painel.textContent).toContain('Origem');
-      expect(painel.textContent).toContain('Personalidade');
-    });
-
-    it('troca para Fragmentos e renderiza somente as seções desse recorte', () => {
-      const alvo = montarExtras(dados);
-
-      selecionarAbaExtras(alvo.raiz, 'Fragmentos');
-      alvo.fixture.detectChanges();
-
-      const extras = alvo.raiz.querySelector('.ficha-extras') as HTMLElement;
-      const botoes = Array.from(
-        extras.querySelectorAll<HTMLButtonElement>('.ficha-extras__navegacao-botao'),
-      );
-      expect(botoes.map((botao) => botao.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
-      expect(extras.textContent).not.toContain('Patente');
-      expect(extras.textContent).not.toContain('Origem');
-      expect(extras.textContent).not.toContain('Personalidade');
-      expect(extras.textContent).toContain('Fragmentos Consumidos');
-      expect(extras.textContent).toContain('Afinidade de Fragmentos');
-      expect(extras.textContent).toContain('Anomalia Biológica');
-    });
-
-    it('preserva Fragmentos ao sair de Extras e voltar enquanto o componente permanece montado', () => {
-      const alvo = montarExtras(dados);
-      selecionarAbaExtras(alvo.raiz, 'Fragmentos');
-      alvo.fixture.detectChanges();
-
-      alvo.fixture.componentInstance['selecionarAbaStatus']('informacoes');
-      alvo.fixture.detectChanges();
-      alvo.fixture.componentInstance['selecionarAbaStatus']('extras');
-      alvo.fixture.detectChanges();
-
-      const extras = alvo.raiz.querySelector('.ficha-extras') as HTMLElement;
-      expect(extras.textContent).toContain('Fragmentos Consumidos');
-      expect(
-        extras.querySelector<HTMLButtonElement>('.ficha-extras__navegacao-botao--ativa')?.textContent?.trim(),
-      ).toBe('Fragmentos');
-    });
-
-    /**
-     * Registro de `fragmentosConsumidos` completo (m3-64, correção) — os campos além de
-     * `modulo`/`bonusEscolhido` só importam para os testes de remoção; aqui bastam valores válidos
-     * e reconhecíveis pra não poluir os testes de exibição/prepend que não olham pra eles.
-     */
-    function registroFragmentoConsumido(
-      modulo: FragmentoModuloEnum,
-      bonusEscolhido: string,
-    ): FichaFragmentoConsumidoDto {
-      return {
-        modulo,
-        bonusEscolhido,
-        opcao: { rotulo: bonusEscolhido, tipo: 'DEFESA', valor: 1 },
-        atributoEscolhido: null,
-        deltaEnergiaMaxima: 0,
-        item: {
-          nome: 'Fragmento achado',
-          categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
-          custo: 0,
-          peso: 0,
-          quantidade: 1,
-          guardada: false,
-          modificacoes: [],
-          modulo,
-        },
-      };
-    }
-
-    it('mostra nome/descrição/Saber de Campo/Especialidade/Formação da Origem definida', () => {
-      const { raiz } = montarExtras({ ...dados, identidade: { personalidade: null, origem: origemExemplo } });
-
-      // A seção "Patente" (m3-6x) entrou acima de Origem na aba Extras e reusa a mesma
-      // `.ficha-extras__titulo` — escopar por seção em vez de pegar o primeiro título da página.
-      const secaoOrigem = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find((secao) =>
-        secao.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Origem',
-      );
-      expect(secaoOrigem?.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Ex-Militar');
-      expect(secaoOrigem?.textContent).toContain('Serviu nas forças armadas antes de ser recrutado.');
-      expect(secaoOrigem?.textContent).toContain('Táticas de combate urbano');
-      expect(secaoOrigem?.textContent).toContain('Sob fogo direto — +1 dado em um teste');
-      const chips = Array.from(secaoOrigem?.querySelectorAll('.ficha-extras__chips .chip') ?? []).map((c) =>
-        c.textContent?.trim(),
-      );
-      expect(chips).toContain('+1m de Deslocamento');
-    });
-
-    it('mostra a seção Patente acima de Origem: nome, faixa de Prestígio, salário e os dois limites', () => {
-      const { raiz } = montarExtras({ ...dados, prestigio: 12 });
-
-      const secaoPatente = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find((secao) =>
-        secao.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Patente',
-      );
-      expect(secaoPatente?.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Veterano');
-      expect(secaoPatente?.textContent).toContain('12–20');
-      expect(secaoPatente?.textContent).toContain('$3.500');
-      expect(secaoPatente?.textContent).toContain('3 níveis de empilhamento até 9 modificações no item');
-      expect(secaoPatente?.textContent).toContain('Alto');
-      expect(secaoPatente?.textContent).toContain('Status de "cliente vip".');
-    });
-
-    it('Origem ainda não definida mostra a mensagem de vazio', () => {
-      const { raiz } = montarExtras(dados);
-      expect(raiz.textContent).toContain('Origem ainda não definida.');
-    });
-
-    it('mostra a Personalidade e a descrição da habilidade correspondente (categoria PERSONALIDADE)', () => {
-      const { raiz } = montarExtras({
-        ...dados,
-        identidade: { personalidade: 'Destemido', origem: null },
-        habilidades: [
-          {
-            nome: 'Destemido',
-            categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
-            custoEnergia: 2,
-            descricao: 'Ignora a primeira fonte de Medo em cada cena.',
-          },
-        ],
-      });
-
-      const secaoPersonalidade = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find((secao) =>
-        secao.textContent?.includes('Destemido'),
-      );
-      expect(secaoPersonalidade?.querySelector('.ficha-extras__titulo')?.textContent?.trim()).toBe('Destemido');
-      expect(secaoPersonalidade?.textContent).toContain('Ignora a primeira fonte de Medo em cada cena.');
-      expect(secaoPersonalidade?.textContent).toContain('2 E');
-    });
-
-    it('Personalidade definida sem nenhum estágio preenchido avisa "sem descrição definida" (m3-78)', () => {
-      const { raiz } = montarExtras({ ...dados, identidade: { personalidade: 'Destemido', origem: null } });
-      expect(raiz.textContent).toContain('Estágio ativo ainda sem descrição definida.');
-    });
-
-    describe('Habilidade de Personalidade — 3 estágios (m3-78)', () => {
-      it('seletor de estágio ativo restrito ao que o Nível atual da ficha desbloqueia — Nível 3 só oferece Base', () => {
-        const componente = montarExtras({ ...dados, nivel: 3, identidade: { personalidade: 'Destemido', origem: null } }, true).fixture.componentInstance;
-        expect(componente['estagiosDisponiveisAtuais']()).toEqual([PersonalidadeEstagioEnum.BASE]);
-      });
-
-      it('seletor de estágio ativo restrito ao que o Nível atual da ficha desbloqueia — Nível 7 já oferece a 1ª Fortificação', () => {
-        const componente = montarExtras({ ...dados, nivel: 7, identidade: { personalidade: 'Destemido', origem: null } }, true).fixture.componentInstance;
-        expect(componente['estagiosDisponiveisAtuais']()).toEqual([PersonalidadeEstagioEnum.BASE, PersonalidadeEstagioEnum.FORTIFICACAO_1]);
-      });
-
-      it('trocar o seletor emite o mesmo rascunho só com `ativa` alterado', () => {
-        const alvo = montarExtras({
-          ...dados,
-          nivel: 7,
-          identidade: {
-            personalidade: 'Destemido',
-            origem: null,
-            habilidade: {
-              ativa: PersonalidadeEstagioEnum.BASE,
-              base: { descricao: 'Efeito base.', custoEnergia: 1 },
-              fortificacao1: { descricao: 'Mais um dado.', custoEnergia: 3 },
-              fortificacao2: null,
-            },
-          },
-        }, true);
-        const emitidos: FichaPersonalidadeHabilidadeDto[] = [];
-        alvo.fixture.componentInstance.ajusteHabilidadePersonalidade.subscribe((h) => emitidos.push(h));
-
-        alvo.fixture.componentInstance['mudarEstagioAtivoPersonalidade'](PersonalidadeEstagioEnum.FORTIFICACAO_1);
-
-        expect(emitidos).toHaveLength(1);
-        expect(emitidos[0].ativa).toBe(PersonalidadeEstagioEnum.FORTIFICACAO_1);
-        expect(emitidos[0].fortificacao1).toEqual({ descricao: 'Mais um dado.', custoEnergia: 3 });
-      });
-
-      it('editar os 3 blocos no editor e confirmar emite o rascunho inteiro', () => {
-        const alvo = montarExtras({ ...dados, nivel: 14, identidade: { personalidade: 'Destemido', origem: null } }, true);
-        const emitidos: FichaPersonalidadeHabilidadeDto[] = [];
-        alvo.fixture.componentInstance.ajusteHabilidadePersonalidade.subscribe((h) => emitidos.push(h));
-
-        const componente = alvo.fixture.componentInstance;
-        componente['editarPersonalidadeHabilidade']();
-        componente['mudarBaseRascunhoPersonalidade']('descricao', 'Ignora a primeira fonte de Medo.');
-        componente['mudarBaseRascunhoPersonalidade']('custoEnergia', '2');
-        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'descricao', 'Mais um dado.');
-        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao1', 'custoEnergia', '3');
-        componente['mudarFortificacaoRascunhoPersonalidade']('fortificacao2', 'descricao', 'Efeito maior.');
-        componente['confirmarPersonalidadeHabilidade']();
-
-        expect(emitidos).toHaveLength(1);
-        expect(emitidos[0].base).toEqual({ descricao: 'Ignora a primeira fonte de Medo.', custoEnergia: 2 });
-        expect(emitidos[0].fortificacao1).toEqual({ descricao: 'Mais um dado.', custoEnergia: 3 });
-        expect(emitidos[0].fortificacao2).toEqual({ descricao: 'Efeito maior.', custoEnergia: null });
-        expect(componente['editandoPersonalidadeHabilidade']()).toBe(false);
-      });
-
-      it('cancelar o editor descarta o rascunho sem emitir nada', () => {
-        const alvo = montarExtras({ ...dados, identidade: { personalidade: 'Destemido', origem: null } }, true);
-        const emitidos: FichaPersonalidadeHabilidadeDto[] = [];
-        alvo.fixture.componentInstance.ajusteHabilidadePersonalidade.subscribe((h) => emitidos.push(h));
-
-        const componente = alvo.fixture.componentInstance;
-        componente['editarPersonalidadeHabilidade']();
-        componente['mudarBaseRascunhoPersonalidade']('descricao', 'Rascunho descartado');
-        componente['cancelarPersonalidadeHabilidade']();
-
-        expect(emitidos).toHaveLength(0);
-        expect(componente['editandoPersonalidadeHabilidade']()).toBe(false);
-        expect(componente['rascunhoPersonalidadeHabilidade']()).toBeNull();
-      });
-
-      it('retrocompatibilidade: item PERSONALIDADE legado (sem identidade.habilidade) vira o estágio correspondente ao Nível atual', () => {
-        const componente = montarExtras({
-          ...dados,
-          nivel: 8,
-          identidade: { personalidade: 'Destemido', origem: null },
-          habilidades: [
-            {
-              nome: 'Destemido+',
-              categoria: HabilidadeCategoriaEnum.PERSONALIDADE,
-              custoEnergia: 3,
-              descricao: 'Mais um dado ao forçar o teste.',
-            },
-          ],
-        }, true).fixture.componentInstance;
-
-        const efetiva = componente['personalidadeHabilidadeEfetiva']();
-        expect(efetiva.ativa).toBe(PersonalidadeEstagioEnum.FORTIFICACAO_1);
-        expect(efetiva.base).toBeNull();
-        expect(efetiva.fortificacao1).toEqual({ descricao: 'Mais um dado ao forçar o teste.', custoEnergia: 3 });
-        expect(efetiva.fortificacao2).toBeNull();
-      });
-    });
-
-    it('afinidade soma fragmentos soltos (por unidade do stack) + fragmentos já acoplados como Modificação', () => {
-      const itens: CarrinhoItemDto[] = [
-        // 2 fragmentos Potencializador módulo V ainda soltos no inventário (mesmo stack, quantidade 2).
-        {
-          nome: 'Fragmento Potencializador',
-          categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
-          custo: 0,
-          peso: 0,
-          quantidade: 2,
-          guardada: false,
-          modificacoes: [],
-          modulo: FragmentoModuloEnum.V,
-        },
-        // 1 fragmento módulo IV já acoplado a uma arma — vira Modificação com origemFragmento (m3-42).
-        {
-          nome: 'Pistola',
-          categoria: ItemCategoriaEnum.ARMAS_DE_FOGO,
-          custo: 100,
-          peso: 1,
-          quantidade: 1,
-          guardada: false,
-          modificacoes: [
-            {
-              nome: 'Fragmento Potencializador — Módulo IV',
-              empilhamentos: 1,
-              efeitos: [],
-              origemFragmento: { tipo: FragmentoTipoEnum.POTENCIALIZADOR, modulo: FragmentoModuloEnum.IV },
-            },
-          ],
-        },
-      ];
-      const { raiz, fixture } = montarFragmentos({ ...dados, inventario: { itens, amplificadores: [] } });
-
-      // Doc — "⬥ Afinidade com Fragmentos": 2× módulo V (1 cada) + 1× módulo IV (2) = 4.
-      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(4);
-      const box = Array.from(raiz.querySelectorAll('.ficha-mini')).find(
-        (b) => b.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Afinidade',
-      );
-      expect(box?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('4');
-      // m3-66: agrupado por módulo (quantidade + Afinidade individual), não mais um chip repetido
-      // por unidade — "2× Módulo V" reforça a composição da soma, em vez de dois chips idênticos.
-      const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
-        c.textContent?.trim(),
-      );
-      expect(chips).toEqual(['2× Módulo V (2)', 'Módulo IV (2)']);
-    });
-
-    it('sem fragmentos portados: afinidade 0 e mensagem de vazio, sem nota de redução', () => {
-      const { raiz, fixture } = montarFragmentos(dados);
-      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(0);
-      expect(raiz.textContent).toContain('Nenhum fragmento portado.');
-      expect(raiz.textContent).not.toContain('Afinidade acima de 10');
-    });
-
-    it('afinidade também soma os fragmentos já consumidos (P-015) — mesmo sem nada no inventário', () => {
-      const documento = {
-        ...dados,
-        fragmentosConsumidos: [registroFragmentoConsumido(FragmentoModuloEnum.IV, '+2 em Defesa')],
-      };
-      const { raiz, fixture } = montarFragmentos(documento);
-
-      // Doc — "Afinidade = 6 - Módulo": módulo IV consumido sozinho vale 2, mesmo com o inventário vazio.
-      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(2);
-      const box = Array.from(raiz.querySelectorAll('.ficha-mini')).find(
-        (b) => b.querySelector('.ficha-mini__rotulo')?.textContent?.trim() === 'Afinidade',
-      );
-      expect(box?.querySelector('.ficha-mini__valor')?.textContent?.trim()).toBe('2');
-    });
-
-    it('afinidade acima de 10 mostra a nota de redução de custo de Energia (m3-42)', () => {
-      // 6 fragmentos módulo I (5 cada) = 30 de afinidade → redução de −10 (floor((30-10)/2)).
-      const itens: CarrinhoItemDto[] = [
-        {
-          nome: 'Fragmento Potencializador',
-          categoria: ItemCategoriaEnum.FRAGMENTO_POTENCIALIZADOR,
-          custo: 0,
-          peso: 0,
-          quantidade: 6,
-          guardada: false,
-          modificacoes: [],
-          modulo: FragmentoModuloEnum.I,
-        },
-      ];
-      const { raiz, fixture } = montarFragmentos({ ...dados, inventario: { itens, amplificadores: [] } });
-
-      expect(fixture.componentInstance['afinidadeFragmentos']()).toBe(30);
-      expect(raiz.textContent).toContain('Afinidade acima de 10: −10 de Energia no custo de fragmentos.');
-      const chips = Array.from(raiz.querySelectorAll('.ficha-extras__chips .chip')).map((c) =>
-        c.textContent?.trim(),
-      );
-      expect(chips).toEqual(['6× Módulo I (30)']);
-    });
-
-    it('rastro de Fragmentos Consumidos aparece acima de "Afinidade de Fragmentos", mais recente primeiro (m3-64)', () => {
-      const documento = {
-        ...dados,
-        fragmentosConsumidos: [
-          registroFragmentoConsumido(FragmentoModuloEnum.III, '+3 em Defesa'),
-          registroFragmentoConsumido(FragmentoModuloEnum.V, '+2 de dano do Corpo'),
-        ],
-      };
-      const { raiz } = montarFragmentos(documento);
-
-      const secoes = Array.from(raiz.querySelectorAll('.ficha-extras__secao'));
-      const titulos = secoes.map((s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim());
-      const indiceConsumidos = titulos.indexOf('Fragmentos Consumidos');
-      const indiceAfinidade = titulos.indexOf('Afinidade de Fragmentos');
-      expect(indiceConsumidos).toBeGreaterThanOrEqual(0);
-      expect(indiceConsumidos).toBeLessThan(indiceAfinidade);
-
-      const linhas = Array.from(secoes[indiceConsumidos].querySelectorAll('.ficha-extras__linha')).map((linha) => ({
-        rotulo: linha.querySelector('.ficha-extras__rotulo')?.textContent?.trim(),
-        valor: linha.querySelector('.ficha-extras__valor')?.textContent?.trim(),
-      }));
-      expect(linhas).toEqual([
-        { rotulo: 'Módulo III', valor: '+3 em Defesa' },
-        { rotulo: 'Módulo V', valor: '+2 de dano do Corpo' },
-      ]);
-    });
-
-    it('sem fragmentos consumidos: mensagem de vazio na seção "Fragmentos Consumidos"', () => {
-      const { raiz } = montarFragmentos(dados);
-      const secao = Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find(
-        (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
-      );
-      expect(secao?.textContent).toContain('Nenhum fragmento consumido ainda.');
-    });
-
-    it('aoRegistrarFragmentoConsumido prepende o novo registro à lista existente e emite ajusteFragmentosConsumidos', () => {
-      const registroExistente = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
-      const documento = { ...dados, fragmentosConsumidos: [registroExistente] };
-      const alvo = montar(documento, 'Corvo', 42, true);
-      const ajustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
-      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => ajustes.push(a));
-
-      const registroNovo = registroFragmentoConsumido(FragmentoModuloEnum.I, '+10 de dano do Corpo');
-      alvo.fixture.componentInstance['aoRegistrarFragmentoConsumido'](registroNovo);
-
-      expect(ajustes).toEqual([[registroNovo, registroExistente]]);
-    });
-
-    it('visualizador (não ajustável): sem botão de remover no registro', () => {
-      const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
-      const { raiz } = montarFragmentos({ ...dados, fragmentosConsumidos: [registro] });
-      expect(raiz.querySelector('.ficha-extras__mini-btn')).toBeNull();
-    });
-
-    it('dono/mestre: botão ✕ abre a confirmação "Remover?"; cancelar fecha sem remover; confirmar retira a linha', () => {
-      const registro = registroFragmentoConsumido(FragmentoModuloEnum.V, '+1 em Defesa');
-      const alvo = montarFragmentos({ ...dados, fragmentosConsumidos: [registro] }, true);
-      const secao = () =>
-        Array.from(alvo.raiz.querySelectorAll('.ficha-extras__secao')).find(
-          (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Fragmentos Consumidos',
-        )!;
-      const linha = () => secao().querySelector('.ficha-extras__linha') as HTMLElement;
-
-      const ajustes: (readonly FichaFragmentoConsumidoDto[])[] = [];
-      alvo.fixture.componentInstance.ajusteFragmentosConsumidos.subscribe((a) => ajustes.push(a));
-
-      const botaoRemover = () =>
-        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
-          (b) => b.getAttribute('aria-label') === 'Remover fragmento consumido',
-        ) as HTMLButtonElement | undefined;
-      expect(botaoRemover()).toBeDefined();
-      botaoRemover()!.click();
-      alvo.fixture.detectChanges();
-      expect(linha().textContent).toContain('Remover?');
-
-      const botaoCancelar = () =>
-        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
-          (b) => b.getAttribute('aria-label') === 'Cancelar remoção do fragmento consumido',
-        ) as HTMLButtonElement;
-      botaoCancelar().click();
-      alvo.fixture.detectChanges();
-      expect(linha().textContent).not.toContain('Remover?');
-      expect(ajustes).toEqual([]);
-
-      botaoRemover()!.click();
-      alvo.fixture.detectChanges();
-      const botaoConfirmar = () =>
-        Array.from(linha().querySelectorAll('.ficha-extras__mini-btn')).find(
-          (b) => b.getAttribute('aria-label') === 'Confirmar remoção do fragmento consumido',
-        ) as HTMLButtonElement;
-      botaoConfirmar().click();
-      alvo.fixture.detectChanges();
-
-      // Componente controlado (m3-10): o próprio `dados()` só muda quando o hospedeiro re-emite o
-      // input após persistir — aqui só cabe conferir o que foi emitido, não o DOM pós-emissão.
-      expect(ajustes).toEqual([[]]);
-    });
-  });
-
-  describe('Limite mínimo de Energia / Anomalia Biológica (m3-67)', () => {
-    /** Monta já na aba "Extras" (mesmo helper de `montarExtras` acima). */
-    function montarExtras(documento: FichaJogadorDadosDto, ajustavel = false) {
-      const alvo = montar(documento, 'Corvo', 42, ajustavel);
-      alvo.fixture.componentRef.setInput('abaStatusInicial', 'extras');
-      alvo.fixture.componentInstance['selecionarAbaExtras']('fragmentos');
-      alvo.fixture.detectChanges();
-      return alvo;
-    }
-
-    function secaoAnomalia(raiz: HTMLElement) {
-      return Array.from(raiz.querySelectorAll('.ficha-extras__secao')).find(
-        (s) => s.querySelector('.ficha-cartao__subrotulo')?.textContent?.trim() === 'Anomalia Biológica',
-      )!;
-    }
-
-    // `dados`: Vigor 4, Destreza 2 → limite mínimo (4+2)×2 = 12. Energia Máxima derivada (sem
-    // override) do Combatente nível 3/Destreza 2 é 43 — bem acima do limite, então fora do estado.
-    it('limite mínimo é (Vigor + Destreza) × 2; Energia Máxima acima dele: sem Anomalia Biológica', () => {
-      const { raiz, fixture } = montarExtras(dados);
-      expect(fixture.componentInstance['limiteMinimoEnergia']()).toBe(12);
-      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(false);
-      const secao = secaoAnomalia(raiz);
-      expect(secao.textContent).toContain('12');
-      expect(secao.textContent).toContain('dentro do limite');
-      expect(secao.textContent).not.toContain('todos os testes');
-    });
-
-    it('Energia Máxima atual abaixo do limite: estado derivado true e mostra os efeitos calculados', () => {
-      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
-      const { raiz, fixture } = montarExtras(documento);
-      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(true);
-
-      const secao = secaoAnomalia(raiz);
-      expect(secao.textContent).toContain('Energia Máxima (5)');
-      const linhas = Array.from(secao.querySelectorAll('.ficha-extras__linha')).map((linha) => ({
-        rotulo: linha.querySelector('.ficha-extras__rotulo')?.textContent?.trim(),
-        valor: linha.querySelector('.ficha-extras__valor')?.textContent?.trim(),
-      }));
-      // Vida Máxima derivada (Combatente nível 3, Vigor 4) = 91 → teto de 10% = 9 (floor).
-      expect(linhas).toEqual([
-        { rotulo: 'Testes', valor: '-15 em todos os testes' },
-        { rotulo: 'Defesa', valor: '-10 em Defesa' },
-        { rotulo: 'Vida atual', valor: 'trava em 9 de 91' },
-      ]);
-    });
-
-    it('Energia Máxima atual igual ao limite: ainda fora do estado (só abaixo entra)', () => {
-      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 12 } };
-      const { fixture } = montarExtras(documento);
-      expect(fixture.componentInstance['anomaliaBiologica']()).toBe(false);
-    });
-
-    it('visualizador (não ajustável) em Anomalia Biológica: sem o atalho de registrar o trauma', () => {
-      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
-      const { raiz } = montarExtras(documento, false);
-      expect(secaoAnomalia(raiz).textContent).not.toContain('Limiar da Humanidade');
-    });
-
-    it('dono/mestre em Anomalia Biológica: atalho pré-preenche nome/descrição e não dispara sozinho', () => {
-      const documento = { ...dados, estado: { ...dados.estado, energiaMaxima: 5 } };
-      const alvo = montarExtras(documento, true);
-      const ajustes: unknown[] = [];
-      alvo.fixture.componentInstance.ajusteSanidade.subscribe((a) => ajustes.push(a));
-
-      const secao = () => secaoAnomalia(alvo.raiz);
-      const botaoAbrir = () =>
-        Array.from(secao().querySelectorAll('button')).find((b) =>
-          b.textContent?.includes('Limiar da Humanidade'),
-        ) as HTMLButtonElement;
-      expect(botaoAbrir()).toBeDefined();
-      // Só abrir o atalho não emite nada — precisa da confirmação explícita.
-      expect(ajustes).toEqual([]);
-
-      botaoAbrir().click();
-      alvo.fixture.detectChanges();
-      expect(secao().textContent).toContain('+2');
-      expect(secao().textContent).toContain('-5');
-      expect(secao().textContent).toContain('3×');
-      expect(ajustes).toEqual([]);
-
-      const botaoCancelar = () =>
-        Array.from(secao().querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Cancelar') as
-          | HTMLButtonElement
-          | undefined;
-      botaoCancelar()!.click();
-      alvo.fixture.detectChanges();
-      expect(secao().textContent).not.toContain('+2 ao custo');
-      expect(ajustes).toEqual([]);
-
-      botaoAbrir().click();
-      alvo.fixture.detectChanges();
-      const botaoConfirmar = () =>
-        Array.from(secao().querySelectorAll('button')).find(
-          (b) => b.textContent?.trim() === 'Registrar trauma',
-        ) as HTMLButtonElement;
-      botaoConfirmar().click();
-      alvo.fixture.detectChanges();
-
-      expect(ajustes).toEqual([
-        {
-          sequelas: dados.estado.sequelas,
-          traumas: [
-            {
-              nome: 'Limiar da Humanidade',
-              descricao: expect.stringContaining('+2'),
-              tratado: false,
-            },
-            ...dados.estado.traumas,
-          ],
-          lesoes: dados.estado.lesoes,
-        },
-      ]);
-    });
-  });
-
   describe('navegação mobile (m3-60) — barra inferior + HUD de vitais', () => {
-    it('a barra inferior tem os seis destinos para dono/mestre, começando pelo Agente', () => {
+    it('a barra inferior tem os cinco destinos do card de equipe, começando pelo Agente (sem Extras/História)', () => {
       const { raiz } = montar(dados, 'Corvo', 42, true, false);
       const destinos = Array.from(raiz.querySelectorAll('.ficha-nav__item')).map((b) =>
         b.getAttribute('data-destino'),
@@ -2268,18 +1568,7 @@ describe('FichaVisualizacao', () => {
         'inventario',
         'habilidades',
         'rolagens',
-        'extras',
-        'historia',
       ]);
-    });
-
-    it('o visualizador não vê o destino História (mesma regra da aba)', () => {
-      const { raiz } = montar(dados, 'Corvo', 42, false, false);
-      const destinos = Array.from(raiz.querySelectorAll('.ficha-nav__item')).map((b) =>
-        b.getAttribute('data-destino'),
-      );
-      expect(destinos).not.toContain('historia');
-      expect(destinos).toHaveLength(6);
     });
 
     it('todo destino tem rótulo visível no DOM — nenhum é só ícone', () => {
@@ -2287,15 +1576,7 @@ describe('FichaVisualizacao', () => {
       const rotulos = Array.from(raiz.querySelectorAll('.ficha-nav__rotulo')).map((r) =>
         r.textContent?.trim(),
       );
-      expect(rotulos).toEqual([
-        'Agente',
-        'Status',
-        'Invent.',
-        'Habilid.',
-        'Rolagens',
-        'Extras',
-        'História',
-      ]);
+      expect(rotulos).toEqual(['Agente', 'Status', 'Invent.', 'Habilid.', 'Rolagens']);
       // O rótulo curto é o visual; o leitor de tela ouve o nome inteiro pelo aria-label do botão.
       const inventario = raiz.querySelector('[data-destino="inventario"]');
       expect(inventario?.getAttribute('aria-label')).toBe('Inventário');
@@ -2331,6 +1612,14 @@ describe('FichaVisualizacao', () => {
       expect(raiz.querySelector('[data-destino="rolagens"]')?.classList).toContain(
         'ficha-nav__item--ativo',
       );
+    });
+
+    it('Rolagens marca o destino externo em vez de manter uma aba interna exposta', () => {
+      const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
+      fixture.componentRef.setInput('destinoMobileInicial', 'rolagens');
+      fixture.detectChanges();
+
+      expect(raiz.querySelector('.ficha-visao__linha-colunas--rolagens')).not.toBeNull();
     });
 
     it('o HUD não aparece no destino Agente — o card de Identidade já mostra o mesmo Nome/Vida/Energia', () => {
@@ -2395,97 +1684,6 @@ describe('FichaVisualizacao', () => {
       for (const preenchimento of preenchimentos) {
         expect(preenchimento.style.width).toBe('0%');
       }
-    });
-  });
-
-  describe('História (m3-50) — aba própria, só dono/mestre', () => {
-    it('não mostra o botão da aba nem o painel quando não ajustável (visualizador)', () => {
-      const { raiz } = montar(dados, 'Corvo', 42, false, false);
-      const botoes = Array.from(raiz.querySelectorAll('.ficha-status__aba')).map((b) =>
-        b.textContent?.trim(),
-      );
-      expect(botoes).not.toContain('História');
-      expect(raiz.textContent).not.toContain('Sem história definida.');
-    });
-
-    it('mostra o botão da aba para dono/mestre (ajustavel)', () => {
-      const { raiz } = montar(dados, 'Corvo', 42, true, false);
-      const botoes = Array.from(raiz.querySelectorAll('.ficha-status__aba')).map((b) =>
-        b.textContent?.trim(),
-      );
-      expect(botoes).toContain('História');
-    });
-
-    it('clicar no botão da aba mostra o texto de história definido', () => {
-      const { raiz, fixture } = montar(
-        { ...dados, historia: 'Nasceu numa colônia orbital.' },
-        'Corvo',
-        42,
-        true,
-        false,
-      );
-      const botao = Array.from(raiz.querySelectorAll('.ficha-status__aba')).find(
-        (b) => b.textContent?.trim() === 'História',
-      ) as HTMLButtonElement;
-      botao.click();
-      fixture.detectChanges();
-
-      expect(raiz.textContent).toContain('Nasceu numa colônia orbital.');
-    });
-
-    it('usa a caixa expansível exclusiva da História', () => {
-      const { raiz, fixture } = montar(
-        { ...dados, historia: 'Nasceu numa colônia orbital.' },
-        'Corvo',
-        42,
-        true,
-        false,
-      );
-
-      const botao = Array.from(raiz.querySelectorAll('.ficha-status__aba')).find(
-        (item) => item.textContent?.trim() === 'História',
-      ) as HTMLButtonElement;
-      botao.click();
-      fixture.detectChanges();
-
-      expect(raiz.querySelector('.ficha-status__anotacoes-caixa--historia')).not.toBeNull();
-      expect(raiz.querySelector('.ficha-visao__anotacoes--historia')).not.toBeNull();
-    });
-
-    it('sem historia definida (ou ausente — visualizador nunca chega aqui) mostra a mensagem de vazio', () => {
-      const { raiz, fixture } = montar(dados, 'Corvo', 42, true, false);
-      fixture.componentRef.setInput('abaStatusInicial', 'historia');
-      fixture.detectChanges();
-
-      expect(raiz.textContent).toContain('Sem história definida.');
-    });
-
-    it('emite ajusteHistoria com o texto confirmado (blur) quando muda', () => {
-      const alvo = montar(dados, 'Corvo', 42, true, false);
-      alvo.fixture.componentRef.setInput('abaStatusInicial', 'historia');
-      alvo.fixture.detectChanges();
-      const emitidos: string[] = [];
-      alvo.fixture.componentInstance.ajusteHistoria.subscribe((h) => emitidos.push(h));
-      const componente = alvo.fixture.componentInstance;
-
-      componente['editarHistoria']();
-      componente['confirmarHistoria']('Nasceu numa colônia orbital.');
-
-      expect(emitidos).toEqual(['Nasceu numa colônia orbital.']);
-    });
-
-    it('não emite ajusteHistoria quando o texto confirmado não mudou', () => {
-      const alvo = montar({ ...dados, historia: 'Já escrita.' }, 'Corvo', 42, true, false);
-      alvo.fixture.componentRef.setInput('abaStatusInicial', 'historia');
-      alvo.fixture.detectChanges();
-      const emitidos: string[] = [];
-      alvo.fixture.componentInstance.ajusteHistoria.subscribe((h) => emitidos.push(h));
-      const componente = alvo.fixture.componentInstance;
-
-      componente['editarHistoria']();
-      componente['confirmarHistoria']('Já escrita.');
-
-      expect(emitidos).toEqual([]);
     });
   });
 
@@ -2575,12 +1773,11 @@ describe('FichaVisualizacao', () => {
       expect(alvo.raiz.querySelector('.ficha-ident__avatar-enquadrar')).toBeNull();
     });
 
-    it('o selo de enquadramento abre o seletor pra imagem existente', () => {
-      const { fixture, raiz } = montarComImagem();
-      (raiz.querySelector('.ficha-ident__avatar-enquadrar') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      expect(raiz.querySelector('app-ajuste-enquadramento-imagem')).not.toBeNull();
-      expect(fixture.componentInstance['arquivoPendente']()).toBeNull();
+    it('todo o bloco de edição de avatar (selo, upload, cor) não aparece aqui — exclusivo da ficha completa', () => {
+      const { raiz } = montarComImagem();
+      expect(raiz.querySelector('.ficha-ident__avatar-enquadrar')).toBeNull();
+      expect(raiz.querySelector('.ficha-ident__avatar-upload')).toBeNull();
+      expect(raiz.querySelector('.ficha-ident__cor-entrada')).toBeNull();
     });
 
     it('confirmar o enquadramento de uma imagem existente só emite focoMudou (sem ajusteImagem)', () => {

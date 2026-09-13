@@ -509,7 +509,7 @@ export class FichaInventario {
    */
   readonly apresentacao = input<'inline' | 'dialog'>('inline');
   /**
-   * `true` no card compacto (m2-20 — `app-ficha-visualizacao[modo="compacto"]`): a toolbar
+   * `true` no card compacto (m2-20 — `app-ficha-campanha-card`): a toolbar
    * (Adicionar itens/Item custom/filtro) fica resumida (só ícone, sem Esvaziar/Custos) e a lista
    * ganha um teto mais baixo — ver SCSS. Independente de `apresentacao`: esta aqui é sempre
    * `'dialog'` na visualização (padrão/embutido/compacto usam o mesmo `app-modal` pro catálogo),

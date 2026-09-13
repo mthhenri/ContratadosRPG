@@ -314,7 +314,7 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('.detalhe__jogador')).not.toBeNull();
     // Seleção inicial: a própria ficha (Vera, `usuarioId: 2`).
     expect(fichaService.recuperarFicha).toHaveBeenCalledWith(4);
-    expect(raiz.querySelector('app-ficha-visualizacao')).not.toBeNull();
+    expect(raiz.querySelector('app-ficha-campanha-card')).not.toBeNull();
   });
 
   it('"Ver ficha" na Equipe troca a ficha exibida sem navegar; a de um colega vira só leitura', () => {

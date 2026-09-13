@@ -27,7 +27,7 @@ import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
  * `atalhosDano`) calculados aqui a partir do documento.
  *
  * Existe porque o painel passou a ter **dois lugares**: a aba Rolagens da ficha completa
- * (`modo="padrao"` de `FichaVisualizacao`, que delega pra cá) e a coluna lateral da visão do
+ * (`FichaVisualizacao`, que delega pra cá) e a coluna lateral da visão do
  * jogador de `/campanhas/:id` (`CampanhaDetalhe`), onde ele vive **fora** do card da ficha, ao lado do
  * histórico da sessão. Sem este componente, os três `computed` derivados teriam de ser duplicados
  * na página.
@@ -55,11 +55,11 @@ export class FichaRolagensPainel {
   readonly cor = input<string | null>(null);
   /**
    * `true` esconde o preset "Iniciativa" da lista editável do `FichaRolagens` — evita duplicar com o
-   * "Rolar Iniciativa" da aba Informações (`FichaVisualizacao.rolarIniciativa`/`presetIniciativa()`),
-   * visível em `modo="padrao"` **e** `modo="compacto"` (glance de Combate, ver
-   * `ficha-visualizacao.component.html`). Toda tela que embute `FichaVisualizacao` ao lado deste
-   * painel — `FichaVisualizacao` propriamente dita, `CampanhaDetalhe`/`detalhe-jogador` e
-   * `previa-jogador` — liga essa flag; default `false` só cobre um consumidor hipotético que
+   * "Rolar Iniciativa" da aba Informações (`rolarIniciativa`/`presetIniciativa()`, presente tanto em
+   * `FichaVisualizacao` quanto em `FichaCampanhaCard` — glance de Combate, ver
+   * `ficha-campanha-card.component.html`). Toda tela que embute uma ficha ao lado deste
+   * painel — `FichaVisualizacao` propriamente dita, `CampanhaDetalhe`/`detalhe-jogador` (via
+   * `FichaCampanhaCard`) e `previa-jogador` — liga essa flag; default `false` só cobre um consumidor hipotético que
    * mostrasse o painel **sem** a ficha ao lado (nenhum existe hoje, mas o preset seria a única forma
    * de rolar Iniciativa nesse caso).
    */

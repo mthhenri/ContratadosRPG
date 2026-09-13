@@ -114,7 +114,7 @@ import {
 } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagensPainel } from '../ficha-rolagens-painel/ficha-rolagens-painel.component';
 import { AjusteEnquadramentoImagem } from '../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component';
-import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
+import type { EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
 import { GRUPOS_FORMACAO, rotuloParametroFormacao } from '../../opcoes-formacao';
 import { CONDICOES_FICHA, type CondicoesFicha } from '../../condicoes-ficha';
@@ -243,6 +243,15 @@ export function ehAbaStatus(valor: string | null | undefined): valor is AbaStatu
 }
 
 /**
+ * Abas do card de Status no `modo="compacto"` (m2-21) — o trio reduzido do card de equipe. A m2-20
+ * tinha **desligado** a barra no compacto e empilhado Inventário/Habilidades/Rolagens de uma vez;
+ * a m2-21 religa o mesmo mecanismo com este recorte. `rolagens` sai porque o painel foi morar na
+ * coluna lateral da página (`CampanhaDetalhe`, ao lado do histórico da sessão); `extras`/`historia`
+ * continuam exclusivas da ficha completa.
+ */
+const ABAS_STATUS_COMPACTO: readonly AbaStatus[] = ['informacoes', 'inventario', 'habilidades'];
+
+/**
  * Destino da barra de navegação **inferior** do mobile (m3-60). É `AbaStatus` mais `'agente'`,
  * porque no celular as colunas Identidade e Atributos do desktop deixam de ser blocos empilhados
  * acima do Status e viram um destino próprio. `'agente'` **não** entra em `AbaStatus` de propósito:
@@ -276,6 +285,22 @@ const DESTINOS_MOBILE: readonly {
   { destino: 'extras', rotulo: 'Extras', rotuloCompleto: 'Extras', icone: 'mais' },
   { destino: 'historia', rotulo: 'História', rotuloCompleto: 'História', icone: 'anotacoes' },
 ];
+
+/**
+ * Subconjunto de `DESTINOS_MOBILE` válido no `modo="compacto"` — cinco destinos (m2-21): os quatro
+ * da m2-20 mais `informacoes`, que voltou a existir quando a barra de abas do compacto foi religada
+ * (Atributos + Combate + Anotações migraram pra ela). Extras/História seguem de fora — só a ficha
+ * completa os tem. `rolagens` continua na barra, mas é o **único destino que não é uma aba**: o
+ * painel vive na coluna lateral da página, então tocá-lo só avisa `CampanhaDetalhe`, que rola até
+ * lá (ver `selecionarDestinoMobile`).
+ */
+const COMPACTO_DESTINOS_MOBILE = new Set<DestinoMobile>([
+  'agente',
+  'informacoes',
+  'inventario',
+  'habilidades',
+  'rolagens',
+]);
 
 /** Derivados do painel **Combate**, na ordem de exibição — todos editáveis no próprio lugar (m3-10). */
 const CHAVES_COMBATE: readonly ChaveInfoExtra[] = [
@@ -344,23 +369,29 @@ export interface AjusteClasse {
 
 
 /**
- * A **ficha** de jogador (m3-07/m3-10) — alvo de fidelidade `docs/design/examples/ficha-de-jogador.html`.
- * Edição no próprio lugar para dono/mestre (`ajustavel`), read-only para quem só tem acesso concedido.
+ * A ficha embutida da campanha (m2-20/m2-21) — versão "card de equipe" da ficha de jogador, usada
+ * por `CampanhaDetalhe` (coluna do jogador), `PreviaJogador` (dialog do mestre), o painel de
+ * Iniciativa/Encontro e a ficha flutuante do mestre. Nasceu de `FichaVisualizacao` (a ficha completa)
+ * por bifurcação — `docs/specs/done/ficha-separar-completa-e-campanha-card.spec.md`: até então as
+ * duas viviam num componente só com `@Input() modo: 'padrao' | 'compacto'`; hoje não compartilham
+ * mais arquivo, o que evita que um ajuste visual de uma vaze pra outra.
  *
- * **Redesenho de comparação visual** (branch `claude/redesign-ficha-screen-*`): a tela foi reduzida a
- * dois cards lado a lado — identidade (+ vitalidade + condições + glance de Defesa/Resistências) e uma
- * versão compacta de Atributos (Proficiência + resumo de Maestria + os 10 atributos em no máximo 2
- * colunas, cada um com um stepper de modificador de teste **não persistido**, ex.: Amplificadores) —
- * pra comparar com a versão em produção (master). A navegação por abas (m3-11) e as seções de
- * Informações Extras, Identidade detalhada, Inventário, Habilidades, Sanidade e Anotações saíram do
- * template nesta rodada; os `@Output`/computeds que as alimentavam continuam intactos.
+ * O nome `FichaCampanhaCard` é decisão consciente do autor mesmo `painel-encontro`/`FichaFlutuante`
+ * não sendo visualmente um "card" — os 4 consumidores só existem dentro de um fluxo iniciado a
+ * partir de uma campanha, e foi esse o critério de nomeação, não a aparência em cada tela.
+ *
+ * Duas colunas lado a lado (não três, como na ficha completa): a esquerda empilha Identidade em
+ * cima de Atributos — resumido, com o glance de Combate que a aba Informações escondeu — e a
+ * direita é o card de Status, com o trio Informações/Inventário/Habilidades (Extras/História/
+ * Sanidade seguem exclusivos da ficha completa). Edição no próprio lugar para dono/mestre
+ * (`ajustavel`), read-only para quem só tem acesso concedido.
  *
  * **Nenhuma regra de jogo vive aqui**: toda stat derivada (Vida/Energia máximas, Defesa, Deslocamento,
  * Dano, Percepção, Inventário, Patente…) vem de `shared/regras` (fonte única — SYSTEM.SPEC §6.6,
  * proibições #26/#27). Estilos só com os tokens do tema "Terminal de Contenção" (proibição #29).
  */
 @Component({
-  selector: 'app-ficha-visualizacao',
+  selector: 'app-ficha-campanha-card',
   imports: [
     NgTemplateOutlet,
     ReactiveFormsModule,
@@ -368,7 +399,6 @@ export interface AjusteClasse {
     Icone,
     Abas,
     Aba,
-    FichaSanidade,
     FichaInventario,
     FichaHabilidades,
     FichaRolagensPainel,
@@ -386,10 +416,10 @@ export interface AjusteClasse {
     FocoImagem,
     ReceberDanoDialog,
   ],
-  templateUrl: './ficha-visualizacao.component.html',
-  styleUrl: './ficha-visualizacao.component.scss',
+  templateUrl: './ficha-campanha-card.component.html',
+  styleUrl: './ficha-campanha-card.component.scss',
 })
-export class FichaVisualizacao {
+export class FichaCampanhaCard {
   /** A janela flutuante do Encontro é o único scroll vertical no mobile. */
   readonly rolagemExterna = input(false);
 
@@ -444,28 +474,26 @@ export class FichaVisualizacao {
    */
   readonly ehMestre = input(false);
 
-  /**
-   * `true` quando a página hospedeira reservou a faixa lateral do Histórico de Rolagens
-   * (`--largura-painel-lateral`) e por isso está mais estreita do que a viewport sugere —
-   * `FichaVisualizar`/`CriaturaVisualizar` alimentam com o próprio `historicoSidebarAberto()`:
-   * dispara o mesmo colapso de 3 colunas que `bp.tablet` já faz, só que também pela largura que
-   * sobrou ao conteúdo, não só pela viewport real.
-   */
-  readonly apertado = input(false);
-
   /** Autoriza oferecer a transferência de itens desta ficha para a base da campanha. */
   readonly podeMandarParaBase = input(false);
 
   /**
-   * Gate da edição "completa" (identidade/classe/reações/contra-ataque/resistências/atributos em
-   * grupo/derivados de Combate/história) — em `FichaCampanhaCard` (m2-20, restrição pós-entrega)
-   * essas ficam **só leitura** mesmo pro dono/mestre: o card de equipe edita Dinheiro, Vida/
-   * Energia, Condições (Morrendo/Machucado/Inconsciente), Inventário (add/remover item) e as
-   * **Anotações** — todas no `ajustavel()` puro. Aqui em `FichaVisualizacao` (ficha completa) os
-   * dois sempre coincidem; o alias existe só para o template ficar idêntico ao de
-   * `FichaCampanhaCard` (ver `docs/specs/done/ficha-separar-completa-e-campanha-card.spec.md`).
+   * Reabre a aba **Rolagens** dentro do trio do `'compacto'` — só pra quem hospeda a ficha embutida
+   * **sem** uma coluna lateral própria de rolagens (a tela de Iniciativa, que a mostra flutuando ou
+   * na lateral de 70% do jogador, ao lado do combate). `CampanhaDetalhe` deixa `false` (padrão): lá
+   * o painel de rolagens já mora na `HistoricoRolagensSidebar`, e duplicá-lo seria ruído.
    */
-  protected readonly ajustavelAmplo = computed(() => this.ajustavel());
+  readonly mostrarRolagensCompacto = input(false);
+
+  /**
+   * Gate da edição "completa" (identidade/classe/reações/contra-ataque/resistências/atributos em
+   * grupo/derivados de Combate/história) — no card de equipe (m2-20, restrição pós-entrega) essas
+   * ficam **só leitura** mesmo pro dono/mestre: o card edita Dinheiro, Vida/Energia, Condições
+   * (Morrendo/Machucado/Inconsciente), Inventário (add/remover item) e as **Anotações** (m2-21,
+   * quando a aba Informações passou a existir aqui) — todas no `ajustavel()` puro. O resto exige
+   * "Abrir ficha completa" (`FichaVisualizacao`).
+   */
+  protected readonly ajustavelAmplo = computed(() => false);
 
   /** Novo valor de Vida/Energia atual após um passo − / + ou digitação (já clampado). A página persiste. */
   readonly ajusteVitalidade = output<AjusteVitalidade>();
@@ -793,14 +821,23 @@ export class FichaVisualizacao {
   readonly abaStatusMudou = output<DestinoMobile>();
 
   /**
-   * Aba efetivamente **renderizada** no card. Sempre igual a `abaStatusAtiva` aqui (ficha completa,
-   * as seis abas de {@link ABAS_STATUS} sempre visíveis) — `FichaCampanhaCard` tem sua própria
-   * versão que cai em Informações quando a aba ativa não está no trio reduzido.
+   * Aba efetivamente **renderizada** no card. O card só tem o trio de {@link ABAS_STATUS_COMPACTO}
+   * (mais `rolagens` quando `mostrarRolagensCompacto`), então uma aba fora do que está visível no
+   * momento — `extras`/`historia` (só na ficha completa), ou `rolagens` sem o input — chegando por
+   * um `#` de URL antigo ou manipulado à mão — cai em Informações em vez de deixar o card vazio.
    */
-  protected readonly abaStatusEfetiva = computed<AbaStatus>(() => this.abaStatusAtiva());
+  protected readonly abaStatusEfetiva = computed<AbaStatus>(() => {
+    const aba = this.abaStatusAtiva();
+    return this.abasStatusVisiveis().includes(aba) ? aba : 'informacoes';
+  });
 
-  /** Abas exibidas na barra do card — sempre as seis, na ficha completa. */
-  protected readonly abasStatusVisiveis = computed<readonly AbaStatus[]>(() => ABAS_STATUS);
+  /**
+   * Abas exibidas na barra do card — o trio reduzido (m2-21). `mostrarRolagensCompacto` reabre a
+   * quarta (Rolagens) — ver o comentário do input.
+   */
+  protected readonly abasStatusVisiveis = computed<readonly AbaStatus[]>(() =>
+    this.mostrarRolagensCompacto() ? [...ABAS_STATUS_COMPACTO, 'rolagens'] : ABAS_STATUS_COMPACTO,
+  );
 
   /** `true` quando a aba `aba` deve aparecer na barra deste modo (atalho de template). */
   protected mostraAbaStatus(aba: AbaStatus): boolean {
@@ -843,8 +880,17 @@ export class FichaVisualizacao {
    */
   protected readonly destinoMobile = linkedSignal<DestinoMobile>(() => this.destinoMobileInicial());
 
-  /** Destinos da barra inferior, na ordem de exibição (mobile) — as seis abas, na ficha completa. */
-  protected readonly destinosMobile = computed(() => DESTINOS_MOBILE);
+  /**
+   * Destinos da barra inferior, na ordem de exibição (mobile). O card de equipe não tem abas de
+   * Informações/Extras/História — sem filtrar aqui, esses três destinos ainda apareciam na barra
+   * e, ao tocar neles, escondiam Identidade+Atributos+Combate (o único conteúdo "Agente" do card)
+   * sem nada de correspondente pra mostrar no lugar (Informações nem renderiza; Extras/História
+   * renderizavam por baixo do Inventário/Habilidades/Rolagens sempre visíveis, fora da aba que o
+   * rótulo dizia estar mostrando).
+   */
+  protected readonly destinosMobile = computed(() =>
+    DESTINOS_MOBILE.filter((item) => COMPACTO_DESTINOS_MOBILE.has(item.destino)),
+  );
 
   /** `true` quando o destino mobile ativo é o agente (Identidade + Atributos). */
   protected readonly mostrandoAgente = computed(() => this.destinoMobile() === 'agente');
@@ -858,6 +904,14 @@ export class FichaVisualizacao {
       this.destinoMobile.set('agente');
       this.abaStatusMudou.emit('agente');
       this.rolarParaTopoDoConteudo();
+      return;
+    }
+    // Comumente, "Rolagens" mora na coluna lateral da página. A Iniciativa, porém, liga
+    // `mostrarRolagensCompacto`: ali o painel é uma quarta aba real e a navegação mobile precisa
+    // selecioná-la, em vez de avisar um hospedeiro externo que não existe.
+    if (destino === 'rolagens' && !this.mostrarRolagensCompacto()) {
+      this.destinoMobile.set('rolagens');
+      this.abaStatusMudou.emit('rolagens');
       return;
     }
     this.selecionarAbaStatus(destino);

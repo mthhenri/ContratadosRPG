@@ -4,31 +4,32 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-12 · **Última decisão registrada:** `ui-33` concluída — painel
+> **Última revisão:** 2026-09-13 · **Última decisão registrada:**
+> `ficha-separar-completa-e-campanha-card` concluída — `FichaVisualizacao` (tinha `@Input() modo:
+> 'padrao'|'compacto'`) virou dois componentes sem arquivo em comum: `FichaVisualizacao` (ficha
+> completa, era `modo="padrao"`) e `FichaCampanhaCard` (novo, `app-ficha-campanha-card`, era
+> `modo="compacto"`). Refactor estrutural puro — zero mudança de comportamento/regra, só
+> descompartilhamento; os 5 consumidores reais trocaram a tag/import, `visualizar.page` sem
+> mudança de atributo. Extração de sub-componentes (Identidade/Reações/Resistências, item 2 da
+> spec) avaliada e **adiada** por decisão consciente — ver `HISTORY.md` e `IDEAS.md`. Pré-requisito
+> de `ui-34-ficha-completa-redesenho` (ainda em `docs/specs/active/`, aguardando a próxima sessão
+> atualizar suas referências de linha, que hoje apontam pro `FichaVisualizacao` de antes da
+> separação). Detalhe em `HISTORY.md` e `CONTEXT.md` §1.
+> Antes: `ui-33` concluída — painel
 > lateral do jogador vira 3 abas (Rolagens/Esquadrão/Inv. Esquadrão): Rolar+Histórico fundidos,
 > aba Sessão removida, card "Equipe" virou a aba "Esquadrão" com avatar 60px (era 28px, passou por
-> 80px) e teto de altura casando com a ficha só no desktop. Dez rodadas de revisão do autor sobre
-> o resultado, 19 achados reais no total (a maioria variações do mesmo tema — squeeze de largura ou
-> altura sem `overflow`/`min-width`/teto defensivo, em telas e no primitivo `shared/ui/cartao`),
-> todos corrigidos na mesma sessão. Um não era bug: a "Iniciativa" na aba Rolagens é o preset comum
-> semeado por decisão de produto já implementada (`m3-47`) — perguntado ao autor via
-> `AskUserQuestion`, escolheu **esconder só na campanha** (`[esconderIniciativa]`, input que já
-> existia em `FichaRolagensPainel` mas só era ligado pela ficha completa), mantendo o botão próprio
-> "Rolar Iniciativa" no glance de Combate do card. Três pedidos de design (não bug): título da
-> página de jogador igualado ao do mestre (20px, sem caixa alta); lista de Habilidades vira
-> **1 coluna sem teto de altura** no viewport Notebook (`@include bp.altura-notebook`, 1º
-> breakpoint de *altura* do tema — `max-height: 768px`, mesma folga vertical menor que os outros
-> dois desktops); seta "Voltar" do jogador movida pra dentro de `&__cabecalho-titulo-linha`, antes
-> do "//" — mesma ordem do mestre (antes vivia num grupo `&__cabecalho-acoes` separado, na ponta
-> direita do cabeçalho). Destaques
-> de bug: Personalidade/Origem empilham em vez de dividir 2 colunas
-> estreitas; Atributos do card compacto usam `@container (min-width: 440px)` pra só ligar 5 colunas
-> quando cabe; `.cartao__cabecalho--quebravel` e o `h1` do cabeçalho da página de jogador (que já
-> existia no de mestre) ganharam a mesma proteção contra squeeze; "//" adicionado ao cabeçalho do
-> mestre (só o jogador tinha); ícone da aba Rolagens trocado de `dado` pra `d20`. Verificado ao vivo
-> nos 4 viewports padrão, tela de campanha (`modo="compacto"`), ficha completa (`modo="padrao"`) e
-> varreduras de largura pontuais; spec movida para `docs/specs/done/`. Detalhe em `HISTORY.md` e
-> `CONTEXT.md` §1.
+> 80px) e teto de altura casando com a ficha só no desktop. Onze rodadas de revisão do autor sobre
+> o resultado, 20 achados reais no total — a maioria squeeze de largura/altura sem `overflow`/
+> `min-width`/teto defensivo (telas e o primitivo `shared/ui/cartao`), mais 4 pedidos de design
+> (título do jogador igualado ao do mestre; Habilidades em 1 coluna sem teto no viewport Notebook,
+> novo `@include bp.altura-notebook`; seta "Voltar" do jogador ao lado do "//", como no mestre;
+> painel de Rolagens do mobile só visível com "Rolagens" selecionado na `.ficha-nav`, antes sempre
+> montado) e 1 investigação sem bug (preset "Iniciativa" da aba Rolagens é decisão de produto já
+> implementada, `m3-47` — autor escolheu **esconder só na campanha** via `AskUserQuestion`,
+> mantendo o botão próprio de rolar no glance de Combate). Todos corrigidos na mesma sessão.
+> Verificado ao vivo nos 4 viewports padrão, tela de campanha (`modo="compacto"`), ficha completa
+> (`modo="padrao"`) e varreduras pontuais de largura/altura; spec movida para `docs/specs/done/`.
+> Detalhe em `HISTORY.md` e `CONTEXT.md` §1.
 > Antes: lote de ajustes do autor (2026-09-11) — os 5 itens fechados. Deslocamento Indeterminado/
 > Infinito na ficha de criatura implementado; "Fraqueza não aumenta o Limite de Resistências"
 > investigado e fechado **sem defeito**, a regra já funcionava; "Espaço Reservado" (mod de mochila)
@@ -133,7 +134,50 @@
 
 ## 1. Próxima Task
 
-**`ui-33-esquadrao-aba-detalhe-jogador` concluída (2026-09-12):** painel lateral do jogador
+**`ficha-separar-completa-e-campanha-card` concluída (2026-09-13):** `app-ficha-visualizacao` era
+um componente só (2767 linhas de template) com `@Input() modo: 'padrao'|'compacto'` alternando
+layout via `@if`/`@else` espalhados pelo template — pré-requisito decidido pelo autor antes do
+redesenho visual da ficha completa (`ui-34-ficha-completa-redesenho`), pra um ajuste em um dos dois
+não arriscar vazar pro outro. Bifurcado em dois componentes que não compartilham mais arquivo:
+`FichaVisualizacao` (mantém o nome, vira só o template completo de sempre — 3 colunas, 6 abas de
+Status, Sanidade/Prestígio/Extras/História inclusos) e `FichaCampanhaCard` (novo,
+`frontend/src/app/modules/ficha/componentes/ficha-campanha-card/`, o antigo `modo="compacto"` — 2
+colunas, 3 abas de Status, Atributos+glance de Combate dentro de Informações). `modo` não existe
+mais como `@Input()` em nenhum dos dois; nenhum `@if (modo...)`/`@else` de alternância sobrou.
+Método: duplicar o componente inteiro primeiro (zero regressão garantida por construção, já que
+cada ramo mantido é literalmente o código de hoje), só depois remover o ramo que não se aplica em
+cada cópia — nunca os dois ao mesmo tempo (risco identificado pelo próprio autor na spec). SCSS
+não precisou de nenhuma mudança: a classe `.ficha-visao--compacto` que already controlava o layout
+virou estática no HTML de `FichaCampanhaCard` (sempre presente) em vez de um binding condicional —
+os seletores `&--compacto`/`:not(&--compacto)` continuam corretos em ambos os arquivos (idênticos,
+puramente CSS, nunca precisaram saber de `modo`).
+Os 5 consumidores reais (`visualizar.page` — `FichaVisualizacao`, sem `[modo]`, já não passava;
+`detalhe-jogador.page`, `previa-jogador.page`, `painel-encontro.page`,
+`ficha-flutuante-conteudo.component` — os 4 trocaram `<app-ficha-visualizacao modo="compacto">`
+por `<app-ficha-campanha-card>`) e um 6º achado só no `git grep` de conferência —
+`ficha-edicao.service.ts` só importa os tipos de evento (`AjusteVitalidade` etc.), que continuam
+declarados em `FichaVisualizacao` e replicados (estruturalmente idênticos, TypeScript por forma)
+em `FichaCampanhaCard`, sem importar um do outro. Extração de sub-componentes de apresentação
+(item 2 da spec — Identidade/Reações/Resistências, candidatos citados) foi avaliada individualmente
+como manda a spec: os três compensariam pelo critério (menos props do que linhas duplicadas), mas
+a própria spec veta fazer bifurcação e extração "na mesma leva de commits" (risco de mexer nos dois
+ao mesmo tempo) — decisão consciente de **adiar**, registrada como ideia em `IDEAS.md`, não perdida.
+Testes: `ficha-visualizacao`/`ficha-campanha-card` focado 282/282 (specs remodelados — casos de
+`modo="compacto"` migraram pro spec novo; um punhado de testes que assumiam `ajustavelAmplo` sempre
+ligado com `ajustavel=true` — herança do tempo em que o componente confundia os dois — corrigidos
+pra refletir que `FichaCampanhaCard` nunca libera edição "ampla", mesmo dono/mestre); suíte completa
+`frontend` 1732/1733 (mesma falha pré-existente, `detalhe-mestre` duplicar-ficha, sem relação,
+reproduz isolada); lint 0 erros nos arquivos tocados; build de produção limpo. Verificação ao vivo
+(Postgres + backend + frontend reais, cenário via REST cru — 1 mestre + 1 jogador + ficha +
+encontro de Iniciativa) nos 4 viewports padrão e nos 5 consumidores: ficha completa, ficha embutida
+do jogador (+ edição de Dinheiro no próprio lugar, + aba Inventário), prévia do mestre, painel de
+Iniciativa e ficha flutuante — todos idênticos ao comportamento documentado, sem overflow, sem
+regressão. Spec em `docs/specs/done/ficha-separar-completa-e-campanha-card.spec.md`.
+`ui-34-ficha-completa-redesenho` (`docs/specs/active/`) ainda cita linhas do `FichaVisualizacao`
+compartilhado de antes desta separação — precisa ser reconferida/atualizada antes de começar a
+implementação.
+
+**Antes: `ui-33-esquadrao-aba-detalhe-jogador` concluída (2026-09-12):** painel lateral do jogador
 (`CampanhaDetalheJogador`) reorganizado de 4 abas (Rolar/Sessão/Histórico/Invent.) + o card sempre
 visível "Equipe" para **três** abas — Rolagens, Esquadrão, Inv. Esquadrão. Rolar e Histórico se
 fundiram num só container rolável (`app-ficha-rolagens-painel` no topo, rótulo "Histórico" + feed
@@ -281,6 +325,21 @@ título → chip → régua). Movido o `<a class="detalhe__cabecalho-voltar">` p
 depende de onde no DOM mora). Verificado em `1920×1080` (seta encostada no "//") e `360×800` (seta
 e "//" na mesma linha do título, que trunca um pouco mais cedo, esperado). Testes:
 `detalhe-jogador` 18/18; suíte completa 1617/1618. Detalhe em `HISTORY.md`.
+
+**Décima primeira rodada do autor sobre `ui-33`: painel de Rolagens do mobile aparecia com
+qualquer destino selecionado — fechada.** "Essa parte de rolagens só deveria aparecer quando tiver
+com o Rolagens selecionado" (recorte mobile mostrando o painel com "Agente" ativo na barra
+inferior). `.detalhe__jogador-lateral` (a coluna do painel Rolagens/Esquadrão/Inv. Esquadrão) nunca
+teve tratamento condicional — sempre montada e visível, correto no desktop/tablet (sem barra de
+destino ali), mas no mobile `.ficha-nav` de `FichaVisualizacao` já documentava "Rolagens" como "o
+único destino que não é uma aba" (as outras 4 escondem/mostram de verdade via `@if`; Rolagens só
+avisa a página, que rola até o painel — sempre lá, só mais embaixo). Fix:
+`[class.detalhe__jogador-lateral--oculto-mobile]` ligado a `destinoMobileFicha() !== 'rolagens'`,
+com `display: none` só dentro de `bp.mobile` (tablet/desktop sem mudança, painel sempre visível).
+`scrollIntoView` existente mantido. Verificado em `360×800`: "Agente" → painel fora da página
+inteira; toque em "Rolagens" → painel aparece, aba ativa na barra; volta pra "Agente" → some de
+novo. Sem regressão em `1920×1080`/`960×1080`/`1366×768`. Testes: `detalhe-jogador` 18/18; suíte
+completa 1617/1618. Detalhe em `HISTORY.md`.
 
 **Lote de ajustes do autor (2026-09-11) — os 5 itens fechados:** Deslocamento Indeterminado/
 Infinito na ficha de criatura **concluído** — cada um dos 4 modos (Terrestre/Voador/Aquático/
@@ -1247,14 +1306,15 @@ pelos dois papéis. Abaixo disso, o corpo diverge por papel (`@if (ehMestre())`/
   passou a resolver `vidaAtual`/`vidaMaxima`/`defesa` também no formato raiz que a criatura usa
   (`COALESCE` entre os dois formatos de `dados`), além de um `JOIN tipo_ficha` novo.
 - **Jogador** (m2-20 + m2-21) — a ficha exibida na coluna principal (a própria, por padrão, ou a de
-  um colega via "Ver ficha") como card embutido (`<app-ficha-visualizacao modo="compacto">`, o
-  componente real da tela de ficha, não uma réplica): 2 colunas que **repartem a linha** —
-  Identidade/Vitalidade/Reações/Resistências à esquerda, card de Status à direita com uma barra de
-  **3 abas** (Informações · Inventário · Habilidades). **Informações** = Atributos (o mesmo bloco
-  que o `modo="padrao"` põe na coluna própria, via `ng-template`) + glance de Combate só leitura
+  um colega via "Ver ficha") como card embutido (`<app-ficha-campanha-card>`, componente próprio
+  desde `ficha-separar-completa-e-campanha-card` — bifurcado de `FichaVisualizacao`, que perdeu o
+  antigo `@Input() modo`): 2 colunas que **repartem a linha** — Identidade/Vitalidade/Reações/
+  Resistências à esquerda, card de Status à direita com uma barra de **3 abas** (Informações ·
+  Inventário · Habilidades). **Informações** = Atributos (o mesmo bloco `#blocoAtributos` que em
+  `FichaVisualizacao` mora na coluna própria, via `ng-template`) + glance de Combate só leitura
   (com os dadinhos de rolar dano) + Anotações editáveis inline; Sanidade, Extras, História e
   Prestígio ficam de fora, alcançáveis por "Abrir ficha completa" (link no cabeçalho do card +
-  botão no rodapé) → `/painel/:campanhaId/ficha/:id` (`modo="padrao"`, sem corte). Inventário e
+  botão no rodapé) → `/painel/:campanhaId/ficha/:id` (`FichaVisualizacao`, sem corte). Inventário e
   Habilidades rolam por dentro com teto de 420px (subiu de 230/250px pós-m2-21, a pedido do autor —
   o teto antigo datava de quando Atributos ainda morava na coluna ao lado). Ao lado, uma coluna
   lateral de 450px com um único painel segmentado de **três** abas — **Rolagens**, **Esquadrão** e

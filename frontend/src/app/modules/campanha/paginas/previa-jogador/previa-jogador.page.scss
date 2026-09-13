@@ -6,7 +6,7 @@
     width: 90vw;
     max-width: none;
     margin: 0 5vw;
-    // `<app-ficha-visualizacao modo="compacto">` tem sua própria `.ficha-nav` fixa no rodapé no
+    // `<app-ficha-campanha-card>` tem sua própria `.ficha-nav` fixa no rodapé no
     // mobile — mesma variável de `.detalhe`/`.visualizar` (m2-20/m3-60): cada página que hospeda a
     // ficha compacta **define** o próprio piso (não há cascata global), e o consome no padding
     // abaixo. Sem isto, o fim da coluna lateral (Sessão) fica por baixo da barra ao rolar até o

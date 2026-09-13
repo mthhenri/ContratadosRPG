@@ -28,7 +28,7 @@ import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inve
 import { IniciativaLeitura } from '../../../encontro/componentes/iniciativa-leitura/iniciativa-leitura.component';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
-import { FichaVisualizacao } from '../../../ficha/componentes/ficha-visualizacao/ficha-visualizacao.component';
+import { FichaCampanhaCard } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
@@ -47,16 +47,16 @@ const UMA_HORA_MS = 60 * 60 * 1000;
  * Prévia de jogador (m8-04) — o mestre confere a experiência exata de um `JOGADOR` específico da
  * campanha: ficha própria/concedida, Equipe, Rolagens e Sessão, **sourceados da projeção do
  * alvo** (`recuperarPreviaJogador`/`recuperarFichaPreviaJogador`, m8-02/m8-04 backend), nunca dos
- * dados do mestre. Reutiliza os mesmos componentes de `CampanhaDetalhe` (jogador) — `FichaVisualizacao`,
+ * dados do mestre. Reutiliza os mesmos componentes de `CampanhaDetalhe` (jogador) — `FichaCampanhaCard`,
  * `FichaRolagensPainel`, `InventarioEsquadrao`, `app-cartao` — sobre dados diferentes, em vez de
  * duplicar o markup (spec, entregável 2). Substitui o antigo `previewJogador` de `CampanhaDetalhe`
  * (signals + `pointer-events: none`, insuficiente — a prévia não tinha projeção própria).
  *
  * **Sem mutação, de verdade — não só na aparência (spec, entregável 3/critério de aceite):**
- * `ajustavel`/outputs de escrita de `FichaVisualizacao` são puramente `@Output` (o pai decide o
+ * `ajustavel`/outputs de escrita de `FichaCampanhaCard` são puramente `@Output` (o pai decide o
  * que fazer) — aqui ficam **desconectados**, então mirrorar a permissão real do alvo em
  * `[ajustavel]` é seguro (nenhum clique chega a um `HttpClient`). Já `podeRolar` (em
- * `FichaVisualizacao` **e** `FichaRolagensPainel`) e `InventarioEsquadrao` fazem a própria chamada
+ * `FichaCampanhaCard` **e** `FichaRolagensPainel`) e `InventarioEsquadrao` fazem a própria chamada
  * HTTP **internamente** (injetam `FichaRolagemRegistroService`/`CampanhaService`/`FichaService`
  * direto, sem passar por um `@Output` que esta página possa recusar) — para esses dois, o valor é
  * **sempre** o mais restrito (`false`/`somenteLeitura`), nunca o que o alvo realmente poderia
@@ -69,7 +69,7 @@ const UMA_HORA_MS = 60 * 60 * 1000;
     Icone,
     OverflowFade,
     BandejaDados,
-    FichaVisualizacao,
+    FichaCampanhaCard,
     FichaRolagensPainel,
     InventarioEsquadrao,
     IniciativaLeitura,
@@ -181,7 +181,7 @@ export class CampanhaPreviaJogador {
   /**
    * `true` quando a ficha exibida é do próprio alvo (mesma regra de `podeAjustarFicha` de
    * `CampanhaDetalhe`, mas para `usuarioAlvoId` — nunca para quem está de fato olhando). Só
-   * controla `[ajustavel]` de `FichaVisualizacao` (saída por `@Output`, nunca conectada aqui);
+   * controla `[ajustavel]` de `FichaCampanhaCard` (saída por `@Output`, nunca conectada aqui);
    * `podeRolar` fica sempre `false` (ver doc da classe).
    */
   protected readonly podeAjustarFichaExibida = computed(
