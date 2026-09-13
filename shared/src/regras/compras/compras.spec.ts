@@ -875,6 +875,27 @@ describe('calcularResumoCompras', () => {
 });
 
 describe('coerência do catálogo e das tabelas', () => {
+  it('preserva nas descrições as condições canônicas dos itens e modificações auditados', () => {
+    // docs/core/sistema-v4.1.0.md — Armazenamento, Itens Operacionais, Itens Medicinais e Modificações.
+    const item = (categoria: ItemCategoriaEnum, nome: string) =>
+      (CATALOGO_ITENS[categoria].find((catalogo) => catalogo.nome === nome)?.descricao ?? '').toLocaleLowerCase();
+    const modificacao = (categoria: ItemCategoriaEnum, nome: string) =>
+      (MODIFICACOES[categoria]?.find((catalogo) => catalogo.nome === nome)?.descricao ?? '').toLocaleLowerCase();
+
+    expect(item(ItemCategoriaEnum.OPERACIONAL, 'Energético')).toContain('compartilha este limite');
+    expect(item(ItemCategoriaEnum.OPERACIONAL, 'Energético Concentrado')).toContain('compartilha este limite');
+    expect(item(ItemCategoriaEnum.ARMAZENAMENTO, 'Bolso de Corpo')).toContain('apenas 1 item de até 1 de peso');
+    expect(item(ItemCategoriaEnum.ARMAZENAMENTO, 'Pochete')).toContain('munições, itens operacionais e medicinais');
+    expect(item(ItemCategoriaEnum.ARMAZENAMENTO, 'Mochila Médica'))
+      .toContain('reduz o peso dos itens em 0,5 (mínimo 0,1)');
+    expect(item(ItemCategoriaEnum.MEDICINAL, 'Estabilizador de Lesão'))
+      .toContain('não pode ser usado em lesões mortais nem em si mesmo');
+    expect(item(ItemCategoriaEnum.MEDICINAL, 'Anestesia')).toContain('pode causar machucado, mas não lesões');
+    expect(modificacao(ItemCategoriaEnum.ARMAZENAMENTO, 'Espaço Reservado')).toContain('operacional ou medicinal');
+    expect(modificacao(ItemCategoriaEnum.EXPLOSIVOS, 'Posicionável')).toContain('sentidos dt intelecto para perceber');
+    expect(modificacao(ItemCategoriaEnum.MUNICOES, 'Instável')).toContain('empilhamentos adicionais não aumentam a chance');
+  });
+
   it('cobre todas as categorias do enum, com rótulo e ícone', () => {
     const categorias = CATALOGO_CATEGORIAS.map((categoria) => categoria.categoria);
     expect(new Set(categorias)).toEqual(new Set(Object.values(ItemCategoriaEnum)));
@@ -1168,10 +1189,10 @@ describe('coerência do catálogo e das tabelas', () => {
       expect(
         escalarDescricaoCatalogoPorCompras(
           'Posicionável',
-          'Instalável e ativável remotamente (30m; DT +2/+5m/stack)',
+          'Instalável e ativável remotamente a 30m (Sentidos DT Intelecto para perceber). Extras: +2 DT e +5m/stack',
           3,
         ),
-      ).toBe('Instalável e ativável remotamente (30m; DT +6/+15m)');
+      ).toBe('Instalável e ativável remotamente a 30m (Sentidos DT Intelecto para perceber). Extras: +6 DT e +15m');
       expect(escalarDescricaoCatalogoPorCompras('Camuflada', '−1 peso (mín. 1), −1 resist. por stack', 4)).toBe(
         '−4 peso (mín. 1), −4 resist.',
       );

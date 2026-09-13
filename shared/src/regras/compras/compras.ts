@@ -231,8 +231,9 @@ const ESCALAS_MANUAIS: Record<string, { textoOriginal: string; formatar: (compra
     formatar: (c) => `+1 nível de alcance. Extras: +${2 * c} no teste`,
   },
   Posicionável: {
-    textoOriginal: 'Instalável e ativável remotamente (30m; DT +2/+5m/stack)',
-    formatar: (c) => `Instalável e ativável remotamente (30m; DT +${2 * c}/+${5 * c}m)`,
+    textoOriginal: 'Instalável e ativável remotamente a 30m (Sentidos DT Intelecto para perceber). Extras: +2 DT e +5m/stack',
+    formatar: (c) =>
+      `Instalável e ativável remotamente a 30m (Sentidos DT Intelecto para perceber). Extras: +${2 * c} DT e +${5 * c}m`,
   },
   Estabilizador: {
     textoOriginal: 'Concede Ataque Duplo (+1E). Extras: −1E/stack',

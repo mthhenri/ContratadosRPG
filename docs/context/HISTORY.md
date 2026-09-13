@@ -1,5 +1,26 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — catálogo: descrições canônicas para itens e modificações auditados
+
+Auditoria iniciada pelo autor encontrou que o catálogo mantinha resumos próprios em
+`shared/src/regras/compras/catalogo.dados.ts` e `compras.dados.ts`, enquanto Compras e
+Inventário exibem esses mesmos dados. Foram ampliadas, contra `docs/core/sistema-v4.1.0.md`,
+as descrições de Energético/Energético Concentrado (limite compartilhado), Bolso de Corpo,
+Pochete e Mochila Médica (sub-inventário e restrições), Estabilizador de Lesão e Anestesia
+(restrições de uso), além de Espaço Reservado, Posicionável e Instável (categoria-alvo,
+percepção e regra de empilhamento). Nenhuma regra mecânica foi alterada.
+
+O texto ampliado de Posicionável exigiu ajustar a chave correspondente em
+`ESCALAS_MANUAIS`: sem isso, a descrição correta deixaria de exibir o total de DT/alcance após
+compras adicionais. O teste foi atualizado primeiro, falhou com a descrição não escalada e
+passou após a correção. A regressão cobre todas as condições textuais auditadas. Inspeção ao
+vivo da categoria Armazenamento em Compras confirmou que os textos mais longos preservam a
+hierarquia e a leitura nos cartões existentes; o análogo é o próprio card de catálogo de Compras,
+mantido sem alteração de estrutura ou estilo.
+
+**Evidência:** teste focado `compras.spec.ts` 101/101; suíte `shared` 49 arquivos/751 testes;
+lint de `shared` sem erros; build de `shared` concluído.
+
 ## 2026-09-13 — fix: card de item na Mochila Médica exibia peso bruto, não reduzido
 
 Feedback direto do autor: "a mochila médica não tá contando os itens dentro dela de forma

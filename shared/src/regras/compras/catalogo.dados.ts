@@ -149,7 +149,8 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
       custo: 75,
       peso: 0.1,
       bonus: '+1 inv.',
-      descricao: 'Pequeno bolso corporal discreto',
+      descricao:
+        '+1 inventário em compartimento separado; apenas 1 item de até 1 de peso. Pode ser usado com outro armazenamento e só aceita Bolso Tático',
       inventarioProprio: {},
       modificacoesPermitidas: ['Bolso Tático'],
     },
@@ -158,7 +159,8 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
       custo: 200,
       peso: 0.2,
       bonus: '+2 inv.',
-      descricao: 'Pochete compacta de cintura',
+      descricao:
+        '+2 inventário em compartimento separado; comporta apenas Munições, Itens Operacionais e Medicinais. Pode ser usada com outro armazenamento',
       inventarioProprio: {
         categoriasPermitidas: [ItemCategoriaEnum.MUNICOES, ItemCategoriaEnum.OPERACIONAL, ItemCategoriaEnum.MEDICINAL],
       },
@@ -173,7 +175,7 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
       custo: 1600,
       peso: 0.5,
       bonus: '+5 inv.',
-      descricao: 'Bolsas organizadas para kits médicos',
+      descricao: '+5 inventário em compartimento separado; apenas Itens Medicinais. Reduz o peso dos itens em 0,5 (mínimo 0,1)',
       inventarioProprio: {
         categoriasPermitidas: [ItemCategoriaEnum.MEDICINAL],
         reducaoPeso: 0.5,
@@ -182,8 +184,14 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     },
   ],
   [ItemCategoriaEnum.OPERACIONAL]: [
-    { nome: 'Energético', custo: 50, peso: 0.5, descricao: 'Recupera 50% da Energia máxima (2×/missão)' },
-    { nome: 'Energético Concentrado', custo: 250, peso: 0.5, descricao: 'Recupera 100% da Energia máxima (2×/missão)' },
+    {
+      nome: 'Energético', custo: 50, peso: 0.5,
+      descricao: 'Recupera 50% da Energia máxima. Duas vezes por missão; Energético Concentrado compartilha este limite',
+    },
+    {
+      nome: 'Energético Concentrado', custo: 250, peso: 0.5,
+      descricao: 'Recupera 100% da Energia máxima. Duas vezes por missão; Energético compartilha este limite',
+    },
     { nome: 'Carga Vital', custo: 450, peso: 1, descricao: 'Reduz custo de habilidades −2E por 2D4t. Depois: −1 dado DES/FOR' },
     { nome: 'Refeição', custo: 50, peso: 0.5, descricao: 'Usada em descanso para aumentar recuperação de Vida e Energia' },
     { nome: 'Equipamento de Descanso', custo: 400, peso: 2.5, descricao: '+1 nível de qualidade de descanso (ou +1 dado se já Confortável)' },
@@ -218,7 +226,10 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Reanimador', custo: 1750, peso: 3, descricao: 'Cura: 2D12+MED×3 Vida. +1 dado +5 p/ Morrendo (DT 20)' },
     { nome: 'Atadura de Luxo', custo: 2500, peso: 1, descricao: 'Cura: 4D12+MED×2+Patente×2 Vida. +2 dados +7 p/ Morrendo (DT 25)' },
     { nome: 'Kit de Recuperação Completo', custo: 4000, peso: 4, descricao: 'Cura: (4D6)×Patente Vida. +3 dados +10 p/ Morrendo (DT 30)' },
-    { nome: 'Estabilizador de Lesão', custo: 2000, peso: 1, descricao: 'Ignora penalidade de 1 lesão por 1D3+1t. MED DT 15' },
+    {
+      nome: 'Estabilizador de Lesão', custo: 2000, peso: 1,
+      descricao: 'Ignora a penalidade de 1 lesão por 1D3+1 turnos. Não pode ser usado em lesões mortais nem em si mesmo. MED DT 15',
+    },
     { nome: 'Estimulante Potente', custo: 1750, peso: 0.5, descricao: '−50% dano recebido por 1D8t. Depois: Cansado 2t. DT 10' },
     { nome: 'Solução Energizante', custo: 1000, peso: 0.5, descricao: '+VIG de resist. [Físico] por 1D8t. DT 10' },
     { nome: 'Adrenalina', custo: 1000, peso: 0.5, descricao: '+1 tipo dado CaC, remove Inconsciente. Depois: Cansado 1t. DT 10' },
@@ -226,7 +237,10 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
     { nome: 'Desfibrilador', custo: 1500, peso: 1, descricao: '−1D6×5 da DT de Morrendo. Teste INT DT 15+5/uso (falha: inutiliza). Medicina DT 10' },
     { nome: 'Esterilizante Medicinal', custo: 1250, peso: 1, descricao: 'Junto a outro item de cura: +1 tipo de dado na cura. DT 10' },
     { nome: 'Analgésico', custo: 1500, peso: 1, descricao: '−1 nível de DT de lesão por 1D6+1t. DT 10' },
-    { nome: 'Anestesia', custo: 1250, peso: 1, descricao: 'Ignora dano recebido por 1D4+1t; recebe tudo depois (sem lesões). DT 10' },
+    {
+      nome: 'Anestesia', custo: 1250, peso: 1,
+      descricao: 'Ignora todo dano recebido por 1D4+1 turnos; recebe-o de uma vez ao fim. Pode causar Machucado, mas não lesões. MED DT 10',
+    },
     { nome: 'Compressor de Ferida', custo: 500, peso: 0.5, descricao: 'Remove condição Sangramento. MED DT 15' },
     { nome: 'Kit de Tratamento', custo: 500, peso: 0.5, descricao: 'Remove condição Envenenado. MED DT 15' },
   ],
