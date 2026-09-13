@@ -1,5 +1,80 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — `ficha-campanha-card-resistencias-coloridas`: Reações+Resistências numa legenda só, cor por tipo de dano
+
+Task solta, pedida em conversa pelo autor com uma imagem de referência (não salva no repositório):
+no card de Identidade do `FichaCampanhaCard` (visão de campanha do jogador — a metade que nasceu de
+`ficha-separar-completa-e-campanha-card`, task imediatamente anterior a esta), aproximar o visual
+das Resistências do estilo já usado no chip de resumo de rolagem (`resultado-rolagem.component.ts`):
+cada tipo de dano com sua própria cor.
+
+**O que já existia vs. o que mudou.** Antes de tocar em código, conferi que `FichaCampanhaCard` já
+tinha migrado (numa rodada de redesenho de comparação visual anterior a esta sessão) as Resistências
+de um formato chip/pill pra caixas `.ficha-mini`-like (`.ficha-resistencia`, rótulo abreviado em
+cima, valor grande embaixo) — só faltava a cor por tipo, que `ui-34-ficha-completa-redesenho.spec.md`
+(spec ainda aberta, exclusiva da ficha completa) já descrevia como alvo (item 6: "cor de cada tipo
+de dano aplica-se ao valor numérico e a um contorno sutil da caixa"), mas cuja seção "Fora de
+Escopo" adiava explicitamente pro `FichaCampanhaCard` — "decidir depois". O pedido desta conversa é
+esse "depois": só o card de campanha, sem tocar `FichaVisualizacao`/ficha completa.
+
+**Legenda única, sem divisor.** As duas legendas "só leitura" (uma pra "Reações", outra pra
+"Resistências", com um `.ficha-cartao__divisor` entre os dois blocos) viraram uma só: "Reações e
+Resistências". Como `ajustavelAmplo()` é sempre `false` em `FichaCampanhaCard` (edição "ampla" é
+exclusiva da ficha completa, decisão da task de separação anterior), a nota "só leitura" aparece
+sempre — não havia dois estados distintos escondidos atrás das duas legendas, só duplicação visual.
+
+**Cor por tipo, replicando (não extraindo) o padrão do chip de resumo.** `resultado-rolagem.
+component.ts` já tinha o padrão exato precisado: um mapa `SUFIXO_TIPO_DANO: Record<TipoDanoEnum,
+string>` e um método `classeGrupo(tipo)` que monta a classe BEM, com o SCSS aplicando
+`color: var(--dano-<tipo>)` e `border-color: var(--dano-<tipo>-border)` num `@each` sobre os 5
+sufixos. Repliquei o mesmo par (mapa + método `classeResistencia`) dentro de `FichaCampanhaCard`
+em vez de extrair um helper compartilhado — os dois arquivos são independentes por design (fruto da
+separação anterior) e o mapa tem 5 linhas; a spec desta task já registrou isso como decisão
+consciente de escopo, não como achado a corrigir depois. Os tokens `--dano-fisico`/`-balistico`/
+`-explosao`/`-quimico`/`-geral` e as variantes `-border`/`-dim` (40%/12% de opacidade) já existiam
+em `docs/design/tema/_tokens.scss`, sem precisar de token novo.
+
+**Testes:** dois testes novos em `ficha-campanha-card.component.spec.ts` — a legenda única +
+ausência de divisor entre os dois blocos (checado por adjacência de `nextElementSibling`, não só
+por texto) e a classe de cor correta em cada uma das 5 resistências. `ficha-campanha-card` focado:
+125/125 (123 de antes + 2 novos). Suíte completa `frontend`: 1734/1735 — a única falha é a mesma já
+documentada em rodadas anteriores (`detalhe-mestre.page.spec.ts`, "abre a dialog de duplicar...",
+`TypeError` em `.click()` de um botão não encontrado pelo texto), reproduzida isolada, sem relação
+com arquivo tocado nesta task. Lint: 0 erros nos arquivos tocados (warnings de aspas simples/duplas
+são baseline pré-existente do repositório inteiro, não desta task).
+
+**Verificação ao vivo.** Autor já com o stack rodando (Postgres + backend + frontend reais) —
+perguntei antes de decidir subir algo, por preferência já registrada do autor de não rodar
+aplicações sem pedido explícito. Cenário via REST cru: usuário mestre cria a campanha, um segundo
+usuário jogador entra via código de convite (a visão de *jogador*, `CampanhaDetalheJogador`, é onde
+`FichaCampanhaCard` renderiza — logar como o próprio mestre cai na visão de mestre, que usa outro
+componente), ficha de jogador criada com um item equipado (`Colete Kevlar`, `resistencia: "3
+[Balístico]"`) pra ter pelo menos uma cor visivelmente diferente de zero. Inspecionado pessoalmente
+(screenshots capturados por subagente, mas o julgamento da UI foi meu, não do relato do subagente)
+nos 4 viewports padrão — `1920×1080`, `960×1080`, `1366×768`, `360×800`: legenda única "REAÇÕES E
+RESISTÊNCIAS · só leitura" em todos, sem divisor entre o bloco de Reações (Defesa/Esquiva/Bloqueio/
+Contra-ataque) e o de Resistências; as 5 caixas de Resistência com borda e valor na cor do próprio
+tipo (físico vermelho, balístico azul, explosão laranja, químico verde, geral quase branco); sem
+overflow horizontal em nenhum viewport, inclusive `360×800` onde o bloco de Reações colapsa pra 2
+colunas (regra `bp.mobile` já existente, sem mudança) mas as 5 Resistências continuam numa linha só.
+
+Spec em `docs/specs/done/ficha-campanha-card-resistencias-coloridas.spec.md`.
+`ui-34-ficha-completa-redesenho` continua aberta, exclusiva da ficha completa, sem relação com esta
+mudança.
+
+**Ajuste fino pós-verificação (mesma sessão):** o autor, olhando o resultado ao vivo, pediu um
+"espacinho" entre a linha de Reações e a de Resistências (a legenda única removeu o
+`.ficha-cartao__divisor` que antes separava os dois blocos, e nada tomou o lugar dele — os dois
+grids ficaram colados) e caixas de Resistência mais finas verticalmente. `.ficha-resistencias`
+ganhou `margin-top: 10px` (não virou divisor de volta — só o respiro, sem linha); `.ficha-
+resistencia` teve o padding vertical reduzido de `8px` pra `5px` (gap interno de `4px` pra `3px`),
+ficando visivelmente mais rasa que antes, mesma leitura da imagem de referência do autor. Suíte
+focada conferida de novo (123/123, sem regressão) e verificação ao vivo refeita nos 2 viewports
+mínimos (`1920×1080`, `360×800`) — espaço visível entre os blocos, caixas de Resistência mais
+baixas que as de Reações, sem overflow. Segunda rodada do mesmo pedido: autor achou que ainda dava
+pra afinar mais — padding vertical `5px → 3px` (gap `3px → 2px`); reconferido de novo (123/123 sem
+regressão, `1920×1080`/`360×800` sem overflow).
+
 ## 2026-09-13 — `ficha-separar-completa-e-campanha-card`: bifurcação de `FichaVisualizacao`
 
 Spec do autor, pré-requisito decidido antes de `ui-34-ficha-completa-redesenho`: `app-ficha-

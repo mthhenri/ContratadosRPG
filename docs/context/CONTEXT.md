@@ -5,16 +5,24 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-13 · **Última decisão registrada:**
-> `ficha-separar-completa-e-campanha-card` concluída — `FichaVisualizacao` (tinha `@Input() modo:
-> 'padrao'|'compacto'`) virou dois componentes sem arquivo em comum: `FichaVisualizacao` (ficha
-> completa, era `modo="padrao"`) e `FichaCampanhaCard` (novo, `app-ficha-campanha-card`, era
-> `modo="compacto"`). Refactor estrutural puro — zero mudança de comportamento/regra, só
-> descompartilhamento; os 5 consumidores reais trocaram a tag/import, `visualizar.page` sem
-> mudança de atributo. Extração de sub-componentes (Identidade/Reações/Resistências, item 2 da
-> spec) avaliada e **adiada** por decisão consciente — ver `HISTORY.md` e `IDEAS.md`. Pré-requisito
-> de `ui-34-ficha-completa-redesenho` (ainda em `docs/specs/active/`, aguardando a próxima sessão
-> atualizar suas referências de linha, que hoje apontam pro `FichaVisualizacao` de antes da
-> separação). Detalhe em `HISTORY.md` e `CONTEXT.md` §1.
+> `ficha-campanha-card-resistencias-coloridas` concluída — no card de Identidade do
+> `FichaCampanhaCard` (visão de campanha do jogador), "Reações" e "Resistências" (antes duas
+> legendas "só leitura" separadas por um divisor) viraram uma legenda única "Reações e
+> Resistências" sem divisor entre os dois blocos; cada caixa de Resistência ganhou cor por
+> `TipoDanoEnum` (mesma paleta `--dano-*` do chip de resumo de rolagem). Pedido em conversa pelo
+> autor, revisando o adiamento de `ui-34-ficha-completa-redesenho` que tinha deixado esse ajuste
+> "pra decidir depois" só pro card de campanha — a ficha completa continua fora, sem mudança.
+> Verificado ao vivo nos 4 viewports padrão. Detalhe em `HISTORY.md` e `CONTEXT.md` §1.
+> Antes: `ficha-separar-completa-e-campanha-card` concluída — `FichaVisualizacao` (tinha
+> `@Input() modo: 'padrao'|'compacto'`) virou dois componentes sem arquivo em comum:
+> `FichaVisualizacao` (ficha completa, era `modo="padrao"`) e `FichaCampanhaCard` (novo,
+> `app-ficha-campanha-card`, era `modo="compacto"`). Refactor estrutural puro — zero mudança de
+> comportamento/regra, só descompartilhamento; os 5 consumidores reais trocaram a tag/import,
+> `visualizar.page` sem mudança de atributo. Extração de sub-componentes (Identidade/Reações/
+> Resistências, item 2 da spec) avaliada e **adiada** por decisão consciente — ver `HISTORY.md` e
+> `IDEAS.md`. Pré-requisito de `ui-34-ficha-completa-redesenho` (ainda em `docs/specs/active/`,
+> aguardando a próxima sessão atualizar suas referências de linha, que hoje apontam pro
+> `FichaVisualizacao` de antes da separação).
 > Antes: `ui-33` concluída — painel
 > lateral do jogador vira 3 abas (Rolagens/Esquadrão/Inv. Esquadrão): Rolar+Histórico fundidos,
 > aba Sessão removida, card "Equipe" virou a aba "Esquadrão" com avatar 60px (era 28px, passou por
@@ -134,7 +142,30 @@
 
 ## 1. Próxima Task
 
-**`ficha-separar-completa-e-campanha-card` concluída (2026-09-13):** `app-ficha-visualizacao` era
+**`ficha-campanha-card-resistencias-coloridas` concluída (2026-09-13):** No card de Identidade do
+`FichaCampanhaCard` (visão de campanha do jogador), as legendas separadas "Reações" (só leitura) e
+"Resistências" (só leitura) — com um `.ficha-cartao__divisor` entre os dois blocos — viraram uma
+legenda única "Reações e Resistências", sem divisor entre `.ficha-combate-rapido` e
+`.ficha-resistencias`. Cada caixa de `.ficha-resistencia` ganhou um modificador BEM por
+`TipoDanoEnum` (`--fisico`/`--balistico`/`--explosao`/`--quimico`/`--geral`): valor na cor do tipo
+(`--dano-<tipo>`), borda sutil (`--dano-<tipo>-border`, 40% opacidade) — mesma paleta já usada no
+chip de resumo de rolagem (`resultado-rolagem.component.scss`, `__grupo--<tipo>`), replicada (não
+extraída) via um `SUFIXO_TIPO_DANO`/`classeResistencia` próprio em `FichaCampanhaCard` (duplicar o
+mapa de 5 entradas foi decisão consciente de escopo, registrada na spec, não achado). Pedido em
+conversa pelo autor (com uma imagem de referência fora do repositório), revisando a decisão de
+escopo de `ui-34-ficha-completa-redesenho` que tinha adiado esse ajuste de cor pro card de campanha
+"pra decidir depois" — `FichaVisualizacao`/ficha completa continuam de fora, sem nenhuma mudança.
+Testes: `ficha-campanha-card` focado 125/125 (123 de antes + 2 novos — legenda única/ausência do
+divisor, classe de cor correta nas 5 resistências); suíte completa `frontend` 1734/1735 (mesma
+falha pré-existente, `detalhe-mestre` duplicar-ficha, sem relação com esta task); lint 0 erros nos
+arquivos tocados. Verificação ao vivo (Postgres + backend + frontend reais, cenário via REST —
+mestre dono da campanha + jogador convidado + ficha com Colete Kevlar equipado, resistência
+Balístico 3) nos 4 viewports padrão: legenda única sem divisor, 5 caixas de Resistência com cor/
+borda por tipo, sem overflow em nenhum viewport. Ajuste fino pedido pelo autor depois de ver o
+resultado: `.ficha-resistencias` ganhou `margin-top: 10px` (o divisor removido tinha levado junto o
+único espaço entre os dois blocos) e `.ficha-resistencia` ficou mais rasa (`padding` vertical
+`8px→5px`). Spec em `docs/specs/done/ficha-campanha-card-resistencias-coloridas.spec.md`.
+Antes: `ficha-separar-completa-e-campanha-card` concluída (2026-09-13): `app-ficha-visualizacao` era
 um componente só (2767 linhas de template) com `@Input() modo: 'padrao'|'compacto'` alternando
 layout via `@if`/`@else` espalhados pelo template — pré-requisito decidido pelo autor antes do
 redesenho visual da ficha completa (`ui-34-ficha-completa-redesenho`), pra um ajuste em um dos dois

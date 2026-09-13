@@ -951,10 +951,12 @@
 
                         <div class="ficha-cartao__divisor"></div>
 
-                        <!-- Defesa/Esquiva/Bloqueio/Contra-ataque — editável no próprio lugar (dono/mestre). Rótulo
-             "Reações" (não só "Defesa") porque a linha já inclui Contra-ataque. -->
+                        <!-- Reações (Defesa/Esquiva/Bloqueio/Contra-ataque) e Resistências, sob uma legenda única
+             (mesmo grau de leitura: as duas são só-leitura neste card — a edição vive na aba
+             Combate da ficha completa). Sem divisor entre os dois blocos, para lerem como um só
+             glance de "aguenta o quê". -->
                         <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
-                            <span>Reações</span>
+                            <span>Reações e Resistências</span>
                             @if (!ajustavelAmplo()) {
                                 <span class="ficha-cartao__subrotulo-nota">só leitura</span>
                             }
@@ -1055,19 +1057,9 @@
                             </div>
                         </div>
 
-                        <div class="ficha-cartao__divisor"></div>
-
-                        <!-- Resistências — editável no próprio lugar (dono/mestre): edita a base manual; o total
-             exibido soma essa base com o que vem do equipamento (`shared/regras`, m3-36). -->
-                        <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
-                            <span>Resistências</span>
-                            @if (!ajustavelAmplo()) {
-                                <span class="ficha-cartao__subrotulo-nota">só leitura</span>
-                            }
-                        </p>
                         <div class="ficha-resistencias">
                             @for (resistencia of resistencias(); track resistencia.tipo) {
-                                <div class="ficha-resistencia">
+                                <div [class]="classeResistencia(resistencia.tipo)">
                                     <span class="ficha-resistencia__abrev">{{
                                         abreviacaoResistencia[resistencia.tipo]
                                     }}</span>

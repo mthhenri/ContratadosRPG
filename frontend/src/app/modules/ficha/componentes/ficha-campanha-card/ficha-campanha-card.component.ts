@@ -2446,6 +2446,24 @@ export class FichaCampanhaCard {
     [TipoDanoEnum.GERAL]: 'Geral',
   };
 
+  /**
+   * Modificador BEM (`ficha-resistencia--<sufixo>`) por tipo de dano — mesma paleta `--dano-*` já
+   * usada no chip de resumo de `resultado-rolagem.component.ts` (`SUFIXO_TIPO_DANO`/`classeGrupo`),
+   * aqui aplicada à caixa de Resistência em vez do chip de rolagem.
+   */
+  private static readonly SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
+    [TipoDanoEnum.FISICO]: 'fisico',
+    [TipoDanoEnum.BALISTICO]: 'balistico',
+    [TipoDanoEnum.EXPLOSAO]: 'explosao',
+    [TipoDanoEnum.QUIMICO]: 'quimico',
+    [TipoDanoEnum.GERAL]: 'geral',
+  };
+
+  /** Classe da caixa de uma Resistência — combina o modificador base com o sufixo do tipo de dano. */
+  protected classeResistencia(tipo: TipoDanoEnum): string {
+    return `ficha-resistencia ficha-resistencia--${FichaCampanhaCard.SUFIXO_TIPO_DANO[tipo]}`;
+  }
+
   /** Tipo de dano em digitação direta na linha de Resistências, ou `null` fora de edição. */
   protected readonly editandoResistencia = signal<TipoDanoEnum | null>(null);
 

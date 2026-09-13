@@ -2351,23 +2351,29 @@
 }
 
 // Resistências em miniatura no card de identidade (redesenho de comparação visual) — glance
-// somente leitura das 5 linhas de `TipoDanoEnum`; a edição continua na aba Combate.
+// somente leitura das 5 linhas de `TipoDanoEnum`; a edição continua na aba Combate. `margin-top`
+// dá o espaçamento que sumiu junto com `.ficha-cartao__divisor` quando Reações e Resistências
+// passaram a viver sob a mesma legenda (autor pediu de volta um "espacinho", sem virar divisor).
 .ficha-resistencias {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 6px;
+    margin-top: 10px;
 
     @include bp.mobile {
         grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 }
 
+// Mais rasa que `.ficha-mini--fino` (padding vertical 7px) — autor pediu as caixas de Resistência
+// mais finas que as de Reações logo acima, pra reforçar que é um glance secundário; padding vertical
+// afinado em duas rodadas (8px → 5px → 3px) até o autor aprovar a proporção.
 .ficha-resistencia {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px 4px;
+    gap: 2px;
+    padding: 3px 4px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
@@ -2415,6 +2421,19 @@
         &::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
+        }
+    }
+
+    // Cor por tipo de dano — mesma paleta do chip de resumo da rolagem (`resultado-rolagem.component.scss`,
+    // `__grupo--<tipo>`): o valor ganha a cor cheia do tipo, a borda da caixa fica só sutil (`-border`,
+    // 40% opacidade). Sem glow aqui — reservado ao chip de resumo da rolagem, não à ficha inteira.
+    @each $tipo in fisico, balistico, explosao, quimico, geral {
+        &--#{$tipo} {
+            border-color: var(--dano-#{$tipo}-border);
+
+            .ficha-resistencia__valor {
+                color: var(--dano-#{$tipo});
+            }
         }
     }
 }

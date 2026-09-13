@@ -465,6 +465,30 @@ describe('FichaCampanhaCard', () => {
       )!;
       expect(fisico.querySelector('.ficha-resistencia__valor .valor-editavel__botao')).toBeNull();
     });
+
+    it('junta Reações e Resistências sob uma legenda única, sem divisor entre os dois blocos', () => {
+      const { raiz } = montar(dados);
+      const combate = raiz.querySelector(
+        '.ficha-visao__coluna--identidade .ficha-combate-rapido--com-contra',
+      )!;
+      const legenda = combate.previousElementSibling!;
+      expect(legenda.querySelector('span')?.textContent?.trim()).toBe('Reações e Resistências');
+      expect(combate.nextElementSibling?.classList.contains('ficha-resistencias')).toBe(true);
+    });
+
+    it('cada Resistência ganha a classe de cor do próprio tipo de dano (mesma paleta do chip de resumo da rolagem)', () => {
+      const { raiz } = montar(dados);
+      const classesPorAbrev = new Map(
+        Array.from(raiz.querySelectorAll('.ficha-visao__coluna--identidade .ficha-resistencia')).map(
+          (box) => [box.querySelector('.ficha-resistencia__abrev')?.textContent?.trim(), Array.from(box.classList)],
+        ),
+      );
+      expect(classesPorAbrev.get('Físico')).toContain('ficha-resistencia--fisico');
+      expect(classesPorAbrev.get('Balíst.')).toContain('ficha-resistencia--balistico');
+      expect(classesPorAbrev.get('Explos.')).toContain('ficha-resistencia--explosao');
+      expect(classesPorAbrev.get('Químico')).toContain('ficha-resistencia--quimico');
+      expect(classesPorAbrev.get('Geral')).toContain('ficha-resistencia--geral');
+    });
   });
 
   /**
