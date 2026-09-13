@@ -908,6 +908,29 @@
                 gap: 8px;
             }
         }
+
+        // Achado ao vivo (autor: Personalidade e Origem sem definir com "tamanho de fonte"
+        // aparentemente diferente, mesmo com `font-size: 13px` igual nos dois — computado
+        // confirmou o valor idêntico, a diferença real era a família: o botão interno de
+        // `<app-valor-editavel>` (Personalidade editável) vem com `font-family: var(--font-mono)`
+        // do próprio `app-botao` (`:host`, não coberto por `[variante]="'herdado'"`, que só cobre
+        // cor/fundo/borda), enquanto o `<span>` de Origem usa `var(--font-sans)` da própria classe
+        // `&__meta-valor`. `::ng-deep` (mesmo recurso já usado no `&__nome-linha` do mobile, acima
+        // no arquivo) porque a encapsulação de view não alcança o host `display: contents` do
+        // primitivo.
+        //
+        // `padding`/`margin` zerados (achado ao vivo — autor: "dá pra alinhar mais os textos?"):
+        // `.valor-editavel__botao` nasce com `padding: 1px 4px; margin: -1px -4px` (folga de hover
+        // sem deslocar layout, ver `valor-editavel.component.scss`) — a margem negativa lateral
+        // comia 4px do `gap: 8px` de `&__meta-linha` abaixo, medido ao vivo como 4px de distância
+        // real entre rótulo e valor de Personalidade contra 8px de Origem (`<span>` simples, sem
+        // essa folga). Zerar os dois aqui faz a caixa do botão coincidir com sua posição de flex
+        // "nua", igualando o espaçamento visual ao do `<span>` de Origem.
+        ::ng-deep .valor-editavel__botao {
+            font-family: var(--font-sans);
+            padding: 0;
+            margin: 0;
+        }
     }
 
     @include bp.tablet {
@@ -1910,9 +1933,18 @@
     // Rótulo e valor na mesma linha (era empilhado) — pedido do autor pra ficar "mais fininho" agora
     // que Personalidade/Origem viraram uma faixa de rodapé (largura de sobra, não precisa mais do
     // rótulo numa linha própria acima do valor).
+    //
+    // `align-items: center` (era `baseline`, achado ao vivo — autor: "um tá mais pra cima que o
+    // outro"): Personalidade e Origem não têm o mesmo tipo de valor — Personalidade em modo
+    // editável usa `<app-valor-editavel>` (um `<button app-botao>` `inline-flex`), Origem usa um
+    // `<span class="ficha-ident__meta-valor-linha">` (também `display:flex`, ver abaixo). Um item
+    // de flex que por sua vez é ele mesmo um container flex/inline-flex sintetiza a própria
+    // baseline a partir do primeiro item interno — com o botão do `app-botao` isso não bate com a
+    // baseline de texto simples do `<span>` da linha de Origem, descolando as duas linhas
+    // visualmente. `center` alinha os dois de forma previsível, independente do tipo de conteúdo.
     &__meta-linha {
         display: flex;
-        align-items: baseline;
+        align-items: center;
         gap: 8px;
         min-width: 0;
         flex: 1 1 0;
@@ -1933,6 +1965,10 @@
         overflow-wrap: anywhere;
     }
 
+    // `[variante]="'herdado'"` no `<app-valor-editavel>` de Personalidade (achado ao vivo — autor:
+    // Personalidade e Origem sem definir ficavam com visual diferente, uma branca outra cinza) faz
+    // o botão interno herdar esta cor por herança em vez de aplicar a própria (`secundario`,
+    // `var(--text)`, quase branco) — mesmo texto "Não definida" e mesmo cinza das duas agora.
     &__meta-valor {
         font-family: var(--font-sans);
         font-size: 13px;

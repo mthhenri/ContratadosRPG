@@ -842,7 +842,7 @@
              Sobe pro topo do bloco (pedido do autor, mesma ordem de `FichaCampanhaCard`): Vitalidade
              primeiro, Condições em seguida, Reações/Resistências por último. -->
                                 <p class="ficha-cartao__subrotulo ficha-cartao__subrotulo--meta">
-                                    <span>Vitalidade</span>
+                                    <span>Saúde</span>
                                 </p>
                                 <div class="ficha-vitalidade" #blocoVitalidade>
                                     <div class="ficha-barra ficha-barra--vida">
@@ -1189,11 +1189,12 @@
                                             <app-valor-editavel
                                                 class="ficha-ident__meta-valor"
                                                 [valor]="
-                                                    identidade().personalidade ?? '— Definir —'
+                                                    identidade().personalidade ?? 'Não definida'
                                                 "
                                                 [editando]="
                                                     editandoIdentidade() === 'personalidade'
                                                 "
+                                                variante="herdado"
                                                 rotuloAria="personalidade"
                                                 (editarSolicitado)="
                                                     editarIdentidade('personalidade')

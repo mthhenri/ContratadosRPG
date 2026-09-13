@@ -242,6 +242,10 @@
     align-items: center;
     gap: var(--space-12);
     min-width: 0;
+    // Achado ao vivo (autor: cabeçalho "grudado" no conteúdo abaixo) — faltava respiro vertical
+    // entre a barra do "Voltar" e a ficha. Mesmo valor de `var(--space-20)` que já separa a coluna
+    // de ações do conteúdo (padding-left de `.ficha-pagina__conteudo` acima), a pedido do autor.
+    margin-bottom: var(--space-20);
 }
 
 // Mesmo "chip" `//` de `.detalhe-mestre__cabecalho-indice`/`.detalhe__cabecalho-indice` (campanha)
@@ -299,6 +303,10 @@
 @include bp.mobile {
     .ficha-pagina__cabecalho {
         flex-wrap: wrap;
+        // Mesmo racional do desktop acima, mas com a medida lateral do próprio mobile (12px, o
+        // padding de `.ficha-pagina__conteudo` nesta largura) — `var(--space-20)` reintroduziria o
+        // espaçamento excessivo que o autor já pediu para reduzir no mobile (rodada anterior).
+        margin-bottom: var(--space-12);
     }
 
     .ficha-pagina__cabecalho-regua {
