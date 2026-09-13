@@ -493,7 +493,11 @@
 // mesmo mini-card do sistema e cai para duas colunas quando o painel fica estreito.
 .ficha-status__progressao {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    // Nível/Prestígio pela metade do share original (pedido do autor) — o 1fr tirado dos dois vai
+    // inteiro pra Patente (2fr), que ganha o dobro; Dinheiro/Salário no meio seguem no share padrão.
+    grid-template-columns:
+        minmax(0, 0.5fr) minmax(0, 0.5fr) minmax(0, 1fr) minmax(0, 1fr)
+        minmax(0, 2fr);
     gap: 8px;
 
     .ficha-ident__stats-linha {
@@ -2694,13 +2698,18 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
-    // Status: Deslocamento/Hab. por Turno/Percepção/Dano Furtivo/Iniciativa têm valor curto (ex.
-    // "9m", "16", "3d6") — a coluna encolhe pro conteúdo (`max-content`) em vez de dividir a fileira
-    // em 6 partes iguais, senão sobra vão morto entre o valor e a borda direita da caixa. O espaço
-    // que sobra vai inteiro pra Dano C. a C. (`1fr`, última da fileira — valor mais longo, ex.
-    // "2D6 [Físico]"); Dano Furtivo fica no meio, do tamanho do próprio conteúdo.
+    // Status: Deslocamento/Hab. por Turno/Percepção têm valor curto (ex. "9m", "16") — as 3
+    // primeiras colunas encolhem pro conteúdo (`max-content`), sem disputar espaço. Dano
+    // Furtivo/Dano C. a C./Iniciativa dividem o que sobra da fileira (pedido do autor: Furtivo
+    // +50%, Corpo a Corpo +150% sobre o share que a Iniciativa tinha sozinha antes — pesos
+    // 1.5fr/2.5fr/1fr, mesmo total de 5fr, sem tirar espaço das 3 primeiras) — `minmax(max-content, …)`
+    // garante que nenhuma das três encolha abaixo do próprio conteúdo mesmo perdendo a disputa.
     &--seis {
-        grid-template-columns: repeat(5, max-content) minmax(0, 1fr);
+        grid-template-columns:
+            repeat(3, max-content)
+            minmax(max-content, 1.5fr)
+            minmax(max-content, 2.5fr)
+            minmax(max-content, 1fr);
     }
 
     &--quatro,
