@@ -350,13 +350,6 @@
         white-space: nowrap;
     }
 
-    &__equipe-vazio {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-mute);
-        font-style: italic;
-    }
-
     // === "Rolagens" — painel de presets/rolagem avulsa (`FichaRolagensPainel`), sempre
     // `[podeRolar]="false"` (ver doc da classe). Sem o toggle mobile de `.detalhe__rolagens-painel`
     // (não há barra de abas na prévia — mais simples, empilha com o resto no mobile).

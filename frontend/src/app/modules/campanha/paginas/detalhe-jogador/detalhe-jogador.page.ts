@@ -196,14 +196,23 @@ export class CampanhaDetalheJogador {
       return;
     }
     // A aba "Rolar" precisa estar ativa antes do scroll — o alvo fica `[hidden]` (0 de altura)
-    // enquanto outra aba do painel segmentado está selecionada.
+    // enquanto outra aba do painel segmentado está selecionada, e a própria seção lateral só
+    // deixa de estar `--oculto-mobile` depois do `destinoMobileFicha` acima entrar em vigor. Os
+    // dois `set()` só agendam a atualização — `scrollIntoView` chamado na hora media a caixa
+    // ainda escondida (altura 0) e não rolava pra lugar nenhum. `setTimeout` empurra a chamada
+    // pra depois do Angular já ter aplicado as duas mudanças no DOM (achado ao vivo, autor).
     this.painelLateralAtivo.set('rolar');
-    const alvo = this.cardRolagens()?.nativeElement;
-    if (!alvo || typeof window === 'undefined') {
+    if (typeof window === 'undefined') {
       return;
     }
-    const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    alvo.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
+    setTimeout(() => {
+      const alvo = this.cardRolagens()?.nativeElement;
+      if (!alvo) {
+        return;
+      }
+      const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      alvo.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
+    });
   }
 
   /**

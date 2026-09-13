@@ -637,13 +637,6 @@ app-coluna-acoes {
         border-radius: var(--radius-control);
     }
 
-    &__equipe-vazio {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-mute);
-        font-style: italic;
-    }
-
     // === Painel lateral unificado (Rolagens/Esquadrão/Inv. Esquadrão, ui-33) — mesmo padrão
     // `detalhe-mestre__painel-lateral` (`app-segmentado`, sempre montado, nunca overlay). Cada aba
     // fica em `[hidden]`, não `@if` — troca de aba não perde estado de scroll/formulário.

@@ -317,6 +317,20 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('app-ficha-campanha-card')).not.toBeNull();
   });
 
+  it('jogador sem nenhuma ficha na campanha nem aparece na Equipe', () => {
+    // `fichas` (não `fichasComColegaJogador`): só Kane (usuarioId 1, Mestre) e Vera (usuarioId 2,
+    // Jogador) têm ficha — "Colega" (usuarioId 3) fica sem nenhuma depois da síntese de `montar()`.
+    const { raiz } = montar({ usuarioId: 2, membros: membrosTres(), fichas });
+
+    const nomes = Array.from(raiz.querySelectorAll('.detalhe__equipe-nome')).map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(nomes).toContain('Mestre');
+    expect(nomes).toContain('Jogador');
+    expect(nomes).not.toContain('Colega');
+    expect(raiz.querySelectorAll('.detalhe__equipe-membro')).toHaveLength(2);
+  });
+
   it('"Ver ficha" na Equipe troca a ficha exibida sem navegar; a de um colega vira só leitura', () => {
     const { fixture, raiz, fichaService, navegar } = montar({
       usuarioId: 2,
@@ -560,5 +574,43 @@ describe('CampanhaDetalheJogador', () => {
     fixture.componentInstance['painelLateralAtivo'].set('esquadrao');
     fixture.detectChanges();
     expect((painelEsquadrao as HTMLElement).hidden).toBe(false);
+  });
+
+  it('destino "Rolagens" do mobile rola até o card só depois do Angular tirar o [hidden] (não na hora)', () => {
+    vi.useFakeTimers();
+    // jsdom não implementa `matchMedia` — `aoMudarDestinoFicha` lê `prefers-reduced-motion`.
+    const matchMediaOriginal = window.matchMedia;
+    window.matchMedia = vi.fn(() => ({ matches: false }) as MediaQueryList);
+    try {
+      const { fixture, raiz } = montar({
+        usuarioId: 2,
+        membros: membrosTres(),
+        fichas: fichasComColegaJogador(),
+      });
+      // Outra aba ativa por padrão (ver `painelLateralAtivo`) — o card de Rolar nasce `[hidden]`.
+      fixture.componentInstance['painelLateralAtivo'].set('esquadrao');
+      fixture.detectChanges();
+      const cardRolar = raiz.querySelector('.detalhe__painel-rolar') as HTMLElement;
+      expect(cardRolar.hidden).toBe(true);
+
+      const scrollSpy = vi.fn();
+      cardRolar.scrollIntoView = scrollSpy;
+
+      fixture.componentInstance['aoMudarDestinoFicha']('rolagens');
+      fixture.detectChanges();
+      // O `[hidden]` já caiu (o `set('rolar')` é síncrono), mas o scroll não pode medir a caixa
+      // antes do browser aplicar esse layout — por isso é adiado, não chamado na hora.
+      expect(cardRolar.hidden).toBe(false);
+      expect(scrollSpy).not.toHaveBeenCalled();
+
+      // `advanceTimersByTime` (não `runAllTimers`): a página tem outros timers/pollings de fundo
+      // (tempo real etc.) que se reagendam pra sempre sob fake timers — `runAllTimers` estourava
+      // "infinite loop". Só precisamos disparar o `setTimeout(…)` sem delay do próprio scroll.
+      vi.advanceTimersByTime(0);
+      expect(scrollSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      window.matchMedia = matchMediaOriginal;
+      vi.useRealTimers();
+    }
   });
 });

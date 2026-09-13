@@ -146,31 +146,41 @@ export function agruparFichasPorMembro(
  * O mestre (ou o alvo da prévia, quando ele mesmo é dono da campanha — nunca acontece) nunca
  * mostra ficha nenhuma aqui — a Equipe é sobre os colegas de time, o card do mestre vira o chip
  * "Mestre".
+ *
+ * Jogador sem nenhuma ficha na campanha nem entra na lista (pedido do autor): a Equipe existe pra
+ * mostrar quem está em campo, não quem ainda falta criar uma ficha — a linha "Sem ficha nesta
+ * campanha" só confundia, sem nenhuma ação disponível ali. Mestre e Espectador continuam sempre
+ * visíveis (papel, não posse de ficha).
  */
 export function montarEquipeExibicao(
   membrosOrdenados: readonly CampanhaMembroResumoDto[],
   fichasPorMembro: ReadonlyMap<number, readonly ItemFicha[]>,
 ): readonly { readonly membro: CampanhaMembroResumoDto; readonly fichas: readonly EquipeFichaExibicao[] }[] {
-  return membrosOrdenados.map((membro) => ({
-    membro,
-    fichas:
-      membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
-        ? []
-        : membro.fichas.map((ficha): EquipeFichaExibicao => {
-            const completa = ficha.acessoCompleto
-              ? fichasPorMembro.get(membro.usuarioId)?.find((item) => item.id === ficha.id)
-              : undefined;
-            if (completa) {
-              return { tipo: 'completa', ...completa };
-            }
-            return {
-              tipo: 'teaser',
-              id: ficha.id,
-              nome: ficha.nome,
-              imagemUrl: ficha.imagemUrl,
-              cor: ficha.cor,
-              classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
-            };
-          }),
-  }));
+  return membrosOrdenados
+    .filter(
+      (membro) =>
+        membro.papel !== TipoCampanhaMembroPapelEnum.JOGADOR || membro.fichas.length > 0,
+    )
+    .map((membro) => ({
+      membro,
+      fichas:
+        membro.papel === TipoCampanhaMembroPapelEnum.MESTRE
+          ? []
+          : membro.fichas.map((ficha): EquipeFichaExibicao => {
+              const completa = ficha.acessoCompleto
+                ? fichasPorMembro.get(membro.usuarioId)?.find((item) => item.id === ficha.id)
+                : undefined;
+              if (completa) {
+                return { tipo: 'completa', ...completa };
+              }
+              return {
+                tipo: 'teaser',
+                id: ficha.id,
+                nome: ficha.nome,
+                imagemUrl: ficha.imagemUrl,
+                cor: ficha.cor,
+                classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+              };
+            }),
+    }));
 }
