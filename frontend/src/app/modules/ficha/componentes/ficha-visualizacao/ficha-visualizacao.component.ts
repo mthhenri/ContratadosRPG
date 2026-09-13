@@ -98,7 +98,6 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Aba } from '../../../../shared/ui/abas/aba.component';
 import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
@@ -384,7 +383,6 @@ export interface AjusteClasse {
     BandejaDados,
     OverflowFade,
     Tooltip,
-    Chip,
     BarraRecurso,
     Botao,
     BotaoIcone,
@@ -1188,11 +1186,6 @@ export class FichaVisualizacao {
       ],
     },
   ];
-
-  /** Classificação institucional exibida no topo (`FICHA-JGD-NNNN`). */
-  protected readonly classificacao = computed(
-    () => `FICHA-JGD-${String(this.fichaId()).padStart(4, '0')}`,
-  );
 
   /**
    * Entrada normalizada aos limites da classe para as fórmulas — só os cinco atributos que

@@ -1,5 +1,24 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — pós-`ui-34`: classificação (`FICHA-JGD-NNNN`) sobe pro cabeçalho da página
+
+Pedido direto em conversa: o card de `FichaVisualizacao` tinha uma linha própria só para
+"Ficha de Jogador" + a régua + o chip de classificação (`.ficha-visao__topo`) — o autor pediu para
+essa linha sumir e o chip subir para o cabeçalho da página (`visualizar.page`), na mesma linha do
+nome, depois da régua: `Voltar // Nome [Campanha] --- FICHA-JGD-0090`.
+
+`FichaVisualizacao` só tem esse consumidor (`visualizar.page`, desde a `ficha-separar-completa-e-
+campanha-card`), então a migração foi direta: `classificacao` (`FICHA-JGD-${fichaId}`) saiu do
+componente — que também perdeu o import de `Chip`, agora sem uso — e virou um campo simples em
+`FichaVisualizar` (não precisa de `computed`: `fichaId` é fixo, parâmetro de rota síncrono). O
+`<header class="ficha-visao__topo">`, `&__rotulo-secao` e o `&__regua` específico dele saíram do
+componente; o comentário de fidelidade no topo do SCSS foi atualizado para não citar mais o chip.
+
+**Evidência.** `ficha-visualizacao.component.spec.ts` (assinatura do teste de codinome/classe
+ajustada, sem a expectativa do chip que saiu) e `visualizar.page.spec.ts` passando, 222 testes ao
+todo; lint sem erros. Verificado ao vivo nos 4 viewports padrão: chip renderiza com o texto certo,
+cabeçalho antigo (`.ficha-visao__topo`) não existe mais no DOM, sem overflow em nenhum.
+
 ## 2026-09-13 — pós-`ui-34`: menu "⋯" no mobile, ícone do Caderno e Anotações redimensionável
 
 Três rodadas de feedback do autor sobre a ficha completa recém-migrada para `app-coluna-acoes`

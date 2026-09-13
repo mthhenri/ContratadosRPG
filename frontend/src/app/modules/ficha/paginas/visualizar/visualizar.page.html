@@ -111,6 +111,11 @@
             } }
             <span class="ficha-pagina__cabecalho-regua"></span>
             <div class="ficha-pagina__acoes">
+                <!-- Classificação institucional (m3-07) — morava num cabeçalho próprio dentro de
+             `FichaVisualizacao`; subiu pra cá a pedido do autor, ao lado do nome. -->
+                <app-chip variante="sutil" class="ficha-pagina__classificacao"
+                    >{{ classificacao }}</app-chip
+                >
                 <!-- Estado do auto-save (m3-60): antes o sucesso era mudo — nenhum sinal de que salvou. -->
                 @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
                 <span

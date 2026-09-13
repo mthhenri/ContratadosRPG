@@ -5,7 +5,10 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-13 · **Última decisão registrada:**
-> pós-`ui-34`, rodadas de feedback do autor concluídas — edição de Atributos virou grade de caixas
+> pós-`ui-34`, a classificação (`FICHA-JGD-NNNN`) saiu do card `FichaVisualizacao` (linha própria
+> `.ficha-visao__topo`, removida) e subiu para o cabeçalho de `visualizar.page`, na mesma linha do
+> nome: `Voltar // Nome [Campanha] --- FICHA-JGD-0090`. Detalhe em `HISTORY.md`.
+> Antes: rodadas de feedback do autor concluídas — edição de Atributos virou grade de caixas
 > (mesmo shell da leitura), com nova variante `discreto` e tamanhos `micro`/`grande` em
 > `shared/ui/stepper`; DT/Proficiência/Maestria só ficam lado a lado acima de um novo
 > `$bp-desktop` (1600px), a grade de 5 atributos (leitura) usa `repeat(auto-fit, minmax(120px,

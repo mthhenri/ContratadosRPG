@@ -99,7 +99,7 @@ describe('FichaVisualizacao', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement };
   }
 
-  it('exibe codinome, classe/arquétipo e classificação, e é somente leitura quando não ajustável', () => {
+  it('exibe codinome e classe/arquétipo, e é somente leitura quando não ajustável', () => {
     const { raiz } = montar(dados);
     expect(raiz.querySelector('.ficha-ident__nome')?.textContent?.trim()).toBe('Corvo');
     const chips = Array.from(raiz.querySelectorAll('.ficha-ident__chips .chip')).map((c) =>
@@ -107,7 +107,6 @@ describe('FichaVisualizacao', () => {
     );
     expect(chips).toContain('Combatente');
     expect(chips).toContain('Mercenário');
-    expect(raiz.querySelector('app-chip')?.textContent?.trim()).toBe('FICHA-JGD-0042');
     expect(raiz.querySelector('input')).toBeNull();
     expect(raiz.querySelector('select')).toBeNull();
   });

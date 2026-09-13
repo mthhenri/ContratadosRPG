@@ -26,6 +26,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
@@ -86,6 +87,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     ReactiveFormsModule,
     Botao,
     BotaoIcone,
+    Chip,
     Icone,
     FichaVisualizacao,
     CalculadoraFlutuante,
@@ -123,6 +125,14 @@ export class FichaVisualizar {
   /** `campanhaId` da rota-pai (`/campanhas/:campanhaId/ficha/:id`), ou `null` sob `/fichas/:id`. */
   private readonly campanhaIdRota = lerParamRota(this.rotaAtiva, 'campanhaId');
   protected readonly fichaId = Number(lerParamRota(this.rotaAtiva, 'id'));
+
+  /**
+   * Classificação institucional (`FICHA-JGD-NNNN`) — morava num cabeçalho próprio dentro de
+   * `FichaVisualizacao` (`.ficha-visao__topo`); o autor pediu pra sumir com essa linha e o chip
+   * subir para o cabeçalho da página, ao lado do nome (`.ficha-pagina__cabecalho`). `fichaId` é
+   * fixo (parâmetro de rota, síncrono) — não precisa de `computed`.
+   */
+  protected readonly classificacao = `FICHA-JGD-${String(this.fichaId).padStart(4, '0')}`;
 
   /**
    * `campanhaId` efetivo (m3-28): sob a rota campanha-scoped, conhecido de imediato; sob
