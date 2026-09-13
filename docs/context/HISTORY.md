@@ -1,5 +1,38 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — pós-`ui-34`: respiro dobrado no mobile e Nome/Contrato empilhados e centralizados
+
+Feedback direto do autor sobre a ficha completa no mobile, em três rodadas — todo o escopo dentro
+de `@include bp.mobile`, sem tocar tela dividida/notebook/desktop.
+
+**Respiro dobrado ao redor do conteúdo.** `.ficha-pagina` (a `<section>` da casca) e
+`.ficha-pagina__conteudo` (introduzida pela `ui-34`) tinham o **mesmo** `padding` mobile aplicado
+nas duas — a `ui-34` passou a dona do respiro pra `__conteudo`, mas esqueceu de remover a regra de
+antes dela (m3-56/m3-60) que já existia no elemento pai. Resultado: 12px+12px nas laterais e
+85px+85px no rodapé, o dobro do pretendido. Corrigido em duas rodadas: primeiro zerando o padding
+duplicado de `.ficha-pagina` (mobile só herda o `padding: 0` do bloco base, sem override); depois,
+a pedido do autor pra reduzir ainda mais, `:host` passou a cancelar também o padding mobile de
+`.conteudo` (16px 12px, `layout.component.scss`) via margem negativa — mesma técnica que o bloco
+desktop já usava, só que com os valores de `.conteudo` no mobile. O total de respiro nas laterais
+caiu de 36px (antes de qualquer correção) para 12px.
+
+**Nome + Contrato empilhados e centralizados.** `.ficha-identidade__nome-linha` (Nome do agente +
+"CONTRATO — 0000") virou `flex-direction: column` no mobile — não `flex-basis: 100%` no Contrato,
+porque pra dono/mestre os dois viram o botão de exibição de `app-valor-editavel`, um primitivo com
+host `display: contents` (sem caixa própria; `flex-basis` nele não tem efeito nenhum, mas
+`flex-direction` no contêiner empilha o filho real que atravessa o `display: contents`
+igual). Centralizar exigiu um segundo achado: o botão interno do primitivo (`.valor-editavel__botao`)
+vem com `align-self: flex-start` por padrão (pensado pro contêiner em `row`, onde isso não mexe na
+posição horizontal) — em `column`, esse é o eixo cruzado, e passou a vencer o `align-items: center`
+do contêiner. Sobrescrito só no mobile via `::ng-deep` (mesmo recurso de `coluna-acoes.component.
+scss`), reaplicando os mesmos valores do modificador `--centro` do próprio primitivo.
+
+**Evidência.** 222 testes (`ficha-visualizacao`/`visualizar.page`) passando em cada rodada; lint 0
+erros nos arquivos tocados. Verificado ao vivo (Playwright, conta dono — o caso mais complexo, com
+`app-valor-editavel` renderizado) nos 4 viewports padrão: sem overflow em nenhum, tela dividida/
+notebook/desktop bit a bit idênticos a antes, Nome e Contrato centralizados um sob o outro no
+mobile.
+
 ## 2026-09-13 — pós-`ui-34`: classificação (`FICHA-JGD-NNNN`) sobe pro cabeçalho da página
 
 Pedido direto em conversa: o card de `FichaVisualizacao` tinha uma linha própria só para

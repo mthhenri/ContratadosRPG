@@ -779,9 +779,32 @@
         gap: 8px 16px;
         margin-bottom: 16px;
 
+        // `flex-direction: column` (não `flex-basis: 100%` no Contrato): o Contrato pode ser um
+        // `<span>` OU o botão de exibição de `app-valor-editavel` (dono/mestre) projetado através
+        // do `display: contents` do host desse primitivo — `flex-basis` no host não tem efeito
+        // nenhum (não gera caixa própria), mas o `flex-direction` do próprio contêiner empilha
+        // qualquer filho real (inclusive os que atravessam um host `display: contents`) na própria
+        // linha, sem precisar saber qual dos dois casos está renderizado. Achado ao vivo (autor:
+        // no mobile o Contrato deveria ficar sempre embaixo do nome, não só quando os dois não
+        // cabem juntos na mesma linha).
         @include bp.mobile {
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
+
+            // Pro dono/mestre, Nome e Contrato viram o botão de exibição de `app-valor-editavel`
+            // (`.valor-editavel__botao`) — que por padrão vem com `align-self: flex-start` do
+            // próprio primitivo (pensado pro contêiner em `row`, onde isso não afeta a posição
+            // horizontal; aqui o contêiner virou `column`, e o eixo cruzado passou a ser o
+            // horizontal, então esse `flex-start` ganhava do `align-items: center` acima).
+            // `::ng-deep` (mesmo recurso de `coluna-acoes.component.scss`) porque a encapsulação de
+            // view não alcança o host `display: contents` do primitivo — os mesmos valores de
+            // `[alinhamento]="'centro'"` (`.valor-editavel__botao--centro`), só que condicionados a
+            // esta largura em vez de fixos por input do consumidor.
+            ::ng-deep .valor-editavel__botao {
+                align-self: center;
+                justify-self: center;
+            }
         }
     }
 

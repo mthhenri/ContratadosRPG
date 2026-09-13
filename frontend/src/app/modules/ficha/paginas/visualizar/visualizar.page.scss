@@ -23,7 +23,11 @@
     @include bp.mobile {
         // altura da barra: 44px de alvo + 6px de padding em cima e embaixo + 1px de borda
         --piso-flutuante: 57px;
-        margin: 0;
+        // Cancela também o padding mobile de `.conteudo` (16px 12px, `layout.component.scss`) — antes
+        // ficava sem cancelar (`margin: 0`) e o padding de `.ficha-pagina__conteudo` somava por cima,
+        // dobrando o respiro nas laterais/topo (achado ao vivo, autor: "muito espaçamento ao redor").
+        // Mesma técnica do desktop acima, só que com os valores mobile de `.conteudo`.
+        margin: -16px -12px;
     }
 }
 
@@ -72,9 +76,13 @@
         width: 100%;
         max-width: 100%;
         margin: 0;
-        // m3-60: o rodapé reserva a altura da barra de navegação fixa + a safe area do iOS, senão o
-        // último bloco de cada aba fica embaixo dela e é inalcançável.
-        padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+        // Achado ao vivo (autor: "muito espaçamento ao redor" no mobile) — um `padding` aqui idêntico
+        // ao de `.ficha-pagina__conteudo` (abaixo) somava as duas caixas e dobrava o respiro (12px+
+        // 12px nas laterais, 85px+85px no rodapé). A `ui-34` introduziu `.ficha-pagina__conteudo`
+        // como dono único do padding (mesmo padrão de `detalhe-mestre`/`detalhe-jogador`: `:host`
+        // sem padding próprio em nenhuma largura), mas a regra de antes dela (m3-56/m3-60, quando
+        // `.ficha-pagina` ainda era o próprio container de conteúdo) sobrou aqui — removida; o
+        // `padding: 0` do bloco base (topo do arquivo) já cobre esta largura também.
     }
 
     // Indicador de auto-save (m3-60) — discreto, no cabeçalho, ao lado do indicador de tempo real.
