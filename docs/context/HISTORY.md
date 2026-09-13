@@ -1,5 +1,68 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — fix: card de item na Mochila Médica exibia peso bruto, não reduzido
+
+Feedback direto do autor: "a mochila médica não tá contando os itens dentro dela de forma
+correta". Investigação sistemática (`superpowers:systematic-debugging`) descartou o motor
+(`listarSubInventarios`, `shared/regras/compras/compras.ts`) — o total no cabeçalho do
+sub-inventário já somava certo (testado em `compras.spec.ts`, doc "Reduz o peso dos itens em
+0,5"). O defeito estava em `ficha-inventario.component.ts#montarItemInventario`: o **card
+individual** de cada item tem seu próprio cálculo de peso (`pesoBruto`, badge "X slots"),
+separado do motor — a mesma classe de bug já corrigida uma vez para `pesoCustom` (m3-76,
+comentário ainda presente no arquivo) —, e esse cálculo local nunca soube da existência de
+`inventarioProprio.reducaoPeso` do container. Resultado visível: o cabeçalho da Mochila Médica
+mostrava "0,5 / 5" (correto), mas o card do item dentro dela mostrava "1 slot" (peso de catálogo,
+sem a redução) — os dois números não batiam, lido pelo autor como "não conta os itens certo".
+
+**Correção.** `itensInventario` (computed) monta agora um `Map<containerId, reducaoPeso>` a partir
+dos containers vestidos com `inventarioProprio` (mesma condição de guarda de
+`listarSubInventarios`: `categoria === ARMAZENAMENTO && !guardada && id`) e passa a redução do
+container de cada item pro novo parâmetro opcional `reducaoPeso` de `montarItemInventario`, que
+aplica `Math.max(0, item.peso - reducaoPeso)` antes de multiplicar por `pesoMods`/`quantidade` —
+mesma fórmula, piso 0, que `listarSubInventarios` já usava. Nenhuma mudança em `shared/regras`.
+
+**Evidência (TDD).** Teste novo em `ficha-inventario.component.spec.ts` reproduziu o bug (card
+mostrando "1 slots" em vez de "0.5 slots") antes da correção; passou depois. Segundo teste cobre a
+borda de um item cujo `containerId` aponta pra uma Mochila Médica **guardada** (não vestida): o
+card deve manter o peso bruto, já que `listarSubInventarios` também ignora containers guardados.
+Suíte completa do componente: 175/175. `npm run test --workspace=shared`: 750/750 (sem mudança,
+controle). `ng test` (frontend inteiro): 1744/1745 — a 1 falha (`detalhe-mestre.page.spec.ts`,
+dialog de duplicar ficha) é pré-existente e não relacionada (módulo de campanha, nada a ver com
+inventário/compras). Lint 0 erros nos arquivos tocados.
+
+**Residual, registrado como problema em aberto (`P-067`, depois resolvido nesta mesma tarefa).**
+Depois da correção acima, o autor mandou print ao vivo mostrando que o cabeçalho da Mochila
+Médica continuava "0 / 5" mesmo com Bandagem (x6) guardada dentro. Card e cabeçalho batiam entre
+si (ambos "0" — a correção acima funcionou), mas o número em si expôs uma regra que ninguém tinha
+discutido: Bandagem (0,2), Spray Medicinal (0,3) e Gel Cicatrizante (0,5) pesam menos que a
+redução da Mochila Médica (0,5) e zeravam por completo (`Math.max(0, peso − 0,5)`), enquanto o doc
+só dizia "Reduz o peso dos itens em 0,5" sem citar piso (ao contrário de "Camuflada", que diz
+"mínimo 1 de peso" explicitamente). Não era bug de implementação — era ambiguidade do doc sobre se
+deveria haver piso — então virou `P-067` em vez de correção unilateral; o autor pediu pra
+registrar e decidir depois.
+
+**Resolução do P-067.** O autor decidiu e atualizou o próprio doc:
+`docs/core/sistema-v4.1.0.md:1706` (nova numeração de linha após reformatação do arquivo) agora
+diz "Reduz o peso dos itens em 0,5 (mínimo 0,1)". `ItemCatalogo.inventarioProprio`
+(`shared/src/regras/compras/catalogo.dados.ts`) ganhou o campo `pesoMinimo?`, preenchido só na
+Mochila Médica (`reducaoPeso: 0.5, pesoMinimo: 0.1`); `listarSubInventarios`
+(`shared/regras/compras/compras.ts`) trocou `Math.max(0, item.peso - reducaoPeso)` por
+`Math.max(pesoMinimo, item.peso - reducaoPeso)` (piso 0 por padrão pra containers sem
+`pesoMinimo`, comportamento inalterado pra Pochete/Bolso de Corpo). `montarItemInventario`
+(`ficha-inventario.component.ts`, mesmo card corrigido no achado acima) ganhou um segundo
+parâmetro `pesoMinimo`, propagado pelo mesmo `Map` de `itensInventario` — refatorado pra guardar
+`{ reducaoPeso, pesoMinimo }` por `containerId` em vez de só o número.
+
+**Evidência.** `compras.spec.ts`: teste da Mochila Médica recalculado pro novo piso — Desfibrilador
+(peso 1) inalterado em 0,5 (> 0,1, sem efeito do novo piso); Calmante (peso 0,5, quantidade 2) sobe
+de 0 pra 0,2 (`max(0,1; 0) × 2`); total do sub-inventário 0,5 → 0,7. `shared`: 750/750. Novo teste em
+`ficha-inventario.component.spec.ts` reproduz o caso real do autor (Bandagem peso 0,2, quantidade
+6): card e cabeçalho agora mostram "0.6 slots"/"0.6 / 5" em vez de "0 slots"/"0 / 5" — cobre o
+próprio cenário do print. Suíte do componente: 176/176. `ng test` (frontend inteiro): 1746/1747 —
+mesma falha pré-existente e não relacionada de antes. Lint 0 erros/avisos novos (avisos
+pré-existentes de `quotes`/`max-len` do arquivo, alheios a esta mudança, não tocados). `P-067`
+removido de `PROBLEMS.md` — resolvido.
+
 ## 2026-09-13 — pós-`ui-34`: respiro dobrado no mobile e Nome/Contrato empilhados e centralizados
 
 Feedback direto do autor sobre a ficha completa no mobile, em três rodadas — todo o escopo dentro

@@ -800,7 +800,7 @@ describe('listarSubInventarios (m3-44)', () => {
     expect(subInventarios[0].pesoUsado).toBe(1);
   });
 
-  it('Mochila Médica: abre sub-inventário só p/ Medicinal, capacidade 5, e reduz 0,5 de peso por item (piso 0)', () => {
+  it('Mochila Médica: abre sub-inventário só p/ Medicinal, capacidade 5, e reduz 0,5 de peso por item (mínimo 0,1)', () => {
     const mochila = montarItem({ nome: 'Mochila Médica', categoria: ItemCategoriaEnum.ARMAZENAMENTO, id: 'med-1' });
     const desfibrilador = montarItem({
       nome: 'Desfibrilador',
@@ -820,8 +820,8 @@ describe('listarSubInventarios (m3-44)', () => {
       containerId: 'med-1',
       capacidade: 5,
       categoriasPermitidas: [ItemCategoriaEnum.MEDICINAL],
-      // Desfibrilador: max(0, 1 − 0,5) × 1 = 0,5; Calmante: max(0, 0,5 − 0,5) × 2 = 0 (piso).
-      pesoUsado: 0.5,
+      // Desfibrilador: max(0,1; 1 − 0,5) × 1 = 0,5; Calmante: max(0,1; 0,5 − 0,5) × 2 = 0,2 (piso 0,1/unidade).
+      pesoUsado: 0.7,
     });
   });
 

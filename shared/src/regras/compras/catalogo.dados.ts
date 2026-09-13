@@ -44,10 +44,13 @@ export interface ItemCatalogo {
     readonly categoriasPermitidas?: readonly ItemCategoriaEnum[];
     /**
      * Reduz o peso de cada item contido em `reducaoPeso` (doc — Mochila Médica: "Reduz o peso dos
-     * itens em 0,5"), piso 0 por item. Só afeta o peso somado em `listarSubInventarios` (a
-     * capacidade do próprio container, via `bonus`, é fixa e não muda).
+     * itens em 0,5 (mínimo 0,1)"), nunca abaixo de `pesoMinimo` por item (piso 0 quando ausente,
+     * caso surja outro container com `reducaoPeso` sem piso próprio no doc). Só afeta o peso
+     * somado em `listarSubInventarios` (a capacidade do próprio container, via `bonus`, é fixa e
+     * não muda).
      */
     readonly reducaoPeso?: number;
+    readonly pesoMinimo?: number;
   };
   /**
    * Restringe as modificações que **este** item aceita, pelo nome — as demais da categoria não
@@ -174,6 +177,7 @@ export const CATALOGO_ITENS: Readonly<Record<ItemCategoriaEnum, readonly ItemCat
       inventarioProprio: {
         categoriasPermitidas: [ItemCategoriaEnum.MEDICINAL],
         reducaoPeso: 0.5,
+        pesoMinimo: 0.1,
       },
     },
   ],

@@ -2838,6 +2838,98 @@ describe('FichaInventario', () => {
       const { raiz } = montar({ itens: [bolsoGuardado], amplificadores: [] });
       expect(raiz.querySelector('.ficha-inv__subinventario')).toBeNull();
     });
+
+    it('o card de um item dentro da Mochila Médica mostra o peso já reduzido em 0,5 (doc), não o bruto', () => {
+      const mochilaMedica: CarrinhoItemDto = {
+        nome: 'Mochila Médica',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 1600,
+        peso: 0.5,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'med-1',
+      };
+      const desfibrilador: CarrinhoItemDto = {
+        nome: 'Desfibrilador',
+        categoria: ItemCategoriaEnum.MEDICINAL,
+        custo: 500,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        containerId: 'med-1',
+      };
+      const { raiz } = montar({ itens: [mochilaMedica, desfibrilador], amplificadores: [] });
+
+      const secao = raiz.querySelector('.ficha-inv__subinventario');
+      // Peso do container: max(0, 1 − 0,5) = 0,5 — o motor (`listarSubInventarios`) já somava certo
+      // no cabeçalho; o card individual (`montarItemInventario`), calculado à parte, ignorava a
+      // redução e mostrava o peso bruto do catálogo (1 slot).
+      const pesoCard = secao?.querySelector('.ficha-inv__peso')?.textContent?.trim();
+      expect(pesoCard).toBe('0.5 slots');
+    });
+
+    it('um item mais leve que a redução (Bandagem) nunca zera — piso 0,1 por unidade (doc: "mínimo 0,1")', () => {
+      const mochilaMedica: CarrinhoItemDto = {
+        nome: 'Mochila Médica',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 1600,
+        peso: 0.5,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        id: 'med-1',
+      };
+      const bandagem: CarrinhoItemDto = {
+        nome: 'Bandagem',
+        categoria: ItemCategoriaEnum.MEDICINAL,
+        custo: 50,
+        peso: 0.2,
+        quantidade: 6,
+        guardada: false,
+        modificacoes: [],
+        containerId: 'med-1',
+      };
+      const { raiz } = montar({ itens: [mochilaMedica, bandagem], amplificadores: [] });
+
+      const secao = raiz.querySelector('.ficha-inv__subinventario');
+      // max(0,1; 0,2 − 0,5) = 0,1 por unidade × 6 = 0,6 — card e cabeçalho batem (P-067).
+      const pesoCard = secao?.querySelector('.ficha-inv__peso')?.textContent?.trim();
+      expect(pesoCard).toBe('0.6 slots');
+      expect(secao?.textContent).toContain('0.6 / 5');
+    });
+
+    it('uma Mochila Médica guardada não reduz o peso de um item que ainda aponta pro seu `id`', () => {
+      const mochilaGuardada: CarrinhoItemDto = {
+        nome: 'Mochila Médica',
+        categoria: ItemCategoriaEnum.ARMAZENAMENTO,
+        custo: 1600,
+        peso: 0.5,
+        quantidade: 1,
+        guardada: true,
+        modificacoes: [],
+        id: 'med-1',
+      };
+      const desfibrilador: CarrinhoItemDto = {
+        nome: 'Desfibrilador',
+        categoria: ItemCategoriaEnum.MEDICINAL,
+        custo: 500,
+        peso: 1,
+        quantidade: 1,
+        guardada: false,
+        modificacoes: [],
+        containerId: 'med-1',
+      };
+      const { raiz } = montar({ itens: [mochilaGuardada, desfibrilador], amplificadores: [] });
+
+      expect(raiz.querySelector('.ficha-inv__subinventario')).toBeNull();
+      const cartaoDesfibrilador = Array.from(raiz.querySelectorAll('.ficha-inv__item')).find((el) =>
+        el.textContent?.includes('Desfibrilador'),
+      );
+      const pesoCard = cartaoDesfibrilador?.querySelector('.ficha-inv__peso')?.textContent?.trim();
+      expect(pesoCard).toBe('1 slots');
+    });
   });
 
   describe('Fragmentos em seção própria (m3-44)', () => {

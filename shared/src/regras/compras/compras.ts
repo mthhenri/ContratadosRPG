@@ -934,8 +934,9 @@ export function calcularTotaisCarrinho(dto: TotaisCarrinhoCalcularDto): TotaisCa
  * `inventarioProprio`, com `id` atribuído, abre sua própria lista — os itens com `containerId`
  * igual a esse `id` pesam só contra a capacidade do container (o bônus dele, via
  * `calcularBonusArmazenamentoItem`), nunca contra o pool principal. Quando o container tem
- * `reducaoPeso` (Mochila Médica: 0,5), cada item contido pesa `peso − reducaoPeso` (piso 0) nessa
- * soma. Containers sem `id` (de antes desta task) e itens `guardada = true` (não vestidos) não
+ * `reducaoPeso` (Mochila Médica: 0,5), cada item contido pesa `peso − reducaoPeso` nessa soma,
+ * nunca abaixo de `pesoMinimo` (Mochila Médica: 0,1 — doc: "mínimo 0,1"; piso 0 por padrão).
+ * Containers sem `id` (de antes desta task) e itens `guardada = true` (não vestidos) não
  * abrem sub-inventário. Espelha `renderCmpSummary`/`getCmpTotals` na mesma filosofia "aviso, não
  * trava" — `categoriasPermitidas`/capacidade excedida são só sinalização da UI.
  */
@@ -952,6 +953,7 @@ export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonl
     }
     const itensContidos = itens.filter((item) => item.containerId === container.id);
     const reducaoPeso = itemCatalogo.inventarioProprio.reducaoPeso ?? 0;
+    const pesoMinimo = itemCatalogo.inventarioProprio.pesoMinimo ?? 0;
     const pesoUsado = itensContidos.reduce((total, item) => {
       const pesoMods = item.modificacoes.reduce(
         (soma, modificacao) =>
@@ -965,7 +967,7 @@ export function listarSubInventarios(itens: readonly CarrinhoItemDto[]): readonl
             }),
         0,
       );
-      const pesoEfetivo = Math.max(0, item.peso - reducaoPeso) + pesoMods;
+      const pesoEfetivo = Math.max(pesoMinimo, item.peso - reducaoPeso) + pesoMods;
       return total + pesoEfetivo * item.quantidade;
     }, 0);
 

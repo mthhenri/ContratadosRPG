@@ -1144,9 +1144,36 @@ export class FichaInventario {
     return 'Nenhum item no inventário.';
   });
 
-  protected readonly itensInventario = computed<readonly ItemInventarioVM[]>(() =>
-    this.inventario().itens.map((item, indice) => this.montarItemInventario(item, indice)),
-  );
+  /**
+   * Card de cada item mostra seu peso individual — quando o item está dentro de uma Mochila
+   * Médica (`containerId`), esse peso já vem reduzido pelo `reducaoPeso`/`pesoMinimo` do
+   * container, a mesma conta de `listarSubInventarios` (shared/regras/compras), pra não divergir
+   * do total exibido no cabeçalho do sub-inventário (mesma classe de bug do `pesoCustom`, m3-76).
+   */
+  protected readonly itensInventario = computed<readonly ItemInventarioVM[]>(() => {
+    const itens = this.inventario().itens;
+    const reducoesPorContainer = new Map<string, { reducaoPeso: number; pesoMinimo: number }>();
+    itens.forEach((container) => {
+      const ehArmazenamento = container.categoria === ItemCategoriaEnum.ARMAZENAMENTO;
+      if (!ehArmazenamento || container.guardada || !container.id) {
+        return;
+      }
+      const inventarioProprio = resolverDadosItem(container)?.inventarioProprio;
+      if (inventarioProprio?.reducaoPeso) {
+        reducoesPorContainer.set(container.id, {
+          reducaoPeso: inventarioProprio.reducaoPeso,
+          pesoMinimo: inventarioProprio.pesoMinimo ?? 0,
+        });
+      }
+    });
+    return itens.map((item, indice) => {
+      const containerId = item.containerId;
+      const reducao = containerId ? reducoesPorContainer.get(containerId) : undefined;
+      const reducaoPeso = reducao?.reducaoPeso ?? 0;
+      const pesoMinimo = reducao?.pesoMinimo ?? 0;
+      return this.montarItemInventario(item, indice, reducaoPeso, pesoMinimo);
+    });
+  });
 
   /** Itens da lista após a busca (nome exibido, nome real e categoria) — a busca em si não reordena nem remove do inventário real. */
   protected readonly itensInventarioFiltrados = computed<readonly ItemInventarioVM[]>(() => {
@@ -2716,7 +2743,12 @@ export class FichaInventario {
     };
   }
 
-  private montarItemInventario(item: CarrinhoItemDto, indice: number): ItemInventarioVM {
+  private montarItemInventario(
+    item: CarrinhoItemDto,
+    indice: number,
+    reducaoPeso = 0,
+    pesoMinimo = 0,
+  ): ItemInventarioVM {
     const limite = obterLimiteModificacoes({ prestigio: this.prestigio() });
     const modsUsados = this.modsUsados(item);
     const ehArmazenamento = item.categoria === ItemCategoriaEnum.ARMAZENAMENTO;
@@ -2747,7 +2779,10 @@ export class FichaInventario {
           }),
       0,
     );
-    const pesoBruto = (item.peso + pesoMods) * item.quantidade;
+    // `reducaoPeso`/`pesoMinimo` (Mochila Médica) vêm do container onde o item está guardado —
+    // mesma conta de `listarSubInventarios` (shared/regras/compras), pro card não divergir do
+    // total exibido no cabeçalho.
+    const pesoBruto = (Math.max(pesoMinimo, item.peso - reducaoPeso) + pesoMods) * item.quantidade;
     // Armazenamento vestido (não guardado) não ocupa slots → "0 slots"; guardado/demais usam o peso real.
     const pesoTexto = `${this.formatarPeso(contaPeso ? pesoBruto : 0)} slots`;
 
