@@ -28,6 +28,8 @@ export enum HabilidadeCategoriaEnum {
   ESPECIALIDADE = 'ESPECIALIDADE',
   /** Habilidade exclusiva de agentes Civis. */
   CIVIL = 'CIVIL',
+  /** Habilidade personalizada exclusiva daquele agente. */
+  UNICA = 'UNICA',
 }
 
 /**
@@ -45,4 +47,5 @@ export const ROTULOS_HABILIDADE_CATEGORIA: Readonly<Record<HabilidadeCategoriaEn
   [HabilidadeCategoriaEnum.PERSONALIDADE]: 'Personalidade',
   [HabilidadeCategoriaEnum.ESPECIALIDADE]: 'Especialidade',
   [HabilidadeCategoriaEnum.CIVIL]: 'Civil',
+  [HabilidadeCategoriaEnum.UNICA]: 'Única',
 };

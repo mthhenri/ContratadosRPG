@@ -63,6 +63,47 @@ describe('FichaHabilidades', () => {
     ]);
   });
 
+  it('oferece e persiste a categoria Única ao adicionar uma habilidade personalizada', () => {
+    const alvo = montar(true);
+    alvo.fixture.componentInstance['adicionar']();
+    alvo.fixture.detectChanges();
+
+    const opcoes = Array.from(alvo.raiz.querySelectorAll('select[aria-label="Categoria"] option')).map(
+      (opcao) => ({ valor: (opcao as HTMLOptionElement).value, rotulo: opcao.textContent?.trim() }),
+    );
+    expect(opcoes).toContainEqual({ valor: HabilidadeCategoriaEnum.UNICA, rotulo: 'Única' });
+
+    alvo.fixture.componentInstance['habilidadeForm'].setValue({
+      nome: 'Marca pessoal',
+      categoria: HabilidadeCategoriaEnum.UNICA,
+      custoEnergia: 0,
+      variavel: false,
+      descricao: '',
+    });
+    alvo.fixture.componentInstance['confirmar']();
+
+    expect(alvo.emitidos[0].at(-1)).toMatchObject({
+      nome: 'Marca pessoal',
+      categoria: HabilidadeCategoriaEnum.UNICA,
+    });
+  });
+
+  it('aplica a cor de identidade da ficha à habilidade Única, como na Personalidade', () => {
+    TestBed.configureTestingModule({ imports: [FichaHabilidades] });
+    const fixture = TestBed.createComponent(FichaHabilidades);
+    fixture.componentRef.setInput('habilidades', [
+      { nome: 'Marca pessoal', categoria: HabilidadeCategoriaEnum.UNICA, custoEnergia: 0, descricao: '' },
+    ] as FichaHabilidadeDto[]);
+    fixture.componentRef.setInput('classe', ClasseEnum.COMBATENTE);
+    fixture.componentRef.setInput('arquetipo', ArquetipoEnum.LUTADOR);
+    fixture.componentRef.setInput('cor', '#00aaff');
+    fixture.detectChanges();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    expect(raiz.querySelector('.habilidades__item--unica')).not.toBeNull();
+    expect(raiz.querySelector('.habilidades__chip--unica')?.textContent?.trim()).toBe('Única');
+  });
+
   it('não emite ao confirmar sem nome (forma inválida)', () => {
     const alvo = montar(true);
     alvo.fixture.componentInstance['adicionar']();

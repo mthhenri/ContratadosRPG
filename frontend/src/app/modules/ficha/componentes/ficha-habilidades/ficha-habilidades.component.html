@@ -132,6 +132,7 @@
                     [class.habilidades__item--personalidade]="
                         habilidade.categoria === Categoria.PERSONALIDADE
                     "
+                    [class.habilidades__item--unica]="habilidade.categoria === Categoria.UNICA"
                 >
                     <div class="habilidades__linha">
                         <span
@@ -148,6 +149,7 @@
                             [class.habilidades__chip--personalidade]="
                                 habilidade.categoria === Categoria.PERSONALIDADE
                             "
+                            [class.habilidades__chip--unica]="habilidade.categoria === Categoria.UNICA"
                             [class.habilidades__chip--inicial]="ehInicial(habilidade)"
                         >
                             {{ rotuloChip(habilidade) }}

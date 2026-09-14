@@ -302,7 +302,8 @@
 
         // Personalidade segue a cor de identidade da ficha (m3-61); sem cor definida, cai no --accent
         // de quem visualiza (mesmo fallback do avatar/`--cor-ficha-*`, ver `_tokens.scss`).
-        &--personalidade {
+        &--personalidade,
+        &--unica {
             border-left-color: var(--cor-ficha, var(--accent));
         }
 
@@ -353,7 +354,8 @@
             border-color: color-mix(in srgb, var(--energy) 40%, transparent);
         }
 
-        &--personalidade {
+        &--personalidade,
+        &--unica {
             color: var(--cor-ficha, var(--accent));
             border-color: var(--cor-ficha-border);
         }
