@@ -5,7 +5,18 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-polimento-visual-lote` concluída — 6 ajustes visuais pontuais em
+> `criatura-classificacao-grade-no-lugar` concluída — a grade de edição da Classificação
+> (`criatura__classificacao-grade`, 4 selects) saiu do fim de `&__ident-corpo` (fileira de largura
+> cheia abaixo das duas colunas inteiras) e entrou dentro de `&__chips-coluna`, no lugar dos
+> próprios chips de leitura — pedido do autor pra reduzir a altura do card de Identidade durante a
+> edição. Virou 2×2 (era 4×1) porque os 4 campos não cabem lado a lado nos 230px da coluna Perfil;
+> `bp.mobile` (1 coluna) sem mudança. Altura medida ao vivo: 514px→560px em desktop/notebook/
+> tablet (+46px, só a coluna Perfil cresce), 1005px→1170px no mobile — contra o bloco cheio de
+> antes, que somava a altura dos 4 campos ao fundo do card inteiro. Compromisso aceito: `<select>`
+> trunca o texto da opção nos 230px (mesmo já registrado em `criatura-identidade-duas-colunas`).
+> Sem teste novo (só reposicionamento); suíte focada 56/56; build/lint 0 erros. Verificado ao vivo
+> nos 4 viewports padrão, em edição e em leitura. Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-polimento-visual-lote` concluída — 6 ajustes visuais pontuais em
 > `CriaturaVisualizacao`/`visualizar-criatura.page`, pedidos numa mensagem só com 2 screenshots:
 > (1) chip de classificação `FICHA-CRT-NNNN` saiu da `.ficha-pagina__acoes` do cabeçalho da
 > página; (2) `shared/ui/abas/aba.component.scss` (primitivo compartilhado com `FichaVisualizacao`)

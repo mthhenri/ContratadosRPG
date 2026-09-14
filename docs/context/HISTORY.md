@@ -1,5 +1,51 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-classificacao-grade-no-lugar: grade de edição da Classificação migra pro lugar dos chips, reduz altura do card de Identidade
+
+Task solta, pedido em conversa logo após `criatura-polimento-visual-lote` (entrada abaixo): "Lá a
+edição da classificação poderíamos mover eles para ficarem onde eles ficam quando clicamos no
+editar pra reduzir um pouco a altura da caixa de Identificação". A grade de 4 selects
+(`criatura__classificacao-grade`) era o 3º filho direto de `&__ident-corpo` — uma fileira de
+largura cheia abaixo das duas colunas (Perfil e Combate) e, dentro de Combate, abaixo de VD/
+Defesa/Tenacidade/Vida/Resistências/Fraquezas —, empurrando o card inteiro pra baixo durante a
+edição, bem longe de onde o autor clicou o lápis.
+
+**Correção:** a grade saiu do fim de `&__ident-corpo` e entrou dentro de `&__chips-coluna`
+(coluna Perfil), no lugar exato dos 2 blocos de chips de leitura (Origem/Porte na 1ª linha,
+Comportamento/Ameaça na 2ª) — o `@if (classificacaoEmEdicao())` que antes só trocava a 2ª linha
+de chips por nada passou a trocá-la pela grade inteira; a 1ª linha já escondia os 2 primeiros
+chips atrás do mesmo `@if`, sem mudança aí. `&__classificacao-grade` deixou de ser
+`grid-column: 1 / -1` (largura cheia do grid de 2 colunas) e virou `width: 100%` com
+`grid-template-columns: repeat(2, minmax(0, 1fr))` — 2×2 em vez de 4×1, porque os 4 campos não
+cabem lado a lado nos 230px da coluna Perfil (mesmo compromisso que já existia antes da task
+`criatura-identidade-duas-colunas` ter movido a grade pra largura cheia, ver "2×2 espremidos" na
+entrada dessa task abaixo). O `bp.mobile` que já forçava a grade a 1 coluna continua valendo, sem
+mudança.
+
+**Efeito medido:** altura do card de Identidade ao entrar em edição — antes empurrava um bloco
+cheio abaixo de Resistências/Fraquezas; agora só a coluna Perfil cresce, no lugar dos próprios
+chips. Medido ao vivo via `getBoundingClientRect()`: `1920×1080`/`1366×768`/`960×1080` (mesma
+altura nos 3, a coluna Combate manda na altura do card) 514px → 560px (+46px, contra a fileira
+cheia anterior que somava a altura dos 4 campos ao fundo do card inteiro); `360×800` (mobile,
+grade em 1 coluna) 1005px → 1170px (+165px, mas ainda dentro da própria coluna Perfil, não um
+bloco extra depois de todo o resto). Compromisso aceito (mesmo já registrado em
+`criatura-identidade-duas-colunas`): nos 230px da coluna Perfil os `<select>` truncam o texto da
+opção selecionada (ex.: "Criação Or", "Grande (2:") — o valor completo aparece ao abrir o
+dropdown; não é overflow nem quebra de layout, só a densidade que o autor pediu.
+
+**Testes/build:** nenhuma mudança de comportamento (só reposicionamento de HTML/CSS, mesmos
+bindings/handlers); suíte focada `criatura-visualizacao`/`visualizar-criatura` 56/56. Build/lint 0
+erros; Prettier sem mudanças além da reformatação automática do bloco movido.
+
+**Verificação ao vivo** (Postgres 16 local sem Docker + backend + frontend reais, seed
+`codex.dev`): ficha "O Colecionador de Rostos" (`/campanhas/2/criatura/11`) nos 4 viewports
+padrão, clicando o lápis pra entrar em edição — grade 2×2 aparece no lugar dos chips em
+`1920×1080`/`1366×768`/`960×1080`, sem overflow, Combate intocado ao lado; `360×800` com a grade
+em coluna única, sem espremer. Estado de leitura (chips normais) capturado de novo pra confirmar
+que não regrediu.
+
+Task solta, sem spec.
+
 ## 2026-09-14 — criatura-polimento-visual-lote: 6 ajustes visuais pontuais em `CriaturaVisualizacao`, a partir de 2 screenshots do autor
 
 Task solta, pedida em conversa com 2 screenshots anexados (um da linha shell do cabeçalho da
