@@ -5,7 +5,14 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-anotacoes-painel-flutuante` concluída — Anotações da ficha de criatura saiu da aba
+> `criatura-selos-identidade-mobile` concluída — os selos "Ficha visível"/"Rolagem oculta" do
+> cabeçalho de Identidade (`CriaturaVisualizacao`) ficavam cortados em `360×800` (2 selos, um a
+> mais que o análogo de jogador, não cabiam na mesma fileira do índice/título/régua). Os 2 selos
+> entraram num wrapper (`&__cartao-metas`) que, só em `bp.mobile`, ganha `flex-basis: 100%` e cai
+> pra uma 2ª linha alinhada sob o título; acima do breakpoint, nada muda. Achado ao vivo pelo
+> autor a partir de screenshots. Verificado ao vivo em `360×800`/`1920×1080`; suíte focada 55/55
+> (sem teste novo — só layout responsivo). Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-anotacoes-painel-flutuante` concluída — Anotações da ficha de criatura saiu da aba
 > Geral pra um `app-painel-flutuante` (arrastável/redimensionável, folha cheia no mobile), mesmo
 > mecanismo (não extraído — bespoke por consumidor, como já era) de `FichaVisualizacao`
 > ("igual temos no usuário", pedido do autor); Caderno da campanha entrou na coluna de ações de

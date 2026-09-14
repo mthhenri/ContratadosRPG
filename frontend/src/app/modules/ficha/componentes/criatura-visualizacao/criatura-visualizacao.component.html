@@ -17,21 +17,26 @@
                     <span class="criatura__cartao-regua"></span>
                     <!-- Selos só-leitura (o toggle de verdade mora na coluna de ações da página,
                  `CriaturaVisualizar` — mesmo racional de `.ficha-identidade__visibilidade-selo`
-                 em `FichaVisualizacao`, ui-34). -->
-                    <span
-                        class="criatura__cartao-meta"
-                        [class.criatura__cartao-meta--ativo]="oculta()"
-                    >
-                        <app-icone [nome]="oculta() ? 'olho-fechado' : 'olho'" />
-                        {{ oculta() ? "Ficha oculta" : "Ficha visível" }}
-                    </span>
-                    <span
-                        class="criatura__cartao-meta"
-                        [class.criatura__cartao-meta--ativo]="rolagemOculta()"
-                    >
-                        <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
-                        {{ rolagemOculta() ? "Rolagem oculta" : "Rolagem pública" }}
-                    </span>
+                 em `FichaVisualizacao`, ui-34). Agrupados num wrapper próprio (`&__cartao-metas`)
+                 pra poder cair numa 2ª linha inteira no mobile (`bp.mobile`) — o cabeçalho de
+                 Identidade tem 2 selos (jogador só tem 1), então "// Identidade ─" + os dois já
+                 não cabem numa fileira só em 360px. -->
+                    <div class="criatura__cartao-metas">
+                        <span
+                            class="criatura__cartao-meta"
+                            [class.criatura__cartao-meta--ativo]="oculta()"
+                        >
+                            <app-icone [nome]="oculta() ? 'olho-fechado' : 'olho'" />
+                            {{ oculta() ? "Ficha oculta" : "Ficha visível" }}
+                        </span>
+                        <span
+                            class="criatura__cartao-meta"
+                            [class.criatura__cartao-meta--ativo]="rolagemOculta()"
+                        >
+                            <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
+                            {{ rolagemOculta() ? "Rolagem oculta" : "Rolagem pública" }}
+                        </span>
+                    </div>
                 </header>
 
                 <!-- Identidade em 2 colunas (pedido do autor): Perfil (nome/registro/foto/

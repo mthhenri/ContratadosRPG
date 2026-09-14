@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-selos-identidade-mobile: selos "Ficha visível"/"Rolagem oculta" não cabiam no cabeçalho de Identidade em 360px
+
+Achado ao vivo pelo autor a partir dos screenshots enviados da task `criatura-identidade-duas-
+colunas`: em `360×800`, os dois selos só-leitura do cabeçalho de Identidade ("Ficha visível" e
+"Rolagem oculta") ficavam cortados na borda direita do card — `.criatura__cartao-cabecalho`
+(`display:flex`, sem `flex-wrap`) tenta caber índice "//" + título + régua + os 2 selos numa
+fileira só, e a soma não cabe em 360px. O card de Identidade de jogador (`FichaVisualizacao`,
+fonte do mesmo padrão de selo) só tem 1 selo ("Ficha oculta/visível"), então esse overflow é
+específico de criatura — não tinha correção pra copiar.
+
+**Correção:** os 2 `<span class="criatura__cartao-meta">` entraram num wrapper próprio
+(`<div class="criatura__cartao-metas">`) que, só em `bp.mobile`, ganha `flex-basis: 100%` — cai
+inteiro pra uma 2ª linha do cabeçalho (`&__cartao-cabecalho` ganhou `flex-wrap: wrap` só nesse
+breakpoint), com `padding-left: 33px` pra alinhar sob o título "Identidade" (recuo do índice "//"
+22px + gap 11px), não sob o próprio índice. Acima de `bp.mobile` nada muda — mesmo `display:flex`
+de sempre, cabeçalho continua numa fileira só.
+
+**Verificação ao vivo:** Postgres local sem Docker (mesmo ambiente das duas tasks anteriores) +
+backend + frontend reais. Screenshot do cabeçalho isolado em `360×800`: "// Identidade ───" na
+1ª linha, "👁 Ficha visível  🚫 Rolagem oculta" na 2ª, sem corte; o mesmo cabeçalho em `1920×1080`
+continua idêntico a antes (1 fileira só). Build/lint 0 erros; suíte focada `criatura-visualizacao`/
+`visualizar-criatura` 55/55 (nenhum teste novo — mudança é só de layout responsivo, sem novo
+comportamento a testar). Task solta, sem spec.
+
 ## 2026-09-14 — criatura-anotacoes-painel-flutuante: Anotações da criatura viram painel flutuante, Caderno da campanha entra na coluna de ações
 
 Task solta, pedida em conversa pelo autor logo após `criatura-identidade-duas-colunas` (entrada

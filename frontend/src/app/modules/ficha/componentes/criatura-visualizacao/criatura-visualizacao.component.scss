@@ -101,6 +101,17 @@
         border-radius: var(--radius-compact);
     }
 
+    // Wrapper dos 2 selos (abaixo) — flex próprio pra poder virar bloco único que cai inteiro numa
+    // 2ª linha do cabeçalho no mobile (`bp.mobile`, ver `&__cartao-cabecalho` mais abaixo), em vez
+    // de cada selo quebrar num ponto imprevisível.
+    &__cartao-metas {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        flex: 0 0 auto;
+    }
+
     // Selo só-leitura no cabeçalho de Identidade (Ficha oculta/visível, Rolagem oculta/pública) —
     // mesma receita de `.ficha-identidade__visibilidade-selo` em FichaVisualizacao: o toggle de
     // verdade mora na coluna de ações da página, isto é só o estado atual.
@@ -1066,6 +1077,19 @@
         }
         &__info-duas {
             grid-template-columns: 1fr;
+        }
+
+        // Cabeçalho de Identidade tem 2 selos (Ficha/Rolagem) — jogador só tem 1, então esta
+        // quebra é específica de criatura. `&__cartao-metas` vira bloco de largura cheia (cai
+        // sempre pra 2ª linha, não só quando o texto não cabe por pouco) e alinha sob o título,
+        // não embaixo do índice "//" — mesmo recuo do índice (22px) + gap (11px).
+        &__cartao-cabecalho {
+            flex-wrap: wrap;
+            row-gap: 4px;
+        }
+        &__cartao-metas {
+            flex-basis: 100%;
+            padding-left: 33px;
         }
     }
 }
