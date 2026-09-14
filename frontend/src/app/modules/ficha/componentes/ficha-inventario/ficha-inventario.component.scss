@@ -460,6 +460,15 @@
         padding: 9px 10px;
         font-size: 13px;
         outline: none;
+        // O `color-scheme` dinâmico do `<html>` (`TemaService`) não é suficiente sozinho pro popup
+        // nativo de um `<select>` — sem cor/fundo explícitos na `<option>`, o Chrome/Edge caem pro
+        // branco padrão do SO ali dentro (baixo contraste sobre o tema escuro do app). Só afeta os
+        // `<select>` nativos que restam (este e "Aplicar em" do painel de Fragmento) — os demais já
+        // viraram popover próprio (`&__categoria-select`/`&__mover`) por este mesmo motivo.
+        option {
+            background-color: var(--surface);
+            color: var(--text);
+        }
 
         &:focus {
             border-color: var(--accent-border);
