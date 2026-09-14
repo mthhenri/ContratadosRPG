@@ -787,7 +787,12 @@
     }
     // "Espaço Reservado" — seletor do item-alvo (reusa `&__campo`/`&__entrada`, mesma identidade
     // do seletor "Aplicar em" do painel de Fragmento) + nota de unidades isentas + aviso de alvo
-    // removido do inventário.
+    // removido do inventário. O chip é estreito (`&__mod-tag-info` tem `min-width: 0` — sem
+    // largura própria definida), então o `&__entrada` (normalmente `width: 100%` pros formulários
+    // largos do painel) precisa encolher pro tamanho do conteúdo aqui, senão o select estica até
+    // preencher a linha inteira do chip. Fundo/borda também abrem mão da identidade "campo de
+    // formulário" (surface + border-strong) pro select se mesclar no `--surface-2` do próprio
+    // chip (`&__mod-tag`) em vez de destacar como uma caixa à parte — mais fino, mais integrado.
     &__mod-alvo {
         display: flex;
         flex-direction: column;
@@ -796,6 +801,14 @@
 
         .ficha-inv__campo {
             gap: 4px;
+        }
+        .ficha-inv__entrada {
+            width: auto;
+            max-width: 220px;
+            padding: 4px 8px;
+            font-size: 12px;
+            background: transparent;
+            border-color: var(--border);
         }
     }
     &__mod-alvo-texto {
@@ -1154,6 +1167,12 @@
     }
     &__peso {
         color: var(--text-mute);
+    }
+    // Peso bruto do item-alvo de "Espaço Reservado" antes da isenção — mesmo padrão do custo bruto
+    // riscado em `&__custo--bruto` (m3-66), aqui ao lado do peso já reduzido em `&__peso`.
+    &__peso--bruto {
+        text-decoration: line-through;
+        margin-right: 4px;
     }
 
     &__tag {

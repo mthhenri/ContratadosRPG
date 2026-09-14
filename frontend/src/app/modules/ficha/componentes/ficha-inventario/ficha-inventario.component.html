@@ -1174,7 +1174,12 @@
                             @if (mostrarCustos()) {
                                 <span class="ficha-inv__custo">{{ item.custoTotalTexto }}</span>
                             }
-                            <span class="ficha-inv__peso">{{ item.pesoTexto }}</span>
+                            <span class="ficha-inv__peso">
+                                @if (item.pesoAntigo; as pesoAntigo) {
+                                    <span class="ficha-inv__peso--bruto">{{ pesoAntigo }}</span>
+                                }
+                                {{ item.pesoTexto }}
+                            </span>
                         </div>
                         <!-- Remover por último: a confirmação acontece no próprio X (troca in-place). -->
                         @if (editavel()) {
@@ -1449,9 +1454,7 @@
                                                     >Item-alvo: {{ itemAlvo.selecionado }}</span
                                                 >
                                             }
-                                            @if (
-                                                itemAlvo.selecionado && !itemAlvo.alvoAusente
-                                            ) {
+                                            @if (itemAlvo.selecionado && !itemAlvo.alvoAusente) {
                                                 <span class="ficha-inv__mod-alvo-nota">
                                                     Isenta {{ itemAlvo.itensIsentos }} unidade{{
                                                         itemAlvo.itensIsentos === 1 ? "" : "s"
@@ -1466,9 +1469,7 @@
                                                 >
                                                     <app-icone
                                                         nome="alerta"
-                                                        [appTooltip]="
-                                                            'Item removido do inventário — a isenção de peso não se aplica.'
-                                                        "
+                                                        [appTooltip]="'Item removido do inventário — a isenção de peso não se aplica.'"
                                                     />
                                                     Item removido do inventário
                                                 </span>

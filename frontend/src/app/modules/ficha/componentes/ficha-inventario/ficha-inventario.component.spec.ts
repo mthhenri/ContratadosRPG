@@ -797,7 +797,7 @@ describe('FichaInventario', () => {
       expect(alvo.componentInstance['itensInventario']()[0].modsAtivas[0].itemAlvo).toBeNull();
     });
 
-    it('lista as opções (Operacional/Medicinal do inventário inteiro) e a contagem de unidades isentas', () => {
+    it('lista as opções (Operacional/Medicinal do inventário principal) e a contagem de unidades isentas', () => {
       const alvo = montar({ itens: [mochila, kitMedico], amplificadores: [] });
       const vm = alvo.componentInstance['itensInventario']()[0].modsAtivas[0];
       expect(vm.itemAlvo).toEqual({
@@ -806,6 +806,42 @@ describe('FichaInventario', () => {
         itensIsentos: 1,
         alvoAusente: false,
       });
+    });
+
+    it('um item Medicinal/Operacional guardado num sub-inventário (containerId) não entra nas opções', () => {
+      const kitDentroDaMochila: CarrinhoItemDto = { ...kitMedico, containerId: 'mochila-1' };
+      const alvo = montar({ itens: [mochila, kitDentroDaMochila], amplificadores: [] });
+      const vm = alvo.componentInstance['itensInventario']()[0].modsAtivas[0];
+      expect(vm.itemAlvo?.opcoes).toEqual([]);
+    });
+
+    it('item-alvo escolhido risca o peso bruto no card do alvo e mostra o peso já reduzido', () => {
+      const item: CarrinhoItemDto = { ...mochila, modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2, itemAlvo: 'Kit Médico' }] };
+      const alvo = montar({ itens: [item, kitMedico], amplificadores: [] });
+      const itens = alvo.componentInstance['itensInventario']();
+      const kit = itens.find((entrada: { nome: string }) => entrada.nome === 'Kit Médico')!;
+      // Kit Médico: peso 1, quantidade 3, 1 unidade isenta → 3 slots (riscado) vira 2 slots.
+      expect(kit.pesoAntigo).toBe('3 slots');
+      expect(kit.pesoTexto).toBe('2 slots');
+    });
+
+    it('sem unidade isenta de fato (alvo com 1 unidade só) o card do alvo não risca peso', () => {
+      const kitUnico: CarrinhoItemDto = { ...kitMedico, quantidade: 1 };
+      const item: CarrinhoItemDto = { ...mochila, modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2, itemAlvo: 'Kit Médico' }] };
+      const alvo = montar({ itens: [item, kitUnico], amplificadores: [] });
+      const itens = alvo.componentInstance['itensInventario']();
+      const kit = itens.find((entrada: { nome: string }) => entrada.nome === 'Kit Médico')!;
+      expect(kit.pesoAntigo).toBeNull();
+      expect(kit.pesoTexto).toBe('1 slots');
+    });
+
+    it('um alvo guardado num sub-inventário nunca risca peso, mesmo com o nome batendo', () => {
+      const kitDentroDaMochila: CarrinhoItemDto = { ...kitMedico, containerId: 'mochila-1' };
+      const item: CarrinhoItemDto = { ...mochila, modificacoes: [{ nome: 'Espaço Reservado', empilhamentos: 2, itemAlvo: 'Kit Médico' }] };
+      const alvo = montar({ itens: [item, kitDentroDaMochila], amplificadores: [] });
+      const itens = alvo.componentInstance['itensInventario']();
+      const kit = itens.find((entrada: { nome: string }) => entrada.nome === 'Kit Médico')!;
+      expect(kit.pesoAntigo).toBeNull();
     });
 
     it('empilhamento extra sobe a contagem de unidades isentas (calcularItensIsentosEspacoReservado)', () => {

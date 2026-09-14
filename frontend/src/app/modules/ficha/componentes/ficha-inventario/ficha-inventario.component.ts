@@ -292,11 +292,14 @@ interface ModAtivaVM {
   readonly fixa: boolean;
   /**
    * Só "Espaço Reservado" (`ModificacaoAplicadaDto.itemAlvo`) — as demais mods ficam com `null`.
-   * `opcoes` lista os itens Operacional/Medicinal do inventário elegíveis a receber a isenção de
-   * peso; `itensIsentos` é quantas unidades do alvo ficam isentas com os empilhamentos atuais
+   * `opcoes` lista os itens Operacional/Medicinal do inventário **principal** (fora de qualquer
+   * sub-inventário/`containerId`, ex.: Mochila Médica) elegíveis a receber a isenção de peso;
+   * `itensIsentos` é quantas unidades do alvo ficam isentas com os empilhamentos atuais
    * (`calcularItensIsentosEspacoReservado`); `alvoAusente` é `true` quando `itemAlvo` está
-   * preenchido mas não bate mais com nenhuma opção (item removido/renomeado do inventário — a
-   * isenção simplesmente para de valer, `calcularTotaisCarrinho` não quebra).
+   * preenchido mas não bate mais com nenhuma opção (item removido/renomeado do inventário, ou
+   * movido pra dentro de um sub-inventário — a isenção simplesmente para de valer,
+   * `calcularTotaisCarrinho` não quebra). O peso antes/depois da isenção mora no card do item
+   * **alvo** (`ItemInventarioVM.pesoAntigo`), não aqui — este chip é sobre a mod, não sobre o item.
    */
   readonly itemAlvo: {
     readonly selecionado: string | null;
@@ -393,6 +396,12 @@ interface ItemInventarioVM {
   readonly quantidade: number;
   readonly custoTotalTexto: string;
   readonly pesoTexto: string;
+  /**
+   * Peso bruto (sem a isenção de "Espaço Reservado") pro card riscar ao lado do `pesoTexto` já
+   * reduzido — só quando este item é alvo de uma mod ativa e sobra pelo menos 1 unidade de fato
+   * isenta (`null` caso contrário, inclusive fora do pool principal — ver `itensInventario`).
+   */
+  readonly pesoAntigo: string | null;
   readonly stat: string | null;
   /** Fórmula de dano tipada (`calcularStatItem`, m3-18) pronta para `rolarFormula` — `null` fora de `CATEGORIAS_COM_DANO` ou sem stat computável (m3-45). */
   readonly danoFormula: string | null;
@@ -1166,12 +1175,31 @@ export class FichaInventario {
         });
       }
     });
+    // "Espaço Reservado" isenta de peso unidades do item-alvo que mira — mesmo acúmulo por `nome`
+    // que `calcularTotaisCarrinho` (shared/regras/compras) faz pro total do inventário, aqui pro
+    // card do próprio alvo mostrar o peso bruto riscado ao lado do reduzido.
+    const itensIsentosPorAlvo = new Map<string, number>();
+    itens.forEach((item) => {
+      item.modificacoes.forEach((modificacao) => {
+        if (modificacao.nome !== 'Espaço Reservado' || !modificacao.itemAlvo) {
+          return;
+        }
+        const atual = itensIsentosPorAlvo.get(modificacao.itemAlvo) ?? 0;
+        itensIsentosPorAlvo.set(
+          modificacao.itemAlvo,
+          atual + calcularItensIsentosEspacoReservado(modificacao.empilhamentos),
+        );
+      });
+    });
     return itens.map((item, indice) => {
       const containerId = item.containerId;
       const reducao = containerId ? reducoesPorContainer.get(containerId) : undefined;
       const reducaoPeso = reducao?.reducaoPeso ?? 0;
       const pesoMinimo = reducao?.pesoMinimo ?? 0;
-      return this.montarItemInventario(item, indice, reducaoPeso, pesoMinimo);
+      // A isenção só alcança o pool principal (mesma restrição do motor) — um item guardado num
+      // sub-inventário nunca mostra o peso riscado, mesmo que carregue o nome de um alvo válido.
+      const itensIsentos = containerId ? 0 : itensIsentosPorAlvo.get(item.nome) ?? 0;
+      return this.montarItemInventario(item, indice, reducaoPeso, pesoMinimo, itensIsentos);
     });
   });
 
@@ -2748,6 +2776,7 @@ export class FichaInventario {
     indice: number,
     reducaoPeso = 0,
     pesoMinimo = 0,
+    itensIsentosEspacoReservado = 0,
   ): ItemInventarioVM {
     const limite = obterLimiteModificacoes({ prestigio: this.prestigio() });
     const modsUsados = this.modsUsados(item);
@@ -2782,22 +2811,37 @@ export class FichaInventario {
     // `reducaoPeso`/`pesoMinimo` (Mochila Médica) vêm do container onde o item está guardado —
     // mesma conta de `listarSubInventarios` (shared/regras/compras), pro card não divergir do
     // total exibido no cabeçalho.
-    const pesoBruto = (Math.max(pesoMinimo, item.peso - reducaoPeso) + pesoMods) * item.quantidade;
+    const pesoUnitario = Math.max(pesoMinimo, item.peso - reducaoPeso) + pesoMods;
+    // Nunca isenta a própria unidade indispensável (piso 1) nem além do que "Espaço Reservado"
+    // concede — mesma trava de `calcularTotaisCarrinho` (shared/regras/compras).
+    const itensIsentosReais = Math.min(
+      itensIsentosEspacoReservado,
+      Math.max(0, item.quantidade - 1),
+    );
+    const pesoBruto = pesoUnitario * item.quantidade;
+    const pesoComIsencao = pesoUnitario * (item.quantidade - itensIsentosReais);
     // Armazenamento vestido (não guardado) não ocupa slots → "0 slots"; guardado/demais usam o peso real.
-    const pesoTexto = `${this.formatarPeso(contaPeso ? pesoBruto : 0)} slots`;
+    const pesoTexto = `${this.formatarPeso(contaPeso ? pesoComIsencao : 0)} slots`;
+    // Riscado só quando sobra isenção de fato (contaPeso e ao menos 1 unidade abatida) — o mesmo
+    // bruto que apareceria sem a mod, ao lado do reduzido acima.
+    const pesoAntigo =
+      contaPeso && itensIsentosReais > 0 ? `${this.formatarPeso(pesoBruto)} slots` : null;
 
     const statComputado = calcularStatItem({ item });
     const definicoes = listarModificacoesDisponiveis(item);
-    // "Espaço Reservado" mira um item Operacional/Medicinal do **inventário inteiro** (não só
-    // deste item) — opções vêm da lista cheia, sem repetir `nome` (essas categorias nunca ganham
-    // `apelido`, `nome` já é identidade única dentro delas — ver `ModificacaoAplicadaDto.itemAlvo`).
+    // "Espaço Reservado" mira um item Operacional/Medicinal do **inventário principal** (não só
+    // deste item, mas também não um guardado num sub-inventário como Mochila Médica — esse já tem
+    // peso próprio reduzido pelo container, não pelo pool principal que esta mod isenta) — opções
+    // vêm da lista cheia, sem repetir `nome` (essas categorias nunca ganham `apelido`, `nome` já é
+    // identidade única dentro delas — ver `ModificacaoAplicadaDto.itemAlvo`).
     const opcoesEspacoReservado = Array.from(
       new Set(
         this.inventario()
           .itens.filter(
             (candidato) =>
-              candidato.categoria === ItemCategoriaEnum.OPERACIONAL ||
-              candidato.categoria === ItemCategoriaEnum.MEDICINAL,
+              !candidato.containerId &&
+              (candidato.categoria === ItemCategoriaEnum.OPERACIONAL ||
+                candidato.categoria === ItemCategoriaEnum.MEDICINAL),
           )
           .map((candidato) => candidato.nome),
       ),
@@ -2849,7 +2893,8 @@ export class FichaInventario {
                 selecionado: modificacao.itemAlvo ?? null,
                 opcoes: opcoesEspacoReservado,
                 itensIsentos: calcularItensIsentosEspacoReservado(modificacao.empilhamentos),
-                alvoAusente: !!modificacao.itemAlvo && !opcoesEspacoReservado.includes(modificacao.itemAlvo),
+                alvoAusente:
+                  !!modificacao.itemAlvo && !opcoesEspacoReservado.includes(modificacao.itemAlvo),
               }
             : null,
       };
@@ -2887,6 +2932,7 @@ export class FichaInventario {
       quantidade: item.quantidade,
       custoTotalTexto: this.formatarDinheiro(custoTotal),
       pesoTexto,
+      pesoAntigo,
       stat: this.formatarStat(statComputado, item),
       danoFormula: statComputado?.dano ?? null,
       descricao: item.descricao ?? null,
