@@ -5,7 +5,18 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-selos-identidade-mobile` concluída — os selos "Ficha visível"/"Rolagem oculta" do
+> `criatura-fusao-geral-descricao` concluída — as abas Geral e Descrição de `CriaturaVisualizacao`
+> viraram uma só (`AbaCriatura` perdeu `'descricao'`; 4 abas → 3). Pedido exploratório do autor,
+> respondido com recomendação + trade-off (mais altura empilhada) antes de implementar; autor
+> confirmou e pediu resolução pro trade-off. Cadência/Bônus de Iniciativa/Deslocamento e Descrição
+> (Gancho/Motivação) continuam como antes; Regeneração/Natureza/Tema de Horror — 3 cards que
+> empilhariam cheios — entraram numa grade (`&__info-grade`, renomeada de `&__info-duas`) que cabe
+> 1 a 3 colunas por `auto-fit`, dependendo da largura real da coluna Status: 3 numa fileira só em
+> `1920×1080` (zero scroll), 2 no notebook, 1 no mobile (mesmo breakpoint que já existia pro grid
+> antigo). Suíte focada 56/56; build/lint 0 erros. Verificado ao vivo nos 4 viewports padrão, com
+> Regeneração preenchida pra exercitar o card "com dado". Task solta, sem spec. Detalhe em
+> `HISTORY.md`.
+> Antes: `criatura-selos-identidade-mobile` concluída — os selos "Ficha visível"/"Rolagem oculta" do
 > cabeçalho de Identidade (`CriaturaVisualizacao`) ficavam cortados em `360×800` (2 selos, um a
 > mais que o análogo de jogador, não cabiam na mesma fileira do índice/título/régua). Os 2 selos
 > entraram num wrapper (`&__cartao-metas`) que, só em `bp.mobile`, ganha `flex-basis: 100%` e cai

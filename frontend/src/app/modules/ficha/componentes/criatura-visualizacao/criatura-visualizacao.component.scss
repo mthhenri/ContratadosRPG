@@ -853,7 +853,11 @@
             border-color: var(--vida);
         }
     }
-    &__info-duas {
+    // Era `&__info-duas` (2 cards fixos — Natureza/Tema de Horror). Renomeada e reaproveitada pra
+    // 3 cards (Regeneração/Natureza/Tema de Horror) na fusão Geral+Descrição (pedido do autor):
+    // `auto-fit` cabe 1 a 3 colunas de ~260px dependendo da largura real da coluna Status — mesma
+    // resolução de altura da fusão, sem repetir a régua de breakpoint em nenhum lugar novo.
+    &__info-grade {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 14px;
@@ -1075,7 +1079,7 @@
         &__classificacao-grade {
             grid-template-columns: 1fr;
         }
-        &__info-duas {
+        &__info-grade {
             grid-template-columns: 1fr;
         }
 

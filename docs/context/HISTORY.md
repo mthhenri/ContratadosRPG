@@ -1,5 +1,47 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-fusao-geral-descricao: abas Geral e Descrição da criatura viram uma só, com grade que resolve a altura
+
+Pedido exploratório do autor ("E se a gente juntar informações e descrição na mesma tab?"),
+respondido primeiro com recomendação + trade-off (mais altura de conteúdo empilhado, sensível no
+notebook 1366×768) antes de implementar — autor confirmou e pediu explicitamente uma resolução
+pra esse trade-off de altura ("vamos ver uma resolução para a altura").
+
+**Fusão das abas.** `AbaCriatura` perdeu `'descricao'`: era `'geral' | 'descricao' | 'ataques' |
+'habilidades'`, virou `'geral' | 'ataques' | 'habilidades'` (`ABAS_CRIATURA` acompanhou). O botão
+`app-aba` "Descrição" saiu da barra; o `@case ("descricao")` do `@switch` foi removido e seu
+conteúdo (Descrição/Gancho/Motivação, Natureza Física, Tema de Horror) entrou dentro do
+`@case ("geral")` já existente, na mesma `<section id="criatura-painel-geral">` — sem novo id nem
+nova rota de aba, só reordenação de HTML.
+
+**Resolução de altura: grade que se adapta à largura, não empilhamento.** Cadência/Bônus de
+Iniciativa/Deslocamento continuam na mesma fileira de sempre (`&__stats--info`, sem mudança);
+Descrição (com Gancho/Motivação) ficou como card de largura cheia logo abaixo, por ser o bloco
+mais denso de texto. Regeneração, Natureza e Tema de Horror — antes 1 stack de 3 cards cheios —
+entraram juntos numa grade (`&__info-grade`, renomeada de `&__info-duas`, que já existia só pra
+Natureza/Tema): `grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))` cabe as 3 numa
+fileira só em desktop largo (1920×1080: zero scroll no card inteiro, verificado ao vivo), 2 no
+notebook (1366×768: Regeneração sozinha numa linha, Natureza/Tema na de baixo — ainda menos altura
+que empilhar os 5 blocos originais) e empilha 1 coluna só no mobile (`bp.mobile`, já existia
+`grid-template-columns: 1fr` nesse breakpoint pro `&__info-duas` antigo — só precisou seguir o
+rename).
+
+**Testes:** o teste que fixava "4 abas (Geral/Descrição/Ataques/Habilidades)" virou "3 abas
+(Geral/Ataques/Habilidades)"; teste novo prova que a aba Geral fundida mostra Cadência (do bloco
+antigo "Geral") e Descrição/Regeneração/Natureza/Tema de Horror (do bloco antigo "Descrição")
+juntos na mesma seção, e que `#criatura-painel-descricao` não existe mais. Suíte focada
+`criatura-visualizacao`/`visualizar-criatura`: 56/56. Build/lint 0 erros.
+
+**Verificação ao vivo** (mesmo ambiente sem Docker das tasks anteriores — Postgres local +
+backend/frontend reais): ficha "O Colecionador de Rostos" com Regeneração preenchida pra exercitar
+o caso "com dado" (não só "Sem regeneração."). Nos 4 viewports padrão: `1920×1080` mostra a grade
+inteira (Regeneração/Natureza/Tema) numa fileira só, sem scroll; `1366×768` quebra pra 2 linhas de
+card mas ainda mais compacto que a versão de 2 abas separadas; `960×1080` e `360×800` empilham em
+1 coluna (página já colapsa pra 1 coluna nesses viewports, sem relação com esta task), sem
+overflow em nenhum.
+
+Task solta, sem spec.
+
 ## 2026-09-14 — criatura-selos-identidade-mobile: selos "Ficha visível"/"Rolagem oculta" não cabiam no cabeçalho de Identidade em 360px
 
 Achado ao vivo pelo autor a partir dos screenshots enviados da task `criatura-identidade-duas-

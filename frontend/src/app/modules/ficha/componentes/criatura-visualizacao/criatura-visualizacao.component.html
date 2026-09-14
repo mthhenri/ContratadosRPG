@@ -720,8 +720,9 @@
             </section>
         </div>
 
-        <!-- Coluna 2 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
-         `.ficha-status__abas` de `FichaVisualizacao`. -->
+        <!-- Coluna 2 — Status: abas Geral / Ataques / Habilidades, mesmo padrão de
+         `.ficha-status__abas` de `FichaVisualizacao`. Geral fundiu as antigas Geral + Descrição
+         (pedido do autor) — ver `&__info-grade` no SCSS pra como a altura foi resolvida. -->
         <div class="criatura__coluna criatura__coluna--status">
             <app-abas rotulo="Abas de status da criatura" (navegou)="aoNavegarAba($event)">
                 <button
@@ -734,17 +735,6 @@
                 >
                     <app-icone nome="visao-geral" />
                     <span class="abas__rotulo">Geral</span>
-                </button>
-                <button
-                    app-aba
-                    valor="descricao"
-                    [ativa]="abaAtiva() === 'descricao'"
-                    id="criatura-aba-descricao"
-                    aria-controls="criatura-painel-descricao"
-                    (click)="selecionarAba('descricao')"
-                >
-                    <app-icone nome="anotacoes" />
-                    <span class="abas__rotulo">Descrição</span>
                 </button>
                 <button
                     app-aba
@@ -1212,214 +1202,6 @@
                         <div class="criatura__info-card">
                             <header class="criatura__info-cabecalho">
                                 <span class="criatura__indice" aria-hidden="true">//</span>
-                                <h3 class="criatura__info-titulo">Regeneração</h3>
-                                <span class="criatura__info-regua"></span>
-                                @if (ajustavel()) {
-                                    @if (!dados().regeneracao) {
-                                        <button
-                                            app-botao-icone
-                                            class="criatura__info-acao"
-                                            type="button"
-                                            aria-label="Adicionar regeneração"
-                                            [appTooltip]="'Adicionar regeneração'"
-                                            (click)="ativarRegeneracao()"
-                                        >
-                                            <app-icone nome="mais" />
-                                        </button>
-                                    } @else {
-                                        <button
-                                            app-botao-icone
-                                            class="criatura__info-acao criatura__info-acao--remover"
-                                            type="button"
-                                            aria-label="Remover regeneração"
-                                            [appTooltip]="'Remover regeneração'"
-                                            (click)="removerRegeneracao()"
-                                        >
-                                            <app-icone nome="excluir" />
-                                        </button>
-                                    }
-                                }
-                            </header>
-                            @if (!dados().regeneracao) {
-                                <p class="criatura__vazio">Sem regeneração.</p>
-                            } @else {
-                                <div class="criatura__tags">
-                                    <span class="criatura__tag">
-                                        <span class="criatura__tag-rotulo">Modo</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="
-                                                rotuloRegeneracaoModo(dados().regeneracao!.modo)
-                                            "
-                                            [editando]="editando('regeneracao.modo')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="modo de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.modo')"
-                                        >
-                                            <select
-                                                #entradaModoRegen
-                                                appAutoFocus
-                                                class="criatura__select criatura__select--tag"
-                                                aria-label="Modo de Regeneração"
-                                                (change)="
-                                                    confirmarCampoRegeneracao(
-                                                        'modo',
-                                                        $any(entradaModoRegen.value)
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (blur)="cancelarEdicao()"
-                                            >
-                                                @for (m of modosRegeneracao; track m) {
-                                                    <option
-                                                        [value]="m"
-                                                        [selected]="m === dados().regeneracao!.modo"
-                                                    >
-                                                        {{ rotuloRegeneracaoModo(m) }}
-                                                    </option>
-                                                }
-                                            </select>
-                                        </app-valor-editavel>
-                                    </span>
-
-                                    <span class="criatura__tag">
-                                        <span class="criatura__tag-rotulo">Intensidade</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="
-                                                rotuloRegeneracaoIntensidade(
-                                                    dados().regeneracao!.intensidade
-                                                )
-                                            "
-                                            [editando]="editando('regeneracao.intensidade')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="intensidade de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.intensidade')"
-                                        >
-                                            <select
-                                                #entradaIntensidadeRegen
-                                                appAutoFocus
-                                                class="criatura__select criatura__select--tag"
-                                                aria-label="Intensidade de Regeneração"
-                                                (change)="
-                                                    confirmarCampoRegeneracao(
-                                                        'intensidade',
-                                                        $any(entradaIntensidadeRegen.value)
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (blur)="cancelarEdicao()"
-                                            >
-                                                @for (i of intensidadesRegeneracao; track i) {
-                                                    <option
-                                                        [value]="i"
-                                                        [selected]="
-                                                            i === dados().regeneracao!.intensidade
-                                                        "
-                                                    >
-                                                        {{ rotuloRegeneracaoIntensidade(i) }}
-                                                    </option>
-                                                }
-                                            </select>
-                                        </app-valor-editavel>
-                                    </span>
-
-                                    <span class="criatura__tag">
-                                        <span class="criatura__tag-rotulo">Valor</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="dados().regeneracao!.valor"
-                                            [editando]="editando('regeneracao.valor')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="valor de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.valor')"
-                                        >
-                                            <input
-                                                #entradaValorRegen
-                                                appAutoFocus
-                                                class="criatura__entrada-numero criatura__entrada-numero--tag"
-                                                type="number"
-                                                [value]="dados().regeneracao!.valor"
-                                                aria-label="Valor de Regeneração"
-                                                (keydown.enter)="
-                                                    confirmarCampoRegeneracao(
-                                                        'valor',
-                                                        entradaValorRegen.valueAsNumber
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoRegeneracao(
-                                                        'valor',
-                                                        entradaValorRegen.valueAsNumber
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                            />
-                                        </app-valor-editavel>
-                                    </span>
-
-                                    <span
-                                        class="criatura__tag criatura__tag--larga"
-                                        [class.criatura__tag--vazia]="
-                                            !dados().regeneracao!.condicao
-                                        "
-                                    >
-                                        <span class="criatura__tag-rotulo">Condição</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="dados().regeneracao!.condicao ?? '—'"
-                                            [editando]="editando('regeneracao.condicao')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="condição de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.condicao')"
-                                        >
-                                            <input
-                                                #entradaCondicaoRegen
-                                                appAutoFocus
-                                                class="criatura__entrada-texto criatura__entrada-texto--tag"
-                                                type="text"
-                                                [value]="dados().regeneracao!.condicao ?? ''"
-                                                aria-label="Condição de Regeneração"
-                                                (keydown.enter)="
-                                                    confirmarCampoRegeneracao(
-                                                        'condicao',
-                                                        entradaCondicaoRegen.value || null
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoRegeneracao(
-                                                        'condicao',
-                                                        entradaCondicaoRegen.value || null
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                            />
-                                        </app-valor-editavel>
-                                    </span>
-                                </div>
-                            }
-                        </div>
-                    </section>
-                }
-
-                @case ("descricao") {
-                    <section
-                        class="criatura__cartao criatura__cartao--painel"
-                        appAbaPainel
-                        id="criatura-painel-descricao"
-                        aria-labelledby="criatura-aba-descricao"
-                    >
-                        <div class="criatura__info-card">
-                            <header class="criatura__info-cabecalho">
-                                <span class="criatura__indice" aria-hidden="true">//</span>
                                 <h3 class="criatura__info-titulo">Descrição</h3>
                                 <span class="criatura__info-regua"></span>
                                 @if (ajustavel() && !editando("identidade.conceito")) {
@@ -1516,7 +1298,215 @@
                             </div>
                         </div>
 
-                        <div class="criatura__info-duas">
+                        <!-- Regeneração/Natureza/Tema de Horror numa grade que se adapta à largura
+                     (pedido do autor: fundir Geral+Descrição numa aba só, sem empilhar tudo numa
+                     coluna — `auto-fit` cabe 1 a 3 colunas dependendo do espaço da coluna Status,
+                     que é onde a fusão mais alongava a tela). -->
+                        <div class="criatura__info-grade">
+                            <div class="criatura__info-card">
+                                <header class="criatura__info-cabecalho">
+                                    <span class="criatura__indice" aria-hidden="true">//</span>
+                                    <h3 class="criatura__info-titulo">Regeneração</h3>
+                                    <span class="criatura__info-regua"></span>
+                                    @if (ajustavel()) {
+                                        @if (!dados().regeneracao) {
+                                            <button
+                                                app-botao-icone
+                                                class="criatura__info-acao"
+                                                type="button"
+                                                aria-label="Adicionar regeneração"
+                                                [appTooltip]="'Adicionar regeneração'"
+                                                (click)="ativarRegeneracao()"
+                                            >
+                                                <app-icone nome="mais" />
+                                            </button>
+                                        } @else {
+                                            <button
+                                                app-botao-icone
+                                                class="criatura__info-acao criatura__info-acao--remover"
+                                                type="button"
+                                                aria-label="Remover regeneração"
+                                                [appTooltip]="'Remover regeneração'"
+                                                (click)="removerRegeneracao()"
+                                            >
+                                                <app-icone nome="excluir" />
+                                            </button>
+                                        }
+                                    }
+                                </header>
+                                @if (!dados().regeneracao) {
+                                    <p class="criatura__vazio">Sem regeneração.</p>
+                                } @else {
+                                    <div class="criatura__tags">
+                                        <span class="criatura__tag">
+                                            <span class="criatura__tag-rotulo">Modo</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="
+                                                    rotuloRegeneracaoModo(dados().regeneracao!.modo)
+                                                "
+                                                [editando]="editando('regeneracao.modo')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="modo de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="editar('regeneracao.modo')"
+                                            >
+                                                <select
+                                                    #entradaModoRegen
+                                                    appAutoFocus
+                                                    class="criatura__select criatura__select--tag"
+                                                    aria-label="Modo de Regeneração"
+                                                    (change)="
+                                                        confirmarCampoRegeneracao(
+                                                            'modo',
+                                                            $any(entradaModoRegen.value)
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (blur)="cancelarEdicao()"
+                                                >
+                                                    @for (m of modosRegeneracao; track m) {
+                                                        <option
+                                                            [value]="m"
+                                                            [selected]="
+                                                                m === dados().regeneracao!.modo
+                                                            "
+                                                        >
+                                                            {{ rotuloRegeneracaoModo(m) }}
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </app-valor-editavel>
+                                        </span>
+
+                                        <span class="criatura__tag">
+                                            <span class="criatura__tag-rotulo">Intensidade</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="
+                                                    rotuloRegeneracaoIntensidade(
+                                                        dados().regeneracao!.intensidade
+                                                    )
+                                                "
+                                                [editando]="editando('regeneracao.intensidade')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="intensidade de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="
+                                                    editar('regeneracao.intensidade')
+                                                "
+                                            >
+                                                <select
+                                                    #entradaIntensidadeRegen
+                                                    appAutoFocus
+                                                    class="criatura__select criatura__select--tag"
+                                                    aria-label="Intensidade de Regeneração"
+                                                    (change)="
+                                                        confirmarCampoRegeneracao(
+                                                            'intensidade',
+                                                            $any(entradaIntensidadeRegen.value)
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (blur)="cancelarEdicao()"
+                                                >
+                                                    @for (i of intensidadesRegeneracao; track i) {
+                                                        <option
+                                                            [value]="i"
+                                                            [selected]="
+                                                                i ===
+                                                                dados().regeneracao!.intensidade
+                                                            "
+                                                        >
+                                                            {{ rotuloRegeneracaoIntensidade(i) }}
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </app-valor-editavel>
+                                        </span>
+
+                                        <span class="criatura__tag">
+                                            <span class="criatura__tag-rotulo">Valor</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="dados().regeneracao!.valor"
+                                                [editando]="editando('regeneracao.valor')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="valor de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="editar('regeneracao.valor')"
+                                            >
+                                                <input
+                                                    #entradaValorRegen
+                                                    appAutoFocus
+                                                    class="criatura__entrada-numero criatura__entrada-numero--tag"
+                                                    type="number"
+                                                    [value]="dados().regeneracao!.valor"
+                                                    aria-label="Valor de Regeneração"
+                                                    (keydown.enter)="
+                                                        confirmarCampoRegeneracao(
+                                                            'valor',
+                                                            entradaValorRegen.valueAsNumber
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (keydown.escape)="cancelarEdicao()"
+                                                    (blur)="
+                                                        confirmarCampoRegeneracao(
+                                                            'valor',
+                                                            entradaValorRegen.valueAsNumber
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                            </app-valor-editavel>
+                                        </span>
+
+                                        <span
+                                            class="criatura__tag criatura__tag--larga"
+                                            [class.criatura__tag--vazia]="
+                                                !dados().regeneracao!.condicao
+                                            "
+                                        >
+                                            <span class="criatura__tag-rotulo">Condição</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="dados().regeneracao!.condicao ?? '—'"
+                                                [editando]="editando('regeneracao.condicao')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="condição de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="editar('regeneracao.condicao')"
+                                            >
+                                                <input
+                                                    #entradaCondicaoRegen
+                                                    appAutoFocus
+                                                    class="criatura__entrada-texto criatura__entrada-texto--tag"
+                                                    type="text"
+                                                    [value]="dados().regeneracao!.condicao ?? ''"
+                                                    aria-label="Condição de Regeneração"
+                                                    (keydown.enter)="
+                                                        confirmarCampoRegeneracao(
+                                                            'condicao',
+                                                            entradaCondicaoRegen.value || null
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (keydown.escape)="cancelarEdicao()"
+                                                    (blur)="
+                                                        confirmarCampoRegeneracao(
+                                                            'condicao',
+                                                            entradaCondicaoRegen.value || null
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                            </app-valor-editavel>
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+
                             <div class="criatura__info-card">
                                 <header class="criatura__info-cabecalho">
                                     <span class="criatura__indice" aria-hidden="true">//</span>

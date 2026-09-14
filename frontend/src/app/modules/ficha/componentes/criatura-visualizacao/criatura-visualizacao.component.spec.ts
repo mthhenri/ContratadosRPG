@@ -161,13 +161,35 @@ describe('CriaturaVisualizacao', () => {
     expect(raiz.querySelectorAll('.ataque-lista__nome').length).toBe(1);
   });
 
-  it('começa na aba Geral e tem as 4 abas (Geral/Descrição/Ataques/Habilidades)', () => {
+  it('começa na aba Geral e tem as 3 abas (Geral/Ataques/Habilidades)', () => {
     const { fixture } = montar();
     expect(fixture.componentInstance['abaAtiva']()).toBe('geral');
     const rotulos = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('button[app-aba] .abas__rotulo'),
     ).map((el) => el.textContent?.trim());
-    expect(rotulos).toEqual(['Geral', 'Descrição', 'Ataques', 'Habilidades']);
+    expect(rotulos).toEqual(['Geral', 'Ataques', 'Habilidades']);
+  });
+
+  it('a aba Geral (fundida com Descrição) mostra Cadência, Descrição e Regeneração/Natureza/Tema de Horror juntos', () => {
+    const { fixture } = montar();
+    fixture.componentRef.setInput('dados', {
+      ...dados,
+      identidade: {
+        ...dados.identidade,
+        conceito: 'Um andarilho silencioso.',
+        naturezaFisica: 'Carne e osso reconstituídos.',
+        temaHorror: 'O que resta de humano nela.',
+      },
+    });
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const painel = raiz.querySelector('#criatura-painel-geral')!;
+    expect(painel.textContent).toContain('Cadência');
+    expect(painel.textContent).toContain('Um andarilho silencioso.');
+    expect(painel.textContent).toContain('Regeneração');
+    expect(painel.textContent).toContain('Carne e osso reconstituídos.');
+    expect(painel.textContent).toContain('O que resta de humano nela.');
+    expect(raiz.querySelector('#criatura-painel-descricao')).toBeNull();
   });
 
   it('a aba Habilidades renderiza só a lista de habilidades (separada de Ataques)', () => {

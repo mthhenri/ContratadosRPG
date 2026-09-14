@@ -102,13 +102,15 @@ const GRUPOS_ATRIBUTO = [
   { rotulo: 'Mentais', campos: CAMPOS_ATRIBUTO.slice(5) },
 ] as const;
 
-/** Aba ativa da coluna de Status. `'informacoes'` virou `'geral'` (Cadência/Bônus de
- * Iniciativa/Deslocamento na mesma linha + Regeneração) + `'descricao'` (Descrição/Gancho/
- * Motivação/Natureza Física/Tema de Horror/Anotações); `'ataques'` (era combinada com
- * Habilidades) virou `'ataques'` + `'habilidades'`, um componente autocontido por aba. */
-type AbaCriatura = 'geral' | 'descricao' | 'ataques' | 'habilidades';
+/** Aba ativa da coluna de Status. `'geral'` reúne Cadência/Bônus de Iniciativa/Deslocamento,
+ * Descrição/Gancho/Motivação e Regeneração/Natureza Física/Tema de Horror (pedido do autor:
+ * "informações" e "descrição" eram abas separadas — `'descricao'` existiu como aba própria até
+ * essa fusão) numa grade que se adapta à largura pra não empilhar tudo numa coluna só (ver
+ * `&__info-grade`); `'ataques'` (era combinada com Habilidades) virou `'ataques'` +
+ * `'habilidades'`, um componente autocontido por aba. */
+type AbaCriatura = 'geral' | 'ataques' | 'habilidades';
 
-const ABAS_CRIATURA: readonly AbaCriatura[] = ['geral', 'descricao', 'ataques', 'habilidades'];
+const ABAS_CRIATURA: readonly AbaCriatura[] = ['geral', 'ataques', 'habilidades'];
 
 /**
  * Valor exibido no `<input type="color">` do avatar enquanto a ficha não tem `cor` definida —
