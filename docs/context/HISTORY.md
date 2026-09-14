@@ -1,5 +1,125 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-identidade-duas-colunas: Identidade da ficha de criatura em 2 colunas, cor por tipo em Resistências/Fraquezas
+
+Task solta, pedida em conversa pelo autor com um desenho à mão anexado (rabiscos sobre um print da
+tela atual): "Assim como nos agentes, a caixa de Identidade deve ser separada em duas colunas."
+Duas partes: (1) reorganizar o card de Identidade de `CriaturaVisualizacao` em 2 colunas internas,
+com uma lista explícita do que cada coluna carrega; (2) colorir as caixas de Resistência e as
+linhas de Fraqueza por tipo de dano, com uma variação de cor quando o item tem subtipo (ex.:
+"Físico Cortante" mais escuro que "Físico" puro).
+
+**Análogo aprovado.** O próprio pedido ("assim como nos agentes") apontou o componente de
+referência: `.ficha-identidade__corpo` em `FichaVisualizacao` (ui-34) já faz exatamente essa
+divisão — grid `230px minmax(0, 1fr)`, coluna estreita fixa pra foto+chips, coluna larga pro resto,
+com um 3º item de largura cheia (`grid-column: 1 / -1`) pros campos que não cabem na coluna
+estreita (`.ficha-identidade__meta-bloco`). Repliquei a mesma grade e a mesma técnica de
+`grid-column` em `CriaturaVisualizacao` — BEM próprio (`criatura__ident-corpo`/`criatura__ident-
+coluna--perfil`/`--combate`), já que o encapsulamento de estilos do Angular não deixa a definição
+de `FichaVisualizacao` vazar pra este componente (mesmo racional já registrado em várias tasks
+anteriores de `CriaturaVisualizacao`).
+
+**Coluna Perfil:** Nome (designação) e registro subiram pra cima da foto (antes ficavam ao lado
+dela, numa linha `flex-row`) — a coluna estreitou pra 230px, não sobra espaço pra foto+texto lado a
+lado. O registro trocou de formato: era "Registro — {{ fichaId }}" (texto livre), virou
+`SCP-00000` — novo computed `registroExibido` (`criatura-visualizacao.component.ts`) que faz
+`padStart(5, '0')` no mesmo `fichaId` numérico que já alimentava a classificação `FICHA-CRT-NNNN`
+da página (prefixo/preenchimento diferentes, mesmo id). A foto ganhou padding visível: pedido
+explícito do autor foi "175x175px com 20 de padding ao redor" — o box (`.criatura__avatar`) cresceu
+de 100×100 pra 215×215 (175 + 2×20) e a moldura da imagem (`.criatura__avatar-moldura`) trocou
+`inset: 0` por `inset: 20px`, deixando a hachura de fundo (tingida por `--cor-ficha`) visível como
+uma margem ao redor da foto em vez de a imagem preencher a caixa inteira. Os 4 chips de
+classificação (Origem, Porte, Comportamento, Nível de Ameaça — antes numa fileira só, cabendo na
+largura antiga do card) viraram 2 linhas de 2 (`Origem | Porte`, `Comportamento | Ameaça`) dentro
+de `criatura__chips-coluna`/`criatura__chips-linha` — a coluna de 230px não cabe os 4 juntos; com
+`flex-wrap` em cada linha, um rótulo excepcionalmente longo ainda quebra sem estourar a coluna, em
+vez de forçar truncamento.
+
+**Coluna Combate:** VD e Defesa continuam juntos (`.criatura__stats`, virou grid de 2 colunas em
+vez de 3 — `1fr 1fr`), mas Tenacidade saiu dessa grade e virou uma linha própria
+(`.criatura__stat--tenacidade`, largura cheia) logo abaixo de Vida — ordem pedida pelo autor (VD |
+Defesa, Vida, Tenacidade, Resistências, Fraquezas). Os 4 selects de edição da Classificação (Origem/
+Porte/Comportamento/Nível de Ameaça), que antes viviam dentro da coluna de Identidade numa grade
+2×2 (`.criatura__classificacao-grade`), subiram pra um 3º item direto do grid `criatura__ident-
+corpo` com `grid-column: 1 / -1` — ficam numa fileira só de 4 agora que herdam a largura do card
+inteiro (694px) em vez dos 230px da coluna Perfil. A ordem dos filhos no DOM importa aqui: o bloco
+de largura cheia precisa vir **depois** das duas colunas (não entre elas), senão o algoritmo de
+auto-placement do CSS Grid empurra a 2ª coluna pra uma linha abaixo por falta de espaço na 1ª linha
+— achado ao construir a grade, documentado como comentário no SCSS.
+
+**Cor por tipo de dano em `CriaturaResistenciaLista`.** Réplica do padrão já estabelecido em
+`resultado-rolagem.component.ts` e usado de novo em `ficha-campanha-card-resistencias-coloridas`
+(task de 2026-09-13): um mapa `SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string>` e um método que
+monta a classe BEM (`classeGradeItem`/`classeItem`, um pra cada variante — resistência é grade
+compacta, fraqueza é lista), com o SCSS aplicando `border-color`/`background`/`color` a partir dos
+tokens `--dano-fisico`/`-balistico`/`-explosao`/`-quimico`/`-geral` (e as variantes `-border`/`-dim`
+já existentes) num `@each`. Nenhum token novo — os 5 já existiam em `_tokens.scss` desde a task do
+chip de resumo de rolagem; só o comentário do bloco de tokens foi ampliado pra citar este novo
+consumidor.
+
+**Novidade sobre o padrão existente: variação por subtipo.** Nem `resultado-rolagem` nem
+`ficha-campanha-card-resistencias-coloridas` tinham essa necessidade (não expõem subtipo na UI).
+Pedido do autor: "se ela for de um subtipo ela deveria fazer uma variação na cor tipo (ex: Físico
+cortante ser um vermelho mais escuro)". Implementado como um `color-mix(in srgb, var(--dano-<tipo>)
+65%, black)` local (mesmo mecanismo de `-border`/`-dim` nos próprios tokens, só que calculado no
+componente em vez de um token dedicado — variação de tom, não um tipo novo) atrás de uma classe
+modificadora extra (`--com-subtipo`), aplicada só quando `item.subtipo` existe. Guardado contra o
+modificador `--editando` (volta ao tratamento neutro/tracejado em edição) com `:not(&--editando)`
+em vez de depender da ordem das regras no SCSS — as duas classes (`--<tipo>` e `--editando`) têm a
+mesma especificidade (uma classe cada), então sem essa guarda a que viesse por último no arquivo
+venceria o empate independente de qual fizesse mais sentido semanticamente.
+
+**Compacidade (pedido explícito do autor, "mantenha as coisas mais compactas e sem tantos
+espaçamentos grandes").** Não precisou de ajuste extra: a divisão em 2 colunas por si só já reduziu
+a altura total do card (o que antes era uma pilha vertical única — foto+texto, chips, VD/Tenacidade/
+Defesa, Vida, Resistências, Fraquezas — agora ocupa 2 colunas lado a lado), sem alterar nenhum
+espaçamento/gap além do que a reestruturação já exigia.
+
+**Divergência consciente do mockup.** `docs/design/examples/ficha-de-criatura.html` (fonte de
+fidelidade visual dos cards Identidade/Atributos/Status, ver `examples/README.md`) mostra a
+Identidade numa coluna só, com Resistências/Fraquezas em cinza neutro sem cor por tipo — o mockup
+**não foi atualizado** nesta task (mesma prática já registrada nas duas divergências anteriores,
+`criatura-visualizacao-shell-ui34` e a que ela mesma documenta). Nota acrescentada em
+`docs/design/examples/README.md`.
+
+**Verificação ao vivo — armadilha de ambiente.** O `docker` deste ambiente de execução não tem o
+daemon disponível (`dial unix /var/run/docker.sock: connect: no such file or directory`, e
+`service docker start` falha por `ulimit` sem permissão) — `npm run db:up` não é uma opção aqui.
+Como o pacote `postgresql-16` já vinha instalado no sistema, subi o cluster local
+(`pg_ctlcluster 16 main start`), criei o role/banco com as credenciais de `.env.example`
+(`postgres`/`postgres`/`contratados_rpg`) e seguindo o resto do fluxo normal (`db:migrate`,
+`db:seed:dev`, `backend:dev`, `frontend:dev`) sem depender do Docker Compose. Login REST como
+`codex.dev` (mestre da campanha 2 no seed dev, dona da criatura "O Colecionador de Rostos",
+`FICHA-CRT-0011`) e Playwright dirigindo `http://localhost:4300/campanhas/2/criatura/11` com a
+sessão plantada em `localStorage`, mesmo padrão da skill `verify`.
+
+**Testes:** `criatura-visualizacao.component.spec.ts` (43 testes, junto com
+`criatura-resistencia-lista.component.spec.ts` na mesma rodada) e `visualizar-criatura.page.spec.ts`
+(15 testes) passam sem alteração — nenhum deles fixava a estrutura DOM antiga (`.criatura__ident`/
+`.criatura__chips`) nem o texto "Registro — N"; só `.criatura__stats--info`/`.criatura__avatar-
+enquadrar`, que continuam existindo. Build (`ng build`) e lint (`eslint`) 0 erros nos arquivos
+tocados (warnings de aspas simples/duplas são baseline pré-existente do repositório inteiro).
+
+**Inspeção visual pessoal** (screenshots capturados por Playwright direto nesta sessão, sem
+subagente) nos 4 viewports padrão — `1920×1080`, `960×1080`, `1366×768`, `360×800` — mais o modo de
+edição da Classificação (desktop) e um item de Resistência (Físico + subtipo "Cortante") e um de
+Fraqueza (Explosão + subtipo "Fragmentação", editados direto no Postgres pra exercitar o caminho
+sem precisar do formulário): as 2 colunas renderizam lado a lado no desktop e colapsam pra 1 coluna
+empilhada em `360×800` (breakpoint `bp.mobile`, 560px); a foto mostra a hachura de fundo como
+margem de 20px ao redor da imagem quando há `imagemUrl`; os 4 selects de Classificação ficam numa
+fileira só de largura cheia em edição; Resistências e Fraquezas mostram cor por tipo (físico
+vermelho, balístico azul, explosão laranja), com o item com subtipo visivelmente mais escuro que o
+mesmo tipo sem subtipo (comparação direta na mesma tela: "Físico" com "Cortante" ficou um vermelho/
+marrom mais escuro que "Balístico" sem subtipo, que manteve o azul cheio); sem overflow horizontal
+em nenhum viewport. Um artefato de `fullPage: true` do Playwright (a barra de ícones lateral fixa
+aparece "flutuando" sobre o meio do card em capturas de página inteira, por ser `position: fixed` e
+o stitching de scroll não recompor esse tipo de elemento) foi identificado e descartado como bug
+real — confirmado via `scrollIntoViewIfNeeded` + captura de viewport único que a caixa VD está lá,
+com o texto certo, só fora do corte da captura de página inteira.
+
+Sem spec (`docs/specs/`) — task solta, registrada só em `HISTORY.md`/`CONTEXT.md` por não se
+encaixar no fluxo `backlog/active/done`.
+
 ## 2026-09-14 — criatura-visualizacao-shell-ui34: cabeçalho e coluna de ações da ficha de criatura alinhados ao padrão do jogador
 
 Pedido em conversa pelo autor: "ajuste na ficha de criatura similar ao que fizemos na ficha de

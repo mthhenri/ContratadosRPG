@@ -40,10 +40,7 @@
             @for (item of itens(); track $index) {
                 <!-- O formulário é bem mais largo que um box de ~77px: em edição o item abandona a grade e
              ocupa a linha inteira, em vez de estourar a coluna. -->
-                <li
-                    class="resistencia-lista__grade-item"
-                    [class.resistencia-lista__grade-item--editando]="editando($index)"
-                >
+                <li [class]="classeGradeItem(item, editando($index))">
                     @if (editando($index)) {
                         <ng-container *ngTemplateOutlet="formulario" />
                     } @else {
@@ -106,10 +103,7 @@
     } @else {
         <ul class="resistencia-lista__itens">
             @for (item of itens(); track $index) {
-                <li
-                    class="resistencia-lista__item"
-                    [class.resistencia-lista__item--editando]="editando($index)"
-                >
+                <li [class]="classeItem(item, editando($index))">
                     @if (editando($index)) {
                         <ng-container *ngTemplateOutlet="formulario" />
                     } @else {

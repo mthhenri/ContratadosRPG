@@ -91,6 +91,35 @@
             background: transparent;
             border: 1px dashed var(--border-strong);
         }
+
+        // Cor por tipo de dano (pedido do autor) — mesma paleta `--dano-*` de `_tokens.scss` já
+        // usada no chip de resumo de `ResultadoRolagem`. `:not(&--editando)` em vez de depender da
+        // ordem no arquivo: as duas classes (`--<tipo>` e `--editando`) têm a mesma especificidade,
+        // então sem essa guarda a última declarada no CSS vencia o empate — o `:not` garante que o
+        // tratamento neutro de edição sempre prevalece, não importa a ordem.
+        @each $tipo in fisico, balistico, explosao, quimico, geral {
+            &--#{$tipo}:not(&--editando) {
+                border-color: var(--dano-#{$tipo}-border);
+                background: var(--dano-#{$tipo}-dim);
+
+                .resistencia-lista__grade-tipo,
+                .resistencia-lista__grade-valor {
+                    color: var(--dano-#{$tipo});
+                }
+
+                // Com subtipo (ex.: Físico Cortante): variação mais escura do mesmo matiz, não uma
+                // cor nova — o tipo continua reconhecível, só o subtipo fica diferenciado.
+                &.resistencia-lista__grade-item--com-subtipo {
+                    border-color: color-mix(in srgb, var(--dano-#{$tipo}) 55%, black);
+                    background: color-mix(in srgb, var(--dano-#{$tipo}) 10%, var(--surface-2));
+
+                    .resistencia-lista__grade-tipo,
+                    .resistencia-lista__grade-valor {
+                        color: color-mix(in srgb, var(--dano-#{$tipo}) 65%, black);
+                    }
+                }
+            }
+        }
     }
     &__grade-tipo {
         font: 9px var(--font-mono);
@@ -136,6 +165,31 @@
             background: transparent;
             border-style: dashed;
             border-color: var(--border-strong);
+        }
+
+        // Cor por tipo de dano (pedido do autor), substituindo o `--accent` uniforme acima — mesma
+        // receita e a mesma guarda `:not(&--editando)` de `&__grade-item`.
+        @each $tipo in fisico, balistico, explosao, quimico, geral {
+            &--#{$tipo}:not(&--editando) {
+                border-color: var(--dano-#{$tipo}-border);
+                background: var(--dano-#{$tipo}-dim);
+
+                .resistencia-lista__tipo,
+                .resistencia-lista__valor {
+                    color: var(--dano-#{$tipo});
+                }
+
+                // Com subtipo: mesma variação mais escura do matiz usada em `&__grade-item`.
+                &.resistencia-lista__item--com-subtipo {
+                    border-color: color-mix(in srgb, var(--dano-#{$tipo}) 55%, black);
+                    background: color-mix(in srgb, var(--dano-#{$tipo}) 10%, var(--surface-2));
+
+                    .resistencia-lista__tipo,
+                    .resistencia-lista__valor {
+                        color: color-mix(in srgb, var(--dano-#{$tipo}) 65%, black);
+                    }
+                }
+            }
         }
     }
     &__item-texto {

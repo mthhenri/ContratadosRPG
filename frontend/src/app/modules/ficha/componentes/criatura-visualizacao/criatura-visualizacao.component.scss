@@ -158,19 +158,36 @@
         }
     }
 
-    // --- Identidade: avatar + designação ---
-    &__ident {
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
+    // --- Identidade em 2 colunas (pedido do autor) ---
+    // Mesma grade `230px minmax(0,1fr)` de `.ficha-identidade__corpo` (FichaVisualizacao, ui-34):
+    // coluna Perfil (nome/registro/foto/classificação) com largura fixa — só precisa acompanhar a
+    // foto de 175px (+ 20px de padding de cada lado = 215px) —, coluna Combate (VD/Defesa/Vida/
+    // Tenacidade/Resistências/Fraquezas) absorve o resto. `criatura__classificacao-grade` (selects
+    // de edição) é o 3º item direto deste grid — ver `grid-column: 1 / -1` abaixo — porque os 4
+    // campos não cabem lado a lado dentro dos 230px da coluna Perfil.
+    &__ident-corpo {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: var(--gap-grid);
+        align-items: start;
     }
-
-    // Tamanho e moldura alinhados ao avatar da ficha de jogador (`FichaVisualizacao.__avatar`):
-    // 100×100, borda de 2px na cor da ficha, e a mesma hachura tingida por `color-mix` (antes era
-    // um cinza neutro fixo — agora acompanha `--cor-ficha` igual ao jogador).
+    &__ident-coluna {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        &--perfil {
+            align-items: center;
+            text-align: center;
+        }
+    }
+    // Foto 175×175 com 20px de padding ao redor (pedido do autor) — a hachura tingida por
+    // `color-mix` (acompanha `--cor-ficha`, mesmo racional do avatar da ficha de jogador) preenche
+    // a caixa inteira (215×215 = 175 + 2×20) e fica visível como moldura ao redor da foto, que não
+    // é mais full-bleed.
     &__avatar {
-        width: 100px;
-        height: 100px;
+        width: 215px;
+        height: 215px;
         flex: none;
         position: relative;
         border-radius: var(--radius-control);
@@ -202,10 +219,11 @@
     // Moldura própria pro crop — o `overflow: hidden` não pode ficar direto em `&__avatar`, porque
     // `&__avatar-upload` (abaixo) usa offset negativo pra ficar meio pra fora da caixa de propósito.
     // Sem essa moldura, a imagem com zoom (crop-pan) vazava por cima dos badges vizinhos (o "zoom
-    // quebrado" reportado pelo autor).
+    // quebrado" reportado pelo autor). `inset: 20px` (era `0`) é o padding ao redor da foto — a
+    // imagem passou a medir 175×175 em vez de preencher a caixa (215×215) por inteiro.
     &__avatar-moldura {
         position: absolute;
-        inset: 0;
+        inset: 20px;
         overflow: hidden;
         border-radius: calc(var(--radius-control) - 2px);
     }
@@ -292,8 +310,10 @@
     &__ident-texto {
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 5px;
         min-width: 0;
+        text-align: center;
     }
     &__ident-rotulo {
         font: 9px var(--font-mono);
@@ -323,9 +343,20 @@
     }
 
     // --- Classificação (chips + lápis / grade de selects) ---
-    &__chips {
+    // Coluna estreitou pra 230px (pedido do autor, ver `&__ident-corpo`), então os 4 chips não cabem
+    // mais numa fileira só — `&__chips-coluna` empilha as duas linhas (Tipo de Criação/Porte,
+    // Comportamento/Ameaça), cada uma um `&__chips-linha` com o mesmo flex-wrap de antes.
+    &__chips-coluna {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+    }
+    &__chips-linha {
         display: flex;
         align-items: center;
+        justify-content: center;
         flex-wrap: wrap;
         gap: 9px;
     }
@@ -364,11 +395,14 @@
         letter-spacing: 0.14em;
         color: var(--text-dim);
     }
+    // Largura cheia do card (2ª linha de `&__ident-corpo`, sob as duas colunas) — mesma técnica de
+    // `grid-column` de `.ficha-identidade__meta-bloco` (FichaVisualizacao): os 4 selects não cabem
+    // lado a lado dentro dos 230px da coluna Perfil.
     &__classificacao-grade {
+        grid-column: 1 / -1;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
-        margin-top: -6px;
     }
 
     // Lápis de seção — mesmo botão `.ficha-cartao__lapis` da ficha de jogador (padding em vez de
@@ -384,10 +418,11 @@
         }
     }
 
-    // --- VD / Tenacidade / Defesa ---
+    // --- VD / Defesa (coluna Combate) — Tenacidade saiu da grade pro próprio `&__stat--tenacidade`
+    // abaixo de Vida (pedido do autor, ver ordem em `&__ident-coluna--combate` no HTML) ---
     &__stats {
         display: grid;
-        grid-template-columns: 0.8fr 1.4fr 0.8fr;
+        grid-template-columns: 1fr 1fr;
         gap: 9px;
     }
     &__stats--info {
@@ -402,6 +437,10 @@
         }
         &--flexivel {
             flex: 1 1 0;
+        }
+        // Tenacidade, sozinha na própria linha (largura cheia da coluna Combate).
+        &--tenacidade {
+            width: 100%;
         }
         // Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (m4-04b, ajuste pós-mockup) —
         // mais largo que os outros dois porque carrega até 4 tags; as tags quebram linha aqui dentro
@@ -976,9 +1015,8 @@
     }
 
     @include bp.mobile {
-        &__ident {
-            flex-direction: column;
-            align-items: flex-start;
+        &__ident-corpo {
+            grid-template-columns: 1fr;
         }
         &__stats {
             grid-template-columns: 1fr;

@@ -5,7 +5,29 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-visualizacao-shell-ui34` concluída — cabeçalho e coluna de ações de
+> `criatura-identidade-duas-colunas` concluída — o card de Identidade de `CriaturaVisualizacao`
+> virou 2 colunas internas (pedido em conversa pelo autor, com desenho de referência à mão): grade
+> `230px minmax(0,1fr)` idêntica à de `.ficha-identidade__corpo` (`FichaVisualizacao`, ui-34).
+> Coluna Perfil — nome, registro no formato `SCP-00000` (novo `registroExibido`, 5 dígitos,
+> substitui "Registro — N"), foto 175×175 com 20px de padding ao redor (era full-bleed 100×100),
+> 2 linhas de chips (Origem/Porte, Comportamento/Ameaça — antes numa fileira só). Coluna Combate —
+> VD/Defesa (Tenacidade saiu da grade de 3, virou linha própria abaixo de Vida), Vida, Tenacidade,
+> Resistências, Fraquezas. Os 4 selects de edição da Classificação (antes 2×2 espremidos na coluna
+> estreita) subiram pra uma 3ª linha de largura cheia do grid (`grid-column: 1 / -1`, mesma técnica
+> de `.ficha-identidade__meta-bloco`), numa fileira só de 4 agora que têm o card inteiro. Em
+> paralelo, `CriaturaResistenciaLista` ganhou cor por `TipoDanoEnum` nos boxes de Resistência e nas
+> linhas de Fraqueza (mesmo padrão `SUFIXO_TIPO_DANO`/`classe*` de `resultado-rolagem`/
+> `ficha-campanha-card-resistencias-coloridas`, tokens `--dano-*` já existentes) — novidade: item
+> com subtipo (ex.: Físico Cortante) fica um `color-mix` mais escuro do mesmo matiz em vez de trocar
+> de cor, guardado contra `--editando` via `:not()` (as duas classes empatam em especificidade, não
+> dá pra confiar na ordem do arquivo). Divergência consciente do mockup de fidelidade
+> `docs/design/examples/ficha-de-criatura.html` (mostra Identidade numa coluna só) — nota em
+> `docs/design/examples/README.md`. Build+lint 0 erros; suíte focada `criatura-visualizacao`/
+> `criatura-resistencia-lista`/`visualizar-criatura` 58/58. Verificado ao vivo (Postgres 16 local
+> sem Docker — daemon indisponível no ambiente — + backend + frontend reais, seed dev) nos 4
+> viewports padrão, inclusive o modo de edição da Classificação e um item de Resistência/Fraqueza
+> com subtipo. Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-visualizacao-shell-ui34` concluída — cabeçalho e coluna de ações de
 > `visualizar-criatura.page`/`CriaturaVisualizacao` alinhados ao padrão que `ui-34` deu à ficha de
 > jogador: `app-coluna-acoes` (categorias "Ficha" — Histórico, Calculadora, Rolagem oculta — e
 > "Gestão", atrás de `podeGerenciar()`) no lugar do kebab solto; cabeçalho com índice "//", nome,
