@@ -17,509 +17,546 @@
                     <span class="criatura__cartao-regua"></span>
                     <!-- Selos só-leitura (o toggle de verdade mora na coluna de ações da página,
                  `CriaturaVisualizar` — mesmo racional de `.ficha-identidade__visibilidade-selo`
-                 em `FichaVisualizacao`, ui-34). -->
-                    <span
-                        class="criatura__cartao-meta"
-                        [class.criatura__cartao-meta--ativo]="oculta()"
-                    >
-                        <app-icone [nome]="oculta() ? 'olho-fechado' : 'olho'" />
-                        {{ oculta() ? "Ficha oculta" : "Ficha visível" }}
-                    </span>
-                    <span
-                        class="criatura__cartao-meta"
-                        [class.criatura__cartao-meta--ativo]="rolagemOculta()"
-                    >
-                        <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
-                        {{ rolagemOculta() ? "Rolagem oculta" : "Rolagem pública" }}
-                    </span>
+                 em `FichaVisualizacao`, ui-34). Agrupados num wrapper próprio (`&__cartao-metas`)
+                 pra poder cair numa 2ª linha inteira no mobile (`bp.mobile`) — o cabeçalho de
+                 Identidade tem 2 selos (jogador só tem 1), então "// Identidade ─" + os dois já
+                 não cabem numa fileira só em 360px. -->
+                    <div class="criatura__cartao-metas">
+                        <span
+                            class="criatura__cartao-meta"
+                            [class.criatura__cartao-meta--ativo]="oculta()"
+                        >
+                            <app-icone [nome]="oculta() ? 'olho-fechado' : 'olho'" />
+                            {{ oculta() ? "Ficha oculta" : "Ficha visível" }}
+                        </span>
+                        <span
+                            class="criatura__cartao-meta"
+                            [class.criatura__cartao-meta--ativo]="rolagemOculta()"
+                        >
+                            <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
+                            {{ rolagemOculta() ? "Rolagem oculta" : "Rolagem pública" }}
+                        </span>
+                    </div>
                 </header>
 
-                <div class="criatura__ident">
-                    @if (ajustavel()) {
-                        <div
-                            class="criatura__avatar criatura__avatar--editavel"
-                            [style.--cor-ficha]="cor()"
-                        >
-                            @if (imagemUrl(); as urlImagem) {
-                                <div class="criatura__avatar-moldura">
-                                    <img
-                                        class="criatura__avatar-imagem"
-                                        [src]="urlImagem"
-                                        alt=""
-                                        [appFocoImagem]="foco()"
+                <!-- Identidade em 2 colunas (pedido do autor): Perfil (nome/registro/foto/
+             classificação) à esquerda, Combate (VD/Defesa/Vida/Tenacidade/Resistências/Fraquezas) à
+             direita — mesma grade `230px minmax(0,1fr)` de `.ficha-identidade__corpo`
+             (FichaVisualizacao, ui-34), replicada aqui pelo mesmo motivo de sempre (o
+             encapsulamento de estilos do Angular não deixa a definição de outro componente vazar
+             pra este). Divergência consciente do mockup de fidelidade (`docs/design/examples/
+             ficha-de-criatura.html`), que mostra a Identidade numa coluna só — ver
+             docs/design/examples/README.md "Excluído de propósito" e docs/context/HISTORY.md. -->
+                <div class="criatura__ident-corpo">
+                    <div class="criatura__ident-coluna criatura__ident-coluna--perfil">
+                        <div class="criatura__ident-texto">
+                            <span class="criatura__ident-rotulo">Criatura</span>
+                            @if (ajustavel()) {
+                                <app-valor-editavel
+                                    class="criatura__designacao"
+                                    [valor]="dados().identidade.designacao"
+                                    [editando]="editando('identidade.designacao')"
+                                    rotuloAria="designação"
+                                    (editarSolicitado)="editar('identidade.designacao')"
+                                >
+                                    <input
+                                        #entradaDesignacao
+                                        appAutoFocus
+                                        class="criatura__designacao-entrada"
+                                        type="text"
+                                        [value]="dados().identidade.designacao"
+                                        aria-label="Designação"
+                                        [disabled]="!ajustavel()"
+                                        (keydown.enter)="
+                                            confirmarCampoIdentidade(
+                                                'designacao',
+                                                entradaDesignacao.value
+                                            );
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarCampoIdentidade(
+                                                'designacao',
+                                                entradaDesignacao.value
+                                            );
+                                            cancelarEdicao()
+                                        "
                                     />
-                                </div>
-                                <button
-                                    app-botao-icone
-                                    [redondo]="true"
-                                    type="button"
-                                    class="criatura__avatar-enquadrar"
-                                    aria-label="Ajustar enquadramento"
-                                    [appTooltip]="'Ajustar enquadramento'"
-                                    (click)="abrirEnquadramentoExistente()"
-                                >
-                                    <app-icone nome="busca" />
-                                </button>
-                                <button
-                                    app-botao-icone
-                                    [redondo]="true"
-                                    type="button"
-                                    class="criatura__avatar-remover"
-                                    aria-label="Remover imagem de registro"
-                                    [appTooltip]="'Remover imagem'"
-                                    (click)="removerImagem.emit()"
-                                >
-                                    <app-icone nome="excluir" />
-                                </button>
-                            }
-                            <input
-                                type="color"
-                                class="criatura__cor-entrada"
-                                aria-label="Cor de identidade da ficha"
-                                [formControl]="corCriaturaForm"
-                            />
-                            <label
-                                class="criatura__avatar-upload"
-                                [appTooltip]="'Trocar imagem de registro'"
-                            >
-                                <input
-                                    type="file"
-                                    class="criatura__avatar-upload-entrada"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    aria-label="Trocar imagem de registro"
-                                    (change)="aoSelecionarImagem($event)"
-                                />
-                                <app-icone nome="editar" />
-                            </label>
-
-                            @if (enquadramentoOrigem(); as origemAtual) {
-                                <app-ajuste-enquadramento-imagem
-                                    [origem]="origemAtual"
-                                    [proporcao]="{ largura: 100, altura: 100 }"
-                                    [focoInicial]="arquivoPendente() ? null : foco()"
-                                    (confirmar)="confirmarEnquadramento($event)"
-                                    (cancelar)="fecharEnquadramento()"
-                                />
-                            }
-                        </div>
-                    } @else {
-                        <span
-                            class="criatura__avatar"
-                            aria-hidden="true"
-                            [style.--cor-ficha]="cor()"
-                        >
-                            @if (imagemUrl(); as urlImagem) {
-                                <div class="criatura__avatar-moldura">
-                                    <img
-                                        class="criatura__avatar-imagem"
-                                        [src]="urlImagem"
-                                        alt=""
-                                        [appFocoImagem]="foco()"
-                                    />
-                                </div>
-                            }
-                        </span>
-                    }
-
-                    <div class="criatura__ident-texto">
-                        <span class="criatura__ident-rotulo">Criatura</span>
-                        @if (ajustavel()) {
-                            <app-valor-editavel
-                                class="criatura__designacao"
-                                [valor]="dados().identidade.designacao"
-                                [editando]="editando('identidade.designacao')"
-                                rotuloAria="designação"
-                                (editarSolicitado)="editar('identidade.designacao')"
-                            >
-                                <input
-                                    #entradaDesignacao
-                                    appAutoFocus
-                                    class="criatura__designacao-entrada"
-                                    type="text"
-                                    [value]="dados().identidade.designacao"
-                                    aria-label="Designação"
-                                    [disabled]="!ajustavel()"
-                                    (keydown.enter)="
-                                        confirmarCampoIdentidade(
-                                            'designacao',
-                                            entradaDesignacao.value
-                                        );
-                                        cancelarEdicao()
-                                    "
-                                    (keydown.escape)="cancelarEdicao()"
-                                    (blur)="
-                                        confirmarCampoIdentidade(
-                                            'designacao',
-                                            entradaDesignacao.value
-                                        );
-                                        cancelarEdicao()
-                                    "
-                                />
-                            </app-valor-editavel>
-                        } @else {
-                            <h1 class="criatura__designacao">
-                                {{ dados().identidade.designacao }}
-                            </h1>
-                        }
-                        <span class="criatura__registro">Registro — {{ fichaId() }}</span>
-                    </div>
-                </div>
-
-                <!-- Classificação: em leitura são só chips; o lápis liga o modo de edição e troca os quatro
-             de uma vez por selects rotulados logo abaixo (trocar um chip isolado por um select de
-             largura diferente fazia a linha inteira saltar). O botão fica sempre na mesma linha,
-             então ligar/desligar o modo não move nada acima dele. -->
-                <div class="criatura__chips">
-                    @if (classificacaoEmEdicao()) {
-                        <span class="criatura__chips-rotulo">Classificação</span>
-                    } @else {
-                        <span class="criatura__chip">{{
-                            rotuloOrigemCriatura(dados().identidade.origem)
-                        }}</span>
-
-                        <span class="criatura__chip">
-                            Porte {{ nomePorte(dados().porte) }}
-                            @if (dimensaoPorte(dados().porte); as dimensao) {
-                                <span
-                                    class="criatura__chip-info"
-                                    tabindex="0"
-                                    [appTooltip]="'Ocupa ' + dimensao"
-                                    [attr.aria-label]="'Ocupa ' + dimensao"
-                                    >i</span
-                                >
-                            }
-                        </span>
-
-                        <span class="criatura__chip">{{
-                            rotuloComportamento(dados().identidade.comportamento)
-                        }}</span>
-                        <span class="criatura__chip criatura__chip--ameaca"
-                            >Ameaça {{ rotuloNivelAmeaca(dados().na) }}</span
-                        >
-                    }
-
-                    @if (ajustavel()) {
-                        <button
-                            app-botao-icone
-                            tamanho="padrao"
-                            class="criatura__lapis"
-                            type="button"
-                            [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
-                            [attr.aria-pressed]="classificacaoEmEdicao()"
-                            [attr.aria-label]="
-                                classificacaoEmEdicao()
-                                    ? 'Cancelar edição da classificação'
-                                    : 'Editar classificação'
-                            "
-                            [appTooltip]="
-                                classificacaoEmEdicao() ? 'Cancelar edição' : 'Editar classificação'
-                            "
-                            (click)="alternarEdicaoClassificacao()"
-                        >
-                            @if (classificacaoEmEdicao()) {
-                                ✕
+                                </app-valor-editavel>
                             } @else {
-                                <app-icone nome="editar" />
+                                <h1 class="criatura__designacao">
+                                    {{ dados().identidade.designacao }}
+                                </h1>
                             }
-                        </button>
-                    }
-                </div>
+                            <span class="criatura__registro">{{ registroExibido() }}</span>
+                        </div>
 
-                @if (classificacaoEmEdicao()) {
-                    <div class="criatura__classificacao-grade">
-                        <app-campo tamanho="compacto" rotulo="Origem">
-                            <select
-                                #entradaOrigem
-                                class="criatura__select"
-                                aria-label="Origem"
-                                (change)="
-                                    confirmarCampoIdentidade('origem', $any(entradaOrigem.value))
-                                "
+                        @if (ajustavel()) {
+                            <div
+                                class="criatura__avatar criatura__avatar--editavel"
+                                [style.--cor-ficha]="cor()"
                             >
-                                @for (o of origens; track o) {
-                                    <option
-                                        [value]="o"
-                                        [selected]="o === dados().identidade.origem"
+                                @if (imagemUrl(); as urlImagem) {
+                                    <div class="criatura__avatar-moldura">
+                                        <img
+                                            class="criatura__avatar-imagem"
+                                            [src]="urlImagem"
+                                            alt=""
+                                            [appFocoImagem]="foco()"
+                                        />
+                                    </div>
+                                    <button
+                                        app-botao-icone
+                                        [redondo]="true"
+                                        type="button"
+                                        class="criatura__avatar-enquadrar"
+                                        aria-label="Ajustar enquadramento"
+                                        [appTooltip]="'Ajustar enquadramento'"
+                                        (click)="abrirEnquadramentoExistente()"
                                     >
-                                        {{ rotuloOrigemCriatura(o) }}
-                                    </option>
-                                }
-                            </select>
-                        </app-campo>
-
-                        <app-campo tamanho="compacto" rotulo="Porte">
-                            <select
-                                #entradaPorte
-                                class="criatura__select"
-                                aria-label="Porte"
-                                (change)="confirmarPorte($any(entradaPorte.value))"
-                            >
-                                @for (p of portes; track p) {
-                                    <option [value]="p" [selected]="p === dados().porte">
-                                        {{ rotuloPorte(p) }}
-                                    </option>
-                                }
-                            </select>
-                        </app-campo>
-
-                        <app-campo tamanho="compacto" rotulo="Comportamento">
-                            <select
-                                #entradaComportamento
-                                class="criatura__select"
-                                aria-label="Comportamento"
-                                (change)="
-                                    confirmarCampoIdentidade(
-                                        'comportamento',
-                                        $any(entradaComportamento.value)
-                                    )
-                                "
-                            >
-                                @for (c of comportamentos; track c) {
-                                    <option
-                                        [value]="c"
-                                        [selected]="c === dados().identidade.comportamento"
+                                        <app-icone nome="busca" />
+                                    </button>
+                                    <button
+                                        app-botao-icone
+                                        [redondo]="true"
+                                        type="button"
+                                        class="criatura__avatar-remover"
+                                        aria-label="Remover imagem de registro"
+                                        [appTooltip]="'Remover imagem'"
+                                        (click)="removerImagem.emit()"
                                     >
-                                        {{ rotuloComportamento(c) }}
-                                    </option>
+                                        <app-icone nome="excluir" />
+                                    </button>
                                 }
-                            </select>
-                        </app-campo>
+                                <input
+                                    type="color"
+                                    class="criatura__cor-entrada"
+                                    aria-label="Cor de identidade da ficha"
+                                    [formControl]="corCriaturaForm"
+                                />
+                                <label
+                                    class="criatura__avatar-upload"
+                                    [appTooltip]="'Trocar imagem de registro'"
+                                >
+                                    <input
+                                        type="file"
+                                        class="criatura__avatar-upload-entrada"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        aria-label="Trocar imagem de registro"
+                                        (change)="aoSelecionarImagem($event)"
+                                    />
+                                    <app-icone nome="editar" />
+                                </label>
 
-                        <app-campo tamanho="compacto" rotulo="Nível de Ameaça">
-                            <select
-                                #entradaNa
-                                class="criatura__select"
-                                aria-label="Nível de Ameaça"
-                                (change)="confirmarNa($any(entradaNa.value))"
+                                @if (enquadramentoOrigem(); as origemAtual) {
+                                    <app-ajuste-enquadramento-imagem
+                                        [origem]="origemAtual"
+                                        [proporcao]="{ largura: 100, altura: 100 }"
+                                        [focoInicial]="arquivoPendente() ? null : foco()"
+                                        (confirmar)="confirmarEnquadramento($event)"
+                                        (cancelar)="fecharEnquadramento()"
+                                    />
+                                }
+                            </div>
+                        } @else {
+                            <span
+                                class="criatura__avatar"
+                                aria-hidden="true"
+                                [style.--cor-ficha]="cor()"
                             >
-                                @for (na of niveisAmeaca; track na) {
-                                    <option [value]="na" [selected]="na === dados().na">
-                                        {{ rotuloNivelAmeaca(na) }}
-                                    </option>
+                                @if (imagemUrl(); as urlImagem) {
+                                    <div class="criatura__avatar-moldura">
+                                        <img
+                                            class="criatura__avatar-imagem"
+                                            [src]="urlImagem"
+                                            alt=""
+                                            [appFocoImagem]="foco()"
+                                        />
+                                    </div>
                                 }
-                            </select>
-                        </app-campo>
-                    </div>
-                }
-
-                <div class="criatura__stats">
-                    <div class="criatura__stat criatura__stat--vd">
-                        <span class="criatura__stat-rotulo">VD</span>
-                        <app-valor-editavel
-                            class="criatura__stat-valor criatura__stat-botao"
-                            [valor]="dados().vd"
-                            [editando]="editando('vd')"
-                            [desabilitado]="!ajustavel()"
-                            rotuloAria="valor de desafio"
-                            [bloco]="true"
-                            (editarSolicitado)="editar('vd')"
-                        >
-                            <input
-                                #entradaVd
-                                appAutoFocus
-                                class="criatura__entrada-numero criatura__entrada-numero--stat"
-                                type="number"
-                                [value]="dados().vd"
-                                aria-label="Valor de Desafio"
-                                (keydown.enter)="
-                                    confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()
-                                "
-                                (keydown.escape)="cancelarEdicao()"
-                                (blur)="confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()"
-                            />
-                        </app-valor-editavel>
+                            </span>
+                        }
                     </div>
 
-                    <div class="criatura__stat">
-                        <span class="criatura__stat-rotulo">Tenacidade</span>
-                        <app-valor-editavel
-                            class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--tenacidade"
-                            [valor]="nomeTenacidade(dados().tenacidade)"
-                            [editando]="editando('tenacidade')"
-                            [desabilitado]="!ajustavel()"
-                            rotuloAria="tenacidade"
-                            [bloco]="true"
-                            (editarSolicitado)="editar('tenacidade')"
-                        >
-                            <select
-                                #entradaTenacidade
-                                appAutoFocus
-                                class="criatura__select criatura__select--stat"
-                                aria-label="Tenacidade"
-                                (change)="
-                                    confirmarTenacidade($any(entradaTenacidade.value));
-                                    cancelarEdicao()
-                                "
-                                (blur)="cancelarEdicao()"
+                    <div class="criatura__ident-coluna criatura__ident-coluna--combate">
+                        <!-- VD/Defesa/Tenacidade numa fileira só (pedido do autor): as caixas de
+                     VD/Defesa encolheram pela metade (`&__stats--compacta`, ver SCSS) pra abrir
+                     espaço pra Tenacidade (antes numa linha própria, cheia), com texto menor nas
+                     3 caixas. -->
+                        <div class="criatura__stats criatura__stats--compacta">
+                            <div class="criatura__stat criatura__stat--vd">
+                                <span class="criatura__stat-rotulo">VD</span>
+                                <app-valor-editavel
+                                    class="criatura__stat-valor criatura__stat-botao"
+                                    [valor]="dados().vd"
+                                    [editando]="editando('vd')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="valor de desafio"
+                                    [bloco]="true"
+                                    (editarSolicitado)="editar('vd')"
+                                >
+                                    <input
+                                        #entradaVd
+                                        appAutoFocus
+                                        class="criatura__entrada-numero criatura__entrada-numero--stat"
+                                        type="number"
+                                        [value]="dados().vd"
+                                        aria-label="Valor de Desafio"
+                                        (keydown.enter)="
+                                            confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarVd(entradaVd.valueAsNumber); cancelarEdicao()
+                                        "
+                                    />
+                                </app-valor-editavel>
+                            </div>
+
+                            <div class="criatura__stat">
+                                <span class="criatura__stat-rotulo">Defesa</span>
+                                <app-valor-editavel
+                                    class="criatura__stat-valor criatura__stat-botao"
+                                    [valor]="dados().defesa"
+                                    [editando]="editando('defesa')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="defesa"
+                                    [bloco]="true"
+                                    (editarSolicitado)="editar('defesa')"
+                                >
+                                    <input
+                                        #entradaDefesa
+                                        appAutoFocus
+                                        class="criatura__entrada-numero criatura__entrada-numero--stat"
+                                        type="number"
+                                        [value]="dados().defesa"
+                                        aria-label="Defesa"
+                                        (keydown.enter)="
+                                            confirmarDefesa(entradaDefesa.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarDefesa(entradaDefesa.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                </app-valor-editavel>
+                            </div>
+
+                            <div class="criatura__stat criatura__stat--tenacidade">
+                                <span class="criatura__stat-rotulo">Tenacidade</span>
+                                <app-valor-editavel
+                                    class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--tenacidade"
+                                    [valor]="nomeTenacidade(dados().tenacidade)"
+                                    [editando]="editando('tenacidade')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="tenacidade"
+                                    [bloco]="true"
+                                    (editarSolicitado)="editar('tenacidade')"
+                                >
+                                    <select
+                                        #entradaTenacidade
+                                        appAutoFocus
+                                        class="criatura__select criatura__select--stat"
+                                        aria-label="Tenacidade"
+                                        (change)="
+                                            confirmarTenacidade($any(entradaTenacidade.value));
+                                            cancelarEdicao()
+                                        "
+                                        (blur)="cancelarEdicao()"
+                                    >
+                                        @for (t of tenacidades; track t) {
+                                            <option
+                                                [value]="t"
+                                                [selected]="t === dados().tenacidade"
+                                            >
+                                                {{ rotuloTenacidade(t) }}
+                                            </option>
+                                        }
+                                    </select>
+                                    @if (
+                                        multiplicadorTenacidade(dados().tenacidade);
+                                        as multiplicador
+                                    ) {
+                                        <span valorEditavelSufixo class="criatura__stat-sufixo">{{
+                                            multiplicador
+                                        }}</span>
+                                    }
+                                </app-valor-editavel>
+                            </div>
+                        </div>
+
+                        <div class="criatura__vida">
+                            <span class="criatura__vida-rotulo-linha">
+                                <span class="criatura__vida-rotulo">Vida</span>
+                                @if (ajustavel()) {
+                                    <button
+                                        app-botao-icone
+                                        class="criatura__receber-dano"
+                                        type="button"
+                                        aria-label="Receber dano"
+                                        [appTooltip]="'Receber dano'"
+                                        (click)="receberDanoAberto.set(true)"
+                                    >
+                                        <app-icone nome="combate" />
+                                    </button>
+                                }
+                            </span>
+                            <div class="criatura__vitalidade">
+                                <button
+                                    class="criatura__passo"
+                                    type="button"
+                                    [disabled]="!ajustavel()"
+                                    (click)="ajustarVida(-1)"
+                                    aria-label="Reduzir vida"
+                                >
+                                    −
+                                </button>
+                                <app-valor-editavel
+                                    class="criatura__vitalidade-valor"
+                                    [valor]="dados().vidaAtual"
+                                    [editando]="editando('vidaAtual')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="vida atual"
+                                    variante="perigo"
+                                    alinhamento="centro"
+                                    (editarSolicitado)="editar('vidaAtual')"
+                                >
+                                    <input
+                                        #entradaVidaAtual
+                                        appAutoFocus
+                                        class="criatura__entrada-numero criatura__entrada-numero--vida"
+                                        type="number"
+                                        [value]="dados().vidaAtual"
+                                        aria-label="Vida atual"
+                                        (keydown.enter)="
+                                            confirmarVidaAtual(entradaVidaAtual.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarVidaAtual(entradaVidaAtual.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                </app-valor-editavel>
+                                <app-valor-editavel
+                                    class="criatura__vitalidade-maxima"
+                                    [valor]="'/ ' + dados().vidaMaxima"
+                                    [editando]="editando('vidaMaxima')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="vida máxima"
+                                    alinhamento="centro"
+                                    (editarSolicitado)="editar('vidaMaxima')"
+                                >
+                                    <input
+                                        #entradaVidaMaxima
+                                        appAutoFocus
+                                        class="criatura__entrada-numero criatura__entrada-numero--vida"
+                                        type="number"
+                                        [value]="dados().vidaMaxima"
+                                        aria-label="Vida máxima"
+                                        (keydown.enter)="
+                                            ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber);
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                </app-valor-editavel>
+                                <button
+                                    class="criatura__passo"
+                                    type="button"
+                                    [disabled]="!ajustavel()"
+                                    (click)="ajustarVida(1)"
+                                    aria-label="Aumentar vida"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <div
+                                class="criatura__barra-vida"
+                                role="progressbar"
+                                [attr.aria-valuenow]="dados().vidaAtual"
+                                [attr.aria-valuemax]="dados().vidaMaxima"
                             >
-                                @for (t of tenacidades; track t) {
-                                    <option [value]="t" [selected]="t === dados().tenacidade">
-                                        {{ rotuloTenacidade(t) }}
-                                    </option>
-                                }
-                            </select>
-                            @if (multiplicadorTenacidade(dados().tenacidade); as multiplicador) {
-                                <span valorEditavelSufixo class="criatura__stat-sufixo">{{
-                                    multiplicador
-                                }}</span>
-                            }
-                        </app-valor-editavel>
+                                <div
+                                    class="criatura__barra-vida-preenchida"
+                                    [style.width.%]="
+                                        dados().vidaMaxima > 0
+                                            ? (dados().vidaAtual / dados().vidaMaxima) * 100
+                                            : 0
+                                    "
+                                ></div>
+                            </div>
+                        </div>
+
+                        <app-criatura-resistencia-lista
+                            titulo="Resistências"
+                            variante="resistencia"
+                            [dica]="'Limite ' + limiteResistencias() + ' pts'"
+                            [itens]="dados().resistencias"
+                            [editavel]="ajustavel()"
+                            (itensMudou)="aoResistenciasMudar($event)"
+                        />
+
+                        <app-criatura-resistencia-lista
+                            titulo="Fraquezas"
+                            variante="fraqueza"
+                            [itens]="dados().fraquezas"
+                            [editavel]="ajustavel()"
+                            (itensMudou)="aoFraquezasMudar($event)"
+                        />
                     </div>
 
-                    <div class="criatura__stat">
-                        <span class="criatura__stat-rotulo">Defesa</span>
-                        <app-valor-editavel
-                            class="criatura__stat-valor criatura__stat-botao"
-                            [valor]="dados().defesa"
-                            [editando]="editando('defesa')"
-                            [desabilitado]="!ajustavel()"
-                            rotuloAria="defesa"
-                            [bloco]="true"
-                            (editarSolicitado)="editar('defesa')"
-                        >
-                            <input
-                                #entradaDefesa
-                                appAutoFocus
-                                class="criatura__entrada-numero criatura__entrada-numero--stat"
-                                type="number"
-                                [value]="dados().defesa"
-                                aria-label="Defesa"
-                                (keydown.enter)="
-                                    confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()
-                                "
-                                (keydown.escape)="cancelarEdicao()"
-                                (blur)="
-                                    confirmarDefesa(entradaDefesa.valueAsNumber); cancelarEdicao()
-                                "
-                            />
-                        </app-valor-editavel>
-                    </div>
-                </div>
-
-                <div class="criatura__vida">
-                    <span class="criatura__vida-rotulo-linha">
-                        <span class="criatura__vida-rotulo">Vida</span>
+                    <!-- Classificação: pedido do autor, a leitura (chips) e a edição (grade de
+                 selects) ficam no mesmo lugar — uma fileira de largura cheia abaixo das duas
+                 colunas (Perfil/Combate), não mais dentro da coluna Perfil estreita (230px). O
+                 lápis (antes do chip de Origem) liga o modo de edição e troca os 4 chips de uma
+                 vez pela grade `criatura__classificacao-grade` logo abaixo. -->
+                    <div class="criatura__chips">
                         @if (ajustavel()) {
                             <button
                                 app-botao-icone
-                                class="criatura__receber-dano"
+                                tamanho="padrao"
+                                class="criatura__lapis"
                                 type="button"
-                                aria-label="Receber dano"
-                                [appTooltip]="'Receber dano'"
-                                (click)="receberDanoAberto.set(true)"
+                                [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
+                                [attr.aria-pressed]="classificacaoEmEdicao()"
+                                [attr.aria-label]="
+                                    classificacaoEmEdicao()
+                                        ? 'Cancelar edição da classificação'
+                                        : 'Editar classificação'
+                                "
+                                [appTooltip]="
+                                    classificacaoEmEdicao()
+                                        ? 'Cancelar edição'
+                                        : 'Editar classificação'
+                                "
+                                (click)="alternarEdicaoClassificacao()"
                             >
-                                <app-icone nome="combate" />
+                                @if (classificacaoEmEdicao()) {
+                                    ✕
+                                } @else {
+                                    <app-icone nome="editar" />
+                                }
                             </button>
                         }
-                    </span>
-                    <div class="criatura__vitalidade">
-                        <button
-                            class="criatura__passo"
-                            type="button"
-                            [disabled]="!ajustavel()"
-                            (click)="ajustarVida(-1)"
-                            aria-label="Reduzir vida"
-                        >
-                            −
-                        </button>
-                        <app-valor-editavel
-                            class="criatura__vitalidade-valor"
-                            [valor]="dados().vidaAtual"
-                            [editando]="editando('vidaAtual')"
-                            [desabilitado]="!ajustavel()"
-                            rotuloAria="vida atual"
-                            variante="perigo"
-                            alinhamento="centro"
-                            (editarSolicitado)="editar('vidaAtual')"
-                        >
-                            <input
-                                #entradaVidaAtual
-                                appAutoFocus
-                                class="criatura__entrada-numero criatura__entrada-numero--vida"
-                                type="number"
-                                [value]="dados().vidaAtual"
-                                aria-label="Vida atual"
-                                (keydown.enter)="
-                                    confirmarVidaAtual(entradaVidaAtual.valueAsNumber);
-                                    cancelarEdicao()
-                                "
-                                (keydown.escape)="cancelarEdicao()"
-                                (blur)="
-                                    confirmarVidaAtual(entradaVidaAtual.valueAsNumber);
-                                    cancelarEdicao()
-                                "
-                            />
-                        </app-valor-editavel>
-                        <app-valor-editavel
-                            class="criatura__vitalidade-maxima"
-                            [valor]="'/ ' + dados().vidaMaxima"
-                            [editando]="editando('vidaMaxima')"
-                            [desabilitado]="!ajustavel()"
-                            rotuloAria="vida máxima"
-                            alinhamento="centro"
-                            (editarSolicitado)="editar('vidaMaxima')"
-                        >
-                            <input
-                                #entradaVidaMaxima
-                                appAutoFocus
-                                class="criatura__entrada-numero criatura__entrada-numero--vida"
-                                type="number"
-                                [value]="dados().vidaMaxima"
-                                aria-label="Vida máxima"
-                                (keydown.enter)="
-                                    ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber);
-                                    cancelarEdicao()
-                                "
-                                (keydown.escape)="cancelarEdicao()"
-                                (blur)="
-                                    ajustarVidaMaxima(entradaVidaMaxima.valueAsNumber);
-                                    cancelarEdicao()
-                                "
-                            />
-                        </app-valor-editavel>
-                        <button
-                            class="criatura__passo"
-                            type="button"
-                            [disabled]="!ajustavel()"
-                            (click)="ajustarVida(1)"
-                            aria-label="Aumentar vida"
-                        >
-                            +
-                        </button>
+
+                        @if (classificacaoEmEdicao()) {
+                            <span class="criatura__chips-rotulo">Classificação</span>
+                        } @else {
+                            <span class="criatura__chip">{{
+                                rotuloOrigemCriatura(dados().identidade.origem)
+                            }}</span>
+
+                            <span class="criatura__chip">
+                                Porte {{ nomePorte(dados().porte) }}
+                                @if (dimensaoPorte(dados().porte); as dimensao) {
+                                    <span
+                                        class="criatura__chip-info"
+                                        tabindex="0"
+                                        [appTooltip]="'Ocupa ' + dimensao"
+                                        [attr.aria-label]="'Ocupa ' + dimensao"
+                                        >i</span
+                                    >
+                                }
+                            </span>
+
+                            <span class="criatura__chip">{{
+                                rotuloComportamento(dados().identidade.comportamento)
+                            }}</span>
+                            <span class="criatura__chip criatura__chip--ameaca"
+                                >Ameaça {{ rotuloNivelAmeaca(dados().na) }}</span
+                            >
+                        }
                     </div>
-                    <div
-                        class="criatura__barra-vida"
-                        role="progressbar"
-                        [attr.aria-valuenow]="dados().vidaAtual"
-                        [attr.aria-valuemax]="dados().vidaMaxima"
-                    >
-                        <div
-                            class="criatura__barra-vida-preenchida"
-                            [style.width.%]="
-                                dados().vidaMaxima > 0
-                                    ? (dados().vidaAtual / dados().vidaMaxima) * 100
-                                    : 0
-                            "
-                        ></div>
-                    </div>
+
+                    @if (classificacaoEmEdicao()) {
+                        <div class="criatura__classificacao-grade">
+                            <app-campo tamanho="compacto" rotulo="Origem">
+                                <select
+                                    #entradaOrigem
+                                    class="criatura__select"
+                                    aria-label="Origem"
+                                    (change)="
+                                        confirmarCampoIdentidade(
+                                            'origem',
+                                            $any(entradaOrigem.value)
+                                        )
+                                    "
+                                >
+                                    @for (o of origens; track o) {
+                                        <option
+                                            [value]="o"
+                                            [selected]="o === dados().identidade.origem"
+                                        >
+                                            {{ rotuloOrigemCriatura(o) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+
+                            <app-campo tamanho="compacto" rotulo="Porte">
+                                <select
+                                    #entradaPorte
+                                    class="criatura__select"
+                                    aria-label="Porte"
+                                    (change)="confirmarPorte($any(entradaPorte.value))"
+                                >
+                                    @for (p of portes; track p) {
+                                        <option [value]="p" [selected]="p === dados().porte">
+                                            {{ rotuloPorte(p) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+
+                            <app-campo tamanho="compacto" rotulo="Comportamento">
+                                <select
+                                    #entradaComportamento
+                                    class="criatura__select"
+                                    aria-label="Comportamento"
+                                    (change)="
+                                        confirmarCampoIdentidade(
+                                            'comportamento',
+                                            $any(entradaComportamento.value)
+                                        )
+                                    "
+                                >
+                                    @for (c of comportamentos; track c) {
+                                        <option
+                                            [value]="c"
+                                            [selected]="c === dados().identidade.comportamento"
+                                        >
+                                            {{ rotuloComportamento(c) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+
+                            <app-campo tamanho="compacto" rotulo="Nível de Ameaça">
+                                <select
+                                    #entradaNa
+                                    class="criatura__select"
+                                    aria-label="Nível de Ameaça"
+                                    (change)="confirmarNa($any(entradaNa.value))"
+                                >
+                                    @for (na of niveisAmeaca; track na) {
+                                        <option [value]="na" [selected]="na === dados().na">
+                                            {{ rotuloNivelAmeaca(na) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+                        </div>
+                    }
                 </div>
-
-                <app-criatura-resistencia-lista
-                    titulo="Resistências"
-                    variante="resistencia"
-                    [dica]="'Limite ' + limiteResistencias() + ' pts'"
-                    [itens]="dados().resistencias"
-                    [editavel]="ajustavel()"
-                    (itensMudou)="aoResistenciasMudar($event)"
-                />
-
-                <app-criatura-resistencia-lista
-                    titulo="Fraquezas"
-                    variante="fraqueza"
-                    [itens]="dados().fraquezas"
-                    [editavel]="ajustavel()"
-                    (itensMudou)="aoFraquezasMudar($event)"
-                />
             </section>
 
             <!-- Atributos — fundido na mesma coluna de Identidade, empilhado abaixo dela (largura
@@ -683,8 +720,9 @@
             </section>
         </div>
 
-        <!-- Coluna 2 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
-         `.ficha-status__abas` de `FichaVisualizacao`. -->
+        <!-- Coluna 2 — Status: abas Geral / Ataques / Habilidades, mesmo padrão de
+         `.ficha-status__abas` de `FichaVisualizacao`. Geral fundiu as antigas Geral + Descrição
+         (pedido do autor) — ver `&__info-grade` no SCSS pra como a altura foi resolvida. -->
         <div class="criatura__coluna criatura__coluna--status">
             <app-abas rotulo="Abas de status da criatura" (navegou)="aoNavegarAba($event)">
                 <button
@@ -697,17 +735,6 @@
                 >
                     <app-icone nome="visao-geral" />
                     <span class="abas__rotulo">Geral</span>
-                </button>
-                <button
-                    app-aba
-                    valor="descricao"
-                    [ativa]="abaAtiva() === 'descricao'"
-                    id="criatura-aba-descricao"
-                    aria-controls="criatura-painel-descricao"
-                    (click)="selecionarAba('descricao')"
-                >
-                    <app-icone nome="anotacoes" />
-                    <span class="abas__rotulo">Descrição</span>
                 </button>
                 <button
                     app-aba
@@ -1175,252 +1202,6 @@
                         <div class="criatura__info-card">
                             <header class="criatura__info-cabecalho">
                                 <span class="criatura__indice" aria-hidden="true">//</span>
-                                <h3 class="criatura__info-titulo">Regeneração</h3>
-                                <span class="criatura__info-regua"></span>
-                                @if (ajustavel()) {
-                                    @if (!dados().regeneracao) {
-                                        <button
-                                            app-botao-icone
-                                            class="criatura__info-acao"
-                                            type="button"
-                                            aria-label="Adicionar regeneração"
-                                            [appTooltip]="'Adicionar regeneração'"
-                                            (click)="ativarRegeneracao()"
-                                        >
-                                            <app-icone nome="mais" />
-                                        </button>
-                                    } @else {
-                                        <button
-                                            app-botao-icone
-                                            class="criatura__info-acao criatura__info-acao--remover"
-                                            type="button"
-                                            aria-label="Remover regeneração"
-                                            [appTooltip]="'Remover regeneração'"
-                                            (click)="removerRegeneracao()"
-                                        >
-                                            <app-icone nome="excluir" />
-                                        </button>
-                                    }
-                                }
-                            </header>
-                            @if (!dados().regeneracao) {
-                                <p class="criatura__vazio">Sem regeneração.</p>
-                            } @else {
-                                <div class="criatura__tags">
-                                    <span class="criatura__tag">
-                                        <span class="criatura__tag-rotulo">Modo</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="
-                                                rotuloRegeneracaoModo(dados().regeneracao!.modo)
-                                            "
-                                            [editando]="editando('regeneracao.modo')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="modo de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.modo')"
-                                        >
-                                            <select
-                                                #entradaModoRegen
-                                                appAutoFocus
-                                                class="criatura__select criatura__select--tag"
-                                                aria-label="Modo de Regeneração"
-                                                (change)="
-                                                    confirmarCampoRegeneracao(
-                                                        'modo',
-                                                        $any(entradaModoRegen.value)
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (blur)="cancelarEdicao()"
-                                            >
-                                                @for (m of modosRegeneracao; track m) {
-                                                    <option
-                                                        [value]="m"
-                                                        [selected]="m === dados().regeneracao!.modo"
-                                                    >
-                                                        {{ rotuloRegeneracaoModo(m) }}
-                                                    </option>
-                                                }
-                                            </select>
-                                        </app-valor-editavel>
-                                    </span>
-
-                                    <span class="criatura__tag">
-                                        <span class="criatura__tag-rotulo">Intensidade</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="
-                                                rotuloRegeneracaoIntensidade(
-                                                    dados().regeneracao!.intensidade
-                                                )
-                                            "
-                                            [editando]="editando('regeneracao.intensidade')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="intensidade de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.intensidade')"
-                                        >
-                                            <select
-                                                #entradaIntensidadeRegen
-                                                appAutoFocus
-                                                class="criatura__select criatura__select--tag"
-                                                aria-label="Intensidade de Regeneração"
-                                                (change)="
-                                                    confirmarCampoRegeneracao(
-                                                        'intensidade',
-                                                        $any(entradaIntensidadeRegen.value)
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (blur)="cancelarEdicao()"
-                                            >
-                                                @for (i of intensidadesRegeneracao; track i) {
-                                                    <option
-                                                        [value]="i"
-                                                        [selected]="
-                                                            i === dados().regeneracao!.intensidade
-                                                        "
-                                                    >
-                                                        {{ rotuloRegeneracaoIntensidade(i) }}
-                                                    </option>
-                                                }
-                                            </select>
-                                        </app-valor-editavel>
-                                    </span>
-
-                                    <span class="criatura__tag">
-                                        <span class="criatura__tag-rotulo">Valor</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="dados().regeneracao!.valor"
-                                            [editando]="editando('regeneracao.valor')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="valor de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.valor')"
-                                        >
-                                            <input
-                                                #entradaValorRegen
-                                                appAutoFocus
-                                                class="criatura__entrada-numero criatura__entrada-numero--tag"
-                                                type="number"
-                                                [value]="dados().regeneracao!.valor"
-                                                aria-label="Valor de Regeneração"
-                                                (keydown.enter)="
-                                                    confirmarCampoRegeneracao(
-                                                        'valor',
-                                                        entradaValorRegen.valueAsNumber
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoRegeneracao(
-                                                        'valor',
-                                                        entradaValorRegen.valueAsNumber
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                            />
-                                        </app-valor-editavel>
-                                    </span>
-
-                                    <span
-                                        class="criatura__tag criatura__tag--larga"
-                                        [class.criatura__tag--vazia]="
-                                            !dados().regeneracao!.condicao
-                                        "
-                                    >
-                                        <span class="criatura__tag-rotulo">Condição</span>
-                                        <app-valor-editavel
-                                            class="criatura__tag-valor"
-                                            [valor]="dados().regeneracao!.condicao ?? '—'"
-                                            [editando]="editando('regeneracao.condicao')"
-                                            [desabilitado]="!ajustavel()"
-                                            rotuloAria="condição de regeneração"
-                                            alinhamento="auto"
-                                            (editarSolicitado)="editar('regeneracao.condicao')"
-                                        >
-                                            <input
-                                                #entradaCondicaoRegen
-                                                appAutoFocus
-                                                class="criatura__entrada-texto criatura__entrada-texto--tag"
-                                                type="text"
-                                                [value]="dados().regeneracao!.condicao ?? ''"
-                                                aria-label="Condição de Regeneração"
-                                                (keydown.enter)="
-                                                    confirmarCampoRegeneracao(
-                                                        'condicao',
-                                                        entradaCondicaoRegen.value || null
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                                (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoRegeneracao(
-                                                        'condicao',
-                                                        entradaCondicaoRegen.value || null
-                                                    );
-                                                    cancelarEdicao()
-                                                "
-                                            />
-                                        </app-valor-editavel>
-                                    </span>
-                                </div>
-                            }
-                        </div>
-
-                        <div class="criatura__info-card">
-                            <header class="criatura__info-cabecalho">
-                                <span class="criatura__indice" aria-hidden="true">//</span>
-                                <h3 class="criatura__info-titulo">Anotações</h3>
-                                <span class="criatura__info-regua"></span>
-                                @if (ajustavel() && !editando("anotacoes")) {
-                                    <button
-                                        app-botao-icone
-                                        tamanho="padrao"
-                                        class="criatura__lapis"
-                                        type="button"
-                                        aria-label="Editar anotações"
-                                        [appTooltip]="'Editar anotações'"
-                                        (click)="editar('anotacoes')"
-                                    >
-                                        <app-icone nome="editar" />
-                                    </button>
-                                }
-                            </header>
-                            @if (editando("anotacoes")) {
-                                <textarea
-                                    #entradaAnotacoes
-                                    appAutoFocus
-                                    class="criatura__anotacoes"
-                                    aria-label="Anotações"
-                                    [value]="dados().anotacoes ?? ''"
-                                    (keydown.escape)="cancelarEdicao()"
-                                    (blur)="
-                                        confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()
-                                    "
-                                ></textarea>
-                            } @else if (dados().anotacoes) {
-                                <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
-                            } @else {
-                                <p class="criatura__vazio">Sem anotações.</p>
-                            }
-                        </div>
-                    </section>
-                }
-
-                @case ("descricao") {
-                    <section
-                        class="criatura__cartao criatura__cartao--painel"
-                        appAbaPainel
-                        id="criatura-painel-descricao"
-                        aria-labelledby="criatura-aba-descricao"
-                    >
-                        <div class="criatura__info-card">
-                            <header class="criatura__info-cabecalho">
-                                <span class="criatura__indice" aria-hidden="true">//</span>
                                 <h3 class="criatura__info-titulo">Descrição</h3>
                                 <span class="criatura__info-regua"></span>
                                 @if (ajustavel() && !editando("identidade.conceito")) {
@@ -1517,7 +1298,215 @@
                             </div>
                         </div>
 
-                        <div class="criatura__info-duas">
+                        <!-- Regeneração/Natureza/Tema de Horror numa grade que se adapta à largura
+                     (pedido do autor: fundir Geral+Descrição numa aba só, sem empilhar tudo numa
+                     coluna — `auto-fit` cabe 1 a 3 colunas dependendo do espaço da coluna Status,
+                     que é onde a fusão mais alongava a tela). -->
+                        <div class="criatura__info-grade">
+                            <div class="criatura__info-card">
+                                <header class="criatura__info-cabecalho">
+                                    <span class="criatura__indice" aria-hidden="true">//</span>
+                                    <h3 class="criatura__info-titulo">Regeneração</h3>
+                                    <span class="criatura__info-regua"></span>
+                                    @if (ajustavel()) {
+                                        @if (!dados().regeneracao) {
+                                            <button
+                                                app-botao-icone
+                                                class="criatura__info-acao"
+                                                type="button"
+                                                aria-label="Adicionar regeneração"
+                                                [appTooltip]="'Adicionar regeneração'"
+                                                (click)="ativarRegeneracao()"
+                                            >
+                                                <app-icone nome="mais" />
+                                            </button>
+                                        } @else {
+                                            <button
+                                                app-botao-icone
+                                                class="criatura__info-acao criatura__info-acao--remover"
+                                                type="button"
+                                                aria-label="Remover regeneração"
+                                                [appTooltip]="'Remover regeneração'"
+                                                (click)="removerRegeneracao()"
+                                            >
+                                                <app-icone nome="excluir" />
+                                            </button>
+                                        }
+                                    }
+                                </header>
+                                @if (!dados().regeneracao) {
+                                    <p class="criatura__vazio">Sem regeneração.</p>
+                                } @else {
+                                    <div class="criatura__tags">
+                                        <span class="criatura__tag">
+                                            <span class="criatura__tag-rotulo">Modo</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="
+                                                    rotuloRegeneracaoModo(dados().regeneracao!.modo)
+                                                "
+                                                [editando]="editando('regeneracao.modo')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="modo de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="editar('regeneracao.modo')"
+                                            >
+                                                <select
+                                                    #entradaModoRegen
+                                                    appAutoFocus
+                                                    class="criatura__select criatura__select--tag"
+                                                    aria-label="Modo de Regeneração"
+                                                    (change)="
+                                                        confirmarCampoRegeneracao(
+                                                            'modo',
+                                                            $any(entradaModoRegen.value)
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (blur)="cancelarEdicao()"
+                                                >
+                                                    @for (m of modosRegeneracao; track m) {
+                                                        <option
+                                                            [value]="m"
+                                                            [selected]="
+                                                                m === dados().regeneracao!.modo
+                                                            "
+                                                        >
+                                                            {{ rotuloRegeneracaoModo(m) }}
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </app-valor-editavel>
+                                        </span>
+
+                                        <span class="criatura__tag">
+                                            <span class="criatura__tag-rotulo">Intensidade</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="
+                                                    rotuloRegeneracaoIntensidade(
+                                                        dados().regeneracao!.intensidade
+                                                    )
+                                                "
+                                                [editando]="editando('regeneracao.intensidade')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="intensidade de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="
+                                                    editar('regeneracao.intensidade')
+                                                "
+                                            >
+                                                <select
+                                                    #entradaIntensidadeRegen
+                                                    appAutoFocus
+                                                    class="criatura__select criatura__select--tag"
+                                                    aria-label="Intensidade de Regeneração"
+                                                    (change)="
+                                                        confirmarCampoRegeneracao(
+                                                            'intensidade',
+                                                            $any(entradaIntensidadeRegen.value)
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (blur)="cancelarEdicao()"
+                                                >
+                                                    @for (i of intensidadesRegeneracao; track i) {
+                                                        <option
+                                                            [value]="i"
+                                                            [selected]="
+                                                                i ===
+                                                                dados().regeneracao!.intensidade
+                                                            "
+                                                        >
+                                                            {{ rotuloRegeneracaoIntensidade(i) }}
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </app-valor-editavel>
+                                        </span>
+
+                                        <span class="criatura__tag">
+                                            <span class="criatura__tag-rotulo">Valor</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="dados().regeneracao!.valor"
+                                                [editando]="editando('regeneracao.valor')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="valor de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="editar('regeneracao.valor')"
+                                            >
+                                                <input
+                                                    #entradaValorRegen
+                                                    appAutoFocus
+                                                    class="criatura__entrada-numero criatura__entrada-numero--tag"
+                                                    type="number"
+                                                    [value]="dados().regeneracao!.valor"
+                                                    aria-label="Valor de Regeneração"
+                                                    (keydown.enter)="
+                                                        confirmarCampoRegeneracao(
+                                                            'valor',
+                                                            entradaValorRegen.valueAsNumber
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (keydown.escape)="cancelarEdicao()"
+                                                    (blur)="
+                                                        confirmarCampoRegeneracao(
+                                                            'valor',
+                                                            entradaValorRegen.valueAsNumber
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                            </app-valor-editavel>
+                                        </span>
+
+                                        <span
+                                            class="criatura__tag criatura__tag--larga"
+                                            [class.criatura__tag--vazia]="
+                                                !dados().regeneracao!.condicao
+                                            "
+                                        >
+                                            <span class="criatura__tag-rotulo">Condição</span>
+                                            <app-valor-editavel
+                                                class="criatura__tag-valor"
+                                                [valor]="dados().regeneracao!.condicao ?? '—'"
+                                                [editando]="editando('regeneracao.condicao')"
+                                                [desabilitado]="!ajustavel()"
+                                                rotuloAria="condição de regeneração"
+                                                alinhamento="auto"
+                                                (editarSolicitado)="editar('regeneracao.condicao')"
+                                            >
+                                                <input
+                                                    #entradaCondicaoRegen
+                                                    appAutoFocus
+                                                    class="criatura__entrada-texto criatura__entrada-texto--tag"
+                                                    type="text"
+                                                    [value]="dados().regeneracao!.condicao ?? ''"
+                                                    aria-label="Condição de Regeneração"
+                                                    (keydown.enter)="
+                                                        confirmarCampoRegeneracao(
+                                                            'condicao',
+                                                            entradaCondicaoRegen.value || null
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                    (keydown.escape)="cancelarEdicao()"
+                                                    (blur)="
+                                                        confirmarCampoRegeneracao(
+                                                            'condicao',
+                                                            entradaCondicaoRegen.value || null
+                                                        );
+                                                        cancelarEdicao()
+                                                    "
+                                                />
+                                            </app-valor-editavel>
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+
                             <div class="criatura__info-card">
                                 <header class="criatura__info-cabecalho">
                                     <span class="criatura__indice" aria-hidden="true">//</span>
@@ -1658,4 +1647,59 @@
         (danoConfirmado)="receberDano($event)"
         (fechado)="receberDanoAberto.set(false)"
     />
+
+    <!-- Anotações (pedido do autor: "igual temos no usuário") — saiu da aba Geral pra um painel
+         flutuante próprio, aberto pela coluna de ações da página (`CriaturaVisualizar`), mesmo
+         mecanismo de `FichaVisualizacao` (arraste/redimensionamento/folha cheia no mobile). -->
+    <app-painel-flutuante
+        #painelAnotacoes="appPainelFlutuante"
+        id="criatura-anotacoes"
+        titulo="Anotações"
+        kicker="Ficha de criatura"
+        [aberto]="anotacoesPainelAberto()"
+        [mobile]="anotacoesEhMobile()"
+        [largura]="anotacoesTamanho()?.largura ?? anotacoesLarguraPadrao"
+        [altura]="anotacoesTamanho()?.altura ?? null"
+        [ignorarMinimizadoPersistido]="true"
+        (fechar)="anotacoesPainelAbertoChange.emit(false)"
+    >
+        <div class="criatura__anotacoes-caixa criatura__anotacoes-caixa--painel">
+            @if (editando("anotacoes")) {
+                <textarea
+                    #entradaAnotacoes
+                    appAutoFocus
+                    class="criatura__anotacoes"
+                    aria-label="Anotações"
+                    placeholder="Escreva suas anotações aqui…"
+                    [value]="dados().anotacoes ?? ''"
+                    (keydown.escape)="cancelarEdicao()"
+                    (blur)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
+                ></textarea>
+            } @else {
+                <button
+                    app-botao
+                    variante="secundario"
+                    tamanho="pequeno"
+                    type="button"
+                    (click)="editar('anotacoes')"
+                >
+                    Editar anotações
+                </button>
+                @if (dados().anotacoes) {
+                    <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
+                } @else {
+                    <p class="criatura__vazio">Sem anotações.</p>
+                }
+            }
+        </div>
+
+        @if (!anotacoesEhMobile()) {
+            <span
+                painelRedimensionar
+                class="criatura__anotacoes-redimensionar"
+                aria-hidden="true"
+                (pointerdown)="iniciarRedimensionamentoAnotacoes($event)"
+            ></span>
+        }
+    </app-painel-flutuante>
 }

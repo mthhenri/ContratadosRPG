@@ -174,22 +174,37 @@ describe('CriaturaVisualizar', () => {
     expect(fichaService.listarAcessos).not.toHaveBeenCalled();
   });
 
-  it('mostra Histórico/Calculadora na coluna de ações mesmo sem podeGerenciar, mas esconde a categoria Gestão (criatura-visualizacao-shell-ui34)', () => {
+  it('mostra Histórico/Anotações/Calculadora/Caderno na coluna de ações mesmo sem podeGerenciar, mas esconde a categoria Gestão (criatura-visualizacao-shell-ui34)', () => {
     const { raiz } = montar({ usuarioLogadoId: 11 });
     const itens = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map(
       (el) => el.textContent?.trim(),
     );
-    expect(itens).toEqual(['Histórico', 'Calculadora']);
+    expect(itens).toEqual(['Histórico', 'Anotações', 'Calculadora', 'Caderno']);
   });
 
-  it('mostra Histórico/Calculadora e a categoria Gestão inteira na coluna de ações para o mestre', () => {
+  it('mostra Histórico/Anotações/Calculadora/Caderno e a categoria Gestão inteira na coluna de ações para o mestre', () => {
     const { raiz } = montar({ usuarioLogadoId: 7 });
     const itens = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map(
       (el) => el.textContent?.trim(),
     );
     expect(itens).toEqual([
-      'Histórico', 'Calculadora', 'Tornar rolagens públicas', 'Acesso de visualização', 'Ocultar ficha', 'Excluir ficha',
+      'Histórico', 'Anotações', 'Calculadora', 'Caderno', 'Tornar rolagens públicas', 'Acesso de visualização', 'Ocultar ficha', 'Excluir ficha',
     ]);
+  });
+
+  it('o botão Anotações da coluna de ações alterna anotacoesAbertas, repassado ao painel flutuante de CriaturaVisualizacao', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('[app-coluna-acoes-item]')).find(
+      (el) => el.textContent?.trim() === 'Anotações',
+    )!;
+
+    botao.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance['anotacoesAbertas']()).toBe(true);
+
+    botao.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance['anotacoesAbertas']()).toBe(false);
   });
 
   it('gere o acesso via menu → dialog para o mestre (dono da criatura)', () => {

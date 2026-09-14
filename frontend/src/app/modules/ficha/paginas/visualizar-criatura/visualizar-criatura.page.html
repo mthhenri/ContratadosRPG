@@ -11,13 +11,30 @@
         </button>
         <button
             app-coluna-acoes-item
+            icone="anotacoes"
+            appTooltip="Anotações"
+            (click)="anotacoesAbertas.update((abertas) => !abertas)"
+        >
+            Anotações
+        </button>
+        <button
+            app-coluna-acoes-item
             icone="calculadora"
             appTooltip="Calculadora"
             (click)="calculadoraAberta.update((aberta) => !aberta)"
         >
             Calculadora
         </button>
-        @if (podeGerenciar()) {
+        @if (campanhaId() !== null) {
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+        } @if (podeGerenciar()) {
         <button
             app-coluna-acoes-item
             [icone]="rolagemOculta() ? 'olho' : 'olho-fechado'"
@@ -87,9 +104,6 @@
             <span class="ficha-pagina__cabecalho-regua"></span>
 
             <div class="ficha-pagina__acoes">
-                <app-chip variante="sutil" class="ficha-pagina__classificacao"
-                    >{{ classificacao }}</app-chip
-                >
                 @if (fichaEdicao.estadoPersistencia() !== 'ocioso') {
                 <span
                     class="ficha-pagina__persistencia"
@@ -157,12 +171,33 @@
                             class="ficha-pagina__menu-item"
                             type="button"
                             role="menuitem"
+                            (click)="anotacoesAbertas.update((abertas) => !abertas); fecharMenu()"
+                        >
+                            <app-icone nome="anotacoes" />
+                            <span>Anotações</span>
+                        </button>
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
                             (click)="calculadoraAberta.update((aberta) => !aberta); fecharMenu()"
                         >
                             <app-icone nome="calculadora" />
                             <span>Calculadora</span>
                         </button>
-                        @if (podeGerenciar()) {
+                        @if (campanhaId() !== null) {
+                        <button
+                            app-botao
+                            class="ficha-pagina__menu-item"
+                            type="button"
+                            role="menuitem"
+                            (click)="alternarCaderno(); fecharMenu()"
+                        >
+                            <app-icone nome="caderno" />
+                            <span>Caderno</span>
+                        </button>
+                        } @if (podeGerenciar()) {
                         <button
                             app-botao
                             class="ficha-pagina__menu-item"
@@ -244,6 +279,8 @@
             [dados]="fichaAtual.dados"
             [ajustavel]="podeGerenciar()"
             [apertado]="historicoSidebarAberto()"
+            [anotacoesPainelAberto]="anotacoesAbertas()"
+            (anotacoesPainelAbertoChange)="anotacoesAbertas.set($event)"
             (vitalidadeMudou)="fichaEdicao.ajustarVitalidade($event)"
             (defesaMudou)="fichaEdicao.ajustarDefesa($event)"
             (identidadeMudou)="fichaEdicao.ajustarIdentidade($event)"
@@ -276,7 +313,17 @@
     </div>
 </section>
 
-@if (confirmandoRevelarRolagem()) {
+@if (cadernoHabilitado() && campanhaId(); as campanhaAtualId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="campanhaAtualId"
+    [campanhaNome]="campanhaNome() ?? ''"
+    [usuarioAtivoId]="usuarioAtivoId()"
+    [ehMestre]="ehMestre()"
+    [membros]="membros()"
+/>
+} @if (confirmandoRevelarRolagem()) {
 <app-modal [aberto]="true" titulo="Tornar rolagens públicas" (fechou)="cancelarRevelarRolagem()">
     <div class="revelar-rolagem">
         <p class="revelar-rolagem__aviso">

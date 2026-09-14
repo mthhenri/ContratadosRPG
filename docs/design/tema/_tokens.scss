@@ -59,12 +59,15 @@
   --contrast-dim: color-mix(in srgb, var(--contrast) 12%, transparent);
   --contrast-border: color-mix(in srgb, var(--contrast) 40%, transparent);
 
-  /* --- Cores por tipo de dano — só o "quadradinho" de resumo por tipo num resultado de
-     rolagem (`resultado-rolagem__grupo`), NUNCA a rolagem inteira. Independentes de --vida/--energy/
+  /* --- Cores por tipo de dano — o "quadradinho" de resumo por tipo num resultado de rolagem
+     (`resultado-rolagem__grupo`) e os boxes de Resistência/Fraqueza da ficha de criatura
+     (`CriaturaResistenciaLista`), NUNCA a rolagem/o card inteiro. Independentes de --vida/--energy/
      --positive/--warning (mesmo quando o matiz é próximo) porque o domínio é outro: tipo de dano
      causado, não stat do agente — trocar um não deve mexer no outro. Mesma receita dim/border (12%/
      40%) do --accent para o preenchimento/borda do chip; o glow (text-shadow/box-shadow) é calculado
-     inline no SCSS do componente, igual ao --cor-ficha do crítico, sem token dedicado. */
+     inline no SCSS do componente, igual ao --cor-ficha do crítico, sem token dedicado. Variação por
+     subtipo (ex.: Físico Cortante) é um `color-mix` local no próprio consumidor, não um token novo —
+     mesmo matiz, só mais escuro. */
   --dano-fisico: #ef4444;      /* Físico */
   --dano-fisico-border: color-mix(in srgb, var(--dano-fisico) 40%, transparent);
   --dano-fisico-dim: color-mix(in srgb, var(--dano-fisico) 12%, transparent);

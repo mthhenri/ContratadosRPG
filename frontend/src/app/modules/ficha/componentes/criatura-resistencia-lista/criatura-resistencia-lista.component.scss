@@ -67,21 +67,22 @@
         }
     }
 
-    // --- Variante "resistencia": boxes compactos (abreviação em cima, valor embaixo) ---
+    // --- Variante "resistencia": chips fininhos (tipo + valor lado a lado, pedido do autor: menos
+    // altura, cada um ocupando só a própria largura em vez de uma grade de caixas quadradas) ---
     &__grade {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-        gap: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
         margin: 0;
         padding: 0;
         list-style: none;
     }
     &__grade-item {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 6px;
-        padding: 9px 8px;
+        padding: 5px 9px;
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
@@ -91,9 +92,38 @@
             background: transparent;
             border: 1px dashed var(--border-strong);
         }
+
+        // Cor por tipo de dano (pedido do autor) — mesma paleta `--dano-*` de `_tokens.scss` já
+        // usada no chip de resumo de `ResultadoRolagem`. `:not(&--editando)` em vez de depender da
+        // ordem no arquivo: as duas classes (`--<tipo>` e `--editando`) têm a mesma especificidade,
+        // então sem essa guarda a última declarada no CSS vencia o empate — o `:not` garante que o
+        // tratamento neutro de edição sempre prevalece, não importa a ordem.
+        @each $tipo in fisico, balistico, explosao, quimico, geral {
+            &--#{$tipo}:not(&--editando) {
+                border-color: var(--dano-#{$tipo}-border);
+                background: var(--dano-#{$tipo}-dim);
+
+                .resistencia-lista__grade-tipo,
+                .resistencia-lista__grade-valor {
+                    color: var(--dano-#{$tipo});
+                }
+
+                // Com subtipo (ex.: Físico Cortante): variação mais escura do mesmo matiz, não uma
+                // cor nova — o tipo continua reconhecível, só o subtipo fica diferenciado.
+                &.resistencia-lista__grade-item--com-subtipo {
+                    border-color: color-mix(in srgb, var(--dano-#{$tipo}) 55%, black);
+                    background: color-mix(in srgb, var(--dano-#{$tipo}) 10%, var(--surface-2));
+
+                    .resistencia-lista__grade-tipo,
+                    .resistencia-lista__grade-valor {
+                        color: color-mix(in srgb, var(--dano-#{$tipo}) 65%, black);
+                    }
+                }
+            }
+        }
     }
     &__grade-tipo {
-        font: 9px var(--font-mono);
+        font: 8px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: 0.07em;
         color: var(--text-mute);
@@ -101,7 +131,7 @@
         cursor: help;
     }
     &__grade-valor {
-        font: 700 16px var(--font-mono);
+        font: 700 13px var(--font-mono);
         color: var(--text);
         line-height: 1;
     }
@@ -124,9 +154,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
         flex-wrap: wrap;
-        padding: 9px 12px;
+        padding: 6px 10px;
         background: var(--accent-dim);
         border: 1px solid var(--accent-border);
         border-radius: var(--radius-control);
@@ -137,26 +167,51 @@
             border-style: dashed;
             border-color: var(--border-strong);
         }
+
+        // Cor por tipo de dano (pedido do autor), substituindo o `--accent` uniforme acima — mesma
+        // receita e a mesma guarda `:not(&--editando)` de `&__grade-item`.
+        @each $tipo in fisico, balistico, explosao, quimico, geral {
+            &--#{$tipo}:not(&--editando) {
+                border-color: var(--dano-#{$tipo}-border);
+                background: var(--dano-#{$tipo}-dim);
+
+                .resistencia-lista__tipo,
+                .resistencia-lista__valor {
+                    color: var(--dano-#{$tipo});
+                }
+
+                // Com subtipo: mesma variação mais escura do matiz usada em `&__grade-item`.
+                &.resistencia-lista__item--com-subtipo {
+                    border-color: color-mix(in srgb, var(--dano-#{$tipo}) 55%, black);
+                    background: color-mix(in srgb, var(--dano-#{$tipo}) 10%, var(--surface-2));
+
+                    .resistencia-lista__tipo,
+                    .resistencia-lista__valor {
+                        color: color-mix(in srgb, var(--dano-#{$tipo}) 65%, black);
+                    }
+                }
+            }
+        }
     }
     &__item-texto {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 2px;
         min-width: 0;
     }
     &__tipo {
-        font: 9px var(--font-mono);
+        font: 8px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: 0.11em;
         color: var(--text-mute);
     }
     &__subtipo {
-        font: 600 13px var(--font-mono);
+        font: 600 12px var(--font-mono);
         color: var(--text);
     }
     &__valor {
         margin-left: auto;
-        font: 700 16px var(--font-mono);
+        font: 700 13px var(--font-mono);
         color: var(--accent);
     }
 

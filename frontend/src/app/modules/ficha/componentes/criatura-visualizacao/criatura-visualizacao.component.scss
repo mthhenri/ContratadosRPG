@@ -101,6 +101,17 @@
         border-radius: var(--radius-compact);
     }
 
+    // Wrapper dos 2 selos (abaixo) — flex próprio pra poder virar bloco único que cai inteiro numa
+    // 2ª linha do cabeçalho no mobile (`bp.mobile`, ver `&__cartao-cabecalho` mais abaixo), em vez
+    // de cada selo quebrar num ponto imprevisível.
+    &__cartao-metas {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        flex: 0 0 auto;
+    }
+
     // Selo só-leitura no cabeçalho de Identidade (Ficha oculta/visível, Rolagem oculta/pública) —
     // mesma receita de `.ficha-identidade__visibilidade-selo` em FichaVisualizacao: o toggle de
     // verdade mora na coluna de ações da página, isto é só o estado atual.
@@ -158,19 +169,36 @@
         }
     }
 
-    // --- Identidade: avatar + designação ---
-    &__ident {
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
+    // --- Identidade em 2 colunas (pedido do autor) ---
+    // Mesma grade `230px minmax(0,1fr)` de `.ficha-identidade__corpo` (FichaVisualizacao, ui-34):
+    // coluna Perfil (nome/registro/foto) com largura fixa — só precisa acompanhar a foto de 175px
+    // (+ 20px de padding de cada lado = 215px) —, coluna Combate (VD/Defesa/Vida/Tenacidade/
+    // Resistências/Fraquezas) absorve o resto. `criatura__chips` (Classificação, leitura ou
+    // edição) é o 3º/4º item direto deste grid — `grid-column: 1 / -1`, largura cheia abaixo das
+    // duas colunas — pedido do autor: leitura e edição no mesmo lugar, fora da coluna Perfil.
+    &__ident-corpo {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: var(--gap-grid);
+        align-items: start;
     }
-
-    // Tamanho e moldura alinhados ao avatar da ficha de jogador (`FichaVisualizacao.__avatar`):
-    // 100×100, borda de 2px na cor da ficha, e a mesma hachura tingida por `color-mix` (antes era
-    // um cinza neutro fixo — agora acompanha `--cor-ficha` igual ao jogador).
+    &__ident-coluna {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        &--perfil {
+            align-items: center;
+            text-align: center;
+        }
+    }
+    // Foto 175×175 com 20px de padding ao redor (pedido do autor) — a hachura tingida por
+    // `color-mix` (acompanha `--cor-ficha`, mesmo racional do avatar da ficha de jogador) preenche
+    // a caixa inteira (215×215 = 175 + 2×20) e fica visível como moldura ao redor da foto, que não
+    // é mais full-bleed.
     &__avatar {
-        width: 100px;
-        height: 100px;
+        width: 215px;
+        height: 215px;
         flex: none;
         position: relative;
         border-radius: var(--radius-control);
@@ -202,10 +230,11 @@
     // Moldura própria pro crop — o `overflow: hidden` não pode ficar direto em `&__avatar`, porque
     // `&__avatar-upload` (abaixo) usa offset negativo pra ficar meio pra fora da caixa de propósito.
     // Sem essa moldura, a imagem com zoom (crop-pan) vazava por cima dos badges vizinhos (o "zoom
-    // quebrado" reportado pelo autor).
+    // quebrado" reportado pelo autor). `inset: 20px` (era `0`) é o padding ao redor da foto — a
+    // imagem passou a medir 175×175 em vez de preencher a caixa (215×215) por inteiro.
     &__avatar-moldura {
         position: absolute;
-        inset: 0;
+        inset: 20px;
         overflow: hidden;
         border-radius: calc(var(--radius-control) - 2px);
     }
@@ -292,8 +321,10 @@
     &__ident-texto {
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 5px;
         min-width: 0;
+        text-align: center;
     }
     &__ident-rotulo {
         font: 9px var(--font-mono);
@@ -323,7 +354,11 @@
     }
 
     // --- Classificação (chips + lápis / grade de selects) ---
+    // Largura cheia do card, 3º item direto de `&__ident-corpo` — pedido do autor: leitura (chips)
+    // e edição (grade) ficam no mesmo lugar, abaixo das duas colunas, em vez de espremidos nos
+    // 230px da coluna Perfil (onde moravam antes de `criatura-identidade-duas-colunas`).
     &__chips {
+        grid-column: 1 / -1;
         display: flex;
         align-items: center;
         flex-wrap: wrap;
@@ -364,11 +399,14 @@
         letter-spacing: 0.14em;
         color: var(--text-dim);
     }
+    // Largura cheia do card (2ª linha de `&__ident-corpo`, sob as duas colunas) — mesma técnica de
+    // `grid-column` de `.ficha-identidade__meta-bloco` (FichaVisualizacao): os 4 selects não cabem
+    // lado a lado dentro dos 230px da coluna Perfil.
     &__classificacao-grade {
+        grid-column: 1 / -1;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
-        margin-top: -6px;
     }
 
     // Lápis de seção — mesmo botão `.ficha-cartao__lapis` da ficha de jogador (padding em vez de
@@ -384,11 +422,32 @@
         }
     }
 
-    // --- VD / Tenacidade / Defesa ---
+    // --- VD / Defesa / Tenacidade (coluna Combate), numa fileira só (pedido do autor: migrar
+    // Tenacidade pra linha de VD/Defesa) ---
     &__stats {
         display: grid;
-        grid-template-columns: 0.8fr 1.4fr 0.8fr;
+        grid-template-columns: 1fr 1fr;
         gap: 9px;
+
+        // VD/Defesa encolhem pela metade (0.5fr cada, era 1fr) e a Tenacidade — que tinha linha
+        // própria de largura cheia — entra no espaço aberto (1fr). Texto das 3 caixas reduzido
+        // (rótulo/valor/sufixo) pra caber confortável na coluna mais estreita.
+        &--compacta {
+            grid-template-columns: 0.5fr 0.5fr 1fr;
+
+            .criatura__stat-rotulo {
+                font-size: 8px;
+                margin-bottom: 4px;
+            }
+            .criatura__stat-valor,
+            .criatura__stat-botao {
+                font-size: 13px;
+            }
+            .criatura__stat-sufixo {
+                font-size: 10px;
+                margin-left: 4px;
+            }
+        }
     }
     &__stats--info {
         display: flex;
@@ -402,6 +461,11 @@
         }
         &--flexivel {
             flex: 1 1 0;
+        }
+        // Tenacidade na grade de 3 colunas (acima): `min-width: 0` deixa o `<select>`/sufixo
+        // encolher com a coluna em vez de estourar a largura da caixa.
+        &--tenacidade {
+            min-width: 0;
         }
         // Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (m4-04b, ajuste pós-mockup) —
         // mais largo que os outros dois porque carrega até 4 tags; as tags quebram linha aqui dentro
@@ -803,7 +867,11 @@
             border-color: var(--vida);
         }
     }
-    &__info-duas {
+    // Era `&__info-duas` (2 cards fixos — Natureza/Tema de Horror). Renomeada e reaproveitada pra
+    // 3 cards (Regeneração/Natureza/Tema de Horror) na fusão Geral+Descrição (pedido do autor):
+    // `auto-fit` cabe 1 a 3 colunas de ~260px dependendo da largura real da coluna Status — mesma
+    // resolução de altura da fusão, sem repetir a régua de breakpoint em nenhum lugar novo.
+    &__info-grade {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 14px;
@@ -969,6 +1037,46 @@
         }
     }
 
+    // Dentro do `app-painel-flutuante` (mesmo racional de `FichaVisualizacao.ficha-status__
+    // anotacoes-caixa--painel`): `flex: 1` deixa a caixa (e o campo de texto) crescer junto com a
+    // janela ao arrastar a alça de redimensionar, sem vão em branco abaixo.
+    &__anotacoes-caixa--painel {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1 1 auto;
+        min-height: 220px;
+
+        .criatura__anotacoes {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+    }
+
+    // Alça de redimensionar do painel de Anotações — mesmo visual de
+    // `FichaVisualizacao.ficha-status__anotacoes-redimensionar`/`CadernoFlutuante.__redimensionar`
+    // (canto inferior direito, arraste livre nos dois eixos).
+    &__anotacoes-redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        touch-action: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 8px;
+            height: 8px;
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
+    }
+
     &__vazio {
         margin: 0;
         font: 12px var(--font-sans);
@@ -976,9 +1084,8 @@
     }
 
     @include bp.mobile {
-        &__ident {
-            flex-direction: column;
-            align-items: flex-start;
+        &__ident-corpo {
+            grid-template-columns: 1fr;
         }
         &__stats {
             grid-template-columns: 1fr;
@@ -986,8 +1093,34 @@
         &__classificacao-grade {
             grid-template-columns: 1fr;
         }
-        &__info-duas {
+        &__info-grade {
             grid-template-columns: 1fr;
+        }
+
+        // Pedido do autor, só no mobile: com `&__ident-corpo` já em 1 coluna só (acima), a
+        // Classificação (leitura ou edição) volta pra logo abaixo da foto, antes da coluna Combate
+        // — não mais a última coisa do card, depois de Resistências/Fraquezas. `order` em vez de
+        // reordenar o HTML: no desktop (sem esta regra) a ordem de origem já resolve o layout de
+        // 2 colunas certo, então só o mobile precisa da troca.
+        &__ident-coluna--combate {
+            order: 2;
+        }
+        &__chips,
+        &__classificacao-grade {
+            order: 1;
+        }
+
+        // Cabeçalho de Identidade tem 2 selos (Ficha/Rolagem) — jogador só tem 1, então esta
+        // quebra é específica de criatura. `&__cartao-metas` vira bloco de largura cheia (cai
+        // sempre pra 2ª linha, não só quando o texto não cabe por pouco) e alinha sob o título,
+        // não embaixo do índice "//" — mesmo recuo do índice (22px) + gap (11px).
+        &__cartao-cabecalho {
+            flex-wrap: wrap;
+            row-gap: 4px;
+        }
+        &__cartao-metas {
+            flex-basis: 100%;
+            padding-left: 33px;
         }
     }
 }

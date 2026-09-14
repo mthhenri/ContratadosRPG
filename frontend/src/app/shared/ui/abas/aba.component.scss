@@ -28,12 +28,15 @@
         color 0.12s ease,
         background 0.12s ease;
 
-    // Colapso mobile para só-ícone, com alvo de toque mínimo — reproduz `ficha-status__aba`, a
-    // origem mais madura (chegou a esse desenho depois do achado ao vivo do corte de rótulo hoje
-    // registrado em `P-005`). Item do tamanho do conteúdo (não mais igual), a barra rola em vez de
-    // espremer alguma aba abaixo do alvo de toque.
+    // Colapso mobile pra só-ícone (rótulo escondido abaixo, exceto no item ativo) — mesma origem
+    // de `ficha-status__aba` que motivou o corte de rótulo (`P-005`). A LARGURA em si não colapsa
+    // mais (era `flex: 0 0 auto`, tamanho do conteúdo — pedido do autor: "as abas deveriam ocupar
+    // todo o espaço na linha delas, não só a ativa"): continua `flex: 1 1 0` do `:host` acima,
+    // cada item dividindo a barra em partes iguais, como no desktop. `min-width`/`min-height`
+    // seguem como piso de toque — se a divisão igual ficar menor que 44px (muitas abas numa tela
+    // estreita), o item para nesse piso e a barra rola (`overflow-x: auto` do `.abas` host) em vez
+    // de espremer abaixo do alvo de toque.
     @include bp.mobile {
-        flex: 0 0 auto;
         min-width: bp.$alvo-toque;
         min-height: bp.$alvo-toque;
         padding: var(--space-8) var(--space-4);

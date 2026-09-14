@@ -25,6 +25,20 @@ const ABREVIACAO: Record<TipoDanoEnum, string> = {
 };
 
 /**
+ * Modificador BEM (`--<sufixo>`) por tipo de dano — mesma cor dedicada dos tokens `--dano-fisico`/
+ * `--dano-balistico`/`--dano-explosao`/`--dano-quimico`/`--dano-geral` (`_tokens.scss`) já usada no
+ * chip de resumo de `ResultadoRolagem` (`SUFIXO_TIPO_DANO`), reaproveitada aqui pra colorir
+ * Resistências e Fraquezas por tipo (pedido do autor).
+ */
+const SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
+  [TipoDanoEnum.FISICO]: 'fisico',
+  [TipoDanoEnum.BALISTICO]: 'balistico',
+  [TipoDanoEnum.EXPLOSAO]: 'explosao',
+  [TipoDanoEnum.QUIMICO]: 'quimico',
+  [TipoDanoEnum.GERAL]: 'geral',
+};
+
+/**
  * Editor no próprio lugar de uma lista `{tipo, subtipo, valor}` (m4-04b) — reusado tanto para
  * Resistências quanto para Fraquezas da ficha de criatura (`FichaCriaturaResistenciaDto` é a
  * mesma forma nos dois campos). `titulo` só rotula a seção; a semântica (resistência vs.
@@ -66,6 +80,35 @@ export class CriaturaResistenciaLista {
 
   protected editando(indice: number): boolean {
     return this.indiceEmEdicao() === indice;
+  }
+
+  /** Classe do box compacto de uma Resistência — cor por tipo de dano, com uma variação mais escura
+   * do mesmo matiz quando o item tem subtipo (ex.: Físico Cortante fica um vermelho mais escuro que
+   * Físico puro — pedido do autor). */
+  protected classeGradeItem(item: FichaCriaturaResistenciaDto, emEdicao: boolean): string {
+    const classes = [
+      'resistencia-lista__grade-item',
+      `resistencia-lista__grade-item--${SUFIXO_TIPO_DANO[item.tipo]}`,
+    ];
+    if (item.subtipo) {
+      classes.push('resistencia-lista__grade-item--com-subtipo');
+    }
+    if (emEdicao) {
+      classes.push('resistencia-lista__grade-item--editando');
+    }
+    return classes.join(' ');
+  }
+
+  /** Mesma cor por tipo (e variação por subtipo) da Resistência, na linha de Fraqueza. */
+  protected classeItem(item: FichaCriaturaResistenciaDto, emEdicao: boolean): string {
+    const classes = ['resistencia-lista__item', `resistencia-lista__item--${SUFIXO_TIPO_DANO[item.tipo]}`];
+    if (item.subtipo) {
+      classes.push('resistencia-lista__item--com-subtipo');
+    }
+    if (emEdicao) {
+      classes.push('resistencia-lista__item--editando');
+    }
+    return classes.join(' ');
   }
 
   protected alternarModoEdicao(): void {

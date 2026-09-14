@@ -5,7 +5,98 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-visualizacao-shell-ui34` concluída — cabeçalho e coluna de ações de
+> `criatura-classificacao-ordem-mobile` concluída — só no mobile (`bp.mobile`, `&__ident-corpo` já
+> em 1 coluna), a fileira de Classificação (leitura ou edição — mesma posição entre si, ver entrada
+> abaixo) voltou pra logo abaixo da foto, antes da coluna Combate, em vez do fim do card inteiro.
+> `order` do CSS Grid dentro de `bp.mobile` (`&__ident-coluna--combate: order 2`;
+> `&__chips`/`&__classificacao-grade: order 1`; Perfil no padrão 0) — sem tocar o HTML nem a ordem
+> de DOM que o desktop usa pra grade de 2 colunas. Acima do breakpoint, sem mudança (Classificação
+> continua no fim do card, como a entrada abaixo deixou). Sem mudança de comportamento; build/lint
+> 0 erros; suíte focada 56/56. Verificado ao vivo nos 4 viewports, leitura e edição em cada um.
+> Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-classificacao-leitura-e-edicao-unificadas` concluída — o autor esclareceu de vez o
+> pedido de duas entradas anteriores: leitura (chips) e edição (grade de 4 selects) da
+> Classificação devem ficar na MESMA posição, e é a leitura que se muda pro lugar da edição (não o
+> contrário). Os 4 chips saíram da coluna Perfil (`&__ident-coluna--perfil`, abaixo da foto) e
+> foram pro 3º/4º item direto de `&__ident-corpo` — largura cheia, abaixo das duas colunas, onde a
+> grade de edição já morava. `&__chips-coluna`/`&__chips-linha` (2 linhas empilhadas, só cabiam 2
+> chips por linha nos 230px da coluna) viraram uma única classe `&__chips` (fileira só, os 4 chips
+> de uma vez, já que não precisam mais caber em 230px); o lápis continua antes do chip de Origem.
+> Clicar o lápis não move mais nada — leitura e edição renderizam na mesma posição vertical exata,
+> só trocando o conteúdo da fileira.
+> Antes: `criatura-classificacao-grade-largura-cheia` — corrigiu só a largura da grade de edição
+> (voltou a `grid-column: 1/-1`, revertendo uma tentativa anterior de espremê-la em 2×2 na coluna
+> Perfil), mas não resolveu leitura/edição ficarem em lugares diferentes — resolvido pela entrada
+> acima.
+> Antes: `criatura-polimento-visual-lote` concluída — 6 ajustes visuais pontuais em
+> `CriaturaVisualizacao`/`visualizar-criatura.page`, pedidos numa mensagem só com 2 screenshots:
+> (1) chip de classificação `FICHA-CRT-NNNN` saiu da `.ficha-pagina__acoes` do cabeçalho da
+> página; (2) `shared/ui/abas/aba.component.scss` (primitivo compartilhado com `FichaVisualizacao`)
+> parou de encolher abas mobile inativas pro tamanho do conteúdo — agora todas dividem a largura
+> igualmente (`flex: 1 1 0`), com `min-width`/`min-height` como piso de alvo de toque; (3) o lápis
+> de edição da Classificação migrou pra antes do chip de Origem; (4) Tenacidade entrou na linha de
+> VD/Defesa (`&__stats--compacta`, `0.5fr 0.5fr 1fr`), as 3 caixas com texto menor; (5)
+> "SCP-00000" virou "REGISTRO — 0000", no formato de `FichaVisualizacao.contratoTexto`
+> ("CONTRATO — 0000"); (6) Resistências viraram chips finos em linha (`flex-wrap`, era grade
+> quadriculada) e Fraquezas ganharam padding/fonte menores. Sem teste novo (só layout/formato de
+> texto); suíte focada 70/70 + `ficha-visualizacao` 163/163 (primitivo compartilhado); build/lint 0
+> erros. Verificado ao vivo nos 4 viewports padrão em `CriaturaVisualizacao`, mais a barra inferior
+> de `FichaVisualizacao` em `360×800` (sem regressão). Task solta, sem spec. Detalhe em
+> `HISTORY.md`.
+> Antes: `criatura-fusao-geral-descricao` concluída — as abas Geral e Descrição de `CriaturaVisualizacao`
+> viraram uma só (`AbaCriatura` perdeu `'descricao'`; 4 abas → 3). Pedido exploratório do autor,
+> respondido com recomendação + trade-off (mais altura empilhada) antes de implementar; autor
+> confirmou e pediu resolução pro trade-off. Cadência/Bônus de Iniciativa/Deslocamento e Descrição
+> (Gancho/Motivação) continuam como antes; Regeneração/Natureza/Tema de Horror — 3 cards que
+> empilhariam cheios — entraram numa grade (`&__info-grade`, renomeada de `&__info-duas`) que cabe
+> 1 a 3 colunas por `auto-fit`, dependendo da largura real da coluna Status: 3 numa fileira só em
+> `1920×1080` (zero scroll), 2 no notebook, 1 no mobile (mesmo breakpoint que já existia pro grid
+> antigo). Suíte focada 56/56; build/lint 0 erros. Verificado ao vivo nos 4 viewports padrão, com
+> Regeneração preenchida pra exercitar o card "com dado". Task solta, sem spec. Detalhe em
+> `HISTORY.md`.
+> Antes: `criatura-selos-identidade-mobile` concluída — os selos "Ficha visível"/"Rolagem oculta" do
+> cabeçalho de Identidade (`CriaturaVisualizacao`) ficavam cortados em `360×800` (2 selos, um a
+> mais que o análogo de jogador, não cabiam na mesma fileira do índice/título/régua). Os 2 selos
+> entraram num wrapper (`&__cartao-metas`) que, só em `bp.mobile`, ganha `flex-basis: 100%` e cai
+> pra uma 2ª linha alinhada sob o título; acima do breakpoint, nada muda. Achado ao vivo pelo
+> autor a partir de screenshots. Verificado ao vivo em `360×800`/`1920×1080`; suíte focada 55/55
+> (sem teste novo — só layout responsivo). Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-anotacoes-painel-flutuante` concluída — Anotações da ficha de criatura saiu da aba
+> Geral pra um `app-painel-flutuante` (arrastável/redimensionável, folha cheia no mobile), mesmo
+> mecanismo (não extraído — bespoke por consumidor, como já era) de `FichaVisualizacao`
+> ("igual temos no usuário", pedido do autor); Caderno da campanha entrou na coluna de ações de
+> `CriaturaVisualizar` (só com `campanhaId`), carregamento preguiçoso igual `FichaVisualizar.
+> alternarCaderno`. Achado ao vivo não corrigido (herança consciente do análogo, não regressão):
+> o painel de Anotações nasce sobrepondo a própria coluna de ações (posição inicial padrão do
+> primitivo) — mesmo comportamento já existente na ficha de jogador; arrastar resolve. Testes:
+> `criatura-visualizacao`/`visualizar-criatura` focado 60/60; suíte completa `frontend` 1752/1754
+> (2 falhas pré-existentes sem relação). Verificado ao vivo (Postgres local sem Docker + backend +
+> frontend reais) em `1920×1080`/`360×800`: abrir/editar/salvar Anotações, arrastar o painel,
+> Caderno mostrando o nome da campanha e as abas corretas pro mestre, folha cheia no mobile.
+> Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-identidade-duas-colunas` concluída — o card de Identidade de `CriaturaVisualizacao`
+> virou 2 colunas internas (pedido em conversa pelo autor, com desenho de referência à mão): grade
+> `230px minmax(0,1fr)` idêntica à de `.ficha-identidade__corpo` (`FichaVisualizacao`, ui-34).
+> Coluna Perfil — nome, registro no formato `SCP-00000` (novo `registroExibido`, 5 dígitos,
+> substitui "Registro — N"), foto 175×175 com 20px de padding ao redor (era full-bleed 100×100),
+> 2 linhas de chips (Origem/Porte, Comportamento/Ameaça — antes numa fileira só). Coluna Combate —
+> VD/Defesa (Tenacidade saiu da grade de 3, virou linha própria abaixo de Vida), Vida, Tenacidade,
+> Resistências, Fraquezas. Os 4 selects de edição da Classificação (antes 2×2 espremidos na coluna
+> estreita) subiram pra uma 3ª linha de largura cheia do grid (`grid-column: 1 / -1`, mesma técnica
+> de `.ficha-identidade__meta-bloco`), numa fileira só de 4 agora que têm o card inteiro. Em
+> paralelo, `CriaturaResistenciaLista` ganhou cor por `TipoDanoEnum` nos boxes de Resistência e nas
+> linhas de Fraqueza (mesmo padrão `SUFIXO_TIPO_DANO`/`classe*` de `resultado-rolagem`/
+> `ficha-campanha-card-resistencias-coloridas`, tokens `--dano-*` já existentes) — novidade: item
+> com subtipo (ex.: Físico Cortante) fica um `color-mix` mais escuro do mesmo matiz em vez de trocar
+> de cor, guardado contra `--editando` via `:not()` (as duas classes empatam em especificidade, não
+> dá pra confiar na ordem do arquivo). Divergência consciente do mockup de fidelidade
+> `docs/design/examples/ficha-de-criatura.html` (mostra Identidade numa coluna só) — nota em
+> `docs/design/examples/README.md`. Build+lint 0 erros; suíte focada `criatura-visualizacao`/
+> `criatura-resistencia-lista`/`visualizar-criatura` 58/58. Verificado ao vivo (Postgres 16 local
+> sem Docker — daemon indisponível no ambiente — + backend + frontend reais, seed dev) nos 4
+> viewports padrão, inclusive o modo de edição da Classificação e um item de Resistência/Fraqueza
+> com subtipo. Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-visualizacao-shell-ui34` concluída — cabeçalho e coluna de ações de
 > `visualizar-criatura.page`/`CriaturaVisualizacao` alinhados ao padrão que `ui-34` deu à ficha de
 > jogador: `app-coluna-acoes` (categorias "Ficha" — Histórico, Calculadora, Rolagem oculta — e
 > "Gestão", atrás de `podeGerenciar()`) no lugar do kebab solto; cabeçalho com índice "//", nome,

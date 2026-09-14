@@ -161,13 +161,35 @@ describe('CriaturaVisualizacao', () => {
     expect(raiz.querySelectorAll('.ataque-lista__nome').length).toBe(1);
   });
 
-  it('começa na aba Geral e tem as 4 abas (Geral/Descrição/Ataques/Habilidades)', () => {
+  it('começa na aba Geral e tem as 3 abas (Geral/Ataques/Habilidades)', () => {
     const { fixture } = montar();
     expect(fixture.componentInstance['abaAtiva']()).toBe('geral');
     const rotulos = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('button[app-aba] .abas__rotulo'),
     ).map((el) => el.textContent?.trim());
-    expect(rotulos).toEqual(['Geral', 'Descrição', 'Ataques', 'Habilidades']);
+    expect(rotulos).toEqual(['Geral', 'Ataques', 'Habilidades']);
+  });
+
+  it('a aba Geral (fundida com Descrição) mostra Cadência, Descrição e Regeneração/Natureza/Tema de Horror juntos', () => {
+    const { fixture } = montar();
+    fixture.componentRef.setInput('dados', {
+      ...dados,
+      identidade: {
+        ...dados.identidade,
+        conceito: 'Um andarilho silencioso.',
+        naturezaFisica: 'Carne e osso reconstituídos.',
+        temaHorror: 'O que resta de humano nela.',
+      },
+    });
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const painel = raiz.querySelector('#criatura-painel-geral')!;
+    expect(painel.textContent).toContain('Cadência');
+    expect(painel.textContent).toContain('Um andarilho silencioso.');
+    expect(painel.textContent).toContain('Regeneração');
+    expect(painel.textContent).toContain('Carne e osso reconstituídos.');
+    expect(painel.textContent).toContain('O que resta de humano nela.');
+    expect(raiz.querySelector('#criatura-painel-descricao')).toBeNull();
   });
 
   it('a aba Habilidades renderiza só a lista de habilidades (separada de Ataques)', () => {
@@ -421,6 +443,52 @@ describe('CriaturaVisualizacao', () => {
       expect(eventos['focoMudou']).toEqual([]);
       expect(eventos['imagemMudou']).toEqual([]);
       expect(fixture.componentInstance['enquadramentoOrigem']()).toBeNull();
+    });
+  });
+
+  // Anotações (pedido do autor: "igual temos no usuário") — saiu da aba Geral pra um painel
+  // flutuante próprio, mesmo gate de visualização (`ajustavel()`) e mesmo id de elemento
+  // (`#criatura-anotacoes .painel-flutuante__janela`) de `FichaVisualizacao`.
+  describe('Anotações — painel flutuante', () => {
+    it('não mostra o painel de Anotações quando não ajustável (visualizador)', () => {
+      const { fixture } = montar();
+      fixture.componentRef.setInput('ajustavel', false);
+      fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+      expect(raiz.querySelector('#criatura-anotacoes .painel-flutuante__janela')).toBeNull();
+    });
+
+    it('mostra as anotações no painel flutuante para dono/mestre quando aberto', () => {
+      const { fixture } = montar();
+      fixture.componentRef.setInput('dados', { ...dados, anotacoes: 'Vista pela última vez no cais.' });
+      fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      fixture.detectChanges();
+      const raiz = fixture.nativeElement as HTMLElement;
+      expect(raiz.querySelector('#criatura-anotacoes .painel-flutuante__janela')).not.toBeNull();
+      expect(raiz.textContent).toContain('Vista pela última vez no cais.');
+    });
+
+    it('fechar o painel emite anotacoesPainelAbertoChange(false)', () => {
+      const { fixture } = montar();
+      fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      fixture.detectChanges();
+      const emitidos: boolean[] = [];
+      fixture.componentInstance.anotacoesPainelAbertoChange.subscribe((v) => emitidos.push(v));
+      const raiz = fixture.nativeElement as HTMLElement;
+      raiz.querySelector<HTMLButtonElement>('#criatura-anotacoes button[aria-label^="Fechar"]')!.click();
+      expect(emitidos).toEqual([false]);
+    });
+
+    it('emite anotacoesMudou com o texto confirmado (blur) ao editar', () => {
+      const { fixture, eventos } = montar();
+      fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      fixture.detectChanges();
+
+      fixture.componentInstance['editar']('anotacoes');
+      fixture.componentInstance['confirmarAnotacoes']('Nova anotação de campo.');
+
+      expect(eventos['anotacoesMudou']).toEqual(['Nova anotação de campo.']);
     });
   });
 });
