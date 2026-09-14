@@ -163,6 +163,21 @@ describe('EspectadorFichaCard', () => {
     expect(raiz.querySelector('.espectador-ficha__menu-botao')).not.toBeNull();
   });
 
+  it('emite o hover do avatar para a página mestre controlar a prévia', () => {
+    const raiz = montar(ficha({ imagemUrl: '/uploads/agentes/dev/kane.png' }));
+    const entrou = vi.fn();
+    const saiu = vi.fn();
+    fixture.componentInstance.avatarEntrou.subscribe(entrou);
+    fixture.componentInstance.avatarSaiu.subscribe(saiu);
+
+    const avatar = raiz.querySelector('.espectador-ficha__avatar') as HTMLElement;
+    avatar.dispatchEvent(new MouseEvent('mouseenter'));
+    avatar.dispatchEvent(new MouseEvent('mouseleave'));
+
+    expect(entrou).toHaveBeenCalledTimes(1);
+    expect(saiu).toHaveBeenCalledTimes(1);
+  });
+
   it('emite abrirFicha ao clicar no ícone de abrir', () => {
     montar(ficha());
     fixture.componentRef.setInput('mostrarAcoes', true);

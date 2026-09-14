@@ -1,3 +1,4 @@
+import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { FichaCriaturaDadosDto, FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
@@ -34,6 +35,7 @@ export interface FichaComumDev {
   readonly tipo: TipoFichaEnum;
   readonly nome: string;
   readonly cor: string;
+  readonly imagemUrl?: string;
 }
 
 export interface OperacoesSeedDev {
@@ -43,7 +45,8 @@ export interface OperacoesSeedDev {
     campanhaId: number,
     usuarioId: number,
     papel: TipoCampanhaMembroPapelEnum,
-  ): Promise<void>;
+  ): Promise<number>;
+  garantirRolagem(campanhaId: number, usuarioId: number, fichaId: number, rotulo: string): Promise<void>;
   garantirFicha(
     campanhaId: number,
     usuarioId: number,
@@ -85,21 +88,23 @@ export async function executarSeedDevComPersistencia(
     }
 
     for (const ficha of CENARIO_DEV.fichas) {
-      await transacao.garantirFicha(
+      const fichaId = await transacao.garantirFicha(
         obterId(campanhas, ficha.campanha),
         obterId(usuarios, ficha.usuario),
         ficha,
         montarDadosFichaDev(ficha),
       );
+      await transacao.garantirRolagem(obterId(campanhas, ficha.campanha), obterId(usuarios, ficha.usuario), fichaId, 'Teste de campo');
     }
 
     for (const criatura of CENARIO_DEV.criaturas) {
-      await transacao.garantirFicha(
+      const fichaId = await transacao.garantirFicha(
         obterId(campanhas, criatura.campanha),
         obterId(usuarios, criatura.usuario),
         criatura,
         criatura.dados,
       );
+      await transacao.garantirRolagem(obterId(campanhas, criatura.campanha), obterId(usuarios, criatura.usuario), fichaId, 'Ação de ameaça');
     }
 
     return {
@@ -240,12 +245,28 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
     );
   }
 
+  async garantirRolagem(campanhaId: number, usuarioId: number, fichaId: number, rotulo: string): Promise<void> {
+    await this.transacao.raw(
+      `INSERT INTO rolagem
+         (ficha_id, campanha_id, usuario_id, rotulo, formula, tipo_rolagem_visibilidade_id, resultado,
+          created_date, updated_date, is_deleted)
+       SELECT :fichaId, :campanhaId, :usuarioId, :rotulo, '1d20+2', tipo_rolagem_visibilidade.id,
+              CAST(:resultado AS jsonb), NOW(), NOW(), false
+       FROM tipo_rolagem_visibilidade
+       WHERE tipo_rolagem_visibilidade.codigo = 'PUBLICA' AND tipo_rolagem_visibilidade.is_deleted = false
+         AND NOT EXISTS (
+           SELECT 1 FROM rolagem WHERE ficha_id = :fichaId AND rotulo = :rotulo AND is_deleted = false
+         )`,
+      { fichaId, campanhaId, usuarioId, rotulo, resultado: JSON.stringify({ dados: [{ sinal: 1, faces: 20, valores: [14], subtotal: 14 }], atributos: [], constante: 2, total: 16 }) },
+    );
+  }
+
   async garantirFicha(
     campanhaId: number,
     usuarioId: number,
     ficha: FichaComumDev,
     dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
-  ): Promise<void> {
+  ): Promise<number> {
     const tipoFichaId = this.exigirId(
       await this.selecionarId(
         `SELECT id FROM tipo_ficha WHERE codigo = :tipo AND is_deleted = false`,
@@ -259,13 +280,14 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
       tipoFichaId,
       nome: ficha.nome,
       cor: ficha.cor,
+      imagemUrl: ficha.imagemUrl ?? null,
       dados: JSON.stringify(dados),
     };
     await this.transacao.raw(
       `INSERT INTO ficha
-         (campanha_id, usuario_id, tipo_ficha_id, nome, cor, oculta, dados,
+         (campanha_id, usuario_id, tipo_ficha_id, nome, cor, imagem_url, oculta, dados,
           created_date, updated_date, is_deleted)
-       SELECT :campanhaId, :usuarioId, :tipoFichaId, :nome, :cor, false,
+       SELECT :campanhaId, :usuarioId, :tipoFichaId, :nome, :cor, :imagemUrl, false,
               CAST(:dados AS jsonb), NOW(), NOW(), false
        WHERE NOT EXISTS (
          SELECT 1 FROM ficha
@@ -276,11 +298,19 @@ class OperacoesKnexSeedDev implements OperacoesSeedDev {
     );
     await this.transacao.raw(
       `UPDATE ficha
-       SET tipo_ficha_id = :tipoFichaId, cor = :cor, oculta = false,
+       SET tipo_ficha_id = :tipoFichaId, cor = :cor, imagem_url = :imagemUrl, oculta = false,
            dados = CAST(:dados AS jsonb), updated_date = NOW()
        WHERE campanha_id = :campanhaId AND usuario_id = :usuarioId
          AND nome = :nome AND is_deleted = false`,
       bindings,
+    );
+    return this.exigirId(
+      await this.selecionarId(
+        `SELECT id FROM ficha WHERE campanha_id = :campanhaId AND usuario_id = :usuarioId
+         AND nome = :nome AND is_deleted = false`,
+        { campanhaId, usuarioId, nome: ficha.nome },
+      ),
+      `ficha ${ficha.nome}`,
     );
   }
 
@@ -304,8 +334,18 @@ class PersistenciaKnexSeedDev implements PersistenciaSeedDev {
 }
 
 export async function executarSeedDev(conexao: Knex): Promise<ResumoSeedDev> {
+  await garantirAvataresDev();
   const senhaHash = await bcrypt.hash(SENHA_CONTAS_DEV, 10);
   return executarSeedDevComPersistencia(new PersistenciaKnexSeedDev(conexao), senhaHash);
+}
+
+async function garantirAvataresDev(): Promise<void> {
+  const origem = resolve(__dirname, 'assets', 'agentes');
+  const destino = resolve(__dirname, '..', '..', 'uploads', 'agentes', 'dev');
+  await mkdir(destino, { recursive: true });
+  for (const arquivo of await readdir(origem)) {
+    if (arquivo.endsWith('.png')) await copyFile(resolve(origem, arquivo), resolve(destino, arquivo));
+  }
 }
 
 export async function main(): Promise<void> {

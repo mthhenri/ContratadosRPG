@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  HabilidadeCategoriaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -42,6 +43,13 @@ describe('CENARIO_DEV', () => {
       { campanha: 'campanha-matheus', usuario: 'espectador', papel: 'ESPECTADOR' },
       { campanha: 'campanha-codex', usuario: 'espectador', papel: 'ESPECTADOR' },
     ]);
+  });
+
+  it('descreve missões prontas para iniciar nas duas campanhas', () => {
+    for (const campanha of CENARIO_DEV.campanhas) {
+      expect(campanha.descricao.length).toBeGreaterThan(200);
+      expect(campanha.descricao).toMatch(/objetivo|missão/i);
+    }
   });
 
   it('faz todo dono de ficha ser membro da campanha correspondente', () => {
@@ -135,7 +143,6 @@ describe('montarDadosFichaDev', () => {
       prestigio: ficha.prestigio,
       atributos: ficha.atributos,
       maestria: null,
-      inventario: { itens: [], amplificadores: [] },
       rolagens: [],
       combos: [],
       anotacoes: '',
@@ -145,6 +152,27 @@ describe('montarDadosFichaDev', () => {
     expect(dados.estado.vidaAtual).toBe(dados.estado.vidaMaxima);
     expect(dados.estado.energiaAtual).toBe(dados.estado.energiaMaxima);
     expect(dados.habilidades.length).toBeGreaterThan(0);
+    expect(dados.inventario.itens.length).toBeGreaterThan(0);
+    expect(dados.identidade?.personalidade).toMatch(/^\p{L}+$/u);
+    expect(dados.identidade?.origem).toMatchObject({
+      nome: expect.any(String),
+      descricao: expect.any(String),
+      formacao: expect.arrayContaining([
+        expect.objectContaining({ bonus: expect.any(String), texto: expect.any(String) }),
+      ]),
+      especialidade: expect.objectContaining({ gatilho: expect.any(String), efeito: expect.any(String) }),
+      saberDeCampo: expect.any(String),
+    });
+    expect(dados.identidade?.origem?.formacao).toHaveLength(2);
+    expect(dados.identidade?.habilidade).toMatchObject({
+      ativa: 'BASE',
+      base: expect.objectContaining({ descricao: expect.any(String), custoEnergia: expect.any(Number) }),
+      fortificacao1: expect.objectContaining({ descricao: expect.any(String), custoEnergia: expect.any(Number) }),
+      fortificacao2: expect.objectContaining({ descricao: expect.any(String), custoEnergia: expect.any(Number) }),
+    });
+    expect(dados.habilidades).toContainEqual(
+      expect.objectContaining({ categoria: HabilidadeCategoriaEnum.PERSONALIDADE }),
+    );
     },
   );
 });

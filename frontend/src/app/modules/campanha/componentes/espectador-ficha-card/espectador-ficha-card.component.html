@@ -1,6 +1,13 @@
 <article class="espectador-ficha" [class.espectador-ficha--critico]="ficha().critico">
     <div class="espectador-ficha__cabecalho">
-        <span class="espectador-ficha__avatar" aria-hidden="true" [style.--cor-ficha]="ficha().cor">
+        <span
+            class="espectador-ficha__avatar"
+            [class.espectador-ficha__avatar--com-preview]="mostrarAcoes() && ficha().imagemUrl"
+            aria-hidden="true"
+            [style.--cor-ficha]="ficha().cor"
+            (mouseenter)="avatarEntrou.emit($event)"
+            (mouseleave)="avatarSaiu.emit()"
+        >
             @if (ficha().imagemUrl; as urlImagem) {
                 <img class="espectador-ficha__avatar-imagem" [src]="urlImagem" alt="" />
             }

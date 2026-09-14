@@ -1,5 +1,88 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-13 — dev-05: correção de alvo da prévia de avatar do mestre
+
+O pedido de prévia do mestre foi esclarecido: o alvo é o avatar nos cartões do **Esquadrão** da
+tela principal da campanha, não a carteirinha do modal **Membros**. A prévia de 300 px continua
+com atraso de 600 ms, imagem inteira em `object-fit: contain` e fechamento ao sair do avatar; o
+card reutilizável agora emite os eventos de entrada e saída, enquanto o modal de membros volta a
+ser apenas informativo.
+
+**Evidência:** o teste do cartão passou com 12/12 casos; a página de campanha real exibiu a
+prévia ao lado do retrato de Quimera Codex na visão de mestre e manteve os cartões e as rolagens
+funcionais também no viewport de 360×800.
+
+## 2026-09-13 — dev-03: retratos do seed e prévia no modal de membros
+
+Os oito retratos PNG do cenário DEV passaram a ser ativos versionados em
+`backend/tools/database/assets/agentes/`. O seed os copia para os uploads locais antes de gravar as
+fichas, portanto uma nova execução preserva os PNGs ajustados e deixa as URLs das oito fichas
+imediatamente navegáveis. Criaturas seguem sem retrato, como definido pelo autor.
+
+O modal **Membros** da campanha, para mestre, agora replica a prévia ampliada da visão de jogador:
+manter o cursor no avatar de uma ficha por 600 ms exibe a imagem inteira em uma moldura fixa de
+300×300 px ao lado do gatilho; sair do avatar ou da página a fecha. A prévia considera o espaço
+disponível e se mantém na janela. O componente análogo registrado foi o avatar do Esquadrão da
+visão de jogador, preservando a mesma espera, tamanho, posicionamento e `object-fit: contain`.
+
+**Evidência:** seed DEV concluído (5 usuários, 2 campanhas, 10 membros, 8 fichas e 3 criaturas);
+testes focados do seed 23/23; teste novo da prévia passou. A suíte focada da página fechou 25/26:
+o único restante é pré-existente no teste de duplicação de ficha, que não encontra o botão de
+confirmação no jsdom. Build do frontend passou (mantendo o aviso preexistente de orçamento inicial
+de bundle). Inspeção real em `1920×1080` e `360×800` confirmou imagens, hierarquia e responsividade
+do modal; o hover é coberto pelo teste automatizado porque a ferramenta de inspeção não expõe
+evento de ponteiro sem clique.
+
+## 2026-09-13 — inventário: Espaço Reservado — seletor compacto, alvo restrito ao principal e peso riscado no item
+
+Ajuste visual pedido pelo autor no chip de "Espaço Reservado" (`ficha-inventario`): o `<select>`
+nativo do item-alvo esticava até a largura inteira do chip — `&__entrada` herda `width: 100%` de um
+formulário largo, mas aqui vive dentro de `&__mod-tag-info` (`min-width: 0`, sem largura própria),
+então o navegador o esticava pra preencher a linha. Ganhou `width: auto`/`max-width: 220px` em
+`&__mod-alvo .ficha-inv__entrada`.
+
+As opções do seletor passaram a excluir itens guardados num sub-inventário (`containerId`, ex.:
+Mochila Médica): a isenção de "Espaço Reservado" só alcança o pool principal
+(`calcularTotaisCarrinho`), então um item separado nunca deveria aparecer como alvo elegível —
+`opcoesEspacoReservado` ganhou o filtro `!containerId` ao lado de Operacional/Medicinal.
+
+O peso antes/depois da isenção (pedido inicial do autor) começou no chip da mod, ao lado da nota
+"Isenta N unidades" — o autor corrigiu em revisão: o traçado pertence ao card do próprio item-alvo,
+não ao chip da mod. `itensInventario` passou a acumular `itensIsentosPorAlvo` por `nome` (mesmo
+cálculo do motor) e repassar pra `montarItemInventario`, que expõe `ItemInventarioVM.pesoAntigo`
+(peso bruto riscado, `null` sem isenção real) ao lado do `pesoTexto` já reduzido — reusa o padrão
+visual de `&__custo--bruto` (m3-66), agora também em `&__peso--bruto`.
+
+**Evidência:** `ficha-inventario.component.spec.ts` — descrição "Espaço Reservado" com os cenários
+de exclusão por `containerId`, peso riscado/reduzido no alvo e ausência de traçado sem isenção real
+ou com o alvo dentro de um container; arquivo completo 180/180. Suíte completa do frontend:
+1740 testes, 2 falhas pré-existentes e não relacionadas (`inventario-esquadrao`,
+`detalhe-mestre` — este em edição concorrente por outra sessão no momento da verificação).
+Verificação visual ao vivo em `1920×1080` e `360×800` com cenário montado via REST (Mochila Mediana
++ "Espaço Reservado" mirando Gel Cicatrizante no inventário principal; Bandagem e Spray Medicinal
+dentro de uma Mochila Médica vestida): select compacto do tamanho do conteúdo, opções do select sem
+os itens do sub-inventário, e "1 slots"/"0.5 slots" (riscado/atual) no card de Gel Cicatrizante — o
+chip da mod manteve só a nota "Isenta 1 unidade de peso".
+
+## 2026-09-13 — dev-02: cenário local com missões, identidades e inventários
+
+O cenário de desenvolvimento deixou de criar campanhas vazias e fichas mínimas. As duas campanhas
+agora trazem briefings de missão completos; as oito fichas de agente receberam Personalidade com
+habilidade Base e duas Fortificações, Origem completa (Formações, Especialidade e Saber de Campo)
+e itens reais do catálogo, coerentes com o papel de cada agente. A montagem do documento reutiliza
+o motor de Identidade para materializar a habilidade e aplicar as Formações aos derivados, sem
+duplicar regra. As três criaturas existentes já atendiam ao pedido, incluindo A Estátua do exemplo
+do Guia do Mestre, e permaneceram validadas por `shared/regras/criatura`.
+
+**Evidência:** TDD focado começou vermelho (9 falhas por descrições/inventários/identidade ausentes)
+e fechou verde: `cenario-dev.spec.ts` 20/20 e `seed-dev.spec.ts` 3/3. Build do backend concluído;
+suíte completa do backend 32 arquivos/556 testes passou. O lint do backend terminou sem erros, com
+2.977 avisos preexistentes de aspas/comprimento em `backend/src/` (as ferramentas de seed não são
+alvo desse glob). `npm run db:reset:dev --workspace=backend` apagou e recriou exclusivamente o
+volume PostgreSQL local e aplicou o seed: 5 usuários, 2 campanhas, 10 membros, 8 fichas e 3
+criaturas. Consulta final no PostgreSQL confirmou descrições de 463/485 caracteres, 8 JSONBs de
+jogador com identidade e itens, e 3 criaturas.
+
 ## 2026-09-13 — catálogo: descrições canônicas para itens e modificações auditados
 
 Auditoria iniciada pelo autor encontrou que o catálogo mantinha resumos próprios em

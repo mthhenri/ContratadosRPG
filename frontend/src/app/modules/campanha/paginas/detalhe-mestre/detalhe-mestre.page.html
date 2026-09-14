@@ -143,8 +143,11 @@
                 <li>
                     <app-espectador-ficha-card
                         [ficha]="ficha"
+                        [ultimaRolagem]="ultimaRolagemFicha(ficha.id)"
                         [mostrarAcoes]="true"
                         [menuAberto]="menuFichaAberto()?.id === ficha.id"
+                        (avatarEntrou)="agendarPreviewAvatar($event, ficha.imagemUrl)"
+                        (avatarSaiu)="cancelarPreviewAvatar()"
                         (abrirFicha)="abrirFichaFlutuante(ficha, TipoFichaEnum.JOGADOR)"
                         (alternarMenu)="alternarMenuFicha(ficha, $event)"
                     />
@@ -687,4 +690,15 @@
         } }
     </div>
 </ng-template>
+}
+
+@if (previewAvatar(); as preview) {
+<div
+    class="detalhe-mestre__avatar-preview"
+    [style.top.px]="preview.top"
+    [style.left.px]="preview.left"
+    aria-hidden="true"
+>
+    <img class="detalhe-mestre__avatar-preview-imagem" [src]="preview.url" alt="" />
+</div>
 }

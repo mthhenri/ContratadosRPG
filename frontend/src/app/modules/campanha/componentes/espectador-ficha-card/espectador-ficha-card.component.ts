@@ -53,4 +53,7 @@ export class EspectadorFichaCard {
 
   readonly abrirFicha = output<void>();
   readonly alternarMenu = output<MouseEvent>();
+  /** O mestre abre a prévia fora do grid, que recortaria um overlay filho. */
+  readonly avatarEntrou = output<MouseEvent>();
+  readonly avatarSaiu = output<void>();
 }

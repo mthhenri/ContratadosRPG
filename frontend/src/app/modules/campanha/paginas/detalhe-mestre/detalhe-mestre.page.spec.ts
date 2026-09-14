@@ -55,7 +55,7 @@ describe('CampanhaDetalheMestre', () => {
       id: 4,
       campanhaId: CAMPANHA_ID,
       campanhaNome: null,
-      imagemUrl: null,
+      imagemUrl: '/uploads/agentes/dev/vera.png',
       usuarioId: 2,
       nome: 'Vera',
       classe: ClasseEnum.SUPORTE,
@@ -250,6 +250,31 @@ describe('CampanhaDetalheMestre', () => {
     expect(cartao.componentInstance.mostrarAcoes()).toBe(true);
   });
 
+  it('entrega ao cartão a última rolagem já carregada no feed para a mesma ficha', () => {
+    const { fixture, dados } = montar();
+    dados.rolagensFeed.set([
+      {
+        id: 77,
+        fichaId: 4,
+        encontroCombatenteId: null,
+        campanhaId: CAMPANHA_ID,
+        usuarioId: 2,
+        nomeAutor: 'Jogador',
+        nomeFicha: 'Vera',
+        rotulo: 'Destreza',
+        formula: null,
+        visibilidade: 'PUBLICA' as never,
+        resultado: { dados: [], atributos: [], constante: 19, total: 19 },
+        createdDate: new Date().toISOString(),
+        corFicha: null,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const cartao = fixture.debugElement.query(By.directive(EspectadorFichaCard));
+    expect(cartao.componentInstance.ultimaRolagem()?.id).toBe(77);
+  });
+
   it('renderiza a subseção Criaturas com a ficha tipo CRIATURA', () => {
     const { raiz } = montar();
     expect(raiz.querySelector('.detalhe-mestre__criatura-nome')?.textContent).toContain('Aberração');
@@ -301,6 +326,31 @@ describe('CampanhaDetalheMestre', () => {
       const carteirinhas = raiz.querySelectorAll('.detalhe-mestre__membro-carteirinha');
       expect(carteirinhas.length).toBeGreaterThan(0);
       expect(Array.from(carteirinhas).some((el) => el.tagName === 'BUTTON')).toBe(false);
+    });
+
+    it('abre a prévia completa depois do hover sustentado no avatar do Esquadrão e fecha ao sair', () => {
+      vi.useFakeTimers();
+      try {
+        const { raiz, fixture } = montar();
+        const cartao = fixture.debugElement.query(By.directive(EspectadorFichaCard));
+        const avatar = cartao.nativeElement.querySelector('.espectador-ficha__avatar') as HTMLElement;
+
+        avatar.dispatchEvent(new MouseEvent('mouseenter'));
+        vi.advanceTimersByTime(599);
+        fixture.detectChanges();
+        expect(raiz.querySelector('.detalhe-mestre__avatar-preview')).toBeNull();
+
+        vi.advanceTimersByTime(1);
+        fixture.detectChanges();
+        const preview = raiz.querySelector('.detalhe-mestre__avatar-preview img') as HTMLImageElement;
+        expect(preview.src).toContain('/uploads/agentes/dev/vera.png');
+
+        avatar.dispatchEvent(new MouseEvent('mouseleave'));
+        fixture.detectChanges();
+        expect(raiz.querySelector('.detalhe-mestre__avatar-preview')).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('mostra a ação "Prévia" só para membros com papel JOGADOR', () => {

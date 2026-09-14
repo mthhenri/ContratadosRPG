@@ -730,6 +730,28 @@
     }
 }
 
+// Mesmo preview do Esquadrão na visão de jogador: portal no fim da página para não ser recortado
+// pela dialog e imagem inteira via `contain`.
+.detalhe-mestre__avatar-preview {
+    position: fixed;
+    z-index: 22;
+    width: 300px;
+    height: 300px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    pointer-events: none;
+}
+
+.detalhe-mestre__avatar-preview-imagem {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: calc(var(--radius-card) - 4px);
+}
+
 .detalhe-mestre__membro-carteirinha-corpo {
     display: flex;
     flex-direction: column;

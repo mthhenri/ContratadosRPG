@@ -13,7 +13,8 @@ interface EstadoEmMemoria {
   usuarios: Map<string, { id: number; nome: string; senha: string }>;
   campanhas: Map<string, { id: number; nome: string }>;
   membros: Map<string, TipoCampanhaMembroPapelEnum>;
-  fichas: Map<string, { cor: string; dados: FichaJogadorDadosDto | FichaCriaturaDadosDto }>;
+  fichas: Map<string, { id: number; cor: string; dados: FichaJogadorDadosDto | FichaCriaturaDadosDto }>;
+  rolagens: Map<number, string>;
 }
 
 function copiarEstado(estado: EstadoEmMemoria): EstadoEmMemoria {
@@ -22,6 +23,7 @@ function copiarEstado(estado: EstadoEmMemoria): EstadoEmMemoria {
     campanhas: new Map(estado.campanhas),
     membros: new Map(estado.membros),
     fichas: new Map(estado.fichas),
+    rolagens: new Map(estado.rolagens),
   };
 }
 
@@ -33,6 +35,7 @@ class PersistenciaEmMemoria implements PersistenciaSeedDev, OperacoesSeedDev {
     campanhas: new Map(),
     membros: new Map(),
     fichas: new Map(),
+    rolagens: new Map(),
   };
   falharNaFicha: number | null = null;
   private proximoId = 2;
@@ -83,16 +86,24 @@ class PersistenciaEmMemoria implements PersistenciaSeedDev, OperacoesSeedDev {
     return Promise.resolve();
   }
 
+  garantirRolagem(_campanhaId: number, _usuarioId: number, fichaId: number, rotulo: string): Promise<void> {
+    this.estado.rolagens.set(fichaId, rotulo);
+    return Promise.resolve();
+  }
+
   garantirFicha(
     campanhaId: number,
     usuarioId: number,
     ficha: FichaComumDev,
     dados: FichaJogadorDadosDto | FichaCriaturaDadosDto,
-  ): Promise<void> {
+  ): Promise<number> {
     this.fichasProcessadas += 1;
     if (this.falharNaFicha === this.fichasProcessadas) throw new Error('falha simulada na ficha');
-    this.estado.fichas.set(`${campanhaId}:${usuarioId}:${ficha.nome}`, { cor: ficha.cor, dados });
-    return Promise.resolve();
+    const chave = `${campanhaId}:${usuarioId}:${ficha.nome}`;
+    const existente = this.estado.fichas.get(chave);
+    const id = existente?.id ?? this.proximoId++;
+    this.estado.fichas.set(chave, { id, cor: ficha.cor, dados });
+    return Promise.resolve(id);
   }
 }
 
@@ -123,6 +134,7 @@ describe('executarSeedDevComPersistencia', () => {
     expect(persistencia.estado.campanhas.size).toBe(2);
     expect(persistencia.estado.membros.size).toBe(10);
     expect(persistencia.estado.fichas.size).toBe(11);
+    expect(persistencia.estado.rolagens.size).toBe(11);
   });
 
   it('reverte toda a transação quando uma ficha falha', async () => {

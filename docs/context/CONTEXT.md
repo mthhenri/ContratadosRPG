@@ -2054,11 +2054,16 @@ jogador" acima e `docs/design/DESIGN.md`.
 14 migrations (`0001`…`0014`), Knex + Docker Compose local, CI de lint+testes em PR, deploy nativo.
 O ambiente local é descartável e reproduzível por `npm run db:reset:dev`: o comando trava o alvo em
 `development`/localhost/`contratados_rpg`/`postgres`/armazenamento local, remove o volume sem backup,
-reaplica migrations e semeia 5 usuários (incluindo um espectador), 2 campanhas, 10 vínculos, 8
-fichas de jogador coloridas e 3 criaturas de teste (`CENARIO_DEV.criaturas`, sempre de posse do
-mestre da respectiva campanha, validadas contra `shared/regras/criatura`). Cada usuário possui uma
-ficha de jogador diferente em cada campanha. O seed transacional isolado é `npm run db:seed:dev`;
-cenário e credenciais estão em `docs/DEVELOPMENT.md`.
+reaplica migrations e semeia 5 usuários (incluindo um espectador), 2 campanhas com briefings de
+missão, 10 vínculos, 8 fichas de jogador coloridas e 3 criaturas de teste
+(`CENARIO_DEV.criaturas`, sempre de posse do mestre da respectiva campanha, validadas contra
+`shared/regras/criatura`). Cada ficha de jogador tem Personalidade (Base e as duas Fortificações),
+Origem completa, habilidade Base materializada, inventário de itens do catálogo e retrato PNG em
+`backend/tools/database/assets/agentes/`, copiado para `backend/uploads/agentes/dev/` a cada seed;
+cada usuário possui uma ficha diferente em cada campanha. O seed transacional isolado é
+`npm run db:seed:dev`; cenário e credenciais estão em `docs/DEVELOPMENT.md`. Na visão do mestre,
+os cartões de agente do **Esquadrão** abrem a mesma prévia integral de 300 px do avatar que a
+visão de jogador usa, após hover sustentado de 600 ms e apenas sobre fichas de agente.
 
 ---
 

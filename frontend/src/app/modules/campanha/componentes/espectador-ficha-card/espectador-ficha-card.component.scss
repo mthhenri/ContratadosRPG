@@ -74,6 +74,10 @@
         object-fit: cover;
     }
 
+    &__avatar--com-preview {
+        cursor: pointer;
+    }
+
     // Modo interativo (campanha-detalhe-mestre-coluna-acoes.spec.md) — "Abrir ficha" ancorado no
     // canto superior direito da própria foto do avatar (chip pequeno sobre a imagem, contrato de
     // design da task).
