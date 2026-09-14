@@ -177,76 +177,6 @@
                                 }
                             </span>
                         }
-
-                        <!-- Classificação: em leitura, 2 linhas de chips (Tipo de Criação/Porte,
-                     Comportamento/Ameaça) — a coluna estreitou (230px, ver SCSS) pra caber a foto,
-                     então os 4 chips não cabem mais numa fileira só. O lápis (pedido do autor:
-                     antes dos chips, não depois) liga o modo de edição e troca os quatro chips de
-                     uma vez pelos selects de `criatura__classificacao-grade` (abaixo das duas
-                     colunas — largura cheia, não cabem dentro da coluna estreita). -->
-                        <div class="criatura__chips-coluna">
-                            <div class="criatura__chips-linha">
-                                @if (ajustavel()) {
-                                    <button
-                                        app-botao-icone
-                                        tamanho="padrao"
-                                        class="criatura__lapis"
-                                        type="button"
-                                        [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
-                                        [attr.aria-pressed]="classificacaoEmEdicao()"
-                                        [attr.aria-label]="
-                                            classificacaoEmEdicao()
-                                                ? 'Cancelar edição da classificação'
-                                                : 'Editar classificação'
-                                        "
-                                        [appTooltip]="
-                                            classificacaoEmEdicao()
-                                                ? 'Cancelar edição'
-                                                : 'Editar classificação'
-                                        "
-                                        (click)="alternarEdicaoClassificacao()"
-                                    >
-                                        @if (classificacaoEmEdicao()) {
-                                            ✕
-                                        } @else {
-                                            <app-icone nome="editar" />
-                                        }
-                                    </button>
-                                }
-
-                                @if (classificacaoEmEdicao()) {
-                                    <span class="criatura__chips-rotulo">Classificação</span>
-                                } @else {
-                                    <span class="criatura__chip">{{
-                                        rotuloOrigemCriatura(dados().identidade.origem)
-                                    }}</span>
-
-                                    <span class="criatura__chip">
-                                        Porte {{ nomePorte(dados().porte) }}
-                                        @if (dimensaoPorte(dados().porte); as dimensao) {
-                                            <span
-                                                class="criatura__chip-info"
-                                                tabindex="0"
-                                                [appTooltip]="'Ocupa ' + dimensao"
-                                                [attr.aria-label]="'Ocupa ' + dimensao"
-                                                >i</span
-                                            >
-                                        }
-                                    </span>
-                                }
-                            </div>
-
-                            @if (!classificacaoEmEdicao()) {
-                                <div class="criatura__chips-linha">
-                                    <span class="criatura__chip">{{
-                                        rotuloComportamento(dados().identidade.comportamento)
-                                    }}</span>
-                                    <span class="criatura__chip criatura__chip--ameaca"
-                                        >Ameaça {{ rotuloNivelAmeaca(dados().na) }}</span
-                                    >
-                                </div>
-                            }
-                        </div>
                     </div>
 
                     <div class="criatura__ident-coluna criatura__ident-coluna--combate">
@@ -482,6 +412,69 @@
                             [editavel]="ajustavel()"
                             (itensMudou)="aoFraquezasMudar($event)"
                         />
+                    </div>
+
+                    <!-- Classificação: pedido do autor, a leitura (chips) e a edição (grade de
+                 selects) ficam no mesmo lugar — uma fileira de largura cheia abaixo das duas
+                 colunas (Perfil/Combate), não mais dentro da coluna Perfil estreita (230px). O
+                 lápis (antes do chip de Origem) liga o modo de edição e troca os 4 chips de uma
+                 vez pela grade `criatura__classificacao-grade` logo abaixo. -->
+                    <div class="criatura__chips">
+                        @if (ajustavel()) {
+                            <button
+                                app-botao-icone
+                                tamanho="padrao"
+                                class="criatura__lapis"
+                                type="button"
+                                [class.criatura__lapis--ativo]="classificacaoEmEdicao()"
+                                [attr.aria-pressed]="classificacaoEmEdicao()"
+                                [attr.aria-label]="
+                                    classificacaoEmEdicao()
+                                        ? 'Cancelar edição da classificação'
+                                        : 'Editar classificação'
+                                "
+                                [appTooltip]="
+                                    classificacaoEmEdicao()
+                                        ? 'Cancelar edição'
+                                        : 'Editar classificação'
+                                "
+                                (click)="alternarEdicaoClassificacao()"
+                            >
+                                @if (classificacaoEmEdicao()) {
+                                    ✕
+                                } @else {
+                                    <app-icone nome="editar" />
+                                }
+                            </button>
+                        }
+
+                        @if (classificacaoEmEdicao()) {
+                            <span class="criatura__chips-rotulo">Classificação</span>
+                        } @else {
+                            <span class="criatura__chip">{{
+                                rotuloOrigemCriatura(dados().identidade.origem)
+                            }}</span>
+
+                            <span class="criatura__chip">
+                                Porte {{ nomePorte(dados().porte) }}
+                                @if (dimensaoPorte(dados().porte); as dimensao) {
+                                    <span
+                                        class="criatura__chip-info"
+                                        tabindex="0"
+                                        [appTooltip]="'Ocupa ' + dimensao"
+                                        [attr.aria-label]="'Ocupa ' + dimensao"
+                                        >i</span
+                                    >
+                                }
+                            </span>
+
+                            <span class="criatura__chip">{{
+                                rotuloComportamento(dados().identidade.comportamento)
+                            }}</span>
+                            <span class="criatura__chip criatura__chip--ameaca"
+                                >Ameaça {{ rotuloNivelAmeaca(dados().na) }}</span
+                            >
+                        }
                     </div>
 
                     @if (classificacaoEmEdicao()) {

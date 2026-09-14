@@ -171,11 +171,11 @@
 
     // --- Identidade em 2 colunas (pedido do autor) ---
     // Mesma grade `230px minmax(0,1fr)` de `.ficha-identidade__corpo` (FichaVisualizacao, ui-34):
-    // coluna Perfil (nome/registro/foto/classificação) com largura fixa — só precisa acompanhar a
-    // foto de 175px (+ 20px de padding de cada lado = 215px) —, coluna Combate (VD/Defesa/Vida/
-    // Tenacidade/Resistências/Fraquezas) absorve o resto. `criatura__classificacao-grade` (selects
-    // de edição) é o 3º item direto deste grid — ver `grid-column: 1 / -1` abaixo — porque os 4
-    // campos não cabem lado a lado dentro dos 230px da coluna Perfil.
+    // coluna Perfil (nome/registro/foto) com largura fixa — só precisa acompanhar a foto de 175px
+    // (+ 20px de padding de cada lado = 215px) —, coluna Combate (VD/Defesa/Vida/Tenacidade/
+    // Resistências/Fraquezas) absorve o resto. `criatura__chips` (Classificação, leitura ou
+    // edição) é o 3º/4º item direto deste grid — `grid-column: 1 / -1`, largura cheia abaixo das
+    // duas colunas — pedido do autor: leitura e edição no mesmo lugar, fora da coluna Perfil.
     &__ident-corpo {
         display: grid;
         grid-template-columns: 230px minmax(0, 1fr);
@@ -354,20 +354,13 @@
     }
 
     // --- Classificação (chips + lápis / grade de selects) ---
-    // Coluna estreitou pra 230px (pedido do autor, ver `&__ident-corpo`), então os 4 chips não cabem
-    // mais numa fileira só — `&__chips-coluna` empilha as duas linhas (Tipo de Criação/Porte,
-    // Comportamento/Ameaça), cada uma um `&__chips-linha` com o mesmo flex-wrap de antes.
-    &__chips-coluna {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 9px;
-        width: 100%;
-    }
-    &__chips-linha {
+    // Largura cheia do card, 3º item direto de `&__ident-corpo` — pedido do autor: leitura (chips)
+    // e edição (grade) ficam no mesmo lugar, abaixo das duas colunas, em vez de espremidos nos
+    // 230px da coluna Perfil (onde moravam antes de `criatura-identidade-duas-colunas`).
+    &__chips {
+        grid-column: 1 / -1;
         display: flex;
         align-items: center;
-        justify-content: center;
         flex-wrap: wrap;
         gap: 9px;
     }

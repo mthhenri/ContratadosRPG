@@ -5,19 +5,22 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-classificacao-grade-largura-cheia` concluída — correção que reverte
-> `criatura-classificacao-grade-no-lugar` (entrada abaixo): o autor esclareceu que a grade de
-> edição da Classificação (`criatura__classificacao-grade`, 4 selects) deve continuar em largura
-> cheia (`grid-column: 1 / -1`, 3º filho de `&__ident-corpo`, abaixo das duas colunas — aceitando
-> que isso é depois de Resistências/Fraquezas, já que a coluna Combate é mais alta que a Perfil),
-> não espremida 2×2 dentro dos 230px da coluna Perfil como a entrada anterior tinha feito. Estado
-> atual é bit a bit igual ao de antes daquela entrada (`&__chips-coluna` só com os 2 `&__chips-
-> linha` de leitura; grade full-width sem truncar texto de `<select>`). Sem mudança de
-> comportamento (revert puro); build/lint 0 erros; suíte focada 56/56 (mesmo diff já validado
-> antes). Task solta, sem spec. Detalhe em `HISTORY.md`.
-> Antes: `criatura-classificacao-grade-no-lugar` (revertida pela entrada acima) — tentativa de
-> mover a grade pro lugar dos chips (2×2, 230px) pra reduzir a altura do card na edição; o autor
-> corrigiu essa leitura logo em seguida. Ver a entrada de reversão acima para o estado atual.
+> `criatura-classificacao-leitura-e-edicao-unificadas` concluída — o autor esclareceu de vez o
+> pedido das duas entradas anteriores: leitura (chips) e edição (grade de 4 selects) da
+> Classificação devem ficar na MESMA posição, e é a leitura que se muda pro lugar da edição (não o
+> contrário). Os 4 chips saíram da coluna Perfil (`&__ident-coluna--perfil`, abaixo da foto) e
+> foram pro 3º/4º item direto de `&__ident-corpo` — largura cheia, abaixo das duas colunas, onde a
+> grade de edição já morava. `&__chips-coluna`/`&__chips-linha` (2 linhas empilhadas, só cabiam 2
+> chips por linha nos 230px da coluna) viraram uma única classe `&__chips` (fileira só, os 4 chips
+> de uma vez, já que não precisam mais caber em 230px); o lápis continua antes do chip de Origem.
+> Clicar o lápis não move mais nada — leitura e edição renderizam na mesma posição vertical exata,
+> só trocando o conteúdo da fileira. Sem mudança de comportamento; build/lint 0 erros; suíte focada
+> 56/56. Verificado ao vivo nos 4 viewports padrão, leitura e edição lado a lado. Task solta, sem
+> spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-classificacao-grade-largura-cheia` — corrigiu só a largura da grade de edição
+> (voltou a `grid-column: 1/-1`, revertendo uma tentativa anterior de espremê-la em 2×2 na coluna
+> Perfil), mas não resolveu leitura/edição ficarem em lugares diferentes — resolvido pela entrada
+> acima.
 > Antes: `criatura-polimento-visual-lote` concluída — 6 ajustes visuais pontuais em
 > `CriaturaVisualizacao`/`visualizar-criatura.page`, pedidos numa mensagem só com 2 screenshots:
 > (1) chip de classificação `FICHA-CRT-NNNN` saiu da `.ficha-pagina__acoes` do cabeçalho da

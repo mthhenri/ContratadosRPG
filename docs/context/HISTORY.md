@@ -1,5 +1,44 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-classificacao-leitura-e-edicao-unificadas: chips de leitura migram pro lugar da grade de edição, mesma posição nos dois estados
+
+Segunda correção do autor na mesma sequência (entrada abaixo): "quando a gente clica no editar,
+os campos ficam lá naquela linha embaixo de tudo, ocupando a largura máxima. Só que a visualização
+deles fica abaixo da foto. Eu queria que a visualização deles ficasse também naquele mesmo lugar
+[...] Não o contrário de fazer a edição ir pra baixo da foto. A questão é fazer a visualização ir
+pra onde a edição é." A entrada anterior (`criatura-classificacao-grade-largura-cheia`) resolveu
+só a largura da grade de edição, mas não tocou o problema real: leitura (chips, na coluna Perfil,
+abaixo da foto) e edição (grade, largura cheia abaixo das duas colunas) ficavam em lugares
+diferentes — clicar o lápis fazia o conteúdo "pular" de um lugar pro outro.
+
+**Correção:** os 4 chips de leitura saíram de dentro da coluna Perfil (`&__ident-coluna--perfil`)
+e foram pro mesmo lugar onde a grade de edição já morava — 3º/4º item direto de `&__ident-corpo`,
+largura cheia (`grid-column: 1 / -1`), abaixo das duas colunas (Perfil/Combate). Os antigos
+`&__chips-coluna` (2 linhas empilhadas, only cabiam 2 chips por linha nos 230px da coluna) e
+`&__chips-linha` viraram uma única classe `&__chips` (`display:flex; flex-wrap:wrap`, sem
+`justify-content:center` — não faz mais sentido centralizar numa fileira de largura cheia), com
+os 4 chips (Origem/Porte/Comportamento/Ameaça) numa fileira só em vez de 2 — já não precisam mais
+caber em 230px. Mesma classe também recebeu o lápis (continua antes do chip de Origem, pedido de
+uma correção anterior nesta sessão). Resultado: leitura e edição renderizam exatamente na mesma
+posição vertical — clicar o lápis não move mais nada acima ou abaixo, só troca o conteúdo daquela
+fileira (chips ↔ grade de 4 selects).
+
+Coincidentemente, essa é a mesma posição/estrutura de antes da task `criatura-identidade-duas-
+colunas` (commit `a5cd108`, classe `&__chips` de então) — mas chegamos aqui pelo pedido explícito
+do autor, não por copiar aquele estado.
+
+**Testes/build:** sem mudança de comportamento (só reposicionamento de HTML/CSS, mesmos bindings);
+suíte focada `criatura-visualizacao`/`visualizar-criatura` 56/56; build/lint 0 erros.
+
+**Verificação ao vivo** (Postgres 16 local sem Docker + backend + frontend reais, seed
+`codex.dev`): ficha "O Colecionador de Rostos" (`/campanhas/2/criatura/11`) nos 4 viewports
+padrão, capturando leitura e edição lado a lado — em todos, a fileira de Classificação (chips ou
+grade) aparece na mesma posição abaixo de Resistências/Fraquezas, sem "pulo" de altura entre os 2
+estados; `360×800` com os chips quebrando em várias linhas (`flex-wrap`) e a grade em 1 coluna
+(`bp.mobile`, sem mudança), ambos no mesmo lugar.
+
+Task solta, sem spec.
+
 ## 2026-09-14 — criatura-classificacao-grade-largura-cheia: correção — grade de edição da Classificação volta a ser largura cheia, revertendo `criatura-classificacao-grade-no-lugar`
 
 Correção do autor logo após a entrada anterior (abaixo): "ele deveria ir até o final, como se
