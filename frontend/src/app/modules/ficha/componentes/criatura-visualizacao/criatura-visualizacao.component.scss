@@ -1097,6 +1097,19 @@
             grid-template-columns: 1fr;
         }
 
+        // Pedido do autor, só no mobile: com `&__ident-corpo` já em 1 coluna só (acima), a
+        // Classificação (leitura ou edição) volta pra logo abaixo da foto, antes da coluna Combate
+        // — não mais a última coisa do card, depois de Resistências/Fraquezas. `order` em vez de
+        // reordenar o HTML: no desktop (sem esta regra) a ordem de origem já resolve o layout de
+        // 2 colunas certo, então só o mobile precisa da troca.
+        &__ident-coluna--combate {
+            order: 2;
+        }
+        &__chips,
+        &__classificacao-grade {
+            order: 1;
+        }
+
         // Cabeçalho de Identidade tem 2 selos (Ficha/Rolagem) — jogador só tem 1, então esta
         // quebra é específica de criatura. `&__cartao-metas` vira bloco de largura cheia (cai
         // sempre pra 2ª linha, não só quando o texto não cabe por pouco) e alinha sob o título,

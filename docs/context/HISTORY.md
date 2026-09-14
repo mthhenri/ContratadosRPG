@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-classificacao-ordem-mobile: no mobile, Classificação volta pra logo abaixo da foto (só nesse viewport)
+
+Ajuste do autor sobre a entrada anterior (abaixo): "No caso da visão mobile, ele pode ficar com a
+edição e visualização abaixo da foto da criatura". A unificação da entrada anterior colocou
+Classificação (leitura e edição) numa fileira de largura cheia abaixo das duas colunas — no
+mobile, onde `&__ident-corpo` já colapsa pra 1 coluna só (`bp.mobile`, sem mudança), isso empurrava
+Classificação pro fim do card inteiro, depois de Atributos/VD/Vida/Resistências/Fraquezas. Só no
+mobile faz sentido reaproximar: sem a disputa de altura entre 2 colunas que motivou a task
+`criatura-classificacao-leitura-e-edicao-unificadas` no desktop, a Classificação pode voltar pra
+logo abaixo da foto sem reabrir o problema de "leitura e edição em lugares diferentes" (as duas
+continuam na mesma posição entre si, só que essa posição muda por viewport).
+
+**Correção:** `order` do CSS Grid, só dentro de `@include bp.mobile` — `&__ident-coluna--combate`
+ganhou `order: 2`, `&__chips`/`&__classificacao-grade` ganharam `order: 1`; `&__ident-coluna--
+perfil` manteve o `order` padrão (0), então continua primeiro. Com `&__ident-corpo` em 1 coluna só
+nesse breakpoint, a ordem visual vira Perfil → Classificação → Combate, sem tocar o HTML (a ordem
+de DOM/fonte permanece a mesma de antes — Perfil, Combate, Classificação — que é a que o desktop
+usa pra grade de 2 colunas funcionar). Acima de `bp.mobile` nada muda: `1920×1080`/`1366×768`/
+`960×1080` continuam com Classificação no fim do card, como a entrada anterior deixou.
+
+**Testes/build:** sem mudança de comportamento (só `order` no mobile); suíte focada
+`criatura-visualizacao`/`visualizar-criatura` 56/56; build/lint 0 erros.
+
+**Verificação ao vivo** (Postgres 16 local sem Docker + backend + frontend reais, seed
+`codex.dev`): ficha "O Colecionador de Rostos" nos 4 viewports — `360×800` com os chips (leitura)
+e a grade (edição) aparecendo logo abaixo da foto, antes de VD/Defesa/Tenacidade, nos dois estados;
+`1920×1080`/`1366×768`/`960×1080` sem mudança visual (Classificação continua no fim do card).
+
+Task solta, sem spec.
+
 ## 2026-09-14 — criatura-classificacao-leitura-e-edicao-unificadas: chips de leitura migram pro lugar da grade de edição, mesma posição nos dois estados
 
 Segunda correção do autor na mesma sequência (entrada abaixo): "quando a gente clica no editar,

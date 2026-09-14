@@ -5,8 +5,17 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-classificacao-leitura-e-edicao-unificadas` concluída — o autor esclareceu de vez o
-> pedido das duas entradas anteriores: leitura (chips) e edição (grade de 4 selects) da
+> `criatura-classificacao-ordem-mobile` concluída — só no mobile (`bp.mobile`, `&__ident-corpo` já
+> em 1 coluna), a fileira de Classificação (leitura ou edição — mesma posição entre si, ver entrada
+> abaixo) voltou pra logo abaixo da foto, antes da coluna Combate, em vez do fim do card inteiro.
+> `order` do CSS Grid dentro de `bp.mobile` (`&__ident-coluna--combate: order 2`;
+> `&__chips`/`&__classificacao-grade: order 1`; Perfil no padrão 0) — sem tocar o HTML nem a ordem
+> de DOM que o desktop usa pra grade de 2 colunas. Acima do breakpoint, sem mudança (Classificação
+> continua no fim do card, como a entrada abaixo deixou). Sem mudança de comportamento; build/lint
+> 0 erros; suíte focada 56/56. Verificado ao vivo nos 4 viewports, leitura e edição em cada um.
+> Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-classificacao-leitura-e-edicao-unificadas` concluída — o autor esclareceu de vez o
+> pedido de duas entradas anteriores: leitura (chips) e edição (grade de 4 selects) da
 > Classificação devem ficar na MESMA posição, e é a leitura que se muda pro lugar da edição (não o
 > contrário). Os 4 chips saíram da coluna Perfil (`&__ident-coluna--perfil`, abaixo da foto) e
 > foram pro 3º/4º item direto de `&__ident-corpo` — largura cheia, abaixo das duas colunas, onde a
@@ -14,9 +23,7 @@
 > chips por linha nos 230px da coluna) viraram uma única classe `&__chips` (fileira só, os 4 chips
 > de uma vez, já que não precisam mais caber em 230px); o lápis continua antes do chip de Origem.
 > Clicar o lápis não move mais nada — leitura e edição renderizam na mesma posição vertical exata,
-> só trocando o conteúdo da fileira. Sem mudança de comportamento; build/lint 0 erros; suíte focada
-> 56/56. Verificado ao vivo nos 4 viewports padrão, leitura e edição lado a lado. Task solta, sem
-> spec. Detalhe em `HISTORY.md`.
+> só trocando o conteúdo da fileira.
 > Antes: `criatura-classificacao-grade-largura-cheia` — corrigiu só a largura da grade de edição
 > (voltou a `grid-column: 1/-1`, revertendo uma tentativa anterior de espremê-la em 2×2 na coluna
 > Perfil), mas não resolveu leitura/edição ficarem em lugares diferentes — resolvido pela entrada
