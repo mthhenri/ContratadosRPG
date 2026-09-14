@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-classificacao-grade-largura-cheia: correção — grade de edição da Classificação volta a ser largura cheia, revertendo `criatura-classificacao-grade-no-lugar`
+
+Correção do autor logo após a entrada anterior (abaixo): "ele deveria ir até o final, como se
+estivesse abaixo das duas colunas, entende?". A leitura de "mover eles para ficarem onde eles
+ficam quando clicamos no editar" que motivou `criatura-classificacao-grade-no-lugar` (squeeze
+2×2 dentro dos 230px da coluna Perfil, no lugar dos chips) estava errada — o autor queria a grade
+continuando em largura cheia (`grid-column: 1 / -1`, como sempre foi desde
+`criatura-identidade-duas-colunas`), só confirmando que "abaixo das duas colunas" é comportamento
+esperado, não o problema a resolver. A pergunta de esclarecimento (`AskUserQuestion`) confirmou:
+largura cheia abaixo de tudo, aceitando que isso significa depois de Resistências/Fraquezas (a
+coluna Combate é mais alta que a Perfil) — não uma posição mais alta que exigiria quebrar a grade
+de 2 colunas no meio da edição (opção descartada, escondia VD/Defesa/Vida temporariamente).
+
+**Reversão:** `frontend/.../criatura-visualizacao.component.html` e `.scss` voltaram bit a bit ao
+estado de antes de `criatura-classificacao-grade-no-lugar` (`git apply -R` do diff do commit,
+conferido igual a `git diff <commit-anterior> -- <esses 2 arquivos>` vazio) — `&__classificacao-
+grade` é de novo o 3º filho direto de `&__ident-corpo`, `grid-column: 1 / -1`,
+`grid-template-columns: repeat(4, minmax(0, 1fr))`; `&__chips-coluna` voltou a ter só os 2
+`&__chips-linha` de chips de leitura (2ª linha escondida atrás de `@if (!classificacaoEmEdicao())`
+em vez de virar a grade). Sem truncamento de texto nos `<select>` (voltam a ter espaço de largura
+cheia); a troca é a altura extra do card durante a edição, que o autor confirmou preferir à
+truncagem.
+
+Build/lint 0 erros (mesmo diff revertido, já validado antes); suíte focada
+`criatura-visualizacao`/`visualizar-criatura` 56/56 (sem mudança de comportamento). Sem
+verificação visual nova — é bit a bit o estado já verificado ao vivo em
+`criatura-identidade-duas-colunas` e `criatura-polimento-visual-lote`.
+
+Task solta, sem spec.
+
 ## 2026-09-14 — criatura-classificacao-grade-no-lugar: grade de edição da Classificação migra pro lugar dos chips, reduz altura do card de Identidade
 
 Task solta, pedido em conversa logo após `criatura-polimento-visual-lote` (entrada abaixo): "Lá a

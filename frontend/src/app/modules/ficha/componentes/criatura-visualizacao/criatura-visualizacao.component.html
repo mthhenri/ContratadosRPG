@@ -181,10 +181,9 @@
                         <!-- Classificação: em leitura, 2 linhas de chips (Tipo de Criação/Porte,
                      Comportamento/Ameaça) — a coluna estreitou (230px, ver SCSS) pra caber a foto,
                      então os 4 chips não cabem mais numa fileira só. O lápis (pedido do autor:
-                     antes dos chips, não depois) liga o modo de edição e troca os chips pela grade
-                     `criatura__classificacao-grade` (2×2, pedido do autor: no lugar dos próprios
-                     chips, não numa fileira cheia abaixo do card inteiro — reduz a altura da
-                     caixa de Identidade durante a edição). -->
+                     antes dos chips, não depois) liga o modo de edição e troca os quatro chips de
+                     uma vez pelos selects de `criatura__classificacao-grade` (abaixo das duas
+                     colunas — largura cheia, não cabem dentro da coluna estreita). -->
                         <div class="criatura__chips-coluna">
                             <div class="criatura__chips-linha">
                                 @if (ajustavel()) {
@@ -237,90 +236,7 @@
                                 }
                             </div>
 
-                            @if (classificacaoEmEdicao()) {
-                                <div class="criatura__classificacao-grade">
-                                    <app-campo tamanho="compacto" rotulo="Origem">
-                                        <select
-                                            #entradaOrigem
-                                            class="criatura__select"
-                                            aria-label="Origem"
-                                            (change)="
-                                                confirmarCampoIdentidade(
-                                                    'origem',
-                                                    $any(entradaOrigem.value)
-                                                )
-                                            "
-                                        >
-                                            @for (o of origens; track o) {
-                                                <option
-                                                    [value]="o"
-                                                    [selected]="o === dados().identidade.origem"
-                                                >
-                                                    {{ rotuloOrigemCriatura(o) }}
-                                                </option>
-                                            }
-                                        </select>
-                                    </app-campo>
-
-                                    <app-campo tamanho="compacto" rotulo="Porte">
-                                        <select
-                                            #entradaPorte
-                                            class="criatura__select"
-                                            aria-label="Porte"
-                                            (change)="confirmarPorte($any(entradaPorte.value))"
-                                        >
-                                            @for (p of portes; track p) {
-                                                <option
-                                                    [value]="p"
-                                                    [selected]="p === dados().porte"
-                                                >
-                                                    {{ rotuloPorte(p) }}
-                                                </option>
-                                            }
-                                        </select>
-                                    </app-campo>
-
-                                    <app-campo tamanho="compacto" rotulo="Comportamento">
-                                        <select
-                                            #entradaComportamento
-                                            class="criatura__select"
-                                            aria-label="Comportamento"
-                                            (change)="
-                                                confirmarCampoIdentidade(
-                                                    'comportamento',
-                                                    $any(entradaComportamento.value)
-                                                )
-                                            "
-                                        >
-                                            @for (c of comportamentos; track c) {
-                                                <option
-                                                    [value]="c"
-                                                    [selected]="
-                                                        c === dados().identidade.comportamento
-                                                    "
-                                                >
-                                                    {{ rotuloComportamento(c) }}
-                                                </option>
-                                            }
-                                        </select>
-                                    </app-campo>
-
-                                    <app-campo tamanho="compacto" rotulo="Nível de Ameaça">
-                                        <select
-                                            #entradaNa
-                                            class="criatura__select"
-                                            aria-label="Nível de Ameaça"
-                                            (change)="confirmarNa($any(entradaNa.value))"
-                                        >
-                                            @for (na of niveisAmeaca; track na) {
-                                                <option [value]="na" [selected]="na === dados().na">
-                                                    {{ rotuloNivelAmeaca(na) }}
-                                                </option>
-                                            }
-                                        </select>
-                                    </app-campo>
-                                </div>
-                            } @else {
+                            @if (!classificacaoEmEdicao()) {
                                 <div class="criatura__chips-linha">
                                     <span class="criatura__chip">{{
                                         rotuloComportamento(dados().identidade.comportamento)
@@ -567,6 +483,86 @@
                             (itensMudou)="aoFraquezasMudar($event)"
                         />
                     </div>
+
+                    @if (classificacaoEmEdicao()) {
+                        <div class="criatura__classificacao-grade">
+                            <app-campo tamanho="compacto" rotulo="Origem">
+                                <select
+                                    #entradaOrigem
+                                    class="criatura__select"
+                                    aria-label="Origem"
+                                    (change)="
+                                        confirmarCampoIdentidade(
+                                            'origem',
+                                            $any(entradaOrigem.value)
+                                        )
+                                    "
+                                >
+                                    @for (o of origens; track o) {
+                                        <option
+                                            [value]="o"
+                                            [selected]="o === dados().identidade.origem"
+                                        >
+                                            {{ rotuloOrigemCriatura(o) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+
+                            <app-campo tamanho="compacto" rotulo="Porte">
+                                <select
+                                    #entradaPorte
+                                    class="criatura__select"
+                                    aria-label="Porte"
+                                    (change)="confirmarPorte($any(entradaPorte.value))"
+                                >
+                                    @for (p of portes; track p) {
+                                        <option [value]="p" [selected]="p === dados().porte">
+                                            {{ rotuloPorte(p) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+
+                            <app-campo tamanho="compacto" rotulo="Comportamento">
+                                <select
+                                    #entradaComportamento
+                                    class="criatura__select"
+                                    aria-label="Comportamento"
+                                    (change)="
+                                        confirmarCampoIdentidade(
+                                            'comportamento',
+                                            $any(entradaComportamento.value)
+                                        )
+                                    "
+                                >
+                                    @for (c of comportamentos; track c) {
+                                        <option
+                                            [value]="c"
+                                            [selected]="c === dados().identidade.comportamento"
+                                        >
+                                            {{ rotuloComportamento(c) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+
+                            <app-campo tamanho="compacto" rotulo="Nível de Ameaça">
+                                <select
+                                    #entradaNa
+                                    class="criatura__select"
+                                    aria-label="Nível de Ameaça"
+                                    (change)="confirmarNa($any(entradaNa.value))"
+                                >
+                                    @for (na of niveisAmeaca; track na) {
+                                        <option [value]="na" [selected]="na === dados().na">
+                                            {{ rotuloNivelAmeaca(na) }}
+                                        </option>
+                                    }
+                                </select>
+                            </app-campo>
+                        </div>
+                    }
                 </div>
             </section>
 

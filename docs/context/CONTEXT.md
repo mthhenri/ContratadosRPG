@@ -5,17 +5,19 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-classificacao-grade-no-lugar` concluída — a grade de edição da Classificação
-> (`criatura__classificacao-grade`, 4 selects) saiu do fim de `&__ident-corpo` (fileira de largura
-> cheia abaixo das duas colunas inteiras) e entrou dentro de `&__chips-coluna`, no lugar dos
-> próprios chips de leitura — pedido do autor pra reduzir a altura do card de Identidade durante a
-> edição. Virou 2×2 (era 4×1) porque os 4 campos não cabem lado a lado nos 230px da coluna Perfil;
-> `bp.mobile` (1 coluna) sem mudança. Altura medida ao vivo: 514px→560px em desktop/notebook/
-> tablet (+46px, só a coluna Perfil cresce), 1005px→1170px no mobile — contra o bloco cheio de
-> antes, que somava a altura dos 4 campos ao fundo do card inteiro. Compromisso aceito: `<select>`
-> trunca o texto da opção nos 230px (mesmo já registrado em `criatura-identidade-duas-colunas`).
-> Sem teste novo (só reposicionamento); suíte focada 56/56; build/lint 0 erros. Verificado ao vivo
-> nos 4 viewports padrão, em edição e em leitura. Task solta, sem spec. Detalhe em `HISTORY.md`.
+> `criatura-classificacao-grade-largura-cheia` concluída — correção que reverte
+> `criatura-classificacao-grade-no-lugar` (entrada abaixo): o autor esclareceu que a grade de
+> edição da Classificação (`criatura__classificacao-grade`, 4 selects) deve continuar em largura
+> cheia (`grid-column: 1 / -1`, 3º filho de `&__ident-corpo`, abaixo das duas colunas — aceitando
+> que isso é depois de Resistências/Fraquezas, já que a coluna Combate é mais alta que a Perfil),
+> não espremida 2×2 dentro dos 230px da coluna Perfil como a entrada anterior tinha feito. Estado
+> atual é bit a bit igual ao de antes daquela entrada (`&__chips-coluna` só com os 2 `&__chips-
+> linha` de leitura; grade full-width sem truncar texto de `<select>`). Sem mudança de
+> comportamento (revert puro); build/lint 0 erros; suíte focada 56/56 (mesmo diff já validado
+> antes). Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-classificacao-grade-no-lugar` (revertida pela entrada acima) — tentativa de
+> mover a grade pro lugar dos chips (2×2, 230px) pra reduzir a altura do card na edição; o autor
+> corrigiu essa leitura logo em seguida. Ver a entrada de reversão acima para o estado atual.
 > Antes: `criatura-polimento-visual-lote` concluída — 6 ajustes visuais pontuais em
 > `CriaturaVisualizacao`/`visualizar-criatura.page`, pedidos numa mensagem só com 2 screenshots:
 > (1) chip de classificação `FICHA-CRT-NNNN` saiu da `.ficha-pagina__acoes` do cabeçalho da

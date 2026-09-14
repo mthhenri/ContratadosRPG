@@ -174,8 +174,8 @@
     // coluna Perfil (nome/registro/foto/classificação) com largura fixa — só precisa acompanhar a
     // foto de 175px (+ 20px de padding de cada lado = 215px) —, coluna Combate (VD/Defesa/Vida/
     // Tenacidade/Resistências/Fraquezas) absorve o resto. `criatura__classificacao-grade` (selects
-    // de edição) mora dentro de `&__chips-coluna`, no lugar dos próprios chips (pedido do autor:
-    // reduz a altura do card na edição em vez de empilhar mais uma fileira cheia abaixo de tudo).
+    // de edição) é o 3º item direto deste grid — ver `grid-column: 1 / -1` abaixo — porque os 4
+    // campos não cabem lado a lado dentro dos 230px da coluna Perfil.
     &__ident-corpo {
         display: grid;
         grid-template-columns: 230px minmax(0, 1fr);
@@ -406,14 +406,14 @@
         letter-spacing: 0.14em;
         color: var(--text-dim);
     }
-    // Grade 2×2 dentro da própria `&__chips-coluna` (pedido do autor: no lugar dos chips de
-    // leitura, não numa fileira cheia abaixo do card inteiro) — os 4 selects não cabem lado a lado
-    // nos 230px da coluna Perfil, então 2 por linha em vez de 4.
+    // Largura cheia do card (2ª linha de `&__ident-corpo`, sob as duas colunas) — mesma técnica de
+    // `grid-column` de `.ficha-identidade__meta-bloco` (FichaVisualizacao): os 4 selects não cabem
+    // lado a lado dentro dos 230px da coluna Perfil.
     &__classificacao-grade {
-        width: 100%;
+        grid-column: 1 / -1;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
     }
 
     // Lápis de seção — mesmo botão `.ficha-cartao__lapis` da ficha de jogador (padding em vez de
