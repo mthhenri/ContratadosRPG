@@ -1402,44 +1402,6 @@
                                 </div>
                             }
                         </div>
-
-                        <div class="criatura__info-card">
-                            <header class="criatura__info-cabecalho">
-                                <span class="criatura__indice" aria-hidden="true">//</span>
-                                <h3 class="criatura__info-titulo">Anotações</h3>
-                                <span class="criatura__info-regua"></span>
-                                @if (ajustavel() && !editando("anotacoes")) {
-                                    <button
-                                        app-botao-icone
-                                        tamanho="padrao"
-                                        class="criatura__lapis"
-                                        type="button"
-                                        aria-label="Editar anotações"
-                                        [appTooltip]="'Editar anotações'"
-                                        (click)="editar('anotacoes')"
-                                    >
-                                        <app-icone nome="editar" />
-                                    </button>
-                                }
-                            </header>
-                            @if (editando("anotacoes")) {
-                                <textarea
-                                    #entradaAnotacoes
-                                    appAutoFocus
-                                    class="criatura__anotacoes"
-                                    aria-label="Anotações"
-                                    [value]="dados().anotacoes ?? ''"
-                                    (keydown.escape)="cancelarEdicao()"
-                                    (blur)="
-                                        confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()
-                                    "
-                                ></textarea>
-                            } @else if (dados().anotacoes) {
-                                <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
-                            } @else {
-                                <p class="criatura__vazio">Sem anotações.</p>
-                            }
-                        </div>
                     </section>
                 }
 
@@ -1690,4 +1652,59 @@
         (danoConfirmado)="receberDano($event)"
         (fechado)="receberDanoAberto.set(false)"
     />
+
+    <!-- Anotações (pedido do autor: "igual temos no usuário") — saiu da aba Geral pra um painel
+         flutuante próprio, aberto pela coluna de ações da página (`CriaturaVisualizar`), mesmo
+         mecanismo de `FichaVisualizacao` (arraste/redimensionamento/folha cheia no mobile). -->
+    <app-painel-flutuante
+        #painelAnotacoes="appPainelFlutuante"
+        id="criatura-anotacoes"
+        titulo="Anotações"
+        kicker="Ficha de criatura"
+        [aberto]="anotacoesPainelAberto()"
+        [mobile]="anotacoesEhMobile()"
+        [largura]="anotacoesTamanho()?.largura ?? anotacoesLarguraPadrao"
+        [altura]="anotacoesTamanho()?.altura ?? null"
+        [ignorarMinimizadoPersistido]="true"
+        (fechar)="anotacoesPainelAbertoChange.emit(false)"
+    >
+        <div class="criatura__anotacoes-caixa criatura__anotacoes-caixa--painel">
+            @if (editando("anotacoes")) {
+                <textarea
+                    #entradaAnotacoes
+                    appAutoFocus
+                    class="criatura__anotacoes"
+                    aria-label="Anotações"
+                    placeholder="Escreva suas anotações aqui…"
+                    [value]="dados().anotacoes ?? ''"
+                    (keydown.escape)="cancelarEdicao()"
+                    (blur)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
+                ></textarea>
+            } @else {
+                <button
+                    app-botao
+                    variante="secundario"
+                    tamanho="pequeno"
+                    type="button"
+                    (click)="editar('anotacoes')"
+                >
+                    Editar anotações
+                </button>
+                @if (dados().anotacoes) {
+                    <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
+                } @else {
+                    <p class="criatura__vazio">Sem anotações.</p>
+                }
+            }
+        </div>
+
+        @if (!anotacoesEhMobile()) {
+            <span
+                painelRedimensionar
+                class="criatura__anotacoes-redimensionar"
+                aria-hidden="true"
+                (pointerdown)="iniciarRedimensionamentoAnotacoes($event)"
+            ></span>
+        }
+    </app-painel-flutuante>
 }

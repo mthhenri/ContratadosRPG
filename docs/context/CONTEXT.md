@@ -5,7 +5,20 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-identidade-duas-colunas` concluída — o card de Identidade de `CriaturaVisualizacao`
+> `criatura-anotacoes-painel-flutuante` concluída — Anotações da ficha de criatura saiu da aba
+> Geral pra um `app-painel-flutuante` (arrastável/redimensionável, folha cheia no mobile), mesmo
+> mecanismo (não extraído — bespoke por consumidor, como já era) de `FichaVisualizacao`
+> ("igual temos no usuário", pedido do autor); Caderno da campanha entrou na coluna de ações de
+> `CriaturaVisualizar` (só com `campanhaId`), carregamento preguiçoso igual `FichaVisualizar.
+> alternarCaderno`. Achado ao vivo não corrigido (herança consciente do análogo, não regressão):
+> o painel de Anotações nasce sobrepondo a própria coluna de ações (posição inicial padrão do
+> primitivo) — mesmo comportamento já existente na ficha de jogador; arrastar resolve. Testes:
+> `criatura-visualizacao`/`visualizar-criatura` focado 60/60; suíte completa `frontend` 1752/1754
+> (2 falhas pré-existentes sem relação). Verificado ao vivo (Postgres local sem Docker + backend +
+> frontend reais) em `1920×1080`/`360×800`: abrir/editar/salvar Anotações, arrastar o painel,
+> Caderno mostrando o nome da campanha e as abas corretas pro mestre, folha cheia no mobile.
+> Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-identidade-duas-colunas` concluída — o card de Identidade de `CriaturaVisualizacao`
 > virou 2 colunas internas (pedido em conversa pelo autor, com desenho de referência à mão): grade
 > `230px minmax(0,1fr)` idêntica à de `.ficha-identidade__corpo` (`FichaVisualizacao`, ui-34).
 > Coluna Perfil — nome, registro no formato `SCP-00000` (novo `registroExibido`, 5 dígitos,

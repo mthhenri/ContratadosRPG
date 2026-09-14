@@ -1,4 +1,13 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -11,6 +20,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
+import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -63,6 +73,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     Icone,
     CriaturaVisualizacao,
     CalculadoraFlutuante,
+    CadernoFlutuante,
     HistoricoRolagensSidebar,
     Tooltip,
     Modal,
@@ -73,6 +84,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
   styleUrl: './visualizar-criatura.page.scss',
 })
 export class CriaturaVisualizar {
+  private readonly cadernoRef = viewChild(CadernoFlutuante);
   private readonly fichaService = inject(FichaService);
   protected readonly fichaEdicao = inject(FichaEdicaoCriaturaService);
   private readonly fichaRolagemRegistro = inject(FichaRolagemRegistroService);
@@ -104,8 +116,12 @@ export class CriaturaVisualizar {
   protected readonly ficha = signal<FichaCriaturaRecuperadaDto | null>(null);
   /** Nome da campanha no cabeçalho — mesmo padrão de `FichaVisualizar.campanhaNome`; ficha solta não o resolve. */
   protected readonly campanhaNome = signal<string | null>(null);
-  private readonly membros = signal<CampanhaMembroResumoDto[]>([]);
+  /** `protected` (não `private`): o Caderno da campanha (`app-caderno-flutuante`) precisa da lista
+   * de membros pra montar a página de Esquadrão — mesma exposição de `FichaVisualizar.membros`. */
+  protected readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   protected readonly acessos = signal<FichaAcessoResumoDto[]>([]);
+
+  protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? 0);
 
   /** Badge do cabeçalho — mesmo formato de `FichaVisualizar.classificacao`, migrado pra cá de
    * `CriaturaVisualizacao` (criatura-visualizacao-shell-ui34): a página é dona do cabeçalho agora. */
@@ -120,6 +136,11 @@ export class CriaturaVisualizar {
 
   /** P-021: botão "Abrir calculadora" de dentro do painel do histórico (só existe no mobile). */
   protected readonly calculadoraAberta = signal(false);
+  /** Painel flutuante de Anotações (pedido do autor) — mesmo padrão de `FichaVisualizar`. */
+  protected readonly anotacoesAbertas = signal(false);
+  /** `false` até o primeiro clique em "Caderno" — mesmo padrão preguiçoso de `FichaVisualizar`
+   * (o Caderno da campanha só monta quando alguém pede, evitando buscar página nenhuma à toa). */
+  protected readonly cadernoHabilitado = signal(false);
   /** A página reserva a faixa da direita enquanto o histórico está aberto. */
   protected readonly historicoSidebarAberto = signal(false);
 
@@ -324,6 +345,19 @@ export class CriaturaVisualizar {
   /** Fecha o menu de ações. */
   protected fecharMenu(): void {
     this.menuAberto.set(false);
+  }
+
+  /** Abre/alterna o Caderno da campanha — mesmo padrão preguiçoso de `FichaVisualizar.
+   * alternarCaderno`: a 1ª chamada monta `app-caderno-flutuante` (`cadernoHabilitado`) e abre
+   * (`setTimeout` — o `@if` do template só cria o `viewChild` no próximo ciclo); daí em diante só
+   * alterna a janela já montada. */
+  protected alternarCaderno(): void {
+    if (!this.cadernoHabilitado()) {
+      this.cadernoHabilitado.set(true);
+      setTimeout(() => this.cadernoRef()?.abrir());
+      return;
+    }
+    this.cadernoRef()?.alternar();
   }
 
   /** Alterna a visibilidade da criatura (`oculta`) direto pelo menu — sem confirmação (m4-09 trata a revelação pro jogador). */

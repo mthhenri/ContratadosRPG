@@ -1008,6 +1008,46 @@
         }
     }
 
+    // Dentro do `app-painel-flutuante` (mesmo racional de `FichaVisualizacao.ficha-status__
+    // anotacoes-caixa--painel`): `flex: 1` deixa a caixa (e o campo de texto) crescer junto com a
+    // janela ao arrastar a alça de redimensionar, sem vão em branco abaixo.
+    &__anotacoes-caixa--painel {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1 1 auto;
+        min-height: 220px;
+
+        .criatura__anotacoes {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+    }
+
+    // Alça de redimensionar do painel de Anotações — mesmo visual de
+    // `FichaVisualizacao.ficha-status__anotacoes-redimensionar`/`CadernoFlutuante.__redimensionar`
+    // (canto inferior direito, arraste livre nos dois eixos).
+    &__anotacoes-redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        touch-action: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 8px;
+            height: 8px;
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
+    }
+
     &__vazio {
         margin: 0;
         font: 12px var(--font-sans);

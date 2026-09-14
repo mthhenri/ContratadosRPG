@@ -1,5 +1,87 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-anotacoes-painel-flutuante: Anotações da criatura viram painel flutuante, Caderno da campanha entra na coluna de ações
+
+Task solta, pedida em conversa pelo autor logo após `criatura-identidade-duas-colunas` (entrada
+abaixo): "As anotações da criatura deveriam ir para a barra lateral, se tornando um painel
+flutuante (igual temos no usuario), assim como adicionar o caderno da campanha ali (caso ela
+esteja numa)". "Igual temos no usuário" aponta o análogo direto: o painel flutuante de Anotações
+de `FichaVisualizacao` (ficha de agente/jogador) — arrastável, redimensionável, folha cheia no
+mobile — e o Caderno da campanha que `FichaVisualizar` (a página) já monta do mesmo jeito.
+
+**`CriaturaVisualizacao`: Anotações saiu da aba Geral pra `app-painel-flutuante`.** Removido o
+`criatura__info-card` inline (cabeçalho + textarea/leitura) que morava na aba "Geral"; no lugar,
+um `app-painel-flutuante` (`id="criatura-anotacoes"`, `kicker="Ficha de criatura"`) no final do
+template, gated por `ajustavel()` — mesmo gate de `FichaVisualizacao` (um visualizador sem gestão
+não vê o painel, só o botão na coluna, que não abre nada; comportamento pré-existente do análogo,
+replicado sem "corrigir" por estar fora de escopo). Trouxe pra dentro de `CriaturaVisualizacao` o
+mesmo mecanismo de arraste/redimensionamento de `FichaVisualizacao` — não extraído para
+`shared/ui/painel-flutuante` porque lá também é bespoke por consumidor (o próprio
+`painelRedimensionar` do primitivo é só um seletor de CSS/projeção, sem diretiva de verdade; cada
+consumidor implementa o próprio `(pointerdown)` + `HostListener`s de `window:pointermove`/
+`pointerup`/`pointercancel`/`resize`): `anotacoesPainelAberto`/`anotacoesPainelAbertoChange`
+(input/output, ligados pela página), `anotacoesEhMobile`/`anotacoesTamanho`/
+`anotacoesLarguraPadrao`, `iniciarRedimensionamentoAnotacoes`/`aoMoverPonteiroAnotacoes`/
+`encerrarRedimensionamentoAnotacoes`/`aoRedimensionarViewportAnotacoes`/`verificarAnotacoesMobile`
+e as 4 constantes (`ANOTACOES_BREAKPOINT_MOBILE`/`_LARGURA_PADRAO`/`_LARGURA_MINIMA`/
+`_ALTURA_MINIMA`) — mesmos valores de `FichaVisualizacao`, não importados de lá de propósito
+(mesmo desacoplamento já documentado para `COR_FICHA_PADRAO`/`GRUPOS_ATRIBUTO`). O conteúdo do
+painel manteve o fluxo de edição já existente do componente (`editar('anotacoes')`/
+`editando('anotacoes')`/`cancelarEdicao()`/`confirmarAnotacoes()`, o mesmo sinal genérico
+`campoEmEdicao` usado por VD/Defesa/Cadência/etc.) em vez de replicar o par dedicado
+`editarAnotacoes()`/`cancelarAnotacoes()` de `FichaVisualizacao` — o resto do componente já não
+usa esse padrão nenhuma vez, então introduzir um segundo mecanismo de edição só pra Anotações
+quebraria a consistência interna que já existia.
+
+**`CriaturaVisualizar` (a página): botões "Anotações" e "Caderno" na coluna de ações.** Mesmo
+padrão de `FichaVisualizar`: "Anotações" entra na categoria "Ficha" (sempre visível, ao lado de
+Histórico/Calculadora — sem gate de `podeGerenciar()`, mesmo comportamento do análogo), liga
+`anotacoesAbertas` (novo signal) a `[anotacoesPainelAberto]`/`(anotacoesPainelAbertoChange)` em
+`<app-criatura-visualizacao>`. "Caderno" só aparece com campanha (`campanhaId() !== null`, mesmo
+guard que já existia pro chip de campanha no cabeçalho) e usa o mesmo carregamento preguiçoso de
+`FichaVisualizar.alternarCaderno`: a 1ª chamada liga `cadernoHabilitado` (monta
+`app-caderno-flutuante`) e abre via `cadernoRef()?.abrir()` num `setTimeout` (o `@if` do template
+só cria o `viewChild` no próximo ciclo); daí em diante só alterna a janela já montada. Os dois
+itens entraram também no menu "⋯" mobile, que já duplicava Histórico/Calculadora/Gestão pelo
+mesmo motivo de sempre (a coluna vira barra fixa no rodapé nessa largura). `membros` (antes
+`private`) virou `protected` — o Caderno precisa da lista pra montar a página de Esquadrão, mesma
+exposição que `FichaVisualizar.membros` já tinha; novo `usuarioAtivoId` computed
+(`sessaoService.usuario()?.id ?? 0`), mesma fórmula do análogo.
+
+**Achado ao vivo, não corrigido (fora de escopo).** Verificando os dois painéis abertos ao mesmo
+tempo (Anotações + Caderno), o Playwright acusou a caixa de Anotações "intercepting pointer
+events" sobre o botão "Caderno" da coluna — o painel nasce em `posicaoInicial` padrão `{x:16,
+y:88}` (do primitivo `app-painel-flutuante`), que se sobrepõe à própria coluna de ações por baixo.
+`CadernoFlutuante`/`CalculadoraFlutuante` compensam isso com `[pisoX]`; a Anotações de
+`FichaVisualizacao` (o análogo direto desta task) **não** — confirmado que o mesmo comportamento já
+existe pra ficha de jogador, então repliquei sem "arrumar": não é regressão desta task, é herança
+consciente do padrão copiado. Arrastar o painel (alça do cabeçalho) resolve, e é o fluxo normal do
+primitivo.
+
+**Testes:** `criatura-visualizacao.component.spec.ts` ganhou `describe('Anotações — painel
+flutuante')` (4 testes: gate `ajustavel()`, conteúdo exibido quando aberto, `fechar` emite
+`anotacoesPainelAbertoChange(false)`, `confirmarAnotacoes` emite o texto editado) — mesmo padrão
+de `ficha-visualizacao.component.spec.ts`. `visualizar-criatura.page.spec.ts`: as duas asserções
+existentes da lista de itens da coluna de ações (que já fixavam a lista inteira) foram atualizadas
+pra incluir Anotações/Caderno; 1 teste novo prova que o botão "Anotações" alterna
+`anotacoesAbertas`. Suíte focada `criatura-visualizacao`/`visualizar-criatura`: 60/60. Suíte
+completa `frontend`: 1752/1754 — as 2 falhas são as mesmas duas já documentadas em entradas
+anteriores (`inventario-esquadrao` filtro de catálogo, `detalhe-mestre` duplicar-ficha),
+reproduzidas isoladas, sem relação com arquivo tocado nesta task. Build (`ng build`) e lint
+(`eslint`) 0 erros nos arquivos tocados.
+
+**Verificação ao vivo.** Mesmo ambiente sem Docker documentado na task anterior (Postgres 16
+local via `pg_ctlcluster`, backend/frontend reais). Login REST como `codex.dev` (mestre da
+campanha 2), Playwright dirigindo `/campanhas/2/criatura/11`: painel de Anotações abre pela coluna
+de ações, mostra "Sem anotações."/botão "Editar anotações"; editar e sair do campo (blur) salva de
+verdade (selo "Salvando…" → "Salvo" no cabeçalho da página, mesmo texto persistindo após reabrir o
+painel); arrastar o painel pelo cabeçalho funciona; Caderno abre mostrando "Caderno · Campanha do
+Codex", abas "Meu Caderno/Esquadrão/Jogadores" (confirma `ehMestre()`/`membros()` corretos) e
+"Nenhuma página ainda". Em `360×800`, o menu "⋯" mostra "Anotações" e, ao abrir, o painel vira
+folha cheia sem alça de redimensionar, mostrando o mesmo texto salvo no desktop (mesma ficha).
+
+Sem spec (`docs/specs/`) — task solta, registrada só em `HISTORY.md`/`CONTEXT.md`.
+
 ## 2026-09-14 — criatura-identidade-duas-colunas: Identidade da ficha de criatura em 2 colunas, cor por tipo em Resistências/Fraquezas
 
 Task solta, pedida em conversa pelo autor com um desenho à mão anexado (rabiscos sobre um print da

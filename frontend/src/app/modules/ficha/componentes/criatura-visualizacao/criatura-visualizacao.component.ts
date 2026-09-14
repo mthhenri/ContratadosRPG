@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import {
@@ -46,6 +46,7 @@ import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
+import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
@@ -117,6 +118,14 @@ const ABAS_CRIATURA: readonly AbaCriatura[] = ['geral', 'descricao', 'ataques', 
  */
 const COR_FICHA_PADRAO = '#d53030';
 
+/** Painel flutuante de Anotações (pedido do autor: "igual temos no usuário") — mesmas 4 constantes
+ * de `FichaVisualizacao`, não importadas de lá de propósito (mesmo desacoplamento de
+ * `COR_FICHA_PADRAO` acima). */
+const ANOTACOES_BREAKPOINT_MOBILE = 560;
+const ANOTACOES_LARGURA_PADRAO = 420;
+const ANOTACOES_LARGURA_MINIMA = 320;
+const ANOTACOES_ALTURA_MINIMA = 260;
+
 /**
  * A **ficha de criatura** numa tela só (m4-04b) — edição no próprio lugar, campo a campo,
  * mirror de `FichaVisualizacao` mas para o documento (bem menor) `FichaCriaturaDadosDto`
@@ -145,9 +154,16 @@ const COR_FICHA_PADRAO = '#d53030';
     AbaPainel,
     StepInput,
     ValorEditavel,
+    PainelFlutuante,
   ],
   templateUrl: './criatura-visualizacao.component.html',
   styleUrl: './criatura-visualizacao.component.scss',
+  host: {
+    '(window:pointermove)': 'aoMoverPonteiroAnotacoes($event)',
+    '(window:pointerup)': 'encerrarRedimensionamentoAnotacoes()',
+    '(window:pointercancel)': 'encerrarRedimensionamentoAnotacoes()',
+    '(window:resize)': 'aoRedimensionarViewportAnotacoes()',
+  },
 })
 export class CriaturaVisualizacao {
   private readonly bandeja = inject(BandejaDadosService);
@@ -173,6 +189,24 @@ export class CriaturaVisualizacao {
    * que sobrou ao conteúdo, não só pela viewport real.
    */
   readonly apertado = input(false);
+
+  /** O painel de Anotações é aberto pela coluna de ações da página (`CriaturaVisualizar`) — mesmo
+   * padrão de `FichaVisualizacao.anotacoesPainelAberto`. */
+  readonly anotacoesPainelAberto = input(false);
+  readonly anotacoesPainelAbertoChange = output<boolean>();
+
+  /**
+   * `[mobile]` de `app-painel-flutuante` para o painel de Anotações — reage à largura real da
+   * janela (mesmo padrão de `FichaVisualizacao`/`CadernoFlutuante.ehMobile`), em vez de um
+   * `true`/`false` fixo.
+   */
+  protected readonly anotacoesEhMobile = signal(this.verificarAnotacoesMobile());
+  /** `null` até o primeiro redimensionamento manual — a janela nasce no tamanho padrão do CSS. */
+  protected readonly anotacoesTamanho = signal<{ largura: number; altura: number } | null>(null);
+  protected readonly anotacoesLarguraPadrao = ANOTACOES_LARGURA_PADRAO;
+  private readonly painelAnotacoesRef = viewChild<PainelFlutuante>('painelAnotacoes');
+  private redimensionandoAnotacoes = false;
+  private origemRedimensionamentoAnotacoes = { ponteiroX: 0, ponteiroY: 0, largura: 0, altura: 0 };
 
   readonly vitalidadeMudou = output<AjusteCriaturaVitalidade>();
   readonly defesaMudou = output<number>();
@@ -592,6 +626,60 @@ export class CriaturaVisualizacao {
     this.anotacoesMudou.emit(anotacoes);
   }
 
+  /** Início do redimensionamento do painel de Anotações (pointerdown na alça do canto) — mesma
+   * lógica de `FichaVisualizacao`. */
+  protected iniciarRedimensionamentoAnotacoes(evento: PointerEvent): void {
+    if (this.anotacoesEhMobile() || evento.button !== 0) {
+      return;
+    }
+    const atual = this.anotacoesTamanho() ?? { largura: ANOTACOES_LARGURA_PADRAO, altura: 0 };
+    const retangulo = this.painelAnotacoesRef()?.obterElemento()?.getBoundingClientRect();
+    evento.preventDefault();
+    this.redimensionandoAnotacoes = true;
+    this.origemRedimensionamentoAnotacoes = {
+      ponteiroX: evento.clientX,
+      ponteiroY: evento.clientY,
+      largura: retangulo?.width ?? atual.largura,
+      altura: retangulo?.height ?? atual.altura,
+    };
+  }
+
+  protected aoMoverPonteiroAnotacoes(evento: PointerEvent): void {
+    if (!this.redimensionandoAnotacoes) {
+      return;
+    }
+    const origem = this.origemRedimensionamentoAnotacoes;
+    this.anotacoesTamanho.set({
+      largura: limitarDimensaoAnotacoes(
+        origem.largura + (evento.clientX - origem.ponteiroX),
+        ANOTACOES_LARGURA_MINIMA,
+        window.innerWidth,
+      ),
+      altura: limitarDimensaoAnotacoes(
+        origem.altura + (evento.clientY - origem.ponteiroY),
+        ANOTACOES_ALTURA_MINIMA,
+        window.innerHeight,
+      ),
+    });
+  }
+
+  protected encerrarRedimensionamentoAnotacoes(): void {
+    this.redimensionandoAnotacoes = false;
+  }
+
+  protected aoRedimensionarViewportAnotacoes(): void {
+    this.anotacoesEhMobile.set(this.verificarAnotacoesMobile());
+  }
+
+  private verificarAnotacoesMobile(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return typeof window.matchMedia === 'function'
+      ? window.matchMedia(`(max-width: ${ANOTACOES_BREAKPOINT_MOBILE}px)`).matches
+      : window.innerWidth <= ANOTACOES_BREAKPOINT_MOBILE;
+  }
+
   protected confirmarNome(nome: string): void {
     this.nomeMudou.emit(nome);
   }
@@ -704,4 +792,8 @@ export class CriaturaVisualizacao {
     this.bandeja.mostrar({ rotulo: executada.rotulo, formula: executada.formula, resultado: executada.resultado, corFicha: this.cor(), visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
     this.rolagemRegistro.registrar(executada);
   }
+}
+
+function limitarDimensaoAnotacoes(valor: number, minimo: number, maximo: number): number {
+  return Math.min(Math.max(valor, minimo), Math.max(minimo, maximo));
 }
