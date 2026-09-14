@@ -3,41 +3,37 @@
     [class.criatura--apertado]="apertado()"
     [style.--cor-modificador-fraca]="modificadorCorFraca()"
 >
-    <!-- Barra superior: rótulo + chip de classificação — mesma estrutura de `ficha-visao__topo`
-       (FichaVisualizacao), movida pra dentro do componente (era da página) pra bater exatamente
-       com o padrão do jogador, inclusive o traço divisor. -->
-    <header class="criatura__topo">
-        <span class="criatura__rotulo-secao">Ficha de Criatura</span>
-        <span class="criatura__regua"></span>
-        @if (ajustavel()) {
-            <!-- Visibilidade das rolagens desta criatura (Teste/Dano/Crítico) — distinto do toggle
-           "Ocultar ficha" do menu da página, que esconde a ficha inteira. Nasce oculta; revelar
-           pede confirmação (ver `alternarRolagemOculta`). -->
-            <button
-                app-botao
-                type="button"
-                class="ficha-rolagem-oculta"
-                [class.ficha-rolagem-oculta--ativa]="rolagemOculta()"
-                [attr.aria-pressed]="rolagemOculta()"
-                [appTooltip]="
-                    rolagemOculta()
-                        ? 'Rolagens da criatura: privadas (só você vê)'
-                        : 'Rolagens da criatura: públicas'
-                "
-                (click)="alternarRolagemOculta()"
-            >
-                <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
-                <span>Rolagem oculta</span>
-            </button>
-        }
-        <app-chip variante="sutil">{{ classificacao() }}</app-chip>
-    </header>
-
     <div class="criatura__linha-colunas">
-        <!-- Coluna 1 — Identidade: avatar/designação, classificação, VD/Tenacidade/Defesa, Vida,
-         Resistências, Fraquezas. Alvo de fidelidade: docs/design/examples/ficha-de-criatura.html. -->
+        <!-- Coluna 1 — Identidade + Atributos fundidos (largura somada das duas colunas antigas,
+         Atributos empilhado abaixo): avatar/designação, classificação, VD/Tenacidade/Defesa,
+         Vida, Resistências, Fraquezas, depois Atributos. Conteúdo interno ainda segue
+         docs/design/examples/ficha-de-criatura.html — só o cabeçalho/moldura divergiu dele nesta
+         task (ver docs/design/examples/README.md). -->
         <div class="criatura__coluna criatura__coluna--identidade">
             <section class="criatura__cartao criatura__cartao--identidade">
+                <header class="criatura__cartao-cabecalho">
+                    <span class="criatura__indice" aria-hidden="true">//</span>
+                    <h2 class="criatura__cartao-titulo">Identidade</h2>
+                    <span class="criatura__cartao-regua"></span>
+                    <!-- Selos só-leitura (o toggle de verdade mora na coluna de ações da página,
+                 `CriaturaVisualizar` — mesmo racional de `.ficha-identidade__visibilidade-selo`
+                 em `FichaVisualizacao`, ui-34). -->
+                    <span
+                        class="criatura__cartao-meta"
+                        [class.criatura__cartao-meta--ativo]="oculta()"
+                    >
+                        <app-icone [nome]="oculta() ? 'olho-fechado' : 'olho'" />
+                        {{ oculta() ? "Ficha oculta" : "Ficha visível" }}
+                    </span>
+                    <span
+                        class="criatura__cartao-meta"
+                        [class.criatura__cartao-meta--ativo]="rolagemOculta()"
+                    >
+                        <app-icone [nome]="rolagemOculta() ? 'olho-fechado' : 'olho'" />
+                        {{ rolagemOculta() ? "Rolagem oculta" : "Rolagem pública" }}
+                    </span>
+                </header>
+
                 <div class="criatura__ident">
                     @if (ajustavel()) {
                         <div
@@ -525,15 +521,16 @@
                     (itensMudou)="aoFraquezasMudar($event)"
                 />
             </section>
-        </div>
 
-        <!-- Coluna 2 — Atributos: em leitura, a grade compacta do mockup (sigla, valor, efetivo, rolar);
-         atrás do lápis, a lista vertical com valor digitável e as barrinhas de Modificador (mesmo
-         gatilho do lápis de Atributos da ficha de jogador). Grupos Físicos/Mentais já vêm da ordem
-         de `camposAtributo` (`sistema-v4.1.0.md`). -->
-        <div class="criatura__coluna criatura__coluna--atributos">
+            <!-- Atributos — fundido na mesma coluna de Identidade, empilhado abaixo dela (largura
+             somada das duas colunas antigas, ver `&__linha-colunas` no SCSS). Em leitura, a grade
+             compacta do mockup (sigla, valor, efetivo, rolar); atrás do lápis, a lista vertical
+             com valor digitável e as barrinhas de Modificador (mesmo gatilho do lápis de
+             Atributos da ficha de jogador). Grupos Físicos/Mentais já vêm da ordem de
+             `camposAtributo` (`sistema-v4.1.0.md`). -->
             <section class="criatura__cartao criatura__cartao--atributos">
                 <header class="criatura__cartao-cabecalho">
+                    <span class="criatura__indice" aria-hidden="true">//</span>
                     <h2 class="criatura__cartao-titulo">Atributos</h2>
                     <span class="criatura__cartao-regua"></span>
                     @if (ajustavel() && !atributosEmEdicao()) {
@@ -686,7 +683,7 @@
             </section>
         </div>
 
-        <!-- Coluna 3 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
+        <!-- Coluna 2 — Status: abas Geral / Descrição / Ataques / Habilidades, mesmo padrão de
          `.ficha-status__abas` de `FichaVisualizacao`. -->
         <div class="criatura__coluna criatura__coluna--status">
             <app-abas rotulo="Abas de status da criatura" (navegou)="aoNavegarAba($event)">
@@ -869,7 +866,9 @@
                                         <span class="criatura__tag-rotulo">Terrestre</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="rotuloDeslocamento(dados().deslocamento.terrestre)"
+                                            [valor]="
+                                                rotuloDeslocamento(dados().deslocamento.terrestre)
+                                            "
                                             [editando]="editando('deslocamento.terrestre')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento terrestre"
@@ -881,11 +880,17 @@
                                                 appAutoFocus
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
-                                                [disabled]="ehDeslocamentoIndeterminado(dados().deslocamento.terrestre)"
+                                                [disabled]="
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.terrestre
+                                                    )
+                                                "
                                                 [value]="
-                                                    ehDeslocamentoIndeterminado(dados().deslocamento.terrestre)
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.terrestre
+                                                    )
                                                         ? ''
-                                                        : dados().deslocamento.terrestre ?? 0
+                                                        : (dados().deslocamento.terrestre ?? 0)
                                                 "
                                                 aria-label="Deslocamento Terrestre"
                                                 (keydown.enter)="
@@ -909,13 +914,17 @@
                                                     #caixaDeslTerrestre
                                                     type="checkbox"
                                                     [checked]="
-                                                        ehDeslocamentoIndeterminado(dados().deslocamento.terrestre)
+                                                        ehDeslocamentoIndeterminado(
+                                                            dados().deslocamento.terrestre
+                                                        )
                                                     "
                                                     aria-label="Deslocamento Terrestre indeterminado"
                                                     (change)="
                                                         confirmarCampoDeslocamento(
                                                             'terrestre',
-                                                            caixaDeslTerrestre.checked ? deslocamentoIndeterminado : 0
+                                                            caixaDeslTerrestre.checked
+                                                                ? deslocamentoIndeterminado
+                                                                : 0
                                                         );
                                                         cancelarEdicao()
                                                     "
@@ -932,7 +941,9 @@
                                         <span class="criatura__tag-rotulo">Voador</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="rotuloDeslocamento(dados().deslocamento.voador)"
+                                            [valor]="
+                                                rotuloDeslocamento(dados().deslocamento.voador)
+                                            "
                                             [editando]="editando('deslocamento.voador')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento voador"
@@ -944,11 +955,17 @@
                                                 appAutoFocus
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
-                                                [disabled]="ehDeslocamentoIndeterminado(dados().deslocamento.voador)"
+                                                [disabled]="
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.voador
+                                                    )
+                                                "
                                                 [value]="
-                                                    ehDeslocamentoIndeterminado(dados().deslocamento.voador)
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.voador
+                                                    )
                                                         ? ''
-                                                        : dados().deslocamento.voador ?? 0
+                                                        : (dados().deslocamento.voador ?? 0)
                                                 "
                                                 aria-label="Deslocamento Voador"
                                                 (keydown.enter)="
@@ -972,13 +989,17 @@
                                                     #caixaDeslVoador
                                                     type="checkbox"
                                                     [checked]="
-                                                        ehDeslocamentoIndeterminado(dados().deslocamento.voador)
+                                                        ehDeslocamentoIndeterminado(
+                                                            dados().deslocamento.voador
+                                                        )
                                                     "
                                                     aria-label="Deslocamento Voador indeterminado"
                                                     (change)="
                                                         confirmarCampoDeslocamento(
                                                             'voador',
-                                                            caixaDeslVoador.checked ? deslocamentoIndeterminado : undefined
+                                                            caixaDeslVoador.checked
+                                                                ? deslocamentoIndeterminado
+                                                                : undefined
                                                         );
                                                         cancelarEdicao()
                                                     "
@@ -997,7 +1018,9 @@
                                         <span class="criatura__tag-rotulo">Aquático</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="rotuloDeslocamento(dados().deslocamento.aquatico)"
+                                            [valor]="
+                                                rotuloDeslocamento(dados().deslocamento.aquatico)
+                                            "
                                             [editando]="editando('deslocamento.aquatico')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento aquático"
@@ -1009,11 +1032,17 @@
                                                 appAutoFocus
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
-                                                [disabled]="ehDeslocamentoIndeterminado(dados().deslocamento.aquatico)"
+                                                [disabled]="
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.aquatico
+                                                    )
+                                                "
                                                 [value]="
-                                                    ehDeslocamentoIndeterminado(dados().deslocamento.aquatico)
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.aquatico
+                                                    )
                                                         ? ''
-                                                        : dados().deslocamento.aquatico ?? 0
+                                                        : (dados().deslocamento.aquatico ?? 0)
                                                 "
                                                 aria-label="Deslocamento Aquático"
                                                 (keydown.enter)="
@@ -1039,7 +1068,9 @@
                                                     #caixaDeslAquatico
                                                     type="checkbox"
                                                     [checked]="
-                                                        ehDeslocamentoIndeterminado(dados().deslocamento.aquatico)
+                                                        ehDeslocamentoIndeterminado(
+                                                            dados().deslocamento.aquatico
+                                                        )
                                                     "
                                                     aria-label="Deslocamento Aquático indeterminado"
                                                     (change)="
@@ -1066,7 +1097,11 @@
                                         <span class="criatura__tag-rotulo">Sobrenatural</span>
                                         <app-valor-editavel
                                             class="criatura__tag-valor"
-                                            [valor]="rotuloDeslocamento(dados().deslocamento.sobrenatural)"
+                                            [valor]="
+                                                rotuloDeslocamento(
+                                                    dados().deslocamento.sobrenatural
+                                                )
+                                            "
                                             [editando]="editando('deslocamento.sobrenatural')"
                                             [desabilitado]="!ajustavel()"
                                             rotuloAria="deslocamento sobrenatural"
@@ -1079,12 +1114,16 @@
                                                 class="criatura__entrada-numero criatura__entrada-numero--tag"
                                                 type="number"
                                                 [disabled]="
-                                                    ehDeslocamentoIndeterminado(dados().deslocamento.sobrenatural)
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.sobrenatural
+                                                    )
                                                 "
                                                 [value]="
-                                                    ehDeslocamentoIndeterminado(dados().deslocamento.sobrenatural)
+                                                    ehDeslocamentoIndeterminado(
+                                                        dados().deslocamento.sobrenatural
+                                                    )
                                                         ? ''
-                                                        : dados().deslocamento.sobrenatural ?? 0
+                                                        : (dados().deslocamento.sobrenatural ?? 0)
                                                 "
                                                 aria-label="Deslocamento Sobrenatural"
                                                 (keydown.enter)="
@@ -1110,7 +1149,9 @@
                                                     #caixaDeslSobrenatural
                                                     type="checkbox"
                                                     [checked]="
-                                                        ehDeslocamentoIndeterminado(dados().deslocamento.sobrenatural)
+                                                        ehDeslocamentoIndeterminado(
+                                                            dados().deslocamento.sobrenatural
+                                                        )
                                                     "
                                                     aria-label="Deslocamento Sobrenatural indeterminado"
                                                     (change)="
@@ -1133,6 +1174,7 @@
 
                         <div class="criatura__info-card">
                             <header class="criatura__info-cabecalho">
+                                <span class="criatura__indice" aria-hidden="true">//</span>
                                 <h3 class="criatura__info-titulo">Regeneração</h3>
                                 <span class="criatura__info-regua"></span>
                                 @if (ajustavel()) {
@@ -1331,6 +1373,7 @@
 
                         <div class="criatura__info-card">
                             <header class="criatura__info-cabecalho">
+                                <span class="criatura__indice" aria-hidden="true">//</span>
                                 <h3 class="criatura__info-titulo">Anotações</h3>
                                 <span class="criatura__info-regua"></span>
                                 @if (ajustavel() && !editando("anotacoes")) {
@@ -1377,6 +1420,7 @@
                     >
                         <div class="criatura__info-card">
                             <header class="criatura__info-cabecalho">
+                                <span class="criatura__indice" aria-hidden="true">//</span>
                                 <h3 class="criatura__info-titulo">Descrição</h3>
                                 <span class="criatura__info-regua"></span>
                                 @if (ajustavel() && !editando("identidade.conceito")) {
@@ -1476,6 +1520,7 @@
                         <div class="criatura__info-duas">
                             <div class="criatura__info-card">
                                 <header class="criatura__info-cabecalho">
+                                    <span class="criatura__indice" aria-hidden="true">//</span>
                                     <h3 class="criatura__info-titulo">Natureza</h3>
                                     <span class="criatura__info-regua"></span>
                                     @if (ajustavel() && !editando("identidade.naturezaFisica")) {
@@ -1516,6 +1561,7 @@
 
                             <div class="criatura__info-card">
                                 <header class="criatura__info-cabecalho">
+                                    <span class="criatura__indice" aria-hidden="true">//</span>
                                     <h3 class="criatura__info-titulo">Tema de Horror</h3>
                                     <span class="criatura__info-regua"></span>
                                     @if (ajustavel() && !editando("identidade.temaHorror")) {
@@ -1603,44 +1649,6 @@
     </div>
 
     <app-bandeja-dados />
-
-    @if (confirmandoRevelarRolagem()) {
-        <app-modal
-            [aberto]="true"
-            titulo="Tornar rolagens públicas"
-            (fechou)="cancelarRevelarRolagem()"
-        >
-            <div class="revelar-rolagem">
-                <p class="revelar-rolagem__aviso">
-                    A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros
-                    jogadores. Tem certeza?
-                </p>
-
-                <div class="revelar-rolagem__acoes">
-                    <button
-                        app-botao
-                        variante="primario"
-                        tamanho="pequeno"
-                        class="revelar-rolagem__acao"
-                        type="button"
-                        (click)="confirmarRevelarRolagem()"
-                    >
-                        <app-icone nome="olho" /> Tornar pública
-                    </button>
-                    <button
-                        app-botao
-                        variante="secundario"
-                        tamanho="pequeno"
-                        class="revelar-rolagem__acao"
-                        type="button"
-                        (click)="cancelarRevelarRolagem()"
-                    >
-                        Cancelar
-                    </button>
-                </div>
-            </div>
-        </app-modal>
-    }
 </article>
 
 @if (ajustavel()) {

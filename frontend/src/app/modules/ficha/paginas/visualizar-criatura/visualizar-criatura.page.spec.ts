@@ -87,7 +87,10 @@ describe('CriaturaVisualizar', () => {
       ),
       excluirFicha: vi.fn(() => of(undefined)),
     };
-    const campanhaService = { listarMembros: vi.fn(() => of(membros)) };
+    const campanhaService = {
+      listarMembros: vi.fn(() => of(membros)),
+      recuperarCampanha: vi.fn(() => of({ nome: 'Operação de teste' })),
+    };
     const sessaoService = { usuario: () => ({ id: opcoes.usuarioLogadoId, login: 'u', nome: 'U', token: 't' }) };
 
     const fichaAlterada$ = new Subject<FichaCriaturaAlteradaDto>();
@@ -169,6 +172,24 @@ describe('CriaturaVisualizar', () => {
     expect(fixture.componentInstance['podeGerenciar']()).toBe(false);
     expect(raiz.querySelector('.acesso')).toBeNull();
     expect(fichaService.listarAcessos).not.toHaveBeenCalled();
+  });
+
+  it('mostra Histórico/Calculadora na coluna de ações mesmo sem podeGerenciar, mas esconde a categoria Gestão (criatura-visualizacao-shell-ui34)', () => {
+    const { raiz } = montar({ usuarioLogadoId: 11 });
+    const itens = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map(
+      (el) => el.textContent?.trim(),
+    );
+    expect(itens).toEqual(['Histórico', 'Calculadora']);
+  });
+
+  it('mostra Histórico/Calculadora e a categoria Gestão inteira na coluna de ações para o mestre', () => {
+    const { raiz } = montar({ usuarioLogadoId: 7 });
+    const itens = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map(
+      (el) => el.textContent?.trim(),
+    );
+    expect(itens).toEqual([
+      'Histórico', 'Calculadora', 'Tornar rolagens públicas', 'Acesso de visualização', 'Ocultar ficha', 'Excluir ficha',
+    ]);
   });
 
   it('gere o acesso via menu → dialog para o mestre (dono da criatura)', () => {

@@ -46,8 +46,6 @@ import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
-import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
@@ -131,7 +129,6 @@ const COR_FICHA_PADRAO = '#d53030';
     Botao,
     BotaoIcone,
     Campo,
-    Chip,
     Icone,
     Tooltip,
     AutoFocus,
@@ -146,7 +143,6 @@ const COR_FICHA_PADRAO = '#d53030';
     Abas,
     Aba,
     AbaPainel,
-    Modal,
     StepInput,
     ValorEditavel,
   ],
@@ -207,9 +203,6 @@ export class CriaturaVisualizacao {
 
   /** Cor de identidade visual do avatar — mesmo padrão de `FichaVisualizacao.corFichaForm`. */
   protected readonly corCriaturaForm = new FormControl<string>(COR_FICHA_PADRAO, { nonNullable: true });
-
-  /** Badge do cabeçalho — mesmo formato de `FichaVisualizacao.classificacao` (zero-padded a 4). */
-  protected readonly classificacao = computed(() => `FICHA-CRT-${String(this.fichaId()).padStart(4, '0')}`);
 
   constructor() {
     // Sincroniza o picker com a cor persistida (troca de criatura exibida).
@@ -612,30 +605,14 @@ export class CriaturaVisualizacao {
    * (`visualizar-criatura.page.ts` chama `inicializar(..., true)`) — os jogadores não podem ver os
    * testes/danos da Ameaça por padrão.
    */
+  /**
+   * Leitura só (o toggle de verdade migrou pra `CriaturaVisualizar.alternarRolagemOculta`, mesmo
+   * racional do `oculta`/`alternarOculta` acima — a página é dona da coluna de ações). Usado tanto
+   * pela visibilidade das rolagens desta criatura (métodos `rolarTeste*`/`rolarAtaque*` abaixo)
+   * quanto pelo selo só-leitura no cabeçalho de Identidade.
+   */
   protected rolagemOculta(): boolean {
     return this.rolagemRegistro.oculta();
-  }
-
-  /** Confirmação pendente pra tornar as rolagens públicas — só ocultar → revelar pede confirmação
-   * (revelar de propósito, ex.: "susto" de rolar publicamente pros jogadores verem, é uma decisão
-   * deliberada; voltar a ocultar não precisa de trava). */
-  protected readonly confirmandoRevelarRolagem = signal(false);
-
-  protected alternarRolagemOculta(): void {
-    if (this.rolagemRegistro.oculta()) {
-      this.confirmandoRevelarRolagem.set(true);
-      return;
-    }
-    this.rolagemRegistro.alternarOculta();
-  }
-
-  protected confirmarRevelarRolagem(): void {
-    this.rolagemRegistro.alternarOculta();
-    this.confirmandoRevelarRolagem.set(false);
-  }
-
-  protected cancelarRevelarRolagem(): void {
-    this.confirmandoRevelarRolagem.set(false);
   }
 
   /**

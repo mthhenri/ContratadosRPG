@@ -4,8 +4,32 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-13 · **Última decisão registrada:**
-> pós-`ui-34`, ficha completa no mobile: `.ficha-pagina`/`.ficha-pagina__conteudo` tinham o mesmo
+> **Última revisão:** 2026-09-14 · **Última decisão registrada:**
+> `criatura-visualizacao-shell-ui34` concluída — cabeçalho e coluna de ações de
+> `visualizar-criatura.page`/`CriaturaVisualizacao` alinhados ao padrão que `ui-34` deu à ficha de
+> jogador: `app-coluna-acoes` (categorias "Ficha" — Histórico, Calculadora, Rolagem oculta — e
+> "Gestão", atrás de `podeGerenciar()`) no lugar do kebab solto; cabeçalho com índice "//", nome,
+> chip de campanha, régua e classificação (`FICHA-CRT-NNNN`, subiu do componente pra página).
+> Identidade e Atributos, antes colunas irmãs, viraram uma coluna só (Atributos empilhado abaixo,
+> largura somada das duas antigas) — a grade de Atributos ganhou `@container(min-width:440px)`
+> pra caber os 5 atributos de cada grupo numa linha (mesma régua de `ficha-cartao--atributos` na
+> ficha de jogador). Cabeçalho de Identidade ganhou dois selos só-leitura (Ficha oculta/visível,
+> Rolagem oculta/pública, mesmo padrão do selo de visibilidade do jogador); os cards de
+> Atributos/Regeneração/Anotações/Descrição/Natureza/Tema de Horror ganharam o índice "//".
+> Correção do autor no meio da task: Histórico/Calculadora, que a 1ª versão deixou com gatilho
+> flutuante próprio (fora da coluna), migraram pra dentro da coluna de ações — sempre visíveis
+> (qualquer papel), diferente de Rolagem oculta/Gestão (só pra quem gerencia). Mockup mantido à
+> mão `ficha-de-criatura.html` não foi atualizado — divergência registrada em
+> `docs/design/examples/README.md`; conteúdo interno dos cards continua fiel a ele. Fora de
+> escopo: card de criatura na visão de mestre da campanha (`EspectadorFichaCard`/grid de
+> Criaturas), pra uma task futura. Testes: `criatura-visualizacao`/`visualizar-criatura` focado
+> 50/50; suíte completa `frontend` 1745/1747 (2 falhas pré-existentes sem relação). Verificado ao
+> vivo (Postgres + backend + frontend reais, REST cru) em `1920×1080`/`360×800`: mestre com
+> criatura em campanha e solta, visualizador com acesso concedido (rail/kebab restritos a
+> Histórico/Calculadora), fluxo completo do toggle de rolagem oculta com confirmação, fusão de
+> colunas com a grade de 5 atributos renderizando de verdade. Spec em
+> `docs/specs/done/criatura-visualizacao-shell-ui34.spec.md`. Detalhe em `HISTORY.md`.
+> Antes: pós-`ui-34`, ficha completa no mobile: `.ficha-pagina`/`.ficha-pagina__conteudo` tinham o mesmo
 > `padding` duplicado (achado da `ui-34`) — corrigido e depois reduzido ainda mais, cancelando
 > também o padding mobile de `.conteudo` via margem negativa em `:host` (total de respiro nas
 > laterais caiu de 36px pra 12px); Nome + "CONTRATO — 0000" viraram `flex-direction: column` e
@@ -171,7 +195,14 @@
 
 ## 1. Próxima Task
 
-**`ficha-campanha-card-resistencias-coloridas` concluída (2026-09-13):** No card de Identidade do
+**`criatura-visualizacao-shell-ui34` concluída (2026-09-14):** cabeçalho e coluna de ações da
+ficha de criatura alinhados ao padrão `ui-34` (jogador); Identidade+Atributos fundidos numa
+coluna (grade de 5 atributos via `@container`); selos de estado na Identidade; Histórico/
+Calculadora migraram pro próprio gatilho pra dentro da coluna de ações (correção do autor no meio
+da task). Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`.
+Spec em `docs/specs/done/criatura-visualizacao-shell-ui34.spec.md`.
+
+**Antes: `ficha-campanha-card-resistencias-coloridas` concluída (2026-09-13):** No card de Identidade do
 `FichaCampanhaCard` (visão de campanha do jogador), as legendas separadas "Reações" (só leitura) e
 "Resistências" (só leitura) — com um `.ficha-cartao__divisor` entre os dois blocos — viraram uma
 legenda única "Reações e Resistências", sem divisor entre `.ficha-combate-rapido` e

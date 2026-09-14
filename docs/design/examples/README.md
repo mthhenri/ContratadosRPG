@@ -56,6 +56,14 @@ colunas com abas) e `CriaturaVisualizacao` foi realinhada a ele na mesma sessão
 `/painel/:campanhaId/criatura/:id` segue fora do ciclo normal de recaptura enquanto este mockup
 continuar sendo mantido à mão em vez de gerado a partir do app real.
 
+**Divergência consciente (2026-09-14, `criatura-visualizacao-shell-ui34`):** o cabeçalho e a
+moldura de `visualizar-criatura.page`/`CriaturaVisualizacao` passaram a seguir o mesmo padrão que
+`ui-34` deu à ficha de jogador (`app-coluna-acoes`, cabeçalho com índice "//"/campanha/
+classificação, índice nos cards, selos de estado) em vez do cabeçalho próprio que este mockup
+mostra (`.criatura__topo` com rótulo "Ficha de Criatura"). O mockup **não foi atualizado** — ele
+continua sendo a fonte pro conteúdo interno dos cards (Identidade/Atributos/Status), só não é mais
+fiel ao cabeçalho. Atualizar o mockup fica para uma rodada futura, a critério do autor.
+
 ## Como usar
 
 Abra o arquivo (duplo clique — funciona offline, sem servidor). Ao construir ou revisar uma tela

@@ -1,12 +1,13 @@
 @use "tema/breakpoints" as bp;
 
-// Visualização/edição da ficha de criatura (m4-04b) — layout de 3 colunas com abas, alvo de
-// fidelidade docs/design/examples/ficha-de-criatura.html (medidas tiradas do DOM renderizado do
-// mockup: colunas 376/236/1fr, gap 14, cards de raio 6 e caixas internas de raio 4). Análogo
-// aprovado de UI/UX: `FichaVisualizacao` (ficha de jogador) — shell de colunas, cabeçalho com
-// avatar, barra de abas e o lápis que troca a grade de Atributos por uma lista em edição são
-// blocos copiados e adaptados de lá (o encapsulamento de estilos do Angular não deixa a definição
-// de outro componente vazar pra este). O card e as abas seguem o canônico
+// Visualização/edição da ficha de criatura (m4-04b) — layout de 2 colunas com abas (Identidade+
+// Atributos fundidos numa coluna só, Status na outra — criatura-visualizacao-shell-ui34, ver
+// `docs/design/examples/README.md` "Excluído de propósito"). Conteúdo interno ainda alvo de
+// fidelidade de docs/design/examples/ficha-de-criatura.html; o cabeçalho/moldura (índice "//" nos
+// cards, selos de estado) segue o padrão que `ui-34` deu a `FichaVisualizacao` (ficha de jogador)
+// — shell de colunas, barra de abas e o lápis que troca a grade de Atributos por uma lista em
+// edição são blocos copiados e adaptados de lá (o encapsulamento de estilos do Angular não deixa
+// a definição de outro componente vazar pra este). O card e as abas seguem o canônico
 // `docs/design/tema/_componentes.scss`; a caixa de status é local pois permite edição inline.
 // Só tokens do tema "Terminal de Contenção" —
 // nenhum hex/fonte/raio solto (proibição #29).
@@ -27,13 +28,19 @@
     &--identidade {
         gap: 16px;
     }
-    // `flex: 1` (mesmo mecanismo de `.ficha-cartao--atributos` na ficha de jogador) — com
-    // `&__linha-colunas{align-items:stretch}` acima, o card estica até a altura da Identidade em vez
-    // de parar no tamanho do próprio conteúdo, mantendo as duas colunas sempre alinhadas embaixo.
+    // `flex: 1` — com `&__linha-colunas{align-items:stretch}` acima esticando a coluna
+    // Identidade+Atributos até a altura da coluna Status (a mais alta), o card de Atributos (que
+    // vem depois de Identidade na mesma coluna, ver HTML) absorve a sobra vertical em vez de
+    // deixar um vão morto embaixo dele. `container-type: inline-size` — mesmo achado de
+    // `.ficha-cartao--atributos` (FichaVisualizacao, ui-33/ui-34): a grade de 5 colunas abaixo só
+    // faz sentido quando o card mede pelo menos 440px; a coluna fundida (694px, ver
+    // `&__linha-colunas`) passa disso, mas medir pela largura real do card em vez do viewport
+    // evita quebra se a coluna algum dia encolher (painel de histórico aberto, tablet).
     &--atributos {
         gap: 10px;
         flex: 1;
         justify-content: flex-start;
+        container-type: inline-size;
     }
     &--painel {
         gap: 14px;
@@ -75,35 +82,54 @@
     gap: var(--gap-grid);
     color: var(--text);
 
-    // Barra superior — mesma estrutura de `.ficha-visao__topo` (FichaVisualizacao).
-    &__topo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    &__rotulo-secao {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-        color: var(--text-mute);
+    // Índice "//" compacto nos cabeçalhos de card — mesma caixa de `.ficha-cartao__indice`
+    // (FichaVisualizacao, ui-34), replicada aqui (BEM próprio do componente, não classe
+    // compartilhada — mesmo padrão de duplicação consciente já usado no resto do arquivo).
+    &__indice {
         flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-compact);
     }
 
-    &__regua {
-        flex: 1;
-        height: 1px;
-        background: var(--border);
+    // Selo só-leitura no cabeçalho de Identidade (Ficha oculta/visível, Rolagem oculta/pública) —
+    // mesma receita de `.ficha-identidade__visibilidade-selo` em FichaVisualizacao: o toggle de
+    // verdade mora na coluna de ações da página, isto é só o estado atual.
+    &__cartao-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex: 0 0 auto;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+
+        app-icone {
+            font-size: 12px;
+        }
+
+        &--ativo {
+            color: var(--warning);
+        }
     }
 
-    // `align-items: stretch` (era `start`) faz a coluna de Atributos esticar até a mesma altura da
-    // de Identidade (que é sempre a mais alta) — mesmo mecanismo de `.ficha-visao__linha-colunas` na
-    // ficha de jogador, onde `.ficha-cartao--atributos` tem `flex: 1` pra aproveitar esse espaço.
+    // `align-items: stretch` faz a coluna de Status esticar até a altura da coluna Identidade+
+    // Atributos (que é sempre a mais alta) — mesmo mecanismo de `.ficha-visao__linha-colunas` na
+    // ficha de jogador. Colunas Identidade e Atributos fundidas numa só (largura somada das duas
+    // antigas, 420+260+14 de gap) com Atributos empilhado abaixo dela — pedido do autor, alinhando
+    // ao padrão de densidade que a coluna de ações/cabeçalho novo da página já trouxe.
     &__linha-colunas {
         display: grid;
-        grid-template-columns: 420px 260px minmax(0, 1fr);
+        grid-template-columns: 694px minmax(0, 1fr);
         align-items: stretch;
         gap: 14px;
         @include bp.tablet {
@@ -532,6 +558,15 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 6px;
+
+        // 5 colunas quando o card (não o viewport, ver `container-type` em `&--atributos` acima)
+        // mede pelo menos 440px — mesma régua de `.ficha-atributos--2col` na ficha de jogador
+        // (ui-33 follow-up): 5 × 80px de coluna segura contra o dadinho de rolar + 4 × 10px de
+        // gap. O 5º atributo do grupo deixa de ser órfão (enche a linha), então a centralização
+        // do `&--sozinho` abaixo precisa ser desfeita aqui.
+        @container (min-width: 440px) {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
     }
     &__atributo-card {
         position: relative;
@@ -544,11 +579,18 @@
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
         text-align: center;
-        // O 5º do grupo não tem par: metade da largura, centralizado (como no mockup).
+        // O 5º do grupo não tem par: metade da largura, centralizado (como no mockup) — só abaixo
+        // dos 440px de `&__atributos-grade`; em 5 colunas ele já enche a linha sozinho.
         &--sozinho {
             grid-column: 1 / -1;
             width: calc(50% - 4px);
             margin: 0 auto;
+
+            @container (min-width: 440px) {
+                grid-column: auto;
+                width: auto;
+                margin: 0;
+            }
         }
     }
     // Idêntico ao dadinho de rolar teste da ficha de jogador (`.ficha-atributo__rolar`).
@@ -947,61 +989,5 @@
         &__info-duas {
             grid-template-columns: 1fr;
         }
-    }
-}
-
-// Toggle "Rolagem oculta" (mesma receita visual de `.ficha-rolagem-oculta`,
-// `ficha-rolagens-painel.component.scss`) — copiado pra cá pelo mesmo motivo do `.botao` acima:
-// encapsulamento de estilos não alcança o componente que hospeda o botão do card de criatura.
-.ficha-rolagem-oculta {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: var(--surface-2);
-    color: var(--text-dim);
-    border: 1px solid var(--border-strong);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-
-    app-icone {
-        font-size: 13px;
-    }
-
-    &:hover {
-        border-color: var(--accent-border);
-        color: var(--text);
-    }
-
-    &--ativa {
-        color: var(--accent);
-        border-color: var(--accent-border);
-        background: var(--accent-dim);
-    }
-
-    @include bp.mobile {
-        min-height: bp.$alvo-toque;
-    }
-}
-
-.revelar-rolagem {
-    &__aviso {
-        margin: 0 0 16px;
-        font: 13px/1.6 var(--font-sans);
-        color: var(--text-dim);
-    }
-    &__acoes {
-        display: flex;
-        gap: 10px;
-    }
-    &__acao {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
     }
 }

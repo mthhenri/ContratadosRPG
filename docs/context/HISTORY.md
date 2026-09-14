@@ -1,5 +1,104 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-visualizacao-shell-ui34: cabeçalho e coluna de ações da ficha de criatura alinhados ao padrão do jogador
+
+Pedido em conversa pelo autor: "ajuste na ficha de criatura similar ao que fizemos na ficha de
+player visualmente". Desenho validado por um mockup estático (Artifact, "antes/depois" com
+callouts numerados, atualizado duas vezes conforme feedback) antes de tocar código — a última
+rodada de feedback pediu a fusão de Identidade+Atributos numa coluna só (Atributos empilhado
+abaixo) e os selos de estado na linha do cabeçalho de Identidade, ambos incorporados ao desenho
+final e implementados como pedido.
+
+**`visualizar-criatura.page` (html/ts/scss)** ganhou o mesmo shell que `ui-34` deu a
+`visualizar.page` (análogo aprovado): `app-coluna-acoes` lateral (categorias "Ficha" — novo item
+"Rolagem oculta"/"Tornar rolagens públicas" — e "Gestão" — Acesso de visualização/Ocultar-Exibir
+ficha/Excluir ficha, só renderiza pra quem `podeGerenciar()`, mesma condição que já escondia o
+menu antigo) substituindo o kebab solto; cabeçalho novo com índice "//", `<h1>` do nome, chip da
+campanha (novo `campanhaNome` signal, buscado igual a `FichaVisualizar`), régua, chip de
+classificação `FICHA-CRT-NNNN` (subiu do componente) e indicador "Salvo"; menu "⋯" mobile-only
+duplicando os mesmos itens. `:host`/`.ficha-pagina` também migraram pro padrão flex-row com
+`app-coluna-acoes` como irmão de `.ficha-pagina__conteudo` (era `width:90vw;margin:0 5vw`
+centralizado) — incluindo `--piso-flutuante` (57px no mobile) pra reservar espaço acima da barra
+fixa que a coluna vira nessa largura, mesmo valor/racional de `visualizar.page.scss`.
+
+**Correção do autor no meio da task:** a 1ª implementação deixou Histórico/Calculadora com o
+próprio gatilho flutuante (fora da coluna), por decisão unilateral de escopo — o autor apontou que
+deveriam estar dentro da coluna de ações, igual à ficha de jogador. Corrigido: os dois ganharam
+`[mostrarGatilho]="false"` e viraram itens da categoria "Ficha" (Histórico, Calculadora), ao lado
+de "Rolagem oculta" — a única diferença é que Histórico/Calculadora ficam **sempre visíveis**
+(qualquer papel, mesmo condição de antes via gatilho próprio), enquanto "Rolagem oculta" e a
+categoria "Gestão" continuam atrás de `podeGerenciar()`. O kebab mobile (antes inteiro atrás de
+`podeGerenciar()`, escondendo Histórico/Calculadora de quem não gerencia — regressão que só não
+apareceu porque o gatilho próprio ainda existia na 1ª versão) foi corrigido do mesmo jeito: sempre
+visível, com Histórico/Calculadora incondicionais e Rolagem oculta/Gestão atrás do mesmo guard.
+
+**Toggle "Rolagem oculta" migrado de `CriaturaVisualizacao` pra `CriaturaVisualizar`** (a página):
+`FichaRolagemRegistroService` já era provido na página (`providers`) e injetado no componente —
+os dois sempre compartilharam a mesma instância, então não precisou de `@Input`/`@Output` novo. O
+componente manteve só a leitura (`rolagemOculta()`, usada nos três `rolarTeste*`/`rolarAtaque*`
+que decidem a visibilidade da rolagem, e no novo selo do cabeçalho); `alternarRolagemOculta`/
+`confirmandoRevelarRolagem`/o dialog "Tornar rolagens públicas" (com a mesma trava de confirmação
+só pra revelar, não pra ocultar) foram para a página.
+
+**`criatura-visualizacao.component` (html/ts/scss)**: a barra `.criatura__topo` (rótulo "Ficha de
+Criatura" + régua + chip de classificação) saiu — redundante com o cabeçalho novo da página; o
+`classificacao` computed saiu do componente junto. O cabeçalho de Identidade (que não tinha
+cabeçalho próprio até agora — ia direto pro avatar) ganhou `<header class="criatura__cartao-
+cabecalho">` novo: índice "//", título "Identidade", régua e dois selos só-leitura ("Ficha
+oculta/visível", "Rolagem oculta/pública") — mesmo padrão do selo `.ficha-identidade__
+visibilidade-selo` que `FichaVisualizacao` já tinha (ui-34): o toggle de verdade mora na coluna de
+ações, aqui é só o estado. Os cabeçalhos de Atributos e dos painéis de Status que já existiam
+(Regeneração/Anotações/Descrição/Natureza/Tema de Horror) ganharam o mesmo índice "//" — fora de
+escopo, por ora: os cabeçalhos internos de `CriaturaAtaqueLista`/`CriaturaHabilidadeLista`
+(componentes próprios, mais complexos — toolbar de ações, não só título+régua), registrado como
+pendência menor, não IDEIA nova.
+
+**Fusão de colunas (pedido na 2ª rodada de feedback do mockup):** Identidade e Atributos, antes
+colunas irmãs (`420px`/`260px`) lado a lado, viraram uma coluna só (`&__linha-colunas` com 2
+tracks agora, `694px minmax(0,1fr)`) — o `<section>` de Atributos só mudou de pai no HTML (saiu de
+dentro de `.criatura__coluna--atributos`, que foi removida, pra dentro de `.criatura__coluna--
+identidade`), empilhando via `flex-direction:column` que a coluna já tinha. Com a largura maior, a
+grade de Atributos ganhou `container-type:inline-size` + `@container(min-width:440px){grid-
+template-columns:repeat(5,1fr)}` — mesma régua de `.ficha-cartao--atributos`/`.ficha-atributos--
+2col` na ficha de jogador (ui-33 follow-up) — os 5 atributos de cada grupo (Físico/Mental) agora
+cabem numa linha só, sem o item "sozinho" centralizado que só a variante de 2 colunas precisa.
+
+O mockup mantido à mão `docs/design/examples/ficha-de-criatura.html` **não foi atualizado** — nota
+de divergência consciente registrada em `examples/README.md` (o cabeçalho diverge do que o mockup
+mostra; o conteúdo interno dos cards continua fiel a ele). Fora de escopo, confirmado com o autor
+antes de começar: reorganizar o card de criatura na visão de mestre (`EspectadorFichaCard`/grid de
+Criaturas) — fica pra depois.
+
+**Testes:** `criatura-visualizacao`/`visualizar-criatura` focado 50/50 (1 teste reescrito — a
+antiga asserção da barra `.criatura__topo`/chip virou verificação do cabeçalho de Identidade novo
+com índice/título/selos; 3 testes novos: índice "//" em mais de um card, e os dois papéis — sem
+`podeGerenciar()` só Histórico/Calculadora, mestre com os 6 itens incluindo Gestão — cobrindo a
+correção do autor sobre onde os dois primeiros deveriam morar; mock de `CampanhaService.
+recuperarCampanha` acrescentado ao spec da página, que ainda não o tinha); suíte completa
+`frontend` 1745/1747 (2 falhas pré-existentes sem relação — `inventario-esquadrao` filtro de
+catálogo, reproduz isolada, e `detalhe-mestre` duplicar-ficha, já documentada em entradas
+anteriores); lint 0 erros.
+
+**Verificação ao vivo** (Postgres + backend + frontend reais, cenário via REST cru — mestre +
+campanha + criatura em campanha + criatura solta + jogador com acesso concedido) em `1920×1080` e
+`360×800`: cabeçalho (índice/campanha/classificação/salvo) nos dois cenários com e sem campanha;
+coluna de ações retraída/expandida com os 6 itens corretos (Histórico/Calculadora sempre, Rolagem
+oculta+Gestão só pra quem gerencia) tanto no rail desktop quanto no kebab mobile — a correção do
+autor no meio da task, verificada nos dois papéis: mestre vê os 6, visualizador com acesso
+concedido mas sem gerência vê só Histórico/Calculadora (sem Rolagem oculta nem Gestão, sem kebab
+visível no desktop — mobile-only por CSS); fluxo completo do toggle "Rolagem oculta" → dialog de
+confirmação → "Tornar pública"; selos de estado na Identidade refletindo o estado real (rolagem
+nasce oculta, mostrado em `--warning`); fusão Identidade+Atributos com a grade de 5 colunas
+renderizando de verdade; abas Descrição/Natureza/Tema de Horror com o índice novo, sem overflow;
+cenário "solta" (`/fichas/criatura/:id`, sem chip de campanha). Mobile: barra fixa da coluna de
+ações não cobre o conteúdo no scroll real (um artefato do screenshot `fullPage` do Playwright
+tinha sugerido colisão — refeito sem `fullPage`, sem repetir o achado, confirmado que era artefato
+de captura, não bug); menu "⋯" com os mesmos 6 itens, sem overflow. Não verificado explicitamente
+em `960×1080`/`1366×768` (fora do critério de aceite mínimo desta task, que pediu só os dois
+viewports padrão); a coluna fundida tem largura fixa (694px, não proporcional ao viewport), então
+o risco de squeeze de notebook já documentado em
+`ui-33` não se aplica aqui.
+
 ## 2026-09-13 — dev-05: correção de alvo da prévia de avatar do mestre
 
 O pedido de prévia do mestre foi esclarecido: o alvo é o avatar nos cartões do **Esquadrão** da

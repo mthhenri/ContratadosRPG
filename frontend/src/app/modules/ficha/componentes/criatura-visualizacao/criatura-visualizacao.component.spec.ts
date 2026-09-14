@@ -333,11 +333,23 @@ describe('CriaturaVisualizacao', () => {
     expect(fixture.componentInstance['modificadorCorFraca']()).toBe('#ffffff');
   });
 
-  it('a barra superior mostra o rótulo e o badge FICHA-CRT com o id zero-padded', () => {
+  it('o cabeçalho de Identidade mostra o índice, o título e os selos de estado (criatura-visualizacao-shell-ui34)', () => {
     const { fixture } = montar();
     const raiz = fixture.nativeElement as HTMLElement;
-    expect(raiz.querySelector('.criatura__rotulo-secao')?.textContent?.trim()).toBe('Ficha de Criatura');
-    expect(raiz.querySelector('app-chip')?.textContent?.trim()).toBe('FICHA-CRT-0004');
+    const cabecalho = raiz.querySelector('.criatura__cartao--identidade .criatura__cartao-cabecalho');
+    expect(cabecalho?.querySelector('.criatura__indice')?.textContent?.trim()).toBe('//');
+    expect(cabecalho?.querySelector('.criatura__cartao-titulo')?.textContent?.trim()).toBe('Identidade');
+    const selos = cabecalho?.querySelectorAll('.criatura__cartao-meta');
+    // `oculta=false` e `rolagemOculta()` (FichaRolagemRegistroService sem `inicializar`, default `false`).
+    expect(selos?.[0]?.textContent?.trim()).toBe('Ficha visível');
+    expect(selos?.[1]?.textContent?.trim()).toBe('Rolagem pública');
+  });
+
+  it('cada card ganha o índice "//" no cabeçalho (Atributos incluso)', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const indices = raiz.querySelectorAll('.criatura__indice');
+    expect(indices.length).toBeGreaterThan(1);
   });
 
   it('o <input type=color> emite corMudou quando a cor muda', () => {

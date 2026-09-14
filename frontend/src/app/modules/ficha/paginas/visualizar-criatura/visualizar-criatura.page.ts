@@ -16,6 +16,9 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
@@ -54,6 +57,9 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     ReactiveFormsModule,
     Botao,
     BotaoIcone,
+    Chip,
+    ColunaAcoes,
+    ColunaAcoesItem,
     Icone,
     CriaturaVisualizacao,
     CalculadoraFlutuante,
@@ -96,8 +102,14 @@ export class CriaturaVisualizar {
 
   protected readonly carregando = signal(true);
   protected readonly ficha = signal<FichaCriaturaRecuperadaDto | null>(null);
+  /** Nome da campanha no cabeçalho — mesmo padrão de `FichaVisualizar.campanhaNome`; ficha solta não o resolve. */
+  protected readonly campanhaNome = signal<string | null>(null);
   private readonly membros = signal<CampanhaMembroResumoDto[]>([]);
   protected readonly acessos = signal<FichaAcessoResumoDto[]>([]);
+
+  /** Badge do cabeçalho — mesmo formato de `FichaVisualizar.classificacao`, migrado pra cá de
+   * `CriaturaVisualizacao` (criatura-visualizacao-shell-ui34): a página é dona do cabeçalho agora. */
+  protected readonly classificacao = `FICHA-CRT-${String(this.fichaId).padStart(4, '0')}`;
 
   /** Histórico de rolagens desta ficha (barra lateral do cabeçalho, gatilho D20) — mesmo padrão de `FichaVisualizar`. */
   protected readonly historicoRolagens = signal<readonly RolagemResumoDto[]>([]);
@@ -172,6 +184,12 @@ export class CriaturaVisualizar {
         switchMap((ficha) => {
           const campanhaId = this.campanhaIdRota !== null ? Number(this.campanhaIdRota) : ficha.campanhaId;
           this.campanhaId.set(campanhaId);
+          if (campanhaId !== null) {
+            this.campanhaService
+              .recuperarCampanha(campanhaId)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({ next: (campanha) => this.campanhaNome.set(campanha.nome) });
+          }
           const membros$ =
             campanhaId !== null ? this.campanhaService.listarMembros(campanhaId) : of([]);
           return membros$.pipe(map((membros) => ({ ficha, membros })));
@@ -315,6 +333,41 @@ export class CriaturaVisualizar {
     if (fichaAtual) {
       this.fichaEdicao.ajustarOculta(!fichaAtual.oculta);
     }
+  }
+
+  /**
+   * Visibilidade das rolagens desta criatura (Teste/Dano/Crítico) — distinto de `oculta`/
+   * `alternarOculta` acima, que é a visibilidade da **ficha inteira**. `FichaRolagemRegistroService`
+   * é provido nesta página (`providers`) e injetado também em `CriaturaVisualizacao`, então os dois
+   * compartilham a mesma instância sem precisar de `@Input`/`@Output` — a página passou a ser dona
+   * do toggle (criatura-visualizacao-shell-ui34, migrado de `CriaturaVisualizacao`); o componente
+   * ainda lê `rolagemOculta()` pra si (privacidade das rolagens que ele mesmo executa, e o selo
+   * só-leitura no cabeçalho de Identidade).
+   */
+  protected rolagemOculta(): boolean {
+    return this.fichaRolagemRegistro.oculta();
+  }
+
+  /** Confirmação pendente pra tornar as rolagens públicas — só ocultar → revelar pede confirmação
+   * (revelar de propósito, ex.: "susto" de rolar publicamente pros jogadores verem, é uma decisão
+   * deliberada; voltar a ocultar não precisa de trava). */
+  protected readonly confirmandoRevelarRolagem = signal(false);
+
+  protected alternarRolagemOculta(): void {
+    if (this.fichaRolagemRegistro.oculta()) {
+      this.confirmandoRevelarRolagem.set(true);
+      return;
+    }
+    this.fichaRolagemRegistro.alternarOculta();
+  }
+
+  protected confirmarRevelarRolagem(): void {
+    this.fichaRolagemRegistro.alternarOculta();
+    this.confirmandoRevelarRolagem.set(false);
+  }
+
+  protected cancelarRevelarRolagem(): void {
+    this.confirmandoRevelarRolagem.set(false);
   }
 
   /** Abre a dialog de gestão de acesso (a partir do menu). */

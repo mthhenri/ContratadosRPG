@@ -1,17 +1,34 @@
-// Casca da tela de visualização/edição da ficha de criatura (m4-04b) — mesmo vocabulário visual
-// de `visualizar.page.scss` (m3-07): cabeçalho, menu kebab, dialogs de acesso/exclusão. Reimplementado
-// aqui (não `@use`) porque o encapsulamento de estilo do Angular não compartilha `.scss` entre
-// componentes — só tokens do tema "Terminal de Contenção" (proibição #29).
+// Casca da tela de visualização/edição da ficha de criatura — mesmo vocabulário visual de
+// `visualizar.page.scss` (m3-07, ui-34): coluna de ações + cabeçalho com índice/campanha/
+// classificação, menu kebab mobile, dialogs de acesso/exclusão. Reimplementado aqui (não `@use`)
+// porque o encapsulamento de estilo do Angular não compartilha `.scss` entre componentes — só
+// tokens do tema "Terminal de Contenção" (proibição #29).
 
 @use "tema/breakpoints" as bp;
 
+// Piso reservado no rodapé pros gatilhos flutuantes (Calculadora/Histórico, que aqui continuam
+// com o gatilho próprio — não migraram pra `app-coluna-acoes`) não ficarem atrás da barra fixa
+// que a coluna de ações vira no mobile — mesmo racional/valor de `visualizar.page.scss`
+// (m3-60/m3-61, ui-34): 44px de alvo de toque + 6px de padding em cima/embaixo + 1px de borda.
+:host {
+    --piso-flutuante: 0px;
+    display: block;
+    margin: -24px -20px;
+
+    @include bp.mobile {
+        --piso-flutuante: 57px;
+        margin: -16px -12px;
+    }
+}
+
 .ficha-pagina {
-    // Mais largo que as telas de criação/edição (960): a visualização é um layout de três colunas
-    // (identidade | atributos | status com abas), mesmo racional de `visualizar.page.scss`
-    // (ficha de jogador) e alvo de fidelidade `docs/design/examples/ficha-de-criatura.html`.
-    width: 90vw;
-    max-width: none;
-    margin: 0 5vw;
+    width: 100%;
+    min-height: calc(100dvh - var(--altura-topbar));
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
     transition:
         width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
         margin 0.26s cubic-bezier(0.22, 1, 0.36, 1);
@@ -19,15 +36,11 @@
     @media (prefers-reduced-motion: reduce) {
         transition: none;
     }
-    padding: 12px 20px 40px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-grid);
 
     // O histórico ocupa uma coluna de apoio em desktop; a ficha usa somente a largura livre.
     &--lateral-aberta {
-        width: calc(100vw - var(--largura-painel-lateral) - (var(--space-20) * 2));
-        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 var(--space-20);
+        width: auto;
+        margin: 0 calc(var(--largura-painel-lateral) + var(--space-20)) 0 0;
 
         @include bp.mobile {
             width: 100%;
@@ -37,9 +50,80 @@
     }
 
     @include bp.mobile {
+        display: block;
         width: 100%;
         max-width: 100%;
-        padding: 10px 12px 28px;
+        margin: 0;
+    }
+
+    &__conteudo {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 24px var(--space-20) var(--space-20);
+
+        @include bp.mobile {
+            padding: 10px 12px calc(28px + var(--piso-flutuante) + env(safe-area-inset-bottom, 0px));
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: var(--space-12);
+        min-width: 0;
+        margin-bottom: var(--space-20);
+    }
+
+    // Mesmo "chip" `//` de `.ficha-cartao__indice`/`.detalhe-mestre__cabecalho-indice`.
+    &__cabecalho-indice {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-compact);
+    }
+
+    &__titulo {
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__campanha {
+        flex: 0 1 auto;
+        padding: var(--space-4) var(--space-8);
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-dim);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+    }
+
+    &__cabecalho-regua {
+        flex: 1 1 auto;
+        min-width: var(--space-12);
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__classificacao {
+        flex: none;
     }
 
     &__persistencia {
@@ -56,16 +140,6 @@
         }
     }
 
-    &__topo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-
-        @include bp.mobile {
-            flex-wrap: wrap;
-        }
-    }
-
     &__acoes {
         display: flex;
         align-items: center;
@@ -76,6 +150,12 @@
             flex-wrap: wrap;
             justify-content: flex-end;
             gap: 8px;
+        }
+    }
+
+    @include bp.mobile {
+        &__cabecalho {
+            flex-wrap: wrap;
         }
     }
 
@@ -319,6 +399,28 @@
         @include bp.mobile {
             min-height: bp.$alvo-toque;
         }
+    }
+}
+
+// Dialog "Tornar rolagens públicas" — migrado de `criatura-visualizacao.component.scss`
+// (criatura-visualizacao-shell-ui34): o toggle que abre esta confirmação agora mora na coluna de
+// ações desta página.
+.revelar-rolagem {
+    &__aviso {
+        margin: 0 0 16px;
+        font: 13px/1.6 var(--font-sans);
+        color: var(--text-dim);
+    }
+    &__acoes {
+        display: flex;
+        gap: 10px;
+    }
+    &__acao {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
     }
 }
 
