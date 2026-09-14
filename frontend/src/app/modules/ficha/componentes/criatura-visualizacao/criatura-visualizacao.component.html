@@ -180,33 +180,12 @@
 
                         <!-- Classificação: em leitura, 2 linhas de chips (Tipo de Criação/Porte,
                      Comportamento/Ameaça) — a coluna estreitou (230px, ver SCSS) pra caber a foto,
-                     então os 4 chips não cabem mais numa fileira só. O lápis liga o modo de edição
-                     e troca os quatro chips de uma vez pelos selects de
-                     `criatura__classificacao-grade` (abaixo das duas colunas — largura cheia, não
-                     cabem dentro da coluna estreita). -->
+                     então os 4 chips não cabem mais numa fileira só. O lápis (pedido do autor:
+                     antes dos chips, não depois) liga o modo de edição e troca os quatro chips de
+                     uma vez pelos selects de `criatura__classificacao-grade` (abaixo das duas
+                     colunas — largura cheia, não cabem dentro da coluna estreita). -->
                         <div class="criatura__chips-coluna">
                             <div class="criatura__chips-linha">
-                                @if (classificacaoEmEdicao()) {
-                                    <span class="criatura__chips-rotulo">Classificação</span>
-                                } @else {
-                                    <span class="criatura__chip">{{
-                                        rotuloOrigemCriatura(dados().identidade.origem)
-                                    }}</span>
-
-                                    <span class="criatura__chip">
-                                        Porte {{ nomePorte(dados().porte) }}
-                                        @if (dimensaoPorte(dados().porte); as dimensao) {
-                                            <span
-                                                class="criatura__chip-info"
-                                                tabindex="0"
-                                                [appTooltip]="'Ocupa ' + dimensao"
-                                                [attr.aria-label]="'Ocupa ' + dimensao"
-                                                >i</span
-                                            >
-                                        }
-                                    </span>
-                                }
-
                                 @if (ajustavel()) {
                                     <button
                                         app-botao-icone
@@ -234,6 +213,27 @@
                                         }
                                     </button>
                                 }
+
+                                @if (classificacaoEmEdicao()) {
+                                    <span class="criatura__chips-rotulo">Classificação</span>
+                                } @else {
+                                    <span class="criatura__chip">{{
+                                        rotuloOrigemCriatura(dados().identidade.origem)
+                                    }}</span>
+
+                                    <span class="criatura__chip">
+                                        Porte {{ nomePorte(dados().porte) }}
+                                        @if (dimensaoPorte(dados().porte); as dimensao) {
+                                            <span
+                                                class="criatura__chip-info"
+                                                tabindex="0"
+                                                [appTooltip]="'Ocupa ' + dimensao"
+                                                [attr.aria-label]="'Ocupa ' + dimensao"
+                                                >i</span
+                                            >
+                                        }
+                                    </span>
+                                }
                             </div>
 
                             @if (!classificacaoEmEdicao()) {
@@ -250,7 +250,11 @@
                     </div>
 
                     <div class="criatura__ident-coluna criatura__ident-coluna--combate">
-                        <div class="criatura__stats">
+                        <!-- VD/Defesa/Tenacidade numa fileira só (pedido do autor): as caixas de
+                     VD/Defesa encolheram pela metade (`&__stats--compacta`, ver SCSS) pra abrir
+                     espaço pra Tenacidade (antes numa linha própria, cheia), com texto menor nas
+                     3 caixas. -->
+                        <div class="criatura__stats criatura__stats--compacta">
                             <div class="criatura__stat criatura__stat--vd">
                                 <span class="criatura__stat-rotulo">VD</span>
                                 <app-valor-editavel
@@ -308,6 +312,48 @@
                                             cancelarEdicao()
                                         "
                                     />
+                                </app-valor-editavel>
+                            </div>
+
+                            <div class="criatura__stat criatura__stat--tenacidade">
+                                <span class="criatura__stat-rotulo">Tenacidade</span>
+                                <app-valor-editavel
+                                    class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--tenacidade"
+                                    [valor]="nomeTenacidade(dados().tenacidade)"
+                                    [editando]="editando('tenacidade')"
+                                    [desabilitado]="!ajustavel()"
+                                    rotuloAria="tenacidade"
+                                    [bloco]="true"
+                                    (editarSolicitado)="editar('tenacidade')"
+                                >
+                                    <select
+                                        #entradaTenacidade
+                                        appAutoFocus
+                                        class="criatura__select criatura__select--stat"
+                                        aria-label="Tenacidade"
+                                        (change)="
+                                            confirmarTenacidade($any(entradaTenacidade.value));
+                                            cancelarEdicao()
+                                        "
+                                        (blur)="cancelarEdicao()"
+                                    >
+                                        @for (t of tenacidades; track t) {
+                                            <option
+                                                [value]="t"
+                                                [selected]="t === dados().tenacidade"
+                                            >
+                                                {{ rotuloTenacidade(t) }}
+                                            </option>
+                                        }
+                                    </select>
+                                    @if (
+                                        multiplicadorTenacidade(dados().tenacidade);
+                                        as multiplicador
+                                    ) {
+                                        <span valorEditavelSufixo class="criatura__stat-sufixo">{{
+                                            multiplicador
+                                        }}</span>
+                                    }
                                 </app-valor-editavel>
                             </div>
                         </div>
@@ -418,45 +464,6 @@
                                     "
                                 ></div>
                             </div>
-                        </div>
-
-                        <div class="criatura__stat criatura__stat--tenacidade">
-                            <span class="criatura__stat-rotulo">Tenacidade</span>
-                            <app-valor-editavel
-                                class="criatura__stat-valor criatura__stat-botao criatura__stat-botao--tenacidade"
-                                [valor]="nomeTenacidade(dados().tenacidade)"
-                                [editando]="editando('tenacidade')"
-                                [desabilitado]="!ajustavel()"
-                                rotuloAria="tenacidade"
-                                [bloco]="true"
-                                (editarSolicitado)="editar('tenacidade')"
-                            >
-                                <select
-                                    #entradaTenacidade
-                                    appAutoFocus
-                                    class="criatura__select criatura__select--stat"
-                                    aria-label="Tenacidade"
-                                    (change)="
-                                        confirmarTenacidade($any(entradaTenacidade.value));
-                                        cancelarEdicao()
-                                    "
-                                    (blur)="cancelarEdicao()"
-                                >
-                                    @for (t of tenacidades; track t) {
-                                        <option [value]="t" [selected]="t === dados().tenacidade">
-                                            {{ rotuloTenacidade(t) }}
-                                        </option>
-                                    }
-                                </select>
-                                @if (
-                                    multiplicadorTenacidade(dados().tenacidade);
-                                    as multiplicador
-                                ) {
-                                    <span valorEditavelSufixo class="criatura__stat-sufixo">{{
-                                        multiplicador
-                                    }}</span>
-                                }
-                            </app-valor-editavel>
                         </div>
 
                         <app-criatura-resistencia-lista

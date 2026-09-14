@@ -1,5 +1,85 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — criatura-polimento-visual-lote: 6 ajustes visuais pontuais em `CriaturaVisualizacao`, a partir de 2 screenshots do autor
+
+Task solta, pedida em conversa com 2 screenshots anexados (um da linha shell do cabeçalho da
+página, com o chip de classificação "FICHA-CRT-0031"; outro da barra de abas mobile, com "GERAL"
+larga/colorida e as outras 2 abas encolhidas só-ícone, sobrando espaço). O pedido do autor juntou
+6 ajustes independentes numa mensagem só; cada um teve sua própria fonte de verdade/análogo.
+
+**1. Chip de classificação saiu do cabeçalho da página.** `visualizar-criatura.page` não precisa
+mais do `<app-chip class="ficha-pagina__classificacao">{{ classificacao }}</app-chip>` na
+`.ficha-pagina__acoes` — pedido explícito do autor ("não precisa mais disso naquela linha
+shell"). Removidos o campo `classificacao` (`FICHA-CRT-NNNN`) e o import de `Chip` da página;
+persistência/histórico/calculadora/menu mobile continuam intactos na mesma linha.
+
+**2. Abas mobile ocupam a largura inteira da linha, não só a ativa.** Achado do autor: no mobile,
+as 2 abas inativas de `CriaturaVisualizacao` encolhiam pro tamanho do próprio conteúdo (ícone só),
+deixando espaço vazio na barra em vez de dividir a largura como no desktop. A causa era
+`shared/ui/abas/aba.component.scss` — primitivo `app-aba`, usado tanto por `CriaturaVisualizacao`
+quanto pela barra inferior de `FichaVisualizacao` (`ficha-status__aba`) —, cujo bloco `bp.mobile`
+trocava `flex: 1 1 0` (largura igual, do `:host` acima) por `flex: 0 0 auto` (tamanho do
+conteúdo). Removida essa troca: agora o item mobile continua `flex: 1 1 0` do `:host`, só
+ganhando `min-width`/`min-height` como piso de alvo de toque (44px) — se a divisão igual ficar
+menor que isso (muitas abas numa tela estreita), o item para nesse piso e a barra rola
+(`overflow-x: auto` do host `.abas`), em vez de espremer abaixo do alvo de toque. Mudança em
+primitivo compartilhado: verificado ao vivo tanto na barra de 3 abas de `CriaturaVisualizacao`
+(Geral/Ataques/Habilidades, agora 106px cada, iguais) quanto na barra de 6 abas do rodapé de
+`FichaVisualizacao` (Agente/Status/Invent./Habilid./Rolagens/Extras/História) — que já mostrava
+rótulo em toda aba por classe própria (`ficha-status__aba-texto`, não a `abas__rotulo` que o
+primitivo esconde no mobile) e segue mostrando, sem regressão, agora com largura igual também.
+
+**3. Lápis de edição da Classificação migrou pra antes do chip de Origem.** Pedido do autor. No
+`criatura__chips-linha`, o `@if (ajustavel())` do botão lápis (que liga o modo de edição da
+Classificação) trocou de posição com o bloco `@if (classificacaoEmEdicao()) {...} @else {...}`
+dos chips de Origem/Porte — o lápis aparece primeiro agora, os chips depois, em leitura e edição.
+
+**4. Tenacidade migrou pra linha de VD/Defesa; as 3 caixas encolheram.** Pedido do autor: "migre
+Tenacidade para ficar na linha delas, reduzindo o tamanho das caixas de Vida/Defesa pela metade e
+dando este espaço para a Tenacidade, além de deixar esses textos menores". `&__stats` ganhou o
+modificador `&--compacta` (`grid-template-columns: 0.5fr 0.5fr 1fr` — VD/Defesa encolhem pela
+metade, Tenacidade ocupa o espaço aberto) e fontes reduzidas nas 3 caixas (rótulo 8px, valor/botão
+13px, sufixo 10px). O bloco HTML de Tenacidade, antes uma `<div class="criatura__stat--tenacidade">`
+solta de largura cheia abaixo de Vida, virou o 3º filho de `&__stats`; `&--tenacidade` trocou
+`width: 100%` por `min-width: 0` (deixa o `<select>` encolher com a coluna estreita em vez de
+estourar). O `bp.mobile` pré-existente que já colapsava `&__stats` pra `grid-template-columns: 1fr`
+continua vencendo `--compacta` no mobile por ordem de declaração no arquivo compilado (mesma
+técnica de empate de especificidade já usada em `&__info-grade`) — verificado ao vivo: as 3 caixas
+empilham em coluna única em `360×800`, sem espremer.
+
+**5. "SCP-00000" virou "REGISTRO — 0000", no formato do "CONTRATO — 0000" do jogador.** Pedido
+explícito do autor apontando o análogo: `FichaVisualizacao.contratoTexto`
+(`` `CONTRATO — ${dados().contrato || '0000'}` ``). `registroExibido` trocou de formato — segue
+usando o `fichaId` numérico da página hospedeira (não um campo de negócio próprio como
+`contrato`, que a criatura não tem), só que agora com o mesmo separador em travessão e o rótulo
+"REGISTRO" em vez do prefixo "SCP-".
+
+**6. Resistências/Fraquezas ficaram mais finas.** Pedido do autor. `CriaturaResistenciaLista`:
+`&__grade` (Resistências) trocou de grade quadriculada (`repeat(auto-fill, minmax(64px,1fr))`,
+itens em coluna) pra uma linha `flex-wrap` de chips finos (tipo + valor lado a lado,
+`padding: 5px 9px`), com fontes reduzidas (`&__grade-tipo` 8px, `&__grade-valor` 13px, eram 9px/
+16px). `&__item` (Fraquezas) manteve a grade de 2 colunas, mas com padding menor (`6px 10px`, era
+`9px 12px`), gap menor (8px, era 10px) e fontes reduzidas (`&__tipo` 8px, `&__subtipo` 12px,
+`&__valor` 13px — eram 9px/13px/16px).
+
+**Testes/build:** nenhuma mudança de comportamento nova (só layout/formato de texto), sem teste
+novo; suíte focada `criatura-visualizacao`/`criatura-resistencia-lista`/`visualizar-criatura`
+70/70, mais `ficha-visualizacao` 163/163 (primitivo compartilhado). Build/lint 0 erros; Prettier
+sem mudanças nos arquivos tocados.
+
+**Verificação ao vivo** (Postgres 16 local sem Docker + backend + frontend reais, seed
+`codex.dev`): ficha "O Colecionador de Rostos" (`/campanhas/2/criatura/11`) nos 4 viewports
+padrão — `1920×1080`/`1366×768`/`960×1080` sem overflow, cabeçalho sem o chip de classificação,
+lápis antes de Origem, VD/Defesa/Tenacidade numa fileira só com texto legível,
+"REGISTRO — 0011", Resistências/Fraquezas visivelmente mais finas; `360×800` com as 3 abas
+(Geral/Ataques/Habilidades) todas ocupando a mesma largura (106px cada, medido via DOM), VD/
+Defesa/Tenacidade empilhados em coluna única sem espremer, Resistências/Fraquezas finas sem
+overflow. Barra inferior de `FichaVisualizacao` (ficha "Quimera Codex", `/campanhas/2/ficha/6`)
+verificada em `360×800`: as 7 abas do rodapé continuam com rótulo sempre visível (comportamento
+próprio, não afetado pela mudança) e ocupam a largura da barra igualmente, sem regressão visual.
+
+Task solta, sem spec.
+
 ## 2026-09-14 — criatura-fusao-geral-descricao: abas Geral e Descrição da criatura viram uma só, com grade que resolve a altura
 
 Pedido exploratório do autor ("E se a gente juntar informações e descrição na mesma tab?"),

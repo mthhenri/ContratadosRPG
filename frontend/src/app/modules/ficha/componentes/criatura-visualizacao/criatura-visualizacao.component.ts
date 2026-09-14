@@ -426,10 +426,13 @@ export class CriaturaVisualizacao {
     this.campoEmEdicao.set(null);
   }
 
-  /** Registro de contenção no formato SCP (pedido do autor, coluna de Identidade em 2 colunas) —
-   * mesmo `fichaId` numérico da `classificacao` (`FICHA-CRT-NNNN`) da página hospedeira, só que
-   * com o prefixo e o preenchimento de zeros do universo ficcional da criatura. */
-  protected readonly registroExibido = computed(() => `SCP-${String(this.fichaId()).padStart(5, '0')}`);
+  /** Registro de contenção (pedido do autor: mesmo formato do "CONTRATO — 0000" de
+   * `FichaVisualizacao.contratoTexto`, só que com o rótulo da criatura) — mesmo `fichaId`
+   * numérico da `classificacao` (`FICHA-CRT-NNNN`) da página hospedeira, só com o rótulo/
+   * preenchimento próprios deste selo. */
+  protected readonly registroExibido = computed(
+    () => `REGISTRO — ${String(this.fichaId()).padStart(4, '0')}`,
+  );
 
   /**
    * Limite de pontos de Resistência disponível para `resistencias` (`2×VD`, +25% por Fraqueza

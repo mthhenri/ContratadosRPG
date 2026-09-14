@@ -5,7 +5,22 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-fusao-geral-descricao` concluída — as abas Geral e Descrição de `CriaturaVisualizacao`
+> `criatura-polimento-visual-lote` concluída — 6 ajustes visuais pontuais em
+> `CriaturaVisualizacao`/`visualizar-criatura.page`, pedidos numa mensagem só com 2 screenshots:
+> (1) chip de classificação `FICHA-CRT-NNNN` saiu da `.ficha-pagina__acoes` do cabeçalho da
+> página; (2) `shared/ui/abas/aba.component.scss` (primitivo compartilhado com `FichaVisualizacao`)
+> parou de encolher abas mobile inativas pro tamanho do conteúdo — agora todas dividem a largura
+> igualmente (`flex: 1 1 0`), com `min-width`/`min-height` como piso de alvo de toque; (3) o lápis
+> de edição da Classificação migrou pra antes do chip de Origem; (4) Tenacidade entrou na linha de
+> VD/Defesa (`&__stats--compacta`, `0.5fr 0.5fr 1fr`), as 3 caixas com texto menor; (5)
+> "SCP-00000" virou "REGISTRO — 0000", no formato de `FichaVisualizacao.contratoTexto`
+> ("CONTRATO — 0000"); (6) Resistências viraram chips finos em linha (`flex-wrap`, era grade
+> quadriculada) e Fraquezas ganharam padding/fonte menores. Sem teste novo (só layout/formato de
+> texto); suíte focada 70/70 + `ficha-visualizacao` 163/163 (primitivo compartilhado); build/lint 0
+> erros. Verificado ao vivo nos 4 viewports padrão em `CriaturaVisualizacao`, mais a barra inferior
+> de `FichaVisualizacao` em `360×800` (sem regressão). Task solta, sem spec. Detalhe em
+> `HISTORY.md`.
+> Antes: `criatura-fusao-geral-descricao` concluída — as abas Geral e Descrição de `CriaturaVisualizacao`
 > viraram uma só (`AbaCriatura` perdeu `'descricao'`; 4 abas → 3). Pedido exploratório do autor,
 > respondido com recomendação + trade-off (mais altura empilhada) antes de implementar; autor
 > confirmou e pediu resolução pro trade-off. Cadência/Bônus de Iniciativa/Deslocamento e Descrição

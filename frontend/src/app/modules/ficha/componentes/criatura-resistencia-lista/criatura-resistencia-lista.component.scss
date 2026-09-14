@@ -67,21 +67,22 @@
         }
     }
 
-    // --- Variante "resistencia": boxes compactos (abreviação em cima, valor embaixo) ---
+    // --- Variante "resistencia": chips fininhos (tipo + valor lado a lado, pedido do autor: menos
+    // altura, cada um ocupando só a própria largura em vez de uma grade de caixas quadradas) ---
     &__grade {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-        gap: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
         margin: 0;
         padding: 0;
         list-style: none;
     }
     &__grade-item {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 6px;
-        padding: 9px 8px;
+        padding: 5px 9px;
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: var(--radius-control);
@@ -122,7 +123,7 @@
         }
     }
     &__grade-tipo {
-        font: 9px var(--font-mono);
+        font: 8px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: 0.07em;
         color: var(--text-mute);
@@ -130,7 +131,7 @@
         cursor: help;
     }
     &__grade-valor {
-        font: 700 16px var(--font-mono);
+        font: 700 13px var(--font-mono);
         color: var(--text);
         line-height: 1;
     }
@@ -153,9 +154,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
         flex-wrap: wrap;
-        padding: 9px 12px;
+        padding: 6px 10px;
         background: var(--accent-dim);
         border: 1px solid var(--accent-border);
         border-radius: var(--radius-control);
@@ -195,22 +196,22 @@
     &__item-texto {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 2px;
         min-width: 0;
     }
     &__tipo {
-        font: 9px var(--font-mono);
+        font: 8px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: 0.11em;
         color: var(--text-mute);
     }
     &__subtipo {
-        font: 600 13px var(--font-mono);
+        font: 600 12px var(--font-mono);
         color: var(--text);
     }
     &__valor {
         margin-left: auto;
-        font: 700 16px var(--font-mono);
+        font: 700 13px var(--font-mono);
         color: var(--accent);
     }
 

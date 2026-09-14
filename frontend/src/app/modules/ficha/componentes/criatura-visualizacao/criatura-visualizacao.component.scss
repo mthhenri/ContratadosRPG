@@ -429,12 +429,32 @@
         }
     }
 
-    // --- VD / Defesa (coluna Combate) — Tenacidade saiu da grade pro próprio `&__stat--tenacidade`
-    // abaixo de Vida (pedido do autor, ver ordem em `&__ident-coluna--combate` no HTML) ---
+    // --- VD / Defesa / Tenacidade (coluna Combate), numa fileira só (pedido do autor: migrar
+    // Tenacidade pra linha de VD/Defesa) ---
     &__stats {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 9px;
+
+        // VD/Defesa encolhem pela metade (0.5fr cada, era 1fr) e a Tenacidade — que tinha linha
+        // própria de largura cheia — entra no espaço aberto (1fr). Texto das 3 caixas reduzido
+        // (rótulo/valor/sufixo) pra caber confortável na coluna mais estreita.
+        &--compacta {
+            grid-template-columns: 0.5fr 0.5fr 1fr;
+
+            .criatura__stat-rotulo {
+                font-size: 8px;
+                margin-bottom: 4px;
+            }
+            .criatura__stat-valor,
+            .criatura__stat-botao {
+                font-size: 13px;
+            }
+            .criatura__stat-sufixo {
+                font-size: 10px;
+                margin-left: 4px;
+            }
+        }
     }
     &__stats--info {
         display: flex;
@@ -449,9 +469,10 @@
         &--flexivel {
             flex: 1 1 0;
         }
-        // Tenacidade, sozinha na própria linha (largura cheia da coluna Combate).
+        // Tenacidade na grade de 3 colunas (acima): `min-width: 0` deixa o `<select>`/sufixo
+        // encolher com a coluna em vez de estourar a largura da caixa.
         &--tenacidade {
-            width: 100%;
+            min-width: 0;
         }
         // Deslocamento na mesma linha de Cadência/Bônus de Iniciativa (m4-04b, ajuste pós-mockup) —
         // mais largo que os outros dois porque carrega até 4 tags; as tags quebram linha aqui dentro

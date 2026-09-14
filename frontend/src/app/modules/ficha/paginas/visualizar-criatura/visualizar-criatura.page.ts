@@ -26,7 +26,6 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
@@ -67,7 +66,6 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     ReactiveFormsModule,
     Botao,
     BotaoIcone,
-    Chip,
     ColunaAcoes,
     ColunaAcoesItem,
     Icone,
@@ -122,10 +120,6 @@ export class CriaturaVisualizar {
   protected readonly acessos = signal<FichaAcessoResumoDto[]>([]);
 
   protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? 0);
-
-  /** Badge do cabeçalho — mesmo formato de `FichaVisualizar.classificacao`, migrado pra cá de
-   * `CriaturaVisualizacao` (criatura-visualizacao-shell-ui34): a página é dona do cabeçalho agora. */
-  protected readonly classificacao = `FICHA-CRT-${String(this.fichaId).padStart(4, '0')}`;
 
   /** Histórico de rolagens desta ficha (barra lateral do cabeçalho, gatilho D20) — mesmo padrão de `FichaVisualizar`. */
   protected readonly historicoRolagens = signal<readonly RolagemResumoDto[]>([]);
