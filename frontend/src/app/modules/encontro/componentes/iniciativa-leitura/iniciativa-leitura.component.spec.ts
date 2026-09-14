@@ -12,11 +12,11 @@ import {
 import { IniciativaLeitura } from './iniciativa-leitura.component';
 
 /**
- * Prova a composição de leitura do Encontro (m8-05): ordem/turno/rodada, cartões de combatente e
- * log da rodada aparecem, e — o que a spec exige provar, não só supor — nenhum controle de
- * condução (steppers de Vida/Energia, receber dano, remover, rolagem avulsa, edição de
- * iniciativa) existe no DOM renderizado, porque `podeAjustar`/`ehMestre`/`emEdicao` nunca são
- * passados a `CartaoCombatente` (ficam no `false` padrão do próprio primitivo).
+ * Prova a composição de leitura do Encontro (m8-05): ordem/turno/rodada e cartões de combatente
+ * aparecem, e — o que a spec exige provar, não só supor — nenhum controle de condução (steppers
+ * de Vida/Energia, receber dano, remover, rolagem avulsa, edição de iniciativa) existe no DOM
+ * renderizado, porque `podeAjustar`/`ehMestre`/`emEdicao` nunca são passados a `CartaoCombatente`
+ * (ficam no `false` padrão do próprio primitivo).
  */
 describe('IniciativaLeitura', () => {
   const combatente = (
@@ -113,12 +113,6 @@ describe('IniciativaLeitura', () => {
   it('renderiza um cartão por ocorrência da ordem — mesma derivação de painel-encontro.page.ts', () => {
     const { raiz } = montar();
     expect(raiz.querySelectorAll('app-cartao-combatente').length).toBe(2);
-  });
-
-  it('renderiza o log da rodada com os eventos que chegaram', () => {
-    const { raiz } = montar();
-    expect(raiz.querySelector('app-log-encontro')).not.toBeNull();
-    expect(raiz.textContent).toContain('Rodada 2 iniciada');
   });
 
   it('combatente não revelado mostra a etiqueta "Não revelado" — o componente só desenha o recorte que o backend já redigiu', () => {

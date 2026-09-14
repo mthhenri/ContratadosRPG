@@ -17,11 +17,10 @@ import {
 } from '../../encontro-leitura.util';
 import { rotuloStatusEncontro } from '../../rotulos-encontro';
 import { CartaoCombatente } from '../cartao-combatente/cartao-combatente.component';
-import { LogEncontro } from '../log-encontro/log-encontro.component';
 
 /**
- * Leitura do Encontro ativo — ordem, turno, rodada, cartões de combatente e log da rodada — sem
- * nenhum controle de condução (m8-05). Usada pelo Painel do espectador e pela Prévia de jogador
+ * Leitura do Encontro ativo — ordem, turno, rodada e cartões de combatente — sem nenhum controle
+ * de condução (m8-05). Usada pelo Painel do espectador e pela Prévia de jogador
  * (`m8-espectadores-campanha`): as duas só têm o `EncontroRecuperadoDto` já redigido pelo backend
  * (`EncontroService.recuperarEncontroAtivoParaEspectador`/`recuperarEncontroAtivoParaAlvo`, nunca
  * o recorte de quem está de fato olhando) — este componente só apresenta o que chegou. A mesma
@@ -34,11 +33,11 @@ import { LogEncontro } from '../log-encontro/log-encontro.component';
  * componentes cuja mutação sai só por `@Output` — o pai que não conecta a saída controla por
  * completo a consequência). `podeAjustar`/`ehMestre`/`emEdicao` nem são passados: ficam no
  * `false` padrão do próprio `CartaoCombatente`, então não há binding nenhum para inspecionar ou
- * errar. `LogEncontro` não tem `@Output` algum — é puramente apresentação.
+ * errar.
  */
 @Component({
   selector: 'app-iniciativa-leitura',
-  imports: [Cartao, Chip, CartaoCombatente, LogEncontro, EstadoVazio],
+  imports: [Cartao, Chip, CartaoCombatente, EstadoVazio],
   templateUrl: './iniciativa-leitura.component.html',
   styleUrl: './iniciativa-leitura.component.scss',
 })

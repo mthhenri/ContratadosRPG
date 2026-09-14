@@ -53,6 +53,28 @@
 
 ## Abertas
 
+### I-030 — Log de iniciativa: retomar em outro formato · encontro/iniciativa
+
+- **Ideia:** reconstruir uma trilha de eventos do combate (dano sofrido e de quem veio, gasto de
+  Energia, condição aplicada, virada de rodada) em um formato mais legível do que o painel
+  granular por turno que existiu antes — hoje a feature foi removida por completo do frontend, não
+  só escondida.
+- **Origem:** o painel `LogEncontro` (m7-07) tinha ficado oculto "por enquanto" desde a revisão da
+  `ui-33` (achado 3ª/4ª rodada, `CONTEXT.md`) — nesta conversa (2026-09-13) o autor decidiu que o
+  controle fino por rodada/turno "vai gerar mais confusão do que ter ele" e pediu a remoção
+  completa (não só ocultar): `LogEncontro` e seu uso em `IniciativaLeitura` (Painel do espectador +
+  Prévia de jogador) saíram do código.
+- **Por quê:** mestre e jogadores ainda podem querer uma trilha do que aconteceu no combate, mas o
+  formato anterior (marcador de rodada/turno, revelação progressiva, uma linha por evento) provou
+  ser granular demais para o uso real — vale repensar o formato (ex.: resumo por rodada, agrupado
+  por combatente) antes de reconstruir, em vez de reativar o mesmo desenho.
+- **Custo aparente:** o backend permanece intacto — tabela `encontro_evento` (migration `0021`) e a
+  gravação de eventos em `EncontroService` (dano, cura, energia, condição aplicada/expirada, rodada
+  iniciada, estado alterado) continuam funcionando e alimentando `EncontroRecuperadoDto.eventos`,
+  só sem consumidor no frontend. Uma reconstrução seria majoritariamente frontend (componente(s)
+  novo(s) de apresentação), a não ser que o novo formato exija um recorte diferente dos dados que o
+  backend já grava.
+
 ### I-029 — Extrair sub-componentes de apresentação de `FichaVisualizacao`/`FichaCampanhaCard` · frontend/ficha
 
 - **Ideia:** extrair pra sub-componentes próprios os três blocos que `ficha-separar-completa-e-

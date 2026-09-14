@@ -1185,16 +1185,6 @@ describe('PainelEncontro', () => {
     });
   });
 
-  it('esconde o log da rodada (por enquanto) para o mestre', () => {
-    const doMestre = montar(encontroAtivo, USUARIO_MESTRE).fixture.nativeElement as HTMLElement;
-    expect(doMestre.querySelector('app-log-encontro')).toBeNull();
-  });
-
-  it('esconde o log da rodada (por enquanto) para o jogador', () => {
-    const doJogador = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
-    expect(doJogador.querySelector('app-log-encontro')).toBeNull();
-  });
-
   describe('histórico: só o mestre vê "Encontros anteriores"', () => {
     const encerrado: EncontroResumoDto = {
       id: 2,
