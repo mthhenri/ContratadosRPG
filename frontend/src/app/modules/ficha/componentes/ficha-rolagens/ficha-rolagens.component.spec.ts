@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { vi } from 'vitest';
 
 import { HabilidadeCategoriaEnum, RolagemPresetTipoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
 import { FichaRolagens } from './ficha-rolagens.component';
 
 /**
@@ -392,6 +394,47 @@ describe('FichaRolagens', () => {
     const vm = alvo.componentInstance['presets']()[0];
     alvo.componentInstance['rolarPassoDoPreset'](vm, 0);
     expect(alvo.mostrar.mock.calls[0][0].resultado.dados[0]?.valores).toHaveLength(5);
+  });
+
+  describe('montador de rolagem (ui-35) — teclado de tokens da rolagem rápida', () => {
+    it('fica fechado por padrão e abre/fecha ao clicar no botão "Montar"', () => {
+      const alvo = montar([]);
+      expect(alvo.fixture.nativeElement.querySelector('app-montador-rolagem')).toBeNull();
+
+      alvo.componentInstance['alternarMontador']();
+      alvo.fixture.detectChanges();
+      expect(alvo.fixture.nativeElement.querySelector('app-montador-rolagem')).not.toBeNull();
+
+      alvo.componentInstance['alternarMontador']();
+      alvo.fixture.detectChanges();
+      expect(alvo.fixture.nativeElement.querySelector('app-montador-rolagem')).toBeNull();
+    });
+
+    it('token inserido no montador aparece na fórmula rápida e é rolável (mesmo FormControl)', () => {
+      const alvo = montar([]);
+      alvo.componentInstance['alternarMontador']();
+      alvo.fixture.detectChanges();
+
+      const montador = alvo.fixture.debugElement.query(By.directive(MontadorRolagem))
+        .componentInstance as MontadorRolagem;
+      montador.formula.set('2d6 + FOR [Físico]');
+      alvo.fixture.detectChanges();
+
+      expect(alvo.componentInstance['rapida'].value).toBe('2d6 + FOR [Físico]');
+      alvo.componentInstance['rolarRapida']();
+      expect(alvo.mostrar).toHaveBeenCalledOnce();
+      expect(alvo.mostrar.mock.calls[0][0].formula).toBe('2d6 + FOR [Físico]');
+    });
+
+    it('repassa atalhosDano para o montador (CORPO/FURTIVO só aparecem quando há valor)', () => {
+      const alvo = montar([], { atalhosDano: { corpo: '2D6 + FOR [Físico]', furtivo: null } });
+      alvo.componentInstance['alternarMontador']();
+      alvo.fixture.detectChanges();
+
+      const montador = alvo.fixture.debugElement.query(By.directive(MontadorRolagem))
+        .componentInstance as MontadorRolagem;
+      expect(montador.atalhosDano()).toEqual({ corpo: '2D6 + FOR [Físico]', furtivo: null });
+    });
   });
 
   describe('podeRolar (m3-51) — visualizador não rola dados', () => {

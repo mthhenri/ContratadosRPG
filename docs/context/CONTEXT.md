@@ -1735,7 +1735,14 @@ o teto de leitura de Anotações), preenchendo a coluna de Status no desktop e l
 crescer no mobile.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
-calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. Cada ficha
+calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. A "Rolagem
+rápida" ganhou um **montador de expressões** opcional (`ui-35`, `MontadorRolagem`,
+`frontend/.../shared/montador-rolagem/`): teclado de tokens (dado, atributo, `kh`/`kl`/`cm`/`!`/
+`?`, tipo de dano, atalhos `CORPO`/`FURTIVO`) que escreve na mesma `FormControl` do input de texto
+— convivem, não se substituem — mais duas ações compostas (`(ATR±n)dM` e `(<fórmula>)#N`) que
+fecham parênteses sozinhas para evitar o erro mais comum de montar essas duas formas na mão. O
+motor não mudou: o teclado só reproduz a gramática já existente, `validarFormula` continua sendo
+quem decide o que é aceito. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
 `ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda
 rolagem daquela ficha (bandeja de dados, histórico, feed "Rolagens Recentes" do painel de

@@ -28,6 +28,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
@@ -93,6 +94,7 @@ interface RolagemVM {
     Botao,
     BotaoIcone,
     EstadoVazio,
+    MontadorRolagem,
   ],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',
@@ -206,7 +208,13 @@ export class FichaRolagens {
 
   /** Campo de **rolagem avulsa** (m3-31): digita uma fórmula e rola na hora, **sem salvar** um preset. */
   protected readonly rapida = new FormControl('', { nonNullable: true });
-  private readonly rapidaTexto = toSignal(this.rapida.valueChanges, { initialValue: '' });
+  protected readonly rapidaTexto = toSignal(this.rapida.valueChanges, { initialValue: '' });
+
+  /** Painel do `MontadorRolagem` (ui-35), fechado por padrão — não some espaço até ser aberto. */
+  protected readonly montadorAberto = signal(false);
+  protected alternarMontador(): void {
+    this.montadorAberto.update((atual) => !atual);
+  }
   /** Validade da fórmula avulsa (live, já com `corpo`/`furtivo` expandidos): `null` enquanto vazia. */
   protected readonly rapidaValida = computed<boolean | null>(() => {
     const texto = this.rapidaTexto().trim();

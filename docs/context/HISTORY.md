@@ -1,5 +1,74 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-15 — ui-35-montador-rolagem: teclado de tokens para a "Rolagem rápida", sem tirar o texto livre de quem já sabe a sintaxe
+
+Origem: conversa com o autor ("vamos montar um montador de expressões mais end-user") sobre a
+fricção de montar uma fórmula de rolagem de cor — hoje a "Rolagem rápida" (`ficha-rolagens`) é só
+um `<input type="text">`, com a cheatsheet estática `guia-formula` como único apoio. Antes de
+implementar, os três exemplos que o autor propôs de cabeça
+(`3D10+FOR [Físico] + 3D6 [Químico]`, `(LUT+2)d20kh1cm1+PROF+5`,
+`((Pon+1)d20kh1cm1+PROF+3+2+1))#2`) foram conferidos contra `interpretarFormula` — os dois
+primeiros já eram válidos; o terceiro, como digitado, tinha um `)` a mais e falharia a validação.
+Essa conversa virou a decisão de desenho: além de botões de token único, o montador ganhou **duas
+ações compostas** — "Dado por atributo + ajuste" (`(ATR±n)dM` inteiro numa tacada) e "Repetir
+tudo" (`(<fórmula>)#N`, envolvendo a string atual) — justamente para fechar parênteses sozinhas
+nos dois casos que mais geram esse tipo de erro na mão.
+
+**Implementação:** componente novo `MontadorRolagem`
+(`frontend/src/app/shared/montador-rolagem/`), análogo aprovado `CalculadoraFlutuante` — mesma
+mecânica de `inserir(token)` concatenando texto num `model<string>` com guardas simples (operador
+`+`/`-` substitui o anterior em vez de encadear), sem parser client-side de "onde inserir" e sem
+nenhuma regra de dados nova (proibição #26): quem valida continua sendo `validarFormula`, já
+existente. Grupos de token: Dado (`d3`…`d20`, sem `d100` — fora da lista canônica do sistema),
+Atributo (10 + `PROF`/`NIV`), Manter maior/menor (`kh`/`kl` com `app-step-input` pro N), Avançado
+(`cm`, `!`, `?`), Tipo de dano (5, cor do token do tema), Atalhos do agente (`CORPO`/`FURTIVO`, só
+quando `atalhosDano()` tem valor) e Editar (dígitos/operadores/parênteses/apagar/limpar).
+Integrado em `ficha-rolagens.component` por um botão "Montar" (ícone `dado`) ao lado do
+`app-guia-formula` existente — abre/fecha um painel abaixo do input, ligado à mesma
+`FormControl` `rapida` (`[formula]="rapidaTexto()" (formulaChange)="rapida.setValue($event)"`);
+`guia-formula` continua existindo sem alteração, como apoio passivo ao lado do ativo.
+
+**Duas correções que só apareceram na verificação ao vivo, não no código:**
+1. As teclas nasceram como `app-botao` sem `[variante]` — exatamente o defeito que o `CLAUDE.md`
+   descreve ("um `app-botao` sem os inputs certos sai sem padding, peso ou caixa alta... não
+   parece um controle do produto"). Correção: teclas próprias em BEM (`.montador-rolagem__tecla`),
+   mesmo padrão hand-styled que `.calc-flutuante__tecla` já usa e que a própria spec já elegeu
+   como análogo — não é regressão ao "elemento nativo estilizado à mão" que o `CLAUDE.md` proíbe,
+   é o mesmo precedente já aprovado para um teclado denso de tokens curtos.
+2. A coluna Status da ficha trava a própria altura (`contain: size; overflow: hidden` em
+   `ficha-visualizacao.component.scss`, acima de `bp.$bp-tablet`) — um painel bem mais alto que a
+   lista de presets simplesmente **sumia cortado, sem barra de rolagem nenhuma**, achado só ao
+   rodar a aplicação real e rolar até o fim do painel. Corrigido dando ao `.montador-rolagem` o
+   mesmo padrão de `.ficha-rol__lista`/`.ficha-extras__painel`: teto próprio + `overflow-y: auto` +
+   `appOverflowFade`, sem teto no mobile (lá a página inteira já rola como uma coisa só). Registrado
+   em `MEMORY.md` como armadilha para qualquer conteúdo novo dentro de uma aba de Status.
+
+**Testes:** `npm run test --workspace=shared` 751/751 (motor não mudou). Frontend: suíte nova
+(`montador-rolagem.component.spec.ts`, 13 casos, incluindo os três exemplos do autor reproduzidos
+só por clique) + 3 casos novos em `ficha-rolagens.component.spec.ts` (abrir/fechar o painel,
+token escrito no montador chega na `FormControl` e rola, `atalhosDano` repassado) — 42/42 nos dois
+arquivos. Suíte completa do frontend: 1764/1766 (os 2 que falham —
+`inventario-esquadrao.component.spec.ts` e `detalhe-mestre.page.spec.ts` — são pré-existentes,
+reproduzidos idênticos com esta mudança stashed, fora do escopo desta task). Lint (`eslint`) dos
+arquivos tocados: 0 erros (só os `warn` de aspas simples/linha, já documentados como preexistentes
+em todo o repositório). Build de produção: mesmo aviso pré-existente de orçamento de bundle
+inicial (533.36 kB, número idêntico com e sem esta mudança — o componente é lazy dentro do módulo
+de ficha).
+
+**Verificação ao vivo** (Postgres 16 local sem Docker + backend + frontend reais, ficha criada via
+REST para o teste): os três exemplos do autor montados **só clicando nos botões** (sem digitar no
+input) e conferidos contra `rapidaValida()`/rolados de verdade na bandeja de dados — o exemplo 1
+(`3d10+FOR[F]+3d6[Q]`) rolou 29, separado em "Físico 19"/"Químico 10"/"+FOR 3", batendo exatamente
+com o texto montado. `1920×1080` e `360×800`: painel legível, teclas com identidade de botão real
+(borda + fundo, não texto nu), rolagem interna funcionando nos dois viewports (sem teto no
+mobile), nav inferior do mobile não sobrepondo conteúdo na rolagem real (um "overlap" que apareceu
+só no *fullPage screenshot* do Playwright era artefato de captura de elemento `position: fixed`,
+descartado depois de comparar com um screenshot real pós-scroll). Botão "Repetir" desabilitado com
+formula vazia mostra contraste reduzido de propósito (opacidade), habilitado mostra texto branco
+sobre `--accent` — conferido nos dois estados.
+
+Spec: `docs/specs/done/ui-35-montador-rolagem.spec.md`.
+
 ## 2026-09-14 — criatura-classificacao-ordem-mobile: no mobile, Classificação volta pra logo abaixo da foto (só nesse viewport)
 
 Ajuste do autor sobre a entrada anterior (abaixo): "No caso da visão mobile, ele pode ficar com a

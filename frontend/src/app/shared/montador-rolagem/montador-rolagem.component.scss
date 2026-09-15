@@ -1,0 +1,200 @@
+// Teclado de tokens da Rolagem rápida (ui-35). Só tokens do tema "Terminal de Contenção"
+// (proibição #29 do CLAUDE.md) — mesma densidade/agrupamento de `calculadora-flutuante`
+// (componente análogo aprovado), mas em seções empilhadas (não uma grade única), já que aqui há
+// bem mais categorias de token que numa calculadora comum. As teclas em si (`__tecla`) reproduzem
+// o estilo local de `.calc-flutuante__tecla` (borda + fundo + hover próprios) em vez do primitivo
+// `app-botao`: a mesma decisão já tomada e aprovada pela calculadora — uma grade densa de teclas
+// curtas (`d6`, `+`, `3`...) é um teclado, não uma lista de botões de ação isolados.
+
+@use "tema/breakpoints" as bp;
+
+.montador-rolagem {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    // A coluna de Status trava a própria altura (`contain: size` em `ficha-visualizacao`) e não
+    // deixa a página crescer com o conteúdo da aba — sem um teto próprio aqui, este painel (bem
+    // mais alto que a lista de presets) simplesmente sumia cortado, sem barra de rolagem nenhuma
+    // (achado ao vivo desta task). Mesmo padrão de `ficha-rol__lista`: teto + rolagem interna +
+    // `appOverflowFade` (fade só onde há de fato conteúdo cortado), sem teto no mobile (lá a
+    // página inteira já rola como uma coisa só).
+    max-height: 420px;
+    overflow-y: auto;
+
+    @include bp.mobile {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    --fade-topo: 0px;
+    --fade-base: 0px;
+
+    &.overflow-fade--topo,
+    &.overflow-fade--base {
+        -webkit-mask-image: linear-gradient(
+            to bottom,
+            transparent 0,
+            #000 var(--fade-topo),
+            #000 calc(100% - var(--fade-base)),
+            transparent 100%
+        );
+        mask-image: linear-gradient(
+            to bottom,
+            transparent 0,
+            #000 var(--fade-topo),
+            #000 calc(100% - var(--fade-base)),
+            transparent 100%
+        );
+    }
+    &.overflow-fade--topo {
+        --fade-topo: 24px;
+    }
+    &.overflow-fade--base {
+        --fade-base: 24px;
+    }
+
+    &__grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__titulo {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-mute);
+    }
+
+    &__dica {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-dim);
+
+        code {
+            font-family: var(--font-mono);
+            color: var(--text);
+        }
+    }
+
+    &__grade {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    &__linha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    &__rotulo-linha {
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+    &__segmentado {
+        flex-wrap: wrap;
+    }
+
+    &__tecla {
+        min-height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+
+        &:hover:not(:disabled) {
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        &:disabled {
+            color: var(--text-mute);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        &--larga {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        &--operador {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
+
+        &--extra {
+            color: var(--text-dim);
+        }
+
+        &--funcao {
+            color: var(--text-mute);
+            background: transparent;
+        }
+
+        &--destaque {
+            background: var(--accent);
+            color: var(--accent-text);
+            border-color: var(--accent);
+
+            &:hover:not(:disabled) {
+                background: var(--accent);
+                filter: brightness(1.08);
+            }
+        }
+
+        &--dano {
+            font-size: 11px;
+
+            &-fisico {
+                color: var(--dano-fisico);
+                border-color: var(--dano-fisico-border);
+            }
+
+            &-balistico {
+                color: var(--dano-balistico);
+                border-color: var(--dano-balistico-border);
+            }
+
+            &-explosao {
+                color: var(--dano-explosao);
+                border-color: var(--dano-explosao-border);
+            }
+
+            &-quimico {
+                color: var(--dano-quimico);
+                border-color: var(--dano-quimico-border);
+            }
+
+            &-geral {
+                color: var(--dano-geral);
+                border-color: var(--dano-geral-border);
+            }
+        }
+    }
+}
