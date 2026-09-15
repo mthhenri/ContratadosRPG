@@ -149,7 +149,7 @@
                         (avatarEntrou)="agendarPreviewAvatar($event, ficha.imagemUrl)"
                         (avatarSaiu)="cancelarPreviewAvatar()"
                         (abrirFicha)="abrirFichaFlutuante(ficha, TipoFichaEnum.JOGADOR)"
-                        (alternarMenu)="alternarMenuFicha(ficha, $event)"
+                        (alternarMenu)="alternarMenuFicha(ficha, TipoFichaEnum.JOGADOR, $event)"
                     />
                 </li>
                 }
@@ -170,48 +170,13 @@
             <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
                 @for (criatura of criaturasEsquadrao(); track criatura.id) {
                 <li>
-                    <div
-                        class="detalhe-mestre__criatura-card"
-                        (dblclick)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
-                    >
-                        <div class="detalhe-mestre__criatura-cabecalho">
-                            <span
-                                class="detalhe-mestre__criatura-avatar"
-                                aria-hidden="true"
-                                [style.--cor-ficha]="criatura.cor"
-                            >
-                                @if (criatura.imagemUrl; as urlImagem) {
-                                <img [src]="urlImagem" alt="" />
-                                }
-                                <button
-                                    app-botao-icone
-                                    [redondo]="true"
-                                    tamanho="mini"
-                                    type="button"
-                                    class="detalhe-mestre__criatura-abrir"
-                                    [attr.aria-label]="'Abrir ficha de ' + criatura.nome"
-                                    [appTooltip]="'Abrir ficha'"
-                                    (click)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
-                                >
-                                    <app-icone nome="visao-geral" />
-                                </button>
-                            </span>
-                            <div class="detalhe-mestre__criatura-corpo">
-                                <span class="detalhe-mestre__criatura-dono">Ameaça</span>
-                                <span class="detalhe-mestre__criatura-nome"
-                                    >{{ criatura.nome }}</span
-                                >
-                                <span class="detalhe-mestre__criatura-meta"
-                                    >NA {{ criatura.naTexto }}</span
-                                >
-                                <span class="detalhe-mestre__criatura-vitais">
-                                    Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—' }}
-                                    @if (criatura.defesa !== undefined) { · Defesa {{
-                                    criatura.defesa }} }
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    <app-criatura-esquadrao-card
+                        [criatura]="criatura"
+                        [ultimaRolagem]="ultimaRolagemFicha(criatura.id)"
+                        [menuAberto]="menuFichaAberto()?.id === criatura.id"
+                        (abrirFicha)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
+                        (alternarMenu)="alternarMenuFicha(criatura, TipoFichaEnum.CRIATURA, $event)"
+                    />
                 </li>
                 }
             </ul>
@@ -342,7 +307,7 @@
         class="detalhe-mestre__ficha-menu-item"
         type="button"
         role="menuitem"
-        (click)="abrirFichaCompletaNovaAba(menuAberto.id)"
+        (click)="abrirFichaCompletaNovaAba(menuAberto.id, menuAberto.tipo)"
     >
         <app-icone nome="olho" />
         <span>Abrir ficha completa</span>
@@ -383,9 +348,8 @@
 <app-modal [aberto]="true" titulo="Duplicar ficha" (fechou)="cancelarDuplicar()">
     <span modalIcone class="dialogo__icone"><app-icone nome="duplicar" /></span>
     <p class="dialogo__aviso">
-        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong
-            >{{ pendenteDuplicar.donoNome }}</strong
-        >"?
+        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"@if
+        (pendenteDuplicar.donoNome; as donoNome) { de "<strong>{{ donoNome }}</strong>" }?
     </p>
     <button
         app-botao
@@ -690,9 +654,7 @@
         } }
     </div>
 </ng-template>
-}
-
-@if (previewAvatar(); as preview) {
+} @if (previewAvatar(); as preview) {
 <div
     class="detalhe-mestre__avatar-preview"
     [style.top.px]="preview.top"

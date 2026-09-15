@@ -1,5 +1,76 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-15 — criatura-card-esquadrao-mestre: card de criatura na visão de mestre ganha paridade com o de jogador
+
+Pedido do autor em conversa: o card de criatura da grade "Criaturas" (visão de mestre,
+`detalhe-mestre.page.html`) devia "seguir o mesmo que tem do jogador" — o card de jogador
+(`EspectadorFichaCard`, análogo escolhido) já tem foto, menu "⋯" (abrir ficha completa/duplicar/
+remover da campanha/excluir ficha), barra de Vida e "última rolagem"; o de criatura era markup
+hand-rolled sem nenhum desses (só nome + "Ameaça" estático + "NA X" + Vida em texto puro). Pedido
+específico: manter a foto no tamanho atual (100×100, não 128×128 do jogador); trocar o rótulo
+"Ameaça" pelo registro/contrato real da criatura (SCP-0000); na linha "NA X", mostrar Porte,
+Comportamento e Nível de Ameaça juntos; Vida com barra igual à do jogador; Defesa na linha de
+baixo igual à do jogador; e adicionar "última rolagem".
+
+**Implementação — dados (shared/backend):** `FichaResumoDto` (`shared/src/dtos/ficha/
+ficha-operacao.dtos.ts`) ganhou `registro`/`porte`/`comportamento` (opcionais, só presentes numa
+`CRIATURA`) — não existiam no resumo, só no documento completo `FichaCriaturaDadosDto`.
+`FichaRepository.colunasResumo()` ganhou as 3 extrações do JSONB (`dados->>'registro'`,
+`dados->>'porte'`, `dados->'identidade'->>'comportamento'`), e `FichaService.paraResumoPublico()`
+repassa os 3 campos ao DTO público.
+
+**Implementação — frontend:** novo componente `CriaturaEsquadraoCard` (`frontend/src/app/modules/
+campanha/componentes/criatura-esquadrao-card/`), mesma receita visual/BEM de
+`EspectadorFichaCard` (avatar hachurado com `--cor-ficha`, botão "Abrir ficha" sobre o avatar,
+`app-barra-recurso` de Vida — sem Energia, criatura não tem —, linha de reação só com Defesa —
+criatura não tem Esquiva/Bloqueio/Contra-ataque de verdade, `guia_de_mestre-v4.0.0.md` —, faixa
+"Última rolagem" no rodapé), avatar mantido em 100×100 (pedido explícito do autor). O antigo
+bloco `.detalhe-mestre__criatura-*` saiu do SCSS/HTML da página. `detalhe-mestre.page.ts`:
+`ItemCriatura` (interface local) virou `CriaturaEsquadraoCardDados` (tipo do componente),
+`criaturasEsquadrao()` traduz `porte`/`comportamento`/`na` com `nomePorte`/`rotuloComportamento`/
+`rotuloNivelAmeaca` (`rotulos-criatura.ts`, já existentes) e resolve o placeholder do registro
+("SCP - ?????", mesmo texto de `CriaturaVisualizacao.registroExibido`). O dropdown "⋯" (já
+genérico, `menuFichaAberto`/`alternarMenuFicha`/`pedirDuplicar`/etc.) foi generalizado: `donoNome`
+virou opcional (criatura não tem dono real — pertence ao mestre) e ganhou `tipo`, que
+`abrirFichaCompletaNovaAba` usa para ramificar a rota — jogador continua indo pro acervo
+(`/fichas/:id`), criatura vai para a própria rota (`/campanhas/:campanhaId/criatura/:id`); sem
+essa ramificação "Abrir ficha completa" numa criatura teria caído em `FichaVisualizacao`
+(jogador), que não sabe renderizar o documento de criatura. O diálogo de duplicar omite o
+"de {{dono}}" quando ausente (criatura).
+
+**Achado ao vivo, corrigido antes do fecho:** o guard `criatura.defesa !== undefined` (copiado
+do padrão de `EspectadorFichaCard`) não escondia a linha "Def" para a criatura sem Defesa
+salva — o valor chega como `null` (não `undefined`) quando a coluna SQL é `NULL`, e
+`null !== undefined` é `true`. Virou `!= null` (cobre os dois). O mesmo padrão existe em
+`EspectadorFichaCard` para `defesa`/`esquiva`/`bloqueio`/`contraAtaque` — fica registrado como
+`P-069` (fora do escopo desta task; provavelmente afeta a classe Civil, que não tem esses
+derivados).
+
+**Testes:** novo `criatura-esquadrao-card.component.spec.ts` (9/9 — registro/nome/classificação,
+só Defesa na reação, faixa de última rolagem nas duas formas, crítico, menu sempre visível,
+eventos `abrirFicha`/`alternarMenu`). `detalhe-mestre.page.spec.ts` atualizado (fixture de
+criatura ganhou `registro`/`porte`/`comportamento`; testes novos: conteúdo do card, `abrirFicha`
+do card de criatura — com `mockImplementation` no `FichaFlutuante.abrir()` espiado, porque a
+fixture rasa `recuperarFichaCriatura: () => of({})` deste spec crasha `CriaturaVisualizacao` se o
+`abrir()` real rodar —, ramificação de rota do "Abrir ficha completa" para os dois tipos, e
+duplicar de criatura sem exigir dono) — 38/39, a 1 falha (`abre a dialog de duplicar e chama
+FichaService.duplicarFicha ao confirmar`, jogador) é pré-existente e alheia a esta task (confirmada
+via `git stash` rodando o mesmo teste isolado no HEAD anterior a qualquer mudança desta task —
+registrada como `P-068`, provavelmente introduzida pela mudança de ícones "olho" do commit
+`75271c7c`, concorrente nesta mesma branch). `npm run build`/`test` de `shared` (751/751) e
+`backend` (181/181 do módulo `ficha`) verdes; lint dos três workspaces sem erro novo (só os
+milhares de warnings pré-existentes de aspas/`max-len`, nenhum workspace tem erro).
+
+**Verificado ao vivo** (Postgres + backend + frontend reais, cenário semeado via REST — usuário,
+campanha, ficha de criatura com dados coerentes de `shared/regras/criatura`, réplica do fixture
+"A Estátua") em `1920×1080` e `360×800`: grid com uma criatura completa (registro "SCP-049",
+"Grande · Caçadora · Média", barra de Vida 1050/1050, "Def 30") e uma crítica (Vida 0, sem
+registro — mostra "SCP - ?????", borda vermelha) lado a lado; abertura do menu "⋯" com os 4
+itens; duplicar uma criatura (mensagem do diálogo sem "de" — confirmado sem o "undefined" que
+apareceria sem a correção); "Abrir ficha completa" abrindo `/campanhas/:id/criatura/:id` de
+verdade numa aba nova, renderizando `CriaturaVisualizacao` sem erro de console (o cenário que a
+ramificação de rota corrigiu). Task solta, sem spec.
+
 ## 2026-09-14 — icones-olho-selo: 3 itens de "olho" da coluna de ações ganham selos distintos
 
 Pedido do autor a partir de um screenshot da coluna de ações expandida (ficha de criatura):

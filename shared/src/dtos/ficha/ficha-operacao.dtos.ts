@@ -1,4 +1,11 @@
-import type { ArquetipoEnum, ClasseEnum, NivelAmeacaEnum, TipoFichaEnum } from '../../enums';
+import type {
+  ArquetipoEnum,
+  ClasseEnum,
+  ComportamentoCriaturaEnum,
+  NivelAmeacaEnum,
+  PorteCriaturaEnum,
+  TipoFichaEnum,
+} from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaJogadorDadosDto } from './ficha.dtos';
 
@@ -133,6 +140,12 @@ export interface FichaResumoDto {
    * seletor de combatentes do Encontro, que mostra NA + VD no lugar de classe/nível.
    */
   readonly vd?: number | null;
+  /** Registro/contrato de catalogação (`FichaCriaturaDadosDto.registro`, ex.: "SCP-049") — só presente numa ficha `CRIATURA`. */
+  readonly registro?: string | null;
+  /** Porte (`FichaCriaturaDadosDto.porte`) — só presente numa ficha `CRIATURA`. */
+  readonly porte?: PorteCriaturaEnum | null;
+  /** Comportamento (`FichaCriaturaDadosDto.identidade.comportamento`) — só presente numa ficha `CRIATURA`. */
+  readonly comportamento?: ComportamentoCriaturaEnum | null;
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;

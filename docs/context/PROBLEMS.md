@@ -29,6 +29,45 @@
 
 ## Ativos
 
+### P-068 — Teste "abre a dialog de duplicar" de `CampanhaDetalheMestre` quebrou (jogador) · `ABERTO` · frontend/teste
+
+- **Sintoma:** `detalhe-mestre.page.spec.ts` — `abre a dialog de duplicar e chama
+  FichaService.duplicarFicha ao confirmar` (cartão de **jogador**) falha com
+  `TypeError: Cannot read properties of undefined (reading 'click')` ao tentar clicar em
+  "Confirmar duplicação" — o `app-modal` de duplicar não abre depois do clique no item do menu.
+- **Causa:** não investigada. Confirmado pré-existente (roda isolado e falha do mesmo jeito no
+  commit `75271c7c` — "registro (SCP) editável na criatura e ícones de olho diferenciados",
+  concorrente nesta mesma branch — antes de qualquer mudança da `criatura-card-esquadrao-mestre`
+  tocar o arquivo). Suspeita, não confirmada: a técnica nova de ícone "base + selo" desse commit
+  mudou a estrutura interna de `app-icone` nos 5 lugares que ele lista, um dos quais é o próprio
+  menu "⋯" do cartão do Esquadrão.
+- **Contorno:** nenhum — o teste falha isolado (`--filter="duplicar"`), não é efeito de ordem com
+  outros testes.
+- **Correção:** não investigada.
+- **Desde:** commit `75271c7c` (2026-09-14), achado durante `criatura-card-esquadrao-mestre`
+  (2026-09-15) ao rodar a suíte focada de `detalhe-mestre.page.spec.ts`.
+
+### P-069 — `!== undefined` não cobre `null` vindo do SQL em campos opcionais do mini-card · `ABERTO` · frontend
+
+- **Sintoma:** um campo opcional de `FichaResumoDto` (ex.: `defesa`/`esquiva`/`bloqueio`/
+  `contraAtaque`) que a SQL devolve como `NULL` (coluna ausente no JSONB) chega ao cliente como
+  `null` via JSON, não como `undefined` — um guard de template `@if (campo !== undefined)` (o
+  padrão usado em `EspectadorFichaCard.espectador-ficha__reacoes`) não esconde a linha, e o rótulo
+  aparece sem valor (ex.: "Def" sem número). Achado ao vivo em `CriaturaEsquadraoCard` (corrigido
+  ali para `!= null`) — `EspectadorFichaCard` tem o mesmo padrão para os 4 campos e não foi
+  corrigido (fora do escopo da task que achou o problema).
+- **Causa:** `FichaResumoDto` tipa os campos como `?: number` (opcional), mas o valor real que
+  atravessa a fronteira HTTP pode ser `null` — a assinatura TypeScript não distingue os dois, e o
+  guard foi escrito pensando só em "propriedade ausente do objeto JS", não em "SQL NULL
+  serializado".
+- **Contorno:** nenhum — o card de jogador com classe sem Defesa/Esquiva/Bloqueio (Civil) pode
+  estar mostrando rótulos vazios hoje; não verificado ao vivo para confirmar o alcance.
+- **Correção:** trocar `!== undefined` por `!= null` nos 4 guards de
+  `espectador-ficha-card.component.html`, ou (mais robusto) tipar `FichaResumoDto` como
+  `number | null` nesses campos para o TypeScript forçar o guard certo em todo consumidor.
+- **Desde:** provavelmente desde a criação de `EspectadorFichaCard` (m8-07); achado em
+  `criatura-card-esquadrao-mestre` (2026-09-15).
+
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo

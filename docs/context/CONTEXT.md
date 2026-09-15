@@ -4,8 +4,35 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `icones-olho-selo` concluída — os 3 itens de "olho" da coluna de ações ("Tornar rolagens
+> **Última revisão:** 2026-09-15 · **Última decisão registrada:**
+> `criatura-card-esquadrao-mestre` concluída — o card de criatura da grade "Criaturas" (visão de
+> mestre) saiu de markup hand-rolled dentro de `detalhe-mestre.page.html` (sem menu "⋯", sem barra
+> de Vida, sem última rolagem) para `CriaturaEsquadraoCard`, componente próprio que segue a mesma
+> receita visual do análogo `EspectadorFichaCard` (Esquadrão de jogadores da mesma tela — pedido
+> do autor: "seguir o mesmo que tem do jogador"): avatar (mantido em 100×100, tamanho que a
+> criatura já usava — só o jogador é 128×128), botão "Abrir ficha" sobre o avatar, menu "⋯" (abrir
+> ficha completa/duplicar/remover da campanha/excluir, reusando o mesmo dropdown genérico do
+> cartão de jogador — `menuFichaAberto` ganhou `tipo`/`donoNome` opcional pra servir os dois),
+> `app-barra-recurso` de Vida (sem Energia — criatura não tem), linha de reação só com Defesa
+> (criatura não tem Esquiva/Bloqueio/Contra-ataque de verdade) e a faixa "Última rolagem" no
+> rodapé. A legenda que antes dizia só "Ameaça" (texto estático, sem dado nenhum) virou o registro
+> real da criatura (`FichaCriaturaDadosDto.registro`, ex. "SCP-049", placeholder "SCP - ?????"); a
+> linha abaixo do nome virou "Porte · Comportamento · Nível de Ameaça" (antes só "NA {{na}}").
+> `FichaResumoDto` (shared) e `colunasResumo()` (backend) ganharam `registro`/`porte`/
+> `comportamento` — não existiam no resumo, só no documento completo. "Abrir ficha completa" para
+> criatura foi corrigido pra ir em `/campanhas/:id/criatura/:id` (rota própria da criatura), não
+> `/fichas/:id` (acervo, só entende `FichaVisualizacao` de jogador — abriria quebrado). Achado ao
+> vivo, corrigido antes do fecho: o guard `defesa !== undefined` (copiado do análogo) não cobre o
+> `null` que a SQL devolve pra uma criatura sem Defesa salva — virou `!= null`; o mesmo padrão em
+> `EspectadorFichaCard` (jogador) fica registrado como problema aberto (`P-069`), fora do escopo
+> desta task. Testes: `criatura-esquadrao-card` (novo, 9/9) + `detalhe-mestre` focado 38/39 (1
+> falha pré-existente e alheia — `P-068`); build/lint dos três workspaces 0 erros novos.
+> Verificado ao vivo (Postgres + backend + frontend reais, seed via REST) em `1920×1080`/
+> `360×800`: grid com uma criatura completa e uma crítica (Vida 0, sem registro) lado a lado,
+> abertura do menu "⋯", duplicar (mensagem sem "de" para criatura), e "Abrir ficha completa"
+> confirmada abrindo `CriaturaVisualizacao` de verdade, sem erro de console. Task solta, sem spec.
+> Detalhe em `HISTORY.md`.
+> Antes: `icones-olho-selo` concluída — os 3 itens de "olho" da coluna de ações ("Tornar rolagens
 > públicas"/"Ocultar rolagens", "Acesso de visualização", "Exibir/Ocultar ficha") ficavam
 > parecidos demais entre si; ganharam a mesma técnica de "base + selo" de `fragmento-construtor`/
 > `fragmento-potencializador` — 3 ícones novos (`olho-rolagens`/`olho-fechado-rolagens` com selo

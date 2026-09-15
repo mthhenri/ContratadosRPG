@@ -12,6 +12,7 @@ import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/c
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { EspectadorFichaCard, type EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
+import { CriaturaEsquadraoCard, type CriaturaEsquadraoCardDados } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
@@ -30,7 +31,7 @@ import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
-import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
+import { nomePorte, rotuloComportamento, rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 
 /** Hover sustentado antes de abrir a prévia ampliada de um avatar. */
 const MS_PREVIEW_AVATAR = 600;
@@ -38,21 +39,8 @@ const MS_PREVIEW_AVATAR = 600;
 /** Lado do preview ampliado do avatar em pixels, sem recorte. */
 const PX_PREVIEW_AVATAR = 300;
 
-/**
- * Uma criatura na grade do Esquadrão — recorte enxuto de `FichaResumoDto` (`tipo === CRIATURA`),
- * mesmo formato que o antigo `CampanhaDetalhe.ItemCriatura` já usava.
- */
-interface ItemCriatura {
-  readonly id: number;
-  readonly usuarioId: number;
-  readonly imagemUrl: string | null;
-  readonly cor: string | null;
-  readonly nome: string;
-  readonly naTexto: string;
-  readonly vidaAtual: number;
-  readonly vidaMaxima?: number;
-  readonly defesa?: number;
-}
+/** Placeholder do registro/contrato quando a criatura não tem um catalogado — mesmo texto de `CriaturaVisualizacao.registroExibido`. */
+const REGISTRO_SEM_CATALOGACAO = 'SCP - ?????';
 
 /**
  * Visão do MESTRE em `/campanhas/:id` — redesenho (`campanha-detalhe-mestre-coluna-acoes.spec.md`).
@@ -71,6 +59,7 @@ interface ItemCriatura {
     Segmentado,
     SegmentadoItem,
     EspectadorFichaCard,
+    CriaturaEsquadraoCard,
     InventarioEsquadrao,
     FichaFlutuante,
     CalculadoraFlutuante,
@@ -194,21 +183,25 @@ export class CampanhaDetalheMestre {
     return this.dados.rolagensFeed().find((rolagem) => rolagem.fichaId === fichaId) ?? null;
   }
 
-  /** Criaturas da campanha — mesma subseção da grade, `na`/`defesa` já resolvidos por `FichaResumoDto`. */
-  protected readonly criaturasEsquadrao = (): readonly ItemCriatura[] =>
+  /** Criaturas da campanha — mesma subseção da grade, `na`/`porte`/`comportamento`/`defesa` já resolvidos por `FichaResumoDto`. */
+  protected readonly criaturasEsquadrao = (): readonly CriaturaEsquadraoCardDados[] =>
     this.dados
       .fichas()
       .filter((ficha) => ficha.tipo === TipoFichaEnum.CRIATURA)
-      .map((ficha): ItemCriatura => ({
+      .map((ficha): CriaturaEsquadraoCardDados => ({
         id: ficha.id,
         usuarioId: ficha.usuarioId,
         imagemUrl: ficha.imagemUrl,
         cor: ficha.cor ?? null,
         nome: ficha.nome,
+        registroTexto: ficha.registro?.trim() || REGISTRO_SEM_CATALOGACAO,
+        porteTexto: ficha.porte ? nomePorte(ficha.porte) : '—',
+        comportamentoTexto: ficha.comportamento ? rotuloComportamento(ficha.comportamento) : '—',
         naTexto: ficha.na ? rotuloNivelAmeaca(ficha.na) : '—',
         vidaAtual: ficha.vidaAtual,
         vidaMaxima: ficha.vidaMaxima,
         defesa: ficha.defesa,
+        critico: ficha.vidaAtual <= 0,
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
 
@@ -235,10 +228,24 @@ export class CampanhaDetalheMestre {
   // template (não dentro do grid, que tem overflow+mask-image e recortaria um `position: fixed`
   // filho na pintura), mesmo padrão do antigo `menuFichaAberto` de `CampanhaDetalhe`.
 
-  protected readonly menuFichaAberto = signal<{ id: number; nome: string; donoNome: string } | null>(null);
+  /**
+   * `donoNome` fica ausente numa criatura (`CriaturaEsquadraoCard` não tem dono real — pertence
+   * ao mestre) — o dropdown e a confirmação de duplicar tratam a ausência condicionalmente.
+   * `tipo` decide a rota de "Abrir ficha completa" (`abrirFichaCompletaNovaAba`).
+   */
+  protected readonly menuFichaAberto = signal<{
+    id: number;
+    nome: string;
+    donoNome?: string;
+    tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA;
+  } | null>(null);
   protected readonly menuFichaPosicao = signal<{ top?: number; bottom?: number; right: number } | null>(null);
 
-  protected alternarMenuFicha(ficha: EspectadorFichaCardDados, evento: MouseEvent): void {
+  protected alternarMenuFicha(
+    ficha: { readonly id: number; readonly nome: string; readonly donoNome?: string },
+    tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA,
+    evento: MouseEvent,
+  ): void {
     if (this.menuFichaAberto()?.id === ficha.id) {
       this.fecharMenuFicha();
       return;
@@ -252,7 +259,7 @@ export class CampanhaDetalheMestre {
         ? { bottom: window.innerHeight - retangulo.top + 6, right }
         : { top: retangulo.bottom + 6, right },
     );
-    this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome: ficha.donoNome });
+    this.menuFichaAberto.set({ id: ficha.id, nome: ficha.nome, donoNome: ficha.donoNome, tipo });
   }
 
   protected fecharMenuFicha(): void {
@@ -260,17 +267,28 @@ export class CampanhaDetalheMestre {
     this.menuFichaPosicao.set(null);
   }
 
-  /** Abre a ficha completa (`/fichas/:id`) em outra aba — mesma rota do acervo. */
-  protected abrirFichaCompletaNovaAba(fichaId: number): void {
+  /**
+   * Abre a ficha completa em outra aba — jogador vai pro acervo (`/fichas/:id`), criatura pra
+   * própria rota de visualização (`/campanhas/:campanhaId/criatura/:id`, não existe equivalente
+   * campanha-less pra criatura hoje).
+   */
+  protected abrirFichaCompletaNovaAba(
+    fichaId: number,
+    tipo: typeof TipoFichaEnum.JOGADOR | typeof TipoFichaEnum.CRIATURA,
+  ): void {
     this.fecharMenuFicha();
-    const url = this.router.serializeUrl(this.router.createUrlTree(['/fichas', fichaId]));
+    const rota =
+      tipo === TipoFichaEnum.CRIATURA
+        ? ['/campanhas', this.dados.id, 'criatura', fichaId]
+        : ['/fichas', fichaId];
+    const url = this.router.serializeUrl(this.router.createUrlTree(rota));
     window.open(url, '_blank', 'noopener');
   }
 
-  protected readonly confirmandoDuplicar = signal<{ id: number; nome: string; donoNome: string } | null>(null);
+  protected readonly confirmandoDuplicar = signal<{ id: number; nome: string; donoNome?: string } | null>(null);
   protected readonly duplicando = signal<number | null>(null);
 
-  protected pedirDuplicar(fichaId: number, fichaNome: string, donoNome: string): void {
+  protected pedirDuplicar(fichaId: number, fichaNome: string, donoNome?: string): void {
     this.fecharMenuFicha();
     this.confirmandoDuplicar.set({ id: fichaId, nome: fichaNome, donoNome });
   }
