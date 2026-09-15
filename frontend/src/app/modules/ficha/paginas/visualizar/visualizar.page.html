@@ -38,7 +38,7 @@
         <div class="coluna-acoes__categoria">Gestão</div>
         <button
             app-coluna-acoes-item
-            icone="olho"
+            icone="olho-membros"
             appTooltip="Acesso de visualização"
             (click)="abrirAcesso()"
         >
@@ -223,7 +223,7 @@
                             role="menuitem"
                             (click)="abrirAcesso()"
                         >
-                            <app-icone nome="olho" />
+                            <app-icone nome="olho-membros" />
                             <span>Acesso de visualização</span>
                             @if (acessos().length) {
                             <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>

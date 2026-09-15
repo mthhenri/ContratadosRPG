@@ -89,7 +89,38 @@
                                     {{ dados().identidade.designacao }}
                                 </h1>
                             }
-                            <span class="criatura__registro">{{ registroExibido() }}</span>
+                            @if (ajustavel()) {
+                                <app-valor-editavel
+                                    class="criatura__registro"
+                                    [valor]="registroExibido()"
+                                    [editando]="editando('registro')"
+                                    [alinhamento]="'centro'"
+                                    [variante]="'herdado'"
+                                    rotuloAria="registro"
+                                    (editarSolicitado)="editar('registro')"
+                                >
+                                    <input
+                                        #entradaRegistro
+                                        appAutoFocus
+                                        class="criatura__registro-entrada"
+                                        type="text"
+                                        [value]="dados().registro ?? ''"
+                                        aria-label="Registro"
+                                        [disabled]="!ajustavel()"
+                                        (keydown.enter)="
+                                            confirmarRegistro(entradaRegistro.value);
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarRegistro(entradaRegistro.value);
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                </app-valor-editavel>
+                            } @else {
+                                <span class="criatura__registro">{{ registroExibido() }}</span>
+                            }
                         </div>
 
                         @if (ajustavel()) {

@@ -1,5 +1,121 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-14 — icones-olho-selo: 3 itens de "olho" da coluna de ações ganham selos distintos
+
+Pedido do autor a partir de um screenshot da coluna de ações expandida (ficha de criatura):
+"esses ícones de olho tão muito parecidos, tem que diferenciar mais". Os 3 itens — "Tornar
+rolagens públicas"/"Ocultar rolagens" (toggle de `rolagemOculta`), "Acesso de visualização"
+(abre diálogo de concessões por usuário, não é toggle) e "Exibir/Ocultar ficha" (toggle de
+`oculta`) — usavam só o par `olho`/`olho-fechado`, e "Acesso de visualização" usa `olho` fixo,
+ficando idêntico ao estado aberto dos outros dois sempre que calha de coincidir.
+
+Perguntado ao autor (`AskUserQuestion`) se a solução era trocar só o ícone de "Acesso de
+visualização" por `membros` (grupo de pessoas), a resposta pediu mais: "acho que devemos ter
+ícones únicos para estas opções, talvez ícones 'duplos' tipo os de fragmentos construtor/
+potencializador" — a técnica que `fragmento-construtor`/`fragmento-potencializador`/`link`/
+`chama` já usam no mesmo arquivo: uma forma-base (diamante) + um selo pequeno no canto inferior
+direito que muda por variante.
+
+**Correção:** 3 ícones novos em `IconeNome`/`icone.component.html`, aplicando a mesma técnica à
+base `olho`/`olho-fechado` em vez do diamante — o "canto vazio" que a técnica explora existe aqui
+também: a lente do `olho` só toca os pontos médios das 4 bordas do viewBox 24×24
+(`M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z`), deixando os 4 cantos livres por construção, sem
+precisar encolher a base como o diamante precisou.
+- `olho-rolagens` / `olho-fechado-rolagens`: `olho`/`olho-fechado` + selo de dado (quadrado
+  arredondado + 2 pips) — "Tornar rolagens públicas"/"Ocultar rolagens" (ainda um toggle de
+  verdade, por isso mantém os dois estados).
+- `olho-membros`: `olho` + selo de uma pessoa (cabeça + ombros, recorte reduzido de `agente`) —
+  "Acesso de visualização" não é toggle (ação fixa, um ícone só). Primeira tentativa usou 2
+  cabeças sobrepostas (mais fiel a `membros`), mas em captura de tela ficou uma mancha confusa no
+  selo de 7×7px; simplificado pra 1 cabeça, que lê limpo no tamanho real do menu.
+- `olho`/`olho-fechado` seguem sem selo — reservados pro toggle "Exibir/Ocultar ficha" (o mais
+  fundamental dos três, e o único que já não precisava de diferenciação).
+
+Aplicado nos 5 lugares que renderizavam esses 2 ícones: coluna de ações e menu mobile "⋯" de
+`visualizar-criatura.page.html`, coluna de ações e menu mobile de `visualizar.page.html` (ficha
+de jogador — só "Acesso de visualização", que não tem toggle de rolagens ali), e a coluna de
+ações de `detalhe-jogador.page.html` (visão de campanha do mestre sobre a ficha de um jogador).
+
+**Testes/build:** novo teste em `icone.component.spec.ts` (assinatura de forma única entre os 5
+ícones de olho); suíte focada `icone`/`visualizar-criatura`/`visualizar`/`detalhe-jogador`
+102/102; build de produção limpo (só o aviso pré-existente de budget, `P-004`); lint 0 erros.
+
+**Verificação ao vivo** (Postgres + backend + frontend reais, cenário via REST): capturas com
+`deviceScaleFactor: 4` de cada ícone isolado confirmaram os 3 selos visualmente distintos (dado,
+pessoa, sem selo) tanto no zoom quanto no tamanho real da coluna de ações (`1920×1080`) e no menu
+"⋯" do mobile (`360×800`, sem overflow, sem regressão nos demais itens do menu).
+
+Task solta, sem spec (pedido direto do autor a partir de um screenshot).
+
+## 2026-09-14 — criatura-registro-scp-editavel: "REGISTRO — 0009" vira campo livre "SCP-XXX" editável pelo mestre
+
+Pedido do autor a partir de um screenshot da ficha de criatura: "esse cara escrito registro, eu
+lembro de ter falado dele ser similar ao que tem ali do contrato pro jogador [...] deveria ser o
+SCP-0000 e eu poder clicar pra editar pra colocar o número de SCP dele [...] eu tenho os meus SCPs
+dentro do universo e também posso colocar o número deles ali". Investigação confirmou o análogo: a
+ficha de jogador já tem exatamente esse mecanismo (`FichaVisualizacao.contratoTexto`, `m3-40`) — um
+`dados().contrato` opcional, editável só pelo mestre, exibido como "CONTRATO — 0000" com "0000" de
+placeholder. Na criatura, "REGISTRO — 0009" nunca foi um campo de verdade: `registroExibido` só
+calculava `` `REGISTRO — ${fichaId}` `` (padStart 4) a partir do id numérico da própria ficha —
+nunca persistido, nunca editável.
+
+Perguntado ao autor (`AskUserQuestion`) sobre dois pontos de formato: (1) manter um rótulo fixo
+"REGISTRO — " com só o número editável (como o Contrato) ou digitar o texto inteiro livremente —
+escolheu **texto livre completo**, sem rótulo fixo; (2) o que mostrar quando vazio — escolheu um
+placeholder próprio, **"SCP - ?????"**, em vez de reaproveitar o id da ficha.
+
+**Correção:**
+- `FichaCriaturaDadosDto` (`shared/src/dtos/ficha/ficha-criatura.dtos.ts`) ganhou `registro?:
+  string` opcional, irmão de `identidade` — sem migration, vive no JSONB `dados` como todo
+  conteúdo de criatura.
+- `criatura-visualizacao.component.ts`: `registroExibido` deixou de usar `fichaId` e virou
+  `dados().registro?.trim() || 'SCP - ?????'`; novo output `registroMudou` e método
+  `confirmarRegistro`, espelhando `identidadeMudou`/`confirmarIdentidade`.
+- `criatura-visualizacao.component.html`: o `<span class="criatura__registro">` ganhou o mesmo
+  padrão clique-para-editar de `designacao` (`app-valor-editavel` + input com enter/escape/blur),
+  sob a mesma condição `ajustavel()` do resto da ficha — sem gate extra de "só mestre" como o
+  Contrato do jogador, porque toda criatura já pertence ao mestre por construção (diferente do
+  jogador, dono da própria ficha, mas não do Contrato).
+- `ficha-edicao-criatura.service.ts`: `ajustarRegistro(registro)` no mesmo padrão de
+  `ajustarDefesa`/`ajustarNa` (`alterarDados(d => ({...d, registro}))`).
+- Wiring do novo `(registroMudou)` nos dois consumidores de `CriaturaVisualizacao`:
+  `visualizar-criatura.page.html` e `ficha-flutuante-conteudo.component.html`.
+- Backend sem mudança: `dados` é JSONB sem `class-validator` (`P-003`), o campo novo passa direto;
+  nenhuma restrição de permissão além da que já existe para editar a criatura (diferente de
+  `validarContratoSomenteMestre`, que só existe porque o jogador-dono edita a própria ficha e o
+  Contrato é uma exceção reservada ao mestre).
+- `fichaId` (input do componente) ficou sem uso interno depois da troca — mantido de propósito
+  (ainda passado por 3 lugares, pode servir a algo futuro); decisão do autor, não achado.
+
+**Correção do autor no mesmo dia:** "alinha ao centro" + "deixa a cor cinzinha igual fica no
+Contrato pro player". O botão de leitura do `app-valor-editavel` nasce `align-self: flex-start`
+(pensado pra texto no meio de uma frase) e `variante="secundario"` (`color: var(--text)`, quase
+branco) — o primitivo já previa os dois escapes exatos pra esse caso: `[alinhamento]="'centro'"`
+(documentado pra "boxes centralizados") e `[variante]="'herdado'"` (documentado pra quando o
+consumidor quer uma cor própria por herança em vez de uma severidade — o mesmo caso de
+`barra-recurso__max`, citado no comentário do próprio primitivo). Sem os dois, `.criatura__registro
+{ color: var(--text-dim) }` nunca vencia o `color` explícito que `secundario` aplica no botão
+interno — a mesma armadilha, aliás, que faz o `.ficha-ident__contrato { color: var(--text-dim) }`
+do jogador também nunca vencer hoje (Contrato não passa `[variante]`; fora de escopo desta task,
+não corrigido). Medido via `getBoundingClientRect`: centro da coluna e centro do botão/input
+coincidem em 212px (`1920×1080`); cor computada do texto foi de `rgb(230,232,235)` (`--text`) para
+`rgb(150,155,163)` (`--text-dim`, exatamente o "cinzinha" pedido).
+
+**Testes/build:** `criatura-visualizacao` focado 43/43 (3 novos — placeholder, texto livre,
+emissão de `registroMudou`) + `ficha-flutuante`/`visualizar-criatura` 30/30; build de produção
+limpo (só o aviso pré-existente de budget, `P-004`); `npm run build --workspace=shared` limpo;
+lint 0 erros nos arquivos tocados.
+
+**Verificação ao vivo** (Postgres + backend + frontend reais, cenário via REST cru — mestre +
+campanha + criatura "A Estátua") em `1920×1080`/`360×800`, leitura e edição: placeholder
+"SCP - ?????" antes de qualquer edição, input em branco ao abrir a edição (não o placeholder),
+"SCP-049" persistido depois de Enter e sobrevivendo a um novo carregamento (`GET /ficha/criatura/
+:id`), indicador "SALVANDO..." disparado, sem overflow em `360×800`. Comparação visual contra o
+Contrato do jogador (análogo aprovado): mesma tipografia mono/mesmo peso, mesma affordance de
+clique, sem parecer HTML genérico.
+
+Task solta, sem spec (pedido direto do autor a partir de um screenshot).
+
 ## 2026-09-14 — criatura-classificacao-ordem-mobile: no mobile, Classificação volta pra logo abaixo da foto (só nesse viewport)
 
 Ajuste do autor sobre a entrada anterior (abaixo): "No caso da visão mobile, ele pode ficar com a

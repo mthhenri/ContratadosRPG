@@ -60,4 +60,16 @@ describe('Icone', () => {
     expect(assinatura('caderno')).not.toBe(assinatura('anotacoes'));
     expect(assinatura('caderno')).not.toBe(assinatura('documentos'));
   });
+
+  it('os selos de olho (rolagens/acesso) desenham formas distintas entre si e do olho puro', () => {
+    const nomes: IconeNome[] = [
+      'olho',
+      'olho-fechado',
+      'olho-rolagens',
+      'olho-fechado-rolagens',
+      'olho-membros',
+    ];
+    const formas = nomes.map(assinatura);
+    expect(new Set(formas).size).toBe(formas.length);
+  });
 });

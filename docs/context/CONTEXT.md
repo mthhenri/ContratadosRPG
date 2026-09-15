@@ -5,7 +5,33 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-classificacao-ordem-mobile` concluída — só no mobile (`bp.mobile`, `&__ident-corpo` já
+> `icones-olho-selo` concluída — os 3 itens de "olho" da coluna de ações ("Tornar rolagens
+> públicas"/"Ocultar rolagens", "Acesso de visualização", "Exibir/Ocultar ficha") ficavam
+> parecidos demais entre si; ganharam a mesma técnica de "base + selo" de `fragmento-construtor`/
+> `fragmento-potencializador` — 3 ícones novos (`olho-rolagens`/`olho-fechado-rolagens` com selo
+> de dado; `olho-membros` com selo de uma pessoa), aplicados nos 5 lugares que renderizavam esses
+> itens (coluna de ações + menu mobile "⋯" de criatura/jogador, coluna de ações de
+> `detalhe-jogador`). `olho`/`olho-fechado` sem selo seguem só pro toggle "Exibir/Ocultar ficha".
+> Suíte focada `icone`/`visualizar-criatura`/`visualizar`/`detalhe-jogador` 102/102; build/lint 0
+> erros. Verificado ao vivo com captura em `deviceScaleFactor: 4` de cada ícone isolado (selos
+> distintos) e no tamanho real da coluna (`1920×1080`) e do menu mobile (`360×800`). Task solta,
+> sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-registro-scp-editavel` concluída — "REGISTRO — 0009" (calculado a partir do id da
+> ficha, nunca editável) virou `dados().registro` de verdade: texto livre (`app-valor-editavel`,
+> mesmo padrão de `designacao`), placeholder `"SCP - ?????"` quando vazio, sem rótulo fixo (autor
+> escolheu via `AskUserQuestion`, comparando com o Contrato do jogador — que mantém "CONTRATO — "
+> fixo e só o número editável, formato descartado aqui). Editável por quem já pode editar a
+> criatura (`ajustavel()`) — sem gate extra de "só mestre" como o Contrato, porque toda criatura já
+> pertence ao mestre. Campo novo em `FichaCriaturaDadosDto` (JSONB, sem migration). Correção do
+> autor no mesmo dia ("alinha ao centro" + cor cinza igual ao Contrato): `[alinhamento]="'centro'"`
+> e `[variante]="'herdado'"` no `app-valor-editavel` — os dois escapes que o primitivo já previa
+> pra esse caso, sem os quais `align-self` (nasce `flex-start`) e a cor `secundario` (`var(--text)`)
+> venciam o CSS do consumidor. Suíte focada `criatura-visualizacao` 43/43 + `ficha-flutuante`/
+> `visualizar-criatura` 30/30; build/lint 0 erros. Verificado ao vivo (Postgres + backend +
+> frontend reais, cenário via REST) em `1920×1080`/`360×800`, leitura, edição, persistência após
+> reload, centralização e cor medidas via `getBoundingClientRect`/`getComputedStyle`. Task solta,
+> sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-classificacao-ordem-mobile` concluída — só no mobile (`bp.mobile`, `&__ident-corpo` já
 > em 1 coluna), a fileira de Classificação (leitura ou edição — mesma posição entre si, ver entrada
 > abaixo) voltou pra logo abaixo da foto, antes da coluna Combate, em vez do fim do card inteiro.
 > `order` do CSS Grid dentro de `bp.mobile` (`&__ident-coluna--combate: order 2`;
@@ -286,12 +312,24 @@
 
 ## 1. Próxima Task
 
-**`criatura-visualizacao-shell-ui34` concluída (2026-09-14):** cabeçalho e coluna de ações da
+**`icones-olho-selo` concluída (2026-09-14):** os 3 itens de "olho" da coluna de ações
+("Tornar rolagens públicas"/"Ocultar rolagens", "Acesso de visualização", "Exibir/Ocultar
+ficha") ganharam a técnica de "base + selo" de `fragmento-construtor`/`fragmento-potencializador`
+— `olho-rolagens`/`olho-fechado-rolagens` (selo de dado) e `olho-membros` (selo de uma pessoa),
+aplicados nos 5 lugares que renderizavam esses ícones. Resumo completo no cabeçalho deste arquivo
+(acima) e relato integral em `HISTORY.md`. Task solta, sem spec.
+
+**Antes: `criatura-registro-scp-editavel` concluída (2026-09-14):** "REGISTRO — 0009" (calculado do id
+da ficha, nunca editável) virou `dados().registro` de verdade — texto livre, sem rótulo fixo,
+placeholder `"SCP - ?????"` quando vazio, mesmo padrão clique-para-editar de `designacao`,
+centralizado e em cinza (`--text-dim`) via `[alinhamento]="'centro'"`/`[variante]="'herdado'"` do
+`app-valor-editavel`. Task solta, sem spec.
+
+**Antes: `criatura-visualizacao-shell-ui34` concluída (2026-09-14):** cabeçalho e coluna de ações da
 ficha de criatura alinhados ao padrão `ui-34` (jogador); Identidade+Atributos fundidos numa
 coluna (grade de 5 atributos via `@container`); selos de estado na Identidade; Histórico/
 Calculadora migraram pro próprio gatilho pra dentro da coluna de ações (correção do autor no meio
-da task). Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`.
-Spec em `docs/specs/done/criatura-visualizacao-shell-ui34.spec.md`.
+da task). Spec em `docs/specs/done/criatura-visualizacao-shell-ui34.spec.md`.
 
 **Antes: `ficha-campanha-card-resistencias-coloridas` concluída (2026-09-13):** No card de Identidade do
 `FichaCampanhaCard` (visão de campanha do jogador), as legendas separadas "Reações" (só leitura) e
