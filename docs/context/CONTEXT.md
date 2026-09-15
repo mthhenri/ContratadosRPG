@@ -1736,12 +1736,18 @@ crescer no mobile.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. A "Rolagem
-rápida" ganhou um **montador de expressões** opcional (`ui-35`, `MontadorRolagem`,
-`frontend/.../shared/montador-rolagem/`): teclado de tokens (dado, atributo, `kh`/`kl`/`cm`/`!`/
-`?`, tipo de dano, atalhos `CORPO`/`FURTIVO`) que escreve na mesma `FormControl` do input de texto
-— convivem, não se substituem — mais duas ações compostas (`(ATR±n)dM` e `(<fórmula>)#N`) que
-fecham parênteses sozinhas para evitar o erro mais comum de montar essas duas formas na mão. O
-motor não mudou: o teclado só reproduz a gramática já existente, `validarFormula` continua sendo
+rápida" ganhou um **montador de expressões** opcional (`ui-35`/`ui-36`, `MontadorRolagem`,
+`frontend/.../shared/montador-rolagem/`): caixa flutuante arrastável (mesmo primitivo
+`app-painel-flutuante` da `CalculadoraFlutuante`, gatilho inline no início do input, estilo do
+botão "Rolar") com um teclado de tokens (dado — ícone real + rótulo `D{faces}` sobreposto,
+clicar de novo soma quantidade no lugar de duplicar o termo, `incrementarUltimoDado` em
+`montador-rolagem.util.ts` —, atributo, `kh`/`kl` sempre 1, `cm` com N ajustável, tipo de dano,
+atalhos `CORPO`/`FURTIVO`) que escreve na mesma `FormControl` do input de texto original — o
+input continua existindo e editável, os dois convivem — mais duas ações compostas ("Dado por
+Propriedade + Ajuste" → `(ATR±n)dM`, "Repetir tudo" → `(<fórmula>)#N`) que fecham parênteses
+sozinhas para evitar o erro mais comum de montar essas duas formas na mão, e um rodapé fixo
+(Apagar último/Limpar/Rolar) sempre visível dentro do painel. O motor não mudou: o teclado só
+reproduz a gramática já existente, `validarFormula` continua sendo
 quem decide o que é aceito. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
 `ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda

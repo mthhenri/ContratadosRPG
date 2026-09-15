@@ -396,27 +396,20 @@ describe('FichaRolagens', () => {
     expect(alvo.mostrar.mock.calls[0][0].resultado.dados[0]?.valores).toHaveLength(5);
   });
 
-  describe('montador de rolagem (ui-35) — teclado de tokens da rolagem rápida', () => {
-    it('fica fechado por padrão e abre/fecha ao clicar no botão "Montar"', () => {
+  describe('montador de rolagem (ui-35) — caixa flutuante de tokens da rolagem rápida', () => {
+    function montadorInstance(alvo: ReturnType<typeof montar>): MontadorRolagem {
+      return alvo.fixture.debugElement.query(By.directive(MontadorRolagem))
+        .componentInstance as MontadorRolagem;
+    }
+
+    it('sempre presente (a caixa flutuante controla o próprio aberto/fechado)', () => {
       const alvo = montar([]);
-      expect(alvo.fixture.nativeElement.querySelector('app-montador-rolagem')).toBeNull();
-
-      alvo.componentInstance['alternarMontador']();
-      alvo.fixture.detectChanges();
       expect(alvo.fixture.nativeElement.querySelector('app-montador-rolagem')).not.toBeNull();
-
-      alvo.componentInstance['alternarMontador']();
-      alvo.fixture.detectChanges();
-      expect(alvo.fixture.nativeElement.querySelector('app-montador-rolagem')).toBeNull();
     });
 
     it('token inserido no montador aparece na fórmula rápida e é rolável (mesmo FormControl)', () => {
       const alvo = montar([]);
-      alvo.componentInstance['alternarMontador']();
-      alvo.fixture.detectChanges();
-
-      const montador = alvo.fixture.debugElement.query(By.directive(MontadorRolagem))
-        .componentInstance as MontadorRolagem;
+      const montador = montadorInstance(alvo);
       montador.formula.set('2d6 + FOR [Físico]');
       alvo.fixture.detectChanges();
 
@@ -426,14 +419,23 @@ describe('FichaRolagens', () => {
       expect(alvo.mostrar.mock.calls[0][0].formula).toBe('2d6 + FOR [Físico]');
     });
 
-    it('repassa atalhosDano para o montador (CORPO/FURTIVO só aparecem quando há valor)', () => {
+    it('o output (rolar) do montador dispara a mesma rolarRapida() do botão externo', () => {
+      const alvo = montar([]);
+      alvo.componentInstance['rapida'].setValue('2d6');
+      const montador = montadorInstance(alvo);
+      montador.rolar.emit();
+      expect(alvo.mostrar).toHaveBeenCalledOnce();
+      expect(alvo.mostrar.mock.calls[0][0].formula).toBe('2d6');
+    });
+
+    it('repassa atalhosDano e a validade já computada (rapidaValida) para o montador', () => {
       const alvo = montar([], { atalhosDano: { corpo: '2D6 + FOR [Físico]', furtivo: null } });
-      alvo.componentInstance['alternarMontador']();
+      alvo.componentInstance['rapida'].setValue('2d6');
       alvo.fixture.detectChanges();
 
-      const montador = alvo.fixture.debugElement.query(By.directive(MontadorRolagem))
-        .componentInstance as MontadorRolagem;
+      const montador = montadorInstance(alvo);
       expect(montador.atalhosDano()).toEqual({ corpo: '2D6 + FOR [Físico]', furtivo: null });
+      expect(montador.formulaValida()).toBe(true);
     });
   });
 

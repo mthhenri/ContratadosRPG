@@ -1,5 +1,94 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-15 — ui-36-montador-rolagem-usabilidade: o montador vira caixa flutuante, dado ganha ícone + incremento inteligente
+
+Segunda passada no `MontadorRolagem` (`ui-35`, entrada anterior logo abaixo), pedida pelo autor
+numa única mensagem depois de usar a v1 de verdade: virar caixa flutuante arrastável (como
+`CalculadoraFlutuante`), ícone real de dado com `D{faces}` sobreposto em vez de texto puro,
+clique repetido no mesmo dado somando quantidade em vez de duplicar token, `kh`/`kl` sempre 1
+lado a lado, tirar explosão/implosão da UI por enquanto, tiles quadrados pros tokens curtos,
+renomear "Dado por atributo + ajuste" → "Dado por Propriedade + Ajuste", e um rodapé fixo com
+Limpar/Apagar/Rolar. Plano revisado e aprovado pelo autor antes de implementar (3 decisões
+fechadas por pergunta: o gatilho alterna aberto/fechado; a fórmula aparece editável dentro do
+próprio painel, não só no input original; o rodapé leva as três ações — não só Limpar como o
+pedido original dizia). Spec: `docs/specs/done/ui-36-montador-rolagem-usabilidade.spec.md`.
+
+**O pedido central — incremento inteligente do dado:** clicar `d6` várias vezes agora soma
+quantidade no último termo `NdM` cru daquela face (`incrementarUltimoDado`,
+`montador-rolagem.util.ts`, função pura nova — mesmo padrão de extração de
+`calculadora-flutuante.util.ts`), em vez de duplicar o token. A regex
+`(^|[+\-(])(\d*)d{faces}(?!\d)` ancora o termo num boundary válido — não confunde o "d20" de
+`(LUT+2)d20` (precedido por `)`, não um boundary) nem `d1` como substring de `d12`/`d10`. Sempre
+o **último** termo daquela face na fórmula inteira, não o último token clicado — testado
+explicitamente (clicar `d10` no meio não atrapalha o próximo clique em `d6` achar o `d6` mais
+atrás). A ação composta "Dado por Propriedade + Ajuste" **não** herda esse comportamento — cada
+clique ali continua montando um bloco `(ATR±n)dM` novo (decisão registrada na spec: mesclar num
+dos vários blocos já presentes seria ambíguo demais).
+
+**Caixa flutuante:** `MontadorRolagem` passou a renderizar o próprio gatilho (estilizado como
+`.ficha-rol__btn--rolar`, mas recriado localmente — view encapsulation não deixa uma classe do
+componente pai vazar pro componente filho) e o próprio `app-painel-flutuante` (ui-17), copiando
+a estrutura de `CalculadoraFlutuante` (hoje o consumidor mais simples do primitivo) sem o bloco
+de redimensionar por arraste. Dentro do painel, três blocos numa coluna flex própria — visor
+editável fixo no topo, corpo rolável (`flex:1; overflow-y:auto` + `appOverflowFade`) com os
+grupos de token, rodapé fixo com Apagar último/Limpar/Rolar — mesmo truque de `CadernoFlutuante`
+(`PainelFlutuante` não tem slot de rodapé nativo; nenhum consumidor tem, cada um resolve com a
+própria hierarquia flex dentro do único `<ng-content>`). Mobile detectado via `matchMedia`
+(mesmo padrão de `FichaVisualizacao.verificarAnotacoesMobile`, não um breakpoint duplicado em
+TS) — abaixo de 560px o painel vira folha cheia nativamente. `ficha-rolagens.component` perdeu
+`montadorAberto`/`alternarMontador` (o estado agora mora dentro do próprio `MontadorRolagem`) e
+ganhou dois novos bindings: `[formulaValida]="rapidaValida()"` (o botão "Rolar" do rodapé usa a
+mesma condição de desabilitado do botão externo, sem duplicar `validarFormula`) e
+`(rolar)="rolarRapida()"` (rolar pelo rodapé não fecha o painel — o jogador pode ajustar e rolar
+de novo).
+
+**Ícone de dado:** reusa a receita exata de `resultado-rolagem__dado` (`display:inline-grid;
+place-items:center` + `grid-area` compartilhada entre os filhos, SVG esmaecido por baixo, texto
+com halo por cima) — `ICONE_POR_FACES` copiado do mesmo mapa de `resultado-rolagem.component.ts`,
+com `d3` caindo no ícone genérico `dado` (sem SVG próprio, confirmado: só `d4`/`d6`/`d8`/`d10`/
+`d12`/`d20` existem em `Icone`).
+
+**Outros ajustes da spec:** `kh`/`kl` perderam os `app-step-input` (sempre bare = 1, documentado
+como equivalente a `kh1`/`kl1` no guia) e ficaram numa linha só, lado a lado; "Margem de crítico"
+manteve o stepper (aceita N>1) sem mudar de layout; os botões de Explosão (`!`)/Implosão (`?`)
+saíram do template (nenhum método dedicado pra limpar — eram `inserir('!')`/`inserir('?')`
+direto); tokens curtos (dado, atributo, tipo de dano — agora por sigla F/B/E/Q/G em vez do nome
+por extenso — dígito, operador, parêntese) viraram tiles quadrados (`__tile`), botões de rótulo
+longo continuam retangulares (`__tecla`) com cantos mais retos.
+
+**Testes:** `montador-rolagem.util.spec.ts` (8 casos novos, puros, sem `TestBed`) cobrindo
+incremento simples, sempre-o-último-termo, `ATRdM` não afetado, bloco composto não afetado, `d1`
+não confundido com substring. `montador-rolagem.component.spec.ts` reescrito (17 casos: caixa
+fechada por padrão, visor editável, incremento via clique real, `kh`/`kl` bare lado a lado,
+explosão/implosão ausentes, rodapé fixo com `formulaValida`/fórmula vazia desabilitando "Rolar",
+os três exemplos originais da `ui-35` remontados com os novos rótulos de botão). 3 casos em
+`ficha-rolagens.component.spec.ts` reescritos pro novo contrato (sem `alternarMontador`; dispara
+`(rolar)` e confere que chama `rolarRapida()`; confere `formulaValida` repassado). 58/58 nos três
+arquivos; suíte completa do frontend 1779+/1782 (as 2 falhas conhecidas —
+`inventario-esquadrao`/`detalhe-mestre.page` — continuam pré-existentes, sem relação com esta
+task). Lint 0 erros; build sem novo aviso (mesmo orçamento de bundle pré-existente, componente
+lazy).
+
+**Verificação ao vivo** (Postgres 16 local + backend + frontend reais, mesma ficha de teste da
+`ui-35`): reabri a caixa flutuante pelo gatilho no início do input, montei o exemplo 1
+(`3d10+FOR[F]+3d6[Q]`) só clicando e **cliquei o mesmo D6 de novo** — o formulário virou
+`...4d6[Q]` na hora (confirmado com leitura instrumentada clique a clique, incluindo um achado do
+próprio script de verificação: a leitura de `inputValue()` **imediatamente** após o `.click()` do
+Playwright lia o estado de UM clique atrás — não é bug do componente, é o teste lendo antes do
+Angular pintar a atualização no DOM; com um `waitForTimeout` pequeno entre clique e leitura, cada
+clique refletiu corretamente). Montei `(PON+1)d20khcm1+PROF+3+2+1` direto no visor, cliquei
+"Repetir tudo" (virou `((PON+1)d20khcm1+PROF+3+2+1)#2`) e **rolei pelo botão do rodapé** — a
+bandeja de dados mostrou as duas repetições (19 e 13, cada uma com PON+1, `kh`, `cm`, `+PROF+6`)
+sem eu precisar fechar o painel nem usar o "Rolar" externo. Testei também um falso alarme: a
+primeira captura de tela (fullPage) parecia mostrar seções sumindo sem rolagem — instrumentei o
+DOM (`scrollHeight`/`clientHeight` do corpo) e confirmei que era só o corpo rolável funcionando
+como desenhado (940px de conteúdo em 416px de altura visível, rodapé sempre fixo depois) — nenhum
+achado real, mas documentado aqui porque quase virou uma correção desnecessária.
+`1920×1080`: painel com tiles quadrados legíveis, silhueta do dado visível atrás do `D{faces}`,
+rodapé sempre visível rolando o corpo. `360×800`: painel vira folha cheia, grade de dados quebra
+em 2 linhas (7 tiles não cabem numa só), rodapé continua fixo e legível, `Rolar` habilita/
+desabilita corretamente.
+
 ## 2026-09-15 — ui-35-montador-rolagem: teclado de tokens para a "Rolagem rápida", sem tirar o texto livre de quem já sabe a sintaxe
 
 Origem: conversa com o autor ("vamos montar um montador de expressões mais end-user") sobre a

@@ -1,61 +1,125 @@
-// Teclado de tokens da Rolagem rápida (ui-35). Só tokens do tema "Terminal de Contenção"
-// (proibição #29 do CLAUDE.md) — mesma densidade/agrupamento de `calculadora-flutuante`
-// (componente análogo aprovado), mas em seções empilhadas (não uma grade única), já que aqui há
-// bem mais categorias de token que numa calculadora comum. As teclas em si (`__tecla`) reproduzem
-// o estilo local de `.calc-flutuante__tecla` (borda + fundo + hover próprios) em vez do primitivo
-// `app-botao`: a mesma decisão já tomada e aprovada pela calculadora — uma grade densa de teclas
-// curtas (`d6`, `+`, `3`...) é um teclado, não uma lista de botões de ação isolados.
+// Teclado de tokens da Rolagem rápida (ui-35, revisão de usabilidade) — agora caixa flutuante,
+// mesmo padrão de `calculadora-flutuante` (moldura da janela mora em `app-painel-flutuante`,
+// ui-17; este arquivo só cuida do gatilho e do conteúdo projetado dentro do painel). Teclas em
+// BEM próprio (`__tile`/`__tecla`), mesma decisão já tomada e aprovada pela calculadora — uma
+// grade densa de tokens curtos é um teclado, não uma lista de botões de ação isolados.
 
 @use "tema/breakpoints" as bp;
 
+:host {
+    display: contents;
+}
+
 .montador-rolagem {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
+    // Gatilho inline (não é círculo flutuante como a calculadora — mora dentro da linha da
+    // "Rolagem rápida", junto do "Rolar") — mesma receita visual de `.ficha-rol__btn--rolar`
+    // (levantada em `ficha-rolagens.component.scss`), só que como toggle: ativo vira preenchido.
+    &__gatilho {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        border-radius: var(--radius-control);
+        padding: 5px 10px;
+        cursor: pointer;
+        border: 1px solid var(--accent-border);
+        background: var(--accent-dim);
+        color: var(--accent);
+        flex: none;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
 
-    // A coluna de Status trava a própria altura (`contain: size` em `ficha-visualizacao`) e não
-    // deixa a página crescer com o conteúdo da aba — sem um teto próprio aqui, este painel (bem
-    // mais alto que a lista de presets) simplesmente sumia cortado, sem barra de rolagem nenhuma
-    // (achado ao vivo desta task). Mesmo padrão de `ficha-rol__lista`: teto + rolagem interna +
-    // `appOverflowFade` (fade só onde há de fato conteúdo cortado), sem teto no mobile (lá a
-    // página inteira já rola como uma coisa só).
-    max-height: 420px;
-    overflow-y: auto;
+        &:hover {
+            filter: brightness(1.1);
+        }
 
-    @include bp.mobile {
-        max-height: none;
-        overflow-y: visible;
+        &--ativo {
+            background: var(--accent);
+            color: var(--accent-text);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+            min-width: bp.$alvo-toque;
+        }
     }
 
-    --fade-topo: 0px;
-    --fade-base: 0px;
+    &__caixa {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: 10px;
+    }
 
-    &.overflow-fade--topo,
-    &.overflow-fade--base {
-        -webkit-mask-image: linear-gradient(
-            to bottom,
-            transparent 0,
-            #000 var(--fade-topo),
-            #000 calc(100% - var(--fade-base)),
-            transparent 100%
-        );
-        mask-image: linear-gradient(
-            to bottom,
-            transparent 0,
-            #000 var(--fade-topo),
-            #000 calc(100% - var(--fade-base)),
-            transparent 100%
-        );
+    &__visor {
+        flex: none;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        padding: 9px 12px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+
+        &:focus-visible {
+            outline: 2px solid var(--accent-border);
+            outline-offset: -1px;
+        }
+
+        &::placeholder {
+            color: var(--text-mute);
+        }
     }
-    &.overflow-fade--topo {
-        --fade-topo: 24px;
+
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding-right: 2px;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 20px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 20px;
+        }
     }
-    &.overflow-fade--base {
-        --fade-base: 24px;
+
+    &__rodape {
+        flex: none;
+        display: flex;
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+
+        .montador-rolagem__tecla {
+            flex: 1;
+        }
     }
 
     &__grupo {
@@ -107,8 +171,10 @@
         flex-wrap: wrap;
     }
 
+    // Botão de rótulo longo (não cabe num tile quadrado): Manter maior/menor, Margem de crítico,
+    // CORPO/FURTIVO, Repetir, e as três ações do rodapé.
     &__tecla {
-        min-height: 32px;
+        min-height: 36px;
         padding: 0 10px;
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-control);
@@ -140,16 +206,12 @@
 
         &--larga {
             flex: 1;
-            min-width: 140px;
+            min-width: 120px;
         }
 
         &--operador {
             color: var(--accent);
             border-color: var(--accent-border);
-        }
-
-        &--extra {
-            color: var(--text-dim);
         }
 
         &--funcao {
@@ -167,9 +229,50 @@
                 filter: brightness(1.08);
             }
         }
+    }
+
+    // Tile quadrado (token curto): dado, atributo, tipo de dano, dígito, operador, parêntese.
+    &__tile {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        @include bp.mobile {
+            width: bp.$alvo-toque;
+            height: bp.$alvo-toque;
+        }
+
+        &:hover:not(:disabled) {
+            border-color: var(--accent-border);
+            background: var(--surface-2);
+        }
+
+        &--extra {
+            color: var(--text-dim);
+        }
+
+        &--operador {
+            color: var(--accent);
+            border-color: var(--accent-border);
+        }
 
         &--dano {
-            font-size: 11px;
+            font-size: 13px;
 
             &-fisico {
                 color: var(--dano-fisico);
@@ -196,5 +299,41 @@
                 border-color: var(--dano-geral-border);
             }
         }
+    }
+
+    // Tile de dado: silhueta do `app-icone` (`d4`..`d20`, `dado` genérico no fallback do `d3`)
+    // empilhada com o rótulo `D{faces}` por cima — mesma receita de `resultado-rolagem__dado`
+    // (`display:inline-grid; place-items:center` + `grid-area` compartilhada entre os filhos, em
+    // vez de posicionamento absoluto, pra não depender de o ícone herdar altura/largura daqui).
+    &__dado-tile {
+        display: inline-grid;
+        place-items: center;
+        font-size: calc(36px / 1.15); // caixa do ícone — acompanha o tamanho do tile
+
+        @include bp.mobile {
+            font-size: calc(#{bp.$alvo-toque} / 1.15);
+        }
+
+        > * {
+            grid-area: 1 / 1;
+        }
+    }
+
+    &__dado-svg {
+        display: block;
+        color: var(--text-dim);
+        opacity: 0.45; // silhueta esmaecida — o rótulo D{faces} por cima é o que importa
+    }
+
+    &__dado-rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text);
+        // Halo escuro: sem ele, os traços do SVG por baixo atravessam visualmente os vãos do
+        // texto (mesmo racional de `resultado-rolagem__dado-valor`).
+        text-shadow:
+            0 0 3px rgb(0 0 0 / 70%),
+            0 0 3px rgb(0 0 0 / 70%);
     }
 }

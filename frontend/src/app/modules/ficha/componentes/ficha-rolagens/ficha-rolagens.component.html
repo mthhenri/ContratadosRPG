@@ -5,20 +5,16 @@
         <div class="ficha-rol__rapida">
             <span class="ficha-rol__rotulo-linha">
                 <span class="ficha-rol__rotulo">Rolagem rápida</span>
-                <button
-                    app-botao-icone
-                    type="button"
-                    tamanho="compacto"
-                    appTooltip="Montar fórmula por botões"
-                    aria-label="Montar fórmula por botões"
-                    [attr.aria-pressed]="montadorAberto() ? 'true' : 'false'"
-                    (click)="alternarMontador()"
-                >
-                    <app-icone nome="dado" />
-                </button>
                 <app-guia-formula #guiaExterna />
             </span>
             <div class="ficha-rol__rapida-linha">
+                <app-montador-rolagem
+                    [formula]="rapidaTexto()"
+                    (formulaChange)="rapida.setValue($event)"
+                    [atalhosDano]="atalhosDano()"
+                    [formulaValida]="rapidaValida()"
+                    (rolar)="rolarRapida()"
+                />
                 <input
                     class="ficha-rol__entrada ficha-rol__entrada--mono"
                     type="text"
@@ -40,13 +36,6 @@
                 <span class="ficha-rol__dica ficha-rol__dica--erro"
                     >Fórmula não reconhecida. Veja o guia (?) ao lado.</span
                 >
-            }
-            @if (montadorAberto()) {
-                <app-montador-rolagem
-                    [formula]="rapidaTexto()"
-                    (formulaChange)="rapida.setValue($event)"
-                    [atalhosDano]="atalhosDano()"
-                />
             }
         </div>
     }

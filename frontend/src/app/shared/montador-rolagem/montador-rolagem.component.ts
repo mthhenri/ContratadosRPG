@@ -1,13 +1,16 @@
-import { Component, computed, input, model, signal } from '@angular/core';
+import { Component, computed, input, model, output, signal, viewChild } from '@angular/core';
 
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import { ABREVIACOES_ATRIBUTO, REPETICOES_MAXIMA } from '@contratados-rpg/shared/regras/rolagem';
 
-import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
-import { Tooltip } from '../tooltip/tooltip.directive';
+import { Icone, type IconeNome } from '../icone/icone.component';
+import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
+import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
 import { Segmentado } from '../ui/segmentado/segmentado.component';
 import { SegmentadoItem } from '../ui/segmentado/segmentado-item.component';
 import { StepInput } from '../ui/stepper/step-input.component';
+import { Tooltip } from '../tooltip/tooltip.directive';
+import { incrementarUltimoDado } from './montador-rolagem.util';
 
 /** Dados canônicos do sistema (`docs/core/sistema-v4.1.0.md` — "Dados"); sem `d100`. */
 const DADOS: readonly number[] = [3, 4, 6, 8, 10, 12, 20];
@@ -18,6 +21,17 @@ const ATRIBUTOS: readonly string[] = Object.keys(ABREVIACOES_ATRIBUTO);
 /** Siglas curtas de `ABREVIACOES_FONTE_EXTRA` (que também aceita `PROFICIENCIA`/`NIVEL` por
  *  extenso). */
 const FONTES_EXTRA: readonly string[] = ['PROF', 'NIV'];
+
+/** Ícone de dado (`d4`..`d20`) por face — mesmo mapa de `resultado-rolagem.component.ts`. `d3`
+ *  não tem SVG dedicado (fallback pro ícone genérico `dado`, só aqui). */
+const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
+  4: 'd4',
+  6: 'd6',
+  8: 'd8',
+  10: 'd10',
+  12: 'd12',
+  20: 'd20',
+};
 
 /** Um botão do grupo "Tipo de dano": sigla exibida + classe BEM para a cor do token. */
 interface TokenTipoDano {
@@ -40,22 +54,34 @@ const TIPOS_DANO: readonly TokenTipoDano[] = [
 /** Caracteres após os quais um novo token "aditivo" não precisa de `+` na frente. */
 const SEM_SINAL_NECESSARIO = new Set(['+', '-', '(']);
 
+/** Abaixo desta largura o painel vira folha cheia — mesmo limiar de `_breakpoints.scss`
+ *  (`$bp-mobile`), lido do CSS via `matchMedia` (mesmo padrão de
+ *  `FichaVisualizacao.verificarAnotacoesMobile`) em vez de duplicado como número mágico aqui. */
+const BREAKPOINT_MOBILE = 560;
+
+const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
+
 /**
- * Teclado de tokens para montar uma fórmula de rolagem sem decorar a sintaxe do motor
- * (`shared/regras/rolagem`) — ui-35. Mesma mecânica de `CalculadoraFlutuante.inserir`: concatena
- * texto no `model` `formula` com guardas simples, sem parser client-side de "onde inserir". Duas
- * ações compostas (`(ATR±n)dM` e `(<fórmula>)#N`) evitam o erro mais comum de montar essas duas
- * formas sancionadas de parênteses na mão (parêntese sobrando/faltando).
+ * Caixa flutuante de tokens para montar uma fórmula de rolagem sem decorar a sintaxe do motor
+ * (`shared/regras/rolagem`) — ui-35, revisão de usabilidade. Mesma mecânica de
+ * `CalculadoraFlutuante.inserir`: concatena texto no `model` `formula` com guardas simples, sem
+ * parser client-side de "onde inserir" — a única exceção é o clique num dado, que soma quantidade
+ * no último termo cru daquela face em vez de duplicar token (`incrementarUltimoDado`). Duas ações
+ * compostas (`(ATR±n)dM` e `(<fórmula>)#N`) evitam o erro mais comum de montar essas duas formas
+ * sancionadas de parênteses na mão (parêntese sobrando/faltando).
  *
  * **Nenhuma regra de dados vive aqui** (proibição #26 do `CLAUDE.md`): os tokens só reproduzem a
- * gramática já documentada em `guia-formula`; quem valida o resultado é `validarFormula`,
- * chamada pelo consumidor (`ficha-rolagens.component.ts`), não este componente.
+ * gramática já documentada em `guia-formula`; quem valida o resultado é `validarFormula`, chamada
+ * pelo consumidor (`ficha-rolagens.component.ts`), não este componente.
  */
 @Component({
   selector: 'app-montador-rolagem',
-  imports: [OverflowFade, Segmentado, SegmentadoItem, StepInput, Tooltip],
+  imports: [Icone, PainelFlutuante, Segmentado, SegmentadoItem, StepInput, Tooltip],
   templateUrl: './montador-rolagem.component.html',
   styleUrl: './montador-rolagem.component.scss',
+  host: {
+    '(window:resize)': 'aoRedimensionarViewport()',
+  },
 })
 export class MontadorRolagem {
   /** Fórmula em edição — mesmo texto que alimenta o `FormControl` da "Rolagem rápida". */
@@ -67,21 +93,60 @@ export class MontadorRolagem {
     readonly furtivo?: string | null;
   }>({});
 
+  /** Validade já computada pelo consumidor (`rapidaValida()`) — desabilita o "Rolar" do rodapé
+   *  com a mesma condição do botão externo, sem duplicar a chamada a `validarFormula` aqui. */
+  readonly formulaValida = input<boolean | null>(null);
+
+  /** O rodapé pede pro consumidor rolar — o painel não fecha sozinho (o jogador pode ajustar e
+   *  rolar de novo, ex.: repetir com N diferente). */
+  readonly rolar = output<void>();
+
   protected readonly dados = DADOS;
   protected readonly atributos = ATRIBUTOS;
   protected readonly fontesExtra = FONTES_EXTRA;
   protected readonly tiposDano = TIPOS_DANO;
   protected readonly repeticoesMaxima = REPETICOES_MAXIMA;
+  protected readonly posicaoInicial = POSICAO_INICIAL;
 
   protected readonly temCorpo = computed(() => !!this.atalhosDano().corpo);
   protected readonly temFurtivo = computed(() => !!this.atalhosDano().furtivo);
 
-  // === Steppers dos operadores por pool (N sempre ≥ 1) ===
-  protected readonly manterMaiorN = signal(1);
-  protected readonly manterMenorN = signal(1);
+  /** Margem de crítico aceita N > 1 (diferente de `kh`/`kl`, que agora são sempre 1). */
   protected readonly margemCriticoN = signal(1);
 
-  // === Ação composta 1: "Dado por atributo+ajuste" → `(ATR±n)dM` ===
+  // === Caixa flutuante: aberto/fechado, mesmo padrão de `CalculadoraFlutuante.alternar()` ===
+  protected readonly aberto = signal(false);
+  private readonly painelRef = viewChild<PainelFlutuante>('painel');
+
+  protected alternar(): void {
+    if (this.aberto() && this.painelRef()?.minimizado()) {
+      this.painelRef()?.restaurar();
+      return;
+    }
+    this.aberto.update((atual) => !atual);
+  }
+
+  protected fechar(): void {
+    this.aberto.set(false);
+  }
+
+  // === Mobile: `[mobile]` de `app-painel-flutuante` reage à largura real da janela, mesmo padrão
+  // de `FichaVisualizacao.verificarAnotacoesMobile` (lido do CSS via `matchMedia`, não duplicado
+  // como breakpoint próprio). ===
+  protected readonly mobileAtivo = signal(this.verificarMobile());
+  protected aoRedimensionarViewport(): void {
+    this.mobileAtivo.set(this.verificarMobile());
+  }
+  private verificarMobile(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return typeof window.matchMedia === 'function'
+      ? window.matchMedia(`(max-width: ${BREAKPOINT_MOBILE}px)`).matches
+      : window.innerWidth <= BREAKPOINT_MOBILE;
+  }
+
+  // === Ação composta 1: "Dado por Propriedade + Ajuste" → `(ATR±n)dM` ===
   protected readonly atributoComposto = signal<string>(ATRIBUTOS[0]);
   protected readonly ajusteComposto = signal(1);
 
@@ -89,7 +154,24 @@ export class MontadorRolagem {
   protected readonly repeticoesN = signal(2);
   protected readonly podeRepetir = computed(() => this.formula().trim().length > 0);
 
-  // === Inserção crua (dado, tag de dano, operador por pool — encostado no texto atual) ===
+  /** Nome do ícone (`app-icone`) pra este `faces` — `dado` genérico no fallback (`d3`, sem SVG
+   *  próprio). */
+  protected iconeDado(faces: number): IconeNome {
+    return ICONE_POR_FACES[faces] ?? 'dado';
+  }
+
+  /** Clique num dado: soma quantidade no último termo cru daquela face já na fórmula, ou insere
+   *  um `dN` novo quando ainda não existe nenhum (comportamento padrão de sempre). */
+  protected clicarDado(faces: number): void {
+    this.formula.update((atual) => incrementarUltimoDado(atual, faces) ?? atual + 'd' + faces);
+  }
+
+  /** Preview editável dentro do painel — mesmo texto do input original da Rolagem rápida. */
+  protected aoDigitarPreview(evento: Event): void {
+    this.formula.set((evento.target as HTMLInputElement).value);
+  }
+
+  // === Inserção crua (tag de dano, operador por pool — encostado no texto atual) ===
   protected inserir(token: string): void {
     this.formula.update((atual) => atual + token);
   }

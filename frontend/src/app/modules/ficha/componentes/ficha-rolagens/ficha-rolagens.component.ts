@@ -210,11 +210,6 @@ export class FichaRolagens {
   protected readonly rapida = new FormControl('', { nonNullable: true });
   protected readonly rapidaTexto = toSignal(this.rapida.valueChanges, { initialValue: '' });
 
-  /** Painel do `MontadorRolagem` (ui-35), fechado por padrão — não some espaço até ser aberto. */
-  protected readonly montadorAberto = signal(false);
-  protected alternarMontador(): void {
-    this.montadorAberto.update((atual) => !atual);
-  }
   /** Validade da fórmula avulsa (live, já com `corpo`/`furtivo` expandidos): `null` enquanto vazia. */
   protected readonly rapidaValida = computed<boolean | null>(() => {
     const texto = this.rapidaTexto().trim();
