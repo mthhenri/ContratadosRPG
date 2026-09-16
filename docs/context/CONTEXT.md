@@ -1,5 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
+> **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
+> Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
+> A retomada das jornadas autenticadas depende de restabelecer Docker/Postgres local, indisponível
+> na verificação de 15/09. Pendências e dados de teste mantidos estão discriminados no relatório.
+
 > **Formatação do frontend:** `frontend/.prettierrc.json` governa exclusivamente HTML/SCSS
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.

@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-15 — usabilidade: relatório parcial dos quatro viewports e propostas para revisão
+
+Inspeção especializada solicitada pelo autor, com desktop 1920×1080, tela dividida
+960×1080 (corrigindo o pedido inicial de vertical), notebook 1366×768 e mobile 360×800.
+Resultados, matriz de cobertura, evidências, dados criados e pendências estão em
+[`RELATORIO.md`](../reviews/usabilidade-2026-09-13/RELATORIO.md). Foram exercitados guia
+de agente até criação, ficha e persistência de recurso, caderno com salvamento e retomada,
+iniciativa até encerramento, rolagem e calculadoras. O relatório prioriza oito recortes,
+com destaque para legibilidade do esquadrão, nomes acessíveis da navegação compacta e
+explicação das validações do guia. Nenhum código de produto foi alterado. Specs novas
+aguardam aprovação explícita do autor; nenhum arquivo de backlog foi criado.
+
+A avaliação permanece aberta: jornadas de jogador/espectador, criatura, acervo/perfil e
+outras combinações de estados ainda não foram concluídas. A retomada encontrou serviços
+desligados; frontend recuperado, mas Docker/Postgres não respondeu à inicialização pelo
+script oficial. Consultas ao Docker confirmaram daemon indisponível, bloqueando login.
+As calculadoras públicas continuaram acessíveis: compra/remover, venda a 75%, DT e Escape
+com retorno de foco na ajuda foram conferidos. Não houve suíte de regressão/lint por se
+tratar de documentação e inspeção, sem implementação. Capturas têm limitações de dimensão
+física documentadas; o repositório recebeu alterações concorrentes durante a avaliação.
+Dados de teste locais mantidos: ficha 44 “Auditoria UX”, página de caderno identificada
+como auditoria, encontro encerrado e rolagem pública; Vida da ficha de teste restaurada.
+
+
 ## 2026-09-15 — criatura-card-esquadrao-mestre: card de criatura na visão de mestre ganha paridade com o de jogador
 
 Pedido do autor em conversa: o card de criatura da grade "Criaturas" (visão de mestre,
