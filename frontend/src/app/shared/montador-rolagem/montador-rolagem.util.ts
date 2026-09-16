@@ -75,9 +75,10 @@ export function reposicionarOperadorPool(formulaAtual: string, operador: string)
 
   const candidatos = [
     ...formulaAtual.matchAll(DADO_COMPOSTO),
-    ...formulaAtual.matchAll(DADO_SIMPLES),
+    ...[...formulaAtual.matchAll(DADO_SIMPLES)].filter(
+      (match) => !estaDentroDeGrupo(formulaAtual, indiceDoDado(match)),
+    ),
   ]
-    .filter((match) => !estaDentroDeGrupo(formulaAtual, indiceDoDado(match)))
     .map((match) => ({ inicio: match.index ?? 0, texto: match[0] }))
     .sort((a, b) => a.inicio - b.inicio);
   const ultimo = candidatos.at(-1);
@@ -100,5 +101,21 @@ export function adicionarTipoDano(formulaAtual: string, tipo: string): string {
     `^(?:\\d+|(?:${FONTE_ROLAGEM}|\\d*)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*|\\(${FONTE_ROLAGEM}(?:[+-]\\d+|\\*\\d+)\\)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*|\\(\\d*d\\d+(?:(?:(?:kh|kl)\\d*|cm\\d+))*(?:[+-]\\d*d\\d+(?:(?:(?:kh|kl)\\d*|cm\\d+))*)*\\))$`,
     'i',
   );
-  return termoFinal.test(formulaAtual) ? `${formulaAtual}[${tipo}]` : formulaAtual;
+  if (termoFinal.test(formulaAtual)) {
+    return `${formulaAtual}[${tipo}]`;
+  }
+  const candidatos = [
+    ...formulaAtual.matchAll(DADO_COMPOSTO),
+    ...[...formulaAtual.matchAll(DADO_SIMPLES)].filter(
+      (match) => !estaDentroDeGrupo(formulaAtual, indiceDoDado(match)),
+    ),
+    ...[...formulaAtual.matchAll(/(?:^|[+(-])\d+(?=(?:\[|[+-]|$))/g)].filter(
+      (match) => !estaDentroDeGrupo(formulaAtual, indiceDoDado(match)),
+    ),
+  ].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  const ultimo = candidatos.at(-1);
+  if (!ultimo) {
+    return formulaAtual;
+  }
+  return formulaAtual.slice(0, (ultimo.index ?? 0) + ultimo[0].length) + `[${tipo}]` + formulaAtual.slice((ultimo.index ?? 0) + ultimo[0].length);
 }

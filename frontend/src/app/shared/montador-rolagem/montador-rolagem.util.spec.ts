@@ -20,6 +20,8 @@ describe('composição do montador', () => {
     expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20kh+d6cm1');
     expect(reposicionarOperadorPool('XYZd6', 'kh')).toBe('XYZd6');
     expect(reposicionarOperadorPool('lutad20', 'kh')).toBe('lutad20kh');
+    expect(reposicionarOperadorPool('(LUT+2)d20', 'kh')).toBe('(LUT+2)d20kh');
+    expect(reposicionarOperadorPool('(LUT*2)d20', 'kl')).toBe('(LUT*2)d20kl');
   });
 
   it('não altera uma fórmula sem dado ao reposicionar pool', () => {
@@ -35,6 +37,7 @@ describe('composição do montador', () => {
     expect(adicionarTipoDano('(1+2)d6', 'F')).toBe('(1+2)d6');
     expect(adicionarTipoDano('XYZd6', 'F')).toBe('XYZd6');
     expect(adicionarTipoDano('forcad6', 'F')).toBe('forcad6[F]');
+    expect(adicionarTipoDano('3d10[F]+FOR+3d6', 'Q')).toBe('3d10[F]+FOR+3d6[Q]');
   });
 
   it('não adiciona tipo de dano a atributo sem dado', () => {
