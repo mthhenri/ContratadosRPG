@@ -1,6 +1,37 @@
 import { describe, expect, it } from 'vitest';
 
-import { incrementarUltimoDado } from './montador-rolagem.util';
+import {
+  adicionarDado,
+  adicionarTipoDano,
+  incrementarUltimoDado,
+  reposicionarOperadorPool,
+} from './montador-rolagem.util';
+
+describe('composição do montador', () => {
+  it('adiciona um dado novo como termo aditivo', () => {
+    expect(adicionarDado('d20', 6)).toBe('d20+d6');
+    expect(adicionarDado('d20+', 6)).toBe('d20+d6');
+    expect(adicionarDado('d20-', 6)).toBe('d20-d6');
+  });
+
+  it('reposiciona o operador de pool no último dado elegível', () => {
+    expect(reposicionarOperadorPool('d20kh+d6', 'kl')).toBe('d20+d6kl');
+  });
+
+  it('não altera uma fórmula sem dado ao reposicionar pool', () => {
+    expect(reposicionarOperadorPool('', 'kh')).toBe('');
+    expect(reposicionarOperadorPool('(2d12+2d6)', 'kh')).toBe('(2d12+2d6)');
+  });
+
+  it('adiciona tipo de dano a um grupo fechado de dados', () => {
+    expect(adicionarTipoDano('(2d12+2d6)', 'F')).toBe('(2d12+2d6)[F]');
+  });
+
+  it('não adiciona tipo de dano a atributo sem dado', () => {
+    expect(adicionarTipoDano('FOR', 'F')).toBe('FOR');
+    expect(adicionarTipoDano('2', 'F')).toBe('2[F]');
+  });
+});
 
 describe('incrementarUltimoDado', () => {
   it('sem termo dessa face ainda, devolve null', () => {

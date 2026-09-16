@@ -29,3 +29,71 @@ export function incrementarUltimoDado(formulaAtual: string, faces: number): stri
     formulaAtual.slice(inicio + quantidadeTexto.length)
   );
 }
+
+/** Adiciona uma face nova, mantendo o incremento do último dado daquela face. */
+export function adicionarDado(formulaAtual: string, faces: number): string {
+  return (
+    incrementarUltimoDado(formulaAtual, faces) ??
+    formulaAtual + (formulaAtual && !/[+\-(]$/.test(formulaAtual) ? '+' : '') + `d${faces}`
+  );
+}
+
+const OPERADOR_POOL = /(?:kh|kl|cm\d+)/gi;
+const DADO_SIMPLES = /(?:^|[+\-(])\d*d\d+(?:kh\d*|kl\d*|cm\d+)?/gi;
+const DADO_COMPOSTO = /\([^()]*\)d\d+(?:kh\d*|kl\d*|cm\d+)?/gi;
+
+function estaDentroDeGrupo(formula: string, indice: number): boolean {
+  let profundidade = 0;
+  for (let posicao = 0; posicao < indice; posicao++) {
+    if (formula[posicao] === '(') profundidade++;
+    if (formula[posicao] === ')') profundidade--;
+  }
+  return profundidade > 0;
+}
+
+function indiceDoDado(match: RegExpMatchArray): number {
+  const indice = match.index ?? 0;
+  return match[0].startsWith('(') ? indice + 1 : indice;
+}
+
+/** Reposiciona o operador de pool para o último dado (simples ou composto) da fórmula. */
+export function reposicionarOperadorPool(formulaAtual: string, operador: string): string {
+  if (!formulaAtual || !/^(?:kh|kl|cm\d+)$/i.test(operador)) {
+    return formulaAtual;
+  }
+
+  const candidatos = [
+    ...formulaAtual.matchAll(DADO_COMPOSTO),
+    ...formulaAtual.matchAll(DADO_SIMPLES),
+  ]
+    .filter((match) => !estaDentroDeGrupo(formulaAtual, indiceDoDado(match)))
+    .map((match) => ({ inicio: match.index ?? 0 }))
+    .sort((a, b) => a.inicio - b.inicio);
+  const ultimo = candidatos.at(-1);
+  if (!ultimo) {
+    return formulaAtual;
+  }
+
+  const semOperadores = formulaAtual.replace(OPERADOR_POOL, '');
+  const candidatosSemOperadores = [
+    ...semOperadores.matchAll(DADO_COMPOSTO),
+    ...semOperadores.matchAll(DADO_SIMPLES),
+  ]
+    .filter((match) => !estaDentroDeGrupo(semOperadores, indiceDoDado(match)))
+    .map((match) => ({ inicio: match.index ?? 0, fim: (match.index ?? 0) + match[0].length }))
+    .sort((a, b) => a.inicio - b.inicio);
+  const alvo = candidatosSemOperadores.at(-1);
+  if (!alvo) {
+    return formulaAtual;
+  }
+  return semOperadores.slice(0, alvo.fim) + operador + semOperadores.slice(alvo.fim);
+}
+
+/** Acrescenta uma tag de dano somente a um termo final elegível. */
+export function adicionarTipoDano(formulaAtual: string, tipo: string): string {
+  if (!formulaAtual || !tipo || /\[[^\]]*\]$/.test(formulaAtual)) {
+    return formulaAtual;
+  }
+  const termoFinal = /^(?:\d+|\d*d\d+(?:kh\d*|kl\d*|cm\d+)?|\([^()]*d\d+(?:[+-]\d*d\d+)*\))$/i;
+  return termoFinal.test(formulaAtual) ? `${formulaAtual}[${tipo}]` : formulaAtual;
+}
