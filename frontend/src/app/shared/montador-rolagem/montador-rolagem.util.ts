@@ -42,8 +42,15 @@ export function adicionarDado(formulaAtual: string, faces: number): string {
 }
 
 const OPERADOR_POOL = /(?:kh|kl|cm\d+)/gi;
-const DADO_SIMPLES = /(?:^|[+\-(])(?:[A-Z]+|\d*)d\d+(?:(?:kh|kl)\d*|cm\d+)*/gi;
-const DADO_COMPOSTO = /\([A-Z]+(?:[+-]\d+|\*\d+)\)d\d+(?:(?:kh|kl)\d*|cm\d+)*/gi;
+const FONTE_ROLAGEM = '(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFICIENCIA|NIV|NIVEL)';
+const DADO_SIMPLES = new RegExp(
+  `(?:^|[+\\-(])(?:${FONTE_ROLAGEM}|\\d*)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*`,
+  'gi',
+);
+const DADO_COMPOSTO = new RegExp(
+  `\\(${FONTE_ROLAGEM}(?:[+-]\\d+|\\*\\d+)\\)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*`,
+  'gi',
+);
 
 function estaDentroDeGrupo(formula: string, indice: number): boolean {
   let profundidade = 0;
@@ -88,6 +95,9 @@ export function adicionarTipoDano(formulaAtual: string, tipo: string): string {
   if (!formulaAtual || !tipo || /\[[^\]]*\]$/.test(formulaAtual)) {
     return formulaAtual;
   }
-  const termoFinal = /^(?:\d+|(?:[A-Z]+|\d*)d\d+(?:(?:kh|kl)\d*|cm\d+)*|\([A-Z]+(?:[+-]\d+|\*\d+)\)d\d+(?:(?:kh|kl)\d*|cm\d+)*|\(\d*d\d+(?:(?:(?:kh|kl)\d*|cm\d+))*(?:[+-]\d*d\d+(?:(?:(?:kh|kl)\d*|cm\d+))*)*\))$/i;
+  const termoFinal = new RegExp(
+    `^(?:\\d+|(?:${FONTE_ROLAGEM}|\\d*)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*|\\(${FONTE_ROLAGEM}(?:[+-]\\d+|\\*\\d+)\\)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*|\\(\\d*d\\d+(?:(?:(?:kh|kl)\\d*|cm\\d+))*(?:[+-]\\d*d\\d+(?:(?:(?:kh|kl)\\d*|cm\\d+))*)*\\))$`,
+    'i',
+  );
   return termoFinal.test(formulaAtual) ? `${formulaAtual}[${tipo}]` : formulaAtual;
 }
