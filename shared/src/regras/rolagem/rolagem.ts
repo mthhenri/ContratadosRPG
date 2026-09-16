@@ -41,10 +41,10 @@ import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto, FichaRolag
  * (`modo:'TESTE'`) para a notação nova. Funções puras; a **única brecha a `Math.random`** é a função de
  * rolagem injetável `rolarDado` (SYSTEM.SPEC §6.6).
  *
- * **Parênteses (m3-46) só existem em duas formas sancionadas**, sem aninhamento arbitrário:
- * `(ATR±n)dM` — atributo+valor como quantidade de dados (ex.: `(LUT+3)d20`) — e `(<fórmula>)#N` —
- * repete a fórmula **inteira** N vezes independentes (ex.: `(PONd20kh1cm1+PROF)#3`). Qualquer outro uso
- * de parênteses é erro de parse.
+ * **Parênteses só existem em formas sancionadas**, sem aninhamento arbitrário: `(ATR±n)dM` e
+ * `(ATR*Y)dM` para quantidade explícita de dados, `(<dados>)[Tipo]` para tipar pools de dado, e
+ * `(<fórmula>)#N` para repetir a fórmula **inteira** N vezes independentes. Qualquer outro uso de
+ * parênteses é erro de parse.
  *
  * Fonte: docs/core/sistema-v4.1.0.md — "Atributos"/"Testes"/"Tipos de Dano". Explosão/implosão não são
  * regra do documento — entram como operadores de ferramenta (m3-29).
@@ -217,6 +217,11 @@ interface AcumuladoresFormula {
   readonly constantesTipadas: TermoConstanteDto[];
 }
 
+/** Metadado interno de `(ATR*Y)dM`; não altera o contrato público de `TermoDadoDto`. */
+type TermoDadoAtributoMultiplicado = TermoDadoDto & {
+  readonly quantidadeAtributoMultiplicador?: number;
+};
+
 /**
  * Interpreta um segmento (expressão aritmética `+`/`−`) estampando cada termo com o `destino`
  * (tipo de dano). Devolve a soma das constantes **sem tag** e, em erro, a mensagem. Nunca lança.
@@ -239,6 +244,35 @@ function interpretarSegmento(
     }
     if (/[[\]]/.test(corpo)) {
       return { constante, erro: `Tag de dano malformada em "${corpo}".` };
+    }
+
+    // Atributo multiplicado como quantidade de dados `(ATR*Y)dM` + operadores por pool.
+    const dadoAtributoMultiplicado = corpo.match(/^\(([A-Za-z]+)\*(\d+)\)[dD](\d+)(.*)$/);
+    if (dadoAtributoMultiplicado) {
+      const atributoMultiplicado = resolverFonte(dadoAtributoMultiplicado[1]);
+      const multiplicador = parseInt(dadoAtributoMultiplicado[2], 10);
+      const faces = parseInt(dadoAtributoMultiplicado[3], 10);
+      if (!atributoMultiplicado) {
+        return { constante, erro: `Fonte desconhecida "${dadoAtributoMultiplicado[1]}".` };
+      }
+      if (faces < 1) {
+        return { constante, erro: `Dado inválido "${corpo}".` };
+      }
+      const { ops, erro } = interpretarOperadores(dadoAtributoMultiplicado[4], faces);
+      if (erro) {
+        return { constante, erro };
+      }
+      const termo: TermoDadoAtributoMultiplicado = {
+        sinal,
+        quantidade: 1,
+        quantidadeAtributo: atributoMultiplicado,
+        quantidadeAtributoMultiplicador: multiplicador,
+        faces,
+        ...ops,
+        ...destino,
+      };
+      acc.dados.push(termo);
+      continue;
     }
 
     // Atributo+valor como quantidade de dados `(ATR±n)dM` (m3-46) + operadores por pool.
@@ -348,6 +382,32 @@ function interpretarSegmento(
 }
 
 /**
+ * Interpreta `(<termos-de-dado>)[Tipo]`: o corpo reutiliza o parser comum, mas só pode conter
+ * pools de dado. Isso mantém os parênteses fora do agrupamento aritmético genérico.
+ */
+function interpretarGrupoTipado(
+  corpo: string,
+  destino: DestinoDano,
+  acc: AcumuladoresFormula,
+): { readonly erro?: string } {
+  const temporarios: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [] };
+  const { constante, erro } = interpretarSegmento(corpo, destino, temporarios);
+  if (erro) {
+    return { erro };
+  }
+  if (
+    temporarios.dados.length === 0 ||
+    temporarios.atributos.length > 0 ||
+    temporarios.constantesTipadas.length > 0 ||
+    constante !== 0
+  ) {
+    return { erro: 'Grupo tipado aceita somente termos de dado.' };
+  }
+  acc.dados.push(...temporarios.dados);
+  return {};
+}
+
+/**
  * Detecta o envelope de repetição `(<fórmula>)#N` (m3-46): só reconhece quando os parênteses envolvem
  * o texto **inteiro** — i.e., o `(` inicial fecha exatamente no `)` que precede o `#N` final, sem sobrar
  * nada fora. `null` quando não é esse envelope (formula normal, ou `(ATR±n)dM` solto). `n` pode vir
@@ -441,6 +501,14 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
           return { valida: false, erro: `Tipo de dano desconhecido: "${tag}".` };
         }
         destino = resolvido;
+      }
+      const grupoTipado = tag !== undefined && expr.match(/^\(([^()]+)\)$/);
+      if (grupoTipado) {
+        const { erro } = interpretarGrupoTipado(grupoTipado[1], destino, acc);
+        if (erro) {
+          return { valida: false, erro };
+        }
+        continue;
       }
       const { erro } = interpretarSegmento(expr, destino, acc);
       if (erro) {
@@ -577,7 +645,16 @@ function rolarTermo(
   let quantidade: number;
   if (termo.quantidadeAtributo) {
     const valorAtributo = ambiente[termo.quantidadeAtributo] ?? 0;
-    if (termo.quantidadeAtributoOffset === undefined && manterMaior !== undefined && valorAtributo <= 0) {
+    const multiplicador =
+      (termo as TermoDadoAtributoMultiplicado).quantidadeAtributoMultiplicador;
+    if (multiplicador !== undefined) {
+      // `(ATR*Y)dM`: contagem explícita e limitada a zero, sem a desvantagem intrínseca de teste.
+      quantidade = Math.max(0, Math.min(QUANTIDADE_DADOS_MAXIMA, valorAtributo * multiplicador));
+    } else if (
+      termo.quantidadeAtributoOffset === undefined &&
+      manterMaior !== undefined &&
+      valorAtributo <= 0
+    ) {
       // Teste de atributo zerado/negativo: rola 2+|attr| dados e mantém o(s) MENOR(es).
       desvantagem = true;
       quantidade = Math.min(QUANTIDADE_DADOS_MAXIMA, 2 - valorAtributo);

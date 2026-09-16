@@ -756,6 +756,32 @@ describe('gramática v4 — atributo+valor como quantidade de dados: `(ATR±n)dM
   });
 });
 
+describe('gramática v5 — multiplicador de atributo e grupo de dados tipado', () => {
+  it('aceita e interpreta `(ATR*Y)dM` como quantidade explícita de dados', () => {
+    // Decisão do Montador: repetir a fonte vira multiplicador, sem desvantagem de teste.
+    expect(validarFormula('(LUT*2)d20')).toBe(true);
+    expect(interpretarFormula('(LUT*2)d20').formula?.dados).toHaveLength(1);
+  });
+
+  it('rola atributo multiplicado sem desvantagem intrínseca', () => {
+    // Luta=3, multiplicador 2: seis d20. Fonte: sistema-v4.1.0.md — Testes.
+    const resultado = rolarFormula({ formula: '(LUT*2)d20', atributos }, rolarMaximo);
+    expect(resultado?.dados[0].valores).toHaveLength(6);
+    expect(resultado?.dados[0].desvantagem).toBeUndefined();
+  });
+
+  it('aceita grupo de pools de dado e estampa seu tipo em todos os termos', () => {
+    // Fonte: sistema-v4.1.0.md — Tipos de Dano.
+    expect(validarFormula('(2d12+2d6)[F]')).toBe(true);
+    const resultado = rolarFormula({ formula: '(2d12+2d6)[F]', atributos }, rolarMaximo);
+    expect(resultado?.dados.every((dado) => dado.tipoDano === TipoDanoEnum.FISICO)).toBe(true);
+  });
+
+  it('rejeita agrupamento aritmético: grupos tipados aceitam apenas termos de dado', () => {
+    expect(validarFormula('(2d12+2)[F]')).toBe(false);
+  });
+});
+
 describe('gramática v4 — repetição da fórmula inteira: `(<fórmula>)#N` (m3-46)', () => {
   it('interpreta N e preserva a fórmula interna intacta', () => {
     const interpretacao = interpretarFormula('(1d6+2)#3');
