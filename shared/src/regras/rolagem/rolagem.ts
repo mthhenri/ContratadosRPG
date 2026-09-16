@@ -389,6 +389,7 @@ function interpretarGrupoTipado(
   corpo: string,
   destino: DestinoDano,
   acc: AcumuladoresFormula,
+  sinalExterno: 1 | -1,
 ): { readonly erro?: string } {
   const temporarios: AcumuladoresFormula = { dados: [], atributos: [], constantesTipadas: [] };
   const { constante, erro } = interpretarSegmento(corpo, destino, temporarios);
@@ -403,7 +404,12 @@ function interpretarGrupoTipado(
   ) {
     return { erro: 'Grupo tipado aceita somente termos de dado.' };
   }
-  acc.dados.push(...temporarios.dados);
+  acc.dados.push(
+    ...temporarios.dados.map((dado) => ({
+      ...dado,
+      sinal: (dado.sinal * sinalExterno) as 1 | -1,
+    })),
+  );
   return {};
 }
 
@@ -486,6 +492,9 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
     for (let i = 0; i < partes.length; i += 2) {
       const expr = partes[i];
       const tag = partes[i + 1];
+      if (i > 0 && expr && !/^[+-]/.test(expr)) {
+        return { valida: false, erro: `Falta operador antes de "${expr}".` };
+      }
       if (!expr) {
         if (tag !== undefined) {
           return { valida: false, erro: `Tag "[${tag}]" sem termos antes.` };
@@ -502,9 +511,10 @@ export function interpretarFormula(formulaTexto: string): InterpretacaoFormulaDt
         }
         destino = resolvido;
       }
-      const grupoTipado = tag !== undefined && expr.match(/^\(([^()]+)\)$/);
+      const grupoTipado = tag !== undefined && expr.match(/^([+-]?)\(([^()]+)\)$/);
       if (grupoTipado) {
-        const { erro } = interpretarGrupoTipado(grupoTipado[1], destino, acc);
+        const sinalExterno: 1 | -1 = grupoTipado[1] === '-' ? -1 : 1;
+        const { erro } = interpretarGrupoTipado(grupoTipado[2], destino, acc, sinalExterno);
         if (erro) {
           return { valida: false, erro };
         }

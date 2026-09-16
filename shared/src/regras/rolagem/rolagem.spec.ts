@@ -780,6 +780,27 @@ describe('gramática v5 — multiplicador de atributo e grupo de dados tipado', 
   it('rejeita agrupamento aritmético: grupos tipados aceitam apenas termos de dado', () => {
     expect(validarFormula('(2d12+2)[F]')).toBe(false);
   });
+
+  it('aplica o tipo do grupo após sinal externo positivo e negativo', () => {
+    const positivo = rolarFormula({ formula: '2d6[F]+(2d12+2d6)[B]', atributos }, rolarMaximo);
+    expect(positivo?.dados.map((dado) => dado.tipoDano)).toEqual([
+      TipoDanoEnum.FISICO,
+      TipoDanoEnum.BALISTICO,
+      TipoDanoEnum.BALISTICO,
+    ]);
+
+    const negativo = rolarFormula({ formula: '2d6[F]-(2d12+2d6)[B]', atributos }, rolarMaximo);
+    expect(negativo?.dados.map((dado) => dado.sinal)).toEqual([1, -1, -1]);
+    expect(negativo?.dados.slice(1).map((dado) => dado.tipoDano)).toEqual([
+      TipoDanoEnum.BALISTICO,
+      TipoDanoEnum.BALISTICO,
+    ]);
+  });
+
+  it('rejeita concatenação depois de um grupo tipado', () => {
+    expect(validarFormula('(2d6+1d8)[F]d4')).toBe(false);
+    expect(validarFormula('(2d6+1d8)[F](1d4+1d6)[B]')).toBe(false);
+  });
 });
 
 describe('gramática v4 — repetição da fórmula inteira: `(<fórmula>)#N` (m3-46)', () => {
