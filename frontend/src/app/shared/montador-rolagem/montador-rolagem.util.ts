@@ -42,7 +42,8 @@ export function adicionarDado(formulaAtual: string, faces: number): string {
 }
 
 const OPERADOR_POOL = /(?:kh|kl|cm\d+)/gi;
-const FONTE_ROLAGEM = '(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFICIENCIA|NIV|NIVEL)';
+const FONTE_ROLAGEM =
+  '(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFICIENCIA|NIV|NIVEL|DESTREZA|FORCA|LUTA|PONTARIA|VIGOR|INTELECTO|MEDICINA|SENTIDOS|SOCIAL|VONTADE)';
 const DADO_SIMPLES = new RegExp(
   `(?:^|[+\\-(])(?:${FONTE_ROLAGEM}|\\d*)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*`,
   'gi',
