@@ -244,10 +244,19 @@ describe('MontadorRolagem', () => {
     expect(fixture.componentInstance.formula()).toBe('2d6-');
   });
 
-  it('apagar último remove o bloco inteiro (não só o último caractere) e limpar zera tudo', () => {
-    const fixture = montar('FORd20kh1cm1-2+7+DES');
-    botaoRodape(fixture, '⌫').click();
-    expect(fixture.componentInstance.formula()).toBe('FORd20kh1cm1-2+7');
+  it('apagar último remove o menor bloco por clique (não o caractere, nem o termo aditivo inteiro) e limpar zera tudo', () => {
+    const fixture = montar('VIGd20khcm1');
+    const apagar = botaoRodape(fixture, '⌫');
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe('VIGd20kh'); // "cm1" some primeiro
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe('VIGd20'); // depois "kh"
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe('VIG'); // depois o dado "d20"
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe(''); // por fim o atributo "VIG"
+
+    fixture.componentInstance.formula.set('2d6+3');
     botaoRodape(fixture, 'Limpar').click();
     expect(fixture.componentInstance.formula()).toBe('');
   });

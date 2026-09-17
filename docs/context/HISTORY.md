@@ -1,5 +1,50 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-17 — Montador de rolagem: apagar por bloco pequeno e cor nos botões de tipo de dano
+
+Quarto relato ao vivo do autor sobre o `MontadorRolagem` na mesma data, refinando a entrada
+anterior (apagar por bloco) e achando um defeito visual novo. Dois pontos:
+
+**1. `⌫` apagava um "bloco" grande demais — refinado pra blocos pequenos.** A entrada anterior
+desta mesma data fez `apagarUltimoBloco` remover o último termo aditivo inteiro (`+DES` de uma
+vez). O autor achou isso ainda grosso demais: em `VIGd20khcm1`, queria desfazer em passos — `cm1`,
+depois `kh`, depois `d20`, depois `VIG`, cada um com seu próprio clique. `apagarUltimoBloco` foi
+reescrita de "acha o último `+`/`-` top-level" para uma cadeia de regras ordenadas, cada uma
+testando o que tem no **final** da fórmula e removendo só essa peça, da mais específica pra mais
+geral: tag de dano `[...]` → `cmN` → `kh`/`kl` → repetição `#N` → dado cru `NdM`/`dM` (quantidade e
+face juntos, nunca digitados em separado) → grupo `(...)` balanceado inteiro (nunca corta dentro
+dele — sobrevive da versão anterior) → atributo/fonte extra/atalho (`FOR`, `PROF`, `CORPO`...) →
+número cru → operador/parêntese solto. O efeito colateral é que multi-termo também ficou mais
+granular: `"+DES"` agora são dois cliques (`DES`, depois `+`), não um — consequência esperada de
+"blocos pequenos", não um bug à parte.
+
+**2. Botões de "Tipo de dano" (F/B/E/Q/G) sem cor nenhuma — bug de especificidade CSS, não
+CSS ausente.** `montador-rolagem.component.scss` já tinha `color`/`border-color` por tipo
+(`--dano-fisico` etc.), mas não tinha efeito nenhum na tela: os cinco botões usavam
+`app-botao[variante="secundario"][estilo="contorno"]`, e a regra correspondente de
+`botao.component.scss` (`:host(.botao--secundario.botao--estilo-contorno)`, duas classes dentro
+de `:host()`) tem mais especificidade que uma classe só vinda do componente pai — sempre vencia,
+deixando os cinco cinzas (mesmo defeito, adiado, também presente em `--extra`/PROF-NIV, fora do
+escopo pedido aqui). Corrigido seguindo o padrão já estabelecido pela `ui-29d`
+(`ValorEditavel`/`variante="herdado"`): **omitir** `[variante]`/`[estilo]` do `app-botao` nesses
+cinco botões — sem variante, o primitivo não aplica cor/fundo/borda nenhum, deixando o CSS do
+consumidor pintar livre, sem competir por especificidade. Como a borda e o hover também vinham de
+`estilo="contorno"` antes, `&--dano` ganhou `border: 1px solid transparent` (a cor por tipo
+sobrescreve) e um `filter: brightness(1.15)` no hover (mesma receita do `pintar()` do
+`app-botao`). Fundo `var(--dano-#{tipo}-dim)` acrescentado — mesma paleta do chip de resumo de
+`resultado-rolagem` (`__grupo--#{tipo}`, cor + borda + fundo esmaecido), a referência que faltava
+pra "ter corzinha" de verdade, não só um contorno.
+
+**Gates:** `npm run test --workspace=frontend --include=.../montador-rolagem/*.spec.ts` — 52/52
+(reescreveu o `describe('apagarUltimoBloco', ...)` inteiro com uma sequência de cliques por
+teste, mais explícito que uma chamada só). `npm run test --workspace=frontend` completo — mesmas
+2 falhas pré-existentes (P-020/P-021), resto verde. `npm run build --workspace=frontend
+--configuration=production` limpo (só o budget do P-004). Verificação visual ao vivo em 1920×1080
+e 360×800: sequência real `VIGd20khcm1` + 4×`⌫` confirmando `VIGd20kh` → `VIGd20` → `VIG` → `` (a
+mesma sequência do autor); cor computada de cada botão de tipo (`getComputedStyle`) confirmando
+`background`/`color` distintos por tipo nos dois viewports (F vermelho, B azul, E laranja, Q
+verde, G neutro — mesmos tokens `--dano-*`/`--dano-*-dim` do chip de `resultado-rolagem`).
+
 ## 2026-09-17 — Montador de rolagem: apagar por bloco e kh/kl/cm por ordem esquerda→direita (com cursor)
 
 Terceiro relato ao vivo do autor sobre o `MontadorRolagem` na mesma data, depois de usar a v3

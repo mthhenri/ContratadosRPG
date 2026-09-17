@@ -86,26 +86,75 @@ describe('composição do montador', () => {
 });
 
 describe('apagarUltimoBloco', () => {
-  it('remove o último termo aditivo inteiro (com o sinal que o antecede), não só o último caractere', () => {
-    expect(apagarUltimoBloco('FORd20kh1cm1-2+7+DES')).toBe('FORd20kh1cm1-2+7');
-    expect(apagarUltimoBloco('2d6+3')).toBe('2d6');
-    expect(apagarUltimoBloco('2d6+FOR-5')).toBe('2d6+FOR');
+  /** Aplica `apagarUltimoBloco` repetidamente e devolve a sequência de resultados, um por clique
+   *  — mais legível que chamar a função várias vezes em série no corpo do teste. */
+  function cliques(formulaInicial: string, quantidade: number): string[] {
+    const resultados: string[] = [];
+    let atual = formulaInicial;
+    for (let i = 0; i < quantidade; i++) {
+      atual = apagarUltimoBloco(atual);
+      resultados.push(atual);
+    }
+    return resultados;
+  }
+
+  it('exemplo do autor: desfaz cm, depois kh, depois o dado, depois o atributo — um por clique', () => {
+    expect(cliques('VIGd20khcm1', 4)).toEqual(['VIGd20kh', 'VIGd20', 'VIG', '']);
   });
 
-  it('operador solto no final conta como bloco (some inteiro, não em partes)', () => {
-    expect(apagarUltimoBloco('d6+')).toBe('d6');
-    expect(apagarUltimoBloco('2d6-')).toBe('2d6');
-  });
-
-  it('nunca corta dentro de um grupo (...) ou de uma tag [...] — os dois contam como parte do bloco', () => {
-    expect(apagarUltimoBloco('(2d12+2d6)')).toBe('');
-    expect(apagarUltimoBloco('(LUT+2)d20kh1cm1+PROF+5')).toBe('(LUT+2)d20kh1cm1+PROF');
-    expect(apagarUltimoBloco('3d10[F]+FOR+3d6[Q]')).toBe('3d10[F]+FOR');
-  });
-
-  it('sem nenhum "+"/"-" top-level, a fórmula inteira é um bloco só', () => {
-    expect(apagarUltimoBloco('FORd20kh1cm1')).toBe('');
+  it('dado cru (quantidade+face) é um bloco só — não foi digitado em partes separadas', () => {
+    expect(apagarUltimoBloco('3d10')).toBe('');
     expect(apagarUltimoBloco('d6')).toBe('');
+  });
+
+  it('tag de dano [...] some inteira antes de qualquer outra coisa no final', () => {
+    expect(apagarUltimoBloco('3d10[F]')).toBe('3d10');
+  });
+
+  it('repetição "#N" é seu próprio bloco, separado do grupo que ela fecha (que sai inteiro em seguida)', () => {
+    expect(cliques('(2d6+3)#2', 2)).toEqual(['(2d6+3)', '']);
+  });
+
+  it('número cru e operador/abre-parênteses soltos são blocos de 1 clique cada', () => {
+    expect(apagarUltimoBloco('2d6+5')).toBe('2d6+');
+    expect(apagarUltimoBloco('2d6+')).toBe('2d6');
+    expect(apagarUltimoBloco('2d6-')).toBe('2d6');
+    expect(apagarUltimoBloco('(')).toBe('');
+  });
+
+  it('atributo/fonte extra/atalho no final é um bloco só (FOR, PROF, CORPO...)', () => {
+    expect(apagarUltimoBloco('2d6+FOR')).toBe('2d6+');
+    expect(apagarUltimoBloco('2d6+PROF')).toBe('2d6+');
+    expect(apagarUltimoBloco('2d6+CORPO')).toBe('2d6+');
+  });
+
+  it('nunca corta dentro de um grupo (...) — sai inteiro assim que vira o menor bloco restante', () => {
+    expect(apagarUltimoBloco('(2d12+2d6)')).toBe('');
+    expect(cliques('(LUT+2)d20kh1cm1+PROF+5', 8)).toEqual([
+      '(LUT+2)d20kh1cm1+PROF+',
+      '(LUT+2)d20kh1cm1+PROF',
+      '(LUT+2)d20kh1cm1+',
+      '(LUT+2)d20kh1cm1',
+      '(LUT+2)d20kh1',
+      '(LUT+2)d20',
+      '(LUT+2)',
+      '',
+    ]);
+  });
+
+  it('decompõe um exemplo com tag, atributo e dois dados — bloco por bloco, até esvaziar', () => {
+    expect(cliques('3d10[F]+FOR+3d6[Q]', 7)).toEqual([
+      '3d10[F]+FOR+3d6',
+      '3d10[F]+FOR+',
+      '3d10[F]+FOR',
+      '3d10[F]+',
+      '3d10[F]',
+      '3d10',
+      '',
+    ]);
+  });
+
+  it('fórmula vazia devolve vazia', () => {
     expect(apagarUltimoBloco('')).toBe('');
   });
 });

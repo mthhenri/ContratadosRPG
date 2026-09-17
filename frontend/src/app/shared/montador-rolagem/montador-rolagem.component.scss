@@ -232,32 +232,31 @@
             border-color: var(--accent-border);
         }
 
+        // Mesma paleta do chip de resumo de `resultado-rolagem` (`__grupo--#{tipo}`): cor do
+        // tipo no texto/borda + fundo esmaecido (`-dim`) — sem o fundo, a sigla ficava sem
+        // "corzinha" nenhuma, só um contorno colorido igual aos outros tiles neutros. Sem
+        // `[variante]`/`[estilo]` no `app-botao` (ui-29d: omitir é como pedir "herdado") — com eles,
+        // a regra de severidade de `:host(.botao--secundario.botao--estilo-contorno)` tem mais
+        // especificidade que uma classe só daqui e vencia sempre, deixando os cinco botões cinzas
+        // (achado ao vivo). Sem variante, `app-botao` não aplica cor/fundo/borda nenhum — só o que
+        // está aqui pinta o botão, então a borda também precisa nascer aqui (antes vinha de
+        // `estilo="contorno"`).
         &--dano {
             font-size: 13px;
+            border: 1px solid transparent;
 
-            &-fisico {
-                color: var(--dano-fisico);
-                border-color: var(--dano-fisico-border);
+            // Sem variante não há hover de `app-botao` nenhum — mesmo `filter: brightness` que o
+            // mixin `pintar($estilo: "preenchido", ...)` usa nos demais botões do produto.
+            &:hover:not(:disabled) {
+                filter: brightness(1.15);
             }
 
-            &-balistico {
-                color: var(--dano-balistico);
-                border-color: var(--dano-balistico-border);
-            }
-
-            &-explosao {
-                color: var(--dano-explosao);
-                border-color: var(--dano-explosao-border);
-            }
-
-            &-quimico {
-                color: var(--dano-quimico);
-                border-color: var(--dano-quimico-border);
-            }
-
-            &-geral {
-                color: var(--dano-geral);
-                border-color: var(--dano-geral-border);
+            @each $tipo in fisico, balistico, explosao, quimico, geral {
+                &-#{$tipo} {
+                    color: var(--dano-#{$tipo});
+                    border-color: var(--dano-#{$tipo}-border);
+                    background: var(--dano-#{$tipo}-dim);
+                }
             }
         }
     }

@@ -1777,7 +1777,19 @@ atualizado só por interação real com o `<input>`, nunca por clique nos outros
 primeiro dado que ainda não tem **exatamente** aquele operador; um clique redundante (dado já tem
 exatamente `kh`, ou já tem exatamente `cm1`) pula pro próximo dado. O critério é o operador exato,
 não a família: um dado com `kh` não bloqueia um clique de `kl` nele (troca em vez de pular),
-preservando o toggle `kh`↔`kl` já estabelecido. A instância do painel subiu para um nível
+preservando o toggle `kh`↔`kl` já estabelecido. Um quarto relato, ainda 2026-09-17, refinou o
+apagar pra blocos menores ainda: `apagarUltimoBloco` virou uma cadeia de regras (tag `[...]` → `cmN`
+→ `kh`/`kl` → `#N` → dado cru `NdM` → grupo `(...)` inteiro → atributo/atalho → número → operador
+solto), cada uma removendo só a peça mais específica do final da fórmula — em `VIGd20khcm1`, `⌫`
+agora desfaz `cm1`, depois `kh`, depois `d20`, depois `VIG`, um clique por vez. E achou por que os
+botões de "Tipo de dano" (F/B/E/Q/G) não tinham cor nenhuma apesar do SCSS já prever `--dano-*` por
+tipo: especificidade — `app-botao[variante="secundario"][estilo="contorno"]` tinha uma regra de
+severidade em `botao.component.scss` mais específica que a do componente pai, sempre vencendo.
+Corrigido pelo padrão já estabelecido na `ui-29d` (`ValorEditavel`/`variante="herdado"`): omitir
+`[variante]`/`[estilo]` desses cinco botões, deixando o SCSS do montador pintar livre (cor + fundo
+`-dim` + borda, mesma paleta do chip de `resultado-rolagem`). O mesmo defeito de especificidade
+existe em PROF/NIV (`--extra`), não corrigido por estar fora do pedido — `P-022`. A instância do
+painel subiu para um nível
 persistente da visualização da ficha —
 uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —

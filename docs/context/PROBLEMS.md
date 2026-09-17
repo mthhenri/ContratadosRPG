@@ -118,6 +118,26 @@
   `npm run test --workspace=frontend` completo). Sem relação com o arquivo alterado nesta task
   (`montador-rolagem/`); não confirmado se já falhava antes dela.
 
+### P-022 — `montador-rolagem__tile--extra` (PROF/NIV) sem a cor apagada pedida no SCSS · `ABERTO` · frontend
+
+- **Sintoma:** `montador-rolagem.component.scss` declara `.montador-rolagem__tile--extra { color:
+  var(--text-dim); }` pros botões PROF/NIV (seção Atributo), mas na tela eles saem na cor accent
+  (vermelha), não apagada — a regra nunca tem efeito.
+- **Causa:** especificidade CSS. Esses botões usam `app-botao[variante="primario"][estilo="contorno"]`;
+  a regra de severidade de `botao.component.scss` é `:host(.botao--primario.botao--estilo-contorno)`
+  (duas classes dentro de `:host()`), mais específica que uma classe só vinda do SCSS do componente
+  pai (`.montador-rolagem__tile--extra`) — sempre vence, goste ou não a cor coincidir. Mesmo
+  mecanismo corrigido nos botões de "Tipo de dano" nesta mesma data (ver `HISTORY.md`), que resolveu
+  omitindo `[variante]`/`[estilo]` do `app-botao` (padrão `ui-29d`) — não aplicado aqui porque
+  PROF/NIV não foi pedido pelo autor desta vez.
+- **Contorno:** nenhum — visualmente já "funciona" hoje porque a cor de `primario` (accent) é a que
+  aparece, só não é a `--text-dim` que o comentário do SCSS promete.
+- **Correção:** mesma receita do `--dano-*`: omitir `[variante]`/`[estilo]` nos botões PROF/NIV e
+  declarar `border`/`background`/hover próprios em `&--extra`, se o autor confirmar que quer a cor
+  apagada de fato (o SCSS já supõe que sim, mas nunca foi validado visualmente até agora).
+- **Desde:** achado ao investigar por que `--dano-*` não pintava (2026-09-17) — não corrigido por
+  estar fora do pedido da task, que era só os botões de tipo de dano.
+
 ### P-021 — `detalhe-mestre.page.spec.ts` falha ao confirmar duplicação de ficha (`Cannot read properties of undefined (reading 'click')`) · `ABERTO` · frontend
 
 - **Sintoma:** o teste "abre a dialog de duplicar e chama FichaService.duplicarFicha ao confirmar"

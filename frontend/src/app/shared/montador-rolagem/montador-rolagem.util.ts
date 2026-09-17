@@ -147,34 +147,64 @@ export function reposicionarOperadorPool(
   return formulaAtual.slice(0, inicioToken) + tokenSemPool + operador + formulaAtual.slice(inicioToken + token.length);
 }
 
-/**
- * Remove o **último bloco** aditivo da fórmula (o último termo top-level, junto do operador
- * `+`/`-` que o antecede) em vez de só o último caractere — pedido do autor: `⌫` desfaz "um
- * clique de composição" (ex.: `FORd20kh1cm1-2+7+DES` → `FORd20kh1cm1-2+7`, removendo `+DES`
- * inteiro), não uma letra por vez. Nunca corta dentro de um grupo `(...)` ou de uma tag `[...]` —
- * os dois contam como parte do bloco que os contém, nunca como fronteira própria. Sem nenhum `+`/
- * `-` top-level (a fórmula inteira é um bloco só, ex.: `(2d12+2d6)`), remove tudo.
- */
-export function apagarUltimoBloco(formulaAtual: string): string {
-  let profundidadeParen = 0;
-  let profundidadeColchete = 0;
-  let corte = 0;
-  for (let indice = 0; indice < formulaAtual.length; indice++) {
-    const caractere = formulaAtual[indice];
-    if (caractere === '(') profundidadeParen++;
-    else if (caractere === ')') profundidadeParen--;
-    else if (caractere === '[') profundidadeColchete++;
-    else if (caractere === ']') profundidadeColchete--;
-    else if (
-      indice > 0 &&
-      (caractere === '+' || caractere === '-') &&
-      profundidadeParen === 0 &&
-      profundidadeColchete === 0
-    ) {
-      corte = indice;
+/** Índice do `(` que fecha o balanceamento do `)` final da fórmula, ou `-1` sem par. */
+function indiceAberturaBalanceada(formula: string): number {
+  let profundidade = 0;
+  for (let indice = formula.length - 1; indice >= 0; indice--) {
+    if (formula[indice] === ')') profundidade++;
+    else if (formula[indice] === '(') {
+      profundidade--;
+      if (profundidade === 0) return indice;
     }
   }
-  return formulaAtual.slice(0, corte);
+  return -1;
+}
+
+const FONTE_OU_ATALHO_NO_FINAL = new RegExp(`(?:${FONTE_ROLAGEM}|CORPO|FURTIVO)$`, 'i');
+
+/**
+ * Remove o **menor bloco** do final da fórmula por clique, na ordem inversa de como um clique de
+ * composição o construiu — não o último caractere, nem o último termo aditivo inteiro. Pedido do
+ * autor: em `VIGd20khcm1`, `⌫` desfaz primeiro `cm1`, depois `kh`, depois `d20`, depois `VIG` — um
+ * clique de cada vez, do modificador mais específico pro mais geral. Ordem de prioridade no final
+ * da fórmula: tag de dano `[...]` inteira → `cmN` → `kh`/`kl` → repetição `#N` → dado cru
+ * `NdM`/`dM` (quantidade e face juntos — não foram digitados em separado) → grupo `(...)`
+ * balanceado inteiro (nunca corta dentro dele, seja `(ATR±n)`/`(ATR*Y)` de uma ação composta ou um
+ * grupo digitado à mão) → atributo/fonte extra/atalho (`FOR`, `PROF`, `CORPO`...) → número cru →
+ * operador/parêntese solto no final. Formula vazia devolve vazia.
+ */
+export function apagarUltimoBloco(formulaAtual: string): string {
+  if (!formulaAtual) {
+    return '';
+  }
+  if (/\[[^\]]*\]$/.test(formulaAtual)) {
+    return formulaAtual.replace(/\[[^\]]*\]$/, '');
+  }
+  if (/cm\d+$/i.test(formulaAtual)) {
+    return formulaAtual.replace(/cm\d+$/i, '');
+  }
+  if (/(?:kh|kl)\d*$/i.test(formulaAtual)) {
+    return formulaAtual.replace(/(?:kh|kl)\d*$/i, '');
+  }
+  if (/#\d+$/.test(formulaAtual)) {
+    return formulaAtual.replace(/#\d+$/, '');
+  }
+  if (/\d*d\d+$/i.test(formulaAtual)) {
+    return formulaAtual.replace(/\d*d\d+$/i, '');
+  }
+  if (formulaAtual.endsWith(')')) {
+    const abertura = indiceAberturaBalanceada(formulaAtual);
+    if (abertura !== -1) {
+      return formulaAtual.slice(0, abertura);
+    }
+  }
+  if (FONTE_OU_ATALHO_NO_FINAL.test(formulaAtual)) {
+    return formulaAtual.replace(FONTE_OU_ATALHO_NO_FINAL, '');
+  }
+  if (/\d+$/.test(formulaAtual)) {
+    return formulaAtual.replace(/\d+$/, '');
+  }
+  return formulaAtual.slice(0, -1);
 }
 
 /** Acrescenta uma tag de dano somente a um termo final elegível. */
