@@ -1861,7 +1861,12 @@ Corrigido pelo padrão já estabelecido na `ui-29d` (`ValorEditavel`/`variante="
 existe em PROF/NIV (`--extra`), não corrigido por estar fora do pedido — `P-022`. A instância do
 painel subiu para um nível
 persistente da visualização da ficha —
-uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens. A barra "Rolagem
+uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens.
+`FichaRolagensPainel` (visor+presets **e** o botão "Rolagem oculta") também sobrevive à troca de
+aba assim, alternando só `oculto()` — desde que a raiz inteira do template (não só
+`<app-ficha-rolagens>` de dentro) receba a classe `--oculto` quando escondido, senão o botão
+"Rolagem oculta" (que é irmão dela, não filho) vaza visível pras outras abas de Status (achado ao
+vivo pelo autor, corrigido). A barra "Rolagem
 rápida" em si (visor + `MontadorRolagem` + "Rolar") foi extraída de `FichaRolagens` pro componente
 `RolagemRapida` (`frontend/.../ficha/componentes/rolagem-rapida/`, controlado por inputs
 `atributos`/`proficiencia`/`nivel`/`atalhosDano`/`podeRolar`/`rolagemOculta`/`cor`/`oculto` + output

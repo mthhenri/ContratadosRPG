@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-17 — Botão "Rolagem oculta" vazando pras outras abas de Status (achado ao vivo, screenshot)
+
+Segundo relato do autor na mesma data/task, com print do mobile: na ficha de jogador, aba
+**Inventário**, o botão "ROLAGEM OCULTA" aparecia sobrando embaixo do card (fora do inventário,
+antes da barra de abas do rodapé) — e reproduzia em qualquer aba de Status que não fosse
+"Rolagens". Investigado ao vivo (agente Playwright dedicado, localizou o elemento exato antes de
+qualquer edição): `FichaRolagensPainel` (`ficha-rolagens-painel.component.html`) é montado uma
+única vez e persiste entre trocas de aba (`FichaVisualizacao`/`FichaCampanhaCard` alternam só o
+input `oculto`, sem `@if`/desmontar — mesmo racional do Montador continuar aberto ao trocar de
+aba). O botão "Rolagem oculta" ficava no **topo** do template do painel, **irmão** de
+`<app-ficha-rolagens>` — só esta última recebia `[oculto]` e escondia a si mesma
+(`.ficha-rol--oculto`, `ficha-rolagens.component.scss`); o botão nunca tinha esse tratamento e
+continuava no fluxo normal, visível, em toda aba que não fosse Rolagens. Corrigido em
+`ficha-rolagens-painel.component.html`/`.scss`: o template inteiro passou a ter uma raiz própria
+(`.ficha-rolagens-painel`) que recebe `[class.ficha-rolagens-painel--oculto]="oculto()"` com a
+mesma receita de esconder-sem-desmontar (`position:absolute; width:0; height:0; visibility:hidden;
+pointer-events:none`) já usada por `.ficha-rol--oculto` — agora o botão some junto com o resto do
+painel. Componente não tinha suíte de teste alguma; ganhou uma (`ficha-rolagens-painel.component.
+spec.ts`, 2 casos: `oculto=false` mostra o botão dentro da raiz sem a classe, `oculto=true` marca a
+classe na raiz). Gate: suíte completa do frontend limpa (só P-019/020/021, pré-existentes e sem
+relação), `tsc --noEmit` limpo, build de produção limpo (só P-004). Verificação ao vivo (Playwright,
+360×800): as 7 abas da ficha de jogador percorridas uma a uma — nenhuma além de "Rolagens" mostra o
+botão (confirmado especificamente na aba Inventário, a do print original); na aba Rolagens o botão
+continua funcionando (clique alterna "Rolagens Públicas" ↔ "Rolagens Ocultas (Privadas)", com
+tooltip correta). O mesmo `FichaRolagensPainel` é usado por `CampanhaDetalhe`/`previa-jogador`
+(coluna lateral compacta) — esses consumidores não passam `[oculto]` (default `false`, sempre
+"aberto"), então o defeito nunca os alcançava; a correção não muda o comportamento deles.
+
 ## 2026-09-17 — Rolagem rápida na ficha de criatura, remoção do menu "⋯" e ajustes de ícones
 
 Retomada de trabalho no branch `claude/montador-rolagens-correcao-yw3qeq` (a PR anterior desse
