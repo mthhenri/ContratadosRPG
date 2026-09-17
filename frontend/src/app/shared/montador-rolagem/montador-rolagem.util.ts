@@ -41,7 +41,14 @@ export function adicionarDado(formulaAtual: string, faces: number): string {
   );
 }
 
-const OPERADOR_POOL = /(?:kh|kl|cm\d+)/gi;
+/**
+ * `kh`/`kl` formam uma família (mantém maior x mantém menor, mutuamente exclusivos); `cm`
+ * é independente e convive com qualquer um dos dois — clicar em um só substitui a ocorrência
+ * existente do mesmo tipo, nunca remove o operador da outra família (`d20khcm1` é válido).
+ */
+function familiaDoOperador(operador: string): RegExp {
+  return /^(?:kh|kl)$/i.test(operador) ? /kh|kl/gi : /cm\d+/gi;
+}
 const FONTE_ROLAGEM =
   '(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFICIENCIA|NIV|NIVEL|DESTREZA|FORCA|LUTA|PONTARIA|VIGOR|INTELECTO|MEDICINA|SENTIDOS|SOCIAL|VONTADE)';
 const DADO_SIMPLES = new RegExp(
@@ -88,7 +95,7 @@ export function reposicionarOperadorPool(formulaAtual: string, operador: string)
   const deslocamento = /^[+\-(]/.test(ultimo.texto) ? 1 : 0;
   const inicioToken = ultimo.inicio + deslocamento;
   const token = ultimo.texto.slice(deslocamento);
-  const tokenSemPool = token.replace(OPERADOR_POOL, '');
+  const tokenSemPool = token.replace(familiaDoOperador(operador), '');
   return formulaAtual.slice(0, inicioToken) + tokenSemPool + operador + formulaAtual.slice(inicioToken + token.length);
 }
 

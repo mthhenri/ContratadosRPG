@@ -17,11 +17,18 @@ describe('composição do montador', () => {
 
   it('reposiciona o operador de pool no último dado elegível', () => {
     expect(reposicionarOperadorPool('d20kh+d6', 'kl')).toBe('d20kh+d6kl');
-    expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20kh+d6cm1');
+    expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20kh+d6klcm1');
     expect(reposicionarOperadorPool('XYZd6', 'kh')).toBe('XYZd6');
     expect(reposicionarOperadorPool('lutad20', 'kh')).toBe('lutad20kh');
     expect(reposicionarOperadorPool('(LUT+2)d20', 'kh')).toBe('(LUT+2)d20kh');
     expect(reposicionarOperadorPool('(LUT*2)d20', 'kl')).toBe('(LUT*2)d20kl');
+  });
+
+  it('kh/kl formam uma família mutuamente exclusiva; cm convive com qualquer um dos dois', () => {
+    expect(reposicionarOperadorPool('d20kh', 'kl')).toBe('d20kl');
+    expect(reposicionarOperadorPool('d20kh', 'cm1')).toBe('d20khcm1');
+    expect(reposicionarOperadorPool('d20khcm1', 'cm2')).toBe('d20khcm2');
+    expect(reposicionarOperadorPool('d20khcm1', 'kl')).toBe('d20cm1kl');
   });
 
   it('não altera uma fórmula sem dado ao reposicionar pool', () => {
