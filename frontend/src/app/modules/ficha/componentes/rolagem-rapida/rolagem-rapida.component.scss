@@ -1,0 +1,98 @@
+// Barra de Rolagem rápida — extraída de `ficha-rolagens.component.scss` (`.ficha-rol__rapida*`),
+// mesmos tokens/geometria, namespace BEM próprio porque o encapsulamento de estilo do Angular não
+// compartilha `.scss` entre componentes (proibição #29 continua valendo: só tokens do tema).
+@use "tema/breakpoints" as bp;
+
+.rolagem-rapida {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+
+    &--oculto {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: visible;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    &__linha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__rotulo-linha {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    &__entrada {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        color: var(--text);
+        font-family: var(--font-mono);
+        padding: 9px 10px;
+        font-size: 13px;
+        outline: none;
+
+        &:focus {
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__btn {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: var(--radius-control);
+        padding: 5px 12px;
+        cursor: pointer;
+        border: 1px solid var(--accent-border);
+        background: var(--accent-dim);
+        color: var(--accent);
+        flex: none;
+
+        &:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__dica {
+        font-family: var(--font-sans);
+        font-size: 11px;
+        color: var(--text-mute);
+
+        &--erro {
+            color: var(--warning);
+        }
+    }
+}

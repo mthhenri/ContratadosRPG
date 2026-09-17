@@ -157,7 +157,7 @@
             // calibrados pra fundo sob texto opaco) — some quase por completo num SVG de linhas finas
         }
 
-        // Sem ícone (fallback de face fora de d4/d6/d8/d10/d12/d20 — ex.: `d3`/`d100` caseiro):
+        // Sem ícone (fallback de face fora de d3/d4/d6/d8/d10/d12/d20 — ex.: `d100` caseiro):
         // volta ao quadradinho de sempre, com borda própria (a silhueta do dado não existe aqui).
         &:not(:has(app-icone)) {
             border: 1px solid var(--border);

@@ -12,9 +12,7 @@ import type {
 } from '@contratados-rpg/shared/dtos/ficha';
 import {
   ABREVIACOES_ATRIBUTO,
-  expandirAtalhosDano,
   resolverPreset,
-  rolarFormula,
   validarFormula,
   type PassoInterpretadoDto,
   type PlanoPresetDto,
@@ -28,10 +26,10 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
-import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
 import { executarPassoPreset } from '../../executar-rolagem';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
+import { RolagemRapida } from '../rolagem-rapida/rolagem-rapida.component';
 
 /** Grupo tipado de um passo seguinte no formulário (encadeamento), com as habilidades **deste passo**. */
 type PassoForm = FormGroup<{
@@ -94,7 +92,7 @@ interface RolagemVM {
     Botao,
     BotaoIcone,
     EstadoVazio,
-    MontadorRolagem,
+    RolagemRapida,
   ],
   templateUrl: './ficha-rolagens.component.html',
   styleUrl: './ficha-rolagens.component.scss',
@@ -207,16 +205,6 @@ export class FichaRolagens {
   protected readonly precisaFormulaOuHabilidade = computed(
     () => !this.formulaTexto().trim() && this.habilidadesPrimariaTexto().length === 0,
   );
-
-  /** Campo de **rolagem avulsa** (m3-31): digita uma fórmula e rola na hora, **sem salvar** um preset. */
-  protected readonly rapida = new FormControl('', { nonNullable: true });
-  protected readonly rapidaTexto = toSignal(this.rapida.valueChanges, { initialValue: '' });
-
-  /** Validade da fórmula avulsa (live, já com `corpo`/`furtivo` expandidos): `null` enquanto vazia. */
-  protected readonly rapidaValida = computed<boolean | null>(() => {
-    const texto = this.rapidaTexto().trim();
-    return texto === '' ? null : validarFormula(expandirAtalhosDano(texto, this.atalhosDano()));
-  });
 
   /** Presets resolvidos pelo motor (passos + efeitos + energia por passo), prontos para exibir e rolar. */
   protected readonly presets = computed<readonly RolagemVM[]>(() => {
@@ -429,34 +417,6 @@ export class FichaRolagens {
   }
 
   // === Rolar ===
-  /**
-   * Rola a **fórmula avulsa** (m3-31) na bandeja, **sem salvar** preset e **sem gastar Energia**. Usa a
-   * fórmula crua digitada (o jogador escreve exatamente o que quer — `2d6 [Físico]`, `LUTd20kh1cm1 + PROF`…).
-   */
-  protected rolarRapida(): void {
-    if (!this.podeRolar()) {
-      return;
-    }
-    const bruto = this.rapida.value.trim();
-    if (!bruto) {
-      return;
-    }
-    const formula = expandirAtalhosDano(bruto, this.atalhosDano());
-    if (!validarFormula(formula)) {
-      return;
-    }
-    const resultado = rolarFormula({
-      formula,
-      atributos: this.atributos(),
-      proficiencia: this.proficiencia(),
-      nivel: this.nivel(),
-    });
-    if (resultado) {
-      this.bandeja.mostrar({ rotulo: 'Rolagem rápida', formula, resultado, corFicha: this.cor(), visibilidade: this.rolagemOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA });
-      this.rolagemFeita.emit({ rotulo: 'Rolagem rápida', formula, resultado });
-    }
-  }
-
   /**
    * Rola um passo do preset e o joga na **bandeja** (m3-22): resolve+rola via `executarPassoPreset`
    * (extraído em m3-37 pra ser reusado também pelo runner de Combos). Debita a Energia das

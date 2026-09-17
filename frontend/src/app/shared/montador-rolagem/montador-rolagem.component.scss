@@ -261,8 +261,8 @@
         }
     }
 
-    // Tile de dado: silhueta do `app-icone` (`d4`..`d20`, `dado` genérico no fallback do `d3`)
-    // empilhada com o rótulo `D{faces}` por cima — mesma receita de `resultado-rolagem__dado`
+    // Tile de dado: silhueta do `app-icone` (`d3`..`d20`) empilhada com o rótulo `D{faces}` por
+    // cima — mesma receita de `resultado-rolagem__dado`
     // (`display:inline-grid; place-items:center` + `grid-area` compartilhada entre os filhos, em
     // vez de posicionamento absoluto, pra não depender de o ícone herdar altura/largura daqui).
     &__dado-tile {

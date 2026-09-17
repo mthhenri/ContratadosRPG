@@ -1639,6 +1639,13 @@
                         id="criatura-painel-ataques"
                         aria-labelledby="criatura-aba-ataques"
                     >
+                        <app-rolagem-rapida
+                            [rolagemOculta]="rolagemOculta()"
+                            [atributos]="dados().atributos"
+                            [podeRolar]="ajustavel()"
+                            [cor]="cor()"
+                            (rolagemFeita)="aoRolagemRapidaFeita($event)"
+                        />
                         <app-criatura-ataque-lista
                             [itens]="dados().ataques"
                             [editavel]="ajustavel()"

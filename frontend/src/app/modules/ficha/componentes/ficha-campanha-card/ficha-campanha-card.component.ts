@@ -282,7 +282,7 @@ const DESTINOS_MOBILE: readonly {
   { destino: 'informacoes', rotulo: 'Status', rotuloCompleto: 'Informações', icone: 'visao-geral' },
   { destino: 'inventario', rotulo: 'Invent.', rotuloCompleto: 'Inventário', icone: 'inventario' },
   { destino: 'habilidades', rotulo: 'Habilid.', rotuloCompleto: 'Habilidades', icone: 'habilidades' },
-  { destino: 'rolagens', rotulo: 'Rolagens', rotuloCompleto: 'Rolagens', icone: 'rolagens' },
+  { destino: 'rolagens', rotulo: 'Rolagens', rotuloCompleto: 'Rolagens', icone: 'd6' },
   { destino: 'extras', rotulo: 'Extras', rotuloCompleto: 'Extras', icone: 'mais' },
   { destino: 'historia', rotulo: 'História', rotuloCompleto: 'História', icone: 'anotacoes' },
 ];

@@ -141,8 +141,6 @@ export class CriaturaVisualizar {
   /** Rolagens desta tela ainda em voo no REST (m3-77) — ver `onRolagemRemota`. */
   private rolagensLocaisEmVoo = 0;
 
-  /** Menu de ações no cabeçalho (kebab) aberto. */
-  protected readonly menuAberto = signal(false);
   /** Dialog de gestão de acesso aberta. */
   protected readonly dialogAcesso = signal(false);
   /** Dialog de confirmação de exclusão aberta. */
@@ -331,16 +329,6 @@ export class CriaturaVisualizar {
     return campanhaId !== null ? ['/campanhas', campanhaId] : ['/fichas'];
   }
 
-  /** Abre/fecha o menu de ações do cabeçalho. */
-  protected alternarMenu(): void {
-    this.menuAberto.update((aberto) => !aberto);
-  }
-
-  /** Fecha o menu de ações. */
-  protected fecharMenu(): void {
-    this.menuAberto.set(false);
-  }
-
   /** Abre/alterna o Caderno da campanha — mesmo padrão preguiçoso de `FichaVisualizar.
    * alternarCaderno`: a 1ª chamada monta `app-caderno-flutuante` (`cadernoHabilitado`) e abre
    * (`setTimeout` — o `@if` do template só cria o `viewChild` no próximo ciclo); daí em diante só
@@ -356,7 +344,6 @@ export class CriaturaVisualizar {
 
   /** Alterna a visibilidade da criatura (`oculta`) direto pelo menu — sem confirmação (m4-09 trata a revelação pro jogador). */
   protected alternarOculta(): void {
-    this.fecharMenu();
     const fichaAtual = this.ficha();
     if (fichaAtual) {
       this.fichaEdicao.ajustarOculta(!fichaAtual.oculta);
@@ -400,7 +387,6 @@ export class CriaturaVisualizar {
 
   /** Abre a dialog de gestão de acesso (a partir do menu). */
   protected abrirAcesso(): void {
-    this.menuAberto.set(false);
     this.dialogAcesso.set(true);
   }
 
@@ -411,7 +397,6 @@ export class CriaturaVisualizar {
 
   /** Abre a dialog de confirmação de exclusão (a partir do menu). */
   protected abrirExclusao(): void {
-    this.menuAberto.set(false);
     this.dialogExclusao.set(true);
   }
 

@@ -275,12 +275,6 @@
             <circle cx="12" cy="12" r="8.5" />
             <path d="M12 7.5a2.25 2.25 0 0 0 0 4.5 2.25 2.25 0 0 1 0 4.5" />
         }
-        @case ("rolagens") {
-            <rect x="4" y="4" width="16" height="16" rx="3" />
-            <circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none" />
-            <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
-            <circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none" />
-        }
         @case ("anotacoes") {
             <!-- Folha com linhas de texto: aba de Anotações (m3-32). -->
             <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
@@ -387,13 +381,28 @@
             />
         }
         @case ("dado") {
-            <!-- Dado d6 (face 5): gatilho de rolagem (distinto do glifo da aba "rolagens"). -->
+            <!-- Dado d6 (face 5): glifo genérico de dado, usado pela aba "Rolagens" (`d6` cobre o
+           gatilho do Montador — ver `dado-mais` abaixo). -->
             <rect x="4" y="4" width="16" height="16" rx="3" />
             <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
+        }
+        @case ("dado-mais") {
+            <!-- `dado` reduzido pro canto superior esquerdo + selo de "+" (canto inferior direito) —
+           mesma técnica de `olho-rolagens`/`fragmento-construtor` (base + selo distintivo, ver
+           comentário de `olho-rolagens` acima): gatilho do Montador de rolagem (monta uma fórmula
+           por botões), distinto do `dado` "puro" usado noutros lugares. -->
+            <rect x="2" y="2" width="13" height="13" rx="2.5" />
+            <circle cx="6.1" cy="6.1" r="1.05" fill="currentColor" stroke="none" />
+            <circle cx="10.9" cy="6.1" r="1.05" fill="currentColor" stroke="none" />
+            <circle cx="8.5" cy="8.5" r="1.05" fill="currentColor" stroke="none" />
+            <circle cx="6.1" cy="10.9" r="1.05" fill="currentColor" stroke="none" />
+            <circle cx="10.9" cy="10.9" r="1.05" fill="currentColor" stroke="none" />
+            <rect x="15.5" y="15.5" width="6.5" height="6.5" rx="1.4" />
+            <path d="M18.75 16.5v4.6M16.45 18.8h4.6" />
         }
         @case ("carregando") {
             <!-- Giro de carregamento do primitivo de botão (ui-01b): aro apagado + arco em
@@ -513,6 +522,17 @@
           M469.344,332.203l-80.811-145.451l80.811-32.32V332.203z"
                 />
             </svg>
+        }
+        @case ("d3") {
+            <!-- Sem SVG dedicado em `shared/src/icons/` (só d4/d6/d8/d10/d12/d20 foram recortados de
+           biblioteca externa) — desenhado à mão como um prisma triangular (a peça física mais comum
+           pra "D3" nas mesas, já que não existe um sólido regular de 3 faces): triângulo + aresta
+           central sugerindo a dobra do prisma, mesmo traço/peso dos ícones desenhados à mão do
+           arquivo (ver comentário de `fragmento-construtor`). Deixava de ter ícone próprio e caía no
+           glifo genérico `dado` — igual a vários outros dados na grade, sem nada que o distinguisse
+           à distância. -->
+            <path d="M12 4 20 19H4Z" />
+            <path d="M12 4v15" />
         }
         @case ("d4") {
             <!-- d4 (tetraedro) preenchido — recorte de `shared/src/icons/d4.svg`, mesmo tratamento do

@@ -29,9 +29,9 @@ const ATRIBUTOS: readonly string[] = Object.keys(ABREVIACOES_ATRIBUTO);
  *  extenso). */
 const FONTES_EXTRA: readonly string[] = ['PROF', 'NIV'];
 
-/** Ícone de dado (`d4`..`d20`) por face — mesmo mapa de `resultado-rolagem.component.ts`. `d3`
- *  não tem SVG dedicado (fallback pro ícone genérico `dado`, só aqui). */
+/** Ícone de dado (`d3`..`d20`) por face — mesmo mapa de `resultado-rolagem.component.ts`. */
 const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
+  3: 'd3',
   4: 'd4',
   6: 'd6',
   8: 'd8',

@@ -74,11 +74,11 @@ describe('ResultadoRolagem', () => {
     expect(dados[1].getAttribute('aria-label')).toBe('1 (descartado)');
   });
 
-  /** Redesign SVG dos dados: face padrão (d4..d20) troca o quadradinho pela silhueta do dado. */
-  it('face padrão (ex.: d6) renderiza o ícone do dado; face fora do conjunto cai no fallback', () => {
+  /** Redesign SVG dos dados: face padrão (d3..d20) troca o quadradinho pela silhueta do dado. */
+  it('face padrão (ex.: d6) renderiza o ícone do dado; face fora do conjunto (d100 caseiro) cai no fallback', () => {
     const raiz = montar(resultadoBase([
       { sinal: 1, faces: 6, valores: [4], subtotal: 4 },
-      { sinal: 1, faces: 3, valores: [2], subtotal: 2 },
+      { sinal: 1, faces: 100, valores: [2], subtotal: 2 },
     ]));
     const dados = raiz.querySelectorAll('.resultado-rolagem__dado');
     expect(dados[0].querySelector('app-icone')).not.toBeNull();

@@ -75,6 +75,8 @@ import {
 import { CriaturaResistenciaLista } from '../criatura-resistencia-lista/criatura-resistencia-lista.component';
 import { CriaturaAtaqueLista } from '../criatura-ataque-lista/criatura-ataque-lista.component';
 import { CriaturaHabilidadeLista } from '../criatura-habilidade-lista/criatura-habilidade-lista.component';
+import { RolagemRapida } from '../rolagem-rapida/rolagem-rapida.component';
+import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { AjusteEnquadramentoImagem } from '../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component';
 
 /** As dez chaves de `FichaAtributosDto`, mesmo apelido do análogo em `FichaVisualizacao`. */
@@ -148,6 +150,7 @@ const ANOTACOES_ALTURA_MINIMA = 260;
     CriaturaResistenciaLista,
     CriaturaAtaqueLista,
     CriaturaHabilidadeLista,
+    RolagemRapida,
     AjusteEnquadramentoImagem,
     FocoImagem,
     ReceberDanoDialog,
@@ -755,6 +758,15 @@ export class CriaturaVisualizacao {
   protected fecharEnquadramento(): void {
     this.enquadramentoOrigem.set(null);
     this.arquivoPendente.set(null);
+  }
+
+  /**
+   * Rolagem rápida da aba Ataques (`app-rolagem-rapida`, mesma barra da ficha de jogador — pedido
+   * do autor): o componente já jogou na bandeja, só falta registrar no histórico da ficha, mesmo
+   * canal que `rolarAtaque`/`rolarTesteAtributo` usam.
+   */
+  protected aoRolagemRapidaFeita(evento: RolagemRealizadaDto): void {
+    this.rolagemRegistro.registrar(evento);
   }
 
   /** Rola o dano de um Ataque (`criatura-rolagem.ts`, motor puro) e mostra/registra o resultado.
