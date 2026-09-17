@@ -1861,7 +1861,18 @@ Corrigido pelo padrão já estabelecido na `ui-29d` (`ValorEditavel`/`variante="
 existe em PROF/NIV (`--extra`), não corrigido por estar fora do pedido — `P-022`. A instância do
 painel subiu para um nível
 persistente da visualização da ficha —
-uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens. Cada ficha
+uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens. A barra "Rolagem
+rápida" em si (visor + `MontadorRolagem` + "Rolar") foi extraída de `FichaRolagens` pro componente
+`RolagemRapida` (`frontend/.../ficha/componentes/rolagem-rapida/`, controlado por inputs
+`atributos`/`proficiencia`/`nivel`/`atalhosDano`/`podeRolar`/`rolagemOculta`/`cor`/`oculto` + output
+`rolagemFeita`) — reusada pela aba Ataques da ficha de criatura (`CriaturaVisualizacao`, sem
+`proficiencia`/`nivel`/`atalhosDano`, que a criatura não tem), que nunca teve rolagem avulsa por
+fórmula livre antes disso. O ícone da aba "Rolagens" (jogador) é `'d6'` (era `'rolagens'`, removido
+do `IconeNome` por ficar sem consumidor); o gatilho do Montador usa `'dado-mais'` (`'dado'` + selo de
+"+" no canto, mesma técnica de `olho-rolagens`); o dado D3 do teclado de tokens ganhou ícone próprio
+(`'d3'`, prisma triangular desenhado à mão) em vez de cair no fallback genérico — `ICONE_POR_FACES`
+de `montador-rolagem.component.ts` e `resultado-rolagem.component.ts` (os dois mapas sempre andam
+juntos) ganharam a entrada `3: 'd3'`. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
 `ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda
 rolagem daquela ficha (bandeja de dados, histórico, feed "Rolagens Recentes" do painel de
@@ -1958,7 +1969,11 @@ corretamente e o jogador sem concessão não a vê (§14). Pendência registrada
 **Visualização/edição** (`frontend/src/app/modules/ficha/componentes/criatura-visualizacao/`,
 `CriaturaVisualizacao` + página `paginas/visualizar-criatura/`) — rota
 `/painel/:campanhaId/criatura/:id`, mesma guarda de mestre da rota `nova`; resolve a pendência da
-`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). Barra superior própria do
+`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). O cabeçalho da página
+(`visualizar-criatura.page.html`) não tem menu "⋯" (removido — duplicava 100% de
+`app-coluna-acoes`, que já vira barra fixa de ícones no rodapé no mobile); todas as ações
+(Histórico, Anotações, Calculadora, Caderno, Rolagem oculta, Acesso, Ocultar/Excluir ficha) vivem
+só na coluna. Barra superior própria do
 componente (`criatura__topo`, rótulo + régua + `chip-classificacao` `FICHA-CRT-{id zero-padded}`,
 igual estrutura de `ficha-visao__topo` do jogador — não fica na página) seguida de dashboard de 3
 colunas — Identidade (avatar com cor de identidade via `<input type="color">`, upload de imagem e
@@ -1970,8 +1985,10 @@ de 4 barras não fica no card — só dentro do modo de edição) · Status com 
 'geral' | 'descricao' | 'ataques' | 'habilidades'`, também divergência deliberada do mockup — que
 mostra 2): Geral (Cadência + Bônus de Iniciativa + Deslocamento na mesma linha — deslocamento é um
 terceiro item de `.criatura__stats--info`, não card próprio — e Regeneração opcional abaixo),
-Descrição (Conceito/Gancho/Motivação, Natureza Física/Tema de Horror, Anotações), Ataques e
-Habilidades (cada uma sua própria aba, grades de cards, Ataque com botões Teste e Dano) — mesmo
+Descrição (Conceito/Gancho/Motivação, Natureza Física/Tema de Horror, Anotações), Ataques (com a
+barra "Rolagem rápida" — `app-rolagem-rapida` — acima da lista de ataques, mesma barra/Montador da
+ficha de jogador) e Habilidades (cada uma sua própria aba, grades de cards, Ataque com botões Teste
+e Dano) — mesmo
 shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
 `docs/design/tema/_componentes.scss`, alvo de fidelidade
 `docs/design/examples/ficha-de-criatura.html`. Abas sempre ocupam 100% da barra (`flex: 1 1 0` em

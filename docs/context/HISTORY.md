@@ -1,5 +1,82 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-17 — Rolagem rápida na ficha de criatura, remoção do menu "⋯" e ajustes de ícones
+
+Retomada de trabalho no branch `claude/montador-rolagens-correcao-yw3qeq` (a PR anterior desse
+nome já tinha sido mesclada; o branch foi reapontado pra `claude/peaceful-lovelace-dehdtm`, que
+continha o mesmo histórico mais três commits desta mesma data — mesclada a `origin/master` com um
+único conflito real, em `HISTORY.md`, resolvido por concatenação — arquivo é *append-only*).
+Quatro pedidos do autor:
+
+**1. Aba Ataques da ficha de criatura ganhou a mesma barra "Rolagem rápida" da ficha de jogador,
+com o Montador de rolagem.** A criatura nunca teve rolagem avulsa por fórmula livre — só testes de
+atributo e ataques cadastrados (`FichaCriaturaAtaqueDto`, motor próprio em `criatura-rolagem.ts`).
+Em vez de duplicar o markup/lógica da barra dentro de `FichaRolagens` (editor de presets, que a
+criatura não tem e não devia ganhar — "ataques" já é o conceito equivalente dela), a barra foi
+**extraída** pra um componente novo, `RolagemRapida`
+(`frontend/.../ficha/componentes/rolagem-rapida/`): visor + `MontadorRolagem` + botão "Rolar",
+controlado por inputs (`atributos`, `proficiencia`, `nivel`, `atalhosDano`, `podeRolar`,
+`rolagemOculta`, `cor`, `oculto`) e um único output `rolagemFeita` — o componente mostra o
+resultado na bandeja de dados sozinho (injeta `BandejaDadosService`), mas quem persiste no
+histórico é o chamador (cada ficha já injeta `FichaRolagemRegistroService` com o `fichaId` certo,
+não haveria como o componente genérico saber disso). `FichaRolagens` (jogador) passou a usar esse
+componente por dentro em vez da versão inline antiga — mesmo comportamento, sem duplicar código; a
+suíte de testes da barra migrou junto para `rolagem-rapida.component.spec.ts`.
+`CriaturaVisualizacao` ganhou `<app-rolagem-rapida>` acima de `<app-criatura-ataque-lista>` na aba
+Ataques, com `atributos=dados().atributos`, sem `proficiencia`/`nivel`/`atalhosDano` (a criatura
+não tem PROF/NIV nem atalhos CORPO/FURTIVO — os mesmos que `rolarAtaqueCriatura` já não usa) e
+`podeRolar=ajustavel()` (mesmo gate dos demais botões de rolar da ficha); o handler
+`aoRolagemRapidaFeita` só repassa pro `rolagemRegistro.registrar()` já injetado no componente,
+mesmo canal que `rolarAtaque`/`rolarTesteAtributo` usam.
+
+**2. Menu "⋯" do cabeçalho da ficha de criatura removido.** Existia só no mobile (CSS escondia no
+desktop) e duplicava 100% dos itens de `app-coluna-acoes` — que no mobile já vira uma barra fixa de
+ícones no rodapé, não desaparece. Era puramente redundante (o próprio comentário do código antigo
+já dizia "duplica os mesmos itens da coluna"): removido o botão, o painel do menu, o backdrop e os
+sinais `menuAberto`/`alternarMenu`/`fecharMenu` de `visualizar-criatura.page.ts`/`.html`/`.scss`
+(inclusive as chamadas a `fecharMenu()`/`menuAberto.set(false)` dentro de
+`alternarOculta`/`abrirAcesso`/`abrirExclusao`, que não faziam mais sentido sem o menu). A ficha de
+**jogador** não foi tocada — continua com o próprio "⋯" mobile, que não foi pedido.
+
+**3. Ícones da ficha de jogador: aba "Rolagens" e gatilho do Montador.** O ícone `'rolagens'`
+(quadrado com 3 pontinhos na diagonal) foi **removido** de `icone.component.ts`/`.html` — as duas
+únicas telas que o usavam (`FichaVisualizacao`/`FichaCampanhaCard`, `icone: 'rolagens'` no array de
+abas de Status) passaram a usar o ícone `'d6'` já existente (silhueta sólida do cubo, recorte da
+biblioteca externa — mesmo family visual dos demais `dN`). O gatilho do Montador (dentro da barra
+Rolagem rápida, `montador-rolagem.component.html`) trocou de `'dado'` (d6 genérico com 5 pips) para
+um ícone novo, `'dado-mais'`: o mesmo glifo de 5 pips reduzido pro canto superior esquerdo + um selo
+quadrado com um "+" no canto inferior direito — mesma técnica de composição "base reduzida + selo
+distintivo" já usada por `olho-rolagens`/`fragmento-construtor`/`chama` (documentada no comentário
+de `olho-rolagens`). `'dado'` continua existindo (glifo genérico, sem consumidor neste momento, mas
+não removido — não foi pedido).
+
+**4. Ícone dedicado pro dado D3 do Montador.** O autor pediu pra "tirar o ícone do dado D3 e
+adicionar o D2" — mas `docs/core/sistema-v4.1.0.md` (linha 1790-1792) define os dados do sistema
+como **D3, D4, D6, D8, D10, D12 e D20** e diz explicitamente "não é possível... reduzir de D3 para
+D2" (D2 não é um dado válido do sistema). Como o pedido conflitava com a fonte da verdade das
+regras, parei e perguntei ao autor antes de mexer na lista de dados do Montador — ele confirmou:
+manter D3 (é o dado canônico), só ajustar o ícone. O problema real era outro: D3 não tinha SVG
+dedicado (`shared/src/icons/` só tem d4/d6/d8/d10/d12/d20 recortados de biblioteca externa) e caía
+no fallback genérico `'dado'` — o mesmo glifo de vários outros tiles da grade, sem nada que o
+distinguisse à distância. Ganhou um ícone próprio, `'d3'`, desenhado à mão (triângulo + aresta
+central sugerindo a dobra de um prisma triangular — a peça física mais comum pra "D3" nas mesas,
+já que não existe sólido regular de 3 faces): adicionado em `icone.component.ts`/`.html` e no mapa
+`ICONE_POR_FACES` de `montador-rolagem.component.ts` **e** `resultado-rolagem.component.ts` (o
+segundo mostra a silhueta do dado rolado na bandeja/histórico — os dois mapas sempre andaram
+juntos, comentário de um cita o outro).
+
+**Gates.** Suíte focada (`rolagem-rapida`, `ficha-rolagens`, `criatura-visualizacao`, `icone`,
+`resultado-rolagem`, `montador-rolagem`) e suíte completa do frontend (`npm run test
+--workspace=frontend`): só as duas falhas pré-existentes e sem relação (`inventario-esquadrao`
+P-020, `detalhe-mestre` duplicar-ficha P-021; `P-019`, de ordem de suíte, não reproduziu nesta
+rodada). `tsc --noEmit` limpo. Build de produção limpo (só o aviso crônico de budget, `P-004`).
+Verificação visual ao vivo (Playwright, stack real com Postgres nativo — sem Docker neste
+ambiente —, backend `:3100`, frontend `:4300`) em `1920×1080` e `360×800`, análogo `FichaRolagens`
+(jogador) vs. a nova barra da criatura: barra idêntica, Montador abre e rola normalmente (`2d6` →
+bandeja), ícones conferidos por zoom (D3 distinto na grade, `d6` sólido na aba, `dado-mais` no
+gatilho), "⋯" ausente no cabeçalho mobile da criatura (barra de rodapé continua existindo). Sem
+overflow nem regressão percebida nas telas visitadas.
+
 ## 2026-09-17 — Montador de rolagem: apagar por bloco pequeno e cor nos botões de tipo de dano
 
 Quarto relato ao vivo do autor sobre o `MontadorRolagem` na mesma data, refinando a entrada
