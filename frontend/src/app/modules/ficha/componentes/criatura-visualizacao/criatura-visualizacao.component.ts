@@ -213,6 +213,7 @@ export class CriaturaVisualizacao {
   readonly vitalidadeMudou = output<AjusteCriaturaVitalidade>();
   readonly defesaMudou = output<number>();
   readonly identidadeMudou = output<FichaCriaturaIdentidadeDto>();
+  readonly registroMudou = output<string>();
   readonly naMudou = output<NivelAmeacaEnum>();
   readonly vdMudou = output<number>();
   readonly atributosMudou = output<FichaAtributosDto>();
@@ -426,12 +427,11 @@ export class CriaturaVisualizacao {
     this.campoEmEdicao.set(null);
   }
 
-  /** Registro de contenção (pedido do autor: mesmo formato do "CONTRATO — 0000" de
-   * `FichaVisualizacao.contratoTexto`, só que com o rótulo da criatura) — mesmo `fichaId`
-   * numérico da `classificacao` (`FICHA-CRT-NNNN`) da página hospedeira, só com o rótulo/
-   * preenchimento próprios deste selo. */
+  /** Texto livre de catalogação (`dados().registro`, ex.: "SCP-049") — mesmo padrão de
+   * `FichaVisualizacao.contratoTexto`, mas sem rótulo fixo: o placeholder cobre o campo
+   * inteiro em vez de só um sufixo numérico. */
   protected readonly registroExibido = computed(
-    () => `REGISTRO — ${String(this.fichaId()).padStart(4, '0')}`,
+    () => this.dados().registro?.trim() || 'SCP - ?????',
   );
 
   /**
@@ -507,6 +507,10 @@ export class CriaturaVisualizacao {
 
   protected confirmarIdentidade(identidade: FichaCriaturaIdentidadeDto): void {
     this.identidadeMudou.emit(identidade);
+  }
+
+  protected confirmarRegistro(registro: string): void {
+    this.registroMudou.emit(registro);
   }
 
   /** Confirma um único campo de Identidade — monta o objeto inteiro (`identidadeMudou` é atômico). */

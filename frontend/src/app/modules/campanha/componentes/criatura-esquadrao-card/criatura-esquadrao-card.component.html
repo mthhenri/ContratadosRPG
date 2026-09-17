@@ -1,0 +1,76 @@
+<article class="criatura-card" [class.criatura-card--critico]="criatura().critico">
+    <div class="criatura-card__cabecalho">
+        <span class="criatura-card__avatar" aria-hidden="true" [style.--cor-ficha]="criatura().cor">
+            @if (criatura().imagemUrl; as urlImagem) {
+                <img class="criatura-card__avatar-imagem" [src]="urlImagem" alt="" />
+            }
+            <button
+                app-botao-icone
+                [redondo]="true"
+                tamanho="mini"
+                type="button"
+                class="criatura-card__abrir-ficha"
+                [attr.aria-label]="'Abrir ficha de ' + criatura().nome"
+                [appTooltip]="'Abrir ficha'"
+                (click)="abrirFicha.emit()"
+            >
+                <app-icone nome="visao-geral" />
+            </button>
+        </span>
+
+        <div class="criatura-card__corpo">
+            <span class="criatura-card__registro">{{ criatura().registroTexto }}</span>
+            <span class="criatura-card__nome">{{ criatura().nome }}</span>
+            <span class="criatura-card__classificacao"
+                >{{ criatura().porteTexto }} · {{ criatura().comportamentoTexto }} ·
+                {{ criatura().naTexto }}</span
+            >
+
+            <div class="criatura-card__recursos">
+                <app-barra-recurso
+                    class="criatura-card__recurso-primitivo"
+                    rotulo="Vida"
+                    recurso="vida"
+                    tamanho="compacto"
+                    [atual]="criatura().vidaAtual"
+                    [maximo]="criatura().vidaMaxima ?? 0"
+                />
+            </div>
+
+            @if (criatura().defesa != null) {
+                <div class="criatura-card__reacoes">
+                    <span
+                        >Def <strong>{{ criatura().defesa }}</strong></span
+                    >
+                </div>
+            }
+        </div>
+
+        <button
+            app-botao-icone
+            type="button"
+            class="criatura-card__menu-botao"
+            [attr.aria-label]="'Ações de ' + criatura().nome"
+            [appTooltip]="'Ações de ' + criatura().nome"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="menuAberto()"
+            (click)="alternarMenu.emit($event)"
+        >
+            ⋯
+        </button>
+    </div>
+
+    <div class="criatura-card__ultima-rolagem" [style.--cor-ficha]="criatura().cor">
+        @if (ultimaRolagem(); as rolagem) {
+            <span class="criatura-card__ultima-rolagem-rotulo">Última rolagem</span>
+            <span class="criatura-card__ultima-rolagem-texto"
+                >{{ rolagem.rotulo }} — {{ rolagem.resultado.total }}</span
+            >
+            @if (ultimaRolagemTempo(); as tempo) {
+                <span class="criatura-card__ultima-rolagem-tempo">{{ tempo }}</span>
+            }
+        } @else {
+            <span class="criatura-card__ultima-rolagem-vazio">Nenhuma rolagem carregada ainda</span>
+        }
+    </div>
+</article>

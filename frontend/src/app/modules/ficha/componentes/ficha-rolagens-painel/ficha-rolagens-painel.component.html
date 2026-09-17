@@ -16,7 +16,7 @@
         (click)="registro.alternarOculta()"
     >
         <app-icone [nome]="registro.oculta() ? 'olho-fechado' : 'olho'" />
-        <span>Rolagem oculta</span>
+        <span>{{ registro.oculta() ? "Rolagens Ocultas (Privadas)" : "Rolagens Públicas" }}</span>
     </button>
 }
 <app-ficha-rolagens

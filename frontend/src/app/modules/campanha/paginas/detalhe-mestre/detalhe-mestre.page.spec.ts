@@ -7,7 +7,9 @@ import { signal } from '@angular/core';
 import {
   ArquetipoEnum,
   ClasseEnum,
+  ComportamentoCriaturaEnum,
   NivelAmeacaEnum,
+  PorteCriaturaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -16,6 +18,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { CampanhaDetalheMestre } from './detalhe-mestre.page';
 import { EspectadorFichaCard } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
+import { CriaturaEsquadraoCard } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
@@ -89,6 +92,9 @@ describe('CampanhaDetalheMestre', () => {
       inconsciente: false,
       na: NivelAmeacaEnum.MEDIA,
       defesa: 10,
+      registro: 'SCP-049',
+      porte: PorteCriaturaEnum.GRANDE,
+      comportamento: ComportamentoCriaturaEnum.CACADORA,
     } as FichaResumoDto,
   ];
 
@@ -275,9 +281,17 @@ describe('CampanhaDetalheMestre', () => {
     expect(cartao.componentInstance.ultimaRolagem()?.id).toBe(77);
   });
 
-  it('renderiza a subseção Criaturas com a ficha tipo CRIATURA', () => {
-    const { raiz } = montar();
-    expect(raiz.querySelector('.detalhe-mestre__criatura-nome')?.textContent).toContain('Aberração');
+  it('renderiza a subseção Criaturas com app-criatura-esquadrao-card, registro/porte/comportamento/NA e a barra de Vida', () => {
+    const { raiz, fixture } = montar();
+    const cartao = fixture.debugElement.query(By.directive(CriaturaEsquadraoCard));
+    expect(cartao).not.toBeNull();
+    expect(raiz.querySelector('.criatura-card__nome')?.textContent).toContain('Aberração');
+    expect(raiz.querySelector('.criatura-card__registro')?.textContent).toContain('SCP-049');
+    const classificacao = raiz.querySelector('.criatura-card__classificacao')?.textContent ?? '';
+    expect(classificacao).toContain('Grande');
+    expect(classificacao).toContain('Caçadora');
+    expect(classificacao).toContain('Média');
+    expect(raiz.querySelector('app-criatura-esquadrao-card app-barra-recurso')).not.toBeNull();
   });
 
   it('abre a ficha flutuante ao emitir abrirFicha do cartão do Esquadrão', () => {
@@ -286,6 +300,56 @@ describe('CampanhaDetalheMestre', () => {
     const cartao = fixture.debugElement.query(By.directive(EspectadorFichaCard));
     cartao.componentInstance.abrirFicha.emit();
     expect(spy).toHaveBeenCalledWith({ fichaId: 4, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 2 });
+  });
+
+  it('abre a ficha flutuante ao emitir abrirFicha do cartão de criatura', () => {
+    const { fixture } = montar();
+    // `mockImplementation` — sem chamar through: `FichaFlutuante.abrir()` real dispara
+    // `CriaturaVisualizacao`, que a fixture rasa `recuperarFichaCriatura: () => of({})` deste
+    // spec não sustenta (crasha em `.vd` de documento vazio). Só a chamada em si prova o roteamento.
+    const spy = vi
+      .spyOn(fixture.componentInstance['fichaFlutuanteRef']()!, 'abrir')
+      .mockImplementation(() => {});
+    const cartao = fixture.debugElement.query(By.directive(CriaturaEsquadraoCard));
+    cartao.componentInstance.abrirFicha.emit();
+    expect(spy).toHaveBeenCalledWith({ fichaId: 9, tipo: TipoFichaEnum.CRIATURA, usuarioIdDono: 1 });
+  });
+
+  it('"Abrir ficha completa" do menu "⋯" vai pro acervo (jogador) ou pra rota de criatura da campanha (criatura)', () => {
+    const { raiz, fixture } = montar();
+    const abrir = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    expect(abrir).toHaveBeenCalledWith(expect.stringContaining('/fichas/4'), '_blank', 'noopener');
+
+    abrir.mockClear();
+    (raiz.querySelector('.criatura-card__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    expect(abrir).toHaveBeenCalledWith(
+      expect.stringContaining(`/campanhas/${CAMPANHA_ID}/criatura/9`),
+      '_blank',
+      'noopener',
+    );
+  });
+
+  it('duplica uma criatura pelo mesmo menu "⋯" do cartão, sem exigir dono', () => {
+    const { raiz, fixture, fichaService } = montar();
+    (raiz.querySelector('.criatura-card__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (raiz.querySelector('.detalhe-mestre__ficha-menu-item:nth-child(2)') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.dialogo__aviso')?.textContent).not.toContain('de "');
+
+    const confirmar = Array.from(raiz.querySelectorAll('app-modal button')).find((el) =>
+      el.textContent?.includes('Confirmar duplicação'),
+    ) as HTMLButtonElement;
+    confirmar.click();
+
+    expect(fichaService.duplicarFicha).toHaveBeenCalledWith(9);
   });
 
   it('esconde o gatilho flutuante próprio da calculadora e do caderno (consolidados na coluna de ações)', () => {

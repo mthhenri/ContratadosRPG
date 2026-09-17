@@ -50,7 +50,7 @@ describe('CriaturaVisualizacao', () => {
 
     const eventos: Record<string, unknown[]> = {};
     for (const nome of [
-      'vitalidadeMudou', 'defesaMudou', 'identidadeMudou', 'naMudou', 'vdMudou', 'atributosMudou',
+      'vitalidadeMudou', 'defesaMudou', 'identidadeMudou', 'registroMudou', 'naMudou', 'vdMudou', 'atributosMudou',
       'modificadoresMudou', 'tenacidadeMudou', 'resistenciasMudou', 'fraquezasMudou', 'regeneracaoMudou',
       'porteMudou', 'deslocamentoMudou', 'cadenciaMudou', 'iniciativaBonusMudou', 'ataquesMudou',
       'habilidadesMudou', 'anotacoesMudou', 'nomeMudou', 'corMudou', 'ocultaMudou',
@@ -151,6 +151,24 @@ describe('CriaturaVisualizacao', () => {
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelector('.criatura__designacao')?.textContent?.trim()).toBe('A Estátua');
     expect(raiz.querySelector('.criatura__stat--vd')?.textContent).toContain('30');
+  });
+
+  it('mostra o placeholder "SCP - ?????" quando dados.registro não está definido', () => {
+    const { fixture } = montar();
+    expect(fixture.componentInstance['registroExibido']()).toBe('SCP - ?????');
+  });
+
+  it('mostra o texto livre de dados.registro quando definido', () => {
+    const { fixture } = montar();
+    fixture.componentRef.setInput('dados', { ...dados, registro: 'SCP-049' });
+    fixture.detectChanges();
+    expect(fixture.componentInstance['registroExibido']()).toBe('SCP-049');
+  });
+
+  it('emite registroMudou ao confirmar o registro editado', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['confirmarRegistro']('SCP-049');
+    expect(eventos['registroMudou']).toEqual(['SCP-049']);
   });
 
   it('renderiza a lista de ataques vinda dos dados na aba Ataques', () => {

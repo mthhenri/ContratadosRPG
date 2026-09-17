@@ -37,7 +37,7 @@
         } @if (podeGerenciar()) {
         <button
             app-coluna-acoes-item
-            [icone]="rolagemOculta() ? 'olho' : 'olho-fechado'"
+            [icone]="rolagemOculta() ? 'olho-rolagens' : 'olho-fechado-rolagens'"
             [appTooltip]="rolagemOculta() ? 'Tornar rolagens públicas' : 'Ocultar rolagens'"
             (click)="alternarRolagemOculta()"
         >
@@ -46,7 +46,7 @@
         <div class="coluna-acoes__categoria">Gestão</div>
         <button
             app-coluna-acoes-item
-            icone="olho"
+            icone="olho-membros"
             appTooltip="Acesso de visualização"
             (click)="abrirAcesso()"
         >
@@ -205,7 +205,7 @@
                             role="menuitem"
                             (click)="alternarRolagemOculta(); fecharMenu()"
                         >
-                            <app-icone [nome]="rolagemOculta() ? 'olho' : 'olho-fechado'" />
+                            <app-icone [nome]="rolagemOculta() ? 'olho-rolagens' : 'olho-fechado-rolagens'" />
                             <span
                                 >{{ rolagemOculta() ? "Tornar rolagens públicas" : "Ocultar
                                 rolagens" }}</span
@@ -218,7 +218,7 @@
                             role="menuitem"
                             (click)="abrirAcesso()"
                         >
-                            <app-icone nome="olho" />
+                            <app-icone nome="olho-membros" />
                             <span>Acesso de visualização</span>
                             @if (acessos().length) {
                             <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
@@ -284,6 +284,7 @@
             (vitalidadeMudou)="fichaEdicao.ajustarVitalidade($event)"
             (defesaMudou)="fichaEdicao.ajustarDefesa($event)"
             (identidadeMudou)="fichaEdicao.ajustarIdentidade($event)"
+            (registroMudou)="fichaEdicao.ajustarRegistro($event)"
             (naMudou)="fichaEdicao.ajustarNa($event)"
             (vdMudou)="fichaEdicao.ajustarVd($event)"
             (atributosMudou)="fichaEdicao.ajustarAtributos($event)"

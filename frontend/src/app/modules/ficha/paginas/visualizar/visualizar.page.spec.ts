@@ -35,6 +35,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { FichaVisualizar } from './visualizar.page';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import type { AjusteAtributos } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { FichaService } from '../../ficha.service';
@@ -285,17 +286,20 @@ describe('FichaVisualizar', () => {
       expect(raiz.textContent).toContain('Ocultar ficha');
     });
 
-    it('abre a mesma dialog de confirmação da ficha', () => {
-      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    it('abre a mesma confirmação da ficha, via ConfirmacaoService (ui-15)', () => {
+      const { raiz } = montar({ usuarioLogadoId: 7 });
+      const confirmar = vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
       const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find(
         (item) => item.textContent?.includes('Ocultar ficha'),
       );
       botao?.click();
-      fixture.detectChanges();
 
-      expect(document.body.textContent).toContain('Ocultar ficha?');
-      expect(document.body.textContent).toContain(
-        'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          titulo: 'Ocultar ficha?',
+          mensagem:
+            'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+        }),
       );
     });
   });

@@ -99,7 +99,7 @@
     </button>
     <button
         app-coluna-acoes-item
-        icone="olho"
+        icone="olho-membros"
         appTooltip="Acesso de visualização"
         [contagem]="acessosFichaExibida().length || null"
         [disabled]="!minhaFichaExibida()"
@@ -269,7 +269,7 @@
                             [disabled]="!minhaFichaExibida()"
                             (click)="abrirAcessoFicha()"
                         >
-                            <app-icone nome="olho" />
+                            <app-icone nome="olho-membros" />
                             <span>Acesso de visualização</span>
                             @if (acessosFichaExibida().length) {
                             <span class="detalhe__cabecalho-menu-contagem"

@@ -45,6 +45,12 @@ import type { FichaAtributosDto } from './ficha.dtos';
  */
 export interface FichaCriaturaDadosDto {
   readonly identidade: FichaCriaturaIdentidadeDto;
+  /**
+   * Texto livre pro mestre catalogar a criatura no universo (ex.: "SCP-049") — opcional, sem
+   * formato imposto. Mesmo padrão de `FichaJogadorDadosDto.contrato`, mas sem rótulo fixo:
+   * o valor exibido é o texto inteiro, não um sufixo de "REGISTRO — ".
+   */
+  readonly registro?: string;
   /** Nível de Ameaça — impacto real da criatura livre por 24h, não dificuldade de combate. */
   readonly na: NivelAmeacaEnum;
   /** Valor de Desafio — meta de design definida como alvo antes de qualquer outro cálculo. */

@@ -23,6 +23,7 @@ import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
@@ -715,71 +716,71 @@ describe('FichaVisualizacao', () => {
       );
     });
 
-    it('abre o aviso de ocultar sem emitir antes da confirmação', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+    it('pede confirmação via ConfirmacaoService (ui-15) — não emite antes de confirmar', async () => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
+      const confirmar = vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
 
-      expect(raiz.textContent).toContain('Ocultar ficha?');
-      expect(raiz.textContent).toContain(
-        'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          titulo: 'Ocultar ficha?',
+          mensagem:
+            'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+          severidade: 'padrao',
+          rotuloConfirmar: 'Ocultar ficha',
+        }),
       );
+      await Promise.resolve();
       expect(emitidos).toEqual([]);
     });
 
-    it('abre o aviso de exibir com a mensagem correspondente', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+    it('pede confirmação de exibir com o texto correspondente quando a ficha já está oculta', () => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
       fixture.componentRef.setInput('oculta', true);
       fixture.detectChanges();
+      const confirmar = vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
 
-      expect(raiz.textContent).toContain('Exibir ficha?');
-      expect(raiz.textContent).toContain(
-        'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          titulo: 'Exibir ficha?',
+          mensagem: 'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
+          rotuloConfirmar: 'Exibir ficha',
+        }),
       );
     });
 
-    it('cancelar ou fechar a dialog não emite ajusteOculta', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+    it('cancelar a confirmação não emite ajusteOculta', async () => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
-      (raiz.querySelector('[data-testid="cancelar-visibilidade"]') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      fixture.componentInstance['cancelarAlteracaoVisibilidade']();
+      await Promise.resolve();
 
-      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
-        false,
-      );
       expect(emitidos).toEqual([]);
     });
 
     it.each([
-      { oculta: false, esperado: true, acao: 'Ocultar ficha' },
-      { oculta: true, esperado: false, acao: 'Exibir ficha' },
-    ])('confirmar $acao emite exatamente o estado oposto e fecha a dialog', ({ oculta, esperado }) => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      { oculta: false, esperado: true },
+      { oculta: true, esperado: false },
+    ])('confirmar emite exatamente o estado oposto', async ({ oculta, esperado }) => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
       fixture.componentRef.setInput('oculta', oculta);
       fixture.detectChanges();
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(true);
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
-      (raiz.querySelector('[data-testid="confirmar-visibilidade"]') as HTMLButtonElement).click();
-      fixture.detectChanges();
+      await Promise.resolve();
 
       expect(emitidos).toEqual([esperado]);
-      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
-        false,
-      );
     });
   });
 

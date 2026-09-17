@@ -470,43 +470,8 @@
                                 </div>
                             </div>
 
-                            <app-modal
-                                [aberto]="confirmandoVisibilidade()"
-                                [titulo]="oculta() ? 'Exibir ficha?' : 'Ocultar ficha?'"
-                                (fechou)="cancelarAlteracaoVisibilidade()"
-                            >
-                                <p>
-                                    @if (oculta()) {
-                                        Esta ficha voltará a aparecer para os outros jogadores da
-                                        campanha.
-                                    } @else {
-                                        Outros jogadores deixarão de ver esta ficha. Você e o mestre
-                                        da campanha continuarão com acesso.
-                                    }
-                                </p>
-                                <div class="ficha-ident__classe-acoes">
-                                    <button
-                                        type="button"
-                                        app-botao
-                                        variante="primario"
-                                        class="ficha-cartao__acao ficha-cartao__acao--confirmar"
-                                        data-testid="confirmar-visibilidade"
-                                        (click)="confirmarAlteracaoVisibilidade()"
-                                    >
-                                        {{ oculta() ? "Exibir ficha" : "Ocultar ficha" }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        app-botao
-                                        variante="secundario"
-                                        class="ficha-cartao__acao"
-                                        data-testid="cancelar-visibilidade"
-                                        (click)="cancelarAlteracaoVisibilidade()"
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </app-modal>
+                            <!-- Ocultar/Exibir ficha (ui-15): confirmação via `ConfirmacaoService` +
+                             `<app-confirmacao>` singleton do layout — nada de modal ad-hoc aqui. -->
 
                             <!-- Editor de Origem (m3-23): nome/descrição/Saber de Campo + Especialidade + 2 linhas de
              Formação. Reusa o mesmo mini-editor da Classe/Arquétipo (`ficha-ident__classe-editor`).

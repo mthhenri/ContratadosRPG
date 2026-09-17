@@ -106,6 +106,7 @@ import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import {
   FichaInventario,
@@ -519,20 +520,26 @@ export class FichaVisualizacao {
   /** Novo valor de "ficha oculta" (m3-65, relacional — fora do `dados`) — a página persiste `ficha.oculta`. */
   readonly ajusteOculta = output<boolean>();
 
-  /** Dialog pendente de confirmação; clicar no controle nunca altera a ficha diretamente. */
-  protected readonly confirmandoVisibilidade = signal(false);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
 
+  /** Pede confirmação (ui-15) antes de alterar a visibilidade; clicar no controle nunca altera a
+   *  ficha diretamente. Não é destrutivo (reversível a qualquer momento) — `severidade: 'padrao'`. */
   solicitarAlteracaoVisibilidade(): void {
-    this.confirmandoVisibilidade.set(true);
-  }
-
-  protected cancelarAlteracaoVisibilidade(): void {
-    this.confirmandoVisibilidade.set(false);
-  }
-
-  protected confirmarAlteracaoVisibilidade(): void {
-    this.ajusteOculta.emit(!this.oculta());
-    this.confirmandoVisibilidade.set(false);
+    const vaiOcultar = !this.oculta();
+    this.confirmacaoService
+      .confirmar({
+        titulo: vaiOcultar ? 'Ocultar ficha?' : 'Exibir ficha?',
+        mensagem: vaiOcultar
+          ? 'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.'
+          : 'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
+        severidade: 'padrao',
+        rotuloConfirmar: vaiOcultar ? 'Ocultar ficha' : 'Exibir ficha',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.ajusteOculta.emit(vaiOcultar);
+        }
+      });
   }
 
   /**

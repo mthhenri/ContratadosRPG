@@ -513,7 +513,7 @@ describe('PainelEncontro', () => {
     abrir();
     fixture.detectChanges();
 
-    expect(elemento.querySelector('.rolagem-avulso__visibilidade')?.textContent).toContain('Rolagem pública');
+    expect(elemento.querySelector('.rolagem-avulso__visibilidade')?.textContent).toContain('Rolagens Públicas');
   });
 
   it('`Rolar iniciativas` só manda quem está sem iniciativa, somando o bônus da criatura', () => {

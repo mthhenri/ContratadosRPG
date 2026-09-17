@@ -1,0 +1,196 @@
+// Cartão de criatura da grade "Criaturas" (visão de mestre) — análogo aprovado
+// `espectador-ficha-card.component.scss` (Esquadrão de jogadores da mesma tela): mesma moldura,
+// mesma receita de avatar hachurado, mesma faixa "Última rolagem". Avatar fica em 100×100 (era o
+// tamanho que a criatura já usava antes desta task — 128×128 é só do jogador, pedido do autor).
+// Só tokens do tema "Terminal de Contenção" (proibição #29).
+
+:host {
+    display: block;
+}
+
+.criatura-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    overflow: hidden;
+
+    // Vida ≤ 0 — mesma receita/limiar de `.espectador-ficha--critico`.
+    &--critico {
+        border-color: var(--vida-border);
+
+        .criatura-card__ultima-rolagem {
+            box-shadow: inset 2px 0 0 var(--vida-border);
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-12);
+        padding: var(--space-12);
+    }
+
+    // Fixo em px (não `width:100%` + `aspect-ratio` + `max-height`, achado de `m8-07`/`ui-34b`
+    // reincidente aqui): 100×100, o tamanho que o card de criatura já usava.
+    &__avatar {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        flex: none;
+        border-radius: var(--radius-control);
+        background-color: color-mix(
+            in srgb,
+            var(--cor-ficha, var(--border-strong)) 14%,
+            var(--surface)
+        );
+        background-image: repeating-linear-gradient(
+            135deg,
+            color-mix(
+                    in srgb,
+                    color-mix(
+                            in srgb,
+                            var(--cor-ficha, var(--border-strong)) 60%,
+                            var(--border-strong)
+                        )
+                        20%,
+                    transparent
+                )
+                0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--cor-ficha, var(--border-strong));
+        overflow: hidden;
+    }
+
+    &__avatar-imagem {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &__abrir-ficha {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+    }
+
+    &__menu-botao {
+        align-self: flex-start;
+        margin-left: auto;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    &__corpo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+        min-width: 0;
+        flex: 1;
+    }
+
+    &__registro {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__nome {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__classificacao {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+    }
+
+    &__recursos {
+        display: flex;
+        gap: var(--space-12);
+        margin-top: var(--space-4);
+    }
+
+    &__recurso-primitivo {
+        min-width: 0;
+        flex: 1;
+    }
+
+    // Só Defesa (criatura não tem Esquiva/Bloqueio/Contra-ataque de verdade) — mesma receita
+    // abreviada de `.espectador-ficha__reacoes`.
+    &__reacoes {
+        display: flex;
+        gap: 2px var(--space-8);
+        margin-top: var(--space-4);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+
+        strong {
+            color: var(--text-dim);
+        }
+    }
+
+    // Faixa "Última rolagem" — mesma receita de `.espectador-ficha__ultima-rolagem`.
+    &__ultima-rolagem {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-8);
+        padding: var(--space-8) var(--space-12);
+        background: var(--surface-2);
+        border-top: 1px solid var(--border);
+        border-radius: var(--radius-control);
+        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
+    }
+
+    &__ultima-rolagem-rotulo {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__ultima-rolagem-texto {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--cor-ficha, var(--text));
+    }
+
+    &__ultima-rolagem-tempo {
+        flex: none;
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-mute);
+    }
+
+    &__ultima-rolagem-vazio {
+        font-family: var(--font-sans);
+        font-size: 11px;
+        font-style: italic;
+        color: var(--text-mute);
+    }
+}
