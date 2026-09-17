@@ -1752,8 +1752,8 @@ quem decide o que é aceito; a `montador-rolagem-ajustes` estendeu o motor
 `(ATR*Y)dM` (quantidade `atributo*multiplicador`, piso zero, sem desvantagem intrínseca) e
 `(termos-de-dado)[TIPO]` (grupo fechado tipando todos os pools internos) — e corrigiu a
 composição por botão: todo clique de dado novo entra como termo aditivo (`+dM`),
-`reposicionarOperadorPool` sempre repõe `kh`/`kl`/`cmN` no **último** dado elegível (`kh`/`kl`
-mutuamente exclusivos, `cm` convive com qualquer um dos dois), e o tipo de dano só escreve com um
+`reposicionarOperadorPool` repõe `kh`/`kl`/`cmN` num dado elegível (`kh`/`kl` mutuamente
+exclusivos, `cm` convive com qualquer um dos dois), e o tipo de dano só escreve com um
 alvo elegível. Um segundo relato ao vivo do autor (2026-09-17) corrigiu mais um defeito e três
 ajustes de UI do painel: clicar num atributo "bare" (sem dado ainda) e depois num dado volta a
 fechar `ATRdM` (atributo como fonte de dados, ex.: `FORd20`) em vez de somar `+dM` do lado —
@@ -1767,7 +1767,17 @@ decorativa de 16px que sobrava nos quatro lados); no desktop o tamanho de base s
 e +25% de altura (380×580 → 570×725) e a janela ganhou uma alça de redimensionar por arraste no
 canto inferior direito (`iniciarRedimensionamento`/`aoMoverPonteiroRedimensionar`, mesmo racional de
 `CadernoFlutuante.iniciarRedimensionamento`, mas com estado local — sem store, sem persistência —
-e **sem** maximizar, pedido explícito do autor). A instância do painel subiu para um nível
+e **sem** maximizar, pedido explícito do autor). Um terceiro relato ao vivo do autor, ainda
+2026-09-17, mudou dois comportamentos de composição: `⌫` (`apagarUltimoBloco`) agora remove o
+**último bloco aditivo** inteiro (o último termo top-level com o `+`/`-` que o antecede, sem
+cortar dentro de `(...)`/`[...]`) em vez de um caractere por vez; e `reposicionarOperadorPool`
+(que reposicionava sempre no **último** dado) passou a varrer da **esquerda pra direita** — ou a
+partir do dado sob o **cursor do visor**, quando o jogador clicou/digitou ali (`cursorVisor`,
+atualizado só por interação real com o `<input>`, nunca por clique nos outros botões) — e usa o
+primeiro dado que ainda não tem **exatamente** aquele operador; um clique redundante (dado já tem
+exatamente `kh`, ou já tem exatamente `cm1`) pula pro próximo dado. O critério é o operador exato,
+não a família: um dado com `kh` não bloqueia um clique de `kl` nele (troca em vez de pular),
+preservando o toggle `kh`↔`kl` já estabelecido. A instância do painel subiu para um nível
 persistente da visualização da ficha —
 uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —

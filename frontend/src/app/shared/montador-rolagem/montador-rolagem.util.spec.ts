@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   adicionarDado,
   adicionarTipoDano,
+  apagarUltimoBloco,
   incrementarUltimoDado,
   reposicionarOperadorPool,
 } from './montador-rolagem.util';
@@ -23,20 +24,43 @@ describe('composição do montador', () => {
     expect(adicionarDado('FORd6', 20)).toBe('FORd6+d20');
   });
 
-  it('reposiciona o operador de pool no último dado elegível', () => {
-    expect(reposicionarOperadorPool('d20kh+d6', 'kl')).toBe('d20kh+d6kl');
-    expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20kh+d6klcm1');
+  it('reposiciona o operador de pool no primeiro dado elegível da esquerda pra direita', () => {
+    // "d20kh" já tem "kh" exato — clicar "kl" nele é troca (kh↔kl), não redundância: aplica ali
+    // mesmo, no primeiro dado, sem pular pro "d6" que vem depois.
+    expect(reposicionarOperadorPool('d20kh+d6', 'kl')).toBe('d20kl+d6');
+    // "cm1" não tem nada a ver com "kh" — o primeiro dado ("d20kh") é elegível pra cm mesmo já
+    // tendo kh (família diferente), então fica nele, não no "d6kl" mais à direita.
+    expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20khcm1+d6kl');
     expect(reposicionarOperadorPool('XYZd6', 'kh')).toBe('XYZd6');
     expect(reposicionarOperadorPool('lutad20', 'kh')).toBe('lutad20kh');
     expect(reposicionarOperadorPool('(LUT+2)d20', 'kh')).toBe('(LUT+2)d20kh');
     expect(reposicionarOperadorPool('(LUT*2)d20', 'kl')).toBe('(LUT*2)d20kl');
   });
 
-  it('kh/kl formam uma família mutuamente exclusiva; cm convive com qualquer um dos dois', () => {
+  it('clique redundante (o dado já tem exatamente esse operador) pula pro próximo dado', () => {
+    // "d20kh" já tem "kh" exato — clicar "kh" de novo nele não muda nada, então vai pro "d6".
+    expect(reposicionarOperadorPool('d20kh+d6', 'kh')).toBe('d20kh+d6kh');
+    // "d20khcm1" já tem "cm1" exato — clicar "cm1" de novo pula pro "d6kh".
+    expect(reposicionarOperadorPool('d20khcm1+d6kh', 'cm1')).toBe('d20khcm1+d6khcm1');
+    // Todos os dados já têm o operador exato: nada a fazer, sem efeito.
+    expect(reposicionarOperadorPool('d20kh+d6kh', 'kh')).toBe('d20kh+d6kh');
+  });
+
+  it('kh/kl formam uma família mutuamente exclusiva (trocam no mesmo dado); cm convive com qualquer um dos dois', () => {
     expect(reposicionarOperadorPool('d20kh', 'kl')).toBe('d20kl');
     expect(reposicionarOperadorPool('d20kh', 'cm1')).toBe('d20khcm1');
     expect(reposicionarOperadorPool('d20khcm1', 'cm2')).toBe('d20khcm2');
     expect(reposicionarOperadorPool('d20khcm1', 'kl')).toBe('d20cm1kl');
+  });
+
+  it('cursor no visor escolhe o dado alvo, mesmo quando não é o primeiro da esquerda', () => {
+    const formula = 'd20+d6';
+    const cursorNoD6 = formula.indexOf('d6') + 1; // dentro do span do segundo candidato ("+d6")
+    expect(reposicionarOperadorPool(formula, 'kh', cursorNoD6)).toBe('d20+d6kh');
+    // Cursor fora de qualquer dado (ex.: início da fórmula) cai no padrão esquerda pra direita.
+    expect(reposicionarOperadorPool(formula, 'kh', 0)).toBe('d20kh+d6');
+    // Cursor null é o mesmo que não informar — também padrão esquerda pra direita.
+    expect(reposicionarOperadorPool(formula, 'kh', null)).toBe('d20kh+d6');
   });
 
   it('não altera uma fórmula sem dado ao reposicionar pool', () => {
@@ -58,6 +82,31 @@ describe('composição do montador', () => {
   it('não adiciona tipo de dano a atributo sem dado', () => {
     expect(adicionarTipoDano('FOR', 'F')).toBe('FOR');
     expect(adicionarTipoDano('2', 'F')).toBe('2[F]');
+  });
+});
+
+describe('apagarUltimoBloco', () => {
+  it('remove o último termo aditivo inteiro (com o sinal que o antecede), não só o último caractere', () => {
+    expect(apagarUltimoBloco('FORd20kh1cm1-2+7+DES')).toBe('FORd20kh1cm1-2+7');
+    expect(apagarUltimoBloco('2d6+3')).toBe('2d6');
+    expect(apagarUltimoBloco('2d6+FOR-5')).toBe('2d6+FOR');
+  });
+
+  it('operador solto no final conta como bloco (some inteiro, não em partes)', () => {
+    expect(apagarUltimoBloco('d6+')).toBe('d6');
+    expect(apagarUltimoBloco('2d6-')).toBe('2d6');
+  });
+
+  it('nunca corta dentro de um grupo (...) ou de uma tag [...] — os dois contam como parte do bloco', () => {
+    expect(apagarUltimoBloco('(2d12+2d6)')).toBe('');
+    expect(apagarUltimoBloco('(LUT+2)d20kh1cm1+PROF+5')).toBe('(LUT+2)d20kh1cm1+PROF');
+    expect(apagarUltimoBloco('3d10[F]+FOR+3d6[Q]')).toBe('3d10[F]+FOR');
+  });
+
+  it('sem nenhum "+"/"-" top-level, a fórmula inteira é um bloco só', () => {
+    expect(apagarUltimoBloco('FORd20kh1cm1')).toBe('');
+    expect(apagarUltimoBloco('d6')).toBe('');
+    expect(apagarUltimoBloco('')).toBe('');
   });
 });
 

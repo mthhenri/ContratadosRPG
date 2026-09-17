@@ -32,6 +32,8 @@
             type="text"
             [value]="formula()"
             (input)="aoDigitarPreview($event)"
+            (click)="aoPosicionarCursor($event)"
+            (keyup)="aoPosicionarCursor($event)"
             aria-label="Fórmula em edição"
             placeholder="Sua fórmula aparece aqui"
         />

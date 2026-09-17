@@ -15,6 +15,7 @@ import { Tooltip } from '../tooltip/tooltip.directive';
 import {
   adicionarDado,
   adicionarTipoDano,
+  apagarUltimoBloco,
   reposicionarOperadorPool,
 } from './montador-rolagem.util';
 
@@ -151,6 +152,19 @@ export class MontadorRolagem {
   protected readonly aberto = signal(false);
   private readonly painelRef = viewChild<PainelFlutuante>('painel');
 
+  /**
+   * Posição do cursor no visor — `null` até o jogador clicar/digitar ali dentro (padrão:
+   * `reposicionarOperadorPool` busca da esquerda pra direita). Só atualiza em interação real com o
+   * campo de texto (clique/teclado); clicar nos outros botões do teclado (dado, atributo etc.)
+   * nunca move essa posição — todo token novo entra por concatenação no fim da fórmula, então uma
+   * posição já registrada continua válida depois deles.
+   */
+  private readonly cursorVisor = signal<number | null>(null);
+
+  protected aoPosicionarCursor(evento: Event): void {
+    this.cursorVisor.set((evento.target as HTMLInputElement).selectionStart);
+  }
+
   protected alternar(): void {
     if (this.aberto() && this.painelRef()?.minimizado()) {
       this.painelRef()?.restaurar();
@@ -237,7 +251,9 @@ export class MontadorRolagem {
 
   /** Preview editável dentro do painel — mesmo texto do input original da Rolagem rápida. */
   protected aoDigitarPreview(evento: Event): void {
-    this.formula.set((evento.target as HTMLInputElement).value);
+    const alvo = evento.target as HTMLInputElement;
+    this.formula.set(alvo.value);
+    this.cursorVisor.set(alvo.selectionStart);
   }
 
   // === Inserção crua (tag de dano, operador por pool — encostado no texto atual) ===
@@ -269,8 +285,9 @@ export class MontadorRolagem {
     });
   }
 
+  /** Remove o último bloco aditivo (não só o último caractere) — ver `apagarUltimoBloco`. */
   protected apagarUltimo(): void {
-    this.formula.update((atual) => atual.slice(0, -1));
+    this.formula.update((atual) => apagarUltimoBloco(atual));
   }
 
   protected limpar(): void {
@@ -288,7 +305,7 @@ export class MontadorRolagem {
   }
 
   protected reposicionarPool(operador: string): void {
-    this.formula.update((atual) => reposicionarOperadorPool(atual, operador));
+    this.formula.update((atual) => reposicionarOperadorPool(atual, operador, this.cursorVisor()));
   }
 
   protected adicionarDano(tipo: string): void {

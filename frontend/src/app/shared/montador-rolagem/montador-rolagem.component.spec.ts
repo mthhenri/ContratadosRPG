@@ -116,10 +116,10 @@ describe('MontadorRolagem', () => {
   });
 
   it.each([
-    ['Manter maior', 'd20+d6kh'],
-    ['Manter menor', 'd20+d6kl'],
-    ['Margem de crítico', 'd20+d6cm1'],
-  ])('aplica %s ao último dado aditivo', (acao, esperado) => {
+    ['Manter maior', 'd20kh+d6'],
+    ['Manter menor', 'd20kl+d6'],
+    ['Margem de crítico', 'd20cm1+d6'],
+  ])('aplica %s ao primeiro dado elegível da esquerda pra direita (sem cursor no visor)', (acao, esperado) => {
     const fixture = montar();
 
     botao(fixture, 'Dado', 'D20').click();
@@ -127,6 +127,33 @@ describe('MontadorRolagem', () => {
     botao(fixture, acao === 'Margem de crítico' ? 'Avançado' : 'Manter maior / menor', acao).click();
 
     expect(fixture.componentInstance.formula()).toBe(esperado);
+  });
+
+  it('clique repetido no mesmo botão de pool distribui pelos dados da esquerda pra direita', () => {
+    const fixture = montar();
+    botao(fixture, 'Dado', 'D20').click();
+    botao(fixture, 'Dado', 'D6').click();
+    const manterMaior = botao(fixture, 'Manter maior / menor', 'Manter maior');
+    manterMaior.click();
+    expect(fixture.componentInstance.formula()).toBe('d20kh+d6');
+    // "d20kh" já tem "kh" exato (clique redundante) — o segundo clique pula pro "d6".
+    manterMaior.click();
+    expect(fixture.componentInstance.formula()).toBe('d20kh+d6kh');
+    // Os dois já têm "kh": um terceiro clique não tem mais alvo, sem efeito.
+    manterMaior.click();
+    expect(fixture.componentInstance.formula()).toBe('d20kh+d6kh');
+  });
+
+  it('posicionar o cursor no visor escolhe qual dado recebe o pool, mesmo não sendo o primeiro', () => {
+    const fixture = montar('d20+d6');
+    const visor = fixture.nativeElement.querySelector('.montador-rolagem__visor') as HTMLInputElement;
+    const posicaoNoD6 = fixture.componentInstance.formula().indexOf('d6') + 1;
+    visor.setSelectionRange(posicaoNoD6, posicaoNoD6);
+    visor.dispatchEvent(new Event('click'));
+
+    botao(fixture, 'Manter maior / menor', 'Manter maior').click();
+
+    expect(fixture.componentInstance.formula()).toBe('d20+d6kh');
   });
 
   it('não altera a fórmula quando pool ou tipo de dano não têm alvo elegível', () => {
@@ -217,10 +244,10 @@ describe('MontadorRolagem', () => {
     expect(fixture.componentInstance.formula()).toBe('2d6-');
   });
 
-  it('apagar último e limpar ficam no rodapé fixo, fora da seção Editar', () => {
-    const fixture = montar('2d6+3');
+  it('apagar último remove o bloco inteiro (não só o último caractere) e limpar zera tudo', () => {
+    const fixture = montar('FORd20kh1cm1-2+7+DES');
     botaoRodape(fixture, '⌫').click();
-    expect(fixture.componentInstance.formula()).toBe('2d6+');
+    expect(fixture.componentInstance.formula()).toBe('FORd20kh1cm1-2+7');
     botaoRodape(fixture, 'Limpar').click();
     expect(fixture.componentInstance.formula()).toBe('');
   });

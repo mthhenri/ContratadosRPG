@@ -1,5 +1,44 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-17 — Montador de rolagem: apagar por bloco e kh/kl/cm por ordem esquerda→direita (com cursor)
+
+Terceiro relato ao vivo do autor sobre o `MontadorRolagem` na mesma data, depois de usar a v3
+(entrada anterior). Dois pontos:
+
+**1. `⌫` apagava só o último caractere, não o último "bloco".** Num exemplo do autor
+(`FORd20kh1cm1-2+7+DES`), clicar `⌫` deveria remover `+DES` inteiro, não só o `S`. Nova função
+`apagarUltimoBloco` (`montador-rolagem.util.ts`) varre a fórmula rastreando profundidade de `(...)`
+e `[...]` e corta no último `+`/`-` **top-level** (fora de grupo/tag) — um grupo fechado ou uma tag
+de dano nunca viram fronteira própria, contam como parte do bloco que os contém; sem nenhum
+`+`/`-` top-level (a fórmula é um bloco só, ex. `(2d12+2d6)`), remove tudo. `apagarUltimo()` do
+componente passou a chamar essa função em vez de `.slice(0, -1)`.
+
+**2. `kh`/`kl`/`cm` sempre iam no último dado; agora vão no primeiro da esquerda, ou onde o cursor
+estiver.** `reposicionarOperadorPool` ganhou um terceiro parâmetro opcional `cursor` (posição no
+visor, `selectionStart`) e trocou a lógica de escolha do dado-alvo: em vez do último dado da
+fórmula, varre da esquerda pra direita (ou a partir do dado sob o cursor, quando informado) e usa o
+**primeiro que ainda não tem exatamente aquele operador** — um clique redundante (o dado já tem
+exatamente `kh`, ou já tem exatamente `cm1`) pula pro próximo dado em vez de não fazer nada. O
+critério de "já tem" é o operador **exato**, não a família: um dado com `kh` não conta como "já
+tendo" `kl` — clicar `kl` nele ainda troca no próprio dado (preserva o toggle `kh`↔`kl` já
+estabelecido antes desta task), só não avança pro próximo. `familiaDoOperador` continua sendo quem
+decide o que remover ao aplicar (kh/kl removem um ao outro; cm só remove outro cm). O componente
+rastreia a posição do cursor com um signal próprio (`cursorVisor`), atualizado só em interação real
+com o campo de texto (clique/tecla no `<input>` do visor via `aoPosicionarCursor`) — nunca por
+clique nos outros botões do teclado (dado, atributo etc.), já que todo token novo entra por
+concatenação no fim da fórmula e uma posição de cursor já registrada continua válida depois deles;
+sem nenhuma interação com o campo, o padrão é "esquerda pra direita" (equivalente a `cursor: null`).
+
+**Gates:** `npm run test --workspace=frontend --include=.../montador-rolagem/*.spec.ts` — 47/47,
+incluindo os testes atualizados de `reposicionarOperadorPool` (renomeados/reescritos pra refletir a
+nova ordem) e os novos de `apagarUltimoBloco` e de cursor. `npm run test --workspace=frontend`
+completo — mesmas 2 falhas pré-existentes de sempre (P-020/P-021, sem relação com este componente),
+resto verde. Verificação visual ao vivo (`localhost:4300`) em 1920×1080 e 360×800: sequência real
+de cliques confirmando `FORd20kh1cm1-2+7+DES` → `⌫` → `FORd20kh1cm1-2+7`; `d20+d6` → "Manter maior"
+→ `d20kh+d6` (primeiro dado, não o último); um segundo clique no mesmo botão pulando pro `d6`
+(`d20kh+d6kh`); e clicar no visor perto do "d6" antes de "Manter menor" aplicando no `d6`
+(`d20+d6kl`) mesmo ele não sendo o primeiro dado.
+
 ## 2026-09-17 — Montador de rolagem: corrige `ATRdM` por clique, reordena "Editar", padding e redimensionar no desktop
 
 Segundo relato ao vivo do autor sobre o `MontadorRolagem` (`frontend/.../shared/montador-rolagem/`),
