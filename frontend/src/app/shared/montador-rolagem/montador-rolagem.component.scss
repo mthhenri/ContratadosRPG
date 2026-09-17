@@ -10,6 +10,13 @@
     display: contents;
 }
 
+:host ::ng-deep .painel-flutuante__janela {
+    margin: max(var(--space-16), env(safe-area-inset-top))
+        max(var(--space-16), env(safe-area-inset-right))
+        max(var(--space-16), env(safe-area-inset-bottom))
+        max(var(--space-16), env(safe-area-inset-left));
+}
+
 .montador-rolagem {
     // Gatilho inline (não é círculo flutuante como a calculadora — mora dentro da linha da
     // "Rolagem rápida", junto do "Rolar") — mesma receita visual de `.ficha-rol__btn--rolar`
@@ -18,26 +25,10 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        border-radius: var(--radius-control);
-        padding: 5px 10px;
-        cursor: pointer;
-        border: 1px solid var(--accent-border);
-        background: var(--accent-dim);
-        color: var(--accent);
         flex: none;
-        transition:
-            background-color 0.15s ease,
-            color 0.15s ease;
-
-        &:hover {
-            filter: brightness(1.1);
-        }
 
         &--ativo {
-            background: var(--accent);
-            color: var(--accent-text);
+            filter: brightness(1.1);
         }
 
         @include bp.mobile {
@@ -175,33 +166,9 @@
     // CORPO/FURTIVO, Repetir, e as três ações do rodapé.
     &__tecla {
         min-height: 36px;
-        padding: 0 10px;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        background: var(--surface);
-        color: var(--text);
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition:
-            border-color 0.15s ease,
-            background-color 0.15s ease,
-            color 0.15s ease;
 
         @include bp.mobile {
             min-height: bp.$alvo-toque;
-        }
-
-        &:hover:not(:disabled) {
-            border-color: var(--accent-border);
-            background: var(--surface-2);
-        }
-
-        &:disabled {
-            color: var(--text-mute);
-            cursor: not-allowed;
-            opacity: 0.6;
         }
 
         &--larga {
@@ -209,26 +176,6 @@
             min-width: 120px;
         }
 
-        &--operador {
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-
-        &--funcao {
-            color: var(--text-mute);
-            background: transparent;
-        }
-
-        &--destaque {
-            background: var(--accent);
-            color: var(--accent-text);
-            border-color: var(--accent);
-
-            &:hover:not(:disabled) {
-                background: var(--accent);
-                filter: brightness(1.08);
-            }
-        }
     }
 
     // Tile quadrado (token curto): dado, atributo, tipo de dano, dígito, operador, parêntese.
@@ -239,27 +186,10 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        background: var(--surface);
-        color: var(--text);
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition:
-            border-color 0.15s ease,
-            background-color 0.15s ease,
-            color 0.15s ease;
 
         @include bp.mobile {
             width: bp.$alvo-toque;
             height: bp.$alvo-toque;
-        }
-
-        &:hover:not(:disabled) {
-            border-color: var(--accent-border);
-            background: var(--surface-2);
         }
 
         &--extra {

@@ -1910,10 +1910,11 @@
              `'rolagens'` no compacto) e o conteúdo saiu daqui pro `FichaRolagensPainel`, que a
              coluna lateral de `CampanhaDetalhe` também renderiza — nenhum derivado de rolagem
              (atributos efetivos/proficiência/atalhos de dano) duplicado entre os dois lugares. -->
-                    @if (abaStatusEfetiva() === "rolagens") {
+                    @if (mostrarRolagensCompacto()) {
                         <div class="ficha-status__conteudo">
                             <app-ficha-rolagens-painel
                                 [dados]="dados()"
+                                [oculto]="abaStatusEfetiva() !== 'rolagens'"
                                 [editavel]="ajustavelAmplo()"
                                 [podeRolar]="podeRolar()"
                                 [cor]="cor()"

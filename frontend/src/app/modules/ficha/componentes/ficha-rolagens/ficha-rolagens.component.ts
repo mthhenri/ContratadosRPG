@@ -100,6 +100,8 @@ interface RolagemVM {
   styleUrl: './ficha-rolagens.component.scss',
 })
 export class FichaRolagens {
+  /** A aba sai do fluxo sem destruir o montador flutuante que pode continuar aberto. */
+  readonly oculto = input(false);
   readonly rolagemOculta = input(false);
   /** Presets atuais — a fonte da verdade é a página (componente controlado). */
   readonly rolagens = input<readonly FichaRolagemDto[]>([]);

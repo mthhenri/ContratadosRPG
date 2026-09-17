@@ -268,6 +268,21 @@ describe('FichaVisualizacao', () => {
         'Informações', 'Inventário', 'Habilidades', 'Rolagens', 'Extras', 'História',
       ]);
     });
+
+    it('mantém o montador aberto e visível ao navegar para outra aba', () => {
+      const alvo = montar(dados, 'Corvo', 42, true);
+      alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
+      alvo.fixture.detectChanges();
+
+      alvo.raiz.querySelector<HTMLButtonElement>('.montador-rolagem__gatilho')!.click();
+      alvo.fixture.detectChanges();
+      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+
+      alvo.fixture.componentInstance['selecionarAbaStatus']('inventario');
+      alvo.fixture.detectChanges();
+
+      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+    });
   });
 
   describe('Defesa/Resistências em miniatura (glance, redesenho de comparação visual)', () => {

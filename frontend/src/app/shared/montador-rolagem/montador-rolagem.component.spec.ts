@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -114,6 +115,52 @@ describe('MontadorRolagem', () => {
     expect(fixture.componentInstance.formula()).toBe('d6');
   });
 
+  it.each([
+    ['Manter maior', 'd20+d6kh'],
+    ['Manter menor', 'd20+d6kl'],
+    ['Margem de crítico', 'd20+d6cm1'],
+  ])('aplica %s ao último dado aditivo', (acao, esperado) => {
+    const fixture = montar();
+
+    botao(fixture, 'Dado', 'D20').click();
+    botao(fixture, 'Dado', 'D6').click();
+    botao(fixture, acao === 'Margem de crítico' ? 'Avançado' : 'Manter maior / menor', acao).click();
+
+    expect(fixture.componentInstance.formula()).toBe(esperado);
+  });
+
+  it('não altera a fórmula quando pool ou tipo de dano não têm alvo elegível', () => {
+    const fixture = montar('FOR');
+
+    botao(fixture, 'Manter maior / menor', 'Manter maior').click();
+    botao(fixture, 'Manter maior / menor', 'Manter menor').click();
+    botao(fixture, 'Avançado', 'Margem de crítico').click();
+    botao(fixture, 'Tipo de dano', 'F').click();
+
+    expect(fixture.componentInstance.formula()).toBe('FOR');
+  });
+
+  it('marca um grupo fechado de pools com o tipo de dano', () => {
+    const fixture = montar('(2d12+2d6)');
+
+    botao(fixture, 'Tipo de dano', 'F').click();
+
+    expect(fixture.componentInstance.formula()).toBe('(2d12+2d6)[F]');
+  });
+
+  it('oferece multiplicador na ação de dado por propriedade', () => {
+    const fixture = montar();
+    fixture.componentInstance['atributoComposto'].set('LUT');
+    Object.assign(fixture.componentInstance, {
+      multiplicadorComposto: signal(2),
+      usaMultiplicadorComposto: signal(true),
+    });
+
+    botao(fixture, 'Dado por Propriedade + Ajuste', 'D20').click();
+
+    expect(fixture.componentInstance.formula()).toBe('(LUT*2)d20');
+  });
+
   it('clicar no mesmo dado várias vezes soma quantidade em vez de duplicar token', () => {
     const fixture = montar();
     const d6 = botao(fixture, 'Dado', 'D6');
@@ -202,19 +249,21 @@ describe('MontadorRolagem', () => {
 
   it('exemplo 1: dois termos de dado com tags de dano diferentes só de clique', () => {
     const fixture = montar();
-    botao(fixture, 'Editar', '3').click();
     botao(fixture, 'Dado', 'D10').click();
-    botao(fixture, 'Editar', '+').click();
-    botao(fixture, 'Atributo', 'FOR').click();
-    // insere a sigla [F] — resolverTipoDanoSimples aceita as duas formas.
+    botao(fixture, 'Dado', 'D10').click();
+    botao(fixture, 'Dado', 'D10').click();
+    // Tipo só se aplica a um termo de dado/grupo fechado: atributo isolado não é alvo elegível.
     botao(fixture, 'Tipo de dano', 'F').click();
     botao(fixture, 'Editar', '+').click();
-    botao(fixture, 'Editar', '3').click();
+    botao(fixture, 'Atributo', 'FOR').click();
+    botao(fixture, 'Editar', '+').click();
+    botao(fixture, 'Dado', 'D6').click();
+    botao(fixture, 'Dado', 'D6').click();
     botao(fixture, 'Dado', 'D6').click();
     botao(fixture, 'Tipo de dano', 'Q').click();
 
     const formula = fixture.componentInstance.formula();
-    expect(formula).toBe('3d10+FOR[F]+3d6[Q]');
+    expect(formula).toBe('3d10[F]+FOR+3d6[Q]');
     expect(validarFormula(formula)).toBe(true);
   });
 

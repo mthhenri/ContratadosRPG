@@ -4,13 +4,19 @@ import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import { ABREVIACOES_ATRIBUTO, REPETICOES_MAXIMA } from '@contratados-rpg/shared/regras/rolagem';
 
 import { Icone, type IconeNome } from '../icone/icone.component';
+import { Botao } from '../ui/botao/botao.component';
+import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import type { PainelFlutuantePosicao } from '../ui/painel-flutuante/painel-flutuante.component';
 import { PainelFlutuante } from '../ui/painel-flutuante/painel-flutuante.component';
 import { Segmentado } from '../ui/segmentado/segmentado.component';
 import { SegmentadoItem } from '../ui/segmentado/segmentado-item.component';
 import { StepInput } from '../ui/stepper/step-input.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
-import { incrementarUltimoDado } from './montador-rolagem.util';
+import {
+  adicionarDado,
+  adicionarTipoDano,
+  reposicionarOperadorPool,
+} from './montador-rolagem.util';
 
 /** Dados canônicos do sistema (`docs/core/sistema-v4.1.0.md` — "Dados"); sem `d100`. */
 const DADOS: readonly number[] = [3, 4, 6, 8, 10, 12, 20];
@@ -65,8 +71,8 @@ const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
  * Caixa flutuante de tokens para montar uma fórmula de rolagem sem decorar a sintaxe do motor
  * (`shared/regras/rolagem`) — ui-35, revisão de usabilidade. Mesma mecânica de
  * `CalculadoraFlutuante.inserir`: concatena texto no `model` `formula` com guardas simples, sem
- * parser client-side de "onde inserir" — a única exceção é o clique num dado, que soma quantidade
- * no último termo cru daquela face em vez de duplicar token (`incrementarUltimoDado`). Duas ações
+ * parser client-side de "onde inserir" — a única exceção é o clique num dado, que delega a
+ * composição ao utilitário puro. Duas ações
  * compostas (`(ATR±n)dM` e `(<fórmula>)#N`) evitam o erro mais comum de montar essas duas formas
  * sancionadas de parênteses na mão (parêntese sobrando/faltando).
  *
@@ -76,7 +82,16 @@ const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
  */
 @Component({
   selector: 'app-montador-rolagem',
-  imports: [Icone, PainelFlutuante, Segmentado, SegmentadoItem, StepInput, Tooltip],
+  imports: [
+    Botao,
+    BotaoIcone,
+    Icone,
+    PainelFlutuante,
+    Segmentado,
+    SegmentadoItem,
+    StepInput,
+    Tooltip,
+  ],
   templateUrl: './montador-rolagem.component.html',
   styleUrl: './montador-rolagem.component.scss',
   host: {
@@ -96,6 +111,9 @@ export class MontadorRolagem {
   /** Validade já computada pelo consumidor (`rapidaValida()`) — desabilita o "Rolar" do rodapé
    *  com a mesma condição do botão externo, sem duplicar a chamada a `validarFormula` aqui. */
   readonly formulaValida = input<boolean | null>(null);
+
+  /** A instância continua viva fora da aba Rolagens; nessa condição só o painel permanece visível. */
+  readonly oculto = input(false);
 
   /** O rodapé pede pro consumidor rolar — o painel não fecha sozinho (o jogador pode ajustar e
    *  rolar de novo, ex.: repetir com N diferente). */
@@ -149,6 +167,8 @@ export class MontadorRolagem {
   // === Ação composta 1: "Dado por Propriedade + Ajuste" → `(ATR±n)dM` ===
   protected readonly atributoComposto = signal<string>(ATRIBUTOS[0]);
   protected readonly ajusteComposto = signal(1);
+  protected readonly usaMultiplicadorComposto = signal(false);
+  protected readonly multiplicadorComposto = signal(2);
 
   // === Ação composta 2: "Repetir tudo" → `(<fórmula>)#N` ===
   protected readonly repeticoesN = signal(2);
@@ -163,7 +183,7 @@ export class MontadorRolagem {
   /** Clique num dado: soma quantidade no último termo cru daquela face já na fórmula, ou insere
    *  um `dN` novo quando ainda não existe nenhum (comportamento padrão de sempre). */
   protected clicarDado(faces: number): void {
-    this.formula.update((atual) => incrementarUltimoDado(atual, faces) ?? atual + 'd' + faces);
+    this.formula.update((atual) => adicionarDado(atual, faces));
   }
 
   /** Preview editável dentro do painel — mesmo texto do input original da Rolagem rápida. */
@@ -211,9 +231,19 @@ export class MontadorRolagem {
   // === Ações compostas ===
   /** Fecha `(ATR±n)dM` de uma vez — o atributo e o ajuste vêm dos steppers acima do teclado. */
   protected inserirDadoPorAtributo(faces: number): void {
-    const sinal = this.ajusteComposto() >= 0 ? '+' : '';
-    const bloco = `(${this.atributoComposto()}${sinal}${this.ajusteComposto()})d${faces}`;
+    const quantidade = this.usaMultiplicadorComposto()
+      ? `*${this.multiplicadorComposto()}`
+      : `${this.ajusteComposto() >= 0 ? '+' : ''}${this.ajusteComposto()}`;
+    const bloco = `(${this.atributoComposto()}${quantidade})d${faces}`;
     this.inserirComSinal(bloco);
+  }
+
+  protected reposicionarPool(operador: string): void {
+    this.formula.update((atual) => reposicionarOperadorPool(atual, operador));
+  }
+
+  protected adicionarDano(tipo: string): void {
+    this.formula.update((atual) => adicionarTipoDano(atual, tipo));
   }
 
   /** Envolve a fórmula **atual inteira** em `(...)#N` — sempre balanceado, por construção. */

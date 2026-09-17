@@ -51,6 +51,8 @@ export class FichaRolagensPainel {
   readonly editavel = input(false);
   /** `true` quando o autor pode **rolar** (m3-51) — gate do toggle e de cada passo. */
   readonly podeRolar = input(false);
+  /** Mantém o montador flutuante vivo enquanto outra aba de Status está em foco. */
+  readonly oculto = input(false);
   /** Cor de identidade visual da ficha (m3-61) — repassada ao editor `FichaRolagens`. */
   readonly cor = input<string | null>(null);
   /**

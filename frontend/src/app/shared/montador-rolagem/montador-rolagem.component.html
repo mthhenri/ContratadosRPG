@@ -1,4 +1,8 @@
+@if (!oculto()) {
 <button
+    app-botao-icone
+    tamanho="padrao"
+    variante="secundario"
     type="button"
     class="montador-rolagem__gatilho"
     [class.montador-rolagem__gatilho--ativo]="aberto()"
@@ -9,6 +13,7 @@
 >
     <app-icone nome="dado" />
 </button>
+}
 
 <app-painel-flutuante
     #painel="appPainelFlutuante"
@@ -40,6 +45,10 @@
                 <div class="montador-rolagem__grade">
                     @for (faces of dados; track faces) {
                         <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
                             type="button"
                             class="montador-rolagem__tile montador-rolagem__dado-tile"
                             [appTooltip]="'D' + faces + ' — clique de novo pra somar mais um'"
@@ -60,6 +69,10 @@
                 <div class="montador-rolagem__grade">
                     @for (sigla of atributos; track sigla) {
                         <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
                             type="button"
                             class="montador-rolagem__tile"
                             [appTooltip]="
@@ -72,6 +85,10 @@
                     }
                     @for (sigla of fontesExtra; track sigla) {
                         <button
+                            app-botao
+                            variante="primario"
+                            estilo="contorno"
+                            tamanho="pequeno"
                             type="button"
                             class="montador-rolagem__tile montador-rolagem__tile--extra"
                             [appTooltip]="sigla === 'PROF' ? 'Soma a Proficiência' : 'Soma o Nível'"
@@ -87,18 +104,26 @@
                 <h3 class="montador-rolagem__titulo">Manter maior / menor</h3>
                 <div class="montador-rolagem__linha">
                     <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
                         type="button"
                         class="montador-rolagem__tecla montador-rolagem__tecla--operador montador-rolagem__tecla--larga"
                         appTooltip="Mantém só o maior dado do pool anterior"
-                        (click)="inserir('kh')"
+                        (click)="reposicionarPool('kh')"
                     >
                         Manter maior
                     </button>
                     <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
                         type="button"
                         class="montador-rolagem__tecla montador-rolagem__tecla--operador montador-rolagem__tecla--larga"
                         appTooltip="Mantém só o menor dado do pool anterior — a desvantagem"
-                        (click)="inserir('kl')"
+                        (click)="reposicionarPool('kl')"
                     >
                         Manter menor
                     </button>
@@ -109,10 +134,14 @@
                 <h3 class="montador-rolagem__titulo">Avançado</h3>
                 <div class="montador-rolagem__linha">
                     <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
                         type="button"
                         class="montador-rolagem__tecla montador-rolagem__tecla--operador montador-rolagem__tecla--larga"
                         appTooltip="Conta os dados no valor máximo do pool anterior (cm) — não altera o total"
-                        (click)="inserir('cm' + margemCriticoN())"
+                        (click)="reposicionarPool('cm' + margemCriticoN())"
                     >
                         Margem de crítico
                     </button>
@@ -132,13 +161,17 @@
                 <div class="montador-rolagem__grade">
                     @for (item of tiposDano; track item.sigla) {
                         <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
                             type="button"
                             [class]="
                                 'montador-rolagem__tile montador-rolagem__tile--dano montador-rolagem__tile--dano-' +
                                 item.classe
                             "
                             [appTooltip]="'Marca o dano anterior como ' + item.tipo"
-                            (click)="inserir('[' + item.sigla + ']')"
+                            (click)="adicionarDano(item.sigla)"
                         >
                             {{ item.sigla }}
                         </button>
@@ -152,6 +185,10 @@
                     <div class="montador-rolagem__grade">
                         @if (temCorpo()) {
                             <button
+                                app-botao
+                                variante="secundario"
+                                estilo="contorno"
+                                tamanho="pequeno"
                                 type="button"
                                 class="montador-rolagem__tecla"
                                 appTooltip="Vira o Dano Corpo a Corpo atual do agente"
@@ -162,6 +199,10 @@
                         }
                         @if (temFurtivo()) {
                             <button
+                                app-botao
+                                variante="secundario"
+                                estilo="contorno"
+                                tamanho="pequeno"
                                 type="button"
                                 class="montador-rolagem__tecla"
                                 appTooltip="Vira o Dano Furtivo atual do agente"
@@ -177,7 +218,7 @@
             <section class="montador-rolagem__grupo">
                 <h3 class="montador-rolagem__titulo">Dado por Propriedade + Ajuste</h3>
                 <p class="montador-rolagem__dica">
-                    Monta <code>(ATR±n)dM</code> de uma vez, sem digitar parênteses.
+                    Monta <code>(ATR±n)dM</code> ou <code>(ATR*Y)dM</code> de uma vez.
                 </p>
                 <app-segmentado
                     rotulo="Propriedade para o dado por ajuste"
@@ -204,28 +245,51 @@
                         </button>
                     }
                 </app-segmentado>
+                <app-segmentado rotulo="Modo da quantidade de dados" class="montador-rolagem__segmentado">
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="!usaMultiplicadorComposto()"
+                        (click)="usaMultiplicadorComposto.set(false)"
+                    >
+                        Ajuste
+                    </button>
+                    <button
+                        app-segmentado-item
+                        type="button"
+                        [ativo]="usaMultiplicadorComposto()"
+                        (click)="usaMultiplicadorComposto.set(true)"
+                    >
+                        Multiplicador
+                    </button>
+                </app-segmentado>
                 <div class="montador-rolagem__linha">
-                    <span class="montador-rolagem__rotulo-linha">Ajuste</span>
+                    <span class="montador-rolagem__rotulo-linha">{{ usaMultiplicadorComposto() ? "Multiplicador" : "Ajuste" }}</span>
                     <app-step-input
-                        [valorExterno]="ajusteComposto()"
-                        (valorAlterado)="ajusteComposto.set($event)"
-                        [min]="-20"
+                        [valorExterno]="usaMultiplicadorComposto() ? multiplicadorComposto() : ajusteComposto()"
+                        (valorAlterado)="usaMultiplicadorComposto() ? multiplicadorComposto.set($event) : ajusteComposto.set($event)"
+                        [min]="usaMultiplicadorComposto() ? 1 : -20"
                         [max]="20"
-                        [comSinal]="true"
+                        [comSinal]="!usaMultiplicadorComposto()"
                         tamanho="compacto"
-                        ariaRotulo="Ajuste da propriedade"
+                        [ariaRotulo]="usaMultiplicadorComposto() ? 'Multiplicador da propriedade' : 'Ajuste da propriedade'"
                     />
                 </div>
                 <div class="montador-rolagem__grade">
                     @for (faces of dados; track faces) {
                         <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
                             type="button"
                             class="montador-rolagem__tile montador-rolagem__dado-tile"
                             [appTooltip]="
                                 'Insere (' +
                                 atributoComposto() +
-                                (ajusteComposto() >= 0 ? '+' : '') +
-                                ajusteComposto() +
+                                (usaMultiplicadorComposto()
+                                    ? '*' + multiplicadorComposto()
+                                    : (ajusteComposto() >= 0 ? '+' : '') + ajusteComposto()) +
                                 ')d' +
                                 faces
                             "
@@ -257,6 +321,10 @@
                         ariaRotulo="Número de repetições"
                     />
                     <button
+                        app-botao
+                        variante="primario"
+                        estilo="preenchido"
+                        tamanho="pequeno"
                         type="button"
                         class="montador-rolagem__tecla montador-rolagem__tecla--destaque"
                         [disabled]="!podeRepetir()"
@@ -271,6 +339,10 @@
                 <h3 class="montador-rolagem__titulo">Editar</h3>
                 <div class="montador-rolagem__grade">
                     <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
                         type="button"
                         class="montador-rolagem__tile montador-rolagem__tile--operador"
                         (click)="inserirOperador('+')"
@@ -278,20 +350,28 @@
                         +
                     </button>
                     <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
                         type="button"
                         class="montador-rolagem__tile montador-rolagem__tile--operador"
                         (click)="inserirOperador('-')"
                     >
                         −
                     </button>
-                    <button type="button" class="montador-rolagem__tile" (click)="inserir('(')">
+                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir('(')">
                         (
                     </button>
-                    <button type="button" class="montador-rolagem__tile" (click)="inserir(')')">
+                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir(')')">
                         )
                     </button>
                     @for (digito of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digito) {
                         <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
                             type="button"
                             class="montador-rolagem__tile"
                             (click)="inserir('' + digito)"
@@ -305,6 +385,10 @@
 
         <div class="montador-rolagem__rodape">
             <button
+                app-botao
+                variante="secundario"
+                estilo="texto"
+                tamanho="pequeno"
                 type="button"
                 class="montador-rolagem__tecla montador-rolagem__tecla--funcao"
                 appTooltip="Apaga o último caractere"
@@ -313,6 +397,10 @@
                 ⌫
             </button>
             <button
+                app-botao
+                variante="secundario"
+                estilo="texto"
+                tamanho="pequeno"
                 type="button"
                 class="montador-rolagem__tecla montador-rolagem__tecla--funcao"
                 (click)="limpar()"
@@ -320,6 +408,10 @@
                 Limpar
             </button>
             <button
+                app-botao
+                variante="primario"
+                estilo="preenchido"
+                tamanho="pequeno"
                 type="button"
                 class="montador-rolagem__tecla montador-rolagem__tecla--destaque"
                 [disabled]="!formula().trim() || formulaValida() === false"
