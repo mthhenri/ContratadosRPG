@@ -1736,19 +1736,26 @@ crescer no mobile.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. A "Rolagem
-rápida" ganhou um **montador de expressões** opcional (`ui-35`/`ui-36`, `MontadorRolagem`,
-`frontend/.../shared/montador-rolagem/`): caixa flutuante arrastável (mesmo primitivo
-`app-painel-flutuante` da `CalculadoraFlutuante`, gatilho inline no início do input, estilo do
-botão "Rolar") com um teclado de tokens (dado — ícone real + rótulo `D{faces}` sobreposto,
-clicar de novo soma quantidade no lugar de duplicar o termo, `incrementarUltimoDado` em
-`montador-rolagem.util.ts` —, atributo, `kh`/`kl` sempre 1, `cm` com N ajustável, tipo de dano,
+rápida" ganhou um **montador de expressões** opcional (`ui-35`/`ui-36`/`montador-rolagem-ajustes`,
+`MontadorRolagem`, `frontend/.../shared/montador-rolagem/`): caixa flutuante arrastável (mesmo
+primitivo `app-painel-flutuante` da `CalculadoraFlutuante`, gatilho inline no início do input,
+estilo do botão "Rolar") com um teclado de tokens (dado — ícone real + rótulo `D{faces}`
+sobreposto, clicar de novo soma quantidade no lugar de duplicar o termo, `incrementarUltimoDado`
+em `montador-rolagem.util.ts` —, atributo, `kh`/`kl` sempre 1, `cm` com N ajustável, tipo de dano,
 atalhos `CORPO`/`FURTIVO`) que escreve na mesma `FormControl` do input de texto original — o
 input continua existindo e editável, os dois convivem — mais duas ações compostas ("Dado por
 Propriedade + Ajuste" → `(ATR±n)dM`, "Repetir tudo" → `(<fórmula>)#N`) que fecham parênteses
 sozinhas para evitar o erro mais comum de montar essas duas formas na mão, e um rodapé fixo
-(Apagar último/Limpar/Rolar) sempre visível dentro do painel. O motor não mudou: o teclado só
-reproduz a gramática já existente, `validarFormula` continua sendo
-quem decide o que é aceito. Cada ficha
+(Apagar último/Limpar/Rolar) sempre visível dentro do painel. `validarFormula` continua sendo
+quem decide o que é aceito; a `montador-rolagem-ajustes` estendeu o motor
+(`shared/src/regras/rolagem/`) só nas duas formas sancionadas pela spec —
+`(ATR*Y)dM` (quantidade `atributo*multiplicador`, piso zero, sem desvantagem intrínseca) e
+`(termos-de-dado)[TIPO]` (grupo fechado tipando todos os pools internos) — e corrigiu a
+composição por botão: todo clique de dado novo entra como termo aditivo (`+dM`),
+`reposicionarOperadorPool` sempre repõe `kh`/`kl`/`cmN` no **último** dado elegível (`kh`/`kl`
+mutuamente exclusivos, `cm` convive com qualquer um dos dois), e o tipo de dano só escreve com um
+alvo elegível. A instância do painel subiu para um nível persistente da visualização da ficha —
+uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
 `ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda
 rolagem daquela ficha (bandeja de dados, histórico, feed "Rolagens Recentes" do painel de

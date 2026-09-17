@@ -89,3 +89,18 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
+### P-019 — `painel-flutuante.component.spec.ts` falha por ordem quando a suíte completa roda · `ABERTO` · frontend
+
+- **Sintoma:** o teste "ao abrir, limita uma posição persistida que ficou fora do viewport e
+  salva a correção" falha (`900px` em vez do `1280px` esperado) quando `npm run test
+  --workspace=frontend` roda a suíte inteira, mas passa 18/18 quando rodado isolado
+  (`--include=.../painel-flutuante.component.spec.ts`).
+- **Causa:** não investigada — cheiro de vazamento de estado global entre specs (viewport,
+  `localStorage` ou mock não resetado por outro arquivo que roda antes na mesma suíte), não do
+  próprio teste ou do componente.
+- **Contorno:** rodar o arquivo isolado quando for preciso confiar no resultado deste caso.
+- **Correção:** isolar a causa do vazamento (bisseção de specs até achar o vizinho que deixa
+  estado sujo).
+- **Desde:** achado no gate de testes da `montador-rolagem-ajustes` (2026-09-17). O arquivo em si
+  não foi tocado por esta task; não confirmado se já falhava assim antes dela.
+

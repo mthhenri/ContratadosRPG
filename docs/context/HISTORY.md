@@ -1,5 +1,75 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-17 — montador-rolagem-ajustes: composição multi-dado, `(ATR*Y)dM`, grupo tipado e painel persistente entre abas
+
+Task avulsa de refinamento do `MontadorRolagem` (`ui-35`/`ui-36`), pedida pelo autor depois de
+usar a v1 de verdade e achar fórmulas inválidas/imprevisíveis com mais de um dado, atributo
+repetido ou tipo de dano. Spec: `docs/specs/done/montador-rolagem-ajustes.spec.md`. Plano de
+execução em `docs/superpowers/plans/2026-09-16-montador-rolagem-ajustes.md` (4 tasks, TDD
+task-a-task) — as tasks 1–3 (composição pura, gramática do motor, integração/persistência) já
+estavam implementadas e commitadas quando esta sessão retomou o trabalho; esta entrada fecha a
+task 4 (gates, verificação visual e documentação) e corrige uma regressão achada nesse gate.
+
+**Composição pura (`montador-rolagem.util.ts`):** `adicionarDado` insere todo dado novo como
+termo aditivo (`+dM`), preservando o incremento inteligente já existente (clicar de novo no
+mesmo dado soma quantidade em vez de duplicar). `reposicionarOperadorPool` localiza o **último**
+termo de dado elegível (simples `NdM.../ATRdM...` ou composto `(ATR±n)dM.../(ATR*Y)dM...`, nunca
+dentro de um grupo `(...)`) e reposiciona `kh`/`kl`/`cmN` nele, sem efeito quando não há alvo.
+`adicionarTipoDano` só escreve `[TIPO]` num termo final elegível (dado, constante ou grupo
+fechado) — sem alvo, o clique é no-op.
+
+**Achado só na verificação, não antes dela:** `reposicionarOperadorPool` removia **todo**
+operador de pool existente no termo antes de aplicar o novo (`OPERADOR_POOL =
+/(?:kh|kl|cm\d+)/gi`), quebrando um teste pré-existente da `ui-35`/`ui-36`
+(`montador-rolagem.component.spec.ts`, "exemplo 2") que esperava `kh` e `cm1` empilhados no
+mesmo `d20` (`(LUT+2)d20khcm1`). `npm run test --workspace=frontend` sem filtro expôs a
+regressão (`d20cm1` em vez de `d20khcm1`) — o teste focado do util sozinho não pegava porque a
+suíte do próprio util só cobria a troca kl→cm, nunca kh+cm coexistindo. Corrigido restringindo a
+remoção à **família** do operador acionado: `kh`/`kl` são mutuamente exclusivos (o motor já
+rejeita os dois no mesmo termo, "Não combine kh e kl no mesmo termo" em
+`shared/src/regras/rolagem/rolagem.ts:133`) e substituem um ao outro; `cmN` é independente e só
+substitui outra ocorrência de `cm`. Dois testes do util atualizados/adicionados
+(`montador-rolagem.util.spec.ts`) cobrindo a coexistência e a substituição por família.
+
+**Motor compartilhado (`shared/src/regras/rolagem/`):** gramática ampliada só nas duas formas
+sancionadas pela spec — `(ATR*Y)dM` (quantidade de dados vira `atributo * multiplicador`, piso
+zero, **não** ativa a desvantagem intrínseca de atributo zerado, pool aplica ao dado do bloco) e
+`(termos-de-dado)[TIPO]` (grupo fechado só com termos de dado internos, tipo replicado a todos os
+pools do grupo). Nenhum parêntese de agrupamento aritmético genérico foi aberto — só essas duas
+formas.
+
+**Ficha/painel:** `MontadorRolagem` (`frontend/.../shared/montador-rolagem/`) subiu para um nível
+persistente da visualização da ficha — uma única instância, gatilho continua na aba Rolagens,
+mas o `app-painel-flutuante` não é mais destruído ao trocar de aba (verificado ao vivo: a fórmula
+sobrevive à troca). Margem da janela no desktop usa `max(var(--space-16), env(safe-area-inset-*))`
+no próprio SCSS do componente — token e safe-area, sem tocar a geometria de
+`app-painel-flutuante` nem de outros consumidores (`CalculadoraFlutuante`,
+`CadernoFlutuante`/`AnotacoesFlutuante` inalterados).
+
+**Testes:** `npm run test --workspace=shared` 757/757. `npm run test --workspace=frontend` —
+depois da correção acima, só as 2 falhas pré-existentes e sem relação
+(`inventario-esquadrao.component.spec.ts`, `detalhe-mestre.page.spec.ts`, já documentadas em
+entradas anteriores) restaram; 1793+/1795 nos demais. Uma falha adicional
+(`painel-flutuante.component.spec.ts`, "limita uma posição persistida fora do viewport") só
+aparece rodando a suíte completa e passa isolada (`--include`) — sensível à ordem/estado global
+entre specs; o arquivo não foi tocado por esta task, mas não foi confirmado se já falhava assim
+antes dela. Registrada como `P-019` em `PROBLEMS.md`. `npm run lint` (raiz) 0 erros. `npm run build --workspace=frontend`
+verde (mesmo aviso de orçamento de bundle pré-existente, chunk lazy).
+
+**Verificação ao vivo** (Postgres 16 + backend + frontend reais, ambiente sem Docker —
+Postgres local via `service postgresql`, banco/usuário criados manualmente espelhando
+`.env.example`; ficha de teste nova com LUT=3): análogo `CalculadoraFlutuante`. Em **1920×1080**:
+abri o montador pela aba Rolagens, montei `d20+d6kh` só clicando, cliquei "Margem de crítico" e
+confirmei `d20+d6khcm1` (kh e cm convivendo, a correção acima), troquei para a aba Informações
+com o painel aberto — painel continuou visível, fórmula intacta. Digitei `(LUT*2)d20` e
+`(2d12+2d6)[F]` na rolagem rápida (fora do montador, mesma gramática) e rolei de verdade: seis
+d20 somando 60 (sem desvantagem intrínseca) e `2d12+2d6` totalizando 15 com selo "Físico 15" nos
+dois pools. Em **360×800**: o montador nasce folha cheia (mesmo padrão de
+`CalculadoraFlutuante`/`CadernoFlutuante` abaixo de 560px, cobre a nav inferior de propósito);
+montei a mesma composição kh+cm, minimizei pelo cabeçalho, troquei de destino pela nav inferior e
+a fórmula seguiu preservada no estado minimizado. Sem overflow horizontal, foco visível, rótulos
+e tiles legíveis nos dois viewports; rodapé fixo (Apagar último/Limpar/Rolar) sempre alcançável.
+
 ## 2026-09-15 — ui-36-montador-rolagem-usabilidade: o montador vira caixa flutuante, dado ganha ícone + incremento inteligente
 
 Segunda passada no `MontadorRolagem` (`ui-35`, entrada anterior logo abaixo), pedida pelo autor
