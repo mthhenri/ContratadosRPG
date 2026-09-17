@@ -187,6 +187,13 @@ describe('MontadorRolagem', () => {
     expect(fixture.componentInstance.formula()).toBe('d6+FOR');
   });
 
+  it('clicar num dado logo após um atributo "bare" fecha ATRdM (atributo como fonte de dados)', () => {
+    const fixture = montar();
+    botao(fixture, 'Atributo', 'FOR').click();
+    botao(fixture, 'Dado', 'D20').click();
+    expect(fixture.componentInstance.formula()).toBe('FORd20');
+  });
+
   it('"Manter maior"/"Manter menor" são sempre 1 (bare) e ficam lado a lado', () => {
     const fixture = montar('d20');
     const linha = botao(fixture, 'Manter maior / menor', 'Manter maior').closest('.montador-rolagem__linha');

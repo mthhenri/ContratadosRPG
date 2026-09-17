@@ -15,6 +15,14 @@ describe('composição do montador', () => {
     expect(adicionarDado('(', 6)).toBe('(d6');
   });
 
+  it('atributo/fonte extra "bare" no final vira fonte de dados (ATRdM) ao clicar num dado', () => {
+    expect(adicionarDado('FOR', 20)).toBe('FORd20');
+    expect(adicionarDado('PROF', 6)).toBe('PROFd6');
+    expect(adicionarDado('2d6+LUT', 20)).toBe('2d6+LUTd20');
+    // atributo já com dado (fonte já fechada): dado novo volta a ser aditivo com "+".
+    expect(adicionarDado('FORd6', 20)).toBe('FORd6+d20');
+  });
+
   it('reposiciona o operador de pool no último dado elegível', () => {
     expect(reposicionarOperadorPool('d20kh+d6', 'kl')).toBe('d20kh+d6kl');
     expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20kh+d6klcm1');

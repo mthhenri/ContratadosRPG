@@ -30,9 +30,16 @@ export function incrementarUltimoDado(formulaAtual: string, faces: number): stri
   );
 }
 
+const FONTE_ROLAGEM =
+  '(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFICIENCIA|NIV|NIVEL|DESTREZA|FORCA|LUTA|PONTARIA|VIGOR|INTELECTO|MEDICINA|SENTIDOS|SOCIAL|VONTADE)';
+
+/** A fórmula termina num atributo/fonte extra "bare" (sem dado nenhum ainda) — clicar num dado
+ *  agora fecha `ATRdM` (atributo como fonte de dados) em vez de somar `+dM` ao lado. */
+const ATRIBUTO_NO_FINAL = new RegExp(`(?:^|[+\\-(])${FONTE_ROLAGEM}$`, 'i');
+
 /** Adiciona uma face nova, mantendo o incremento do último dado daquela face. */
 export function adicionarDado(formulaAtual: string, faces: number): string {
-  if (/[+\-(]$/.test(formulaAtual)) {
+  if (/[+\-(]$/.test(formulaAtual) || ATRIBUTO_NO_FINAL.test(formulaAtual)) {
     return formulaAtual + `d${faces}`;
   }
   return (
@@ -49,8 +56,6 @@ export function adicionarDado(formulaAtual: string, faces: number): string {
 function familiaDoOperador(operador: string): RegExp {
   return /^(?:kh|kl)$/i.test(operador) ? /kh|kl/gi : /cm\d+/gi;
 }
-const FONTE_ROLAGEM =
-  '(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFICIENCIA|NIV|NIVEL|DESTREZA|FORCA|LUTA|PONTARIA|VIGOR|INTELECTO|MEDICINA|SENTIDOS|SOCIAL|VONTADE)';
 const DADO_SIMPLES = new RegExp(
   `(?:^|[+\\-(])(?:${FONTE_ROLAGEM}|\\d*)d\\d+(?:(?:kh|kl)\\d*|cm\\d+)*`,
   'gi',

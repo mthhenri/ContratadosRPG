@@ -10,11 +10,18 @@
     display: contents;
 }
 
-:host ::ng-deep .painel-flutuante__janela {
+// A margem só se aplica à janela arrastável do desktop — no mobile a caixa preenche a tela toda
+// (só recuando pelo notch/home indicator via `safe-area-inset`, não por uma margem decorativa).
+:host ::ng-deep .painel-flutuante__janela:not(.painel-flutuante__janela--mobile) {
     margin: max(var(--space-16), env(safe-area-inset-top))
         max(var(--space-16), env(safe-area-inset-right))
         max(var(--space-16), env(safe-area-inset-bottom))
         max(var(--space-16), env(safe-area-inset-left));
+}
+
+:host ::ng-deep .painel-flutuante__janela--mobile {
+    inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+        env(safe-area-inset-left);
 }
 
 .montador-rolagem {
@@ -42,6 +49,30 @@
         flex-direction: column;
         height: 100%;
         gap: 10px;
+        padding: 14px;
+    }
+
+    // Alça de redimensionar (desktop only — sem maximizar) — mesma receita visual de
+    // `.caderno__redimensionar`.
+    &__redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        touch-action: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 8px;
+            height: 8px;
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
     }
 
     &__visor {

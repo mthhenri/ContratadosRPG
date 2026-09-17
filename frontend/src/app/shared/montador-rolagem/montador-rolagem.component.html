@@ -20,8 +20,8 @@
     id="montador-rolagem"
     titulo="Montador de rolagem"
     [aberto]="aberto()"
-    [largura]="380"
-    [altura]="580"
+    [largura]="mobileAtivo() ? null : tamanho().largura"
+    [altura]="mobileAtivo() ? null : tamanho().altura"
     [mobile]="mobileAtivo()"
     [posicaoInicial]="posicaoInicial"
     (fechar)="fechar()"
@@ -37,6 +37,53 @@
         />
 
         <div class="montador-rolagem__corpo" appOverflowFade>
+            <section class="montador-rolagem__grupo">
+                <h3 class="montador-rolagem__titulo">Editar</h3>
+                <div class="montador-rolagem__grade">
+                    <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        type="button"
+                        class="montador-rolagem__tile montador-rolagem__tile--operador"
+                        (click)="inserirOperador('+')"
+                    >
+                        +
+                    </button>
+                    <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        type="button"
+                        class="montador-rolagem__tile montador-rolagem__tile--operador"
+                        (click)="inserirOperador('-')"
+                    >
+                        −
+                    </button>
+                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir('(')">
+                        (
+                    </button>
+                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir(')')">
+                        )
+                    </button>
+                    @for (digito of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digito) {
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
+                            type="button"
+                            class="montador-rolagem__tile"
+                            (click)="inserir('' + digito)"
+                        >
+                            {{ digito }}
+                        </button>
+                    }
+                </div>
+            </section>
+
             <section class="montador-rolagem__grupo">
                 <h3 class="montador-rolagem__titulo">Dado</h3>
                 <p class="montador-rolagem__dica">
@@ -334,53 +381,6 @@
                     </button>
                 </div>
             </section>
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Editar</h3>
-                <div class="montador-rolagem__grade">
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile montador-rolagem__tile--operador"
-                        (click)="inserirOperador('+')"
-                    >
-                        +
-                    </button>
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile montador-rolagem__tile--operador"
-                        (click)="inserirOperador('-')"
-                    >
-                        −
-                    </button>
-                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir('(')">
-                        (
-                    </button>
-                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir(')')">
-                        )
-                    </button>
-                    @for (digito of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digito) {
-                        <button
-                            app-botao
-                            variante="secundario"
-                            estilo="contorno"
-                            tamanho="pequeno"
-                            type="button"
-                            class="montador-rolagem__tile"
-                            (click)="inserir('' + digito)"
-                        >
-                            {{ digito }}
-                        </button>
-                    }
-                </div>
-            </section>
         </div>
 
         <div class="montador-rolagem__rodape">
@@ -421,4 +421,13 @@
             </button>
         </div>
     </div>
+
+    @if (!mobileAtivo()) {
+        <span
+            painelRedimensionar
+            class="montador-rolagem__redimensionar"
+            aria-hidden="true"
+            (pointerdown)="iniciarRedimensionamento($event)"
+        ></span>
+    }
 </app-painel-flutuante>

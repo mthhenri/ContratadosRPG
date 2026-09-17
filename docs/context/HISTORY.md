@@ -1,5 +1,68 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-17 — Montador de rolagem: corrige `ATRdM` por clique, reordena "Editar", padding e redimensionar no desktop
+
+Segundo relato ao vivo do autor sobre o `MontadorRolagem` (`frontend/.../shared/montador-rolagem/`),
+depois de usar a v2 (entrada anterior desta mesma data). Quatro pontos, sem spec nova — feedback
+direto sobre a UI já entregue.
+
+**1. Regressão: `FORd20` (atributo como fonte de dados) parou de funcionar por clique.** Clicar
+num atributo "bare" (`FOR`, sem dado ainda na fórmula) e em seguida num dado deveria fechar
+`ATRdM` — a forma sancionada pelo motor onde o atributo é a *fonte* da quantidade de dados, não um
+modificador somado (grafia documentada em `guia-formula`, ex.: `LUTd20kh1cm1`). A v1 do componente
+(`cd1205a`) fazia isso por concatenação simples (`atual + 'd' + faces`); um `fix` seguinte
+(`242c5b0`) introduziu `adicionarDado` com um `+` automático de segurança pra todo clique de dado
+que não continuasse um termo já existente — e essa rede de segurança capturou também o caso
+`ATRdM`, que nunca deveria levar `+`. O bug ficou latente porque nenhum teste (util ou componente)
+cobria "clicar num atributo puro, depois um dado" isoladamente — os testes existentes sempre
+testavam atributo *depois* de um dado (`d6+FOR`), nunca antes. Corrigido em
+`montador-rolagem.util.ts`: `adicionarDado` agora reconhece a fórmula terminando num atributo/fonte
+extra "bare" (`ATRIBUTO_NO_FINAL`, mesma lista `FONTE_ROLAGEM` já usada pelo resto do arquivo) e
+concatena `dM` direto nesse caso, voltando ao comportamento original; quando o atributo já tem um
+`d` fechado (`FORd6`), um novo dado continua aditivo (`FORd6+d20`), sem ambiguidade. Testes novos
+em `montador-rolagem.util.spec.ts` e `montador-rolagem.component.spec.ts` (clique real nos botões
+`FOR` → `D20`) cobrindo os dois casos.
+
+**2. Ordem das seções:** "Editar" (operadores `+`/`-`, parênteses, dígitos) subiu para o topo do
+teclado, antes de "Dado" — pedido direto do autor, sem lógica nova (só reordenação no template).
+
+**3. Padding interno:** o corpo do painel (`.montador-rolagem__caixa`) não tinha padding nenhum —
+título das seções, dicas e as primeiras/últimas colunas de tiles encostavam nas bordas da caixa.
+Adicionado `padding: 14px` na caixa inteira (mesma ordem de grandeza do padding interno da
+`CalculadoraFlutuante`, 12–14px).
+
+**4. Geometria do painel — mobile preenche a tela, desktop maior e redimensionável sem
+maximizar:** o `::ng-deep` do componente sobre `.painel-flutuante__janela` aplicava uma margem
+decorativa de `max(16px, safe-area-inset-*)` **sempre**, inclusive no modo folha cheia do mobile
+(`--mobile`, que já usa `inset` do próprio `app-painel-flutuante`) — resultado: no mobile a caixa
+não ia até a borda da tela, sobrava uma faixa visível dos quatro lados (achado ao vivo, print do
+autor em 360×800 mostrando a barra de navegação inferior "vazando" por baixo da caixa). A margem
+agora só se aplica à janela arrastável do desktop (`:not(.painel-flutuante__janela--mobile)`); o
+mobile ganhou sua própria regra com `inset` = só `safe-area-inset-*` (0 em qualquer tela sem notch
+— preenche 100% do viewport). No desktop, o tamanho de base subiu de 380×580 para 570×725 (+50%
+largura, +25% altura, pedido explícito do autor) e a janela ganhou uma alça de redimensionar por
+arraste no canto inferior direito — mesmo primitivo de projeção `[painelRedimensionar]` que
+`CadernoFlutuante` já usa (o único outro consumidor de `app-painel-flutuante` com essa
+funcionalidade; "redimensionar por arraste continua fora do escopo" do primitivo em si, ver
+`painel-flutuante.component.ts`). Ao contrário do caderno, **sem** botão de maximizar — pedido
+explícito do autor ("sem deixar o botão de maximizar") — e sem persistência entre sessões (estado
+local do componente, `signal<Tamanho>`, sem `localStorage`; o caderno persiste porque tem uma
+store própria, o montador não).
+
+**Gates:** `npm run test --workspace=frontend` completo — 2 arquivos falhando
+(`inventario-esquadrao.component.spec.ts`, `detalhe-mestre.page.spec.ts`), ambos pré-existentes e
+sem relação com este componente (reproduzidos isolados, sem nenhuma mudança desta task no caminho
+deles) — registrados em `PROBLEMS.md` como P-020/P-021 em vez de corrigidos "de passagem". A suíte
+completa não reproduziu o P-019 (`painel-flutuante` sensível a ordem) desta vez — segue aberto,
+comportamento intermitente já documentado. `npm run build --workspace=frontend`
+(`--configuration=production`) limpo, só o budget do bundle inicial já excedido (P-004,
+pré-existente). Verificação visual ao vivo (`localhost:4300`, stack real com Postgres/Nest/Angular)
+em 1920×1080 e 360×800: sequência de cliques `FOR` → `D20` confirmada como `FORd20` nos dois
+viewports; ordem "Editar" antes de "Dado" confirmada nos dois; padding visível (nenhum texto/tile
+colado na borda); mobile ocupando exatamente 360×800 (sem margem sobrando); desktop nascendo a
+570×725 e crescendo por arraste da alça (confirmado 710×835 após um arraste de teste), sem botão de
+maximizar em lugar nenhum do cabeçalho.
+
 ## 2026-09-17 — montador-rolagem-ajustes: composição multi-dado, `(ATR*Y)dM`, grupo tipado e painel persistente entre abas
 
 Task avulsa de refinamento do `MontadorRolagem` (`ui-35`/`ui-36`), pedida pelo autor depois de

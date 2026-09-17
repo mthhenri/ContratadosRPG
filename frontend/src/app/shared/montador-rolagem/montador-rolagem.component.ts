@@ -67,6 +67,18 @@ const BREAKPOINT_MOBILE = 560;
 
 const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
 
+/** Tamanho de base 380×580 (ui-35) +50% horizontal/+25% vertical — pedido do autor, a caixa
+ *  original ficava apertada demais pra composição de fórmulas compostas. */
+const LARGURA_INICIAL = 570;
+const ALTURA_INICIAL = 725;
+const LARGURA_MINIMA = 320;
+const ALTURA_MINIMA = 420;
+
+interface Tamanho {
+  readonly largura: number;
+  readonly altura: number;
+}
+
 /**
  * Caixa flutuante de tokens para montar uma fórmula de rolagem sem decorar a sintaxe do motor
  * (`shared/regras/rolagem`) — ui-35, revisão de usabilidade. Mesma mecânica de
@@ -96,6 +108,9 @@ const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
   styleUrl: './montador-rolagem.component.scss',
   host: {
     '(window:resize)': 'aoRedimensionarViewport()',
+    '(window:pointermove)': 'aoMoverPonteiroRedimensionar($event)',
+    '(window:pointerup)': 'encerrarRedimensionamento()',
+    '(window:pointercancel)': 'encerrarRedimensionamento()',
   },
 })
 export class MontadorRolagem {
@@ -162,6 +177,40 @@ export class MontadorRolagem {
     return typeof window.matchMedia === 'function'
       ? window.matchMedia(`(max-width: ${BREAKPOINT_MOBILE}px)`).matches
       : window.innerWidth <= BREAKPOINT_MOBILE;
+  }
+
+  // === Redimensionar (desktop): sem maximizar — só a alça no canto, mesmo padrão de
+  // `CadernoFlutuante.iniciarRedimensionamento`/`aoMoverPonteiro`, mas com estado local (não há
+  // store aqui) e sem persistência entre sessões. ===
+  protected readonly tamanho = signal<Tamanho>({ largura: LARGURA_INICIAL, altura: ALTURA_INICIAL });
+  private redimensionando = false;
+  private origemRedimensionamento = { ponteiroX: 0, ponteiroY: 0, tamanho: this.tamanho() };
+
+  protected iniciarRedimensionamento(evento: PointerEvent): void {
+    if (this.mobileAtivo() || evento.button !== 0) return;
+    evento.preventDefault();
+    this.redimensionando = true;
+    this.origemRedimensionamento = {
+      ponteiroX: evento.clientX,
+      ponteiroY: evento.clientY,
+      tamanho: this.tamanho(),
+    };
+  }
+
+  protected aoMoverPonteiroRedimensionar(evento: PointerEvent): void {
+    if (!this.redimensionando) return;
+    const largura =
+      this.origemRedimensionamento.tamanho.largura + evento.clientX - this.origemRedimensionamento.ponteiroX;
+    const altura =
+      this.origemRedimensionamento.tamanho.altura + evento.clientY - this.origemRedimensionamento.ponteiroY;
+    this.tamanho.set({
+      largura: limitarDimensao(largura, LARGURA_MINIMA, window.innerWidth),
+      altura: limitarDimensao(altura, ALTURA_MINIMA, window.innerHeight),
+    });
+  }
+
+  protected encerrarRedimensionamento(): void {
+    this.redimensionando = false;
   }
 
   // === Ação composta 1: "Dado por Propriedade + Ajuste" → `(ATR±n)dM` ===
@@ -253,4 +302,11 @@ export class MontadorRolagem {
     }
     this.formula.update((atual) => `(${atual})#${this.repeticoesN()}`);
   }
+}
+
+/** Nunca menor que o mínimo nem maior que o viewport disponível — mesmo racional de
+ *  `caderno-flutuante.store.ts:limitarDimensao`. */
+function limitarDimensao(valor: number, minimo: number, viewport: number): number {
+  if (viewport <= minimo) return viewport;
+  return Math.min(Math.max(valor, minimo), viewport);
 }

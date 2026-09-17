@@ -104,3 +104,32 @@
 - **Desde:** achado no gate de testes da `montador-rolagem-ajustes` (2026-09-17). O arquivo em si
   não foi tocado por esta task; não confirmado se já falhava assim antes dela.
 
+### P-020 — `inventario-esquadrao.component.spec.ts` falha (busca do catálogo devolve 2 cards em vez de 1) · `ABERTO` · frontend
+
+- **Sintoma:** o teste "filtra os itens do catálogo pela busca sem decorar o nome com ícone"
+  espera `1` card (`.inventario-esquadrao__catalogo-item`) depois de buscar "Energético
+  Concentrado", mas recebe `2`. Reproduz isolado (`--include=.../inventario-esquadrao.component.spec.ts`),
+  não é sensível à ordem da suíte.
+- **Causa:** não investigada.
+- **Contorno:** nenhum.
+- **Correção:** depurar o filtro de busca do catálogo do componente ou, se o catálogo de fixture do
+  teste mudou, atualizar a expectativa.
+- **Desde:** achado no gate de testes do fecho da `montador-rolagem-ajustes` (2026-09-17,
+  `npm run test --workspace=frontend` completo). Sem relação com o arquivo alterado nesta task
+  (`montador-rolagem/`); não confirmado se já falhava antes dela.
+
+### P-021 — `detalhe-mestre.page.spec.ts` falha ao confirmar duplicação de ficha (`Cannot read properties of undefined (reading 'click')`) · `ABERTO` · frontend
+
+- **Sintoma:** o teste "abre a dialog de duplicar e chama FichaService.duplicarFicha ao confirmar"
+  procura um botão com texto "Confirmar duplicação" na dialog e recebe `undefined` — o `.click()`
+  seguinte lança `TypeError`. Reproduz isolado, não é sensível à ordem da suíte.
+- **Causa:** não investigada — cheiro de rótulo do botão da dialog de confirmação ter mudado (ou a
+  dialog não estar abrindo a tempo do teste procurar o botão).
+- **Contorno:** nenhum.
+- **Correção:** depurar a dialog de duplicação de `CampanhaDetalheMestre` — confirmar o rótulo
+  atual do botão de confirmação e se o `fixture.detectChanges()`/espera antes da busca é
+  suficiente.
+- **Desde:** achado no gate de testes do fecho da `montador-rolagem-ajustes` (2026-09-17,
+  `npm run test --workspace=frontend` completo). Sem relação com o arquivo alterado nesta task
+  (`montador-rolagem/`); não confirmado se já falhava antes dela.
+

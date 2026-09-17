@@ -1754,7 +1754,21 @@ quem decide o que é aceito; a `montador-rolagem-ajustes` estendeu o motor
 composição por botão: todo clique de dado novo entra como termo aditivo (`+dM`),
 `reposicionarOperadorPool` sempre repõe `kh`/`kl`/`cmN` no **último** dado elegível (`kh`/`kl`
 mutuamente exclusivos, `cm` convive com qualquer um dos dois), e o tipo de dano só escreve com um
-alvo elegível. A instância do painel subiu para um nível persistente da visualização da ficha —
+alvo elegível. Um segundo relato ao vivo do autor (2026-09-17) corrigiu mais um defeito e três
+ajustes de UI do painel: clicar num atributo "bare" (sem dado ainda) e depois num dado volta a
+fechar `ATRdM` (atributo como fonte de dados, ex.: `FORd20`) em vez de somar `+dM` do lado —
+`adicionarDado`/`ATRIBUTO_NO_FINAL` em `montador-rolagem.util.ts` reconhecem esse caso e concatenam
+direto, igual ao comportamento original da `cd1205a` que um `fix` seguinte (`242c5b0`, ao introduzir
+o `+` automático de segurança dos outros casos) tinha quebrado sem perceber; a seção "Editar"
+(operadores, parênteses, dígitos) passou a vir antes de "Dado" no teclado; o corpo do painel ganhou
+padding (texto/tiles encostavam nas paredes internas da caixa); no mobile a caixa agora preenche a
+tela inteira (só recuando por `safe-area-inset` de notch/home indicator, não mais por uma margem
+decorativa de 16px que sobrava nos quatro lados); no desktop o tamanho de base subiu +50% de largura
+e +25% de altura (380×580 → 570×725) e a janela ganhou uma alça de redimensionar por arraste no
+canto inferior direito (`iniciarRedimensionamento`/`aoMoverPonteiroRedimensionar`, mesmo racional de
+`CadernoFlutuante.iniciarRedimensionamento`, mas com estado local — sem store, sem persistência —
+e **sem** maximizar, pedido explícito do autor). A instância do painel subiu para um nível
+persistente da visualização da ficha —
 uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
 `ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda
