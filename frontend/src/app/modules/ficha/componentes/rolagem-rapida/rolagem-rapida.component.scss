@@ -65,11 +65,7 @@
     }
 
     &__btn {
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 600;
         border-radius: var(--radius-control);
-        padding: 5px 12px;
         cursor: pointer;
         border: 1px solid var(--accent-border);
         background: var(--accent-dim);
@@ -79,6 +75,10 @@
         &:disabled {
             opacity: 0.45;
             cursor: not-allowed;
+        }
+
+        &--icone {
+            padding: 0;
         }
 
         @include bp.mobile {

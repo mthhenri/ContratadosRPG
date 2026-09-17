@@ -2,12 +2,16 @@ import { Component, computed, inject, input, output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
+import { RolagemVisibilidadeEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { expandirAtalhosDano, rolarFormula, validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 
+import { SessaoService } from '../../../../core/services/sessao.service';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { Icone } from '../../../../shared/icone/icone.component';
 import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { GuiaFormula } from '../guia-formula/guia-formula.component';
 
@@ -25,7 +29,7 @@ import { GuiaFormula } from '../guia-formula/guia-formula.component';
  */
 @Component({
   selector: 'app-rolagem-rapida',
-  imports: [ReactiveFormsModule, GuiaFormula, MontadorRolagem],
+  imports: [ReactiveFormsModule, GuiaFormula, MontadorRolagem, BotaoIcone, Icone, Tooltip],
   templateUrl: './rolagem-rapida.component.html',
   styleUrl: './rolagem-rapida.component.scss',
 })
@@ -47,10 +51,25 @@ export class RolagemRapida {
   /** Cor de identidade visual da ficha — repassada à bandeja de dados. */
   readonly cor = input<string | null>(null);
 
+  /** Restringe o gatilho do Montador de rolagem a usuário TESTER/ADMIN — pedido do autor pra
+   *  ficha de criatura/NPC (a barra ainda não é oficial nessas fichas); a ficha de jogador não
+   *  passa esse input e mantém o Montador liberado pra qualquer um que possa rolar. */
+  readonly restringirMontadorATester = input(false);
+
   /** Toda rolagem executada aqui — quem persiste o histórico. */
   readonly rolagemFeita = output<RolagemRealizadaDto>();
 
   private readonly bandeja = inject(BandejaDadosService);
+  private readonly sessao = inject(SessaoService);
+
+  /** Ver `restringirMontadorATester`. */
+  protected readonly podeUsarMontador = computed(() => {
+    if (!this.restringirMontadorATester()) {
+      return true;
+    }
+    const tipo = this.sessao.usuario()?.tipo;
+    return tipo === TipoUsuarioEnum.TESTER || tipo === TipoUsuarioEnum.ADMIN;
+  });
 
   protected readonly formula = new FormControl('', { nonNullable: true });
   private readonly formulaTexto = toSignal(this.formula.valueChanges, { initialValue: '' });

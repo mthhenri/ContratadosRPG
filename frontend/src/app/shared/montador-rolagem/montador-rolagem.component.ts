@@ -131,6 +131,11 @@ export class MontadorRolagem {
   /** A instância continua viva fora da aba Rolagens; nessa condição só o painel permanece visível. */
   readonly oculto = input(false);
 
+  /** Gate de acesso ao gatilho — hoje usado pela ficha de criatura/NPC pra restringir o Montador a
+   *  tester/admin (ver `RolagemRapida.podeUsarMontador`); a ficha de jogador não passa esse input e
+   *  mantém o padrão liberado. */
+  readonly permitido = input(true);
+
   /** O rodapé pede pro consumidor rolar — o painel não fecha sozinho (o jogador pode ajustar e
    *  rolar de novo, ex.: repetir com N diferente). */
   readonly rolar = output<void>();

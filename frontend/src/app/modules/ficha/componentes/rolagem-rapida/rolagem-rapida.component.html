@@ -1,41 +1,45 @@
 @if (podeRolar()) {
-<div class="rolagem-rapida" [class.rolagem-rapida--oculto]="oculto()">
-    <span class="rolagem-rapida__rotulo-linha">
-        <span class="rolagem-rapida__rotulo">Rolagem rápida</span>
-        <app-guia-formula #guiaExterna />
-    </span>
-    <div class="rolagem-rapida__linha">
-        <app-montador-rolagem
-            [oculto]="oculto()"
-            [style.visibility]="oculto() ? 'visible' : null"
-            [style.pointer-events]="oculto() ? 'auto' : null"
-            [formula]="formula.value"
-            (formulaChange)="formula.setValue($event)"
-            [atalhosDano]="atalhosDano()"
-            [formulaValida]="formulaValida()"
-            (rolar)="rolar()"
-        />
-        <input
-            class="rolagem-rapida__entrada"
-            type="text"
-            [formControl]="formula"
-            placeholder="Ex.: 2d6 + FOR [Físico]  ·  LUTd20kh1cm1 + PROF  ·  CORPO  ·  FURTIVO"
-            aria-label="Fórmula da rolagem rápida"
-            (keydown.enter)="rolar()"
-        />
-        <button
-            type="button"
-            class="rolagem-rapida__btn"
-            [disabled]="!formula.value.trim() || formulaValida() === false"
-            (click)="rolar()"
-        >
-            Rolar
-        </button>
+    <div class="rolagem-rapida" [class.rolagem-rapida--oculto]="oculto()">
+        <span class="rolagem-rapida__rotulo-linha">
+            <span class="rolagem-rapida__rotulo">Rolagem rápida</span>
+            <app-guia-formula #guiaExterna />
+        </span>
+        <div class="rolagem-rapida__linha">
+            <app-montador-rolagem
+                [oculto]="oculto()"
+                [style.visibility]="oculto() ? 'visible' : null"
+                [style.pointer-events]="oculto() ? 'auto' : null"
+                [formula]="formula.value"
+                (formulaChange)="formula.setValue($event)"
+                [atalhosDano]="atalhosDano()"
+                [formulaValida]="formulaValida()"
+                [permitido]="podeUsarMontador()"
+                (rolar)="rolar()"
+            />
+            <input
+                class="rolagem-rapida__entrada"
+                type="text"
+                [formControl]="formula"
+                placeholder="Ex.: 2d6 + FOR [Físico]  ·  LUTd20kh1cm1 + PROF  ·  CORPO  ·  FURTIVO"
+                aria-label="Fórmula da rolagem rápida"
+                (keydown.enter)="rolar()"
+            />
+            <button
+                app-botao-icone
+                type="button"
+                class="rolagem-rapida__btn rolagem-rapida__btn--icone"
+                [disabled]="!formula.value.trim() || formulaValida() === false"
+                [appTooltip]="'Rolar'"
+                aria-label="Rolar"
+                (click)="rolar()"
+            >
+                <app-icone [nome]="'d20'" />
+            </button>
+        </div>
+        @if (formulaValida() === false) {
+            <span class="rolagem-rapida__dica rolagem-rapida__dica--erro"
+                >Fórmula não reconhecida. Veja o guia (?) ao lado.</span
+            >
+        }
     </div>
-    @if (formulaValida() === false) {
-    <span class="rolagem-rapida__dica rolagem-rapida__dica--erro"
-        >Fórmula não reconhecida. Veja o guia (?) ao lado.</span
-    >
-    }
-</div>
 }
