@@ -7,6 +7,22 @@
     display: block;
 }
 
+// Raiz do painel: recebe o mesmo tratamento "some da tela, sem desmontar" de `.ficha-rol--oculto`
+// (`ficha-rolagens.component.scss`) — antes só `<app-ficha-rolagens>` escondia a si mesma quando
+// `oculto()`; o botão "Rolagem oculta" era irmão dela, fora desse tratamento, e continuava visível
+// (e ocupando espaço no fluxo) em toda aba de Status que não fosse Rolagens — achado ao vivo pelo
+// autor num screenshot do mobile, com o botão sobrando embaixo da aba Inventário.
+.ficha-rolagens-painel {
+    &--oculto {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: visible;
+        visibility: hidden;
+        pointer-events: none;
+    }
+}
+
 // Toggle "rolagem oculta" (m3-27) — mesma receita visual do `.ficha-condicoes__item`, num bloco
 // próprio (é uma decisão de visibilidade de rolagem, não uma condição de saúde).
 .ficha-rolagem-oculta {
