@@ -106,20 +106,23 @@
     // Gatilho fica só na cor sem brilho, Passiva sai em grayscale 50% (sempre ligada, sem custo).
     // `--cor-ficha` é herdada do `[style.--cor-ficha]` no `<article class="criatura">` raiz
     // (`CriaturaVisualizacao`) — custom property atravessa o encapsulamento de estilo do Angular.
+    // Texto/borda usam `--cor-ficha-legivel` (piso de legibilidade sobre fundo escuro, ver
+    // `_tokens.scss`) — uma ficha com cor roxa/azul escura ficava com chip quase invisível
+    // (achado ao vivo 2026-09-18). O preenchimento (`background`/`box-shadow`) continua na cor crua.
     &__chip--ativa {
-        color: var(--cor-ficha, var(--accent));
-        border-color: var(--cor-ficha, var(--accent));
+        color: var(--cor-ficha-legivel);
+        border-color: var(--cor-ficha-legivel);
         background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
         box-shadow: 0 0 8px color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, transparent);
     }
     &__chip--gatilho {
-        color: var(--cor-ficha, var(--accent));
-        border-color: var(--cor-ficha, var(--accent));
+        color: var(--cor-ficha-legivel);
+        border-color: var(--cor-ficha-legivel);
         background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
     }
     &__chip--passiva {
-        color: var(--cor-ficha, var(--accent));
-        border-color: var(--cor-ficha, var(--accent));
+        color: var(--cor-ficha-legivel);
+        border-color: var(--cor-ficha-legivel);
         background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
         filter: grayscale(50%);
     }
