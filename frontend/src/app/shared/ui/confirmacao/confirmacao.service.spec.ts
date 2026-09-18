@@ -57,4 +57,47 @@ describe('ConfirmacaoService', () => {
     expect(() => servico.responder(true)).not.toThrow();
     expect(servico.pedido()).toBeNull();
   });
+
+  it('com `aoConfirmar`, fica em `carregando` até a promessa resolver e só então fecha/resolve', async () => {
+    const servico = montar();
+    let liberar!: () => void;
+    const aoConfirmar = () => new Promise<void>((resolve) => (liberar = resolve));
+    const promessa = servico.confirmar({
+      titulo: 'Excluir ficha',
+      mensagem: 'Excluir Kane?',
+      rotuloConfirmar: 'Confirmar',
+      aoConfirmar,
+    });
+
+    const respondida = servico.responder(true);
+    await Promise.resolve();
+    expect(servico.carregando()).toBe(true);
+    expect(servico.pedido()).not.toBeNull();
+
+    liberar();
+    await respondida;
+
+    expect(servico.carregando()).toBe(false);
+    expect(servico.pedido()).toBeNull();
+    expect(await promessa).toBe(true);
+  });
+
+  it('com `aoConfirmar` que rejeita, sai de `carregando` mas mantém o pedido aberto', async () => {
+    const servico = montar();
+    const aoConfirmar = () => Promise.reject(new Error('falhou'));
+    const promessa = servico.confirmar({
+      titulo: 'Excluir ficha',
+      mensagem: 'Excluir Kane?',
+      rotuloConfirmar: 'Confirmar',
+      aoConfirmar,
+    });
+
+    await servico.responder(true);
+
+    expect(servico.carregando()).toBe(false);
+    expect(servico.pedido()).not.toBeNull();
+
+    servico.responder(false);
+    expect(await promessa).toBe(false);
+  });
 });

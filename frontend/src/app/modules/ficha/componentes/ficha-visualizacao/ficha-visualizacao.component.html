@@ -2550,6 +2550,26 @@
                     (keydown.escape)="cancelarAnotacoes()"
                     (blur)="confirmarAnotacoes(entradaAnotacoes.value)"
                 ></textarea>
+                <div class="ficha-status__anotacoes-acoes">
+                    <button
+                        app-botao
+                        variante="primario"
+                        tamanho="pequeno"
+                        type="button"
+                        (click)="confirmarAnotacoes(entradaAnotacoes.value)"
+                    >
+                        Salvar
+                    </button>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        tamanho="pequeno"
+                        type="button"
+                        (click)="cancelarAnotacoes()"
+                    >
+                        Cancelar
+                    </button>
+                </div>
             } @else {
                 <button
                     app-botao

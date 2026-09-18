@@ -2,6 +2,7 @@
     class="criatura"
     [class.criatura--apertado]="apertado()"
     [style.--cor-modificador-fraca]="modificadorCorFraca()"
+    [style.--cor-ficha]="cor()"
 >
     <div class="criatura__linha-colunas">
         <!-- Coluna 1 — Identidade + Atributos fundidos (largura somada das duas colunas antigas,
@@ -1729,6 +1730,26 @@
                     (keydown.escape)="cancelarEdicao()"
                     (blur)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
                 ></textarea>
+                <div class="criatura__anotacoes-acoes">
+                    <button
+                        app-botao
+                        variante="primario"
+                        tamanho="pequeno"
+                        type="button"
+                        (click)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
+                    >
+                        Salvar
+                    </button>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        tamanho="pequeno"
+                        type="button"
+                        (click)="cancelarEdicao()"
+                    >
+                        Cancelar
+                    </button>
+                </div>
             } @else {
                 <button
                     app-botao

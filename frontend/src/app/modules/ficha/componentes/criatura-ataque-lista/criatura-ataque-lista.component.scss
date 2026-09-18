@@ -117,10 +117,33 @@
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-compact);
     }
+    // Selo de custo de ação (pedido do autor) — mesma progressão de "compromisso" da cor da ficha
+    // usada no chip de tipo de Habilidade (`criatura-habilidade-lista`): Completa brilha (a ação
+    // mais cara), Padrão fica só na cor sem brilho, Movimento sai em grayscale 50% (a mais barata).
+    // `--cor-ficha` é herdada do `[style.--cor-ficha]` no `<article class="criatura">` raiz
+    // (`CriaturaVisualizacao`) — custom property atravessa o encapsulamento de estilo do Angular.
+    &__marca--completa {
+        color: var(--cor-ficha, var(--accent));
+        border-color: var(--cor-ficha, var(--accent));
+        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+        box-shadow: 0 0 8px color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, transparent);
+    }
+    &__marca--padrao {
+        color: var(--cor-ficha, var(--accent));
+        border-color: var(--cor-ficha, var(--accent));
+        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+    }
+    &__marca--movimento {
+        color: var(--cor-ficha, var(--accent));
+        border-color: var(--cor-ficha, var(--accent));
+        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+        filter: grayscale(50%);
+    }
     &__efeito {
         margin: 0;
         font: 13px/1.55 var(--font-sans);
         color: var(--text-dim);
+        white-space: pre-wrap;
     }
 
     &__rodape {
@@ -191,14 +214,6 @@
             border-color: var(--accent-border);
         }
     }
-    // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
-    // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
-    &__acao--confirmar {
-        width: auto;
-        padding: 0 8px;
-        color: var(--vida);
-    }
-
     // --- Formulário: cabeçalho (custo, nome, área), três fórmulas iguais e efeito em texto livre. ---
     &__form {
         display: grid;

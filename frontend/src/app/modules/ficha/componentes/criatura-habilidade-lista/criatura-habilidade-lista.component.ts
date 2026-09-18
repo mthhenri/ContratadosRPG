@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -9,6 +9,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
 
@@ -31,10 +32,11 @@ export class CriaturaHabilidadeLista {
   protected readonly rotuloTipo = rotuloHabilidadeTipoCriatura;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
-  protected readonly indiceRemovendo = signal<number | null>(null);
   /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre
    * visíveis; o autor entra e sai dele de propósito (botão "Editar"/"Concluir" no cabeçalho). */
   protected readonly modoEdicao = signal(false);
+
+  private readonly confirmacaoService = inject(ConfirmacaoService);
 
   protected readonly itemForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -47,11 +49,17 @@ export class CriaturaHabilidadeLista {
     return this.indiceEmEdicao() === indice;
   }
 
+  /** Classe do chip de tipo — Ativa (cor da ficha brilhando), Gatilho (cor da ficha sem brilho) e
+   * Passiva (cor da ficha em grayscale 50%), mesma escala usada no selo de custo de ação de
+   * `criatura-ataque-lista` (pedido do autor). */
+  protected classeChipTipo(tipo: HabilidadeTipoCriaturaEnum): string {
+    return `habilidade-lista__chip habilidade-lista__chip--${tipo.toLowerCase()}`;
+  }
+
   protected alternarModoEdicao(): void {
     this.modoEdicao.update((valor) => !valor);
     if (!this.modoEdicao()) {
       this.cancelar();
-      this.cancelarRemocao();
     }
   }
 
@@ -70,14 +78,6 @@ export class CriaturaHabilidadeLista {
     this.indiceEmEdicao.set(null);
   }
 
-  protected pedirRemocao(indice: number): void {
-    this.indiceRemovendo.set(indice);
-  }
-
-  protected cancelarRemocao(): void {
-    this.indiceRemovendo.set(null);
-  }
-
   protected confirmar(): void {
     const indice = this.indiceEmEdicao();
     if (indice === null || this.itemForm.invalid) {
@@ -94,9 +94,19 @@ export class CriaturaHabilidadeLista {
     this.cancelar();
   }
 
-  protected remover(indice: number): void {
+  protected async remover(indice: number): Promise<void> {
+    const item = this.itens()[indice];
+    const confirmado = await this.confirmacaoService.confirmar({
+      titulo: 'Remover habilidade?',
+      mensagem: `Remover ${item.nome}? Esta ação não pode ser desfeita.`,
+      entidade: item.nome,
+      severidade: 'perigo',
+      rotuloConfirmar: 'Remover habilidade',
+    });
+    if (!confirmado) {
+      return;
+    }
     this.emitir(this.itens().filter((_, i) => i !== indice));
-    this.indiceRemovendo.set(null);
     if (this.indiceEmEdicao() === indice) {
       this.cancelar();
     }

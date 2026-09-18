@@ -1,5 +1,132 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Ficha de criatura: confirmação de remoção migrada pro `ConfirmacaoService` (ui-15) e polimento visual de Ataques/Habilidades/Anotações
+
+Dois pedidos do autor na mesma sessão, sobre a ficha de criatura: (1) "a confirmação da remoção
+[de ataque/habilidade] tá com botões fora do padrão... outras partes da ficha de criatura também
+estão com coisas fora do padrão"; (2) um lote de pedidos visuais — quebra de linha em
+descrição/efeito/restrição, cor por tipo em Habilidades/Ataques usando a cor da própria ficha, e a
+caixa de Anotações da criatura alinhada à do jogador com botão de Salvar/Cancelar.
+
+**Investigação do pedido 1.** `criatura-ataque-lista`, `criatura-habilidade-lista` e
+`criatura-resistencia-lista` (m4-04b, 15/08) trocavam a linha do item por um par inline
+"Confirmar remoção"/"Cancelar" — exatamente o antipadrão que `docs/design/DESIGN.md` proíbe pelo
+nome ("nunca... uma área de confirmação inline (`role="alertdialog"`) como o produto praticava
+antes desta task"). O `ConfirmacaoService` (ui-15) que baniu esse padrão só nasceu em 01/09,
+**depois** desses três componentes — nunca foram migrados retroativamente. Sintoma concreto
+relatado: sem `[variante]` no `app-botao`, o botão "Confirmar remoção" saía sem cor de severidade
+nenhuma; o SCSS local compensava pintando à mão com `var(--vida)` (token do stat Vida, não de erro
+— o token correto é `--erro`, que é o que `variante="perigo"` já usa).
+
+**Correção:** os três componentes agora chamam `ConfirmacaoService.confirmar({ severidade:
+'perigo', ... })` a partir de `remover(indice)` (agora assíncrono) — sem `indiceRemovendo`,
+`pedirRemocao`/`cancelarRemocao` nem o branch inline no template. `criatura-resistencia-lista`
+tem duas variantes (grade de Resistências, lista de Fraquezas) — as duas migradas. Achados
+adicionais na mesma varredura, também corrigidos:
+- **"Tornar rolagens públicas"** (`visualizar-criatura.page.ts`) usava um `<app-modal>` montado à
+  mão — trocado por `ConfirmacaoService.confirmar({ severidade: 'padrao' })`, mesmo padrão já
+  usado em `FichaVisualizacao.solicitarAlteracaoVisibilidade`. O SCSS órfão (`.revelar-rolagem`)
+  foi removido.
+- O botão "Confirmar exclusão" do dialog de "Excluir ficha" (também hand-rolled) usava
+  `variante="primario"` em vez de `variante="perigo"` — corrigido isoladamente (cor errada pra uma
+  ação destrutiva), mas o dialog em si **não foi migrado** pro `ConfirmacaoService`: ele mantém um
+  estado "Excluindo…"/botões desabilitados durante a chamada assíncrona ao backend, e a API atual
+  de `ConfirmacaoPedido` só resolve `true`/`false` sem cobrir um estado de carregamento. Ampliar o
+  primitivo é decisão do autor (`CLAUDE.md` — "pare e pergunte ao autor" antes de contornar), não
+  decidida nesta task. Mesmo hand-rolled dialog existe idêntico em `visualizar.page.html`
+  (jogador) — fora do escopo (o pedido foi só sobre a ficha de criatura).
+
+**Pedido 2 — quebra de linha:** `.habilidade-lista__descricao`, `.ataque-lista__efeito` e
+`.habilidade-lista__restricao` ganharam `white-space: pre-wrap` (nenhum dos três tinha). O mesmo
+foi aplicado a `.criatura__info-texto` (compartilhado por Anotações/Descrição/Natureza/Tema de
+Horror na ficha de criatura), que também não tinha — alinhando com `.ficha-visao__anotacoes` do
+jogador, que já usa `pre-wrap`.
+
+**Pedido 2 — cor por tipo/custo de ação.** Existe uma cor de identidade por ficha
+(`FichaCriarDto.cor`, hex) já exposta como custom property `--cor-ficha` (`[style.--cor-ficha]`),
+até então só usada no avatar. Ela foi promovida pro `<article class="criatura">` raiz de
+`CriaturaVisualizacao` — custom property atravessa o encapsulamento de estilo do Angular por ser
+herança de DOM normal, então passou a estar disponível em `criatura-ataque-lista` e
+`criatura-habilidade-lista` sem precisar de um novo `@Input`. Com isso:
+- Chip de tipo de Habilidade (Ativa/Gatilho/Passiva) e selo de custo de ação do Ataque
+  (Completa/Padrão/Movimento) ganharam 3 variantes de cor, mesma escala nos dois: o nível mais
+  "caro"/deliberado (Ativa/Completa) usa `--cor-ficha` com `box-shadow` de brilho; o nível médio
+  (Gatilho/Padrão) usa a cor sem brilho; o nível "grátis"/sempre-ligado (Passiva/Movimento) usa
+  `filter: grayscale(50%)` sobre a mesma cor — pedido literal do autor ("cor da ficha brilhando",
+  "sem o glow", "grayscale 50%").
+- `CustoAcaoEnum` só tem `MOVIMENTO`/`PADRAO`/`COMPLETA` — o autor cogitou uma "ação livre" mas não
+  tinha certeza; **não implementada** (mudança de enum ripple em `shared`/regras/UI, decisão do
+  autor primeiro).
+- `.habilidade-lista__restricao` também virou uma "tag clara" (fundo `--surface`, borda, raio —
+  mesmo desenho do chip de tipo, tom neutro) em vez de só texto itálico solto.
+
+**Pedido 2 — Anotações da criatura.** A causa raiz da caixa "diferente" da ficha de jogador: só
+existia a regra `.criatura__anotacoes-caixa--painel` (o modificador, sem padding/fundo/borda) —
+faltava a regra base `.criatura__anotacoes-caixa` que `FichaVisualizacao` tem
+(`padding: 14px; background: var(--surface-2); border: 1px solid var(--border)`). Adicionada,
+igual ao jogador. Nos dois (`CriaturaVisualizacao` e `FichaVisualizacao`) foi adicionado um par de
+botões "Salvar"/"Cancelar" explícitos dentro do modo de edição — antes só existia salvar-ao-perder-
+foco (`blur`) e cancelar com Esc, sem afordance visível. O comportamento de "fechar a caixa também
+salva" já funcionava (o botão × de `app-painel-flutuante` usa `(pointerdown)="$event
+.stopPropagation()"`, sem `preventDefault()`, então o foco sai do textarea e dispara o `blur` antes
+do clique do × processar) — confirmado lendo o código, não alterado.
+
+**Extensão do `ConfirmacaoService` (pedido do autor, após revisão do lote acima).** O dialog de
+"Excluir ficha" continuava hand-rolled porque precisava manter um estado "Excluindo…"/botões
+desabilitados durante a chamada assíncrona, e `ConfirmacaoPedido` só resolvia `true`/`false` na
+hora do clique. Ampliado: `ConfirmacaoPedido.aoConfirmar?: () => Promise<void>` — quando presente,
+`ConfirmacaoService.responder(true)` não fecha o diálogo na hora; liga `carregando` (novo signal),
+espera a promessa, só então fecha/resolve. Erro na promessa volta `carregando` a `false` e mantém o
+diálogo aberto pra nova tentativa (o toast de erro é responsabilidade do interceptor HTTP global,
+já existente — o serviço não duplica). `Confirmacao` (componente) usa `carregando()` pra: mostrar o
+botão de confirmar em `[carregando]` (spinner do próprio `Botao`), desabilitar os dois botões, e
+travar `fechavelPeloFundo`/Esc/× enquanto em voo. `visualizar-criatura.page.ts`
+(`abrirExclusao`) migrado pra esse padrão — `dialogExclusao`/`excluindo`/`confirmarExclusao`/
+`fecharExclusao` removidos, junto do `<app-modal>` e do SCSS `.exclusao` órfãos.
+
+**Achado de revisão, corrigido nos quatro `mensagem` da task:** os `ConfirmacaoPedido.mensagem`
+escritos inicialmente (nos três `remover()` e no novo `abrirExclusao`) incluíam `**` literais ao
+redor do nome (`` `Remover **${nome}**?...` ``), copiando por engano a notação de ênfase dos
+comentários de documentação do serviço. O destaque em negrito de `entidade` é feito por
+`Confirmacao.mensagemPartida` via `indexOf`/`slice` puro — sem qualquer parser de markdown — então
+os `**` apareceriam como asteriscos literais na tela. Corrigido nos quatro pontos para o padrão já
+usado por `painel-encontro.page.ts` (`mensagem: \`Remover ${nome} do combate?...\``, sem marcação).
+
+**Pergunta feita ao autor sobre um 4º custo de ação ("Turno")** antes de implementar: a tabela de
+dano por VD (`docs/core/guia_de_mestre-v4.0.0.md`) tem 4 colunas — Movimento/Padrão/Completa/
+**Turno** —, mas `shared/src/regras/criatura/ataques.ts` já documenta que "Turno" não é custo de
+UMA ação isolada, é a soma de referência da rodada inteira (função própria,
+`obterDanoReferenciaTurnoPorVd`, separada de `obterDanoReferenciaPorVd`). Adicionar
+`CustoAcaoEnum.TURNO` contradiria essa decisão de design já implementada — o autor confirmou não
+implementar. `CustoAcaoEnum` permanece com os 3 valores originais.
+
+**Verificação visual ao vivo (skill `verify`)** executada nos dois viewports obrigatórios
+(1920×1080 e 360×800), com um cenário isolado criado via REST num usuário/campanha/ficha de teste
+novos (sem tocar dados existentes — outra sessão pode estar usando o mesmo Postgres). Confirmado
+pessoalmente por captura de tela: selo de custo de ação e chip de tipo com as 3 cores (Passiva/
+Movimento em grayscale visivelmente mais apagado, Gatilho/Padrão na cor cheia, Ativa/Completa na
+cor cheia — brilho sutil, difícil de distinguir por print comprimido mas presente no CSS);
+descrição/efeito com quebra de linha renderizando corretamente; restrição como tag; os três
+dialogs de remoção (ataque/habilidade/resistência), "Tornar rolagens públicas" e "Excluir ficha"
+todos no mesmo componente global `<app-confirmacao>` (ícone de alerta só nos `perigo`, botão
+vermelho só nos `perigo` — "Tornar rolagens públicas" saiu com botão na cor `--accent` do tema do
+site, que por coincidência também é avermelhado nesta conta de teste, não confundir com
+`variante="perigo"`); painel de Anotações com padding/borda igual ao da ficha de jogador e botões
+Salvar/Cancelar visíveis; nenhum overflow em 360×800. **Não verificado ao vivo:** o estado
+`carregando` (spinner) do botão "Confirmar exclusão" durante a chamada assíncrona — o cenário de
+teste cancelou a exclusão de propósito pra não apagar a ficha; esse comportamento específico fica
+coberto só pelos testes automatizados de `confirmacao.service.spec.ts`, não por captura visual.
+
+**Gates finais:** suíte completa do frontend — 130 arquivos, 1837/1837 testes (inclui os testes
+novos de `confirmacao.service.spec.ts` para `aoConfirmar`/`carregando`, e os dois testes
+atualizados de `visualizar-criatura.page.spec.ts` pro novo fluxo de exclusão via
+`ConfirmacaoService`). Lint (`eslint`) dos arquivos tocados: 0 erros (warnings pré-existentes de
+`quotes`/`max-len`, alheios a esta task).
+
+**Resíduo da verificação:** o cenário de teste (usuário `teste-visual-*`, campanha "Campanha Teste
+Visual *", ficha "O Vigia Cianótico") ficou no Postgres de desenvolvimento — não foi limpo por não
+ter sido pedido; é dado isolado e aditivo, não interfere em nada existente.
+
 ## 2026-09-18 — Lote de 6 problemas de `PROBLEMS.md` fechado: P-068/P-021 (duplicar ficha), P-069 (guard `null`), P-019 (viewport vazando entre specs), P-020 (busca do catálogo) e P-022 (cor apagada PROF/NIV)
 
 Pedido direto do autor a partir da lista de `PROBLEMS.md` ("vamos resolver o P-068, P-069, P-019,

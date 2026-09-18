@@ -26,6 +26,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CriaturaVisualizar } from './visualizar-criatura.page';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -297,11 +298,22 @@ describe('CriaturaVisualizar', () => {
     });
   });
 
-  it('exclui a criatura e navega de volta à campanha', () => {
+  it('exclui a criatura e navega de volta à campanha', async () => {
     const { fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
-    fixture.componentInstance['confirmarExclusao']();
+    fixture.componentInstance['abrirExclusao']();
+    await TestBed.inject(ConfirmacaoService).responder(true);
+
     expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
     expect(navegarEspiao).toHaveBeenCalledWith(['/campanhas', 9]);
+  });
+
+  it('cancelar a confirmação de exclusão não chama excluirFicha nem navega', async () => {
+    const { fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+    fixture.componentInstance['abrirExclusao']();
+    await TestBed.inject(ConfirmacaoService).responder(false);
+
+    expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+    expect(navegarEspiao).not.toHaveBeenCalled();
   });
 
   describe('criatura solta (m4-11)', () => {
@@ -326,14 +338,15 @@ describe('CriaturaVisualizar', () => {
       expect(voltar?.getAttribute('href')).toBe('/fichas');
     });
 
-    it('exclusão de uma criatura solta redireciona ao acervo (/fichas), não a /campanhas', () => {
+    it('exclusão de uma criatura solta redireciona ao acervo (/fichas), não a /campanhas', async () => {
       const { fixture, navegarEspiao } = montar({
         usuarioLogadoId: 7,
         semCampanhaNaRota: true,
         fichaCampanhaId: null,
       });
 
-      fixture.componentInstance['confirmarExclusao']();
+      fixture.componentInstance['abrirExclusao']();
+      await TestBed.inject(ConfirmacaoService).responder(true);
 
       expect(navegarEspiao).toHaveBeenCalledWith(['/fichas']);
     });

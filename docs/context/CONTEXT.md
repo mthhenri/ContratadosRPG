@@ -9,8 +9,43 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-15 · **Última decisão registrada:**
-> `criatura-card-esquadrao-mestre` concluída — o card de criatura da grade "Criaturas" (visão de
+> **Última revisão:** 2026-09-18 · **Última decisão registrada:**
+> Ficha de criatura: `criatura-ataque-lista`/`criatura-habilidade-lista`/`criatura-resistencia-lista`
+> tinham a confirmação de remoção num antipadrão inline anterior ao `ConfirmacaoService` (ui-15) —
+> migradas, junto de "Tornar rolagens públicas" e (por pedido explícito do autor, numa segunda
+> rodada) "Excluir ficha". Esse último exigiu ampliar o primitivo: `ConfirmacaoPedido` ganhou
+> `aoConfirmar?: () => Promise<void>` — com ele, `ConfirmacaoService`/`Confirmacao` mantêm o diálogo
+> aberto com o botão de confirmar em `carregando` até a promessa assíncrona terminar, em vez de
+> fechar na hora (erro mantém o diálogo aberto pra nova tentativa). Além disso:
+> descrição/efeito/restrição de Habilidades e Ataques ganharam `white-space: pre-wrap`; chip de tipo
+> de Habilidade (Ativa/Gatilho/Passiva) e selo de custo de ação do Ataque (Completa/Padrão/Movimento)
+> ganharam cor por `--cor-ficha` (a cor de identidade da própria ficha, promovida pro `<article
+> class="criatura">` raiz) com brilho/sem brilho/grayscale 50% pelos 3 níveis; a caixa de Anotações
+> da criatura ganhou o padding/fundo que faltava (só existia o modificador `--painel`, sem a regra
+> base) e as duas fichas (criatura e jogador) ganharam botões explícitos "Salvar"/"Cancelar" no modo
+> de edição de Anotações. Avaliado e recusado (rules-first): "ação livre" não existe como custo de
+> ataque de criatura — a 4ª coluna da tabela de regras é "Turno", que `shared/regras` já trata
+> corretamente como soma agregada da rodada, não custo de uma ação isolada; `CustoAcaoEnum`
+> permanece com 3 valores. `npm run test --workspace=frontend` completo: 130/130 arquivos,
+> 1837/1837 testes; lint dos arquivos tocados sem erros. **Verificação visual (`verify`) executada**
+> nos dois viewports obrigatórios, com cenário isolado via REST — confirmado pessoalmente por
+> captura de tela (cores, quebras de linha, tags, os 5 diálogos migrados, painel de Anotações).
+> Único ponto não verificado ao vivo: o spinner de `carregando` do botão de excluir durante a
+> chamada assíncrona (coberto só por teste automatizado). Detalhe em `HISTORY.md`.
+> Antes: Lote de 6 problemas de `PROBLEMS.md` fechado a pedido direto do autor — P-068/P-021 (mesmo teste
+> de duplicar ficha do jogador, seletor pegava o item errado do menu "⋯"), P-069 (guard `!= null`
+> replicado em `EspectadorFichaCard`, e `eslint.config.mjs` ganhou `allowNullOrUndefined` pra esse
+> idioma parar de reprovar lint), P-020 (busca do catálogo priorizando nome sobre descrição, que
+> cruzava referência com outro item), P-022 (PROF/NIV do Montador sem cor apagada, mesma correção
+> de especificidade já aplicada em "Tipo de dano") e P-019 (`window.innerWidth`/`innerHeight`
+> vazando entre `caderno-flutuante`/`leitor-documentos` e o resto da suíte — `afterAll` restaurando
+> o valor original nos dois arquivos). Achado no processo, fora do escopo e registrado como novo
+> `P-071`: `ficha-visualizacao.component.spec.ts` tem um teste do Montador sensível a ordem de
+> suíte, causa não investigada. `npm run test --workspace=frontend` completo: 1829/1829 (só o novo
+> P-071, alheio a esta task); lint dos arquivos tocados sem erros. Verificação visual do ajuste de
+> PROF/NIV (P-022) **pendente** — aplicação real não foi levantada nesta task. Detalhe em
+> `HISTORY.md`.
+> Antes: `criatura-card-esquadrao-mestre` concluída — o card de criatura da grade "Criaturas" (visão de
 > mestre) saiu de markup hand-rolled dentro de `detalhe-mestre.page.html` (sem menu "⋯", sem barra
 > de Vida, sem última rolagem) para `CriaturaEsquadraoCard`, componente próprio que segue a mesma
 > receita visual do análogo `EspectadorFichaCard` (Esquadrão de jogadores da mesma tela — pedido

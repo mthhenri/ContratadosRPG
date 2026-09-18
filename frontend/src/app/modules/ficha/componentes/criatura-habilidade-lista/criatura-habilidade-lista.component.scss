@@ -101,15 +101,47 @@
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-compact);
     }
+    // Cor por tipo (pedido do autor) — mesma escala de "compromisso" da cor da ficha usada no selo
+    // de custo de ação de `criatura-ataque-lista`: Ativa brilha (a habilidade mais deliberada),
+    // Gatilho fica só na cor sem brilho, Passiva sai em grayscale 50% (sempre ligada, sem custo).
+    // `--cor-ficha` é herdada do `[style.--cor-ficha]` no `<article class="criatura">` raiz
+    // (`CriaturaVisualizacao`) — custom property atravessa o encapsulamento de estilo do Angular.
+    &__chip--ativa {
+        color: var(--cor-ficha, var(--accent));
+        border-color: var(--cor-ficha, var(--accent));
+        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+        box-shadow: 0 0 8px color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, transparent);
+    }
+    &__chip--gatilho {
+        color: var(--cor-ficha, var(--accent));
+        border-color: var(--cor-ficha, var(--accent));
+        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+    }
+    &__chip--passiva {
+        color: var(--cor-ficha, var(--accent));
+        border-color: var(--cor-ficha, var(--accent));
+        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+        filter: grayscale(50%);
+    }
     &__descricao {
         margin: 0;
         font: 13px/1.55 var(--font-sans);
         color: var(--text-dim);
+        white-space: pre-wrap;
     }
+    // "Tag clara" (pedido do autor) — mesmo desenho de `&__chip`, mas sem o tom de destaque:
+    // fundo levemente mais claro que o card e quebra de linha preservada (restrição pode ser
+    // um texto livre longo, não só uma palavra).
     &__restricao {
+        display: inline-block;
+        padding: 3px 7px;
         font: 11px var(--font-sans);
         font-style: italic;
         color: var(--text-mute);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-compact);
+        white-space: pre-wrap;
     }
     &__acoes {
         display: flex;
@@ -131,14 +163,6 @@
             border-color: var(--accent-border);
         }
     }
-    // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
-    // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
-    &__acao--confirmar {
-        width: auto;
-        padding: 0 8px;
-        color: var(--vida);
-    }
-
     // --- Formulário: grade rotulada (mesmo desenho do de Ataques) ---
     &__form {
         display: grid;

@@ -46,7 +46,7 @@
                 } @else {
                     <div class="habilidade-lista__cabecalho-item">
                         <span class="habilidade-lista__nome">{{ item.nome }}</span>
-                        <span class="habilidade-lista__chip">{{ rotuloTipo(item.tipo) }}</span>
+                        <span [class]="classeChipTipo(item.tipo)">{{ rotuloTipo(item.tipo) }}</span>
                     </div>
                     <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
                     @if (item.restricao) {
@@ -63,34 +63,15 @@
                             >
                                 <app-icone nome="editar" />
                             </button>
-                            @if (indiceRemovendo() === $index) {
-                                <button
-                                    app-botao
-                                    class="habilidade-lista__acao habilidade-lista__acao--confirmar"
-                                    type="button"
-                                    (click)="remover($index)"
-                                >
-                                    Confirmar remoção
-                                </button>
-                                <button
-                                    app-botao
-                                    class="habilidade-lista__acao"
-                                    type="button"
-                                    (click)="cancelarRemocao()"
-                                >
-                                    Cancelar
-                                </button>
-                            } @else {
-                                <button
-                                    app-botao-icone
-                                    class="habilidade-lista__acao"
-                                    type="button"
-                                    aria-label="Remover"
-                                    (click)="pedirRemocao($index)"
-                                >
-                                    <app-icone nome="excluir" />
-                                </button>
-                            }
+                            <button
+                                app-botao-icone
+                                class="habilidade-lista__acao"
+                                type="button"
+                                aria-label="Remover"
+                                (click)="remover($index)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
                         </div>
                     }
                 }

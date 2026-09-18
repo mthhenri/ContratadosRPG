@@ -66,34 +66,15 @@
                                 >
                                     <app-icone nome="editar" />
                                 </button>
-                                @if (indiceRemovendo() === $index) {
-                                    <button
-                                        app-botao
-                                        class="resistencia-lista__acao resistencia-lista__acao--confirmar"
-                                        type="button"
-                                        (click)="remover($index)"
-                                    >
-                                        Confirmar
-                                    </button>
-                                    <button
-                                        app-botao
-                                        class="resistencia-lista__acao"
-                                        type="button"
-                                        (click)="cancelarRemocao()"
-                                    >
-                                        Cancelar
-                                    </button>
-                                } @else {
-                                    <button
-                                        app-botao-icone
-                                        class="resistencia-lista__acao"
-                                        type="button"
-                                        aria-label="Remover"
-                                        (click)="pedirRemocao($index)"
-                                    >
-                                        <app-icone nome="excluir" />
-                                    </button>
-                                }
+                                <button
+                                    app-botao-icone
+                                    class="resistencia-lista__acao"
+                                    type="button"
+                                    aria-label="Remover"
+                                    (click)="remover($index)"
+                                >
+                                    <app-icone nome="excluir" />
+                                </button>
                             </div>
                         }
                     }
@@ -127,34 +108,15 @@
                                 >
                                     <app-icone nome="editar" />
                                 </button>
-                                @if (indiceRemovendo() === $index) {
-                                    <button
-                                        app-botao
-                                        class="resistencia-lista__acao resistencia-lista__acao--confirmar"
-                                        type="button"
-                                        (click)="remover($index)"
-                                    >
-                                        Confirmar remoção
-                                    </button>
-                                    <button
-                                        app-botao
-                                        class="resistencia-lista__acao"
-                                        type="button"
-                                        (click)="cancelarRemocao()"
-                                    >
-                                        Cancelar
-                                    </button>
-                                } @else {
-                                    <button
-                                        app-botao-icone
-                                        class="resistencia-lista__acao"
-                                        type="button"
-                                        aria-label="Remover"
-                                        (click)="pedirRemocao($index)"
-                                    >
-                                        <app-icone nome="excluir" />
-                                    </button>
-                                }
+                                <button
+                                    app-botao-icone
+                                    class="resistencia-lista__acao"
+                                    type="button"
+                                    aria-label="Remover"
+                                    (click)="remover($index)"
+                                >
+                                    <app-icone nome="excluir" />
+                                </button>
                             </div>
                         }
                     }

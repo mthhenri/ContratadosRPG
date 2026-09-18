@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { filter, finalize, map, of, switchMap } from 'rxjs';
+import { filter, finalize, firstValueFrom, map, of, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
@@ -28,6 +28,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
@@ -93,6 +94,7 @@ export class CriaturaVisualizar {
   private readonly topbarContexto = inject(TopbarContextoService);
   private readonly bandejaDados = inject(BandejaDadosService);
   private readonly notificacaoService = inject(NotificacaoService);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -143,9 +145,6 @@ export class CriaturaVisualizar {
 
   /** Dialog de gestão de acesso aberta. */
   protected readonly dialogAcesso = signal(false);
-  /** Dialog de confirmação de exclusão aberta. */
-  protected readonly dialogExclusao = signal(false);
-  protected readonly excluindo = signal(false);
 
   /** Membro selecionado para receber acesso (Reactive Forms — sem `ngModel`). */
   protected readonly membroParaConceder = new FormControl<number | null>(null);
@@ -363,26 +362,27 @@ export class CriaturaVisualizar {
     return this.fichaRolagemRegistro.oculta();
   }
 
-  /** Confirmação pendente pra tornar as rolagens públicas — só ocultar → revelar pede confirmação
-   * (revelar de propósito, ex.: "susto" de rolar publicamente pros jogadores verem, é uma decisão
-   * deliberada; voltar a ocultar não precisa de trava). */
-  protected readonly confirmandoRevelarRolagem = signal(false);
-
+  /** Só ocultar → revelar pede confirmação (ui-15) — revelar de propósito, ex.: "susto" de rolar
+   * publicamente pros jogadores verem, é uma decisão deliberada; voltar a ocultar não precisa de
+   * trava. Não é destrutivo (reversível a qualquer momento) — `severidade: 'padrao'`. */
   protected alternarRolagemOculta(): void {
-    if (this.fichaRolagemRegistro.oculta()) {
-      this.confirmandoRevelarRolagem.set(true);
+    if (!this.fichaRolagemRegistro.oculta()) {
+      this.fichaRolagemRegistro.alternarOculta();
       return;
     }
-    this.fichaRolagemRegistro.alternarOculta();
-  }
-
-  protected confirmarRevelarRolagem(): void {
-    this.fichaRolagemRegistro.alternarOculta();
-    this.confirmandoRevelarRolagem.set(false);
-  }
-
-  protected cancelarRevelarRolagem(): void {
-    this.confirmandoRevelarRolagem.set(false);
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Tornar rolagens públicas?',
+        mensagem:
+          'A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros jogadores.',
+        severidade: 'padrao',
+        rotuloConfirmar: 'Tornar pública',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.fichaRolagemRegistro.alternarOculta();
+        }
+      });
   }
 
   /** Abre a dialog de gestão de acesso (a partir do menu). */
@@ -395,31 +395,26 @@ export class CriaturaVisualizar {
     this.dialogAcesso.set(false);
   }
 
-  /** Abre a dialog de confirmação de exclusão (a partir do menu). */
+  /** Pede confirmação (ui-15) e exclui a criatura (soft delete no backend, só dono/mestre — §14) —
+   *  a partir do menu. `aoConfirmar` mantém o diálogo aberto com "Confirmar exclusão" em
+   *  carregando até a chamada terminar, mesmo efeito visual do dialog hand-rolled anterior. */
   protected abrirExclusao(): void {
-    this.dialogExclusao.set(true);
-  }
-
-  /** Fecha a dialog de exclusão — inócuo enquanto a exclusão está em voo. */
-  protected fecharExclusao(): void {
-    if (!this.excluindo()) {
-      this.dialogExclusao.set(false);
-    }
-  }
-
-  /** Exclui a criatura (soft delete no backend, só dono/mestre — §14) e volta ao detalhe da campanha. */
-  protected confirmarExclusao(): void {
-    if (this.excluindo()) {
-      return;
-    }
-    this.excluindo.set(true);
-    this.fichaService
-      .excluirFicha(this.fichaId)
-      .pipe(finalize(() => this.excluindo.set(false)))
-      .subscribe({
-        next: () => {
+    const nome = this.ficha()?.nome;
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Excluir ficha',
+        mensagem: nome
+          ? `Excluir ${nome}? Esta ação não pode ser desfeita.`
+          : 'Excluir esta ficha? Esta ação não pode ser desfeita.',
+        entidade: nome,
+        severidade: 'perigo',
+        rotuloConfirmar: 'Confirmar exclusão',
+        aoConfirmar: () => firstValueFrom(this.fichaService.excluirFicha(this.fichaId)),
+      })
+      .then((confirmado) => {
+        if (confirmado) {
           void this.router.navigate(this.rotaDeSaida());
-        },
+        }
       });
   }
 

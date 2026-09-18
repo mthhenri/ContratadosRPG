@@ -906,6 +906,7 @@
         font: 14px/1.6 var(--font-sans);
         color: var(--text-dim);
         max-width: 78ch;
+        white-space: pre-wrap;
     }
 
     // Gancho/Motivação: linha própria abaixo da descrição, separada por um filete (como no mockup).
@@ -1062,13 +1063,23 @@
         }
     }
 
+    // Mesma caixa "clara" de `FichaVisualizacao.ficha-status__anotacoes-caixa` (padding/fundo/
+    // borda ao redor do conteúdo) — faltava aqui e deixava o painel da criatura visualmente
+    // diferente do de jogador (achado ao vivo pelo autor).
+    &__anotacoes-caixa {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
     // Dentro do `app-painel-flutuante` (mesmo racional de `FichaVisualizacao.ficha-status__
     // anotacoes-caixa--painel`): `flex: 1` deixa a caixa (e o campo de texto) crescer junto com a
     // janela ao arrastar a alça de redimensionar, sem vão em branco abaixo.
     &__anotacoes-caixa--painel {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
         flex: 1 1 auto;
         min-height: 220px;
 
@@ -1076,6 +1087,11 @@
             flex: 1 1 auto;
             min-height: 0;
         }
+    }
+
+    &__anotacoes-acoes {
+        display: flex;
+        gap: 6px;
     }
 
     // Alça de redimensionar do painel de Anotações — mesmo visual de

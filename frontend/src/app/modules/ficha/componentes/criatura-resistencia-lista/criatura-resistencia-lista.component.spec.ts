@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TipoDanoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaResistenciaDto } from '@contratados-rpg/shared/dtos/ficha';
 
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { CriaturaResistenciaLista } from './criatura-resistencia-lista.component';
 
 describe('CriaturaResistenciaLista', () => {
@@ -109,12 +110,25 @@ describe('CriaturaResistenciaLista', () => {
     expect(alvo.emitidos[0]).toEqual([...itens, { tipo: TipoDanoEnum.QUIMICO, subtipo: null, valor: 5 }]);
   });
 
-  it('remove um item e emite a lista sem ele', () => {
+  it('pede confirmação via ConfirmacaoService (ui-15/P-069) e só remove se confirmar', async () => {
     const alvo = montar(true);
-    alvo.fixture.componentInstance['pedirRemocao'](0);
-    alvo.fixture.componentInstance['remover'](0);
+    const confirmar = vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(true);
 
+    await alvo.fixture.componentInstance['remover'](0);
+
+    expect(confirmar).toHaveBeenCalledWith(
+      expect.objectContaining({ severidade: 'perigo', entidade: TipoDanoEnum.BALISTICO }),
+    );
     expect(alvo.emitidos).toHaveLength(1);
     expect(alvo.emitidos[0]).toEqual([]);
+  });
+
+  it('cancelar a confirmação não remove nem emite', async () => {
+    const alvo = montar(true);
+    vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
+
+    await alvo.fixture.componentInstance['remover'](0);
+
+    expect(alvo.emitidos).toHaveLength(0);
   });
 });

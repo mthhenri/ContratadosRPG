@@ -319,56 +319,6 @@
     }
 }
 
-.exclusao {
-    &__aviso {
-        margin: 0 0 16px;
-        font-family: var(--font-sans);
-        font-size: 13px;
-        color: var(--text);
-    }
-    &__acoes {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    &__acao {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 11px 18px;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-
-        @include bp.mobile {
-            min-height: bp.$alvo-toque;
-        }
-    }
-}
-
-// Dialog "Tornar rolagens públicas" — migrado de `criatura-visualizacao.component.scss`
-// (criatura-visualizacao-shell-ui34): o toggle que abre esta confirmação agora mora na coluna de
-// ações desta página.
-.revelar-rolagem {
-    &__aviso {
-        margin: 0 0 16px;
-        font: 13px/1.6 var(--font-sans);
-        color: var(--text-dim);
-    }
-    &__acoes {
-        display: flex;
-        gap: 10px;
-    }
-    &__acao {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-}
-
 // Esqueleto de carregamento — versão simplificada de coluna única (não replica as 3 colunas reais
 // de `CriaturaVisualizacao`, só evita o salto de largura contra `.ficha-pagina` acima). Identidade
 // (cor/raio/pulso) vem de `app-esqueleto`; aqui só a geometria de cada silhueta.
