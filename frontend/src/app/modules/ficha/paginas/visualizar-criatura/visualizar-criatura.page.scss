@@ -25,9 +25,10 @@
 
 .ficha-pagina {
     width: 100%;
-    // Mesmo ajuste de `visualizar.page.scss` (ficha de jogador) — ver o comentário lá: sem piso de
-    // `100dvh`, a cadeia `align-items: stretch` para de forçar o card de Status a esticar até a
-    // altura da janela numa ficha curta, deixando de sobrar fundo quadriculado vazio embaixo dele.
+    // Mesmo ajuste de `visualizar.page.scss` (ficha de jogador) — ver o comentário lá: o piso de
+    // `100dvh` é pra `app-coluna-acoes` bater no rodapé (trilho de navegação, não conteúdo); some
+    // no `@include bp.mobile` abaixo, onde a coluna de ações vira barra fixa fora do fluxo.
+    min-height: calc(100dvh - var(--altura-topbar));
     margin: 0;
     padding: 0;
     display: flex;
@@ -58,11 +59,18 @@
         width: 100%;
         max-width: 100%;
         margin: 0;
+        // `app-coluna-acoes` já saiu da fileira aqui — o piso do desktop/tablet não tem mais ninguém
+        // pra esticar até ele.
+        min-height: 0;
     }
 
     &__conteudo {
         flex: 1 1 0;
         min-width: 0;
+        // Opta fora do `align-items: stretch` da fileira — ver o comentário em `.ficha-pagina` acima
+        // e em `visualizar.page.scss`: o piso é só pra `app-coluna-acoes`, o conteúdo real continua
+        // encolhendo pro próprio tamanho.
+        align-self: flex-start;
         padding: 24px var(--space-20) var(--space-20);
 
         @include bp.mobile {

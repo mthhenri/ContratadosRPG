@@ -12,11 +12,15 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
 
+    // `overflow: hidden` (não `visible`) — mesmo raciocínio de `.ficha-rol--oculto`
+    // (`ficha-rolagens.component.scss`): sem isso, conteúdo interno em fluxo normal ainda ocupa a
+    // posição estática que teria se a barra estivesse visível, inflando o `scrollHeight` da página
+    // se essa posição cai abaixo da viewport, mesmo com tudo invisível.
     &--oculto {
         position: absolute;
         width: 0;
         height: 0;
-        overflow: visible;
+        overflow: hidden;
         visibility: hidden;
         pointer-events: none;
     }

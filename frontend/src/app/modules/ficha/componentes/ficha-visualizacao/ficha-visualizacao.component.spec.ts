@@ -11,6 +11,7 @@ import {
   PersonalidadeEstagioEnum,
   SeveridadeLesaoEnum,
   TipoDanoEnum,
+  TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaFragmentoConsumidoDto,
@@ -19,6 +20,7 @@ import type {
   FichaOrigemDto,
   FichaPersonalidadeHabilidadeDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { UsuarioAutenticadoDto } from '@contratados-rpg/shared/dtos/usuario';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
@@ -271,18 +273,33 @@ describe('FichaVisualizacao', () => {
     });
 
     it('mantém o montador aberto e visível ao navegar para outra aba', () => {
-      const alvo = montar(dados, 'Corvo', 42, true);
-      alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
-      alvo.fixture.detectChanges();
+      // Gatilho do Montador é restrito a TESTER/ADMIN (`restringirMontadorATester`, ver
+      // `rolagem-rapida.component.ts`) — a ficha de jogador passa `true` como qualquer outro
+      // consumidor. Sessão de teste precisa refletir isso pro gatilho existir no DOM.
+      const sessaoAdmin: UsuarioAutenticadoDto = {
+        token: 'token-de-teste',
+        id: 1,
+        login: 'admin.teste',
+        nome: 'Admin Teste',
+        tipo: TipoUsuarioEnum.ADMIN,
+      };
+      localStorage.setItem('contratados-rpg.sessao', JSON.stringify(sessaoAdmin));
+      try {
+        const alvo = montar(dados, 'Corvo', 42, true);
+        alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
+        alvo.fixture.detectChanges();
 
-      alvo.raiz.querySelector<HTMLButtonElement>('.montador-rolagem__gatilho')!.click();
-      alvo.fixture.detectChanges();
-      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+        alvo.raiz.querySelector<HTMLButtonElement>('.montador-rolagem__gatilho')!.click();
+        alvo.fixture.detectChanges();
+        expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
 
-      alvo.fixture.componentInstance['selecionarAbaStatus']('inventario');
-      alvo.fixture.detectChanges();
+        alvo.fixture.componentInstance['selecionarAbaStatus']('inventario');
+        alvo.fixture.detectChanges();
 
-      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+        expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+      } finally {
+        localStorage.removeItem('contratados-rpg.sessao');
+      }
     });
   });
 

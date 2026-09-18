@@ -7,11 +7,16 @@
     flex-direction: column;
     gap: 12px;
 
+    // `overflow: hidden` (não `visible`): com a caixa em 0×0, um filho normal (ex.: `.ficha-rol__lista`
+    // vazia com `app-estado-vazio`) ainda ocupa a posição estática onde estaria se a aba estivesse
+    // visível — se essa posição cai abaixo da viewport, ele infla o `scrollHeight` da página inteira
+    // mesmo invisível (achado ao vivo: 7px de scroll fantasma na Sentinela Matheus, virando um vão
+    // enorme com mais conteúdo real — sintoma "quebra fora do contexto da aba", não vão interno).
     &--oculto {
         position: absolute;
         width: 0;
         height: 0;
-        overflow: visible;
+        overflow: hidden;
         visibility: hidden;
         pointer-events: none;
     }

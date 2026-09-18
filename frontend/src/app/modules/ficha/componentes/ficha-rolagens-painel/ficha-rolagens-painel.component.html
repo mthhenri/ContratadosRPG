@@ -17,7 +17,9 @@
             (click)="registro.alternarOculta()"
         >
             <app-icone [nome]="registro.oculta() ? 'olho-fechado' : 'olho'" />
-            <span>{{ registro.oculta() ? "Rolagens Ocultas (Privadas)" : "Rolagens Públicas" }}</span>
+            <span>{{
+                registro.oculta() ? "Rolagens Ocultas (Privadas)" : "Rolagens Públicas"
+            }}</span>
         </button>
     }
     <app-ficha-rolagens
@@ -34,6 +36,7 @@
         [podeRolar]="podeRolar()"
         [cor]="cor()"
         [rolagemOculta]="registro.oculta()"
+        [restringirMontadorATester]="restringirMontadorATester()"
         (rolagensMudou)="aoRolagensMudou($event)"
         (energiaGasta)="energiaGasta.emit($event)"
         (rolagemFeita)="registro.registrar($event)"

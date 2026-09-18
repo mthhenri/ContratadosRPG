@@ -33,13 +33,14 @@
 
 .ficha-pagina {
     width: 100%;
-    // Sem piso de `100dvh` (era `min-height: calc(100dvh - var(--altura-topbar))`): com
-    // `align-items: stretch` isso forçava toda a cadeia flex de dentro — `.ficha-visao`, o card de
-    // Status, cada `&__conteudo` de aba (`ficha-visualizacao.component.scss`) — a esticar até a
-    // altura da janela mesmo numa ficha nova/vazia (poucos atributos, sem sequela/trauma/lesão),
-    // sobrando fundo quadriculado abaixo do card sem nenhum conteúdo ali. Achado ao vivo pelo autor.
-    // A coluna de ações (`app-coluna-acoes`, `align-self: stretch`) some no bloco `@include
-    // bp.mobile` abaixo, então este ajuste só encolhe o desktop/tablet.
+    // Piso de `100dvh` de volta (era removido — ver `&__conteudo` abaixo pra saber por quê não
+    // reabre o vão que a remoção evitava). `app-coluna-acoes` (`align-self: stretch`, o próprio
+    // padrão do primitivo) é quem precisa dele: sem piso, a fileira só media pela altura do
+    // conteúdo, e numa ficha curta a coluna de ações — que visualmente é um trilho de navegação,
+    // não conteúdo — parava no meio da tela em vez de bater no rodapé (achado ao vivo pelo autor).
+    // Desaparece no `@include bp.mobile` abaixo, junto com o resto da fileira (a coluna de ações
+    // vira barra fixa de rodapé lá, fora do fluxo).
+    min-height: calc(100dvh - var(--altura-topbar));
     margin: 0;
     transition:
         width 0.26s cubic-bezier(0.22, 1, 0.36, 1),
@@ -82,6 +83,9 @@
         width: 100%;
         max-width: 100%;
         margin: 0;
+        // `app-coluna-acoes` já saiu da fileira aqui (vira barra fixa de rodapé) — o piso de `100dvh`
+        // do desktop/tablet não tem mais ninguém pra esticar até ele; zera pra não sobrar vão vazio.
+        min-height: 0;
         // Achado ao vivo (autor: "muito espaçamento ao redor" no mobile) — um `padding` aqui idêntico
         // ao de `.ficha-pagina__conteudo` (abaixo) somava as duas caixas e dobrava o respiro (12px+
         // 12px nas laterais, 85px+85px no rodapé). A `ui-34` introduziu `.ficha-pagina__conteudo`
@@ -236,6 +240,12 @@
 .ficha-pagina__conteudo {
     flex: 1 1 0;
     min-width: 0;
+    // Opta fora do `align-items: stretch` da fileira (`.ficha-pagina`) — o piso de `100dvh` é só
+    // pra `app-coluna-acoes` bater no rodapé (comentário lá); sem este `flex-start`, o próprio
+    // conteúdo esticaria pra bater no piso também, reabrindo o vão/fundo quadriculado que a
+    // remoção do piso original evitava (`FichaVisualizacao` sempre igual à altura do piso, mesmo
+    // com ficha curta). Cross-size vira `auto`: encolhe pro conteúdo real de novo.
+    align-self: flex-start;
     padding: 24px var(--space-20) var(--space-20);
 
     @include bp.mobile {

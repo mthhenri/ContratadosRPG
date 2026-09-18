@@ -126,6 +126,8 @@ export class FichaRolagens {
    * `false` pra ele, mas antes da m3-51 ele ainda conseguia rolar os presets existentes).
    */
   readonly podeRolar = input(false);
+  /** Repassado a `RolagemRapida` — ver `restringirMontadorATester` lá (padrão `false`: liberado). */
+  readonly restringirMontadorATester = input(false);
   /** Dano C. a C./Furtivo atuais — expandem os atalhos `corpo`/`furtivo` na rolagem avulsa. */
   readonly atalhosDano = input<{ readonly corpo?: string | null; readonly furtivo?: string | null }>({});
   /** Cor de identidade visual da ficha (m3-61) — repassada à bandeja de dados em cada rolagem. */

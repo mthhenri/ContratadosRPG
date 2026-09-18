@@ -1,5 +1,153 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Lote de 6 problemas de `PROBLEMS.md` fechado: P-068/P-021 (duplicar ficha), P-069 (guard `null`), P-019 (viewport vazando entre specs), P-020 (busca do catálogo) e P-022 (cor apagada PROF/NIV)
+
+Pedido direto do autor a partir da lista de `PROBLEMS.md` ("vamos resolver o P-068, P-069, P-019,
+P-020, P-022 e P-021"). Cada um investigado por causa raiz antes de corrigir (`systematic-debugging`),
+não só reproduzido e remendado.
+
+**P-068 e P-021 eram o mesmo teste** (`detalhe-mestre.page.spec.ts`, "abre a dialog de duplicar e
+chama FichaService.duplicarFicha ao confirmar", cartão de jogador — os dois relatos citam
+literalmente o mesmo texto de teste, achados em datas/tasks diferentes). Reproduz isolado. Causa:
+o seletor pegava o **primeiro** `.detalhe-mestre__ficha-menu-item` do menu "⋯", que hoje é "Abrir
+ficha completa" (o teste de "Abrir ficha completa" logo acima no arquivo confirma essa ordem) —
+"Duplicar ficha" é o segundo item; ficou desatualizado quando "Abrir ficha completa" passou a vir
+primeiro no menu. O teste irmão de criatura já filtra por `:nth-child(2)` corretamente. Corrigido
+buscando o item pelo texto ("Duplicar") em vez de por posição, robusto a reordenação futura do menu.
+
+**P-069**: os 4 guards `ficha().defesa !== undefined` (e esquiva/bloqueio/contraAtaque) em
+`espectador-ficha-card.component.html` não cobriam `null` — valor real que a SQL devolve pra coluna
+ausente do JSONB (`FichaResumoDto` tipa como `?: number`, mas o campo serializado pode chegar como
+`null`, não `undefined`). Mesmo defeito já corrigido em `CriaturaEsquadraoCard` (`!= null`), agora
+replicado aqui. **Achado no processo**: o padrão `!= null` que o projeto já usava pra esse caso
+violava `@angular-eslint/template/eqeqeq` (a regra não tem exceção pra `null`/`undefined` habilitada
+por padrão) — `criatura-esquadrao-card.component.html` já falhava nesse lint sem que ninguém tivesse
+notado. `eslint.config.mjs` ganhou `allowNullOrUndefined: true` nessa regra pros arquivos `.html`,
+formalizando o idioma em vez de deixar as duas ocorrências linting vermelho.
+
+**P-020**: `inventario-esquadrao.component.spec.ts` buscava "Energético Concentrado" e recebia 2
+cards em vez de 1. Causa raiz remontada até o commit `138d3576` ("alinhar descrições do catálogo"):
+a descrição do item "Energético" passou a citar o nome completo do item vizinho ("...Energético
+Concentrado compartilha este limite"), e o filtro (`itensCatalogo` em
+`inventario-esquadrao.component.ts`) buscava em `nome + descricao` concatenados — uma busca pelo
+nome exato de um item batia também na descrição de outro que só o *menciona*. Corrigido priorizando
+nome: busca por nome primeiro; só cai pra descrição quando nenhum item bate por nome (preserva a
+busca por efeito/texto livre pra termos como "energia" que não são nome de item nenhum).
+
+**P-022**: botões PROF/NIV do Montador de Rolagem (`montador-rolagem.component.html`) usavam
+`variante="primario" estilo="contorno"`, e a regra de severidade `:host(.botao--primario.botao--
+estilo-contorno)` em `botao.component.scss` sempre vencia a `.montador-rolagem__tile--extra { color:
+var(--text-dim) }` por especificidade — exatamente o mesmo defeito já corrigido nos 5 botões de
+"Tipo de dano" no mesmo componente. Aplicado o padrão já estabelecido (`ui-29d`): removidas as
+duas props do `app-botao`, e `&--extra` ganhou cor/fundo/borda próprios (`--text-dim`, borda neutra,
+hover clareando pra `--text`).
+
+**P-019**: `painel-flutuante.component.spec.ts` (teste "ao abrir, limita uma posição persistida que
+ficou fora do viewport") falhava só com a suíte completa. Causa: `caderno-flutuante.component.spec.ts`
+e `leitor-documentos.component.spec.ts` mudam `window.innerWidth`/`innerHeight` via
+`Object.defineProperty` em alguns testes (viewport mobile `360×800`) e dependem só do próprio
+`beforeEach` (que sempre volta pra `1920×1080`) pra resetar — não sobra ninguém resetando **depois**
+do último teste do arquivo, então o valor mutado vaza pro próximo arquivo que rodar na mesma worker.
+Corrigido com `afterAll` nos dois arquivos restaurando `window.innerWidth`/`innerHeight` ao valor
+capturado antes do primeiro teste — mesmo padrão de guardar/restaurar já usado em
+`rolagem-avulso.component.spec.ts`/`ficha-flutuante.component.spec.ts`, só que no nível do arquivo
+inteiro em vez de um teste.
+
+**Achado fora do escopo, não corrigido**: rodando a suíte completa do frontend pra validar o P-019,
+apareceu uma 7ª falha nova, sensível a ordem, sem relação com nenhum arquivo tocado nesta task —
+`ficha-visualizacao.component.spec.ts` › "mantém o montador aberto e visível ao navegar para outra
+aba" (`Cannot read properties of null (reading 'click')` em `.montador-rolagem__gatilho`, que não
+existe — o teste simula sessão ADMIN via `localStorage.setItem('contratados-rpg.sessao', ...)` pra
+liberar o gatilho restrito a tester/admin). Passa isolado, causa não investigada. Registrada como
+`PROBLEMS.md` `P-071` em vez de corrigida "de passagem".
+
+**Gates**: `npm run test --workspace=frontend` completo — 130 arquivos, 1829/1829 testes (a única
+falha pré-existente, P-071 acima, é alheia a esta task). `npx eslint` nos arquivos tocados: 0 erros
+(só avisos pré-existentes de aspas simples, fora do escopo). Verificação visual do ajuste de cor de
+PROF/NIV (P-022) **não executada** — mudança só de CSS/lint, aplicação real não foi levantada nesta
+task; fica pendente até rodar `verify` nos dois viewports obrigatórios.
+
+## 2026-09-18 — Vão fantasma no fim da ficha ao trocar para Informações/Inventário/Habilidades (`overflow: visible` no painel de Rolagens escondido)
+
+Retomada do relato do autor sobre "algo quebrando fora do contexto da aba" ao selecionar
+Informações/Inventário/Habilidades — duas hipóteses erradas antes de achar a causa real (registradas
+só pra não repetir): (1) o vão P-070 (Status esticando pra bater com Identidade+Atributos) — o
+autor confirmou que não era isso, o sintoma ficava **fora** da caixa da aba; (2) o Montador de
+rolagem ficando visível/clicável ao trocar de aba (`rolagem-rapida.component.html`,
+`[style.visibility]="oculto() ? 'visible' : null"`) — comportamento **proposital** (o autor quer
+que o Montador sobreviva à troca de aba), não o bug.
+
+Causa real, achada medindo `document.documentElement.scrollHeight` vs `window.innerHeight` com
+Playwright (réplica fiel dos dados da própria "Sentinela Matheus", criada via REST pra não tocar a
+conta real do autor): trocar para qualquer aba que não seja Rolagens sempre deixava um
+`scrollHeight` alguns pixels maior que a viewport — some com Rolagens ativa, reaparece ao sair.
+`document.querySelectorAll` + filtro por `getBoundingClientRect().bottom > innerHeight` apontou o
+culpado exato: `.ficha-rol__lista` → `<app-estado-vazio>` ("Nenhum preset de rolagem salvo."),
+ocupando a posição estática que teria se a aba Rolagens estivesse visível — como `FichaRolagensPainel`
+fica sempre montado (não é `@if`, só oculto via `[oculto]`) e o CSS de "esconder sem desmontar"
+(`.ficha-rol--oculto`/`.ficha-rolagens-painel--oculto`/`.rolagem-rapida--oculto`, mesma receita nos
+3 componentes: `position:absolute; width:0; height:0; overflow:visible; visibility:hidden;
+pointer-events:none`) usava `overflow: visible`, um filho em fluxo normal dentro dessa caixa 0×0
+continuava ocupando espaço geométrico (`visibility:hidden` só tira da pintura, não do layout) — se
+essa posição estática cai abaixo da viewport (comum: o conteúdo real de Rolagens é mais alto que a
+aba curta ativa), o `scrollHeight` da página inteira infla por esse tanto, mesmo sem nada visível
+ali. Com pouco conteúdo (ficha nova) dava ~7px, quase imperceptível; com uma ficha de anos de uso
+(mais presets/histórico) vira um vão grande o bastante pra aparecer scrollbar e, ao rolar até o
+fim, uma faixa vazia clara sob a barra lateral esquerda (`app-coluna-acoes`) — que não estica
+junto porque sua altura é da `.ficha-pagina` normal, não do `scrollHeight` inflado.
+
+Corrigido trocando `overflow: visible` → `overflow: hidden` nos 3 lugares com a mesma receita
+"esconde sem desmontar" (`ficha-rolagens.component.scss` `.ficha-rol--oculto`,
+`ficha-rolagens-painel.component.scss` `.ficha-rolagens-painel--oculto`,
+`rolagem-rapida.component.scss` `.rolagem-rapida--oculto`) — a caixa 0×0 agora também recorta os
+filhos, então a posição estática deles para de contar pro `scrollHeight` de qualquer ancestral.
+Validado ao vivo antes de editar (injeção de CSS via Playwright confirmando `scrollHeight` voltando
+a bater com `innerHeight`) e depois via fonte de verdade. Testado com uma ficha rica (18 habilidades
+reais do catálogo, 8 presets de Rolagens sintéticos) em todas as 6 abas de `1920×1080` — `scrollHeight`
+idêntico a `innerHeight` em todas — e em `360×800` (mobile, onde o sintoma não se aplicava por não
+haver colunas lado a lado, confirmado sem regressão). Aba Rolagens em si renderiza normalmente com
+a mudança (só afeta o modificador `--oculto`, nunca aplicado nela mesma). Gate: `tsc --noEmit`
+limpo, suíte completa de `frontend/src/app/modules/ficha` (34 arquivos, 943 testes) sem regressão,
+`prettier --check` limpo nos 3 arquivos tocados (só `.scss`, sem lint de JS/TS aplicável). Usuário e
+fichas de teste (via REST, dados copiados só de leitura do Postgres local) removidos ao final.
+
+**Follow-up no mesmo dia, pedido do autor:** ao investigar o Montador (item 2 acima), achado que
+`restringirMontadorATester` (`rolagem-rapida.component.ts`) só era ligado pela ficha de criatura —
+a ficha de jogador não passava o input e liberava o gatilho do Montador pra qualquer usuário
+`NORMAL`, não só `TESTER`/`ADMIN`. O autor confirmou que queria a mesma restrição também na ficha
+de jogador. Input `restringirMontadorATester` (repassa `[true]`) foi encadeado por toda a cadeia —
+`RolagemRapida` → `FichaRolagens` → `FichaRolagensPainel` — e ligado com `true` nos 4 consumidores
+reais de `FichaRolagensPainel`: `FichaVisualizacao`, `FichaCampanhaCard`,
+`CampanhaDetalhe`/`detalhe-jogador` e `previa-jogador` (esse último com `podeRolar=false`, gatilho
+nunca aparecia mesmo antes, mas ligado por consistência). Um teste de `FichaVisualizacao` quebrou
+("mantém o montador aberto e visível ao navegar para outra aba") por depender do gatilho existir
+sem sessão TESTER/ADMIN — corrigido plantando uma sessão `ADMIN` em `localStorage` só nesse teste
+(mesmo padrão de `sessao.service.spec.ts`), não globalmente no arquivo. Gate: `tsc --noEmit` limpo,
+suíte completa de `frontend/src/app/modules/ficha` + `frontend/src/app/modules/campanha` (47
+arquivos, 1106 testes) sem regressão, `prettier --check` limpo nos 13 arquivos tocados. Verificado
+ao vivo: gatilho do Montador ausente do DOM pra sessão `NORMAL` na ficha de jogador (antes
+aparecia), presente pra `ADMIN`/`TESTER`.
+
+**Segundo follow-up no mesmo dia, pedido do autor:** com o vazamento de `scrollHeight` corrigido
+(item acima), sobrou um efeito colateral visível — a coluna de ações (`app-coluna-acoes`, o trilho
+de ícones à esquerda) parava de bater no rodapé da tela em fichas curtas, deixando um vão vazio
+abaixo dela. Causa: `.ficha-pagina` (`visualizar.page.scss`/`visualizar-criatura.page.scss`) é
+`display:flex; align-items:stretch`, e a coluna de ações depende inteiramente disso pra alcançar
+altura de tela cheia (`coluna-acoes.component.scss`, `:host { align-self: stretch }`, sem `min-
+height` próprio) — o `min-height: calc(100dvh - var(--altura-topbar))` da fileira que garantia isso
+tinha sido removido mais cedo (item "Vãos em branco", 100dvh forçava toda a cadeia de dentro a
+esticar, sobrando fundo quadriculado). Corrigido trazendo o `min-height` de volta em `.ficha-pagina`
+(zerado no `@include bp.mobile`, onde a coluna vira barra fixa de rodapé, fora do fluxo) **e**
+dando `align-self: flex-start` a `.ficha-pagina__conteudo` — só a coluna de ações (`align-self:
+stretch`, herdado) responde ao piso agora; o conteúdo real da ficha continua encolhendo pro próprio
+tamanho, sem reabrir o vão quadriculado que a remoção evitava. Verificado ao vivo com
+`getBoundingClientRect` (Playwright, ficha curta, `1920×1080`): coluna de ações batendo em
+`bottom: 1080` (cheio), conteúdo parando em `bottom: 882` (tamanho real, não esticado),
+`scrollHeight` continua idêntico a `innerHeight` (sem o vazamento do item anterior). Sem regressão
+em `360×800`/`1366×768`/`960×1080`. Gate: `tsc --noEmit` limpo, suíte completa de
+`frontend/src/app/modules/ficha` (943 testes) sem regressão, `prettier --check` limpo nos 2
+arquivos tocados (só `.scss`).
+
 ## 2026-09-18 — Edição de Atributos da criatura passou a reusar a mesma caixa da leitura, como na ficha de jogador
 
 Pedido direto do autor: alinhar a edição de Atributos da criatura com o padrão já usado na ficha

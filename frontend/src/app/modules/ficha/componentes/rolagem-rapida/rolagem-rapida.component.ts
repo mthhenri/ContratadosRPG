@@ -51,9 +51,9 @@ export class RolagemRapida {
   /** Cor de identidade visual da ficha — repassada à bandeja de dados. */
   readonly cor = input<string | null>(null);
 
-  /** Restringe o gatilho do Montador de rolagem a usuário TESTER/ADMIN — pedido do autor pra
-   *  ficha de criatura/NPC (a barra ainda não é oficial nessas fichas); a ficha de jogador não
-   *  passa esse input e mantém o Montador liberado pra qualquer um que possa rolar. */
+  /** Restringe o gatilho do Montador de rolagem a usuário TESTER/ADMIN — pedido do autor. Todo
+   *  consumidor real (ficha de jogador, criatura/NPC) passa `true`; o padrão `false` só cobre quem
+   *  ainda não decidiu (ex.: um teste unitário que monta o componente isolado). */
   readonly restringirMontadorATester = input(false);
 
   /** Toda rolagem executada aqui — quem persiste o histórico. */
