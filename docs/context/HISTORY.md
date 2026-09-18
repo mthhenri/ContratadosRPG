@@ -1,5 +1,39 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Selo de custo de ação/tipo de habilidade da ficha de criatura sem contraste com `--cor-ficha` escura, e fecho do P-070
+
+**P-070 fechado.** O autor confirmou que o item está resolvido e pode sair de `PROBLEMS.md` — o
+sintoma originalmente descrito ali (vão em branco *interno* ao card de Status quando a aba tem
+pouco conteúdo) segue com o comportamento atual (nunca ganhou correção própria, permanecia
+`ACEITO`); o que motivava o item na prática era a leitura do autor de "algo quebrando" na troca de
+aba, e essa causa real (vão *externo*, `scrollHeight` > viewport pelo painel de Rolagens oculto com
+`overflow: visible`) já foi corrigida e narrada na entrada seguinte deste arquivo ("Vão fantasma no
+fim da ficha..."). Removido de `PROBLEMS.md` a pedido do autor nesta sessão.
+
+**Achado ao vivo pelo autor (screenshot):** nos selos de custo de ação (Ataques) e no chip de tipo
+(Habilidades) da ficha de criatura — introduzidos na task registrada logo abaixo, "polimento visual
+de Ataques/Habilidades/Anotações", também 2026-09-18 —, texto e borda usavam `var(--cor-ficha,
+var(--accent))` puro. `--cor-ficha` vem de um `<input type="color">` livre, sem piso de luminância;
+numa ficha com cor roxa escura, o selo saía quase ilegível sobre o fundo escuro do card
+(`--surface-2`) — texto, borda e preenchimento todos na mesma cor de baixa luminância.
+
+**Correção:** novo token em `_tokens.scss`, `--cor-ficha-legivel: color-mix(in srgb, var(--cor-
+ficha, var(--accent)) 55%, var(--text) 45%)` — mistura 45% em direção a `--text` (quase branco),
+garantindo um piso de legibilidade qualquer que seja o matiz escolhido, sem perder a identidade de
+cor da ficha. Aplicado em `color`/`border-color` das 6 variantes de selo/chip
+(`criatura-ataque-lista__marca--completa/padrao/movimento`,
+`criatura-habilidade-lista__chip--ativa/gatilho/passiva`); `background`/`box-shadow`
+(preenchimento sutil, não precisa do mesmo piso) continuam na cor crua.
+
+**Gates:** SCSS dos dois componentes compila sem erro (`sass --no-source-map`). Verificação visual
+ao vivo (`verify`) **não executada** — Docker/Postgres indisponíveis neste ambiente de execução
+(`docker: unknown command: docker desktop`, sem daemon rodando); confirmado apenas por uma réplica
+estática isolada da regra de cor (mesmos tokens/color-mix, fora do Angular) comparando antes/depois
+com uma cor roxa escura de exemplo — o "antes" reproduziu o defeito relatado (selo quase invisível),
+o "depois" ficou legível preservando o matiz. Isso não substitui rodar a aplicação real nos
+viewports obrigatórios; item de verificação visual completa fica pendente até haver ambiente com
+Postgres disponível.
+
 ## 2026-09-18 — Ficha de criatura: confirmação de remoção migrada pro `ConfirmacaoService` (ui-15) e polimento visual de Ataques/Habilidades/Anotações
 
 Dois pedidos do autor na mesma sessão, sobre a ficha de criatura: (1) "a confirmação da remoção

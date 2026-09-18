@@ -36,6 +36,13 @@
      quebra para fichas existentes. */
     --cor-ficha-dim: color-mix(in srgb, var(--cor-ficha, var(--accent)) 12%, transparent);
     --cor-ficha-border: color-mix(in srgb, var(--cor-ficha, var(--accent)) 40%, transparent);
+    /* `--cor-ficha` vem de um `<input type="color">` livre (sem piso de luminância) — um roxo/azul
+     escuro escolhido pelo autor da ficha vira texto/borda quase invisível sobre `--surface-2`
+     (selos de custo de ação/tipo de habilidade da ficha de criatura, achado ao vivo 2026-09-18).
+     Mistura 45% em direção a `--text` (quase branco) garante um piso de legibilidade qualquer que
+     seja o matiz escolhido, sem perder a identidade de cor da ficha. Só para TEXTO/BORDA que
+     precisam ser lidos sobre fundo escuro — dim/border acima (preenchimento) continuam na cor crua. */
+    --cor-ficha-legivel: color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, var(--text) 45%);
 
     /* --- Cores semânticas de domínio (mesma chroma/lightness, só varia o matiz) --- */
     /* Vida é vermelho FIXO da identidade — não acompanha a troca de `--accent` (que só
