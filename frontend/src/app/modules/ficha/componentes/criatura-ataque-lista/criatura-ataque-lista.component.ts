@@ -70,9 +70,9 @@ export class CriaturaAtaqueLista {
     return this.indiceEmEdicao() === indice;
   }
 
-  /** Classe do selo de custo de ação — Completa (cor da ficha brilhando), Padrão (cor da ficha
-   * sem brilho) e Movimento (cor da ficha em grayscale 50%), mesma escala de "compromisso" da
-   * ação usada no tipo de Habilidade (pedido do autor). */
+  /** Classe do selo de custo de ação — Movimento (cinza+glow), Padrão (cor do tema+glow),
+   * Completa (branco+glow) e Turno (branco+glow mais largo); Ação Livre fica sem glow. Mesma
+   * escala usada no chip de tipo de Habilidade (pedido do autor, 2026-09-18). */
   protected classeMarcaCusto(custo: CustoAcaoEnum): string {
     return `ataque-lista__marca ataque-lista__marca--${custo.toLowerCase()}`;
   }

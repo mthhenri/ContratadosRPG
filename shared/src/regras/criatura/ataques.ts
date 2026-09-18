@@ -8,9 +8,15 @@ import type { DanoReferenciaObterDto, DanoReferenciaTurnoObterDto } from './cria
  * direção, desde que preserve a distância entre colunas e nunca zere o fixo (regras
  * qualitativas, não verificáveis por este motor a partir de uma string de dano livre).
  *
- * A coluna "Turno" (dano total possível numa rodada inteira) não corresponde a um
- * `CustoAcaoEnum` — não é custo de uma ação isolada, é a soma de referência do turno completo
- * — por isso fica em `obterDanoReferenciaTurnoPorVd`, separada de `obterDanoReferenciaPorVd`.
+ * A coluna "Turno" é o dano total possível numa rodada inteira, não uma ação isolada — por isso
+ * também segue disponível separada em `obterDanoReferenciaTurnoPorVd`. A partir de 2026-09-18
+ * (pedido do autor) um ataque individual também pode declarar `custoAcao: TURNO` (uma ação que
+ * consome o turno inteiro da criatura, ex.: "arma que recarrega e dispara na mesma ação") — nesse
+ * caso `obterDanoReferenciaPorVd` aponta pra mesma coluna. `ACAO_LIVRE` não tem coluna de
+ * referência (ação sem custo relevante não carrega peso de dano no guia) — `obterDanoReferenciaPorVd`
+ * devolve `'—'` pra ela, o mesmo sentinela já usado pela UI quando o VD ainda não foi preenchido.
+ * O documento oficial ainda não formaliza `TURNO`/`ACAO_LIVRE` como custo de ataque — o autor
+ * pretende atualizá-lo depois.
  *
  * Mesma convenção de faixa do resto do módulo (limite superior inclusive na própria faixa) —
  * ver `atributos.ts`.
@@ -30,10 +36,12 @@ const FAIXAS_DANO_REFERENCIA: readonly {
   { vdMaximo: Infinity, movimento: '7D20+8', padrao: '8D20+42', completa: '10D20+90', turno: '10D20+168' },
 ];
 
-const CAMPO_POR_CUSTO_ACAO: Readonly<Record<CustoAcaoEnum, 'movimento' | 'padrao' | 'completa'>> = {
+const CAMPO_POR_CUSTO_ACAO: Readonly<Record<CustoAcaoEnum, 'movimento' | 'padrao' | 'completa' | 'turno' | null>> = {
+  [CustoAcaoEnum.ACAO_LIVRE]: null,
   [CustoAcaoEnum.MOVIMENTO]: 'movimento',
   [CustoAcaoEnum.PADRAO]: 'padrao',
   [CustoAcaoEnum.COMPLETA]: 'completa',
+  [CustoAcaoEnum.TURNO]: 'turno',
 };
 
 function obterFaixaDano(vd: number) {
@@ -41,7 +49,8 @@ function obterFaixaDano(vd: number) {
 }
 
 export function obterDanoReferenciaPorVd(dto: DanoReferenciaObterDto): string {
-  return obterFaixaDano(dto.vd)[CAMPO_POR_CUSTO_ACAO[dto.custoAcao]];
+  const campo = CAMPO_POR_CUSTO_ACAO[dto.custoAcao];
+  return campo ? obterFaixaDano(dto.vd)[campo] : '—';
 }
 
 /** Referência de dano total possível numa rodada completa (coluna "Turno" da tabela) — não é

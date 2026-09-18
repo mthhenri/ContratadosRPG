@@ -10,7 +10,22 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-18 · **Última decisão registrada:**
-> Continuação de `editor-markdown-campos-texto-livre`: `ul`/`ol`/`li` no `EditorMarkdown` não
+> `app-editor-markdown` compacto tinha `:host { flex: 1; }` herdado do modo página-cheia do
+> Caderno — dentro de um card `display:flex; flex-direction:column` sem altura fixa
+> (`habilidade-lista__item`), 2 instâncias compactas na mesma coluna (Descrição+Restrição)
+> dividiam o espaço ao meio em vez de crescer pro próprio conteúdo, sobrepondo texto (achado pelo
+> autor, print). Corrigido com `flex: none` no `:host(.editor-markdown--compacto)`. Selo de custo
+> de ação (Ataque)/tipo (Habilidade) trocou `--cor-ficha` por 3 tokens novos e fixos
+> (`--selo-cinza`/`--selo-tema`/`--selo-branco`, cada um com glow próprio) — Habilidade: Passiva
+> branco, Gatilho cinza, Ativa tema; Ataque: Movimento cinza, Padrão tema, Completa branco (pedido
+> do autor, não gostou do resultado anterior com `--cor-ficha`). `CustoAcaoEnum` ganhou
+> `ACAO_LIVRE`/`TURNO` (pedido do autor, documento oficial ainda não formaliza — ele atualiza
+> depois): `obterDanoReferenciaPorVd` aponta Turno pra mesma coluna "Turno" já existente na
+> tabela, Ação Livre devolve `'—'` (sem peso de dano no guia); cor proposta por mim (Ação Livre
+> sem glow, Turno = branco de Completa com glow mais largo). `npm run test --workspace=shared`
+> 49/49/759/759, `--workspace=frontend` 130/130/1840/1840; build/lint 0 erros novos. Detalhe em
+> `HISTORY.md`.
+> Antes: continuação de `editor-markdown-campos-texto-livre`: `ul`/`ol`/`li` no `EditorMarkdown` não
 > tinham nenhum marcador visual (mesma causa do blockquote/P-072 — o Milkdown usa `data-label` +
 > `::before`, não `list-style` nativo), corrigido com regras próprias em
 > `editor-markdown.component.scss`, verificado ao vivo (bullets/numeração/recuo aninhado corretos
@@ -413,7 +428,14 @@
 
 ## 1. Próxima Task
 
-**Polimento de `editor-markdown-campos-texto-livre` concluído (2026-09-18):** listas
+**Sobreposição no `EditorMarkdown` compacto + repaint dos selos de custo/tipo concluído
+(2026-09-18):** `flex: none` corrige a sobreposição de Descrição+Restrição no card de Habilidade
+de criatura; selo de custo de ação/tipo de habilidade trocou `--cor-ficha` por 3 tokens fixos
+(cinza/tema/branco, cada um com glow); `CustoAcaoEnum` ganhou `ACAO_LIVRE`/`TURNO`. Resumo
+completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. Task solta, sem
+spec — continuação direta da task abaixo.
+
+**Antes: polimento de `editor-markdown-campos-texto-livre` concluído (2026-09-18):** listas
 ordenada/desordenada sem marcador no `EditorMarkdown` (mesma causa do P-072/blockquote),
 descrição de Sequela/Trauma/Lesão virou `<textarea>` (sem Markdown) e ícone `olho-fechado` sem a
 `<line>` diagonal do "eye-off" original. Resumo completo no cabeçalho deste arquivo (acima) e

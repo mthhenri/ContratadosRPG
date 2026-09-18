@@ -247,8 +247,15 @@
 // Contexto de campo de formulário (Efeito adicional, Descrição/Restrição) — a página inteira do
 // Caderno já tinha padding generoso e o botão "voltar ao topo" pressupondo rolagem longa; aqui o
 // conteúdo típico é uma frase ou parágrafo curto, então isso só sobra em vão.
+// `flex: none`: o `:host` de base é `flex: 1` (pensado pra preencher a página inteira do
+// Caderno dentro do próprio flex column dele) — dentro de um card compacto (`habilidade-lista__item`,
+// `ataque-lista__item`, ambos `display:flex; flex-direction:column` sem altura fixa), herdar
+// `flex: 1 1 0%` faz 2 instâncias compactas na mesma coluna (ex.: Descrição + Restrição) dividirem
+// o espaço vertical disponível ao meio em vez de cada uma crescer pro próprio conteúdo — a 2ª
+// instância nasce menor que o texto que carrega e a sobreposição cobre o fim do texto da 1ª.
 :host(.editor-markdown--compacto) {
     min-height: 84px;
+    flex: none;
 }
 
 :host(.editor-markdown--compacto) .editor-markdown__barra {

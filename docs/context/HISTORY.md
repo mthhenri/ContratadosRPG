@@ -1,5 +1,57 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Sobreposição de texto no `EditorMarkdown` compacto, selo de custo/tipo em preto-e-branco-e-tema e `CustoAcaoEnum` ganha Ação Livre/Turno
+
+Autor reportou, com print, que Descrição e Restrição de Habilidade de criatura sobrepõem texto
+quando os dois campos aparecem juntos no mesmo card, e que não gostou da paleta do selo de
+custo de ação/tipo de habilidade (a que usa `--cor-ficha`, adicionada antes na mesma sessão de
+polimento de 2026-09-18). Pediu uma paleta nova, fixa, em tons de preto/branco/cor do tema — e,
+"sendo mais ambicioso", quis também `ACAO_LIVRE`/`TURNO` como custo de ação de Ataque, com a cor
+correspondente à minha escolha ("veja como seria a cor+glow deles").
+
+**Sobreposição (achado, corrigido).** `app-editor-markdown` tem `:host { flex: 1; }` — pensado pra
+preencher a página inteira do Caderno de Campanha dentro do próprio flex column dele. Dentro de um
+card compacto (`habilidade-lista__item`, `ataque-lista__item`, ambos `display:flex;
+flex-direction:column` sem altura fixa), herdar `flex: 1 1 0%` faz duas instâncias compactas na
+mesma coluna (Descrição + Restrição) dividirem o espaço vertical disponível ao meio em vez de cada
+uma crescer pro próprio conteúdo — a 2ª instância nascia menor que o texto que carregava e a
+sobreposição cobria o fim do texto da 1ª. Reproduzido ao vivo (seed REST com o texto exato do
+print) antes de tocar o código. Corrigido com `flex: none` na regra `:host(.editor-markdown--compacto)`
+— um campo compacto sempre foi pra ter altura de conteúdo, nunca pra disputar espaço com irmãos
+num flex column.
+
+**Selo de custo/tipo: nova paleta preto/cinza/tema, sem `--cor-ficha`.** O autor não gostou do
+resultado da escala anterior (branco/cinza/cor livre da ficha, achado+corrigido mais cedo no
+mesmo dia) — pediu uma escala fixa e específica: Habilidade Passiva em branco, De Gatilho em
+cinza, Ativa na cor do tema; Ataque Movimento em cinza, Padrão na cor do tema, Completa em
+branco — todos com glow (box-shadow), nenhum mais em grayscale/sem-brilho como antes. Três novos
+tokens em `_tokens.scss` (`--selo-cinza`/`--selo-tema`/`--selo-branco`, cada um com
+`-dim`/`-border`/`-glow`) substituem `--cor-ficha`/`--cor-ficha-legivel` nos dois lugares
+(`criatura-habilidade-lista__chip--*`, `criatura-ataque-lista__marca--*`) — `--cor-ficha` continua
+intocado nos ~15 outros consumidores (tema por-personagem no resto da ficha).
+
+**`CustoAcaoEnum` ganha `ACAO_LIVRE`/`TURNO`.** Pedido explícito do autor, ciente de que o
+documento oficial (`docs/core/guia_de_mestre-v4.0.0.md`) ainda não formaliza os dois como custo de
+uma ação isolada — ele mesmo disse que atualiza o documento depois. O guia já cita as duas ideias
+(texto de turno menciona "Ações Livres"; a tabela de dano de referência já tem uma coluna "Turno",
+hoje só exposta via `obterDanoReferenciaTurnoPorVd`, separada por não ser custo de uma ação
+isolada). Decisão tomada sem perguntar (a pedido explícito veio junto com "veja como ficaria"):
+`obterDanoReferenciaPorVd` passou a aceitar `TURNO` apontando pra mesma coluna "Turno" da tabela
+(reaproveita o número que já existe, nenhuma fórmula nova) e `ACAO_LIVRE` devolvendo `'—'` (ação
+sem peso de dano no guia — mesmo sentinela que a UI já usa quando o VD não foi preenchido).
+Cor proposta pro selo dos dois novos (o autor pediu pra ver): Ação Livre sem glow (só o contorno
+padrão, a mais barata, sem "peso" visual); Turno no mesmo branco de Completa com glow mais largo
+(continua lendo como "ainda mais" sem introduzir uma 4ª cor). `rotuloCustoAcao`: "Ação Livre" e
+"Ação de Turno". Nenhuma outra migração — os dois selects (`criatura-ataque-lista`,
+`criar-criatura.page`) derivam de `Object.values(CustoAcaoEnum)`, sem lista própria pra atualizar.
+
+Gates: `npm run test --workspace=shared` 49/49/759/759 (2 casos novos em `ataques.spec.ts`:
+Turno bate com a coluna Turno, Ação Livre devolve `'—'`); `npm run test --workspace=frontend`
+130/130/1840/1840; `ng build`/`eslint` nos arquivos tocados — 0 erros novos. Verificado ao vivo
+(seed REST, 2 viewports obrigatórios): sobreposição não reaparece com Descrição+Restrição juntas;
+os 3 tons de Habilidade e os 5 de Ataque (incluindo os 2 novos) legíveis e com o glow esperado, sem
+overflow no mobile.
+
 ## 2026-09-18 — Listas no `EditorMarkdown`, descrição de Sequela/Trauma/Lesão em textarea e ícone `olho-fechado` sem risco
 
 Continuação da sessão de `editor-markdown-campos-texto-livre` (entrada abaixo): autor pediu pra

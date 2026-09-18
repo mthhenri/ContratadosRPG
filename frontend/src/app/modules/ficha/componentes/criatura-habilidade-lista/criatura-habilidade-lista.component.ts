@@ -59,9 +59,9 @@ export class CriaturaHabilidadeLista {
     return this.indiceEmEdicao() === indice;
   }
 
-  /** Classe do chip de tipo — Ativa (cor da ficha brilhando), Gatilho (cor da ficha sem brilho) e
-   * Passiva (cor da ficha em grayscale 50%), mesma escala usada no selo de custo de ação de
-   * `criatura-ataque-lista` (pedido do autor). */
+  /** Classe do chip de tipo — Passiva (branco+glow), Gatilho (cinza+glow) e Ativa (cor do
+   * tema+glow), mesma escala usada no selo de custo de ação de `criatura-ataque-lista` (pedido
+   * do autor, 2026-09-18). */
   protected classeChipTipo(tipo: HabilidadeTipoCriaturaEnum): string {
     return `habilidade-lista__chip habilidade-lista__chip--${tipo.toLowerCase()}`;
   }

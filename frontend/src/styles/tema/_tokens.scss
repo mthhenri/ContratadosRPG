@@ -66,6 +66,26 @@
     --contrast-dim: color-mix(in srgb, var(--contrast) 12%, transparent);
     --contrast-border: color-mix(in srgb, var(--contrast) 40%, transparent);
 
+    /* --- Selo de "compromisso" (custo de ação de Ataque, tipo de Habilidade — ficha de
+     criatura) — três tons neutros da própria identidade do tema, cada um com glow (box-shadow)
+     próprio. Substitui a dependência de `--cor-ficha` que os dois selos usavam antes (2026-09-18,
+     pedido do autor: o resultado com a cor livre da ficha não ficava bom, preferiu preto/branco/
+     cor do tema fixos). Escala de "peso" visual, do mais discreto ao mais chamativo:
+     cinza → tema → branco. `--selo-cinza` usa `--text-dim` (mesmo cinza-texto do resto do
+     tema, não um cinza novo) só pra ganhar variantes dim/border/glow como as demais. */
+    --selo-cinza: var(--text-dim);
+    --selo-cinza-dim: color-mix(in srgb, var(--selo-cinza) 14%, transparent);
+    --selo-cinza-border: color-mix(in srgb, var(--selo-cinza) 45%, transparent);
+    --selo-cinza-glow: color-mix(in srgb, var(--selo-cinza) 45%, transparent);
+    --selo-tema: var(--accent);
+    --selo-tema-dim: color-mix(in srgb, var(--selo-tema) 14%, transparent);
+    --selo-tema-border: color-mix(in srgb, var(--selo-tema) 45%, transparent);
+    --selo-tema-glow: color-mix(in srgb, var(--selo-tema) 55%, transparent);
+    --selo-branco: var(--contrast);
+    --selo-branco-dim: color-mix(in srgb, var(--selo-branco) 14%, transparent);
+    --selo-branco-border: color-mix(in srgb, var(--selo-branco) 45%, transparent);
+    --selo-branco-glow: color-mix(in srgb, var(--selo-branco) 60%, transparent);
+
     /* --- Cores por tipo de dano — só o "quadradinho" de resumo por tipo num resultado de
      rolagem (`resultado-rolagem__grupo`), NUNCA a rolagem inteira. Independentes de --vida/--energy/
      --positive/--warning (mesmo quando o matiz é próximo) porque o domínio é outro: tipo de dano

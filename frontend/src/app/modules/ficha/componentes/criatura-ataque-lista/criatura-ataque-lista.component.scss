@@ -117,30 +117,39 @@
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-compact);
     }
-    // Selo de custo de ação (pedido do autor) — mesma progressão de "compromisso" da cor da ficha
-    // usada no chip de tipo de Habilidade (`criatura-habilidade-lista`): Completa brilha (a ação
-    // mais cara), Padrão fica só na cor sem brilho, Movimento sai em grayscale 50% (a mais barata).
-    // `--cor-ficha` é herdada do `[style.--cor-ficha]` no `<article class="criatura">` raiz
-    // (`CriaturaVisualizacao`) — custom property atravessa o encapsulamento de estilo do Angular.
-    // Texto/borda usam `--cor-ficha-legivel` (piso de legibilidade sobre fundo escuro, ver
-    // `_tokens.scss`) — uma ficha com cor roxa/azul escura ficava com selo quase invisível
-    // (achado ao vivo 2026-09-18). O preenchimento (`background`/`box-shadow`) continua na cor crua.
-    &__marca--completa {
-        color: var(--cor-ficha-legivel);
-        border-color: var(--cor-ficha-legivel);
-        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
-        box-shadow: 0 0 8px color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, transparent);
-    }
-    &__marca--padrao {
-        color: var(--cor-ficha-legivel);
-        border-color: var(--cor-ficha-legivel);
-        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+    // Selo de custo de ação (pedido do autor, 2026-09-18 — substitui a escala anterior baseada
+    // em `--cor-ficha`, que ficava ilegível/sem graça em fichas de cor livre escura). Progressão
+    // de "peso" pelos tokens `--selo-*` de `_tokens.scss` (cada um já com o próprio glow):
+    // Movimento em cinza, Padrão na cor do tema, Completa em branco. Turno (ação que consome o
+    // turno inteiro, a mais cara de todas — `CustoAcaoEnum`, 2026-09-18) usa o mesmo branco de
+    // Completa com um glow mais largo, pra continuar lendo como "ainda mais" sem introduzir uma
+    // 4ª cor. Ação Livre (a mais barata) fica sem glow — só o contorno padrão de `&__marca`.
+    &__marca--acao_livre {
+        color: var(--text-mute);
     }
     &__marca--movimento {
-        color: var(--cor-ficha-legivel);
-        border-color: var(--cor-ficha-legivel);
-        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
-        filter: grayscale(50%);
+        color: var(--selo-cinza);
+        border-color: var(--selo-cinza-border);
+        background: var(--selo-cinza-dim);
+        box-shadow: 0 0 8px var(--selo-cinza-glow);
+    }
+    &__marca--padrao {
+        color: var(--selo-tema);
+        border-color: var(--selo-tema-border);
+        background: var(--selo-tema-dim);
+        box-shadow: 0 0 8px var(--selo-tema-glow);
+    }
+    &__marca--completa {
+        color: var(--selo-branco);
+        border-color: var(--selo-branco-border);
+        background: var(--selo-branco-dim);
+        box-shadow: 0 0 8px var(--selo-branco-glow);
+    }
+    &__marca--turno {
+        color: var(--selo-branco);
+        border-color: var(--selo-branco-border);
+        background: var(--selo-branco-dim);
+        box-shadow: 0 0 14px var(--selo-branco-glow);
     }
     &__efeito {
         margin: 0;

@@ -101,30 +101,27 @@
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-compact);
     }
-    // Cor por tipo (pedido do autor) — mesma escala de "compromisso" da cor da ficha usada no selo
-    // de custo de ação de `criatura-ataque-lista`: Ativa brilha (a habilidade mais deliberada),
-    // Gatilho fica só na cor sem brilho, Passiva sai em grayscale 50% (sempre ligada, sem custo).
-    // `--cor-ficha` é herdada do `[style.--cor-ficha]` no `<article class="criatura">` raiz
-    // (`CriaturaVisualizacao`) — custom property atravessa o encapsulamento de estilo do Angular.
-    // Texto/borda usam `--cor-ficha-legivel` (piso de legibilidade sobre fundo escuro, ver
-    // `_tokens.scss`) — uma ficha com cor roxa/azul escura ficava com chip quase invisível
-    // (achado ao vivo 2026-09-18). O preenchimento (`background`/`box-shadow`) continua na cor crua.
-    &__chip--ativa {
-        color: var(--cor-ficha-legivel);
-        border-color: var(--cor-ficha-legivel);
-        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
-        box-shadow: 0 0 8px color-mix(in srgb, var(--cor-ficha, var(--accent)) 55%, transparent);
+    // Cor por tipo (pedido do autor, 2026-09-18 — substitui a escala anterior baseada em
+    // `--cor-ficha`, que ficava ilegível/sem graça em fichas de cor livre escura): Passiva em
+    // branco, De Gatilho em cinza, Ativa na cor do tema — os três tokens `--selo-*` de
+    // `_tokens.scss`, cada um já com o próprio glow (box-shadow).
+    &__chip--passiva {
+        color: var(--selo-branco);
+        border-color: var(--selo-branco-border);
+        background: var(--selo-branco-dim);
+        box-shadow: 0 0 8px var(--selo-branco-glow);
     }
     &__chip--gatilho {
-        color: var(--cor-ficha-legivel);
-        border-color: var(--cor-ficha-legivel);
-        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
+        color: var(--selo-cinza);
+        border-color: var(--selo-cinza-border);
+        background: var(--selo-cinza-dim);
+        box-shadow: 0 0 8px var(--selo-cinza-glow);
     }
-    &__chip--passiva {
-        color: var(--cor-ficha-legivel);
-        border-color: var(--cor-ficha-legivel);
-        background: color-mix(in srgb, var(--cor-ficha, var(--accent)) 16%, transparent);
-        filter: grayscale(50%);
+    &__chip--ativa {
+        color: var(--selo-tema);
+        border-color: var(--selo-tema-border);
+        background: var(--selo-tema-dim);
+        box-shadow: 0 0 8px var(--selo-tema-glow);
     }
     &__descricao {
         margin: 0;
