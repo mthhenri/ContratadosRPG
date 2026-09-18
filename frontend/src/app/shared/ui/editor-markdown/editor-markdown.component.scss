@@ -150,6 +150,33 @@
     color: var(--accent);
 }
 
+// Listas (ordenada/desordenada, P-072-like: sem isto, `ul`/`ol`/`li` renderizam sem nenhuma
+// marca visual — o plugin de lista do Milkdown não usa marcador nativo do navegador, e sim um
+// `data-label` (`•`/`1.`/`2.`...) no próprio `<li>`, que precisa de `::before` pra aparecer.
+:host ::ng-deep .milkdown .editor :is(ul, ol) {
+    margin: 0.4em 0 0.9em;
+    padding-left: 1.5em;
+}
+
+:host ::ng-deep .milkdown .editor li {
+    position: relative;
+    margin: 0.15em 0;
+    list-style: none;
+
+    > p {
+        margin: 0;
+        display: inline;
+    }
+
+    &::before {
+        position: absolute;
+        left: -1.4em;
+        color: var(--text-mute);
+        font-family: var(--font-mono);
+        content: attr(data-label);
+    }
+}
+
 :host ::ng-deep .milkdown .editor table {
     display: block;
     width: max-content;

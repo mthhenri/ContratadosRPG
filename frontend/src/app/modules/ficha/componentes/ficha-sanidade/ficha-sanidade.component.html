@@ -353,13 +353,13 @@
             aria-label="Nome da sequela"
             required
         />
-        <input
-            class="sanidade__campo"
-            type="text"
+        <textarea
+            class="sanidade__campo sanidade__campo--area"
+            rows="2"
             formControlName="descricao"
             placeholder="Descrição (opcional)"
             aria-label="Descrição da sequela"
-        />
+        ></textarea>
         <div class="sanidade__form-acoes">
             <button
                 app-botao
@@ -386,13 +386,13 @@
             aria-label="Nome do trauma"
             required
         />
-        <input
-            class="sanidade__campo"
-            type="text"
+        <textarea
+            class="sanidade__campo sanidade__campo--area"
+            rows="2"
             formControlName="descricao"
             placeholder="Descrição (opcional)"
             aria-label="Descrição do trauma"
-        />
+        ></textarea>
         <label class="sanidade__checkbox">
             <input type="checkbox" formControlName="tratado" />
             <span>Tratado</span>
@@ -459,13 +459,13 @@
                 <span>Permanente</span>
             </label>
         </div>
-        <input
-            class="sanidade__campo"
-            type="text"
+        <textarea
+            class="sanidade__campo sanidade__campo--area"
+            rows="2"
             formControlName="descricao"
             placeholder="Descrição (opcional)"
             aria-label="Descrição da lesão"
-        />
+        ></textarea>
         <div class="sanidade__form-acoes">
             <button app-botao class="sanidade__salvar" type="submit">Salvar</button>
             <button app-botao class="sanidade__cancelar" type="button" (click)="cancelar()">

@@ -1,5 +1,53 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Listas no `EditorMarkdown`, descrição de Sequela/Trauma/Lesão em textarea e ícone `olho-fechado` sem risco
+
+Continuação da sessão de `editor-markdown-campos-texto-livre` (entrada abaixo): autor pediu pra
+puxar a atualização de `master` (merge trazendo o fecho do P-070 e o token
+`--cor-ficha-legivel`, ambos sem conflito de código — só `HISTORY.md`/`PROBLEMS.md` divergiram,
+resolvidos mantendo as duas entradas/o P-072 e descartando o P-070 já fechado por lá) e revisar
+como as listas ordenada/desordenada ficam nos 6 campos que passaram a usar
+`app-editor-markdown`. Mais duas observações soltas do autor, corrigidas na mesma tarefa.
+
+**Listas sem marcador (achado, corrigido).** Igual ao P-072 (blockquote): `ul`/`ol`/`li` não
+tinham nenhuma regra em `editor-markdown.component.scss`. Inspecionado o DOM renderizado —
+o plugin de lista do Milkdown não usa `list-style` nativo, e sim um atributo `data-label`
+(`•`/`1.`/`2.`...) no próprio `<li>`, que só aparece com um `::before { content: attr(data-label) }`
+próprio. Sem isso, um `- item`/`1. item` no Markdown virava uma sequência de parágrafos soltos,
+indistinguível de texto corrido — inclusive a lista aninhada, sem nenhum recuo. Adicionadas regras
+pra `:is(ul, ol)` (margem/`padding-left`) e `li::before` (mesma técnica de `h1`/`h2`/blockquote:
+`var(--text-mute)`/`var(--font-mono)`), verificado ao vivo (REST seed em `historia`/`descricao`
+de habilidade) nos 2 viewports obrigatórios e nos 3 contextos (página cheia, painel flutuante,
+peek compacto de Habilidade) — bullets, numeração e recuo do subitem aninhado corretos, sem
+overflow, sem a "2ª caixa" do achado anterior reaparecer.
+
+**Descrição de Sequela/Trauma/Lesão: `<input type="text">` → `<textarea>` (sem Markdown).** Pedido
+explícito do autor pra **não** usar `app-editor-markdown` aqui — só virar multi-linha. Os 3 campos
+(`ficha-sanidade.component.html`) trocaram para `<textarea rows="2" class="sanidade__campo
+sanidade__campo--area">`; novo modificador `&--area` (`resize: vertical; min-height: 52px`) no
+mesmo padrão de `ficha-inv__entrada--area` (`ficha-inventario.component.scss`). Sem migração —
+`descricao` já era `string` simples nos 3 DTOs (`FichaSequelaDto`/`FichaTraumaDto`/`FichaLesaoDto`).
+Testes existentes (`ficha-sanidade.component.spec.ts`) seguem verdes sem alteração — operam sobre
+o `FormGroup`, não sobre a tag do elemento.
+
+**Ícone `olho-fechado` sem risco.** Achado pelo autor no botão "Custos" do inventário (`app-icone
+[nome]="mostrarCustos() ? 'olho' : 'olho-fechado'"`, `ficha-inventario.component.html`) — o path
+de `olho-fechado` em `icone.component.html` é a curva de "olho semicerrado" do ícone Feather
+`eye-off`, mas **sem** a `<line>` diagonal que o ícone original tem: o SVG nunca teve o traço, não
+é um problema de cor/CSS. Renderizado isolado (Playwright, fora do Angular) confirmou: sem a linha,
+o ícone parece só um olho sonolento, não um "olho riscado". Adicionada `<line x1="1" y1="1" x2="23"
+y2="23" />` em `olho-fechado`; em `olho-fechado-rolagens` (mesmo path + selo de dado no canto
+inferior direito), a linha foi truncada (`x2="14.5" y2="14.5"`) pra não cortar o selo, na mesma
+lógica já registrada no comentário do losango do `olho-rolagens` (canto vazio por construção).
+Confirmado ao vivo no botão Custos (os dois estados, olho aberto/fechado) e no ícone de "Exibir/
+ocultar ficha" da barra lateral da própria tela de edição.
+
+Gates: `npm run test --workspace=frontend` completo — 130/130 arquivos, 1840/1840 (sem `P-071`
+nesta rodada); `npx eslint` nos 3 arquivos tocados — 0 erros (só os warnings de aspas
+pré-existentes); `ng build` — 0 erros novos (mesmo warning de budget do `P-004`). Verificação
+visual ao vivo nos 2 viewports obrigatórios (`1920×1080`/`360×800`) cobriu os 3 achados acima;
+não houve mudança de UI fora do que está descrito.
+
 ## 2026-09-18 — Edição em Markdown: história/anotações (jogador e criatura), efeito adicional de Ataque, descrição/restrição de Habilidade
 
 Pedido exploratório do autor em conversa: aplicar o mesmo editor de Markdown que o Caderno de

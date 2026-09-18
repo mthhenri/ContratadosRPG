@@ -379,6 +379,11 @@
             outline: none;
             border-color: var(--accent);
         }
+
+        &--area {
+            resize: vertical;
+            min-height: 52px;
+        }
     }
 
     &__stepper {

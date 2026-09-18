@@ -10,7 +10,18 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-18 · **Última decisão registrada:**
-> `editor-markdown-campos-texto-livre` concluída — história/anotações da ficha de jogador,
+> Continuação de `editor-markdown-campos-texto-livre`: `ul`/`ol`/`li` no `EditorMarkdown` não
+> tinham nenhum marcador visual (mesma causa do blockquote/P-072 — o Milkdown usa `data-label` +
+> `::before`, não `list-style` nativo), corrigido com regras próprias em
+> `editor-markdown.component.scss`, verificado ao vivo (bullets/numeração/recuo aninhado corretos
+> nos 2 viewports e nos 3 contextos: página cheia, painel flutuante, peek compacto). Descrição de
+> Sequela/Trauma/Lesão (`ficha-sanidade.component.html`) virou `<textarea>` (a pedido explícito do
+> autor, **sem** Markdown — só multi-linha). Ícone `olho-fechado` (`icone.component.html`) não
+> tinha a `<line>` diagonal do "eye-off" original — parecia um olho semicerrado, não riscado —,
+> corrigido em `olho-fechado`/`olho-fechado-rolagens` (truncada nesta última pra não cortar o selo
+> de dado). `npm run test --workspace=frontend` 130/130/1840/1840; build/lint 0 erros novos.
+> Detalhe em `HISTORY.md`.
+> Antes: `editor-markdown-campos-texto-livre` concluída — história/anotações da ficha de jogador,
 > anotações/efeito adicional de Ataque/descrição+restrição de Habilidade da ficha de criatura e
 > descrição de Habilidade de jogador agora usam o mesmo editor Markdown do Caderno de Campanha
 > (`EditorMarkdown`, Milkdown), promovido de `modules/pagina-caderno/` para
@@ -402,7 +413,13 @@
 
 ## 1. Próxima Task
 
-**`editor-markdown-campos-texto-livre` concluída (2026-09-18):** história/anotações do jogador,
+**Polimento de `editor-markdown-campos-texto-livre` concluído (2026-09-18):** listas
+ordenada/desordenada sem marcador no `EditorMarkdown` (mesma causa do P-072/blockquote),
+descrição de Sequela/Trauma/Lesão virou `<textarea>` (sem Markdown) e ícone `olho-fechado` sem a
+`<line>` diagonal do "eye-off" original. Resumo completo no cabeçalho deste arquivo (acima) e
+relato integral em `HISTORY.md`. Task solta, sem spec — continuação direta da task abaixo.
+
+**Antes: `editor-markdown-campos-texto-livre` concluída (2026-09-18):** história/anotações do jogador,
 anotações/efeito adicional/descrição+restrição da criatura e descrição de habilidade do jogador
 ganharam o editor Markdown do Caderno (`EditorMarkdown`, promovido para `shared/ui/`). Resumo
 completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. Spec em
