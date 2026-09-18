@@ -266,20 +266,56 @@ describe('CriaturaVisualizacao', () => {
     });
   });
 
-  it('a grade de Atributos só vira lista editável depois do lápis do cabeçalho', () => {
+  it('o focusout do campo numérico não bloqueia o clique em "Indeterminado" ao lado', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['editar']('deslocamento.terrestre');
+    fixture.detectChanges();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    const entrada = raiz.querySelector<HTMLInputElement>(
+      'input[aria-label="Deslocamento Terrestre"]',
+    )!;
+    const caixa = raiz.querySelector<HTMLInputElement>(
+      '.criatura__tag .criatura__deslocamento-indeterminado input[type="checkbox"]',
+    )!;
+
+    // Reproduz o clique real: o navegador move o foco pra caixa antes do "change" disparar, o que
+    // dispara "blur" e "focusout" no campo numérico (nessa ordem) com relatedTarget = caixa.
+    entrada.dispatchEvent(new FocusEvent('blur', { relatedTarget: caixa }));
+    entrada.dispatchEvent(new FocusEvent('focusout', { relatedTarget: caixa }));
+    fixture.detectChanges();
+
+    // Se a edição fosse cancelada aqui, o `@if` de app-valor-editavel destruiria a caixa antes
+    // do "change" completar e o clique não registraria nada.
+    expect(fixture.componentInstance['editando']('deslocamento.terrestre')).toBe(true);
+
+    caixa.checked = true;
+    caixa.dispatchEvent(new Event('change'));
+
+    expect(eventos['deslocamentoMudou'].at(-1)).toEqual({
+      terrestre: DeslocamentoValorEspecialEnum.INDETERMINADO,
+    });
+  });
+
+  it('a edição de Atributos reusa a mesma caixa da leitura, só com o modificador --edicao', () => {
     const { fixture } = montar();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
-    expect(raiz.querySelector('.criatura__atributo-linha')).toBeNull();
+    expect(raiz.querySelector('.criatura__atributo-card--edicao')).toBeNull();
 
     fixture.componentInstance['editarAtributos']();
     fixture.detectChanges();
-    expect(raiz.querySelectorAll('.criatura__atributo-linha').length).toBe(10);
-    expect(raiz.querySelector('.criatura__atributo-card')).toBeNull();
+    // A caixa continua sendo `.criatura__atributo-card` (não vira uma lista à parte) — só ganha o
+    // modificador `--edicao`, mesmo padrão de `.ficha-atributo`/`.ficha-atributo--edicao` na ficha
+    // de jogador.
+    expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
+    expect(raiz.querySelectorAll('.criatura__atributo-card--edicao').length).toBe(10);
+    expect(raiz.querySelector('app-step-input')).not.toBeNull();
 
     fixture.componentInstance['cancelarAtributos']();
     fixture.detectChanges();
     expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
+    expect(raiz.querySelector('.criatura__atributo-card--edicao')).toBeNull();
   });
 
   it('a edição de Atributos é rascunho: Cancelar descarta e Salvar emite os dois mapas de uma vez', () => {

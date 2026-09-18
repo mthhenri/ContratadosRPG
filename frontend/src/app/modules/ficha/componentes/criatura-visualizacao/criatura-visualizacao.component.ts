@@ -598,6 +598,22 @@ export class CriaturaVisualizacao {
     this.confirmarDeslocamento({ ...this.dados().deslocamento, [campo]: valor });
   }
 
+  /** `focusout` do campo numérico de Deslocamento — ignora quando o foco vai para a caixa
+   * "Indeterminado" ao lado, senão `cancelarEdicao()` destrói a caixa (projetada via `@if` em
+   * app-valor-editavel) antes do clique completar e o `change` dela nunca dispara. */
+  protected confirmarSaidaCampoDeslocamento<K extends keyof FichaCriaturaDeslocamentoDto>(
+    evento: FocusEvent,
+    campo: K,
+    valor: FichaCriaturaDeslocamentoDto[K],
+    caixaIndeterminado: HTMLInputElement,
+  ): void {
+    if (evento.relatedTarget === caixaIndeterminado) {
+      return;
+    }
+    this.confirmarCampoDeslocamento(campo, valor);
+    this.cancelarEdicao();
+  }
+
   /** Sentinela exposto ao template — Angular não referencia membros de enum importado direto. */
   protected readonly deslocamentoIndeterminado = DeslocamentoValorEspecialEnum.INDETERMINADO;
 

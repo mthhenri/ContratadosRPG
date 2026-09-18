@@ -649,26 +649,36 @@
                     <span class="criatura__atributos-grupo">{{ grupo.rotulo }}</span>
 
                     @if (atributosEmEdicao()) {
-                        <div class="criatura__atributos-lista">
-                            @for (campo of grupo.campos; track campo.chave) {
-                                <div class="criatura__atributo-linha">
-                                    <div class="criatura__atributo-linha-topo">
-                                        <span class="criatura__atributo-linha-nome">{{
-                                            campo.nome
-                                        }}</span>
-                                        <div class="criatura__atributo-linha-stepper">
-                                            <app-step-input
-                                                [valorExterno]="atributoRascunho(campo.chave)"
-                                                [min]="0"
-                                                [digitavel]="false"
-                                                tamanho="mini"
-                                                [ariaRotulo]="campo.nome"
-                                                (valorAlterado)="
-                                                    definirAtributoRascunho(campo.chave, $event)
-                                                "
-                                            />
-                                        </div>
-                                    </div>
+                        <!-- Reusa a mesma caixa da leitura (`.criatura__atributo-card`, mesmo racional de
+                 `.ficha-atributo`/`.ficha-atributo--edicao` na ficha de jogador) — o valor e o
+                 chip de Modificador viram stepper e seletor de 4 níveis, mas a caixa e a grade
+                 continuam as mesmas, só com `--edicao` ajustando o que muda. A grade vai a 3
+                 colunas quando cabe (pedido do autor) e cai pra 2 em containers estreitos — nunca
+                 as 5 da leitura em telas largas: o seletor de Modificador precisa de mais largura
+                 por caixa que o chip de texto da leitura. -->
+                        <div class="criatura__atributos-grade criatura__atributos-grade--edicao">
+                            @for (campo of grupo.campos; track campo.chave; let ultimo = $last) {
+                                <div
+                                    class="criatura__atributo-card criatura__atributo-card--edicao"
+                                    [class.criatura__atributo-card--sozinho]="ultimo"
+                                >
+                                    <span
+                                        class="criatura__atributo-abrev"
+                                        tabindex="0"
+                                        [appTooltip]="campo.nome"
+                                        [attr.aria-label]="campo.nome"
+                                        >{{ campo.abrev }}</span
+                                    >
+                                    <app-step-input
+                                        [valorExterno]="atributoRascunho(campo.chave)"
+                                        [min]="0"
+                                        [digitavel]="false"
+                                        tamanho="mini"
+                                        [ariaRotulo]="campo.nome"
+                                        (valorAlterado)="
+                                            definirAtributoRascunho(campo.chave, $event)
+                                        "
+                                    />
                                     <div
                                         class="criatura__atributo-modificadores"
                                         role="radiogroup"
@@ -959,12 +969,13 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'terrestre',
-                                                        entradaDeslTerrestre.valueAsNumber
-                                                    );
-                                                    cancelarEdicao()
+                                                        entradaDeslTerrestre.valueAsNumber,
+                                                        caixaDeslTerrestre
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">
@@ -1034,12 +1045,14 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'voador',
-                                                        entradaDeslVoador.valueAsNumber || undefined
-                                                    );
-                                                    cancelarEdicao()
+                                                        entradaDeslVoador.valueAsNumber ||
+                                                            undefined,
+                                                        caixaDeslVoador
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">
@@ -1112,13 +1125,14 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'aquatico',
                                                         entradaDeslAquatico.valueAsNumber ||
-                                                            undefined
-                                                    );
-                                                    cancelarEdicao()
+                                                            undefined,
+                                                        caixaDeslAquatico
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">
@@ -1193,13 +1207,14 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'sobrenatural',
                                                         entradaDeslSobrenatural.valueAsNumber ||
-                                                            undefined
-                                                    );
-                                                    cancelarEdicao()
+                                                            undefined,
+                                                        caixaDeslSobrenatural
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">

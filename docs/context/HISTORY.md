@@ -1,5 +1,81 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Edição de Atributos da criatura passou a reusar a mesma caixa da leitura, como na ficha de jogador
+
+Pedido direto do autor: alinhar a edição de Atributos da criatura com o padrão já usado na ficha
+de jogador. Comparando os dois (`FichaVisualizacao`/`CriaturaVisualizacao`), a lógica de edição em
+grupo (lápis → rascunho → Salvar/Cancelar, com aviso de violação de cota) já era a mesma dos dois
+lados — a divergência real era só visual: a ficha de jogador reusa a mesma caixa da leitura
+(`.ficha-atributo`, só com o modificador `--edicao` trocando texto estático por steppers), enquanto
+a criatura trocava para uma lista vertical inteiramente diferente (`.criatura__atributos-lista`/
+`.criatura__atributo-linha`) ao entrar em edição. Confirmado com o autor (`AskUserQuestion`) que o
+ponto a alinhar era exatamente esse — reaproveitar a mesma grade/caixa.
+
+Corrigido em `criatura-visualizacao.component.html`/`.scss`: a edição agora usa a mesma
+`.criatura__atributos-grade` e `.criatura__atributo-card` da leitura, com dois modificadores
+`--edicao`. Divergência deliberada do padrão do jogador: a grade de edição nunca acompanha as 5
+colunas da leitura em telas largas (`@container` acima), porque o seletor de Modificador da
+criatura (4 barrinhas Forte/Médio/Fraco/Frágil, mesmo widget do assistente de criação) precisa de
+mais largura por caixa do que os steppers finos do jogador — com 5 colunas as barrinhas ficariam
+espremidas demais para tocar. A identidade da caixa em edição trocou de nome completo (texto solto)
+para abrev+tooltip, igual à leitura e ao padrão do jogador. `&__atributo-modificadores` ganhou
+`width: 100%` explícito — a caixa é flex-column com `align-items: center`, que encolhe filhos ao
+conteúdo por padrão (a antiga lista era grid, que estica por padrão; sem o ajuste as 4 barrinhas
+ficariam espremidas na largura natural dos botões). Removidas as classes obsoletas
+`&__atributos-lista`/`&__atributo-linha*`.
+
+**Follow-up na mesma tarefa — 3 colunas em vez de 2, com fallback responsivo.** Pedido do autor
+com print da edição em 2 colunas: caixa mais compacta, cabe 3 por linha. Primeira tentativa (3
+colunas fixas) vazou conteúdo em 360×800 — o seletor de Modificador (4 barrinhas) não cabe em
+~100px de caixa. Corrigido com a mesma técnica de `@container` já usada na grade de leitura: 2
+colunas por padrão, 3 a partir de 560px de largura do card (`&__atributos-grade--edicao`); o órfão
+do grupo de 5 (`&--sozinho`) voltou a centralizar só abaixo de 560px — acima disso o grupo fecha
+3+2 e a caixa de trás tem par, não é mais órfã (mesmo racional do `@container` de 440px já usado
+pela leitura, ponto de corte próprio porque o conteúdo da edição é mais largo). Caixa em edição
+ficou mais compacta (`gap`/`padding` menores). Verificado nos 4 viewports padrão da skill `verify`
+(`1920×1080`, `960×1080`, `1366×768`, `360×800`): 3 colunas nos três primeiros, 2 colunas com
+órfão centralizado no mobile, sem overflow em nenhum.
+
+Teste de markup atualizado (`criatura-visualizacao.component.spec.ts`) — antes verificava que
+`.criatura__atributo-card` sumia e `.criatura__atributo-linha` aparecia em edição; agora verifica
+que a caixa é a mesma nos dois modos, só ganhando `.criatura__atributo-card--edicao`. Testes de
+lógica (rascunho, Salvar/Cancelar, violação de cota 2/3/3/2) não mudaram — só a lógica de
+apresentação foi tocada. Gate: suíte completa de `frontend/src/app/modules/ficha` (34 arquivos, 943
+testes) sem regressão, `tsc --noEmit`/`ng build` limpos, `prettier --check` limpo nos 3 arquivos
+tocados. Verificação visual ao vivo (Playwright, stack já em execução do autor): usuário/campanha/
+criatura de teste criados via REST, tela aberta em `1920×1080` e `360×800` — leitura, edição
+(incluindo o aviso de violação de cota ao alternar um Modificador) e o retorno limpo à leitura após
+Cancelar, nos dois viewports. Órfão do grupo (5º atributo) centralizado corretamente nos dois modos
+e larguras. Nenhuma mudança de lógica de regra — só consolidação de HTML/SCSS.
+
+## 2026-09-18 — "Indeterminado" dos Deslocamentos da criatura não clicava, por causa do `blur` do campo numérico ao lado
+
+Relato direto do autor: na ficha de criatura, dentro de cada tag de Deslocamento (Terrestre/
+Voador/Aquático/Sobrenatural) em edição, não dava pra clicar na caixa "Indeterminado". Investigado
+com `superpowers:systematic-debugging` antes de qualquer fix. Causa raiz: o campo numérico
+(`input[type=number]`) e a caixa "Indeterminado" moram lado a lado dentro do mesmo
+`app-valor-editavel`, cujo template só renderiza o `<ng-content>` projetado (input + caixa) enquanto
+`editando()` é `true` (`@if (editando()) { <ng-content /> } @else { <button>... }`,
+`valor-editavel.component.html`). O input tinha `(blur)="confirmarCampoDeslocamento(...);
+cancelarEdicao()"` — ao clicar na caixa (ou no rótulo "Indeterminado" que a envolve), o navegador
+move o foco pra ela **antes** do `click`/`change` completar, disparando `blur` no input primeiro;
+`cancelarEdicao()` zera `campoEmEdicao`, o `@if` cai pro modo leitura e destrói a caixa **no meio do
+clique**, então o `change` dela nunca chega a disparar — o clique "não fazia nada" visualmente.
+Corrigido substituindo `(blur)` por `(focusout)` nos quatro campos numéricos e adicionando
+`confirmarSaidaCampoDeslocamento` (`criatura-visualizacao.component.ts`), que ignora o evento quando
+`evento.relatedTarget` é a própria caixa "Indeterminado" do campo (referenciada por template ref,
+`caixaDeslTerrestre`/`caixaDeslVoador`/`caixaDeslAquatico`/`caixaDeslSobrenatural`) — nesse caso a
+edição continua aberta e é a própria caixa, no seu `(change)`, que confirma o valor e fecha a
+edição; qualquer outro destino de foco (clicar fora, Tab pra outro campo) cancela normalmente. Teste
+de regressão novo (`criatura-visualizacao.component.spec.ts`) reproduz a sequência real do navegador
+(`blur` seguido de `focusout`, ambos com `relatedTarget` = caixa) — confirmado falhando no código
+antigo (`editando()` virava `false`) antes de aplicar a correção, e passando depois. Gate: suíte
+completa de `frontend/src/app/modules/ficha` (34 arquivos, 943 testes) sem regressão, `tsc --noEmit`
+limpo, `ng build` de desenvolvimento limpo, lint sem erros novos (só os warnings pré-existentes de
+aspas/`max-len` já presentes no arquivo). Escopo só de lógica de foco/edição — sem mudança visual;
+verificação visual da skill `verify` não se aplica (nenhum HTML/CSS de layout mudou, só bindings de
+evento).
+
 ## 2026-09-18 — Vãos em branco na ficha de jogador/criatura (piso de página e wrapper de Rolagens), investigados ao vivo por print
 
 Sequência de três relatos do autor, cada um com print, sobre "espaço sobrando" em pontos diferentes
