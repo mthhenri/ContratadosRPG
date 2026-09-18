@@ -1,5 +1,57 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Vãos em branco na ficha de jogador/criatura (piso de página e wrapper de Rolagens), investigados ao vivo por print
+
+Sequência de três relatos do autor, cada um com print, sobre "espaço sobrando" em pontos diferentes
+da ficha completa (`visualizar.page`/`visualizar-criatura.page`) — cada um investigado
+separadamente porque, apesar do sintoma parecido (vão em branco), a causa é uma camada de CSS
+diferente:
+
+**1. Grade quadriculada sobrando abaixo do card, em qualquer aba curta (achado ao investigar um
+pedido anterior sobre a aba Rolagens).** `.ficha-pagina` (`visualizar.page.scss` e
+`visualizar-criatura.page.scss`) tinha `min-height: calc(100dvh - var(--altura-topbar))`; com
+`align-items: stretch` nesse container flex, o piso forçava toda a cadeia de dentro
+(`.ficha-visao`, o card de Status, cada `&__conteudo` de aba) a esticar até a altura da janela
+mesmo numa ficha nova/curta (poucos atributos, sem sequela/trauma/lesão), expondo o fundo
+quadriculado da página abaixo do card. Corrigido removendo o `min-height` dos dois arquivos (o
+mesmo padrão existia duplicado nos dois, um por tipo de ficha) — a página passa a encolher pro
+tamanho real do conteúdo. Testado ao vivo em 1920×1080, 960×1080, 1366×768 e 360×800 (mobile não
+usa esse container em flex, sem mudança), com a barra de ações lateral (`app-coluna-acoes`,
+`align-self:stretch`) acompanhando a nova altura sem cortar nem sobrar, e com uma ficha de criatura
+de conteúdo real (não sintética) sem diferença visível (já passava da altura da janela). Impacto
+identificado e aceito pelo autor: o painel de Histórico de Rolagens (gaveta lateral, `position:
+fixed`) não faz parte dessa cadeia flex e continua sempre em altura de tela cheia — numa ficha curta
+ele agora aparece visualmente mais alto que o conteúdo da ficha ao lado (antes os dois eram
+esticados pra tela cheia igualmente, mascarando a diferença). 405 testes de frontend (as duas
+páginas + `FichaVisualizacao`/`FichaCampanhaCard`/`CriaturaVisualizacao`) sem regressão.
+
+**2. Painel de Rolagens (sempre montado) disputando espaço com a aba ativa nas abas Extras/
+História.** `FichaRolagensPainel` fica montado o tempo todo (não é `@if`) pra sobreviver à troca de
+aba — só `[oculto]` esconde o conteúdo por dentro (posição absoluta, 0×0, ver P-fechado da
+`ficha-rolagens-painel--oculto`). O wrapper `.ficha-status__conteudo` que o envolve, porém, tinha
+`flex: 1` sem exceção — nas larguras onde o card de Status tem altura travada (ver item 3 abaixo),
+esse wrapper vazio disputava o espaço livre em pé de igualdade com o `.ficha-status__conteudo` da
+aba realmente visível, e como flexbox reparte por peso e não por conteúdo, as duas caixas saíam
+exatamente na metade da altura — a aba ativa (Extras, História, qualquer uma com pouco conteúdo)
+ficava com metade do card em branco acima do conteúdo. Corrigido com um modificador
+(`--rolagens-oculta`) que zera `flex-grow`/`flex-basis` do wrapper quando ele não é a aba ativa, em
+`ficha-visualizacao.component.html`/`.scss` e no equivalente `ficha-campanha-card` (mesmo padrão,
+usado quando `mostrarRolagensCompacto()`). Verificado ao vivo em 960×1080, 1920×1080 e 360×800
+(Extras, História e Rolagens) — sem vão em branco.
+
+**3. Card de Status sempre esticado pra bater com a coluna Identidade+Atributos — registrado como
+problema aceito, não corrigido.** Investigando o mesmo sintoma ("vão em branco") numa aba
+Informações/Inventário/Habilidades de conteúdo curto, e depois com um print da própria ficha do
+autor ("Sentinela Matheus", aba Habilidades com ~650px de vão), a causa achada foi outra: dentro de
+`.ficha-visao__linha-colunas` (`display:flex; align-items:stretch`), a coluna de Status sempre
+copia a altura de Identidade+Atributos (`.ficha-visao__coluna-agente`) — numa ficha com identidade
+"alta" (retrato, atributos com modificador) e uma aba curta ao lado, sobra vão. Ao contrário dos
+itens 1 e 2, esse comportamento tem uma razão documentada no próprio código (impedir que uma aba
+muito longa, ex.: um inventário grande, estoure a altura da coluna vizinha e role a página inteira
+em vez de rolar só por dentro do card) — não é claramente um bug, é um trade-off. Apresentadas ao
+autor as opções (encolher pro próprio conteúdo vs. teto fixo por viewport vs. manter), ele escolheu
+manter o comportamento atual. Registrado como `P-070` (`PROBLEMS.md`) em vez de corrigido.
+
 ## 2026-09-17 — Botão "Rolagem oculta" vazando pras outras abas de Status (achado ao vivo, screenshot)
 
 Segundo relato do autor na mesma data/task, com print do mobile: na ficha de jogador, aba

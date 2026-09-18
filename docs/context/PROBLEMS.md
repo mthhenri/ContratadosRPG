@@ -29,6 +29,30 @@
 
 ## Ativos
 
+### P-070 — Card de Status estica pra bater com a coluna Identidade+Atributos, sobra vão em branco em aba curta · `ACEITO` · frontend
+
+- **Sintoma:** nas fichas completas de jogador/criatura (linha com Identidade+Atributos de um lado
+  e Status — Informações/Inventário/Habilidades/Rolagens/Extras/História — do outro), o card de
+  Status sempre estica até a altura de Identidade+Atributos. Numa ficha com identidade "alta"
+  (retrato, mais atributos) e uma aba de conteúdo curto (ex.: Habilidades com só 1-2 itens), sobra
+  um vão em branco grande dentro do card, abaixo do conteúdo real. Achado ao vivo pelo autor em
+  duas fichas (uma sintética e a própria "Sentinela Matheus", print da aba Habilidades com ~650px
+  de vão).
+- **Causa:** `.ficha-visao__coluna-agente` (Identidade+Atributos) e `.ficha-visao__coluna--status`
+  são os dois itens de `.ficha-visao__linha-colunas` (`display:flex; align-items:stretch`,
+  `ficha-visualizacao.component.scss`) — a altura de Status é sempre igual à de agente, e o
+  conteúdo interno (`.ficha-cartao--status`/`.ficha-status__conteudo`, ambos `flex:1`) preenche
+  essa altura mesmo quando o conteúdo real é muito menor.
+- **Contorno:** nenhum.
+- **Correção:** opções levantadas com o autor (2026-09-18) — (a) `align-items: flex-start` pra
+  Status encolher pro próprio conteúdo (efeito colateral: uma aba muito longa, ex.: inventário
+  grande, passa a rolar a página inteira em vez de só o card por dentro, perdendo o
+  `contain:size`/`overflow:hidden` que hoje limita isso); (b) um teto de altura fixo (ex.: relativo
+  à viewport) em vez de copiar a coluna vizinha, reduzindo o vão sem eliminá-lo por completo. O
+  autor optou por manter o comportamento atual por ora.
+- **Desde:** existe desde o redesenho "comparação visual" das 3 colunas (buscar por esse termo em
+  `ficha-visualizacao.component.scss`); relatado pelo autor em 2026-09-18.
+
 ### P-068 — Teste "abre a dialog de duplicar" de `CampanhaDetalheMestre` quebrou (jogador) · `ABERTO` · frontend/teste
 
 - **Sintoma:** `detalhe-mestre.page.spec.ts` — `abre a dialog de duplicar e chama
