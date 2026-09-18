@@ -52,28 +52,28 @@
             </div>
 
             @if (
-                ficha().defesa !== undefined ||
-                ficha().esquiva !== undefined ||
-                ficha().bloqueio !== undefined ||
-                ficha().contraAtaque !== undefined
+                ficha().defesa != null ||
+                ficha().esquiva != null ||
+                ficha().bloqueio != null ||
+                ficha().contraAtaque != null
             ) {
                 <div class="espectador-ficha__reacoes">
-                    @if (ficha().defesa !== undefined) {
+                    @if (ficha().defesa != null) {
                         <span
                             >Def <strong>{{ ficha().defesa }}</strong></span
                         >
                     }
-                    @if (ficha().esquiva !== undefined) {
+                    @if (ficha().esquiva != null) {
                         <span
                             >Esq <strong>{{ ficha().esquiva }}</strong></span
                         >
                     }
-                    @if (ficha().bloqueio !== undefined) {
+                    @if (ficha().bloqueio != null) {
                         <span
                             >Blo <strong>{{ ficha().bloqueio }}</strong></span
                         >
                     }
-                    @if (ficha().contraAtaque !== undefined) {
+                    @if (ficha().contraAtaque != null) {
                         <span
                             >Con <strong>{{ ficha().contraAtaque }}</strong></span
                         >

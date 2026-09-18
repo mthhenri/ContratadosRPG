@@ -64,9 +64,10 @@
 > `/fichas/:id` (acervo, só entende `FichaVisualizacao` de jogador — abriria quebrado). Achado ao
 > vivo, corrigido antes do fecho: o guard `defesa !== undefined` (copiado do análogo) não cobre o
 > `null` que a SQL devolve pra uma criatura sem Defesa salva — virou `!= null`; o mesmo padrão em
-> `EspectadorFichaCard` (jogador) fica registrado como problema aberto (`P-069`), fora do escopo
-> desta task. Testes: `criatura-esquadrao-card` (novo, 9/9) + `detalhe-mestre` focado 38/39 (1
-> falha pré-existente e alheia — `P-068`); build/lint dos três workspaces 0 erros novos.
+> `EspectadorFichaCard` (jogador) ficou registrado como problema aberto (`P-069`), fora do escopo
+> desta task — corrigido depois (ver `HISTORY.md` 2026-09-18). Testes: `criatura-esquadrao-card`
+> (novo, 9/9) + `detalhe-mestre` focado 38/39 (1 falha pré-existente e alheia — `P-068`, também
+> corrigida depois); build/lint dos três workspaces 0 erros novos.
 > Verificado ao vivo (Postgres + backend + frontend reais, seed via REST) em `1920×1080`/
 > `360×800`: grid com uma criatura completa e uma crítica (Vida 0, sem registro) lado a lado,
 > abertura do menu "⋯", duplicar (mensagem sem "de" para criatura), e "Abrir ficha completa"
@@ -1893,7 +1894,8 @@ severidade em `botao.component.scss` mais específica que a do componente pai, s
 Corrigido pelo padrão já estabelecido na `ui-29d` (`ValorEditavel`/`variante="herdado"`): omitir
 `[variante]`/`[estilo]` desses cinco botões, deixando o SCSS do montador pintar livre (cor + fundo
 `-dim` + borda, mesma paleta do chip de `resultado-rolagem`). O mesmo defeito de especificidade
-existe em PROF/NIV (`--extra`), não corrigido por estar fora do pedido — `P-022`. A instância do
+existia em PROF/NIV (`--extra`) — `P-022`, corrigido depois com o mesmo padrão (ver `HISTORY.md`
+2026-09-18). A instância do
 painel subiu para um nível
 persistente da visualização da ficha —
 uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens.

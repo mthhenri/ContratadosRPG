@@ -222,8 +222,18 @@
             height: bp.$alvo-toque;
         }
 
+        // Mesmo motivo do `&--dano` abaixo (ui-29d, P-022): sem omitir `[variante]`/`[estilo]`
+        // no `app-botao`, `:host(.botao--primario.botao--estilo-contorno)` vencia por
+        // especificidade e a cor apagada nunca aparecia — PROF/NIV saíam sempre no accent.
         &--extra {
             color: var(--text-dim);
+            background: transparent;
+            border: 1px solid var(--border-strong);
+
+            &:hover:not(:disabled) {
+                color: var(--text);
+                border-color: var(--accent-border);
+            }
         }
 
         &--operador {

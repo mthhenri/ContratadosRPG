@@ -7,7 +7,7 @@ import {
 } from '@contratados-rpg/shared/enums';
 import type { PaginaCadernoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import { Subject, of, throwError } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { CadernoFlutuante } from './caderno-flutuante.component';
@@ -30,6 +30,13 @@ const pagina: PaginaCadernoDto = {
 };
 
 describe('CadernoFlutuante', () => {
+  // `definirViewport` (abaixo) muta `window.innerWidth`/`innerHeight` globalmente; sem restaurar
+  // ao original depois do último teste, o valor vaza pra specs de outros arquivos que rodam
+  // depois na mesma suíte (P-019 — achado com `npm run test --workspace=frontend` completo).
+  const larguraOriginal = window.innerWidth;
+  const alturaOriginal = window.innerHeight;
+  afterAll(() => definirViewport(larguraOriginal, alturaOriginal));
+
   let fixture: ComponentFixture<CadernoFlutuante>;
   let api: {
     listarPaginas: ReturnType<typeof vi.fn>;

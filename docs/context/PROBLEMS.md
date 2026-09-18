@@ -49,48 +49,29 @@
   grande, passa a rolar a página inteira em vez de só o card por dentro, perdendo o
   `contain:size`/`overflow:hidden` que hoje limita isso); (b) um teto de altura fixo (ex.: relativo
   à viewport) em vez de copiar a coluna vizinha, reduzindo o vão sem eliminá-lo por completo. O
-  autor optou por manter o comportamento atual por ora.
+  autor optou por manter o comportamento atual por ora. Revisitado depois no mesmo dia — não era o
+  problema relatado; o autor esclareceu que o sintoma real não é o vão interno da aba, e sim algo
+  quebrando **fora** da caixa da aba ao selecionar Informações/Inventário/Habilidades. Correção
+  deste vão especificamente segue não feita.
 - **Desde:** existe desde o redesenho "comparação visual" das 3 colunas (buscar por esse termo em
   `ficha-visualizacao.component.scss`); relatado pelo autor em 2026-09-18.
 
-### P-068 — Teste "abre a dialog de duplicar" de `CampanhaDetalheMestre` quebrou (jogador) · `ABERTO` · frontend/teste
+### P-071 — Teste do Montador na `FichaVisualizacao` falha só com a suíte completa (gatilho ADMIN não aparece) · `ABERTO` · frontend/teste
 
-- **Sintoma:** `detalhe-mestre.page.spec.ts` — `abre a dialog de duplicar e chama
-  FichaService.duplicarFicha ao confirmar` (cartão de **jogador**) falha com
-  `TypeError: Cannot read properties of undefined (reading 'click')` ao tentar clicar em
-  "Confirmar duplicação" — o `app-modal` de duplicar não abre depois do clique no item do menu.
-- **Causa:** não investigada. Confirmado pré-existente (roda isolado e falha do mesmo jeito no
-  commit `75271c7c` — "registro (SCP) editável na criatura e ícones de olho diferenciados",
-  concorrente nesta mesma branch — antes de qualquer mudança da `criatura-card-esquadrao-mestre`
-  tocar o arquivo). Suspeita, não confirmada: a técnica nova de ícone "base + selo" desse commit
-  mudou a estrutura interna de `app-icone` nos 5 lugares que ele lista, um dos quais é o próprio
-  menu "⋯" do cartão do Esquadrão.
-- **Contorno:** nenhum — o teste falha isolado (`--filter="duplicar"`), não é efeito de ordem com
-  outros testes.
-- **Correção:** não investigada.
-- **Desde:** commit `75271c7c` (2026-09-14), achado durante `criatura-card-esquadrao-mestre`
-  (2026-09-15) ao rodar a suíte focada de `detalhe-mestre.page.spec.ts`.
-
-### P-069 — `!== undefined` não cobre `null` vindo do SQL em campos opcionais do mini-card · `ABERTO` · frontend
-
-- **Sintoma:** um campo opcional de `FichaResumoDto` (ex.: `defesa`/`esquiva`/`bloqueio`/
-  `contraAtaque`) que a SQL devolve como `NULL` (coluna ausente no JSONB) chega ao cliente como
-  `null` via JSON, não como `undefined` — um guard de template `@if (campo !== undefined)` (o
-  padrão usado em `EspectadorFichaCard.espectador-ficha__reacoes`) não esconde a linha, e o rótulo
-  aparece sem valor (ex.: "Def" sem número). Achado ao vivo em `CriaturaEsquadraoCard` (corrigido
-  ali para `!= null`) — `EspectadorFichaCard` tem o mesmo padrão para os 4 campos e não foi
-  corrigido (fora do escopo da task que achou o problema).
-- **Causa:** `FichaResumoDto` tipa os campos como `?: number` (opcional), mas o valor real que
-  atravessa a fronteira HTTP pode ser `null` — a assinatura TypeScript não distingue os dois, e o
-  guard foi escrito pensando só em "propriedade ausente do objeto JS", não em "SQL NULL
-  serializado".
-- **Contorno:** nenhum — o card de jogador com classe sem Defesa/Esquiva/Bloqueio (Civil) pode
-  estar mostrando rótulos vazios hoje; não verificado ao vivo para confirmar o alcance.
-- **Correção:** trocar `!== undefined` por `!= null` nos 4 guards de
-  `espectador-ficha-card.component.html`, ou (mais robusto) tipar `FichaResumoDto` como
-  `number | null` nesses campos para o TypeScript forçar o guard certo em todo consumidor.
-- **Desde:** provavelmente desde a criação de `EspectadorFichaCard` (m8-07); achado em
-  `criatura-card-esquadrao-mestre` (2026-09-15).
+- **Sintoma:** `ficha-visualizacao.component.spec.ts` — `mantém o montador aberto e visível ao
+  navegar para outra aba` falha com `TypeError: Cannot read properties of null (reading 'click')`
+  em `.montador-rolagem__gatilho` — o botão não existe no DOM. O teste simula sessão ADMIN via
+  `localStorage.setItem('contratados-rpg.sessao', ...)` pra liberar o gatilho (restrito a
+  tester/admin, `restringirMontadorATester`). Passa isolado (164/164); falha só quando
+  `npm run test --workspace=frontend` roda a suíte inteira.
+- **Causa:** não investigada — cheiro de vazamento de estado entre specs (sessão cacheada por
+  algum consumidor de `SessaoService`, ou `localStorage` não limpo por outro arquivo que roda antes
+  na mesma worker), no molde do que já aconteceu com viewport (P-019, corrigido nesta mesma data).
+- **Contorno:** rodar o arquivo isolado quando for preciso confiar no resultado deste caso.
+- **Correção:** isolar a causa do vazamento (bisseção de specs até achar o vizinho que deixa
+  `SessaoService`/`localStorage` sujo antes deste arquivo rodar).
+- **Desde:** achado ao validar o fix do P-019 (2026-09-18, `npm run test --workspace=frontend`
+  completo). O arquivo em si não foi tocado por essa task; não confirmado se já falhava antes dela.
 
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
@@ -152,67 +133,4 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
-### P-019 — `painel-flutuante.component.spec.ts` falha por ordem quando a suíte completa roda · `ABERTO` · frontend
-
-- **Sintoma:** o teste "ao abrir, limita uma posição persistida que ficou fora do viewport e
-  salva a correção" falha (`900px` em vez do `1280px` esperado) quando `npm run test
-  --workspace=frontend` roda a suíte inteira, mas passa 18/18 quando rodado isolado
-  (`--include=.../painel-flutuante.component.spec.ts`).
-- **Causa:** não investigada — cheiro de vazamento de estado global entre specs (viewport,
-  `localStorage` ou mock não resetado por outro arquivo que roda antes na mesma suíte), não do
-  próprio teste ou do componente.
-- **Contorno:** rodar o arquivo isolado quando for preciso confiar no resultado deste caso.
-- **Correção:** isolar a causa do vazamento (bisseção de specs até achar o vizinho que deixa
-  estado sujo).
-- **Desde:** achado no gate de testes da `montador-rolagem-ajustes` (2026-09-17). O arquivo em si
-  não foi tocado por esta task; não confirmado se já falhava assim antes dela.
-
-### P-020 — `inventario-esquadrao.component.spec.ts` falha (busca do catálogo devolve 2 cards em vez de 1) · `ABERTO` · frontend
-
-- **Sintoma:** o teste "filtra os itens do catálogo pela busca sem decorar o nome com ícone"
-  espera `1` card (`.inventario-esquadrao__catalogo-item`) depois de buscar "Energético
-  Concentrado", mas recebe `2`. Reproduz isolado (`--include=.../inventario-esquadrao.component.spec.ts`),
-  não é sensível à ordem da suíte.
-- **Causa:** não investigada.
-- **Contorno:** nenhum.
-- **Correção:** depurar o filtro de busca do catálogo do componente ou, se o catálogo de fixture do
-  teste mudou, atualizar a expectativa.
-- **Desde:** achado no gate de testes do fecho da `montador-rolagem-ajustes` (2026-09-17,
-  `npm run test --workspace=frontend` completo). Sem relação com o arquivo alterado nesta task
-  (`montador-rolagem/`); não confirmado se já falhava antes dela.
-
-### P-022 — `montador-rolagem__tile--extra` (PROF/NIV) sem a cor apagada pedida no SCSS · `ABERTO` · frontend
-
-- **Sintoma:** `montador-rolagem.component.scss` declara `.montador-rolagem__tile--extra { color:
-  var(--text-dim); }` pros botões PROF/NIV (seção Atributo), mas na tela eles saem na cor accent
-  (vermelha), não apagada — a regra nunca tem efeito.
-- **Causa:** especificidade CSS. Esses botões usam `app-botao[variante="primario"][estilo="contorno"]`;
-  a regra de severidade de `botao.component.scss` é `:host(.botao--primario.botao--estilo-contorno)`
-  (duas classes dentro de `:host()`), mais específica que uma classe só vinda do SCSS do componente
-  pai (`.montador-rolagem__tile--extra`) — sempre vence, goste ou não a cor coincidir. Mesmo
-  mecanismo corrigido nos botões de "Tipo de dano" nesta mesma data (ver `HISTORY.md`), que resolveu
-  omitindo `[variante]`/`[estilo]` do `app-botao` (padrão `ui-29d`) — não aplicado aqui porque
-  PROF/NIV não foi pedido pelo autor desta vez.
-- **Contorno:** nenhum — visualmente já "funciona" hoje porque a cor de `primario` (accent) é a que
-  aparece, só não é a `--text-dim` que o comentário do SCSS promete.
-- **Correção:** mesma receita do `--dano-*`: omitir `[variante]`/`[estilo]` nos botões PROF/NIV e
-  declarar `border`/`background`/hover próprios em `&--extra`, se o autor confirmar que quer a cor
-  apagada de fato (o SCSS já supõe que sim, mas nunca foi validado visualmente até agora).
-- **Desde:** achado ao investigar por que `--dano-*` não pintava (2026-09-17) — não corrigido por
-  estar fora do pedido da task, que era só os botões de tipo de dano.
-
-### P-021 — `detalhe-mestre.page.spec.ts` falha ao confirmar duplicação de ficha (`Cannot read properties of undefined (reading 'click')`) · `ABERTO` · frontend
-
-- **Sintoma:** o teste "abre a dialog de duplicar e chama FichaService.duplicarFicha ao confirmar"
-  procura um botão com texto "Confirmar duplicação" na dialog e recebe `undefined` — o `.click()`
-  seguinte lança `TypeError`. Reproduz isolado, não é sensível à ordem da suíte.
-- **Causa:** não investigada — cheiro de rótulo do botão da dialog de confirmação ter mudado (ou a
-  dialog não estar abrindo a tempo do teste procurar o botão).
-- **Contorno:** nenhum.
-- **Correção:** depurar a dialog de duplicação de `CampanhaDetalheMestre` — confirmar o rótulo
-  atual do botão de confirmação e se o `fixture.detectChanges()`/espera antes da busca é
-  suficiente.
-- **Desde:** achado no gate de testes do fecho da `montador-rolagem-ajustes` (2026-09-17,
-  `npm run test --workspace=frontend` completo). Sem relação com o arquivo alterado nesta task
-  (`montador-rolagem/`); não confirmado se já falhava antes dela.
 

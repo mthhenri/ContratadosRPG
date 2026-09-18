@@ -363,7 +363,9 @@ describe('CampanhaDetalheMestre', () => {
     (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    (Array.from(raiz.querySelectorAll('.detalhe-mestre__ficha-menu-item')).find((el) =>
+      el.textContent?.includes('Duplicar'),
+    ) as HTMLButtonElement).click();
     fixture.detectChanges();
 
     const confirmar = Array.from(raiz.querySelectorAll('app-modal button')).find((el) =>
