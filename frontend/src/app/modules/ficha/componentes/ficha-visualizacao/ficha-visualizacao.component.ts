@@ -100,6 +100,7 @@ import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
@@ -387,6 +388,7 @@ export interface AjusteClasse {
     BarraRecurso,
     Botao,
     BotaoIcone,
+    EditorMarkdown,
     Modal,
     PainelFlutuante,
     StepInput,
@@ -1593,11 +1595,14 @@ export class FichaVisualizacao {
    */
   protected readonly anotacoes = computed(() => (this.dados().anotacoes ?? '').trim());
 
-  /** `true` enquanto a aba Anotações (m3-32) está em edição (textarea aberta). */
+  /** `true` enquanto a aba Anotações (m3-32) está em edição (editor Markdown aberto). */
   protected readonly editandoAnotacoes = signal(false);
+  /** Rascunho do editor Markdown de Anotações — `app-editor-markdown` não tem `.value` de DOM. */
+  protected readonly rascunhoAnotacoes = signal('');
 
   /** Abre a edição das Anotações (aba própria — distinta do peek read-only da Visão Geral). */
   protected editarAnotacoes(): void {
+    this.rascunhoAnotacoes.set(this.dados().anotacoes ?? '');
     this.editandoAnotacoes.set(true);
   }
 
@@ -1676,11 +1681,14 @@ export class FichaVisualizacao {
    */
   protected readonly historia = computed(() => (this.dados().historia ?? '').trim());
 
-  /** `true` enquanto a aba própria História (m3-50) está em edição (textarea aberta). */
+  /** `true` enquanto a aba própria História (m3-50) está em edição (editor Markdown aberto). */
   protected readonly editandoHistoria = signal(false);
+  /** Rascunho do editor Markdown de História — `app-editor-markdown` não tem `.value` de DOM. */
+  protected readonly rascunhoHistoria = signal('');
 
   /** Abre a edição da História — só chega aqui quando `ajustavel()` (o botão/painel são gated). */
   protected editarHistoria(): void {
+    this.rascunhoHistoria.set(this.dados().historia ?? '');
     this.editandoHistoria.set(true);
   }
 

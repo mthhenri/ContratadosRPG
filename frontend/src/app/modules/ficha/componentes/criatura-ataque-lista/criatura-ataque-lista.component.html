@@ -56,7 +56,13 @@
                     </div>
 
                     @if (item.efeito) {
-                        <p class="ataque-lista__efeito">{{ item.efeito }}</p>
+                        <app-editor-markdown
+                            class="ataque-lista__efeito"
+                            [valor]="item.efeito"
+                            [somenteLeitura]="true"
+                            [compacto]="true"
+                            [rotulo]="'Efeito adicional'"
+                        />
                     }
 
                     <div class="ataque-lista__rodape">
@@ -179,16 +185,15 @@
                 />
             </label>
         </div>
-        <label class="ataque-lista__campo">
+        <div class="ataque-lista__campo">
             <span class="ataque-lista__campo-rotulo">Efeito adicional</span>
-            <textarea
+            <app-editor-markdown
                 class="ataque-lista__input ataque-lista__textarea"
                 formControlName="efeito"
-                placeholder="Opcional"
-                aria-label="Efeito"
-                rows="3"
-            ></textarea>
-        </label>
+                [compacto]="true"
+                [rotulo]="'Efeito adicional'"
+            />
+        </div>
         <div class="ataque-lista__form-acoes">
             <button
                 app-botao

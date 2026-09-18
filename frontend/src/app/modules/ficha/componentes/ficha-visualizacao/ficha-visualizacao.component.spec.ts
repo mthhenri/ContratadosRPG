@@ -25,6 +25,7 @@ import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
@@ -2480,7 +2481,11 @@ describe('FichaVisualizacao', () => {
       botao.click();
       fixture.detectChanges();
 
-      expect(raiz.textContent).toContain('Nasceu numa colônia orbital.');
+      const editor = fixture.debugElement.query(
+        By.css('.ficha-status__anotacoes-caixa--historia app-editor-markdown'),
+      ).componentInstance as EditorMarkdown;
+      expect(editor.valor()).toBe('Nasceu numa colônia orbital.');
+      expect(editor.somenteLeitura()).toBe(true);
     });
 
     it('usa a caixa expansível exclusiva da História', () => {
@@ -2499,7 +2504,11 @@ describe('FichaVisualizacao', () => {
       fixture.detectChanges();
 
       expect(raiz.querySelector('.ficha-status__anotacoes-caixa--historia')).not.toBeNull();
-      expect(raiz.querySelector('.ficha-visao__anotacoes--historia')).not.toBeNull();
+      expect(
+        fixture.debugElement.query(
+          By.css('.ficha-status__anotacoes-caixa--historia app-editor-markdown'),
+        ),
+      ).not.toBeNull();
     });
 
     it('sem historia definida (ou ausente — visualizador nunca chega aqui) mostra a mensagem de vazio', () => {
@@ -2552,7 +2561,10 @@ describe('FichaVisualizacao', () => {
       alvo.fixture.detectChanges();
 
       expect(alvo.raiz.querySelector('#ficha-anotacoes .painel-flutuante__janela')).not.toBeNull();
-      expect(alvo.raiz.textContent).toContain('Veterano de contenção.');
+      const editor = alvo.fixture.debugElement.query(
+        By.css('#ficha-anotacoes app-editor-markdown'),
+      ).componentInstance as EditorMarkdown;
+      expect(editor.valor()).toBe('Veterano de contenção.');
     });
 
     it('anotacoes ausente (omitida no backend pro visualizador) não quebra a leitura', () => {

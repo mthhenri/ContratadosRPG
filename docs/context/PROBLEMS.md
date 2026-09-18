@@ -29,6 +29,23 @@
 
 ## Ativos
 
+### P-072 — `EditorMarkdown` não estiliza blockquote (`>`) · `ACEITO` · frontend
+
+- **Sintoma:** conteúdo Markdown com citação (`> texto`) renderiza como parágrafo comum — sem
+  recuo, borda ou qualquer marca visual — em qualquer consumidor do primitivo (Caderno de
+  Campanha e, desde `editor-markdown-campos-texto-livre`, história/anotações/efeito/descrição/
+  restrição).
+- **Causa:** `editor-markdown.component.scss` estiliza explicitamente `h1`/`h2`/`code`/`pre`/`a`/
+  `table` dentro de `.milkdown .editor`, mas nunca `blockquote` — o elemento cai no estilo padrão
+  do navegador, que a maioria dos motores não realça de forma perceptível dentro do reset do
+  editor.
+- **Contorno:** nenhum — o texto ainda aparece, só sem distinção visual do resto do parágrafo.
+- **Correção:** adicionar uma regra `:host ::ng-deep .milkdown .editor blockquote` (borda-esquerda
+  + `color`/`padding` na linha dos outros elementos já estilizados).
+- **Desde:** já existia no Caderno (`ui-XX`/Milkdown original); só ficou visível/registrado ao
+  exercitar o primitivo em `editor-markdown-campos-texto-livre` (2026-09-18), que usou blockquote
+  no cenário de verificação ao vivo.
+
 ### P-070 — Card de Status estica pra bater com a coluna Identidade+Atributos, sobra vão em branco em aba curta · `ACEITO` · frontend
 
 - **Sintoma:** nas fichas completas de jogador/criatura (linha com Identidade+Atributos de um lado

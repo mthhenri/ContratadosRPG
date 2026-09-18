@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { describe, expect, it } from 'vitest';
 import {
   CadenciaEnum, ComportamentoCriaturaEnum, DeslocamentoValorEspecialEnum, ModificadorCriaturaEnum,
@@ -7,6 +8,7 @@ import {
 import type { FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { CriaturaVisualizacao } from './criatura-visualizacao.component';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { TemaService } from '../../../../core/services/tema.service';
@@ -520,7 +522,10 @@ describe('CriaturaVisualizacao', () => {
       fixture.detectChanges();
       const raiz = fixture.nativeElement as HTMLElement;
       expect(raiz.querySelector('#criatura-anotacoes .painel-flutuante__janela')).not.toBeNull();
-      expect(raiz.textContent).toContain('Vista pela última vez no cais.');
+      const editor = fixture.debugElement.query(
+        By.css('#criatura-anotacoes app-editor-markdown'),
+      ).componentInstance as EditorMarkdown;
+      expect(editor.valor()).toBe('Vista pela última vez no cais.');
     });
 
     it('fechar o painel emite anotacoesPainelAbertoChange(false)', () => {

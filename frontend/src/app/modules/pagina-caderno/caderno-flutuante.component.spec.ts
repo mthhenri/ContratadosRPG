@@ -11,7 +11,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { CadernoFlutuante } from './caderno-flutuante.component';
-import { EDITOR_MARKDOWN_FACTORY } from './editor-markdown.component';
+import { EDITOR_MARKDOWN_FACTORY } from '../../shared/ui/editor-markdown/editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
 import { SessaoService } from '../../core/services/sessao.service';
 import { TempoRealService } from '../../core/services/tempo-real.service';

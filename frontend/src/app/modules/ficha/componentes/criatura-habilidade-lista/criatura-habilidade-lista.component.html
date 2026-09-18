@@ -48,9 +48,21 @@
                         <span class="habilidade-lista__nome">{{ item.nome }}</span>
                         <span [class]="classeChipTipo(item.tipo)">{{ rotuloTipo(item.tipo) }}</span>
                     </div>
-                    <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
+                    <app-editor-markdown
+                        class="habilidade-lista__descricao"
+                        [valor]="item.descricao"
+                        [somenteLeitura]="true"
+                        [compacto]="true"
+                        [rotulo]="'Descrição de ' + item.nome"
+                    />
                     @if (item.restricao) {
-                        <span class="habilidade-lista__restricao">{{ item.restricao }}</span>
+                        <app-editor-markdown
+                            class="habilidade-lista__restricao"
+                            [valor]="item.restricao"
+                            [somenteLeitura]="true"
+                            [compacto]="true"
+                            [rotulo]="'Restrição de ' + item.nome"
+                        />
                     }
                     @if (editavel() && modoEdicao()) {
                         <div class="habilidade-lista__acoes">
@@ -106,24 +118,24 @@
                 }
             </select>
         </label>
-        <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+        <div class="habilidade-lista__campo habilidade-lista__campo--largo">
             <span class="habilidade-lista__campo-rotulo">Descrição</span>
-            <textarea
+            <app-editor-markdown
                 class="habilidade-lista__textarea"
                 formControlName="descricao"
-                placeholder="O que a habilidade faz"
-                aria-label="Descrição"
-            ></textarea>
-        </label>
-        <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+                [compacto]="true"
+                [rotulo]="'Descrição'"
+            />
+        </div>
+        <div class="habilidade-lista__campo habilidade-lista__campo--largo">
             <span class="habilidade-lista__campo-rotulo">Restrição</span>
-            <input
+            <app-editor-markdown
                 class="habilidade-lista__input"
                 formControlName="restricao"
-                placeholder="Opcional"
-                aria-label="Restrição"
+                [compacto]="true"
+                [rotulo]="'Restrição'"
             />
-        </label>
+        </div>
         <div class="habilidade-lista__form-acoes">
             <button
                 app-botao

@@ -2469,23 +2469,40 @@
                                     }
                                 </div>
                                 @if (editandoHistoria()) {
-                                    <textarea
-                                        #entradaHistoria
+                                    <app-editor-markdown
                                         class="ficha-status__anotacoes-campo ficha-status__anotacoes-campo--historia"
-                                        rows="10"
-                                        aria-label="História"
-                                        placeholder="Escreva a história do agente aqui…"
-                                        [value]="dados().historia ?? ''"
+                                        [valor]="rascunhoHistoria()"
+                                        [rotulo]="'História'"
+                                        (valorChange)="rascunhoHistoria.set($event)"
                                         (keydown.escape)="cancelarHistoria()"
-                                        (blur)="confirmarHistoria(entradaHistoria.value)"
-                                    ></textarea>
+                                    />
+                                    <div class="ficha-status__anotacoes-acoes">
+                                        <button
+                                            app-botao
+                                            variante="primario"
+                                            tamanho="pequeno"
+                                            type="button"
+                                            (click)="confirmarHistoria(rascunhoHistoria())"
+                                        >
+                                            Salvar
+                                        </button>
+                                        <button
+                                            app-botao
+                                            variante="secundario"
+                                            tamanho="pequeno"
+                                            type="button"
+                                            (click)="cancelarHistoria()"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
                                 } @else if (historia()) {
-                                    <p
-                                        class="ficha-visao__anotacoes ficha-visao__anotacoes--historia"
-                                        appOverflowFade
-                                    >
-                                        {{ historia() }}
-                                    </p>
+                                    <app-editor-markdown
+                                        class="ficha-status__anotacoes-campo ficha-status__anotacoes-campo--historia"
+                                        [valor]="historia()"
+                                        [somenteLeitura]="true"
+                                        [rotulo]="'História'"
+                                    />
                                 } @else {
                                     <p class="ficha-visao__vazio">Sem história definida.</p>
                                 }
@@ -2540,23 +2557,20 @@
     >
         <div class="ficha-status__anotacoes-caixa ficha-status__anotacoes-caixa--painel">
             @if (editandoAnotacoes()) {
-                <textarea
-                    #entradaAnotacoes
+                <app-editor-markdown
                     class="ficha-status__anotacoes-campo"
-                    rows="10"
-                    aria-label="Anotações"
-                    placeholder="Escreva suas anotações aqui…"
-                    [value]="dados().anotacoes ?? ''"
+                    [valor]="rascunhoAnotacoes()"
+                    [rotulo]="'Anotações'"
+                    (valorChange)="rascunhoAnotacoes.set($event)"
                     (keydown.escape)="cancelarAnotacoes()"
-                    (blur)="confirmarAnotacoes(entradaAnotacoes.value)"
-                ></textarea>
+                />
                 <div class="ficha-status__anotacoes-acoes">
                     <button
                         app-botao
                         variante="primario"
                         tamanho="pequeno"
                         type="button"
-                        (click)="confirmarAnotacoes(entradaAnotacoes.value)"
+                        (click)="confirmarAnotacoes(rascunhoAnotacoes())"
                     >
                         Salvar
                     </button>
@@ -2581,7 +2595,12 @@
                     Editar anotações
                 </button>
                 @if (anotacoes()) {
-                    <p class="ficha-visao__anotacoes" appOverflowFade>{{ anotacoes() }}</p>
+                    <app-editor-markdown
+                        class="ficha-status__anotacoes-campo"
+                        [valor]="anotacoes()"
+                        [somenteLeitura]="true"
+                        [rotulo]="'Anotações'"
+                    />
                 } @else {
                     <p class="ficha-visao__vazio">Sem anotações.</p>
                 }

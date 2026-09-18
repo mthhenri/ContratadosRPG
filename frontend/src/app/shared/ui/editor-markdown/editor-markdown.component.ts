@@ -5,13 +5,16 @@ import {
   ElementRef,
   InjectionToken,
   OnDestroy,
+  computed,
   effect,
+  forwardRef,
   inject,
   input,
   output,
   signal,
   viewChild,
 } from '@angular/core';
+import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import {
   Editor,
   defaultValueCtx,
@@ -46,8 +49,8 @@ import { callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
 import type { Awareness } from 'y-protocols/awareness';
 import type { Doc } from 'yjs';
 
-import { Icone } from '../../shared/icone/icone.component';
-import { Tooltip } from '../../shared/tooltip/tooltip.directive';
+import { Icone } from '../../icone/icone.component';
+import { Tooltip } from '../../tooltip/tooltip.directive';
 
 type FormatoMarkdown =
   | 'TEXTO'
@@ -188,8 +191,15 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
   selector: 'app-editor-markdown',
   standalone: true,
   imports: [Icone, Tooltip],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => EditorMarkdown),
+      multi: true,
+    },
+  ],
   template: `
-    @if (!somenteLeitura()) {
+    @if (!somenteLeituraEfetiva()) {
       <div class="editor-markdown__barra" role="toolbar" aria-label="Formatação Markdown">
         <button type="button" aria-label="Texto normal" [appTooltip]="'Texto normal'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TEXTO')">¶</button>
         <button type="button" aria-label="Título principal" [appTooltip]="'Título principal (H1)'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TITULO_1')">H1</button>
@@ -221,21 +231,38 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'editor-markdown',
-    '[class.editor-markdown--somente-leitura]': 'somenteLeitura()',
-    '[attr.aria-label]':
-      'somenteLeitura() ? "Conteúdo Markdown somente leitura" : "Editor Markdown"',
+    '[class.editor-markdown--somente-leitura]': 'somenteLeituraEfetiva()',
+    '[class.editor-markdown--compacto]': 'compacto()',
+    '[attr.aria-label]': 'rotuloAria()',
     '(click)': 'alterarEstadoTabela()',
     '(keyup)': 'alterarEstadoTabela()',
     '(scroll)': 'alterarPosicaoRolagem()',
   },
 })
-export class EditorMarkdown implements AfterViewInit, OnDestroy {
+export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAccessor {
   readonly valor = input('');
   /** Documento Yjs da página do esquadrão; ausente no caderno privado. */
   readonly documentoColaborativo = input<Doc | null>(null);
   /** Presença Yjs (cursor/seleção remotos, P-039) da mesma página; ausente no caderno privado. */
   readonly awareness = input<Awareness | null>(null);
   readonly somenteLeitura = input(false);
+  /**
+   * `true` reduz padding/toolbar/`min-height` para caber num campo de formulário (Efeito
+   * adicional, Descrição/Restrição de Habilidade) em vez de uma página inteira do Caderno.
+   */
+  readonly compacto = input(false);
+  /**
+   * `<app-editor-markdown>` não é um elemento de formulário nativo — um `<label>` em volta não
+   * associa nada, e o `@angular-eslint/template/label-has-associated-control` reprova
+   * (Efeito adicional/Descrição/Restrição). Este input é o nome acessível do campo, propagado
+   * pro `aria-label` do próprio host; sem ele, cai no rótulo genérico do editor.
+   */
+  readonly rotulo = input<string | null>(null);
+  protected readonly rotuloAria = computed(
+    () =>
+      this.rotulo() ??
+      (this.somenteLeituraEfetiva() ? 'Conteúdo Markdown somente leitura' : 'Editor Markdown'),
+  );
   readonly valorChange = output<string>();
   protected readonly emTabela = signal(false);
   protected readonly mostrarVoltarAoTopo = signal(false);
@@ -247,9 +274,27 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
   private sincronizando = false;
   private destruido = false;
 
+  /**
+   * `writeValue`/`registerOnChange` (Reactive Forms — `formControlName="efeito"` em Ataque/
+   * Habilidade) e `[valor]`/`(valorChange)` (Caderno) são dois modos de alimentar o mesmo
+   * conteúdo; `usandoCva` decide qual dos dois é a fonte de verdade, travado assim que o Angular
+   * chamar `writeValue` pela primeira vez (todo `FormControl` chama na montagem).
+   */
+  private readonly usandoCva = signal(false);
+  private readonly valorCva = signal<string | null>(null);
+  private readonly desabilitadoCva = signal(false);
+  private onChange: ((valor: string) => void) | null = null;
+  private onTouched: (() => void) | null = null;
+  protected readonly valorEfetivo = computed(() =>
+    this.usandoCva() ? this.valorCva() ?? '' : this.valor(),
+  );
+  protected readonly somenteLeituraEfetiva = computed(
+    () => this.somenteLeitura() || this.desabilitadoCva(),
+  );
+
   constructor() {
     effect(() => {
-      const valor = this.valor();
+      const valor = this.valorEfetivo();
       const instancia = this.instancia;
       // No modo colaborativo o Y.Doc já está vinculado ao ProseMirror (bindXmlFragment) e é a
       // única fonte de verdade do conteúdo — `[valor]` aqui só ecoa o próprio `markdownUpdated`
@@ -269,7 +314,7 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
       this.sincronizando = false;
     });
     effect(() => {
-      const somenteLeitura = this.somenteLeitura();
+      const somenteLeitura = this.somenteLeituraEfetiva();
       this.instancia?.definirSomenteLeitura(somenteLeitura);
     });
   }
@@ -277,17 +322,19 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
   async ngAfterViewInit(): Promise<void> {
     const instancia = this.criarEditor({
       raiz: this.raiz().nativeElement,
-      valorInicial: this.valor(),
+      valorInicial: this.valorEfetivo(),
       documentoColaborativo: this.documentoColaborativo(),
       awareness: this.awareness(),
       aoAlterar: (markdown) => {
-        if (
-          !this.sincronizando &&
-          !this.somenteLeitura() &&
-          markdown !== this.valor()
-        ) {
-          this.valorChange.emit(markdown);
+        if (this.sincronizando || this.somenteLeituraEfetiva() || markdown === this.valorEfetivo()) {
+          return;
         }
+        if (this.usandoCva()) {
+          this.valorCva.set(markdown);
+          this.onChange?.(markdown);
+          this.onTouched?.();
+        }
+        this.valorChange.emit(markdown);
       },
     });
     this.instancia = instancia;
@@ -300,10 +347,10 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
     // (com o conteúdo remoto que outros colaboradores já tenham escrito) vinculado ao
     // ProseMirror — sobrescrever aqui com `valorInicial` (o rascunho local, possivelmente
     // desatualizado) apagaria essa sincronização inicial.
-    if (!this.documentoColaborativo() && instancia.obterMarkdown() !== this.valor()) {
-      instancia.definirMarkdown(this.valor());
+    if (!this.documentoColaborativo() && instancia.obterMarkdown() !== this.valorEfetivo()) {
+      instancia.definirMarkdown(this.valorEfetivo());
     }
-    instancia.definirSomenteLeitura(this.somenteLeitura());
+    instancia.definirSomenteLeitura(this.somenteLeituraEfetiva());
   }
 
   ngOnDestroy(): void {
@@ -312,8 +359,25 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy {
     this.instancia = null;
   }
 
+  writeValue(valor: string | null): void {
+    this.usandoCva.set(true);
+    this.valorCva.set(valor ?? '');
+  }
+
+  registerOnChange(fn: (valor: string) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(desabilitado: boolean): void {
+    this.desabilitadoCva.set(desabilitado);
+  }
+
   protected aplicarFormato(formato: FormatoMarkdown): void {
-    if (!this.somenteLeitura()) this.instancia?.aplicarFormato(formato);
+    if (!this.somenteLeituraEfetiva()) this.instancia?.aplicarFormato(formato);
   }
 
   protected alterarEstadoTabela(): void {

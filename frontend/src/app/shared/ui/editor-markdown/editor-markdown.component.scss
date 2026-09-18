@@ -217,6 +217,60 @@
     cursor: default;
 }
 
+// Contexto de campo de formulário (Efeito adicional, Descrição/Restrição) — a página inteira do
+// Caderno já tinha padding generoso e o botão "voltar ao topo" pressupondo rolagem longa; aqui o
+// conteúdo típico é uma frase ou parágrafo curto, então isso só sobra em vão.
+:host(.editor-markdown--compacto) {
+    min-height: 84px;
+}
+
+:host(.editor-markdown--compacto) .editor-markdown__barra {
+    min-height: 34px;
+    padding: 3px 6px;
+}
+
+:host(.editor-markdown--compacto) .editor-markdown__barra button {
+    min-width: 24px;
+    min-height: 24px;
+    padding: 3px 5px;
+    font-size: 9px;
+}
+
+:host(.editor-markdown--compacto) ::ng-deep .milkdown .editor {
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+:host(.editor-markdown--compacto) .editor-markdown__voltar-topo {
+    display: none;
+}
+
+// Leitura compacta ("peek" de Efeito adicional/Descrição/Restrição, sem toolbar) — o texto
+// original nesses lugares era um `<p>`/`<span>` sem moldura própria, herdando a caixa do
+// card que já o envolve (ex.: `.ataque-lista__efeito`). Sem isto, o `background`/`min-height`
+// do editor cria uma 2ª caixa visível dentro da 1ª — a moldura de edição só faz sentido com a
+// toolbar presente.
+:host(.editor-markdown--compacto.editor-markdown--somente-leitura) {
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+    background: transparent;
+}
+
+:host(.editor-markdown--compacto.editor-markdown--somente-leitura) .editor-markdown__superficie {
+    min-height: 0;
+}
+
+:host(.editor-markdown--compacto.editor-markdown--somente-leitura) ::ng-deep .milkdown,
+:host(.editor-markdown--compacto.editor-markdown--somente-leitura) ::ng-deep .milkdown .editor {
+    min-height: 0;
+    padding: 0;
+}
+
+:host(.editor-markdown--compacto.editor-markdown--somente-leitura) ::ng-deep .milkdown .editor {
+    padding: 0;
+}
+
 @media (max-width: 560px) {
     .editor-markdown__barra button {
         min-width: 36px;

@@ -1,5 +1,85 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-18 — Edição em Markdown: história/anotações (jogador e criatura), efeito adicional de Ataque, descrição/restrição de Habilidade
+
+Pedido exploratório do autor em conversa: aplicar o mesmo editor de Markdown que o Caderno de
+Campanha já tinha, na história/anotações da ficha de jogador e de criatura e, de forma mais
+ambiciosa, no efeito adicional de Ataques e na descrição/restrição de Habilidades (jogador e
+criatura). Respondido primeiro com uma investigação (`Explore`) do que já existia — `EditorMarkdown`
+(Milkdown) só vivia em `modules/pagina-caderno/`, os 6 campos eram `string` simples sem
+migração de schema necessária, e `m3-32-ficha-anotacoes.spec.md` já tinha marcado "rich
+text/markdown" como Fora de Escopo para Anotações — e três decisões via `AskUserQuestion`: promover
+o editor para `shared/ui/` (em vez de importar entre módulos), incluir `restricao` (campo de uma
+linha) no Markdown também, e abrir uma spec nova revisitando a decisão da m3-32 em vez de só
+implementar por cima. Spec: `docs/specs/done/editor-markdown-campos-texto-livre.spec.md`.
+
+**Promoção do primitivo.** `EditorMarkdown` saiu de `modules/pagina-caderno/` para
+`shared/ui/editor-markdown/` sem mudar a API existente (`[valor]`/`(valorChange)`/
+`[somenteLeitura]`/`[documentoColaborativo]`/`[awareness]`) — `CadernoFlutuante` só trocou o
+caminho do import. Ganhou `ControlValueAccessor` (`NG_VALUE_ACCESSOR`) para poder ser usado com
+`formControlName` nos formulários reativos de Ataque/Habilidade de criatura, sem que isso muda o
+modo `[valor]`/`(valorChange)` direto que o Caderno já usava (`usandoCva`, travado no 1º
+`writeValue`, decide qual dos dois é a fonte de verdade). Ganhou também `[compacto]` — reduz
+padding/toolbar/`min-height` para caber num campo de formulário curto em vez de uma página inteira
+do Caderno — e `[rotulo]`, o nome acessível do campo (necessário porque
+`@angular-eslint/template/label-has-associated-control` reprova um `<label>` em volta de um
+componente que não é elemento de formulário nativo; os 3 pontos que usavam `<label>` em volta do
+editor viraram `<div>` com `[rotulo]` explícito).
+
+**Aplicação nos 6 campos:** `historia`/`anotacoes` de `FichaVisualizacao` (edição inline com
+Salvar/Cancelar — a`história`, que antes confirmava só no `blur` do `<textarea>`, ganhou os mesmos
+botões que Anotações já tinha, porque um editor rico com toolbar não tem um "blur simples" que
+sirva pra salvar), `anotacoes` de `CriaturaVisualizacao` (mesmo padrão), `efeito` de
+`CriaturaAtaqueLista` (`formControlName` direto) e `descricao`/`restricao` de
+`CriaturaHabilidadeLista` + `descricao` de `FichaHabilidades` (idem). Dados existentes: nenhuma
+migração — os 6 campos continuam `string`/`string | null` no mesmo JSONB; texto plano já digitado é
+Markdown válido e aparece sem alteração na primeira renderização (confirmado ao vivo com anotações/
+história/descrição pré-existentes via seed REST).
+
+**Achado ao vivo, corrigido antes do fecho:** o "peek" de leitura compacta (Efeito adicional,
+Descrição/Restrição de Habilidade) ganhou uma 2ª caixa escura visível dentro do card que já o
+envolve — o texto original nesses 3 lugares era um `<p>`/`<span>` sem moldura própria
+(`white-space: pre-wrap`, sem `background`/`border`), e o `background: var(--bg)`/`min-height` que
+o host do editor sempre aplicava criava uma caixa nova, inclusive cortando a última linha do texto
+por `overflow` num teste inicial da correção. `:host(.editor-markdown--compacto.editor-markdown--somente-leitura)`
+zera `background`/`min-height`/padding interno do Milkdown (`overflow: visible`) — só nesse combo
+específico (leitura compacta); a edição compacta (com toolbar) continua com a caixa normal, igual
+aos outros campos do formulário.
+
+**Divergência assumida:** `restricao` de Habilidade de criatura era uma "tag clara" pequena e
+itálica (chip de uma linha); com o editor sempre em bloco (mesmo compacto/leitura), ela virou um
+parágrafo maior sem itálico — aceito porque o campo passou a suportar Markdown completo (negrito,
+etc.), que não cabe na estética de chip de uma palavra. Blockquote (`>`) não tem estilo visual
+próprio no primitivo (nem tinha no Caderno) — aparece como texto plano sem recuo/borda; gap
+pré-existente do primitivo, não introduzido por esta task, não corrigido aqui (fora do escopo da
+spec).
+
+Testes: `editor-markdown` focado 52/52 (49 do comportamento existente + 3 novos de
+`ControlValueAccessor` — valor inicial do `FormControl`, digitação de volta ao `FormControl`,
+`disable()` refletido como somente leitura); `caderno-flutuante`/`ficha-visualizacao`/
+`criatura-visualizacao`/`criatura-ataque-lista`/`ficha-habilidades`/`criatura-habilidade-lista`
+focado 310/310 (5 testes pré-existentes reescritos — dependiam de `<textarea>`/classes que não
+existem mais, ou de `raiz.textContent` síncrono que não reflete o Milkdown, que monta
+assíncrono — passaram a inspecionar `EditorMarkdown.valor()`/presença do elemento via
+`fixture.debugElement.query`); suíte completa `npm run test --workspace=frontend`: 130/130
+arquivos, 1840/1840 testes (sem falha nova, sem a falha `P-071` desta vez — não investigada, não
+é desta task); `npm run build`/`npm run lint --workspace=frontend`: 0 erros novos (o lint do
+repo inteiro tem ~18k warnings pré-existentes de estilo de aspas, não relacionados, confirmado
+comparando a mesma rodada antes das mudanças via `git stash`).
+
+Verificado ao vivo (Postgres 16 local sem Docker — daemon indisponível no ambiente, mesma situação
+registrada em 15/09 — + backend + frontend reais, cenário via REST: 1 mestre, 1 ficha de jogador
+com história/anotações/habilidade, 1 criatura com ataque/habilidade com efeito/descrição/restrição
+em Markdown incluindo cabeçalho, negrito e blockquote) nos 2 viewports obrigatórios (`1920×1080`/
+`360×800`): os 6 campos em leitura e edição, história/anotações do jogador (aba própria e painel
+flutuante), anotações/ataque/habilidade da criatura (aba própria e painel flutuante), toolbar
+completa e compacta, sem overflow em nenhum viewport, texto existente aparecendo sem alteração.
+Único ponto não verificado ao vivo isoladamente: o painel de Anotações do jogador especificamente
+no mobile (seletor do menu "⋯" ficou instável no fluxo de automação) — o mesmo mecanismo
+(`app-painel-flutuante` + `app-editor-markdown`) foi confirmado funcionando no mobile pelo
+equivalente de criatura (`#criatura-anotacoes`) e pela História do próprio jogador no mobile; fica
+como verificação pendente de baixo risco, não um "não verificado" às ciegas.
+
 ## 2026-09-18 — Ficha de criatura: confirmação de remoção migrada pro `ConfirmacaoService` (ui-15) e polimento visual de Ataques/Habilidades/Anotações
 
 Dois pedidos do autor na mesma sessão, sobre a ficha de criatura: (1) "a confirmação da remoção

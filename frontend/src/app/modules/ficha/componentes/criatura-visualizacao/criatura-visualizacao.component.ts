@@ -46,6 +46,7 @@ import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
@@ -142,6 +143,7 @@ const ANOTACOES_ALTURA_MINIMA = 260;
     Botao,
     BotaoIcone,
     Campo,
+    EditorMarkdown,
     Icone,
     Tooltip,
     AutoFocus,
@@ -418,11 +420,17 @@ export class CriaturaVisualizacao {
     this.ajustarVida(-total);
   }
 
+  /** Rascunho do editor Markdown de Anotações — `app-editor-markdown` não tem `.value` de DOM. */
+  protected readonly rascunhoAnotacoes = signal('');
+
   protected editando(chave: string): boolean {
     return this.campoEmEdicao() === chave;
   }
 
   protected editar(chave: string): void {
+    if (chave === 'anotacoes') {
+      this.rascunhoAnotacoes.set(this.dados().anotacoes ?? '');
+    }
     this.campoEmEdicao.set(chave);
   }
 

@@ -1720,23 +1720,20 @@
     >
         <div class="criatura__anotacoes-caixa criatura__anotacoes-caixa--painel">
             @if (editando("anotacoes")) {
-                <textarea
-                    #entradaAnotacoes
-                    appAutoFocus
+                <app-editor-markdown
                     class="criatura__anotacoes"
-                    aria-label="Anotações"
-                    placeholder="Escreva suas anotações aqui…"
-                    [value]="dados().anotacoes ?? ''"
+                    [valor]="rascunhoAnotacoes()"
+                    [rotulo]="'Anotações'"
+                    (valorChange)="rascunhoAnotacoes.set($event)"
                     (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
-                ></textarea>
+                />
                 <div class="criatura__anotacoes-acoes">
                     <button
                         app-botao
                         variante="primario"
                         tamanho="pequeno"
                         type="button"
-                        (click)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
+                        (click)="confirmarAnotacoes(rascunhoAnotacoes()); cancelarEdicao()"
                     >
                         Salvar
                     </button>
@@ -1761,7 +1758,12 @@
                     Editar anotações
                 </button>
                 @if (dados().anotacoes) {
-                    <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
+                    <app-editor-markdown
+                        class="criatura__anotacoes"
+                        [valor]="dados().anotacoes ?? ''"
+                        [somenteLeitura]="true"
+                        [rotulo]="'Anotações'"
+                    />
                 } @else {
                     <p class="criatura__vazio">Sem anotações.</p>
                 }

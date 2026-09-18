@@ -10,7 +10,29 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-18 · **Última decisão registrada:**
-> Ficha de criatura: `criatura-ataque-lista`/`criatura-habilidade-lista`/`criatura-resistencia-lista`
+> `editor-markdown-campos-texto-livre` concluída — história/anotações da ficha de jogador,
+> anotações/efeito adicional de Ataque/descrição+restrição de Habilidade da ficha de criatura e
+> descrição de Habilidade de jogador agora usam o mesmo editor Markdown do Caderno de Campanha
+> (`EditorMarkdown`, Milkdown), promovido de `modules/pagina-caderno/` para
+> `shared/ui/editor-markdown/` — ganhou `ControlValueAccessor` (uso com `formControlName` nos
+> formulários de Ataque/Habilidade), `[compacto]` (campo de formulário, não página inteira) e
+> `[rotulo]` (nome acessível, exigido pelo lint quando o `<label>` em volta virou `<div>`). Nenhuma
+> migração de schema — os 6 campos continuam `string`/`string | null` no JSONB, texto plano
+> existente aparece sem alteração. Achado ao vivo corrigido: o "peek" de leitura compacta (Efeito
+> adicional, Descrição/Restrição) ganhava uma 2ª caixa escura dentro do card que já o envolvia —
+> `:host(.editor-markdown--compacto.editor-markdown--somente-leitura)` zera fundo/`min-height`/
+> padding interno só nesse combo. Divergência assumida: `restricao` de Habilidade de criatura era
+> uma "tag clara" pequena/itálica, virou parágrafo maior sem itálico (aceito — o campo passou a
+> suportar Markdown completo). Blockquote (`>`) não tem estilo visual próprio no primitivo — gap
+> pré-existente do Caderno, não corrigido nesta task. `npm run test --workspace=frontend` completo:
+> 130/130 arquivos, 1840/1840 testes (5 testes pré-existentes reescritos — dependiam de `<textarea>`
+> ou de `raiz.textContent` síncrono que o Milkdown assíncrono não preenche a tempo); build/lint 0
+> erros novos. Verificado ao vivo (Postgres local sem Docker + backend + frontend reais, cenário via
+> REST) nos 2 viewports obrigatórios, leitura e edição dos 6 campos — pendente apenas o painel de
+> Anotações do jogador isoladamente no mobile (mecanismo idêntico já confirmado no mobile pelo
+> equivalente de criatura). Spec em `docs/specs/done/editor-markdown-campos-texto-livre.spec.md`.
+> Detalhe em `HISTORY.md`.
+> Antes: Ficha de criatura: `criatura-ataque-lista`/`criatura-habilidade-lista`/`criatura-resistencia-lista`
 > tinham a confirmação de remoção num antipadrão inline anterior ao `ConfirmacaoService` (ui-15) —
 > migradas, junto de "Tornar rolagens públicas" e (por pedido explícito do autor, numa segunda
 > rodada) "Excluir ficha". Esse último exigiu ampliar o primitivo: `ConfirmacaoPedido` ganhou
@@ -380,7 +402,13 @@
 
 ## 1. Próxima Task
 
-**`icones-olho-selo` concluída (2026-09-14):** os 3 itens de "olho" da coluna de ações
+**`editor-markdown-campos-texto-livre` concluída (2026-09-18):** história/anotações do jogador,
+anotações/efeito adicional/descrição+restrição da criatura e descrição de habilidade do jogador
+ganharam o editor Markdown do Caderno (`EditorMarkdown`, promovido para `shared/ui/`). Resumo
+completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. Spec em
+`docs/specs/done/editor-markdown-campos-texto-livre.spec.md`.
+
+**Antes: `icones-olho-selo` concluída (2026-09-14):** os 3 itens de "olho" da coluna de ações
 ("Tornar rolagens públicas"/"Ocultar rolagens", "Acesso de visualização", "Exibir/Ocultar
 ficha") ganharam a técnica de "base + selo" de `fragmento-construtor`/`fragmento-potencializador`
 — `olho-rolagens`/`olho-fechado-rolagens` (selo de dado) e `olho-membros` (selo de uma pessoa),

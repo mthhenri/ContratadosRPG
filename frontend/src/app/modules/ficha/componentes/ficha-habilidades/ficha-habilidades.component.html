@@ -222,7 +222,13 @@
                         }
                     </div>
                     @if (habilidade.descricao) {
-                        <span class="habilidades__descricao">{{ habilidade.descricao }}</span>
+                        <app-editor-markdown
+                            class="habilidades__descricao"
+                            [valor]="habilidade.descricao"
+                            [somenteLeitura]="true"
+                            [compacto]="true"
+                            [rotulo]="'Descrição de ' + habilidade.nome"
+                        />
                     }
                     @if (indiceUtilizando() === idx) {
                         <div class="habilidades__utilizar-variavel">
@@ -352,13 +358,12 @@
                 <span>Variável</span>
             </label>
         </div>
-        <textarea
+        <app-editor-markdown
             class="habilidades__campo habilidades__campo--area"
             formControlName="descricao"
-            rows="2"
-            placeholder="Descrição do efeito (opcional)"
-            aria-label="Descrição da habilidade"
-        ></textarea>
+            [compacto]="true"
+            [rotulo]="'Descrição da habilidade'"
+        />
         <div class="habilidades__form-acoes">
             <button
                 app-botao

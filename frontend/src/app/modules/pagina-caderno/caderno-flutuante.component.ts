@@ -40,7 +40,7 @@ import {
 import { TempoRealService } from '../../core/services/tempo-real.service';
 import type { CadernoTamanho } from './caderno-flutuante.model';
 import { CadernoFlutuanteStore } from './caderno-flutuante.store';
-import { EditorMarkdown } from './editor-markdown.component';
+import { EditorMarkdown } from '../../shared/ui/editor-markdown/editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
 import { CadernoEsquadraoColaborativoService } from './caderno-esquadrao-colaborativo.service';
 import {
