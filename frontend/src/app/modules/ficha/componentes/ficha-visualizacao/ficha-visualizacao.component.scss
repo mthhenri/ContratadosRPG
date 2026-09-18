@@ -1238,6 +1238,19 @@
         min-height: 0;
     }
 
+    // O card de Rolagens (`FichaRolagensPainel`) fica sempre montado (não é `@if`), pra sobreviver à
+    // troca de aba — só `[oculto]` esconde o conteúdo dele por dentro. Sem este modificador, o
+    // `flex: 1` do `&__conteudo` acima faz esse wrapper vazio disputar espaço em pé de igualdade com
+    // o `&__conteudo` da aba realmente visível: como o flexbox reparte o espaço livre por peso, não
+    // por conteúdo, as duas caixas saem exatamente na metade da altura — e a aba ativa (Extras,
+    // História, qualquer uma com pouco conteúdo) sobra com metade do card em branco acima do texto.
+    // Achado ao vivo pelo autor (aba Extras com um vão enorme antes de "Identidade/Fragmentos").
+    // Zerar `flex-grow`/`flex-basis` aqui tira esse wrapper da disputa quando ele não é a aba ativa.
+    &__conteudo--rolagens-oculta {
+        flex: 0 0 0;
+        min-height: 0;
+    }
+
     // Única seção com a caixa de fundo mais clara (era o "conteudo" inteiro antes) — Sequelas/
     // Traumas/Lesões agora usam o próprio visual do `FichaSanidade` (editável). Altura mínima pra
     // ocupar um espaço considerável mesmo com pouco (ou nenhum) texto — o espaço sobrou das tags

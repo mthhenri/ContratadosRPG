@@ -33,7 +33,13 @@
 
 .ficha-pagina {
     width: 100%;
-    min-height: calc(100dvh - var(--altura-topbar));
+    // Sem piso de `100dvh` (era `min-height: calc(100dvh - var(--altura-topbar))`): com
+    // `align-items: stretch` isso forçava toda a cadeia flex de dentro — `.ficha-visao`, o card de
+    // Status, cada `&__conteudo` de aba (`ficha-visualizacao.component.scss`) — a esticar até a
+    // altura da janela mesmo numa ficha nova/vazia (poucos atributos, sem sequela/trauma/lesão),
+    // sobrando fundo quadriculado abaixo do card sem nenhum conteúdo ali. Achado ao vivo pelo autor.
+    // A coluna de ações (`app-coluna-acoes`, `align-self: stretch`) some no bloco `@include
+    // bp.mobile` abaixo, então este ajuste só encolhe o desktop/tablet.
     margin: 0;
     transition:
         width 0.26s cubic-bezier(0.22, 1, 0.36, 1),

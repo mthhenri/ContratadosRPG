@@ -1876,7 +1876,12 @@
              coluna lateral de `CampanhaDetalhe` também renderiza — nenhum derivado de rolagem
              (atributos efetivos/proficiência/atalhos de dano) duplicado entre os dois lugares. -->
                     @if (mostrarRolagensCompacto()) {
-                        <div class="ficha-status__conteudo">
+                        <div
+                            class="ficha-status__conteudo"
+                            [class.ficha-status__conteudo--rolagens-oculta]="
+                                abaStatusEfetiva() !== 'rolagens'
+                            "
+                        >
                             <app-ficha-rolagens-painel
                                 [dados]="dados()"
                                 [oculto]="abaStatusEfetiva() !== 'rolagens'"

@@ -25,7 +25,9 @@
 
 .ficha-pagina {
     width: 100%;
-    min-height: calc(100dvh - var(--altura-topbar));
+    // Mesmo ajuste de `visualizar.page.scss` (ficha de jogador) — ver o comentário lá: sem piso de
+    // `100dvh`, a cadeia `align-items: stretch` para de forçar o card de Status a esticar até a
+    // altura da janela numa ficha curta, deixando de sobrar fundo quadriculado vazio embaixo dele.
     margin: 0;
     padding: 0;
     display: flex;

@@ -865,6 +865,15 @@
         min-height: 0;
     }
 
+    // Mesmo caso de `ficha-visualizacao.component.scss` (`&__conteudo--rolagens-oculta`, ver comentário
+    // lá): o wrapper de `FichaRolagensPainel` fica montado sempre que `mostrarRolagensCompacto()` é
+    // `true`, mesmo quando a aba ativa é outra — sem zerar seu `flex-grow` ele disputa metade da altura
+    // do card com a aba visível e deixa a aba curta (Extras/História) com um vão em branco.
+    &__conteudo--rolagens-oculta {
+        flex: 0 0 0;
+        min-height: 0;
+    }
+
     // Única seção com a caixa de fundo mais clara (era o "conteudo" inteiro antes) — Sequelas/
     // Traumas/Lesões agora usam o próprio visual do `FichaSanidade` (editável). Altura mínima pra
     // ocupar um espaço considerável mesmo com pouco (ou nenhum) texto — o espaço sobrou das tags
