@@ -225,6 +225,8 @@ export interface OpcoesDoPainel {
   readonly incluirFichaDoJogador?: boolean;
   /** Os membros nunca chegam (`listarMembros` fica pendente) — o papel é desconhecido. */
   readonly membrosPendentes?: boolean;
+  /** A lista de encontros chega, mas o encontro em si (`recuperarEncontro`) fica pendente. */
+  readonly encontroPendente?: boolean;
   /**
    * Não provê o `EncontroPainelDadosService` no `TestBed`: a casca o declara nos próprios
    * `providers`, e um segundo provedor na raiz criaria duas instâncias (duas cargas).
@@ -244,6 +246,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     historicoExtra = [],
     incluirFichaDoJogador = false,
     membrosPendentes = false,
+    encontroPendente = false,
     semServicoDeDados = false,
   } = opcoes;
   const encontroAlterado$ = new Subject<EncontroAlteradoDto>();
@@ -254,6 +257,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const paginaEsquadraoExcluida$ = new Subject<{ campanhaId: number; paginaId: number }>();
   const presencaEsquadraoCaderno$ = new Subject<unknown>();
   const membrosPendentes$ = new Subject<CampanhaMembroResumoDto[]>();
+  const encontroPendente$ = new Subject<EncontroRecuperadoDto>();
   const encontroService = {
     listarPorCampanha: vi.fn(() =>
       of([
@@ -269,7 +273,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
         ...historicoExtra,
       ]),
     ),
-    recuperarEncontro: vi.fn(() => of(estado)),
+    recuperarEncontro: vi.fn(() => (encontroPendente ? encontroPendente$ : of(estado))),
     criarEncontro: vi.fn(() =>
       of({
         id: estado.id,
@@ -379,6 +383,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     encontroIniciativaPedido$,
     rolagemRegistrada$,
     membrosPendentes$,
+    encontroPendente$,
   };
 }
 

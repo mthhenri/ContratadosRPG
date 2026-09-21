@@ -195,11 +195,37 @@ describe('PainelEncontroJogador', () => {
       fixture.detectChanges();
       const elemento = fixture.nativeElement as HTMLElement;
 
-      expect(texto(elemento.querySelector('.iniciativa-jogador__carregando'))).toBe(
-        'Carregando o combate…',
-      );
+      expect(
+        elemento.querySelector('.iniciativa-jogador__linha')?.getAttribute('aria-label'),
+      ).toBe('Carregando o combate');
+      // Trilha (com o bloco de ação), Rolagens e as duas massas da ficha — a silhueta da tela pronta.
+      expect(elemento.querySelector('.iniciativa-jogador__esqueleto-trilha')).not.toBeNull();
+      expect(elemento.querySelector('.iniciativa-jogador__esqueleto-acao')).not.toBeNull();
+      expect(elemento.querySelector('.iniciativa-jogador__esqueleto-rolagens')).not.toBeNull();
+      expect(elemento.querySelector('.iniciativa-jogador__esqueleto-identidade')).not.toBeNull();
+      expect(elemento.querySelector('.iniciativa-jogador__esqueleto-conteudo')).not.toBeNull();
+      // A coluna de ações e o cabeçalho são os reais: não dependem do encontro.
+      expect(elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__item')).toHaveLength(2);
       expect(elemento.querySelector('.iniciativa-jogador__vazio')).toBeNull();
       expect(elemento.querySelector('app-trilha-turnos')).toBeNull();
+    });
+
+    it('com a lista de encontros já na tela e o encontro em voo, segue na silhueta', () => {
+      const { fixture, encontroPendente$ } = montarPainel(PainelEncontroJogador, {
+        usuarioId: USUARIO_JOGADOR,
+        encontroPendente: true,
+      });
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      expect(elemento.querySelector('.iniciativa-jogador__esqueleto-trilha')).not.toBeNull();
+      expect(elemento.querySelector('.iniciativa-jogador__vazio')).toBeNull();
+
+      encontroPendente$.next(encontroAtivo);
+      encontroPendente$.complete();
+      fixture.detectChanges();
+
+      expect(elemento.querySelector('.iniciativa-jogador__esqueleto-trilha')).toBeNull();
+      expect(elemento.querySelector('app-trilha-turnos')).not.toBeNull();
     });
 
     it('sem combate aberto, mantém a casca e o palco vira um estado vazio', () => {

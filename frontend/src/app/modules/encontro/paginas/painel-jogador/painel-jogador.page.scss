@@ -10,16 +10,10 @@
 
 @include casca.casca("iniciativa-jogador");
 @include casca.grade;
+// Trilha e Rolagens em carregamento — antes dos ajustes de largura abaixo, que vencem o `min-height`.
+@include casca.esqueleto-laterais("iniciativa-jogador");
 
 .iniciativa-jogador {
-    &__carregando {
-        margin: 0;
-        font-family: var(--font-sans);
-        font-size: 14px;
-        font-style: italic;
-        color: var(--text-mute);
-    }
-
     // Ferramentas no cabeçalho — só existem no mobile com a ficha no palco (ver `--com-ficha`).
     &__ferramentas {
         display: none;
@@ -47,6 +41,55 @@
     &__esqueleto-ficha {
         display: block;
         min-height: 480px;
+    }
+
+    // Carregamento da tela inteira: o bloco de ação da trilha (entre os contadores e a fila) e o palco
+    // com as duas massas do cartão de ficha — identidade/status e abas/conteúdo. A silhueta é a de
+    // quem tem ficha em campo, o caso normal de quem abre esta tela.
+    &__esqueleto-acao {
+        flex: none;
+        height: 88px;
+
+        @include bp.tablet {
+            width: 230px;
+        }
+
+        // Mobile: como na trilha real, contadores, o bloco de ação em linha própria e a fila abaixo.
+        @include bp.mobile {
+            flex: 1 1 100%;
+            width: auto;
+            min-width: 0;
+        }
+    }
+
+    &__esqueleto-trilha {
+        @include bp.mobile {
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+    }
+
+    &__esqueleto-cartao {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-16);
+    }
+
+    &__esqueleto-identidade,
+    &__esqueleto-conteudo {
+        min-height: 620px;
+
+        @include bp.mobile {
+            min-height: 360px;
+        }
+    }
+
+    &__esqueleto-identidade {
+        flex: 1 1 400px;
+    }
+
+    &__esqueleto-conteudo {
+        flex: 1.4 1 460px;
     }
 
     // Agrupa a trilha e as Rolagens. Sem caixa própria (`display: contents`) — no desktop largo cada

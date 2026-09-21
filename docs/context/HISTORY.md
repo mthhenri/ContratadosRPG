@@ -1,5 +1,33 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Iniciativa: revisão dos esqueletos de carregamento (mestre e jogador)
+
+Pedido do autor: "revisa os skeletons tanto da visão de mestre quanto a de jogador nas telas de iniciativa".
+Revisão feita na aplicação real, segurando cada requisição de carga (membros, lista de encontros, encontro,
+fichas, feed) em etapas e capturando o que cada papel enxerga, em `1920×1080`, `1366×768`, `960×1080` e `360×800`.
+
+- **Achado 1 — o estado vazio piscava, nos dois papéis.** `carregandoEncontro` era desligado pelo `finalize` da
+  *lista* de encontros, mas o encontro em si (`recuperarEncontro`) era buscado por um `subscribe` aninhado, depois.
+  Entre as duas respostas a tela não "carregava" e ainda não tinha encontro: o jogador via "Nenhum combate em
+  andamento" e o mestre via "Novo combate" por uma ida à rede, e só então o combate aparecia. Corrigido no
+  `EncontroPainelDadosService`: a busca do encontro virou `switchMap` da lista, e o `finalize` fica no fim da
+  cadeia — o esqueleto segue até o encontro chegar (ou até se saber que não há aberto).
+- **Achado 2 — a visão do jogador não tinha esqueleto**, só a linha "Carregando o combate…" sob o cabeçalho. Ganhou
+  a silhueta da própria tela pronta: trilha com o bloco de ação | Rolagens | palco com as duas massas do cartão de
+  ficha (identidade/status e abas/conteúdo); coluna de ações e cabeçalho são os reais, porque não dependem do
+  encontro. No mobile a trilha quebra em linhas como a real (contadores, bloco de ação, fila). A geometria de
+  trilha e Rolagens — idêntica nas duas visões — foi para o parcial `_casca-iniciativa.scss`
+  (`@mixin esqueleto-laterais`); o esqueleto do mestre continua igual (conferido em 1920 e 360).
+- **Limite conhecido, não corrigido:** enquanto os membros não chegam o papel é desconhecido e a casca monta a página
+  do mestre — quem é jogador vê por um instante a silhueta do mestre (coluna de 5 itens, barra de condução) antes de a
+  do jogador assumir. Resolver exigiria saber o papel antes da lista de membros (hoje só ela o informa). No mobile, com
+  a ficha no palco, a barra de ações do rodapé some e as duas ferramentas sobem ao cabeçalho quando a tela termina de
+  carregar (o esqueleto não antecipa isso).
+- **Testes:** `+4` — serviço (continua carregando entre a lista e o encontro; sem encontro aberto não busca nada),
+  jogador (silhueta completa; encontro em voo segue no esqueleto e depois monta a trilha) e mestre (encontro em voo
+  não pisca o estado vazio). `painel-encontro.testing.ts` ganhou `encontroPendente`. Módulo Encontro: 13 arquivos /
+  233 testes verdes; eslint sem erros nos arquivos tocados.
+
 ## 2026-09-21 — Iniciativa: mestre e jogador em páginas separadas e nova visão do jogador (ui-39)
 
 Pedido do autor, depois de aprovar o mock "POC Iniciativa do jogador" (artifact, v1): "monta esse spec e já

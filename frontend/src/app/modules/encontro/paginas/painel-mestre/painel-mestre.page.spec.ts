@@ -722,6 +722,24 @@ describe('PainelEncontroMestre', () => {
         expect(elemento.querySelector('.iniciativa-tela')).toBeNull();
       });
 
+      it('com a lista de encontros já na tela e o encontro em voo, segue na silhueta — não pisca o estado vazio', () => {
+        const { fixture, encontroPendente$ } = montarPainel(PainelEncontroMestre, {
+          usuarioId: USUARIO_MESTRE,
+          encontroPendente: true,
+        });
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        expect(elemento.querySelectorAll('.grade app-esqueleto').length).toBeGreaterThan(0);
+        expect(elemento.querySelector('.iniciativa-mestre__vazio')).toBeNull();
+        expect(elemento.querySelector('app-estado-vazio')).toBeNull();
+
+        encontroPendente$.next(encontroAtivo);
+        encontroPendente$.complete();
+        fixture.detectChanges();
+
+        expect(elemento.querySelectorAll('.grade app-esqueleto')).toHaveLength(0);
+        expect(elemento.querySelector('app-trilha-turnos')).not.toBeNull();
+      });
     });
 
     it('monta a casca: coluna de ações, trilha, rolagens fixa, condução, ficha resumida e grade', () => {

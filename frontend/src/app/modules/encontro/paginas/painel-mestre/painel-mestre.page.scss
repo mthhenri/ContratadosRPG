@@ -373,7 +373,9 @@
 // Esqueleto de carregamento da visão do mestre — reaproveita a casca real (`__conteudo`,
 // `__cabecalho`, `__linha`, `__trilha`, `__rolagens`, `__palco`, `__corpo`, `__resumo`, `__todos`,
 // `.grade--palco`); aqui só a geometria de cada bloco. A identidade (cor/raio/pulso) vem de
-// `app-esqueleto`; as três superfícies (trilha, rolagens) espelham as dos componentes reais.
+// `app-esqueleto`. Trilha e Rolagens (as duas colunas laterais) vêm do parcial compartilhado.
+@include casca.esqueleto-laterais("iniciativa-mestre");
+
 .iniciativa-mestre {
     &__esqueleto-acao {
         flex: none;
@@ -397,81 +399,6 @@
         width: 260px;
         max-width: 50%;
         height: 22px;
-    }
-
-    // Trilha de turnos: contadores (Rodada/Turno) + a fila de quem age.
-    &__esqueleto-trilha {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-12);
-        padding: var(--space-12) var(--space-8);
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-card);
-        min-height: 360px;
-
-        @include bp.tablet {
-            flex-direction: row;
-            align-items: center;
-            min-height: 0;
-            overflow: hidden;
-        }
-    }
-
-    &__esqueleto-contadores {
-        display: flex;
-        justify-content: space-around;
-        gap: var(--space-8);
-
-        @include bp.tablet {
-            flex: none;
-            gap: var(--space-12);
-        }
-    }
-
-    &__esqueleto-contador {
-        width: 56px;
-        height: 40px;
-    }
-
-    &__esqueleto-passos {
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        gap: var(--space-8);
-        min-width: 0;
-
-        @include bp.tablet {
-            flex-direction: row;
-        }
-    }
-
-    &__esqueleto-passo {
-        height: 44px;
-
-        @include bp.tablet {
-            flex: none;
-            width: 120px;
-        }
-    }
-
-    // Rolagens: o container real é o posicionado que o histórico `[fixo]` preenche.
-    &__esqueleto-rolagens {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
-        padding: var(--space-12);
-        overflow: hidden;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-card);
-    }
-
-    &__esqueleto-rolagem {
-        flex: none;
-        height: 64px;
     }
 
     &__esqueleto-conducao {

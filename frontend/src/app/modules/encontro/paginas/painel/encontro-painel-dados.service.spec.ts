@@ -86,6 +86,33 @@ describe('EncontroPainelDadosService', () => {
       expect(dados.carregando()).toBe(true);
       expect(dados.visaoDoMestre()).toBe(true);
     });
+
+    it('continua carregando entre a lista de encontros e o encontro — não cai no estado vazio', () => {
+      const { dados, encontroPendente$ } = montar({ encontroPendente: true });
+
+      // Os membros já chegaram e a lista também; falta o encontro em si.
+      expect(dados.membros()).not.toBeNull();
+      expect(dados.encontro()).toBeNull();
+      expect(dados.carregando()).toBe(true);
+
+      encontroPendente$.next(encontroAtivo);
+      encontroPendente$.complete();
+
+      expect(dados.encontro()?.nome).toBe('Contenção no Setor 12');
+      expect(dados.carregando()).toBe(false);
+    });
+
+    it('sem encontro aberto a carga termina sem buscar nenhum encontro', () => {
+      const encerrado: EncontroRecuperadoDto = {
+        ...encontroAtivo,
+        status: EncontroStatusEnum.ENCERRADO,
+      };
+      const { dados, encontroService } = montar({ estado: encerrado });
+
+      expect(encontroService.recuperarEncontro).not.toHaveBeenCalled();
+      expect(dados.encontro()).toBeNull();
+      expect(dados.carregando()).toBe(false);
+    });
   });
 
   describe('leitura da ordem da rodada', () => {

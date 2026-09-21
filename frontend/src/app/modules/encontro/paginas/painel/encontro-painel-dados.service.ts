@@ -1,7 +1,7 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, filter, finalize } from 'rxjs';
+import { Observable, filter, finalize, of, switchMap } from 'rxjs';
 
 import type {
   EncontroCombatenteResumoDto,
@@ -250,11 +250,13 @@ export class EncontroPainelDadosService {
    */
   private carregar(): void {
     this.carregandoEncontro.set(true);
+    // A carga só termina quando o encontro em si chega — encadeado, e não disparado de dentro do
+    // `next` da lista: entre a lista e o encontro a tela já não "carrega" e ainda não tem encontro,
+    // e piscaria o estado vazio ("Nenhum combate em andamento" / "Novo combate") por uma ida à rede.
     this.encontroService
       .listarPorCampanha(this.campanhaId)
-      .pipe(finalize(() => this.carregandoEncontro.set(false)))
-      .subscribe({
-        next: (encontros) => {
+      .pipe(
+        switchMap((encontros) => {
           this.encontrosDaCampanhaInterno.set(encontros);
           const idDaRota = this.encontroIdDaRota();
           const pedido = idDaRota === null ? null : Number(idDaRota);
@@ -262,15 +264,11 @@ export class EncontroPainelDadosService {
             pedido === null
               ? encontros.find((resumo) => resumo.status !== EncontroStatusEnum.ENCERRADO)
               : encontros.find((resumo) => resumo.id === pedido);
-          if (alvo) {
-            this.encontroService
-              .recuperarEncontro(alvo.id)
-              .subscribe({ next: (estado) => this.encontroAtual.set(estado) });
-          } else {
-            this.encontroAtual.set(null);
-          }
-        },
-      });
+          return alvo ? this.encontroService.recuperarEncontro(alvo.id) : of(null);
+        }),
+        finalize(() => this.carregandoEncontro.set(false)),
+      )
+      .subscribe({ next: (estado) => this.encontroAtual.set(estado) });
 
     this.fichaService
       .listarFichas(this.campanhaId)
