@@ -67,6 +67,106 @@ implementação, seguindo a skill `task-flow`.
   deles). Confirmado por request direto que a rota nova nunca chama `listarMembros`/
   `GET /ficha?campanhaId`/`GET /campanha/:id`.
 
+## 2026-09-21 — Fecha os dois skeletons que ficaram pendentes: ficha de criatura e campanha do mestre
+
+Pedido direto do autor, continuação de "Skeletons das telas redesenhadas" (mesma data, mais abaixo
+neste arquivo): fechar os dois itens que aquela rodada e a verificação ao vivo seguinte deixaram de
+fora — a ficha de criatura (nunca tocada) e o skeleton de campanha do mestre (redesenhado mas nunca
+renderizado de fato, código morto). Duas decisões do autor antes de implementar: (1) o skeleton de
+mestre ganha vida via dica de papel vinda de `CampanhaLista` — não removê-lo; (2) o skeleton de
+criatura reaproveita a casca real, mesmo padrão das outras telas, não só troca o mecanismo.
+
+**Ficha de criatura.** Novo `CriaturaEsqueleto` (`modules/ficha/componentes/criatura-esqueleto/`) —
+geometria de `CriaturaVisualizacao` (coluna fundida de 694px Identidade+Atributos | Status com 3
+abas Geral/Ataques/Habilidades), mesmo padrão de `FichaEsqueleto`: identidade (cor/raio/pulso) vem
+de `app-esqueleto`, aqui só a geometria de cada bloco. Substituiu a silhueta ad-hoc antiga de
+`visualizar-criatura.page.html` (`criatura-esqueleto` solto, 1 coluna genérica com "topo" rótulo+chip
+que tinha sobrado de antes da `ui-34` — o comentário do SCSS já admitia "não replica as 3 colunas
+reais"). `app-coluna-acoes`/cabeçalho da página já eram reais fora do `@if(carregando())` — só o
+miolo trocou. SCSS novo replica a grade real (`694px minmax(0,1fr)`, `ident-corpo` `230px
+minmax(0,1fr)`, colapso em `bp.tablet`/`bp.mobile`).
+
+**Campanha do mestre — dica de papel.** `CampanhaLista` já sabia o `papel` de cada linha; agora
+repassa via `[state]="{ papel: campanha.papel }"` nos dois links da linha (`lista.page.html`).
+`CampanhaDetalheShell` lê `papelHint` de `router.getCurrentNavigation()?.extras.state?.['papel']`
+no construtor e, enquanto `dados.carregando()`, monta `CampanhaDetalheMestre` quando o hint é
+`MESTRE` (senão continua caindo em `CampanhaDetalheJogador`, como sempre). O hint nunca sobrevive à
+chegada do papel de verdade — assim que `carregando()` vira `false`, a decisão volta a ser
+`dados.ehMestre()`; um hint errado (ficha stale, URL manipulada) só troca a silhueta por um
+instante, nunca os dados. Sem hint (refresh, link colado, navegação direta) o comportamento
+permanece o de sempre.
+
+**Testes.** `npm run test --workspace=frontend`: 140/140 arquivos, 2030/2030 (novos: silhueta em
+`visualizar-criatura.page.spec.ts`; três casos novos em `detalhe-shell.page.spec.ts` — hint MESTRE
+mostra `CampanhaDetalheMestre` ainda carregando, sem hint continua em jogador, hint errado troca
+para jogador assim que os membros reais chegam). ESLint dos arquivos tocados: 0 erros (só os
+avisos pré-existentes de aspas/`max-len` do resto do arquivo, não das linhas alteradas).
+
+**Verificação ao vivo.** Postgres 16 local (sem Docker no ambiente — subido via `pg_ctlcluster`,
+não pelo `docker-compose.yml`) + backend + frontend, Playwright em `1920×1080` e `360×800`, conta
+`mestre.verify`/`jogador.verify` criada via REST, criatura "A Estátua" via `POST /ficha/criatura`
+(payload de `criarDadosCriatura()`, `ficha.service.spec.ts`). Confirmado: (1) skeleton de criatura
+com a mesma geometria de colunas/cartões da tela real nos dois viewports, sem "pulo" ao assentar,
+sem overflow no mobile (chips/selos quebram em bloco cheio, como o real). (2) Navegando pela linha
+da lista como mestre, o skeleton de `CampanhaDetalheMestre` (Esquadrão/Criaturas) aparece de fato
+pela primeira vez — antes era código morto — e cede lugar ao conteúdo real sem deslocar o layout.
+(3) Navegação direta pela URL (sem passar pela lista, sem `state`) continua caindo no skeleton de
+jogador, comportamento preservado. (4) Sem erros de console além de um `ERR_CERT_AUTHORITY_INVALID`
+do proxy do ambiente, alheio à mudança.
+
+## 2026-09-21 — `criatura-designacao-fonte-unica`: nome da criatura divergia entre `ficha.nome` e `identidade.designacao`
+
+Achado pelo autor a partir de 2 screenshots: no cabeçalho/card de `CriaturaVisualizacao` a criatura
+"Eco" aparecia como "0 Eco" na Identidade, enquanto o card "Criaturas" da campanha
+(`CriaturaEsquadraoCard`) mostrava "Eco" normalmente. Não era desalinhamento de CSS — eram dois
+campos de nome divergentes. `FichaCriaturaIdentidadeDto.designacao` (JSONB, editável clicando no
+nome dentro do card Identidade) e `ficha.nome` (coluna relacional, usada em todo o resto — título
+da página, `CriaturaEsquadraoCard`, listas) só nasciam iguais na criação
+(`CriarCriatura.construirDados`, comentário já documentava essa decisão) e nunca mais depois: editar
+a Designação só emitia `identidadeMudou`, nunca `nomeMudou`. `ficha.nome` em si nem tinha caminho de
+edição funcional pra criatura — `confirmarNome`/`nomeMudou`/`ajustarNome` já existiam de ponta a
+ponta (persistência incluída em `FichaEdicaoCriaturaService.ajustarNome`) mas nenhum template
+chamava `confirmarNome`; código morto, achado ao grepar.
+
+Comparado com a ficha de jogador (pedido explícito do autor: "veja se isso também está acontecendo
+na ficha de agente") — **não acontece lá**: `FichaIdentidadeDto` (jogador) não tem campo de nome
+nenhum (só `personalidade`/`origem`/`habilidade` — conceito de identidade diferente, sem
+equivalente a "designação"); o card Identidade de `FichaVisualizacao` já edita `nome()` direto via
+`confirmarIdentidade('nome', ...)` → `ajusteNome` → `ficha.nome`. A criatura era a única ficha com
+essa duplicação.
+
+Correção: fonte única. `FichaCriaturaIdentidadeDto` perdeu o campo `designacao` (documentado no
+lugar do campo removido, apontando para `ficha.nome`). O card Identidade de `CriaturaVisualizacao`
+continua com o mesmo rótulo/posição "Designação" (nada mudou visualmente — mesmas classes CSS
+`criatura__designacao`/`criatura__designacao-entrada`), mas agora lê/edita `nome()` e chama
+`confirmarNome()` (ganhou a mesma trava de vazio/sem-mudança de
+`FichaVisualizacao.confirmarIdentidade('nome', ...)`) em vez de `confirmarCampoIdentidade
+('designacao', ...)`. `CriarCriatura` (assistente de criação) não manda mais `designacao` dentro de
+`identidade` — o campo local do formulário (rascunho até o envio) virou só a origem de `nome:` na
+criação, como já era. `docs/SCHEMA.md`, a fixture de seed dev (`cenario-dev.ts`, 3 criaturas) e os 8
+arquivos de teste que montavam `identidade.designacao` foram atualizados.
+
+Testes: `npm run test --workspace=shared` 49/49 arquivos, 759/759; `--workspace=backend` 32/32,
+565/565; `--workspace=frontend` 140/140, 2028/2028 (inclui 2 testes novos em
+`criatura-visualizacao.component.spec.ts`: `confirmarNome` emite `nomeMudou` — não
+`identidadeMudou` — e ignora valor vazio/sem mudança). Lint dos três workspaces sem erro novo (só
+warnings pré-existentes de aspas/`max-len`, repositório inteiro). `npm run openapi:gerar-contratos
+--workspace=backend` regenerado — o diff resultante também absorveu drift pré-existente do arquivo
+gerado (não passava por esse comando havia várias tasks: `registro`/`porte`/`comportamento` no
+resumo, `ACAO_LIVRE`/`TURNO`, Deslocamento Indeterminado, `CampanhaSalaSairDto`/`FichaSalaSairDto`
+novos) — mecânico, não é escopo desta task, só ficou junto por ser um arquivo gerado de uma peça só.
+
+Verificado ao vivo (Postgres 16 local sem Docker — daemon indisponível no ambiente — + backend +
+frontend reais): criatura criada via REST, aberta em `/campanhas/:id/criatura/:id`. Antes da
+correção o bug não reproduzia neste cenário porque a fixture de teste nasce com os dois campos
+iguais — o defeito só aparece quando a Designação é reeditada depois da criação, exatamente o que
+o autor fez. Renomeei a Designação pelo card Identidade sem reload: o título do cabeçalho
+atualizou junto, na hora (prova de fonte única, não só de payload). Recarreguei a página — persistiu
+nos dois lugares. Abri a campanha — o card `CriaturaEsquadraoCard` já mostrava o nome novo. Tudo
+conferido em `1920×1080` e `360×800`, sem overflow (nenhuma classe CSS mudou, então o layout em si
+não corria risco, mas a fonte de dados mudou e podia ter vazado `undefined`/vazio se algum caminho
+não tivesse sido migrado — não vazou). Task solta, sem spec.
+
 ## 2026-09-21 — Brainstorming: módulo de Cenas (amplia o M7) e M9 de documentos
 
 Pedido do autor: tipar a cena na criação da Iniciativa (nem toda cena com iniciativa é combate) e

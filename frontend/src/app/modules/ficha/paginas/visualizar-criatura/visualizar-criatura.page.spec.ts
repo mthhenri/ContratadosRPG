@@ -43,7 +43,7 @@ import { RolagemService } from '../../rolagem.service';
 describe('CriaturaVisualizar', () => {
   const dados: FichaCriaturaDadosDto = {
     identidade: {
-      designacao: 'A Estátua', origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
+      origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
       naturezaFisica: 'x', comportamento: ComportamentoCriaturaEnum.CACADORA, motivacao: 'x', ganchoUnico: 'x',
     },
     na: NivelAmeacaEnum.ALTA, vd: 30,
@@ -166,6 +166,17 @@ describe('CriaturaVisualizar', () => {
     const { raiz, fichaService } = montar({ usuarioLogadoId: 7 });
     expect(fichaService.recuperarFichaCriatura).toHaveBeenCalledWith(4);
     expect(raiz.querySelector('app-criatura-visualizacao')).not.toBeNull();
+  });
+
+  it('enquanto carrega, mostra a silhueta da ficha de criatura', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    fixture.componentInstance['carregando'].set(true);
+    fixture.detectChanges();
+
+    const silhueta = raiz.querySelector('app-criatura-esqueleto');
+    expect(silhueta?.getAttribute('role')).toBe('status');
+    expect(silhueta?.getAttribute('aria-label')).toBe('Carregando ficha');
+    expect(raiz.querySelector('app-criatura-visualizacao')).toBeNull();
   });
 
   it('não gerencia acesso nem busca acessos para quem não é dono/mestre', () => {

@@ -55,39 +55,33 @@
                             @if (ajustavel()) {
                                 <app-valor-editavel
                                     class="criatura__designacao"
-                                    [valor]="dados().identidade.designacao"
-                                    [editando]="editando('identidade.designacao')"
+                                    [valor]="nome()"
+                                    [editando]="editando('designacao')"
                                     rotuloAria="designação"
-                                    (editarSolicitado)="editar('identidade.designacao')"
+                                    (editarSolicitado)="editar('designacao')"
                                 >
                                     <input
                                         #entradaDesignacao
                                         appAutoFocus
                                         class="criatura__designacao-entrada"
                                         type="text"
-                                        [value]="dados().identidade.designacao"
+                                        [value]="nome()"
                                         aria-label="Designação"
                                         [disabled]="!ajustavel()"
                                         (keydown.enter)="
-                                            confirmarCampoIdentidade(
-                                                'designacao',
-                                                entradaDesignacao.value
-                                            );
+                                            confirmarNome(entradaDesignacao.value);
                                             cancelarEdicao()
                                         "
                                         (keydown.escape)="cancelarEdicao()"
                                         (blur)="
-                                            confirmarCampoIdentidade(
-                                                'designacao',
-                                                entradaDesignacao.value
-                                            );
+                                            confirmarNome(entradaDesignacao.value);
                                             cancelarEdicao()
                                         "
                                     />
                                 </app-valor-editavel>
                             } @else {
                                 <h1 class="criatura__designacao">
-                                    {{ dados().identidade.designacao }}
+                                    {{ nome() }}
                                 </h1>
                             }
                             @if (ajustavel()) {

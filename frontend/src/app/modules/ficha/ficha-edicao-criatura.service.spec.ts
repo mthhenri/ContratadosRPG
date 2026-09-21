@@ -12,7 +12,7 @@ import { FichaEdicaoCriaturaService } from './ficha-edicao-criatura.service';
 describe('FichaEdicaoCriaturaService', () => {
   const dados: FichaCriaturaDadosDto = {
     identidade: {
-      designacao: 'A Estátua', origem: OrigemCriaturaEnum.ORIGINAL,
+      origem: OrigemCriaturaEnum.ORIGINAL,
       conceito: 'x', naturezaFisica: 'x', comportamento: ComportamentoCriaturaEnum.CACADORA,
       motivacao: 'x', ganchoUnico: 'x',
     },

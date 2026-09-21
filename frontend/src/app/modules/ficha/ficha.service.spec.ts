@@ -368,7 +368,6 @@ describe('FichaService', () => {
 
   const dadosCriatura: FichaCriaturaDadosDto = {
     identidade: {
-      designacao: 'A Estátua',
       origem: OrigemCriaturaEnum.ORIGINAL,
       conceito: 'Uma estátua que se move quando ninguém olha.',
       naturezaFisica: 'Pedra articulada.',

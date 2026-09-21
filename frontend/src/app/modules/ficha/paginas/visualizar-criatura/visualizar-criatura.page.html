@@ -141,21 +141,7 @@
         </header>
 
         @if (carregando()) {
-        <div class="criatura-esqueleto" role="status" aria-label="Carregando ficha">
-            <div class="criatura-esqueleto__topo">
-                <app-esqueleto class="criatura-esqueleto__esqueleto-rotulo" />
-                <app-esqueleto class="criatura-esqueleto__esqueleto-chip" />
-            </div>
-            @for (indice of [0, 1, 2, 3, 4]; track indice) {
-            <div class="criatura-esqueleto__secao">
-                <app-esqueleto class="criatura-esqueleto__esqueleto-titulo" />
-                <app-esqueleto class="criatura-esqueleto__esqueleto-linha" />
-                <app-esqueleto
-                    class="criatura-esqueleto__esqueleto-linha criatura-esqueleto__esqueleto-curta"
-                />
-            </div>
-            }
-        </div>
+        <app-criatura-esqueleto role="status" aria-label="Carregando ficha" />
         } @else if (ficha(); as fichaAtual) {
         <app-criatura-visualizacao
             [fichaId]="fichaAtual.id"

@@ -385,7 +385,6 @@ export const CENARIO_DEV = {
       cor: '#78716C',
       dados: {
         identidade: {
-          designacao: 'A Estátua',
           origem: OrigemCriaturaEnum.SCP_ADAPTADO,
           conceito:
             'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
@@ -486,7 +485,6 @@ export const CENARIO_DEV = {
       cor: '#94A3B8',
       dados: {
         identidade: {
-          designacao: 'Enxame Ceifa-Drones',
           origem: OrigemCriaturaEnum.ORIGINAL,
           conceito:
             'Um enxame de pequenos drones autônomos que caça em grupo e se dispersa quando confrontado.',
@@ -582,7 +580,6 @@ export const CENARIO_DEV = {
       cor: '#7C2D12',
       dados: {
         identidade: {
-          designacao: 'O Colecionador de Rostos',
           origem: OrigemCriaturaEnum.ORIGINAL,
           conceito:
             'Um predador humanoide que usa rostos arrancados de vítimas como máscaras para se aproximar de novos alvos.',
