@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Habilidades: filtro "Outras" (Personalidade, Especialidade, Civil e Única)
+
+Pedido do autor: o resumo por tipo da aba Habilidades da ficha (m3-48) só cobria Arquétipo/Classe/Geral/Outra
+classe/arquétipo; as habilidades de Personalidade, Especialidade, Civil e Única ficavam fora de qualquer contador e
+não tinham como ser filtradas. Ajuste avulso, sem spec. Cor pedida: branco no tema escuro, preto no claro.
+
+- **Onde vive:** um único componente, `ficha-habilidades`, serve a ficha completa (`ficha-visualizacao`), o card
+  compacto e o painel flutuante (`ficha-campanha-card`) — a mudança vale nas três apresentações sem tocar em
+  nenhuma delas.
+- **Regra:** `bucketResumo` deixou de devolver `null` — o que não é Arquétipo/Subclasse, Classe, Geral/Geral
+  Melhorada ou Outra classe cai em `outras`, então o contador soma todas as categorias e nenhuma habilidade fica
+  fora do resumo. `contagemPorCategoria` virou um `Record` por bucket. O filtro segue **cumulativo**; cobrir os
+  **5** tipos (antes 4) limpa a seleção. Mensagem de lista vazia: "Nenhuma habilidade de … outras categorias."
+- **Cor:** `--text`, não um hex nem `--contrast`. O `TemaService` inverte `--text` (`#e6e8eb` → `#12151a`) ao
+  alternar a base, então o contador acompanha o tema sozinho; `--contrast` é fixo (`#f4f6f8`) e sumiria no claro.
+- **Testes:** `ficha-habilidades.component.spec.ts` 42/42 (+3: Outras filtra as 4 categorias e nada além, soma com
+  outro tipo e o clique direito só a tira, mensagem de vazio; "4 tipos" virou "5 tipos"; modificador de cor).
+  ESLint sem erros (avisos de aspas são preexistentes); prettier: o trecho novo passa — o `.html` ainda tem uma
+  linha preexistente (`chip--unica`) que ele reformataria, não tocada.
+- **Pendente — verificação visual ao vivo (gate do `CLAUDE.md`):** não executada nesta sessão. Falta conferir o
+  botão "Outras" (estado normal, ativo com glow, com a linha de contadores quebrando em `360×800`) nos temas
+  escuro e claro, na ficha completa, no card compacto e no painel flutuante.
+
 ## 2026-09-21 — Iniciativa: foto ampliada no hover do avatar da trilha (mestre e jogador)
 
 Pedido do autor: a trilha da Iniciativa deve ter o mesmo efeito de hover do Esquadrão na visão do jogador da

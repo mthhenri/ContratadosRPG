@@ -83,6 +83,18 @@
                     contagemPorCategoria().outraClasse
                 }}</span>
             </button>
+            <button
+                type="button"
+                class="habilidades__resumo-item habilidades__resumo-item--outras"
+                [class.habilidades__resumo-item--ativo]="filtroCategoria().has('outras')"
+                [attr.aria-pressed]="filtroCategoria().has('outras')"
+                [appTooltip]="'Personalidade, Especialidade, Civil e Única — clique direito remove só este filtro'"
+                (click)="alternarFiltro('outras')"
+                (contextmenu)="removerFiltroPorContexto('outras', $event)"
+            >
+                <span class="habilidades__resumo-rotulo">Outras</span>
+                <span class="habilidades__resumo-valor">{{ contagemPorCategoria().outras }}</span>
+            </button>
             @if (filtroCategoria().size > 0) {
                 <button
                     app-botao-icone
