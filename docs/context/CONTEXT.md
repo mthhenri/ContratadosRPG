@@ -2256,6 +2256,11 @@ com ficha em campo o palco é a grade de leitura. Layout comum às duas visões 
 (excluído do build em `tsconfig.app.json`). Composição em `docs/design/DESIGN.md` ("Iniciativa — visão do
 jogador").
 
+**Foto ampliada na trilha.** Nas duas visões, o avatar de quem tem foto (ficha ou avulso com
+`imagemUrl`) abre o preview ampliado em hover sustentado de mouse (600 ms, foto inteira em 300×300,
+`contain`) — o mesmo do Esquadrão da campanha, via `appPreviewAvatar`
+(`shared/preview-avatar/`). Avatar de sigla e toque não abrem nada.
+
 Um combatente **avulso** (sem ficha) só existe dentro do encontro: cor obrigatória + imagem
 opcional persistidas em `encontro_combatente` (`cor_avulso`/`imagem_url_avulso`); o modo "Editar
 combatentes" troca cor, substitui e remove imagem. `EncontroCombatenteResumoDto` expõe a forma

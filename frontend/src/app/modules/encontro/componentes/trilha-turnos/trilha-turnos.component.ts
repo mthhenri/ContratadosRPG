@@ -4,6 +4,7 @@ import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontr
 import { CombatenteOrigemEnum, EncontroStatusEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
+import { PreviewAvatar } from '../../../../shared/preview-avatar/preview-avatar.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import {
   combatenteEhDaVez,
@@ -44,7 +45,7 @@ interface PosicaoTrilhaDto {
  */
 @Component({
   selector: 'app-trilha-turnos',
-  imports: [Tooltip, FocoImagem],
+  imports: [Tooltip, FocoImagem, PreviewAvatar],
   templateUrl: './trilha-turnos.component.html',
   styleUrl: './trilha-turnos.component.scss',
   host: { '[class.trilha--com-acao]': 'comAcao()' },

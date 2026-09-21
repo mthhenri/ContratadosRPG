@@ -1,5 +1,32 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Iniciativa: foto ampliada no hover do avatar da trilha (mestre e jogador)
+
+Pedido do autor: a trilha da Iniciativa deve ter o mesmo efeito de hover do Esquadrão na visão do jogador da
+campanha — passar o mouse sobre o avatar e ver a foto grande, com as mesmas proporções —, nas duas visões.
+Ajuste avulso, sem spec.
+
+- **Análogo escolhido:** o preview do avatar do Esquadrão (`detalhe-jogador.page`, `agendarPreviewAvatar` +
+  `.detalhe__avatar-preview`): 600 ms de hover sustentado, quadrado de 300×300 com padding 4px, borda
+  `--border-strong`, raio `--radius-card`, sombra `0 8px 24px`, foto inteira (`contain`, sem o recorte do
+  `appFocoImagem`), à direita do avatar e à esquerda quando não cabe, travado na janela; cursor de mão só no avatar.
+- **Onde vive:** o comportamento já existia em três cópias locais (Esquadrão do jogador, do mestre e Acervo), cada
+  uma com estado e cálculo de posição na página. Em vez de uma quarta cópia dentro de um componente já extenso,
+  nasceu a diretiva `appPreviewAvatar` em `shared/preview-avatar/` (portal no `<body>` como o `Tooltip`, então a lista
+  rolável da trilha nunca o recorta). A trilha só liga a diretiva no avatar e ganha `trilha__avatar--ampliavel`
+  (cursor de mão quando há foto). As três cópias antigas **não foram migradas** — fora do escopo pedido.
+- **Comportamento:** só mouse (toque não tem hover); sem URL não faz nada (avatar de sigla, criatura sem foto,
+  avulso sem imagem); fecha ao sair, clicar, rolar qualquer container, redimensionar, trocar/limpar a URL e destruir.
+- **Testes:** `preview-avatar.directive.spec.ts` (+6: atraso de 600 ms, 300×300 + `contain`, cancelar ao sair, sem
+  URL, toque, fechar por clique/rolagem/troca de foto/destruição). Trilha + diretiva: 2 arquivos / 19 testes
+  verdes; eslint sem erros (avisos de aspas são preexistentes); prettier ok nos `.html`/`.scss` tocados.
+- **Verificação ao vivo** (Playwright, stack do autor, `codex.dev` mestre e `jogador.stub.1`, campanha 2/encontro
+  12): `1920×1080` e `360×800` nas duas visões — não abre antes dos 600 ms, abre 300×300 com `contain` dentro da
+  janela, some ao sair, avatar de sigla não abre e mantém o cursor padrão, sem overflow horizontal nem erro de
+  página; `960×1080` (faixa de chips) conferido no mestre. Estilo computado do preview idêntico ao do Esquadrão
+  (padding, borda, raio, sombra, `contain`, fundo, cor de borda). Observação: com o mouse parado no avatar o tooltip
+  do item (300 ms) abre antes e o preview (600 ms) o cobre, por ser o último portal anexado.
+
 ## 2026-09-21 — Iniciativa: revisão dos esqueletos de carregamento (mestre e jogador)
 
 Pedido do autor: "revisa os skeletons tanto da visão de mestre quanto a de jogador nas telas de iniciativa".

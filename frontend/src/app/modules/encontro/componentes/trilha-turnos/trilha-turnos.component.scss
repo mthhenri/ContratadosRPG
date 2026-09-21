@@ -163,6 +163,12 @@
         color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 30%, transparent) 0 3px,
         transparent 3px 9px
     );
+
+    // Com foto, o avatar é o gatilho do preview ampliado no hover sustentado (`appPreviewAvatar`) —
+    // o mesmo cursor de mão do avatar do Esquadrão da campanha.
+    &--ampliavel {
+        cursor: pointer;
+    }
 }
 
 .trilha__avatar-imagem {

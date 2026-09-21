@@ -34,7 +34,12 @@
                 [attr.aria-current]="posicao.ativa ? 'step' : null"
                 [appTooltip]="posicao.dica"
             >
-                <span class="trilha__avatar" aria-hidden="true">
+                <span
+                    class="trilha__avatar"
+                    [class.trilha__avatar--ampliavel]="posicao.combatente.imagemUrl"
+                    aria-hidden="true"
+                    [appPreviewAvatar]="posicao.combatente.imagemUrl"
+                >
                     @if (posicao.combatente.imagemUrl; as urlImagem) {
                         <img
                             class="trilha__avatar-imagem"
