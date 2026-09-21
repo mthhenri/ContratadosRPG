@@ -88,6 +88,11 @@ export interface CampanhaRecuperarDto {
   readonly id: number;
 }
 
+/** Mensagem de infraestrutura para abandonar as salas de uma campanha no Socket.IO. */
+export interface CampanhaSalaSairDto {
+  readonly id: number;
+}
+
 /**
  * Saída da recuperação individual — a campanha completa. `codigoConvite`/
  * `codigoConviteEspectador` só vêm preenchidos para o `MESTRE` (`CampanhaService.recuperarCampanha`

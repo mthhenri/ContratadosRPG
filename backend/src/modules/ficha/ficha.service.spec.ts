@@ -88,6 +88,7 @@ interface CampanhaGatewayDublado {
   emitirFichaVisibilidadeAlterada: ReturnType<typeof vi.fn>;
   emitirFichaRemovidaDaCampanha: ReturnType<typeof vi.fn>;
   emitirAcessoRevogado: ReturnType<typeof vi.fn>;
+  expulsarUsuarioDaFicha: ReturnType<typeof vi.fn>;
   emitirInventarioAlterado: ReturnType<typeof vi.fn>;
 }
 
@@ -318,6 +319,7 @@ describe('FichaService', () => {
       emitirFichaVisibilidadeAlterada: vi.fn(),
       emitirFichaRemovidaDaCampanha: vi.fn(),
       emitirAcessoRevogado: vi.fn(),
+      expulsarUsuarioDaFicha: vi.fn().mockResolvedValue(undefined),
       emitirInventarioAlterado: vi.fn(),
     };
     armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };

@@ -1142,6 +1142,7 @@ export class FichaService {
 
     const acessoRevogado: FichaAcessoRevogadoDto = { fichaId: dto.fichaId, usuarioId: dto.usuarioId };
     this.campanhaGateway.emitirAcessoRevogado(acessoRevogado);
+    await this.campanhaGateway.expulsarUsuarioDaFicha(acessoRevogado);
     return acessoRevogado;
   }
 

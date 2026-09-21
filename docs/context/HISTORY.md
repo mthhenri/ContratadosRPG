@@ -1,5 +1,19 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — rede-01: ciclo de vida das salas de tempo real
+
+As inscrições Socket.IO deixaram de sobreviver a quem as consumia: `TempoRealService` mantém referências por
+ficha/campanha, envia join apenas em `0 → 1`, leave em `1 → 0` e reingressa somente chaves ativas. A perda de
+sessão centralmente desconecta e limpa o socket. O gateway recebeu DTOs de infraestrutura para saída e, após a
+persistência, expulsa o acesso revogado e recalibra as salas de campanha em remoção, mudança de papel e transferência
+de mestre; autorização continua pertencendo às services.
+
+- **Testes:** frontend focado 16/16; backend focado 287/287; suítes shared 759/759 e backend 563/563; builds de
+  shared/backend passaram. Lint terminou com zero erros e 19.913 avisos preexistentes de estilo.
+- **Verificação ao vivo:** contas locais existentes `codex.dev` e `jogador.stub.1`, na Campanha do Codex: ambos
+  ingressaram autorizados, a presença efêmera chegou antes da saída de Codex e não chegou depois. Nenhuma conta ou
+  dado de domínio foi criado/alterado.
+
 ## 2026-09-21 — Habilidades: filtro "Outras" (Personalidade, Especialidade, Civil e Única)
 
 Pedido do autor: o resumo por tipo da aba Habilidades da ficha (m3-48) só cobria Arquétipo/Classe/Geral/Outra

@@ -1,4 +1,4 @@
-import { InjectionToken, Injectable, inject, signal } from '@angular/core';
+import { InjectionToken, Injectable, effect, inject, signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
@@ -66,9 +66,9 @@ export class TempoRealService {
   /** Token com que o socket atual foi aberto — reconecta se a sessão trocar (logout+login). */
   private tokenConectado: string | null = null;
 
-  /** Salas já ingressadas — reingressadas a cada reconexão (o servidor as perde ao cair o socket). */
-  private readonly salasFicha = new Set<number>();
-  private readonly salasCampanha = new Set<number>();
+  /** Referências ativas de sala — só chaves positivas reingressam após uma reconexão. */
+  private readonly referenciasSalasFicha = new Map<number, number>();
+  private readonly referenciasSalasCampanha = new Map<number, number>();
 
   /** `true` enquanto o socket está conectado ao gateway. */
   readonly conectado = signal(false);
@@ -154,6 +154,14 @@ export class TempoRealService {
   readonly paginaEsquadraoExcluida$ = this.paginaEsquadraoExcluidaSubject.asObservable();
   /** Presença Yjs (cursor/seleção/identidade) de quem mais edita a mesma página do Esquadrão. */
   readonly presencaEsquadraoCaderno$ = this.presencaEsquadraoSubject.asObservable();
+
+  constructor() {
+    effect(() => {
+      if (!this.sessaoService.autenticado()) {
+        this.desconectar();
+      }
+    });
+  }
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -250,16 +258,14 @@ export class TempoRealService {
    * entre o buffer offline do socket.io e o reingresso).
    */
   entrarSalaFicha(fichaId: number): void {
-    this.salasFicha.add(fichaId);
-    if (this.conectado()) {
+    if (this.incrementarReferencia(this.referenciasSalasFicha, fichaId) && this.conectado()) {
       this.socket?.emit('ficha:entrar', { id: fichaId });
     }
   }
 
   /** Ingressa na sala `campanha:<id>` (só membros — checado pelo gateway). Ver `entrarSalaFicha`. */
   entrarSalaCampanha(campanhaId: number): void {
-    this.salasCampanha.add(campanhaId);
-    if (this.conectado()) {
+    if (this.incrementarReferencia(this.referenciasSalasCampanha, campanhaId) && this.conectado()) {
       this.socket?.emit('campanha:entrar', { id: campanhaId });
     }
   }
@@ -278,12 +284,16 @@ export class TempoRealService {
 
   /** Esquece a sala `ficha:<id>` (ao sair da tela) — para não reingressar nela numa reconexão. */
   sairSalaFicha(fichaId: number): void {
-    this.salasFicha.delete(fichaId);
+    if (this.decrementarReferencia(this.referenciasSalasFicha, fichaId) && this.conectado()) {
+      this.socket?.emit('ficha:sair', { id: fichaId });
+    }
   }
 
   /** Esquece a sala `campanha:<id>` (ao sair da tela) — para não reingressar nela numa reconexão. */
   sairSalaCampanha(campanhaId: number): void {
-    this.salasCampanha.delete(campanhaId);
+    if (this.decrementarReferencia(this.referenciasSalasCampanha, campanhaId) && this.conectado()) {
+      this.socket?.emit('campanha:sair', { id: campanhaId });
+    }
   }
 
   /** Encerra a conexão e limpa o estado de salas (ex.: logout). */
@@ -294,17 +304,36 @@ export class TempoRealService {
     this.jaConectou = false;
     this.conectado.set(false);
     this.ativo.set(false);
-    this.salasFicha.clear();
-    this.salasCampanha.clear();
+    this.referenciasSalasFicha.clear();
+    this.referenciasSalasCampanha.clear();
   }
 
   /** Reingressa em todas as salas conhecidas — chamado a cada `connect` (inicial e reconexão). */
   private reingressarSalas(): void {
-    for (const fichaId of this.salasFicha) {
+    for (const fichaId of this.referenciasSalasFicha.keys()) {
       this.socket?.emit('ficha:entrar', { id: fichaId });
     }
-    for (const campanhaId of this.salasCampanha) {
+    for (const campanhaId of this.referenciasSalasCampanha.keys()) {
       this.socket?.emit('campanha:entrar', { id: campanhaId });
     }
+  }
+
+  private incrementarReferencia(referencias: Map<number, number>, id: number): boolean {
+    const quantidade = referencias.get(id) ?? 0;
+    referencias.set(id, quantidade + 1);
+    return quantidade === 0;
+  }
+
+  private decrementarReferencia(referencias: Map<number, number>, id: number): boolean {
+    const quantidade = referencias.get(id);
+    if (!quantidade) {
+      return false;
+    }
+    if (quantidade === 1) {
+      referencias.delete(id);
+      return true;
+    }
+    referencias.set(id, quantidade - 1);
+    return false;
   }
 }

@@ -15,6 +15,7 @@ import type {
   CampanhaMembroInternoRecuperadoDto,
   CampanhaMembroPapelAlteradoDto,
   CampanhaRecuperarDto,
+  CampanhaSalaSairDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
@@ -22,6 +23,7 @@ import type {
   FichaAlteradaDto,
   FichaCriadaDto,
   FichaRecuperarDto,
+  FichaSalaSairDto,
   FichaResumoDto,
   FichaCampanhaRemovidaDto,
   FichaVisibilidadeAlteradaDto,
@@ -123,6 +125,15 @@ export class CampanhaGateway implements OnGatewayConnection {
     return { sucesso: true };
   }
 
+  /** Abandona a sala de ficha pedida; não é mutação de domínio e não consulta services. */
+  @SubscribeMessage('ficha:sair')
+  async sairSalaFicha(
+    @ConnectedSocket() cliente: Socket,
+    @MessageBody() dto: FichaSalaSairDto,
+  ): Promise<void> {
+    await cliente.leave(this.salaFicha(dto.id));
+  }
+
   /**
    * Entra na sala `campanha:<id>` — só **membros** (§14), consultando
    * `CampanhaService.validarAcessoSalaCampanha` (que valida o vínculo do usuário na campanha,
@@ -164,6 +175,19 @@ export class CampanhaGateway implements OnGatewayConnection {
       await cliente.join(this.salaCampanhaMestre(dto.id));
     }
     return { sucesso: true };
+  }
+
+  /** Abandona todas as variantes de sala que uma campanha pode usar; não consulta services. */
+  @SubscribeMessage('campanha:sair')
+  async sairSalaCampanha(
+    @ConnectedSocket() cliente: Socket,
+    @MessageBody() dto: CampanhaSalaSairDto,
+  ): Promise<void> {
+    await Promise.all([
+      cliente.leave(this.salaCampanha(dto.id)),
+      cliente.leave(this.salaCampanhaMestre(dto.id)),
+      cliente.leave(this.salaCampanhaEspectador(dto.id)),
+    ]);
   }
 
   /**
@@ -339,6 +363,43 @@ export class CampanhaGateway implements OnGatewayConnection {
    */
   emitirAcessoRevogado(evento: FichaAcessoRevogadoDto): void {
     this.servidor.to(this.salaFicha(evento.fichaId)).emit('ficha:acesso-revogado', evento);
+  }
+
+  /** Remove das fichas os sockets do usuário cujo acesso acabou de ser revogado pela service. */
+  async expulsarUsuarioDaFicha(evento: FichaAcessoRevogadoDto): Promise<void> {
+    const sockets = await this.servidor.in(this.salaFicha(evento.fichaId)).fetchSockets();
+    await Promise.all(
+      sockets
+        .filter((socket) => (socket.data as { usuario?: JwtPayload }).usuario?.sub === evento.usuarioId)
+        .map((socket) => socket.leave(this.salaFicha(evento.fichaId))),
+    );
+  }
+
+  /** Aplica ao socket o papel já persistido pela service, sem reproduzir a autorização de domínio. */
+  async recalibrarSalasCampanhaUsuario(dto: {
+    readonly campanhaId: number;
+    readonly usuarioId: number;
+    readonly papel: TipoCampanhaMembroPapelEnum | null;
+  }): Promise<void> {
+    const salas = [
+      this.salaCampanha(dto.campanhaId),
+      this.salaCampanhaMestre(dto.campanhaId),
+      this.salaCampanhaEspectador(dto.campanhaId),
+    ];
+    const sockets = await this.servidor.in(salas).fetchSockets();
+    await Promise.all(sockets
+      .filter((socket) => (socket.data as { usuario?: JwtPayload }).usuario?.sub === dto.usuarioId)
+      .flatMap((socket) => [
+        ...salas.map((sala) => socket.leave(sala)),
+        ...(dto.papel === null ? [] : [socket.join(
+          dto.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+            ? this.salaCampanhaEspectador(dto.campanhaId)
+            : this.salaCampanha(dto.campanhaId),
+        )]),
+        ...(dto.papel === TipoCampanhaMembroPapelEnum.MESTRE
+          ? [socket.join(this.salaCampanhaMestre(dto.campanhaId))]
+          : []),
+      ]));
   }
 
   /** Propaga a criação já persistida de uma página colaborativa à campanha. */

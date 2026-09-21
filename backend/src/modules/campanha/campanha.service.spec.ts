@@ -44,6 +44,7 @@ interface CampanhaGatewayDublado {
   emitirEstadoAlterado: ReturnType<typeof vi.fn>;
   emitirInventarioAlterado: ReturnType<typeof vi.fn>;
   emitirPapelMembroAlterado: ReturnType<typeof vi.fn>;
+  recalibrarSalasCampanhaUsuario: ReturnType<typeof vi.fn>;
 }
 
 describe('CampanhaService', () => {
@@ -88,6 +89,7 @@ describe('CampanhaService', () => {
       emitirEstadoAlterado: vi.fn(),
       emitirInventarioAlterado: vi.fn(),
       emitirPapelMembroAlterado: vi.fn(),
+      recalibrarSalasCampanhaUsuario: vi.fn().mockResolvedValue(undefined),
     };
     service = new CampanhaService(
       repositorio as unknown as CampanhaRepository,

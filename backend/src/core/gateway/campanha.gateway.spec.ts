@@ -28,6 +28,7 @@ interface EncontroServiceDublado {
 interface SocketDublado {
   readonly cliente: Socket;
   readonly join: ReturnType<typeof vi.fn>;
+  readonly leave: ReturnType<typeof vi.fn>;
   readonly disconnect: ReturnType<typeof vi.fn>;
   readonly toSala: ReturnType<typeof vi.fn>;
   readonly emitirParaSala: ReturnType<typeof vi.fn>;
@@ -45,6 +46,7 @@ function criarSocket(
   opcoes: { token?: string; usuario?: JwtPayload; salas?: readonly string[] } = {},
 ): SocketDublado {
   const join = vi.fn();
+  const leave = vi.fn();
   const disconnect = vi.fn();
   const emitirParaSala = vi.fn();
   const toSala = vi.fn(() => ({ emit: emitirParaSala }));
@@ -53,10 +55,11 @@ function criarSocket(
     handshake: { auth: { token: opcoes.token }, headers: {} },
     rooms: new Set(opcoes.salas ?? []),
     join,
+    leave,
     disconnect,
     to: toSala,
   } as unknown as Socket;
-  return { cliente, join, disconnect, toSala, emitirParaSala };
+  return { cliente, join, leave, disconnect, toSala, emitirParaSala };
 }
 
 describe('CampanhaGateway', () => {
@@ -217,6 +220,65 @@ describe('CampanhaGateway', () => {
 
       expect(join).not.toHaveBeenCalled();
       expect(resultado).toEqual({ sucesso: false });
+    });
+  });
+
+  describe('sair de salas (infraestrutura sem mutação)', () => {
+    it('abandona somente a sala da ficha, sem consultar services', async () => {
+      const { cliente, leave } = criarSocket({ usuario });
+
+      await gateway.sairSalaFicha(cliente, { id: 5 });
+
+      expect(leave).toHaveBeenCalledWith('ficha:5');
+      expect(fichaService.recuperarFicha).not.toHaveBeenCalled();
+    });
+
+    it('abandona todas as variantes da sala da campanha, sem consultar services', async () => {
+      const { cliente, leave } = criarSocket({ usuario });
+
+      await gateway.sairSalaCampanha(cliente, { id: 3 });
+
+      expect(leave).toHaveBeenCalledWith('campanha:3');
+      expect(leave).toHaveBeenCalledWith('campanha:3:mestre');
+      expect(leave).toHaveBeenCalledWith('campanha:3:espectador');
+      expect(campanhaService.validarAcessoSalaCampanha).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('recalibração pós-permissão', () => {
+    it('remove o usuário da ficha revogada depois de emitir o aviso', async () => {
+      const socketAlvo = criarSocket({ usuario });
+      const socketOutro = criarSocket({ usuario: { ...usuario, sub: 99 } });
+      const fetchSockets = vi.fn().mockResolvedValue([socketAlvo.cliente, socketOutro.cliente]);
+      (gateway as unknown as { servidor: Server }).servidor = {
+        in: vi.fn(() => ({ fetchSockets })),
+        to: vi.fn(() => ({ emit: vi.fn() })),
+      } as unknown as Server;
+
+      gateway.emitirAcessoRevogado({ fichaId: 5, usuarioId: usuario.sub });
+      await gateway.expulsarUsuarioDaFicha({ fichaId: 5, usuarioId: usuario.sub });
+
+      expect(socketAlvo.leave).toHaveBeenCalledWith('ficha:5');
+      expect(socketOutro.leave).not.toHaveBeenCalled();
+    });
+
+    it('troca todas as salas antigas pela sala exclusiva do espectador', async () => {
+      const socketAlvo = criarSocket({ usuario });
+      const fetchSockets = vi.fn().mockResolvedValue([socketAlvo.cliente]);
+      (gateway as unknown as { servidor: Server }).servidor = {
+        in: vi.fn(() => ({ fetchSockets })),
+      } as unknown as Server;
+
+      await gateway.recalibrarSalasCampanhaUsuario({
+        campanhaId: 3,
+        usuarioId: usuario.sub,
+        papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
+      });
+
+      expect(socketAlvo.leave).toHaveBeenCalledWith('campanha:3');
+      expect(socketAlvo.leave).toHaveBeenCalledWith('campanha:3:mestre');
+      expect(socketAlvo.leave).toHaveBeenCalledWith('campanha:3:espectador');
+      expect(socketAlvo.join).toHaveBeenCalledWith('campanha:3:espectador');
     });
   });
 

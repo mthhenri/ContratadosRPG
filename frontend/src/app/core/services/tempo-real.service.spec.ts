@@ -45,7 +45,7 @@ describe('TempoRealService', () => {
   let ioMock: ReturnType<typeof vi.fn>;
 
   function criar(obterToken: () => string | null): { servico: TempoRealService } {
-    const sessaoService = { obterToken };
+    const sessaoService = { obterToken, autenticado: () => obterToken() !== null };
     TestBed.configureTestingModule({
       providers: [
         { provide: SessaoService, useValue: sessaoService },
@@ -143,6 +143,42 @@ describe('TempoRealService', () => {
     ]);
     // Só há eventos de entrada — nada de escrita de ficha/campanha pelo socket.
     expect(socketFake.emitidos.every((e) => e.evento.endsWith(':entrar'))).toBe(true);
+  });
+
+  it('mantém uma sala de campanha até o último consumidor sair', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    socketFake.disparar('connect');
+
+    servico.entrarSalaCampanha(9);
+    servico.entrarSalaCampanha(9);
+    servico.sairSalaCampanha(9);
+    expect(socketFake.emitidos).toEqual([{ evento: 'campanha:entrar', payload: { id: 9 } }]);
+
+    servico.sairSalaCampanha(9);
+    expect(socketFake.emitidos).toEqual([
+      { evento: 'campanha:entrar', payload: { id: 9 } },
+      { evento: 'campanha:sair', payload: { id: 9 } },
+    ]);
+  });
+
+  it('emite saída somente para a última referência de ficha e não reingressa depois', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    socketFake.disparar('connect');
+    socketFake.emitidos.length = 0;
+
+    servico.entrarSalaFicha(42);
+    servico.entrarSalaFicha(42);
+    servico.sairSalaFicha(42);
+    servico.sairSalaFicha(42);
+    servico.sairSalaFicha(42);
+    socketFake.disparar('connect');
+
+    expect(socketFake.emitidos).toEqual([
+      { evento: 'ficha:entrar', payload: { id: 42 } },
+      { evento: 'ficha:sair', payload: { id: 42 } },
+    ]);
   });
 
   it('repassa ficha:alterada / ficha:criada / membro:entrou / ficha:acesso-revogado aos Observables', () => {

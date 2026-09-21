@@ -10,6 +10,8 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-21 · **Última decisão registrada:**
+> `rede-01` fechou o ciclo de vida de salas Socket.IO: referência por consumidor no cliente, saída efetiva no gateway
+> e recalibração pós-revogação/vínculo/papel. A próxima otimização de rede é `rede-02` (carga inicial de projeções).
 > Iniciativa (`ui-39`): o `PainelEncontro` monolítico (mestre e jogador por `@if`) foi separado em
 > `PainelEncontroShell` (resolve o papel; provê o `EncontroPainelDadosService`) →
 > `PainelEncontroMestre`/`PainelEncontroJogador`, no molde de `detalhe-shell`. A visão do jogador ganhou a

@@ -539,6 +539,11 @@ export interface FichaAcessoRevogadoDto {
   readonly usuarioId: number;
 }
 
+/** Mensagem de infraestrutura para abandonar uma sala de ficha no Socket.IO. */
+export interface FichaSalaSairDto {
+  readonly id: number;
+}
+
 /**
  * Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é
  * deliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem
