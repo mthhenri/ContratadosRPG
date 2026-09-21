@@ -6,7 +6,8 @@ import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
  * Silhueta de carregamento da ficha de jogador — mesma geometria de duas colunas de
  * `FichaVisualizacao` (Identidade + Atributos empilhadas | Status com barra de abas). Serve a ficha
  * completa (`visualizar.page`, 40/60, cabeçalho já vive na página) e o card embutido da campanha
- * (`[compacto]`, o mesmo divisor de `FichaCampanhaCard`, com a barra "Ficha de Jogador" no topo).
+ * (`[compacto]`, o mesmo divisor de `FichaCampanhaCard`, sem a barra "Ficha de Jogador" — a visão
+ * do jogador não a exibe).
  *
  * `app-esqueleto` dá a identidade (cor/raio/pulso); aqui só a geometria de cada bloco. Os blocos
  * são `aria-hidden`; quem embute anuncia o carregamento uma vez (`role="status"` +
@@ -19,6 +20,6 @@ import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
   styleUrl: './ficha-esqueleto.component.scss',
 })
 export class FichaEsqueleto {
-  /** Card embutido da campanha: divisão 1:1 com teto na coluna de Identidade e barra de topo. */
+  /** Card embutido da campanha: divisão 1:1 com teto na coluna de Identidade. */
   readonly compacto = input(false);
 }

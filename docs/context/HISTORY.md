@@ -1,5 +1,40 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Confirmação ao remover da campanha, itens de diálogo selecionados na coluna e ficha do jogador sem a barra "Ficha de Jogador"
+
+Pedido do autor, em cima da entrega anterior (skeletons / "i" da missão / itens selecionados).
+
+- **"Remover da campanha" agora confirma.** Antes era ação direta em quatro lugares (campanha do jogador,
+  cartão da ficha no painel do mestre, ficha completa e acervo). A pergunta é a mesma em todos —
+  `confirmarRemocaoDaCampanha()` em `modules/ficha/ficha-confirmacoes.ts` sobre o `ConfirmacaoService`
+  (severidade `padrao`: a ficha só volta ao acervo do dono e pode ser vinculada de novo, então sem o vermelho de
+  exclusão). Em cada página o método antigo virou privado (`removerDaCampanha`) e o gatilho público é
+  `pedirRemoverDaCampanha(...)`; o menu "⋯" do mobile usa o mesmo caminho. Cancelar não chama o REST.
+- **Itens da coluna de ações que abrem diálogo ficam selecionados** (`[pressionado]`) enquanto o diálogo está
+  aberto — o overlay só escurece a tela, mas o item marcado continua visível atrás dele. Jogador: Vincular ficha,
+  Acesso de visualização, Remover da campanha, Excluir ficha. Mestre: Membros, Convites, Editar, Excluir.
+  Ficha completa: Acesso de visualização, Remover da campanha, Excluir ficha. Criatura: Acesso de visualização,
+  Excluir ficha. Onde o diálogo é um `dialog*()` já existente, o item lê o sinal; onde é o `ConfirmacaoService`
+  (uma promessa), a página ganhou um sinal `confirmando`/`confirmandoExclusao`/`confirmandoRemocao` ligado ao
+  `.finally` da confirmação. "Ocultar ficha"/"Tornar rolagens públicas" ficam de fora: são interruptores de
+  estado, não abrem painel.
+- **Ficha do jogador sem a barra "Ficha de Jogador / FICHA-JGD-NNNN".** `FichaCampanhaCard` ganhou o input
+  `mostrarTopo` (padrão `true`); a visão do jogador e a prévia dela (mestre) passam `false` (o nome da ficha já
+  está no cabeçalho do cartão). A janela flutuante e o Encontro mantêm a barra. O `app-ficha-esqueleto
+  [compacto]` perdeu a barra correspondente (e o SCSS morto `__topo/__rotulo/__chip`).
+- **Testes:** frontend 135 arquivos / 1944 testes verdes (novos: confirmar/cancelar remoção nas quatro páginas,
+  `aria-pressed` dos itens de diálogo em jogador/mestre/ficha/criatura, `mostrarTopo`, topo ausente na visão do
+  jogador). Lint sem erros (avisos de aspas são preexistentes).
+- **Verificação ao vivo** (Playwright, `1920×1080` e `360×800`, `jogador.stub.1` e `codex.dev`): topo ausente
+  no card do jogador (desktop e mobile, sem overflow); Vincular/Acesso/Remover/Excluir e Membros/Convites/
+  Editar/Excluir com `aria-pressed=true` ao abrir e `false` ao fechar, item destacado visível por trás do
+  overlay; a confirmação de Remover não dispara `PUT /ficha/:id/campanha` antes de confirmar e dispara com
+  `{"campanhaId":null}` ao confirmar (a ficha foi devolvida à campanha por REST ao fim); no mobile o "⋯" →
+  "Remover da campanha" abre a mesma confirmação; skeleton do card do jogador sem a barra. Sem erros de console.
+- **Fora do escopo/aberto:** "Encerrar combate" (Iniciativa) também é um item que abre confirmação e ainda não
+  fica selecionado enquanto ela está aberta — a Iniciativa está em rework por outra sessão (ui-39), então não foi
+  tocada.
+
 ## 2026-09-21 — Verificação ao vivo das entregas do dia (skeletons, habilidades, "i" da missão, itens selecionados, WebSocket)
 
 Stack real (Postgres local recriado + backend + frontend do autor), Playwright em `1920×1080` e `360×800`,

@@ -75,6 +75,7 @@
         app-coluna-acoes-item
         icone="vincular"
         appTooltip="Vincular ficha existente"
+        [pressionado]="dialogVincular()"
         (click)="abrirVincularFicha()"
     >
         Vincular ficha
@@ -84,6 +85,7 @@
         icone="olho-membros"
         appTooltip="Acesso de visualização"
         [contagem]="acessosFichaExibida().length || null"
+        [pressionado]="dialogAcessoFicha()"
         [disabled]="!minhaFichaExibida()"
         (click)="abrirAcessoFicha()"
     >
@@ -94,8 +96,9 @@
         app-coluna-acoes-item
         icone="voltar"
         [appTooltip]="rotuloRemoverDaCampanha()"
+        [pressionado]="confirmando() === 'remocao'"
         [disabled]="!minhaFichaExibida() || removendo() === minhaFichaExibida()?.id"
-        (click)="removerDaCampanha(minhaFichaExibida()!.id)"
+        (click)="pedirRemoverDaCampanha(minhaFichaExibida()!.id, minhaFichaExibida()!.nome)"
     >
         {{ rotuloRemoverDaCampanha() }}
     </button>
@@ -103,6 +106,7 @@
         app-coluna-acoes-item
         icone="excluir"
         appTooltip="Excluir ficha"
+        [pressionado]="confirmando() === 'exclusao'"
         [disabled]="!minhaFichaExibida()"
         (click)="pedirExcluirFicha(minhaFichaExibida()!.id, minhaFichaExibida()!.nome)"
     >
@@ -279,7 +283,7 @@
                             type="button"
                             role="menuitem"
                             [disabled]="!minhaFichaExibida() || removendo() === minhaFichaExibida()?.id"
-                            (click)="removerDaCampanha(minhaFichaExibida()!.id)"
+                            (click)="pedirRemoverDaCampanha(minhaFichaExibida()!.id, minhaFichaExibida()!.nome)"
                         >
                             <app-icone nome="voltar" />
                             <span> {{ rotuloRemoverDaCampanha() }} </span>
@@ -342,6 +346,7 @@
 
                     <app-ficha-campanha-card
                         [fichaId]="fichaExibida.id"
+                        [mostrarTopo]="false"
                         [nome]="fichaExibida.nome"
                         [cor]="fichaExibida.cor"
                         [imagemUrl]="fichaExibida.imagemUrl"

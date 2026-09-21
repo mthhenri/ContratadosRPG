@@ -14,14 +14,6 @@
     flex-direction: column;
     gap: var(--gap-grid);
 
-    // Barra "Ficha de Jogador" + chip de classificação — só o card embutido (na ficha completa esses
-    // dois moram no cabeçalho da própria página).
-    &__topo {
-        display: flex;
-        align-items: center;
-        gap: var(--space-12);
-    }
-
     &__linha {
         display: flex;
         align-items: stretch;
@@ -167,17 +159,6 @@
     }
 
     // Geometria dos blocos — identidade (cor/raio/pulso) vem de `app-esqueleto`.
-    &__rotulo {
-        width: 110px;
-        height: 12px;
-    }
-
-    &__chip {
-        flex: none;
-        width: 150px;
-        height: 20px;
-    }
-
     &__indice {
         flex: none;
         width: 22px;

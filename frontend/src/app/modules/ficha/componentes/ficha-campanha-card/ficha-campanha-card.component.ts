@@ -424,6 +424,13 @@ export class FichaCampanhaCard {
   /** A janela flutuante do Encontro é o único scroll vertical no mobile. */
   readonly rolagemExterna = input(false);
 
+  /**
+   * Barra superior "Ficha de Jogador" + chip `FICHA-JGD-NNNN`. A visão do jogador (e a prévia dela,
+   * do mestre) já traz o nome da ficha no cabeçalho do cartão e dispensa a linha; a janela
+   * flutuante e o Encontro mantêm.
+   */
+  readonly mostrarTopo = input(true);
+
   /** Identificador da ficha (compõe a classificação `FICHA-JGD-NNNN`). */
   readonly fichaId = input.required<number>();
   /** Nome/codinome do agente (exibido no card de identidade). */

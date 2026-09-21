@@ -16,6 +16,7 @@ import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { CartaoFichaAcervo, type ItemAcervo } from '../../componentes/cartao-ficha-acervo/cartao-ficha-acervo.component';
+import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
 import { FichaService } from '../../ficha.service';
 import { rotuloNivelAmeaca } from '../../rotulos-criatura';
 import { rotuloClasseCompleto } from '../../rotulos-ficha';
@@ -390,9 +391,21 @@ export class FichaAcervo {
       });
   }
 
-  /** Desatribui a ficha (volta ao acervo) — ação direta, sem dialog; some o chip na hora. */
-  protected removerDaCampanha(fichaId: number): void {
+  /** Pede a confirmação e, se aceita, desatribui a ficha da campanha (ver `removerDaCampanha`). */
+  protected pedirRemoverDaCampanha(fichaId: number, fichaNome: string): void {
     this.fecharMenuFicha();
+    if (this.removendo() !== null) {
+      return;
+    }
+    void confirmarRemocaoDaCampanha(this.confirmacaoService, fichaNome).then((confirmado) => {
+      if (confirmado) {
+        this.removerDaCampanha(fichaId);
+      }
+    });
+  }
+
+  /** Desatribui a ficha (volta ao acervo solto do dono); some o chip na hora. */
+  private removerDaCampanha(fichaId: number): void {
     if (this.removendo() !== null) {
       return;
     }

@@ -79,6 +79,7 @@
         app-coluna-acoes-item
         icone="membros"
         appTooltip="Membros"
+        [pressionado]="dialogMembrosAberta()"
         (click)="dialogMembrosAberta.set(true)"
     >
         Membros
@@ -95,6 +96,7 @@
         app-coluna-acoes-item
         icone="convite"
         appTooltip="Convites"
+        [pressionado]="dialogConvitesAberta()"
         (click)="dialogConvitesAberta.set(true)"
     >
         Convites
@@ -104,6 +106,7 @@
         app-coluna-acoes-item
         icone="editar"
         appTooltip="Editar campanha"
+        [pressionado]="dialogEdicaoAberta()"
         (click)="abrirEdicao()"
     >
         Editar
@@ -112,6 +115,7 @@
         app-coluna-acoes-item
         icone="excluir"
         appTooltip="Excluir campanha"
+        [pressionado]="confirmandoExclusao()"
         (click)="pedirExclusao()"
     >
         Excluir
@@ -387,7 +391,7 @@
         type="button"
         role="menuitem"
         [disabled]="removendo() === menuAberto.id"
-        (click)="removerDaCampanha(menuAberto.id)"
+        (click)="pedirRemoverDaCampanha(menuAberto.id, menuAberto.nome)"
     >
         <app-icone nome="voltar" />
         <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>

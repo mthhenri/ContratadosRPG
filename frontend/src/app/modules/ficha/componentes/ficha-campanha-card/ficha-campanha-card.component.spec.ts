@@ -109,6 +109,17 @@ describe('FichaCampanhaCard', () => {
     expect(raiz.querySelector('select')).toBeNull();
   });
 
+  it('esconde a barra "Ficha de Jogador" + classificação quando `mostrarTopo` é falso', () => {
+    const { fixture, raiz } = montar(dados);
+    expect(raiz.querySelector('.ficha-visao__topo')?.textContent).toContain('Ficha de Jogador');
+
+    fixture.componentRef.setInput('mostrarTopo', false);
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.ficha-visao__topo')).toBeNull();
+    expect(raiz.textContent).not.toContain('FICHA-JGD-0042');
+  });
+
   it('repassa a disponibilidade e a solicitação de mandar item para a base', () => {
     const alvo = montar(dados, 'Corvo', 42, true);
     alvo.fixture.componentRef.setInput('podeMandarParaBase', true);

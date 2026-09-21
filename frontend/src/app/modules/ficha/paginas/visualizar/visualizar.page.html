@@ -44,6 +44,7 @@
             app-coluna-acoes-item
             icone="olho-membros"
             appTooltip="Acesso de visualização"
+            [pressionado]="dialogAcesso()"
             (click)="abrirAcesso()"
         >
             Acesso de visualização
@@ -61,8 +62,9 @@
             app-coluna-acoes-item
             icone="voltar"
             appTooltip="Remover da campanha"
+            [pressionado]="confirmandoRemocao()"
             [disabled]="removendoDaCampanha()"
-            (click)="removerDaCampanha()"
+            (click)="pedirRemoverDaCampanha()"
         >
             {{ removendoDaCampanha() ? 'Removendo…' : 'Remover da campanha' }}
         </button>
@@ -71,6 +73,7 @@
             app-coluna-acoes-item
             icone="excluir"
             appTooltip="Excluir ficha"
+            [pressionado]="dialogExclusao()"
             (click)="abrirExclusao()"
         >
             Excluir ficha
@@ -252,7 +255,7 @@
                             type="button"
                             role="menuitem"
                             [disabled]="removendoDaCampanha()"
-                            (click)="removerDaCampanha()"
+                            (click)="pedirRemoverDaCampanha()"
                         >
                             <app-icone nome="voltar" />
                             <span

@@ -399,11 +399,24 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('.detalhe__banner-alerta')?.textContent).toContain('Kane');
   });
 
-  it('"Remover da campanha" age sobre a ficha exibida, fecha o menu e troca para outra ficha própria', () => {
-    const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+  it('"Remover da campanha" pede confirmação, age sobre a ficha exibida, fecha o menu e troca para outra ficha própria', async () => {
+    const { fixture, raiz, fichaService, confirmacaoService } = montar({
+      usuarioId: 2,
+      membros: membrosDois(),
+      fichas,
+    });
     abrirMenu(raiz, fixture);
 
     encontrarItemMenu(raiz, 'Remover da campanha').click();
+    fixture.detectChanges();
+
+    expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+      expect.objectContaining({ titulo: 'Remover da campanha', entidade: 'Vera', severidade: 'padrao' }),
+    );
+    expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+
+    await Promise.resolve();
+    await Promise.resolve();
     fixture.detectChanges();
 
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
@@ -411,7 +424,7 @@ describe('CampanhaDetalheJogador', () => {
     expect(fichaService.recuperarFicha).toHaveBeenCalledWith(5);
   });
 
-  it('"Remover da campanha" sem outra ficha própria restante cai no estado vazio do jogador', () => {
+  it('"Remover da campanha" sem outra ficha própria restante cai no estado vazio do jogador', async () => {
     const { fixture, raiz, fichaService } = montar({
       usuarioId: 2,
       membros: membrosDois(),
@@ -420,10 +433,99 @@ describe('CampanhaDetalheJogador', () => {
     abrirMenu(raiz, fixture);
 
     encontrarItemMenu(raiz, 'Remover da campanha').click();
+    await Promise.resolve();
+    await Promise.resolve();
     fixture.detectChanges();
 
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
     expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
+  });
+
+  it('cancelar a confirmação de "Remover da campanha" não desatribui a ficha', async () => {
+    const { fixture, raiz, fichaService } = montar({
+      usuarioId: 2,
+      membros: membrosDois(),
+      fichas,
+      confirmarResultado: false,
+    });
+    abrirMenu(raiz, fixture);
+
+    encontrarItemMenu(raiz, 'Remover da campanha').click();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+  });
+
+  describe('itens da coluna de ações que abrem diálogo ficam selecionados', () => {
+    function itemColuna(raiz: HTMLElement, rotulo: string): HTMLElement {
+      const item = Array.from(
+        raiz.querySelectorAll<HTMLElement>('app-coluna-acoes [app-coluna-acoes-item]'),
+      ).find((candidato) => candidato.textContent?.trim().startsWith(rotulo));
+      expect(item, rotulo).toBeDefined();
+      return item!;
+    }
+
+    it('"Vincular ficha" e "Acesso de visualização" enquanto a dialog está aberta', () => {
+      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      expect(itemColuna(raiz, 'Vincular ficha').getAttribute('aria-pressed')).toBe('false');
+      expect(itemColuna(raiz, 'Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+
+      itemColuna(raiz, 'Vincular ficha').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Vincular ficha').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['fecharVincularFicha']();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Vincular ficha').getAttribute('aria-pressed')).toBe('false');
+
+      itemColuna(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Acesso de visualização').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['fecharAcessoFicha']();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('"Remover da campanha" e "Excluir ficha" enquanto a confirmação está aberta', async () => {
+      const { fixture, raiz, confirmacaoService } = montar({
+        usuarioId: 2,
+        membros: membrosDois(),
+        fichas,
+      });
+      let resolver: (valor: boolean) => void = () => undefined;
+      confirmacaoService.confirmar.mockImplementation(
+        () => new Promise<boolean>((resolve) => (resolver = resolve)),
+      );
+
+      itemColuna(raiz, 'Remover da campanha').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Remover da campanha').getAttribute('aria-pressed')).toBe('true');
+      expect(itemColuna(raiz, 'Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+
+      resolver(false);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Remover da campanha').getAttribute('aria-pressed')).toBe('false');
+
+      itemColuna(raiz, 'Excluir ficha').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir ficha').getAttribute('aria-pressed')).toBe('true');
+      resolver(false);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+    });
+  });
+
+  it('a ficha embutida não mostra a barra "Ficha de Jogador" com a classificação', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+    expect(raiz.querySelector('app-ficha-campanha-card')).not.toBeNull();
+    expect(raiz.querySelector('.ficha-visao__topo')).toBeNull();
+    expect(raiz.textContent).not.toContain('FICHA-JGD-');
   });
 
   it('"Excluir ficha" pede confirmação; cancelar não chama o serviço', async () => {

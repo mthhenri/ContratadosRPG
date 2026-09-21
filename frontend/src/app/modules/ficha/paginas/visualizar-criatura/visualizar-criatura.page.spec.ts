@@ -309,6 +309,32 @@ describe('CriaturaVisualizar', () => {
     expect(navegarEspiao).toHaveBeenCalledWith(['/campanhas', 9]);
   });
 
+  it('"Acesso de visualização" e "Excluir ficha" ficam selecionados enquanto o diálogo está aberto', async () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    const item = (rotulo: string) =>
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('[app-coluna-acoes-item]')).find(
+        (el) => el.textContent?.trim() === rotulo,
+      )!;
+    expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+    expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+
+    item('Acesso de visualização').click();
+    fixture.detectChanges();
+    expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('true');
+    fixture.componentInstance['fecharAcesso']();
+    fixture.detectChanges();
+    expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+
+    item('Excluir ficha').click();
+    fixture.detectChanges();
+    expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('true');
+    await TestBed.inject(ConfirmacaoService).responder(false);
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+  });
+
   it('cancelar a confirmação de exclusão não chama excluirFicha nem navega', async () => {
     const { fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
     fixture.componentInstance['abrirExclusao']();

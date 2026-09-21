@@ -30,6 +30,7 @@ import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { CampanhaService } from '../../campanha.service';
+import { confirmarRemocaoDaCampanha } from '../../../ficha/ficha-confirmacoes';
 import { FichaService } from '../../../ficha/ficha.service';
 import { nomePorte, rotuloComportamento, rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 
@@ -321,9 +322,21 @@ export class CampanhaDetalheMestre {
 
   protected readonly removendo = signal<number | null>(null);
 
-  /** Desatribui a ficha da campanha (ela volta ao acervo solto do dono) — via menu do cartão. */
-  protected removerDaCampanha(fichaId: number): void {
+  /** Pede a confirmação e, se aceita, desatribui a ficha da campanha — via menu do cartão. */
+  protected pedirRemoverDaCampanha(fichaId: number, fichaNome: string): void {
     this.fecharMenuFicha();
+    if (this.removendo() !== null) {
+      return;
+    }
+    void confirmarRemocaoDaCampanha(this.confirmacaoService, fichaNome).then((confirmado) => {
+      if (confirmado) {
+        this.removerDaCampanha(fichaId);
+      }
+    });
+  }
+
+  /** Desatribui a ficha da campanha (ela volta ao acervo solto do dono). */
+  private removerDaCampanha(fichaId: number): void {
     if (this.removendo() !== null) {
       return;
     }
@@ -411,13 +424,17 @@ export class CampanhaDetalheMestre {
       });
   }
 
+  /** Confirmação de exclusão da campanha aberta — marca o item "Excluir" da coluna de ações. */
+  protected readonly confirmandoExclusao = signal(false);
+
   protected pedirExclusao(): void {
     this.dialogEdicaoAberta.set(false);
     const campanhaAtual = this.dados.campanha();
-    if (!campanhaAtual) {
+    if (!campanhaAtual || this.confirmandoExclusao()) {
       return;
     }
-    this.confirmacaoService
+    this.confirmandoExclusao.set(true);
+    void this.confirmacaoService
       .confirmar({
         titulo: 'Excluir campanha',
         mensagem: `Excluir ${campanhaAtual.nome}? Esta ação não pode ser desfeita.`,
@@ -430,7 +447,8 @@ export class CampanhaDetalheMestre {
             .excluirCampanha(this.dados.id)
             .subscribe({ next: () => void this.router.navigate(['/campanhas']) });
         }
-      });
+      })
+      .finally(() => this.confirmandoExclusao.set(false));
   }
 
   protected abrirAnotacoesFicha(fichaId: number): void {

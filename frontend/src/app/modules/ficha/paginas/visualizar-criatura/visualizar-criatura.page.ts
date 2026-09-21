@@ -397,12 +397,19 @@ export class CriaturaVisualizar {
     this.dialogAcesso.set(false);
   }
 
+  /** Confirmação de exclusão aberta — marca o item "Excluir ficha" da coluna de ações. */
+  protected readonly confirmandoExclusao = signal(false);
+
   /** Pede confirmação (ui-15) e exclui a criatura (soft delete no backend, só dono/mestre — §14) —
    *  a partir do menu. `aoConfirmar` mantém o diálogo aberto com "Confirmar exclusão" em
    *  carregando até a chamada terminar, mesmo efeito visual do dialog hand-rolled anterior. */
   protected abrirExclusao(): void {
     const nome = this.ficha()?.nome;
-    this.confirmacaoService
+    if (this.confirmandoExclusao()) {
+      return;
+    }
+    this.confirmandoExclusao.set(true);
+    void this.confirmacaoService
       .confirmar({
         titulo: 'Excluir ficha',
         mensagem: nome
@@ -417,7 +424,8 @@ export class CriaturaVisualizar {
         if (confirmado) {
           void this.router.navigate(this.rotaDeSaida());
         }
-      });
+      })
+      .finally(() => this.confirmandoExclusao.set(false));
   }
 
   /** Busca uma página do histórico de rolagens e acrescenta ao final. */

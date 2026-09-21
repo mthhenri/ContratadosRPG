@@ -366,16 +366,64 @@ describe('FichaVisualizar', () => {
   });
 
   describe('remover da campanha', () => {
-    it('oferece a ação quando a ficha está vinculada e remove antes de voltar ao acervo', () => {
-      const { raiz, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+    it('oferece a ação quando a ficha está vinculada, pede confirmação e remove antes de voltar ao acervo', async () => {
+      const { raiz, fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+      let resolver: (valor: boolean) => void = () => undefined;
+      const confirmar = vi
+        .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
+        .mockImplementation(() => new Promise<boolean>((resolve) => (resolver = resolve)));
       const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find(
         (item) => item.textContent?.includes('Remover da campanha'),
       );
       expect(botao).toBeDefined();
       botao?.click();
+      fixture.detectChanges();
+
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Remover da campanha', severidade: 'padrao' }),
+      );
+      expect(botao?.getAttribute('aria-pressed')).toBe('true');
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+
+      resolver(true);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
 
       expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(42, null);
       expect(navegarEspiao).toHaveBeenCalledWith(['/fichas']);
+      expect(botao?.getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('cancelar a confirmação não remove a ficha da campanha', async () => {
+      const { raiz, fichaService } = montar({ usuarioLogadoId: 7 });
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item'))
+        .find((item) => item.textContent?.includes('Remover da campanha'))
+        ?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+    });
+
+    it('"Acesso de visualização" e "Excluir ficha" ficam selecionados enquanto a dialog está aberta', () => {
+      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+      const item = (rotulo: string) =>
+        Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find((candidato) =>
+          candidato.textContent?.includes(rotulo),
+        )!;
+      expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+
+      item('Acesso de visualização').click();
+      fixture.detectChanges();
+      expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['fecharAcesso']();
+
+      item('Excluir ficha').click();
+      fixture.detectChanges();
+      expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('true');
+      expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
     });
 
     it('não oferece a ação quando a ficha já está solta no acervo', () => {

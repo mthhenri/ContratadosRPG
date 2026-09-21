@@ -36,6 +36,8 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { confirmarRemocaoDaCampanha } from '../../ficha-confirmacoes';
 import { FichaService } from '../../ficha.service';
 import { FichaEdicaoService } from '../../ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
@@ -111,6 +113,7 @@ export class FichaVisualizar {
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
   protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
   private readonly fichaService = inject(FichaService);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
   /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);
   /** Flag "Rolagem oculta" + registro do histórico (m3-27), compartilhados na página (m2-21). */
@@ -481,12 +484,30 @@ export class FichaVisualizar {
     this.dialogAcesso.set(false);
   }
 
-  /**
-   * Desatribui a ficha da campanha e volta ao acervo solto do dono. Ação direta, igual aos
-   * menus análogos do painel da campanha e do acervo; o backend confirma a permissão de dono/mestre.
-   */
-  protected removerDaCampanha(): void {
+  /** Confirmação de "Remover da campanha" aberta — marca o item da coluna de ações. */
+  protected readonly confirmandoRemocao = signal(false);
+
+  /** Pede a confirmação e, se aceita, desatribui a ficha da campanha (ver `removerDaCampanha`). */
+  protected pedirRemoverDaCampanha(): void {
     this.fecharMenu();
+    if (this.campanhaId() === null || this.removendoDaCampanha() || this.confirmandoRemocao()) {
+      return;
+    }
+    this.confirmandoRemocao.set(true);
+    void confirmarRemocaoDaCampanha(this.confirmacaoService, this.ficha()?.nome ?? 'a ficha')
+      .then((confirmado) => {
+        if (confirmado) {
+          this.removerDaCampanha();
+        }
+      })
+      .finally(() => this.confirmandoRemocao.set(false));
+  }
+
+  /**
+   * Desatribui a ficha da campanha e volta ao acervo solto do dono; o backend confirma a
+   * permissão de dono/mestre.
+   */
+  private removerDaCampanha(): void {
     if (this.campanhaId() === null || this.removendoDaCampanha()) {
       return;
     }

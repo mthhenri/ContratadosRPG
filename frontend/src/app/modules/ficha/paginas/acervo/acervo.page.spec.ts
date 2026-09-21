@@ -215,8 +215,8 @@ describe('FichaAcervo', () => {
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(1, 9);
   });
 
-  it('remove a ficha da campanha diretamente pelo menu, sem dialog', () => {
-    const { fixture, raiz, fichaService } = montar({
+  it('remove a ficha da campanha pelo menu depois de confirmar', async () => {
+    const { fixture, raiz, fichaService, confirmacaoService } = montar({
       fichas: [fichaResumo({ id: 1, campanhaId: 9, campanhaNome: 'Operação Alfa' })],
     });
 
@@ -230,9 +230,38 @@ describe('FichaAcervo', () => {
     itemRemover.click();
     fixture.detectChanges();
 
+    expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+      expect.objectContaining({ titulo: 'Remover da campanha', entidade: 'Kane' }),
+    );
+    expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(1, null);
-    expect(raiz.querySelector('app-modal')).toBeNull();
     expect(raiz.querySelector('.acervo__chip--campanha')).toBeNull();
+  });
+
+  it('cancelar a confirmação mantém a ficha na campanha', async () => {
+    const { fixture, raiz, fichaService } = montar({
+      fichas: [fichaResumo({ id: 1, campanhaId: 9, campanhaNome: 'Operação Alfa' })],
+      confirmarResultado: false,
+    });
+
+    (raiz.querySelector('.acervo__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (
+      Array.from(raiz.querySelectorAll('.acervo__menu-item')).find((botao) =>
+        botao.textContent?.includes('Remover da campanha'),
+      ) as HTMLButtonElement
+    ).click();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+    expect(raiz.querySelector('.acervo__chip--campanha')).not.toBeNull();
   });
 
   function abrirMenuFicha(raiz: HTMLElement, fixture: { detectChanges(): void }) {

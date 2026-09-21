@@ -42,6 +42,7 @@ import {
   montarEquipeExibicao,
   type EquipeFichaExibicao,
 } from '../../campanha-equipe.util';
+import { confirmarRemocaoDaCampanha } from '../../../ficha/ficha-confirmacoes';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -506,13 +507,34 @@ export class CampanhaDetalheJogador {
   }
 
   /**
-   * Desatribui a ficha da campanha (ela volta ao acervo solto do dono) — ação direta, sem dialog,
-   * mesmo padrão de `FichaAcervo.removerDaCampanha`. Filtro otimista direto em `dados.fichas`
-   * (não um refetch): `avancarFichaExibidaApos`, logo a seguir, precisa que a ficha removida já
-   * não conste na lista para não escolhê-la de novo como "restante".
+   * Confirmação pendente ("Remover da campanha" ou "Excluir ficha") — marca o item da coluna de
+   * ações como selecionado enquanto o diálogo de confirmação está aberto, como as dialogs de
+   * Vincular/Acesso fazem com os respectivos itens.
    */
-  protected removerDaCampanha(fichaId: number): void {
+  protected readonly confirmando = signal<'remocao' | 'exclusao' | null>(null);
+
+  /** Pede a confirmação e, se aceita, desatribui a ficha da campanha (ver `removerDaCampanha`). */
+  protected pedirRemoverDaCampanha(fichaId: number, fichaNome: string): void {
     this.fecharMenu();
+    if (this.removendo() !== null || this.confirmando() !== null) {
+      return;
+    }
+    this.confirmando.set('remocao');
+    void confirmarRemocaoDaCampanha(this.confirmacaoService, fichaNome)
+      .then((confirmado) => {
+        if (confirmado) {
+          this.removerDaCampanha(fichaId);
+        }
+      })
+      .finally(() => this.confirmando.set(null));
+  }
+
+  /**
+   * Desatribui a ficha da campanha (ela volta ao acervo solto do dono). Filtro otimista direto em
+   * `dados.fichas` (não um refetch): `avancarFichaExibidaApos`, logo a seguir, precisa que a ficha
+   * removida já não conste na lista para não escolhê-la de novo como "restante".
+   */
+  private removerDaCampanha(fichaId: number): void {
     if (this.removendo() !== null) {
       return;
     }
@@ -531,7 +553,11 @@ export class CampanhaDetalheJogador {
   /** Abre a confirmação de exclusão a partir do menu do cabeçalho. */
   protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
     this.fecharMenu();
-    this.confirmacaoService
+    if (this.confirmando() !== null) {
+      return;
+    }
+    this.confirmando.set('exclusao');
+    void this.confirmacaoService
       .confirmar({
         titulo: 'Excluir ficha',
         mensagem: `Excluir ${fichaNome}? Esta ação não pode ser desfeita.`,
@@ -542,7 +568,8 @@ export class CampanhaDetalheJogador {
         if (confirmado) {
           this.excluirFicha(fichaId);
         }
-      });
+      })
+      .finally(() => this.confirmando.set(null));
   }
 
   private excluirFicha(fichaId: number): void {

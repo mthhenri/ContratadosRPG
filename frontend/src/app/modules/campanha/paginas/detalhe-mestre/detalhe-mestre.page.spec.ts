@@ -590,6 +590,83 @@ describe('CampanhaDetalheMestre', () => {
       expect(raiz.querySelector('app-caderno-flutuante .painel-flutuante__janela')).toBeNull();
       expect(itemCaderno.getAttribute('aria-pressed')).toBe('false');
     });
+
+    function itemColuna(raiz: HTMLElement, rotulo: string): HTMLElement {
+      return Array.from(raiz.querySelectorAll<HTMLElement>('[app-coluna-acoes-item]')).find(
+        (el) => el.textContent?.trim() === rotulo,
+      )!;
+    }
+
+    it('Membros, Convites e Editar ficam selecionados enquanto a dialog respectiva está aberta', () => {
+      const { raiz, fixture } = montar();
+      for (const rotulo of ['Membros', 'Convites', 'Editar']) {
+        expect(itemColuna(raiz, rotulo).getAttribute('aria-pressed'), rotulo).toBe('false');
+      }
+
+      itemColuna(raiz, 'Membros').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Membros').getAttribute('aria-pressed')).toBe('true');
+      expect(itemColuna(raiz, 'Convites').getAttribute('aria-pressed')).toBe('false');
+      fixture.componentInstance['dialogMembrosAberta'].set(false);
+
+      itemColuna(raiz, 'Convites').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Convites').getAttribute('aria-pressed')).toBe('true');
+      expect(itemColuna(raiz, 'Membros').getAttribute('aria-pressed')).toBe('false');
+      fixture.componentInstance['dialogConvitesAberta'].set(false);
+
+      itemColuna(raiz, 'Editar').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Editar').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['cancelarEdicao']();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Editar').getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('Excluir fica selecionado enquanto a confirmação de exclusão está aberta', async () => {
+      const { raiz, fixture, confirmacaoService } = montar();
+      let resolver: (valor: boolean) => void = () => undefined;
+      confirmacaoService.confirmar.mockImplementation(
+        () => new Promise<boolean>((resolve) => (resolver = resolve)),
+      );
+
+      itemColuna(raiz, 'Excluir').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir').getAttribute('aria-pressed')).toBe('true');
+
+      resolver(false);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir').getAttribute('aria-pressed')).toBe('false');
+    });
+  });
+
+  describe('"Remover da campanha" (menu do cartão da ficha)', () => {
+    it('pede confirmação e só desatribui a ficha depois de confirmar', async () => {
+      const { fixture, fichaService, confirmacaoService } = montar();
+
+      fixture.componentInstance['pedirRemoverDaCampanha'](3, 'Kane');
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Remover da campanha', entidade: 'Kane', severidade: 'padrao' }),
+      );
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(3, null);
+    });
+
+    it('cancelar a confirmação não desatribui a ficha', async () => {
+      const { fixture, fichaService, confirmacaoService } = montar();
+      confirmacaoService.confirmar.mockResolvedValue(false);
+
+      fixture.componentInstance['pedirRemoverDaCampanha'](3, 'Kane');
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+    });
   });
 
   describe('dialog "Convites"', () => {
