@@ -1,5 +1,47 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Brainstorming: módulo de Cenas (amplia o M7) e M9 de documentos
+
+Pedido do autor: tipar a cena na criação da Iniciativa (nem toda cena com iniciativa é combate) e
+abrir caminho para uma cena de Investigação, que organiza documentos e fichas dos jogadores numa
+mesma tela — "uma expansão do M7 para se tornar realmente um módulo de Cenas". Conduzido pela
+skill `superpowers:brainstorming` (caminho arquitetural: perguntas → 3 seções de design aprovadas
+uma a uma → specs). Nenhum código foi alterado nesta sessão — só specs e o registro de contexto.
+
+- **Decisões fechadas com o autor** (`AskUserQuestion`, 5 rodadas): os documentos da cena de
+  Investigação vêm de uma biblioteca de documentos da campanha nova (M9, promovendo a `I-014`), não
+  de anexo solto na cena nem do Caderno existente; a cena tem ciclo `PLANEJADA → ATIVA →
+  ENCERRADA` — o mestre prepara várias cenas com antecedência e abre uma por vez na mesa, mudando a
+  invariante atual de "um encontro não-encerrado por campanha" (que migra para a cena); nesta leva,
+  só Combate e Investigação ganham painel/mecânica própria — Furtiva e Perseguição rodam no painel
+  de Iniciativa de hoje só etiquetadas, Resistência também, sem Nível de Alerta/Limiar/inversão de
+  perseguidor; a M9 ganha spec de milestone própria nesta mesma rodada, não só uma dependência
+  declarada; apresentar um documento na cena revela na biblioteca do jogador **e** mostra um
+  destaque discreto no painel dele, sem abrir nada automaticamente (não interrompe quem rola dado).
+- **Modelo escolhido (opção C, entre 3 apresentadas)**: `cena` nasce como raiz nova (tipo, nome,
+  status, ordem); `encontro` continua existindo, intocado em nome/código, e passa a pendurar numa
+  `cena_id` — é a estrutura de iniciativa que Combate/Furtiva/Perseguição têm e Investigação/
+  Resistência não têm (`cenaTemIniciativa`, função pura nova). Descartadas: renomear tudo para
+  `cena` (~2000 testes, tabelas de iniciativa vazias na metade dos tipos) e só acrescentar `tipo` em
+  `encontro` (nome "encontro" ficaria errado para uma investigação).
+- **Risco fechado na spec, não deixado implícito**: hoje `encontro:alterado` vai para toda a sala da
+  campanha; se o mestre pré-monta um combate numa cena `PLANEJADA`, isso vazaria spoiler. A
+  `m7-22-backend-cena.spec.md` fecha essa trava explicitamente (nem GET nem evento saem de uma cena
+  planejada para quem não é mestre).
+- **Specs escritas** (`docs/specs/backlog/`): `m7-cenas.spec.md` (milestone, com a quebra em
+  `m7-21`…`m7-26`), `m9-documentos-campanha.spec.md` (milestone, promovendo `I-014`),
+  `m7-21-contrato-migration-cena.spec.md`, `m7-22-backend-cena.spec.md` e
+  `m7-23-frontend-hub-cenas.spec.md` — as três primeiras tasks já detalhadas, porque juntas entregam
+  o pedido imediato do autor (tipar a cena na criação) sem esperar a M9. As tasks seguintes
+  (`m7-24`…`m7-26`) ficam esboçadas no milestone, para detalhar quando começarem.
+- **`docs/context/IDEAS.md`**: `I-014` saiu de "Abertas" para "Promovidas", apontando para
+  `m9-documentos-campanha.spec.md`; o upgrade "mesa investigativa/mapa mental" que já estava
+  registrado nela virou item de "Fora de escopo" da spec, não implementado.
+- **Pontos deixados em aberto na spec**, para decidir ao implementar: se o jogador vê cenas
+  encerradas no hub como hoje vê combates encerrados; o que o Espectador (`m8`) vê numa cena de
+  Investigação, dado que documentos podem ter sensibilidade diferente de uma rolagem pública.
+- Nenhum teste/build rodado — sessão de brainstorming e escrita de spec, sem mudança de código.
+
 ## 2026-09-21 — Rede-04: consultas locais, cancelamento e reuso
 
 - A Gestão de usuários passou a concentrar carga inicial, filtros, paginação e invalidações após

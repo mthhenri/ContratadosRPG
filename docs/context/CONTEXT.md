@@ -10,9 +10,21 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-21 · **Última decisão registrada:**
-> `rede-01` fechou o ciclo de vida de salas Socket.IO: referência por consumidor no cliente, saída efetiva no gateway
+> Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de **Cenas**
+> — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/Perseguição/
+> Resistência, `docs/core/sistema-v4.1.0.md` "⬡ Cenas") e abrir caminho para uma cena de
+> Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
+> raiz nova (tipo, status `PLANEJADA→ATIVA→ENCERRADA`, ordem); `encontro` continua intocado em
+> nome/código, passando a pendurar numa `cena_id` — é a estrutura que só Combate/Furtiva/
+> Perseguição têm (`cenaTemIniciativa`). A cena de Investigação depende de uma M9 nova (biblioteca
+> de documentos da campanha, promovendo `I-014`), cuja spec de milestone também foi escrita nesta
+> rodada. Specs em `docs/specs/backlog/`: `m7-cenas.spec.md`, `m9-documentos-campanha.spec.md`,
+> `m7-21-contrato-migration-cena.spec.md`, `m7-22-backend-cena.spec.md`,
+> `m7-23-frontend-hub-cenas.spec.md` (as três últimas já detalhadas — juntas entregam o pedido
+> imediato do autor sem esperar a M9). Nenhum código alterado; detalhe completo em `HISTORY.md`.
+> Antes: `rede-01` fechou o ciclo de vida de salas Socket.IO: referência por consumidor no cliente, saída efetiva no gateway
 > e recalibração pós-revogação/vínculo/papel. A próxima otimização de rede é `rede-02` (carga inicial de projeções).
-> Iniciativa (`ui-39`): o `PainelEncontro` monolítico (mestre e jogador por `@if`) foi separado em
+> Antes: Iniciativa (`ui-39`): o `PainelEncontro` monolítico (mestre e jogador por `@if`) foi separado em
 > `PainelEncontroShell` (resolve o papel; provê o `EncontroPainelDadosService`) →
 > `PainelEncontroMestre`/`PainelEncontroJogador`, no molde de `detalhe-shell`. A visão do jogador ganhou a
 > composição do mestre (coluna de ações · trilha · Rolagens · palco) com a **própria ficha** no palco e o
@@ -439,7 +451,15 @@
 
 ## 1. Próxima Task
 
-**Sobreposição no `EditorMarkdown` compacto + repaint dos selos de custo/tipo concluído
+**Módulo de Cenas — specs prontas para implementar (2026-09-21):** `m7-21-contrato-migration-
+cena.spec.md`, `m7-22-backend-cena.spec.md` e `m7-23-frontend-hub-cenas.spec.md`
+(`docs/specs/backlog/`) juntas entregam o pedido do autor: tipar a cena na criação, com hub e
+redirecionamento das rotas de Iniciativa atuais. São a fundação do milestone `m7-cenas.spec.md`;
+seguir `m7-21 → m7-22 → m7-23` nessa ordem. A cena de Investigação (`m7-25`) só pode começar depois
+de `m9-documentos-campanha.spec.md` ter ao menos o backend de documento + revelar/ocultar prontos.
+Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`.
+
+**Antes: Sobreposição no `EditorMarkdown` compacto + repaint dos selos de custo/tipo concluído
 (2026-09-18):** `flex: none` corrige a sobreposição de Descrição+Restrição no card de Habilidade
 de criatura; selo de custo de ação/tipo de habilidade trocou `--cor-ficha` por 3 tokens fixos
 (cinza/tema/branco, cada um com glow); `CustoAcaoEnum` ganhou `ACAO_LIVRE`/`TURNO`. Resumo
