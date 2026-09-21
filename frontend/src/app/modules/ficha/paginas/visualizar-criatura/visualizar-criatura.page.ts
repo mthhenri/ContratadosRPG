@@ -29,7 +29,6 @@ import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.compon
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
-import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -43,6 +42,7 @@ import { lerParamRota } from '../../ler-param-rota';
 import { mesclarDocumento } from '../../mesclar-ficha';
 import { RolagemService } from '../../rolagem.service';
 
+import { CriaturaEsqueleto } from '../../componentes/criatura-esqueleto/criatura-esqueleto.component';
 import { CriaturaVisualizacao } from '../../componentes/criatura-visualizacao/criatura-visualizacao.component';
 
 /** Tamanho de página do histórico de rolagens da barra lateral. */
@@ -70,13 +70,13 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     ColunaAcoes,
     ColunaAcoesItem,
     Icone,
+    CriaturaEsqueleto,
     CriaturaVisualizacao,
     CalculadoraFlutuante,
     CadernoFlutuante,
     HistoricoRolagensSidebar,
     Tooltip,
     Modal,
-    Esqueleto,
   ],
   providers: [FichaEdicaoCriaturaService, FichaRolagemRegistroService],
   templateUrl: './visualizar-criatura.page.html',

@@ -168,6 +168,17 @@ describe('CriaturaVisualizar', () => {
     expect(raiz.querySelector('app-criatura-visualizacao')).not.toBeNull();
   });
 
+  it('enquanto carrega, mostra a silhueta da ficha de criatura', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    fixture.componentInstance['carregando'].set(true);
+    fixture.detectChanges();
+
+    const silhueta = raiz.querySelector('app-criatura-esqueleto');
+    expect(silhueta?.getAttribute('role')).toBe('status');
+    expect(silhueta?.getAttribute('aria-label')).toBe('Carregando ficha');
+    expect(raiz.querySelector('app-criatura-visualizacao')).toBeNull();
+  });
+
   it('não gerencia acesso nem busca acessos para quem não é dono/mestre', () => {
     const { raiz, fixture, fichaService } = montar({ usuarioLogadoId: 11 });
     expect(fixture.componentInstance['podeGerenciar']()).toBe(false);
