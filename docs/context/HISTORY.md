@@ -1,5 +1,53 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Scrollbar do tema nunca aplicava (Chrome/Edge/Firefox) e scroll interno em Ataques/Habilidades da criatura
+
+Dois pedidos do autor ao usar a tela. Specs `docs/specs/done/scrollbar-global-cross-browser.spec.md` e
+`docs/specs/done/criatura-ataques-habilidades-scroll-interno.spec.md`.
+
+**1. Scrollbar.** "Nenhuma scrollbar customizada, mais fininha, está sendo aplicada" (print da coluna
+de Rolagens com barra nativa de 15px e setas ▲▼). Reproduzido na app real com um container
+`overflow: auto` injetado, medindo `offsetWidth - clientWidth` e `getComputedStyle` em Chromium 148 (motor
+do Chrome), Microsoft Edge 153 e Firefox 150. **Causa raiz:** o m1-18 declarava o padrão duas vezes —
+`scrollbar-width: thin` + `scrollbar-color` em `html` **e** `::-webkit-scrollbar-*` em `*` — e no Chromium
+≥ 121 as duas formas não se somam: um elemento com `scrollbar-color`/`scrollbar-width` ≠ `auto` perde
+o `::-webkit-scrollbar`. `scrollbar-color` é herdado (todo container o herdava de `html`), `scrollbar-width`
+não é (containers ficavam em `auto`): barra nativa de 15px, só recolorida. No Firefox, `thin` valia só para
+a barra da página, não para os containers. As duas regras nasceram juntas em `6c75438d`, então a
+customização nunca funcionou nos navegadores atuais. **Correção** em `frontend/src/styles/tema/_base.scss`
+(e o espelho `docs/design/tema/_base.scss`): as propriedades padrão passam para `*` e voltam a `auto` dentro
+de `@supports selector(::-webkit-scrollbar)`, onde o pseudo-elemento assume — uma forma por navegador.
+Hipótese confirmada antes de editar (CSS injetado nos três navegadores): Chromium/Edge 15→10px, sem setas,
+polegar do tema; Firefox `thin` + cores do tema em todo container. Depois de editar, sonda repetida no app
+real e capturas do painel de Rolagens (1366×768, onde a lista passa a rolar) nos três. `DESIGN.md`
+("Scrollbar") registra a armadilha. Os HTMLs de `docs/design/examples/` (capturas históricas) mantêm o CSS
+antigo; Safari não foi testado. Firefox do Playwright em modo headless reporta `scrollbar-width: none`
+(esconde barras) — a verificação usou janela real; Chromium/Edge precisam de
+`ignoreDefaultArgs: ['--hide-scrollbars']`.
+
+**2. Criatura.** "Se tem muitos ataques ou habilidades, a ficha vai indo lá pra baixo: devia pôr um scroll
+interno nessas duas caixas, pra altura da coluna do lado." Medido com uma criatura de teste (14 ataques e 14
+habilidades, removida depois): a coluna Status crescia e arrastava a de Identidade+Atributos junto (905px
+em 1920×1080, 2111px em 1366×768, contra os 740px próprios da coluna de Identidade). Análogo: a coluna
+Status da **ficha de jogador** (`contain: size; overflow: hidden` acima de `$bp-tablet`, painel longo
+rolando por dentro) e `habilidades__lista` com `appOverflowFade`. Com a aba Ataques ou Habilidades ativa e as
+duas colunas lado a lado, `criatura__coluna--status-rolavel` trava a Status na altura da vizinha; os
+cartões rolam por dentro de `__rolagem` (lista **e** formulário de item novo), com cabeçalho e "Rolagem
+rápida" fixos e fade só onde há corte. Os limiares repetem os do `--apertado` (`$bp-tablet`, e
+`$bp-tablet + $reserva-painel-lateral` com o painel de Rolagens aberto). Empilhado (tablet/mobile) e a aba
+Geral não mudam: sem coluna ao lado não há altura de referência, e a m3-60 da ficha de jogador decidiu que
+a página inteira rola como uma coisa só. Dois achados no caminho: a barra de abas encolhia 38→30px porque o
+flexbox reparte o aperto da coluna travada (`> app-abas { flex-shrink: 0 }`), e o formulário de item novo
+ficava fora do `<ul>` — espremido/cortado; entrou na área rolável e `adicionar()` o traz à vista
+(`scrollIntoView({ block: 'nearest' })` num `effect` sobre o `viewChild`).
+
+**Verificação.** Testes focados 72/72 (ataque-lista, habilidade-lista, visualizacao, resistencia-lista, com
+testes novos para a área rolável, o `scrollIntoView` e a classe da coluna); Prettier limpo nos
+html/scss tocados; ESLint 0 erros (só warnings preexistentes). Ao vivo: 1920×1080, 1366×768, 960×1080 e
+360×800; com o painel de Rolagens aberto a 1920 e 1500; estados Geral/Ataques/Habilidades, fim da lista
+(fade no topo), "+" abrindo o formulário à vista com o botão Adicionar visível e Cancelar; Chromium, Edge e
+Firefox — Status = Identidade = 740px, abas 38px, sem overflow horizontal, sem erro de console.
+
 ## 2026-09-20 — ui-38: Iniciativa do mestre sem combate aberto + dialog "Novo combate"
 
 Pedido do autor ao usar a tela (continuação da `ui-37`): "esse botão [Combate atual] não tá fazendo
