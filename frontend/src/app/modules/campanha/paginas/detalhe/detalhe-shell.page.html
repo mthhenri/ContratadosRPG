@@ -1,7 +1,9 @@
-@if (dados.carregando()) {
-    <app-campanha-detalhe-jogador />
+@if (dados.carregando() && papelHint === TipoCampanhaMembroPapelEnum.MESTRE) {
+<app-campanha-detalhe-mestre />
+} @else if (dados.carregando()) {
+<app-campanha-detalhe-jogador />
 } @else if (dados.ehMestre()) {
-    <app-campanha-detalhe-mestre />
+<app-campanha-detalhe-mestre />
 } @else {
-    <app-campanha-detalhe-jogador />
+<app-campanha-detalhe-jogador />
 }

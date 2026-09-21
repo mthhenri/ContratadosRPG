@@ -10,7 +10,16 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-21 · **Última decisão registrada:**
-> Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de **Cenas**
+> Fecham os dois skeletons pendentes da rodada anterior (pedido direto do autor): **ficha de
+> criatura** ganhou `CriaturaEsqueleto` reaproveitando a casca real (mesma família de
+> `FichaEsqueleto`), substituindo a silhueta ad-hoc de 1 coluna de `visualizar-criatura.page`;
+> **campanha do mestre** ganhou vida — `CampanhaLista` repassa `papel` via `[state]` da navegação,
+> `CampanhaDetalheShell` lê `papelHint` do `Router` e monta `CampanhaDetalheMestre` já enquanto
+> `dados.carregando()` quando o hint é `MESTRE` (antes esse skeleton nunca rodava, sempre caía em
+> jogador). Sem hint, comportamento de sempre. `npm run test --workspace=frontend` 140/140/2030/2030;
+> verificação ao vivo em `1920×1080`/`360×800` confirmou as duas silhuetas contra a tela real, sem
+> "pulo" de layout, sem overflow. Detalhe completo em `HISTORY.md`.
+> Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de **Cenas**
 > — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/Perseguição/
 > Resistência, `docs/core/sistema-v4.1.0.md` "⬡ Cenas") e abrir caminho para uma cena de
 > Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
