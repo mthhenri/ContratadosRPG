@@ -1,12 +1,22 @@
 @use "tema/breakpoints" as bp;
 
 :host {
-    display: block;
+    // Flex em coluna para a lista poder encolher e rolar por dentro (ver `&__itens`); fora de um
+    // flex-pai (ex.: empilhado) `flex`/`min-height` não têm efeito e o host segue como bloco.
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 // Habilidades da ficha de criatura — mesmo desenho de cabeçalho/card de `criatura-ataque-lista`,
 // alvo de fidelidade docs/design/examples/ficha-de-criatura.html.
 .habilidade-lista {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+
     &__cabecalho {
         display: flex;
         align-items: center;
@@ -53,6 +63,44 @@
             &:hover {
                 background: var(--accent-dim);
             }
+        }
+    }
+
+    // Área rolável (lista + formulário de item novo). Rola por dentro só quando a coluna Status está
+    // travada na altura da coluna vizinha (`CriaturaVisualizacao`, `&__coluna--status-rolavel`):
+    // cabeçalho fixo, cartões rolando com fade só onde há corte (`appOverflowFade`, mesmo desenho de
+    // `habilidades__lista` da ficha de jogador). Sem altura definida (empilhado/mobile) não há
+    // overflow e nada muda.
+    &__rolagem {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 22px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 22px;
         }
     }
 

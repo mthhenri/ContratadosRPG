@@ -28,6 +28,32 @@ describe('CriaturaHabilidadeLista', () => {
     expect(nomes).toEqual(['Pele de Pedra']);
   });
 
+  it('lista e formulário de item novo ficam na mesma área rolável, com o cabeçalho fora dela', () => {
+    const { fixture, raiz } = montar(true);
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+
+    const rolagem = raiz.querySelector('.habilidade-lista__rolagem')!;
+    expect(rolagem.querySelector('.habilidade-lista__itens')).not.toBeNull();
+    expect(rolagem.querySelector('.habilidade-lista__form-novo')).not.toBeNull();
+    expect(rolagem.querySelector('.habilidade-lista__cabecalho')).toBeNull();
+    expect(raiz.querySelector('.habilidade-lista__cabecalho')).not.toBeNull();
+  });
+
+  it('traz o formulário de item novo à vista dentro da área rolável', async () => {
+    const rolarAteOFormulario = vi.fn();
+    // jsdom não implementa `scrollIntoView`.
+    Element.prototype.scrollIntoView = rolarAteOFormulario;
+    const { fixture } = montar(true);
+    expect(rolarAteOFormulario).not.toHaveBeenCalled();
+
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(rolarAteOFormulario).toHaveBeenCalledWith({ block: 'nearest' });
+  });
+
   it('só mostra editar/remover por item depois de ativar o modo de edição', () => {
     const { fixture, raiz } = montar(true);
     expect(raiz.querySelector('.habilidade-lista__acoes')).toBeNull();

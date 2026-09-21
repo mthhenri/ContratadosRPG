@@ -33,97 +33,102 @@
         <app-estado-vazio tamanho="compacto" titulo="Nenhum ataque." />
     }
 
-    <ul class="ataque-lista__itens">
-        @for (item of itens(); track $index) {
-            <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando($index)">
-                @if (editando($index)) {
-                    <ng-container
-                        *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
-                    />
-                } @else {
-                    <div class="ataque-lista__cabecalho-item">
-                        <span class="ataque-lista__nome">{{ item.nome }}</span>
-                        <span class="ataque-lista__dano">{{ item.dano }}</span>
-                    </div>
-
-                    <div class="ataque-lista__marcas">
-                        <span [class]="classeMarcaCusto(item.custoAcao)">{{
-                            rotuloCustoAcaoCurto(item.custoAcao)
-                        }}</span>
-                        @if (item.area) {
-                            <span class="ataque-lista__marca">Área</span>
-                        }
-                    </div>
-
-                    @if (item.efeito) {
-                        <app-editor-markdown
-                            class="ataque-lista__efeito"
-                            [valor]="item.efeito"
-                            [somenteLeitura]="true"
-                            [compacto]="true"
-                            [rotulo]="'Efeito adicional'"
+    <div class="ataque-lista__rolagem" appOverflowFade>
+        <ul class="ataque-lista__itens">
+            @for (item of itens(); track $index) {
+                <li
+                    class="ataque-lista__item"
+                    [class.ataque-lista__item--editando]="editando($index)"
+                >
+                    @if (editando($index)) {
+                        <ng-container
+                            *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
                         />
-                    }
+                    } @else {
+                        <div class="ataque-lista__cabecalho-item">
+                            <span class="ataque-lista__nome">{{ item.nome }}</span>
+                            <span class="ataque-lista__dano">{{ item.dano }}</span>
+                        </div>
 
-                    <div class="ataque-lista__rodape">
-                        <button
-                            app-botao
-                            class="ataque-lista__rolar ataque-lista__rolar--teste"
-                            type="button"
-                            (click)="testar(item)"
-                        >
-                            <app-icone nome="d20" /> Teste
-                        </button>
-                        <button
-                            app-botao
-                            class="ataque-lista__rolar ataque-lista__rolar--dano"
-                            type="button"
-                            (click)="rolar(item)"
-                        >
-                            <app-icone nome="d20" /> Dano
-                        </button>
-                        <button
-                            app-botao
-                            class="ataque-lista__rolar ataque-lista__rolar--critico"
-                            type="button"
-                            [appTooltip]="'Rolar dano crítico'"
-                            (click)="criticar(item)"
-                        >
-                            <app-icone nome="d20" /> Crítico
-                        </button>
-                        @if (editavel() && modoEdicao()) {
-                            <div class="ataque-lista__acoes">
-                                <button
-                                    app-botao-icone
-                                    class="ataque-lista__acao"
-                                    type="button"
-                                    aria-label="Editar"
-                                    (click)="editar($index)"
-                                >
-                                    <app-icone nome="editar" />
-                                </button>
-                                <button
-                                    app-botao-icone
-                                    class="ataque-lista__acao"
-                                    type="button"
-                                    aria-label="Remover"
-                                    (click)="remover($index)"
-                                >
-                                    <app-icone nome="excluir" />
-                                </button>
-                            </div>
+                        <div class="ataque-lista__marcas">
+                            <span [class]="classeMarcaCusto(item.custoAcao)">{{
+                                rotuloCustoAcaoCurto(item.custoAcao)
+                            }}</span>
+                            @if (item.area) {
+                                <span class="ataque-lista__marca">Área</span>
+                            }
+                        </div>
+
+                        @if (item.efeito) {
+                            <app-editor-markdown
+                                class="ataque-lista__efeito"
+                                [valor]="item.efeito"
+                                [somenteLeitura]="true"
+                                [compacto]="true"
+                                [rotulo]="'Efeito adicional'"
+                            />
                         }
-                    </div>
-                }
-            </li>
-        }
-    </ul>
 
-    @if (editando(-1)) {
-        <div class="ataque-lista__form-novo">
-            <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
-        </div>
-    }
+                        <div class="ataque-lista__rodape">
+                            <button
+                                app-botao
+                                class="ataque-lista__rolar ataque-lista__rolar--teste"
+                                type="button"
+                                (click)="testar(item)"
+                            >
+                                <app-icone nome="d20" /> Teste
+                            </button>
+                            <button
+                                app-botao
+                                class="ataque-lista__rolar ataque-lista__rolar--dano"
+                                type="button"
+                                (click)="rolar(item)"
+                            >
+                                <app-icone nome="d20" /> Dano
+                            </button>
+                            <button
+                                app-botao
+                                class="ataque-lista__rolar ataque-lista__rolar--critico"
+                                type="button"
+                                [appTooltip]="'Rolar dano crítico'"
+                                (click)="criticar(item)"
+                            >
+                                <app-icone nome="d20" /> Crítico
+                            </button>
+                            @if (editavel() && modoEdicao()) {
+                                <div class="ataque-lista__acoes">
+                                    <button
+                                        app-botao-icone
+                                        class="ataque-lista__acao"
+                                        type="button"
+                                        aria-label="Editar"
+                                        (click)="editar($index)"
+                                    >
+                                        <app-icone nome="editar" />
+                                    </button>
+                                    <button
+                                        app-botao-icone
+                                        class="ataque-lista__acao"
+                                        type="button"
+                                        aria-label="Remover"
+                                        (click)="remover($index)"
+                                    >
+                                        <app-icone nome="excluir" />
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+
+        @if (editando(-1)) {
+            <div class="ataque-lista__form-novo" #formNovo>
+                <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
+            </div>
+        }
+    </div>
 </section>
 
 <!-- Formulário em grade rotulada: a linha de flex-wrap anterior deixava sete controles sem rótulo

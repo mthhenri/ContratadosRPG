@@ -167,6 +167,59 @@
         &--status {
             align-self: stretch;
         }
+
+        // Ataques/Habilidades (pedido do autor): com muitos itens a coluna Status crescia e arrastava
+        // a de Identidade+Atributos junto (`&__linha-colunas{align-items:stretch}`). Mesma receita de
+        // `.ficha-visao__coluna--status` na ficha de jogador: `contain: size` tira o conteúdo desta
+        // coluna do cálculo da altura da fileira — que passa a ser a da coluna vizinha —, e
+        // `overflow: hidden` o impede de estourá-la; quem rola por dentro é a lista de cartões
+        // (`.ataque-lista__itens`/`.habilidade-lista__itens`), com o cabeçalho fixo. Só vale com as
+        // duas colunas lado a lado: empilhadas não há altura de referência (e a página inteira rola
+        // como uma coisa só, decisão m3-60 da ficha de jogador). A aba Geral fica de fora — a
+        // Descrição em Markdown pode ser longa e não rola por dentro.
+        &--status-rolavel {
+            // Coluna com altura travada: sem isto o flexbox reparte o aperto também com a barra de
+            // abas (`overflow-x: auto` a deixa encolher abaixo do conteúdo) e ela sai mais baixa
+            // que nas outras abas.
+            > app-abas {
+                flex-shrink: 0;
+            }
+
+            @media (min-width: (bp.$bp-tablet + 1px)) {
+                .criatura:not(.criatura--apertado) & {
+                    contain: size;
+                    overflow: hidden;
+                }
+            }
+
+            // Painel lateral de Rolagens aberto: `&--apertado` só empilha abaixo de
+            // `$bp-tablet + $reserva-painel-lateral` (ver `&--apertado &__linha-colunas`).
+            @media (min-width: (bp.$bp-tablet + bp.$reserva-painel-lateral + 1px)) {
+                .criatura--apertado & {
+                    contain: size;
+                    overflow: hidden;
+                }
+            }
+        }
+    }
+
+    // O card do painel precisa poder encolher abaixo do conteúdo (`min-height: 0`) e cortar o que
+    // passar, senão o `contain: size` da coluna acima não chega às listas — o card estouraria antes.
+    // Mesmos dois limiares da coluna.
+    &__coluna--status-rolavel &__cartao--painel {
+        @media (min-width: (bp.$bp-tablet + 1px)) {
+            .criatura:not(.criatura--apertado) & {
+                min-height: 0;
+                overflow: hidden;
+            }
+        }
+
+        @media (min-width: (bp.$bp-tablet + bp.$reserva-painel-lateral + 1px)) {
+            .criatura--apertado & {
+                min-height: 0;
+                overflow: hidden;
+            }
+        }
     }
 
     // --- Identidade em 2 colunas (pedido do autor) ---

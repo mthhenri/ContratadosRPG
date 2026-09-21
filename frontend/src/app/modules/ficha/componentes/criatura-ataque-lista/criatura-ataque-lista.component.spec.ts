@@ -80,6 +80,32 @@ describe('CriaturaAtaqueLista', () => {
     expect(raiz.querySelector('.ataque-lista__acoes')).toBeNull();
   });
 
+  it('lista e formulário de item novo ficam na mesma área rolável, com o cabeçalho fora dela', () => {
+    const { fixture, raiz } = montar(true);
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+
+    const rolagem = raiz.querySelector('.ataque-lista__rolagem')!;
+    expect(rolagem.querySelector('.ataque-lista__itens')).not.toBeNull();
+    expect(rolagem.querySelector('.ataque-lista__form-novo')).not.toBeNull();
+    expect(rolagem.querySelector('.ataque-lista__cabecalho')).toBeNull();
+    expect(raiz.querySelector('.ataque-lista__cabecalho')).not.toBeNull();
+  });
+
+  it('traz o formulário de item novo à vista dentro da área rolável', async () => {
+    const rolarAteOFormulario = vi.fn();
+    // jsdom não implementa `scrollIntoView`.
+    Element.prototype.scrollIntoView = rolarAteOFormulario;
+    const { fixture } = montar(true);
+    expect(rolarAteOFormulario).not.toHaveBeenCalled();
+
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(rolarAteOFormulario).toHaveBeenCalledWith({ block: 'nearest' });
+  });
+
   it('adiciona um ataque e emite a lista inteira', () => {
     const alvo = montar(true);
     alvo.fixture.componentInstance['adicionar']();

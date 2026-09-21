@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, effect, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -11,6 +11,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
@@ -28,6 +29,7 @@ const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as Cu
     Tooltip,
     NgTemplateOutlet,
     EstadoVazio,
+    OverflowFade,
   ],
   templateUrl: './criatura-ataque-lista.component.html',
   styleUrl: './criatura-ataque-lista.component.scss',
@@ -82,6 +84,21 @@ export class CriaturaAtaqueLista {
     if (!this.modoEdicao()) {
       this.cancelar();
     }
+  }
+
+  /** Formulário de item novo (`indiceEmEdicao === -1`), montado no fim da lista rolável. */
+  private readonly formNovo = viewChild<ElementRef<HTMLElement>>('formNovo');
+
+  constructor() {
+    // A lista rola por dentro quando a coluna Status está travada na altura da vizinha
+    // (`CriaturaVisualizacao`): o formulário de item novo nasce no fim dela e pode ficar abaixo da
+    // dobra — traz ele à vista assim que existir. `nearest` só rola se precisar.
+    effect(() => {
+      const alvo = this.formNovo()?.nativeElement;
+      if (alvo && typeof alvo.scrollIntoView === 'function') {
+        alvo.scrollIntoView({ block: 'nearest' });
+      }
+    });
   }
 
   protected adicionar(): void {

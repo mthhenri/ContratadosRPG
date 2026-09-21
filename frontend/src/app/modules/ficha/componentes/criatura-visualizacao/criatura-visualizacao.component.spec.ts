@@ -212,6 +212,26 @@ describe('CriaturaVisualizacao', () => {
     expect(raiz.querySelector('#criatura-painel-descricao')).toBeNull();
   });
 
+  it('só as abas Ataques e Habilidades travam a coluna Status na altura da coluna vizinha (scroll interno)', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const status = () => raiz.querySelector('.criatura__coluna--status')!;
+
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(false);
+
+    fixture.componentInstance['selecionarAba']('ataques');
+    fixture.detectChanges();
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(true);
+
+    fixture.componentInstance['selecionarAba']('habilidades');
+    fixture.detectChanges();
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(true);
+
+    fixture.componentInstance['selecionarAba']('geral');
+    fixture.detectChanges();
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(false);
+  });
+
   it('a aba Habilidades renderiza só a lista de habilidades (separada de Ataques)', () => {
     const { fixture } = montar();
     fixture.componentInstance['selecionarAba']('habilidades');

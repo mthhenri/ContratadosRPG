@@ -33,69 +33,73 @@
         <app-estado-vazio tamanho="compacto" titulo="Nenhuma habilidade especial." />
     }
 
-    <ul class="habilidade-lista__itens">
-        @for (item of itens(); track $index) {
-            <li
-                class="habilidade-lista__item"
-                [class.habilidade-lista__item--editando]="editando($index)"
-            >
-                @if (editando($index)) {
-                    <ng-container
-                        *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
-                    />
-                } @else {
-                    <div class="habilidade-lista__cabecalho-item">
-                        <span class="habilidade-lista__nome">{{ item.nome }}</span>
-                        <span [class]="classeChipTipo(item.tipo)">{{ rotuloTipo(item.tipo) }}</span>
-                    </div>
-                    <app-editor-markdown
-                        class="habilidade-lista__descricao"
-                        [valor]="item.descricao"
-                        [somenteLeitura]="true"
-                        [compacto]="true"
-                        [rotulo]="'Descrição de ' + item.nome"
-                    />
-                    @if (item.restricao) {
+    <div class="habilidade-lista__rolagem" appOverflowFade>
+        <ul class="habilidade-lista__itens">
+            @for (item of itens(); track $index) {
+                <li
+                    class="habilidade-lista__item"
+                    [class.habilidade-lista__item--editando]="editando($index)"
+                >
+                    @if (editando($index)) {
+                        <ng-container
+                            *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
+                        />
+                    } @else {
+                        <div class="habilidade-lista__cabecalho-item">
+                            <span class="habilidade-lista__nome">{{ item.nome }}</span>
+                            <span [class]="classeChipTipo(item.tipo)">{{
+                                rotuloTipo(item.tipo)
+                            }}</span>
+                        </div>
                         <app-editor-markdown
-                            class="habilidade-lista__restricao"
-                            [valor]="item.restricao"
+                            class="habilidade-lista__descricao"
+                            [valor]="item.descricao"
                             [somenteLeitura]="true"
                             [compacto]="true"
-                            [rotulo]="'Restrição de ' + item.nome"
+                            [rotulo]="'Descrição de ' + item.nome"
                         />
+                        @if (item.restricao) {
+                            <app-editor-markdown
+                                class="habilidade-lista__restricao"
+                                [valor]="item.restricao"
+                                [somenteLeitura]="true"
+                                [compacto]="true"
+                                [rotulo]="'Restrição de ' + item.nome"
+                            />
+                        }
+                        @if (editavel() && modoEdicao()) {
+                            <div class="habilidade-lista__acoes">
+                                <button
+                                    app-botao-icone
+                                    class="habilidade-lista__acao"
+                                    type="button"
+                                    aria-label="Editar"
+                                    (click)="editar($index)"
+                                >
+                                    <app-icone nome="editar" />
+                                </button>
+                                <button
+                                    app-botao-icone
+                                    class="habilidade-lista__acao"
+                                    type="button"
+                                    aria-label="Remover"
+                                    (click)="remover($index)"
+                                >
+                                    <app-icone nome="excluir" />
+                                </button>
+                            </div>
+                        }
                     }
-                    @if (editavel() && modoEdicao()) {
-                        <div class="habilidade-lista__acoes">
-                            <button
-                                app-botao-icone
-                                class="habilidade-lista__acao"
-                                type="button"
-                                aria-label="Editar"
-                                (click)="editar($index)"
-                            >
-                                <app-icone nome="editar" />
-                            </button>
-                            <button
-                                app-botao-icone
-                                class="habilidade-lista__acao"
-                                type="button"
-                                aria-label="Remover"
-                                (click)="remover($index)"
-                            >
-                                <app-icone nome="excluir" />
-                            </button>
-                        </div>
-                    }
-                }
-            </li>
-        }
-    </ul>
+                </li>
+            }
+        </ul>
 
-    @if (editando(-1)) {
-        <div class="habilidade-lista__form-novo">
-            <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
-        </div>
-    }
+        @if (editando(-1)) {
+            <div class="habilidade-lista__form-novo" #formNovo>
+                <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
+            </div>
+        }
+    </div>
 </section>
 
 <!-- Formulário em grade rotulada, no mesmo desenho do de Ataques. -->

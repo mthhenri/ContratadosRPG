@@ -765,7 +765,12 @@
         <!-- Coluna 2 — Status: abas Geral / Ataques / Habilidades, mesmo padrão de
          `.ficha-status__abas` de `FichaVisualizacao`. Geral fundiu as antigas Geral + Descrição
          (pedido do autor) — ver `&__info-grade` no SCSS pra como a altura foi resolvida. -->
-        <div class="criatura__coluna criatura__coluna--status">
+        <div
+            class="criatura__coluna criatura__coluna--status"
+            [class.criatura__coluna--status-rolavel]="
+                abaAtiva() === 'ataques' || abaAtiva() === 'habilidades'
+            "
+        >
             <app-abas rotulo="Abas de status da criatura" (navegou)="aoNavegarAba($event)">
                 <button
                     app-aba
