@@ -43,7 +43,7 @@ import { RolagemService } from '../../rolagem.service';
 describe('CriaturaVisualizar', () => {
   const dados: FichaCriaturaDadosDto = {
     identidade: {
-      designacao: 'A Estátua', origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
+      origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
       naturezaFisica: 'x', comportamento: ComportamentoCriaturaEnum.CACADORA, motivacao: 'x', ganchoUnico: 'x',
     },
     na: NivelAmeacaEnum.ALTA, vd: 30,

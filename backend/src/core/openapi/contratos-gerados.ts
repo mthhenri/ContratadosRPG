@@ -144,6 +144,19 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada de recuperação individual — o `id` vem do `@Param`, injetado no DTO pela\ncontroller (recuperação individual sempre `{ id }`, nunca primitivo)."
     },
+    "CampanhaSalaSairDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Mensagem de infraestrutura para abandonar as salas de uma campanha no Socket.IO."
+    },
     "CampanhaRecuperadaDto": {
         "type": "object",
         "properties": {
@@ -2234,6 +2247,10 @@ export const schemasContratosPublicos = {
             "identidade": {
                 "$ref": "#/components/schemas/FichaCriaturaIdentidadeDto"
             },
+            "registro": {
+                "type": "string",
+                "description": "Texto livre pro mestre catalogar a criatura no universo (ex.: \"SCP-049\") — opcional, sem\nformato imposto. Mesmo padrão de `FichaJogadorDadosDto.contrato`, mas sem rótulo fixo:\no valor exibido é o texto inteiro, não um sufixo de \"REGISTRO — \"."
+            },
             "na": {
                 "type": "string",
                 "enum": [
@@ -2376,16 +2393,13 @@ export const schemasContratosPublicos = {
     "FichaCriaturaIdentidadeDto": {
         "type": "object",
         "properties": {
-            "designacao": {
-                "type": "string",
-                "description": "Nome da criação — algo lembrável, não um código técnico."
-            },
             "origem": {
                 "type": "string",
                 "enum": [
                     "SCP_ADAPTADO",
                     "ORIGINAL"
-                ]
+                ],
+                "description": "Designação (nome da criação, \"algo lembrável, não um código técnico\") não tem campo aqui —\né `ficha.nome` (coluna relacional), editado sob o rótulo \"Designação\" em `CriaturaVisualizacao`.\nAntes desta task havia um campo `designacao` próprio, sincronizado com `ficha.nome` só no\ninstante da criação (`CriarCriatura`) e nunca mais depois — editar um sem o outro os\ndivergia (achado ao vivo, screenshot do autor). Fonte única agora, mesmo padrão de\n`FichaVisualizacao`/`ajusteNome` (ficha de jogador nunca teve essa duplicação)."
             },
             "conceito": {
                 "type": "string",
@@ -2418,7 +2432,6 @@ export const schemasContratosPublicos = {
             }
         },
         "required": [
-            "designacao",
             "origem",
             "conceito",
             "naturezaFisica",
@@ -2497,21 +2510,49 @@ export const schemasContratosPublicos = {
         "type": "object",
         "properties": {
             "terrestre": {
-                "type": "number"
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
             },
             "voador": {
-                "type": "number"
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
             },
             "aquatico": {
-                "type": "number"
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
             },
             "sobrenatural": {
-                "type": "number",
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ],
                 "description": "Ignora terreno/obstáculos e reações; ver guia para as regras especiais de uso em jogo."
             }
         },
         "additionalProperties": false,
-        "description": "Deslocamento da criatura — ao menos um modo preenchido (validado por\n`shared/regras/criatura`). Cada modo é independente e trocar entre os declarados não\nconsome ação. `terrestre` tem uma tabela de sugestão por Destreza no guia, mas o valor é\nsempre declarado pelo Mestre, nunca calculado automaticamente a partir do atributo."
+        "description": "Deslocamento da criatura — ao menos um modo preenchido (validado por\n`shared/regras/criatura`). Cada modo é independente e trocar entre os declarados não\nconsome ação. `terrestre` tem uma tabela de sugestão por Destreza no guia, mas o valor é\nsempre declarado pelo Mestre, nunca calculado automaticamente a partir do atributo. Cada modo\naceita `DeslocamentoValorEspecialEnum.INDETERMINADO` no lugar do número, para quando o Mestre\ndeclara o modo como sem limite prático (ex.: Sobrenatural sem alcance definido)."
     },
     "FichaCriaturaAtaqueDto": {
         "type": "object",
@@ -2526,9 +2567,11 @@ export const schemasContratosPublicos = {
             "custoAcao": {
                 "type": "string",
                 "enum": [
+                    "ACAO_LIVRE",
                     "MOVIMENTO",
                     "PADRAO",
-                    "COMPLETA"
+                    "COMPLETA",
+                    "TURNO"
                 ]
             },
             "dano": {
@@ -2734,6 +2777,35 @@ export const schemasContratosPublicos = {
             "vd": {
                 "type": "number",
                 "description": "Valor de Desafio (`FichaCriaturaDadosDto.vd`) — só presente numa ficha `CRIATURA`. Alimenta o\nseletor de combatentes do Encontro, que mostra NA + VD no lugar de classe/nível."
+            },
+            "registro": {
+                "type": "string",
+                "description": "Registro/contrato de catalogação (`FichaCriaturaDadosDto.registro`, ex.: \"SCP-049\") — só presente numa ficha `CRIATURA`."
+            },
+            "porte": {
+                "type": "string",
+                "enum": [
+                    "MINUSCULO",
+                    "MEDIO",
+                    "GRANDE",
+                    "ENORME",
+                    "GIGANTE",
+                    "TITANICO",
+                    "COLOSSAL"
+                ],
+                "description": "Porte (`FichaCriaturaDadosDto.porte`) — só presente numa ficha `CRIATURA`."
+            },
+            "comportamento": {
+                "type": "string",
+                "enum": [
+                    "CACADORA",
+                    "TERRITORIAL",
+                    "OPORTUNISTA",
+                    "INDIFERENTE",
+                    "INTELIGENTE",
+                    "CAOTICA"
+                ],
+                "description": "Comportamento (`FichaCriaturaDadosDto.identidade.comportamento`) — só presente numa ficha `CRIATURA`."
             },
             "classe": {
                 "type": "string",
@@ -3231,6 +3303,19 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Saída da revogação — confirmação do par (ficha, usuário) cuja concessão foi revogada."
     },
+    "FichaSalaSairDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Mensagem de infraestrutura para abandonar uma sala de ficha no Socket.IO."
+    },
     "FichaVisibilidadeAlteradaDto": {
         "type": "object",
         "properties": {
@@ -3247,6 +3332,23 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é\ndeliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem\nestá na sala ampla `campanha:<id>`."
+    },
+    "FichaCampanhaRemovidaDto": {
+        "type": "object",
+        "properties": {
+            "fichaId": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "fichaId",
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para\noutra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload\nmínimo de propósito (nenhum dado da ficha), então vale para qualquer tipo, inclusive\ncriatura/NPC, que não têm `ficha:criada` justamente por causa do recorte de visibilidade."
     },
     "FichaAcessosListarDto": {
         "type": "object",
@@ -3542,7 +3644,8 @@ export const schemasContratosPublicos = {
                     "OUTRA_CLASSE",
                     "PERSONALIDADE",
                     "ESPECIALIDADE",
-                    "CIVIL"
+                    "CIVIL",
+                    "UNICA"
                 ]
             },
             "custoEnergia": {
@@ -5448,6 +5551,14 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "responseSchema": "CampanhaPainelEspectadorDto"
     },
+    "CampanhaProjecaoController_recuperarEncontroAtivoPainelEspectador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/painel-espectador/encontro-ativo",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "EncontroRecuperadoDto"
+    },
     "CampanhaProjecaoController_recuperarPreviaJogador": {
         "controller": "CampanhaProjecaoController",
         "metodo": "get",
@@ -5455,6 +5566,14 @@ export const operacoesContratosPublicos = {
         "tag": "Campanhas",
         "publica": false,
         "responseSchema": "CampanhaPreviaJogadorDto"
+    },
+    "CampanhaProjecaoController_recuperarEncontroAtivoPreviaJogador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/previa-jogador/:usuarioAlvoId/encontro-ativo",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "EncontroRecuperadoDto"
     },
     "CampanhaProjecaoController_recuperarFichaPreviaJogador": {
         "controller": "CampanhaProjecaoController",

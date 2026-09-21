@@ -47,6 +47,59 @@ pela primeira vez — antes era código morto — e cede lugar ao conteúdo real
 jogador, comportamento preservado. (4) Sem erros de console além de um `ERR_CERT_AUTHORITY_INVALID`
 do proxy do ambiente, alheio à mudança.
 
+## 2026-09-21 — `criatura-designacao-fonte-unica`: nome da criatura divergia entre `ficha.nome` e `identidade.designacao`
+
+Achado pelo autor a partir de 2 screenshots: no cabeçalho/card de `CriaturaVisualizacao` a criatura
+"Eco" aparecia como "0 Eco" na Identidade, enquanto o card "Criaturas" da campanha
+(`CriaturaEsquadraoCard`) mostrava "Eco" normalmente. Não era desalinhamento de CSS — eram dois
+campos de nome divergentes. `FichaCriaturaIdentidadeDto.designacao` (JSONB, editável clicando no
+nome dentro do card Identidade) e `ficha.nome` (coluna relacional, usada em todo o resto — título
+da página, `CriaturaEsquadraoCard`, listas) só nasciam iguais na criação
+(`CriarCriatura.construirDados`, comentário já documentava essa decisão) e nunca mais depois: editar
+a Designação só emitia `identidadeMudou`, nunca `nomeMudou`. `ficha.nome` em si nem tinha caminho de
+edição funcional pra criatura — `confirmarNome`/`nomeMudou`/`ajustarNome` já existiam de ponta a
+ponta (persistência incluída em `FichaEdicaoCriaturaService.ajustarNome`) mas nenhum template
+chamava `confirmarNome`; código morto, achado ao grepar.
+
+Comparado com a ficha de jogador (pedido explícito do autor: "veja se isso também está acontecendo
+na ficha de agente") — **não acontece lá**: `FichaIdentidadeDto` (jogador) não tem campo de nome
+nenhum (só `personalidade`/`origem`/`habilidade` — conceito de identidade diferente, sem
+equivalente a "designação"); o card Identidade de `FichaVisualizacao` já edita `nome()` direto via
+`confirmarIdentidade('nome', ...)` → `ajusteNome` → `ficha.nome`. A criatura era a única ficha com
+essa duplicação.
+
+Correção: fonte única. `FichaCriaturaIdentidadeDto` perdeu o campo `designacao` (documentado no
+lugar do campo removido, apontando para `ficha.nome`). O card Identidade de `CriaturaVisualizacao`
+continua com o mesmo rótulo/posição "Designação" (nada mudou visualmente — mesmas classes CSS
+`criatura__designacao`/`criatura__designacao-entrada`), mas agora lê/edita `nome()` e chama
+`confirmarNome()` (ganhou a mesma trava de vazio/sem-mudança de
+`FichaVisualizacao.confirmarIdentidade('nome', ...)`) em vez de `confirmarCampoIdentidade
+('designacao', ...)`. `CriarCriatura` (assistente de criação) não manda mais `designacao` dentro de
+`identidade` — o campo local do formulário (rascunho até o envio) virou só a origem de `nome:` na
+criação, como já era. `docs/SCHEMA.md`, a fixture de seed dev (`cenario-dev.ts`, 3 criaturas) e os 8
+arquivos de teste que montavam `identidade.designacao` foram atualizados.
+
+Testes: `npm run test --workspace=shared` 49/49 arquivos, 759/759; `--workspace=backend` 32/32,
+565/565; `--workspace=frontend` 140/140, 2028/2028 (inclui 2 testes novos em
+`criatura-visualizacao.component.spec.ts`: `confirmarNome` emite `nomeMudou` — não
+`identidadeMudou` — e ignora valor vazio/sem mudança). Lint dos três workspaces sem erro novo (só
+warnings pré-existentes de aspas/`max-len`, repositório inteiro). `npm run openapi:gerar-contratos
+--workspace=backend` regenerado — o diff resultante também absorveu drift pré-existente do arquivo
+gerado (não passava por esse comando havia várias tasks: `registro`/`porte`/`comportamento` no
+resumo, `ACAO_LIVRE`/`TURNO`, Deslocamento Indeterminado, `CampanhaSalaSairDto`/`FichaSalaSairDto`
+novos) — mecânico, não é escopo desta task, só ficou junto por ser um arquivo gerado de uma peça só.
+
+Verificado ao vivo (Postgres 16 local sem Docker — daemon indisponível no ambiente — + backend +
+frontend reais): criatura criada via REST, aberta em `/campanhas/:id/criatura/:id`. Antes da
+correção o bug não reproduzia neste cenário porque a fixture de teste nasce com os dois campos
+iguais — o defeito só aparece quando a Designação é reeditada depois da criação, exatamente o que
+o autor fez. Renomeei a Designação pelo card Identidade sem reload: o título do cabeçalho
+atualizou junto, na hora (prova de fonte única, não só de payload). Recarreguei a página — persistiu
+nos dois lugares. Abri a campanha — o card `CriaturaEsquadraoCard` já mostrava o nome novo. Tudo
+conferido em `1920×1080` e `360×800`, sem overflow (nenhuma classe CSS mudou, então o layout em si
+não corria risco, mas a fonte de dados mudou e podia ter vazado `undefined`/vazio se algum caminho
+não tivesse sido migrado — não vazou). Task solta, sem spec.
+
 ## 2026-09-21 — Brainstorming: módulo de Cenas (amplia o M7) e M9 de documentos
 
 Pedido do autor: tipar a cena na criação da Iniciativa (nem toda cena com iniciativa é combate) e

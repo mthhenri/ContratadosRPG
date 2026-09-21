@@ -19,9 +19,23 @@
 > jogador). Sem hint, comportamento de sempre. `npm run test --workspace=frontend` 140/140/2030/2030;
 > verificação ao vivo em `1920×1080`/`360×800` confirmou as duas silhuetas contra a tela real, sem
 > "pulo" de layout, sem overflow. Detalhe completo em `HISTORY.md`.
-> Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de **Cenas**
-> — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/Perseguição/
-> Resistência, `docs/core/sistema-v4.1.0.md` "⬡ Cenas") e abrir caminho para uma cena de
+> Antes: `criatura-designacao-fonte-unica` concluída (2026-09-21) — o nome da criatura tinha dois campos
+> divergentes: `ficha.nome` (relacional, usado no título da página/`CriaturaEsquadraoCard`/listas) e
+> `FichaCriaturaIdentidadeDto.designacao` (JSONB, editável pelo card Identidade). Só nasciam iguais
+> na criação; editar a Designação depois não propagava pra `ficha.nome` (achado do autor por
+> screenshot: "0 Eco" na Identidade vs. "Eco" no card da campanha). `designacao` saiu do DTO —
+> Designação agora lê/edita `ficha.nome` direto (`confirmarNome`/`nomeMudou`/`ajustarNome`, que já
+> existiam de ponta a ponta mas nenhum template chamava), mesmo padrão que `FichaVisualizacao`
+> (jogador) já usava pro próprio nome — conferido a pedido do autor que **não** tem a mesma
+> duplicação (`FichaIdentidadeDto` do jogador não tem campo de nome nenhum). Rótulo/posição/classes
+> CSS "Designação" intactos — só a fonte do valor mudou. `shared`/`backend`/`frontend`: 49+32+140
+> arquivos, 759+565+2028 testes, 0 erro novo de lint; contrato OpenAPI regenerado. Verificado ao
+> vivo (Postgres local sem Docker + backend + frontend reais): renomear pela Identidade atualiza o
+> cabeçalho da página **sem reload** e o card `CriaturaEsquadraoCard` da campanha, persiste após
+> reload, em `1920×1080` e `360×800`. Detalhe completo em `HISTORY.md`.
+> Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de
+> **Cenas** — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/
+> Perseguição/Resistência, `docs/core/sistema-v4.1.0.md` "⬡ Cenas") e abrir caminho para uma cena de
 > Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
 > raiz nova (tipo, status `PLANEJADA→ATIVA→ENCERRADA`, ordem); `encontro` continua intocado em
 > nome/código, passando a pendurar numa `cena_id` — é a estrutura que só Combate/Furtiva/
