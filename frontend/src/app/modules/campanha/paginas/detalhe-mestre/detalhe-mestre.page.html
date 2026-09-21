@@ -1,17 +1,75 @@
 @if (dados.carregando()) {
-<div class="detalhe-mestre__esqueleto" role="status" aria-label="Carregando campanha">
-    <div class="detalhe-mestre__esqueleto-coluna"></div>
-    <div class="detalhe-mestre__esqueleto-corpo">
-        <header class="detalhe-mestre__cabecalho">
-            <app-esqueleto class="detalhe-mestre__esqueleto-titulo" />
-        </header>
-        <ul class="detalhe-mestre__esquadrao-grid">
+<!-- Esqueleto de carregamento: reaproveita a casca real (a própria `app-coluna-acoes` com o mesmo
+     `id`, então nasce já retraída/expandida como o autor deixou, e vira barra de rodapé no mobile
+     sozinha) e as classes BEM reais de cabeçalho/corpo/seções — a silhueta acompanha o layout de
+     verdade sem manutenção paralela quando ele mudar. Só a geometria de cada bloco é própria. -->
+<app-coluna-acoes id="campanha-detalhe-mestre" rotulo="Ações da campanha">
+    @for (i of [0, 1, 2, 3, 4, 5, 6]; track i) {
+    <app-esqueleto class="detalhe-mestre__esqueleto-acao" />
+    }
+</app-coluna-acoes>
+
+<div class="detalhe-mestre__conteudo" role="status" aria-label="Carregando campanha">
+    <header class="detalhe-mestre__cabecalho">
+        <app-esqueleto class="detalhe-mestre__esqueleto-voltar" />
+        <span class="detalhe-mestre__cabecalho-indice">//</span>
+        <app-esqueleto class="detalhe-mestre__esqueleto-titulo" />
+        <app-esqueleto class="detalhe-mestre__esqueleto-estado" />
+        <span class="detalhe-mestre__cabecalho-regua"></span>
+    </header>
+
+    <div class="detalhe-mestre__corpo">
+        <section class="detalhe-mestre__esquadrao">
+            <header class="detalhe-mestre__secao">
+                <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
+                <span class="detalhe-mestre__secao-regua"></span>
+                <app-esqueleto class="detalhe-mestre__esqueleto-botao" />
+                <app-esqueleto class="detalhe-mestre__esqueleto-botao" />
+            </header>
+            <ul class="detalhe-mestre__esquadrao-grid">
+                @for (i of [0, 1, 2]; track i) {
+                <li class="detalhe-mestre__esqueleto-card">
+                    <div class="detalhe-mestre__esqueleto-card-topo">
+                        <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
+                        <div class="detalhe-mestre__esqueleto-card-texto">
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-nome" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
+                        </div>
+                    </div>
+                    <app-esqueleto class="detalhe-mestre__esqueleto-rodape" />
+                </li>
+                }
+            </ul>
+
+            <header class="detalhe-mestre__secao detalhe-mestre__secao--criaturas">
+                <h2 class="detalhe-mestre__secao-titulo">Criaturas</h2>
+                <span class="detalhe-mestre__secao-regua"></span>
+            </header>
+            <ul class="detalhe-mestre__esquadrao-grid">
+                <li class="detalhe-mestre__esqueleto-card">
+                    <div class="detalhe-mestre__esqueleto-card-topo">
+                        <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
+                        <div class="detalhe-mestre__esqueleto-card-texto">
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-nome" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
+                        </div>
+                    </div>
+                    <app-esqueleto class="detalhe-mestre__esqueleto-rodape" />
+                </li>
+            </ul>
+        </section>
+
+        <aside class="detalhe-mestre__painel-lateral">
+            <app-esqueleto class="detalhe-mestre__esqueleto-segmentado" />
             @for (i of [0, 1, 2]; track i) {
-            <li class="detalhe-mestre__esqueleto-card">
-                <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
-            </li>
+            <app-esqueleto class="detalhe-mestre__rolagens-esqueleto-item" />
             }
-        </ul>
+        </aside>
     </div>
 </div>
 } @else if (dados.campanha(); as campanhaAtual) {
@@ -63,11 +121,12 @@
         app-coluna-acoes-item
         icone="calculadora"
         appTooltip="Calculadora"
+        [pressionado]="calculadoraAberta()"
         (click)="alternarCalculadora()"
     >
         Calculadora
     </button>
-    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" (click)="alternarCaderno()">
+    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" [pressionado]="cadernoAberto()" (click)="alternarCaderno()">
         Caderno
     </button>
 </app-coluna-acoes>

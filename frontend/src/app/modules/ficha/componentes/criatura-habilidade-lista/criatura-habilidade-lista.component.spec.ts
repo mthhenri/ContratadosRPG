@@ -28,6 +28,17 @@ describe('CriaturaHabilidadeLista', () => {
     expect(nomes).toEqual(['Pele de Pedra']);
   });
 
+  it('mostra a descrição pelo componente com teto de linhas, que já traz o nome acessível', () => {
+    const { raiz } = montar(false);
+    const descricao = raiz.querySelector('app-habilidade-descricao.habilidade-lista__descricao');
+
+    expect(descricao).not.toBeNull();
+    expect(
+      descricao?.querySelector('app-editor-markdown')?.getAttribute('aria-label') ??
+        descricao?.querySelector('[aria-label]')?.getAttribute('aria-label'),
+    ).toBe('Descrição de Pele de Pedra');
+  });
+
   it('lista e formulário de item novo ficam na mesma área rolável, com o cabeçalho fora dela', () => {
     const { fixture, raiz } = montar(true);
     fixture.componentInstance['adicionar']();

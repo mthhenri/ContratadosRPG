@@ -79,6 +79,7 @@ describe('CampanhaDetalheDadosService', () => {
     const membroEntrou$ = new Subject<unknown>();
     const fichaAlterada$ = new Subject<unknown>();
     const fichaVisibilidadeAlterada$ = new Subject<unknown>();
+    const fichaRemovidaDaCampanha$ = new Subject<unknown>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
@@ -93,6 +94,7 @@ describe('CampanhaDetalheDadosService', () => {
       membroEntrou$: membroEntrou$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
+      fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable() as Observable<RolagemResumoDto>,
       estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
@@ -125,6 +127,7 @@ describe('CampanhaDetalheDadosService', () => {
       estadoAlterado$,
       inventarioAlterado$,
       fichaAlterada$,
+      fichaRemovidaDaCampanha$,
     };
   }
 
@@ -184,6 +187,18 @@ describe('CampanhaDetalheDadosService', () => {
 
     expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
     void service;
+  });
+
+  it('refaz o fetch de membros/fichas ao receber ficha:removida-da-campanha em tempo real', () => {
+    const { fichaService, fichaRemovidaDaCampanha$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    fichaService.listarFichas.mockClear();
+
+    fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID });
+
+    expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
   });
 
   it('recarrega campanha e inventário ao receber estadoAlterado$ da própria campanha', () => {

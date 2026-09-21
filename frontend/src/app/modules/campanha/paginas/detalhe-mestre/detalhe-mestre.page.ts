@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -98,6 +98,8 @@ export class CampanhaDetalheMestre {
 
   protected readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
   private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
 
   protected readonly calculadoraAberta = signal(false);

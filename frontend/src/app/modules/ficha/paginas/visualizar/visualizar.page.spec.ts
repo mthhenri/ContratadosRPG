@@ -199,6 +199,17 @@ describe('FichaVisualizar', () => {
     expect(fichaService.listarAcessos).not.toHaveBeenCalled();
   });
 
+  it('enquanto carrega, mostra a silhueta da ficha e um título provisório no cabeçalho', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    fixture.componentInstance['carregando'].set(true);
+    fixture.detectChanges();
+
+    const silhueta = raiz.querySelector('app-ficha-esqueleto');
+    expect(silhueta?.getAttribute('role')).toBe('status');
+    expect(silhueta?.getAttribute('aria-label')).toBe('Carregando ficha');
+    expect(raiz.querySelector('app-ficha-visualizacao')).toBeNull();
+  });
+
   it('concentra as ferramentas da ficha na coluna de ações', () => {
     const { raiz } = montar({ usuarioLogadoId: 7 });
 
@@ -240,14 +251,26 @@ describe('FichaVisualizar', () => {
       fixture.detectChanges();
     };
 
+    const pressionado = (rotulo: string) =>
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item'))
+        .find((item) => item.textContent?.includes(rotulo))
+        ?.getAttribute('aria-pressed');
+    expect(['Histórico', 'Anotações', 'Calculadora'].map(pressionado)).toEqual(['false', 'false', 'false']);
+
     acionar('Histórico');
     expect(raiz.querySelector('.historico-rolagens__painel')).not.toBeNull();
+    expect(pressionado('Histórico')).toBe('true');
 
     acionar('Anotações');
     expect(raiz.querySelector('app-painel-flutuante .painel-flutuante__janela')).not.toBeNull();
+    expect(pressionado('Anotações')).toBe('true');
 
     acionar('Calculadora');
     expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).not.toBeNull();
+    expect(pressionado('Calculadora')).toBe('true');
+
+    acionar('Histórico');
+    expect(pressionado('Histórico')).toBe('false');
   });
 
   it('gere o acesso via menu → dialog para o dono, com elegíveis corretos', () => {

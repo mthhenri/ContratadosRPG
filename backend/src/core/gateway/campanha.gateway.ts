@@ -23,6 +23,7 @@ import type {
   FichaCriadaDto,
   FichaRecuperarDto,
   FichaResumoDto,
+  FichaCampanhaRemovidaDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type {
@@ -238,6 +239,17 @@ export class CampanhaGateway implements OnGatewayConnection {
     // derrubar o broadcast de `ficha:alterada` que já aconteceu — mesmo espírito do `catch` por
     // socket em `emitirEncontroAlterado` logo abaixo.
     void this.encontroService.sincronizarFichaAlterada(ficha.id, ficha.campanhaId).catch(() => undefined);
+  }
+
+  /**
+   * Avisa a campanha que uma ficha saiu dela (`ficha:removida-da-campanha`) — o cliente refaz o GET
+   * autorizado e a ficha some do Esquadrão. Payload só com os ids: vale para qualquer tipo de
+   * ficha, sem carregar dado da ficha para a sala ampla.
+   */
+  emitirFichaRemovidaDaCampanha(evento: FichaCampanhaRemovidaDto): void {
+    this.servidor
+      .to(this.salaCampanha(evento.campanhaId))
+      .emit('ficha:removida-da-campanha', evento);
   }
 
   /**

@@ -5,6 +5,7 @@
             app-coluna-acoes-item
             icone="d20"
             appTooltip="Histórico"
+            [pressionado]="historicoSidebarAberto()"
             (click)="historicoSidebarAberto.update((aberto) => !aberto)"
         >
             Histórico
@@ -13,6 +14,7 @@
             app-coluna-acoes-item
             icone="anotacoes"
             appTooltip="Anotações"
+            [pressionado]="anotacoesAbertas()"
             (click)="anotacoesAbertas.update((abertas) => !abertas)"
         >
             Anotações
@@ -21,6 +23,7 @@
             app-coluna-acoes-item
             icone="calculadora"
             appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
             (click)="alternarCalculadora()"
         >
             Calculadora
@@ -30,6 +33,7 @@
             app-coluna-acoes-item
             icone="caderno"
             appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
             (click)="alternarCaderno()"
         >
             Caderno
@@ -108,7 +112,9 @@
             <h1 class="ficha-pagina__titulo">{{ fichaAtual.nome }}</h1>
             @if (campanhaNome(); as nomeCampanha) {
             <span class="ficha-pagina__campanha">{{ nomeCampanha }}</span>
-            } }
+            } } @else if (carregando()) {
+            <app-esqueleto class="ficha-pagina__esqueleto-titulo" />
+            }
             <span class="ficha-pagina__cabecalho-regua"></span>
             <div class="ficha-pagina__acoes">
                 <!-- Classificação institucional (m3-07) — morava num cabeçalho próprio dentro de
@@ -273,64 +279,9 @@
         </header>
 
         @if (carregando()) {
-        <!-- Esqueleto de carregamento (m3-56) — `app-esqueleto` (ui-14/P-051) dá a identidade, a
-         silhueta espelha o layout real de `FichaVisualizacao` (topo | identidade+atributos |
-         status com barra de abas), inclusive no mobile (mesmas larguras/breakpoints do
-         componente real, ver `.ficha-esqueleto` no SCSS). -->
-        <div class="ficha-esqueleto" role="status" aria-label="Carregando ficha">
-            <div class="ficha-esqueleto__topo">
-                <app-esqueleto class="ficha-esqueleto__esqueleto-rotulo" />
-                <app-esqueleto class="ficha-esqueleto__esqueleto-chip" />
-            </div>
-
-            <div class="ficha-esqueleto__linha">
-                <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--identidade">
-                    <div class="ficha-esqueleto__cartao">
-                        <div class="ficha-esqueleto__ident-topo">
-                            <app-esqueleto class="ficha-esqueleto__esqueleto-avatar" />
-                            <app-esqueleto class="ficha-esqueleto__esqueleto-titulo" />
-                        </div>
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
-                        <app-esqueleto
-                            class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
-                        />
-                        <div class="ficha-esqueleto__barras">
-                            <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
-                            <app-esqueleto class="ficha-esqueleto__esqueleto-barra" />
-                        </div>
-                        <div class="ficha-esqueleto__mini-grade">
-                            @for (indice of [0, 1, 2, 3]; track indice) {
-                            <app-esqueleto class="ficha-esqueleto__esqueleto-mini" />
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--atributos">
-                    <div class="ficha-esqueleto__cartao">
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-titulo" />
-                        @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
-                        }
-                    </div>
-                </div>
-
-                <div class="ficha-esqueleto__coluna ficha-esqueleto__coluna--status">
-                    <div class="ficha-esqueleto__abas">
-                        @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-aba" />
-                        }
-                    </div>
-                    <div class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-linha" />
-                        <app-esqueleto
-                            class="ficha-esqueleto__esqueleto-linha ficha-esqueleto__esqueleto-curta"
-                        />
-                        <app-esqueleto class="ficha-esqueleto__esqueleto-bloco" />
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Esqueleto de carregamento: mesma silhueta de 2 colunas de `FichaVisualizacao` (Identidade +
+         Atributos | Status com abas). O cabeçalho da página já está no ar acima. -->
+        <app-ficha-esqueleto role="status" aria-label="Carregando ficha" />
         } @else if (ficha(); as fichaAtual) {
         <!-- Edição no próprio lugar (m3-10): cada campo tem seu lápis; não há mais botão global. -->
         <app-ficha-visualizacao

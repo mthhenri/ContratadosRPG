@@ -86,6 +86,7 @@ interface CampanhaGatewayDublado {
   emitirFichaCriada: ReturnType<typeof vi.fn>;
   emitirFichaAlterada: ReturnType<typeof vi.fn>;
   emitirFichaVisibilidadeAlterada: ReturnType<typeof vi.fn>;
+  emitirFichaRemovidaDaCampanha: ReturnType<typeof vi.fn>;
   emitirAcessoRevogado: ReturnType<typeof vi.fn>;
   emitirInventarioAlterado: ReturnType<typeof vi.fn>;
 }
@@ -315,6 +316,7 @@ describe('FichaService', () => {
       emitirFichaCriada: vi.fn(),
       emitirFichaAlterada: vi.fn(),
       emitirFichaVisibilidadeAlterada: vi.fn(),
+      emitirFichaRemovidaDaCampanha: vi.fn(),
       emitirAcessoRevogado: vi.fn(),
       emitirInventarioAlterado: vi.fn(),
     };
@@ -2166,7 +2168,7 @@ describe('FichaService', () => {
       expect(resultado).toEqual({ id: 5, campanhaId: 3 });
     });
 
-    it('desatribui a ficha (campanhaId: null) sem checar membro-alvo nem emitir evento', async () => {
+    it('desatribui a ficha (campanhaId: null) sem checar membro-alvo, avisando só a sala que ela deixou', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
@@ -2186,7 +2188,54 @@ describe('FichaService', () => {
       });
       expect(fichaRepositorio.atribuirCampanha).toHaveBeenCalledWith({ id: 5, campanhaId: null });
       expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({
+        fichaId: 5,
+        campanhaId: 3,
+      });
       expect(resultado).toEqual({ id: 5, campanhaId: null });
+    });
+
+    it('não emite ficha:removida-da-campanha ao atribuir uma ficha solta nem ao repetir a mesma campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.atribuirCampanha.mockResolvedValue({
+        id: 5,
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+        nome: 'Agente Alfa',
+        dados: criarDados(),
+      });
+
+      await service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono);
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      await service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono);
+
+      expect(campanhaGateway.emitirFichaRemovidaDaCampanha).not.toHaveBeenCalled();
+    });
+
+    it('ao mover a ficha para outra campanha, avisa a campanha antiga e a nova', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      const fichaMovida = {
+        id: 5,
+        campanhaId: 9,
+        usuarioId: usuarioDono.sub,
+        nome: 'Agente Alfa',
+        dados: criarDados(),
+      };
+      fichaRepositorio.atribuirCampanha.mockResolvedValue(fichaMovida);
+
+      await service.atribuirCampanha({ id: 5, campanhaId: 9 }, usuarioDono);
+
+      expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({
+        fichaId: 5,
+        campanhaId: 3,
+      });
+      expect(campanhaGateway.emitirFichaCriada).toHaveBeenCalledWith(fichaMovida);
     });
 
     it('lança ResourceNotFoundException("Membro") quando o dono não é membro da campanha-alvo', async () => {

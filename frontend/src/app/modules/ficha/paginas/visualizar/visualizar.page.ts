@@ -44,6 +44,7 @@ import { mesclarFicha } from '../../mesclar-ficha';
 import { RolagemService } from '../../rolagem.service';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 
+import { FichaEsqueleto } from '../../componentes/ficha-esqueleto/ficha-esqueleto.component';
 import {
   AbaFicha,
   AbaStatus,
@@ -89,6 +90,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
     BotaoIcone,
     Chip,
     Icone,
+    FichaEsqueleto,
     FichaVisualizacao,
     CalculadoraFlutuante,
     HistoricoRolagensSidebar,
@@ -106,6 +108,8 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
 export class FichaVisualizar {
   private readonly fichaVisualizacao = viewChild(FichaVisualizacao);
   private readonly cadernoRef = viewChild(CadernoFlutuante);
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` (m2-20) — reusados por `CampanhaDetalhe` na visão do jogador. */
   protected readonly fichaEdicao = inject(FichaEdicaoService);

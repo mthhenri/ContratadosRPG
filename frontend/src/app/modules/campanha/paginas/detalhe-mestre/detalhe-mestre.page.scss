@@ -745,33 +745,96 @@
 }
 
 // === Esqueleto de carregamento ===
-.detalhe-mestre__esqueleto {
-    display: flex;
-    width: 100%;
-}
-
-.detalhe-mestre__esqueleto-coluna {
+// Reaproveita a casca real (`app-coluna-acoes`, `__conteudo`, `__cabecalho`, `__corpo`, `__secao`,
+// `__esquadrao-grid`, `__painel-lateral`); aqui só a geometria de cada bloco — a identidade
+// (cor/raio/pulso) vem de `app-esqueleto`. `__esqueleto-card` espelha `.espectador-ficha`: avatar
+// 128px + coluna de texto/barras + faixa "Última rolagem".
+.detalhe-mestre__esqueleto-acao {
     flex: none;
-    width: 56px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
+    height: 44px;
+
+    @include bp.mobile {
+        flex: 1 1 0;
+        min-width: 0;
+        height: bp.$alvo-toque;
+    }
 }
 
-.detalhe-mestre__esqueleto-corpo {
-    flex: 1;
-    padding: var(--space-20);
+.detalhe-mestre__esqueleto-voltar {
+    flex: none;
+    width: 32px;
+    height: 32px;
 }
 
 .detalhe-mestre__esqueleto-titulo {
+    flex: none;
     width: 240px;
-    height: 24px;
+    max-width: 50%;
+    height: 22px;
+}
+
+.detalhe-mestre__esqueleto-estado {
+    flex: none;
+    width: 92px;
+    height: 28px;
+}
+
+.detalhe-mestre__esqueleto-botao {
+    flex: none;
+    width: 118px;
+    height: 30px;
 }
 
 .detalhe-mestre__esqueleto-card {
-    height: 180px;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+}
+
+.detalhe-mestre__esqueleto-card-topo {
+    display: flex;
+    gap: var(--space-12);
+    padding: var(--space-12);
+}
+
+.detalhe-mestre__esqueleto-card-texto {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
 }
 
 .detalhe-mestre__esqueleto-avatar {
+    flex: none;
+    width: 128px;
+    height: 128px;
+}
+
+.detalhe-mestre__esqueleto-linha-curta {
+    width: 45%;
+    height: 10px;
+}
+
+.detalhe-mestre__esqueleto-linha-nome {
+    width: 75%;
+    height: 16px;
+}
+
+.detalhe-mestre__esqueleto-barra {
     width: 100%;
-    height: 100%;
+    height: 22px;
+}
+
+.detalhe-mestre__esqueleto-rodape {
+    height: 30px;
+    margin: 0 var(--space-12) var(--space-12);
+}
+
+.detalhe-mestre__esqueleto-segmentado {
+    flex: none;
+    height: 34px;
 }

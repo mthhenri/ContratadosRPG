@@ -1374,6 +1374,43 @@ describe('PainelEncontro', () => {
   });
 
   describe('visão do mestre (ui-37)', () => {
+    describe('carregamento', () => {
+      /** `carregandoEncontro` é privado; o teste só precisa reacender o estado de carga. */
+      const carregar = (fixture: ReturnType<typeof montar>['fixture']) => {
+        (
+          fixture.componentInstance as unknown as { carregandoEncontro: { set(v: boolean): void } }
+        ).carregandoEncontro.set(true);
+        fixture.detectChanges();
+      };
+
+      it('mostra a silhueta da casca do mestre, sem cair no estado vazio nem na tela de jogador', () => {
+        const { fixture } = montar();
+        carregar(fixture);
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        const conteudo = elemento.querySelector('.iniciativa-mestre__conteudo');
+        expect(conteudo?.getAttribute('role')).toBe('status');
+        expect(conteudo?.getAttribute('aria-label')).toBe('Carregando o combate');
+        expect(elemento.querySelector('app-coluna-acoes')).not.toBeNull();
+        expect(elemento.querySelectorAll('app-coluna-acoes app-esqueleto').length).toBeGreaterThan(0);
+        expect(elemento.querySelectorAll('.grade app-esqueleto').length).toBeGreaterThan(0);
+        expect(elemento.querySelector('.iniciativa-mestre__vazio')).toBeNull();
+        expect(elemento.querySelector('app-trilha-turnos')).toBeNull();
+        expect(elemento.querySelector('.iniciativa-tela')).toBeNull();
+      });
+
+      it('para quem já se sabe jogador, segue a tela de leitura de sempre', () => {
+        const { fixture } = montar(encontroAtivo, USUARIO_JOGADOR);
+        carregar(fixture);
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        expect(elemento.querySelector('.iniciativa-mestre')).toBeNull();
+        expect(texto(elemento.querySelector('.iniciativa__carregando'))).toBe(
+          'Carregando o combate…',
+        );
+      });
+    });
+
     it('monta a casca: coluna de ações, trilha, rolagens fixa, condução, ficha resumida e grade', () => {
       const elemento = montar().fixture.nativeElement as HTMLElement;
 
@@ -1386,6 +1423,21 @@ describe('PainelEncontro', () => {
       // As rolagens são uma coluna da página, não o painel sobreposto com gatilho.
       expect(elemento.querySelector('.historico-rolagens__painel--fixo')).not.toBeNull();
       expect(elemento.querySelector('.historico-rolagens__gatilho')).toBeNull();
+    });
+
+    it('marca Calculadora e Caderno como pressionados enquanto as janelas estão abertas', () => {
+      const { fixture } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      for (const rotulo of ['Calculadora', 'Caderno']) {
+        const item = itemDaColuna(elemento, rotulo)!;
+        expect(item.getAttribute('aria-pressed')).toBe('false');
+
+        item.click();
+        fixture.detectChanges();
+        expect(item.getAttribute('aria-pressed')).toBe('true');
+        expect(item.classList).toContain('coluna-acoes__item--ativo');
+      }
     });
 
     it('descreve o encontro no cabeçalho: título, campanha e estado', () => {

@@ -24,6 +24,7 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { HabilidadeDescricao } from '../habilidade-descricao/habilidade-descricao.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { FichaHabilidadeSeletor } from '../ficha-habilidade-seletor/ficha-habilidade-seletor.component';
@@ -99,6 +100,7 @@ function juntarComOu(rotulos: readonly string[]): string {
     Botao,
     BotaoIcone,
     EditorMarkdown,
+    HabilidadeDescricao,
     FichaHabilidadeSeletor,
     EstadoVazio,
     StepInput,

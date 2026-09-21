@@ -84,6 +84,8 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
 })
 export class CriaturaVisualizar {
   private readonly cadernoRef = viewChild(CadernoFlutuante);
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
   private readonly fichaService = inject(FichaService);
   protected readonly fichaEdicao = inject(FichaEdicaoCriaturaService);
   private readonly fichaRolagemRegistro = inject(FichaRolagemRegistroService);

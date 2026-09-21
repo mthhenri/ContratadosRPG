@@ -550,6 +550,17 @@ export interface FichaVisibilidadeAlteradaDto {
 }
 
 /**
+ * Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para
+ * outra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload
+ * mínimo de propósito (nenhum dado da ficha), então vale para qualquer tipo, inclusive
+ * criatura/NPC, que não têm `ficha:criada` justamente por causa do recorte de visibilidade.
+ */
+export interface FichaCampanhaRemovidaDto {
+  readonly fichaId: number;
+  readonly campanhaId: number;
+}
+
+/**
  * Entrada da listagem das concessões ativas de uma ficha — o `fichaId` vem do `@Param`, injetado
  * no DTO pela controller. Só o dono ou o mestre listam (§14). A saída é sempre resumida
  * (`FichaAcessoResumoDto`).

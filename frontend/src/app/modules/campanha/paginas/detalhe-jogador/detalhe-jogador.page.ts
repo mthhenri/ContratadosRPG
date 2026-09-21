@@ -32,6 +32,7 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { mesclarFicha } from '../../../ficha/mesclar-ficha';
+import { FichaEsqueleto } from '../../../ficha/componentes/ficha-esqueleto/ficha-esqueleto.component';
 import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
 import {
   FichaCampanhaCard,
@@ -81,6 +82,7 @@ const PX_PREVIEW_AVATAR = 300;
     CalculadoraFlutuante,
     CadernoFlutuante,
     FichaCampanhaCard,
+    FichaEsqueleto,
     FichaRolagensPainel,
     ResultadoRolagem,
     Tooltip,
@@ -125,7 +127,12 @@ export class CampanhaDetalheJogador {
   protected readonly painelLateralAtivo = signal<'rolar' | 'esquadrao' | 'inventario'>('rolar');
 
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
   private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
+
+  /** Texto da missão (descrição da campanha) começa oculto; o botão "i" do cabeçalho o alterna. */
+  protected readonly descricaoAberta = signal(false);
 
   /** Bloqueia os botões enquanto a bandeja de dados está aberta. */
   protected readonly calculadoraAberta = signal(false);

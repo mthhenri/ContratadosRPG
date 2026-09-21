@@ -1,22 +1,27 @@
 @if (dados.carregando()) {
 <!--
-  Esqueleto de carregamento — reaproveita as classes BEM reais do cabeçalho/jogador (em vez de
-  duplicar medidas num `&__esqueleto-*` à parte) — a silhueta acompanha o layout de verdade sem
-  precisar de manutenção paralela quando ele mudar. `pointer-events: none` (ver SCSS) neutraliza
-  hover/cursor dos elementos reais reaproveitados.
+  Esqueleto de carregamento — reaproveita a casca real (a própria `app-coluna-acoes` com o mesmo
+  `id`, que o SCSS já esconde no mobile) e as classes BEM reais do cabeçalho/jogador/painel
+  lateral; a ficha embutida é `app-ficha-esqueleto [compacto]`, a mesma silhueta de duas colunas
+  do `FichaCampanhaCard`. A silhueta acompanha o layout de verdade sem manutenção paralela quando
+  ele mudar. `pointer-events: none` (ver SCSS) neutraliza hover/cursor dos elementos reais
+  reaproveitados.
 -->
+<app-coluna-acoes id="campanha-detalhe-jogador" rotulo="Ações da ficha">
+    @for (i of [0, 1, 2, 3, 4, 5, 6, 7]; track i) {
+    <app-esqueleto class="detalhe__esqueleto-acao" />
+    }
+</app-coluna-acoes>
+
 <section class="detalhe">
     <div class="detalhe__esqueleto" role="status" aria-label="Carregando campanha">
         <header class="detalhe__cabecalho">
             <div class="detalhe__cabecalho-titulo-linha">
+                <app-esqueleto class="detalhe__esqueleto-voltar" />
                 <span class="detalhe__cabecalho-indice">//</span>
                 <app-esqueleto class="detalhe__esqueleto-titulo" />
-                <app-esqueleto class="detalhe__esqueleto-chip" />
+                <app-esqueleto class="detalhe__esqueleto-estado" />
                 <span class="detalhe__cabecalho-regua"></span>
-            </div>
-            <div class="detalhe__cabecalho-acoes">
-                <app-esqueleto class="detalhe__esqueleto-icone" />
-                <app-esqueleto class="detalhe__esqueleto-icone" />
             </div>
         </header>
 
@@ -27,41 +32,18 @@
                         <app-esqueleto class="detalhe__esqueleto-avatar" />
                         <app-esqueleto class="detalhe__esqueleto-titulo-card" />
                         <span class="detalhe__cabecalho-regua"></span>
-                        <div class="detalhe__esqueleto-ficha-acoes">
-                            <app-esqueleto class="detalhe__esqueleto-botao" />
-                            <app-esqueleto class="detalhe__esqueleto-botao" />
-                        </div>
+                        <app-esqueleto class="detalhe__esqueleto-botao" />
                     </div>
-                    <div class="detalhe__esqueleto-ficha-corpo">
-                        <div class="detalhe__esqueleto-barras">
-                            <app-esqueleto class="detalhe__esqueleto-barra" />
-                            <app-esqueleto class="detalhe__esqueleto-barra" />
-                        </div>
-                        <div class="detalhe__esqueleto-mini-grade">
-                            @for (i of [0, 1, 2, 3]; track i) {
-                            <app-esqueleto class="detalhe__esqueleto-mini" />
-                            }
-                        </div>
-                        <div class="detalhe__esqueleto-abas">
-                            @for (i of [0, 1, 2]; track i) {
-                            <app-esqueleto class="detalhe__esqueleto-aba" />
-                            }
-                        </div>
-                        <app-esqueleto class="detalhe__esqueleto-bloco" />
-                    </div>
+                    <app-ficha-esqueleto [compacto]="true" />
                 </app-cartao>
             </div>
 
             <div class="detalhe__jogador-lateral">
                 <div class="detalhe__painel-lateral">
-                    <div class="detalhe__esqueleto-abas">
-                        @for (i of [0, 1, 2]; track i) {
-                        <app-esqueleto class="detalhe__esqueleto-aba" />
-                        }
-                    </div>
-                    <div class="detalhe__rolagens-painel-corpo">
-                        @for (i of [0, 1]; track i) {
-                        <app-esqueleto class="detalhe__esqueleto-linha" />
+                    <app-esqueleto class="detalhe__esqueleto-segmentado" />
+                    <div class="detalhe__historico-esqueleto">
+                        @for (i of [0, 1, 2, 3]; track i) {
+                        <app-esqueleto class="detalhe__historico-esqueleto-item" />
                         }
                     </div>
                 </div>
@@ -131,11 +113,12 @@
         app-coluna-acoes-item
         icone="calculadora"
         appTooltip="Calculadora"
+        [pressionado]="calculadoraAberta()"
         (click)="alternarCalculadora()"
     >
         Calculadora
     </button>
-    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" (click)="alternarCaderno()">
+    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" [pressionado]="cadernoAberto()" (click)="alternarCaderno()">
         Caderno
     </button>
 </app-coluna-acoes>
@@ -166,6 +149,19 @@
                 <span class="detalhe__cabecalho-regua"></span>
             </div>
             <div class="detalhe__cabecalho-acoes">
+                @if (campanhaAtual.descricao) {
+                <button
+                    app-botao-icone
+                    class="detalhe__cabecalho-info"
+                    type="button"
+                    [attr.aria-pressed]="descricaoAberta()"
+                    [attr.aria-label]="descricaoAberta() ? 'Ocultar a missão' : 'Mostrar a missão'"
+                    [appTooltip]="descricaoAberta() ? 'Ocultar a missão' : 'Mostrar a missão'"
+                    (click)="descricaoAberta.update((aberta) => !aberta)"
+                >
+                    <app-icone nome="info" />
+                </button>
+                }
                 <app-calculadora-flutuante
                     #calculadora
                     [(aberta)]="calculadoraAberta"
@@ -305,7 +301,7 @@
             </div>
         </header>
 
-        @if (campanhaAtual.descricao) {
+        @if (campanhaAtual.descricao && descricaoAberta()) {
         <p class="detalhe__descricao">{{ campanhaAtual.descricao }}</p>
         } @if (fichaCritica(); as critica) {
         <div class="detalhe__banner-alerta" role="alert">

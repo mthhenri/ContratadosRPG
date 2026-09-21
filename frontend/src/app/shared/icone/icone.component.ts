@@ -37,6 +37,7 @@ import { Component, input } from '@angular/core';
  * lado a lado no menu), distinto também de `documentos` (livro aberto, reservado ao leitor global
  * de Sistema/Guia do Mestre).
  * `dados`, dois d20 sobrepostos (ui-37): "Rolar iniciativas" na condução de turno do mestre.
+ * `info`, círculo com "i": mostra/oculta o texto da missão no cabeçalho da campanha do jogador.
  */
 export type IconeNome =
   | 'agente'
@@ -104,6 +105,7 @@ export type IconeNome =
   | 'camadas'
   | 'teto'
   | 'busca'
+  | 'info'
   | 'duplicar'
   | 'd20'
   | 'd3'

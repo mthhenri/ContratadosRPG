@@ -53,6 +53,7 @@ import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
@@ -158,6 +159,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     BotaoIcone,
     Campo,
     Cartao,
+    Esqueleto,
     EstadoVazio,
     Modal,
   ],
@@ -204,6 +206,8 @@ export class PainelEncontro {
   /** Gatilho "N encerrados" — recebe o foco de volta quando o menu fecha por `Escape`. */
   private readonly historicoGatilho = viewChild('historicoGatilho', { read: ElementRef });
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
 
   /** `campanhaId` da rota — sempre presente (a rota só existe sob `/campanhas/:campanhaId`). */
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
@@ -317,6 +321,15 @@ export class PainelEncontro {
    * e o carregamento seguem a tela de sempre.
    */
   protected readonly modoMestre = computed(() => !this.carregando() && this.ehMestre());
+
+  /**
+   * Carregando **sem** já saber que é jogador/espectador: mostra a silhueta da visão do mestre
+   * (mesma casca) em vez de cair na tela de leitura por um quadro. Com os membros resolvidos e o
+   * usuário fora do papel de mestre, o carregamento segue a tela de leitura de sempre.
+   */
+  protected readonly esqueletoMestre = computed(
+    () => this.carregando() && (this.membros() === null || this.ehMestre()),
+  );
 
   /** `id` de quem está com a tela aberta — só existe pro input `usuarioAtivoId` das Anotações. */
   protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? null);

@@ -5,6 +5,7 @@
             app-coluna-acoes-item
             icone="d20"
             appTooltip="Histórico"
+            [pressionado]="historicoSidebarAberto()"
             (click)="historicoSidebarAberto.update((aberto) => !aberto)"
         >
             Histórico
@@ -13,6 +14,7 @@
             app-coluna-acoes-item
             icone="anotacoes"
             appTooltip="Anotações"
+            [pressionado]="anotacoesAbertas()"
             (click)="anotacoesAbertas.update((abertas) => !abertas)"
         >
             Anotações
@@ -21,6 +23,7 @@
             app-coluna-acoes-item
             icone="calculadora"
             appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
             (click)="calculadoraAberta.update((aberta) => !aberta)"
         >
             Calculadora
@@ -30,6 +33,7 @@
             app-coluna-acoes-item
             icone="caderno"
             appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
             (click)="alternarCaderno()"
         >
             Caderno

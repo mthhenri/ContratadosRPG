@@ -118,6 +118,7 @@ describe('CampanhaPreviaJogador', () => {
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const membroEntrou$ = new Subject<unknown>();
     const fichaVisibilidadeAlterada$ = new Subject<unknown>();
+    const fichaRemovidaDaCampanha$ = new Subject<unknown>();
     const fichaAlterada$ = new Subject<{ id: number }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
@@ -136,6 +137,7 @@ describe('CampanhaPreviaJogador', () => {
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
+      fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
@@ -167,6 +169,7 @@ describe('CampanhaPreviaJogador', () => {
       campanhaProjecaoService,
       rolagemRegistrada$,
       membroEntrou$,
+      fichaRemovidaDaCampanha$,
       fichaAlterada$,
       encontroAlterado$,
     };
@@ -276,6 +279,16 @@ describe('CampanhaPreviaJogador', () => {
     campanhaProjecaoService.recuperarPreviaJogador.mockClear();
 
     membroEntrou$.next({});
+    fixture.detectChanges();
+
+    expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+  });
+
+  it('ficha removida da campanha refaz a projeção', () => {
+    const { fixture, fichaRemovidaDaCampanha$, campanhaProjecaoService } = montar();
+    campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+    fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID });
     fixture.detectChanges();
 
     expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);

@@ -11,6 +11,7 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { HabilidadeDescricao } from '../habilidade-descricao/habilidade-descricao.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
@@ -25,6 +26,7 @@ const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTip
     Botao,
     BotaoIcone,
     EditorMarkdown,
+    HabilidadeDescricao,
     Icone,
     Tooltip,
     NgTemplateOutlet,

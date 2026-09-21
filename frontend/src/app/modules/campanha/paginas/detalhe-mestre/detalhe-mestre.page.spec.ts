@@ -180,6 +180,7 @@ describe('CampanhaDetalheMestre', () => {
       membroEntrou$: new Subject().asObservable(),
       fichaAlterada$: new Subject().asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
+      fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
       estadoAlterado$: new Subject().asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
@@ -232,6 +233,20 @@ describe('CampanhaDetalheMestre', () => {
     (Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find((el) => el.textContent?.trim() === 'Membros') as HTMLButtonElement).click();
     fixture.detectChanges();
   }
+
+  it('enquanto carrega, mostra a casca real com a silhueta de cabeçalho, cartões e painel lateral', () => {
+    const { fixture, raiz, dados } = montar();
+    dados.carregando.set(true);
+    fixture.detectChanges();
+
+    const conteudo = raiz.querySelector('.detalhe-mestre__conteudo');
+    expect(conteudo?.getAttribute('role')).toBe('status');
+    expect(conteudo?.getAttribute('aria-label')).toBe('Carregando campanha');
+    expect(raiz.querySelectorAll('app-coluna-acoes app-esqueleto').length).toBeGreaterThan(0);
+    expect(raiz.querySelectorAll('.detalhe-mestre__esqueleto-card').length).toBeGreaterThan(0);
+    expect(raiz.querySelector('.detalhe-mestre__painel-lateral app-esqueleto')).not.toBeNull();
+    expect(raiz.querySelector('app-espectador-ficha-card')).toBeNull();
+  });
 
   it('renderiza a coluna de ações com Membros, Iniciativa, Convites, Editar, Excluir, Calculadora, Caderno', () => {
     const { raiz } = montar();
@@ -543,13 +558,18 @@ describe('CampanhaDetalheMestre', () => {
         (el) => el.textContent?.trim() === 'Calculadora',
       ) as HTMLButtonElement;
 
+      expect(itemCalculadora.getAttribute('aria-pressed')).toBe('false');
+
       itemCalculadora.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).not.toBeNull();
+      expect(itemCalculadora.getAttribute('aria-pressed')).toBe('true');
+      expect(itemCalculadora.classList).toContain('coluna-acoes__item--ativo');
 
       itemCalculadora.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).toBeNull();
+      expect(itemCalculadora.getAttribute('aria-pressed')).toBe('false');
     });
 
     it('Caderno alterna aberto/fechado ao clicar de novo no mesmo item', () => {
@@ -558,13 +578,17 @@ describe('CampanhaDetalheMestre', () => {
         (el) => el.textContent?.trim() === 'Caderno',
       ) as HTMLButtonElement;
 
+      expect(itemCaderno.getAttribute('aria-pressed')).toBe('false');
+
       itemCaderno.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-caderno-flutuante .painel-flutuante__janela')).not.toBeNull();
+      expect(itemCaderno.getAttribute('aria-pressed')).toBe('true');
 
       itemCaderno.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-caderno-flutuante .painel-flutuante__janela')).toBeNull();
+      expect(itemCaderno.getAttribute('aria-pressed')).toBe('false');
     });
   });
 

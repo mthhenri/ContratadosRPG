@@ -212,9 +212,11 @@
         }
     }
     // --- Formulário: grade rotulada (mesmo desenho do de Ataques) ---
+    // Nome ocupa o máximo da coluna; o Tipo (Ativa/Gatilho/Passiva) fica só com a largura que precisa,
+    // no fim da linha. Descrição/Restrição/ações ocupam a linha inteira (`--largo`/`__form-acoes`).
     &__form {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
         width: 100%;
     }

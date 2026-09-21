@@ -127,6 +127,7 @@ export class CampanhaDetalheDadosService {
       this.tempoRealService.membroEntrou$,
       this.tempoRealService.fichaAlterada$,
       this.tempoRealService.fichaVisibilidadeAlterada$,
+      this.tempoRealService.fichaRemovidaDaCampanha$,
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: () => this.recarregarMembrosEFichas() });

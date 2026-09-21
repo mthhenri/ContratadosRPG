@@ -233,6 +233,7 @@ describe('CampanhaDetalheJogador', () => {
       membroEntrou$: new Subject().asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
+      fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
       estadoAlterado$: new Subject().asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
@@ -295,6 +296,45 @@ describe('CampanhaDetalheJogador', () => {
     }
     return item;
   }
+
+  it('esconde o texto da missão e o alterna pelo botão "i" do cabeçalho', () => {
+    const { fixture, raiz } = montar({
+      usuarioId: 2,
+      membros: membrosTres(),
+      fichas: fichasComColegaJogador(),
+    });
+    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe__cabecalho-info')!;
+
+    expect(raiz.querySelector('.detalhe__descricao')).toBeNull();
+    expect(botao.getAttribute('aria-pressed')).toBe('false');
+
+    botao.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.detalhe__descricao')?.textContent).toContain('Operação em curso');
+    expect(botao.getAttribute('aria-pressed')).toBe('true');
+
+    botao.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.detalhe__descricao')).toBeNull();
+  });
+
+  it('enquanto carrega, mostra a casca real com a silhueta da ficha embutida e do painel lateral', () => {
+    const { fixture, raiz, dados } = montar({
+      usuarioId: 2,
+      membros: membrosTres(),
+      fichas: fichasComColegaJogador(),
+    });
+    dados.carregando.set(true);
+    fixture.detectChanges();
+
+    const silhueta = raiz.querySelector('.detalhe__esqueleto');
+    expect(silhueta?.getAttribute('role')).toBe('status');
+    expect(silhueta?.getAttribute('aria-label')).toBe('Carregando campanha');
+    expect(raiz.querySelectorAll('app-coluna-acoes app-esqueleto').length).toBeGreaterThan(0);
+    expect(raiz.querySelector('.detalhe__ficha-embutida app-ficha-esqueleto')).not.toBeNull();
+    expect(raiz.querySelector('.detalhe__painel-lateral app-esqueleto')).not.toBeNull();
+    expect(raiz.querySelector('app-ficha-campanha-card')).toBeNull();
+  });
 
   it('mostra o botão "Voltar às campanhas" no cabeçalho, apontando para /campanhas', () => {
     const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });

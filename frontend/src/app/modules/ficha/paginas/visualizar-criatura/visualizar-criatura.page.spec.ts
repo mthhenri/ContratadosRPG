@@ -202,10 +202,12 @@ describe('CriaturaVisualizar', () => {
     botao.click();
     fixture.detectChanges();
     expect(fixture.componentInstance['anotacoesAbertas']()).toBe(true);
+    expect(botao.getAttribute('aria-pressed')).toBe('true');
 
     botao.click();
     fixture.detectChanges();
     expect(fixture.componentInstance['anotacoesAbertas']()).toBe(false);
+    expect(botao.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('gere o acesso via menu → dialog para o mestre (dono da criatura)', () => {

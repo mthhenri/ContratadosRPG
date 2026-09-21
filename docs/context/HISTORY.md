@@ -1,5 +1,138 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Verificação ao vivo das entregas do dia (skeletons, habilidades, "i" da missão, itens selecionados, WebSocket)
+
+Stack real (Postgres local recriado + backend + frontend do autor), Playwright em `1920×1080` e `360×800`,
+contas do seed (`codex.dev` mestre da "Campanha do Codex"; `jogador.stub.1/2`). Complementa os quatro blocos
+abaixo, cujos "pendentes" ficam **resolvidos**, exceto onde dito.
+
+- **WebSocket `ficha:removida-da-campanha`:** cliente Socket.IO cru como `jogador.stub.2` na sala da campanha; o
+  mestre desatribuiu a ficha 7 por REST → o jogador recebeu `{fichaId:7, campanhaId:2}`; o dono reatribuiu →
+  recebeu só `ficha:criada` (nada de `removida`). A ficha foi devolvida à campanha ao fim. Achado de
+  contorno: depois de desatribuída, o **mestre não consegue** reatribuir (só o dono) — comportamento anterior,
+  não mexido.
+- **Missão / botão "i" (jogador):** oculto por padrão, alterna ao clique (`aria-pressed`), sem overflow em
+  nenhum viewport; no celular o "i" fica colado no "⋯" (regra `:has` funcionou).
+- **Item selecionado na coluna:** `aria-pressed` e destaque corretos ao abrir/fechar Calculadora e Caderno
+  (campanha do jogador), Histórico/Calculadora/Anotações (ficha completa) e Calculadora (Iniciativa).
+  Achado (anterior às mudanças): o painel flutuante de Anotações abre **por cima** da coluna de ações e
+  bloqueia o clique nos itens abaixo dele.
+- **Skeletons:** ficha completa e card do jogador fiéis ao layout real (2 colunas, coluna de ações, lateral),
+  sem overflow no celular; a barra de abas passou a contar 6 (ficha completa) / 3 (card compacto), como a real.
+  Iniciativa: mostra a casca do mestre, sem overflow. **Achados:** (1) `CampanhaDetalheShell` renderiza
+  `CampanhaDetalheJogador` enquanto `dados.carregando()` (ainda não se sabe o papel), então o skeleton do
+  primeiro carregamento é **sempre o do jogador**, mesmo para o mestre — o skeleton de `detalhe-mestre` só
+  apareceria se `carregando` voltasse a `true` com a visão do mestre montada, o que hoje não acontece (já era
+  código morto antes). Ficou como está; decisão em aberto: o shell escolher a silhueta por uma dica de papel
+  (a listagem de campanhas já traz `papel`) ou remover o skeleton morto. (2) A Iniciativa carrega sem saber se
+  há combate: a silhueta é a de combate em curso; numa campanha **sem combate** ela é bem mais alta que o
+  estado vazio real ("pulo" ao assentar).
+- **Habilidades (criatura):** Nome/Tipo — com `minmax(0,1fr) 130px` o Nome ficava com 134px no celular;
+  passou a `minmax(0,1fr) auto` (Tipo 95px no fim; Nome 939px no desktop, 169px no celular). `HabilidadeDescricao`:
+  corte em 5 linhas com reticências (110px visíveis de 243px), botão de olho e tooltip com o texto inteiro
+  (799 caracteres) nos dois viewports; limpeza da habilidade de teste feita. Não testado ao vivo: a mesma
+  descrição na aba Habilidades da ficha de **jogador** (mesmo componente).
+- Suíte do frontend após os ajustes: 135/135 arquivos, 1931/1931.
+
+## 2026-09-21 — Texto da missão atrás de um botão "i" (jogador) e item selecionado nas colunas de ações de todas as telas
+
+Dois pedidos diretos do autor.
+
+**1. Missão sob demanda (`detalhe-jogador`).** O texto da campanha (`campanha.descricao`) deixou de aparecer
+fixo; começa oculto e um `app-botao-icone` com o ícone novo `info` (`Icone`, círculo com "i") alterna a
+exibição (`descricaoAberta`, `aria-pressed`, tooltip "Mostrar/Ocultar a missão"). O botão vive na
+linha de ações do cabeçalho — a ponta direita, onde morava o "⋯", que hoje só existe no mobile — e só
+aparece se a campanha tem descrição. No mobile a linha de ações ocupa a largura toda: o "i" carrega o
+`margin-left: auto` e o "⋯" fica colado ao lado dele (`:has` no SCSS). A visão de mestre não mudou.
+
+**2. Destaque do item selecionado na coluna de ações.** Pergunta do autor: por que só a Iniciativa tinha? É
+o **mesmo** componente (`app-coluna-acoes`/`app-coluna-acoes-item`); o destaque (fundo `--accent-dim` + risco
+lateral de 2px no `--accent`, a versão vertical do item ativo da topbar) vem do input `[pressionado]`, que a
+`ui-37` só ligou nos toggles da Iniciativa (Novo combate, Selecionar, Adicionar avulso, Editar). As outras
+telas simplesmente não o passavam. Agora passam, para os itens que abrem/fecham um painel: **Histórico,
+Anotações, Calculadora e Caderno** na ficha completa e na ficha de criatura; **Calculadora e Caderno** na
+campanha do mestre, na do jogador e na Iniciativa. `CadernoFlutuante` ganhou o `aberto` público (antes o estado
+era `protected`) e cada página expõe `cadernoAberto`; a calculadora já tinha `calculadoraAberta`. "Aberto"
+inclui minimizado — o painel continua na tela e o item o restaura. Ficaram sem destaque de propósito os
+itens que abrem diálogo modal (Membros, Convites, Acesso…, o backdrop cobre a coluna), os que só executam
+ação (Editar, Excluir, Remover da campanha, Ocultar ficha) e os links (Iniciativa).
+
+**Testes.** `npm run test --workspace=frontend`: 135/135 arquivos, 1931/1931 (`aria-pressed`/classe `--ativo`
+nos specs de `detalhe-mestre`, `visualizar`, `visualizar-criatura` e `painel-encontro`; botão "i" em
+`detalhe-jogador`). ESLint dos arquivos tocados: 0 erros. **Pendente:** verificação visual na aplicação real
+(não executada por instrução do autor): o "i" e o texto da missão no desktop e em 360px (a regra `:has`), e o
+destaque nos itens de coluna de cada tela — incluindo o mobile, onde a coluna vira barra de rodapé e o risco
+lateral do item ativo pode não ler bem numa barra horizontal.
+
+## 2026-09-21 — "Remover da campanha" não chegava por WebSocket: novo evento `ficha:removida-da-campanha`
+
+Pedido direto do autor. **Causa:** `FichaService.atribuirCampanha` só emitia `ficha:criada` ao *entrar* numa
+campanha; o docstring assumia que sair (desatribuir ou mover) "não recebe evento — fora de escopo". Quem
+estava com a campanha aberta só via a ficha sumir depois de recarregar (quem clicou já filtrava a lista
+localmente, então o defeito só aparecia para os outros). **Correção:** `FichaCampanhaRemovidaDto`
+(`{ fichaId, campanhaId }`, `shared/`) emitido por `CampanhaGateway.emitirFichaRemovidaDaCampanha` na sala
+`campanha:<id>` **que a ficha deixou** (também ao mover para outra, onde a nova sala segue recebendo
+`ficha:criada`); só ids, então vale para criatura/NPC (que não têm `ficha:criada` por causa do recorte).
+Frontend: `TempoRealService.fichaRemovidaDaCampanha$`, consumido por `campanha-detalhe-dados.service`
+(refaz membros/fichas, cobre mestre e jogador) e `previa-jogador`. Espectadores não recebem (sala própria,
+fechada por construção). Mapa da skill `tempo-real` e `SYSTEM.SPEC.md` §9 atualizados.
+
+**Testes:** backend 32/32 arquivos, 559/559; shared 49/49, 759/759; frontend focado nos consumidores 6
+arquivos, 93/93 (a suíte completa do frontend rodou antes desta mudança, 1926/1926); ESLint dos arquivos
+tocados 0 erros. **Pendente:** teste ao vivo com dois usuários (mestre e jogador) — não executei a aplicação;
+falta confirmar o evento chegando no navegador do outro e a ficha sumindo sem recarregar. Outras telas que
+mostram a ficha removida (ficha aberta em `visualizar` por quem já estava nela, painel de Iniciativa com a
+ficha como combatente) não reagem ao evento — fora do que foi pedido.
+
+**Base local.** A pedido do autor, `npm run db:reset:dev` (derruba o volume Docker `contratados-rpg-postgres`,
+reaplica as 29 migrations e o seed: 5 usuários, 2 campanhas, 10 membros, 8 fichas, 3 criaturas). Qualquer
+dado que estivesse na base local foi apagado.
+
+## 2026-09-21 — Skeletons das telas redesenhadas e habilidades (nome/tipo, teto de linhas na descrição): código pronto, gate visual ABERTO
+
+Pedido direto do autor (sem spec): os skeletons de loading de Ficha completa, Campanha (mestre e jogador)
+e Iniciativa ainda desenhavam o layout antigo; no formulário de Habilidade de criatura o Nome ficava
+"curtinho"; e descrições longas deviam ser cortadas com reticências, com um botão que abre o texto inteiro.
+
+**Skeletons.** Regra comum: reaproveitar a casca real em vez de uma silhueta paralela — a própria
+`app-coluna-acoes` com o **mesmo `id`** da tela real (nasce retraída/expandida como o autor deixou, vira
+barra de rodapé sozinha no mobile) com blocos `app-esqueleto` como itens, e as classes BEM reais de
+cabeçalho/corpo/seções. (a) **Ficha completa**: o skeleton tinha 3 colunas e um "topo" (rótulo + chip) que
+sobrou de antes da ui-34; virou o novo componente `FichaEsqueleto` (`modules/ficha/componentes/ficha-esqueleto/`,
+duas colunas 40/60: Identidade+Atributos | Status com abas), e o cabeçalho da página ganhou um título
+provisório enquanto `carregando()`. (b) **Card do jogador** em `detalhe-jogador` usa o mesmo
+`FichaEsqueleto [compacto]` (divisão 1:1, teto de 500px na Identidade, barra "Ficha de Jogador"), mais a
+coluna de ações, o cabeçalho real e a lateral de 450px com o segmentado. (c) **Campanha do mestre**: cabeçalho,
+seções "Esquadrão"/"Criaturas" com cartões no formato do `EspectadorFichaCard` (avatar 128, barras, faixa de
+última rolagem) e o painel lateral. (d) **Iniciativa**: o carregamento nem passava pela casca do mestre —
+`modoMestre()` exige `!carregando()`, então a tela caía no ramo de jogador com um "Carregando o combate…"
+solto; agora `esqueletoMestre()` (`carregando()` **e** membros ainda desconhecidos ou usuário mestre) mostra
+coluna + cabeçalho + trilha | rolagens | palco (condução, ficha resumida, grade). Ainda não se sabe se há
+combate aberto enquanto carrega, então a silhueta é a de combate em curso (a mais alta); quem já se sabe
+jogador continua com a tela de leitura de sempre.
+
+**Habilidades.** `criatura-habilidade-lista`: o formulário passou de `auto-fit minmax(150px, 1fr)` (Nome e
+Tipo dividiam a linha) para `minmax(0, 1fr) 130px` — Nome ocupa o máximo e o Tipo fica no fim. O formulário
+de jogador (`ficha-habilidades`) já tinha o Nome em largura cheia. Novo `HabilidadeDescricao`
+(`modules/ficha/componentes/habilidade-descricao/`), usado nas duas listas: `-webkit-line-clamp: 5` no
+documento do Milkdown, medição de overflow por `MutationObserver`/`ResizeObserver` (o Milkdown monta
+assíncrono) e, só se passou do teto, um `app-botao-icone` cujo `appTooltip` mostra a descrição inteira.
+**Limite assumido:** o balão do `appTooltip` é texto puro (260px, sem `pre-wrap`), então a descrição vai sem
+formatação (`markdownParaTexto` tira os marcadores). Um popover que renderize o Markdown, seja mais largo e
+role exigiria um primitivo novo em `shared/ui/` — decisão do autor, não tomada aqui.
+
+**Testes.** `npm run test --workspace=frontend`: 135/135 arquivos, 1926/1926 testes (novos: silhuetas nos
+specs de `visualizar`, `detalhe-mestre`, `detalhe-jogador` e `painel-encontro` — incluindo jogador já
+conhecido seguindo a tela de leitura —, `habilidade-descricao` com `markdownParaTexto`, e o uso do componente
+em `criatura-habilidade-lista`). ESLint dos arquivos tocados: 0 erros.
+
+**Pendente (por isso a tarefa segue aberta).** Verificação visual na aplicação real (`verify`, `1920×1080` e
+`360×800`) **não foi feita**: o autor pediu que a aplicação não seja executada sem pedido explícito. Precisa
+conferir: as cinco silhuetas contra as telas reais (sem "pulo" de layout ao assentar; coluna de ações
+retraída e expandida; mobile), o `-webkit-line-clamp` sobre os blocos do Milkdown (parágrafos e listas) e a
+posição do botão, e o Nome/Tipo do formulário em 360px. `esqueletoMestre` também não foi visto com latência
+real. `espectador.page` tem skeleton próprio que não foi tocado (fora do que o autor listou).
+
 ## 2026-09-21 — Scrollbar do tema nunca aplicava (Chrome/Edge/Firefox) e scroll interno em Ataques/Habilidades da criatura
 
 Dois pedidos do autor ao usar a tela. Specs `docs/specs/done/scrollbar-global-cross-browser.spec.md` e

@@ -1030,8 +1030,9 @@ export class FichaService {
    * mesma checagem da concessão de acesso — m3-04); `campanhaId: null` desatribui sem checagem
    * extra. Ao entrar numa campanha nova, emite `ficha:criada` (resumo) na sala dela — os membros
    * conectados veem a ficha aparecer, mesmo evento de `criarFicha` (m3-05); ao sair de uma
-   * campanha (desatribuir ou mover para outra), a sala anterior não recebe evento — fora de
-   * escopo desta task (a spec marca como opcional). `ResourceNotFoundException` se a ficha não
+   * campanha (desatribuir ou mover para outra), emite `ficha:removida-da-campanha` (só os ids) na
+   * sala que ela deixou, para qualquer tipo de ficha — os membros conectados veem a ficha sumir
+   * do Esquadrão sem recarregar. `ResourceNotFoundException` se a ficha não
    * existir; `UnauthorizedAccessException` se o autor não puder editá-la ou o dono não for membro
    * (JOGADOR) ou mestre (CRIATURA/NPC) da campanha-alvo.
    *
@@ -1070,6 +1071,12 @@ export class FichaService {
     const fichaAtribuida = await this.fichaRepositorio.atribuirCampanha(dto);
     if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId && ehJogador) {
       this.campanhaGateway.emitirFichaCriada(fichaAtribuida);
+    }
+    if (fichaEncontrada.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId) {
+      this.campanhaGateway.emitirFichaRemovidaDaCampanha({
+        fichaId: fichaAtribuida.id,
+        campanhaId: fichaEncontrada.campanhaId,
+      });
     }
 
     return { id: fichaAtribuida.id, campanhaId: fichaAtribuida.campanhaId };

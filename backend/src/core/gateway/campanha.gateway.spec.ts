@@ -335,6 +335,16 @@ describe('CampanhaGateway', () => {
       });
     });
 
+    it('emite ficha:removida-da-campanha na sala da campanha que a ficha deixou, só com os ids', () => {
+      gateway.emitirFichaRemovidaDaCampanha({ fichaId: 5, campanhaId: 3 });
+
+      expect(paraSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitir).toHaveBeenCalledWith('ficha:removida-da-campanha', {
+        fichaId: 5,
+        campanhaId: 3,
+      });
+    });
+
     it('omite historia do broadcast de ficha:alterada — sala mista, sem distinção por socket (m3-50)', () => {
       const ficha = {
         id: 5,

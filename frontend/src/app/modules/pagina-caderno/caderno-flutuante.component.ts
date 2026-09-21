@@ -128,6 +128,8 @@ export class CadernoFlutuante implements OnDestroy {
   private readonly documento = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly estado = this.store.estado;
+  /** Janela do caderno aberta (mesmo minimizada) — marca o item da coluna de ações da tela. */
+  readonly aberto = computed(() => this.estado().aberto);
   protected readonly modoCaderno = signal<ModoCaderno>('MEU');
   protected readonly jogadorSelecionadoId = signal<number | null>(null);
   protected readonly exclusaoPendente = signal(false);

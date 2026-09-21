@@ -249,6 +249,9 @@ export class CampanhaPreviaJogador {
     this.tempoRealService.fichaVisibilidadeAlterada$
       .pipe(takeUntilDestroyed())
       .subscribe({ next: () => this.carregarPrevia() });
+    this.tempoRealService.fichaRemovidaDaCampanha$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => this.carregarPrevia() });
 
     // Ficha alterada: refaz a projeção (Equipe/Esquadrão) e, se for a ficha aberta agora, também
     // o fetch dedicado — via REST (nunca o payload do socket), pela mesma razão acima.

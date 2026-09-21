@@ -1,4 +1,70 @@
-@if (modoMestre()) {
+@if (esqueletoMestre()) {
+<!-- Carregamento da visão do mestre: mesma casca de `modoMestre()` (coluna de ações real, cabeçalho,
+     trilha | rolagens | palco com ficha resumida + grade), pra tela não "pular" quando o encontro
+     chega. Ainda não se sabe se há combate aberto; a silhueta é a do combate em curso, o caso em
+     que a tela é mais alta. `carregando()` só vira jogador/espectador quando os membros chegam e
+     o usuário não é o mestre — aí segue a tela de leitura de sempre. -->
+<div class="iniciativa-mestre">
+    <app-coluna-acoes id="iniciativa-mestre" rotulo="Ações da iniciativa">
+        @for (i of [0, 1, 2, 3, 4]; track i) {
+        <app-esqueleto class="iniciativa-mestre__esqueleto-acao" />
+        }
+    </app-coluna-acoes>
+
+    <div class="iniciativa-mestre__conteudo" role="status" aria-label="Carregando o combate">
+        <header class="iniciativa-mestre__cabecalho">
+            <app-esqueleto class="iniciativa-mestre__esqueleto-voltar" />
+            <span class="iniciativa-mestre__indice">//</span>
+            <app-esqueleto class="iniciativa-mestre__esqueleto-titulo" />
+            <span class="iniciativa-mestre__regua"></span>
+        </header>
+
+        <div class="iniciativa-mestre__linha">
+            <div class="iniciativa-mestre__trilha iniciativa-mestre__esqueleto-trilha">
+                <div class="iniciativa-mestre__esqueleto-contadores">
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-contador" />
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-contador" />
+                </div>
+                <div class="iniciativa-mestre__esqueleto-passos">
+                    @for (i of [0, 1, 2, 3, 4]; track i) {
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-passo" />
+                    }
+                </div>
+            </div>
+
+            <div class="iniciativa-mestre__rolagens">
+                <div class="iniciativa-mestre__esqueleto-rolagens">
+                    @for (i of [0, 1, 2, 3]; track i) {
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-rolagem" />
+                    }
+                </div>
+            </div>
+
+            <div class="iniciativa-mestre__palco">
+                <app-esqueleto class="iniciativa-mestre__esqueleto-conducao" />
+
+                <div class="iniciativa-mestre__corpo">
+                    <section class="iniciativa-mestre__resumo">
+                        <app-esqueleto class="iniciativa-mestre__esqueleto-resumo" />
+                    </section>
+
+                    <section class="iniciativa-mestre__todos">
+                        <header class="iniciativa-mestre__secao">
+                            <h2 class="iniciativa-mestre__secao-titulo">Todos os combatentes</h2>
+                            <span class="iniciativa-mestre__secao-regua"></span>
+                        </header>
+                        <div class="grade grade--compacta grade--palco">
+                            @for (i of [0, 1, 2, 3]; track i) {
+                            <app-esqueleto class="iniciativa-mestre__esqueleto-combatente" />
+                            }
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+} @else if (modoMestre()) {
 <!-- Visão do mestre (ui-37/ui-38): coluna de ações + trilha + rolagens + palco. A casca é a mesma de
      `detalhe-mestre` — coluna encostada na topbar e na borda, conteúdo com o restante da largura.
      Sem encontro (ui-38) a casca fica e o palco vira um estado vazio com "Novo combate".
@@ -65,6 +131,7 @@
             app-coluna-acoes-item
             icone="calculadora"
             appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
             (click)="alternarCalculadora()"
         >
             Calculadora
@@ -73,6 +140,7 @@
             app-coluna-acoes-item
             icone="caderno"
             appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
             (click)="alternarCaderno()"
         >
             Caderno

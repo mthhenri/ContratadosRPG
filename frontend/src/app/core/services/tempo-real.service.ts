@@ -14,6 +14,7 @@ import type {
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
+  FichaCampanhaRemovidaDto,
   FichaResumoDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -85,6 +86,7 @@ export class TempoRealService {
   private readonly fichaCriadaSubject = new Subject<FichaResumoDto>();
   private readonly fichaVisibilidadeAlteradaSubject =
     new Subject<FichaVisibilidadeAlteradaDto>();
+  private readonly fichaRemovidaDaCampanhaSubject = new Subject<FichaCampanhaRemovidaDto>();
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
   private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
@@ -109,6 +111,9 @@ export class TempoRealService {
   /** A visibilidade de uma ficha mudou; consumidores refazem o recorte autorizado da campanha. */
   readonly fichaVisibilidadeAlterada$: Observable<FichaVisibilidadeAlteradaDto> =
     this.fichaVisibilidadeAlteradaSubject.asObservable();
+  /** Uma ficha saiu da campanha (voltou ao acervo ou foi movida); consumidores refazem o recorte. */
+  readonly fichaRemovidaDaCampanha$: Observable<FichaCampanhaRemovidaDto> =
+    this.fichaRemovidaDaCampanhaSubject.asObservable();
   /** Um membro entrou na campanha (na sala `campanha:<id>`). */
   readonly membroEntrou$: Observable<CampanhaMembroEntradaDto> =
     this.membroEntrouSubject.asObservable();
@@ -196,6 +201,9 @@ export class TempoRealService {
       'ficha:visibilidade-alterada',
       (evento: FichaVisibilidadeAlteradaDto) =>
         this.fichaVisibilidadeAlteradaSubject.next(evento),
+    );
+    this.socket.on('ficha:removida-da-campanha', (evento: FichaCampanhaRemovidaDto) =>
+      this.fichaRemovidaDaCampanhaSubject.next(evento),
     );
     this.socket.on('caderno-esquadrao:pagina-criada', (pagina: PaginaCadernoResumoDto) =>
       this.paginaEsquadraoCriadaSubject.next(pagina),
