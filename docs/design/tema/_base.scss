@@ -40,36 +40,51 @@ body {
 // com --accent-border (nunca --accent sólido, reservado para ação/estado ativo). Consome só
 // tokens → legível nas bases clara/escura. Definida UMA vez, globalmente (aplique num parcial de
 // tema global, não por componente).
+//
+// ATENÇÃO — as duas formas NÃO se somam no Chromium moderno (Chrome/Edge ≥ 121): um elemento com
+// `scrollbar-color`/`scrollbar-width` diferente de `auto` perde o `::-webkit-scrollbar`. Como
+// `scrollbar-color` é herdado, declará-lo em `html` desligava o desenho do tema em TODO container
+// (ficava a barra nativa de 15px com setas, só recolorida). Por isso cada navegador recebe UMA
+// forma só: as propriedades padrão onde não há `::-webkit-scrollbar` e o pseudo-elemento onde há.
 
-// Firefox (e a spec padrão de scrollbar): mesmas cores via os dois tokens; herda p/ descendentes.
-html {
+// Firefox (e qualquer navegador sem `::-webkit-scrollbar`): spec padrão. `scrollbar-width` não é
+// herdado, então vai em `*` — em `html` valeria só para a barra da página, não para os containers.
+* {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
 }
 
-// Chrome / Edge / Safari (WebKit/Blink): `*` cobre body, modais e qualquer container com overflow.
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
+// Chrome / Edge / Safari (WebKit/Blink): devolve as propriedades padrão a `auto` para o
+// `::-webkit-scrollbar` abaixo valer. `*` cobre body, modais e qualquer container com overflow.
+@supports selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
 
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
 
-*::-webkit-scrollbar-thumb {
-  background: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-}
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-*::-webkit-scrollbar-thumb:hover {
-  border-color: var(--accent-border);
-}
+  *::-webkit-scrollbar-thumb {
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+  }
 
-// Canto onde as barras vertical e horizontal se cruzam (tabelas/textarea largos).
-*::-webkit-scrollbar-corner {
-  background: transparent;
+  *::-webkit-scrollbar-thumb:hover {
+    border-color: var(--accent-border);
+  }
+
+  // Canto onde as barras vertical e horizontal se cruzam (tabelas/textarea largos).
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
 // === Foco de teclado (acessibilidade) ===

@@ -484,8 +484,15 @@ precisar ser repetido por componente.
   (`width`/`height: 10px`). No `:hover`, o contorno passa a `--accent-border` (realce sutil —
   **nunca** `--accent` sólido, reservado para ação/estado ativo).
 - **Track / corner:** transparentes.
-- **Cross-browser:** `::-webkit-scrollbar-*` (Chrome/Edge/Safari) + `scrollbar-width: thin` e
-  `scrollbar-color: var(--border-strong) transparent` (Firefox e a spec padrão).
+- **Cross-browser:** `::-webkit-scrollbar-*` (Chrome/Edge/Safari) **ou** `scrollbar-width: thin` +
+  `scrollbar-color: var(--border-strong) transparent` (Firefox e a spec padrão) — **uma forma por
+  navegador, nunca as duas**. No Chromium ≥ 121 uma propriedade padrão diferente de `auto` desliga o
+  `::-webkit-scrollbar` do elemento, e `scrollbar-color` é herdado: declará-la em `html` fazia todo
+  container cair na barra nativa de 15px com setas. Por isso as propriedades padrão ficam em `*` e
+  voltam a `auto` dentro de `@supports selector(::-webkit-scrollbar)`, onde o pseudo-elemento
+  assume. `scrollbar-width` não é herdado, então também precisa ir em `*` (em `html` só cobriria a
+  barra da página). Componentes que precisam esconder a barra (abas) usam `scrollbar-width: none` +
+  `::-webkit-scrollbar { display: none }` no próprio elemento.
 - **Só tokens** (`--surface-2`/`--border-strong`/`--accent-border`) → segue legível e discreto nas
   duas bases (clara/escura) do tema em runtime, que sobrescrevem esses tokens. Nenhum hex solto
   (proibição #29).
