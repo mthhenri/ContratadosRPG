@@ -4,7 +4,7 @@ import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import type { CampanhaPreviaJogadorDto } from '@contratados-rpg/shared/dtos/campanha';
 
 import { CampanhaProjecaoService } from '../../modules/campanha/campanha-projecao.service';
-import { previaJogadorCampanhaGuard } from './previa-jogador-campanha.guard';
+import { previaJogadorCampanhaResolver } from './previa-jogador-campanha.guard';
 
 const PREVIA: CampanhaPreviaJogadorDto = {
   campanha: { id: 57, nome: 'Contenção', descricao: null, naBase: true },
@@ -15,8 +15,8 @@ const PREVIA: CampanhaPreviaJogadorDto = {
   encontroAtivo: null,
 };
 
-describe('previaJogadorCampanhaGuard', () => {
-  async function executar(resultado: 'ok' | 'erro'): Promise<true | UrlTree> {
+describe('previaJogadorCampanhaResolver', () => {
+  async function executar(resultado: 'ok' | 'erro'): Promise<CampanhaPreviaJogadorDto | UrlTree> {
     const campanhaProjecaoService = {
       recuperarPreviaJogador: vi.fn(() =>
         resultado === 'erro' ? throwError(() => new Error('falhou')) : of(PREVIA),
@@ -32,13 +32,13 @@ describe('previaJogadorCampanhaGuard', () => {
       paramMap: { get: (nome: string) => (nome === 'id' ? '57' : '99') },
     } as unknown as ActivatedRouteSnapshot;
     const valor = TestBed.runInInjectionContext(() =>
-      previaJogadorCampanhaGuard(rota, {} as RouterStateSnapshot),
+      previaJogadorCampanhaResolver(rota, {} as RouterStateSnapshot),
     );
-    return firstValueFrom(valor as Observable<true | UrlTree>);
+    return firstValueFrom(valor as Observable<CampanhaPreviaJogadorDto | UrlTree>);
   }
 
   it('libera quando o backend aceita a projeção (mestre da campanha, alvo JOGADOR ativo)', async () => {
-    expect(await executar('ok')).toBe(true);
+    expect(await executar('ok')).toEqual(PREVIA);
   });
 
   it('redireciona a acesso-negado quando o backend recusa (não-mestre, ou alvo não-JOGADOR)', async () => {

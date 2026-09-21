@@ -207,7 +207,13 @@ export class CampanhaPreviaJogador {
     effect(() => this.topbarContexto.definir(this.previa()?.campanha.nome ?? null));
     this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
 
-    this.carregarPrevia();
+    const previaInicial = this.rotaAtiva.snapshot.data?.['previaJogador'] as CampanhaPreviaJogadorDto | undefined;
+    if (previaInicial) {
+      this.aplicarPrevia(previaInicial);
+      this.carregando.set(false);
+    } else {
+      this.carregarPrevia();
+    }
     this.carregarInventario();
 
     // Fetch da ficha completa (mesmo padrão de `CampanhaDetalhe`) sempre que `fichaExibidaId`
@@ -302,16 +308,16 @@ export class CampanhaPreviaJogador {
       .recuperarPreviaJogador(this.id, this.usuarioAlvoId)
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
-        next: (previa) => {
-          this.previa.set(previa);
-          this.rolagensFeed.set(previa.rolagens);
-          if (this.fichaExibidaId() === null) {
-            const propria = previa.fichas.find((ficha) => ficha.usuarioId === this.usuarioAlvoId);
-            if (propria) {
-              this.fichaExibidaId.set(propria.id);
-            }
-          }
-        },
+        next: (previa) => this.aplicarPrevia(previa),
       });
+  }
+
+  private aplicarPrevia(previa: CampanhaPreviaJogadorDto): void {
+    this.previa.set(previa);
+    this.rolagensFeed.set(previa.rolagens);
+    if (this.fichaExibidaId() === null) {
+      const propria = previa.fichas.find((ficha) => ficha.usuarioId === this.usuarioAlvoId);
+      if (propria) this.fichaExibidaId.set(propria.id);
+    }
   }
 }

@@ -1,5 +1,13 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — rede-02: carga inicial única das projeções
+
+Painel do espectador e Prévia de jogador receberam as projeções por resolver, eliminando o GET de autorização
+descartado e o segundo GET da página. Após os gates, o backend paraleliza as consultas independentes com `Promise.all`.
+
+- **Testes:** frontend focado 37/37, backend focado 16/16; suítes completas e builds frontend/backend concluíram com
+  sucesso.
+
 ## 2026-09-21 — Ficha de criatura: descrição de habilidade com formatação preservada e expressões dos ataques no tooltip
 
 Pedido do autor, dois ajustes pontuais na ficha de criatura. Ajuste avulso, sem spec.

@@ -3,8 +3,8 @@ import { Routes } from '@angular/router';
 import { autenticacaoGuard } from './core/guards/autenticacao.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { mestreCampanhaGuard } from './core/guards/mestre-campanha.guard';
-import { espectadorCampanhaGuard } from './core/guards/espectador-campanha.guard';
-import { previaJogadorCampanhaGuard } from './core/guards/previa-jogador-campanha.guard';
+import { espectadorCampanhaResolver } from './core/guards/espectador-campanha.guard';
+import { previaJogadorCampanhaResolver } from './core/guards/previa-jogador-campanha.guard';
 
 export const routes: Routes = [
   {
@@ -67,7 +67,8 @@ export const routes: Routes = [
   // rotas acima (ficha/criatura/iniciativa): casa antes do prefixo genérico `campanhas`.
   {
     path: 'campanhas/:id/espectador',
-    canActivate: [autenticacaoGuard, espectadorCampanhaGuard],
+    canActivate: [autenticacaoGuard],
+    resolve: { painelEspectador: espectadorCampanhaResolver },
     loadComponent: () =>
       import('./modules/campanha/paginas/espectador/espectador.page').then(
         (pagina) => pagina.CampanhaEspectador,
@@ -78,7 +79,8 @@ export const routes: Routes = [
   // projeção como autoridade). Mesma convenção de precedência das rotas acima.
   {
     path: 'campanhas/:id/previa/:usuarioAlvoId',
-    canActivate: [autenticacaoGuard, previaJogadorCampanhaGuard],
+    canActivate: [autenticacaoGuard],
+    resolve: { previaJogador: previaJogadorCampanhaResolver },
     loadComponent: () =>
       import('./modules/campanha/paginas/previa-jogador/previa-jogador.page').then(
         (pagina) => pagina.CampanhaPreviaJogador,

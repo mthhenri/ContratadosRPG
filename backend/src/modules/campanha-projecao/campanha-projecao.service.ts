@@ -70,27 +70,24 @@ export class CampanhaProjecaoService {
     // m8-07: nunca `listarFichas`/`listarFichasParaAlvo` (matriz de visibilidade por dono) — o
     // espectador não possui ficha nenhuma na campanha, então o recorte é sempre "todo agente não
     // oculto", independente de quem pede (espectador real ou mestre em prévia).
-    const fichas = await this.fichaService.listarFichasParaEspectador({ campanhaId: dto.campanhaId });
+    const [fichas, membros, rolagens, encontroAtivo] = await Promise.all([
+      this.fichaService.listarFichasParaEspectador({ campanhaId: dto.campanhaId }),
+      this.campanhaRepositorio.listarMembros({
+        campanhaId: dto.campanhaId,
+        usuarioAtivoId: usuarioAtivo.sub,
+        usuarioAtivoEhMestre: false,
+      }),
+      this.rolagemRepositorio.listarPublicasPorCampanha({
+        campanhaId: dto.campanhaId,
+        pagina: dto.pagina,
+        itensPorPagina: dto.itensPorPagina,
+      }),
+      this.encontroService.recuperarEncontroAtivoParaEspectador({ campanhaId: dto.campanhaId }),
+    ]);
 
     // `membros` só resolve o nome do dono de cada ficha acima (`usuarioId`) — mesma consulta que
     // `recuperarPreviaJogador` já usa pra Equipe, `usuarioAtivoEhMestre: false` sempre (nunca
     // amplia `acessoCompleto`, campo que este painel nem consome).
-    const membros = await this.campanhaRepositorio.listarMembros({
-      campanhaId: dto.campanhaId,
-      usuarioAtivoId: usuarioAtivo.sub,
-      usuarioAtivoEhMestre: false,
-    });
-
-    const rolagens = await this.rolagemRepositorio.listarPublicasPorCampanha({
-      campanhaId: dto.campanhaId,
-      pagina: dto.pagina,
-      itensPorPagina: dto.itensPorPagina,
-    });
-
-    const encontroAtivo = await this.encontroService.recuperarEncontroAtivoParaEspectador({
-      campanhaId: dto.campanhaId,
-    });
-
     return { campanha: identidade, fichas, membros, rolagens, encontroAtivo };
   }
 
@@ -126,22 +123,11 @@ export class CampanhaProjecaoService {
     // Coluna "Equipe" da visão de jogador (m8-04): mesma consulta que `CampanhaService.listarMembros`
     // usa pro mestre, mas com a identidade do **alvo** — `acessoCompleto` por ficha e a visibilidade
     // de ficha `oculta` de terceiro saem calculados como o alvo veria, nunca como o mestre vê.
-    const membros = await this.campanhaRepositorio.listarMembros({
-      campanhaId: dto.campanhaId,
-      usuarioAtivoId: dto.usuarioAlvoId,
-      usuarioAtivoEhMestre: false,
-    });
-
-    const rolagens = await this.rolagemRepositorio.listarPorCampanha({
-      campanhaId: dto.campanhaId,
-      usuarioId: dto.usuarioAlvoId,
-      ehMestre: false,
-    });
-
-    const encontroAtivo = await this.encontroService.recuperarEncontroAtivoParaAlvo({
-      campanhaId: dto.campanhaId,
-      usuarioAlvoId: dto.usuarioAlvoId,
-    });
+    const [membros, rolagens, encontroAtivo] = await Promise.all([
+      this.campanhaRepositorio.listarMembros({ campanhaId: dto.campanhaId, usuarioAtivoId: dto.usuarioAlvoId, usuarioAtivoEhMestre: false }),
+      this.rolagemRepositorio.listarPorCampanha({ campanhaId: dto.campanhaId, usuarioId: dto.usuarioAlvoId, ehMestre: false }),
+      this.encontroService.recuperarEncontroAtivoParaAlvo({ campanhaId: dto.campanhaId, usuarioAlvoId: dto.usuarioAlvoId }),
+    ]);
 
     return {
       campanha: identidade,

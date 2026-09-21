@@ -4,7 +4,7 @@ import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import type { CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 
 import { CampanhaProjecaoService } from '../../modules/campanha/campanha-projecao.service';
-import { espectadorCampanhaGuard } from './espectador-campanha.guard';
+import { espectadorCampanhaResolver } from './espectador-campanha.guard';
 
 const PAINEL: CampanhaPainelEspectadorDto = {
   campanha: { id: 57, nome: 'Contenção', descricao: null, naBase: true },
@@ -14,8 +14,8 @@ const PAINEL: CampanhaPainelEspectadorDto = {
   membros: [],
 };
 
-describe('espectadorCampanhaGuard', () => {
-  async function executar(resultado: 'ok' | 'erro'): Promise<true | UrlTree> {
+describe('espectadorCampanhaResolver', () => {
+  async function executar(resultado: 'ok' | 'erro'): Promise<CampanhaPainelEspectadorDto | UrlTree> {
     const campanhaProjecaoService = {
       recuperarPainelEspectador: vi.fn(() =>
         resultado === 'erro' ? throwError(() => new Error('falhou')) : of(PAINEL),
@@ -29,13 +29,13 @@ describe('espectadorCampanhaGuard', () => {
     });
     const rota = { paramMap: { get: () => '57' } } as unknown as ActivatedRouteSnapshot;
     const valor = TestBed.runInInjectionContext(() =>
-      espectadorCampanhaGuard(rota, {} as RouterStateSnapshot),
+      espectadorCampanhaResolver(rota, {} as RouterStateSnapshot),
     );
-    return firstValueFrom(valor as Observable<true | UrlTree>);
+    return firstValueFrom(valor as Observable<CampanhaPainelEspectadorDto | UrlTree>);
   }
 
   it('libera quando o backend aceita a projeção (espectador real ou mestre em prévia)', async () => {
-    expect(await executar('ok')).toBe(true);
+    expect(await executar('ok')).toEqual(PAINEL);
   });
 
   it('redireciona a acesso-negado quando o backend recusa (jogador, ou não-membro)', async () => {
