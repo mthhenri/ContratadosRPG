@@ -152,6 +152,34 @@ ao vivo em 1920×1080 e 1366×768 (tablet e mobile não mudam: a coluna empilha 
 16→14px (caixa de 26→24px de altura). Efeito no banco de dev: o encontro 8 ganhou a ficha "Acadêmico Stub 1"
 e está em combate.
 
+## 2026-09-19 — P-071 investigado: não reproduz; teste do Montador endurecido (causa raiz não confirmada)
+
+Pedido direto do autor ("resolve a P-071"). Método: `superpowers:systematic-debugging`.
+
+**Evidência.** O teste `ficha-visualizacao.component.spec.ts` › "mantém o montador aberto e
+visível ao navegar para outra aba" falhou uma única vez (`.montador-rolagem__gatilho` ausente) na
+suíte completa do lote P-019/P-020/P-022 (2026-09-18) e passou em todas as execuções seguintes:
+2026-09-18 duas vezes (1840/1840, registradas em entradas anteriores) e, hoje, 6 execuções
+completas seguidas em `HEAD` (130/130 arquivos, 1840/1840) mais o arquivo isolado (164/164). Nada
+no fluxo do teste é assíncrono (`localStorage.setItem` → `montar()` → `setInput` →
+`detectChanges` → `querySelector`), então interleaving com outro spec no meio do teste está
+descartado; `SessaoService` é `providedIn: 'root'` e o TestBed é resetado a cada teste
+(`destroyAfterEach` padrão, confirmado em `@angular/build`/`init-testbed`); nenhum spec faz
+`stubGlobal`/troca de `localStorage`. Hipótese não confirmada por ausência de reprodução: o
+`SessaoService` ter lido o `localStorage` antes do `setItem` do teste (ordem de construção).
+
+**Mudança (endurecimento, não correção comprovada).** O teste deixou de gravar a sessão ADMIN no
+`localStorage` esperando que o `SessaoService` a leia ao ser construído: `montar()` ganhou o
+parâmetro opcional `sessao`, que chama `TestBed.inject(SessaoService).substituirSessao(sessao)`
+entre o `configureTestingModule` e o `createComponent` — a instância que o componente injeta já
+nasce com a identidade certa, independente de quando/como o serviço lê o `localStorage`. O
+`finally` que limpa a chave foi mantido (`substituirSessao` também persiste). Gates:
+`npm run test --workspace=frontend` completo 130/130 arquivos, 1840/1840; `eslint` no spec sem
+erros.
+
+**Pendente.** Se `P-071` reaparecer, a hipótese acima está refutada e a investigação recomeça —
+capturar a saída completa da falha (stack e ordem dos arquivos) na hora.
+
 ## 2026-09-18 — Sobreposição de texto no `EditorMarkdown` compacto, selo de custo/tipo em preto-e-branco-e-tema e `CustoAcaoEnum` ganha Ação Livre/Turno
 
 Autor reportou, com print, que Descrição e Restrição de Habilidade de criatura sobrepõem texto

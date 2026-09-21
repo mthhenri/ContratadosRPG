@@ -46,7 +46,7 @@
   exercitar o primitivo em `editor-markdown-campos-texto-livre` (2026-09-18), que usou blockquote
   no cenário de verificação ao vivo.
 
-### P-071 — Teste do Montador na `FichaVisualizacao` falha só com a suíte completa (gatilho ADMIN não aparece) · `ABERTO` · frontend/teste
+### P-071 — Teste do Montador na `FichaVisualizacao` falhou uma vez só com a suíte completa (gatilho ADMIN não aparece) · `CONTORNADO` · frontend/teste
 
 - **Sintoma:** `ficha-visualizacao.component.spec.ts` — `mantém o montador aberto e visível ao
   navegar para outra aba` falha com `TypeError: Cannot read properties of null (reading 'click')`
@@ -57,9 +57,11 @@
 - **Causa:** não investigada — cheiro de vazamento de estado entre specs (sessão cacheada por
   algum consumidor de `SessaoService`, ou `localStorage` não limpo por outro arquivo que roda antes
   na mesma worker), no molde do que já aconteceu com viewport (P-019, corrigido nesta mesma data).
-- **Contorno:** rodar o arquivo isolado quando for preciso confiar no resultado deste caso.
-- **Correção:** isolar a causa do vazamento (bisseção de specs até achar o vizinho que deixa
-  `SessaoService`/`localStorage` sujo antes deste arquivo rodar).
+- **Contorno:** desde 2026-09-19 o teste injeta a sessão direto no `SessaoService` (param
+  `sessao` de `montar()`), sem depender do `localStorage` ser lido na construção. Não reproduziu
+  em 7 execuções completas seguidas (1840/1840) — a causa raiz **nunca foi confirmada**.
+- **Correção:** se voltar a falhar, capturar stack e ordem dos arquivos na hora e bissecionar
+  specs; se ficar verde por um período razoável, remover este item.
 - **Desde:** achado ao validar o fix do P-019 (2026-09-18, `npm run test --workspace=frontend`
   completo). O arquivo em si não foi tocado por essa task; não confirmado se já falhava antes dela.
 

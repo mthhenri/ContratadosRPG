@@ -24,6 +24,7 @@ import type { UsuarioAutenticadoDto } from '@contratados-rpg/shared/dtos/usuario
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
+import { SessaoService } from '../../../../core/services/sessao.service';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
@@ -83,6 +84,9 @@ describe('FichaVisualizacao', () => {
     // m3-51: por padrão espelha `ajustavel` (é assim que a página liga hoje — dono/mestre rolam,
     // visualizador não) — testes que precisam dissociar os dois passam o valor explicitamente.
     podeRolar = ajustavel,
+    // Sessão injetada direto no `SessaoService` antes de o componente existir, em vez de gravada
+    // no `localStorage` na esperança de o serviço lê-la ao ser construído (P-071).
+    sessao: UsuarioAutenticadoDto | null = null,
   ) {
     // `FichaRolagemRegistroService` (m2-21) é provido pela **página** que hospeda a ficha
     // (`VisualizarPage`/`CampanhaDetalhe`, `providers: []`), nunca em `root`: a flag "Rolagem
@@ -92,6 +96,9 @@ describe('FichaVisualizacao', () => {
       imports: [FichaVisualizacao],
       providers: [FichaRolagemRegistroService],
     });
+    if (sessao) {
+      TestBed.inject(SessaoService).substituirSessao(sessao);
+    }
     const fixture = TestBed.createComponent(FichaVisualizacao);
     fixture.componentRef.setInput('fichaId', fichaId);
     fixture.componentRef.setInput('nome', nome);
@@ -284,9 +291,8 @@ describe('FichaVisualizacao', () => {
         nome: 'Admin Teste',
         tipo: TipoUsuarioEnum.ADMIN,
       };
-      localStorage.setItem('contratados-rpg.sessao', JSON.stringify(sessaoAdmin));
       try {
-        const alvo = montar(dados, 'Corvo', 42, true);
+        const alvo = montar(dados, 'Corvo', 42, true, false, true, sessaoAdmin);
         alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
         alvo.fixture.detectChanges();
 
