@@ -47,7 +47,6 @@
                     } @else {
                         <div class="ataque-lista__cabecalho-item">
                             <span class="ataque-lista__nome">{{ item.nome }}</span>
-                            <span class="ataque-lista__dano">{{ item.dano }}</span>
                         </div>
 
                         <div class="ataque-lista__marcas">
@@ -74,6 +73,7 @@
                                 app-botao
                                 class="ataque-lista__rolar ataque-lista__rolar--teste"
                                 type="button"
+                                [appTooltip]="'Rolar teste: ' + item.teste"
                                 (click)="testar(item)"
                             >
                                 <app-icone nome="d20" /> Teste
@@ -82,6 +82,7 @@
                                 app-botao
                                 class="ataque-lista__rolar ataque-lista__rolar--dano"
                                 type="button"
+                                [appTooltip]="'Rolar dano: ' + item.dano"
                                 (click)="rolar(item)"
                             >
                                 <app-icone nome="d20" /> Dano
@@ -90,7 +91,7 @@
                                 app-botao
                                 class="ataque-lista__rolar ataque-lista__rolar--critico"
                                 type="button"
-                                [appTooltip]="'Rolar dano crítico'"
+                                [appTooltip]="'Rolar dano crítico: ' + item.danoCritico"
                                 (click)="criticar(item)"
                             >
                                 <app-icone nome="d20" /> Crítico

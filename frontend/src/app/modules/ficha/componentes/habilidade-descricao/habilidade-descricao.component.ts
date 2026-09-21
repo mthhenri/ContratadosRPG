@@ -15,16 +15,26 @@ import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.compon
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 
 /**
- * Markdown → texto corrido, só o bastante pro balão do tooltip (texto puro, sem renderização):
- * tira os marcadores de título/lista/citação/ênfase/código e reduz `[texto](url)` a `texto`.
- * Não pretende ser um parser — a descrição de habilidade só usa a sintaxe básica do editor.
+ * Markdown → texto puro para o balão do tooltip (sem renderização), **preservando a forma**: quebras
+ * de linha, linhas em branco, recuo e listas ficam como o autor escreveu (o balão usa
+ * `white-space: pre-wrap` quando há `\n`, ver `Tooltip`). Só sai a sintaxe que o leitor não veria:
+ * marcadores de título/citação/ênfase/código, `[texto](url)` reduzido a `texto` e escapes. Itens de
+ * lista viram `•`; listas numeradas mantêm o número. Não pretende ser um parser — a descrição de
+ * habilidade só usa a sintaxe básica do editor.
  */
 export function markdownParaTexto(markdown: string): string {
   return markdown
+    .replace(/\r\n?/g, '\n')
+    // Parágrafo vazio do Milkdown (`<br />` sozinho entre duas linhas em branco) já é a linha em branco
+    // que o autor deixou; um `<br />` no meio do texto é uma quebra de linha.
+    .replace(/\n\n[ \t]*<br\s*\/?>[ \t]*(?=\n\n|$)/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/^\s{0,3}(?:#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '')
+    .replace(/^([ \t]*)(?:#{1,6}|>)[ \t]+/gm, '$1')
+    .replace(/^([ \t]*)[-*+][ \t]+/gm, '$1• ')
     .replace(/(\*\*|__|\*|_|~~|`)/g, '')
-    .replace(/\s*\n\s*/g, ' ')
+    .replace(/\\(?=\n|$)/g, '')
+    .replace(/[ \t]+$/gm, '')
     .trim();
 }
 

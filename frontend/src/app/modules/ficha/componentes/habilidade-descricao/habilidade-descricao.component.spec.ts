@@ -3,10 +3,16 @@ import { TestBed } from '@angular/core/testing';
 import { HabilidadeDescricao, markdownParaTexto } from './habilidade-descricao.component';
 
 describe('markdownParaTexto', () => {
-  it('tira marcadores de título, lista, citação, ênfase e código', () => {
+  it('tira marcadores de título, citação, ênfase e código e mantém a estrutura de linhas e listas', () => {
     const markdown = '# Título\n\n- **Item** um\n- _item_ dois\n\n> citação com `código`';
 
-    expect(markdownParaTexto(markdown)).toBe('Título Item um item dois citação com código');
+    expect(markdownParaTexto(markdown)).toBe('Título\n\n• Item um\n• item dois\n\ncitação com código');
+  });
+
+  it('mantém o número das listas numeradas e o recuo das sublistas', () => {
+    expect(markdownParaTexto('1. passo um\n2. passo dois\n   - detalhe\n   * outro')).toBe(
+      '1. passo um\n2. passo dois\n   • detalhe\n   • outro',
+    );
   });
 
   it('reduz link e imagem ao texto visível', () => {
@@ -15,8 +21,19 @@ describe('markdownParaTexto', () => {
     );
   });
 
-  it('junta quebras de linha em espaços simples', () => {
-    expect(markdownParaTexto('linha um\n\n\nlinha dois')).toBe('linha um linha dois');
+  it('preserva quebras de linha e linhas em branco, sem sobra de espaço no fim das linhas', () => {
+    expect(markdownParaTexto('linha um  \n\n\nlinha dois\t\nlinha três')).toBe(
+      'linha um\n\n\nlinha dois\nlinha três',
+    );
+  });
+
+  it('trata quebra forçada (barra invertida) e <br /> como quebra de linha', () => {
+    expect(markdownParaTexto('linha um\\\nlinha dois')).toBe('linha um\nlinha dois');
+    expect(markdownParaTexto('linha um<br />linha dois')).toBe('linha um\nlinha dois');
+  });
+
+  it('parágrafo vazio do editor (<br /> sozinho) vira a linha em branco que o autor deixou', () => {
+    expect(markdownParaTexto('antes\n\n<br />\n\ndepois')).toBe('antes\n\n\ndepois');
   });
 });
 

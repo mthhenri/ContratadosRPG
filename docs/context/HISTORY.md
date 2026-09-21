@@ -1,5 +1,29 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Ficha de criatura: descrição de habilidade com formatação preservada e expressões dos ataques no tooltip
+
+Pedido do autor, dois ajustes pontuais na ficha de criatura. Ajuste avulso, sem spec.
+
+- **Descrição completa da habilidade (o "olho").** Não é popover: é o `appTooltip` do botão de
+  `HabilidadeDescricao`, que recebia o Markdown reduzido a **uma linha só** por `markdownParaTexto` (todo `\n`
+  virava espaço) e o balão, um `<div>` sem `white-space`, colapsaria qualquer quebra mesmo se ela chegasse. Dois
+  pontos corrigidos: (1) `markdownParaTexto` agora preserva a forma — quebras, linhas em branco, recuo, listas
+  (`•` nas não numeradas, número mantido nas numeradas) — e só tira a sintaxe que o leitor não veria (`#`, `>`,
+  ênfase, código, URL de link, escapes, quebra forçada `\`, `<br />`); (2) `Tooltip` aplica
+  `white-space: pre-wrap` **só quando o texto tem `\n`**, então tooltip de uma linha segue idêntico. O componente é
+  o mesmo da ficha do jogador (`ficha-habilidades`), que herda o comportamento — não há divergência a manter.
+- **Ataques.** Os três botões de rolagem ganham tooltip com a expressão: `Rolar teste: …`, `Rolar dano: …`,
+  `Rolar dano crítico: …` (o crítico já tinha `Rolar dano crítico`; ganhou a expressão). A expressão de dano saiu do
+  cabeçalho do item (`.ataque-lista__dano` removido, HTML e SCSS) e o nome ocupa a largura inteira do card.
+- **Testes:** frontend completo 140 arquivos / 2025 testes verdes. Novos: `markdownParaTexto` (estrutura de
+  linhas/listas, recuo, quebra forçada e `<br />`, parágrafo vazio), `Tooltip` (`pre-wrap` só com `\n`) e a lista de
+  ataques (expressão em cada tooltip; dano fora do cabeçalho). ESLint sem erros; prettier ok nos `.html`/`.scss`
+  tocados.
+- **Pendente — verificação visual ao vivo (gate do `CLAUDE.md`):** não executada nesta sessão. Falta conferir na
+  ficha de criatura, em `1920×1080` e `360×800`: o balão do "olho" com uma descrição de várias linhas/lista, os três
+  tooltips dos botões de rolagem e o cabeçalho do ataque com nome longo. Suposição não verificada: o Milkdown
+  serializa parágrafo vazio como `<br />` (tratado defensivamente, sem depender disso).
+
 ## 2026-09-21 — rede-01: ciclo de vida das salas de tempo real
 
 As inscrições Socket.IO deixaram de sobreviver a quem as consumia: `TempoRealService` mantém referências por

@@ -135,20 +135,15 @@
             border-color: var(--border-strong);
         }
     }
+    // A expressão de dano deixou o cabeçalho (vive no tooltip dos botões de rolagem): o nome ocupa
+    // a largura inteira do card.
     &__cabecalho-item {
         display: flex;
         align-items: baseline;
-        justify-content: space-between;
-        gap: 10px;
     }
     &__nome {
         font: 600 14px var(--font-sans);
         color: var(--text);
-    }
-    &__dano {
-        font: 700 13px var(--font-mono);
-        color: var(--text);
-        white-space: nowrap;
     }
 
     &__marcas {

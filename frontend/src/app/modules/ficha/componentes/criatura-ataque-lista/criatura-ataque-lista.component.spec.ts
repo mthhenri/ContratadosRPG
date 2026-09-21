@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { describe, expect, it, vi } from 'vitest';
 import { CustoAcaoEnum } from '@contratados-rpg/shared/enums';
 import type { FichaCriaturaAtaqueDto } from '@contratados-rpg/shared/dtos/ficha';
 
+import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { CriaturaAtaqueLista } from './criatura-ataque-lista.component';
 
@@ -24,10 +26,22 @@ describe('CriaturaAtaqueLista', () => {
     return { fixture, raiz: fixture.nativeElement as HTMLElement, emitidos, rolados };
   }
 
-  it('lista os ataques com nome e dano', () => {
+  it('lista os ataques só com o nome no cabeçalho — a expressão de dano não ocupa o espaço dele', () => {
     const { raiz } = montar(false);
     const nomes = Array.from(raiz.querySelectorAll('.ataque-lista__nome')).map((n) => n.textContent?.trim());
     expect(nomes).toEqual(['Golpe de Pedra']);
+    expect(raiz.querySelector('.ataque-lista__dano')).toBeNull();
+    expect(raiz.querySelector('.ataque-lista__cabecalho-item')?.textContent).not.toContain('4D12');
+  });
+
+  it('cada botão de rolagem mostra a própria expressão no tooltip (teste, dano e dano crítico)', () => {
+    const { fixture } = montar(false);
+    const tooltipDe = (classe: string) =>
+      fixture.debugElement.query(By.css(classe)).injector.get(Tooltip).appTooltip();
+
+    expect(tooltipDe('.ataque-lista__rolar--teste')).toBe('Rolar teste: lutad20kh1+3');
+    expect(tooltipDe('.ataque-lista__rolar--dano')).toBe('Rolar dano: 4D12+10');
+    expect(tooltipDe('.ataque-lista__rolar--critico')).toBe('Rolar dano crítico: 8D12+20');
   });
 
   it('organiza o formulário com custo, nome, área, fórmulas e efeito no editor Markdown', () => {
