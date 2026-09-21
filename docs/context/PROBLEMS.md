@@ -29,25 +29,6 @@
 
 ## Ativos
 
-### P-073 — Espectador fica preso em "Carregando o combate…" na tela de Iniciativa · `ABERTO` · frontend
-
-- **Sintoma:** o espectador abre "Ver Iniciativa" (`/campanhas/:id/iniciativa/:encontroId`) e a
-  tela nunca sai do carregamento; aparecem três toasts "Acesso não autorizado" e nenhum combatente.
-- **Causa:** `EncontroPainelDadosService.carregando()` (antes `PainelEncontro.carregando()`, extraído na
-  `ui-39`) só vira `false` quando `membros()` deixa de ser `null`,
-  e `membros` só é preenchido no `next` de `listarMembros`. O backend recusa
-  `GET /campanha/:id/membros` a `ESPECTADOR` por regra (`CampanhaService.listarMembros`, 403), então
-  o `next` nunca dispara e não há tratamento de erro. Junto vêm 403 de `GET /ficha?campanhaId` e
-  `GET /campanha/:id`, que a página também consulta. Com papel desconhecido a casca monta a página do
-  mestre, então o espectador fica no **esqueleto** de carregamento dela (antes, no texto "Carregando o
-  combate…").
-- **Contorno:** nenhum para o espectador; jogador e mestre não são afetados.
-- **Correção:** a página deve resolver "quem está olhando" por uma fonte que o espectador possa
-  ler e não consultar o que o papel não pode ler. Precisa de spec — toca a `m8-05` (visão do
-  espectador) e o `EncontroPainelDadosService` (`ui-39`).
-- **Desde:** a condição de carregamento existe desde `m7-06`; achado em 2026-09-20 ao capturar
-  a visão do jogador para a POC (`espectador.stub`, campanha-codex).
-
 ### P-072 — `EditorMarkdown` não estiliza blockquote (`>`) · `ACEITO` · frontend
 
 - **Sintoma:** conteúdo Markdown com citação (`> texto`) renderiza como parágrafo comum — sem

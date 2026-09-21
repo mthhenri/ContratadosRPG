@@ -1,10 +1,9 @@
 import { DestroyRef, Component, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { filter, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaIdentidadeSeguraDto, CampanhaMembroResumoDto, CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
@@ -12,7 +11,6 @@ import { CampanhaProjecaoService } from '../../campanha-projecao.service';
 import { CampanhaService } from '../../campanha.service';
 import { agruparFichasPorMembro, ordenarMembros, type ItemFicha } from '../../campanha-equipe.util';
 import { EspectadorFichaCard, type EspectadorFichaCardDados } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
-import { IniciativaLeitura } from '../../../encontro/componentes/iniciativa-leitura/iniciativa-leitura.component';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -23,9 +21,10 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
-import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Tamanho de página do feed — mesmo degrau do histórico de rolagens da ficha (`visualizar.page.ts`). */
 const ITENS_POR_PAGINA = 20;
@@ -57,11 +56,11 @@ const UM_DIA_MS = 24 * 60 * 60 * 1000;
     BotaoIcone,
     Cartao,
     Chip,
+    ColunaAcoes,
+    ColunaAcoesItem,
     EspectadorFichaCard,
     EstadoVazio,
     Esqueleto,
-    IniciativaLeitura,
-    Modal,
   ],
   templateUrl: './espectador.page.html',
   styleUrl: './espectador.page.scss',
@@ -140,13 +139,14 @@ export class CampanhaEspectador {
   /** `true` quando quem abriu esta rota é o mestre da campanha, em prévia (nunca um espectador real). */
   protected readonly ehMestrePreview = signal(false);
 
+  /** Alterna a exibição da descrição da campanha — mesmo padrão de `detalhe-jogador.page.ts`. */
+  protected readonly descricaoAberta = signal(false);
+
   /**
-   * Encontro não-encerrado da campanha, já redigido pelo backend (m8-05) — gatilha "Ver
-   * Iniciativa". `EncontroService.recuperarEncontroAtivoParaEspectador` devolve o mesmo resultado
-   * para `ESPECTADOR` real e `MESTRE` em prévia; esta página nunca decide o recorte sozinha.
+   * Coluna "Rolagens públicas" visível — item "Rolagens" da coluna de ações. Escondê-la libera a
+   * largura toda para a grade de fichas (`.espectador__ficha-grid--largura-cheia`).
    */
-  protected readonly encontroAtivo = signal<EncontroRecuperadoDto | null>(null);
-  protected readonly iniciativaAberta = signal(false);
+  protected readonly rolagensVisiveis = signal(true);
 
   /** Relógio de 5s só para recomputar o tempo relativo das rolagens, sem novo fetch. */
   private readonly agora = signal(Date.now());
@@ -192,23 +192,8 @@ export class CampanhaEspectador {
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
 
-    // Encontro alterado (m8-05): nunca confia no payload do socket — o mesmo evento carrega o
-    // recorte de MESTRE para quem está de fato conectado como mestre (em prévia), então só um
-    // refetch via REST (`recuperarEncontroAtivoParaEspectador`, sempre redigido) garante o mesmo
-    // resultado para ESPECTADOR real e MESTRE em prévia. `itensPorPagina: 1` evita perturbar a
-    // paginação do feed de rolagens já carregado.
-    this.tempoRealService.encontroAlterado$
-      .pipe(filter((evento) => evento.encontro.campanhaId === this.id), takeUntilDestroyed())
-      .subscribe({ next: () => this.atualizarEncontroAtivo() });
-
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
-  }
-
-  private atualizarEncontroAtivo(): void {
-    this.campanhaProjecaoService
-      .recuperarEncontroAtivoPainelEspectador(this.id)
-      .subscribe({ next: (encontro) => this.encontroAtivo.set(encontro) });
   }
 
   private onRolagemRegistrada(rolagem: RolagemResumoDto): void {
@@ -242,7 +227,6 @@ export class CampanhaEspectador {
 
   private aplicarPainel(painel: CampanhaPainelEspectadorDto, pagina: number): void {
     this.campanha.set(painel.campanha);
-    this.encontroAtivo.set(painel.encontroAtivo);
           // `fichas`/`membros` não são paginados (o painel de jogadores devolve o recorte inteiro
           // sempre) — atualiza a cada página, inclusive em "Carregar mais", sem custo extra.
           this.fichas.set(painel.fichas);

@@ -10,7 +10,26 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-21 · **Última decisão registrada:**
-> Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de **Cenas**
+> `espectador-coluna-acoes-e-iniciativa` concluída: Painel do espectador ganhou `app-coluna-acoes`
+> ("Iniciativa" sempre visível + "Rolagens" como toggle que esconde a coluna e expande a grade de
+> fichas), cabeçalho no molde "shell" (índice `//` + chip + régua) e o ícone "i" de descrição da
+> campanha (mesmo padrão de `detalhe-jogador`). Nova página **separada**
+> `PainelEncontroEspectador` (`modules/encontro/paginas/painel-espectador/`, nunca misturada com
+> `PainelEncontroMestre`/`PainelEncontroJogador`) — mesma casca (`_casca-iniciativa.scss`), sem
+> `app-coluna-acoes` e sem nenhum controle de condução, reaproveitando a derivação pura de
+> `encontro-leitura.util.ts`. Rota nova `campanhas/:id/espectador/iniciativa`, mesmo
+> `espectadorCampanhaResolver` do painel — **fecha o `P-073`** (a causa raiz era essa tela reusar a
+> visão do mestre, que chama `listarMembros`/`GET /ficha?campanhaId`/`GET /campanha/:id`, recusados
+> pro papel `ESPECTADOR`). Precedido por um POC aprovado em conversa (artifact "Central do
+> Espectador"). Achado ao vivo, corrigido antes do fecho: `auto-fill` na grade de fichas expandida
+> espremia o(s) cartão(ões) na 1ª faixa em vez de esticar — trocado por `auto-fit`. Testes:
+> `espectador.page.spec.ts` 18/18 (4 testes do antigo modal substituídos), `painel-espectador.page.
+> spec.ts` novo 11/11; `npm run test --workspace=frontend` completo 141/141 arquivos, 2037/2037
+> testes; lint/build sem erros novos (só o warning de budget pré-existente, `P-004`, alheio à
+> task — nenhum arquivo tocado entra no chunk inicial). Verificado ao vivo nos dois viewports
+> obrigatórios, painel (4 estados) e Iniciativa (combate ativo e encerrado). Spec em
+> `docs/specs/done/espectador-coluna-acoes-e-iniciativa.spec.md`. Detalhe completo em `HISTORY.md`.
+> Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de **Cenas**
 > — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/Perseguição/
 > Resistência, `docs/core/sistema-v4.1.0.md` "⬡ Cenas") e abrir caminho para uma cena de
 > Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
@@ -32,7 +51,8 @@
 > `[trilhaAcao]`/`meuCombatenteId` ("Você"); o layout comum vive em `paginas/_casca-iniciativa.scss`.
 > Faixa 1081–1599px: trilha e Rolagens dividem uma coluna (o cartão de ficha só empilha por janela).
 > Frontend 139 arquivos / 2005 testes, lint sem erros, build ok. Detalhe em `HISTORY.md` e
-> `docs/design/DESIGN.md` ("Iniciativa — visão do jogador"). `P-073` (espectador) segue aberto.
+> `docs/design/DESIGN.md` ("Iniciativa — visão do jogador"). `P-073` (espectador) — fechado depois,
+> ver entrada `espectador-coluna-acoes-e-iniciativa` no topo deste arquivo.
 > Antes: `app-editor-markdown` compacto tinha `:host { flex: 1; }` herdado do modo página-cheia do
 > Caderno — dentro de um card `display:flex; flex-direction:column` sem altura fixa
 > (`habilidade-lista__item`), 2 instâncias compactas na mesma coluna (Descrição+Restrição)
@@ -457,7 +477,16 @@ cena.spec.md`, `m7-22-backend-cena.spec.md` e `m7-23-frontend-hub-cenas.spec.md`
 redirecionamento das rotas de Iniciativa atuais. São a fundação do milestone `m7-cenas.spec.md`;
 seguir `m7-21 → m7-22 → m7-23` nessa ordem. A cena de Investigação (`m7-25`) só pode começar depois
 de `m9-documentos-campanha.spec.md` ter ao menos o backend de documento + revelar/ocultar prontos.
-Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`.
+Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. **Atenção:**
+a task `espectador-coluna-acoes-e-iniciativa` (concluída depois desta entrada ter sido escrita, ver
+topo do arquivo) acrescentou a rota `campanhas/:id/espectador/iniciativa` e a página
+`PainelEncontroEspectador` — quem mexer no redirecionamento das rotas de Iniciativa pelo módulo de
+Cenas precisa considerar essa terceira rota, além das de mestre/jogador.
+
+**Antes: `espectador-coluna-acoes-e-iniciativa` concluída (2026-09-21):** Painel do espectador
+padronizado (coluna de ações, cabeçalho "shell", toggle de descrição) e Iniciativa própria do
+espectador — fecha o `P-073`. Resumo completo no cabeçalho deste arquivo (acima) e relato integral
+em `HISTORY.md`. Spec em `docs/specs/done/espectador-coluna-acoes-e-iniciativa.spec.md`.
 
 **Antes: Sobreposição no `EditorMarkdown` compacto + repaint dos selos de custo/tipo concluído
 (2026-09-18):** `flex: none` corrige a sobreposição de Descrição+Restrição no card de Habilidade

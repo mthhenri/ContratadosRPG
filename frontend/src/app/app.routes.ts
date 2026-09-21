@@ -74,6 +74,19 @@ export const routes: Routes = [
         (pagina) => pagina.CampanhaEspectador,
       ),
   },
+  // Iniciativa do espectador (corrige P-073) — arquivo próprio e separado de
+  // `PainelEncontroMestre`/`PainelEncontroJogador` (`encontro.routes.ts`), reaproveitando o mesmo
+  // `espectadorCampanhaResolver` do painel: nunca chama os endpoints que o backend recusa (403)
+  // para `ESPECTADOR` (`listarMembros`/`GET /ficha?campanhaId`/`GET /campanha/:id`).
+  {
+    path: 'campanhas/:id/espectador/iniciativa',
+    canActivate: [autenticacaoGuard],
+    resolve: { painelEspectador: espectadorCampanhaResolver },
+    loadComponent: () =>
+      import('./modules/encontro/paginas/painel-espectador/painel-espectador.page').then(
+        (pagina) => pagina.PainelEncontroEspectador,
+      ),
+  },
   // Prévia de jogador (m8-04) — só o mestre da campanha, para um `usuarioAlvoId` `JOGADOR` ativo
   // (`previaJogadorCampanhaGuard`, mesmo racional de `espectadorCampanhaGuard`: usa a própria
   // projeção como autoridade). Mesma convenção de precedência das rotas acima.

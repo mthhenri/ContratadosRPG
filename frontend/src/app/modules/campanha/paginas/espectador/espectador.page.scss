@@ -1,18 +1,33 @@
 @use "tema/breakpoints" as bp;
 
-// Container de página própria (m8-03) — mesma medida de `.detalhe`/`.iniciativa`: 90vw centrado
-// no desktop, largura total sem margem no mobile (decisão registrada em `campanha-mobile-margem-
-// conteudo`). Sem painel lateral aqui (nenhuma consulta/histórico flutuante), então nunca precisa
-// do estado `--lateral-aberta` que `.detalhe` tem.
+// Casca com coluna de ações (mesmo contrato de `detalhe-mestre`/`_casca-iniciativa.scss`): coluna
+// de ações encostada na topbar e na borda esquerda do viewport, conteúdo com o restante da
+// largura — abandona o antigo `90vw` centrado (que só fazia sentido sem coluna lateral nenhuma).
 .espectador {
-    width: 90vw;
-    max-width: none;
-    margin: 0 5vw;
+    display: flex;
+    align-items: stretch;
+    min-height: calc(100dvh - var(--altura-topbar));
+    margin: -24px -20px;
 
     @include bp.mobile {
-        width: 100%;
-        max-width: 100%;
+        flex-direction: column;
+        min-height: 0;
         margin: 0;
+    }
+
+    &__conteudo {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-16);
+        padding: 24px var(--space-20) var(--space-20);
+
+        @include bp.mobile {
+            padding: 12px;
+            // Piso reservado para a barra inferior de `app-coluna-acoes`.
+            padding-bottom: calc(12px + 56px + env(safe-area-inset-bottom, 0px));
+        }
     }
 
     // Barra de prévia do mestre — mesma receita de `.detalhe__preview-barra` (ui-15/m2-19), mas
@@ -22,7 +37,6 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 16px;
         padding: 10px 16px;
         background: var(--accent-dim);
         border: 1px solid var(--accent-border);
@@ -67,12 +81,12 @@
         }
     }
 
-    // Cabeçalho compacto — voltar (só espectador real) + nome da campanha + selo, uma linha só.
+    // Cabeçalho no molde "shell" do produto (índice `//` + título + chip + régua — mesmo contrato
+    // de `detalhe-mestre__cabecalho`/`_casca-iniciativa.scss`).
     &__cabecalho {
         display: flex;
         align-items: center;
         gap: 11px;
-        margin-bottom: 16px;
 
         @include bp.mobile {
             flex-wrap: wrap;
@@ -82,6 +96,21 @@
 
     &__voltar {
         flex: none;
+    }
+
+    &__indice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-compact);
     }
 
     &__titulo {
@@ -94,6 +123,17 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    // Toggle da descrição da campanha — mesmo padrão de `detalhe-jogador__cabecalho-info`.
+    &__info {
+        flex: none;
+    }
+
+    &__descricao {
+        margin: 0;
+        font-family: var(--font-sans);
+        color: var(--text-dim);
     }
 
     // Substitui `.esqueleto-bloco` (nunca definido neste arquivo — P-061): silhueta do `&__titulo`
@@ -110,32 +150,14 @@
         background: var(--border);
     }
 
-    // `app-botao` sem `[tamanho]` nasce sem `display`/`padding`/`font-size` (ver comentário em
-    // `&__preview-sair` acima) — mesma receita, mas compacta o bastante para conviver com o selo
-    // "Modo espectador" na mesma linha do cabeçalho (m8-05 deixou de fora; corrigido no m8-06).
-    &__ver-iniciativa {
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 9px 16px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-
-        @include bp.mobile {
-            min-height: bp.$alvo-toque;
-        }
-    }
-
     &__selo {
         flex: none;
     }
 
-    // === Duas colunas (m8-07, POC validado fora do repositório): grade de fichas (painel de
-    // jogadores) à esquerda, histórico de rolagens com largura fixa à direita — mesmo token
-    // `--largura-painel-lateral` que `HistoricoRolagensSidebar` já usa. Empilha no mobile.
+    // === Duas colunas (m8-07): grade de fichas (painel de jogadores) à esquerda, histórico de
+    // rolagens com largura fixa à direita — mesmo token `--largura-painel-lateral` que
+    // `HistoricoRolagensSidebar` já usa. Empilha no mobile. O item "Rolagens" da coluna de ações
+    // esconde a 2ª coluna (`--sem-rolagens`) e libera a largura toda para a grade de fichas.
     &__grade {
         display: grid;
         grid-template-columns: minmax(0, 1fr) var(--largura-painel-lateral);
@@ -146,6 +168,14 @@
         @include bp.tablet {
             grid-template-columns: minmax(0, 1fr);
         }
+
+        &--sem-rolagens {
+            grid-template-columns: minmax(0, 1fr);
+
+            .espectador__feed {
+                display: none;
+            }
+        }
     }
 
     &__jogadores {
@@ -155,6 +185,8 @@
     }
 
     // Grade de cartões de ficha — mesma receita de 2 colunas de `.detalhe__esquadrao-grid` (m2-19).
+    // Com a coluna "Rolagens públicas" oculta (`&--sem-rolagens`), a largura sobra pra mais
+    // colunas — `auto-fill` em vez de 2 fixas, mesmo mínimo de card do análogo de campanha.
     &__ficha-grid {
         list-style: none;
         margin: 0;
@@ -163,6 +195,17 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--space-8);
         align-items: start;
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    // `auto-fit` (não `auto-fill`): com poucas fichas, as faixas vazias colapsam a 0 e a(s)
+    // existente(s) esticam pra preencher a largura toda — `auto-fill` mantém faixas fantasmas
+    // reservadas, espremendo cada cartão na 1ª faixa mesmo com a linha inteira livre.
+    &__grade--sem-rolagens &__ficha-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 
         @include bp.mobile {
             grid-template-columns: minmax(0, 1fr);
