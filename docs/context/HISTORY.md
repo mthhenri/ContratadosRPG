@@ -1,5 +1,72 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — `espectador-coluna-acoes-e-iniciativa`: redesenho do Painel do espectador e Iniciativa própria (fecha `P-073`)
+
+Pedido do autor em conversa, depois de revisar o Painel do espectador ao vivo e perguntar sobre o
+`P-073` (espectador travava em "Carregando o combate…" ao abrir Iniciativa por link direto/refresh
+— a causa raiz era essa rota reusar a visão do mestre, que chama `listarMembros`/
+`GET /ficha?campanhaId`/`GET /campanha/:id`, todos recusados — 403 — para `ESPECTADOR`). Antes de
+codar, montei um POC interativo (artifact "Central do Espectador", HTML/CSS/JS fiel aos tokens e
+componentes reais extraídos do código) para o autor aprovar o desenho; ele aprovou e pediu só uma
+garantia: a tela de Iniciativa do espectador ser **arquivo próprio**, como já é entre mestre e
+jogador. Daí a spec (`docs/specs/done/espectador-coluna-acoes-e-iniciativa.spec.md`) e a
+implementação, seguindo a skill `task-flow`.
+
+- **Painel do espectador (`espectador.page`) padronizado no molde de mestre/jogador**: ganhou
+  `app-coluna-acoes` (categoria "Espectador") com dois itens — "Iniciativa" (`routerLink`, sempre
+  visível, não condicionada a haver combate — mesmo padrão de `detalhe-mestre`, a tela de destino é
+  quem mostra o estado vazio) e "Rolagens" (toggle local que esconde a coluna "Rolagens públicas" e
+  libera a largura toda para a grade de fichas). O container raiz (`.espectador`) abandonou o
+  `90vw` centrado e passou para a casca com coluna de ações (`display:flex; margin:-24px -20px`),
+  mesmo contrato de `detalhe-mestre.page.scss`. Cabeçalho reescrito no molde "shell" (índice `//` +
+  título + chip + régua) e ganhou o ícone "i" que alterna a descrição da campanha, mesmo padrão de
+  `detalhe-jogador.page.html` (`descricaoAberta`, `aria-pressed`, `<p>` condicional). O botão "Ver
+  Iniciativa" e o modal (`app-modal` + `app-iniciativa-leitura`, sinal `iniciativaAberta`) saíram —
+  viraram navegação real pela rota nova.
+- **Página nova e separada — `PainelEncontroEspectador`** (`frontend/src/app/modules/encontro/
+  paginas/painel-espectador/`), nunca misturada com `PainelEncontroMestre`/`PainelEncontroJogador`
+  (pedido explícito do autor). Usa o mesmo parcial `_casca-iniciativa.scss` (bloco
+  `iniciativa-espectador`) e reaproveita, sem duplicar, a derivação pura de apresentação já
+  extraída em `encontro-leitura.util.ts` (`montarCombatentesVisuais`/`combatenteEhDaVez`/
+  `combatenteJaAgiu`/`resolverNivelAmeaca`) — o mesmo motor que `IniciativaLeitura` (o modal de
+  hoje) já usa, então não é uma segunda leitura da ordem. **Sem `app-coluna-acoes`** (espectador não
+  gerencia combate nem tem Calculadora/Caderno nesta tela) e **sem nenhum controle de condução**:
+  `app-trilha-turnos` sem `[comAcao]`, `app-cartao-combatente` sem `[ehMestre]`/`[podeAjustar]` —
+  os dois caem no `false` padrão dos próprios componentes (confirmado lendo o código deles antes de
+  implementar, item de risco da spec). Rolagens públicas vêm de `HistoricoRolagensSidebar` +
+  `RolagemService.listarPorCampanha` (mesmo endpoint que mestre/jogador usam — `GET
+  /campanha/:id/rolagem` já filtra pra só `PUBLICA` de terceiros pra quem não é mestre, seguro pra
+  `ESPECTADOR`). Rota nova `campanhas/:id/espectador/iniciativa` reaproveita o mesmo
+  `espectadorCampanhaResolver` do painel — nenhum guard novo, nenhuma mudança de backend: a correção
+  inteira do `P-073` foi trocar a fonte de dados do lado do frontend.
+- **Achado ao vivo, corrigido antes do fecho**: a variante "grade cheia" da grade de fichas usava
+  `grid-template-columns: repeat(auto-fill, minmax(280px,1fr))` — com poucas fichas (1 ou 2),
+  `auto-fill` cria várias faixas vazias reservadas e espreme o(s) cartão(ões) na primeira faixa em
+  vez de esticar, produzindo sobreposição de texto (Vida/Energia, defesas, última rolagem
+  colidindo). Trocado para `auto-fit`, que colapsa as faixas vazias — confirmado com 1 e 2 fichas
+  nos dois viewports depois da correção.
+- **Testes**: `espectador.page.spec.ts` — 4 testes do antigo "Ver Iniciativa"/modal substituídos por
+  4 novos (coluna de ações sempre com "Iniciativa", toggle de Rolagens reflete em
+  `aria-pressed`/classe modificadora, ausência/presença do ícone "i" conforme `descricao`, toggle da
+  descrição); suíte do arquivo 18/18. `painel-espectador.page.spec.ts` novo, 11/11 — cabeçalho,
+  trilha, palco, feed de rolagens (inicial + tempo real sem duplicar), estado vazio sem encontro,
+  ausência de `app-coluna-acoes` e de qualquer controle de condução (mesmas asserções de ausência
+  de `IniciativaLeitura.spec.ts`), refetch do encontro em `encontro:alterado` só da própria
+  campanha, e o uso do dado já resolvido pela rota (sem refetch redundante) com fallback defensivo
+  coberto à parte. `npm run test --workspace=frontend` completo: 141/141 arquivos, 2037/2037
+  testes; lint 0 erros novos (só os warnings de aspas/`max-len` já pré-existentes no resto do
+  repositório); build ok (o único warning é o de budget do bundle inicial, `P-004`, alheio a esta
+  task — nenhum arquivo tocado aqui entra no chunk inicial).
+- **Verificado ao vivo** (Postgres 16 local sem Docker + backend + frontend reais, cenário via REST:
+  campanha com 2 jogadores/fichas, 1 rolagem pública, 1 encontro) em `1920×1080` e `360×800`:
+  Painel do espectador nos quatro estados (padrão, Rolagens ocultas com 1 e depois 2 fichas
+  esticando — inclusive no mobile —, descrição aberta) e a Iniciativa nova tanto com o combate
+  ativo (trilha, rolagens, palco) quanto encerrada (estado vazio "Nenhum combate em andamento",
+  mesmo texto do jogador) — comparado lado a lado com a estrutura real de `PainelEncontroMestre`/
+  `PainelEncontroJogador` (mesma casca, mesmo cartão de combatente, sem nenhum dos controles
+  deles). Confirmado por request direto que a rota nova nunca chama `listarMembros`/
+  `GET /ficha?campanhaId`/`GET /campanha/:id`.
+
 ## 2026-09-21 — Fecha os dois skeletons que ficaram pendentes: ficha de criatura e campanha do mestre
 
 Pedido direto do autor, continuação de "Skeletons das telas redesenhadas" (mesma data, mais abaixo
