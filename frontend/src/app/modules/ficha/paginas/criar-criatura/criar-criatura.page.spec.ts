@@ -198,7 +198,7 @@ describe('CriaturaCriar', () => {
     expect(dto.cor).toBeNull();
     expect(dto.dados).toEqual({
       identidade: {
-        designacao: 'A Estátua', origem: OrigemCriaturaEnum.SCP_ADAPTADO,
+        origem: OrigemCriaturaEnum.SCP_ADAPTADO,
         conceito: 'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
         naturezaFisica: 'Humanoide, altura entre 1,8m e 2,1m, aparência de pedra calcária escura. Sem feições definidas.',
         comportamento: ComportamentoCriaturaEnum.CACADORA,

@@ -16,7 +16,6 @@ import { validarFichaCriatura } from './validacao';
 function construirFichaValida(sobrescritas: Partial<FichaCriaturaDadosDto> = {}): FichaCriaturaDadosDto {
   return {
     identidade: {
-      designacao: 'Criatura de Teste',
       origem: OrigemCriaturaEnum.ORIGINAL,
       conceito: 'Uma criatura de teste.',
       naturezaFisica: 'Humanoide.',

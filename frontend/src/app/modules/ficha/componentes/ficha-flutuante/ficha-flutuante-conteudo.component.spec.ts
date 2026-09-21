@@ -60,7 +60,6 @@ describe('FichaFlutuanteConteudo', () => {
     oculta: false,
     dados: {
       identidade: {
-        designacao: 'SCP-1471-A',
         origem: OrigemCriaturaEnum.ORIGINAL,
         conceito: 'x',
         naturezaFisica: 'x',

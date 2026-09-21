@@ -716,8 +716,13 @@ export class CriaturaVisualizacao {
       : window.innerWidth <= ANOTACOES_BREAKPOINT_MOBILE;
   }
 
+  /** Confirma a Designação (`ficha.nome` — fonte única, ver {@link FichaCriaturaIdentidadeDto}) —
+   * mesma trava de `FichaVisualizacao.confirmarIdentidade('nome', ...)`: ignora vazio/sem mudança. */
   protected confirmarNome(nome: string): void {
-    this.nomeMudou.emit(nome);
+    const aparado = nome.trim();
+    if (aparado && aparado !== this.nome()) {
+      this.nomeMudou.emit(aparado);
+    }
   }
 
   protected confirmarCor(cor: string | null): void {
