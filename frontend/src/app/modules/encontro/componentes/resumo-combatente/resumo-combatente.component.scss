@@ -1,0 +1,295 @@
+// Ficha resumida de quem age agora (ui-37) — alvo de fidelidade: POC "Tela de Iniciativa" v9.
+// As caixas de Reações/Resistências reproduzem `.ficha-mini`/`.ficha-resistencia` de
+// `ficha-campanha-card` (sem primitivo compartilhado para elas, o padrão do consumidor único é
+// mantido). Só tokens do tema "Terminal de Contenção" (proibição #29).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    min-width: 0;
+    padding: var(--space-16);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+}
+
+// Foto quadrada cobrindo a largura da coluna (largura = altura); a identidade vem logo abaixo.
+.resumo__topo {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-12);
+}
+
+// Hachura na cor da ficha (m3-61) — mesma receita do avatar do cartão; com imagem, ela a cobre.
+.resumo__retrato {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--text-dim);
+    border: 1px solid var(--cor-ficha, var(--border-strong));
+    border-radius: var(--radius-control);
+    background-color: color-mix(in srgb, var(--cor-ficha, var(--surface-2)) 14%, var(--surface));
+    background-image: repeating-linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--cor-ficha, var(--border-strong)) 30%, transparent) 0 3px,
+        transparent 3px 9px
+    );
+}
+
+.resumo__retrato-imagem {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: 0 0;
+}
+
+.resumo__identidade {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.resumo__origem {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    white-space: pre-line;
+}
+
+.resumo__titulo-linha {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+}
+
+.resumo__nome {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.resumo__barras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8) var(--space-16);
+
+    app-barra-recurso {
+        flex: 1 1 160px;
+    }
+}
+
+.resumo__combate {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-12) var(--space-16);
+}
+
+.resumo__grupo {
+    flex: 1 1 300px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &--reacoes {
+        flex-grow: 1.2;
+    }
+}
+
+.resumo__legenda {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--text-mute);
+}
+
+.resumo__reacoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8);
+
+    // Uma reação só (criatura: só Defesa) não estica a caixa pela coluna inteira.
+    &--unica {
+        grid-template-columns: minmax(0, 120px);
+    }
+}
+
+.ficha-mini {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 7px 8px;
+    text-align: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    // O agente sem Contra-ataque: a caixa existe, mas tracejada — ausência, não zero.
+    &--ausente {
+        border-style: dashed;
+        border-color: var(--border-strong);
+    }
+
+    &__rotulo {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.1;
+        color: var(--text-dim);
+    }
+}
+
+// Resistências em 3 + 2: seis colunas, a 1ª linha com 3 caixas (2 colunas cada) e a 2ª com 2 (3
+// colunas cada).
+.resumo__resistencias {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--space-8);
+}
+
+.ficha-resistencia {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: var(--space-4) 2px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    &:nth-child(n + 4) {
+        grid-column: span 3;
+    }
+
+    &__abrev {
+        max-width: 100%;
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-mute);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--text-dim);
+    }
+
+    // Mesma paleta `--dano-*` do resumo de rolagem: borda e número na cor do tipo de dano.
+    &--fisico {
+        border-color: var(--dano-fisico-border);
+
+        .ficha-resistencia__valor {
+            color: var(--dano-fisico);
+        }
+    }
+
+    &--balistico {
+        border-color: var(--dano-balistico-border);
+
+        .ficha-resistencia__valor {
+            color: var(--dano-balistico);
+        }
+    }
+
+    &--explosao {
+        border-color: var(--dano-explosao-border);
+
+        .ficha-resistencia__valor {
+            color: var(--dano-explosao);
+        }
+    }
+
+    &--quimico {
+        border-color: var(--dano-quimico-border);
+
+        .ficha-resistencia__valor {
+            color: var(--dano-quimico);
+        }
+    }
+
+    &--geral {
+        border-color: var(--dano-geral-border);
+
+        .ficha-resistencia__valor {
+            color: var(--dano-geral);
+        }
+    }
+}
+
+// Painel de largura cheia (a coluna empilhou): uma foto que cobrisse tudo seria gigante — volta
+// ao quadrado de 84px ao lado da identidade, e as reações passam a quatro colunas.
+@include bp.tablet {
+    .resumo__topo {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-16);
+    }
+
+    .resumo__retrato {
+        width: 84px;
+        font-size: 20px;
+    }
+
+    .resumo__reacoes {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@include bp.mobile {
+    .resumo__grupo,
+    .resumo__grupo--reacoes {
+        flex-basis: 100%;
+    }
+
+    .resumo__reacoes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

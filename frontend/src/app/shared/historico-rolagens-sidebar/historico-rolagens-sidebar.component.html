@@ -1,4 +1,4 @@
-@if (mostrarGatilho()) {
+@if (mostrarGatilho() && !fixo()) {
     <button
         type="button"
         class="historico-rolagens__gatilho utilitario-flutuante utilitario-flutuante--historico utilitario-flutuante--inline-mobile"
@@ -16,21 +16,24 @@
     </button>
 }
 
-@if (painelRenderizado()) {
-    <button
-        class="historico-rolagens__fundo"
-        [class.historico-rolagens__fundo--saindo]="saindo()"
-        type="button"
-        [attr.aria-label]="'Fechar ' + titulo().toLowerCase()"
-        (click)="fechar()"
-    ></button>
+@if (renderizado()) {
+    @if (!fixo()) {
+        <button
+            class="historico-rolagens__fundo"
+            [class.historico-rolagens__fundo--saindo]="saindo()"
+            type="button"
+            [attr.aria-label]="'Fechar ' + titulo().toLowerCase()"
+            (click)="fechar()"
+        ></button>
+    }
 
     <aside
         class="historico-rolagens__painel"
         [class.historico-rolagens__painel--saindo]="saindo()"
+        [class.historico-rolagens__painel--fixo]="fixo()"
         role="complementary"
         [attr.aria-label]="titulo()"
-        tabindex="-1"
+        [attr.tabindex]="fixo() ? null : -1"
         appAutoFocus
         (keydown.escape)="fechar()"
     >
@@ -41,15 +44,17 @@
             <span class="historico-rolagens__contagem" aria-hidden="true">{{
                 itens().length
             }}</span>
-            <button
-                class="historico-rolagens__fechar"
-                type="button"
-                app-botao
-                [attr.aria-label]="'Fechar ' + titulo().toLowerCase()"
-                (click)="fechar()"
-            >
-                ✕
-            </button>
+            @if (!fixo()) {
+                <button
+                    class="historico-rolagens__fechar"
+                    type="button"
+                    app-botao
+                    [attr.aria-label]="'Fechar ' + titulo().toLowerCase()"
+                    (click)="fechar()"
+                >
+                    ✕
+                </button>
+            }
         </header>
 
         <!-- P-021: só no mobile (CSS) — o gatilho da calculadora no cabeçalho da página fica coberto

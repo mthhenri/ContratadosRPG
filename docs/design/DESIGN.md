@@ -327,7 +327,50 @@ quarta forma, mais próxima do painel lateral de 500px que do painel flutuante: 
 normal do layout (flex, nunca `position: fixed`) e empurra o conteúdo ao expandir/retrair em vez de
 sobrepor. Substitui `.utilitario-flutuante` só na visão de mestre da campanha por ora — os outros 6
 consumidores de `.utilitario-flutuante` (ficha, Iniciativa, campanha do jogador) migram em specs
-futuras, mesmo padrão de rollout gradual de `ui-28`…`ui-32`.
+futuras, mesmo padrão de rollout gradual de `ui-28`…`ui-32`. A visão do **mestre** da Iniciativa
+migrou na `ui-37` (abaixo); a do jogador segue com os utilitários flutuantes.
+
+`app-coluna-acoes-item` aceita `[pressionado]` (`boolean | null`, `ui-37`) para item de
+**alternância** (Editar combatentes, Selecionar combatentes, Adicionar avulso): vira `aria-pressed`
+e ganha o mesmo destaque `--ativo` do item de rota, sem o `aria-current="page"` que só cabe a rota.
+`null` (padrão) mantém o item comum.
+
+### Iniciativa — visão do mestre (`ui-37`)
+
+Composição aprovada na POC "Tela de Iniciativa" (v9): **coluna de ações | trilha de turnos | coluna
+de rolagens | palco**, sobre a casca de `detalhe-mestre` (coluna 56/200px encostada na topbar e na
+borda; conteúdo com o restante da largura). Só existe para o mestre; o jogador/espectador seguem a
+tela anterior (`.iniciativa-tela`). **Sem combate aberto (`ui-38`)** a casca fica (coluna com
+"Novo combate" + Ferramentas, cabeçalho "Iniciativa" sem nome/chip) e o palco vira um
+`app-estado-vazio` com a ação **Novo combate**, que abre um `app-modal` "Novo combate" (campo
+"Nome do encontro" em `app-campo`, Cancelar/Abrir combate; Enter envia). Lendo um encontro
+encerrado, o cabeçalho mostra "Combate atual" só se houver combate aberto — senão, "Novo combate".
+**Combates encerrados:** com um encontro na tela, o gatilho "N encerrados" do cabeçalho abre um menu
+ancorado (`.historico__menu`, mesmo desenho do dropdown de perfil da topbar: fecha pelo botão, ao
+escolher ou com `Escape`; não fecha por clique-fora) — uma linha por combate (nome, data de criação,
+rodadas e combatentes, seta) que abre o registro. Sem combate aberto o gatilho some e a lista vira
+a seção "Combates anteriores" (cartões) logo abaixo do estado vazio.
+
+- **Trilha** (`app-trilha-turnos`, 262px): contadores Rodada/Turno, uma posição por slot da rodada
+  (Cadência > 1 repete), avatar 36px, nome em até 2 linhas, iniciativa à direita. Item ativo em
+  `accent` a 12% + borda `--accent`; quem já agiu recua só pelo avatar (mesma regra do cartão,
+  `ui-16`). No tablet vira faixa horizontal de chips de 56px sem nome.
+- **Rolagens** (`app-historico-rolagens-sidebar [fixo]`, `clamp(300px, 23.44vw, 450px)`): mesmo
+  cabeçalho, item e resultado compacto do painel lateral, como coluna da página (sem gatilho, sem
+  fundo, sem fechar); a lista rola por dentro do container posicionado que a hospeda.
+- **Palco:** `app-conducao-turno` (voltar · quem age · avançar primário · Encerrar `perigo`; em
+  montagem, Pedir/Rolar iniciativas e Iniciar combate; encerrado, só o estado) sobre
+  `app-resumo-combatente` (280px: foto **quadrada** na largura da coluna, Vida/Energia, Reações em
+  2 colunas e Resistências em **3 + 2**, caixas `.ficha-mini`/`.ficha-resistencia` da ficha de
+  campanha) ao lado da grade `.grade--compacta.grade--palco` (`repeat(auto-fill, minmax(260px,
+  1fr))`).
+- **Regra vence o mockup:** criatura só com Defesa; avulso e NPC sem Resistências
+  (`resistencias: null`); o agente sem Contra-ataque mostra a caixa tracejada "—".
+- **Responsivo:** `bp.tablet` empilha (trilha → palco → rolagens) e a ficha resumida vira linha (foto
+  84px); `bp.mobile` transforma `app-coluna-acoes` na barra inferior fixa e devolve o cartão às
+  métricas cheias — a condução fica no fluxo da página, não em rodapé fixo próprio.
+- **Ordem de leitura:** a grade e a trilha usam as mesmas funções puras de
+  `encontro-leitura.util.ts`; nenhuma regra de iniciativa/Cadência vive na UI.
 
 O corpo projetado pelo primitivo é uma **coluna flexível** (`flex: 1; min-height: 0`): controles
 fixos de cada consumidor ficam no fluxo normal, e a região que deve preencher o restante declara

@@ -399,6 +399,47 @@
             width: 100vw;
         }
     }
+
+    // ui-37: coluna fixa da página (Iniciativa do mestre). Vem depois do bloco mobile de propósito —
+    // a largura de `100vw` e o `display: none` da régua/contagem lá são do painel sobreposto, não
+    // desta coluna, que preenche o container posicionado que a hospeda. Sem `tabindex`, o
+    // `appAutoFocus` do template não tem onde focar, então a coluna nunca rouba o foco da tela.
+    &__painel--fixo {
+        position: absolute;
+        inset: 0;
+        z-index: auto;
+        width: auto;
+        min-width: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        box-shadow: none;
+        animation: none;
+
+        .historico-rolagens__cabecalho {
+            gap: var(--space-12);
+            padding: var(--space-16);
+        }
+
+        .historico-rolagens__titulo {
+            flex: none;
+            font-size: 13px;
+            line-height: inherit;
+            white-space: nowrap;
+        }
+
+        .historico-rolagens__regua {
+            display: block;
+        }
+
+        .historico-rolagens__contagem {
+            display: block;
+        }
+
+        .historico-rolagens__corpo {
+            padding: var(--space-12) var(--space-16);
+        }
+    }
 }
 
 @keyframes historico-rolagens-entra {

@@ -1,5 +1,157 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-20 — ui-38: Iniciativa do mestre sem combate aberto + dialog "Novo combate"
+
+Pedido do autor ao usar a tela (continuação da `ui-37`): "esse botão [Combate atual] não tá fazendo
+nada" e "temos que ajustar essa tela de criar (se pá transformar em dialog?)". Spec
+`docs/specs/done/ui-38-iniciativa-sem-combate.spec.md`. Análogos: a casca da própria `ui-37`,
+`app-estado-vazio` com ação projetada e `app-modal` com formulário curto (`entrar.page`).
+
+**Causa do botão "morto":** lendo um encontro encerrado, "Combate atual" navega para
+`/campanhas/:id/iniciativa`; sem combate aberto o destino era a tela "sem encontro" (fora da casca
+nova) — a ação existia, mas caía num beco. Agora o botão só aparece se `temCombateAberto()`; sem
+combate aberto, o mesmo lugar oferece **Novo combate**.
+
+**O que mudou** (`painel-encontro.page.*`): `modoMestre()` deixou de exigir encontro carregado — sem
+encontro a casca fica (coluna: Combate › Novo combate + Ferramentas; cabeçalho "Iniciativa" sem
+nome/chip; gatilho "N encerrados") e o palco é um `app-estado-vazio` "Nenhum combate em andamento."
+com **Novo combate** (`tamanho="medio"`). Novo combate abre um `app-modal` (campo "Nome do encontro"
+em `app-campo`, com `appAutoFocus`; Cancelar / Abrir combate; Enter envia; Esc/fundo/× fecham). Código
+morto removido do ramo antigo: formulário inline (`.abertura__linha`/`__acao`), botões de histórico
+do mestre e o painel de histórico (inalcançáveis: mestre fora do carregamento sempre cai em
+`modoMestre`). Backend intocado.
+
+**Verificação:** `ng test` completo 134 arquivos / 1907 testes (a página foi de 67 para 71: casca sem
+encontro, dialog abrir/enviar/cancelar, "Combate atual" vs "Novo combate"). Ao vivo (1920×1080 e
+360×800, campanha-codex): estado vazio, dialog (foco no campo, botão desabilitado sem nome, Esc
+fecha, Enter cria e a tela vira a montagem "Iniciativa · Contenção no Setor 12"), histórico de
+encerrado sem combate aberto (botão "Novo combate" abre o dialog), sem overflow nem erro de console.
+Achado do gate: o botão do estado vazio saiu sem padding (`app-botao` sem `tamanho`) — corrigido
+com `tamanho="medio"`. Prettier limpo; ESLint 0 erros.
+
+**Ajuste posterior — campo do dialog:** o input de "Nome do encontro" saiu cru (sem fundo, borda nem
+raio: o `app-campo` só cuida de rótulo/erro, o controle é do consumidor). Passou a seguir a receita
+de input do login (`--surface-2`, borda `--border-strong`, `--radius-control`, mono 14px, foco em
+`--accent-border`, 44px de altura no mobile). Conferido ao vivo (1920×1080 e 360×800; vazio,
+focado e preenchido).
+
+**Ajuste posterior — listagem de encerrados (B + D):** o painel inline "N encerrados" (faixa larga
+empurrando a tela, cartões sem sinal de clique) foi repensado com o autor por um artifact de
+variantes (A tabela inline · B popover · C gaveta · D embutida no estado vazio). Escolha do autor:
+**B com combate** e **D sem combate**. B: o gatilho "N encerrados" do cabeçalho abre um menu
+ancorado (`.historico__menu`, mesmo desenho do dropdown de perfil da topbar) com uma linha por
+combate (nome, `dd/MM/yyyy` de criação, rodadas e combatentes, seta); fecha pelo próprio botão, ao
+escolher e com `Escape` — este via `host: '(document:keydown.escape)'` da página, para valer mesmo
+com o foco fora do menu (o menu **não** fecha por clique-fora, como o perfil da topbar); no mobile
+ocupa a largura do cabeçalho. D: sem combate aberto o gatilho some e a seção "Combates anteriores"
+(cartões `.historico__card`, grade `minmax(320px, 1fr)`) fica logo abaixo do estado vazio. As duas
+formas compartilham o `ng-template #linhaHistorico`. Uma passagem intermediária (dialog
+"Combates encerrados") foi descartada e removida. Testes da página 74 (menu abrir/escolher/Escape/
+toggle, cartões do estado vazio; data em meio-dia UTC para não depender de fuso). Conferido ao vivo
+(1920×1080, 1366×768, 960×1080 e 360×800): menu com 6 itens, clique fora não fecha, Esc fecha e
+devolve o foco, escolher navega e fecha, cartões numa linha em todas as larguras. O encerrado aberto
+não aparece na própria lista (já era assim).
+
+**Efeito no banco de dev:** os encontros de teste 7 a 11 (campanha-codex) ficaram **encerrados**
+(9 e 10 = "Contenção no Setor 12"; 11 = "Menu de encerrados"); nada aberto.
+
+## 2026-09-20 — ui-37: visão do mestre da Iniciativa no layout da POC
+
+Pedido do autor: "cria a spec de ajuste disso e já implementa, isso é só pra visão de mestre" — o
+layout aprovado na POC "Tela de Iniciativa" (artifact `F8t3V7BWmQ85NA4Byx4tHr`, v9, construída e
+ajustada em sessão anterior sobre os primitivos e tokens reais) levado para a tela real. Spec em
+`docs/specs/done/ui-37-iniciativa-mestre-layout.spec.md`.
+
+**Análogo registrado** (`design-fidelity`): casca de `detalhe-mestre` + `app-coluna-acoes`; cartões
+em `.grade--compacta` (`ui-16`); caixas `.ficha-mini`/`.ficha-resistencia` de `ficha-campanha-card`;
+`historico-rolagens-sidebar` + `resultado-rolagem` compacto para as rolagens. Detalhe da
+composição em `docs/design/DESIGN.md` ("Iniciativa — visão do mestre").
+
+**Mudanças.**
+- `PainelEncontro`: novo ramo `modoMestre()` (`ehMestre() && encontro()`), com coluna de ações
+  (Combate: Selecionar/Adicionar avulso/Editar/Encerrar; Ferramentas: Calculadora/Caderno),
+  cabeçalho estilo `detalhe-mestre` e a linha trilha | rolagens | palco. Jogador/espectador, o
+  mestre sem encontro (formulário "Abrir combate") e o carregamento ficam no ramo antigo, que
+  perdeu só o que era código morto do mestre (fileira de ações secundárias/gaveta mobile, barra
+  fixa de condução, `acoesAbertas`/`alternarAcoes`, `.secundarias*`, `.painel__bloco--conducao`).
+  `app-ficha-flutuante`, `app-rolagem-avulso` e `app-bandeja-dados` passaram a ser instância única
+  fora dos dois ramos; a lista de encontros encerrados virou `ng-template` reusado pelos dois.
+- Componentes novos em `modules/encontro/componentes/`: `app-trilha-turnos`, `app-conducao-turno`,
+  `app-resumo-combatente` (burros: inputs + outputs, sem regra).
+- `encontro-leitura.util.ts` ganhou leituras puras (`turnosPorRodadaDoCombatente`,
+  `linhaOrigemDoCombatente`, `defesasDoCombatente`, `siglaDoCombatente`,
+  `combatenteTemIdentidadeVisivel`), extraídas do cartão — que passou a consumi-las sem mudar o que
+  mostra (spec do cartão intacta e verde).
+- `HistoricoRolagensSidebar` ganhou `[fixo]` (coluna da página: sem gatilho/fundo/fechar/animação,
+  sem `tabindex` para o `appAutoFocus` não roubar foco; preenche o container posicionado).
+- `ColunaAcoesItem` ganhou `[pressionado]` (`aria-pressed` + destaque, sem `aria-current`).
+
+**Decisões que merecem o olho do autor.** (1) `[pressionado]` amplia um primitivo de `shared/ui/` —
+foi a forma de reproduzir o destaque de "Editar" que a POC aprovada mostra, sem `aria-current` de
+página num toggle; é compatível com todos os consumidores e fácil de reverter. (2) Rolagens usa o
+feed **da campanha** (o mesmo do painel flutuante), não um filtro por encontro — por isso o título
+é "Rolagens" e a contagem, o total do feed. (3) "Encerrar" existe na barra da vez **e** na coluna
+de ações (as duas na POC aprovada), ambas com a mesma confirmação. (4) A iniciativa aparece crua
+(`18`), como no cartão, e não com zero à esquerda como na POC; a sigla mantém o acento (`ÍM`).
+(5) `docs/design/examples/iniciativa-desktop.html` (mockup antigo) NÃO foi recapturado.
+
+**Verificado.** `ng test` completo: 134/134 arquivos, 1902/1902 testes (antes: 130/1840); nos 11
+arquivos tocados, 176/176 (67 do painel, com os testes de mestre
+reescritos para o novo DOM sem afrouxar asserção de comportamento — confirmação de encerrar/remover,
+`disabled` de Pedir/Rolar/Iniciar, chamadas ao `EncontroService`, jogador sem controle de mestre);
+specs novos de util, trilha, condução, resumo, `[fixo]` e `[pressionado]`. `eslint` nas pastas
+tocadas: 0 erros (avisos de aspas são preexistentes no projeto). `prettier --check` nos html/scss
+tocados: limpo (aplicado só a 2 arquivos, por caminho). `ng build`: compila; aviso de orçamento do
+bundle inicial (537 kB > 450 kB) não comparado com o HEAD — as mudanças vivem em chunks lazy.
+
+**Gate visual (feito, stack real — Postgres/backend/`ng serve` do autor, mestre `codex.dev`, campanha
+"Campanha do Codex", encontro "Teste").** Análogo comparado: POC v9 e `detalhe-mestre`.
+Viewports: 1920×1080 e 360×800 (fotos vistas), 960×1080 (foto vista) e 1366×768 (só medido: sem
+overflow). Estados: montagem vazia (d/m), parcial com "Iniciar" desabilitado, completa, seletor e
+avulso abertos, início/meio de combate, Cadência 2 (avulso Dupla repetido na trilha e na grade),
+criatura Ameaça Alta, modo Editar, coluna expandida (persistiu em `localStorage` após reload),
+tooltip da trilha, encerrado via histórico (d/m), virada de rodada (`R1 T8/8` → `R2 T1/8`) e voltar
+turno, visão do jogador (stub1, d/m: sem casca do mestre, divisão 30/70 intacta). Alvos de toque a
+360px: 44px em condução, coluna de ações, "Ajustar" e voltar; foco visível no "Avançar"; zero erro
+de console. **Achado e corrigido na inspeção:** em 360px o "N participantes" do divisor de seção
+vazava ~10px do gutter (título + contagem já ocupam a linha) — régua com `min-width: 0` no mobile.
+**Não exercitado ao vivo:** estado "Morrendo" (nenhuma ficha morrendo no seed), clique real em
+"Pedir/Rolar iniciativas" e em "Encerrar", envio do formulário de avulso e o mestre sem encontro
+aberto (cobertos só por teste unitário). Observação: no rail expandido (200px) "Selecionar
+combatentes"/"Editar combatentes" truncam com reticências — comportamento do primitivo, a POC
+usava os mesmos rótulos.
+
+**Efeito no banco de dev:** o encontro "Teste" da campanha-codex (estava em montagem, sem
+iniciativas) ganhou o avulso "Sujeito Contido" (Dupla), iniciativas e está **em combate**
+(rodada 2, turno 1/8) — encerrar/ignorar à vontade.
+
+**Ajuste posterior — ícone de "Rolar iniciativas":** a pedido do autor o botão deixou o d6 (`dado`)
+e usa o novo ícone `dados` (`shared/icone`): dois d20 sobrepostos, o de trás recortado por uma
+máscara com a silhueta do da frente (mesmo icosaedro do `d20`, declarado uma vez em `<defs>` e
+reusado por `<use>`). Teste em `icone.component.spec.ts`. Conferido ao vivo (1920×1080 e 360×800,
+captura ampliada 3×). Efeito no banco de dev: "Teste" foi **encerrado** e o encontro 8 "Icone
+dados" (3 avulsos, em montagem) ficou na campanha-codex — encerrar/ignorar à vontade.
+
+**Ajuste posterior — sem "Ninguém age ainda." na montagem:** a pedido do autor, antes de o combate
+começar a coluna da ficha resumida (`.iniciativa-mestre__resumo`) não é renderizada e a grade
+"Todos os combatentes" ocupa o palco inteiro. Em combate segue o resumo de quem está na vez; no
+encerrado a coluna também some (o cartão "Combate encerrado." foi removido a pedido do autor). Conferido ao vivo em 1920×1080, 960×1080 e 360×800
+(sem overflow).
+
+**Ajuste posterior — Resistências mais finas:** as caixas do resumo (`.ficha-resistencia`) ficaram
+mais baixas: padding vertical 8→4px, gap 4→2px, número 18→16px (altura ~52→43px); num segundo
+passo rótulo e número foram para a mesma linha, centralizados (altura 26px; padding 4px, com folga
+para número de 2 dígitos na caixa de ~88px). Conferido ao vivo em 1920×1080 e 360×800.
+
+**Ajuste posterior — coluna da ficha resumida 10% mais estreita:** 310→280px de largura; a foto
+quadrada acompanha (276→246px). Com a coluna menor, as caixas de Resistências ficaram com 77px e
+número de 2 dígitos truncava "BALÍST."/"EXPLOS." (simulado no DOM) — `letter-spacing` do rótulo
+0.08→0.04em, gap 4px e padding horizontal 2px resolveram (sem truncar com 1 ou 2 dígitos). Conferido
+ao vivo em 1920×1080 e 1366×768 (tablet e mobile não mudam: a coluna empilha em largura cheia).
+`DESIGN.md` atualizado (310→280px). Texto das Resistências menor a pedido: rótulo 10→9px, número
+16→14px (caixa de 26→24px de altura). Efeito no banco de dev: o encontro 8 ganhou a ficha "Acadêmico Stub 1"
+e está em combate.
+
 ## 2026-09-18 — Sobreposição de texto no `EditorMarkdown` compacto, selo de custo/tipo em preto-e-branco-e-tema e `CustoAcaoEnum` ganha Ação Livre/Turno
 
 Autor reportou, com print, que Descrição e Restrição de Habilidade de criatura sobrepõem texto

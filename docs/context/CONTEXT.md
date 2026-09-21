@@ -2221,6 +2221,18 @@ histórico) que bifurca por `ehMestre()`: o jogador é espectador, rola a própr
 pode avançar/encerrar o turno da própria ficha (o backend confirma que o combatente do slot atual
 pertence à ficha do usuário ativo). O mestre mantém todos os controles de condução.
 
+**Visão do mestre (`ui-37`).** Com um encontro carregado, o mestre vê o palco de uma só vista
+(`modoMestre()`): `app-coluna-acoes` (Combate/Ferramentas) | `app-trilha-turnos` | coluna fixa de
+Rolagens (`app-historico-rolagens-sidebar [fixo]`) | palco com `app-conducao-turno`,
+`app-resumo-combatente` (ficha resumida de quem age) e a grade `.grade--compacta.grade--palco`.
+Jogador/espectador e o carregamento seguem a tela antiga (`.iniciativa-tela`). Sem combate aberto
+(`ui-38`) o mestre mantém a mesma casca, com estado vazio e o dialog "Novo combate" (`app-modal`)
+no lugar do antigo formulário inline; "Combate atual" só aparece havendo combate aberto.
+Os combates encerrados: menu ancorado no gatilho "N encerrados" (com combate na tela) ou seção
+"Combates anteriores" em cartões (sem combate) — ver DESIGN. As leituras puras (turnos por rodada, origem, defesas, sigla) vivem
+em `encontro-leitura.util.ts` e são compartilhadas com o cartão. Composição em
+`docs/design/DESIGN.md` ("Iniciativa — visão do mestre").
+
 Um combatente **avulso** (sem ficha) só existe dentro do encontro: cor obrigatória + imagem
 opcional persistidas em `encontro_combatente` (`cor_avulso`/`imagem_url_avulso`); o modo "Editar
 combatentes" troca cor, substitui e remove imagem. `EncontroCombatenteResumoDto` expõe a forma

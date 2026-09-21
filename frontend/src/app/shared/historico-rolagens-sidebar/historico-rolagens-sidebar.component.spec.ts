@@ -150,6 +150,40 @@ describe('HistoricoRolagensSidebar', () => {
     expect(painel.querySelector('.historico-rolagens__formula')).toBeNull();
   });
 
+  describe('modo fixo (ui-37)', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('fixo', true);
+      fixture.componentRef.setInput('itens', [criarItem({ rotulo: 'Ataque' })]);
+      fixture.detectChanges();
+    });
+
+    it('renderiza a coluna sem gatilho, sem fundo e sem botão de fechar', () => {
+      const raiz = fixture.nativeElement as HTMLElement;
+
+      expect(obterGatilho()).toBeNull();
+      expect(raiz.querySelector('.historico-rolagens__fundo')).toBeNull();
+      expect(raiz.querySelector('.historico-rolagens__fechar')).toBeNull();
+      expect(raiz.querySelector('.historico-rolagens__painel--fixo')).not.toBeNull();
+      expect(raiz.querySelector('.historico-rolagens__rotulo')?.textContent).toContain('Ataque');
+    });
+
+    it('não é focável, então o autofoco do painel sobreposto nunca rouba o foco da página', () => {
+      const painel = (fixture.nativeElement as HTMLElement).querySelector(
+        '.historico-rolagens__painel',
+      ) as HTMLElement;
+
+      expect(painel.hasAttribute('tabindex')).toBe(false);
+    });
+
+    it('mantém a contagem visível no cabeçalho', () => {
+      const contagem = (fixture.nativeElement as HTMLElement).querySelector(
+        '.historico-rolagens__contagem',
+      );
+
+      expect(contagem?.textContent?.trim()).toBe('1');
+    });
+  });
+
   function obterGatilho(): HTMLButtonElement {
     return fixture.nativeElement.querySelector(
       '.historico-rolagens__gatilho',

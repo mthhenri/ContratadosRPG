@@ -36,6 +36,7 @@ import { Component, input } from '@angular/core';
  * Anotações da própria ficha (achado ao vivo pelo autor: os dois itens ficavam indistinguíveis
  * lado a lado no menu), distinto também de `documentos` (livro aberto, reservado ao leitor global
  * de Sistema/Guia do Mestre).
+ * `dados`, dois d20 sobrepostos (ui-37): "Rolar iniciativas" na condução de turno do mestre.
  */
 export type IconeNome =
   | 'agente'
@@ -94,6 +95,7 @@ export type IconeNome =
   | 'chama'
   | 'dado'
   | 'dado-mais'
+  | 'dados'
   | 'morrendo'
   | 'machucado'
   | 'inconsciente'

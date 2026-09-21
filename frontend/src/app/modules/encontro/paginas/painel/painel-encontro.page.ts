@@ -1,6 +1,7 @@
 import {
   Component,
   DestroyRef,
+  ElementRef,
   computed,
   effect,
   inject,
@@ -8,6 +9,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -46,12 +48,18 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
+import { Chip } from '../../../../shared/ui/chip/chip.component';
+import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
+import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { FichaCampanhaCard } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
@@ -61,6 +69,9 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { rolarIniciativaDaFicha } from '../../../ficha/rolar-iniciativa';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
+import { ConducaoTurno } from '../../componentes/conducao-turno/conducao-turno.component';
+import { ResumoCombatente } from '../../componentes/resumo-combatente/resumo-combatente.component';
+import { TrilhaTurnos } from '../../componentes/trilha-turnos/trilha-turnos.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { SeletorCombatentes } from '../../componentes/seletor-combatentes/seletor-combatentes.component';
 import { RolagemAvulso } from '../../componentes/rolagem-avulso/rolagem-avulso.component';
@@ -99,7 +110,9 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
  * **uma** tela com duas leituras, como o mockup previu no `visaoJogador`:
  *
  * - **Mestre:** monta o encontro (adicionar ficha da campanha ou avulso, atribuir iniciativa),
- *   conduz (avançar/voltar turno, dano/cura) e encerra.
+ *   conduz (avançar/voltar turno, dano/cura) e encerra. Com um encontro carregado, a tela é o palco
+ *   da `ui-37` (`modoMestre()`): coluna de ações, trilha de turnos, condução, ficha resumida de quem
+ *   age, grade de combatentes e a coluna fixa de rolagens.
  * - **Jogador:** espectador. Vê a ordem, a rodada, o turno e o estado de quem ele já podia ver
  *   fora do combate — e nada mais. A única coisa que ele **escreve** é a própria iniciativa,
  *   quando o mestre a pede (a rolagem sai do preset da ficha dele, não de um motor daqui).
@@ -119,6 +132,9 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
 @Component({
   selector: 'app-painel-encontro',
   imports: [
+    DatePipe,
+    NgTemplateOutlet,
+    AutoFocus,
     RouterLink,
     ReactiveFormsModule,
     Icone,
@@ -127,6 +143,12 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     HistoricoRolagensSidebar,
     CadernoFlutuante,
     CartaoCombatente,
+    ConducaoTurno,
+    ResumoCombatente,
+    TrilhaTurnos,
+    ColunaAcoes,
+    ColunaAcoesItem,
+    Chip,
     FichaFlutuante,
     FichaCampanhaCard,
     SeletorCombatentes,
@@ -134,11 +156,16 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     BandejaDados,
     Botao,
     BotaoIcone,
+    Campo,
     Cartao,
     EstadoVazio,
+    Modal,
   ],
   templateUrl: './painel-encontro.page.html',
   styleUrl: './painel-encontro.page.scss',
+  // `Escape` fecha o menu de encerrados mesmo com o foco fora dele (o menu não fecha por clique-fora,
+  // como o dropdown de perfil da topbar) — o método só age com o menu aberto.
+  host: { '(document:keydown.escape)': 'fecharHistoricoPeloTeclado()' },
   // O jogador rola a própria iniciativa **daqui**, e essa rolagem tem de entrar no feed da campanha
   // como qualquer outra (m3-27); e a própria ficha dele fica sempre aberta na coluna lateral
   // (item novo). Nenhum dos dois serviços é `providedIn: 'root'`: cada página que hospeda uma
@@ -171,6 +198,12 @@ export class PainelEncontro {
   /** Referência à janela flutuante de ficha (mestre olhando qualquer combatente; jogador, um colega
    *  revelado) — aberta imperativamente por `abrirFichaFlutuante`. */
   private readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
+
+  /** Janelas abertas pela coluna de ações do mestre (`ui-37`) — sem gatilho próprio. */
+  private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
+  /** Gatilho "N encerrados" — recebe o foco de volta quando o menu fecha por `Escape`. */
+  private readonly historicoGatilho = viewChild('historicoGatilho', { read: ElementRef });
+  private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
 
   /** `campanhaId` da rota — sempre presente (a rota só existe sob `/campanhas/:campanhaId`). */
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
@@ -235,18 +268,14 @@ export class PainelEncontro {
   /** Painel de adicionar avulso aberto — fluxo à parte, porque não há ficha nenhuma para escolher. */
   protected readonly adicionandoAvulso = signal(false);
 
-  /**
-   * Ações secundárias do mestre abertas (m7-08). Só tem efeito **no mobile**: em 360px elas ficam
-   * atrás de um gatilho para não disputar espaço com a ação primária do rodapé, e no desktop o CSS
-   * as mantém sempre na tela. É a folha de estilo que conhece a largura; aqui só mora a intenção.
-   */
-  protected readonly acoesAbertas = signal(false);
-
   protected readonly EncontroStatusEnum = EncontroStatusEnum;
   protected readonly CadenciaEnum = CadenciaEnum;
   protected readonly rotuloStatusEncontro = rotuloStatusEncontro;
   protected readonly nomeCadencia = nomeCadencia;
   protected readonly cadencias = Object.values(CadenciaEnum);
+
+  /** Dialog "Novo combate" aberto — o mestre nomeia o encontro e a montagem começa (`ui-38`). */
+  protected readonly criandoEncontro = signal(false);
 
   /** Formulário de criação do encontro (quando a campanha ainda não tem um aberto). */
   protected readonly formularioCriacao = this.formBuilder.nonNullable.group({
@@ -281,6 +310,13 @@ export class PainelEncontro {
         membro.usuarioId === usuarioId && membro.papel === TipoCampanhaMembroPapelEnum.MESTRE,
     );
   });
+
+  /**
+   * Visão do mestre (`ui-37`/`ui-38`): coluna de ações + cabeçalho e, com encontro carregado,
+   * trilha + rolagens + palco; sem encontro, um estado vazio com "Novo combate". Jogador/espectador
+   * e o carregamento seguem a tela de sempre.
+   */
+  protected readonly modoMestre = computed(() => !this.carregando() && this.ehMestre());
 
   /** `id` de quem está com a tela aberta — só existe pro input `usuarioAtivoId` das Anotações. */
   protected readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? null);
@@ -347,6 +383,11 @@ export class PainelEncontro {
     this.encontrosDaCampanha()
       .filter((resumo) => resumo.status === EncontroStatusEnum.ENCERRADO)
       .filter((resumo) => resumo.id !== this.encontro()?.id),
+  );
+
+  /** `true` quando a campanha tem um combate em montagem ou em andamento (não só encerrados). */
+  protected readonly temCombateAberto = computed(() =>
+    this.encontrosDaCampanha().some((resumo) => resumo.status !== EncontroStatusEnum.ENCERRADO),
   );
 
   /** `true` quando a tela está mostrando um encontro do histórico, não o combate da mesa. */
@@ -664,7 +705,32 @@ export class PainelEncontro {
     this.fichaFlutuanteRef()?.abrir({ fichaId, tipo, usuarioIdDono });
   }
 
+  /**
+   * Alterna a janela da calculadora pelo método do próprio componente, não `calculadoraAberta.set(
+   * !calculadoraAberta())` — só `CalculadoraFlutuante.alternar()` sabe restaurar em vez de fechar
+   * quando a janela está aberta **minimizada** (mesmo racional de `detalhe-mestre`).
+   */
+  protected alternarCalculadora(): void {
+    this.calculadoraRef()?.alternar();
+  }
+
+  /** Alterna a janela do caderno — mesmo racional de `alternarCalculadora()`. */
+  protected alternarCaderno(): void {
+    this.cadernoRef()?.alternar();
+  }
+
   // ── Montagem ───────────────────────────────────────────────────────────────
+
+  /** Abre o dialog "Novo combate" com o campo limpo. */
+  protected abrirNovoCombate(): void {
+    this.formularioCriacao.reset({ nome: '' });
+    this.criandoEncontro.set(true);
+  }
+
+  /** Fecha o dialog sem criar nada. */
+  protected fecharNovoCombate(): void {
+    this.criandoEncontro.set(false);
+  }
 
   /** Cria o encontro da campanha e já abre o painel de montagem. */
   protected criarEncontro(): void {
@@ -677,6 +743,7 @@ export class PainelEncontro {
       }),
       (criado) => {
         this.formularioCriacao.reset({ nome: '' });
+        this.criandoEncontro.set(false);
         this.encontroService
           .recuperarEncontro(criado.id)
           .subscribe({ next: (estado) => this.encontro.set(estado) });
@@ -706,11 +773,6 @@ export class PainelEncontro {
     this.imagemAvulsoArquivo.set(null);
     this.imagemAvulsoPreview.set(null);
     this.adicionandoAvulso.set(false);
-  }
-
-  /** Abre/fecha a gaveta de ações secundárias (só o mobile as esconde). */
-  protected alternarAcoes(): void {
-    this.acoesAbertas.update((aberto) => !aberto);
   }
 
   /** Liga/desliga o modo de edição dos cartões (iniciativa à mão + remover). */
@@ -1081,9 +1143,18 @@ export class PainelEncontro {
 
   // ── Histórico ──────────────────────────────────────────────────────────────
 
-  /** Abre/fecha a lista de encontros anteriores. */
+  /** Abre/fecha o menu de encontros anteriores (só existe com um encontro na tela). */
   protected alternarHistorico(): void {
     this.historicoAberto.update((aberto) => !aberto);
+  }
+
+  /** `Escape` fecha o menu e devolve o foco ao gatilho — só age com o menu aberto. */
+  protected fecharHistoricoPeloTeclado(): void {
+    if (!this.historicoAberto()) {
+      return;
+    }
+    this.historicoAberto.set(false);
+    (this.historicoGatilho()?.nativeElement as HTMLElement | undefined)?.focus();
   }
 
   /**
@@ -1091,6 +1162,7 @@ export class PainelEncontro {
    * está na tela — o combate encerrado é um documento, e um documento tem endereço.
    */
   protected abrirDoHistorico(resumo: EncontroResumoDto): void {
+    this.historicoAberto.set(false);
     void this.roteador.navigate(['/campanhas', this.campanhaId, 'iniciativa', resumo.id]);
   }
 

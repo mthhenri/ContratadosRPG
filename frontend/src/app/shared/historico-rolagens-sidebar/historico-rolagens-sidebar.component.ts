@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, effect, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, input, model, output, signal, untracked } from '@angular/core';
 
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -62,6 +62,13 @@ export class HistoricoRolagensSidebar {
   readonly acimaDaCalculadora = input(false);
   /** Oculta o gatilho próprio quando a página oferece a ação pela coluna lateral. */
   readonly mostrarGatilho = input(true);
+  /**
+   * Coluna fixa da página (`ui-37`, Iniciativa do mestre) em vez de painel sobreposto: sempre
+   * renderizada, sem gatilho, sem fundo, sem botão de fechar, sem animação e sem foco automático.
+   * O painel preenche o container posicionado que o hospeda (`position: absolute; inset: 0`), então
+   * quem hospeda define a largura e a altura — a lista rola por dentro, sem alargar a linha.
+   */
+  readonly fixo = input(false);
 
   readonly carregarMais = output<void>();
   /**
@@ -78,6 +85,8 @@ export class HistoricoRolagensSidebar {
   /** Mantém o DOM durante a saída, mesmo depois de devolver a coluna para a página. */
   protected readonly painelRenderizado = signal(false);
   protected readonly saindo = signal(false);
+  /** O painel existe no DOM: sempre na coluna fixa; no modo sobreposto, só enquanto aberto/saindo. */
+  protected readonly renderizado = computed(() => this.fixo() || this.painelRenderizado());
   private encerramentoPendente: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {

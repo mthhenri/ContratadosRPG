@@ -1,0 +1,58 @@
+<div class="trilha__contadores">
+    @if (emCombate()) {
+        <div class="trilha__contador">
+            <span class="trilha__rotulo">Rodada</span>
+            <span class="trilha__numero">{{ encontro().rodadaAtual }}</span>
+        </div>
+        <div class="trilha__contador">
+            <span class="trilha__rotulo">Turno</span>
+            <span class="trilha__numero trilha__numero--destaque">
+                {{ encontro().turnoIndice + 1
+                }}<span class="trilha__fracao">/{{ totalTurnos() }}</span>
+            </span>
+        </div>
+    } @else {
+        <div class="trilha__contador">
+            <span class="trilha__rotulo">Situação</span>
+            <span class="trilha__numero trilha__numero--texto">{{ situacao() }}</span>
+        </div>
+    }
+</div>
+
+<div class="trilha__corpo">
+    <ol class="trilha__lista" aria-label="Ordem de turnos" #lista>
+        @for (posicao of posicoes(); track posicao.combatente.chaveVisual) {
+            <li
+                class="trilha__item"
+                [class.trilha__item--ativa]="posicao.ativa"
+                [class.trilha__item--agiu]="posicao.agiu"
+                [style.--cor-ficha]="posicao.combatente.corFicha"
+                [attr.aria-current]="posicao.ativa ? 'step' : null"
+                [appTooltip]="posicao.dica"
+            >
+                <span class="trilha__avatar" aria-hidden="true">
+                    @if (posicao.combatente.imagemUrl; as urlImagem) {
+                        <img
+                            class="trilha__avatar-imagem"
+                            [src]="urlImagem"
+                            alt=""
+                            [appFocoImagem]="posicao.combatente.imagemFoco"
+                        />
+                    } @else {
+                        {{ posicao.sigla }}
+                    }
+                </span>
+                <span class="trilha__info">
+                    <span class="trilha__nome">{{ posicao.combatente.nome }}</span>
+                    @if (posicao.subtitulo) {
+                        <span class="trilha__sub">{{ posicao.subtitulo }}</span>
+                    }
+                </span>
+                <span class="trilha__iniciativa">{{ posicao.combatente.iniciativa ?? "—" }}</span>
+                @if (posicao.ocorrencia; as ocorrencia) {
+                    <span class="trilha__ocorrencia">{{ ocorrencia }}</span>
+                }
+            </li>
+        }
+    </ol>
+</div>

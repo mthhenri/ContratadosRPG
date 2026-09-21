@@ -1,6 +1,15 @@
 import type { EncontroCombatenteResumoDto, EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { EncontroStatusEnum, NivelAmeacaEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import {
+  CadenciaEnum,
+  CombatenteOrigemEnum,
+  EncontroStatusEnum,
+  NivelAmeacaEnum,
+  TipoFichaEnum,
+} from '@contratados-rpg/shared/enums';
+import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
+
+import { rotuloClasseCompleto } from '../ficha/rotulos-ficha';
 
 /**
  * Derivação pura do estado de leitura de um `EncontroRecuperadoDto` — extraído de
@@ -135,4 +144,115 @@ export function resolverNivelAmeaca(
     return null;
   }
   return fichasVisiveis.find((ficha) => ficha.id === combatente.fichaId)?.na ?? null;
+}
+
+/**
+ * Quantos turnos o combatente tem na rodada — o motor puro (`calcularTurnosPorRodada`) decide; só
+ * a Cadência Frenética carrega um número próprio (mínimo 4). Compartilhada pelo cartão, pela
+ * trilha e pela ficha resumida do mestre para nunca divergirem sobre "Cadência N".
+ */
+export function turnosPorRodadaDoCombatente(
+  combatente: Pick<EncontroCombatenteResumoDto, 'cadencia' | 'turnosPorRodada'>,
+): number {
+  return combatente.cadencia === CadenciaEnum.FRENETICA
+    ? Math.max(4, combatente.turnosPorRodada ?? 4)
+    : calcularTurnosPorRodada(combatente.cadencia);
+}
+
+/**
+ * `true` quando a "carteirinha" do agente (avatar, dono, classe/arquétipo) chegou mesmo sem
+ * `revelado` (m7-16): o backend só popula `donoNome` nesse caso, e só num agente de ficha.
+ */
+export function combatenteTemIdentidadeVisivel(
+  combatente: Pick<EncontroCombatenteResumoDto, 'tipoFicha' | 'donoNome'>,
+): boolean {
+  return combatente.tipoFicha === TipoFichaEnum.JOGADOR && combatente.donoNome !== null;
+}
+
+/**
+ * Linha de origem do combatente: o agente mostra quem o joga e a classe/arquétipo, em duas linhas
+ * (quebra de linha `\n` — o consumidor usa `white-space: pre-line`); os demais dizem de onde
+ * vieram, numa linha só.
+ */
+export function linhaOrigemDoCombatente(combatente: EncontroCombatenteResumoDto): string {
+  if (combatenteTemIdentidadeVisivel(combatente)) {
+    const classeLabel = combatente.classe
+      ? rotuloClasseCompleto(combatente.classe, combatente.arquetipo)
+      : 'Agente';
+    return `${combatente.donoNome}\n${classeLabel}`;
+  }
+  if (!combatente.revelado) {
+    return 'Em campo';
+  }
+  if (combatente.origem === CombatenteOrigemEnum.AVULSO) {
+    return 'Digitado nesta sessão';
+  }
+  if (combatente.tipoFicha === TipoFichaEnum.CRIATURA) {
+    return 'Criatura da campanha';
+  }
+  if (combatente.tipoFicha === TipoFichaEnum.JOGADOR) {
+    return 'Agente';
+  }
+  return 'Adicionado pelo mestre';
+}
+
+/**
+ * Uma defesa exibida — só as que o combatente realmente possui. O `rotuloCurto` é a forma do
+ * mobile (`Def · Esq · Blo · Con`); os dois viajam juntos porque a troca é de largura de tela,
+ * decidida no CSS.
+ */
+export interface DefesaExibidaDto {
+  readonly rotulo: string;
+  readonly rotuloCurto: string;
+  /** Nome por extenso (`Contra-ataque`) — a ficha resumida tem largura para ele; o cartão, não. */
+  readonly rotuloExtenso: string;
+  readonly valor: number;
+}
+
+/**
+ * As defesas que o combatente **de fato** possui. A criatura chega com Esquiva/Bloqueio/Contra
+ * nulos (ela não reage — a regra vence o mockup), então sai só com Defesa; o avulso, com nenhuma.
+ */
+export function defesasDoCombatente(
+  combatente: Pick<
+    EncontroCombatenteResumoDto,
+    'defesa' | 'esquiva' | 'bloqueio' | 'contraAtaque'
+  >,
+): readonly DefesaExibidaDto[] {
+  const candidatas: readonly (readonly [string, string, string, number | null])[] = [
+    ['Defesa', 'Def', 'Defesa', combatente.defesa],
+    ['Esquiva', 'Esq', 'Esquiva', combatente.esquiva],
+    ['Bloqueio', 'Blo', 'Bloqueio', combatente.bloqueio],
+    ['Contra', 'Con', 'Contra-ataque', combatente.contraAtaque],
+  ];
+  return candidatas
+    .filter(
+      (quarteto): quarteto is readonly [string, string, string, number] => quarteto[3] !== null,
+    )
+    .map(([rotulo, rotuloCurto, rotuloExtenso, valor]) => ({
+      rotulo,
+      rotuloCurto,
+      rotuloExtenso,
+      valor,
+    }));
+}
+
+/**
+ * Sigla de duas letras para o avatar sem imagem: inicial da primeira e da última palavra do nome
+ * (`Marco "Aço" Kessler` → `MK`); nome de uma palavra só usa as duas primeiras letras. Aspas e
+ * pontuação nas bordas das palavras são ignoradas.
+ */
+export function siglaDoCombatente(nome: string): string {
+  const palavras = nome
+    .split(/\s+/)
+    .map((palavra) => palavra.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
+    .filter((palavra) => palavra.length > 0);
+  if (palavras.length === 0) {
+    return '?';
+  }
+  const sigla =
+    palavras.length === 1
+      ? [...palavras[0]].slice(0, 2).join('')
+      : `${[...palavras[0]][0]}${[...palavras[palavras.length - 1]][0]}`;
+  return sigla.toLocaleUpperCase('pt-BR');
 }

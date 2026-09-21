@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 
 import type {
@@ -247,10 +247,23 @@ describe('PainelEncontro', () => {
         ]),
       ),
       recuperarEncontro: vi.fn(() => of(estado)),
+      criarEncontro: vi.fn(() =>
+        of({
+          id: estado.id,
+          campanhaId: estado.campanhaId,
+          nome: 'Contenção no Setor 12',
+          status: EncontroStatusEnum.MONTAGEM,
+          rodadaAtual: 0,
+          createdDate: '2026-08-17T00:00:00.000Z',
+        }),
+      ),
       rolarIniciativasFaltantes: vi.fn(() => of(estado)),
       atribuirIniciativa: vi.fn(() => of(estado)),
       alterarFormulaIniciativa: vi.fn(() => of(estado)),
       avancarTurno: vi.fn(() => of(estado)),
+      voltarTurno: vi.fn(() => of(estado)),
+      iniciarEncontro: vi.fn(() => of(estado)),
+      pedirIniciativa: vi.fn(() => of(estado)),
       ajustarVida: vi.fn(() => of(estado)),
       adicionarCombatente: vi.fn(() => of(estado)),
       removerCombatente: vi.fn(() => of(estado)),
@@ -371,6 +384,22 @@ describe('PainelEncontro', () => {
   const interno = (fixture: ReturnType<typeof montar>['fixture']): PainelInterno =>
     fixture.componentInstance as unknown as PainelInterno;
 
+  /** Texto de um elemento sem quebras/espaços duplicados — o template quebra linhas ao formatar. */
+  const texto = (elemento: Element | null | undefined): string =>
+    (elemento?.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+  /** Um item de `app-coluna-acoes` (visão do mestre, ui-37) pelo rótulo. */
+  const itemDaColuna = (raiz: HTMLElement, rotulo: string): HTMLButtonElement | undefined =>
+    Array.from(
+      raiz.querySelectorAll<HTMLButtonElement>('app-coluna-acoes .coluna-acoes__item'),
+    ).find((item) => texto(item) === rotulo);
+
+  /** Um botão da barra de condução do mestre pelo `aria-label` ou pelo texto. */
+  const botaoDaConducao = (raiz: HTMLElement, rotulo: string): HTMLButtonElement | undefined =>
+    Array.from(raiz.querySelectorAll<HTMLButtonElement>('app-conducao-turno button')).find(
+      (botao) => botao.getAttribute('aria-label') === rotulo || texto(botao) === rotulo,
+    );
+
   it('lê de quem é a vez da `ordemRodada`, sem recalcular a ordem', () => {
     const { fixture } = montar();
     // turnoIndice 2 → terceiro slot → segunda ocorrência da criatura.
@@ -424,7 +453,9 @@ describe('PainelEncontro', () => {
     expect(cartoes[2].querySelector('.combatente--ativo')).not.toBeNull();
     expect(cartoes[0].querySelector('.combatente__iniciativa-campo')).not.toBeNull();
     expect(cartoes[2].querySelector('.combatente__iniciativa-campo')).toBeNull();
-    expect(elemento.querySelector('.iniciativa__meta')?.textContent).toContain('3 participantes');
+    expect(texto(elemento.querySelector('.iniciativa-mestre__secao-meta'))).toContain(
+      '3 participantes',
+    );
   });
 
   it('resolve o Nível de Ameaça do contexto já carregado, sem consulta extra', () => {
@@ -624,6 +655,12 @@ describe('PainelEncontro', () => {
       expect(textos).not.toContain('Rolar iniciativas');
       expect(textos).not.toContain('Selecionar combatentes');
       expect(textos).not.toContain('Adicionar avulso');
+      // Nem a casca do mestre (ui-37): coluna de ações, trilha, condução e ficha resumida.
+      expect(elemento.querySelector('.iniciativa-mestre')).toBeNull();
+      expect(elemento.querySelector('app-coluna-acoes')).toBeNull();
+      expect(elemento.querySelector('app-trilha-turnos')).toBeNull();
+      expect(elemento.querySelector('app-conducao-turno')).toBeNull();
+      expect(elemento.querySelector('app-resumo-combatente')).toBeNull();
       expect(elemento.querySelector('.painel__bloco--jogador')).toBeNull();
       // E nenhum stepper de vida/energia chega aos cartões.
       expect(elemento.querySelectorAll('.combatente__stepper').length).toBe(0);
@@ -672,9 +709,14 @@ describe('PainelEncontro', () => {
       expect(elemento.querySelector('[role="dialog"]')).not.toBeNull();
     });
 
-    it('preserva a grade canônica do mestre', () => {
+    it('dá ao mestre a grade do palco (compacta, de colunas automáticas), nunca a do jogador', () => {
       const mestre = montar(encontroAtivo, USUARIO_MESTRE).fixture.nativeElement as HTMLElement;
-      expect(mestre.querySelector('.grade')?.classList).not.toContain('grade--compacta');
+      const grade = mestre.querySelector<HTMLElement>('.grade');
+
+      expect(grade?.classList).toContain('grade--compacta');
+      expect(grade?.classList).toContain('grade--palco');
+      // Sem `--grade-colunas`: o número de colunas vem do CSS (`auto-fill`), não de `colunasGrade()`.
+      expect(grade?.style.getPropertyValue('--grade-colunas')).toBe('');
     });
 
     it('não duplica a própria iniciativa fora do cartão do combatente', () => {
@@ -690,15 +732,12 @@ describe('PainelEncontro', () => {
 
     it('o mestre continua com a barra de condução inteira', () => {
       const { fixture } = montar(encontroAtivo, USUARIO_MESTRE);
-      const textos = Array.from(
-        (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
-      ).map((botao) => botao.textContent?.replace(/\s+/g, ' ').trim());
+      const elemento = fixture.nativeElement as HTMLElement;
 
-      // "Avançar turno" no mobile, "Avançar" no desktop: os dois rótulos moram no DOM e é o CSS
-      // que escolhe (m7-08), então o teste afirma o prefixo, não a string inteira.
-      expect(textos.some((texto) => texto?.startsWith('Avançar'))).toBe(true);
-      expect(textos).toContain('Encerrar');
-      expect((fixture.nativeElement as HTMLElement).querySelector('.iniciativa__papel')).toBeNull();
+      expect(botaoDaConducao(elemento, 'Voltar ao turno anterior')).toBeDefined();
+      expect(botaoDaConducao(elemento, 'Passar ao próximo turno')).toBeDefined();
+      expect(botaoDaConducao(elemento, 'Encerrar')).toBeDefined();
+      expect(elemento.querySelector('.iniciativa__papel')).toBeNull();
     });
 
     it('o jogador rola a **própria** iniciativa pelo preset da ficha dele', () => {
@@ -784,9 +823,13 @@ describe('PainelEncontro', () => {
       expect(elemento.querySelector('.painel__bloco--vez')?.textContent).toContain('K. Amaral');
     });
 
-    it('mantém a caixinha "Age agora"/"Aguardando" para o mestre', () => {
+    it('mostra ao mestre quem age agora na barra de condução, não na caixinha do jogador', () => {
       const doMestre = montar(encontroAtivo, USUARIO_MESTRE).fixture.nativeElement as HTMLElement;
-      expect(doMestre.querySelector('.painel__bloco--vez')).not.toBeNull();
+      const conducao = texto(doMestre.querySelector('app-conducao-turno'));
+
+      expect(conducao).toContain('Age agora');
+      expect(conducao).toContain('SCP-1471-A');
+      expect(doMestre.querySelector('.painel__bloco--vez')).toBeNull();
     });
 
     it('avisa o jogador com uma notificação quando chega a vez do combatente dele', () => {
@@ -861,13 +904,7 @@ describe('PainelEncontro', () => {
       expect(elemento.querySelector('app-seletor-combatentes')).toBeNull();
       expect(elemento.querySelector('.adicionar')).toBeNull();
 
-      elemento
-        .querySelectorAll<HTMLButtonElement>('.secundarias__acao')
-        .forEach((botao) => {
-          if (botao.textContent?.includes('Selecionar combatentes')) {
-            botao.click();
-          }
-        });
+      itemDaColuna(elemento, 'Selecionar combatentes')?.click();
       fixture.detectChanges();
 
       expect(elemento.querySelector('app-seletor-combatentes')).not.toBeNull();
@@ -882,9 +919,7 @@ describe('PainelEncontro', () => {
     it('clicar num cartão fora do encontro adiciona a ficha', () => {
       const { fixture, encontroService } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
-        .find((botao) => botao.textContent?.includes('Selecionar combatentes'))
-        ?.click();
+      itemDaColuna(elemento, 'Selecionar combatentes')?.click();
       fixture.detectChanges();
 
       // "Novo Recruta" (fichaId 999) é o único ainda fora do encontro.
@@ -905,9 +940,7 @@ describe('PainelEncontro', () => {
     it('clicar num cartão já marcado remove o combatente correspondente', () => {
       const { fixture, encontroService } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
-        .find((botao) => botao.textContent?.includes('Selecionar combatentes'))
-        ?.click();
+      itemDaColuna(elemento, 'Selecionar combatentes')?.click();
       fixture.detectChanges();
 
       elemento.querySelector<HTMLButtonElement>('.seletor__cartao--marcado')?.click();
@@ -953,9 +986,7 @@ describe('PainelEncontro', () => {
     it('abre o formulário de avulso separado do seletor, e adiciona o avulso digitado', () => {
       const { fixture, encontroService } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
-        .find((botao) => botao.textContent?.includes('Adicionar avulso'))
-        ?.click();
+      itemDaColuna(elemento, 'Adicionar avulso')?.click();
       fixture.detectChanges();
 
       expect(elemento.querySelector('app-seletor-combatentes')).toBeNull();
@@ -986,9 +1017,7 @@ describe('PainelEncontro', () => {
     it('solicita e envia os turnos do avulso com Cadência Frenética', () => {
       const { fixture, encontroService } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
-        .find((botao) => botao.textContent?.includes('Adicionar avulso'))
-        ?.click();
+      itemDaColuna(elemento, 'Adicionar avulso')?.click();
       fixture.detectChanges();
 
       const form = elemento.querySelector('form.adicionar') as HTMLFormElement;
@@ -1019,9 +1048,7 @@ describe('PainelEncontro', () => {
     it('não envia o avulso sem nome', () => {
       const { fixture, encontroService } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'))
-        .find((botao) => botao.textContent?.includes('Adicionar avulso'))
-        ?.click();
+      itemDaColuna(elemento, 'Adicionar avulso')?.click();
       fixture.detectChanges();
 
       const botaoSubmeter = elemento.querySelector<HTMLButtonElement>('.adicionar__acao')!;
@@ -1031,37 +1058,32 @@ describe('PainelEncontro', () => {
       expect(encontroService.adicionarCombatente).not.toHaveBeenCalled();
     });
 
-    it('vira botão filled (não mais "Fechar") enquanto o seletor está aberto', () => {
+    it('marca "Selecionar combatentes" como pressionado enquanto o seletor está aberto', () => {
       const { fixture } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      const botao = Array.from(
-        elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'),
-      ).find((item) => item.textContent?.includes('Selecionar combatentes'))!;
+      const item = itemDaColuna(elemento, 'Selecionar combatentes')!;
 
-      expect(botao.classList).toContain('botao--secundario');
-      expect(botao.getAttribute('aria-pressed')).toBe('false');
+      expect(item.getAttribute('aria-pressed')).toBe('false');
+      expect(item.classList).not.toContain('coluna-acoes__item--ativo');
 
-      botao.click();
+      item.click();
       fixture.detectChanges();
 
-      expect(botao.textContent?.trim()).toContain('Selecionar combatentes');
-      expect(botao.classList).toContain('botao--primario');
-      expect(botao.classList).not.toContain('botao--secundario');
-      expect(botao.getAttribute('aria-pressed')).toBe('true');
+      expect(texto(item)).toBe('Selecionar combatentes');
+      expect(item.getAttribute('aria-pressed')).toBe('true');
+      expect(item.classList).toContain('coluna-acoes__item--ativo');
     });
 
-    it('vira botão filled enquanto o avulso está aberto, e "Cancelar" limpa e fecha o formulário', () => {
+    it('marca "Adicionar avulso" como pressionado enquanto o formulário está aberto, e "Cancelar" limpa e fecha', () => {
       const { fixture, encontroService } = montar();
       const elemento = fixture.nativeElement as HTMLElement;
-      const botaoAbrir = Array.from(
-        elemento.querySelectorAll<HTMLButtonElement>('.secundarias__acao'),
-      ).find((item) => item.textContent?.includes('Adicionar avulso'))!;
+      const item = itemDaColuna(elemento, 'Adicionar avulso')!;
 
-      botaoAbrir.click();
+      item.click();
       fixture.detectChanges();
 
-      expect(botaoAbrir.classList).toContain('botao--primario');
-      expect(botaoAbrir.getAttribute('aria-pressed')).toBe('true');
+      expect(item.getAttribute('aria-pressed')).toBe('true');
+      expect(item.classList).toContain('coluna-acoes__item--ativo');
 
       const nome = elemento.querySelector<HTMLInputElement>('input[formControlName="nomeAvulso"]')!;
       nome.value = 'Sujeito Contido';
@@ -1070,16 +1092,17 @@ describe('PainelEncontro', () => {
 
       const botaoCancelar = Array.from(
         elemento.querySelectorAll<HTMLButtonElement>('form.adicionar .adicionar__acao'),
-      ).find((item) => item.textContent?.includes('Cancelar'))!;
+      ).find((botao) => texto(botao) === 'Cancelar')!;
       botaoCancelar.click();
       fixture.detectChanges();
 
       expect(elemento.querySelector('form.adicionar')).toBeNull();
-      expect(botaoAbrir.classList).toContain('botao--secundario');
+      expect(item.getAttribute('aria-pressed')).toBe('false');
+      expect(item.classList).not.toContain('coluna-acoes__item--ativo');
       expect(encontroService.adicionarCombatente).not.toHaveBeenCalled();
 
       // Reabrir prova que o formulário voltou limpo.
-      botaoAbrir.click();
+      item.click();
       fixture.detectChanges();
       expect(
         elemento.querySelector<HTMLInputElement>('input[formControlName="nomeAvulso"]')?.value,
@@ -1093,54 +1116,81 @@ describe('PainelEncontro', () => {
       status: EncontroStatusEnum.MONTAGEM,
       ordemRodada: [],
     };
+    const semIniciativa: EncontroRecuperadoDto = {
+      ...montagem,
+      combatentes: [
+        combatente(1, 'SCP-1471-A', { tipoFicha: TipoFichaEnum.CRIATURA, iniciativa: null }),
+        combatente(2, 'K. Amaral', { iniciativa: 18 }),
+      ],
+    };
 
-    /** "Pedir iniciativa" e "Rolar iniciativas" ficam juntos numa caixinha; "Iniciar combate" mora
-     *  na sua própria, ao lado — ela é quem vira a barra fixa do rodapé no mobile (m7-08). */
-    it('agrupa "Pedir iniciativa" e "Rolar iniciativas" numa caixinha, separada da de "Iniciar combate"', () => {
-      const { fixture } = montar(montagem);
+    /** Em montagem ninguém age: a barra de condução vira as três ações de montar a ordem (ui-37). */
+    it('reúne "Pedir iniciativa", "Rolar iniciativas" e "Iniciar combate" na barra de condução', () => {
+      const elemento = montar(montagem).fixture.nativeElement as HTMLElement;
+      const acoes = Array.from(
+        elemento.querySelectorAll('app-conducao-turno .conducao__acoes button'),
+      ).map((botao) => texto(botao));
+
+      expect(acoes).toEqual(['Pedir iniciativa', 'Rolar iniciativas', 'Iniciar combate']);
+      expect(botaoDaConducao(elemento, 'Pedir iniciativa')?.classList).toContain('botao--positivo');
+      expect(texto(elemento.querySelector('app-conducao-turno'))).toContain(
+        'Combate ainda não iniciado',
+      );
+      // Voltar/avançar/encerrar só existem com o combate em curso.
+      expect(botaoDaConducao(elemento, 'Passar ao próximo turno')).toBeUndefined();
+      expect(botaoDaConducao(elemento, 'Encerrar')).toBeUndefined();
+    });
+
+    it('chama os jogadores a rolar a própria iniciativa', () => {
+      const { fixture, encontroService } = montar(montagem);
+
+      botaoDaConducao(fixture.nativeElement as HTMLElement, 'Pedir iniciativa')?.click();
+
+      expect(encontroService.pedirIniciativa).toHaveBeenCalledWith(montagem.id);
+    });
+
+    it('libera "Iniciar combate" com todo mundo com iniciativa e bloqueia "Rolar iniciativas"', () => {
+      const { fixture, encontroService } = montar(montagem);
       const elemento = fixture.nativeElement as HTMLElement;
 
-      const blocos = Array.from(elemento.querySelectorAll('.painel__bloco--controles'));
-      const blocoPedidos = blocos.find((bloco) =>
-        bloco.textContent?.includes('Pedir iniciativa'),
-      )!;
-      const blocoIniciar = blocos.find((bloco) => bloco.textContent?.includes('Iniciar combate'))!;
+      expect(botaoDaConducao(elemento, 'Rolar iniciativas')?.disabled).toBe(true);
+      const iniciar = botaoDaConducao(elemento, 'Iniciar combate')!;
+      expect(iniciar.disabled).toBe(false);
 
-      expect(blocoPedidos).not.toBe(blocoIniciar);
-      expect(blocoPedidos.textContent).toContain('Rolar iniciativas');
-      expect(blocoPedidos.classList).not.toContain('painel__bloco--conducao');
-      expect(blocoIniciar.classList).toContain('painel__bloco--conducao');
+      iniciar.click();
+      expect(encontroService.iniciarEncontro).toHaveBeenCalledWith(montagem.id);
+    });
 
-      const botaoPedir = blocoPedidos.querySelector('button')!;
-      expect(botaoPedir.textContent?.trim()).toBe('Pedir iniciativa');
-      expect(botaoPedir.classList).toContain('botao--positivo');
+    it('bloqueia "Iniciar combate" enquanto falta iniciativa e libera "Rolar iniciativas"', () => {
+      const { fixture, encontroService } = montar(semIniciativa);
+      const elemento = fixture.nativeElement as HTMLElement;
 
-      // "Rolar iniciativas" some da gaveta de "mais ações": em montagem ela já está na caixinha.
-      const gaveta = Array.from(elemento.querySelectorAll('.secundarias__acao')).map((botao) =>
-        botao.textContent?.replace(/\s+/g, ' ').trim(),
-      );
-      expect(gaveta).not.toContain('Rolar iniciativas');
+      const iniciar = botaoDaConducao(elemento, 'Iniciar combate')!;
+      expect(iniciar.disabled).toBe(true);
+      expect(botaoDaConducao(elemento, 'Rolar iniciativas')?.disabled).toBe(false);
+
+      iniciar.click();
+      expect(encontroService.iniciarEncontro).not.toHaveBeenCalled();
     });
   });
 
-  describe('combate: "Encerrar" ao lado da condução, sem "Rolar iniciativas"', () => {
-    it('põe "Encerrar" na própria caixinha, ao lado de Voltar/Avançar — fora da gaveta', () => {
-      const { fixture } = montar(encontroAtivo);
+  describe('combate: condução na barra da vez e "Encerrar combate" na coluna de ações', () => {
+    it('põe "Encerrar" ao lado de Voltar/Avançar e repete a ação na coluna de ações', () => {
+      const elemento = montar(encontroAtivo).fixture.nativeElement as HTMLElement;
+
+      expect(botaoDaConducao(elemento, 'Encerrar')).toBeDefined();
+      expect(itemDaColuna(elemento, 'Encerrar combate')).toBeDefined();
+    });
+
+    it('avança e volta o turno pelos botões da barra', () => {
+      const { fixture, encontroService } = montar(encontroAtivo);
       const elemento = fixture.nativeElement as HTMLElement;
 
-      const blocos = Array.from(elemento.querySelectorAll('.painel__bloco--controles'));
-      const blocoConducao = blocos.find((bloco) => bloco.textContent?.includes('Avançar'))!;
-      const blocoEncerrar = blocos.find(
-        (bloco) => bloco.textContent?.replace(/\s+/g, ' ').trim() === 'Encerrar',
-      )!;
+      botaoDaConducao(elemento, 'Passar ao próximo turno')?.click();
+      botaoDaConducao(elemento, 'Voltar ao turno anterior')?.click();
 
-      expect(blocoEncerrar).not.toBe(blocoConducao);
-      expect(blocoEncerrar.classList).not.toContain('painel__bloco--conducao');
-      expect(
-        Array.from(elemento.querySelectorAll('.secundarias__acao')).some(
-          (botao) => botao.textContent?.trim() === 'Encerrar',
-        ),
-      ).toBe(false);
+      expect(encontroService.avancarTurno).toHaveBeenCalledWith(encontroAtivo.id);
+      expect(encontroService.voltarTurno).toHaveBeenCalledWith(encontroAtivo.id);
     });
 
     it('pede confirmação (ui-15) antes de encerrar; cancelar não chama encerrarEncontro', async () => {
@@ -1150,9 +1200,7 @@ describe('PainelEncontro', () => {
         .mockResolvedValue(false);
       const elemento = fixture.nativeElement as HTMLElement;
 
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.painel__acao'))
-        .find((botao) => botao.textContent?.trim() === 'Encerrar')
-        ?.click();
+      botaoDaConducao(elemento, 'Encerrar')?.click();
       fixture.detectChanges();
       await Promise.resolve();
       await Promise.resolve();
@@ -1166,9 +1214,7 @@ describe('PainelEncontro', () => {
       vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(true);
       const elemento = fixture.nativeElement as HTMLElement;
 
-      Array.from(elemento.querySelectorAll<HTMLButtonElement>('.painel__acao'))
-        .find((botao) => botao.textContent?.trim() === 'Encerrar')
-        ?.click();
+      botaoDaConducao(elemento, 'Encerrar')?.click();
       fixture.detectChanges();
       await Promise.resolve();
       await Promise.resolve();
@@ -1176,11 +1222,25 @@ describe('PainelEncontro', () => {
       expect(encontroService.encerrarEncontro).toHaveBeenCalledWith(encontroAtivo.id);
     });
 
+    it('a coluna de ações encerra com a mesma confirmação', async () => {
+      const { fixture, encontroService } = montar(encontroAtivo);
+      const confirmar = vi
+        .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
+        .mockResolvedValue(true);
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      itemDaColuna(elemento, 'Encerrar combate')?.click();
+      fixture.detectChanges();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Encerrar combate' }));
+      expect(encontroService.encerrarEncontro).toHaveBeenCalledWith(encontroAtivo.id);
+    });
+
     it('nunca mostra "Rolar iniciativas" depois que o combate começou', () => {
       const elemento = montar(encontroAtivo).fixture.nativeElement as HTMLElement;
-      const textos = Array.from(elemento.querySelectorAll('button')).map((botao) =>
-        botao.textContent?.replace(/\s+/g, ' ').trim(),
-      );
+      const textos = Array.from(elemento.querySelectorAll('button')).map((botao) => texto(botao));
       expect(textos).not.toContain('Rolar iniciativas');
     });
   });
@@ -1193,40 +1253,84 @@ describe('PainelEncontro', () => {
       status: EncontroStatusEnum.ENCERRADO,
       rodadaAtual: 5,
       quantidadeCombatentes: 3,
-      createdDate: '2026-08-10T00:00:00.000Z',
+      createdDate: '2026-08-10T12:00:00.000Z', // meio-dia UTC: a mesma data em qualquer fuso
     };
 
-    it('mostra o link "N encerrados" no cabeçalho pro mestre, e abre o painel do histórico', () => {
-      const { fixture } = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]);
-      const elemento = fixture.nativeElement as HTMLElement;
+    /** Abre o menu do histórico pelo gatilho "N encerrados" do cabeçalho. */
+    const abrirMenu = (raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) => {
       const gatilho = Array.from(
-        elemento.querySelectorAll<HTMLButtonElement>('.iniciativa__historico'),
+        raiz.querySelectorAll<HTMLButtonElement>('.iniciativa-mestre__cabecalho button'),
       ).find((botao) => botao.textContent?.includes('encerrado'))!;
-      expect(gatilho).not.toBeUndefined();
-      expect(elemento.querySelector('.historico__painel')).toBeNull();
-
       gatilho.click();
       fixture.detectChanges();
+      return gatilho;
+    };
 
-      expect(elemento.querySelector('.historico__painel')).not.toBeNull();
+    it('mostra o link "N encerrados" no cabeçalho pro mestre, e abre o menu do histórico', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]);
+      const elemento = fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector('.historico__menu')).toBeNull();
+
+      const gatilho = abrirMenu(elemento, fixture);
+
+      expect(gatilho.getAttribute('aria-expanded')).toBe('true');
+      expect(texto(elemento.querySelector('.historico__legenda'))).toBe('Combates encerrados');
       expect(elemento.querySelector('.historico__nome')?.textContent?.trim()).toBe(
         'Emboscada no Setor 4',
       );
+      // Data, rodadas e combatentes na mesma linha de meta.
+      expect(texto(elemento.querySelector('.historico__meta'))).toBe(
+        '10/08/2026 · 5 rodadas · 3 combatentes',
+      );
+    });
+
+    it('escolher um combate do menu abre o registro dele e fecha o menu', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]);
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const elemento = fixture.nativeElement as HTMLElement;
+      abrirMenu(elemento, fixture);
+
+      elemento.querySelector<HTMLButtonElement>('.historico__item')!.click();
+      fixture.detectChanges();
+
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'iniciativa', encerrado.id]);
+      expect(elemento.querySelector('.historico__menu')).toBeNull();
+    });
+
+    it('Escape fecha o menu e devolve o foco ao gatilho; clicar de novo no gatilho também fecha', () => {
+      const { fixture } = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]);
+      const elemento = fixture.nativeElement as HTMLElement;
+      const gatilho = abrirMenu(elemento, fixture);
+
+      // Escape no documento (foco em qualquer lugar): o listener vive no `host` da página.
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      expect(elemento.querySelector('.historico__menu')).toBeNull();
+      expect(document.activeElement).toBe(gatilho);
+
+      gatilho.click();
+      fixture.detectChanges();
+      expect(elemento.querySelector('.historico__menu')).not.toBeNull();
+      gatilho.click();
+      fixture.detectChanges();
+      expect(elemento.querySelector('.historico__menu')).toBeNull();
     });
 
     it('nunca mostra o link de "Encontros anteriores" pro jogador, mesmo havendo histórico', () => {
       const elemento = montar(encontroAtivo, USUARIO_JOGADOR, [encerrado]).fixture
         .nativeElement as HTMLElement;
       expect(elemento.querySelector('.iniciativa__historico')).toBeNull();
-      expect(elemento.querySelector('.historico__painel')).toBeNull();
+      expect(elemento.querySelector('.historico__menu')).toBeNull();
+      expect(elemento.querySelector('.historico__card')).toBeNull();
     });
   });
 
-  describe('recorte mobile (m7-08)', () => {
+  describe('recorte mobile (m7-08) — leitura do jogador', () => {
     /**
-     * O que estes testes provam é a **estrutura** que o CSS usa para decidir o recorte: os dois
-     * rótulos no DOM, a classe do bloco redundante, a gaveta de ações. A largura em si é verificada
-     * na aplicação real (skill `verify`, 360×800) — jsdom não aplica media query.
+     * O que estes testes provam é a **estrutura** que o CSS usa para decidir o recorte: a classe do
+     * bloco redundante e o contador condensado. A largura em si é verificada na aplicação real
+     * (skill `verify`, 360×800) — jsdom não aplica media query. A gaveta de ações e a barra fixa de
+     * condução do mestre saíram na ui-37: a coluna de ações vira a barra inferior por conta própria.
      */
     const emMontagem: EncontroRecuperadoDto = {
       ...encontroAtivo,
@@ -1236,20 +1340,18 @@ describe('PainelEncontro', () => {
     };
 
     it('carrega o contador condensado `R · T` ao lado da contagem de participantes', () => {
-      const { fixture } = montar();
+      const { fixture } = montar(encontroAtivo, USUARIO_JOGADOR);
       const elemento = fixture.nativeElement as HTMLElement;
-      const compacta = (elemento.querySelector('.iniciativa__meta--compacta')?.textContent ?? '')
-        .replace(/\s+/g, ' ')
-        .trim();
       // Rodada 2, 3º dos 4 slots da ordem intercalada.
-      expect(compacta).toBe('R2 · T3/4');
+      expect(texto(elemento.querySelector('.iniciativa__meta--compacta'))).toBe('R2 · T3/4');
       expect(
         elemento.querySelector('.iniciativa__meta:not(.iniciativa__meta--compacta)')?.textContent,
       ).toContain('participantes');
     });
 
     it('marca como redundante no mobile o bloco de contadores durante o combate', () => {
-      const emCombate = montar().fixture.nativeElement as HTMLElement;
+      const emCombate = montar(encontroAtivo, USUARIO_JOGADOR).fixture
+        .nativeElement as HTMLElement;
       expect(
         emCombate.querySelector('.painel__bloco--contadores')?.classList,
       ).toContain('painel__bloco--redundante-mobile');
@@ -1257,48 +1359,282 @@ describe('PainelEncontro', () => {
 
     it('mantém o bloco de contadores no mobile em montagem, onde ele carrega a "Situação"', () => {
       // O cabeçalho compacto só mostra `R · T`, que em montagem ainda não existe.
-      const elemento = montar(emMontagem).fixture.nativeElement as HTMLElement;
+      const elemento = montar(emMontagem, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
       expect(elemento.querySelector('.iniciativa__meta--compacta')).toBeNull();
       expect(
         elemento.querySelector('.painel__bloco--contadores')?.classList,
       ).not.toContain('painel__bloco--redundante-mobile');
     });
 
-    it('deixa só a ação primária no bloco de condução e manda o resto para a gaveta', () => {
-      const { fixture } = montar();
-      const elemento = fixture.nativeElement as HTMLElement;
-      const conducao = Array.from(
-        elemento.querySelectorAll('.painel__bloco--conducao button'),
-      ).map((botao) => (botao.textContent ?? '').replace(/\s+/g, ' ').trim());
-      expect(conducao).toEqual(['Voltar', 'Avançar turno']);
-
-      const gaveta = Array.from(elemento.querySelectorAll('.secundarias__acao')).map((botao) =>
-        (botao.textContent ?? '').replace(/\s+/g, ' ').trim(),
-      );
-      expect(gaveta).toEqual(['Selecionar combatentes', 'Adicionar avulso', 'Editar combatentes']);
-    });
-
-    it('abre e fecha a gaveta de ações secundárias', () => {
-      const { fixture } = montar();
-      const elemento = fixture.nativeElement as HTMLElement;
-      const gatilho = elemento.querySelector<HTMLButtonElement>('.secundarias__gatilho');
-      expect(gatilho?.textContent?.trim()).toBe('Mais ações');
-      expect(elemento.querySelector('.secundarias')?.classList).not.toContain(
-        'secundarias--abertas',
-      );
-
-      gatilho?.click();
-      fixture.detectChanges();
-      expect(elemento.querySelector('.secundarias')?.classList).toContain('secundarias--abertas');
-      expect(
-        elemento.querySelector<HTMLButtonElement>('.secundarias__gatilho')?.textContent?.trim(),
-      ).toBe('Fechar ações');
-    });
-
-    it('não dá gaveta nem barra de condução ao jogador', () => {
+    it('não dá coluna de ações nem barra de condução ao jogador', () => {
       const elemento = montar(encontroAtivo, USUARIO_JOGADOR).fixture.nativeElement as HTMLElement;
-      expect(elemento.querySelector('.secundarias')).toBeNull();
-      expect(elemento.querySelector('.painel__bloco--conducao')).toBeNull();
+      expect(elemento.querySelector('app-coluna-acoes')).toBeNull();
+      expect(elemento.querySelector('app-conducao-turno')).toBeNull();
+    });
+  });
+
+  describe('visão do mestre (ui-37)', () => {
+    it('monta a casca: coluna de ações, trilha, rolagens fixa, condução, ficha resumida e grade', () => {
+      const elemento = montar().fixture.nativeElement as HTMLElement;
+
+      expect(elemento.querySelector('.iniciativa-tela')).toBeNull();
+      expect(elemento.querySelector('app-coluna-acoes')).not.toBeNull();
+      expect(elemento.querySelector('app-trilha-turnos')).not.toBeNull();
+      expect(elemento.querySelector('app-conducao-turno')).not.toBeNull();
+      expect(elemento.querySelector('app-resumo-combatente')).not.toBeNull();
+      expect(elemento.querySelectorAll('app-cartao-combatente')).toHaveLength(4);
+      // As rolagens são uma coluna da página, não o painel sobreposto com gatilho.
+      expect(elemento.querySelector('.historico-rolagens__painel--fixo')).not.toBeNull();
+      expect(elemento.querySelector('.historico-rolagens__gatilho')).toBeNull();
+    });
+
+    it('descreve o encontro no cabeçalho: título, campanha e estado', () => {
+      const elemento = montar().fixture.nativeElement as HTMLElement;
+
+      expect(texto(elemento.querySelector('.iniciativa-mestre__titulo'))).toBe(
+        'Iniciativa · Contenção no Setor 12',
+      );
+      expect(texto(elemento.querySelector('.iniciativa-mestre__campanha'))).toBe(
+        'Campanha de Teste',
+      );
+      expect(texto(elemento.querySelector('.iniciativa-mestre__cabecalho app-chip'))).toBe(
+        'Em combate',
+      );
+    });
+
+    it('reúne na coluna de ações o que é do Combate e o que é Ferramenta', () => {
+      const elemento = montar().fixture.nativeElement as HTMLElement;
+      const rotulos = Array.from(
+        elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__item'),
+      ).map((item) => texto(item));
+
+      expect(rotulos).toEqual([
+        'Selecionar combatentes',
+        'Adicionar avulso',
+        'Editar combatentes',
+        'Encerrar combate',
+        'Calculadora',
+        'Caderno',
+      ]);
+      const categorias = Array.from(
+        elemento.querySelectorAll('app-coluna-acoes .coluna-acoes__categoria'),
+      ).map((categoria) => texto(categoria));
+      expect(categorias).toEqual(['Combate', 'Ferramentas']);
+    });
+
+    it('a ficha resumida é a de quem age agora, com o nível de Ameaça e a Cadência', () => {
+      const elemento = montar().fixture.nativeElement as HTMLElement;
+      const resumo = elemento.querySelector('app-resumo-combatente');
+
+      expect(texto(resumo?.querySelector('.resumo__nome'))).toBe('SCP-1471-A');
+      const chips = Array.from(resumo?.querySelectorAll('app-chip') ?? []).map((chip) => texto(chip));
+      expect(chips).toEqual(['Ameaça · Alta', 'Cadência 2']);
+    });
+
+    it('a ficha resumida acompanha a troca de turno', () => {
+      const { fixture, encontroAlterado$ } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      encontroAlterado$.next({ encontro: { ...encontroAtivo, turnoIndice: 1 } });
+      fixture.detectChanges();
+
+      expect(texto(elemento.querySelector('.resumo__nome'))).toBe('K. Amaral');
+      expect(texto(elemento.querySelector('app-trilha-turnos .trilha__item--ativa'))).toContain(
+        'K. Amaral',
+      );
+    });
+
+    it('alterna o modo Editar pela coluna de ações', () => {
+      const { fixture } = montar();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const editar = itemDaColuna(elemento, 'Editar combatentes')!;
+
+      expect(elemento.querySelector('.combatente__iniciativa-campo')).toBeNull();
+      expect(editar.getAttribute('aria-pressed')).toBe('false');
+
+      editar.click();
+      fixture.detectChanges();
+
+      expect(editar.getAttribute('aria-pressed')).toBe('true');
+      expect(elemento.querySelector('.combatente__iniciativa-campo')).not.toBeNull();
+    });
+
+    it('em montagem, não há ficha resumida nem estado vazio e a trilha mostra a situação', () => {
+      const emMontagem: EncontroRecuperadoDto = {
+        ...encontroAtivo,
+        status: EncontroStatusEnum.MONTAGEM,
+        turnoIndice: 0,
+        ordemRodada: [],
+      };
+      const elemento = montar(emMontagem).fixture.nativeElement as HTMLElement;
+
+      expect(elemento.querySelector('app-resumo-combatente')).toBeNull();
+      expect(elemento.querySelector('.iniciativa-mestre__resumo')).toBeNull();
+      expect(elemento.textContent).not.toContain('Ninguém age ainda.');
+      expect(elemento.querySelector('.iniciativa-mestre__todos app-cartao-combatente')).not.toBeNull();
+      expect(texto(elemento.querySelector('app-trilha-turnos .trilha__contadores'))).toContain(
+        'Montagem',
+      );
+    });
+
+    it('encerrado: só leitura — sem ações de combate na coluna nem na condução', () => {
+      const encerrado: EncontroRecuperadoDto = {
+        ...encontroAtivo,
+        status: EncontroStatusEnum.ENCERRADO,
+      };
+      // Um encerrado só chega à tela pela rota do histórico ou pelo broadcast — a tela do combate
+      // corrente nunca o escolhe sozinha —, então o teste o entrega pelo broadcast.
+      const { fixture, encontroAlterado$ } = montar();
+      encontroAlterado$.next({ encontro: encerrado });
+      fixture.detectChanges();
+      const elemento = fixture.nativeElement as HTMLElement;
+
+      expect(itemDaColuna(elemento, 'Selecionar combatentes')).toBeUndefined();
+      expect(itemDaColuna(elemento, 'Editar combatentes')).toBeUndefined();
+      expect(itemDaColuna(elemento, 'Calculadora')).toBeDefined();
+      expect(elemento.querySelectorAll('app-conducao-turno button')).toHaveLength(0);
+      expect(texto(elemento.querySelector('app-conducao-turno'))).toContain('só leitura');
+      expect(texto(elemento.querySelector('.iniciativa-mestre__cabecalho app-chip'))).toBe(
+        'Encerrado',
+      );
+      // Cartões sem steppers: o encontro encerrado é imutável.
+      expect(elemento.querySelectorAll('.combatente__stepper')).toHaveLength(0);
+      // Ninguém está na vez: sem coluna da ficha resumida e sem cartão "Combate encerrado."
+      expect(elemento.querySelector('.iniciativa-mestre__resumo')).toBeNull();
+      expect(elemento.textContent).not.toContain('Combate encerrado.');
+    });
+
+    describe('sem combate aberto (ui-38)', () => {
+      /** Só há um encontro na campanha e ele já está encerrado: nenhum combate aberto. */
+      const soEncerrado: EncontroRecuperadoDto = {
+        ...encontroAtivo,
+        status: EncontroStatusEnum.ENCERRADO,
+      };
+
+      const abrirDialog = (raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) => {
+        itemDaColuna(raiz, 'Novo combate')!.click();
+        fixture.detectChanges();
+        return raiz.querySelector('app-modal dialog') as HTMLDialogElement | null;
+      };
+
+      it('mantém a casca do mestre: coluna com "Novo combate", cabeçalho sem nome e estado vazio', () => {
+        const { fixture } = montar(soEncerrado);
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        expect(elemento.querySelector('.iniciativa-mestre')).not.toBeNull();
+        expect(elemento.querySelector('form.abertura')).toBeNull();
+        expect(itemDaColuna(elemento, 'Novo combate')).toBeDefined();
+        expect(itemDaColuna(elemento, 'Selecionar combatentes')).toBeUndefined();
+        expect(itemDaColuna(elemento, 'Calculadora')).toBeDefined();
+        expect(texto(elemento.querySelector('.iniciativa-mestre__titulo'))).toBe('Iniciativa');
+        expect(elemento.querySelector('.iniciativa-mestre__cabecalho app-chip')).toBeNull();
+        expect(texto(elemento.querySelector('.iniciativa-mestre__vazio'))).toContain(
+          'Nenhum combate em andamento.',
+        );
+        expect(elemento.querySelector('app-trilha-turnos')).toBeNull();
+        expect(elemento.querySelector('app-modal')).toBeNull();
+      });
+
+      it('lista os combates anteriores no próprio estado vazio, sem gatilho no cabeçalho', () => {
+        const { fixture } = montar(soEncerrado);
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        expect(texto(elemento.querySelector('.iniciativa-mestre__anteriores h2'))).toBe(
+          'Combates anteriores',
+        );
+        const cartoes = elemento.querySelectorAll<HTMLButtonElement>('.historico__card');
+        expect(cartoes).toHaveLength(1);
+        expect(texto(cartoes[0].querySelector('.historico__nome'))).toBe(soEncerrado.nome);
+        expect(
+          Array.from(
+            elemento.querySelectorAll('.iniciativa-mestre__cabecalho button'),
+          ).some((botao) => texto(botao).includes('encerrado')),
+        ).toBe(false);
+
+        cartoes[0].click();
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'iniciativa', soEncerrado.id]);
+      });
+
+      it('o estado vazio e a coluna abrem o dialog "Novo combate"', () => {
+        const { fixture } = montar(soEncerrado);
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        elemento.querySelector<HTMLButtonElement>('.iniciativa-mestre__vazio button')!.click();
+        fixture.detectChanges();
+
+        expect(elemento.querySelector('app-modal')).not.toBeNull();
+        expect(texto(elemento.querySelector('app-modal .modal__titulo'))).toBe('Novo combate');
+        expect(itemDaColuna(elemento, 'Novo combate')!.getAttribute('aria-pressed')).toBe('true');
+      });
+
+      it('Abrir combate fica desabilitado sem nome e envia o nome (com trim), fechando o dialog', () => {
+        const { fixture, encontroService } = montar(soEncerrado);
+        const elemento = fixture.nativeElement as HTMLElement;
+        abrirDialog(elemento, fixture);
+        const enviar = elemento.querySelector<HTMLButtonElement>('app-modal button[type="submit"]')!;
+        const campo = elemento.querySelector<HTMLInputElement>('app-modal input')!;
+
+        expect(enviar.disabled).toBe(true);
+
+        campo.value = '  Contenção no Setor 12  ';
+        campo.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        expect(enviar.disabled).toBe(false);
+
+        elemento
+          .querySelector<HTMLFormElement>('app-modal form')!
+          .dispatchEvent(new Event('submit'));
+        fixture.detectChanges();
+
+        expect(encontroService.criarEncontro).toHaveBeenCalledWith(CAMPANHA_ID, {
+          nome: 'Contenção no Setor 12',
+        });
+        expect(elemento.querySelector('app-modal')).toBeNull();
+      });
+
+      it('Cancelar fecha o dialog sem criar nada', () => {
+        const { fixture, encontroService } = montar(soEncerrado);
+        const elemento = fixture.nativeElement as HTMLElement;
+        abrirDialog(elemento, fixture);
+
+        Array.from(elemento.querySelectorAll<HTMLButtonElement>('app-modal button'))
+          .find((botao) => texto(botao) === 'Cancelar')!
+          .click();
+        fixture.detectChanges();
+
+        expect(elemento.querySelector('app-modal')).toBeNull();
+        expect(encontroService.criarEncontro).not.toHaveBeenCalled();
+      });
+
+      it('lendo um encerrado, "Combate atual" só aparece havendo combate aberto', () => {
+        const encerrado: EncontroRecuperadoDto = {
+          ...encontroAtivo,
+          id: 99,
+          status: EncontroStatusEnum.ENCERRADO,
+        };
+        const rotulos = (raiz: HTMLElement): string[] =>
+          Array.from(
+            raiz.querySelectorAll<HTMLButtonElement>('.iniciativa-mestre__cabecalho button'),
+          ).map((botao) => texto(botao));
+
+        // Há combate aberto (o padrão de `montar`): o botão volta a ele.
+        const comAberto = montar();
+        comAberto.encontroAlterado$.next({ encontro: encerrado });
+        comAberto.fixture.detectChanges();
+        const comAbertoRaiz = comAberto.fixture.nativeElement as HTMLElement;
+        expect(rotulos(comAbertoRaiz)).toContain('Combate atual');
+        expect(rotulos(comAbertoRaiz)).not.toContain('Novo combate');
+        TestBed.resetTestingModule();
+
+        // Nenhum aberto: o mesmo lugar oferece criar um.
+        const semAberto = montar(soEncerrado);
+        semAberto.encontroAlterado$.next({ encontro: encerrado });
+        semAberto.fixture.detectChanges();
+        const semAbertoRaiz = semAberto.fixture.nativeElement as HTMLElement;
+        expect(rotulos(semAbertoRaiz)).not.toContain('Combate atual');
+        expect(rotulos(semAbertoRaiz)).toContain('Novo combate');
+      });
     });
   });
 });
