@@ -1,5 +1,73 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Iniciativa: mestre e jogador em páginas separadas e nova visão do jogador (ui-39)
+
+Pedido do autor, depois de aprovar o mock "POC Iniciativa do jogador" (artifact, v1): "monta esse spec e já
+executa" e "se mestre e jogador estão no mesmo arquivo, separa". Spec em
+`docs/specs/done/ui-39-iniciativa-jogador-layout-e-separacao.spec.md`.
+
+- **Mestre e jogador estavam no mesmo componente** — `PainelEncontro` (~1200 linhas de TS, ~850 de HTML),
+  alternando por `@if (modoMestre())`. Foi separado no molde de `detalhe-shell`/`detalhe-mestre`/
+  `detalhe-jogador` da campanha: **`PainelEncontroShell`** (`paginas/painel/painel-shell.page.*`) resolve o
+  papel e monta **`PainelEncontroMestre`** (`paginas/painel-mestre/`) ou **`PainelEncontroJogador`**
+  (`paginas/painel-jogador/`); o dado, a carga e o socket foram para o **`EncontroPainelDadosService`**
+  (`@Injectable()`, provido pela casca, uma instância por navegação). Papel desconhecido (membros a caminho)
+  monta a página do mestre, que traz o esqueleto de carregamento (o trabalho de outra sessão, commitado em
+  `f268551c`, foi carregado para lá sem mudança). O layout comum às duas vive num parcial SCSS com mixin
+  (`paginas/_casca-iniciativa.scss`), incluído por cada página com o próprio bloco BEM — sem copiar CSS e sem
+  mudar nenhuma regra do mestre. `painel-encontro.page.*` foi removido; as rotas apontam para a casca.
+- **Nova visão do jogador** — coluna de ações (só Ferramentas) | trilha | Rolagens fixas | palco, com a
+  **própria ficha** (`app-ficha-campanha-card`) no palco inteiro: `app-trilha-turnos` ganhou o slot
+  `[trilhaAcao]` e `meuCombatenteId` ("Você"); o novo **`app-acao-jogador`** é o bloco do topo da trilha
+  (rolar iniciativa · aguardando · minha vez com "Avançar turno" · vez de outro com "Faltam N turnos" ·
+  assistindo · encerrado); `turnosAteAVez` e `resolverFichaParaAbrir` são funções puras em
+  `encontro-leitura.util.ts`. Rolar a própria iniciativa (preset da ficha ou `iniciativaFormulaCustom`), o
+  chamado do mestre, o aviso "Sua vez!" e o avanço só na própria vez continuam como eram. Sem combatente com
+  ficha em campo o palco é a grade de leitura; sem encontro, estado vazio (decisões desta spec — o mock não
+  cobria). Saíram: a coluna lateral de 70% (`iniciativa-tela`), o botão "Minha ficha" do cabeçalho, o
+  histórico flutuante de rolagens, o chip "Espectador" (aparecia também para quem joga) e os contadores
+  redundantes do mobile.
+- **Três achados na verificação ao vivo, corrigidos na tarefa** (o mock não os previa, porque desenhava a ficha
+  à mão): (1) **1366×768** — o `FichaCampanhaCard` só empilha pela largura da *janela* (`bp.tablet`) e pede
+  ~700px de palco (Identidade e Status lado a lado); com três colunas o palco tinha ~650px e a barra de abas
+  era cortada. Entre 1081 e 1599px trilha e Rolagens agora dividem **uma coluna de 300px** empilhada (3 : 2,
+  `sticky`); ≥ 1600px seguem as três colunas do mock. (2) **Mobile** — a coluna de ações vira barra fixa no
+  rodapé, na mesma faixa da `.ficha-nav` do cartão (que ficava por cima, deixando Calculadora e Caderno
+  inalcançáveis): com a ficha no palco a coluna some no mobile e as duas ferramentas sobem para o cabeçalho
+  (a saída do `detalhe-jogador`). (3) **Cabeçalho duplicado** — o cartão traz a faixa "Ficha de Jogador ·
+  FICHA-JGD-NNNN"; passa `[mostrarTopo]="false"` (input de `dbe5f2f7`). O cabeçalho "Minha ficha" (título,
+  régua e chip) que o mock tinha foi **removido a pedido do autor** ("só ocupa espaço à toa"): a ficha começa
+  no topo do palco e a região só é nomeada "Minha ficha" para leitor de tela.
+- **Perda assumida:** quem tem ficha em campo deixa de ver a grade de cartões e, com ela, de abrir a ficha de um
+  colega revelado por ali (o mock aprovado não tem a grade). Continua possível para quem só assiste e pelo
+  Caderno ("Ver ficha").
+- **Testes:** os 77 testes do spec antigo foram redistribuídos — 64 mantidos (mesmas asserções) nos specs do
+  serviço de dados, da casca e da página do mestre; 13 trocaram de assunto (contadores `R · T` e bloco redundante
+  do mobile, grade dividida, botão "Minha ficha", "Espectador", coluna/condução ausentes do jogador) e ganharam
+  testes equivalentes da nova visão. Novos: `encontro-painel-dados.service.spec`, `painel-shell.page.spec`
+  (papel → página; o papel errado nunca dispara o efeito do outro), `painel-jogador.page.spec`,
+  `acao-jogador.component.spec`, "Você"/slot/`comAcao` na trilha, `turnosAteAVez`/`resolverFichaParaAbrir`. Fixtures
+  e providers compartilhados em `painel-encontro.testing.ts` — excluído do build em `tsconfig.app.json`
+  (`src/**/*.testing.ts`), porque importa `vitest`/`TestBed`. **Frontend: 139 arquivos / 2005 testes verdes**;
+  lint sem erros (avisos de aspas/`max-len` são preexistentes); `ng build` ok (o aviso do orçamento do bundle
+  inicial, 541 kB, é anterior e não vem do lazy chunk desta tela).
+- **Verificação ao vivo** (Postgres/backend/frontend reais; Playwright em `1920×1080`, `1366×768`, `960×1080` e
+  `360×800`; jogador `stub1` no navegador e o mestre pela API): regressão do mestre com combate em curso —
+  `1920` e `960` idênticos byte a byte ao "antes", `1366` e `360` iguais na inspeção, alturas de documento
+  iguais (1080/1454/1528/3205) — mais sem combate, montagem e encerrado; jogador com percurso completo
+  (montagem → chamado acende o bloco e dispara a notificação → **rolar** grava a iniciativa no backend, entra no
+  feed e na trilha → aguardando → combate: vez de outro ("Faltam 2 turnos") → **sua vez** → **Avançar turno**
+  move o turno no backend → encerrado sem botões), sem overflow horizontal e sem erros de console nos quatro
+  viewports; trilha e Rolagens `sticky` (topo em 12px após rolar 416px em 1366×768); jogador sem ficha em campo
+  (grade de leitura + "Você está assistindo") e sem combate (estado vazio); coluna retraída/expandida de
+  1100 a 1600px sem overflow de página. Com a ficha semeada (sem o preset "Iniciativa") o app avisa "Sem preset
+  de Iniciativa" e não grava — comportamento de sempre; o percurso usou a fórmula do combatente (m7-19).
+- **Aberto / fora do escopo:** `P-073` (espectador preso no carregamento) segue aberto — a casca preserva o
+  comportamento; agora o espectador fica no esqueleto da página do mestre. "Encerrar combate" (coluna de ações do
+  mestre) ainda não fica selecionado enquanto a confirmação está aberta, como os itens de diálogo da entrega de
+  `dbe5f2f7` — deixado de fora por não estar na spec. Abas Inventário/Habilidades/Rolagens são as do cartão,
+  como estão. No banco de dev, os combates de teste desta tarefa ficam encerrados na campanha do Codex.
+
 ## 2026-09-21 — Confirmação ao remover da campanha, itens de diálogo selecionados na coluna e ficha do jogador sem a barra "Ficha de Jogador"
 
 Pedido do autor, em cima da entrega anterior (skeletons / "i" da missão / itens selecionados).

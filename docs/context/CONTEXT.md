@@ -9,8 +9,17 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-18 · **Última decisão registrada:**
-> `app-editor-markdown` compacto tinha `:host { flex: 1; }` herdado do modo página-cheia do
+> **Última revisão:** 2026-09-21 · **Última decisão registrada:**
+> Iniciativa (`ui-39`): o `PainelEncontro` monolítico (mestre e jogador por `@if`) foi separado em
+> `PainelEncontroShell` (resolve o papel; provê o `EncontroPainelDadosService`) →
+> `PainelEncontroMestre`/`PainelEncontroJogador`, no molde de `detalhe-shell`. A visão do jogador ganhou a
+> composição do mestre (coluna de ações · trilha · Rolagens · palco) com a **própria ficha** no palco e o
+> bloco de ação (`app-acao-jogador`: rolar iniciativa / avançar turno) no topo da trilha; a trilha ganhou
+> `[trilhaAcao]`/`meuCombatenteId` ("Você"); o layout comum vive em `paginas/_casca-iniciativa.scss`.
+> Faixa 1081–1599px: trilha e Rolagens dividem uma coluna (o cartão de ficha só empilha por janela).
+> Frontend 139 arquivos / 2005 testes, lint sem erros, build ok. Detalhe em `HISTORY.md` e
+> `docs/design/DESIGN.md` ("Iniciativa — visão do jogador"). `P-073` (espectador) segue aberto.
+> Antes: `app-editor-markdown` compacto tinha `:host { flex: 1; }` herdado do modo página-cheia do
 > Caderno — dentro de um card `display:flex; flex-direction:column` sem altura fixa
 > (`habilidade-lista__item`), 2 instâncias compactas na mesma coluna (Descrição+Restrição)
 > dividiam o espaço ao meio em vez de crescer pro próprio conteúdo, sobrepondo texto (achado pelo
@@ -2216,22 +2225,36 @@ progresso no topo, resumo operacional vira bottom sheet aberto por um botão ded
 
 ### Encontro de Combate — `backend/encontro`, `frontend/src/app/modules/encontro`
 
-Tela única (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, `:encontroId` opcional para
-histórico) que bifurca por `ehMestre()`: o jogador é espectador, rola a própria iniciativa e só
-pode avançar/encerrar o turno da própria ficha (o backend confirma que o combatente do slot atual
-pertence à ficha do usuário ativo). O mestre mantém todos os controles de condução.
+Tela única (rota `/campanhas/:campanhaId/iniciativa`, `:encontroId` opcional para histórico) com
+duas visões em páginas separadas (`ui-39`): `PainelEncontroShell` resolve o papel
+(`EncontroPainelDadosService.visaoDoMestre`) e monta `PainelEncontroMestre` (todos os controles de
+condução) ou `PainelEncontroJogador` (rola a própria iniciativa e só pode avançar o turno da própria
+ficha — o backend confirma que o combatente do slot atual pertence à ficha do usuário ativo). O
+`EncontroPainelDadosService` (`@Injectable()`, provido pela casca) é o único ponto de carga e de
+assinatura de socket; papel desconhecido (membros a caminho) monta a página do mestre, que traz o
+esqueleto de carregamento.
 
 **Visão do mestre (`ui-37`).** Com um encontro carregado, o mestre vê o palco de uma só vista
-(`modoMestre()`): `app-coluna-acoes` (Combate/Ferramentas) | `app-trilha-turnos` | coluna fixa de
+(`PainelEncontroMestre`): `app-coluna-acoes` (Combate/Ferramentas) | `app-trilha-turnos` | coluna fixa de
 Rolagens (`app-historico-rolagens-sidebar [fixo]`) | palco com `app-conducao-turno`,
 `app-resumo-combatente` (ficha resumida de quem age) e a grade `.grade--compacta.grade--palco`.
-Jogador/espectador e o carregamento seguem a tela antiga (`.iniciativa-tela`). Sem combate aberto
+Sem combate aberto
 (`ui-38`) o mestre mantém a mesma casca, com estado vazio e o dialog "Novo combate" (`app-modal`)
 no lugar do antigo formulário inline; "Combate atual" só aparece havendo combate aberto.
 Os combates encerrados: menu ancorado no gatilho "N encerrados" (com combate na tela) ou seção
 "Combates anteriores" em cartões (sem combate) — ver DESIGN. As leituras puras (turnos por rodada, origem, defesas, sigla) vivem
 em `encontro-leitura.util.ts` e são compartilhadas com o cartão. Composição em
 `docs/design/DESIGN.md` ("Iniciativa — visão do mestre").
+
+**Visão do jogador (`ui-39`).** Mesma casca (coluna de ações só com Ferramentas | `app-trilha-turnos` |
+Rolagens fixas | palco), com a própria ficha (`app-ficha-campanha-card`, `mostrarTopo=false`, sem
+cabeçalho de seção) e o bloco `app-acao-jogador` no topo da trilha — rolar a própria
+iniciativa (preset da ficha ou `iniciativaFormulaCustom`), avançar turno só na própria vez, "Faltam N
+turnos" (`turnosAteAVez`), o chamado do mestre (`iniciativaPedida`) e o aviso "Sua vez!". Sem combatente
+com ficha em campo o palco é a grade de leitura. Layout comum às duas visões no parcial
+`paginas/_casca-iniciativa.scss`; apoio de teste compartilhado em `painel-encontro.testing.ts`
+(excluído do build em `tsconfig.app.json`). Composição em `docs/design/DESIGN.md` ("Iniciativa — visão do
+jogador").
 
 Um combatente **avulso** (sem ficha) só existe dentro do encontro: cor obrigatória + imagem
 opcional persistidas em `encontro_combatente` (`cor_avulso`/`imagem_url_avulso`); o modo "Editar

@@ -328,7 +328,7 @@ normal do layout (flex, nunca `position: fixed`) e empurra o conteúdo ao expand
 sobrepor. Substitui `.utilitario-flutuante` só na visão de mestre da campanha por ora — os outros 6
 consumidores de `.utilitario-flutuante` (ficha, Iniciativa, campanha do jogador) migram em specs
 futuras, mesmo padrão de rollout gradual de `ui-28`…`ui-32`. A visão do **mestre** da Iniciativa
-migrou na `ui-37` (abaixo); a do jogador segue com os utilitários flutuantes.
+migrou na `ui-37` e a do **jogador** na `ui-39` (ambas abaixo) — as duas com a coluna de ações.
 
 `app-coluna-acoes-item` aceita `[pressionado]` (`boolean | null`, `ui-37`) para item de
 **alternância** (Editar combatentes, Selecionar combatentes, Adicionar avulso): vira `aria-pressed`
@@ -339,8 +339,8 @@ e ganha o mesmo destaque `--ativo` do item de rota, sem o `aria-current="page"` 
 
 Composição aprovada na POC "Tela de Iniciativa" (v9): **coluna de ações | trilha de turnos | coluna
 de rolagens | palco**, sobre a casca de `detalhe-mestre` (coluna 56/200px encostada na topbar e na
-borda; conteúdo com o restante da largura). Só existe para o mestre; o jogador/espectador seguem a
-tela anterior (`.iniciativa-tela`). **Sem combate aberto (`ui-38`)** a casca fica (coluna com
+borda; conteúdo com o restante da largura). Só existe para o mestre — o jogador tem a própria visão
+(`ui-39`, abaixo), com a mesma casca. **Sem combate aberto (`ui-38`)** a casca fica (coluna com
 "Novo combate" + Ferramentas, cabeçalho "Iniciativa" sem nome/chip) e o palco vira um
 `app-estado-vazio` com a ação **Novo combate**, que abre um `app-modal` "Novo combate" (campo
 "Nome do encontro" em `app-campo`, Cancelar/Abrir combate; Enter envia). Lendo um encontro
@@ -371,6 +371,44 @@ a seção "Combates anteriores" (cartões) logo abaixo do estado vazio.
   métricas cheias — a condução fica no fluxo da página, não em rodapé fixo próprio.
 - **Ordem de leitura:** a grade e a trilha usam as mesmas funções puras de
   `encontro-leitura.util.ts`; nenhuma regra de iniciativa/Cadência vive na UI.
+
+### Iniciativa — visão do jogador (`ui-39`)
+
+Mesma casca da visão do mestre — **coluna de ações | trilha | Rolagens | palco** —, em que o palco é a
+**própria ficha** do jogador e as ações dele moram no topo da trilha (mock aprovado "POC Iniciativa do
+jogador"). A tela é uma **casca** (`PainelEncontroShell`) que resolve o papel e monta
+`PainelEncontroMestre` ou `PainelEncontroJogador`, no molde de `detalhe-shell`; o layout comum das
+duas vive no parcial `paginas/_casca-iniciativa.scss` (mixin `casca`), incluído por cada página com o
+próprio bloco BEM (`iniciativa-mestre`/`iniciativa-jogador`).
+
+- **Coluna de ações:** só **Ferramentas** (Calculadora, Caderno, `[pressionado]`). No mobile, com a
+  ficha no palco, ela some — a barra fixa do rodapé colide com a `.ficha-nav` do cartão de ficha (mesma
+  faixa) — e as duas ferramentas sobem para o cabeçalho como `app-botao-icone` (a saída do
+  `detalhe-jogador`). Sem ficha em campo a coluna continua sendo a barra inferior.
+- **Trilha** (`app-trilha-turnos`): os mesmos contadores Rodada/Turno e, logo abaixo, o **bloco de
+  ação** (`app-acao-jogador`, projetado em `[trilhaAcao]`; `.trilha__topo` agrupa os dois). O item do
+  próprio jogador ganha o subtítulo **"Você"** (`--accent`, negrito) e, sem ninguém na vez, é o alvo
+  do rolar-até-o-item. O mestre não passa nenhum dos dois e a trilha é a de sempre.
+- **Bloco de ação** (moldura acesa como a `app-conducao-turno`, `--acesa` em `accent` a 9%): **rolar**
+  (montagem, sem iniciativa — botão primário "Rolar iniciativa"; acende quando o mestre chamou),
+  **aguardando** ("Iniciativa N"), **minha vez** (nome, "N ação/ações restante(s)" e "Avançar turno"),
+  **vez de outro** ("Age agora" + "Faltam N turnos para a sua vez." / "Você é o próximo.", de
+  `turnosAteAVez`), **assistindo** (sem combatente em campo) e **encerrado** (sem botões).
+- **Palco:** o `app-ficha-campanha-card` da própria ficha ocupando toda a largura, **sem cabeçalho de seção**
+  (`[mostrarTopo]="false"` também dispensa a faixa "Ficha de Jogador · FICHA-JGD-NNNN" — o nome já está no
+  cartão; a região é nomeada "Minha ficha" só para leitor de tela). Sem combatente com ficha em campo
+  (quem só assiste) o palco é a grade de leitura `.grade--compacta.grade--palco`; sem encontro, um
+  `app-estado-vazio`.
+- **Responsivo:** ≥ 1600px, três colunas (trilha 262px | Rolagens `clamp(300px, 23.44vw, 450px)` | palco),
+  com trilha e Rolagens `sticky` na altura da janela enquanto o palco rola. **1081–1599px:** trilha e
+  Rolagens dividem **uma só coluna** de 300px empilhada (3 : 2), também `sticky` — o cartão de ficha só
+  empilha pela largura da *janela* e pede ~700px de palco (Identidade e Status lado a lado), o que três
+  colunas não deixam num notebook. ≤ 1080px (`bp.tablet`) empilha (trilha em faixa, com o bloco de ação ao
+  lado dos contadores → ficha → Rolagens); `bp.mobile` põe o bloco de ação na linha inteira, com a ação
+  primária já na primeira tela.
+- **Saíram:** a coluna lateral de 70% e a divisão `iniciativa-tela`, o botão "Minha ficha" do cabeçalho, o
+  histórico flutuante de rolagens, o chip "Espectador" e os contadores redundantes do mobile. Quem tem
+  ficha em campo deixa de ver a grade de cartões (e de abrir a ficha de um colega por ela).
 
 O corpo projetado pelo primitivo é uma **coluna flexível** (`flex: 1; min-height: 0`): controles
 fixos de cada consumidor ficam no fluxo normal, e a região que deve preencher o restante declara
