@@ -140,7 +140,6 @@ function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogador
 function criarDadosCriatura(overrides: Partial<FichaCriaturaDadosDto> = {}): FichaCriaturaDadosDto {
   return {
     identidade: {
-      designacao: 'A Estátua',
       origem: OrigemCriaturaEnum.SCP_ADAPTADO,
       conceito: 'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
       naturezaFisica: 'Humanoide, altura entre 1,8m e 2,1m, aparência de pedra calcária escura.',
@@ -3047,7 +3046,7 @@ describe('FichaService', () => {
         const resultado = await service.recuperarFichaCriatura({ id: 9 }, usuarioMembro);
 
         expect(fichaRepositorio.recuperarAcesso).toHaveBeenCalledWith({ fichaId: 9, usuarioId: usuarioMembro.sub });
-        expect(resultado.dados.identidade.designacao).toBe('A Estátua');
+        expect(resultado.nome).toBe('A Estátua');
       });
 
       it('lança ResourceNotFoundException quando a ficha não existe', async () => {

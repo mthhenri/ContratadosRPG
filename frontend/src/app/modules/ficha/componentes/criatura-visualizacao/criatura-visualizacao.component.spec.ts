@@ -16,7 +16,7 @@ import { TemaService } from '../../../../core/services/tema.service';
 describe('CriaturaVisualizacao', () => {
   const dados: FichaCriaturaDadosDto = {
     identidade: {
-      designacao: 'A Estátua', origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
+      origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
       naturezaFisica: 'x', comportamento: ComportamentoCriaturaEnum.CACADORA, motivacao: 'x', ganchoUnico: 'x',
     },
     na: NivelAmeacaEnum.ALTA, vd: 30,
@@ -148,11 +148,25 @@ describe('CriaturaVisualizacao', () => {
     expect(eventos['ataquesMudou']).toEqual([novos]);
   });
 
-  it('renderiza a designação e o VD vindos dos dados', () => {
+  it('renderiza a designação (fonte única: `nome()`, não `identidade`) e o VD vindos dos dados', () => {
     const { fixture } = montar();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelector('.criatura__designacao')?.textContent?.trim()).toBe('A Estátua');
     expect(raiz.querySelector('.criatura__stat--vd')?.textContent).toContain('30');
+  });
+
+  it('emite nomeMudou (não identidadeMudou) ao confirmar a Designação editada', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['confirmarNome']('Eco');
+    expect(eventos['nomeMudou']).toEqual(['Eco']);
+    expect(eventos['identidadeMudou']).toEqual([]);
+  });
+
+  it('ignora a Designação confirmada vazia ou sem mudança — não emite nomeMudou', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['confirmarNome']('   ');
+    fixture.componentInstance['confirmarNome']('A Estátua');
+    expect(eventos['nomeMudou']).toEqual([]);
   });
 
   it('mostra o placeholder "SCP - ?????" quando dados.registro não está definido', () => {

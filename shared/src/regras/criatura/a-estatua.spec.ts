@@ -94,7 +94,6 @@ describe('Caso de teste completo — "A Estátua"', () => {
   it('Ficha completa (Fraqueza ajustada ao mínimo real de 26) não tem violações de coerência', () => {
     const ficha: FichaCriaturaDadosDto = {
       identidade: {
-        designacao: 'A Estátua',
         origem: OrigemCriaturaEnum.SCP_ADAPTADO,
         conceito: 'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
         naturezaFisica: 'Humanoide, altura entre 1,8m e 2,1m, aparência de pedra calcária escura. Sem feições definidas.',
