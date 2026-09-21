@@ -8,6 +8,7 @@ import type {
   CampanhaPreviaJogadorRecuperarDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
@@ -137,6 +138,40 @@ export class CampanhaProjecaoService {
       podeAcessarInventarioEsquadrao: identidade.naBase,
       encontroAtivo,
     };
+  }
+
+  async recuperarEncontroAtivoPainelEspectador(
+    dto: CampanhaPainelEspectadorRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto | null> {
+    await this.recuperarIdentidadeSegura(dto.campanhaId);
+    const membro = await this.campanhaService.validarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (!this.campanhaService.ehEspectador(membro.papel) && !this.campanhaService.ehMestre(membro.papel)) {
+      throw new UnauthorizedAccessException();
+    }
+    return this.encontroService.recuperarEncontroAtivoParaEspectador({ campanhaId: dto.campanhaId });
+  }
+
+  async recuperarEncontroAtivoPreviaJogador(
+    dto: CampanhaPreviaJogadorRecuperarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto | null> {
+    await this.recuperarIdentidadeSegura(dto.campanhaId);
+    const membro = await this.campanhaService.validarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (!this.campanhaService.ehMestre(membro.papel)) {
+      throw new UnauthorizedAccessException();
+    }
+    await this.fichaService.listarFichasParaAlvo({
+      campanhaId: dto.campanhaId,
+      usuarioAlvoId: dto.usuarioAlvoId,
+    });
+    return this.encontroService.recuperarEncontroAtivoParaAlvo({ campanhaId: dto.campanhaId, usuarioAlvoId: dto.usuarioAlvoId });
   }
 
   /**

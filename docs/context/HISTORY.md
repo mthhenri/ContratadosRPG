@@ -1,5 +1,20 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Rede-03: invalidação seletiva de tempo real
+
+- Foram criados os GETs estreitos de encontro ativo para o painel do espectador e para a prévia
+  de jogador, ambos mantendo os gates das projeções completas e devolvendo apenas o recorte
+  redigido pelo backend.
+- O espectador passa a buscar somente o encontro após `encontro:alterado`; a prévia agrupa
+  invalidações por 25 ms, cancela a execução anterior, deixa a projeção absorver o encontro e
+  preserva categorias independentes para ficha exibida e inventário.
+- O detalhe de campanha agora recarrega fichas e membros separadamente, filtrando o contexto dos
+  broadcasts; a reconexão continua sincronizando os dois recursos.
+- Verificado: 18 testes focados do backend, 43 do frontend e builds de backend/frontend. O build
+  do frontend preserva o aviso preexistente de bundle inicial acima do orçamento. Uma tentativa
+  manual com conta de desenvolvimento sem permissão para a prévia foi recusada como esperado e
+  não foi considerada evidência de interface.
+
 ## 2026-09-21 — rede-02: carga inicial única das projeções
 
 Painel do espectador e Prévia de jogador receberam as projeções por resolver, eliminando o GET de autorização

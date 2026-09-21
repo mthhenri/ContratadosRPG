@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, forkJoin, merge } from 'rxjs';
+import { filter, finalize, forkJoin, merge } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaInventarioItemDto,
@@ -123,14 +123,22 @@ export class CampanhaDetalheDadosService {
     });
 
     merge(
-      this.tempoRealService.fichaCriada$,
-      this.tempoRealService.membroEntrou$,
-      this.tempoRealService.fichaAlterada$,
-      this.tempoRealService.fichaVisibilidadeAlterada$,
-      this.tempoRealService.fichaRemovidaDaCampanha$,
+      this.tempoRealService.fichaCriada$.pipe(filter((ficha) => ficha.campanhaId === id)),
+      this.tempoRealService.fichaAlterada$.pipe(
+        filter((ficha) => this.salasFichaAtivas.has(ficha.id)),
+      ),
+      this.tempoRealService.fichaVisibilidadeAlterada$.pipe(
+        filter((evento) => evento.campanhaId === id),
+      ),
+      this.tempoRealService.fichaRemovidaDaCampanha$.pipe(
+        filter((evento) => evento.campanhaId === id),
+      ),
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.recarregarMembrosEFichas() });
+      .subscribe({ next: () => this.recarregarFichas() });
+    this.tempoRealService.membroEntrou$
+      .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.recarregarMembros() });
 
     // Feed de rolagens em tempo real (m3-27; correção): rolagens `PUBLICA` chegam para qualquer
     // membro; `PRIVADA` só chega aqui quando esta tela é a do mestre (backend emite só na sala
@@ -244,6 +252,18 @@ export class CampanhaDetalheDadosService {
         this.sincronizarSalasFicha(fichas);
         this.ultimaAtualizacaoEm.set(Date.now());
       },
+    });
+  }
+
+  private recarregarMembros(): void {
+    this.campanhaService.listarMembros(this.idInterno).subscribe((membros) => this.membros.set(membros));
+  }
+
+  private recarregarFichas(): void {
+    this.fichaService.listarFichas(this.idInterno).subscribe((fichas) => {
+      this.fichas.set(fichas);
+      this.sincronizarSalasFicha(fichas);
+      this.ultimaAtualizacaoEm.set(Date.now());
     });
   }
 

@@ -207,8 +207,8 @@ export class CampanhaEspectador {
 
   private atualizarEncontroAtivo(): void {
     this.campanhaProjecaoService
-      .recuperarPainelEspectador(this.id, 1, 1)
-      .subscribe({ next: (painel) => this.encontroAtivo.set(painel.encontroAtivo) });
+      .recuperarEncontroAtivoPainelEspectador(this.id)
+      .subscribe({ next: (encontro) => this.encontroAtivo.set(encontro) });
   }
 
   private onRolagemRegistrada(rolagem: RolagemResumoDto): void {

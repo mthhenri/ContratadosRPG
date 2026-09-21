@@ -4,6 +4,7 @@ import type {
   CampanhaPreviaJogadorDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
@@ -33,6 +34,17 @@ export class CampanhaProjecaoController {
     );
   }
 
+  @Get('campanha/:id/painel-espectador/encontro-ativo')
+  recuperarEncontroAtivoPainelEspectador(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto | null> {
+    return this.campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador(
+      { campanhaId: id, pagina: 1, itensPorPagina: 1 },
+      usuarioAtivo,
+    );
+  }
+
   @Get('campanha/:id/previa-jogador/:usuarioAlvoId')
   recuperarPreviaJogador(
     @Param('id', ParseIntPipe) id: number,
@@ -40,6 +52,18 @@ export class CampanhaProjecaoController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<CampanhaPreviaJogadorDto> {
     return this.campanhaProjecaoService.recuperarPreviaJogador(
+      { campanhaId: id, usuarioAlvoId },
+      usuarioAtivo,
+    );
+  }
+
+  @Get('campanha/:id/previa-jogador/:usuarioAlvoId/encontro-ativo')
+  recuperarEncontroAtivoPreviaJogador(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('usuarioAlvoId', ParseIntPipe) usuarioAlvoId: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<EncontroRecuperadoDto | null> {
+    return this.campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador(
       { campanhaId: id, usuarioAlvoId },
       usuarioAtivo,
     );

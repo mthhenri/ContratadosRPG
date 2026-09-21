@@ -176,14 +176,15 @@ describe('CampanhaDetalheDadosService', () => {
     expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
   });
 
-  it('refaz o fetch de membros/fichas ao receber ficha:alterada em tempo real', () => {
+  it('refaz somente o fetch de fichas ao receber ficha:alterada em tempo real', () => {
     const { service, fichaService, fichaAlterada$ } = montar({
       usuarioId: 1,
       membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+      fichas: [{ id: 1 } as FichaResumoDto],
     });
     fichaService.listarFichas.mockClear();
 
-    fichaAlterada$.next({});
+    fichaAlterada$.next({ id: 1 });
 
     expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
     void service;
