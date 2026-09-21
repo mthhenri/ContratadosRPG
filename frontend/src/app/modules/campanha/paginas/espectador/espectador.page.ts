@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
-import type { CampanhaIdentidadeSeguraDto, CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { CampanhaIdentidadeSeguraDto, CampanhaMembroResumoDto, CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -170,7 +170,13 @@ export class CampanhaEspectador {
     effect(() => this.topbarContexto.definir(this.campanha()?.nome ?? null));
     this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
 
-    this.carregarPainel(1);
+    const painelInicial = this.rotaAtiva.snapshot.data?.['painelEspectador'] as CampanhaPainelEspectadorDto | undefined;
+    if (painelInicial) {
+      this.aplicarPainel(painelInicial, 1);
+      this.carregando.set(false);
+    } else {
+      this.carregarPainel(1);
+    }
     this.carregarPapel();
 
     this.tempoRealService.conectar();
@@ -201,8 +207,8 @@ export class CampanhaEspectador {
 
   private atualizarEncontroAtivo(): void {
     this.campanhaProjecaoService
-      .recuperarPainelEspectador(this.id, 1, 1)
-      .subscribe({ next: (painel) => this.encontroAtivo.set(painel.encontroAtivo) });
+      .recuperarEncontroAtivoPainelEspectador(this.id)
+      .subscribe({ next: (encontro) => this.encontroAtivo.set(encontro) });
   }
 
   private onRolagemRegistrada(rolagem: RolagemResumoDto): void {
@@ -230,9 +236,13 @@ export class CampanhaEspectador {
       .recuperarPainelEspectador(this.id, pagina, ITENS_POR_PAGINA)
       .pipe(finalize(() => marcarCarregando.set(false)))
       .subscribe({
-        next: (painel) => {
-          this.campanha.set(painel.campanha);
-          this.encontroAtivo.set(painel.encontroAtivo);
+        next: (painel) => this.aplicarPainel(painel, pagina),
+      });
+  }
+
+  private aplicarPainel(painel: CampanhaPainelEspectadorDto, pagina: number): void {
+    this.campanha.set(painel.campanha);
+    this.encontroAtivo.set(painel.encontroAtivo);
           // `fichas`/`membros` não são paginados (o painel de jogadores devolve o recorte inteiro
           // sempre) — atualiza a cada página, inclusive em "Carregar mais", sem custo extra.
           this.fichas.set(painel.fichas);
@@ -241,9 +251,7 @@ export class CampanhaEspectador {
             pagina === 1 ? painel.rolagens.itens : [...atuais, ...painel.rolagens.itens],
           );
           this.paginaAtual.set(painel.rolagens.paginaAtual);
-          this.temMais.set(painel.rolagens.paginaAtual < painel.rolagens.totalPaginas);
-        },
-      });
+    this.temMais.set(painel.rolagens.paginaAtual < painel.rolagens.totalPaginas);
   }
 
   protected carregarMais(): void {

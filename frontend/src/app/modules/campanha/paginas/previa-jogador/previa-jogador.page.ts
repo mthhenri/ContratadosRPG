@@ -1,7 +1,17 @@
 import { DestroyRef, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { filter, finalize } from 'rxjs';
+import {
+  bufferTime,
+  EMPTY,
+  filter,
+  finalize,
+  merge,
+  Observable,
+  Subject,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   CampanhaInventarioItemDto,
@@ -42,6 +52,8 @@ import { Modal } from '../../../../shared/ui/modal/modal.component';
 
 /** Janela da tira "Sessão" — mesma janela de uma hora de `CampanhaDetalhe`. */
 const UMA_HORA_MS = 60 * 60 * 1000;
+
+type IntencaoInvalidacao = 'projecao' | 'ficha-exibida' | 'inventario' | 'encontro';
 
 /**
  * Prévia de jogador (m8-04) — o mestre confere a experiência exata de um `JOGADOR` específico da
@@ -93,6 +105,8 @@ export class CampanhaPreviaJogador {
   private readonly tempoRealService = inject(TempoRealService);
   private readonly topbarContexto = inject(TopbarContextoService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly invalidacoes = new Subject<IntencaoInvalidacao>();
+  private geracaoInvalidacao = 0;
 
   /** `id` da campanha e `usuarioAlvoId` do jogador em prévia, lidos da rota (`/campanhas/:id/previa/:usuarioAlvoId`). */
   protected readonly id = Number(this.rotaAtiva.snapshot.paramMap.get('id'));
@@ -207,7 +221,13 @@ export class CampanhaPreviaJogador {
     effect(() => this.topbarContexto.definir(this.previa()?.campanha.nome ?? null));
     this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
 
-    this.carregarPrevia();
+    const previaInicial = this.rotaAtiva.snapshot.data?.['previaJogador'] as CampanhaPreviaJogadorDto | undefined;
+    if (previaInicial) {
+      this.aplicarPrevia(previaInicial);
+      this.carregando.set(false);
+    } else {
+      this.carregarPrevia();
+    }
     this.carregarInventario();
 
     // Fetch da ficha completa (mesmo padrão de `CampanhaDetalhe`) sempre que `fichaExibidaId`
@@ -239,42 +259,46 @@ export class CampanhaPreviaJogador {
           this.rolagensFeed.update((atuais) => (atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais])),
       });
 
-    // Membro/ficha alterados em algum lugar da campanha (spec, entregável 4: "pode recarregar a
-    // projeção") — refaz a projeção inteira, nunca confia no payload do broadcast (que não é
-    // redigido para o alvo — `emitirFichaAlterada` redige para *qualquer* ouvinte igual, não
-    // especificamente para o alvo desta prévia).
+    this.configurarCoordenadorInvalidacao();
+
+    // Membro/ficha alterados em algum lugar da campanha refazem a projeção segura, mas somente
+    // depois de conferir o contexto do evento. O coordenador abaixo agrupa a ponte
+    // ficha:alterada → encontro:alterado gerada pela mesma mutação.
     this.tempoRealService.membroEntrou$
-      .pipe(takeUntilDestroyed())
-      .subscribe({ next: () => this.carregarPrevia() });
+      .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.invalidacoes.next('projecao') });
     this.tempoRealService.fichaVisibilidadeAlterada$
-      .pipe(takeUntilDestroyed())
-      .subscribe({ next: () => this.carregarPrevia() });
+      .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.invalidacoes.next('projecao') });
     this.tempoRealService.fichaRemovidaDaCampanha$
-      .pipe(takeUntilDestroyed())
-      .subscribe({ next: () => this.carregarPrevia() });
+      .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.invalidacoes.next('projecao') });
 
     // Ficha alterada: refaz a projeção (Equipe/Esquadrão) e, se for a ficha aberta agora, também
     // o fetch dedicado — via REST (nunca o payload do socket), pela mesma razão acima.
-    this.tempoRealService.fichaAlterada$.pipe(takeUntilDestroyed()).subscribe({
+    this.tempoRealService.fichaAlterada$
+      .pipe(
+        filter((ficha) => this.previa()?.fichas.some(({ id }) => id === ficha.id) ?? false),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
       next: (ficha) => {
-        this.carregarPrevia();
+        this.invalidacoes.next('projecao');
         if (ficha.id === this.fichaExibidaId()) {
-          this.recarregarFichaExibida();
+          this.invalidacoes.next('ficha-exibida');
         }
       },
     });
 
     this.tempoRealService.inventarioAlterado$
       .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
-      .subscribe({ next: () => this.carregarInventario() });
+      .subscribe({ next: () => this.invalidacoes.next('inventario') });
 
-    // Encontro alterado (m8-05): mesmo racional de membroEntrou$/fichaVisibilidadeAlterada$ acima
-    // — nunca confia no payload do socket (o mesmo evento carrega o recorte de MESTRE para o
-    // mestre de verdade em prévia), refaz a projeção inteira via REST
-    // (`recuperarEncontroAtivoParaAlvo`, sempre redigido com a identidade do alvo).
+    // Nunca usamos o payload, que pode conter o recorte de mestre. Sem uma invalidação de
+    // projeção na mesma janela, este caso usa somente o GET estreito redigido para o alvo.
     this.tempoRealService.encontroAlterado$
       .pipe(filter((evento) => evento.encontro.campanhaId === this.id), takeUntilDestroyed())
-      .subscribe({ next: () => this.carregarPrevia() });
+      .subscribe({ next: () => this.invalidacoes.next('encontro') });
 
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
@@ -302,16 +326,82 @@ export class CampanhaPreviaJogador {
       .recuperarPreviaJogador(this.id, this.usuarioAlvoId)
       .pipe(finalize(() => this.carregando.set(false)))
       .subscribe({
-        next: (previa) => {
-          this.previa.set(previa);
-          this.rolagensFeed.set(previa.rolagens);
-          if (this.fichaExibidaId() === null) {
-            const propria = previa.fichas.find((ficha) => ficha.usuarioId === this.usuarioAlvoId);
-            if (propria) {
-              this.fichaExibidaId.set(propria.id);
+        next: (previa) => this.aplicarPrevia(previa),
+      });
+  }
+
+  /** Agrupa intenções da mesma mutação e cancela a execução anterior ao chegar uma mais nova. */
+  private configurarCoordenadorInvalidacao(): void {
+    this.invalidacoes
+      .pipe(
+        bufferTime(25),
+        filter((intencoes) => intencoes.length > 0),
+        switchMap((intencoes) => {
+          const incluiProjecao = intencoes.includes('projecao');
+          const geracao = ++this.geracaoInvalidacao;
+          const requisicoes: Observable<unknown>[] = [];
+
+          if (incluiProjecao) {
+            this.carregando.set(true);
+            requisicoes.push(
+              this.campanhaProjecaoService
+                .recuperarPreviaJogador(this.id, this.usuarioAlvoId)
+                .pipe(tap((previa) => this.aplicarPrevia(previa))),
+            );
+          } else if (intencoes.includes('encontro')) {
+            requisicoes.push(
+              this.campanhaProjecaoService
+                .recuperarEncontroAtivoPreviaJogador(this.id, this.usuarioAlvoId)
+                .pipe(
+                  tap((encontro) =>
+                    this.previa.update((previa) =>
+                      previa ? { ...previa, encontroAtivo: encontro } : previa,
+                    ),
+                  ),
+                ),
+            );
+          }
+
+          if (intencoes.includes('ficha-exibida')) {
+            const fichaId = this.fichaExibidaId();
+            if (fichaId !== null) {
+              requisicoes.push(
+                this.campanhaProjecaoService
+                  .recuperarFichaPreviaJogador(this.id, this.usuarioAlvoId, fichaId)
+                  .pipe(tap((ficha) => this.fichaExibidaDados.set(ficha))),
+              );
             }
           }
-        },
-      });
+
+          if (intencoes.includes('inventario')) {
+            requisicoes.push(
+              this.campanhaService
+                .recuperarInventario(this.id)
+                .pipe(tap((inventario) => this.inventarioEsquadrao.set(inventario.itens))),
+            );
+          }
+
+          return requisicoes.length > 0
+            ? merge(...requisicoes).pipe(
+                finalize(() => {
+                  if (incluiProjecao && geracao === this.geracaoInvalidacao) {
+                    this.carregando.set(false);
+                  }
+                }),
+              )
+            : EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  private aplicarPrevia(previa: CampanhaPreviaJogadorDto): void {
+    this.previa.set(previa);
+    this.rolagensFeed.set(previa.rolagens);
+    if (this.fichaExibidaId() === null) {
+      const propria = previa.fichas.find((ficha) => ficha.usuarioId === this.usuarioAlvoId);
+      if (propria) this.fichaExibidaId.set(propria.id);
+    }
   }
 }

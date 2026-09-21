@@ -125,6 +125,7 @@ describe('CampanhaPreviaJogador', () => {
 
     const campanhaProjecaoService = {
       recuperarPreviaJogador: vi.fn(() => of(opts.previaResposta ?? previa())),
+      recuperarEncontroAtivoPreviaJogador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
       recuperarFichaPreviaJogador: vi.fn(() => of(opts.fichaResposta ?? fichaCompleta())),
     };
     const campanhaService = {
@@ -274,21 +275,23 @@ describe('CampanhaPreviaJogador', () => {
     expect(raiz.textContent).toContain('Dano 2d6');
   });
 
-  it('membro entrou/ficha alterada refazem a projeção (spec item 4)', () => {
+  it('membro entrou refaz a projeção (spec item 4)', async () => {
     const { fixture, membroEntrou$, campanhaProjecaoService } = montar();
     campanhaProjecaoService.recuperarPreviaJogador.mockClear();
 
-    membroEntrou$.next({});
+    membroEntrou$.next({ campanhaId: CAMPANHA_ID, usuarioId: 99 });
+    await new Promise((resolve) => setTimeout(resolve, 30));
     fixture.detectChanges();
 
     expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
   });
 
-  it('ficha removida da campanha refaz a projeção', () => {
+  it('ficha removida da campanha refaz a projeção', async () => {
     const { fixture, fichaRemovidaDaCampanha$, campanhaProjecaoService } = montar();
     campanhaProjecaoService.recuperarPreviaJogador.mockClear();
 
     fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID });
+    await new Promise((resolve) => setTimeout(resolve, 30));
     fixture.detectChanges();
 
     expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
@@ -346,29 +349,36 @@ describe('CampanhaPreviaJogador', () => {
       expect(raiz.querySelector('app-iniciativa-leitura')).not.toBeNull();
     });
 
-    it('encontro:alterado da própria campanha refaz a projeção inteira via REST — nunca lê o payload do evento (o mestre requisitante não pode herdar o próprio recorte de mestre)', () => {
+    it('encontro:alterado isolado busca somente o encontro seguro via REST', async () => {
       const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar({
         previaResposta: previa({ encontroAtivo: null }),
       });
       campanhaProjecaoService.recuperarPreviaJogador.mockClear();
-      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValue(of(previa({ encontroAtivo })));
+      campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador.mockReturnValue(of(encontroAtivo));
 
       encontroAlterado$.next({
         encontro: { ...encontroAtivo, id: 999, campanhaId: CAMPANHA_ID } as never,
       });
+      await new Promise((resolve) => setTimeout(resolve, 30));
       fixture.detectChanges();
 
-      expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+      expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
+      expect(campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador).toHaveBeenCalledWith(
+        CAMPANHA_ID,
+        ALVO_ID,
+      );
     });
 
     it('encontro:alterado de OUTRA campanha não dispara refetch', () => {
       const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar();
       campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+      campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador.mockClear();
 
       encontroAlterado$.next({ encontro: { ...encontroAtivo, campanhaId: CAMPANHA_ID + 1 } as never });
       fixture.detectChanges();
 
       expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
+      expect(campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { catchError, map, of } from 'rxjs';
+import { ResolveFn, Router } from '@angular/router';
+import { catchError, of } from 'rxjs';
+import type { CampanhaPreviaJogadorDto } from '@contratados-rpg/shared/dtos/campanha';
 
 import { CampanhaProjecaoService } from '../../modules/campanha/campanha-projecao.service';
 
@@ -11,14 +12,13 @@ import { CampanhaProjecaoService } from '../../modules/campanha/campanha-projeca
  * próprio endpoint que a página vai carregar e propaga sucesso/falha, sem reimplementar
  * permissão (proibição #28).
  */
-export const previaJogadorCampanhaGuard: CanActivateFn = (rota) => {
+export const previaJogadorCampanhaResolver: ResolveFn<CampanhaPreviaJogadorDto | ReturnType<Router['createUrlTree']>> = (rota) => {
   const campanhaProjecaoService = inject(CampanhaProjecaoService);
   const router = inject(Router);
   const campanhaId = Number(rota.paramMap.get('id'));
   const usuarioAlvoId = Number(rota.paramMap.get('usuarioAlvoId'));
 
   return campanhaProjecaoService.recuperarPreviaJogador(campanhaId, usuarioAlvoId).pipe(
-    map(() => true),
     catchError(() => of(router.createUrlTree(['/acesso-negado']))),
   );
 };

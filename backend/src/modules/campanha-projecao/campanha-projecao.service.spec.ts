@@ -371,4 +371,44 @@ describe('CampanhaProjecaoService', () => {
       ).rejects.toThrow(ResourceNotFoundException);
     });
   });
+
+  describe('projeções estreitas de encontro ativo', () => {
+    it('devolve o encontro redigido para espectador e aceita mestre em prévia', async () => {
+      campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.ESPECTADOR });
+      encontroServico.recuperarEncontroAtivoParaEspectador.mockResolvedValue(null);
+
+      await expect(
+        service.recuperarEncontroAtivoPainelEspectador(
+          { campanhaId: 3, pagina: 1, itensPorPagina: 1 },
+          usuarioEspectador,
+        ),
+      ).resolves.toBeNull();
+
+      expect(encontroServico.recuperarEncontroAtivoParaEspectador).toHaveBeenCalledWith({ campanhaId: 3 });
+    });
+
+    it('exige mestre para prévia e valida o alvo antes de buscar o encontro', async () => {
+      campanhaRepositorio.recuperarPorId.mockResolvedValue(campanhaPersistida);
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      fichaServico.listarFichasParaAlvo.mockResolvedValue([]);
+      encontroServico.recuperarEncontroAtivoParaAlvo.mockResolvedValue(null);
+
+      await expect(
+        service.recuperarEncontroAtivoPreviaJogador(
+          { campanhaId: 3, usuarioAlvoId: usuarioJogador.sub },
+          usuarioMestre,
+        ),
+      ).resolves.toBeNull();
+      expect(fichaServico.listarFichasParaAlvo).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioAlvoId: usuarioJogador.sub,
+      });
+
+      campanhaServico.validarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.JOGADOR });
+      await expect(
+        service.recuperarEncontroAtivoPreviaJogador({ campanhaId: 3, usuarioAlvoId: 99 }, usuarioJogador),
+      ).rejects.toThrow(UnauthorizedAccessException);
+    });
+  });
 });

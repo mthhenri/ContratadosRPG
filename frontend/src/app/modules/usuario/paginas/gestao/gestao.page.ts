@@ -2,8 +2,18 @@ import { Component, DestroyRef, HostListener, Pipe, PipeTransform, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { debounceTime, distinctUntilChanged, finalize, Observable } from 'rxjs';
-import { UsuarioResumoDto } from '@contratados-rpg/shared/dtos/usuario';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  EMPTY,
+  finalize,
+  Observable,
+  Subject,
+  switchMap,
+  tap,
+} from 'rxjs';
+import { UsuarioListarDto, UsuarioResumoDto } from '@contratados-rpg/shared/dtos/usuario';
 import { TipoUsuarioEnum, UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
@@ -59,6 +69,8 @@ export class UsuarioGestao {
   protected readonly tipoPendente = signal<{ usuarioId: number; tipo: TipoUsuarioEnum } | null>(null);
   protected readonly impersonacaoPendenteId = signal<number | null>(null);
   protected readonly impersonandoId = signal<number | null>(null);
+  private readonly intencoesListagem = new Subject<void>();
+  private geracaoListagem = 0;
 
   protected readonly filtroForm = this.formBuilder.nonNullable.group({
     busca: [''], tipo: ['' as TipoUsuarioEnum | ''], situacao: [UsuarioSituacaoEnum.ATIVOS],
@@ -79,6 +91,29 @@ export class UsuarioGestao {
   });
 
   constructor() {
+    this.intencoesListagem
+      .pipe(
+        switchMap(() => {
+          const geracao = ++this.geracaoListagem;
+          this.carregando.set(true);
+          return this.usuarioAdminService.listarUsuarios(this.montarFiltroListagem()).pipe(
+            tap((resultado) => {
+              this.usuarios.set(resultado.itens);
+              this.totalItens.set(resultado.totalItens);
+              this.totalPaginas.set(resultado.totalPaginas);
+            }),
+            catchError(() => EMPTY),
+            finalize(() => {
+              if (geracao === this.geracaoListagem) {
+                this.carregando.set(false);
+              }
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+
     this.carregarUsuarios();
     this.filtroForm.controls.busca.valueChanges.pipe(
       debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef),
@@ -89,19 +124,16 @@ export class UsuarioGestao {
       .subscribe(() => this.aplicarFiltros());
   }
 
-  protected carregarUsuarios(): void {
-    this.carregando.set(true);
+  protected carregarUsuarios(): void { this.intencoesListagem.next(); }
+
+  private montarFiltroListagem(): UsuarioListarDto {
     const filtro = this.filtroForm.getRawValue();
-    this.usuarioAdminService.listarUsuarios({
+    return {
       pagina: this.pagina(), itensPorPagina: 10, ordenarPor: 'nome', direcao: 'ASC',
       ...(filtro.busca.trim() ? { busca: filtro.busca.trim() } : {}),
       ...(filtro.tipo ? { tipo: filtro.tipo } : {}),
       situacao: filtro.situacao,
-    }).pipe(finalize(() => this.carregando.set(false))).subscribe((resultado) => {
-      this.usuarios.set(resultado.itens);
-      this.totalItens.set(resultado.totalItens);
-      this.totalPaginas.set(resultado.totalPaginas);
-    });
+    };
   }
 
   protected aplicarFiltros(): void { this.pagina.set(1); this.fecharEdicao(); this.carregarUsuarios(); }

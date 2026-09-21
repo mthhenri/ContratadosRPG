@@ -91,6 +91,7 @@ describe('CampanhaEspectador', () => {
   }) {
     const campanhaProjecaoService = {
       recuperarPainelEspectador: vi.fn(() => of(opts.painelRetorno ?? painel())),
+      recuperarEncontroAtivoPainelEspectador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
     };
     const campanhaService = {
       listarCampanhas: vi.fn(() => of(opts.campanhas ?? [])),
@@ -146,6 +147,7 @@ describe('CampanhaEspectador', () => {
   it('mostra o esqueleto enquanto carrega', () => {
     const campanhaProjecaoService = {
       recuperarPainelEspectador: vi.fn(() => new Subject<CampanhaPainelEspectadorDto>()),
+      recuperarEncontroAtivoPainelEspectador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
     };
     TestBed.configureTestingModule({
       imports: [CampanhaEspectador],
@@ -279,6 +281,7 @@ describe('CampanhaEspectador', () => {
     it('mostra o esqueleto da grade de fichas enquanto carrega', () => {
       const campanhaProjecaoService = {
         recuperarPainelEspectador: vi.fn(() => new Subject<CampanhaPainelEspectadorDto>()),
+        recuperarEncontroAtivoPainelEspectador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
       };
       TestBed.configureTestingModule({
         imports: [CampanhaEspectador],
@@ -421,16 +424,15 @@ describe('CampanhaEspectador', () => {
       expect(raiz.querySelector('app-iniciativa-leitura')).not.toBeNull();
     });
 
-    it('encontro:alterado da própria campanha refaz o painel via REST — nunca lê o payload do evento (mestre em prévia não pode herdar o recorte de mestre do socket)', () => {
+    it('encontro:alterado da própria campanha busca somente o encontro seguro via REST', () => {
       const { fixture, raiz, campanhaProjecaoService, encontroAlterado$ } = montar({
         painelRetorno: { ...painel([]), encontroAtivo: null },
       });
       expect(raiz.querySelector('.espectador__ver-iniciativa')).toBeNull();
 
       const encontroRedigido: EncontroRecuperadoDto = { ...encontroAtivo, id: 10 };
-      campanhaProjecaoService.recuperarPainelEspectador.mockReturnValue(
-        of({ ...painel([]), encontroAtivo: encontroRedigido }),
-      );
+      campanhaProjecaoService.recuperarPainelEspectador.mockClear();
+      campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador.mockReturnValue(of(encontroRedigido));
 
       // O payload do evento carregaria o recorte de MESTRE se quem está conectado for o mestre em
       // prévia — a página nunca deve ler `evento.encontro` diretamente, só usá-lo como sinal.
@@ -439,7 +441,8 @@ describe('CampanhaEspectador', () => {
       });
       fixture.detectChanges();
 
-      expect(campanhaProjecaoService.recuperarPainelEspectador).toHaveBeenCalledWith(CAMPANHA_ID, 1, 1);
+      expect(campanhaProjecaoService.recuperarPainelEspectador).not.toHaveBeenCalled();
+      expect(campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador).toHaveBeenCalledWith(CAMPANHA_ID);
       const gatilho = raiz.querySelector('.espectador__ver-iniciativa');
       expect(gatilho).not.toBeNull();
       gatilho?.dispatchEvent(new Event('click'));
@@ -454,11 +457,13 @@ describe('CampanhaEspectador', () => {
         painelRetorno: { ...painel([]), encontroAtivo: null },
       });
       campanhaProjecaoService.recuperarPainelEspectador.mockClear();
+      campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador.mockClear();
 
       encontroAlterado$.next({ encontro: { ...encontroAtivo, campanhaId: CAMPANHA_ID + 1 } as never });
       fixture.detectChanges();
 
       expect(campanhaProjecaoService.recuperarPainelEspectador).not.toHaveBeenCalled();
+      expect(campanhaProjecaoService.recuperarEncontroAtivoPainelEspectador).not.toHaveBeenCalled();
     });
   });
 });

@@ -27,6 +27,17 @@
 
 ## Promovidas
 
+### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
+
+- Promovida em 2026-09-21 a `docs/specs/backlog/m9-documentos-campanha.spec.md`. Nasceu do pedido
+  do autor de 2026-08-11 (biblioteca de documentos da campanha) e se encontrou com um segundo
+  pedido, de 2026-09-21, para que a cena de Investigação do módulo de Cenas
+  (`docs/specs/backlog/m7-cenas.spec.md`) pudesse apresentar documentos junto das fichas dos
+  jogadores. O upgrade "mesa investigativa/mapa mental" registrado nesta entrada foi levado à spec
+  como item de "Fora de escopo", não implementado. Os **cadernos privados**, que já tinham saído
+  desta ideia, continuam em
+  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
+
 ### I-024 — `perigo` e `primario` são a mesma cor · frontend/design system
 
 - Fechada em 2026-09-07 **sem spec própria**: ao investigar para implementar, `perigo` já não usa
@@ -267,36 +278,6 @@
   (`ficha.imagem_contrato_url`?), um segundo par de endpoint dedicado com permissão **mestre-only**
   (distinta de `validarPermissaoEdicao`, que hoje deixa dono e mestre editarem igual) e decidir onde
   ela aparece na UI (cabeçalho? aba própria?) — ainda não especificado.
-
-### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
-
-- **Ideia:** criar um módulo de documentos da campanha — possivelmente M9 — no qual o mestre possa
-  cadastrar conteúdo em texto ou imagem, compartilhar documentos selecionados com os jogadores e
-  oferecer aos jogadores uma biblioteca dos documentos recebidos dentro da própria campanha. Os
-  **cadernos privados** que antes faziam parte desta ideia já foram especificados separadamente em
-  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
-- **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
-- **Por quê:** materiais de sessão, pistas, handouts e notas de preparação ficam hoje fora do
-  sistema. Centralizá-los preserva o contexto da campanha e permite controlar claramente o que é
-  privado do mestre e o que já foi revelado aos jogadores.
-- **Custo aparente:** alto — modelo de documento e de compartilhamento/visibilidade, upload e
-  armazenamento de imagens e biblioteca por campanha. A
-  busca textual inicial será feita no **PostgreSQL**, que continua como fonte de verdade: `tsvector`,
-  consulta amigável e índice GIN, sempre recortados pelas permissões da campanha. Ainda falta decidir
-  quais formatos de documento são aceitos e se haverá versionamento ou organização por pastas/tags.
-  A numeração M9 é sugestão, não decisão de roadmap.
-- **Evolução futura — Elasticsearch:** permanece uma opção para busca semântica/híbrida, maior
-  sofisticação de relevância ou volume que justifique um índice separado. Nesse cenário, PostgreSQL
-  continua autoritativo e Elasticsearch é projeção reconstruível, sincronizada em criação, alteração
-  e remoção e filtrada pelas permissões antes da consulta. A especificação futura deverá validar
-  hospedagem, sincronização/reindexação, divisão em trechos, embeddings e tratamento de exclusões.
-- **Upgrade futuro — mesa investigativa/mapa mental:** depois da biblioteca básica, os documentos
-  poderiam existir também numa superfície virtual colaborativa. Os jogadores organizariam textos,
-  imagens e pistas livremente, colocariam itens lado a lado, criariam conexões visuais entre eles e
-  acrescentariam anotações próprias, formando um mapa mental da investigação ou da campanha. Esse
-  upgrade exigiria posicionamento livre, persistência do layout, conexões entre nós, colaboração em
-  tempo real e regras de edição/visibilidade. É uma evolução da M9 centrada em conhecimento e pistas,
-  distinta do tabletop tático da M11, que é centrado em mapas, tokens e posicionamento de cena.
 
 ### I-015 — M10 sugerido: assistência por IA · inteligência artificial
 

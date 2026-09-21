@@ -228,7 +228,7 @@ export class FichaAcervo {
   }
 
   constructor() {
-    this.carregar();
+    this.carregarDadosIniciais();
 
     // Mesmo tratamento de `CampanhaDetalhe` (m3-52): o menu é `position: fixed` calculado no
     // clique — sem fechar ao rolar/redimensionar, ele descolaria visualmente do botão que o abriu.
@@ -244,7 +244,7 @@ export class FichaAcervo {
     this.destroyRef.onDestroy(() => this.cancelarPreviewAvatar());
   }
 
-  private carregar(): void {
+  private carregarDadosIniciais(): void {
     this.carregando.set(true);
     forkJoin({
       fichas: this.fichaService.listarMinhasFichas(),
@@ -257,6 +257,11 @@ export class FichaAcervo {
           this.campanhas.set(campanhas);
         },
       });
+  }
+
+  /** Recarrega somente os resumos de ficha, que mudam após duplicar uma ficha. */
+  private recarregarFichas(): void {
+    this.fichaService.listarMinhasFichas().subscribe({ next: (fichas) => this.fichas.set(fichas) });
   }
 
   /** Navega pro guia de criação campanha-less (`/fichas/nova`) — mesmo padrão de `CampanhaDetalhe.abrirCriarFicha`. */
@@ -384,9 +389,9 @@ export class FichaAcervo {
       .atribuirCampanha(pendente.id, campanhaId)
       .pipe(finalize(() => this.atribuindo.set(null)))
       .subscribe({
-        next: () => {
+        next: (resultado) => {
           this.confirmandoAtribuir.set(null);
-          this.carregar();
+          this.aplicarCampanhaAtribuida(resultado.id, resultado.campanhaId);
         },
       });
   }
@@ -414,13 +419,7 @@ export class FichaAcervo {
       .atribuirCampanha(fichaId, null)
       .pipe(finalize(() => this.removendo.set(null)))
       .subscribe({
-        next: () => {
-          this.fichas.update((lista) =>
-            lista.map((ficha) =>
-              ficha.id === fichaId ? { ...ficha, campanhaId: null, campanhaNome: null } : ficha,
-            ),
-          );
-        },
+        next: (resultado) => this.aplicarCampanhaAtribuida(resultado.id, resultado.campanhaId),
       });
   }
 
@@ -454,7 +453,7 @@ export class FichaAcervo {
       .subscribe({
         next: () => {
           this.confirmandoDuplicar.set(null);
-          this.carregar();
+          this.recarregarFichas();
         },
       });
   }
@@ -483,5 +482,16 @@ export class FichaAcervo {
         this.fichas.update((lista) => lista.filter((ficha) => ficha.id !== fichaId));
       },
     });
+  }
+
+  /** Atualiza o chip pelo retorno autoritativo da mutação e pelo nome da campanha já carregada. */
+  private aplicarCampanhaAtribuida(fichaId: number, campanhaId: number | null): void {
+    const campanhaNome =
+      campanhaId === null ? null : this.campanhas().find((campanha) => campanha.id === campanhaId)?.nome ?? null;
+    this.fichas.update((lista) =>
+      lista.map((ficha) =>
+        ficha.id === fichaId ? { ...ficha, campanhaId, campanhaNome } : ficha,
+      ),
+    );
   }
 }
