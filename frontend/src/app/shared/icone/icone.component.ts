@@ -66,6 +66,7 @@ export type IconeNome =
   | 'sair'
   | 'entrar'
   | 'chevron'
+  | 'chevron-direita'
   | 'copiar'
   | 'check'
   | 'mais'
