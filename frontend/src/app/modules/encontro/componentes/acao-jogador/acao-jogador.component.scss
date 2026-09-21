@@ -1,0 +1,63 @@
+// Bloco de ação do jogador (ui-39) — alvo de fidelidade: mock aprovado "POC Iniciativa do jogador",
+// que herda a moldura "acesa" da condução do mestre (`conducao-turno`). Só tokens do tema
+// (proibição #29); o botão é `app-botao` — aqui só layout e alvo de toque.
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: var(--space-12);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+}
+
+// Há algo a fazer agora: a moldura acende, como a da condução do mestre.
+:host(.acao--acesa) {
+    background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+    border-color: var(--accent-border);
+}
+
+.acao__rotulo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+
+    :host(.acao--acesa) & {
+        color: var(--accent);
+    }
+}
+
+.acao__nome {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.acao__detalhe {
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text-mute);
+}
+
+.acao__botao {
+    margin-top: var(--space-4);
+
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
+}
+
+// "Avançar" reaproveita o ícone `voltar` espelhado, como a condução do mestre.
+.acao__icone-avancar {
+    transform: scaleX(-1);
+}

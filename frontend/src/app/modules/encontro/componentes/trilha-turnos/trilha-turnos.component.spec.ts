@@ -1,3 +1,4 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import type {
@@ -92,10 +93,13 @@ describe('TrilhaTurnos', () => {
     eventos: [],
   };
 
-  function montar(encontro: EncontroRecuperadoDto) {
+  function montar(encontro: EncontroRecuperadoDto, entradas: Record<string, unknown> = {}) {
     const fixture = TestBed.createComponent(TrilhaTurnos);
     fixture.componentRef.setInput('encontro', encontro);
     fixture.componentRef.setInput('combatentes', montarCombatentesVisuais(encontro));
+    for (const [nome, valor] of Object.entries(entradas)) {
+      fixture.componentRef.setInput(nome, valor);
+    }
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
@@ -190,5 +194,87 @@ describe('TrilhaTurnos', () => {
     expect(elemento.querySelectorAll('.trilha__item--ativa')).toHaveLength(0);
     expect(elemento.querySelectorAll('.trilha__item--agiu')).toHaveLength(0);
     expect(elemento.querySelectorAll('.trilha__item')).toHaveLength(3);
+  });
+
+  describe('visão do jogador (ui-39)', () => {
+    /** Hospedeiro mínimo: projeta um bloco em `[trilhaAcao]`, como a página do jogador faz. */
+    @Component({
+      selector: 'app-hospede-trilha',
+      imports: [TrilhaTurnos],
+      template: `
+        <app-trilha-turnos [encontro]="encontro" [combatentes]="combatentes" [comAcao]="true">
+          <div trilhaAcao>Sua ação</div>
+        </app-trilha-turnos>
+      `,
+    })
+    class HospedeComAcao {
+      protected readonly encontro = ativo;
+      protected readonly combatentes = montarCombatentesVisuais(ativo);
+    }
+
+    it('marca só o combatente do próprio jogador com "Você", sem tirar o resto do item', () => {
+      const elemento = montar(ativo, { meuCombatenteId: 2 });
+      const meu = elemento.querySelector('.trilha__item--voce');
+
+      expect(elemento.querySelectorAll('.trilha__item--voce')).toHaveLength(1);
+      expect(texto(meu?.querySelector('.trilha__nome'))).toBe('K. Amaral');
+      expect(texto(meu?.querySelector('.trilha__sub'))).toBe('Você');
+      expect(meu?.querySelector('.trilha__sub')?.classList).toContain('trilha__sub--voce');
+      expect(texto(meu?.querySelector('.trilha__iniciativa'))).toBe('18');
+      // Os demais seguem com o subtítulo de sempre.
+      const subs = Array.from(elemento.querySelectorAll('.trilha__item:not(.trilha__item--voce)')).map(
+        (item) => texto(item.querySelector('.trilha__sub')),
+      );
+      expect(subs).not.toContain('Você');
+    });
+
+    it('sem "meuCombatenteId" (mestre, espectador), nenhum item ganha a marca', () => {
+      const elemento = montar(ativo);
+
+      expect(elemento.querySelectorAll('.trilha__item--voce')).toHaveLength(0);
+      expect(elemento.textContent).not.toContain('Você');
+    });
+
+    it('o item do jogador convive com o item ativo', () => {
+      // turnoIndice 2 → 2ª ocorrência da criatura; o jogador é K. Amaral (já agiu).
+      const elemento = montar(ativo, { meuCombatenteId: 2 });
+
+      expect(texto(elemento.querySelector('.trilha__item--ativa'))).toContain('SCP-1471-A');
+      expect(elemento.querySelector('.trilha__item--voce.trilha__item--agiu')).not.toBeNull();
+    });
+
+    it('acomoda o bloco de ação projetado logo abaixo dos contadores, dentro do topo', () => {
+      const fixture = TestBed.createComponent(HospedeComAcao);
+      fixture.detectChanges();
+      const elemento = fixture.nativeElement as HTMLElement;
+      const topo = elemento.querySelector('.trilha__topo');
+
+      expect(topo?.querySelector('.trilha__contadores')).not.toBeNull();
+      expect(topo?.querySelector('.trilha__acao [trilhaAcao]')?.textContent).toContain('Sua ação');
+      // A ordem no DOM: contadores, depois a ação, depois a lista.
+      const filhos = Array.from(topo?.children ?? []).map((filho) => filho.className);
+      expect(filhos).toEqual(['trilha__contadores', 'trilha__acao']);
+      expect(elemento.querySelector('app-trilha-turnos')?.classList).toContain('trilha--com-acao');
+    });
+
+    it('sem bloco de ação projetado o slot fica vazio (o mestre não muda)', () => {
+      const elemento = montar(ativo);
+
+      expect(elemento.querySelector('.trilha__acao')?.childElementCount).toBe(0);
+      expect(elemento.querySelector('.trilha__acao')?.matches(':empty')).toBe(true);
+    });
+
+    it('em montagem, sem ninguém na vez, o item do jogador é o alvo do rolar-até-o-item', () => {
+      const montagem: EncontroRecuperadoDto = {
+        ...ativo,
+        status: EncontroStatusEnum.MONTAGEM,
+        turnoIndice: 0,
+        ordemRodada: [],
+      };
+      const elemento = montar(montagem, { meuCombatenteId: 2 });
+
+      expect(elemento.querySelectorAll('.trilha__item--ativa')).toHaveLength(0);
+      expect(elemento.querySelector('.trilha__item--voce')).not.toBeNull();
+    });
   });
 });

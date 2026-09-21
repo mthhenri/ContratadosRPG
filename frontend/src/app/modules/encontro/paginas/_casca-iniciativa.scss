@@ -1,0 +1,257 @@
+// Casca de layout da tela "Iniciativa" — o que a visão do mestre (ui-37/ui-38) e a do jogador
+// (ui-39) têm em comum: coluna de ações + conteúdo, cabeçalho, a linha trilha | rolagens | palco e
+// o divisor de seção. Cada página inclui o mixin com o próprio bloco BEM (`iniciativa-mestre`,
+// `iniciativa-jogador`) e acrescenta só o que é dela. Alvo de fidelidade: POC "Tela de Iniciativa"
+// v9 e o mock "POC Iniciativa do jogador". Só tokens (proibição #29).
+//
+// É um parcial + mixin (e não um componente) porque o que se compartilha é CSS de layout, não
+// comportamento: o DOM de cada página continua sendo dela, como em `detalhe-mestre`/
+// `detalhe-jogador`, sem nó novo entre a página e seus filhos.
+
+@use "tema/breakpoints" as bp;
+
+@mixin casca($bloco) {
+    // Casca de `detalhe-mestre`: coluna de ações (flex item fixo, largura própria) + conteúdo, que usa
+    // toda a largura restante — sem o `90vw` das demais telas.
+    .#{$bloco} {
+        display: flex;
+        align-items: stretch;
+        min-height: calc(100dvh - var(--altura-topbar));
+        // Cancela o padding de `.conteudo` (`layout.component.scss`, 24px 20px): a coluna de ações gruda
+        // na topbar e na borda esquerda do viewport, como em `detalhe-mestre`. `__conteudo` reassume o
+        // padding sozinho.
+        margin: -24px -20px;
+
+        @include bp.mobile {
+            flex-direction: column;
+            min-height: 0;
+            // No mobile a coluna de ações vira barra fixa (fora do fluxo) — não precisa encostar por
+            // margem negativa, e `.conteudo` já tem padding menor aqui (16px 12px).
+            margin: 0;
+        }
+
+        &__conteudo {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-16);
+            padding: 24px var(--space-20) var(--space-20);
+
+            @include bp.mobile {
+                padding: 12px;
+                // Piso reservado para a barra inferior de `app-coluna-acoes`.
+                padding-bottom: calc(12px + 56px + env(safe-area-inset-bottom, 0px));
+            }
+        }
+
+        // Cabeçalho — mesma receita de `.detalhe-mestre__cabecalho`. No mobile ele é a âncora do menu de
+        // encerrados (largura cheia), por isso `position: relative`.
+        &__cabecalho {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+
+            @include bp.mobile {
+                flex-wrap: wrap;
+                row-gap: 10px;
+            }
+        }
+
+        // Sem combate aberto (ui-38): o estado vazio ocupa o palco, centrado e sem esticar pela tela.
+        &__vazio {
+            display: block;
+            width: 100%;
+            max-width: 560px;
+            margin: calc(var(--space-12) * 2) auto 0;
+        }
+
+        &__vazio-acao {
+            margin-top: var(--space-8);
+
+            @include bp.mobile {
+                min-height: bp.$alvo-toque;
+            }
+        }
+
+        &__indice {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            width: 22px;
+            height: 22px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius-compact);
+        }
+
+        &__titulo {
+            margin: 0;
+            min-width: 0;
+            overflow: hidden;
+            font-family: var(--font-mono);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            @include bp.mobile {
+                font-size: 17px;
+            }
+        }
+
+        &__campanha {
+            font-size: 12px;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        &__regua {
+            flex: 1;
+            min-width: 20px;
+            height: 1px;
+            background: var(--border);
+        }
+
+        // Trilha | Rolagens | Palco. No tablet empilha na ordem trilha → palco → rolagens.
+        &__linha {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: stretch;
+            gap: var(--space-16);
+
+            @include bp.tablet {
+                flex-direction: column;
+            }
+        }
+
+        &__trilha {
+            flex: none;
+            width: 262px;
+
+            @include bp.tablet {
+                width: auto;
+            }
+        }
+
+        // O container é o posicionado que `HistoricoRolagensSidebar [fixo]` preenche: a lista rola por
+        // dentro, então a altura da coluna é a do palco, nunca a da lista. 450px em 1920; encolhe junto
+        // com a tela para não espremer o palco.
+        &__rolagens {
+            position: relative;
+            flex: none;
+            width: clamp(300px, 23.44vw, 450px);
+            min-height: 160px;
+
+            @include bp.tablet {
+                order: 3;
+                width: auto;
+                height: 320px;
+                min-height: 0;
+            }
+        }
+
+        &__palco {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-16);
+
+            @include bp.tablet {
+                order: 2;
+            }
+        }
+
+        &__todos {
+            flex: 1;
+            min-width: 0;
+            align-self: flex-start;
+
+            @include bp.tablet {
+                align-self: stretch;
+            }
+        }
+
+        // Divisor de seção "solto" — `.detalhe-mestre__secao*`.
+        &__secao {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: var(--space-12);
+        }
+
+        &__secao-titulo {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-label);
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        &__secao-regua {
+            flex: 1;
+            min-width: 20px;
+            height: 1px;
+            background: var(--border);
+
+            // Em 360px título + contagem já ocupam a linha: sem folga para a régua, o "N participantes"
+            // vazava do gutter de 12px.
+            @include bp.mobile {
+                min-width: 0;
+            }
+        }
+
+        &__secao-meta {
+            flex: none;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-mute);
+        }
+    }
+}
+
+// ── Grade de cartões ────────────────────────────────────────────────────────
+// `--grade-colunas` (3/4/5) é a variável de `colunasGrade()`; o palco não a usa — a `.grade--palco`
+// abaixo tem colunas automáticas. Tablet/mobile mantêm a contagem fixa de sempre.
+@mixin grade {
+    .grade {
+        display: grid;
+        grid-template-columns: repeat(var(--grade-colunas, 3), minmax(0, 1fr));
+        gap: 12px;
+
+        @include bp.tablet {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+            max-height: none;
+            padding-right: 0;
+            overflow-y: visible;
+            scrollbar-gutter: auto;
+        }
+    }
+
+    // Grade do palco: quantas colunas de 260px couberem ao lado da ficha resumida — não depende de
+    // `colunasGrade()`, que só faz sentido quando a grade ocupa a tela toda. Declarada depois de
+    // `.grade` para vencer as colunas fixas dela; no mobile volta a uma coluna, e o cartão volta às
+    // métricas cheias (o CSS do cartão só compacta acima de `bp.mobile`).
+    .grade--palco {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+}

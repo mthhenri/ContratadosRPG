@@ -9,12 +9,14 @@ import {
 } from '@contratados-rpg/shared/enums';
 import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
 
+import type { FichaFlutuanteAlvo } from '../ficha/componentes/ficha-flutuante/ficha-flutuante.model';
 import { rotuloClasseCompleto } from '../ficha/rotulos-ficha';
 
 /**
- * Derivação pura do estado de leitura de um `EncontroRecuperadoDto` — extraído de
- * `painel-encontro.page.ts` (m8-05) para não duplicar a mesma apresentação entre a tela "Iniciativa"
- * do jogador/mestre e a composição de leitura do espectador/prévia de jogador. Nenhuma regra de
+ * Derivação pura do estado de leitura de um `EncontroRecuperadoDto` — extraído do antigo
+ * `painel-encontro.page.ts` (m8-05, hoje `EncontroPainelDadosService`) para não duplicar a mesma
+ * apresentação entre a tela "Iniciativa" do jogador/mestre e a composição de leitura do
+ * espectador/prévia de jogador. Nenhuma regra de
  * domínio vive aqui: `ordemRodada` e a intercalação de Cadência já chegam prontas do backend
  * (`shared/regras/encontro`); o que este módulo deriva é só apresentação — de quem é a vez, quem já
  * agiu, quantas colunas a grade usa.
@@ -109,7 +111,7 @@ export function combatenteJaAgiu(
     return combatente.indiceOrdem < encontro.turnoIndice;
   }
   // Sem posição na ordem calculada (entrou depois): considera agido só se nenhuma ocorrência sua
-  // ainda estiver pendente na rodada — mesmo critério de `jaAgiram` em `painel-encontro.page.ts`.
+  // ainda estiver pendente na rodada — mesmo critério do antigo `jaAgiram` do painel.
   const pendentes = new Set(
     encontro.ordemRodada
       .filter((_, indice) => indice >= encontro.turnoIndice)
@@ -119,6 +121,44 @@ export function combatenteJaAgiu(
     encontro.ordemRodada.some((slot) => slot.combatenteId === combatente.id) &&
     !pendentes.has(combatente.id)
   );
+}
+
+/**
+ * Quantos turnos faltam até o combatente agir: a menor distância, em slots de `ordemRodada`, do
+ * turno atual até um slot dele — contando a virada de rodada (o último slot é seguido do primeiro).
+ * `0` é a vez dele; um combatente de Cadência > 1 tem vários slots e vale o mais próximo. `null`
+ * fora do combate ou quando ele não está na ordem calculada (entrou depois dela). Deriva da ordem
+ * que o backend já entregou, não recalcula Cadência.
+ */
+export function turnosAteAVez(
+  encontro: EncontroRecuperadoDto | null,
+  combatenteId: number,
+): number | null {
+  if (!encontro || encontro.status !== EncontroStatusEnum.ATIVO) {
+    return null;
+  }
+  const total = encontro.ordemRodada.length;
+  const distancias = encontro.ordemRodada.flatMap((slot, indice) =>
+    slot.combatenteId === combatenteId ? [(indice - encontro.turnoIndice + total) % total] : [],
+  );
+  return distancias.length > 0 ? Math.min(...distancias) : null;
+}
+
+/**
+ * O alvo da janela flutuante de ficha para um combatente/ficha — só `JOGADOR` e `CRIATURA` têm o
+ * que abrir (avulso e NPC não), e o dono vem do resumo já carregado (`fichasVisiveis`), sem nova
+ * consulta. `null` quando não há o que abrir.
+ */
+export function resolverFichaParaAbrir(
+  fichaId: number,
+  tipo: TipoFichaEnum | null,
+  fichasVisiveis: readonly Pick<FichaResumoDto, 'id' | 'usuarioId'>[],
+): FichaFlutuanteAlvo | null {
+  if (tipo !== TipoFichaEnum.JOGADOR && tipo !== TipoFichaEnum.CRIATURA) {
+    return null;
+  }
+  const usuarioIdDono = fichasVisiveis.find((ficha) => ficha.id === fichaId)?.usuarioId;
+  return usuarioIdDono === undefined ? null : { fichaId, tipo, usuarioIdDono };
 }
 
 /**

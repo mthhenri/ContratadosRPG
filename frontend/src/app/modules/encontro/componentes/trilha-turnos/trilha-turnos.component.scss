@@ -1,6 +1,7 @@
-// Trilha de turnos da visão do mestre (ui-37) — alvo de fidelidade: POC "Tela de Iniciativa" v9.
+// Trilha de turnos da visão do mestre (ui-37) e do jogador (ui-39) — alvo de fidelidade: POC "Tela
+// de Iniciativa" v9 e o mock aprovado "POC Iniciativa do jogador".
 // Só tokens do tema "Terminal de Contenção" (proibição #29). A largura da coluna é de quem a
-// hospeda (`painel-encontro.page.scss`); aqui só a forma interna e o recorte responsivo.
+// hospeda (`painel-mestre.page.scss`/`painel-jogador.page.scss`, via `paginas/_casca-iniciativa.scss`); aqui só a forma interna e o recorte responsivo.
 
 @use "tema/breakpoints" as bp;
 
@@ -14,14 +15,33 @@
     border-radius: var(--radius-card);
 }
 
+// Topo da trilha: os contadores e, na visão do jogador, o bloco de ação projetado abaixo deles.
+.trilha__topo {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-12);
+    border-bottom: 1px solid var(--border);
+}
+
+// O slot `[trilhaAcao]`: some quando nada é projetado (o mestre não usa).
+.trilha__acao {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    &:empty {
+        display: none;
+    }
+}
+
 .trilha__contadores {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     gap: var(--space-8);
-    margin-bottom: var(--space-12);
-    padding-bottom: var(--space-12);
-    border-bottom: 1px solid var(--border);
 }
 
 .trilha__contador {
@@ -111,6 +131,15 @@
     &--agiu .trilha__avatar {
         opacity: 0.55;
     }
+
+    // O combatente do próprio jogador (ui-39): borda mais firme, sem competir com a do ativo.
+    &--voce {
+        border-color: var(--border-strong);
+    }
+
+    &--voce#{&}--ativa {
+        border-color: var(--accent);
+    }
 }
 
 // Hachura na cor da ficha — mesma receita do avatar do cartão de combatente.
@@ -171,6 +200,12 @@
     font-family: var(--font-mono);
     font-size: 9px;
     color: var(--text-mute);
+
+    // "Você" (ui-39) — a marca do próprio jogador na ordem.
+    &--voce {
+        font-weight: 700;
+        color: var(--accent);
+    }
 }
 
 .trilha__iniciativa {
@@ -200,12 +235,15 @@
         padding: var(--space-8) var(--space-12);
     }
 
-    .trilha__contadores {
-        gap: var(--space-16);
+    .trilha__topo {
         margin: 0;
         padding: 0 var(--space-12) 0 0;
         border-right: 1px solid var(--border);
         border-bottom: 0;
+    }
+
+    .trilha__contadores {
+        gap: var(--space-16);
     }
 
     .trilha__contador {
@@ -265,5 +303,56 @@
         font-family: var(--font-mono);
         font-size: 9px;
         color: var(--text-mute);
+    }
+}
+
+// Com o bloco de ação do jogador (ui-39) projetado no topo: na faixa do tablet a trilha quebra em
+// linhas — o topo (contadores + ação) à esquerda, a lista dos chips ocupando o que sobra — e, no
+// mobile, o topo ocupa a linha inteira, com a ação primária já na primeira tela.
+@include bp.tablet {
+    :host(.trilha--com-acao) {
+        flex-wrap: wrap;
+
+        .trilha__topo {
+            flex: 0 1 auto;
+            flex-direction: row;
+            align-items: center;
+            gap: var(--space-12);
+        }
+
+        .trilha__corpo {
+            flex: 1 1 240px;
+        }
+    }
+
+    // O bloco de ação tem largura própria ao lado dos contadores.
+    :host(.trilha--com-acao) .trilha__acao {
+        min-width: 230px;
+    }
+}
+
+@include bp.mobile {
+    :host(.trilha--com-acao) {
+        .trilha__topo {
+            flex: 1 1 100%;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0 0 var(--space-12);
+            border-right: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trilha__contadores {
+            justify-content: flex-start;
+            gap: var(--space-20);
+        }
+
+        .trilha__corpo {
+            flex: 1 1 100%;
+        }
+    }
+
+    :host(.trilha--com-acao) .trilha__acao {
+        min-width: 0;
     }
 }

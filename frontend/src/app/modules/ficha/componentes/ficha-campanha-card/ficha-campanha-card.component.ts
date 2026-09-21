@@ -426,8 +426,9 @@ export class FichaCampanhaCard {
 
   /**
    * Barra superior "Ficha de Jogador" + chip `FICHA-JGD-NNNN`. A visão do jogador (e a prévia dela,
-   * do mestre) já traz o nome da ficha no cabeçalho do cartão e dispensa a linha; a janela
-   * flutuante e o Encontro mantêm.
+   * do mestre) já traz o nome da ficha no cabeçalho do cartão e dispensa a linha; a visão do
+   * jogador da Iniciativa (`ui-39`) também a dispensa — o palco já tem o título "Minha ficha" e o chip
+   * sobe para o cabeçalho dele. A janela flutuante mantém.
    */
   readonly mostrarTopo = input(true);
 

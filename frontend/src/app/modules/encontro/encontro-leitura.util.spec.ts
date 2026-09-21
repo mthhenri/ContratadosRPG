@@ -1,9 +1,13 @@
-import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type {
+  EncontroCombatenteResumoDto,
+  EncontroRecuperadoDto,
+} from '@contratados-rpg/shared/dtos/encontro';
 import {
   ArquetipoEnum,
   CadenciaEnum,
   ClasseEnum,
   CombatenteOrigemEnum,
+  EncontroStatusEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
 
@@ -11,7 +15,9 @@ import {
   combatenteTemIdentidadeVisivel,
   defesasDoCombatente,
   linhaOrigemDoCombatente,
+  resolverFichaParaAbrir,
   siglaDoCombatente,
+  turnosAteAVez,
   turnosPorRodadaDoCombatente,
 } from './encontro-leitura.util';
 
@@ -158,6 +164,74 @@ describe('encontro-leitura.util', () => {
 
     it('não quebra com nome vazio', () => {
       expect(siglaDoCombatente('   ')).toBe('?');
+    });
+  });
+
+  describe('turnosAteAVez', () => {
+    // 1(1º) → 2 → 1(2º) → 3 — a criatura de Cadência Dupla intercalada entre dois agentes.
+    const ativo: EncontroRecuperadoDto = {
+      id: 1,
+      campanhaId: 9,
+      nome: 'Contenção no Setor 12',
+      status: EncontroStatusEnum.ATIVO,
+      rodadaAtual: 2,
+      turnoIndice: 1,
+      combatentes: [],
+      ordemRodada: [
+        { combatenteId: 1, ocorrencia: 1 },
+        { combatenteId: 2, ocorrencia: 1 },
+        { combatenteId: 1, ocorrencia: 2 },
+        { combatenteId: 3, ocorrencia: 1 },
+      ],
+      eventos: [],
+    };
+
+    it('é zero quando a vez é do próprio combatente', () => {
+      expect(turnosAteAVez(ativo, 2)).toBe(0);
+    });
+
+    it('conta os slots até o próximo do combatente', () => {
+      expect(turnosAteAVez(ativo, 1)).toBe(1); // o 2º turno da criatura é o slot seguinte
+      expect(turnosAteAVez(ativo, 3)).toBe(2);
+    });
+
+    it('de quem tem vários slots vale o mais próximo', () => {
+      expect(turnosAteAVez({ ...ativo, turnoIndice: 2 }, 1)).toBe(0);
+      expect(turnosAteAVez({ ...ativo, turnoIndice: 3 }, 1)).toBe(1); // vira a rodada: 1º slot
+    });
+
+    it('vira a rodada quando o próprio slot já passou', () => {
+      // turnoIndice 2: K. Amaral (slot 1) já agiu — falta a rodada seguinte: 3 slots à frente.
+      expect(turnosAteAVez({ ...ativo, turnoIndice: 2 }, 2)).toBe(3);
+    });
+
+    it('é nulo fora do combate ou quando o combatente não está na ordem', () => {
+      expect(turnosAteAVez({ ...ativo, status: EncontroStatusEnum.MONTAGEM }, 2)).toBeNull();
+      expect(turnosAteAVez({ ...ativo, status: EncontroStatusEnum.ENCERRADO }, 2)).toBeNull();
+      expect(turnosAteAVez(ativo, 99)).toBeNull();
+      expect(turnosAteAVez(null, 2)).toBeNull();
+    });
+  });
+
+  describe('resolverFichaParaAbrir', () => {
+    const fichas = [
+      { id: 100, usuarioId: 7 },
+      { id: 200, usuarioId: 8 },
+    ];
+
+    it('devolve o alvo com o dono vindo do resumo já carregado', () => {
+      expect(resolverFichaParaAbrir(100, TipoFichaEnum.JOGADOR, fichas)).toEqual({
+        fichaId: 100,
+        tipo: TipoFichaEnum.JOGADOR,
+        usuarioIdDono: 7,
+      });
+      expect(resolverFichaParaAbrir(200, TipoFichaEnum.CRIATURA, fichas)?.usuarioIdDono).toBe(8);
+    });
+
+    it('não há o que abrir para avulso, NPC ou ficha que quem consulta não vê', () => {
+      expect(resolverFichaParaAbrir(100, null, fichas)).toBeNull();
+      expect(resolverFichaParaAbrir(100, TipoFichaEnum.NPC, fichas)).toBeNull();
+      expect(resolverFichaParaAbrir(999, TipoFichaEnum.JOGADOR, fichas)).toBeNull();
     });
   });
 });

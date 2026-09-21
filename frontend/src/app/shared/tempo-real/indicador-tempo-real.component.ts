@@ -11,7 +11,7 @@ import { Chip } from '../ui/chip/chip.component';
  *
  * Montado uma única vez na topbar (`Layout`, ui-21) — antes cada página de ficha/campanha
  * posicionava a própria cópia, disputando espaço com os botões do próprio cabeçalho (achado ao
- * vivo em `visualizar.page`/`painel-encontro.page`). Só aparece quando `ativo()`: a página que
+ * vivo em `visualizar.page`/`EncontroPainelDadosService`). Só aparece quando `ativo()`: a página que
  * chamou `conectar()` ao menos uma vez nesta sessão está — ou já esteve — em uso; sem isso, toda
  * tela apareceria "offline" antes de qualquer ficha/campanha ter sido aberta. O **debounce** que
  * evita piscar em micro-quedas é 100% SCSS (o elemento só surge após ~1,5s desconectado —

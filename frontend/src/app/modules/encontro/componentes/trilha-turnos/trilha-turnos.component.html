@@ -1,22 +1,25 @@
-<div class="trilha__contadores">
-    @if (emCombate()) {
-        <div class="trilha__contador">
-            <span class="trilha__rotulo">Rodada</span>
-            <span class="trilha__numero">{{ encontro().rodadaAtual }}</span>
-        </div>
-        <div class="trilha__contador">
-            <span class="trilha__rotulo">Turno</span>
-            <span class="trilha__numero trilha__numero--destaque">
-                {{ encontro().turnoIndice + 1
-                }}<span class="trilha__fracao">/{{ totalTurnos() }}</span>
-            </span>
-        </div>
-    } @else {
-        <div class="trilha__contador">
-            <span class="trilha__rotulo">Situação</span>
-            <span class="trilha__numero trilha__numero--texto">{{ situacao() }}</span>
-        </div>
-    }
+<div class="trilha__topo">
+    <div class="trilha__contadores">
+        @if (emCombate()) {
+            <div class="trilha__contador">
+                <span class="trilha__rotulo">Rodada</span>
+                <span class="trilha__numero">{{ encontro().rodadaAtual }}</span>
+            </div>
+            <div class="trilha__contador">
+                <span class="trilha__rotulo">Turno</span>
+                <span class="trilha__numero trilha__numero--destaque">
+                    {{ encontro().turnoIndice + 1
+                    }}<span class="trilha__fracao">/{{ totalTurnos() }}</span>
+                </span>
+            </div>
+        } @else {
+            <div class="trilha__contador">
+                <span class="trilha__rotulo">Situação</span>
+                <span class="trilha__numero trilha__numero--texto">{{ situacao() }}</span>
+            </div>
+        }
+    </div>
+    <div class="trilha__acao"><ng-content select="[trilhaAcao]" /></div>
 </div>
 
 <div class="trilha__corpo">
@@ -26,6 +29,7 @@
                 class="trilha__item"
                 [class.trilha__item--ativa]="posicao.ativa"
                 [class.trilha__item--agiu]="posicao.agiu"
+                [class.trilha__item--voce]="posicao.voce"
                 [style.--cor-ficha]="posicao.combatente.corFicha"
                 [attr.aria-current]="posicao.ativa ? 'step' : null"
                 [appTooltip]="posicao.dica"
@@ -45,7 +49,9 @@
                 <span class="trilha__info">
                     <span class="trilha__nome">{{ posicao.combatente.nome }}</span>
                     @if (posicao.subtitulo) {
-                        <span class="trilha__sub">{{ posicao.subtitulo }}</span>
+                        <span class="trilha__sub" [class.trilha__sub--voce]="posicao.voce">{{
+                            posicao.subtitulo
+                        }}</span>
                     }
                 </span>
                 <span class="trilha__iniciativa">{{ posicao.combatente.iniciativa ?? "—" }}</span>

@@ -1,0 +1,73 @@
+@switch (modo()) {
+    @case ("rolar") {
+        <span class="acao__rotulo">Sua iniciativa</span>
+        <span class="acao__detalhe">
+            {{
+                chamado()
+                    ? "O mestre chamou a rolagem. Role a sua para entrar na ordem."
+                    : "Role a sua para entrar na ordem."
+            }}
+        </span>
+        <button
+            app-botao
+            variante="primario"
+            tamanho="medio"
+            [fluido]="true"
+            class="acao__botao"
+            type="button"
+            [disabled]="emOperacao()"
+            [appTooltip]="'Rolar a Iniciativa da sua ficha e entrar na ordem'"
+            (click)="rolar.emit()"
+        >
+            <app-icone nome="dado" />
+            Rolar iniciativa
+        </button>
+    }
+    @case ("aguardando") {
+        <span class="acao__rotulo">Aguardando</span>
+        @if (minhaIniciativa(); as iniciativa) {
+            <span class="acao__nome">Iniciativa {{ iniciativa }}</span>
+        }
+        <span class="acao__detalhe">
+            Combate ainda não iniciado. O mestre começa quando todos rolarem.
+        </span>
+    }
+    @case ("minha-vez") {
+        <span class="acao__rotulo">Sua vez</span>
+        <span class="acao__nome">{{ nomeDaVez() }}</span>
+        <span class="acao__detalhe">
+            {{ acoesRestantes() }}
+            {{ acoesRestantes() === 1 ? "ação restante" : "ações restantes" }}
+        </span>
+        <button
+            app-botao
+            variante="primario"
+            tamanho="medio"
+            [fluido]="true"
+            class="acao__botao"
+            type="button"
+            [disabled]="emOperacao()"
+            [appTooltip]="'Encerrar sua vez e passar ao próximo turno'"
+            (click)="avancar.emit()"
+        >
+            <app-icone nome="voltar" class="acao__icone-avancar" />
+            Avançar turno
+        </button>
+    }
+    @case ("vez-de-outro") {
+        <span class="acao__rotulo">Age agora</span>
+        <span class="acao__nome">{{ nomeDaVez() }}</span>
+        <span class="acao__detalhe">{{ textoDaEspera() }}</span>
+    }
+    @case ("assistindo") {
+        <span class="acao__rotulo">{{ emCombate() ? "Age agora" : "Assistindo" }}</span>
+        @if (emCombate() && nomeDaVez()) {
+            <span class="acao__nome">{{ nomeDaVez() }}</span>
+        }
+        <span class="acao__detalhe">Você está assistindo a este combate.</span>
+    }
+    @case ("encerrado") {
+        <span class="acao__rotulo">Encerrado</span>
+        <span class="acao__detalhe">Este combate terminou. Só leitura.</span>
+    }
+}

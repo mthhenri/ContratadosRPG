@@ -1,9 +1,9 @@
-@if (esqueletoMestre()) {
-<!-- Carregamento da visão do mestre: mesma casca de `modoMestre()` (coluna de ações real, cabeçalho,
+@if (dados.carregando()) {
+<!-- Carregamento da visão do mestre: mesma casca da tela pronta (coluna de ações real, cabeçalho,
      trilha | rolagens | palco com ficha resumida + grade), pra tela não "pular" quando o encontro
      chega. Ainda não se sabe se há combate aberto; a silhueta é a do combate em curso, o caso em
-     que a tela é mais alta. `carregando()` só vira jogador/espectador quando os membros chegam e
-     o usuário não é o mestre — aí segue a tela de leitura de sempre. -->
+     que a tela é mais alta. A casca (`PainelEncontroShell`) só monta esta página enquanto o papel é
+     desconhecido ou o usuário é o mestre; quem não é passa à página do jogador. -->
 <div class="iniciativa-mestre">
     <app-coluna-acoes id="iniciativa-mestre" rotulo="Ações da iniciativa">
         @for (i of [0, 1, 2, 3, 4]; track i) {
@@ -64,33 +64,32 @@
         </div>
     </div>
 </div>
-} @else if (modoMestre()) {
+} @else {
 <!-- Visão do mestre (ui-37/ui-38): coluna de ações + trilha + rolagens + palco. A casca é a mesma de
      `detalhe-mestre` — coluna encostada na topbar e na borda, conteúdo com o restante da largura.
-     Sem encontro (ui-38) a casca fica e o palco vira um estado vazio com "Novo combate".
-     Jogador/espectador seguem no ramo `@else`. -->
+     Sem encontro (ui-38) a casca fica e o palco vira um estado vazio com "Novo combate". -->
 <div class="iniciativa-mestre">
     <app-coluna-acoes id="iniciativa-mestre" rotulo="Ações da iniciativa">
-        @if (!encontro()) {
+        @if (!dados.encontro()) {
         <div class="coluna-acoes__categoria">Combate</div>
         <button
             app-coluna-acoes-item
             icone="mais"
             appTooltip="Abrir um combate novo nesta campanha"
             [pressionado]="criandoEncontro()"
-            [disabled]="emOperacao()"
+            [disabled]="dados.emOperacao()"
             (click)="abrirNovoCombate()"
         >
             Novo combate
         </button>
-        } @else if (mutavel()) {
+        } @else if (dados.mutavel()) {
         <div class="coluna-acoes__categoria">Combate</div>
         <button
             app-coluna-acoes-item
             icone="mais"
             appTooltip="Escolher fichas da campanha para o combate"
             [pressionado]="selecionandoCombatentes()"
-            [disabled]="emOperacao()"
+            [disabled]="dados.emOperacao()"
             (click)="alternarSelecaoCombatentes()"
         >
             Selecionar combatentes
@@ -100,7 +99,7 @@
             icone="novo-agente"
             appTooltip="Adicionar um inimigo improvisado, sem ficha"
             [pressionado]="adicionandoAvulso()"
-            [disabled]="emOperacao()"
+            [disabled]="dados.emOperacao()"
             (click)="alternarAdicaoAvulso()"
         >
             Adicionar avulso
@@ -110,17 +109,17 @@
             icone="editar"
             appTooltip="Editar iniciativa e remover combatentes"
             [pressionado]="modoEdicao()"
-            [disabled]="emOperacao() || !combatentes().length"
+            [disabled]="dados.emOperacao() || !dados.combatentes().length"
             (click)="alternarEdicao()"
         >
             Editar combatentes
         </button>
-        @if (emCombate()) {
+        @if (dados.emCombate()) {
         <button
             app-coluna-acoes-item
             icone="excluir"
             appTooltip="Encerrar o combate — depois disso ele fica só de leitura"
-            [disabled]="emOperacao()"
+            [disabled]="dados.emOperacao()"
             (click)="encerrarCombate()"
         >
             Encerrar combate
@@ -152,7 +151,7 @@
             <a
                 app-botao-icone
                 tamanho="padrao"
-                [routerLink]="['/campanhas', campanhaId]"
+                [routerLink]="['/campanhas', dados.campanhaId]"
                 aria-label="Voltar à campanha"
                 [appTooltip]="'Voltar à campanha'"
             >
@@ -160,18 +159,18 @@
             </a>
             <span class="iniciativa-mestre__indice">//</span>
             <h1 class="iniciativa-mestre__titulo">
-                {{ encontro() ? 'Iniciativa · ' + encontro()!.nome : 'Iniciativa' }}
+                {{ dados.encontro() ? 'Iniciativa · ' + dados.encontro()!.nome : 'Iniciativa' }}
             </h1>
-            @if (campanhaNome()) {
-            <span class="iniciativa-mestre__campanha">{{ campanhaNome() }}</span>
-            } @if (encontro(); as encontroCabecalho) {
+            @if (dados.campanhaNome()) {
+            <span class="iniciativa-mestre__campanha">{{ dados.campanhaNome() }}</span>
+            } @if (dados.encontro(); as encontroCabecalho) {
             <app-chip variante="sutil"
                 >{{ rotuloStatusEncontro(encontroCabecalho.status) }}</app-chip
             >
             }
             <span class="iniciativa-mestre__regua"></span>
             <!-- Encontros anteriores (m7-06): só o mestre navega pelo histórico. -->
-            @if (vendoHistorico()) { @if (temCombateAberto()) {
+            @if (dados.vendoHistorico()) { @if (temCombateAberto()) {
             <button
                 app-botao
                 variante="secundario"
@@ -190,13 +189,13 @@
                 tamanho="pequeno"
                 type="button"
                 [appTooltip]="'Não há combate em andamento — abrir um novo'"
-                [disabled]="emOperacao()"
+                [disabled]="dados.emOperacao()"
                 (click)="abrirNovoCombate()"
             >
                 <app-icone nome="mais" />
                 Novo combate
             </button>
-            } } @if (encontro() && historico().length) {
+            } } @if (dados.encontro() && historico().length) {
             <!-- Combates encerrados (ui-38): menu ancorado no gatilho. Segue o dropdown de perfil da
                  topbar: fecha pelo próprio botão, ao escolher um combate ou com Escape (listener no
                  `host` da página). -->
@@ -237,50 +236,50 @@
             }
         </header>
 
-        @if (encontro(); as encontroAtual) {
+        @if (dados.encontro(); as encontroAtual) {
         <div class="iniciativa-mestre__linha">
             <app-trilha-turnos
                 class="iniciativa-mestre__trilha"
                 [encontro]="encontroAtual"
-                [combatentes]="combatentes()"
+                [combatentes]="dados.combatentes()"
             />
 
             <div class="iniciativa-mestre__rolagens">
                 <app-historico-rolagens-sidebar
                     [fixo]="true"
                     titulo="Rolagens"
-                    [itens]="rolagensFeed()"
-                    [carregando]="carregandoRolagens()"
+                    [itens]="dados.rolagensFeed()"
+                    [carregando]="dados.carregandoRolagens()"
                 />
             </div>
 
             <div class="iniciativa-mestre__palco">
                 <app-conducao-turno
                     [status]="encontroAtual.status"
-                    [nomeDaVez]="combatenteDaVez()?.nome ?? null"
-                    [acoesRestantes]="acoesRestantesDaVez()"
-                    [emOperacao]="emOperacao()"
-                    [temCombatentes]="combatentes().length > 0"
-                    [faltamIniciativas]="faltamIniciativas()"
+                    [nomeDaVez]="dados.combatenteDaVez()?.nome ?? null"
+                    [acoesRestantes]="dados.acoesRestantesDaVez()"
+                    [emOperacao]="dados.emOperacao()"
+                    [temCombatentes]="dados.combatentes().length > 0"
+                    [faltamIniciativas]="dados.faltamIniciativas()"
                     (voltar)="voltarTurno()"
-                    (avancar)="avancarTurno()"
+                    (avancar)="dados.avancarTurno()"
                     (encerrar)="encerrarCombate()"
                     (pedirIniciativa)="pedirIniciativa()"
                     (rolarIniciativas)="rolarTudo()"
                     (iniciar)="iniciarCombate()"
                 />
 
-                @if (mutavel() && selecionandoCombatentes()) {
+                @if (dados.mutavel() && selecionandoCombatentes()) {
                 <!-- Cartões sumarizados de agente/criatura/NPC da campanha, um por linha de tipo. Clicar
                      alterna a presença no encontro; quem já está em campo chega marcado — reabrir o
                      seletor depois de montar não perde a leitura de quem foi adicionado. -->
                 <app-seletor-combatentes
-                    [fichas]="fichasCampanha()"
-                    [combatentes]="combatentes()"
-                    [desabilitado]="emOperacao()"
+                    [fichas]="dados.fichasCampanha()"
+                    [combatentes]="dados.combatentes()"
+                    [desabilitado]="dados.emOperacao()"
                     (fichaAlternada)="alternarFichaNoEncontro($event)"
                 />
-                } @if (mutavel() && adicionandoAvulso()) {
+                } @if (dados.mutavel() && adicionandoAvulso()) {
                 <form
                     class="adicionar"
                     [formGroup]="formularioAvulso"
@@ -367,7 +366,7 @@
                         variante="primario"
                         class="adicionar__acao"
                         type="submit"
-                        [disabled]="emOperacao() || formularioAvulso.invalid"
+                        [disabled]="dados.emOperacao() || formularioAvulso.invalid"
                     >
                         Adicionar
                     </button>
@@ -376,7 +375,7 @@
                         variante="secundario"
                         class="adicionar__acao"
                         type="button"
-                        [disabled]="emOperacao()"
+                        [disabled]="dados.emOperacao()"
                         (click)="cancelarAvulso()"
                     >
                         Cancelar
@@ -387,11 +386,11 @@
                 <div class="iniciativa-mestre__corpo">
                     <!-- Só há ficha resumida quando alguém está na vez: em montagem e no encerrado a
                          coluna some e a grade de combatentes fica com o palco inteiro. -->
-                    @if (combatenteDaVez(); as daVez) {
+                    @if (dados.combatenteDaVez(); as daVez) {
                     <section class="iniciativa-mestre__resumo" aria-label="Combatente ativo">
                         <app-resumo-combatente
                             [combatente]="daVez"
-                            [nivelAmeaca]="nivelAmeaca(daVez)"
+                            [nivelAmeaca]="dados.nivelAmeaca(daVez)"
                             (abrirFicha)="abrirFichaFlutuante(daVez)"
                         />
                     </section>
@@ -408,20 +407,20 @@
                             </span>
                         </header>
 
-                        @if (combatentes().length) {
+                        @if (dados.combatentes().length) {
                         <div class="grade grade--compacta grade--palco">
-                            @for (combatente of combatentes(); track combatente.chaveVisual) {
+                            @for (combatente of dados.combatentes(); track combatente.chaveVisual) {
                             <app-cartao-combatente
                                 [combatente]="combatente"
                                 [ocorrencia]="combatente.ocorrencia"
                                 [totalOcorrencias]="combatente.totalOcorrencias"
-                                [ehTurnoAtual]="ehDaVez(combatente)"
-                                [jaAgiu]="jaAgiu(combatente)"
-                                [emCombate]="emCombate()"
-                                [nivelAmeaca]="nivelAmeaca(combatente)"
+                                [ehTurnoAtual]="dados.ehDaVez(combatente)"
+                                [jaAgiu]="dados.jaAgiu(combatente)"
+                                [emCombate]="dados.emCombate()"
+                                [nivelAmeaca]="dados.nivelAmeaca(combatente)"
                                 [ehMestre]="true"
-                                [podeAjustar]="mutavel() && !emOperacao()"
-                                [emEdicao]="modoEdicao() && mutavel() && combatente.ocorrencia === 1"
+                                [podeAjustar]="dados.mutavel() && !dados.emOperacao()"
+                                [emEdicao]="modoEdicao() && dados.mutavel() && combatente.ocorrencia === 1"
                                 (vidaAjustada)="ajustarVida(combatente, $event)"
                                 (energiaAjustada)="ajustarEnergia(combatente, $event)"
                                 (iniciativaAtribuida)="atribuirIniciativa(combatente, $event)"
@@ -461,7 +460,7 @@
                 tamanho="medio"
                 class="iniciativa-mestre__vazio-acao"
                 type="button"
-                [disabled]="emOperacao()"
+                [disabled]="dados.emOperacao()"
                 (click)="abrirNovoCombate()"
             >
                 <app-icone nome="mais" />
@@ -492,297 +491,22 @@
 <!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas, que sabe
      restaurar em vez de fechar quando a janela está minimizada (mesmo racional de `detalhe-mestre`). -->
 <app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
-@if (usuarioAtivoId(); as usuarioId) {
+@if (dados.usuarioAtivoId(); as usuarioId) {
 <app-caderno-flutuante
     #caderno
     [mostrarGatilho]="false"
-    [campanhaId]="campanhaId"
-    [campanhaNome]="campanhaNome()"
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
     [usuarioAtivoId]="usuarioId"
     [ehMestre]="true"
-    [membros]="membrosDaCampanha()"
+    [membros]="dados.membrosDaCampanha()"
     [temInventario]="false"
     (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
 />
-} } @else {
-<div
-    class="iniciativa-tela"
-    [class.iniciativa-tela--dividida]="mostrarFichaLateral()"
-    [class.iniciativa-tela--lateral-aberta]="rolagensSidebarAberto()"
->
-    <section class="iniciativa">
-        <header class="iniciativa__topo">
-            <a
-                app-botao-icone
-                class="iniciativa__voltar"
-                [routerLink]="['/campanhas', campanhaId]"
-                aria-label="Voltar à campanha"
-                [appTooltip]="'Voltar à campanha'"
-            >
-                <app-icone nome="voltar" />
-            </a>
-            <div class="iniciativa__acoes">
-                <!-- Contexto/navegação do encontro — o que muda conforme o estado do combate, não conforme
-           o usuário. No mobile forma a 1ª linha, sempre acima dos utilitários (item de UI m7-16). -->
-                <div class="iniciativa__acoes-grupo iniciativa__acoes-grupo--status">
-                    @if (!carregando() && !ehMestre()) {
-                    <span class="iniciativa__papel">
-                        <app-icone nome="olho" />
-                        Espectador
-                    </span>
-                    }
-                </div>
-
-                <!-- Utilitários da sessão — mesmo grupo em qualquer tela do painel (ficha, campanha). No
-           mobile forma a 2ª linha, sempre na mesma ordem, para nunca disputar lugar com o status
-           acima nem saltar de posição conforme o que está visível. -->
-                <div class="iniciativa__acoes-grupo iniciativa__acoes-grupo--utilitarios">
-                    @if (mostrarFichaLateral()) {
-                    <button
-                        app-botao
-                        class="iniciativa__minha-ficha"
-                        type="button"
-                        [appTooltip]="'Abrir sua ficha'"
-                        (click)="abrirMinhaFicha()"
-                    >
-                        <app-icone nome="visao-geral" />
-                        <span>Minha ficha</span>
-                    </button>
-                    }
-                    <app-calculadora-flutuante [(aberta)]="calculadoraAberta" />
-                    <app-historico-rolagens-sidebar
-                        [(aberto)]="rolagensSidebarAberto"
-                        titulo="Histórico de Rolagens da Campanha"
-                        [itens]="rolagensFeed()"
-                        [carregando]="carregandoRolagens()"
-                        [acimaDaCalculadora]="true"
-                        (abrirCalculadora)="calculadoraAberta.set(true)"
-                    />
-                    @if (usuarioAtivoId(); as usuarioId) {
-                    <app-caderno-flutuante
-                        [campanhaId]="campanhaId"
-                        [campanhaNome]="campanhaNome()"
-                        [usuarioAtivoId]="usuarioId"
-                        [ehMestre]="ehMestre()"
-                        [membros]="membrosDaCampanha()"
-                        [temInventario]="false"
-                        (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
-                    />
-                    }
-                </div>
-            </div>
-        </header>
-
-        @if (carregando()) {
-        <p class="iniciativa__carregando">Carregando o combate…</p>
-        } @else if (!encontro() && !ehMestre()) {
-        <app-cartao titulo="Iniciativa" nivelTitulo="h1">
-            <span cartaoIndice>//</span>
-            <p class="abertura__ajuda">
-                Nenhum combate em andamento. Quando o mestre abrir um, esta tela acende sozinha.
-            </p>
-        </app-cartao>
-        } @else {
-        <!-- Leitura do jogador/espectador (o mestre com encontro usa o ramo `modoMestre()` acima). -->
-        <app-cartao
-            [titulo]="'Iniciativa · ' + encontro()!.nome"
-            nivelTitulo="h1"
-            [semCaixa]="true"
-        >
-            <span cartaoIndice>//</span>
-            <span cartaoFim class="iniciativa__meta">
-                {{ encontro()!.combatentes.length }} {{ encontro()!.combatentes.length === 1 ?
-                'participante' : 'participantes' }}
-            </span>
-            <!-- Contador condensado do mockup mobile (m7-08): `R3 · T3/6` no lugar do bloco de
-           contadores, que no desktop continua sendo o que a tela mostra. -->
-            @if (emCombate()) {
-            <span cartaoFim class="iniciativa__meta iniciativa__meta--compacta">
-                R{{ encontro()!.rodadaAtual }} · T{{ encontro()!.turnoIndice + 1 }}/{{
-                totalDeTurnos() }}
-            </span>
-            }
-
-            <div class="iniciativa__corpo">
-                <!-- Faixa de leitura: contadores e quem age, mais a rolagem da própria iniciativa. -->
-                <div class="painel">
-                    <!-- Em combate, Rodada/Turno já estão no cabeçalho compacto do mobile: o bloco vira
-                   redundante e sai da coluna, que é a altura mais cara da tela de 360px. -->
-                    <div
-                        class="painel__bloco painel__bloco--contadores"
-                        [class.painel__bloco--redundante-mobile]="emCombate()"
-                    >
-                        @if (emCombate()) {
-                        <div class="painel__contador">
-                            <span class="painel__rotulo">Rodada</span>
-                            <span class="painel__numero">{{ encontro()!.rodadaAtual }}</span>
-                        </div>
-                        <div class="painel__contador">
-                            <span class="painel__rotulo">Turno</span>
-                            <span class="painel__numero painel__numero--destaque">
-                                {{ encontro()!.turnoIndice + 1 }}<span class="painel__fracao"
-                                    >/{{ totalDeTurnos() }}</span
-                                >
-                            </span>
-                        </div>
-                        } @else {
-                        <div class="painel__contador">
-                            <span class="painel__rotulo">Situação</span>
-                            <span class="painel__numero painel__numero--texto">
-                                {{ rotuloStatusEncontro(encontro()!.status) }}
-                            </span>
-                        </div>
-                        }
-                    </div>
-
-                    @if (mutavel()) {
-                    <div
-                        class="painel__bloco painel__bloco--vez"
-                        [class.painel__bloco--acesa]="combatenteDaVez()"
-                    >
-                        <span class="painel__rotulo">
-                            {{ ehMinhaVez() ? 'Sua vez' : emCombate() ? 'Age agora' : 'Aguardando'
-                            }}
-                        </span>
-                        @if (combatenteDaVez(); as daVez) {
-                        <span class="painel__vez">
-                            {{ daVez.nome }}
-                            <span class="painel__vez-detalhe">
-                                · {{ acoesRestantesDaVez() }} {{ acoesRestantesDaVez() === 1 ? 'ação
-                                restante' : 'ações restantes' }}
-                            </span>
-                        </span>
-                        } @else {
-                        <span class="painel__vez painel__vez--vazia"
-                            >Combate ainda não iniciado</span
-                        >
-                        }
-                    </div>
-                    } @if ( mutavel() && (possoRolarIniciativa() || meuCombatente() === null ||
-                    ehMinhaVez()) ) {
-                    <!-- A contrapartida do jogador ao "Rolar tudo" do mestre: ele rola a **própria**, com o
-                     preset e os dados extras da ficha dele (m7-06). -->
-                    <div
-                        class="painel__bloco painel__bloco--controles painel__bloco--jogador"
-                        [class.painel__bloco--acesa]="iniciativaPedida()"
-                    >
-                        @if (possoRolarIniciativa()) {
-                        <button
-                            app-botao
-                            variante="primario"
-                            class="painel__acao"
-                            type="button"
-                            [disabled]="emOperacao()"
-                            [appTooltip]="'Rolar a Iniciativa da sua ficha e entrar na ordem'"
-                            (click)="rolarMinhaIniciativa()"
-                        >
-                            <app-icone nome="dado" />
-                            Rolar iniciativa
-                        </button>
-                        } @else if (ehMinhaVez()) {
-                        <button
-                            app-botao
-                            variante="primario"
-                            class="painel__acao"
-                            type="button"
-                            [disabled]="emOperacao()"
-                            [appTooltip]="'Encerrar sua vez e passar ao próximo turno'"
-                            (click)="avancarTurno()"
-                        >
-                            <app-icone nome="voltar" class="painel__acao-icone--avancar" />
-                            Avançar turno
-                        </button>
-                        } @else if (meuCombatente() === null) {
-                        <span class="painel__vez painel__vez--vazia"
-                            >Você está assistindo a este combate</span
-                        >
-                        }
-                    </div>
-                    }
-                </div>
-
-                @if (combatentes().length) {
-                <div
-                    class="grade"
-                    [class.grade--compacta]="gradeCompacta()"
-                    [style.--grade-colunas]="colunasGrade()"
-                >
-                    @for (combatente of combatentes(); track combatente.chaveVisual) {
-                    <app-cartao-combatente
-                        [combatente]="combatente"
-                        [ocorrencia]="combatente.ocorrencia"
-                        [totalOcorrencias]="combatente.totalOcorrencias"
-                        [ehTurnoAtual]="ehDaVez(combatente)"
-                        [jaAgiu]="jaAgiu(combatente)"
-                        [emCombate]="emCombate()"
-                        [nivelAmeaca]="nivelAmeaca(combatente)"
-                        [ehMestre]="false"
-                        [podeAjustar]="false"
-                        [emEdicao]="false"
-                        (abrirFicha)="abrirFichaFlutuante(combatente)"
-                    />
-                    }
-                </div>
-                } @else {
-                <app-estado-vazio
-                    tamanho="compacto"
-                    titulo="O mestre ainda está montando a ordem de iniciativa."
-                />
-                }
-            </div>
-        </app-cartao>
-        }
-    </section>
-
-    @if (mostrarFichaLateral()) {
-    <!-- Coluna do jogador (item novo): a própria ficha, sempre aberta, pra acompanhar o combate sem
-       largar a tela de Iniciativa — 70% da largura em desktop; some no mobile (ver SCSS). -->
-    <aside class="iniciativa-tela__ficha">
-        @if (meuFichaDados(); as ficha) {
-        <app-ficha-campanha-card
-            [fichaId]="ficha.id"
-            [nome]="ficha.nome"
-            [cor]="ficha.cor"
-            [imagemUrl]="ficha.imagemUrl"
-            [dados]="ficha.dados"
-            [ajustavel]="true"
-            [podeRolar]="true"
-            [ehMestre]="false"
-            [mostrarRolagensCompacto]="true"
-            (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
-            (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
-            (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
-            (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
-            (ajusteNome)="fichaEdicao.ajustarNome($event)"
-            (ajusteCor)="fichaEdicao.ajustarCor($event)"
-            (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
-            (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
-            (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
-            (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
-            (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
-            (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
-            (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
-            (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
-            (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
-            (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
-            (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
-            (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
-            (ajusteHabilidadePersonalidade)="fichaEdicao.ajustarHabilidadePersonalidade($event)"
-            (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
-            (origemLimpa)="fichaEdicao.limparOrigem()"
-            (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
-        />
-        } @else {
-        <p class="iniciativa-tela__ficha-carregando">Carregando sua ficha…</p>
-        }
-    </aside>
-    }
-</div>
-}
-
-<!-- Janela de ficha do combatente clicado (mestre olhando qualquer um; jogador, um colega revelado):
-     uma só instância para os dois ramos, aberta imperativamente por `abrirFichaFlutuante`. -->
-<app-ficha-flutuante #fichaFlutuante [ehMestre]="ehMestre()" />
+} }
+<!-- Janela de ficha do combatente clicado (o mestre olhando qualquer um): uma só instância, aberta
+     imperativamente por `abrirFichaFlutuante`. -->
+<app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />
 
 <!-- Conteúdo de uma linha do histórico (nome, data, rodadas e combatentes + seta) — compartilhado
      pelo menu do cabeçalho (com combate) e pelos cartões do estado vazio (sem combate). -->
@@ -832,7 +556,7 @@
                 tamanho="medio"
                 class="novo-combate__acao"
                 type="submit"
-                [disabled]="formularioCriacao.invalid || emOperacao()"
+                [disabled]="formularioCriacao.invalid || dados.emOperacao()"
             >
                 Abrir combate
             </button>
@@ -844,7 +568,7 @@
     [combatente]="avulso"
     [ocultaInicial]="rolagemAvulsoOculta(avulso.id)"
     (fechado)="avulsoRolando.set(null)"
-    (registrada)="adicionarRolagemAoFeed($event)"
+    (registrada)="dados.adicionarRolagemAoFeed($event)"
     (ocultaAlterada)="alterarVisibilidadeRolagemAvulso(avulso.id, $event)"
 />
 }

@@ -19,6 +19,8 @@ interface PosicaoTrilhaDto {
   readonly ativa: boolean;
   readonly agiu: boolean;
   readonly sigla: string;
+  /** É o combatente do próprio jogador (visão do jogador) — ganha a marca "Você". */
+  readonly voce: boolean;
   readonly subtitulo: string;
   /** `1/2` — só quando o combatente tem mais de um turno na rodada (faixa horizontal). */
   readonly ocorrencia: string | null;
@@ -26,9 +28,13 @@ interface PosicaoTrilhaDto {
 }
 
 /**
- * Trilha de turnos da visão do mestre (`ui-37`): contadores Rodada/Turno (ou a Situação, fora do
- * combate) e a ordem em que os combatentes agem — cada slot da rodada é uma posição, então uma
- * Cadência maior que 1 aparece repetida, igual à grade.
+ * Trilha de turnos da visão do mestre (`ui-37`) e do jogador (`ui-39`): contadores Rodada/Turno
+ * (ou a Situação, fora do combate) e a ordem em que os combatentes agem — cada slot da rodada é uma
+ * posição, então uma Cadência maior que 1 aparece repetida, igual à grade.
+ *
+ * O jogador projeta o bloco de ação dele em `[trilhaAcao]` (logo abaixo dos contadores, no mesmo
+ * bloco de topo) e passa `meuCombatenteId`, que marca o item dele com "Você". O mestre não usa
+ * nenhum dos dois e a trilha continua exatamente como era.
  *
  * Componente **burro**: recebe o encontro e a lista visual já montada
  * (`montarCombatentesVisuais`) e não escreve nada. De quem é a vez e quem já agiu vêm das mesmas
@@ -41,11 +47,16 @@ interface PosicaoTrilhaDto {
   imports: [Tooltip, FocoImagem],
   templateUrl: './trilha-turnos.component.html',
   styleUrl: './trilha-turnos.component.scss',
+  host: { '[class.trilha--com-acao]': 'comAcao()' },
 })
 export class TrilhaTurnos {
   readonly encontro = input.required<EncontroRecuperadoDto>();
   /** Posições visuais na ordem em que agem (`montarCombatentesVisuais`). */
   readonly combatentes = input.required<readonly CombatenteVisualDto[]>();
+  /** Id do combatente do próprio jogador — `null` no mestre e para quem só assiste. */
+  readonly meuCombatenteId = input<number | null>(null);
+  /** Há um bloco de ação projetado em `[trilhaAcao]` — o topo da trilha passa a acomodá-lo. */
+  readonly comAcao = input(false);
 
   private readonly lista = viewChild<ElementRef<HTMLElement>>('lista');
 
@@ -57,15 +68,18 @@ export class TrilhaTurnos {
 
   protected readonly posicoes = computed<readonly PosicaoTrilhaDto[]>(() => {
     const encontroAtual = this.encontro();
+    const meuId = this.meuCombatenteId();
     return this.combatentes().map((combatente) => {
       const ativa = combatenteEhDaVez(combatente, encontroAtual);
       const agiu = combatenteJaAgiu(combatente, encontroAtual);
+      const voce = meuId !== null && combatente.id === meuId;
       return {
         combatente,
         ativa,
         agiu,
         sigla: siglaDoCombatente(combatente.nome),
-        subtitulo: this.subtituloDe(combatente),
+        voce,
+        subtitulo: voce ? 'Você' : this.subtituloDe(combatente),
         ocorrencia:
           combatente.totalOcorrencias > 1
             ? `${combatente.ocorrencia}/${combatente.totalOcorrencias}`
@@ -112,7 +126,10 @@ export class TrilhaTurnos {
 
   private centralizarAtiva(): void {
     const lista = this.lista()?.nativeElement;
-    const ativa = lista?.querySelector<HTMLElement>('.trilha__item--ativa');
+    // Sem ninguém agindo (montagem), o jogador tem o item dele à vista.
+    const ativa =
+      lista?.querySelector<HTMLElement>('.trilha__item--ativa') ??
+      lista?.querySelector<HTMLElement>('.trilha__item--voce');
     if (!lista || !ativa) {
       return;
     }
