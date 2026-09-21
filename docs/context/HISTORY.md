@@ -1,5 +1,18 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — Rede-04: consultas locais, cancelamento e reuso
+
+- A Gestão de usuários passou a concentrar carga inicial, filtros, paginação e invalidações após
+  mutação em uma intenção única com `switchMap`. A geração ativa protege os dados e o indicador
+  de carregamento contra finalizações ou respostas antigas.
+- O Acervo agora separa a carga fria paralela de fichas/campanhas da recarga somente de fichas.
+  Atribuir e remover campanha atualizam o chip localmente pelo DTO de resposta e pela campanha já
+  carregada; duplicar refaz apenas a lista canônica de fichas.
+- Verificado: testes focados 33/33, build do frontend e lint sem erros. A suíte completa do
+  frontend foi executada; sua saída de artefatos excedeu o limite de retenção do terminal. O build
+  mantém o aviso preexistente de bundle inicial acima do orçamento, e o lint mantém avisos de
+  estilo preexistentes sem erros.
+
 ## 2026-09-21 — Rede-03: invalidação seletiva de tempo real
 
 - Foram criados os GETs estreitos de encontro ativo para o painel do espectador e para a prévia

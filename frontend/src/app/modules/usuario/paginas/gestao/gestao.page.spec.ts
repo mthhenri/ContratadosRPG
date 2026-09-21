@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { UsuarioSituacaoEnum } from '@contratados-rpg/shared/enums';
 import { UsuarioResumoDto } from '@contratados-rpg/shared/dtos/usuario';
@@ -19,6 +19,7 @@ interface GestaoTestApi {
   senhaForm: { setValue(valor: { novaSenha: string }): void };
   aplicarFiltros(): void;
   limparFiltros(): void;
+  irParaPagina(pagina: number): void;
   abrirEditor(usuario: UsuarioResumoDto, modo: 'perfil' | 'senha' | 'tipo'): void;
   salvarSenha(usuario: UsuarioResumoDto): void;
   pedirExclusao(usuario: UsuarioResumoDto): void;
@@ -89,6 +90,24 @@ describe('UsuarioGestao', () => {
       pagina: 1,
       situacao: UsuarioSituacaoEnum.ATIVOS,
     }));
+  });
+
+  it('cancela a resposta antiga quando uma intenção de filtro mais nova chega', () => {
+    const componente = fixture.componentInstance as unknown as GestaoTestApi;
+    const antiga = new Subject<typeof lista>();
+    const recente = new Subject<typeof lista>();
+    servico.listarUsuarios.mockReset();
+    servico.listarUsuarios.mockReturnValueOnce(antiga).mockReturnValueOnce(recente);
+
+    componente.aplicarFiltros();
+    componente.irParaPagina(2);
+    recente.next({ ...lista, itens: [{ ...lista.itens[1], nome: 'Resultado recente' }] });
+    recente.complete();
+    antiga.next({ ...lista, itens: [{ ...lista.itens[0], nome: 'Resultado antigo' }] });
+    fixture.detectChanges();
+
+    expect(raiz.textContent).toContain('Resultado recente');
+    expect(raiz.textContent).not.toContain('Resultado antigo');
   });
 
   it('fecha o menu de tipo fora dele e permite cancelar uma troca pendente', () => {

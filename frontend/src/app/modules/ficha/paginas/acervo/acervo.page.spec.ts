@@ -100,7 +100,7 @@ describe('FichaAcervo', () => {
       criarFicha: vi.fn((dto: FichaCriarDto) =>
         of({ id: 5, campanhaId: null, usuarioId: 7, nome: dto.nome, dados: dto.dados }),
       ),
-      atribuirCampanha: vi.fn(() => of({ id: 1, campanhaId: 9 })),
+      atribuirCampanha: vi.fn(() => of({ id: 1, campanhaId: 9 } as { id: number; campanhaId: number | null })),
       duplicarFicha: vi.fn(() =>
         of({ id: 99, campanhaId: null, usuarioId: 7, nome: 'Kane (cópia)', dados: {} }),
       ),
@@ -192,8 +192,10 @@ describe('FichaAcervo', () => {
     expect(raiz.querySelector('.acervo__menu-botao')).not.toBeNull();
   });
 
-  it('abre o menu e a dialog de atribuição, chamando atribuirCampanha com a campanha escolhida', () => {
-    const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1, campanhaId: null })] });
+  it('atribui localmente sem repetir as listagens de ficha ou campanha', () => {
+    const { fixture, raiz, fichaService, campanhaService } = montar({ fichas: [fichaResumo({ id: 1, campanhaId: null })] });
+    fichaService.listarMinhasFichas.mockClear();
+    campanhaService.listarCampanhas.mockClear();
 
     const botaoMenu = raiz.querySelector('.acervo__menu-botao') as HTMLButtonElement;
     botaoMenu.click();
@@ -213,10 +215,13 @@ describe('FichaAcervo', () => {
     botaoConfirmar.click();
 
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(1, 9);
+    expect(fichaService.listarMinhasFichas).not.toHaveBeenCalled();
+    expect(campanhaService.listarCampanhas).not.toHaveBeenCalled();
+    expect(raiz.textContent).toContain('Operação Alfa');
   });
 
   it('remove a ficha da campanha pelo menu depois de confirmar', async () => {
-    const { fixture, raiz, fichaService, confirmacaoService } = montar({
+    const { fixture, raiz, fichaService, campanhaService, confirmacaoService } = montar({
       fichas: [fichaResumo({ id: 1, campanhaId: 9, campanhaNome: 'Operação Alfa' })],
     });
 
@@ -235,12 +240,14 @@ describe('FichaAcervo', () => {
     );
     expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
 
+    fichaService.atribuirCampanha.mockReturnValueOnce(of({ id: 1, campanhaId: null }));
     await Promise.resolve();
     await Promise.resolve();
     fixture.detectChanges();
 
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(1, null);
     expect(raiz.querySelector('.acervo__chip--campanha')).toBeNull();
+    expect(campanhaService.listarCampanhas).toHaveBeenCalledTimes(1);
   });
 
   it('cancelar a confirmação mantém a ficha na campanha', async () => {
@@ -300,8 +307,8 @@ describe('FichaAcervo', () => {
       expect(fichaService.duplicarFicha).not.toHaveBeenCalled();
     });
 
-    it('confirmar chama FichaService.duplicarFicha e recarrega o acervo', () => {
-      const { fixture, raiz, fichaService } = montar({ fichas: [fichaResumo({ id: 1 })] });
+    it('confirmar chama FichaService.duplicarFicha e recarrega somente as fichas', () => {
+      const { fixture, raiz, fichaService, campanhaService } = montar({ fichas: [fichaResumo({ id: 1 })] });
       expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(1);
       abrirMenuFicha(raiz, fixture);
       clicarItemMenu(raiz, fixture, 'Duplicar ficha');
@@ -311,6 +318,7 @@ describe('FichaAcervo', () => {
 
       expect(fichaService.duplicarFicha).toHaveBeenCalledWith(1);
       expect(fichaService.listarMinhasFichas).toHaveBeenCalledTimes(2);
+      expect(campanhaService.listarCampanhas).toHaveBeenCalledTimes(1);
       expect(raiz.querySelector('app-modal')).toBeNull();
     });
   });
