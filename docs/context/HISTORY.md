@@ -25,6 +25,8 @@ antigo; Safari não foi testado. Firefox do Playwright em modo headless reporta 
 (esconde barras) — a verificação usou janela real; Chromium/Edge precisam de
 `ignoreDefaultArgs: ['--hide-scrollbars']`.
 
+**Ajuste de espessura (mesmo dia).** Com a barra já valendo, o autor achou-a grossa: "talvez metade da grossura que tá atualmente". `::-webkit-scrollbar` de 10px para **5px** (largura e altura, nos dois `_base.scss`; `DESIGN.md` atualizado). Medido em Chromium e Edge (`offsetWidth - clientWidth` = 5) e capturado a 3× no painel de Rolagens: polegar de 5px com contorno `--border-strong`, e `--accent-border` no hover. O Firefox não aceita largura em pixels — só `thin`/`auto`/`none` —, então lá nada muda: `thin` já é o mínimo que ele oferece.
+
 **2. Criatura.** "Se tem muitos ataques ou habilidades, a ficha vai indo lá pra baixo: devia pôr um scroll
 interno nessas duas caixas, pra altura da coluna do lado." Medido com uma criatura de teste (14 ataques e 14
 habilidades, removida depois): a coluna Status crescia e arrastava a de Identidade+Atributos junto (905px

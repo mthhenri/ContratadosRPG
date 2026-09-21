@@ -481,8 +481,9 @@ para todo container com overflow — scroll geral, os modais, tabelas e o textar
 precisar ser repetido por componente.
 
 - **Thumb:** `--surface-2` com contorno `--border-strong`, raio `--radius-control`. Fino
-  (`width`/`height: 10px`). No `:hover`, o contorno passa a `--accent-border` (realce sutil —
-  **nunca** `--accent` sólido, reservado para ação/estado ativo).
+  (`width`/`height: 5px` — metade dos 10px originais, a pedido do autor; no Firefox a largura é
+  `thin`, o mínimo que o navegador oferece). No `:hover`, o contorno passa a `--accent-border`
+  (realce sutil — **nunca** `--accent` sólido, reservado para ação/estado ativo).
 - **Track / corner:** transparentes.
 - **Cross-browser:** `::-webkit-scrollbar-*` (Chrome/Edge/Safari) **ou** `scrollbar-width: thin` +
   `scrollbar-color: var(--border-strong) transparent` (Firefox e a spec padrão) — **uma forma por
