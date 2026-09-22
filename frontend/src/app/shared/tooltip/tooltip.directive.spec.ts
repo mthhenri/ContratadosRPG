@@ -125,6 +125,30 @@ describe('Tooltip', () => {
     }
   });
 
+  it('texto com quebra de linha preserva quebras e espaços; texto de uma linha só não muda', () => {
+    vi.useFakeTimers();
+    try {
+      const { botao, fixture } = montar();
+
+      fixture.componentInstance.texto.set('Linha um\n\n  Linha dois recuada');
+      fixture.detectChanges();
+      botao.dispatchEvent(new Event('pointerenter'));
+      vi.advanceTimersByTime(320);
+      const comQuebra = balao() as HTMLElement;
+      expect(comQuebra.style.whiteSpace).toBe('pre-wrap');
+      expect(comQuebra.textContent).toBe('Linha um\n\n  Linha dois recuada');
+      botao.dispatchEvent(new Event('pointerleave'));
+
+      fixture.componentInstance.texto.set('Uma linha só.');
+      fixture.detectChanges();
+      botao.dispatchEvent(new Event('pointerenter'));
+      vi.advanceTimersByTime(320);
+      expect((balao() as HTMLElement).style.whiteSpace).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('texto vazio não abre nada', () => {
     vi.useFakeTimers();
     try {

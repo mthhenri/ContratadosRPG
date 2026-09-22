@@ -7,7 +7,9 @@ import { signal } from '@angular/core';
 import {
   ArquetipoEnum,
   ClasseEnum,
+  ComportamentoCriaturaEnum,
   NivelAmeacaEnum,
+  PorteCriaturaEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
@@ -16,6 +18,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { CampanhaDetalheMestre } from './detalhe-mestre.page';
 import { EspectadorFichaCard } from '../../componentes/espectador-ficha-card/espectador-ficha-card.component';
+import { CriaturaEsquadraoCard } from '../../componentes/criatura-esquadrao-card/criatura-esquadrao-card.component';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
@@ -89,6 +92,9 @@ describe('CampanhaDetalheMestre', () => {
       inconsciente: false,
       na: NivelAmeacaEnum.MEDIA,
       defesa: 10,
+      registro: 'SCP-049',
+      porte: PorteCriaturaEnum.GRANDE,
+      comportamento: ComportamentoCriaturaEnum.CACADORA,
     } as FichaResumoDto,
   ];
 
@@ -174,7 +180,10 @@ describe('CampanhaDetalheMestre', () => {
       membroEntrou$: new Subject().asObservable(),
       fichaAlterada$: new Subject().asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
+      fichaCondicoesAlteradas$: new Subject().asObservable(),
+      fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       estadoAlterado$: new Subject().asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
       paginaEsquadraoCriada$: new Subject().asObservable(),
@@ -227,6 +236,20 @@ describe('CampanhaDetalheMestre', () => {
     fixture.detectChanges();
   }
 
+  it('enquanto carrega, mostra a casca real com a silhueta de cabeçalho, cartões e painel lateral', () => {
+    const { fixture, raiz, dados } = montar();
+    dados.carregando.set(true);
+    fixture.detectChanges();
+
+    const conteudo = raiz.querySelector('.detalhe-mestre__conteudo');
+    expect(conteudo?.getAttribute('role')).toBe('status');
+    expect(conteudo?.getAttribute('aria-label')).toBe('Carregando campanha');
+    expect(raiz.querySelectorAll('app-coluna-acoes app-esqueleto').length).toBeGreaterThan(0);
+    expect(raiz.querySelectorAll('.detalhe-mestre__esqueleto-card').length).toBeGreaterThan(0);
+    expect(raiz.querySelector('.detalhe-mestre__painel-lateral app-esqueleto')).not.toBeNull();
+    expect(raiz.querySelector('app-espectador-ficha-card')).toBeNull();
+  });
+
   it('renderiza a coluna de ações com Membros, Iniciativa, Convites, Editar, Excluir, Calculadora, Caderno', () => {
     const { raiz } = montar();
     const rotulos = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map((el) =>
@@ -275,9 +298,17 @@ describe('CampanhaDetalheMestre', () => {
     expect(cartao.componentInstance.ultimaRolagem()?.id).toBe(77);
   });
 
-  it('renderiza a subseção Criaturas com a ficha tipo CRIATURA', () => {
-    const { raiz } = montar();
-    expect(raiz.querySelector('.detalhe-mestre__criatura-nome')?.textContent).toContain('Aberração');
+  it('renderiza a subseção Criaturas com app-criatura-esquadrao-card, registro/porte/comportamento/NA e a barra de Vida', () => {
+    const { raiz, fixture } = montar();
+    const cartao = fixture.debugElement.query(By.directive(CriaturaEsquadraoCard));
+    expect(cartao).not.toBeNull();
+    expect(raiz.querySelector('.criatura-card__nome')?.textContent).toContain('Aberração');
+    expect(raiz.querySelector('.criatura-card__registro')?.textContent).toContain('SCP-049');
+    const classificacao = raiz.querySelector('.criatura-card__classificacao')?.textContent ?? '';
+    expect(classificacao).toContain('Grande');
+    expect(classificacao).toContain('Caçadora');
+    expect(classificacao).toContain('Média');
+    expect(raiz.querySelector('app-criatura-esquadrao-card app-barra-recurso')).not.toBeNull();
   });
 
   it('abre a ficha flutuante ao emitir abrirFicha do cartão do Esquadrão', () => {
@@ -286,6 +317,56 @@ describe('CampanhaDetalheMestre', () => {
     const cartao = fixture.debugElement.query(By.directive(EspectadorFichaCard));
     cartao.componentInstance.abrirFicha.emit();
     expect(spy).toHaveBeenCalledWith({ fichaId: 4, tipo: TipoFichaEnum.JOGADOR, usuarioIdDono: 2 });
+  });
+
+  it('abre a ficha flutuante ao emitir abrirFicha do cartão de criatura', () => {
+    const { fixture } = montar();
+    // `mockImplementation` — sem chamar through: `FichaFlutuante.abrir()` real dispara
+    // `CriaturaVisualizacao`, que a fixture rasa `recuperarFichaCriatura: () => of({})` deste
+    // spec não sustenta (crasha em `.vd` de documento vazio). Só a chamada em si prova o roteamento.
+    const spy = vi
+      .spyOn(fixture.componentInstance['fichaFlutuanteRef']()!, 'abrir')
+      .mockImplementation(() => {});
+    const cartao = fixture.debugElement.query(By.directive(CriaturaEsquadraoCard));
+    cartao.componentInstance.abrirFicha.emit();
+    expect(spy).toHaveBeenCalledWith({ fichaId: 9, tipo: TipoFichaEnum.CRIATURA, usuarioIdDono: 1 });
+  });
+
+  it('"Abrir ficha completa" do menu "⋯" vai pro acervo (jogador) ou pra rota de criatura da campanha (criatura)', () => {
+    const { raiz, fixture } = montar();
+    const abrir = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    expect(abrir).toHaveBeenCalledWith(expect.stringContaining('/fichas/4'), '_blank', 'noopener');
+
+    abrir.mockClear();
+    (raiz.querySelector('.criatura-card__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    expect(abrir).toHaveBeenCalledWith(
+      expect.stringContaining(`/campanhas/${CAMPANHA_ID}/criatura/9`),
+      '_blank',
+      'noopener',
+    );
+  });
+
+  it('duplica uma criatura pelo mesmo menu "⋯" do cartão, sem exigir dono', () => {
+    const { raiz, fixture, fichaService } = montar();
+    (raiz.querySelector('.criatura-card__menu-botao') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (raiz.querySelector('.detalhe-mestre__ficha-menu-item:nth-child(2)') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.dialogo__aviso')?.textContent).not.toContain('de "');
+
+    const confirmar = Array.from(raiz.querySelectorAll('app-modal button')).find((el) =>
+      el.textContent?.includes('Confirmar duplicação'),
+    ) as HTMLButtonElement;
+    confirmar.click();
+
+    expect(fichaService.duplicarFicha).toHaveBeenCalledWith(9);
   });
 
   it('esconde o gatilho flutuante próprio da calculadora e do caderno (consolidados na coluna de ações)', () => {
@@ -299,7 +380,9 @@ describe('CampanhaDetalheMestre', () => {
     (raiz.querySelector('.espectador-ficha__menu-botao') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    (raiz.querySelector('.detalhe-mestre__ficha-menu-item') as HTMLButtonElement).click();
+    (Array.from(raiz.querySelectorAll('.detalhe-mestre__ficha-menu-item')).find((el) =>
+      el.textContent?.includes('Duplicar'),
+    ) as HTMLButtonElement).click();
     fixture.detectChanges();
 
     const confirmar = Array.from(raiz.querySelectorAll('app-modal button')).find((el) =>
@@ -477,13 +560,18 @@ describe('CampanhaDetalheMestre', () => {
         (el) => el.textContent?.trim() === 'Calculadora',
       ) as HTMLButtonElement;
 
+      expect(itemCalculadora.getAttribute('aria-pressed')).toBe('false');
+
       itemCalculadora.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).not.toBeNull();
+      expect(itemCalculadora.getAttribute('aria-pressed')).toBe('true');
+      expect(itemCalculadora.classList).toContain('coluna-acoes__item--ativo');
 
       itemCalculadora.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).toBeNull();
+      expect(itemCalculadora.getAttribute('aria-pressed')).toBe('false');
     });
 
     it('Caderno alterna aberto/fechado ao clicar de novo no mesmo item', () => {
@@ -492,13 +580,94 @@ describe('CampanhaDetalheMestre', () => {
         (el) => el.textContent?.trim() === 'Caderno',
       ) as HTMLButtonElement;
 
+      expect(itemCaderno.getAttribute('aria-pressed')).toBe('false');
+
       itemCaderno.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-caderno-flutuante .painel-flutuante__janela')).not.toBeNull();
+      expect(itemCaderno.getAttribute('aria-pressed')).toBe('true');
 
       itemCaderno.click();
       fixture.detectChanges();
       expect(raiz.querySelector('app-caderno-flutuante .painel-flutuante__janela')).toBeNull();
+      expect(itemCaderno.getAttribute('aria-pressed')).toBe('false');
+    });
+
+    function itemColuna(raiz: HTMLElement, rotulo: string): HTMLElement {
+      return Array.from(raiz.querySelectorAll<HTMLElement>('[app-coluna-acoes-item]')).find(
+        (el) => el.textContent?.trim() === rotulo,
+      )!;
+    }
+
+    it('Membros, Convites e Editar ficam selecionados enquanto a dialog respectiva está aberta', () => {
+      const { raiz, fixture } = montar();
+      for (const rotulo of ['Membros', 'Convites', 'Editar']) {
+        expect(itemColuna(raiz, rotulo).getAttribute('aria-pressed'), rotulo).toBe('false');
+      }
+
+      itemColuna(raiz, 'Membros').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Membros').getAttribute('aria-pressed')).toBe('true');
+      expect(itemColuna(raiz, 'Convites').getAttribute('aria-pressed')).toBe('false');
+      fixture.componentInstance['dialogMembrosAberta'].set(false);
+
+      itemColuna(raiz, 'Convites').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Convites').getAttribute('aria-pressed')).toBe('true');
+      expect(itemColuna(raiz, 'Membros').getAttribute('aria-pressed')).toBe('false');
+      fixture.componentInstance['dialogConvitesAberta'].set(false);
+
+      itemColuna(raiz, 'Editar').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Editar').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['cancelarEdicao']();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Editar').getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('Excluir fica selecionado enquanto a confirmação de exclusão está aberta', async () => {
+      const { raiz, fixture, confirmacaoService } = montar();
+      let resolver: (valor: boolean) => void = () => undefined;
+      confirmacaoService.confirmar.mockImplementation(
+        () => new Promise<boolean>((resolve) => (resolver = resolve)),
+      );
+
+      itemColuna(raiz, 'Excluir').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir').getAttribute('aria-pressed')).toBe('true');
+
+      resolver(false);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir').getAttribute('aria-pressed')).toBe('false');
+    });
+  });
+
+  describe('"Remover da campanha" (menu do cartão da ficha)', () => {
+    it('pede confirmação e só desatribui a ficha depois de confirmar', async () => {
+      const { fixture, fichaService, confirmacaoService } = montar();
+
+      fixture.componentInstance['pedirRemoverDaCampanha'](3, 'Kane');
+      expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Remover da campanha', entidade: 'Kane', severidade: 'padrao' }),
+      );
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(3, null);
+    });
+
+    it('cancelar a confirmação não desatribui a ficha', async () => {
+      const { fixture, fichaService, confirmacaoService } = montar();
+      confirmacaoService.confirmar.mockResolvedValue(false);
+
+      fixture.componentInstance['pedirRemoverDaCampanha'](3, 'Kane');
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
     });
   });
 

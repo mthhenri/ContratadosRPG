@@ -23,6 +23,8 @@ import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.dir
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { HabilidadeDescricao } from '../habilidade-descricao/habilidade-descricao.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { FichaHabilidadeSeletor } from '../ficha-habilidade-seletor/ficha-habilidade-seletor.component';
@@ -44,15 +46,19 @@ const CATEGORIAS: readonly OpcaoCategoria[] = (
   Object.values(HabilidadeCategoriaEnum) as HabilidadeCategoriaEnum[]
 ).map((valor) => ({ valor, rotulo: ROTULOS_HABILIDADE_CATEGORIA[valor] }));
 
-/** Os 4 grupos do resumo por categoria (m3-48) — mesmos buckets de `contagemPorCategoria`. */
-type FiltroCategoriaResumo = 'arquetipo' | 'classe' | 'geral' | 'outraClasse';
+/**
+ * Os 5 grupos do resumo por categoria (m3-48) — mesmos buckets de `contagemPorCategoria`. `outras`
+ * junta o que não é Arquétipo/Classe/Geral/Outra classe: Personalidade, Especialidade, Civil e Única.
+ */
+type FiltroCategoriaResumo = 'arquetipo' | 'classe' | 'geral' | 'outraClasse' | 'outras';
 
-/** Ordem canônica dos 4 tipos — usada pra checar "todos selecionados" e montar a mensagem de vazio. */
+/** Ordem canônica dos 5 tipos — usada pra checar "todos selecionados" e montar a mensagem de vazio. */
 const TIPOS_FILTRO_RESUMO: readonly FiltroCategoriaResumo[] = [
   'arquetipo',
   'classe',
   'geral',
   'outraClasse',
+  'outras',
 ];
 
 /** Rótulos fixos do resumo — `arquetipo` vira "Subclasse" numa ficha Experimento (P-014, ver `rotuloResumoArquetipo`). */
@@ -61,6 +67,7 @@ const ROTULO_FILTRO_RESUMO: Readonly<Record<FiltroCategoriaResumo, string>> = {
   classe: 'Classe',
   geral: 'Geral',
   outraClasse: 'Outra classe/arquétipo',
+  outras: 'outras categorias',
 };
 
 /** Junta rótulos em prosa: "A", "A ou B", "A, B ou C" — usado na mensagem de lista vazia. */
@@ -97,6 +104,8 @@ function juntarComOu(rotulos: readonly string[]): string {
     Tooltip,
     Botao,
     BotaoIcone,
+    EditorMarkdown,
+    HabilidadeDescricao,
     FichaHabilidadeSeletor,
     EstadoVazio,
     StepInput,
@@ -145,8 +154,8 @@ export class FichaHabilidades {
 
   /**
    * Tipos do resumo ativos como filtro (m3-48) — **cumulativo**: vazio = sem filtro (todos os
-   * tipos aparecem); cada clique soma um tipo à seleção. Se a seleção chegar a cobrir os 4 tipos,
-   * volta a vazio (equivalente a "todos" — não faz sentido manter os 4 acesos). Estado de UI
+   * tipos aparecem); cada clique soma um tipo à seleção. Se a seleção chegar a cobrir os 5 tipos,
+   * volta a vazio (equivalente a "todos" — não faz sentido manter os 5 acesos). Estado de UI
    * volátil, não persiste após sair da ficha (fora de escopo qualquer campo novo em `dados`).
    */
   protected readonly filtroCategoria = signal<ReadonlySet<FiltroCategoriaResumo>>(new Set());
@@ -186,40 +195,34 @@ export class FichaHabilidades {
   });
 
   /**
-   * Contagem por categoria (resumo acima da busca) — Arquétipo/Classe/Geral/Outra classe. Uma
-   * habilidade de Classe/Arquétipo vinda de **outra** origem (`ehDeOutraOrigem` — mesmo critério
+   * Contagem por categoria (resumo acima da busca) — Arquétipo/Classe/Geral/Outra classe/Outras.
+   * Uma habilidade de Classe/Arquétipo vinda de **outra** origem (`ehDeOutraOrigem` — mesmo critério
    * do sufixo do chip, ex. "Classe - Especialista") conta em "outra classe", não na própria.
    */
   protected readonly contagemPorCategoria = computed(() => {
-    let arquetipo = 0;
-    let classe = 0;
-    let geral = 0;
-    let outraClasse = 0;
+    const contagem: Record<FiltroCategoriaResumo, number> = {
+      arquetipo: 0,
+      classe: 0,
+      geral: 0,
+      outraClasse: 0,
+      outras: 0,
+    };
     for (const habilidade of this.habilidades()) {
-      const bucket = this.bucketResumo(habilidade);
-      if (bucket === 'arquetipo') {
-        arquetipo++;
-      } else if (bucket === 'classe') {
-        classe++;
-      } else if (bucket === 'geral') {
-        geral++;
-      } else if (bucket === 'outraClasse') {
-        outraClasse++;
-      }
+      contagem[this.bucketResumo(habilidade)]++;
     }
-    return { arquetipo, classe, geral, outraClasse };
+    return contagem;
   });
 
   /**
-   * Bucket do resumo por categoria (m3-48) a que a habilidade pertence, ou `null` quando não cai em
-   * nenhum dos 4 grupos exibidos (ex.: Personalidade/Especialidade/Civil) — mesmo critério usado por
+   * Bucket do resumo por categoria (m3-48) a que a habilidade pertence — mesmo critério usado por
    * `contagemPorCategoria` e pelo filtro de `habilidadesFiltradas`. Subclasse (P-014) soma no mesmo
    * bucket de Arquétipo — é o mesmo conceito, só renomeado na exibição (`rotuloResumoArquetipo`);
    * subclasses nunca cruzam (doc), então não existe um caso "de outra subclasse" a separar aqui.
    * Geral Melhorada (`GERAL_MELHORADA`) soma no mesmo bucket de Geral — mesmo conceito, variação
-   * buffada por arquétipo (doc).
+   * buffada por arquétipo (doc). O que sobra (Personalidade, Especialidade, Civil e Única) cai em
+   * `outras`.
    */
-  private bucketResumo(habilidade: FichaHabilidadeDto): FiltroCategoriaResumo | null {
+  private bucketResumo(habilidade: FichaHabilidadeDto): FiltroCategoriaResumo {
     if (
       habilidade.categoria === HabilidadeCategoriaEnum.OUTRA_CLASSE ||
       this.ehDeOutraOrigem(habilidade)
@@ -241,11 +244,11 @@ export class FichaHabilidades {
     ) {
       return 'geral';
     }
-    return null;
+    return 'outras';
   }
 
   /**
-   * Soma/tira um tipo da seleção cumulativa. Clicar de novo no mesmo tipo o tira; somar os 4
+   * Soma/tira um tipo da seleção cumulativa. Clicar de novo no mesmo tipo o tira; somar os 5
    * tipos limpa tudo (equivale a "todos" — ver o comentário de `filtroCategoria`).
    */
   protected alternarFiltro(tipo: FiltroCategoriaResumo): void {
@@ -289,10 +292,7 @@ export class FichaHabilidades {
     const porCategoria =
       filtro.size === 0
         ? indexadas
-        : indexadas.filter(({ habilidade }) => {
-            const bucket = this.bucketResumo(habilidade);
-            return bucket !== null && filtro.has(bucket);
-          });
+        : indexadas.filter(({ habilidade }) => filtro.has(this.bucketResumo(habilidade)));
     const termo = this.buscaTexto().trim().toLowerCase();
     if (!termo) {
       return porCategoria;

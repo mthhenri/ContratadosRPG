@@ -61,6 +61,7 @@ import {
   calcularStatsEfetivos,
   calcularVida,
   maestriaValida,
+  resolverMachucadoPelaVida,
 } from '@contratados-rpg/shared/regras/agente';
 import { calcularResumoCompras, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { validarFichaCriatura } from '@contratados-rpg/shared/regras/criatura';
@@ -394,6 +395,9 @@ export class FichaService {
       tipo: fichaInterna.tipo,
       na: fichaInterna.na,
       vd: fichaInterna.vd,
+      registro: fichaInterna.registro,
+      porte: fichaInterna.porte,
+      comportamento: fichaInterna.comportamento,
       classe: fichaInterna.classe,
       arquetipo: fichaInterna.arquetipo,
       nivel: fichaInterna.nivel,
@@ -692,9 +696,37 @@ export class FichaService {
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     const estado = this.extrairVitalidade(dto.estado);
     this.validarVitalidade(estado);
-    const fichaAlterada = await this.fichaRepositorio.alterarVitalidade({ id: dto.id, estado });
+    const estadoComMachucado = this.resolverMachucadoNaVitalidade(
+      fichaEncontrada.dados as FichaJogadorDadosDto,
+      estado,
+    );
+    const fichaAlterada = await this.fichaRepositorio.alterarVitalidade({
+      id: dto.id,
+      estado: estadoComMachucado,
+    });
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
     return fichaAlterada;
+  }
+
+  /**
+   * Deriva o Machucado (I-032) a partir da Vida quando `estado` traz `vidaAtual` — histerese de
+   * `resolverMachucadoPelaVida` (`shared/regras/agente`): liga em ≤ 50%, mantém entre 50%-99%,
+   * desliga só em 100%. Não altera nada quando só `energiaAtual` mudou (Vida intacta) — o toggle
+   * manual (Anestesia etc., `ajustarCondicoes`) continua valendo até a próxima mudança de Vida.
+   */
+  private resolverMachucadoNaVitalidade(
+    dadosAtuais: FichaJogadorDadosDto,
+    estado: FichaVitalidadeAlterarDto,
+  ): FichaVitalidadeAlterarDto & { readonly machucado?: boolean } {
+    if (estado.vidaAtual === undefined) {
+      return estado;
+    }
+    const machucado = resolverMachucadoPelaVida({
+      vidaAtual: estado.vidaAtual,
+      vidaMaxima: dadosAtuais.estado.vidaMaxima,
+      machucado: dadosAtuais.estado.machucado ?? false,
+    });
+    return { ...estado, machucado };
   }
 
   /**
@@ -1027,8 +1059,9 @@ export class FichaService {
    * mesma checagem da concessão de acesso — m3-04); `campanhaId: null` desatribui sem checagem
    * extra. Ao entrar numa campanha nova, emite `ficha:criada` (resumo) na sala dela — os membros
    * conectados veem a ficha aparecer, mesmo evento de `criarFicha` (m3-05); ao sair de uma
-   * campanha (desatribuir ou mover para outra), a sala anterior não recebe evento — fora de
-   * escopo desta task (a spec marca como opcional). `ResourceNotFoundException` se a ficha não
+   * campanha (desatribuir ou mover para outra), emite `ficha:removida-da-campanha` (só os ids) na
+   * sala que ela deixou, para qualquer tipo de ficha — os membros conectados veem a ficha sumir
+   * do Esquadrão sem recarregar. `ResourceNotFoundException` se a ficha não
    * existir; `UnauthorizedAccessException` se o autor não puder editá-la ou o dono não for membro
    * (JOGADOR) ou mestre (CRIATURA/NPC) da campanha-alvo.
    *
@@ -1067,6 +1100,12 @@ export class FichaService {
     const fichaAtribuida = await this.fichaRepositorio.atribuirCampanha(dto);
     if (dto.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId && ehJogador) {
       this.campanhaGateway.emitirFichaCriada(fichaAtribuida);
+    }
+    if (fichaEncontrada.campanhaId !== null && dto.campanhaId !== fichaEncontrada.campanhaId) {
+      this.campanhaGateway.emitirFichaRemovidaDaCampanha({
+        fichaId: fichaAtribuida.id,
+        campanhaId: fichaEncontrada.campanhaId,
+      });
     }
 
     return { id: fichaAtribuida.id, campanhaId: fichaAtribuida.campanhaId };
@@ -1132,6 +1171,7 @@ export class FichaService {
 
     const acessoRevogado: FichaAcessoRevogadoDto = { fichaId: dto.fichaId, usuarioId: dto.usuarioId };
     this.campanhaGateway.emitirAcessoRevogado(acessoRevogado);
+    await this.campanhaGateway.expulsarUsuarioDaFicha(acessoRevogado);
     return acessoRevogado;
   }
 

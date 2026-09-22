@@ -1,0 +1,86 @@
+<div class="criatura-esqueleto">
+    <div class="criatura-esqueleto__linha">
+        <div class="criatura-esqueleto__coluna-agente">
+            <section class="criatura-esqueleto__cartao">
+                <header class="criatura-esqueleto__cabecalho">
+                    <app-esqueleto class="criatura-esqueleto__indice" />
+                    <app-esqueleto class="criatura-esqueleto__titulo-cartao" />
+                    <span class="criatura-esqueleto__regua"></span>
+                    <app-esqueleto class="criatura-esqueleto__meta" />
+                    <app-esqueleto class="criatura-esqueleto__meta" />
+                </header>
+
+                <div class="criatura-esqueleto__ident-corpo">
+                    <div
+                        class="criatura-esqueleto__ident-coluna criatura-esqueleto__ident-coluna--perfil"
+                    >
+                        <app-esqueleto class="criatura-esqueleto__avatar" />
+                        <app-esqueleto class="criatura-esqueleto__linha-nome" />
+                        <app-esqueleto
+                            class="criatura-esqueleto__linha-texto criatura-esqueleto__linha-curta"
+                        />
+                    </div>
+
+                    <div class="criatura-esqueleto__ident-coluna">
+                        <div class="criatura-esqueleto__grade criatura-esqueleto__grade--tres">
+                            @for (indice of [0, 1, 2]; track indice) {
+                                <app-esqueleto class="criatura-esqueleto__mini" />
+                            }
+                        </div>
+                        <app-esqueleto class="criatura-esqueleto__barra" />
+                        <div class="criatura-esqueleto__grade criatura-esqueleto__grade--duas">
+                            <app-esqueleto class="criatura-esqueleto__mini" />
+                            <app-esqueleto class="criatura-esqueleto__mini" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criatura-esqueleto__chips">
+                    <app-esqueleto class="criatura-esqueleto__chip" />
+                    <app-esqueleto class="criatura-esqueleto__chip" />
+                    <app-esqueleto class="criatura-esqueleto__chip" />
+                </div>
+            </section>
+
+            <section class="criatura-esqueleto__cartao">
+                <header class="criatura-esqueleto__cabecalho">
+                    <app-esqueleto class="criatura-esqueleto__indice" />
+                    <app-esqueleto class="criatura-esqueleto__titulo-cartao" />
+                    <span class="criatura-esqueleto__regua"></span>
+                </header>
+                <app-esqueleto class="criatura-esqueleto__grupo-rotulo" />
+                <div class="criatura-esqueleto__grade criatura-esqueleto__grade--cinco">
+                    @for (indice of [0, 1, 2, 3, 4]; track indice) {
+                        <app-esqueleto class="criatura-esqueleto__atributo" />
+                    }
+                </div>
+                <app-esqueleto class="criatura-esqueleto__grupo-rotulo" />
+                <div class="criatura-esqueleto__grade criatura-esqueleto__grade--cinco">
+                    @for (indice of [0, 1, 2, 3, 4]; track indice) {
+                        <app-esqueleto class="criatura-esqueleto__atributo" />
+                    }
+                </div>
+            </section>
+        </div>
+
+        <div class="criatura-esqueleto__coluna-status">
+            <div class="criatura-esqueleto__abas">
+                @for (indice of [0, 1, 2]; track indice) {
+                    <app-esqueleto class="criatura-esqueleto__aba" />
+                }
+            </div>
+            <section class="criatura-esqueleto__cartao criatura-esqueleto__cartao--conteudo">
+                <div class="criatura-esqueleto__grade criatura-esqueleto__grade--cinco">
+                    @for (indice of [0, 1, 2, 3, 4]; track indice) {
+                        <app-esqueleto class="criatura-esqueleto__mini" />
+                    }
+                </div>
+                <app-esqueleto class="criatura-esqueleto__linha-texto" />
+                <app-esqueleto
+                    class="criatura-esqueleto__linha-texto criatura-esqueleto__linha-curta"
+                />
+                <app-esqueleto class="criatura-esqueleto__bloco" />
+            </section>
+        </div>
+    </div>
+</div>

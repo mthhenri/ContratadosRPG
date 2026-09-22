@@ -41,12 +41,14 @@ description: >
 | Emissor pós-mutação | Evento e sala | Consumidor frontend |
 |---|---|---|
 | `FichaService.criarFicha`/atribuir | `ficha:criada` → `campanha:<id>` (resumo) | `campanha/detalhe` atualiza lista |
+| `FichaService.atribuirCampanha` (saída de campanha: desatribuir ou mover) | `ficha:removida-da-campanha` → `campanha:<id>` que a ficha deixou (só ids, qualquer tipo) | `campanha/detalhe` e `previa-jogador` refazem o recorte |
 | `FichaService.alterarFicha` e ajustes | `ficha:alterada` → `ficha:<id>` (sem campos privados) | `ficha/paginas/visualizar` e `visualizar-criatura` refazem a ficha; `campanha/detalhe` refaz o resumo correspondente |
 | Alteração de visibilidade | `ficha:visibilidade-alterada` → `campanha:<id>` | `campanha/detalhe` refaz o recorte autorizado |
 | `FichaService.revogarAcesso` | `ficha:acesso-revogado` → `ficha:<id>` | páginas de visualização redirecionam o revogado |
 | `CampanhaService.entrarCampanha` | `membro:entrou` → `campanha:<id>` | `campanha/detalhe` refaz membros/fichas |
 | Estado ou inventário de campanha | `campanha:estado-alterado` / `campanha:inventario-alterado` → `campanha:<id>` | `campanha/detalhe` atualiza estado ou refaz inventário |
 | `RolagemService.registrarRolagem` pública | `rolagem:registrada` → `campanha:<id>`; ficha solta → `ficha:<id>` | detalhe, ficha, criatura e painel de encontro acrescentam ao feed |
+| `RolagemService.excluirRolagem` (só ADMIN) | `rolagem:excluida` → mesma sala do registro (privada só `campanha:<id>:mestre`); payload sem conteúdo | detalhe, prévia, espectador, painel de encontro e visualizar/criatura removem a rolagem da lista |
 | `EncontroService` | `encontro:alterado` / `encontro:iniciativa-pedido` → `campanha:<id>` | `painel-encontro` e `campanha/detalhe` atualizam o estado/chamado |
 
 `CampanhaGateway.emitirFichaAlterada` tem uma ponte deliberada: após transmitir, chama

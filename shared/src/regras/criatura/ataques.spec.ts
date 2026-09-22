@@ -16,6 +16,14 @@ describe('obterDanoReferenciaPorVd', () => {
   it('faixa 100+', () => {
     expect(obterDanoReferenciaPorVd({ vd: 150, custoAcao: CustoAcaoEnum.COMPLETA })).toBe('10D20+90');
   });
+
+  it('Turno (custo de ação de um ataque isolado) bate com a coluna Turno da tabela', () => {
+    expect(obterDanoReferenciaPorVd({ vd: 30, custoAcao: CustoAcaoEnum.TURNO })).toBe('4D20+34');
+  });
+
+  it('Ação Livre não tem coluna de referência', () => {
+    expect(obterDanoReferenciaPorVd({ vd: 30, custoAcao: CustoAcaoEnum.ACAO_LIVRE })).toBe('—');
+  });
 });
 
 describe('obterDanoReferenciaTurnoPorVd', () => {

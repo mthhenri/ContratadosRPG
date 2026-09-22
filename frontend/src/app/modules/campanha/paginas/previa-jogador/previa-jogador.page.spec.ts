@@ -103,7 +103,7 @@ describe('CampanhaPreviaJogador', () => {
           nome: 'Beta',
           papel: TipoCampanhaMembroPapelEnum.JOGADOR,
           fichas: [
-            { id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true },
+            { id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false },
           ],
         },
       ],
@@ -118,12 +118,15 @@ describe('CampanhaPreviaJogador', () => {
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const membroEntrou$ = new Subject<unknown>();
     const fichaVisibilidadeAlterada$ = new Subject<unknown>();
+    const fichaCondicoesAlteradas$ = new Subject<{ campanhaId: number }>();
+    const fichaRemovidaDaCampanha$ = new Subject<unknown>();
     const fichaAlterada$ = new Subject<{ id: number }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
 
     const campanhaProjecaoService = {
       recuperarPreviaJogador: vi.fn(() => of(opts.previaResposta ?? previa())),
+      recuperarEncontroAtivoPreviaJogador: vi.fn(() => of(null as EncontroRecuperadoDto | null)),
       recuperarFichaPreviaJogador: vi.fn(() => of(opts.fichaResposta ?? fichaCompleta())),
     };
     const campanhaService = {
@@ -134,8 +137,11 @@ describe('CampanhaPreviaJogador', () => {
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
+      fichaCondicoesAlteradas$: fichaCondicoesAlteradas$.asObservable(),
+      fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
@@ -167,6 +173,8 @@ describe('CampanhaPreviaJogador', () => {
       campanhaProjecaoService,
       rolagemRegistrada$,
       membroEntrou$,
+      fichaRemovidaDaCampanha$,
+      fichaCondicoesAlteradas$,
       fichaAlterada$,
       encontroAlterado$,
     };
@@ -202,13 +210,13 @@ describe('CampanhaPreviaJogador', () => {
             usuarioId: ALVO_ID,
             nome: 'Beta',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true }],
+            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false }],
           },
           {
             usuarioId: COLEGA_ID,
             nome: 'Colega',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 20, nome: 'Ficha Oculta', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: false }],
+            fichas: [{ id: 20, nome: 'Ficha Oculta', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: false, morrendo: false, machucado: false, inconsciente: false }],
           },
         ],
       }),
@@ -231,13 +239,13 @@ describe('CampanhaPreviaJogador', () => {
             usuarioId: ALVO_ID,
             nome: 'Beta',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true }],
+            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false }],
           },
           {
             usuarioId: COLEGA_ID,
             nome: 'Colega',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 20, nome: 'Ficha do Colega', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true }],
+            fichas: [{ id: 20, nome: 'Ficha do Colega', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false }],
           },
         ],
       }),
@@ -271,11 +279,34 @@ describe('CampanhaPreviaJogador', () => {
     expect(raiz.textContent).toContain('Dano 2d6');
   });
 
-  it('membro entrou/ficha alterada refazem a projeção (spec item 4)', () => {
+  it('membro entrou refaz a projeção (spec item 4)', async () => {
     const { fixture, membroEntrou$, campanhaProjecaoService } = montar();
     campanhaProjecaoService.recuperarPreviaJogador.mockClear();
 
-    membroEntrou$.next({});
+    membroEntrou$.next({ campanhaId: CAMPANHA_ID, usuarioId: 99 });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    fixture.detectChanges();
+
+    expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+  });
+
+  it('ficha removida da campanha refaz a projeção', async () => {
+    const { fixture, fichaRemovidaDaCampanha$, campanhaProjecaoService } = montar();
+    campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+    fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    fixture.detectChanges();
+
+    expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+  });
+
+  it('ficha:condicoes-alteradas (I-031) da campanha em prévia refaz a projeção', async () => {
+    const { fixture, fichaCondicoesAlteradas$, campanhaProjecaoService } = montar();
+    campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+    fichaCondicoesAlteradas$.next({ campanhaId: CAMPANHA_ID });
+    await new Promise((resolve) => setTimeout(resolve, 30));
     fixture.detectChanges();
 
     expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
@@ -333,29 +364,36 @@ describe('CampanhaPreviaJogador', () => {
       expect(raiz.querySelector('app-iniciativa-leitura')).not.toBeNull();
     });
 
-    it('encontro:alterado da própria campanha refaz a projeção inteira via REST — nunca lê o payload do evento (o mestre requisitante não pode herdar o próprio recorte de mestre)', () => {
+    it('encontro:alterado isolado busca somente o encontro seguro via REST', async () => {
       const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar({
         previaResposta: previa({ encontroAtivo: null }),
       });
       campanhaProjecaoService.recuperarPreviaJogador.mockClear();
-      campanhaProjecaoService.recuperarPreviaJogador.mockReturnValue(of(previa({ encontroAtivo })));
+      campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador.mockReturnValue(of(encontroAtivo));
 
       encontroAlterado$.next({
         encontro: { ...encontroAtivo, id: 999, campanhaId: CAMPANHA_ID } as never,
       });
+      await new Promise((resolve) => setTimeout(resolve, 30));
       fixture.detectChanges();
 
-      expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+      expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
+      expect(campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador).toHaveBeenCalledWith(
+        CAMPANHA_ID,
+        ALVO_ID,
+      );
     });
 
     it('encontro:alterado de OUTRA campanha não dispara refetch', () => {
       const { fixture, campanhaProjecaoService, encontroAlterado$ } = montar();
       campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+      campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador.mockClear();
 
       encontroAlterado$.next({ encontro: { ...encontroAtivo, campanhaId: CAMPANHA_ID + 1 } as never });
       fixture.detectChanges();
 
       expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
+      expect(campanhaProjecaoService.recuperarEncontroAtivoPreviaJogador).not.toHaveBeenCalled();
     });
   });
 });

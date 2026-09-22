@@ -45,7 +45,7 @@ describe('TempoRealService', () => {
   let ioMock: ReturnType<typeof vi.fn>;
 
   function criar(obterToken: () => string | null): { servico: TempoRealService } {
-    const sessaoService = { obterToken };
+    const sessaoService = { obterToken, autenticado: () => obterToken() !== null };
     TestBed.configureTestingModule({
       providers: [
         { provide: SessaoService, useValue: sessaoService },
@@ -145,6 +145,42 @@ describe('TempoRealService', () => {
     expect(socketFake.emitidos.every((e) => e.evento.endsWith(':entrar'))).toBe(true);
   });
 
+  it('mantém uma sala de campanha até o último consumidor sair', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    socketFake.disparar('connect');
+
+    servico.entrarSalaCampanha(9);
+    servico.entrarSalaCampanha(9);
+    servico.sairSalaCampanha(9);
+    expect(socketFake.emitidos).toEqual([{ evento: 'campanha:entrar', payload: { id: 9 } }]);
+
+    servico.sairSalaCampanha(9);
+    expect(socketFake.emitidos).toEqual([
+      { evento: 'campanha:entrar', payload: { id: 9 } },
+      { evento: 'campanha:sair', payload: { id: 9 } },
+    ]);
+  });
+
+  it('emite saída somente para a última referência de ficha e não reingressa depois', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    socketFake.disparar('connect');
+    socketFake.emitidos.length = 0;
+
+    servico.entrarSalaFicha(42);
+    servico.entrarSalaFicha(42);
+    servico.sairSalaFicha(42);
+    servico.sairSalaFicha(42);
+    servico.sairSalaFicha(42);
+    socketFake.disparar('connect');
+
+    expect(socketFake.emitidos).toEqual([
+      { evento: 'ficha:entrar', payload: { id: 42 } },
+      { evento: 'ficha:sair', payload: { id: 42 } },
+    ]);
+  });
+
   it('repassa ficha:alterada / ficha:criada / membro:entrou / ficha:acesso-revogado aos Observables', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();
@@ -170,6 +206,28 @@ describe('TempoRealService', () => {
     servico.fichaVisibilidadeAlterada$.subscribe((evento) => recebidos.push(evento));
 
     socketFake.disparar('ficha:visibilidade-alterada', { fichaId: 5, campanhaId: 3 });
+
+    expect(recebidos).toEqual([{ fichaId: 5, campanhaId: 3 }]);
+  });
+
+  it('repassa ficha:condicoes-alteradas com o payload mínimo da campanha (I-031)', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.fichaCondicoesAlteradas$.subscribe((evento) => recebidos.push(evento));
+
+    socketFake.disparar('ficha:condicoes-alteradas', { campanhaId: 3 });
+
+    expect(recebidos).toEqual([{ campanhaId: 3 }]);
+  });
+
+  it('repassa ficha:removida-da-campanha com a campanha que a ficha deixou', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.fichaRemovidaDaCampanha$.subscribe((evento) => recebidos.push(evento));
+
+    socketFake.disparar('ficha:removida-da-campanha', { fichaId: 5, campanhaId: 3 });
 
     expect(recebidos).toEqual([{ fichaId: 5, campanhaId: 3 }]);
   });

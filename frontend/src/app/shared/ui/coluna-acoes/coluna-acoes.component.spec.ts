@@ -11,6 +11,8 @@ import { ColunaAcoesItem } from './coluna-acoes-item.component';
     <app-coluna-acoes id="teste-coluna" rotulo="Ações da campanha">
       <button app-coluna-acoes-item icone="olho" [ativo]="true" appTooltip="Membros">Membros</button>
       <button app-coluna-acoes-item icone="convite" [contagem]="3" appTooltip="Convites">Convites</button>
+      <button app-coluna-acoes-item icone="editar" [pressionado]="true" appTooltip="Editar">Editar</button>
+      <button app-coluna-acoes-item icone="mais" [pressionado]="false" appTooltip="Adicionar">Adicionar</button>
     </app-coluna-acoes>
   `,
 })
@@ -63,6 +65,19 @@ describe('ColunaAcoes', () => {
     expect(
       itens[1].nativeElement.querySelector('.coluna-acoes__item-contagem')?.textContent?.trim(),
     ).toBe('3');
+  });
+
+  it('`[pressionado]` vira `aria-pressed` e destaque, sem `aria-current` de rota', () => {
+    const itens = fixture.debugElement.queryAll(By.directive(ColunaAcoesItem));
+    const ligado = itens[2].nativeElement as HTMLElement;
+    const desligado = itens[3].nativeElement as HTMLElement;
+    expect(ligado.getAttribute('aria-pressed')).toBe('true');
+    expect(ligado.classList.contains('coluna-acoes__item--ativo')).toBe(true);
+    expect(ligado.hasAttribute('aria-current')).toBe(false);
+    expect(desligado.getAttribute('aria-pressed')).toBe('false');
+    expect(desligado.classList.contains('coluna-acoes__item--ativo')).toBe(false);
+    // Item comum (sem `[pressionado]`) não vira botão de alternância.
+    expect(itens[1].nativeElement.hasAttribute('aria-pressed')).toBe(false);
   });
 
   it('aria-label do nav reflete [rotulo]', () => {

@@ -1,0 +1,149 @@
+// Visão do jogador da tela "Iniciativa" (m7-06, redesenhada na ui-39) — alvo de fidelidade: o mock
+// aprovado "POC Iniciativa do jogador", sobre a casca da visão do mestre. A casca comum (coluna +
+// conteúdo, cabeçalho, linha trilha | rolagens | palco, divisor de seção, grade) vem do parcial
+// compartilhado com o mestre; aqui ficam o palco com a própria ficha e o comportamento de rolagem
+// da trilha e das Rolagens. Só tokens do tema "Terminal de Contenção" (proibição #29); os controles
+// são primitivos de `shared/ui/`.
+
+@use "tema/breakpoints" as bp;
+@use "../casca-iniciativa" as casca;
+
+@include casca.casca("iniciativa-jogador");
+@include casca.grade;
+// Trilha e Rolagens em carregamento — antes dos ajustes de largura abaixo, que vencem o `min-height`.
+@include casca.esqueleto-laterais("iniciativa-jogador");
+
+.iniciativa-jogador {
+    // Ferramentas no cabeçalho — só existem no mobile com a ficha no palco (ver `--com-ficha`).
+    &__ferramentas {
+        display: none;
+        gap: var(--space-8);
+    }
+
+    // Mobile com a ficha embutida: o cartão tem a própria barra fixa no rodapé (`.ficha-nav`), na mesma
+    // faixa da barra da coluna de ações — que ficaria por baixo, inalcançável. A coluna some e as duas
+    // ferramentas sobem para o cabeçalho (a saída do `detalhe-jogador`); a casca já reserva o piso
+    // do rodapé para a barra da ficha.
+    &--com-ficha {
+        @include bp.mobile {
+            app-coluna-acoes {
+                display: none;
+            }
+
+            .iniciativa-jogador__ferramentas {
+                display: flex;
+                margin-left: auto;
+            }
+        }
+    }
+
+    // Enquanto a ficha do jogador não chega: a silhueta ocupa o palco, para a tela não "pular".
+    &__esqueleto-ficha {
+        display: block;
+        min-height: 480px;
+    }
+
+    // Carregamento da tela inteira: o bloco de ação da trilha (entre os contadores e a fila) e o palco
+    // com as duas massas do cartão de ficha — identidade/status e abas/conteúdo. A silhueta é a de
+    // quem tem ficha em campo, o caso normal de quem abre esta tela.
+    &__esqueleto-acao {
+        flex: none;
+        height: 88px;
+
+        @include bp.tablet {
+            width: 230px;
+        }
+
+        // Mobile: como na trilha real, contadores, o bloco de ação em linha própria e a fila abaixo.
+        @include bp.mobile {
+            flex: 1 1 100%;
+            width: auto;
+            min-width: 0;
+        }
+    }
+
+    &__esqueleto-trilha {
+        @include bp.mobile {
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+    }
+
+    &__esqueleto-cartao {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-16);
+    }
+
+    &__esqueleto-identidade,
+    &__esqueleto-conteudo {
+        min-height: 620px;
+
+        @include bp.mobile {
+            min-height: 360px;
+        }
+    }
+
+    &__esqueleto-identidade {
+        flex: 1 1 400px;
+    }
+
+    &__esqueleto-conteudo {
+        flex: 1.4 1 460px;
+    }
+
+    // Agrupa a trilha e as Rolagens. Sem caixa própria (`display: contents`) — no desktop largo cada
+    // uma é uma coluna da linha, e abaixo do tablet a linha empilha e reordena os dois (a regra de
+    // `order` da casca continua valendo para os filhos, como se o agrupador não existisse).
+    &__laterais {
+        display: contents;
+    }
+
+    // Desktop largo (≥ 1600px, o Full HD "de verdade"): trilha | Rolagens | palco. A ficha pode ser
+    // bem mais alta que a janela, então as duas colunas acompanham a rolagem da página — `max-height`
+    // limita a altura que o `align-items: stretch` da linha lhes daria (a do palco inteiro) e o
+    // `sticky` as mantém à vista.
+    @include bp.desktop-amplo {
+        &__trilha,
+        &__rolagens {
+            position: sticky;
+            top: var(--space-16);
+            max-height: calc(100dvh - 2 * var(--space-16));
+        }
+    }
+}
+
+// Notebook e telas divididas (1081–1599px): três colunas deixariam ao palco menos do que o cartão de
+// ficha pede (~700px, Identidade e Status lado a lado — o cartão só empilha pela largura da
+// *janela*, não da coluna). Trilha e Rolagens dividem então uma só coluna estreita, empilhadas, que
+// acompanha a rolagem da página; o palco fica com o resto.
+@media (min-width: #{bp.$bp-tablet + 1px}) and (max-width: #{bp.$bp-desktop - 1px}) {
+    .iniciativa-jogador {
+        &__laterais {
+            display: flex;
+            flex: none;
+            flex-direction: column;
+            align-self: flex-start;
+            gap: var(--space-16);
+            width: 300px;
+            height: calc(100dvh - 2 * var(--space-16));
+            position: sticky;
+            top: var(--space-16);
+        }
+
+        &__trilha,
+        &__rolagens {
+            width: auto;
+            min-height: 0;
+        }
+
+        // A lista da trilha rola por dentro; o topo (contadores + ação) tem a altura que precisar.
+        &__trilha {
+            flex: 3 1 0;
+        }
+
+        &__rolagens {
+            flex: 2 1 0;
+        }
+    }
+}

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { describe, expect, it } from 'vitest';
 import {
   CadenciaEnum, ComportamentoCriaturaEnum, DeslocamentoValorEspecialEnum, ModificadorCriaturaEnum,
@@ -7,6 +8,7 @@ import {
 import type { FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { CriaturaVisualizacao } from './criatura-visualizacao.component';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { TemaService } from '../../../../core/services/tema.service';
@@ -14,7 +16,7 @@ import { TemaService } from '../../../../core/services/tema.service';
 describe('CriaturaVisualizacao', () => {
   const dados: FichaCriaturaDadosDto = {
     identidade: {
-      designacao: 'A Estátua', origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
+      origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
       naturezaFisica: 'x', comportamento: ComportamentoCriaturaEnum.CACADORA, motivacao: 'x', ganchoUnico: 'x',
     },
     na: NivelAmeacaEnum.ALTA, vd: 30,
@@ -50,7 +52,7 @@ describe('CriaturaVisualizacao', () => {
 
     const eventos: Record<string, unknown[]> = {};
     for (const nome of [
-      'vitalidadeMudou', 'defesaMudou', 'identidadeMudou', 'naMudou', 'vdMudou', 'atributosMudou',
+      'vitalidadeMudou', 'defesaMudou', 'identidadeMudou', 'registroMudou', 'naMudou', 'vdMudou', 'atributosMudou',
       'modificadoresMudou', 'tenacidadeMudou', 'resistenciasMudou', 'fraquezasMudou', 'regeneracaoMudou',
       'porteMudou', 'deslocamentoMudou', 'cadenciaMudou', 'iniciativaBonusMudou', 'ataquesMudou',
       'habilidadesMudou', 'anotacoesMudou', 'nomeMudou', 'corMudou', 'ocultaMudou',
@@ -146,11 +148,43 @@ describe('CriaturaVisualizacao', () => {
     expect(eventos['ataquesMudou']).toEqual([novos]);
   });
 
-  it('renderiza a designação e o VD vindos dos dados', () => {
+  it('renderiza a designação (fonte única: `nome()`, não `identidade`) e o VD vindos dos dados', () => {
     const { fixture } = montar();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelector('.criatura__designacao')?.textContent?.trim()).toBe('A Estátua');
     expect(raiz.querySelector('.criatura__stat--vd')?.textContent).toContain('30');
+  });
+
+  it('emite nomeMudou (não identidadeMudou) ao confirmar a Designação editada', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['confirmarNome']('Eco');
+    expect(eventos['nomeMudou']).toEqual(['Eco']);
+    expect(eventos['identidadeMudou']).toEqual([]);
+  });
+
+  it('ignora a Designação confirmada vazia ou sem mudança — não emite nomeMudou', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['confirmarNome']('   ');
+    fixture.componentInstance['confirmarNome']('A Estátua');
+    expect(eventos['nomeMudou']).toEqual([]);
+  });
+
+  it('mostra o placeholder "SCP - ?????" quando dados.registro não está definido', () => {
+    const { fixture } = montar();
+    expect(fixture.componentInstance['registroExibido']()).toBe('SCP - ?????');
+  });
+
+  it('mostra o texto livre de dados.registro quando definido', () => {
+    const { fixture } = montar();
+    fixture.componentRef.setInput('dados', { ...dados, registro: 'SCP-049' });
+    fixture.detectChanges();
+    expect(fixture.componentInstance['registroExibido']()).toBe('SCP-049');
+  });
+
+  it('emite registroMudou ao confirmar o registro editado', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['confirmarRegistro']('SCP-049');
+    expect(eventos['registroMudou']).toEqual(['SCP-049']);
   });
 
   it('renderiza a lista de ataques vinda dos dados na aba Ataques', () => {
@@ -190,6 +224,26 @@ describe('CriaturaVisualizacao', () => {
     expect(painel.textContent).toContain('Carne e osso reconstituídos.');
     expect(painel.textContent).toContain('O que resta de humano nela.');
     expect(raiz.querySelector('#criatura-painel-descricao')).toBeNull();
+  });
+
+  it('só as abas Ataques e Habilidades travam a coluna Status na altura da coluna vizinha (scroll interno)', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const status = () => raiz.querySelector('.criatura__coluna--status')!;
+
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(false);
+
+    fixture.componentInstance['selecionarAba']('ataques');
+    fixture.detectChanges();
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(true);
+
+    fixture.componentInstance['selecionarAba']('habilidades');
+    fixture.detectChanges();
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(true);
+
+    fixture.componentInstance['selecionarAba']('geral');
+    fixture.detectChanges();
+    expect(status().classList.contains('criatura__coluna--status-rolavel')).toBe(false);
   });
 
   it('a aba Habilidades renderiza só a lista de habilidades (separada de Ataques)', () => {
@@ -248,20 +302,56 @@ describe('CriaturaVisualizacao', () => {
     });
   });
 
-  it('a grade de Atributos só vira lista editável depois do lápis do cabeçalho', () => {
+  it('o focusout do campo numérico não bloqueia o clique em "Indeterminado" ao lado', () => {
+    const { fixture, eventos } = montar();
+    fixture.componentInstance['editar']('deslocamento.terrestre');
+    fixture.detectChanges();
+
+    const raiz = fixture.nativeElement as HTMLElement;
+    const entrada = raiz.querySelector<HTMLInputElement>(
+      'input[aria-label="Deslocamento Terrestre"]',
+    )!;
+    const caixa = raiz.querySelector<HTMLInputElement>(
+      '.criatura__tag .criatura__deslocamento-indeterminado input[type="checkbox"]',
+    )!;
+
+    // Reproduz o clique real: o navegador move o foco pra caixa antes do "change" disparar, o que
+    // dispara "blur" e "focusout" no campo numérico (nessa ordem) com relatedTarget = caixa.
+    entrada.dispatchEvent(new FocusEvent('blur', { relatedTarget: caixa }));
+    entrada.dispatchEvent(new FocusEvent('focusout', { relatedTarget: caixa }));
+    fixture.detectChanges();
+
+    // Se a edição fosse cancelada aqui, o `@if` de app-valor-editavel destruiria a caixa antes
+    // do "change" completar e o clique não registraria nada.
+    expect(fixture.componentInstance['editando']('deslocamento.terrestre')).toBe(true);
+
+    caixa.checked = true;
+    caixa.dispatchEvent(new Event('change'));
+
+    expect(eventos['deslocamentoMudou'].at(-1)).toEqual({
+      terrestre: DeslocamentoValorEspecialEnum.INDETERMINADO,
+    });
+  });
+
+  it('a edição de Atributos reusa a mesma caixa da leitura, só com o modificador --edicao', () => {
     const { fixture } = montar();
     const raiz = fixture.nativeElement as HTMLElement;
     expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
-    expect(raiz.querySelector('.criatura__atributo-linha')).toBeNull();
+    expect(raiz.querySelector('.criatura__atributo-card--edicao')).toBeNull();
 
     fixture.componentInstance['editarAtributos']();
     fixture.detectChanges();
-    expect(raiz.querySelectorAll('.criatura__atributo-linha').length).toBe(10);
-    expect(raiz.querySelector('.criatura__atributo-card')).toBeNull();
+    // A caixa continua sendo `.criatura__atributo-card` (não vira uma lista à parte) — só ganha o
+    // modificador `--edicao`, mesmo padrão de `.ficha-atributo`/`.ficha-atributo--edicao` na ficha
+    // de jogador.
+    expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
+    expect(raiz.querySelectorAll('.criatura__atributo-card--edicao').length).toBe(10);
+    expect(raiz.querySelector('app-step-input')).not.toBeNull();
 
     fixture.componentInstance['cancelarAtributos']();
     fixture.detectChanges();
     expect(raiz.querySelectorAll('.criatura__atributo-card').length).toBe(10);
+    expect(raiz.querySelector('.criatura__atributo-card--edicao')).toBeNull();
   });
 
   it('a edição de Atributos é rascunho: Cancelar descarta e Salvar emite os dois mapas de uma vez', () => {
@@ -466,7 +556,10 @@ describe('CriaturaVisualizacao', () => {
       fixture.detectChanges();
       const raiz = fixture.nativeElement as HTMLElement;
       expect(raiz.querySelector('#criatura-anotacoes .painel-flutuante__janela')).not.toBeNull();
-      expect(raiz.textContent).toContain('Vista pela última vez no cais.');
+      const editor = fixture.debugElement.query(
+        By.css('#criatura-anotacoes app-editor-markdown'),
+      ).componentInstance as EditorMarkdown;
+      expect(editor.valor()).toBe('Vista pela última vez no cais.');
     });
 
     it('fechar o painel emite anotacoesPainelAbertoChange(false)', () => {

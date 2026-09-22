@@ -26,6 +26,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { CriaturaVisualizar } from './visualizar-criatura.page';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { FichaService } from '../../ficha.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
@@ -42,7 +43,7 @@ import { RolagemService } from '../../rolagem.service';
 describe('CriaturaVisualizar', () => {
   const dados: FichaCriaturaDadosDto = {
     identidade: {
-      designacao: 'A Estátua', origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
+      origem: OrigemCriaturaEnum.ORIGINAL, conceito: 'x',
       naturezaFisica: 'x', comportamento: ComportamentoCriaturaEnum.CACADORA, motivacao: 'x', ganchoUnico: 'x',
     },
     na: NivelAmeacaEnum.ALTA, vd: 30,
@@ -106,6 +107,7 @@ describe('CriaturaVisualizar', () => {
       fichaAlterada$: fichaAlterada$.asObservable(),
       acessoRevogado$: acessoRevogado$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -167,6 +169,17 @@ describe('CriaturaVisualizar', () => {
     expect(raiz.querySelector('app-criatura-visualizacao')).not.toBeNull();
   });
 
+  it('enquanto carrega, mostra a silhueta da ficha de criatura', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    fixture.componentInstance['carregando'].set(true);
+    fixture.detectChanges();
+
+    const silhueta = raiz.querySelector('app-criatura-esqueleto');
+    expect(silhueta?.getAttribute('role')).toBe('status');
+    expect(silhueta?.getAttribute('aria-label')).toBe('Carregando ficha');
+    expect(raiz.querySelector('app-criatura-visualizacao')).toBeNull();
+  });
+
   it('não gerencia acesso nem busca acessos para quem não é dono/mestre', () => {
     const { raiz, fixture, fichaService } = montar({ usuarioLogadoId: 11 });
     expect(fixture.componentInstance['podeGerenciar']()).toBe(false);
@@ -201,10 +214,12 @@ describe('CriaturaVisualizar', () => {
     botao.click();
     fixture.detectChanges();
     expect(fixture.componentInstance['anotacoesAbertas']()).toBe(true);
+    expect(botao.getAttribute('aria-pressed')).toBe('true');
 
     botao.click();
     fixture.detectChanges();
     expect(fixture.componentInstance['anotacoesAbertas']()).toBe(false);
+    expect(botao.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('gere o acesso via menu → dialog para o mestre (dono da criatura)', () => {
@@ -297,11 +312,48 @@ describe('CriaturaVisualizar', () => {
     });
   });
 
-  it('exclui a criatura e navega de volta à campanha', () => {
+  it('exclui a criatura e navega de volta à campanha', async () => {
     const { fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
-    fixture.componentInstance['confirmarExclusao']();
+    fixture.componentInstance['abrirExclusao']();
+    await TestBed.inject(ConfirmacaoService).responder(true);
+
     expect(fichaService.excluirFicha).toHaveBeenCalledWith(4);
     expect(navegarEspiao).toHaveBeenCalledWith(['/campanhas', 9]);
+  });
+
+  it('"Acesso de visualização" e "Excluir ficha" ficam selecionados enquanto o diálogo está aberto', async () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    const item = (rotulo: string) =>
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('[app-coluna-acoes-item]')).find(
+        (el) => el.textContent?.trim() === rotulo,
+      )!;
+    expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+    expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+
+    item('Acesso de visualização').click();
+    fixture.detectChanges();
+    expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('true');
+    fixture.componentInstance['fecharAcesso']();
+    fixture.detectChanges();
+    expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+
+    item('Excluir ficha').click();
+    fixture.detectChanges();
+    expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('true');
+    await TestBed.inject(ConfirmacaoService).responder(false);
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('cancelar a confirmação de exclusão não chama excluirFicha nem navega', async () => {
+    const { fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+    fixture.componentInstance['abrirExclusao']();
+    await TestBed.inject(ConfirmacaoService).responder(false);
+
+    expect(fichaService.excluirFicha).not.toHaveBeenCalled();
+    expect(navegarEspiao).not.toHaveBeenCalled();
   });
 
   describe('criatura solta (m4-11)', () => {
@@ -326,14 +378,15 @@ describe('CriaturaVisualizar', () => {
       expect(voltar?.getAttribute('href')).toBe('/fichas');
     });
 
-    it('exclusão de uma criatura solta redireciona ao acervo (/fichas), não a /campanhas', () => {
+    it('exclusão de uma criatura solta redireciona ao acervo (/fichas), não a /campanhas', async () => {
       const { fixture, navegarEspiao } = montar({
         usuarioLogadoId: 7,
         semCampanhaNaRota: true,
         fichaCampanhaId: null,
       });
 
-      fixture.componentInstance['confirmarExclusao']();
+      fixture.componentInstance['abrirExclusao']();
+      await TestBed.inject(ConfirmacaoService).responder(true);
 
       expect(navegarEspiao).toHaveBeenCalledWith(['/fichas']);
     });

@@ -27,6 +27,7 @@ export class Confirmacao {
   protected readonly servico = inject(ConfirmacaoService);
 
   protected readonly perigo = computed(() => (this.servico.pedido()?.severidade ?? 'perigo') === 'perigo');
+  protected readonly carregando = this.servico.carregando;
 
   protected readonly mensagemPartida = computed<MensagemPartida | null>(() => {
     const pedido = this.servico.pedido();
@@ -45,10 +46,15 @@ export class Confirmacao {
   });
 
   protected confirmar(): void {
-    this.servico.responder(true);
+    void this.servico.responder(true);
   }
 
+  /** Ignorado enquanto `aoConfirmar` está em voo — mesma guarda que `fecharExclusao()` tinha
+   *  antes de migrar pra este serviço ("inócuo enquanto a exclusão está em voo"). */
   protected cancelar(): void {
-    this.servico.responder(false);
+    if (this.carregando()) {
+      return;
+    }
+    void this.servico.responder(false);
   }
 }

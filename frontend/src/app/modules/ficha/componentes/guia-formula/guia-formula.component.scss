@@ -39,6 +39,24 @@
         border-color: var(--accent-border);
     }
 
+    // Mesmo tamanho dos botões vizinhos de peso "padrão" do primitivo (ex.: "Rolagens Ocultas"/
+    // "Rolar" da rolagem avulsa) — sem isso, o gatilho fininho (3px 8px, 24px de altura) destoa ao
+    // lado de botões de 38px de altura (achado ao vivo, autor).
+    &--padrao {
+        min-height: 38px;
+        padding: 0 10px;
+        background: var(--surface-2);
+
+        @include bp.mobile {
+            width: 100%;
+            justify-content: center;
+            min-height: bp.$alvo-toque;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-block: 0;
+        }
+    }
+
     &__marca {
         color: var(--accent);
         font-weight: 700;

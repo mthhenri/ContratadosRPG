@@ -116,10 +116,10 @@ describe('MontadorRolagem', () => {
   });
 
   it.each([
-    ['Manter maior', 'd20+d6kh'],
-    ['Manter menor', 'd20+d6kl'],
-    ['Margem de crítico', 'd20+d6cm1'],
-  ])('aplica %s ao último dado aditivo', (acao, esperado) => {
+    ['Manter maior', 'd20kh+d6'],
+    ['Manter menor', 'd20kl+d6'],
+    ['Margem de crítico', 'd20cm1+d6'],
+  ])('aplica %s ao primeiro dado elegível da esquerda pra direita (sem cursor no visor)', (acao, esperado) => {
     const fixture = montar();
 
     botao(fixture, 'Dado', 'D20').click();
@@ -127,6 +127,33 @@ describe('MontadorRolagem', () => {
     botao(fixture, acao === 'Margem de crítico' ? 'Avançado' : 'Manter maior / menor', acao).click();
 
     expect(fixture.componentInstance.formula()).toBe(esperado);
+  });
+
+  it('clique repetido no mesmo botão de pool distribui pelos dados da esquerda pra direita', () => {
+    const fixture = montar();
+    botao(fixture, 'Dado', 'D20').click();
+    botao(fixture, 'Dado', 'D6').click();
+    const manterMaior = botao(fixture, 'Manter maior / menor', 'Manter maior');
+    manterMaior.click();
+    expect(fixture.componentInstance.formula()).toBe('d20kh+d6');
+    // "d20kh" já tem "kh" exato (clique redundante) — o segundo clique pula pro "d6".
+    manterMaior.click();
+    expect(fixture.componentInstance.formula()).toBe('d20kh+d6kh');
+    // Os dois já têm "kh": um terceiro clique não tem mais alvo, sem efeito.
+    manterMaior.click();
+    expect(fixture.componentInstance.formula()).toBe('d20kh+d6kh');
+  });
+
+  it('posicionar o cursor no visor escolhe qual dado recebe o pool, mesmo não sendo o primeiro', () => {
+    const fixture = montar('d20+d6');
+    const visor = fixture.nativeElement.querySelector('.montador-rolagem__visor') as HTMLInputElement;
+    const posicaoNoD6 = fixture.componentInstance.formula().indexOf('d6') + 1;
+    visor.setSelectionRange(posicaoNoD6, posicaoNoD6);
+    visor.dispatchEvent(new Event('click'));
+
+    botao(fixture, 'Manter maior / menor', 'Manter maior').click();
+
+    expect(fixture.componentInstance.formula()).toBe('d20+d6kh');
   });
 
   it('não altera a fórmula quando pool ou tipo de dano não têm alvo elegível', () => {
@@ -187,6 +214,13 @@ describe('MontadorRolagem', () => {
     expect(fixture.componentInstance.formula()).toBe('d6+FOR');
   });
 
+  it('clicar num dado logo após um atributo "bare" fecha ATRdM (atributo como fonte de dados)', () => {
+    const fixture = montar();
+    botao(fixture, 'Atributo', 'FOR').click();
+    botao(fixture, 'Dado', 'D20').click();
+    expect(fixture.componentInstance.formula()).toBe('FORd20');
+  });
+
   it('"Manter maior"/"Manter menor" são sempre 1 (bare) e ficam lado a lado', () => {
     const fixture = montar('d20');
     const linha = botao(fixture, 'Manter maior / menor', 'Manter maior').closest('.montador-rolagem__linha');
@@ -210,10 +244,19 @@ describe('MontadorRolagem', () => {
     expect(fixture.componentInstance.formula()).toBe('2d6-');
   });
 
-  it('apagar último e limpar ficam no rodapé fixo, fora da seção Editar', () => {
-    const fixture = montar('2d6+3');
-    botaoRodape(fixture, '⌫').click();
-    expect(fixture.componentInstance.formula()).toBe('2d6+');
+  it('apagar último remove o menor bloco por clique (não o caractere, nem o termo aditivo inteiro) e limpar zera tudo', () => {
+    const fixture = montar('VIGd20khcm1');
+    const apagar = botaoRodape(fixture, '⌫');
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe('VIGd20kh'); // "cm1" some primeiro
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe('VIGd20'); // depois "kh"
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe('VIG'); // depois o dado "d20"
+    apagar.click();
+    expect(fixture.componentInstance.formula()).toBe(''); // por fim o atributo "VIG"
+
+    fixture.componentInstance.formula.set('2d6+3');
     botaoRodape(fixture, 'Limpar').click();
     expect(fixture.componentInstance.formula()).toBe('');
   });

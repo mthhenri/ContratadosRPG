@@ -5,6 +5,7 @@
             app-coluna-acoes-item
             icone="d20"
             appTooltip="Histórico"
+            [pressionado]="historicoSidebarAberto()"
             (click)="historicoSidebarAberto.update((aberto) => !aberto)"
         >
             Histórico
@@ -13,6 +14,7 @@
             app-coluna-acoes-item
             icone="anotacoes"
             appTooltip="Anotações"
+            [pressionado]="anotacoesAbertas()"
             (click)="anotacoesAbertas.update((abertas) => !abertas)"
         >
             Anotações
@@ -21,6 +23,7 @@
             app-coluna-acoes-item
             icone="calculadora"
             appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
             (click)="calculadoraAberta.update((aberta) => !aberta)"
         >
             Calculadora
@@ -30,6 +33,7 @@
             app-coluna-acoes-item
             icone="caderno"
             appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
             (click)="alternarCaderno()"
         >
             Caderno
@@ -37,7 +41,7 @@
         } @if (podeGerenciar()) {
         <button
             app-coluna-acoes-item
-            [icone]="rolagemOculta() ? 'olho' : 'olho-fechado'"
+            [icone]="rolagemOculta() ? 'olho-rolagens' : 'olho-fechado-rolagens'"
             [appTooltip]="rolagemOculta() ? 'Tornar rolagens públicas' : 'Ocultar rolagens'"
             (click)="alternarRolagemOculta()"
         >
@@ -46,8 +50,9 @@
         <div class="coluna-acoes__categoria">Gestão</div>
         <button
             app-coluna-acoes-item
-            icone="olho"
+            icone="olho-membros"
             appTooltip="Acesso de visualização"
+            [pressionado]="dialogAcesso()"
             (click)="abrirAcesso()"
         >
             Acesso de visualização
@@ -64,6 +69,7 @@
             app-coluna-acoes-item
             icone="excluir"
             appTooltip="Excluir ficha"
+            [pressionado]="confirmandoExclusao()"
             (click)="abrirExclusao()"
         >
             Excluir ficha
@@ -130,144 +136,12 @@
                     [(aberta)]="calculadoraAberta"
                     [mostrarGatilho]="false"
                 />
-
-                <!-- Menu "⋯" — só existe no mobile (CSS): `app-coluna-acoes` vira barra fixa no
-             rodapé nessa largura, mesmo padrão de `visualizar.page.html` (ui-34). Duplica os
-             mesmos itens da coluna; Histórico/Calculadora sempre visíveis (qualquer papel),
-             Rolagem oculta/Gestão só pra quem `podeGerenciar()`, mesma condição de antes. -->
-                <div class="ficha-pagina__menu-container">
-                    <button
-                        app-botao-icone
-                        class="ficha-pagina__menu-botao"
-                        type="button"
-                        aria-label="Ações da ficha"
-                        aria-haspopup="menu"
-                        [attr.aria-expanded]="menuAberto()"
-                        [appTooltip]="'Ações da ficha'"
-                        (click)="alternarMenu()"
-                    >
-                        ⋯
-                    </button>
-                    @if (menuAberto()) {
-                    <button
-                        class="ficha-pagina__menu-fundo"
-                        type="button"
-                        aria-label="Fechar menu"
-                        (click)="fecharMenu()"
-                    ></button>
-                    <div class="ficha-pagina__menu" role="menu">
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="historicoSidebarAberto.update((aberto) => !aberto); fecharMenu()"
-                        >
-                            <app-icone nome="d20" />
-                            <span>Histórico</span>
-                        </button>
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="anotacoesAbertas.update((abertas) => !abertas); fecharMenu()"
-                        >
-                            <app-icone nome="anotacoes" />
-                            <span>Anotações</span>
-                        </button>
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="calculadoraAberta.update((aberta) => !aberta); fecharMenu()"
-                        >
-                            <app-icone nome="calculadora" />
-                            <span>Calculadora</span>
-                        </button>
-                        @if (campanhaId() !== null) {
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="alternarCaderno(); fecharMenu()"
-                        >
-                            <app-icone nome="caderno" />
-                            <span>Caderno</span>
-                        </button>
-                        } @if (podeGerenciar()) {
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="alternarRolagemOculta(); fecharMenu()"
-                        >
-                            <app-icone [nome]="rolagemOculta() ? 'olho' : 'olho-fechado'" />
-                            <span
-                                >{{ rolagemOculta() ? "Tornar rolagens públicas" : "Ocultar
-                                rolagens" }}</span
-                            >
-                        </button>
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="abrirAcesso()"
-                        >
-                            <app-icone nome="olho" />
-                            <span>Acesso de visualização</span>
-                            @if (acessos().length) {
-                            <span class="ficha-pagina__menu-contagem">{{ acessos().length }}</span>
-                            }
-                        </button>
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="alternarOculta()"
-                        >
-                            <app-icone [nome]="ficha()?.oculta ? 'olho' : 'olho-fechado'" />
-                            <span>{{ ficha()?.oculta ? "Exibir ficha" : "Ocultar ficha" }}</span>
-                        </button>
-                        <button
-                            app-botao
-                            class="ficha-pagina__menu-item"
-                            type="button"
-                            role="menuitem"
-                            (click)="abrirExclusao()"
-                        >
-                            <app-icone nome="excluir" />
-                            <span>Excluir ficha</span>
-                        </button>
-                        }
-                    </div>
-                    }
-                </div>
                 }
             </div>
         </header>
 
         @if (carregando()) {
-        <div class="criatura-esqueleto" role="status" aria-label="Carregando ficha">
-            <div class="criatura-esqueleto__topo">
-                <app-esqueleto class="criatura-esqueleto__esqueleto-rotulo" />
-                <app-esqueleto class="criatura-esqueleto__esqueleto-chip" />
-            </div>
-            @for (indice of [0, 1, 2, 3, 4]; track indice) {
-            <div class="criatura-esqueleto__secao">
-                <app-esqueleto class="criatura-esqueleto__esqueleto-titulo" />
-                <app-esqueleto class="criatura-esqueleto__esqueleto-linha" />
-                <app-esqueleto
-                    class="criatura-esqueleto__esqueleto-linha criatura-esqueleto__esqueleto-curta"
-                />
-            </div>
-            }
-        </div>
+        <app-criatura-esqueleto role="status" aria-label="Carregando ficha" />
         } @else if (ficha(); as fichaAtual) {
         <app-criatura-visualizacao
             [fichaId]="fichaAtual.id"
@@ -284,6 +158,7 @@
             (vitalidadeMudou)="fichaEdicao.ajustarVitalidade($event)"
             (defesaMudou)="fichaEdicao.ajustarDefesa($event)"
             (identidadeMudou)="fichaEdicao.ajustarIdentidade($event)"
+            (registroMudou)="fichaEdicao.ajustarRegistro($event)"
             (naMudou)="fichaEdicao.ajustarNa($event)"
             (vdMudou)="fichaEdicao.ajustarVd($event)"
             (atributosMudou)="fichaEdicao.ajustarAtributos($event)"
@@ -323,38 +198,6 @@
     [ehMestre]="ehMestre()"
     [membros]="membros()"
 />
-} @if (confirmandoRevelarRolagem()) {
-<app-modal [aberto]="true" titulo="Tornar rolagens públicas" (fechou)="cancelarRevelarRolagem()">
-    <div class="revelar-rolagem">
-        <p class="revelar-rolagem__aviso">
-            A partir de agora, os testes e danos rolados desta criatura ficam visíveis pros
-            jogadores. Tem certeza?
-        </p>
-
-        <div class="revelar-rolagem__acoes">
-            <button
-                app-botao
-                variante="primario"
-                tamanho="pequeno"
-                class="revelar-rolagem__acao"
-                type="button"
-                (click)="confirmarRevelarRolagem()"
-            >
-                <app-icone nome="olho" /> Tornar pública
-            </button>
-            <button
-                app-botao
-                variante="secundario"
-                tamanho="pequeno"
-                class="revelar-rolagem__acao"
-                type="button"
-                (click)="cancelarRevelarRolagem()"
-            >
-                Cancelar
-            </button>
-        </div>
-    </div>
-</app-modal>
 } @if (dialogAcesso()) {
 <app-modal [aberto]="true" titulo="Acesso de visualização" (fechou)="fecharAcesso()">
     <div class="acesso">
@@ -413,38 +256,6 @@
         } @else {
         <p class="acesso__vazio">Nenhum acesso concedido ainda.</p>
         }
-    </div>
-</app-modal>
-} @if (dialogExclusao()) {
-<app-modal [aberto]="true" titulo="Excluir ficha" (fechou)="fecharExclusao()">
-    <div class="exclusao">
-        <p class="exclusao__aviso">
-            Excluir <strong>{{ ficha()?.nome }}</strong>? Esta ação não pode ser desfeita.
-        </p>
-
-        <div class="exclusao__acoes">
-            <button
-                app-botao
-                variante="primario"
-                class="exclusao__acao"
-                type="button"
-                [disabled]="excluindo()"
-                (click)="confirmarExclusao()"
-            >
-                <app-icone nome="excluir" />
-                {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
-            </button>
-            <button
-                app-botao
-                variante="secundario"
-                class="exclusao__acao"
-                type="button"
-                [disabled]="excluindo()"
-                (click)="fecharExclusao()"
-            >
-                Cancelar
-            </button>
-        </div>
     </div>
 </app-modal>
 }

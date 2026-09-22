@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
@@ -143,6 +143,14 @@ const SECOES: readonly SecaoGuia[] = [
   styleUrl: './guia-formula.component.scss',
 })
 export class GuiaFormula {
+  /**
+   * `true` (padrão) mantém o gatilho compacto — "? Guia" ao lado do rótulo "Fórmula" (Rolagem
+   * Rápida da ficha, uso original). `false` estica pra `min-height: 38px`/padding cheio, pra
+   * encostar em botões do tamanho padrão do primitivo `Botao` (ex.: rolagem avulsa, onde o gatilho
+   * senta ao lado de "Rolagens Ocultas"/"Rolar" e não pode destoar do tamanho dos dois).
+   */
+  readonly compacto = input(true);
+
   /** Se o modal está aberto. */
   protected readonly aberto = signal(false);
 

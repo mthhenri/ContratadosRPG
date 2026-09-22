@@ -1,0 +1,95 @@
+<div class="resumo__topo">
+    <span class="resumo__retrato" aria-hidden="true">
+        @if (combatente().imagemUrl; as urlImagem) {
+            <img
+                class="resumo__retrato-imagem"
+                [src]="urlImagem"
+                alt=""
+                [appFocoImagem]="combatente().imagemFoco"
+            />
+        } @else {
+            {{ sigla() }}
+        }
+    </span>
+    <div class="resumo__identidade">
+        <span class="resumo__origem">{{ origem() }}</span>
+        <div class="resumo__titulo-linha">
+            <h2 class="resumo__nome">{{ combatente().nome }}</h2>
+            @if (combatente().fichaId !== null) {
+                <button
+                    app-botao-icone
+                    type="button"
+                    [attr.aria-label]="'Abrir ficha de ' + combatente().nome"
+                    [appTooltip]="'Abrir ficha'"
+                    (click)="abrirFicha.emit()"
+                >
+                    <app-icone nome="visao-geral" />
+                </button>
+            }
+            @if (ehCriatura()) {
+                <app-chip severidade="aviso">{{ rotuloAmeaca() }}</app-chip>
+            }
+            @if (cadencia(); as rotuloCadencia) {
+                <app-chip severidade="secundario">{{ rotuloCadencia }}</app-chip>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="resumo__barras">
+    <app-barra-recurso
+        rotulo="Vida"
+        recurso="vida"
+        [atual]="combatente().vidaAtual"
+        [maximo]="combatente().vidaMaxima"
+    />
+    @if (temEnergia()) {
+        <app-barra-recurso
+            rotulo="Energia"
+            recurso="energia"
+            [atual]="combatente().energiaAtual ?? 0"
+            [maximo]="combatente().energiaMaxima ?? 0"
+        />
+    }
+</div>
+
+@if (reacoes().length || resistencias()) {
+    <div class="resumo__combate">
+        @if (reacoes().length) {
+            <div class="resumo__grupo resumo__grupo--reacoes">
+                <span class="resumo__legenda">Reações</span>
+                <div
+                    class="resumo__reacoes"
+                    [class.resumo__reacoes--unica]="reacoes().length === 1"
+                >
+                    @for (reacao of reacoes(); track reacao.rotulo) {
+                        <div class="ficha-mini">
+                            <span class="ficha-mini__rotulo">{{ reacao.rotuloExtenso }}</span>
+                            <span class="ficha-mini__valor">{{ reacao.valor }}</span>
+                        </div>
+                    }
+                    @if (mostrarContraAusente()) {
+                        <div class="ficha-mini ficha-mini--ausente">
+                            <span class="ficha-mini__rotulo">Contra-ataque</span>
+                            <span class="ficha-mini__valor">—</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (resistencias(); as caixas) {
+            <div class="resumo__grupo">
+                <span class="resumo__legenda">Resistências</span>
+                <div class="resumo__resistencias">
+                    @for (resistencia of caixas; track resistencia.tipo) {
+                        <div [class]="'ficha-resistencia ficha-resistencia--' + resistencia.sufixo">
+                            <span class="ficha-resistencia__abrev">{{ resistencia.rotulo }}</span>
+                            <span class="ficha-resistencia__valor">{{ resistencia.valor }}</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

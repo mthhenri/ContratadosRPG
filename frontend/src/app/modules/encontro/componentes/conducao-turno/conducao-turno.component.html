@@ -1,0 +1,102 @@
+@if (emCombate()) {
+    <button
+        app-botao-icone
+        tamanho="padrao"
+        class="conducao__passo"
+        type="button"
+        [disabled]="emOperacao()"
+        aria-label="Voltar ao turno anterior"
+        [appTooltip]="'Voltar ao turno anterior'"
+        (click)="voltar.emit()"
+    >
+        <app-icone nome="voltar" />
+    </button>
+
+    <div class="conducao__centro">
+        <span class="conducao__rotulo">Age agora</span>
+        <span class="conducao__nome">
+            {{ nomeDaVez() }}
+            <span class="conducao__detalhe">
+                · {{ acoesRestantes() }}
+                {{ acoesRestantes() === 1 ? "ação restante" : "ações restantes" }}
+            </span>
+        </span>
+    </div>
+
+    <button
+        app-botao-icone
+        tamanho="padrao"
+        variante="primario"
+        class="conducao__passo"
+        type="button"
+        [disabled]="emOperacao()"
+        aria-label="Passar ao próximo turno"
+        [appTooltip]="'Passar ao próximo turno'"
+        (click)="avancar.emit()"
+    >
+        <app-icone nome="voltar" class="conducao__icone-avancar" />
+    </button>
+
+    <button
+        app-botao
+        variante="perigo"
+        class="conducao__acao conducao__encerrar"
+        type="button"
+        [disabled]="emOperacao()"
+        [appTooltip]="'Encerrar o combate — depois disso ele fica só de leitura'"
+        (click)="encerrar.emit()"
+    >
+        Encerrar
+    </button>
+} @else if (emMontagem()) {
+    <div class="conducao__centro">
+        <span class="conducao__rotulo">Aguardando</span>
+        <span class="conducao__nome conducao__nome--vazio">Combate ainda não iniciado</span>
+    </div>
+
+    <div class="conducao__acoes">
+        <button
+            app-botao
+            variante="positivo"
+            class="conducao__acao"
+            type="button"
+            [disabled]="emOperacao() || !temCombatentes()"
+            [appTooltip]="'Chamar os jogadores a rolar a própria iniciativa'"
+            (click)="pedirIniciativa.emit()"
+        >
+            Pedir iniciativa
+        </button>
+        <button
+            app-botao
+            variante="secundario"
+            class="conducao__acao"
+            type="button"
+            [disabled]="emOperacao() || !faltamIniciativas()"
+            [appTooltip]="'Rolar a iniciativa de quem ainda não tem — nunca sobrescreve'"
+            (click)="rolarIniciativas.emit()"
+        >
+            <app-icone nome="dados" />
+            Rolar iniciativas
+        </button>
+        <button
+            app-botao
+            variante="primario"
+            class="conducao__acao"
+            type="button"
+            [disabled]="emOperacao() || !podeIniciar()"
+            [appTooltip]="
+                faltamIniciativas()
+                    ? 'Falta iniciativa para algum combatente'
+                    : 'Começar o combate na rodada 1'
+            "
+            (click)="iniciar.emit()"
+        >
+            Iniciar combate
+        </button>
+    </div>
+} @else {
+    <div class="conducao__centro">
+        <span class="conducao__rotulo">Situação</span>
+        <span class="conducao__nome conducao__nome--vazio">Combate encerrado — só leitura</span>
+    </div>
+}

@@ -348,6 +348,11 @@ export class CampanhaService {
       papel: dto.papel,
     });
     this.campanhaGateway.emitirPapelMembroAlterado(papelAlterado);
+    await this.campanhaGateway.recalibrarSalasCampanhaUsuario({
+      campanhaId: papelAlterado.campanhaId,
+      usuarioId: papelAlterado.usuarioId,
+      papel: papelAlterado.papel,
+    });
     return papelAlterado;
   }
 
@@ -602,6 +607,12 @@ export class CampanhaService {
       usuarioId: dto.usuarioId,
     });
 
+    await this.campanhaGateway.recalibrarSalasCampanhaUsuario({
+      campanhaId: dto.id,
+      usuarioId: dto.usuarioId,
+      papel: null,
+    });
+
     return { campanhaId: dto.id, usuarioId: dto.usuarioId };
   }
 
@@ -651,6 +662,19 @@ export class CampanhaService {
       mestreAtualUsuarioId: usuarioAtivo.sub,
       novoMestreUsuarioId: dto.novoMestreUsuarioId,
     });
+
+    await Promise.all([
+      this.campanhaGateway.recalibrarSalasCampanhaUsuario({
+        campanhaId: dto.id,
+        usuarioId: usuarioAtivo.sub,
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      }),
+      this.campanhaGateway.recalibrarSalasCampanhaUsuario({
+        campanhaId: dto.id,
+        usuarioId: dto.novoMestreUsuarioId,
+        papel: TipoCampanhaMembroPapelEnum.MESTRE,
+      }),
+    ]);
 
     return {
       campanhaId: dto.id,

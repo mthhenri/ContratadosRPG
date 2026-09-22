@@ -7,11 +7,11 @@ import {
 } from '@contratados-rpg/shared/enums';
 import type { PaginaCadernoDto } from '@contratados-rpg/shared/dtos/pagina-caderno';
 import { Subject, of, throwError } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { CadernoFlutuante } from './caderno-flutuante.component';
-import { EDITOR_MARKDOWN_FACTORY } from './editor-markdown.component';
+import { EDITOR_MARKDOWN_FACTORY } from '../../shared/ui/editor-markdown/editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
 import { SessaoService } from '../../core/services/sessao.service';
 import { TempoRealService } from '../../core/services/tempo-real.service';
@@ -30,6 +30,13 @@ const pagina: PaginaCadernoDto = {
 };
 
 describe('CadernoFlutuante', () => {
+  // `definirViewport` (abaixo) muta `window.innerWidth`/`innerHeight` globalmente; sem restaurar
+  // ao original depois do último teste, o valor vaza pra specs de outros arquivos que rodam
+  // depois na mesma suíte (P-019 — achado com `npm run test --workspace=frontend` completo).
+  const larguraOriginal = window.innerWidth;
+  const alturaOriginal = window.innerHeight;
+  afterAll(() => definirViewport(larguraOriginal, alturaOriginal));
+
   let fixture: ComponentFixture<CadernoFlutuante>;
   let api: {
     listarPaginas: ReturnType<typeof vi.fn>;

@@ -496,10 +496,14 @@ divergiu). Segue a mesma filosofia de `FichaJogadorDadosDto`: tudo que aparece n
 persistido (`m3-10`), Vida Máxima/Defesa são **snapshot na criação + editáveis depois** (o motor
 não recalcula sobre a edição), sem Maestria (mecânica exclusiva de jogador).
 
+Designação (nome da criação) não é campo de `identidade` — é `ficha.nome` (coluna relacional,
+mesmo campo que jogador usa), editado sob o rótulo "Designação" em `CriaturaVisualizacao`. Fonte
+única: um campo `designacao` próprio aqui divergia de `ficha.nome` sempre que um dos dois era
+editado sem o outro (achado ao vivo).
+
 ```jsonc
 {
   "identidade": {
-    "designacao": "A Estátua",          // nome da criação
     "origem": "SCP_ADAPTADO",           // OrigemCriaturaEnum: SCP_ADAPTADO | ORIGINAL
     "conceito": "...",                  // "linha de conceito" — 1 frase, o gancho de criação
     "naturezaFisica": "...",

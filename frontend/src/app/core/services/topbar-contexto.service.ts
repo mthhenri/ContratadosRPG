@@ -4,7 +4,7 @@ import { Injectable, signal } from '@angular/core';
  * Rótulo exibido no slot de contexto da topbar (ui-21) — entre a marca e a nav — dizendo em qual
  * campanha ou ficha o usuário está agora. A topbar sozinha nunca sabe disso (ela é montada uma
  * vez, fora do `router-outlet`); cada página dona de uma entidade (`CampanhaDetalhe`,
- * `FichaVisualizar`, `FichaVisualizarCriatura`, `PainelEncontro`) define o próprio rótulo ao
+ * `FichaVisualizar`, `FichaVisualizarCriatura`, `EncontroPainelDadosService`) define o próprio rótulo ao
  * carregar e limpa ao sair (`DestroyRef.onDestroy`), como já fazem com `TempoRealService.sairSala*`.
  * Fora dessas páginas o slot fica `null` — some por completo, sem buraco nem separador solto.
  */

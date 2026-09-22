@@ -46,6 +46,7 @@ import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
@@ -75,6 +76,8 @@ import {
 import { CriaturaResistenciaLista } from '../criatura-resistencia-lista/criatura-resistencia-lista.component';
 import { CriaturaAtaqueLista } from '../criatura-ataque-lista/criatura-ataque-lista.component';
 import { CriaturaHabilidadeLista } from '../criatura-habilidade-lista/criatura-habilidade-lista.component';
+import { RolagemRapida } from '../rolagem-rapida/rolagem-rapida.component';
+import type { RolagemRealizadaDto } from '../../rolagem-realizada';
 import { AjusteEnquadramentoImagem } from '../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component';
 
 /** As dez chaves de `FichaAtributosDto`, mesmo apelido do análogo em `FichaVisualizacao`. */
@@ -140,6 +143,7 @@ const ANOTACOES_ALTURA_MINIMA = 260;
     Botao,
     BotaoIcone,
     Campo,
+    EditorMarkdown,
     Icone,
     Tooltip,
     AutoFocus,
@@ -148,6 +152,7 @@ const ANOTACOES_ALTURA_MINIMA = 260;
     CriaturaResistenciaLista,
     CriaturaAtaqueLista,
     CriaturaHabilidadeLista,
+    RolagemRapida,
     AjusteEnquadramentoImagem,
     FocoImagem,
     ReceberDanoDialog,
@@ -213,6 +218,7 @@ export class CriaturaVisualizacao {
   readonly vitalidadeMudou = output<AjusteCriaturaVitalidade>();
   readonly defesaMudou = output<number>();
   readonly identidadeMudou = output<FichaCriaturaIdentidadeDto>();
+  readonly registroMudou = output<string>();
   readonly naMudou = output<NivelAmeacaEnum>();
   readonly vdMudou = output<number>();
   readonly atributosMudou = output<FichaAtributosDto>();
@@ -414,11 +420,17 @@ export class CriaturaVisualizacao {
     this.ajustarVida(-total);
   }
 
+  /** Rascunho do editor Markdown de Anotações — `app-editor-markdown` não tem `.value` de DOM. */
+  protected readonly rascunhoAnotacoes = signal('');
+
   protected editando(chave: string): boolean {
     return this.campoEmEdicao() === chave;
   }
 
   protected editar(chave: string): void {
+    if (chave === 'anotacoes') {
+      this.rascunhoAnotacoes.set(this.dados().anotacoes ?? '');
+    }
     this.campoEmEdicao.set(chave);
   }
 
@@ -426,12 +438,11 @@ export class CriaturaVisualizacao {
     this.campoEmEdicao.set(null);
   }
 
-  /** Registro de contenção (pedido do autor: mesmo formato do "CONTRATO — 0000" de
-   * `FichaVisualizacao.contratoTexto`, só que com o rótulo da criatura) — mesmo `fichaId`
-   * numérico da `classificacao` (`FICHA-CRT-NNNN`) da página hospedeira, só com o rótulo/
-   * preenchimento próprios deste selo. */
+  /** Texto livre de catalogação (`dados().registro`, ex.: "SCP-049") — mesmo padrão de
+   * `FichaVisualizacao.contratoTexto`, mas sem rótulo fixo: o placeholder cobre o campo
+   * inteiro em vez de só um sufixo numérico. */
   protected readonly registroExibido = computed(
-    () => `REGISTRO — ${String(this.fichaId()).padStart(4, '0')}`,
+    () => this.dados().registro?.trim() || 'SCP - ?????',
   );
 
   /**
@@ -507,6 +518,10 @@ export class CriaturaVisualizacao {
 
   protected confirmarIdentidade(identidade: FichaCriaturaIdentidadeDto): void {
     this.identidadeMudou.emit(identidade);
+  }
+
+  protected confirmarRegistro(registro: string): void {
+    this.registroMudou.emit(registro);
   }
 
   /** Confirma um único campo de Identidade — monta o objeto inteiro (`identidadeMudou` é atômico). */
@@ -589,6 +604,22 @@ export class CriaturaVisualizacao {
     valor: FichaCriaturaDeslocamentoDto[K],
   ): void {
     this.confirmarDeslocamento({ ...this.dados().deslocamento, [campo]: valor });
+  }
+
+  /** `focusout` do campo numérico de Deslocamento — ignora quando o foco vai para a caixa
+   * "Indeterminado" ao lado, senão `cancelarEdicao()` destrói a caixa (projetada via `@if` em
+   * app-valor-editavel) antes do clique completar e o `change` dela nunca dispara. */
+  protected confirmarSaidaCampoDeslocamento<K extends keyof FichaCriaturaDeslocamentoDto>(
+    evento: FocusEvent,
+    campo: K,
+    valor: FichaCriaturaDeslocamentoDto[K],
+    caixaIndeterminado: HTMLInputElement,
+  ): void {
+    if (evento.relatedTarget === caixaIndeterminado) {
+      return;
+    }
+    this.confirmarCampoDeslocamento(campo, valor);
+    this.cancelarEdicao();
   }
 
   /** Sentinela exposto ao template — Angular não referencia membros de enum importado direto. */
@@ -685,8 +716,13 @@ export class CriaturaVisualizacao {
       : window.innerWidth <= ANOTACOES_BREAKPOINT_MOBILE;
   }
 
+  /** Confirma a Designação (`ficha.nome` — fonte única, ver {@link FichaCriaturaIdentidadeDto}) —
+   * mesma trava de `FichaVisualizacao.confirmarIdentidade('nome', ...)`: ignora vazio/sem mudança. */
   protected confirmarNome(nome: string): void {
-    this.nomeMudou.emit(nome);
+    const aparado = nome.trim();
+    if (aparado && aparado !== this.nome()) {
+      this.nomeMudou.emit(aparado);
+    }
   }
 
   protected confirmarCor(cor: string | null): void {
@@ -751,6 +787,15 @@ export class CriaturaVisualizacao {
   protected fecharEnquadramento(): void {
     this.enquadramentoOrigem.set(null);
     this.arquivoPendente.set(null);
+  }
+
+  /**
+   * Rolagem rápida da aba Ataques (`app-rolagem-rapida`, mesma barra da ficha de jogador — pedido
+   * do autor): o componente já jogou na bandeja, só falta registrar no histórico da ficha, mesmo
+   * canal que `rolarAtaque`/`rolarTesteAtributo` usam.
+   */
+  protected aoRolagemRapidaFeita(evento: RolagemRealizadaDto): void {
+    this.rolagemRegistro.registrar(evento);
   }
 
   /** Rola o dano de um Ataque (`criatura-rolagem.ts`, motor puro) e mostra/registra o resultado.

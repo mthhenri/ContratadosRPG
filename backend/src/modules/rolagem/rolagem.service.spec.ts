@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import type { ResultadoRolagemDto } from '@contratados-rpg/shared/regras/rolagem';
-import { UnauthorizedAccessException } from '../../core/exceptions';
+import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
@@ -14,6 +14,8 @@ interface RolagemRepositorioDublado {
   registrarRolagem: ReturnType<typeof vi.fn>;
   listarPorFicha: ReturnType<typeof vi.fn>;
   listarPorCampanha: ReturnType<typeof vi.fn>;
+  recuperarParaExclusao: ReturnType<typeof vi.fn>;
+  excluirRolagem: ReturnType<typeof vi.fn>;
 }
 
 interface FichaServiceDublado {
@@ -26,6 +28,7 @@ interface CampanhaRepositorioDublado {
 
 interface CampanhaGatewayDublado {
   emitirRolagemRegistrada: ReturnType<typeof vi.fn>;
+  emitirRolagemExcluida: ReturnType<typeof vi.fn>;
 }
 
 interface EncontroRepositorioDublado {
@@ -73,10 +76,12 @@ describe('RolagemService', () => {
       registrarRolagem: vi.fn(),
       listarPorFicha: vi.fn(),
       listarPorCampanha: vi.fn(),
+      recuperarParaExclusao: vi.fn(),
+      excluirRolagem: vi.fn(),
     };
     fichaService = { recuperarFicha: vi.fn() };
     campanhaRepositorio = { recuperarMembro: vi.fn() };
-    campanhaGateway = { emitirRolagemRegistrada: vi.fn() };
+    campanhaGateway = { emitirRolagemRegistrada: vi.fn(), emitirRolagemExcluida: vi.fn() };
     encontroRepositorio = {
       recuperarCombatentePorId: vi.fn(),
       recuperarPorId: vi.fn(),
@@ -88,6 +93,39 @@ describe('RolagemService', () => {
       campanhaGateway as unknown as CampanhaGateway,
       encontroRepositorio as never,
     );
+  });
+
+  describe('excluirRolagem', () => {
+    const admin: JwtPayload = { ...usuarioAtivo, tipo: TipoUsuarioEnum.ADMIN };
+    const alvo = { id: 9, fichaId: 10, campanhaId: 5, visibilidade: RolagemVisibilidadeEnum.PUBLICA };
+
+    it('exclui por soft delete e emite rolagem:excluida quando o usuário é ADMIN', async () => {
+      rolagemRepositorio.recuperarParaExclusao.mockResolvedValue(alvo);
+
+      const resposta = await service.excluirRolagem({ id: 9 }, admin);
+
+      expect(rolagemRepositorio.excluirRolagem).toHaveBeenCalledWith(9);
+      expect(campanhaGateway.emitirRolagemExcluida).toHaveBeenCalledWith(alvo);
+      expect(resposta).toEqual(alvo);
+    });
+
+    it('nega quem não é ADMIN, sem consultar nem excluir', async () => {
+      await expect(service.excluirRolagem({ id: 9 }, usuarioAtivo)).rejects.toBeInstanceOf(
+        UnauthorizedAccessException,
+      );
+      expect(rolagemRepositorio.recuperarParaExclusao).not.toHaveBeenCalled();
+      expect(rolagemRepositorio.excluirRolagem).not.toHaveBeenCalled();
+    });
+
+    it('responde não encontrada para rolagem inexistente ou já excluída, sem emitir', async () => {
+      rolagemRepositorio.recuperarParaExclusao.mockResolvedValue(null);
+
+      await expect(service.excluirRolagem({ id: 9 }, admin)).rejects.toBeInstanceOf(
+        ResourceNotFoundException,
+      );
+      expect(rolagemRepositorio.excluirRolagem).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirRolagemExcluida).not.toHaveBeenCalled();
+    });
   });
 
   describe('registrarRolagemAvulso', () => {

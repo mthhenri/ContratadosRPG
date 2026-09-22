@@ -203,6 +203,17 @@ app-coluna-acoes {
         flex: none;
     }
 
+    // Botão "i": mostra/oculta o texto da missão da campanha. No desktop fica na ponta direita do
+    // cabeçalho (onde o "⋯" morava); no mobile a linha de ações ocupa a largura toda e o "i" vai pra
+    // ponta direita, colado no "⋯" (ver a regra `:has` no fim do arquivo).
+    &__cabecalho-info {
+        flex: none;
+
+        @include bp.mobile {
+            margin-left: auto;
+        }
+    }
+
     // Fundo transparente pra fechar o menu com um clique fora — sem clipping ancestral aqui (o
     // cabeçalho não vive dentro de nenhum `overflow`+`mask-image`), então não precisa do truque de
     // `position: fixed` calculado no clique que o menu de ficha (`&__ficha-menu*`) usa.
@@ -580,6 +591,36 @@ app-coluna-acoes {
         white-space: nowrap;
     }
 
+    // Condições (I-031) na carteirinha sem acesso — mesma receita de `.ficha-hud__selo`
+    // (`ficha-visualizacao.component.scss`), o selo compacto que já existe para o mesmo dado
+    // num contexto mobile sticky; aqui é o único lugar onde a carteirinha mostra estado.
+    &__equipe-condicoes {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    &__equipe-selo {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-radius: var(--radius-compact);
+        padding: 1px 5px;
+        color: var(--warning);
+        border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+        background: color-mix(in srgb, var(--warning) 10%, transparent);
+
+        // Morrendo e Inconsciente são estados críticos — accent, não aviso (mesma distinção do HUD).
+        &[data-selo-condicao='morrendo'],
+        &[data-selo-condicao='inconsciente'] {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+
     // 60px (ui-33 follow-up; era 80px, e antes disso 28px com `--radius-control`) — pedido do autor
     // depois de ver ao vivo: 80px pesava demais na lista de itens compactos do Esquadrão.
     &__equipe-ficha-avatar {
@@ -670,54 +711,11 @@ app-coluna-acoes {
         gap: var(--space-8);
     }
 
-    &__historico-item {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
-        padding: var(--space-12) var(--space-16);
-        background: var(--surface-2);
-        border-radius: var(--radius-control);
-        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
-    }
 
-    &__historico-meta {
-        display: flex;
-        align-items: baseline;
-        flex-wrap: wrap;
-        gap: var(--space-8);
-        line-height: 1.2;
-    }
 
-    &__historico-rotulo {
-        font-family: var(--font-mono);
-        font-weight: 700;
-        font-size: 13px;
-        color: var(--text);
-    }
 
-    &__historico-formula {
-        display: block;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--text-dim);
-        opacity: 75%;
-        overflow-wrap: anywhere;
-    }
 
-    &__historico-autor {
-        font-size: 11px;
-        color: var(--text-dim);
-        overflow-wrap: anywhere;
-    }
 
-    &__historico-data {
-        flex: none;
-        margin-left: auto;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--text-mute);
-        white-space: nowrap;
-    }
 
     &__historico-esqueleto {
         display: flex;
@@ -883,47 +881,6 @@ app-coluna-acoes {
         align-items: center;
         gap: 10px;
         margin-bottom: 12px;
-    }
-
-    // Botões "Inventário"/"Abrir completa" do card de ficha embutida (item 6) — lado a lado no
-    // desktop, linha própria de largura cheia no mobile (mesmo comportamento real de
-    // `&__ficha-embutida-acoes`, ver `detalhe__esqueleto-ficha-topo` acima com `flex-wrap`).
-    &__esqueleto-ficha-acoes {
-        display: flex;
-        gap: 8px;
-        flex: none;
-
-        @include bp.mobile {
-            flex-basis: 100%;
-            width: 100%;
-        }
-    }
-
-    &__esqueleto-ficha-corpo {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    &__esqueleto-barras {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    &__esqueleto-mini-grade {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 6px;
-
-        @include bp.mobile {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    &__esqueleto-abas {
-        display: flex;
-        gap: 6px;
     }
 
     // Alvos de toque confortáveis (m1-15 / WCAG 2.5.5) nas ações do mestre e no link de voltar.
@@ -1115,15 +1072,37 @@ app-coluna-acoes {
 }
 
 // Geometria dos blocos de `app-esqueleto` — identidade (cor/raio/pulso) vem do primitivo; aqui só
-// largura/altura/flex de cada silhueta do esqueleto de carregamento (mestre/jogador — ver HTML).
+// largura/altura/flex de cada silhueta do esqueleto de carregamento (ver HTML). O corpo da ficha
+// embutida é `app-ficha-esqueleto` (geometria própria).
 .detalhe {
-    &__esqueleto-titulo {
-        width: 240px;
-        height: 20px;
+    // Itens da coluna de ações — 44px na coluna (`coluna-acoes-item`), dividem a barra no mobile
+    // (onde a coluna some nesta página, ver `app-coluna-acoes` no topo do arquivo).
+    &__esqueleto-acao {
+        flex: none;
+        height: 44px;
     }
 
-    // Título do cabeçalho do card de ficha embutida (visão jogador) — flexível (não `width` fixo),
-    // pra não forçar overflow horizontal no mobile ao lado do avatar (item 6, `&__ficha-embutida`).
+    &__esqueleto-voltar {
+        flex: none;
+        width: 32px;
+        height: 32px;
+    }
+
+    &__esqueleto-titulo {
+        flex: none;
+        width: 240px;
+        max-width: 50%;
+        height: 22px;
+    }
+
+    &__esqueleto-estado {
+        flex: none;
+        width: 92px;
+        height: 28px;
+    }
+
+    // Título do cabeçalho do card de ficha embutida — flexível (não `width` fixo), pra não forçar
+    // overflow horizontal no mobile ao lado do avatar (item 6, `&__ficha-embutida`).
     &__esqueleto-titulo-card {
         flex: 1 1 auto;
         min-width: 70px;
@@ -1137,58 +1116,20 @@ app-coluna-acoes {
         flex: none;
     }
 
-    &__esqueleto-chip {
-        width: 64px;
-        height: 22px;
-        flex: none;
-    }
-
-    &__esqueleto-icone {
-        width: 26px;
-        height: 22px;
-        flex: none;
-    }
-
-    &__esqueleto-rotulo {
-        width: 60px;
-        height: 10px;
-        margin-bottom: 7px;
-    }
-
-    &__esqueleto-linha {
-        width: 100%;
-        height: 11px;
-    }
-
     &__esqueleto-botao {
-        width: 84px;
+        flex: none;
+        width: 120px;
         height: 28px;
     }
 
-    &__esqueleto-barra {
-        width: 100%;
-        height: 10px;
-    }
-
-    &__esqueleto-mini {
-        height: 40px;
-    }
-
-    &__esqueleto-aba {
-        width: 64px;
-        height: 26px;
+    &__esqueleto-segmentado {
         flex: none;
+        height: 34px;
     }
+}
 
-    &__esqueleto-bloco {
-        width: 100%;
-        height: 60px;
-    }
-
-    &__esqueleto-d20 {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        flex: none;
-    }
+// Com o botão "i" na linha de ações do mobile, é ele quem carrega o `margin-left: auto` — o "⋯" volta
+// a ficar colado ao lado dele em vez de os dois dividirem o espaço livre.
+.detalhe__cabecalho-acoes:has(.detalhe__cabecalho-info) .detalhe__cabecalho-menu-envoltorio--mobile {
+    margin-left: 0;
 }

@@ -1,10 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import type { PaginatedResult, StandardResponse } from '@contratados-rpg/shared/interfaces';
-import type { RolagemRegistrarDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type {
+  RolagemExcluidaDto,
+  RolagemRegistrarDto,
+  RolagemResumoDto,
+} from '@contratados-rpg/shared/dtos/rolagem';
 
 import { environment } from '../../../environments/environment';
+import { TempoRealService } from '../../core/services/tempo-real.service';
 
 /**
  * Cliente HTTP do módulo `rolagem` (m3-27) — registra e lista as rolagens disparadas a partir de
@@ -15,10 +20,12 @@ import { environment } from '../../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class RolagemService {
   private readonly httpClient = inject(HttpClient);
+  private readonly tempoRealService = inject(TempoRealService);
 
   private readonly baseFicha = `${environment.apiBase}/ficha`;
   private readonly baseCampanha = `${environment.apiBase}/campanha`;
   private readonly baseEncontro = `${environment.apiBase}/encontro`;
+  private readonly baseRolagem = `${environment.apiBase}/rolagem`;
 
   /**
    * Registra uma rolagem disparada a partir da ficha `fichaId`. Fire-and-forget do ponto de vista
@@ -63,5 +70,17 @@ export class RolagemService {
     return this.httpClient
       .get<StandardResponse<RolagemResumoDto[]>>(`${this.baseCampanha}/${campanhaId}/rolagem`)
       .pipe(map((resposta) => resposta.dados as RolagemResumoDto[]));
+  }
+
+  /**
+   * Exclui (soft delete) uma rolagem — só `ADMIN` (I-033). Depois do REST, avisa os consumidores
+   * locais por `TempoRealService.notificarRolagemExcluida`, porque o admin pode não estar na sala
+   * que receberia o broadcast (ex.: histórico de uma ficha solta privada).
+   */
+  excluir(id: number): Observable<RolagemExcluidaDto> {
+    return this.httpClient.delete<StandardResponse<RolagemExcluidaDto>>(`${this.baseRolagem}/${id}`).pipe(
+      map((resposta) => resposta.dados as RolagemExcluidaDto),
+      tap((excluida) => this.tempoRealService.notificarRolagemExcluida(excluida)),
+    );
   }
 }

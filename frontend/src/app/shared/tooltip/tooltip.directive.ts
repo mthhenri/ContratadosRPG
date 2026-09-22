@@ -68,7 +68,8 @@ let sequenciaBalao = 0;
  * — no celular a largura também se limita à tela (`min(260px, 100vw - folga)`), sem estourar a
  * lateral. Estilizado **só com os tokens do tema** "Terminal de Contenção" (as CSS custom properties
  * cascateiam do `:root` até o `<body>`), respeitando a proibição #29 — sem hex/fonte/raio fixos.
- * Texto vazio/ausente **não** abre nada.
+ * Texto vazio/ausente **não** abre nada. Texto com `\n` preserva quebras de linha e espaços
+ * (`white-space: pre-wrap`).
  *
  * @example
  * ```html
@@ -364,6 +365,9 @@ export class Tooltip {
       color: 'var(--text)',
       font: '500 12px/1.45 var(--font-sans)',
       'letter-spacing': 'normal',
+      // Texto com quebra de linha (ex.: descrição de habilidade em várias linhas) mantém quebras e
+      // espaços; o `<div>` normal os colapsaria. Texto de uma linha só segue quebrando como sempre.
+      ...(texto.includes('\n') ? { 'white-space': 'pre-wrap' } : {}),
       'box-shadow': '0 8px 24px rgb(0 0 0 / 45%)',
       'z-index': '3000',
       'pointer-events': 'none',

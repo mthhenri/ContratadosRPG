@@ -33,6 +33,13 @@
 
 .ficha-pagina {
     width: 100%;
+    // Piso de `100dvh` de volta (era removido — ver `&__conteudo` abaixo pra saber por quê não
+    // reabre o vão que a remoção evitava). `app-coluna-acoes` (`align-self: stretch`, o próprio
+    // padrão do primitivo) é quem precisa dele: sem piso, a fileira só media pela altura do
+    // conteúdo, e numa ficha curta a coluna de ações — que visualmente é um trilho de navegação,
+    // não conteúdo — parava no meio da tela em vez de bater no rodapé (achado ao vivo pelo autor).
+    // Desaparece no `@include bp.mobile` abaixo, junto com o resto da fileira (a coluna de ações
+    // vira barra fixa de rodapé lá, fora do fluxo).
     min-height: calc(100dvh - var(--altura-topbar));
     margin: 0;
     transition:
@@ -76,6 +83,9 @@
         width: 100%;
         max-width: 100%;
         margin: 0;
+        // `app-coluna-acoes` já saiu da fileira aqui (vira barra fixa de rodapé) — o piso de `100dvh`
+        // do desktop/tablet não tem mais ninguém pra esticar até ele; zera pra não sobrar vão vazio.
+        min-height: 0;
         // Achado ao vivo (autor: "muito espaçamento ao redor" no mobile) — um `padding` aqui idêntico
         // ao de `.ficha-pagina__conteudo` (abaixo) somava as duas caixas e dobrava o respiro (12px+
         // 12px nas laterais, 85px+85px no rodapé). A `ui-34` introduziu `.ficha-pagina__conteudo`
@@ -230,6 +240,12 @@
 .ficha-pagina__conteudo {
     flex: 1 1 0;
     min-width: 0;
+    // Opta fora do `align-items: stretch` da fileira (`.ficha-pagina`) — o piso de `100dvh` é só
+    // pra `app-coluna-acoes` bater no rodapé (comentário lá); sem este `flex-start`, o próprio
+    // conteúdo esticaria pra bater no piso também, reabrindo o vão/fundo quadriculado que a
+    // remoção do piso original evitava (`FichaVisualizacao` sempre igual à altura do piso, mesmo
+    // com ficha curta). Cross-size vira `auto`: encolhe pro conteúdo real de novo.
+    align-self: flex-start;
     padding: 24px var(--space-20) var(--space-20);
 
     @include bp.mobile {
@@ -512,168 +528,12 @@
     }
 }
 
-// === Esqueleto de carregamento (m3-56) ===
-// Silhueta do layout real de `FichaVisualizacao` (topo | identidade+atributos | status com barra
-// de abas) — mesmas larguras/breakpoints do componente real (`ficha-visualizacao.component.scss`),
-// pra não "pular" quando o conteúdo de verdade assenta. Identidade (cor/raio/pulso) vem de
-// `app-esqueleto` (ui-14/P-051); aqui só a geometria de cada silhueta.
-.ficha-esqueleto {
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap-grid);
-
-    &__topo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    // Mesma fileira de três colunas do `.ficha-visao__linha-colunas` real — inclusive o colapso em
-    // coluna única abaixo de `$bp-tablet` (a página de carregamento nunca deve ser mais larga que a
-    // real, senão o layout "pula" quando o conteúdo chega).
-    &__linha {
-        display: flex;
-        align-items: stretch;
-        gap: var(--gap-grid);
-
-        @include bp.tablet {
-            flex-direction: column;
-        }
-    }
-
-    &__coluna {
-        display: flex;
-        flex-direction: column;
-        gap: var(--gap-grid);
-        min-width: 0;
-
-        &--identidade {
-            width: 420px;
-            flex: 0 0 auto;
-
-            @include bp.tablet {
-                width: 100%;
-            }
-        }
-
-        &--atributos {
-            width: 260px;
-            flex: 0 0 auto;
-
-            @include bp.tablet {
-                width: 100%;
-            }
-        }
-
-        &--status {
-            flex: 1 1 auto;
-            min-width: 420px;
-
-            @include bp.tablet {
-                min-width: 0;
-                width: 100%;
-            }
-        }
-    }
-
-    &__cartao {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        flex: 1;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-card);
-        padding: var(--pad-card);
-
-        &--conteudo {
-            gap: 14px;
-        }
-    }
-
-    &__ident-topo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    &__barras {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-
-        @media (max-width: 360px) {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    &__mini-grade {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    // Mesma barra de abas do card de Status real (`.ficha-status__abas`).
-    &__abas {
-        display: flex;
-        gap: 5px;
-        padding: 4px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-card);
-    }
-
-    // Geometria dos blocos de esqueleto — identidade (cor/raio/pulso) vem de `app-esqueleto`.
-    &__esqueleto-rotulo {
-        width: 130px;
-        height: 12px;
-    }
-
-    &__esqueleto-chip {
-        width: 150px;
-        height: 20px;
-        margin-left: auto;
-    }
-
-    &__esqueleto-avatar {
-        width: 44px;
-        height: 44px;
-        flex: none;
-        border-radius: 50%;
-    }
-
-    &__esqueleto-titulo {
-        width: 65%;
-        max-width: 200px;
-        height: 18px;
-    }
-
-    &__esqueleto-linha {
-        width: 100%;
-        height: 14px;
-    }
-
-    &__esqueleto-curta {
-        width: 45%;
-    }
-
-    &__esqueleto-barra {
-        width: 100%;
-        height: 56px;
-    }
-
-    &__esqueleto-mini {
-        width: 100%;
-        height: 48px;
-    }
-
-    &__esqueleto-aba {
-        flex: 1;
-        height: 30px;
-    }
-
-    &__esqueleto-bloco {
-        width: 100%;
-        height: 160px;
-    }
+// === Esqueleto de carregamento ===
+// A silhueta do corpo é `app-ficha-esqueleto`; aqui só o título do cabeçalho enquanto a ficha (e o
+// nome dela) ainda não chegou — mesma altura de linha do `h1` real, pro cabeçalho não "pular".
+.ficha-pagina__esqueleto-titulo {
+    flex: none;
+    width: 220px;
+    max-width: 50%;
+    height: 22px;
 }

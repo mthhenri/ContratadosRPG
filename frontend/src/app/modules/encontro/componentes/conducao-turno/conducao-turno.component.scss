@@ -1,0 +1,124 @@
+// Barra de condução do mestre (ui-37) — alvo de fidelidade: POC "Tela de Iniciativa" v9, que
+// herda a moldura "acesa" do `.painel__bloco--vez` da tela atual. Só tokens do tema (proibição #29);
+// os botões são `app-botao`/`app-botao-icone` — aqui só tamanho e layout.
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    padding: 14px var(--space-16);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+
+    @include bp.mobile {
+        flex-wrap: wrap;
+    }
+}
+
+// Tem alguém agindo: a moldura acende, como no mockup.
+:host(.conducao--acesa) {
+    border-color: var(--accent-border);
+}
+
+.conducao__centro {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+
+    @include bp.mobile {
+        order: -1;
+        flex: 1 1 100%;
+    }
+}
+
+.conducao__rotulo {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+}
+
+.conducao__nome {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    overflow-wrap: anywhere;
+
+    &--vazio {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
+}
+
+.conducao__detalhe {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-mute);
+}
+
+// "Avançar" reaproveita o ícone `voltar` espelhado — evita um SVG quase idêntico só pela direção.
+.conducao__icone-avancar {
+    transform: scaleX(-1);
+}
+
+.conducao__passo {
+    @include bp.mobile {
+        flex: 1;
+        min-height: bp.$alvo-toque;
+    }
+}
+
+.conducao__encerrar {
+    flex: none;
+    margin-left: var(--space-8);
+
+    @include bp.mobile {
+        flex: 1 1 100%;
+        margin: 0;
+    }
+}
+
+.conducao__acoes {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+
+    @include bp.mobile {
+        flex: 1 1 100%;
+    }
+}
+
+// Receita de tamanho dos botões de condução (a mesma do `.painel__acao` da tela atual): 11px mono,
+// caixa alta, `--tracking-label`. Alvo de toque de 44px no mobile.
+.conducao__acao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+
+    app-icone {
+        font-size: 13px;
+    }
+
+    @include bp.mobile {
+        flex: 1 1 100%;
+        min-height: bp.$alvo-toque;
+    }
+}

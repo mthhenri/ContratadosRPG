@@ -11,6 +11,7 @@ import {
   PersonalidadeEstagioEnum,
   SeveridadeLesaoEnum,
   TipoDanoEnum,
+  TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import type {
   FichaFragmentoConsumidoDto,
@@ -19,10 +20,14 @@ import type {
   FichaOrigemDto,
   FichaPersonalidadeHabilidadeDto,
 } from '@contratados-rpg/shared/dtos/ficha';
+import type { UsuarioAutenticadoDto } from '@contratados-rpg/shared/dtos/usuario';
 import { calcularVida } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 
+import { SessaoService } from '../../../../core/services/sessao.service';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
 import { FichaVisualizacao } from './ficha-visualizacao.component';
@@ -79,6 +84,9 @@ describe('FichaVisualizacao', () => {
     // m3-51: por padrão espelha `ajustavel` (é assim que a página liga hoje — dono/mestre rolam,
     // visualizador não) — testes que precisam dissociar os dois passam o valor explicitamente.
     podeRolar = ajustavel,
+    // Sessão injetada direto no `SessaoService` antes de o componente existir, em vez de gravada
+    // no `localStorage` na esperança de o serviço lê-la ao ser construído (P-071).
+    sessao: UsuarioAutenticadoDto | null = null,
   ) {
     // `FichaRolagemRegistroService` (m2-21) é provido pela **página** que hospeda a ficha
     // (`VisualizarPage`/`CampanhaDetalhe`, `providers: []`), nunca em `root`: a flag "Rolagem
@@ -88,6 +96,9 @@ describe('FichaVisualizacao', () => {
       imports: [FichaVisualizacao],
       providers: [FichaRolagemRegistroService],
     });
+    if (sessao) {
+      TestBed.inject(SessaoService).substituirSessao(sessao);
+    }
     const fixture = TestBed.createComponent(FichaVisualizacao);
     fixture.componentRef.setInput('fichaId', fichaId);
     fixture.componentRef.setInput('nome', nome);
@@ -270,18 +281,32 @@ describe('FichaVisualizacao', () => {
     });
 
     it('mantém o montador aberto e visível ao navegar para outra aba', () => {
-      const alvo = montar(dados, 'Corvo', 42, true);
-      alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
-      alvo.fixture.detectChanges();
+      // Gatilho do Montador é restrito a TESTER/ADMIN (`restringirMontadorATester`, ver
+      // `rolagem-rapida.component.ts`) — a ficha de jogador passa `true` como qualquer outro
+      // consumidor. Sessão de teste precisa refletir isso pro gatilho existir no DOM.
+      const sessaoAdmin: UsuarioAutenticadoDto = {
+        token: 'token-de-teste',
+        id: 1,
+        login: 'admin.teste',
+        nome: 'Admin Teste',
+        tipo: TipoUsuarioEnum.ADMIN,
+      };
+      try {
+        const alvo = montar(dados, 'Corvo', 42, true, false, true, sessaoAdmin);
+        alvo.fixture.componentRef.setInput('abaStatusInicial', 'rolagens');
+        alvo.fixture.detectChanges();
 
-      alvo.raiz.querySelector<HTMLButtonElement>('.montador-rolagem__gatilho')!.click();
-      alvo.fixture.detectChanges();
-      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+        alvo.raiz.querySelector<HTMLButtonElement>('.montador-rolagem__gatilho')!.click();
+        alvo.fixture.detectChanges();
+        expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
 
-      alvo.fixture.componentInstance['selecionarAbaStatus']('inventario');
-      alvo.fixture.detectChanges();
+        alvo.fixture.componentInstance['selecionarAbaStatus']('inventario');
+        alvo.fixture.detectChanges();
 
-      expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+        expect(alvo.raiz.querySelector('.montador-rolagem__corpo')).not.toBeNull();
+      } finally {
+        localStorage.removeItem('contratados-rpg.sessao');
+      }
     });
   });
 
@@ -715,71 +740,71 @@ describe('FichaVisualizacao', () => {
       );
     });
 
-    it('abre o aviso de ocultar sem emitir antes da confirmação', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+    it('pede confirmação via ConfirmacaoService (ui-15) — não emite antes de confirmar', async () => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
+      const confirmar = vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
 
-      expect(raiz.textContent).toContain('Ocultar ficha?');
-      expect(raiz.textContent).toContain(
-        'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          titulo: 'Ocultar ficha?',
+          mensagem:
+            'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+          severidade: 'padrao',
+          rotuloConfirmar: 'Ocultar ficha',
+        }),
       );
+      await Promise.resolve();
       expect(emitidos).toEqual([]);
     });
 
-    it('abre o aviso de exibir com a mensagem correspondente', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+    it('pede confirmação de exibir com o texto correspondente quando a ficha já está oculta', () => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
       fixture.componentRef.setInput('oculta', true);
       fixture.detectChanges();
+      const confirmar = vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
 
-      expect(raiz.textContent).toContain('Exibir ficha?');
-      expect(raiz.textContent).toContain(
-        'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          titulo: 'Exibir ficha?',
+          mensagem: 'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
+          rotuloConfirmar: 'Exibir ficha',
+        }),
       );
     });
 
-    it('cancelar ou fechar a dialog não emite ajusteOculta', () => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+    it('cancelar a confirmação não emite ajusteOculta', async () => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
-      (raiz.querySelector('[data-testid="cancelar-visibilidade"]') as HTMLButtonElement).click();
-      fixture.detectChanges();
-      fixture.componentInstance['cancelarAlteracaoVisibilidade']();
+      await Promise.resolve();
 
-      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
-        false,
-      );
       expect(emitidos).toEqual([]);
     });
 
     it.each([
-      { oculta: false, esperado: true, acao: 'Ocultar ficha' },
-      { oculta: true, esperado: false, acao: 'Exibir ficha' },
-    ])('confirmar $acao emite exatamente o estado oposto e fecha a dialog', ({ oculta, esperado }) => {
-      const { fixture, raiz } = montar(dados, 'Corvo', 42, true);
+      { oculta: false, esperado: true },
+      { oculta: true, esperado: false },
+    ])('confirmar emite exatamente o estado oposto', async ({ oculta, esperado }) => {
+      const { fixture } = montar(dados, 'Corvo', 42, true);
       fixture.componentRef.setInput('oculta', oculta);
       fixture.detectChanges();
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(true);
       const emitidos: boolean[] = [];
       fixture.componentInstance.ajusteOculta.subscribe((valor) => emitidos.push(valor));
 
       fixture.componentInstance.solicitarAlteracaoVisibilidade();
-      fixture.detectChanges();
-      (raiz.querySelector('[data-testid="confirmar-visibilidade"]') as HTMLButtonElement).click();
-      fixture.detectChanges();
+      await Promise.resolve();
 
       expect(emitidos).toEqual([esperado]);
-      expect(raiz.querySelector('[data-testid="confirmar-visibilidade"]')?.closest('dialog')?.open).toBe(
-        false,
-      );
     });
   });
 
@@ -2462,7 +2487,11 @@ describe('FichaVisualizacao', () => {
       botao.click();
       fixture.detectChanges();
 
-      expect(raiz.textContent).toContain('Nasceu numa colônia orbital.');
+      const editor = fixture.debugElement.query(
+        By.css('.ficha-status__anotacoes-caixa--historia app-editor-markdown'),
+      ).componentInstance as EditorMarkdown;
+      expect(editor.valor()).toBe('Nasceu numa colônia orbital.');
+      expect(editor.somenteLeitura()).toBe(true);
     });
 
     it('usa a caixa expansível exclusiva da História', () => {
@@ -2481,7 +2510,11 @@ describe('FichaVisualizacao', () => {
       fixture.detectChanges();
 
       expect(raiz.querySelector('.ficha-status__anotacoes-caixa--historia')).not.toBeNull();
-      expect(raiz.querySelector('.ficha-visao__anotacoes--historia')).not.toBeNull();
+      expect(
+        fixture.debugElement.query(
+          By.css('.ficha-status__anotacoes-caixa--historia app-editor-markdown'),
+        ),
+      ).not.toBeNull();
     });
 
     it('sem historia definida (ou ausente — visualizador nunca chega aqui) mostra a mensagem de vazio', () => {
@@ -2534,7 +2567,10 @@ describe('FichaVisualizacao', () => {
       alvo.fixture.detectChanges();
 
       expect(alvo.raiz.querySelector('#ficha-anotacoes .painel-flutuante__janela')).not.toBeNull();
-      expect(alvo.raiz.textContent).toContain('Veterano de contenção.');
+      const editor = alvo.fixture.debugElement.query(
+        By.css('#ficha-anotacoes app-editor-markdown'),
+      ).componentInstance as EditorMarkdown;
+      expect(editor.valor()).toBe('Veterano de contenção.');
     });
 
     it('anotacoes ausente (omitida no backend pro visualizador) não quebra a leitura', () => {

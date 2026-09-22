@@ -78,9 +78,11 @@ const ROTULO_MODIFICADOR: Record<ModificadorCriaturaEnum, string> = {
 };
 
 const ROTULO_CUSTO_ACAO: Record<CustoAcaoEnum, string> = {
+  [CustoAcaoEnum.ACAO_LIVRE]: 'Ação Livre',
   [CustoAcaoEnum.MOVIMENTO]: 'Ação de Movimento',
   [CustoAcaoEnum.PADRAO]: 'Ação Padrão',
   [CustoAcaoEnum.COMPLETA]: 'Ação Completa',
+  [CustoAcaoEnum.TURNO]: 'Ação de Turno',
 };
 
 const ROTULO_HABILIDADE_TIPO: Record<HabilidadeTipoCriaturaEnum, string> = {

@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -9,6 +9,7 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 
 const TIPOS: readonly TipoDanoEnum[] = Object.values(TipoDanoEnum) as TipoDanoEnum[];
@@ -67,10 +68,11 @@ export class CriaturaResistenciaLista {
   protected readonly abreviacao = ABREVIACAO;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
-  protected readonly indiceRemovendo = signal<number | null>(null);
   /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre
    * visíveis; o autor entra e sai dele de propósito (botão no cabeçalho). */
   protected readonly modoEdicao = signal(false);
+
+  private readonly confirmacaoService = inject(ConfirmacaoService);
 
   protected readonly itemForm = new FormGroup({
     tipo: new FormControl(TipoDanoEnum.FISICO, { nonNullable: true, validators: [Validators.required] }),
@@ -115,7 +117,6 @@ export class CriaturaResistenciaLista {
     this.modoEdicao.update((valor) => !valor);
     if (!this.modoEdicao()) {
       this.cancelar();
-      this.cancelarRemocao();
     }
   }
 
@@ -134,14 +135,6 @@ export class CriaturaResistenciaLista {
     this.indiceEmEdicao.set(null);
   }
 
-  protected pedirRemocao(indice: number): void {
-    this.indiceRemovendo.set(indice);
-  }
-
-  protected cancelarRemocao(): void {
-    this.indiceRemovendo.set(null);
-  }
-
   protected confirmar(): void {
     const indice = this.indiceEmEdicao();
     if (indice === null || this.itemForm.invalid) {
@@ -157,9 +150,20 @@ export class CriaturaResistenciaLista {
     this.cancelar();
   }
 
-  protected remover(indice: number): void {
+  protected async remover(indice: number): Promise<void> {
+    const item = this.itens()[indice];
+    const descricao = item.subtipo ? `${item.tipo} · ${item.subtipo}` : item.tipo;
+    const confirmado = await this.confirmacaoService.confirmar({
+      titulo: `Remover de ${this.titulo()}?`,
+      mensagem: `Remover ${descricao}? Esta ação não pode ser desfeita.`,
+      entidade: descricao,
+      severidade: 'perigo',
+      rotuloConfirmar: 'Remover',
+    });
+    if (!confirmado) {
+      return;
+    }
     this.emitir(this.itens().filter((_, i) => i !== indice));
-    this.indiceRemovendo.set(null);
     if (this.indiceEmEdicao() === indice) {
       this.cancelar();
     }

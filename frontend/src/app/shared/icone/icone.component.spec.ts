@@ -60,4 +60,27 @@ describe('Icone', () => {
     expect(assinatura('caderno')).not.toBe(assinatura('anotacoes'));
     expect(assinatura('caderno')).not.toBe(assinatura('documentos'));
   });
+
+  it('`dados` desenha dois d20, o de trás recortado pela silhueta do da frente', () => {
+    const raiz = montar('dados');
+    const dados = raiz.querySelectorAll('svg svg use');
+    expect(dados.length).toBe(2);
+    expect(dados[0].getAttribute('href')).toBe(dados[1].getAttribute('href'));
+    const recortado = raiz.querySelector('g[mask]');
+    expect(recortado).not.toBeNull();
+    expect(recortado!.querySelectorAll('use').length).toBe(1);
+    expect(raiz.querySelector('mask')).not.toBeNull();
+  });
+
+  it('os selos de olho (rolagens/acesso) desenham formas distintas entre si e do olho puro', () => {
+    const nomes: IconeNome[] = [
+      'olho',
+      'olho-fechado',
+      'olho-rolagens',
+      'olho-fechado-rolagens',
+      'olho-membros',
+    ];
+    const formas = nomes.map(assinatura);
+    expect(new Set(formas).size).toBe(formas.length);
+  });
 });

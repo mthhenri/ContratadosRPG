@@ -79,7 +79,20 @@ export type EquipeFichaExibicao =
       readonly imagemUrl: string | null;
       readonly cor: string | null;
       readonly classeTexto: string;
+      /**
+       * As três condições (I-031) — únicas presentes numa carteirinha sem `acessoCompleto`
+       * (`CampanhaMembroFichaResumoDto`). Sempre as 3, com `ativa`, mesma forma de
+       * `ItemFicha.condicoes` — quem renderiza filtra as ativas.
+       */
+      readonly condicoes: readonly ItemFichaCondicao[];
     };
+
+/** Só as condições marcadas (I-031) — a carteirinha sem acesso mostra a exceção, não as 3 sempre. */
+export function condicoesAtivas(
+  condicoes: readonly ItemFichaCondicao[],
+): readonly ItemFichaCondicao[] {
+  return condicoes.filter((condicao) => condicao.ativa);
+}
 
 /** Membros ordenados para a coluna "Membros" — mestre primeiro, depois jogadores/espectadores em ordem alfabética pelo nome. */
 export function ordenarMembros(
@@ -180,6 +193,10 @@ export function montarEquipeExibicao(
                 imagemUrl: ficha.imagemUrl,
                 cor: ficha.cor,
                 classeTexto: rotuloClasseCompleto(ficha.classe, ficha.arquetipo),
+                condicoes: CONDICOES_FICHA.map((condicao) => ({
+                  ...condicao,
+                  ativa: ficha[condicao.chave],
+                })),
               };
             }),
     }));

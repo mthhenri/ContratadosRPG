@@ -14,6 +14,16 @@ export interface ConfirmacaoPedido {
   readonly severidade?: ConfirmacaoSeveridade;
   readonly rotuloConfirmar: string;
   readonly rotuloCancelar?: string;
+  /**
+   * Ação assíncrona disparada ao confirmar (ex.: a chamada HTTP que exclui o registro). Quando
+   * presente, o diálogo **não fecha no clique** — fica aberto com o botão de confirmar em
+   * `carregando` (`ConfirmacaoService.carregando`) até a promessa resolver, e só então fecha e
+   * resolve `confirmar()` com `true`. Se a promessa rejeitar, o diálogo volta ao estado normal e
+   * continua aberto pra o usuário tentar de novo — o erro em si é responsabilidade de quem chama
+   * (ex.: toast do interceptor HTTP global; este serviço não duplica esse aviso). Sem
+   * `aoConfirmar`, o comportamento é o de sempre: fecha e resolve na hora.
+   */
+  readonly aoConfirmar?: () => Promise<void>;
 }
 
 /**
@@ -25,9 +35,12 @@ export interface ConfirmacaoPedido {
 @Injectable({ providedIn: 'root' })
 export class ConfirmacaoService {
   private readonly _pedido = signal<ConfirmacaoPedido | null>(null);
+  private readonly _carregando = signal(false);
   private resolver: ((valor: boolean) => void) | null = null;
 
   readonly pedido = this._pedido.asReadonly();
+  /** `true` enquanto o `aoConfirmar` do pedido atual está em voo — ver `ConfirmacaoPedido.aoConfirmar`. */
+  readonly carregando = this._carregando.asReadonly();
 
   /** Abre o diálogo e resolve quando o usuário confirma, cancela, aperta Escape ou clica fora. */
   confirmar(pedido: ConfirmacaoPedido): Promise<boolean> {
@@ -37,8 +50,20 @@ export class ConfirmacaoService {
     });
   }
 
-  /** Chamado pelo `Confirmacao` — resolve a promessa pendente e fecha o diálogo. */
-  responder(valor: boolean): void {
+  /** Chamado pelo `Confirmacao` — em confirmação sem `aoConfirmar`, resolve e fecha na hora. Com
+   *  `aoConfirmar`, espera a promessa antes de resolver/fechar (ver `ConfirmacaoPedido.aoConfirmar`). */
+  async responder(valor: boolean): Promise<void> {
+    const aoConfirmar = this._pedido()?.aoConfirmar;
+    if (valor && aoConfirmar) {
+      this._carregando.set(true);
+      try {
+        await aoConfirmar();
+      } catch {
+        this._carregando.set(false);
+        return;
+      }
+      this._carregando.set(false);
+    }
     const resolver = this.resolver;
     this.resolver = null;
     this._pedido.set(null);

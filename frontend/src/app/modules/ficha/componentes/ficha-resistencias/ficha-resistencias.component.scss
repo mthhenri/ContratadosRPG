@@ -1,0 +1,118 @@
+// Resistências em miniatura (I-029: extraído de `FichaVisualizacao`/`FichaCampanhaCard`, onde
+// vivia duplicado byte a byte) — glance das 5 linhas de `TipoDanoEnum`, editável (`[ajustavelAmplo]`)
+// ou só leitura. `--compacto` (carteirinha) troca a fileira flex por uma grade de 5 colunas iguais
+// e reduz fonte/adiciona o respiro que substituía `.ficha-cartao__divisor` — única divergência
+// visual real entre os dois hosts.
+.ficha-resistencias {
+    display: flex;
+    gap: 6px;
+
+    > .ficha-resistencia {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    &--compacto {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-top: 10px;
+
+        > .ficha-resistencia {
+            flex: initial;
+        }
+    }
+}
+
+.ficha-resistencia {
+    // Cor por tipo de dano — mesma paleta `--dano-*` das Reações; o padrão pega o próprio
+    // `--dano-fisico` porque a caixa de Físico não carrega modificador (`FISICO` é o sufixo base).
+    --cor-resistencia: var(--dano-fisico);
+    --borda-resistencia: var(--dano-fisico-border);
+
+    &--balistico {
+        --cor-resistencia: var(--dano-balistico);
+        --borda-resistencia: var(--dano-balistico-border);
+    }
+
+    &--explosao {
+        --cor-resistencia: var(--dano-explosao);
+        --borda-resistencia: var(--dano-explosao-border);
+    }
+
+    &--quimico {
+        --cor-resistencia: var(--dano-quimico);
+        --borda-resistencia: var(--dano-quimico-border);
+    }
+
+    &--geral {
+        --cor-resistencia: var(--dano-geral);
+        --borda-resistencia: var(--dano-geral-border);
+    }
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 3px 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--borda-resistencia, var(--border));
+    border-radius: var(--radius-control);
+
+    &__abrev {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-mute);
+
+        .ficha-resistencias--compacto & {
+            font-size: 9px;
+        }
+    }
+
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--cor-resistencia);
+
+        .ficha-resistencias--compacto & {
+            font-size: 15px;
+        }
+    }
+
+    // Campo de digitação direta da base manual — mesma filosofia de `.ficha-mini__entrada`: largura
+    // no tamanho do texto (2-3 dígitos), não do box inteiro.
+    &__entrada {
+        width: 3ch;
+        min-width: 2.5ch;
+        field-sizing: content;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 1px 4px;
+        outline: none;
+        -moz-appearance: textfield;
+        -webkit-appearance: textfield;
+        appearance: textfield;
+
+        .ficha-resistencias--compacto & {
+            font-size: 15px;
+        }
+
+        &:focus {
+            border-color: var(--accent-border);
+        }
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    }
+}

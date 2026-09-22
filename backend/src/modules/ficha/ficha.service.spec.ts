@@ -86,7 +86,9 @@ interface CampanhaGatewayDublado {
   emitirFichaCriada: ReturnType<typeof vi.fn>;
   emitirFichaAlterada: ReturnType<typeof vi.fn>;
   emitirFichaVisibilidadeAlterada: ReturnType<typeof vi.fn>;
+  emitirFichaRemovidaDaCampanha: ReturnType<typeof vi.fn>;
   emitirAcessoRevogado: ReturnType<typeof vi.fn>;
+  expulsarUsuarioDaFicha: ReturnType<typeof vi.fn>;
   emitirInventarioAlterado: ReturnType<typeof vi.fn>;
 }
 
@@ -138,7 +140,6 @@ function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogador
 function criarDadosCriatura(overrides: Partial<FichaCriaturaDadosDto> = {}): FichaCriaturaDadosDto {
   return {
     identidade: {
-      designacao: 'A Estátua',
       origem: OrigemCriaturaEnum.SCP_ADAPTADO,
       conceito: 'Uma figura de pedra humanoide que só se move quando ninguém a observa diretamente.',
       naturezaFisica: 'Humanoide, altura entre 1,8m e 2,1m, aparência de pedra calcária escura.',
@@ -315,7 +316,9 @@ describe('FichaService', () => {
       emitirFichaCriada: vi.fn(),
       emitirFichaAlterada: vi.fn(),
       emitirFichaVisibilidadeAlterada: vi.fn(),
+      emitirFichaRemovidaDaCampanha: vi.fn(),
       emitirAcessoRevogado: vi.fn(),
+      expulsarUsuarioDaFicha: vi.fn().mockResolvedValue(undefined),
       emitirInventarioAlterado: vi.fn(),
     };
     armazenamentoProvedor = { salvarImagem: vi.fn(), excluirImagem: vi.fn() };
@@ -1613,7 +1616,10 @@ describe('FichaService', () => {
         usuarioDono,
       );
 
-      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({ id: 5, estado: { vidaAtual: 17 } });
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 17, machucado: false },
+      });
     });
 
     it('preserva a ficha fora de dados.estado e emite a alteracao apos validar permissao', async () => {
@@ -1632,9 +1638,67 @@ describe('FichaService', () => {
 
       await expect(service.alterarVitalidade({ id: 5, estado: { vidaAtual: 17 } }, usuarioDono)).resolves.toBe(fichaAlterada);
 
-      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({ id: 5, estado: { vidaAtual: 17 } });
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 17, machucado: false },
+      });
       expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
       expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith(fichaAlterada);
+    });
+
+    it('liga o Machucado (I-032) quando a Vida cai a 50% ou menos da máxima', async () => {
+      const fichaComMaximo: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        dados: criarDados({ estado: { ...criarDados().estado, vidaMaxima: 40 } }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComMaximo);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaComMaximo);
+
+      await service.alterarVitalidade({ id: 5, estado: { vidaAtual: 20 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 20, machucado: true },
+      });
+    });
+
+    it('desliga o Machucado (I-032) só quando a Vida volta a 100%', async () => {
+      const fichaMachucada: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        dados: criarDados({ estado: { ...criarDados().estado, vidaMaxima: 40, machucado: true } }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaMachucada);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaMachucada);
+
+      await service.alterarVitalidade({ id: 5, estado: { vidaAtual: 30 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 30, machucado: true },
+      });
+
+      await service.alterarVitalidade({ id: 5, estado: { vidaAtual: 40 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenLastCalledWith({
+        id: 5,
+        estado: { vidaAtual: 40, machucado: false },
+      });
+    });
+
+    it('não mexe no Machucado quando só a Energia muda', async () => {
+      const fichaMachucada: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        dados: criarDados({ estado: { ...criarDados().estado, vidaMaxima: 40, machucado: true } }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaMachucada);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaMachucada);
+
+      await service.alterarVitalidade({ id: 5, estado: { energiaAtual: 5 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { energiaAtual: 5 },
+      });
     });
   });
 
@@ -2166,7 +2230,7 @@ describe('FichaService', () => {
       expect(resultado).toEqual({ id: 5, campanhaId: 3 });
     });
 
-    it('desatribui a ficha (campanhaId: null) sem checar membro-alvo nem emitir evento', async () => {
+    it('desatribui a ficha (campanhaId: null) sem checar membro-alvo, avisando só a sala que ela deixou', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       campanhaRepositorio.recuperarMembro.mockResolvedValue({
         papel: TipoCampanhaMembroPapelEnum.JOGADOR,
@@ -2186,7 +2250,54 @@ describe('FichaService', () => {
       });
       expect(fichaRepositorio.atribuirCampanha).toHaveBeenCalledWith({ id: 5, campanhaId: null });
       expect(campanhaGateway.emitirFichaCriada).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({
+        fichaId: 5,
+        campanhaId: 3,
+      });
       expect(resultado).toEqual({ id: 5, campanhaId: null });
+    });
+
+    it('não emite ficha:removida-da-campanha ao atribuir uma ficha solta nem ao repetir a mesma campanha', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaSolta);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      fichaRepositorio.atribuirCampanha.mockResolvedValue({
+        id: 5,
+        campanhaId: 3,
+        usuarioId: usuarioDono.sub,
+        nome: 'Agente Alfa',
+        dados: criarDados(),
+      });
+
+      await service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono);
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      await service.atribuirCampanha({ id: 5, campanhaId: 3 }, usuarioDono);
+
+      expect(campanhaGateway.emitirFichaRemovidaDaCampanha).not.toHaveBeenCalled();
+    });
+
+    it('ao mover a ficha para outra campanha, avisa a campanha antiga e a nova', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+      const fichaMovida = {
+        id: 5,
+        campanhaId: 9,
+        usuarioId: usuarioDono.sub,
+        nome: 'Agente Alfa',
+        dados: criarDados(),
+      };
+      fichaRepositorio.atribuirCampanha.mockResolvedValue(fichaMovida);
+
+      await service.atribuirCampanha({ id: 5, campanhaId: 9 }, usuarioDono);
+
+      expect(campanhaGateway.emitirFichaRemovidaDaCampanha).toHaveBeenCalledWith({
+        fichaId: 5,
+        campanhaId: 3,
+      });
+      expect(campanhaGateway.emitirFichaCriada).toHaveBeenCalledWith(fichaMovida);
     });
 
     it('lança ResourceNotFoundException("Membro") quando o dono não é membro da campanha-alvo', async () => {
@@ -2996,7 +3107,7 @@ describe('FichaService', () => {
         const resultado = await service.recuperarFichaCriatura({ id: 9 }, usuarioMembro);
 
         expect(fichaRepositorio.recuperarAcesso).toHaveBeenCalledWith({ fichaId: 9, usuarioId: usuarioMembro.sub });
-        expect(resultado.dados.identidade.designacao).toBe('A Estátua');
+        expect(resultado.nome).toBe('A Estátua');
       });
 
       it('lança ResourceNotFoundException quando a ficha não existe', async () => {

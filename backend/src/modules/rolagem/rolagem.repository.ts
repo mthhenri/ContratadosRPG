@@ -3,6 +3,7 @@ import type { Knex } from 'knex';
 import type {
   RolagemCampanhaInternoListarDto,
   RolagemCampanhaPublicaInternoListarDto,
+  RolagemExcluidaDto,
   RolagemInternoListarDto,
   RolagemInternoRegistrarDto,
   RolagemResumoDto,
@@ -84,6 +85,29 @@ export class RolagemRepository extends BaseRepository {
       { id: inserida.id },
     );
     return rolagemRegistrada;
+  }
+
+  /**
+   * Recupera o recorte mínimo (`RolagemExcluidaDto`) de uma rolagem ainda não excluída — a service
+   * usa antes de excluir para saber a sala do evento e para responder 404 quando não existe.
+   */
+  async recuperarParaExclusao(id: number): Promise<RolagemExcluidaDto | null> {
+    const [encontrada] = await this.executarConsulta<RolagemExcluidaDto>(
+      `SELECT rolagem.id, rolagem.ficha_id AS "fichaId", rolagem.campanha_id AS "campanhaId",
+              tipo_rolagem_visibilidade.codigo AS visibilidade
+       FROM rolagem
+       INNER JOIN tipo_rolagem_visibilidade
+         ON tipo_rolagem_visibilidade.id = rolagem.tipo_rolagem_visibilidade_id
+        AND tipo_rolagem_visibilidade.is_deleted = false
+       WHERE rolagem.id = :id AND rolagem.is_deleted = false`,
+      { id },
+    );
+    return encontrada ?? null;
+  }
+
+  /** Exclusão lógica da rolagem (`is_deleted = true`) — nunca DELETE físico. */
+  async excluirRolagem(id: number): Promise<void> {
+    await this.executarSoftDelete(id);
   }
 
   /**

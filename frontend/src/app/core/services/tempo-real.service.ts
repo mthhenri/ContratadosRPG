@@ -1,4 +1,4 @@
-import { InjectionToken, Injectable, inject, signal } from '@angular/core';
+import { InjectionToken, Injectable, effect, inject, signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
@@ -14,10 +14,12 @@ import type {
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
+  FichaCampanhaRemovidaDto,
+  FichaCondicoesAlteradasDto,
   FichaResumoDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type { RolagemExcluidaDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
   PaginaCadernoEsquadraoPresencaDto,
@@ -65,9 +67,9 @@ export class TempoRealService {
   /** Token com que o socket atual foi aberto — reconecta se a sessão trocar (logout+login). */
   private tokenConectado: string | null = null;
 
-  /** Salas já ingressadas — reingressadas a cada reconexão (o servidor as perde ao cair o socket). */
-  private readonly salasFicha = new Set<number>();
-  private readonly salasCampanha = new Set<number>();
+  /** Referências ativas de sala — só chaves positivas reingressam após uma reconexão. */
+  private readonly referenciasSalasFicha = new Map<number, number>();
+  private readonly referenciasSalasCampanha = new Map<number, number>();
 
   /** `true` enquanto o socket está conectado ao gateway. */
   readonly conectado = signal(false);
@@ -85,9 +87,12 @@ export class TempoRealService {
   private readonly fichaCriadaSubject = new Subject<FichaResumoDto>();
   private readonly fichaVisibilidadeAlteradaSubject =
     new Subject<FichaVisibilidadeAlteradaDto>();
+  private readonly fichaCondicoesAlteradasSubject = new Subject<FichaCondicoesAlteradasDto>();
+  private readonly fichaRemovidaDaCampanhaSubject = new Subject<FichaCampanhaRemovidaDto>();
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
   private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
+  private readonly rolagemExcluidaSubject = new Subject<RolagemExcluidaDto>();
   private readonly estadoAlteradoSubject = new Subject<CampanhaEstadoAlteradaDto>();
   private readonly inventarioAlteradoSubject = new Subject<CampanhaInventarioAlteradoDto>();
   private readonly encontroAlteradoSubject = new Subject<EncontroAlteradoDto>();
@@ -109,6 +114,16 @@ export class TempoRealService {
   /** A visibilidade de uma ficha mudou; consumidores refazem o recorte autorizado da campanha. */
   readonly fichaVisibilidadeAlterada$: Observable<FichaVisibilidadeAlteradaDto> =
     this.fichaVisibilidadeAlteradaSubject.asObservable();
+  /**
+   * Uma ficha `JOGADOR` da campanha pode ter mudado de condição (I-031) — payload mínimo (só
+   * `campanhaId`, sala ampla `campanha:<id>`); consumidores refazem `listarMembros` pra atualizar
+   * as carteirinhas mesmo sem acesso completo à ficha.
+   */
+  readonly fichaCondicoesAlteradas$: Observable<FichaCondicoesAlteradasDto> =
+    this.fichaCondicoesAlteradasSubject.asObservable();
+  /** Uma ficha saiu da campanha (voltou ao acervo ou foi movida); consumidores refazem o recorte. */
+  readonly fichaRemovidaDaCampanha$: Observable<FichaCampanhaRemovidaDto> =
+    this.fichaRemovidaDaCampanhaSubject.asObservable();
   /** Um membro entrou na campanha (na sala `campanha:<id>`). */
   readonly membroEntrou$: Observable<CampanhaMembroEntradaDto> =
     this.membroEntrouSubject.asObservable();
@@ -126,6 +141,14 @@ export class TempoRealService {
    */
   readonly rolagemRegistrada$: Observable<RolagemResumoDto> =
     this.rolagemRegistradaSubject.asObservable();
+  /**
+   * Uma rolagem foi excluída por um `ADMIN` (I-033) — chega na mesma sala em que
+   * `rolagemRegistrada$` chegaria e leva só o `id` (sem conteúdo). Quem lista rolagens a tira da
+   * lista. Também é alimentado por `notificarRolagemExcluida` para o próprio admin que excluiu, que
+   * pode nem estar na sala.
+   */
+  readonly rolagemExcluida$: Observable<RolagemExcluidaDto> =
+    this.rolagemExcluidaSubject.asObservable();
   readonly estadoAlterado$: Observable<CampanhaEstadoAlteradaDto> =
     this.estadoAlteradoSubject.asObservable();
   readonly inventarioAlterado$: Observable<CampanhaInventarioAlteradoDto> =
@@ -149,6 +172,14 @@ export class TempoRealService {
   readonly paginaEsquadraoExcluida$ = this.paginaEsquadraoExcluidaSubject.asObservable();
   /** Presença Yjs (cursor/seleção/identidade) de quem mais edita a mesma página do Esquadrão. */
   readonly presencaEsquadraoCaderno$ = this.presencaEsquadraoSubject.asObservable();
+
+  constructor() {
+    effect(() => {
+      if (!this.sessaoService.autenticado()) {
+        this.desconectar();
+      }
+    });
+  }
 
   /**
    * Abre a conexão Socket.IO com o JWT da sessão. **Idempotente** enquanto a sessão não muda (chamável
@@ -197,6 +228,13 @@ export class TempoRealService {
       (evento: FichaVisibilidadeAlteradaDto) =>
         this.fichaVisibilidadeAlteradaSubject.next(evento),
     );
+    this.socket.on(
+      'ficha:condicoes-alteradas',
+      (evento: FichaCondicoesAlteradasDto) => this.fichaCondicoesAlteradasSubject.next(evento),
+    );
+    this.socket.on('ficha:removida-da-campanha', (evento: FichaCampanhaRemovidaDto) =>
+      this.fichaRemovidaDaCampanhaSubject.next(evento),
+    );
     this.socket.on('caderno-esquadrao:pagina-criada', (pagina: PaginaCadernoResumoDto) =>
       this.paginaEsquadraoCriadaSubject.next(pagina),
     );
@@ -220,6 +258,9 @@ export class TempoRealService {
     this.socket.on('rolagem:registrada', (rolagem: RolagemResumoDto) =>
       this.rolagemRegistradaSubject.next(rolagem),
     );
+    this.socket.on('rolagem:excluida', (rolagem: RolagemExcluidaDto) =>
+      this.rolagemExcluidaSubject.next(rolagem),
+    );
     this.socket.on('campanha:estado-alterado', (evento: CampanhaEstadoAlteradaDto) =>
       this.estadoAlteradoSubject.next(evento),
     );
@@ -242,16 +283,14 @@ export class TempoRealService {
    * entre o buffer offline do socket.io e o reingresso).
    */
   entrarSalaFicha(fichaId: number): void {
-    this.salasFicha.add(fichaId);
-    if (this.conectado()) {
+    if (this.incrementarReferencia(this.referenciasSalasFicha, fichaId) && this.conectado()) {
       this.socket?.emit('ficha:entrar', { id: fichaId });
     }
   }
 
   /** Ingressa na sala `campanha:<id>` (só membros — checado pelo gateway). Ver `entrarSalaFicha`. */
   entrarSalaCampanha(campanhaId: number): void {
-    this.salasCampanha.add(campanhaId);
-    if (this.conectado()) {
+    if (this.incrementarReferencia(this.referenciasSalasCampanha, campanhaId) && this.conectado()) {
       this.socket?.emit('campanha:entrar', { id: campanhaId });
     }
   }
@@ -270,12 +309,16 @@ export class TempoRealService {
 
   /** Esquece a sala `ficha:<id>` (ao sair da tela) — para não reingressar nela numa reconexão. */
   sairSalaFicha(fichaId: number): void {
-    this.salasFicha.delete(fichaId);
+    if (this.decrementarReferencia(this.referenciasSalasFicha, fichaId) && this.conectado()) {
+      this.socket?.emit('ficha:sair', { id: fichaId });
+    }
   }
 
   /** Esquece a sala `campanha:<id>` (ao sair da tela) — para não reingressar nela numa reconexão. */
   sairSalaCampanha(campanhaId: number): void {
-    this.salasCampanha.delete(campanhaId);
+    if (this.decrementarReferencia(this.referenciasSalasCampanha, campanhaId) && this.conectado()) {
+      this.socket?.emit('campanha:sair', { id: campanhaId });
+    }
   }
 
   /** Encerra a conexão e limpa o estado de salas (ex.: logout). */
@@ -286,17 +329,41 @@ export class TempoRealService {
     this.jaConectou = false;
     this.conectado.set(false);
     this.ativo.set(false);
-    this.salasFicha.clear();
-    this.salasCampanha.clear();
+    this.referenciasSalasFicha.clear();
+    this.referenciasSalasCampanha.clear();
   }
 
   /** Reingressa em todas as salas conhecidas — chamado a cada `connect` (inicial e reconexão). */
   private reingressarSalas(): void {
-    for (const fichaId of this.salasFicha) {
+    for (const fichaId of this.referenciasSalasFicha.keys()) {
       this.socket?.emit('ficha:entrar', { id: fichaId });
     }
-    for (const campanhaId of this.salasCampanha) {
+    for (const campanhaId of this.referenciasSalasCampanha.keys()) {
       this.socket?.emit('campanha:entrar', { id: campanhaId });
     }
+  }
+
+  private incrementarReferencia(referencias: Map<number, number>, id: number): boolean {
+    const quantidade = referencias.get(id) ?? 0;
+    referencias.set(id, quantidade + 1);
+    return quantidade === 0;
+  }
+
+  private decrementarReferencia(referencias: Map<number, number>, id: number): boolean {
+    const quantidade = referencias.get(id);
+    if (!quantidade) {
+      return false;
+    }
+    if (quantidade === 1) {
+      referencias.delete(id);
+      return true;
+    }
+    referencias.set(id, quantidade - 1);
+    return false;
+  }
+
+  /** Repassa localmente uma exclusão que este cliente acabou de fazer pelo REST (ver `rolagemExcluida$`). */
+  notificarRolagemExcluida(rolagem: RolagemExcluidaDto): void {
+    this.rolagemExcluidaSubject.next(rolagem);
   }
 }

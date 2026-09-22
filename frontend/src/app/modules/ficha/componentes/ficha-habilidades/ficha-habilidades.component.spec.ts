@@ -404,7 +404,7 @@ describe('FichaHabilidades', () => {
 
   /**
    * m3-48: contadores por tipo no resumo ficam clicáveis e o filtro é **cumulativo** — cada clique
-   * soma um tipo à seleção; clicar de novo no mesmo tipo o tira; somar os 4 tipos limpa tudo
+   * soma um tipo à seleção; clicar de novo no mesmo tipo o tira; somar os 5 tipos limpa tudo
    * (equivalente a "todos"). O botão vassoura (`&__limpar-filtro`, ícone só, alinhado à direita na
    * própria linha do resumo, logo depois de "Outras classes/arquétipos") só aparece com algum tipo
    * ativo e limpa a seleção inteira. Estado de UI volátil (nenhum campo novo em `dados`).
@@ -416,6 +416,11 @@ describe('FichaHabilidades', () => {
       { nome: 'Salto de Arquétipo', categoria: HabilidadeCategoriaEnum.ARQUETIPO, custoEnergia: 0, descricao: '' },
       { nome: 'Primeiros Socorros', categoria: HabilidadeCategoriaEnum.GERAL, custoEnergia: 1, descricao: '' },
       { nome: 'Técnica Emprestada', categoria: HabilidadeCategoriaEnum.OUTRA_CLASSE, custoEnergia: 2, descricao: '' },
+      // As 4 categorias do bucket "Outras" (nenhuma é Arquétipo/Classe/Geral/Outra classe).
+      { nome: 'Sangue Frio', categoria: HabilidadeCategoriaEnum.PERSONALIDADE, custoEnergia: 0, descricao: '' },
+      { nome: 'Perito em Fechaduras', categoria: HabilidadeCategoriaEnum.ESPECIALIDADE, custoEnergia: 0, descricao: '' },
+      { nome: 'Contatos na Rua', categoria: HabilidadeCategoriaEnum.CIVIL, custoEnergia: 0, descricao: '' },
+      { nome: 'Marca Pessoal', categoria: HabilidadeCategoriaEnum.UNICA, custoEnergia: 0, descricao: '' },
     ];
 
     function montarCompleta() {
@@ -492,18 +497,40 @@ describe('FichaHabilidades', () => {
       expect(nomes(raiz)).toEqual(['Salto de Arquétipo']);
     });
 
-    it('selecionar os 4 tipos limpa tudo (equivalente a "todos")', () => {
+    it('clicar em Outras filtra Personalidade, Especialidade, Civil e Única (e nada além)', () => {
+      const { raiz, fixture } = montarCompleta();
+      expect(botaoResumo(raiz, 'Outras').querySelector('.habilidades__resumo-valor')?.textContent?.trim()).toBe('4');
+
+      botaoResumo(raiz, 'Outras').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Sangue Frio', 'Perito em Fechaduras', 'Contatos na Rua', 'Marca Pessoal']);
+    });
+
+    it('Outras soma com os demais tipos (cumulativo) e o clique direito só a tira', () => {
+      const { raiz, fixture } = montarCompleta();
+      botaoResumo(raiz, 'Classe').click();
+      botaoResumo(raiz, 'Outras').click();
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Golpe de Classe', 'Sangue Frio', 'Perito em Fechaduras', 'Contatos na Rua', 'Marca Pessoal']);
+
+      botaoResumo(raiz, 'Outras').dispatchEvent(new Event('contextmenu', { bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+      expect(nomes(raiz)).toEqual(['Golpe de Classe']);
+    });
+
+    it('selecionar os 5 tipos limpa tudo (equivalente a "todos")', () => {
       const { raiz, fixture } = montarCompleta();
       botaoResumo(raiz, 'Arquétipo').click();
       botaoResumo(raiz, 'Classe').click();
       botaoResumo(raiz, 'Geral').click();
+      botaoResumo(raiz, 'Outras').click();
       fixture.detectChanges();
-      expect(nomes(raiz)).toHaveLength(3); // ainda faltam "Outras classes/arquétipos"
+      expect(nomes(raiz)).toHaveLength(7); // ainda falta "Outras classes/arquétipos"
 
       botaoResumo(raiz, 'Outras classes/arquétipos').click();
       fixture.detectChanges();
       expect(nomes(raiz)).toEqual(habilidadesCompletas.map((h) => h.nome)); // limpou: mostra tudo
-      for (const rotulo of ['Arquétipo', 'Classe', 'Geral', 'Outras classes/arquétipos']) {
+      for (const rotulo of ['Arquétipo', 'Classe', 'Geral', 'Outras classes/arquétipos', 'Outras']) {
         expect(botaoResumo(raiz, rotulo).getAttribute('aria-pressed')).toBe('false');
       }
     });
@@ -547,6 +574,7 @@ describe('FichaHabilidades', () => {
       expect(botaoResumo(raiz, 'Classe').classList.contains('habilidades__resumo-item--classe')).toBe(true);
       expect(botaoResumo(raiz, 'Geral').classList.contains('habilidades__resumo-item--geral')).toBe(true);
       expect(botaoResumo(raiz, 'Outras classes/arquétipos').classList.contains('habilidades__resumo-item--outra-classe')).toBe(true);
+      expect(botaoResumo(raiz, 'Outras').classList.contains('habilidades__resumo-item--outras')).toBe(true);
     });
 
     function dispararContextMenu(botao: HTMLButtonElement): Event {
@@ -584,6 +612,13 @@ describe('FichaHabilidades', () => {
       fixture.detectChanges();
       const vazio = raiz.querySelector('.estado-vazio__titulo')?.textContent?.trim();
       expect(vazio).toBe('Nenhuma habilidade de Geral ou Outra classe/arquétipo.');
+    });
+
+    it('sem resultado em Outras, a mensagem de vazio nomeia "outras categorias"', () => {
+      const { raiz, fixture } = montar(true); // fixture original: só Classe e Arquétipo
+      botaoResumo(raiz, 'Outras').click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.estado-vazio__titulo')?.textContent?.trim()).toBe('Nenhuma habilidade de outras categorias.');
     });
   });
 

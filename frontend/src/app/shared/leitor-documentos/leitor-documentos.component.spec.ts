@@ -1,10 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LeitorDocumentos } from './leitor-documentos.component';
 import { LeitorDocumentosService } from './leitor-documentos.service';
 
 describe('LeitorDocumentos', () => {
+  // `definirViewport` (abaixo) muta `window.innerWidth`/`innerHeight` globalmente; sem restaurar
+  // ao original depois do último teste, o valor vaza pra specs de outros arquivos que rodam
+  // depois na mesma suíte (P-019 — achado com `npm run test --workspace=frontend` completo).
+  const larguraOriginal = window.innerWidth;
+  const alturaOriginal = window.innerHeight;
+  afterAll(() => definirViewport(larguraOriginal, alturaOriginal));
+
   let fixture: ComponentFixture<LeitorDocumentos>;
   let servico: LeitorDocumentosService;
 

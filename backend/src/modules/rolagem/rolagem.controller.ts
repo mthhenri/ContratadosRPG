@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -11,10 +12,12 @@ import {
 import type {
   RolagemRegistrarDto,
   RolagemAvulsoRegistrarDto,
+  RolagemExcluidaDto,
   RolagemResumoDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
-import { ActiveUser } from '../../core/decorators';
+import { ActiveUser, TiposPermitidos } from '../../core/decorators';
+import { TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import { DocumentarController } from '../../core/openapi';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { RolagemService } from './rolagem.service';
@@ -68,5 +71,14 @@ export class RolagemController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<RolagemResumoDto[]> {
     return this.rolagemService.listarPorCampanha({ campanhaId: id }, usuarioAtivo);
+  }
+
+  @Delete('rolagem/:id')
+  @TiposPermitidos(TipoUsuarioEnum.ADMIN)
+  excluir(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<RolagemExcluidaDto> {
+    return this.rolagemService.excluirRolagem({ id }, usuarioAtivo);
   }
 }

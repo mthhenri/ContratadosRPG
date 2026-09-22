@@ -106,6 +106,7 @@ import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { FichaHabilidades } from '../ficha-habilidades/ficha-habilidades.component';
 import {
   FichaInventario,
@@ -113,6 +114,8 @@ import {
   type CustoEnergiaFragmento,
 } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagensPainel } from '../ficha-rolagens-painel/ficha-rolagens-painel.component';
+import { FichaReacoes, type AjusteDerivado } from '../ficha-reacoes/ficha-reacoes.component';
+import { FichaResistencias, type AjusteResistencia } from '../ficha-resistencias/ficha-resistencias.component';
 import { AjusteEnquadramentoImagem } from '../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component';
 import type { EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
@@ -281,7 +284,7 @@ const DESTINOS_MOBILE: readonly {
   { destino: 'informacoes', rotulo: 'Status', rotuloCompleto: 'Informações', icone: 'visao-geral' },
   { destino: 'inventario', rotulo: 'Invent.', rotuloCompleto: 'Inventário', icone: 'inventario' },
   { destino: 'habilidades', rotulo: 'Habilid.', rotuloCompleto: 'Habilidades', icone: 'habilidades' },
-  { destino: 'rolagens', rotulo: 'Rolagens', rotuloCompleto: 'Rolagens', icone: 'rolagens' },
+  { destino: 'rolagens', rotulo: 'Rolagens', rotuloCompleto: 'Rolagens', icone: 'd6' },
   { destino: 'extras', rotulo: 'Extras', rotuloCompleto: 'Extras', icone: 'mais' },
   { destino: 'historia', rotulo: 'História', rotuloCompleto: 'História', icone: 'anotacoes' },
 ];
@@ -320,18 +323,6 @@ export type CampoVitalidade = CampoVitalidadeAtual | 'vidaMaxima' | 'energiaMaxi
 /** Ajuste rápido de Vida/Energia emitido pela leitura — já com o novo valor clampado a [0, máximo]. */
 export interface AjusteVitalidade {
   readonly campo: CampoVitalidade;
-  readonly valor: number;
-}
-
-/** Edição de um derivado (Informações Extras) — override persistido em `derivados[chave]` (m3-10). */
-export interface AjusteDerivado {
-  readonly chave: ChaveInfoExtra;
-  readonly valor: number | string;
-}
-
-/** Edição da base manual de uma resistência (ajuste pós-m3-36) — a página persiste em `derivados.resistencias`. */
-export interface AjusteResistencia {
-  readonly tipo: TipoDanoEnum;
   readonly valor: number;
 }
 
@@ -402,6 +393,8 @@ export interface AjusteClasse {
     FichaInventario,
     FichaHabilidades,
     FichaRolagensPainel,
+    FichaReacoes,
+    FichaResistencias,
     BandejaDados,
     OverflowFade,
     Tooltip,
@@ -422,6 +415,14 @@ export interface AjusteClasse {
 export class FichaCampanhaCard {
   /** A janela flutuante do Encontro é o único scroll vertical no mobile. */
   readonly rolagemExterna = input(false);
+
+  /**
+   * Barra superior "Ficha de Jogador" + chip `FICHA-JGD-NNNN`. A visão do jogador (e a prévia dela,
+   * do mestre) já traz o nome da ficha no cabeçalho do cartão e dispensa a linha; a visão do
+   * jogador da Iniciativa (`ui-39`) também a dispensa — o palco já tem o título "Minha ficha" e o chip
+   * sobe para o cabeçalho dele. A janela flutuante mantém.
+   */
+  readonly mostrarTopo = input(true);
 
   /** Identificador da ficha (compõe a classificação `FICHA-JGD-NNNN`). */
   readonly fichaId = input.required<number>();
@@ -516,20 +517,26 @@ export class FichaCampanhaCard {
   /** Novo valor de "ficha oculta" (m3-65, relacional — fora do `dados`) — a página persiste `ficha.oculta`. */
   readonly ajusteOculta = output<boolean>();
 
-  /** Dialog pendente de confirmação; clicar no controle nunca altera a ficha diretamente. */
-  protected readonly confirmandoVisibilidade = signal(false);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
 
+  /** Pede confirmação (ui-15) antes de alterar a visibilidade; clicar no controle nunca altera a
+   *  ficha diretamente. Não é destrutivo (reversível a qualquer momento) — `severidade: 'padrao'`. */
   solicitarAlteracaoVisibilidade(): void {
-    this.confirmandoVisibilidade.set(true);
-  }
-
-  protected cancelarAlteracaoVisibilidade(): void {
-    this.confirmandoVisibilidade.set(false);
-  }
-
-  protected confirmarAlteracaoVisibilidade(): void {
-    this.ajusteOculta.emit(!this.oculta());
-    this.confirmandoVisibilidade.set(false);
+    const vaiOcultar = !this.oculta();
+    this.confirmacaoService
+      .confirmar({
+        titulo: vaiOcultar ? 'Ocultar ficha?' : 'Exibir ficha?',
+        mensagem: vaiOcultar
+          ? 'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.'
+          : 'Esta ficha voltará a aparecer para os outros jogadores da campanha.',
+        severidade: 'padrao',
+        rotuloConfirmar: vaiOcultar ? 'Ocultar ficha' : 'Exibir ficha',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.ajusteOculta.emit(vaiOcultar);
+        }
+      });
   }
 
   /**
@@ -2436,62 +2443,6 @@ export class FichaCampanhaCard {
   protected readonly contraAtaqueLinha = computed<InfoExtra>(
     () => this.informacoesExtras().find((info) => info.chave === 'contraAtaque')!,
   );
-
-  /** Abreviação de exibição de cada `TipoDanoEnum` no grid compacto de Resistências (glance). */
-  protected readonly abreviacaoResistencia: Record<TipoDanoEnum, string> = {
-    [TipoDanoEnum.FISICO]: 'Físico',
-    [TipoDanoEnum.BALISTICO]: 'Balíst.',
-    [TipoDanoEnum.EXPLOSAO]: 'Explos.',
-    [TipoDanoEnum.QUIMICO]: 'Químico',
-    [TipoDanoEnum.GERAL]: 'Geral',
-  };
-
-  /**
-   * Modificador BEM (`ficha-resistencia--<sufixo>`) por tipo de dano — mesma paleta `--dano-*` já
-   * usada no chip de resumo de `resultado-rolagem.component.ts` (`SUFIXO_TIPO_DANO`/`classeGrupo`),
-   * aqui aplicada à caixa de Resistência em vez do chip de rolagem.
-   */
-  private static readonly SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
-    [TipoDanoEnum.FISICO]: 'fisico',
-    [TipoDanoEnum.BALISTICO]: 'balistico',
-    [TipoDanoEnum.EXPLOSAO]: 'explosao',
-    [TipoDanoEnum.QUIMICO]: 'quimico',
-    [TipoDanoEnum.GERAL]: 'geral',
-  };
-
-  /** Classe da caixa de uma Resistência — combina o modificador base com o sufixo do tipo de dano. */
-  protected classeResistencia(tipo: TipoDanoEnum): string {
-    return `ficha-resistencia ficha-resistencia--${FichaCampanhaCard.SUFIXO_TIPO_DANO[tipo]}`;
-  }
-
-  /** Tipo de dano em digitação direta na linha de Resistências, ou `null` fora de edição. */
-  protected readonly editandoResistencia = signal<TipoDanoEnum | null>(null);
-
-  /** Abre a digitação direta da base manual de uma Resistência (clique na linha). */
-  protected editarResistencia(tipo: TipoDanoEnum): void {
-    this.editandoResistencia.set(tipo);
-  }
-
-  /** Cancela a digitação da Resistência (Escape) sem alterar. */
-  protected cancelarResistencia(): void {
-    this.editandoResistencia.set(null);
-  }
-
-  /**
-   * Confirma a base manual de Resistência digitada (Enter/blur): emite se mudou. Sem trava de
-   * faixa (liberdade total — m3-10); o guard evita o commit duplo do blur após o Enter.
-   */
-  protected confirmarResistencia(tipo: TipoDanoEnum, texto: string): void {
-    if (this.editandoResistencia() !== tipo) {
-      return;
-    }
-    this.editandoResistencia.set(null);
-    const bruto = Number.parseInt(texto, 10);
-    const manualAtual = this.resistencias().find((linha) => linha.tipo === tipo)?.manual ?? 0;
-    if (!Number.isNaN(bruto) && bruto !== manualAtual) {
-      this.ajusteResistencia.emit({ tipo, valor: bruto });
-    }
-  }
 
   /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-15). */
   protected readonly totalHabilidades = computed(() => this.dados().habilidades.length);

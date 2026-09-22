@@ -1,0 +1,226 @@
+// Silhueta de carregamento da ficha de jogador — geometria de `FichaVisualizacao`/
+// `FichaCampanhaCard` (`ficha-visualizacao.component.scss`, `.ficha-visao__linha-colunas`): mesmas
+// divisões e mesmo colapso em coluna única abaixo de `bp.tablet`, pra tela não "pular" quando o
+// conteúdo de verdade assenta. Cor/raio/pulso dos blocos vêm de `app-esqueleto`.
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: block;
+}
+
+.ficha-esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-grid);
+
+    &__linha {
+        display: flex;
+        align-items: stretch;
+        gap: var(--gap-grid);
+
+        @include bp.tablet {
+            flex-direction: column;
+        }
+    }
+
+    // Identidade + Atributos empilhadas (40% da linha na ficha completa, `ui-34`).
+    &__coluna-agente {
+        display: flex;
+        flex: 2 1 0;
+        flex-direction: column;
+        gap: var(--gap-grid);
+        min-width: 0;
+
+        @include bp.tablet {
+            flex: 1 1 auto;
+        }
+    }
+
+    // Status ocupa o resto (60%) — barra de abas + cartão de conteúdo.
+    &__coluna-status {
+        display: flex;
+        flex: 3 1 0;
+        flex-direction: column;
+        gap: var(--space-12);
+        min-width: 0;
+
+        @include bp.tablet {
+            flex: 1 1 auto;
+        }
+    }
+
+    // Card embutido: as duas colunas dividem a linha por igual, com teto na de Identidade
+    // (`.ficha-visao--compacto`).
+    &--compacto &__coluna-agente {
+        flex: 1 1 340px;
+        max-width: 500px;
+
+        @include bp.tablet {
+            flex: 1 1 auto;
+            max-width: none;
+        }
+    }
+
+    &--compacto &__coluna-status {
+        flex: 1 1 340px;
+
+        @include bp.tablet {
+            flex: 1 1 auto;
+        }
+    }
+
+    &__cartao {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        padding: var(--pad-card);
+
+        &--conteudo {
+            flex: 1;
+        }
+    }
+
+    &__cabecalho {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+    }
+
+    &__regua {
+        flex: 1;
+        min-width: 12px;
+        height: 1px;
+        background: var(--border);
+    }
+
+    &__identidade {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-16);
+    }
+
+    &__identidade-a {
+        display: flex;
+        flex: 1 1 150px;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-width: 0;
+    }
+
+    &__identidade-b {
+        display: flex;
+        flex: 1 1 200px;
+        flex-direction: column;
+        gap: var(--space-12);
+        min-width: 0;
+    }
+
+    &__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-8);
+    }
+
+    &__grade {
+        display: grid;
+        gap: var(--space-8);
+
+        &--tres {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        &--quatro {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        &--cinco {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    &__barras {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-12);
+    }
+
+    // Mesma barra de abas do card de Status real (`.ficha-status__abas`).
+    &__abas {
+        display: flex;
+        gap: 5px;
+        padding: 4px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+    }
+
+    // Geometria dos blocos — identidade (cor/raio/pulso) vem de `app-esqueleto`.
+    &__indice {
+        flex: none;
+        width: 22px;
+        height: 22px;
+    }
+
+    &__titulo-cartao {
+        flex: none;
+        width: 96px;
+        height: 14px;
+    }
+
+    &__meta {
+        flex: none;
+        width: 84px;
+        height: 12px;
+    }
+
+    &__avatar {
+        width: 150px;
+        max-width: 100%;
+        aspect-ratio: 1;
+    }
+
+    &__linha-nome {
+        width: 80%;
+        height: 18px;
+    }
+
+    &__linha-texto {
+        width: 100%;
+        height: 14px;
+    }
+
+    &__linha-curta {
+        width: 45%;
+    }
+
+    &__chip-classe {
+        width: 84px;
+        height: 22px;
+    }
+
+    &__mini {
+        height: 48px;
+    }
+
+    &__barra {
+        height: 40px;
+    }
+
+    &__atributo {
+        height: 56px;
+    }
+
+    &__aba {
+        flex: 1;
+        height: 30px;
+    }
+
+    &__bloco {
+        flex: 1;
+        min-height: 160px;
+    }
+}

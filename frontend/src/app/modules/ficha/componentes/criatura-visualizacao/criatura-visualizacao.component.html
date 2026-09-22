@@ -2,6 +2,7 @@
     class="criatura"
     [class.criatura--apertado]="apertado()"
     [style.--cor-modificador-fraca]="modificadorCorFraca()"
+    [style.--cor-ficha]="cor()"
 >
     <div class="criatura__linha-colunas">
         <!-- Coluna 1 — Identidade + Atributos fundidos (largura somada das duas colunas antigas,
@@ -54,42 +55,67 @@
                             @if (ajustavel()) {
                                 <app-valor-editavel
                                     class="criatura__designacao"
-                                    [valor]="dados().identidade.designacao"
-                                    [editando]="editando('identidade.designacao')"
+                                    [valor]="nome()"
+                                    [editando]="editando('designacao')"
                                     rotuloAria="designação"
-                                    (editarSolicitado)="editar('identidade.designacao')"
+                                    (editarSolicitado)="editar('designacao')"
                                 >
                                     <input
                                         #entradaDesignacao
                                         appAutoFocus
                                         class="criatura__designacao-entrada"
                                         type="text"
-                                        [value]="dados().identidade.designacao"
+                                        [value]="nome()"
                                         aria-label="Designação"
                                         [disabled]="!ajustavel()"
                                         (keydown.enter)="
-                                            confirmarCampoIdentidade(
-                                                'designacao',
-                                                entradaDesignacao.value
-                                            );
+                                            confirmarNome(entradaDesignacao.value);
                                             cancelarEdicao()
                                         "
                                         (keydown.escape)="cancelarEdicao()"
                                         (blur)="
-                                            confirmarCampoIdentidade(
-                                                'designacao',
-                                                entradaDesignacao.value
-                                            );
+                                            confirmarNome(entradaDesignacao.value);
                                             cancelarEdicao()
                                         "
                                     />
                                 </app-valor-editavel>
                             } @else {
                                 <h1 class="criatura__designacao">
-                                    {{ dados().identidade.designacao }}
+                                    {{ nome() }}
                                 </h1>
                             }
-                            <span class="criatura__registro">{{ registroExibido() }}</span>
+                            @if (ajustavel()) {
+                                <app-valor-editavel
+                                    class="criatura__registro"
+                                    [valor]="registroExibido()"
+                                    [editando]="editando('registro')"
+                                    [alinhamento]="'centro'"
+                                    [variante]="'herdado'"
+                                    rotuloAria="registro"
+                                    (editarSolicitado)="editar('registro')"
+                                >
+                                    <input
+                                        #entradaRegistro
+                                        appAutoFocus
+                                        class="criatura__registro-entrada"
+                                        type="text"
+                                        [value]="dados().registro ?? ''"
+                                        aria-label="Registro"
+                                        [disabled]="!ajustavel()"
+                                        (keydown.enter)="
+                                            confirmarRegistro(entradaRegistro.value);
+                                            cancelarEdicao()
+                                        "
+                                        (keydown.escape)="cancelarEdicao()"
+                                        (blur)="
+                                            confirmarRegistro(entradaRegistro.value);
+                                            cancelarEdicao()
+                                        "
+                                    />
+                                </app-valor-editavel>
+                            } @else {
+                                <span class="criatura__registro">{{ registroExibido() }}</span>
+                            }
                         </div>
 
                         @if (ajustavel()) {
@@ -618,26 +644,36 @@
                     <span class="criatura__atributos-grupo">{{ grupo.rotulo }}</span>
 
                     @if (atributosEmEdicao()) {
-                        <div class="criatura__atributos-lista">
-                            @for (campo of grupo.campos; track campo.chave) {
-                                <div class="criatura__atributo-linha">
-                                    <div class="criatura__atributo-linha-topo">
-                                        <span class="criatura__atributo-linha-nome">{{
-                                            campo.nome
-                                        }}</span>
-                                        <div class="criatura__atributo-linha-stepper">
-                                            <app-step-input
-                                                [valorExterno]="atributoRascunho(campo.chave)"
-                                                [min]="0"
-                                                [digitavel]="false"
-                                                tamanho="mini"
-                                                [ariaRotulo]="campo.nome"
-                                                (valorAlterado)="
-                                                    definirAtributoRascunho(campo.chave, $event)
-                                                "
-                                            />
-                                        </div>
-                                    </div>
+                        <!-- Reusa a mesma caixa da leitura (`.criatura__atributo-card`, mesmo racional de
+                 `.ficha-atributo`/`.ficha-atributo--edicao` na ficha de jogador) — o valor e o
+                 chip de Modificador viram stepper e seletor de 4 níveis, mas a caixa e a grade
+                 continuam as mesmas, só com `--edicao` ajustando o que muda. A grade vai a 3
+                 colunas quando cabe (pedido do autor) e cai pra 2 em containers estreitos — nunca
+                 as 5 da leitura em telas largas: o seletor de Modificador precisa de mais largura
+                 por caixa que o chip de texto da leitura. -->
+                        <div class="criatura__atributos-grade criatura__atributos-grade--edicao">
+                            @for (campo of grupo.campos; track campo.chave; let ultimo = $last) {
+                                <div
+                                    class="criatura__atributo-card criatura__atributo-card--edicao"
+                                    [class.criatura__atributo-card--sozinho]="ultimo"
+                                >
+                                    <span
+                                        class="criatura__atributo-abrev"
+                                        tabindex="0"
+                                        [appTooltip]="campo.nome"
+                                        [attr.aria-label]="campo.nome"
+                                        >{{ campo.abrev }}</span
+                                    >
+                                    <app-step-input
+                                        [valorExterno]="atributoRascunho(campo.chave)"
+                                        [min]="0"
+                                        [digitavel]="false"
+                                        tamanho="mini"
+                                        [ariaRotulo]="campo.nome"
+                                        (valorAlterado)="
+                                            definirAtributoRascunho(campo.chave, $event)
+                                        "
+                                    />
                                     <div
                                         class="criatura__atributo-modificadores"
                                         role="radiogroup"
@@ -723,7 +759,12 @@
         <!-- Coluna 2 — Status: abas Geral / Ataques / Habilidades, mesmo padrão de
          `.ficha-status__abas` de `FichaVisualizacao`. Geral fundiu as antigas Geral + Descrição
          (pedido do autor) — ver `&__info-grade` no SCSS pra como a altura foi resolvida. -->
-        <div class="criatura__coluna criatura__coluna--status">
+        <div
+            class="criatura__coluna criatura__coluna--status"
+            [class.criatura__coluna--status-rolavel]="
+                abaAtiva() === 'ataques' || abaAtiva() === 'habilidades'
+            "
+        >
             <app-abas rotulo="Abas de status da criatura" (navegou)="aoNavegarAba($event)">
                 <button
                     app-aba
@@ -928,12 +969,13 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'terrestre',
-                                                        entradaDeslTerrestre.valueAsNumber
-                                                    );
-                                                    cancelarEdicao()
+                                                        entradaDeslTerrestre.valueAsNumber,
+                                                        caixaDeslTerrestre
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">
@@ -1003,12 +1045,14 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'voador',
-                                                        entradaDeslVoador.valueAsNumber || undefined
-                                                    );
-                                                    cancelarEdicao()
+                                                        entradaDeslVoador.valueAsNumber ||
+                                                            undefined,
+                                                        caixaDeslVoador
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">
@@ -1081,13 +1125,14 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'aquatico',
                                                         entradaDeslAquatico.valueAsNumber ||
-                                                            undefined
-                                                    );
-                                                    cancelarEdicao()
+                                                            undefined,
+                                                        caixaDeslAquatico
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">
@@ -1162,13 +1207,14 @@
                                                     cancelarEdicao()
                                                 "
                                                 (keydown.escape)="cancelarEdicao()"
-                                                (blur)="
-                                                    confirmarCampoDeslocamento(
+                                                (focusout)="
+                                                    confirmarSaidaCampoDeslocamento(
+                                                        $event,
                                                         'sobrenatural',
                                                         entradaDeslSobrenatural.valueAsNumber ||
-                                                            undefined
-                                                    );
-                                                    cancelarEdicao()
+                                                            undefined,
+                                                        caixaDeslSobrenatural
+                                                    )
                                                 "
                                             />
                                             <label class="criatura__deslocamento-indeterminado">
@@ -1608,6 +1654,14 @@
                         id="criatura-painel-ataques"
                         aria-labelledby="criatura-aba-ataques"
                     >
+                        <app-rolagem-rapida
+                            [rolagemOculta]="rolagemOculta()"
+                            [atributos]="dados().atributos"
+                            [podeRolar]="ajustavel()"
+                            [cor]="cor()"
+                            [restringirMontadorATester]="true"
+                            (rolagemFeita)="aoRolagemRapidaFeita($event)"
+                        />
                         <app-criatura-ataque-lista
                             [itens]="dados().ataques"
                             [editavel]="ajustavel()"
@@ -1665,16 +1719,33 @@
     >
         <div class="criatura__anotacoes-caixa criatura__anotacoes-caixa--painel">
             @if (editando("anotacoes")) {
-                <textarea
-                    #entradaAnotacoes
-                    appAutoFocus
+                <app-editor-markdown
                     class="criatura__anotacoes"
-                    aria-label="Anotações"
-                    placeholder="Escreva suas anotações aqui…"
-                    [value]="dados().anotacoes ?? ''"
+                    [valor]="rascunhoAnotacoes()"
+                    [rotulo]="'Anotações'"
+                    (valorChange)="rascunhoAnotacoes.set($event)"
                     (keydown.escape)="cancelarEdicao()"
-                    (blur)="confirmarAnotacoes(entradaAnotacoes.value); cancelarEdicao()"
-                ></textarea>
+                />
+                <div class="criatura__anotacoes-acoes">
+                    <button
+                        app-botao
+                        variante="primario"
+                        tamanho="pequeno"
+                        type="button"
+                        (click)="confirmarAnotacoes(rascunhoAnotacoes()); cancelarEdicao()"
+                    >
+                        Salvar
+                    </button>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        tamanho="pequeno"
+                        type="button"
+                        (click)="cancelarEdicao()"
+                    >
+                        Cancelar
+                    </button>
+                </div>
             } @else {
                 <button
                     app-botao
@@ -1686,7 +1757,12 @@
                     Editar anotações
                 </button>
                 @if (dados().anotacoes) {
-                    <p class="criatura__info-texto">{{ dados().anotacoes }}</p>
+                    <app-editor-markdown
+                        class="criatura__anotacoes"
+                        [valor]="dados().anotacoes ?? ''"
+                        [somenteLeitura]="true"
+                        [rotulo]="'Anotações'"
+                    />
                 } @else {
                     <p class="criatura__vazio">Sem anotações.</p>
                 }

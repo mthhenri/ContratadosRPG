@@ -36,6 +36,8 @@ import { Component, input } from '@angular/core';
  * Anotações da própria ficha (achado ao vivo pelo autor: os dois itens ficavam indistinguíveis
  * lado a lado no menu), distinto também de `documentos` (livro aberto, reservado ao leitor global
  * de Sistema/Guia do Mestre).
+ * `dados`, dois d20 sobrepostos (ui-37): "Rolar iniciativas" na condução de turno do mestre.
+ * `info`, círculo com "i": mostra/oculta o texto da missão no cabeçalho da campanha do jogador.
  */
 export type IconeNome =
   | 'agente'
@@ -64,6 +66,7 @@ export type IconeNome =
   | 'sair'
   | 'entrar'
   | 'chevron'
+  | 'chevron-direita'
   | 'copiar'
   | 'check'
   | 'mais'
@@ -75,13 +78,15 @@ export type IconeNome =
   | 'excluir'
   | 'olho'
   | 'olho-fechado'
+  | 'olho-rolagens'
+  | 'olho-fechado-rolagens'
+  | 'olho-membros'
   | 'tema'
   | 'visao-geral'
   | 'combate'
   | 'inventario'
   | 'habilidades'
   | 'sanidade'
-  | 'rolagens'
   | 'anotacoes'
   | 'vestida'
   | 'guardada'
@@ -91,6 +96,8 @@ export type IconeNome =
   | 'link'
   | 'chama'
   | 'dado'
+  | 'dado-mais'
+  | 'dados'
   | 'morrendo'
   | 'machucado'
   | 'inconsciente'
@@ -99,8 +106,10 @@ export type IconeNome =
   | 'camadas'
   | 'teto'
   | 'busca'
+  | 'info'
   | 'duplicar'
   | 'd20'
+  | 'd3'
   | 'd4'
   | 'd6'
   | 'd8'

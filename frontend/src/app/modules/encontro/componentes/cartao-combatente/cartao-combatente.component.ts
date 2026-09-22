@@ -1,8 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 
 import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/encontro';
-import { CadenciaEnum, CombatenteOrigemEnum, NivelAmeacaEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
-import { calcularTurnosPorRodada } from '@contratados-rpg/shared/regras/encontro';
+import { CombatenteOrigemEnum, NivelAmeacaEnum, TipoDanoEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { FocoImagem } from '../../../../shared/foco-imagem.directive';
@@ -13,18 +12,13 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
-import { rotuloClasseCompleto } from '../../../ficha/rotulos-ficha';
-
-/**
- * Uma defesa exibida na faixa do cartão — só as que o combatente realmente possui. O `rotuloCurto`
- * é a forma que o mockup mobile usa (`Def · Esq · Blo · Con`); os dois viajam juntos porque a
- * troca é de **largura de tela**, decidida no CSS, e não de estado do componente.
- */
-interface DefesaExibidaDto {
-  readonly rotulo: string;
-  readonly rotuloCurto: string;
-  readonly valor: number;
-}
+import {
+  combatenteTemIdentidadeVisivel,
+  defesasDoCombatente,
+  linhaOrigemDoCombatente,
+  turnosPorRodadaDoCombatente,
+  type DefesaExibidaDto,
+} from '../../encontro-leitura.util';
 
 /** Abreviação de cada `TipoDanoEnum` na faixa compacta de resistências do cartão (m7-17). */
 const ABREVIACAO_RESISTENCIA: Record<TipoDanoEnum, string> = {
@@ -133,12 +127,7 @@ export class CartaoCombatente {
   protected readonly CombatenteOrigemEnum = CombatenteOrigemEnum;
 
   /** Quantos turnos ele tem na rodada — o motor puro decide, não este componente. */
-  protected readonly turnosPorRodada = computed(() => {
-    const combatente = this.combatente();
-    return combatente.cadencia === CadenciaEnum.FRENETICA
-      ? Math.max(4, combatente.turnosPorRodada ?? 4)
-      : calcularTurnosPorRodada(combatente.cadencia);
-  });
+  protected readonly turnosPorRodada = computed(() => turnosPorRodadaDoCombatente(this.combatente()));
 
   /**
    * `true` quando quem está olhando pode ver a ficha deste combatente. O mestre recebe sempre
@@ -157,8 +146,8 @@ export class CartaoCombatente {
    * encontro pra qualquer ficha não oculta. O backend só popula `donoNome` nesse caso; a ausência
    * já diz que a ficha está oculta ou que o combatente não é um agente.
    */
-  protected readonly identidadeVisivel = computed(
-    () => this.ehAgente() && this.combatente().donoNome !== null,
+  protected readonly identidadeVisivel = computed(() =>
+    combatenteTemIdentidadeVisivel(this.combatente()),
   );
 
   /**
@@ -168,30 +157,7 @@ export class CartaoCombatente {
    * (`cadenciaRotulo` abaixo) saiu daqui na `ui-16`: virou chip ao lado da linha, em vez de sufixo
    * concatenado na mesma string.
    */
-  protected readonly linhaOrigem = computed<string>(() => {
-    const combatenteAtual = this.combatente();
-    // A carteirinha do agente vale tanto revelado quanto só-identidade — as duas populam
-    // `donoNome` do mesmo jeito (m7-16); só os números diferem, e esta linha não os usa.
-    if (this.identidadeVisivel()) {
-      const classeLabel = combatenteAtual.classe
-        ? rotuloClasseCompleto(combatenteAtual.classe, combatenteAtual.arquetipo)
-        : 'Agente';
-      return `${combatenteAtual.donoNome}\n${classeLabel}`;
-    }
-    if (!this.revelado()) {
-      return 'Em campo';
-    }
-    if (combatenteAtual.origem === CombatenteOrigemEnum.AVULSO) {
-      return 'Digitado nesta sessão';
-    }
-    if (combatenteAtual.tipoFicha === TipoFichaEnum.CRIATURA) {
-      return 'Criatura da campanha';
-    }
-    if (combatenteAtual.tipoFicha === TipoFichaEnum.JOGADOR) {
-      return 'Agente';
-    }
-    return 'Adicionado pelo mestre';
-  });
+  protected readonly linhaOrigem = computed<string>(() => linhaOrigemDoCombatente(this.combatente()));
 
   /**
    * Chip "Cadência N" ao lado da linha de origem (`ui-16` — antes era sufixo de texto embutido em
@@ -249,18 +215,9 @@ export class CartaoCombatente {
    * Contra nulos (ela não reage — a regra vence o mockup), então a faixa dela sai só com Defesa;
    * o avulso, sem nenhuma, e a faixa não é desenhada.
    */
-  protected readonly defesas = computed<readonly DefesaExibidaDto[]>(() => {
-    const combatenteAtual = this.combatente();
-    const candidatas: readonly (readonly [string, string, number | null])[] = [
-      ['Defesa', 'Def', combatenteAtual.defesa],
-      ['Esquiva', 'Esq', combatenteAtual.esquiva],
-      ['Bloqueio', 'Blo', combatenteAtual.bloqueio],
-      ['Contra', 'Con', combatenteAtual.contraAtaque],
-    ];
-    return candidatas
-      .filter((trio): trio is readonly [string, string, number] => trio[2] !== null)
-      .map(([rotulo, rotuloCurto, valor]) => ({ rotulo, rotuloCurto, valor }));
-  });
+  protected readonly defesas = computed<readonly DefesaExibidaDto[]>(() =>
+    defesasDoCombatente(this.combatente()),
+  );
 
   /**
    * Resistência a dano por tipo (m7-17), mesmo total que a ficha mostra na aba Combate — o
@@ -282,6 +239,18 @@ export class CartaoCombatente {
 
   /** `true` quando o combatente tem Energia — agente e NPC têm; criatura e avulso, não. */
   protected readonly temEnergia = computed(() => this.combatente().energiaMaxima !== null);
+
+  /**
+   * Habilita os steppers `−`/`+` de Vida/Energia — só o avulso, que não tem ficha própria pra
+   * abrir e editar lá (pedido do autor: pra quem tem ficha, ajustar Vida/Energia direto no cartão
+   * da Iniciativa duplicava um caminho de edição e arriscava divergir do valor real da ficha;
+   * "Receber dano" continua para todos, é fluxo de combate, não micro-ajuste). O gatilho mobile
+   * "Ajustar"/"Fechar" (`alternarAjuste`) só existe para revelar esses steppers, então segue o
+   * mesmo gate.
+   */
+  protected readonly podeAjustarVidaEnergia = computed(
+    () => this.podeAjustar() && this.combatente().origem === CombatenteOrigemEnum.AVULSO,
+  );
 
   /**
    * Rodapé narrativo do cartão: as condições da ficha que quem joga alternou à mão

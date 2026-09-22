@@ -97,6 +97,24 @@ rápido). `[aria-label="Vida atual"]` **só existe** no modo de digitação.
 **Provar "sem recarregar":** plante `window.__sentinela` antes e confira depois — se a página
 recarregou, a variável some.
 
+## Vários navegadores e barras de rolagem
+
+Bug de CSS que depende do navegador (scrollbar, `contain`, `@supports`) pede os três do autor: Chrome,
+Edge e Firefox. Nenhum é instalado "de fábrica" no Playwright — use o que há:
+
+- **Chrome:** o `chromium` do Playwright (mesmo motor do Chrome) — `chromium.launch({ ignoreDefaultArgs:
+  ['--hide-scrollbars'] })`. Em headless o Playwright **esconde as barras**; sem esse argumento a
+  espessura medida é 0 e o defeito de scrollbar não aparece.
+- **Edge:** `chromium.launch({ channel: 'msedge', ignoreDefaultArgs: ['--hide-scrollbars'] })` (usa o
+  Edge instalado em `Program Files (x86)/Microsoft/Edge`).
+- **Firefox:** `npx playwright install firefox` (uma vez) e `firefox.launch({ headless: false })` —
+  o headless reporta `scrollbar-width: none`. As barras do Firefox no Windows são *overlay* (espessura
+  0 no layout): meça `getComputedStyle(el).scrollbarWidth/Color` e capture depois de um `mouse.wheel`.
+- **Medir a barra:** injete um `div` com `overflow: auto` na página real e leia
+  `offsetWidth - clientWidth` (10 = `::-webkit-scrollbar` do tema; 15 = barra nativa) — não confie só no
+  CSS declarado: no Chromium, `scrollbar-color`/`scrollbar-width` ≠ `auto` **desligam** o `::-webkit-scrollbar`
+  (ver `docs/design/DESIGN.md`, "Scrollbar").
+
 ## Tempo real (WebSocket)
 
 - O cliente conecta em `environment.apiBase || undefined` (mesma origem em dev, via proxy).

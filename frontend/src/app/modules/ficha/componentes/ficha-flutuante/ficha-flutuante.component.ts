@@ -20,7 +20,7 @@ const BREAKPOINT_MOBILE = 560;
  * arraste, posição, empilhamento de z-index, minimizar e fechar vêm todos do primitivo, mesma
  * receita de `leitor-documentos`/`caderno-flutuante`. Este componente só cuida do conteúdo e do
  * que continua fora do escopo do primitivo: redimensionar por arraste e maximizar. Quem dispara é
- * a página hospedeira (`PainelEncontro`), chamando `abrir()` via referência de template
+ * a página hospedeira (`PainelEncontroMestre`/`PainelEncontroJogador`), chamando `abrir()` via referência de template
  * (`#fichaFlutuante`) a partir do cartão do combatente ou do "Ver ficha" das Anotações.
  *
  * O corpo (busca + edição da ficha) mora no componente filho `FichaFlutuanteConteudo`, recriado a

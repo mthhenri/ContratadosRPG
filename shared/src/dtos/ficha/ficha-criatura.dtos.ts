@@ -45,6 +45,12 @@ import type { FichaAtributosDto } from './ficha.dtos';
  */
 export interface FichaCriaturaDadosDto {
   readonly identidade: FichaCriaturaIdentidadeDto;
+  /**
+   * Texto livre pro mestre catalogar a criatura no universo (ex.: "SCP-049") — opcional, sem
+   * formato imposto. Mesmo padrão de `FichaJogadorDadosDto.contrato`, mas sem rótulo fixo:
+   * o valor exibido é o texto inteiro, não um sufixo de "REGISTRO — ".
+   */
+  readonly registro?: string;
   /** Nível de Ameaça — impacto real da criatura livre por 24h, não dificuldade de combate. */
   readonly na: NivelAmeacaEnum;
   /** Valor de Desafio — meta de design definida como alvo antes de qualquer outro cálculo. */
@@ -105,8 +111,14 @@ export interface FichaCriaturaDadosDto {
  * a criatura precisa existir como conceito coerente primeiro.
  */
 export interface FichaCriaturaIdentidadeDto {
-  /** Nome da criação — algo lembrável, não um código técnico. */
-  readonly designacao: string;
+  /**
+   * Designação (nome da criação, "algo lembrável, não um código técnico") não tem campo aqui —
+   * é `ficha.nome` (coluna relacional), editado sob o rótulo "Designação" em `CriaturaVisualizacao`.
+   * Antes desta task havia um campo `designacao` próprio, sincronizado com `ficha.nome` só no
+   * instante da criação (`CriarCriatura`) e nunca mais depois — editar um sem o outro os
+   * divergia (achado ao vivo, screenshot do autor). Fonte única agora, mesmo padrão de
+   * `FichaVisualizacao`/`ajusteNome` (ficha de jogador nunca teve essa duplicação).
+   */
   readonly origem: OrigemCriaturaEnum;
   /** "Linha de Conceito" — uma única frase, o gancho de criação que guia tudo depois. */
   readonly conceito: string;

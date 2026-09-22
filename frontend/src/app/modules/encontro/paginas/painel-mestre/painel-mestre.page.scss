@@ -1,0 +1,417 @@
+// Visão do mestre da tela "Iniciativa" (m7-05, ui-37/ui-38) — alvo de fidelidade: POC "Tela de
+// Iniciativa" v9 e o análogo `detalhe-mestre`. A casca comum (coluna + conteúdo, cabeçalho, linha
+// trilha | rolagens | palco, divisor de seção, grade) vem do parcial compartilhado com a visão do
+// jogador; aqui ficam a montagem, o histórico, o Novo combate e o esqueleto de carregamento. Só
+// tokens do tema "Terminal de Contenção" (proibição #29); os controles são primitivos de
+// `shared/ui/`.
+
+@use "tema/breakpoints" as bp;
+@use "../casca-iniciativa" as casca;
+
+@include casca.casca("iniciativa-mestre");
+@include casca.grade;
+
+// ── Só do mestre (ui-37) ────────────────────────────────────────────────────
+.iniciativa-mestre {
+    // Âncora do menu de encerrados no desktop; no mobile o cabeçalho assume (ver a casca).
+    &__historico {
+        position: relative;
+
+        @include bp.mobile {
+            position: static;
+        }
+    }
+
+    // Sem combate (D): a lista de combates anteriores vem logo abaixo do estado vazio.
+    &__anteriores {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+    }
+
+    // Ficha resumida de quem age (esquerda, esticada até o fim) + todos os combatentes (direita).
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: stretch;
+        gap: var(--space-16);
+
+        @include bp.tablet {
+            flex-direction: column;
+        }
+    }
+
+    &__resumo {
+        flex: none;
+        width: 280px;
+        display: flex;
+
+        @include bp.tablet {
+            width: auto;
+        }
+
+        app-resumo-combatente,
+        app-estado-vazio {
+            flex: 1;
+            min-width: 0;
+        }
+    }
+}
+
+// Os botões usam `app-botao`; só a altura de toque é responsabilidade do painel.
+.adicionar__acao {
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
+}
+
+.adicionar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    padding: var(--pad-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+
+    &__campo {
+        flex: 1 1 200px;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+
+        &--curto {
+            flex: 0 1 130px;
+        }
+        &--identidade {
+            flex: 0 1 118px;
+        }
+        &--imagem {
+            position: relative;
+            flex: 1 1 190px;
+            cursor: pointer;
+        }
+    }
+
+    &__identidade {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__preview {
+        width: 44px;
+        height: 44px;
+        overflow: hidden;
+        flex: none;
+        background-color: color-mix(in srgb, var(--cor-avulso) 14%, var(--surface));
+        background-image: repeating-linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--cor-avulso) 30%, transparent) 0 3px,
+            transparent 3px 9px
+        );
+        border: 1px solid var(--cor-avulso);
+        border-radius: var(--radius-control);
+    }
+
+    &__preview-imagem {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+    }
+
+    &__cor {
+        width: 44px;
+        height: 44px;
+        padding: 3px;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        cursor: pointer;
+    }
+
+    &__arquivo {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        color: var(--text-dim);
+    }
+
+    &__arquivo-entrada {
+        position: absolute;
+        inset: 20px 0 0;
+        width: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__acao {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+}
+
+// Controle compacto do painel: sem rótulo próprio, por isso não é um `app-campo`.
+.painel__controle {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    outline: none;
+
+    &:focus {
+        border-color: var(--accent-border);
+    }
+
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
+}
+
+// Dialog "Novo combate" (ui-38) — só o layout do formulário; caixa, cabeçalho e foco são do `app-modal`.
+.novo-combate {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+
+    &__ajuda {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+
+    // Invólucro, rótulo e erro vêm do `app-campo`; o controle segue a receita de input do login.
+    &__entrada {
+        width: 100%;
+        padding: 10px 12px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__acoes {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-8);
+
+        @include bp.mobile {
+            flex-direction: column-reverse;
+        }
+    }
+
+    &__acao {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}
+
+// ── Histórico de encontros (complemento da m7-06; gatilho no cabeçalho) ──────
+// Combates encerrados (ui-38): menu ancorado no gatilho do cabeçalho (com combate) e cartões no
+// estado vazio (sem combate). Só o layout; nomes, meta e seta são compartilhados (`#linhaHistorico`).
+.historico {
+    // Menu do cabeçalho — mesmo desenho do dropdown de perfil da topbar (superfície, borda forte,
+    // sombra), com a seta apontando o gatilho.
+    &__menu {
+        position: absolute;
+        z-index: 30;
+        top: calc(100% + var(--space-8));
+        right: 0;
+        width: min(400px, calc(100vw - 2 * var(--space-16)));
+        max-height: min(60vh, 420px);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-card);
+        box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+
+        @include bp.mobile {
+            // Sem espaço para ancorar à direita do gatilho: ocupa a largura do cabeçalho.
+            left: 0;
+            right: 0;
+            width: auto;
+        }
+    }
+
+    &__legenda {
+        padding: 10px 14px 8px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__item,
+    &__card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-12);
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__item {
+        padding: 9px 14px;
+        background: transparent;
+        border: 0;
+        border-top: 1px solid var(--border);
+
+        &:hover {
+            background: var(--surface-2);
+        }
+    }
+
+    // Cartões do estado vazio (D): uma grade de linhas do mesmo desenho, em cartão.
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: var(--space-12);
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__card {
+        padding: var(--space-12) 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+
+        &:hover {
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
+    }
+
+    &__texto {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__nome {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__meta {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-mute);
+    }
+
+    // O glifo `chevron` aponta para baixo; girado, indica "abrir".
+    &__seta {
+        flex: none;
+        color: var(--text-mute);
+        transform: rotate(-90deg);
+    }
+
+    &__item:hover &__seta,
+    &__card:hover &__seta {
+        color: var(--accent);
+    }
+}
+
+// Esqueleto de carregamento da visão do mestre — reaproveita a casca real (`__conteudo`,
+// `__cabecalho`, `__linha`, `__trilha`, `__rolagens`, `__palco`, `__corpo`, `__resumo`, `__todos`,
+// `.grade--palco`); aqui só a geometria de cada bloco. A identidade (cor/raio/pulso) vem de
+// `app-esqueleto`. Trilha e Rolagens (as duas colunas laterais) vêm do parcial compartilhado.
+@include casca.esqueleto-laterais("iniciativa-mestre");
+
+.iniciativa-mestre {
+    &__esqueleto-acao {
+        flex: none;
+        height: 44px;
+
+        @include bp.mobile {
+            flex: 1 1 0;
+            min-width: 0;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    &__esqueleto-voltar {
+        flex: none;
+        width: 32px;
+        height: 32px;
+    }
+
+    &__esqueleto-titulo {
+        flex: none;
+        width: 260px;
+        max-width: 50%;
+        height: 22px;
+    }
+
+    &__esqueleto-conducao {
+        flex: none;
+        height: 66px;
+    }
+
+    &__esqueleto-resumo {
+        flex: 1;
+        min-height: 380px;
+    }
+
+    &__esqueleto-combatente {
+        height: 140px;
+    }
+}

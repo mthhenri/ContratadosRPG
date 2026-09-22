@@ -141,9 +141,17 @@ export class InventarioEsquadrao {
   protected readonly itensCatalogo = computed(() => {
     const termo = this.termoBusca().trim().toLocaleLowerCase('pt-BR');
     const itens = CATALOGO_ITENS[this.categoriaSelecionada()] ?? [];
-    return termo
-      ? itens.filter((item) => `${item.nome} ${item.descricao ?? ''}`.toLocaleLowerCase('pt-BR').includes(termo))
-      : itens;
+    if (!termo) {
+      return itens;
+    }
+    // Nome tem prioridade: descrições costumam citar o nome de outro item do catálogo (ex.:
+    // "Energético"/"Energético Concentrado" se referenciam), então buscar por um nome exato não
+    // pode trazer o item vizinho junto. Só cai pra descrição quando nenhum nome bate (P-020).
+    const porNome = itens.filter((item) => item.nome.toLocaleLowerCase('pt-BR').includes(termo));
+    if (porNome.length) {
+      return porNome;
+    }
+    return itens.filter((item) => (item.descricao ?? '').toLocaleLowerCase('pt-BR').includes(termo));
   });
   protected readonly modificacoesEmConfiguracao = computed(() =>
     this.configuracaoModificacoes()?.item.modificacoes ?? [],

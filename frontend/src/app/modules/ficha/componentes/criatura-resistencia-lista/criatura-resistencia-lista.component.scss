@@ -233,14 +233,6 @@
             border-color: var(--accent-border);
         }
     }
-    // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
-    // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
-    &__acao--confirmar {
-        width: auto;
-        padding: 0 8px;
-        color: var(--vida);
-    }
-
     // --- Formulário (mesmo nos dois modos): Tipo, Subtipo e Valor em uma linha compacta. ---
     &__form {
         display: grid;

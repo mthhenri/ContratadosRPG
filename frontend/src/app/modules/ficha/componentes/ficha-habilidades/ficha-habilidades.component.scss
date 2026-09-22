@@ -33,12 +33,12 @@
         color: var(--text);
     }
 
-    // Resumo por categoria (Arquétipo/Classe/Geral/Outra classe) — acima da busca. Cada contador é
+    // Resumo por categoria (Arquétipo/Classe/Geral/Outra classe/Outras) — acima da busca. Cada contador é
     // um botão cumulativo (m3-48): clique soma/tira o tipo do filtro (clique direito só tira — ver
     // `removerFiltroPorContexto`); o glow do tipo ativo usa a MESMA cor semântica do próprio tipo
     // (`currentColor`, herdada do modificador de cor abaixo), não um accent uniforme — os 4
-    // modificadores usam os 4 tokens semânticos do tema (positive/warning/energy/accent), sem
-    // inventar cor nova (proibição #29).
+    // modificadores de tipo usam os 4 tokens semânticos do tema (positive/warning/energy/accent) e o
+    // de Outras usa o neutro `--text`, sem inventar cor nova (proibição #29).
     &__resumo {
         display: flex;
         flex-wrap: wrap;
@@ -83,8 +83,15 @@
             color: var(--accent);
         }
 
+        // Outras (Personalidade/Especialidade/Civil/Única): neutro do tema — `--text` é quase-branco
+        // no escuro e quase-preto no claro (o `TemaService` inverte o token), então o contador acompanha
+        // a base sem hex nem token novo. `--contrast` não serve: é fixo e sumiria sobre o fundo claro.
+        &--outras {
+            color: var(--text);
+        }
+
         // Tipo ativo: glow na própria cor do tipo (currentColor dos modificadores acima) — Arquétipo
-        // brilha verde, Classe âmbar, Geral azul, Outra classe/arquétipo accent.
+        // brilha verde, Classe âmbar, Geral azul, Outra classe/arquétipo accent, Outras branco/preto.
         &--ativo {
             background: color-mix(in srgb, currentColor 16%, transparent);
             border-color: currentColor;
@@ -103,7 +110,8 @@
         .habilidades__resumo-item--arquetipo &,
         .habilidades__resumo-item--classe &,
         .habilidades__resumo-item--geral &,
-        .habilidades__resumo-item--outra-classe & {
+        .habilidades__resumo-item--outra-classe &,
+        .habilidades__resumo-item--outras & {
             color: currentColor;
             opacity: 0.75;
         }
@@ -123,6 +131,7 @@
         .habilidades__resumo-item--classe &,
         .habilidades__resumo-item--geral &,
         .habilidades__resumo-item--outra-classe &,
+        .habilidades__resumo-item--outras &,
         .habilidades__resumo-item--ativo & {
             color: currentColor;
         }

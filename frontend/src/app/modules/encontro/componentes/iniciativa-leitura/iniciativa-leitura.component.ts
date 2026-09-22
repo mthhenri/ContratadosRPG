@@ -24,7 +24,7 @@ import { CartaoCombatente } from '../cartao-combatente/cartao-combatente.compone
  * (`m8-espectadores-campanha`): as duas só têm o `EncontroRecuperadoDto` já redigido pelo backend
  * (`EncontroService.recuperarEncontroAtivoParaEspectador`/`recuperarEncontroAtivoParaAlvo`, nunca
  * o recorte de quem está de fato olhando) — este componente só apresenta o que chegou. A mesma
- * derivação de apresentação de `painel-encontro.page.ts` (`encontro-leitura.util.ts`), nunca uma
+ * derivação de apresentação da tela "Iniciativa" (`EncontroPainelDadosService`, `encontro-leitura.util.ts`), nunca uma
  * segunda leitura da ordem/Cadência.
  *
  * **Sem mutação, de verdade — não só na aparência.** `CartaoCombatente` só muda algo através dos

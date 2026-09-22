@@ -1,17 +1,75 @@
 @if (dados.carregando()) {
-<div class="detalhe-mestre__esqueleto" role="status" aria-label="Carregando campanha">
-    <div class="detalhe-mestre__esqueleto-coluna"></div>
-    <div class="detalhe-mestre__esqueleto-corpo">
-        <header class="detalhe-mestre__cabecalho">
-            <app-esqueleto class="detalhe-mestre__esqueleto-titulo" />
-        </header>
-        <ul class="detalhe-mestre__esquadrao-grid">
+<!-- Esqueleto de carregamento: reaproveita a casca real (a própria `app-coluna-acoes` com o mesmo
+     `id`, então nasce já retraída/expandida como o autor deixou, e vira barra de rodapé no mobile
+     sozinha) e as classes BEM reais de cabeçalho/corpo/seções — a silhueta acompanha o layout de
+     verdade sem manutenção paralela quando ele mudar. Só a geometria de cada bloco é própria. -->
+<app-coluna-acoes id="campanha-detalhe-mestre" rotulo="Ações da campanha">
+    @for (i of [0, 1, 2, 3, 4, 5, 6]; track i) {
+    <app-esqueleto class="detalhe-mestre__esqueleto-acao" />
+    }
+</app-coluna-acoes>
+
+<div class="detalhe-mestre__conteudo" role="status" aria-label="Carregando campanha">
+    <header class="detalhe-mestre__cabecalho">
+        <app-esqueleto class="detalhe-mestre__esqueleto-voltar" />
+        <span class="detalhe-mestre__cabecalho-indice">//</span>
+        <app-esqueleto class="detalhe-mestre__esqueleto-titulo" />
+        <app-esqueleto class="detalhe-mestre__esqueleto-estado" />
+        <span class="detalhe-mestre__cabecalho-regua"></span>
+    </header>
+
+    <div class="detalhe-mestre__corpo">
+        <section class="detalhe-mestre__esquadrao">
+            <header class="detalhe-mestre__secao">
+                <h2 class="detalhe-mestre__secao-titulo">Esquadrão</h2>
+                <span class="detalhe-mestre__secao-regua"></span>
+                <app-esqueleto class="detalhe-mestre__esqueleto-botao" />
+                <app-esqueleto class="detalhe-mestre__esqueleto-botao" />
+            </header>
+            <ul class="detalhe-mestre__esquadrao-grid">
+                @for (i of [0, 1, 2]; track i) {
+                <li class="detalhe-mestre__esqueleto-card">
+                    <div class="detalhe-mestre__esqueleto-card-topo">
+                        <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
+                        <div class="detalhe-mestre__esqueleto-card-texto">
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-nome" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
+                        </div>
+                    </div>
+                    <app-esqueleto class="detalhe-mestre__esqueleto-rodape" />
+                </li>
+                }
+            </ul>
+
+            <header class="detalhe-mestre__secao detalhe-mestre__secao--criaturas">
+                <h2 class="detalhe-mestre__secao-titulo">Criaturas</h2>
+                <span class="detalhe-mestre__secao-regua"></span>
+            </header>
+            <ul class="detalhe-mestre__esquadrao-grid">
+                <li class="detalhe-mestre__esqueleto-card">
+                    <div class="detalhe-mestre__esqueleto-card-topo">
+                        <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
+                        <div class="detalhe-mestre__esqueleto-card-texto">
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-nome" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-linha-curta" />
+                            <app-esqueleto class="detalhe-mestre__esqueleto-barra" />
+                        </div>
+                    </div>
+                    <app-esqueleto class="detalhe-mestre__esqueleto-rodape" />
+                </li>
+            </ul>
+        </section>
+
+        <aside class="detalhe-mestre__painel-lateral">
+            <app-esqueleto class="detalhe-mestre__esqueleto-segmentado" />
             @for (i of [0, 1, 2]; track i) {
-            <li class="detalhe-mestre__esqueleto-card">
-                <app-esqueleto class="detalhe-mestre__esqueleto-avatar" />
-            </li>
+            <app-esqueleto class="detalhe-mestre__rolagens-esqueleto-item" />
             }
-        </ul>
+        </aside>
     </div>
 </div>
 } @else if (dados.campanha(); as campanhaAtual) {
@@ -21,6 +79,7 @@
         app-coluna-acoes-item
         icone="membros"
         appTooltip="Membros"
+        [pressionado]="dialogMembrosAberta()"
         (click)="dialogMembrosAberta.set(true)"
     >
         Membros
@@ -37,6 +96,7 @@
         app-coluna-acoes-item
         icone="convite"
         appTooltip="Convites"
+        [pressionado]="dialogConvitesAberta()"
         (click)="dialogConvitesAberta.set(true)"
     >
         Convites
@@ -46,6 +106,7 @@
         app-coluna-acoes-item
         icone="editar"
         appTooltip="Editar campanha"
+        [pressionado]="dialogEdicaoAberta()"
         (click)="abrirEdicao()"
     >
         Editar
@@ -54,6 +115,7 @@
         app-coluna-acoes-item
         icone="excluir"
         appTooltip="Excluir campanha"
+        [pressionado]="confirmandoExclusao()"
         (click)="pedirExclusao()"
     >
         Excluir
@@ -63,11 +125,12 @@
         app-coluna-acoes-item
         icone="calculadora"
         appTooltip="Calculadora"
+        [pressionado]="calculadoraAberta()"
         (click)="alternarCalculadora()"
     >
         Calculadora
     </button>
-    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" (click)="alternarCaderno()">
+    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" [pressionado]="cadernoAberto()" (click)="alternarCaderno()">
         Caderno
     </button>
 </app-coluna-acoes>
@@ -149,7 +212,7 @@
                         (avatarEntrou)="agendarPreviewAvatar($event, ficha.imagemUrl)"
                         (avatarSaiu)="cancelarPreviewAvatar()"
                         (abrirFicha)="abrirFichaFlutuante(ficha, TipoFichaEnum.JOGADOR)"
-                        (alternarMenu)="alternarMenuFicha(ficha, $event)"
+                        (alternarMenu)="alternarMenuFicha(ficha, TipoFichaEnum.JOGADOR, $event)"
                     />
                 </li>
                 }
@@ -170,48 +233,13 @@
             <ul class="detalhe-mestre__esquadrao-grid" appOverflowFade>
                 @for (criatura of criaturasEsquadrao(); track criatura.id) {
                 <li>
-                    <div
-                        class="detalhe-mestre__criatura-card"
-                        (dblclick)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
-                    >
-                        <div class="detalhe-mestre__criatura-cabecalho">
-                            <span
-                                class="detalhe-mestre__criatura-avatar"
-                                aria-hidden="true"
-                                [style.--cor-ficha]="criatura.cor"
-                            >
-                                @if (criatura.imagemUrl; as urlImagem) {
-                                <img [src]="urlImagem" alt="" />
-                                }
-                                <button
-                                    app-botao-icone
-                                    [redondo]="true"
-                                    tamanho="mini"
-                                    type="button"
-                                    class="detalhe-mestre__criatura-abrir"
-                                    [attr.aria-label]="'Abrir ficha de ' + criatura.nome"
-                                    [appTooltip]="'Abrir ficha'"
-                                    (click)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
-                                >
-                                    <app-icone nome="visao-geral" />
-                                </button>
-                            </span>
-                            <div class="detalhe-mestre__criatura-corpo">
-                                <span class="detalhe-mestre__criatura-dono">Ameaça</span>
-                                <span class="detalhe-mestre__criatura-nome"
-                                    >{{ criatura.nome }}</span
-                                >
-                                <span class="detalhe-mestre__criatura-meta"
-                                    >NA {{ criatura.naTexto }}</span
-                                >
-                                <span class="detalhe-mestre__criatura-vitais">
-                                    Vida {{ criatura.vidaAtual }}/{{ criatura.vidaMaxima ?? '—' }}
-                                    @if (criatura.defesa !== undefined) { · Defesa {{
-                                    criatura.defesa }} }
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    <app-criatura-esquadrao-card
+                        [criatura]="criatura"
+                        [ultimaRolagem]="ultimaRolagemFicha(criatura.id)"
+                        [menuAberto]="menuFichaAberto()?.id === criatura.id"
+                        (abrirFicha)="abrirFichaFlutuante(criatura, TipoFichaEnum.CRIATURA)"
+                        (alternarMenu)="alternarMenuFicha(criatura, TipoFichaEnum.CRIATURA, $event)"
+                    />
                 </li>
                 }
             </ul>
@@ -260,28 +288,11 @@
                 } @else {
                 <ul class="detalhe-mestre__rolagens-lista">
                     @for (item of dados.rolagensFeed(); track item.id) {
-                    <li class="detalhe-mestre__rolagens-item" [style.--cor-ficha]="item.corFicha">
-                        <div class="detalhe-mestre__rolagens-meta">
-                            <span class="detalhe-mestre__rolagens-rotulo">{{ item.rotulo }}</span>
-                            <span class="detalhe-mestre__rolagens-autor"
-                                >{{ item.nomeAutor }} · {{ item.nomeFicha }}</span
-                            >
-                            @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
-                            <app-chip severidade="aviso" tom="contorno">privada</app-chip>
-                            }
-                            <span class="detalhe-mestre__rolagens-data"
-                                >{{ item.createdDate | date: 'dd/MM HH:mm' }}</span
-                            >
-                        </div>
-                        @if (item.formula) {
-                        <span class="detalhe-mestre__rolagens-formula">{{ item.formula }}</span>
-                        }
-                        <app-resultado-rolagem
-                            [resultado]="item.resultado"
-                            [corFicha]="item.corFicha"
-                            [compacto]="true"
-                        />
-                    </li>
+                    <li
+                        app-cartao-rolagem
+                        [rolagem]="item"
+                        [autor]="item.nomeAutor + ' · ' + item.nomeFicha"
+                    ></li>
                     }
                 </ul>
                 }
@@ -342,7 +353,7 @@
         class="detalhe-mestre__ficha-menu-item"
         type="button"
         role="menuitem"
-        (click)="abrirFichaCompletaNovaAba(menuAberto.id)"
+        (click)="abrirFichaCompletaNovaAba(menuAberto.id, menuAberto.tipo)"
     >
         <app-icone nome="olho" />
         <span>Abrir ficha completa</span>
@@ -363,7 +374,7 @@
         type="button"
         role="menuitem"
         [disabled]="removendo() === menuAberto.id"
-        (click)="removerDaCampanha(menuAberto.id)"
+        (click)="pedirRemoverDaCampanha(menuAberto.id, menuAberto.nome)"
     >
         <app-icone nome="voltar" />
         <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>
@@ -383,9 +394,8 @@
 <app-modal [aberto]="true" titulo="Duplicar ficha" (fechou)="cancelarDuplicar()">
     <span modalIcone class="dialogo__icone"><app-icone nome="duplicar" /></span>
     <p class="dialogo__aviso">
-        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>" de "<strong
-            >{{ pendenteDuplicar.donoNome }}</strong
-        >"?
+        Deseja mesmo duplicar a ficha "<strong>{{ pendenteDuplicar.nome }}</strong>"@if
+        (pendenteDuplicar.donoNome; as donoNome) { de "<strong>{{ donoNome }}</strong>" }?
     </p>
     <button
         app-botao
@@ -690,9 +700,7 @@
         } }
     </div>
 </ng-template>
-}
-
-@if (previewAvatar(); as preview) {
+} @if (previewAvatar(); as preview) {
 <div
     class="detalhe-mestre__avatar-preview"
     [style.top.px]="preview.top"

@@ -1,0 +1,122 @@
+<!-- Visão do espectador da tela "Iniciativa" — mesma casca de mestre/jogador (cabeçalho, trilha,
+     Rolagens, palco), sem coluna de ações (espectador não gerencia combate nem tem Calculadora/
+     Caderno aqui) e sem nenhum controle de condução. Corrige o P-073: nunca chama os endpoints
+     que o backend recusa para ESPECTADOR. -->
+<div class="iniciativa-espectador">
+    <div class="iniciativa-espectador__conteudo">
+        <header class="iniciativa-espectador__cabecalho">
+            <a
+                app-botao-icone
+                tamanho="padrao"
+                [routerLink]="['/campanhas', campanhaId, 'espectador']"
+                aria-label="Voltar ao Painel do espectador"
+                [appTooltip]="'Voltar ao Painel do espectador'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            <span class="iniciativa-espectador__indice">//</span>
+            <h1 class="iniciativa-espectador__titulo">
+                {{ encontro() ? "Iniciativa · " + encontro()!.nome : "Iniciativa" }}
+            </h1>
+            @if (campanhaNome()) {
+            <span class="iniciativa-espectador__campanha">{{ campanhaNome() }}</span>
+            } @if (encontro(); as encontroCabecalho) {
+            <app-chip variante="sutil"
+                >{{ rotuloStatusEncontro(encontroCabecalho.status) }}</app-chip
+            >
+            }
+            <span class="iniciativa-espectador__regua"></span>
+        </header>
+
+        @if (carregando()) {
+        <div class="iniciativa-espectador__linha" role="status" aria-label="Carregando o combate">
+            <div class="iniciativa-espectador__trilha iniciativa-espectador__esqueleto-trilha">
+                <div class="iniciativa-espectador__esqueleto-contadores">
+                    <app-esqueleto class="iniciativa-espectador__esqueleto-contador" />
+                    <app-esqueleto class="iniciativa-espectador__esqueleto-contador" />
+                </div>
+                <div class="iniciativa-espectador__esqueleto-passos">
+                    @for (i of [0, 1, 2, 3, 4]; track i) {
+                    <app-esqueleto class="iniciativa-espectador__esqueleto-passo" />
+                    }
+                </div>
+            </div>
+
+            <div class="iniciativa-espectador__rolagens">
+                <div class="iniciativa-espectador__esqueleto-rolagens">
+                    @for (i of [0, 1, 2, 3]; track i) {
+                    <app-esqueleto class="iniciativa-espectador__esqueleto-rolagem" />
+                    }
+                </div>
+            </div>
+
+            <div class="iniciativa-espectador__palco">
+                <div class="grade grade--compacta grade--palco">
+                    @for (i of [0, 1, 2, 3]; track i) {
+                    <app-esqueleto class="iniciativa-espectador__esqueleto-combatente" />
+                    }
+                </div>
+            </div>
+        </div>
+        } @else if (encontro(); as encontroAtual) {
+        <div class="iniciativa-espectador__linha">
+            <app-trilha-turnos
+                class="iniciativa-espectador__trilha"
+                [encontro]="encontroAtual"
+                [combatentes]="combatentesVisuais()"
+            />
+
+            <div class="iniciativa-espectador__rolagens">
+                <app-historico-rolagens-sidebar
+                    [fixo]="true"
+                    titulo="Rolagens"
+                    [itens]="rolagens()"
+                    [carregando]="carregandoRolagens()"
+                />
+            </div>
+
+            <div class="iniciativa-espectador__palco">
+                <section class="iniciativa-espectador__todos" aria-label="Todos os combatentes">
+                    <header class="iniciativa-espectador__secao">
+                        <h2 class="iniciativa-espectador__secao-titulo">Todos os combatentes</h2>
+                        <span class="iniciativa-espectador__secao-regua"></span>
+                        <span class="iniciativa-espectador__secao-meta">
+                            {{ encontroAtual.combatentes.length }} {{
+                            encontroAtual.combatentes.length === 1 ? "participante" :
+                            "participantes" }}
+                        </span>
+                    </header>
+
+                    @if (combatentesVisuais().length) {
+                    <div class="grade grade--compacta grade--palco">
+                        @for (combatente of combatentesVisuais(); track combatente.chaveVisual) {
+                        <app-cartao-combatente
+                            [combatente]="combatente"
+                            [ocorrencia]="combatente.ocorrencia"
+                            [totalOcorrencias]="combatente.totalOcorrencias"
+                            [ehTurnoAtual]="ehDaVez(combatente)"
+                            [jaAgiu]="jaAgiu(combatente)"
+                            [emCombate]="emCombate()"
+                            [nivelAmeaca]="nivelAmeaca(combatente)"
+                        />
+                        }
+                    </div>
+                    } @else {
+                    <app-estado-vazio
+                        tamanho="compacto"
+                        titulo="O mestre ainda está montando a ordem de iniciativa."
+                    />
+                    }
+                </section>
+            </div>
+        </div>
+        } @else {
+        <app-estado-vazio
+            class="iniciativa-espectador__vazio"
+            icone="combate"
+            titulo="Nenhum combate em andamento."
+            linhaApoio="Quando o mestre abrir um, esta tela acende sozinha."
+        />
+        }
+    </div>
+</div>

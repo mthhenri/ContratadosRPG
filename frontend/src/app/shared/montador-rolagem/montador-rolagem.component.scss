@@ -10,11 +10,18 @@
     display: contents;
 }
 
-:host ::ng-deep .painel-flutuante__janela {
+// A margem só se aplica à janela arrastável do desktop — no mobile a caixa preenche a tela toda
+// (só recuando pelo notch/home indicator via `safe-area-inset`, não por uma margem decorativa).
+:host ::ng-deep .painel-flutuante__janela:not(.painel-flutuante__janela--mobile) {
     margin: max(var(--space-16), env(safe-area-inset-top))
         max(var(--space-16), env(safe-area-inset-right))
         max(var(--space-16), env(safe-area-inset-bottom))
         max(var(--space-16), env(safe-area-inset-left));
+}
+
+:host ::ng-deep .painel-flutuante__janela--mobile {
+    inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+        env(safe-area-inset-left);
 }
 
 .montador-rolagem {
@@ -42,6 +49,30 @@
         flex-direction: column;
         height: 100%;
         gap: 10px;
+        padding: 14px;
+    }
+
+    // Alça de redimensionar (desktop only — sem maximizar) — mesma receita visual de
+    // `.caderno__redimensionar`.
+    &__redimensionar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        touch-action: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 8px;
+            height: 8px;
+            border-right: 1px solid var(--accent);
+            border-bottom: 1px solid var(--accent);
+        }
     }
 
     &__visor {
@@ -175,7 +206,6 @@
             flex: 1;
             min-width: 120px;
         }
-
     }
 
     // Tile quadrado (token curto): dado, atributo, tipo de dano, dígito, operador, parêntese.
@@ -192,8 +222,18 @@
             height: bp.$alvo-toque;
         }
 
+        // Mesmo motivo do `&--dano` abaixo (ui-29d, P-022): sem omitir `[variante]`/`[estilo]`
+        // no `app-botao`, `:host(.botao--primario.botao--estilo-contorno)` vencia por
+        // especificidade e a cor apagada nunca aparecia — PROF/NIV saíam sempre no accent.
         &--extra {
             color: var(--text-dim);
+            background: transparent;
+            border: 1px solid var(--border-strong);
+
+            &:hover:not(:disabled) {
+                color: var(--text);
+                border-color: var(--accent-border);
+            }
         }
 
         &--operador {
@@ -201,38 +241,37 @@
             border-color: var(--accent-border);
         }
 
+        // Mesma paleta do chip de resumo de `resultado-rolagem` (`__grupo--#{tipo}`): cor do
+        // tipo no texto/borda + fundo esmaecido (`-dim`) — sem o fundo, a sigla ficava sem
+        // "corzinha" nenhuma, só um contorno colorido igual aos outros tiles neutros. Sem
+        // `[variante]`/`[estilo]` no `app-botao` (ui-29d: omitir é como pedir "herdado") — com eles,
+        // a regra de severidade de `:host(.botao--secundario.botao--estilo-contorno)` tem mais
+        // especificidade que uma classe só daqui e vencia sempre, deixando os cinco botões cinzas
+        // (achado ao vivo). Sem variante, `app-botao` não aplica cor/fundo/borda nenhum — só o que
+        // está aqui pinta o botão, então a borda também precisa nascer aqui (antes vinha de
+        // `estilo="contorno"`).
         &--dano {
             font-size: 13px;
+            border: 1px solid transparent;
 
-            &-fisico {
-                color: var(--dano-fisico);
-                border-color: var(--dano-fisico-border);
+            // Sem variante não há hover de `app-botao` nenhum — mesmo `filter: brightness` que o
+            // mixin `pintar($estilo: "preenchido", ...)` usa nos demais botões do produto.
+            &:hover:not(:disabled) {
+                filter: brightness(1.15);
             }
 
-            &-balistico {
-                color: var(--dano-balistico);
-                border-color: var(--dano-balistico-border);
-            }
-
-            &-explosao {
-                color: var(--dano-explosao);
-                border-color: var(--dano-explosao-border);
-            }
-
-            &-quimico {
-                color: var(--dano-quimico);
-                border-color: var(--dano-quimico-border);
-            }
-
-            &-geral {
-                color: var(--dano-geral);
-                border-color: var(--dano-geral-border);
+            @each $tipo in fisico, balistico, explosao, quimico, geral {
+                &-#{$tipo} {
+                    color: var(--dano-#{$tipo});
+                    border-color: var(--dano-#{$tipo}-border);
+                    background: var(--dano-#{$tipo}-dim);
+                }
             }
         }
     }
 
-    // Tile de dado: silhueta do `app-icone` (`d4`..`d20`, `dado` genérico no fallback do `d3`)
-    // empilhada com o rótulo `D{faces}` por cima — mesma receita de `resultado-rolagem__dado`
+    // Tile de dado: silhueta do `app-icone` (`d3`..`d20`) empilhada com o rótulo `D{faces}` por
+    // cima — mesma receita de `resultado-rolagem__dado`
     // (`display:inline-grid; place-items:center` + `grid-area` compartilhada entre os filhos, em
     // vez de posicionamento absoluto, pra não depender de o ícone herdar altura/largura daqui).
     &__dado-tile {

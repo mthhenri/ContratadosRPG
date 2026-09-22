@@ -10,18 +10,17 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAcessoResumoDto, FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
-import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
+import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -32,20 +31,22 @@ import { FichaService } from '../../../ficha/ficha.service';
 import { FichaEdicaoService } from '../../../ficha/ficha-edicao.service';
 import { FichaRolagemRegistroService } from '../../../ficha/ficha-rolagem-registro.service';
 import { mesclarFicha } from '../../../ficha/mesclar-ficha';
+import { FichaEsqueleto } from '../../../ficha/componentes/ficha-esqueleto/ficha-esqueleto.component';
 import { FichaRolagensPainel } from '../../../ficha/componentes/ficha-rolagens-painel/ficha-rolagens-painel.component';
 import {
   FichaCampanhaCard,
   type DestinoMobile,
 } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
 import {
+  condicoesAtivas,
   montarEquipeExibicao,
   type EquipeFichaExibicao,
 } from '../../campanha-equipe.util';
+import { confirmarRemocaoDaCampanha } from '../../../ficha/ficha-confirmacoes';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
@@ -81,13 +82,13 @@ const PX_PREVIEW_AVATAR = 300;
     CalculadoraFlutuante,
     CadernoFlutuante,
     FichaCampanhaCard,
+    FichaEsqueleto,
     FichaRolagensPainel,
-    ResultadoRolagem,
+    CartaoRolagem,
     Tooltip,
     Botao,
     BotaoIcone,
     Cartao,
-    Chip,
     ColunaAcoes,
     ColunaAcoesItem,
     EstadoVazio,
@@ -95,7 +96,6 @@ const PX_PREVIEW_AVATAR = 300;
     Esqueleto,
     Segmentado,
     SegmentadoItem,
-    DatePipe,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './detalhe-jogador.page.html',
@@ -119,13 +119,17 @@ export class CampanhaDetalheJogador {
 
   /** Exposto ao template só para o chip "Mestre" na lista de Equipe. */
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
-  protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
 
   /** Painel lateral fixo (Rolagens/Esquadrão/Inv. Esquadrão) — sempre montado, nunca overlay (mesmo padrão do mestre). */
   protected readonly painelLateralAtivo = signal<'rolar' | 'esquadrao' | 'inventario'>('rolar');
 
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');
+  /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
+  protected readonly cadernoAberto = computed(() => this.cadernoRef()?.aberto() ?? false);
   private readonly calculadoraRef = viewChild<CalculadoraFlutuante>('calculadora');
+
+  /** Texto da missão (descrição da campanha) começa oculto; o botão "i" do cabeçalho o alterna. */
+  protected readonly descricaoAberta = signal(false);
 
   /** Bloqueia os botões enquanto a bandeja de dados está aberta. */
   protected readonly calculadoraAberta = signal(false);
@@ -187,6 +191,9 @@ export class CampanhaDetalheJogador {
     readonly { readonly membro: CampanhaMembroResumoDto; readonly fichas: readonly EquipeFichaExibicao[] }[]
   >(() => montarEquipeExibicao(this.dados.membrosOrdenados(), this.dados.fichasPorMembro()));
 
+  /** Só as condições marcadas (I-031) — exposto ao template da carteirinha. */
+  protected readonly condicoesAtivas = condicoesAtivas;
+
   /** Card "Rolagens" da coluna lateral — alvo do destino `'rolagens'` da barra inferior do mobile. */
   private readonly cardRolagens = viewChild<ElementRef<HTMLElement>>('cardRolagens');
 
@@ -213,6 +220,18 @@ export class CampanhaDetalheJogador {
       const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       alvo.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
     });
+  }
+
+  /**
+   * Gatilho mobile independente da ficha própria (P-074): sem `app-ficha-campanha-card` montado,
+   * a `.ficha-nav` que normalmente dispara `aoMudarDestinoFicha('rolagens')` nem existe, e o
+   * painel lateral (Rolagens/Esquadrão/Inv. Esquadrão) fica preso em `--oculto-mobile` para
+   * sempre. Este método replica o mesmo destino "rolagens" direto na aba Esquadrão, sem depender
+   * da ficha embutida.
+   */
+  protected abrirEsquadraoSemFicha(): void {
+    this.destinoMobileFicha.set('rolagens');
+    this.painelLateralAtivo.set('esquadrao');
   }
 
   /**
@@ -499,13 +518,34 @@ export class CampanhaDetalheJogador {
   }
 
   /**
-   * Desatribui a ficha da campanha (ela volta ao acervo solto do dono) — ação direta, sem dialog,
-   * mesmo padrão de `FichaAcervo.removerDaCampanha`. Filtro otimista direto em `dados.fichas`
-   * (não um refetch): `avancarFichaExibidaApos`, logo a seguir, precisa que a ficha removida já
-   * não conste na lista para não escolhê-la de novo como "restante".
+   * Confirmação pendente ("Remover da campanha" ou "Excluir ficha") — marca o item da coluna de
+   * ações como selecionado enquanto o diálogo de confirmação está aberto, como as dialogs de
+   * Vincular/Acesso fazem com os respectivos itens.
    */
-  protected removerDaCampanha(fichaId: number): void {
+  protected readonly confirmando = signal<'remocao' | 'exclusao' | null>(null);
+
+  /** Pede a confirmação e, se aceita, desatribui a ficha da campanha (ver `removerDaCampanha`). */
+  protected pedirRemoverDaCampanha(fichaId: number, fichaNome: string): void {
     this.fecharMenu();
+    if (this.removendo() !== null || this.confirmando() !== null) {
+      return;
+    }
+    this.confirmando.set('remocao');
+    void confirmarRemocaoDaCampanha(this.confirmacaoService, fichaNome)
+      .then((confirmado) => {
+        if (confirmado) {
+          this.removerDaCampanha(fichaId);
+        }
+      })
+      .finally(() => this.confirmando.set(null));
+  }
+
+  /**
+   * Desatribui a ficha da campanha (ela volta ao acervo solto do dono). Filtro otimista direto em
+   * `dados.fichas` (não um refetch): `avancarFichaExibidaApos`, logo a seguir, precisa que a ficha
+   * removida já não conste na lista para não escolhê-la de novo como "restante".
+   */
+  private removerDaCampanha(fichaId: number): void {
     if (this.removendo() !== null) {
       return;
     }
@@ -524,7 +564,11 @@ export class CampanhaDetalheJogador {
   /** Abre a confirmação de exclusão a partir do menu do cabeçalho. */
   protected pedirExcluirFicha(fichaId: number, fichaNome: string): void {
     this.fecharMenu();
-    this.confirmacaoService
+    if (this.confirmando() !== null) {
+      return;
+    }
+    this.confirmando.set('exclusao');
+    void this.confirmacaoService
       .confirmar({
         titulo: 'Excluir ficha',
         mensagem: `Excluir ${fichaNome}? Esta ação não pode ser desfeita.`,
@@ -535,7 +579,8 @@ export class CampanhaDetalheJogador {
         if (confirmado) {
           this.excluirFicha(fichaId);
         }
-      });
+      })
+      .finally(() => this.confirmando.set(null));
   }
 
   private excluirFicha(fichaId: number): void {

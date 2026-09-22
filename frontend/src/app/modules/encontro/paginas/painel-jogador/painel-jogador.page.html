@@ -1,0 +1,281 @@
+<!-- Visão do jogador (ui-39): a mesma casca da visão do mestre — coluna de ações + trilha + rolagens +
+     palco —, com a própria ficha do jogador ocupando o palco e as ações dele (rolar iniciativa,
+     avançar turno) no topo da trilha. Sem combatente com ficha em campo, o palco é a grade de
+     leitura; sem encontro, um estado vazio. -->
+<div class="iniciativa-jogador" [class.iniciativa-jogador--com-ficha]="comFichaEmCampo()">
+    <app-coluna-acoes id="iniciativa-jogador" rotulo="Ações da iniciativa">
+        <div class="coluna-acoes__categoria">Ferramentas</div>
+        <button
+            app-coluna-acoes-item
+            icone="calculadora"
+            appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
+            (click)="alternarCalculadora()"
+        >
+            Calculadora
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+    </app-coluna-acoes>
+
+    <div class="iniciativa-jogador__conteudo">
+        <header class="iniciativa-jogador__cabecalho">
+            <a
+                app-botao-icone
+                tamanho="padrao"
+                [routerLink]="['/campanhas', dados.campanhaId]"
+                aria-label="Voltar à campanha"
+                [appTooltip]="'Voltar à campanha'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            <span class="iniciativa-jogador__indice">//</span>
+            <!-- Só no mobile, com a ficha no palco: a coluna de ações vira barra fixa no rodapé e
+                 colidiria com a barra da ficha embutida (mesma faixa), então as duas ferramentas
+                 sobem para o cabeçalho — a mesma saída do detalhe do jogador. -->
+            <div class="iniciativa-jogador__ferramentas">
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    aria-label="Calculadora"
+                    [appTooltip]="'Calculadora'"
+                    (click)="alternarCalculadora()"
+                >
+                    <app-icone nome="calculadora" />
+                </button>
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    aria-label="Caderno"
+                    [appTooltip]="'Caderno'"
+                    (click)="alternarCaderno()"
+                >
+                    <app-icone nome="caderno" />
+                </button>
+            </div>
+            <h1 class="iniciativa-jogador__titulo">
+                {{ dados.encontro() ? 'Iniciativa · ' + dados.encontro()!.nome : 'Iniciativa' }}
+            </h1>
+            @if (dados.campanhaNome()) {
+            <span class="iniciativa-jogador__campanha">{{ dados.campanhaNome() }}</span>
+            } @if (dados.encontro(); as encontroCabecalho) {
+            <app-chip variante="sutil"
+                >{{ rotuloStatusEncontro(encontroCabecalho.status) }}</app-chip
+            >
+            }
+            <span class="iniciativa-jogador__regua"></span>
+        </header>
+
+        @if (dados.carregando()) {
+        <!-- Carregamento: a mesma silhueta da tela pronta (trilha com o bloco de ação | rolagens | ficha
+             no palco), pra ela não "pular" quando o encontro chega. Só vale para quem já se sabe que não
+             é mestre — enquanto o papel é desconhecido, a casca monta a página do mestre. A coluna de
+             ações e o cabeçalho são os reais: não dependem do encontro. -->
+        <div
+            class="iniciativa-jogador__linha"
+            role="status"
+            aria-label="Carregando o combate"
+        >
+            <div class="iniciativa-jogador__laterais">
+                <div class="iniciativa-jogador__trilha iniciativa-jogador__esqueleto-trilha">
+                    <div class="iniciativa-jogador__esqueleto-contadores">
+                        <app-esqueleto class="iniciativa-jogador__esqueleto-contador" />
+                        <app-esqueleto class="iniciativa-jogador__esqueleto-contador" />
+                    </div>
+                    <app-esqueleto class="iniciativa-jogador__esqueleto-acao" />
+                    <div class="iniciativa-jogador__esqueleto-passos">
+                        @for (i of [0, 1, 2, 3, 4]; track i) {
+                        <app-esqueleto class="iniciativa-jogador__esqueleto-passo" />
+                        }
+                    </div>
+                </div>
+
+                <div class="iniciativa-jogador__rolagens">
+                    <div class="iniciativa-jogador__esqueleto-rolagens">
+                        @for (i of [0, 1, 2, 3]; track i) {
+                        <app-esqueleto class="iniciativa-jogador__esqueleto-rolagem" />
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="iniciativa-jogador__palco">
+                <div class="iniciativa-jogador__esqueleto-cartao">
+                    <app-esqueleto class="iniciativa-jogador__esqueleto-identidade" />
+                    <app-esqueleto class="iniciativa-jogador__esqueleto-conteudo" />
+                </div>
+            </div>
+        </div>
+        } @else if (dados.encontro(); as encontroAtual) {
+        <div class="iniciativa-jogador__linha">
+            <!-- Trilha e Rolagens: duas colunas ao lado do palco no desktop largo; entre o tablet e o
+                 desktop largo dividem uma só coluna estreita (`display: contents` no resto), para a
+                 ficha ter a largura que o cartão dela pede. -->
+            <div class="iniciativa-jogador__laterais">
+                <!-- O bloco de ação mora no topo da trilha, logo abaixo dos contadores Rodada/Turno. -->
+                <app-trilha-turnos
+                    class="iniciativa-jogador__trilha"
+                    [encontro]="encontroAtual"
+                    [combatentes]="dados.combatentes()"
+                    [meuCombatenteId]="meuCombatente()?.id ?? null"
+                    [comAcao]="true"
+                >
+                    <app-acao-jogador
+                        trilhaAcao
+                        [status]="encontroAtual.status"
+                        [assistindo]="meuCombatente() === null"
+                        [minhaVez]="ehMinhaVez()"
+                        [nomeDaVez]="dados.combatenteDaVez()?.nome ?? null"
+                        [acoesRestantes]="dados.acoesRestantesDaVez()"
+                        [turnosAteAVez]="turnosAteMinhaVez()"
+                        [podeRolar]="possoRolarIniciativa()"
+                        [chamado]="iniciativaPedida()"
+                        [minhaIniciativa]="meuCombatente()?.iniciativa ?? null"
+                        [emOperacao]="dados.emOperacao()"
+                        (rolar)="rolarMinhaIniciativa()"
+                        (avancar)="dados.avancarTurno()"
+                    />
+                </app-trilha-turnos>
+
+                <div class="iniciativa-jogador__rolagens">
+                    <app-historico-rolagens-sidebar
+                        [fixo]="true"
+                        titulo="Rolagens"
+                        [itens]="dados.rolagensFeed()"
+                        [carregando]="dados.carregandoRolagens()"
+                    />
+                </div>
+            </div>
+
+            @if (meuCombatente()) {
+            <!-- A própria ficha ocupa o palco inteiro — o mesmo `app-ficha-campanha-card` do detalhe do
+                 jogador, sem reescrever nenhuma parte dela. -->
+            <section class="iniciativa-jogador__palco" aria-label="Minha ficha">
+                @if (meuFichaDados(); as ficha) {
+                <app-ficha-campanha-card
+                    [fichaId]="ficha.id"
+                    [nome]="ficha.nome"
+                    [cor]="ficha.cor"
+                    [imagemUrl]="ficha.imagemUrl"
+                    [dados]="ficha.dados"
+                    [ajustavel]="true"
+                    [podeRolar]="true"
+                    [ehMestre]="false"
+                    [mostrarRolagensCompacto]="true"
+                    [mostrarTopo]="false"
+                    (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+                    (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+                    (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+                    (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+                    (ajusteNome)="fichaEdicao.ajustarNome($event)"
+                    (ajusteCor)="fichaEdicao.ajustarCor($event)"
+                    (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+                    (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+                    (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+                    (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+                    (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+                    (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+                    (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+                    (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+                    (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
+                    (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+                    (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+                    (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+                    (ajusteHabilidadePersonalidade)="
+                        fichaEdicao.ajustarHabilidadePersonalidade($event)
+                    "
+                    (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+                    (origemLimpa)="fichaEdicao.limparOrigem()"
+                    (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
+                />
+                } @else {
+                <app-esqueleto
+                    class="iniciativa-jogador__esqueleto-ficha"
+                    role="status"
+                    aria-label="Carregando sua ficha"
+                />
+                }
+            </section>
+            } @else {
+            <!-- Sem combatente meu em campo: quem só assiste vê a grade de leitura, como o mestre a vê. -->
+            <section class="iniciativa-jogador__palco" aria-label="Todos os combatentes">
+                <header class="iniciativa-jogador__secao">
+                    <h2 class="iniciativa-jogador__secao-titulo">Todos os combatentes</h2>
+                    <span class="iniciativa-jogador__secao-regua"></span>
+                    <span class="iniciativa-jogador__secao-meta">
+                        {{ encontroAtual.combatentes.length }} {{ encontroAtual.combatentes.length
+                        === 1 ? 'participante' : 'participantes' }}
+                    </span>
+                </header>
+
+                @if (dados.combatentes().length) {
+                <div class="grade grade--compacta grade--palco">
+                    @for (combatente of dados.combatentes(); track combatente.chaveVisual) {
+                    <app-cartao-combatente
+                        [combatente]="combatente"
+                        [ocorrencia]="combatente.ocorrencia"
+                        [totalOcorrencias]="combatente.totalOcorrencias"
+                        [ehTurnoAtual]="dados.ehDaVez(combatente)"
+                        [jaAgiu]="dados.jaAgiu(combatente)"
+                        [emCombate]="dados.emCombate()"
+                        [nivelAmeaca]="dados.nivelAmeaca(combatente)"
+                        [ehMestre]="false"
+                        [podeAjustar]="false"
+                        [emEdicao]="false"
+                        (abrirFicha)="abrirFichaFlutuante(combatente)"
+                    />
+                    }
+                </div>
+                } @else {
+                <app-estado-vazio
+                    tamanho="compacto"
+                    titulo="O mestre ainda está montando a ordem de iniciativa."
+                />
+                }
+            </section>
+            }
+        </div>
+        } @else {
+        <app-estado-vazio
+            class="iniciativa-jogador__vazio"
+            icone="combate"
+            titulo="Nenhum combate em andamento."
+            linhaApoio="Quando o mestre abrir um, esta tela acende sozinha."
+        />
+        }
+    </div>
+</div>
+
+<!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas, que sabe
+     restaurar em vez de fechar quando a janela está minimizada (mesmo racional de `detalhe-mestre`). -->
+<app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+@if (dados.usuarioAtivoId(); as usuarioId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
+    [usuarioAtivoId]="usuarioId"
+    [ehMestre]="false"
+    [membros]="dados.membrosDaCampanha()"
+    [temInventario]="false"
+    (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
+/>
+}
+
+<!-- Janela de ficha do combatente clicado na grade de leitura (ou do "Ver ficha" do Caderno): uma só
+     instância, aberta imperativamente por `abrirFichaFlutuante`. -->
+<app-ficha-flutuante #fichaFlutuante [ehMestre]="false" />
+
+<!-- A rolagem da própria iniciativa usa a mesma carta central das fichas. O serviço sozinho mantém o
+     estado; esta instância é quem torna o resultado visível nesta tela. -->
+<app-bandeja-dados />

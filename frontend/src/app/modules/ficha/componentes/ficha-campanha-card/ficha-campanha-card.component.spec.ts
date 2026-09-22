@@ -109,6 +109,17 @@ describe('FichaCampanhaCard', () => {
     expect(raiz.querySelector('select')).toBeNull();
   });
 
+  it('esconde a barra "Ficha de Jogador" + classificação quando `mostrarTopo` é falso', () => {
+    const { fixture, raiz } = montar(dados);
+    expect(raiz.querySelector('.ficha-visao__topo')?.textContent).toContain('Ficha de Jogador');
+
+    fixture.componentRef.setInput('mostrarTopo', false);
+    fixture.detectChanges();
+
+    expect(raiz.querySelector('.ficha-visao__topo')).toBeNull();
+    expect(raiz.textContent).not.toContain('FICHA-JGD-0042');
+  });
+
   it('repassa a disponibilidade e a solicitação de mandar item para a base', () => {
     const alvo = montar(dados, 'Corvo', 42, true);
     alvo.fixture.componentRef.setInput('podeMandarParaBase', true);
@@ -468,12 +479,10 @@ describe('FichaCampanhaCard', () => {
 
     it('junta Reações e Resistências sob uma legenda única, sem divisor entre os dois blocos', () => {
       const { raiz } = montar(dados);
-      const combate = raiz.querySelector(
-        '.ficha-visao__coluna--identidade .ficha-combate-rapido--com-contra',
-      )!;
-      const legenda = combate.previousElementSibling!;
+      const reacoes = raiz.querySelector('.ficha-visao__coluna--identidade app-ficha-reacoes')!;
+      const legenda = reacoes.previousElementSibling!;
       expect(legenda.querySelector('span')?.textContent?.trim()).toBe('Reações e Resistências');
-      expect(combate.nextElementSibling?.classList.contains('ficha-resistencias')).toBe(true);
+      expect(reacoes.nextElementSibling?.tagName.toLowerCase()).toBe('app-ficha-resistencias');
     });
 
     it('cada Resistência ganha a classe de cor do próprio tipo de dano (mesma paleta do chip de resumo da rolagem)', () => {

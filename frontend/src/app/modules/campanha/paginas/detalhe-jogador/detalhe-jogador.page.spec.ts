@@ -147,6 +147,9 @@ describe('CampanhaDetalheJogador', () => {
                 imagemUrl: ficha.imagemUrl,
                 cor: ficha.cor ?? null,
                 acessoCompleto: true,
+                morrendo: ficha.morrendo ?? false,
+                machucado: ficha.machucado ?? false,
+                inconsciente: ficha.inconsciente ?? false,
               })),
     }));
     const campanhaService = {
@@ -233,7 +236,10 @@ describe('CampanhaDetalheJogador', () => {
       membroEntrou$: new Subject().asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
+      fichaCondicoesAlteradas$: new Subject().asObservable(),
+      fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       estadoAlterado$: new Subject().asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
       paginaEsquadraoCriada$: new Subject().asObservable(),
@@ -296,6 +302,45 @@ describe('CampanhaDetalheJogador', () => {
     return item;
   }
 
+  it('esconde o texto da missão e o alterna pelo botão "i" do cabeçalho', () => {
+    const { fixture, raiz } = montar({
+      usuarioId: 2,
+      membros: membrosTres(),
+      fichas: fichasComColegaJogador(),
+    });
+    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe__cabecalho-info')!;
+
+    expect(raiz.querySelector('.detalhe__descricao')).toBeNull();
+    expect(botao.getAttribute('aria-pressed')).toBe('false');
+
+    botao.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.detalhe__descricao')?.textContent).toContain('Operação em curso');
+    expect(botao.getAttribute('aria-pressed')).toBe('true');
+
+    botao.click();
+    fixture.detectChanges();
+    expect(raiz.querySelector('.detalhe__descricao')).toBeNull();
+  });
+
+  it('enquanto carrega, mostra a casca real com a silhueta da ficha embutida e do painel lateral', () => {
+    const { fixture, raiz, dados } = montar({
+      usuarioId: 2,
+      membros: membrosTres(),
+      fichas: fichasComColegaJogador(),
+    });
+    dados.carregando.set(true);
+    fixture.detectChanges();
+
+    const silhueta = raiz.querySelector('.detalhe__esqueleto');
+    expect(silhueta?.getAttribute('role')).toBe('status');
+    expect(silhueta?.getAttribute('aria-label')).toBe('Carregando campanha');
+    expect(raiz.querySelectorAll('app-coluna-acoes app-esqueleto').length).toBeGreaterThan(0);
+    expect(raiz.querySelector('.detalhe__ficha-embutida app-ficha-esqueleto')).not.toBeNull();
+    expect(raiz.querySelector('.detalhe__painel-lateral app-esqueleto')).not.toBeNull();
+    expect(raiz.querySelector('app-ficha-campanha-card')).toBeNull();
+  });
+
   it('mostra o botão "Voltar às campanhas" no cabeçalho, apontando para /campanhas', () => {
     const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
     const voltar = raiz.querySelector('.detalhe__cabecalho-voltar');
@@ -331,6 +376,39 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelectorAll('.detalhe__equipe-membro')).toHaveLength(2);
   });
 
+  it('a carteirinha sem acesso mostra o selo de Machucado (I-031), mesmo sem acessoCompleto', () => {
+    const membros: CampanhaMembroResumoDto[] = [
+      { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+      { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+      {
+        usuarioId: 3,
+        nome: 'Colega',
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        fichas: [
+          {
+            id: 3,
+            nome: 'Kane',
+            classe: ClasseEnum.COMBATENTE,
+            arquetipo: ArquetipoEnum.LUTADOR,
+            imagemUrl: null,
+            cor: null,
+            acessoCompleto: false,
+            morrendo: false,
+            machucado: true,
+            inconsciente: false,
+          },
+        ],
+      },
+    ];
+    const { raiz } = montar({ usuarioId: 2, membros, fichas });
+
+    const carteirinha = raiz.querySelector('.detalhe__equipe-carteirinha')!;
+    const selos = Array.from(carteirinha.querySelectorAll('.detalhe__equipe-selo')).map((selo) =>
+      selo.textContent?.trim(),
+    );
+    expect(selos).toEqual(['Machucado']);
+  });
+
   it('"Ver ficha" na Equipe troca a ficha exibida sem navegar; a de um colega vira só leitura', () => {
     const { fixture, raiz, fichaService, navegar } = montar({
       usuarioId: 2,
@@ -359,11 +437,24 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('.detalhe__banner-alerta')?.textContent).toContain('Kane');
   });
 
-  it('"Remover da campanha" age sobre a ficha exibida, fecha o menu e troca para outra ficha própria', () => {
-    const { fixture, raiz, fichaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+  it('"Remover da campanha" pede confirmação, age sobre a ficha exibida, fecha o menu e troca para outra ficha própria', async () => {
+    const { fixture, raiz, fichaService, confirmacaoService } = montar({
+      usuarioId: 2,
+      membros: membrosDois(),
+      fichas,
+    });
     abrirMenu(raiz, fixture);
 
     encontrarItemMenu(raiz, 'Remover da campanha').click();
+    fixture.detectChanges();
+
+    expect(confirmacaoService.confirmar).toHaveBeenCalledWith(
+      expect.objectContaining({ titulo: 'Remover da campanha', entidade: 'Vera', severidade: 'padrao' }),
+    );
+    expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+
+    await Promise.resolve();
+    await Promise.resolve();
     fixture.detectChanges();
 
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
@@ -371,7 +462,7 @@ describe('CampanhaDetalheJogador', () => {
     expect(fichaService.recuperarFicha).toHaveBeenCalledWith(5);
   });
 
-  it('"Remover da campanha" sem outra ficha própria restante cai no estado vazio do jogador', () => {
+  it('"Remover da campanha" sem outra ficha própria restante cai no estado vazio do jogador', async () => {
     const { fixture, raiz, fichaService } = montar({
       usuarioId: 2,
       membros: membrosDois(),
@@ -380,10 +471,120 @@ describe('CampanhaDetalheJogador', () => {
     abrirMenu(raiz, fixture);
 
     encontrarItemMenu(raiz, 'Remover da campanha').click();
+    await Promise.resolve();
+    await Promise.resolve();
     fixture.detectChanges();
 
     expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(4, null);
     expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
+  });
+
+  it('"Ver Esquadrão" no estado vazio revela o painel lateral e ativa a aba Esquadrão (P-074)', async () => {
+    const { fixture, raiz } = montar({
+      usuarioId: 2,
+      membros: membrosDois(),
+      fichas: fichas.filter((ficha) => ficha.usuarioId !== 2),
+    });
+
+    const lateral = raiz.querySelector('.detalhe__jogador-lateral')!;
+    expect(lateral.classList.contains('detalhe__jogador-lateral--oculto-mobile')).toBe(true);
+
+    const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__jogador-vazio-acoes button')).find(
+      (elemento) => elemento.textContent?.includes('Ver Esquadrão'),
+    );
+    expect(botao).toBeTruthy();
+    botao!.click();
+    fixture.detectChanges();
+
+    expect(lateral.classList.contains('detalhe__jogador-lateral--oculto-mobile')).toBe(false);
+    expect(fixture.componentInstance['painelLateralAtivo']()).toBe('esquadrao');
+  });
+
+  it('cancelar a confirmação de "Remover da campanha" não desatribui a ficha', async () => {
+    const { fixture, raiz, fichaService } = montar({
+      usuarioId: 2,
+      membros: membrosDois(),
+      fichas,
+      confirmarResultado: false,
+    });
+    abrirMenu(raiz, fixture);
+
+    encontrarItemMenu(raiz, 'Remover da campanha').click();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+  });
+
+  describe('itens da coluna de ações que abrem diálogo ficam selecionados', () => {
+    function itemColuna(raiz: HTMLElement, rotulo: string): HTMLElement {
+      const item = Array.from(
+        raiz.querySelectorAll<HTMLElement>('app-coluna-acoes [app-coluna-acoes-item]'),
+      ).find((candidato) => candidato.textContent?.trim().startsWith(rotulo));
+      expect(item, rotulo).toBeDefined();
+      return item!;
+    }
+
+    it('"Vincular ficha" e "Acesso de visualização" enquanto a dialog está aberta', () => {
+      const { fixture, raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+      expect(itemColuna(raiz, 'Vincular ficha').getAttribute('aria-pressed')).toBe('false');
+      expect(itemColuna(raiz, 'Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+
+      itemColuna(raiz, 'Vincular ficha').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Vincular ficha').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['fecharVincularFicha']();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Vincular ficha').getAttribute('aria-pressed')).toBe('false');
+
+      itemColuna(raiz, 'Acesso de visualização').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Acesso de visualização').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['fecharAcessoFicha']();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('"Remover da campanha" e "Excluir ficha" enquanto a confirmação está aberta', async () => {
+      const { fixture, raiz, confirmacaoService } = montar({
+        usuarioId: 2,
+        membros: membrosDois(),
+        fichas,
+      });
+      let resolver: (valor: boolean) => void = () => undefined;
+      confirmacaoService.confirmar.mockImplementation(
+        () => new Promise<boolean>((resolve) => (resolver = resolve)),
+      );
+
+      itemColuna(raiz, 'Remover da campanha').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Remover da campanha').getAttribute('aria-pressed')).toBe('true');
+      expect(itemColuna(raiz, 'Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+
+      resolver(false);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Remover da campanha').getAttribute('aria-pressed')).toBe('false');
+
+      itemColuna(raiz, 'Excluir ficha').click();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir ficha').getAttribute('aria-pressed')).toBe('true');
+      resolver(false);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(itemColuna(raiz, 'Excluir ficha').getAttribute('aria-pressed')).toBe('false');
+    });
+  });
+
+  it('a ficha embutida não mostra a barra "Ficha de Jogador" com a classificação', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+
+    expect(raiz.querySelector('app-ficha-campanha-card')).not.toBeNull();
+    expect(raiz.querySelector('.ficha-visao__topo')).toBeNull();
+    expect(raiz.textContent).not.toContain('FICHA-JGD-');
   });
 
   it('"Excluir ficha" pede confirmação; cancelar não chama o serviço', async () => {
@@ -554,7 +755,7 @@ describe('CampanhaDetalheJogador', () => {
 
     const painelRolar = raiz.querySelector('.detalhe__painel-rolar');
     expect(painelRolar?.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
-    expect(painelRolar?.querySelector('.detalhe__historico-item')?.textContent).toContain('Pontaria');
+    expect(painelRolar?.querySelector('li[app-cartao-rolagem]')?.textContent).toContain('Pontaria');
     expect(raiz.querySelector('.detalhe__painel-historico')).toBeNull();
     expect(raiz.querySelector('.detalhe__painel-sessao')).toBeNull();
     expect(raiz.querySelector('.rolagem-pill')).toBeNull();

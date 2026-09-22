@@ -226,9 +226,12 @@ const paraHabilidadeDto = (linha: LinhaHabilidade): FichaCriaturaHabilidadeDto =
  * - **Rascunho persistido** (mesmo `GuiaCriacaoRascunhoService` do guia de jogador, ajuste
  *   pós-mockup): a chave leva um `tipo` (`'agente' | 'criatura'`) desde essa mudança — os dois
  *   guias podem ter rascunho pendente na mesma campanha, no mesmo navegador, sem se sobrescrever.
- * - **`nome` da ficha = `designacao`**: o DTO de nível de ficha (`FichaCriaturaCriarDto.nome`)
+ * - **`nome` da ficha = Designação**: o DTO de nível de ficha (`FichaCriaturaCriarDto.nome`)
  *   não tem campo próprio no roteiro do guia — a Designação da Ficha de Identidade já cumpre
- *   esse papel, sem precisar de um segundo campo quase idêntico.
+ *   esse papel. `FichaCriaturaIdentidadeDto` não tem campo `designacao` (removido depois da
+ *   criação divergir de `ficha.nome` em produção — editar um não atualizava o outro): a
+ *   Designação vive só em `ficha.nome`, único lugar, o campo local `designacao` deste guia é só
+ *   rascunho até o envio.
  * - **Sem seleção de "operador responsável"**: dono de criatura é sempre o mestre autenticado
  *   (`FichaCriaturaCriarDto` não tem `usuarioId` — o backend já fixa isso em `m4-03`), então o
  *   guia não precisa (nem pode) escolher em nome de quem a ficha nasce.
@@ -578,7 +581,7 @@ export class CriaturaCriar {
     const vidaMaxima = calcularVidaMaxima({ vd: e.vd, tenacidade });
     return {
       identidade: {
-        designacao: e.designacao.trim(), origem: e.origem, conceito: e.conceito.trim(),
+        origem: e.origem, conceito: e.conceito.trim(),
         naturezaFisica: e.naturezaFisica.trim(), comportamento: e.comportamento, motivacao: e.motivacao.trim(),
         ganchoUnico: e.ganchoUnico.trim(), ...(e.temaHorror.trim() ? { temaHorror: e.temaHorror.trim() } : {}),
       },

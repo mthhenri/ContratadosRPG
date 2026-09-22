@@ -5,11 +5,12 @@ import type { DadosRoladosDto, ResultadoRolagemDto } from '@contratados-rpg/shar
 import { Icone, type IconeNome } from '../icone/icone.component';
 
 /**
- * Faces com SVG de dado dedicado (`d4`..`d20` em `icone.component`) — as únicas que trocam o
- * quadradinho pela silhueta do dado. Fórmula caseira com face fora desse conjunto (ex.: `d3`,
- * `d100`) não tem arte própria e continua no quadradinho de sempre (fallback).
+ * Faces com SVG de dado dedicado (`d3`..`d20` em `icone.component`) — as únicas que trocam o
+ * quadradinho pela silhueta do dado. Fórmula caseira com face fora desse conjunto (ex.: `d100`)
+ * não tem arte própria e continua no quadradinho de sempre (fallback).
  */
 const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
+  3: 'd3',
   4: 'd4',
   6: 'd6',
   8: 'd8',

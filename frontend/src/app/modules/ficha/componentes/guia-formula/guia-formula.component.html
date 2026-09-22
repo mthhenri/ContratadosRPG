@@ -2,6 +2,7 @@
     app-botao
     type="button"
     class="guia-gatilho"
+    [class.guia-gatilho--padrao]="!compacto()"
     aria-label="Guia: como escrever uma fórmula"
     (click)="abrir()"
 >

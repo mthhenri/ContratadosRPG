@@ -27,29 +27,16 @@
 
 ## Promovidas
 
-### I-024 — `perigo` e `primario` são a mesma cor · frontend/design system
+### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
 
-- Fechada em 2026-09-07 **sem spec própria**: ao investigar para implementar, `perigo` já não usa
-  `--accent` — `ui-12-tokens-semanticos-de-estado` (`docs/specs/done/`) desacoplou a severidade
-  antes desta ideia ser revisitada (`Botao`/`Chip` usam `--erro`, `app-valor-editavel` usa `--vida`,
-  ambos vermelho fixo). Nenhuma cópia local de `.botao--perigo` restava (`ui-04`/`ui-28`…`ui-32` já
-  tinham migrado os 3 usos citados). Nada a implementar — só o registro de que já está resolvida.
-
-### I-025 — Primitivo de "stat editável" para `ficha-mini`/`ficha-atributo` · frontend/design system
-
-- Fundida com `I-026` e fechada por
-  `docs/specs/done/i-024-025-026-stepper-passo-e-cores-perigo.spec.md` (2026-09-07). Metade da ideia
-  original (editar in-line + dadinho de rolar em `ficha-mini`) já tinha virado composição de
-  `app-valor-editavel` + `app-botao-icone` (`P-057`/`P-058`), sem precisar de primitivo novo. A
-  metade que sobrou — o stepper de segurar-repetir sem digitação de `ficha-atributo` — ganhou
-  `[digitavel]="false"`/`[comSinal]` no `app-step-input` existente, em vez de um primitivo à parte.
-
-### I-026 — `[tamanho]` compacto opt-in no `StepInput` · frontend/design system
-
-- Ver `I-025` acima — a mesma spec fechou as duas: o `[tamanho]` já existia (`padrao`/`compacto`/
-  `mini`) antes desta ideia ser revisitada, mas o problema real tinha mudado de forma (`.ficha-passo`
-  não é mais um stepper completo, só um botão avulso) — o que faltava era o modo `digitavel=false`,
-  não uma variante de tamanho.
+- Promovida em 2026-09-21 a `docs/specs/backlog/m9-documentos-campanha.spec.md`. Nasceu do pedido
+  do autor de 2026-08-11 (biblioteca de documentos da campanha) e se encontrou com um segundo
+  pedido, de 2026-09-21, para que a cena de Investigação do módulo de Cenas
+  (`docs/specs/backlog/m7-cenas.spec.md`) pudesse apresentar documentos junto das fichas dos
+  jogadores. O upgrade "mesa investigativa/mapa mental" registrado nesta entrada foi levado à spec
+  como item de "Fora de escopo", não implementado. Os **cadernos privados**, que já tinham saído
+  desta ideia, continuam em
+  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
 
 ## Abertas
 
@@ -75,25 +62,26 @@
   novo(s) de apresentação), a não ser que o novo formato exija um recorte diferente dos dados que o
   backend já grava.
 
-### I-029 — Extrair sub-componentes de apresentação de `FichaVisualizacao`/`FichaCampanhaCard` · frontend/ficha
+### I-029 — Extrair o bloco de Identidade de `FichaVisualizacao`/`FichaCampanhaCard` · frontend/ficha
 
-- **Ideia:** extrair pra sub-componentes próprios os três blocos que `ficha-separar-completa-e-
-  campanha-card` avaliou e decidiu **não** tocar na mesma tarefa: bloco de Identidade (sem os
-  quick-stats que divergem de posição entre os dois componentes), bloco de Reações (Defesa/
-  Esquiva/Bloqueio/Contra-ataque) e bloco de Resistências (os 5 tipos de dano) — hoje duplicados
-  byte a byte entre `FichaVisualizacao` e `FichaCampanhaCard`, divergindo só na origem do booleano
-  `ajustavelAmplo` (sempre `ajustavel()` num, sempre `false` no outro).
-- **Origem:** item 2 da spec `ficha-separar-completa-e-campanha-card` (`docs/specs/done/`),
-  avaliado individualmente pra cada candidato e adiado por decisão consciente — a própria spec veta
-  fazer bifurcação e extração "na mesma leva de commits" (risco de mexer nos dois ao mesmo tempo
-  antes de ver os templates lado a lado sem `@if`).
-- **Por quê:** os três compensariam pelo critério da spec (menos props/inputs do que linhas hoje
-  duplicadas em cada arquivo — a divergência real é mínima, só o `ajustavelAmplo`); manter a
-  duplicação por muito tempo arrisca as duas cópias divergirem de verdade num ajuste futuro que
-  toque só uma.
-- **Custo aparente:** só frontend, 3 componentes novos (`.ts`/`.html`/`.scss`/`.spec.ts` cada),
-  props para os dados + `ajustavelAmplo` + outputs (`ajusteDerivado`/`ajusteResistencia`) — sem
-  schema novo, sem regra de domínio nova.
+- **Ideia:** dos três blocos que esta ideia originalmente cobria, dois já saíram — `FichaReacoes` e
+  `FichaResistencias` (2026-09-22, sem spec própria, ver `HISTORY.md`). O bloco de **Identidade**
+  (nome/contrato, avatar com recorte de enquadramento, editor de classe/arquétipo, modal de Origem)
+  continua duplicado byte a byte entre os dois componentes — deliberadamente **não** extraído nesta
+  rodada: ao contrário de Reações/Resistências (grid de dados + um booleano), Identidade carrega
+  uma dúzia de sinais de edição locais (`editandoIdentidade`, `corFichaForm`,
+  `enquadramentoOrigem`, `arquivoPendente`, `editandoClasse`, `rascunhoClasse`, `editandoOrigem`,
+  `rascunhoOrigem`...) e métodos de confirmar/cancelar para cada um — uma extração seria bem maior
+  e mais arriscada do que o resto da ideia original previa.
+- **Origem:** item 2 da spec `ficha-separar-completa-e-campanha-card` (`docs/specs/done/`); revisada
+  em 2026-09-22 a pedido do autor, que fechou Reações/Resistências e decidiu adiar Identidade dado
+  o tamanho do acoplamento encontrado ao investigar.
+- **Por quê:** mesma razão original — a duplicação arrisca as duas cópias divergirem de verdade num
+  ajuste futuro que toque só uma; agora é o único dos três blocos que ainda duplica.
+- **Custo aparente:** maior do que o resto da ideia original — 1 componente novo, mas com um output
+  por campo editável (nome/contrato/nível/prestígio/cor/imagem/classe/arquétipo/origem) e a
+  migração do modal de Origem (`app-modal`) e do recorte de enquadramento
+  (`app-ajuste-enquadramento-imagem`) para dentro dele.
 
 ### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
 
@@ -268,36 +256,6 @@
   (distinta de `validarPermissaoEdicao`, que hoje deixa dono e mestre editarem igual) e decidir onde
   ela aparece na UI (cabeçalho? aba própria?) — ainda não especificado.
 
-### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
-
-- **Ideia:** criar um módulo de documentos da campanha — possivelmente M9 — no qual o mestre possa
-  cadastrar conteúdo em texto ou imagem, compartilhar documentos selecionados com os jogadores e
-  oferecer aos jogadores uma biblioteca dos documentos recebidos dentro da própria campanha. Os
-  **cadernos privados** que antes faziam parte desta ideia já foram especificados separadamente em
-  `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`.
-- **Origem:** conversa com o autor em 2026-08-11, ao levantar módulos futuros para a plataforma.
-- **Por quê:** materiais de sessão, pistas, handouts e notas de preparação ficam hoje fora do
-  sistema. Centralizá-los preserva o contexto da campanha e permite controlar claramente o que é
-  privado do mestre e o que já foi revelado aos jogadores.
-- **Custo aparente:** alto — modelo de documento e de compartilhamento/visibilidade, upload e
-  armazenamento de imagens e biblioteca por campanha. A
-  busca textual inicial será feita no **PostgreSQL**, que continua como fonte de verdade: `tsvector`,
-  consulta amigável e índice GIN, sempre recortados pelas permissões da campanha. Ainda falta decidir
-  quais formatos de documento são aceitos e se haverá versionamento ou organização por pastas/tags.
-  A numeração M9 é sugestão, não decisão de roadmap.
-- **Evolução futura — Elasticsearch:** permanece uma opção para busca semântica/híbrida, maior
-  sofisticação de relevância ou volume que justifique um índice separado. Nesse cenário, PostgreSQL
-  continua autoritativo e Elasticsearch é projeção reconstruível, sincronizada em criação, alteração
-  e remoção e filtrada pelas permissões antes da consulta. A especificação futura deverá validar
-  hospedagem, sincronização/reindexação, divisão em trechos, embeddings e tratamento de exclusões.
-- **Upgrade futuro — mesa investigativa/mapa mental:** depois da biblioteca básica, os documentos
-  poderiam existir também numa superfície virtual colaborativa. Os jogadores organizariam textos,
-  imagens e pistas livremente, colocariam itens lado a lado, criariam conexões visuais entre eles e
-  acrescentariam anotações próprias, formando um mapa mental da investigação ou da campanha. Esse
-  upgrade exigiria posicionamento livre, persistência do layout, conexões entre nós, colaboração em
-  tempo real e regras de edição/visibilidade. É uma evolução da M9 centrada em conhecimento e pistas,
-  distinta do tabletop tático da M11, que é centrado em mapas, tokens e posicionamento de cena.
-
 ### I-015 — M10 sugerido: assistência por IA · inteligência artificial
 
 - **Ideia:** integrar assistência de IA — possivelmente como M10 — em diferentes pontos do produto:
@@ -358,22 +316,6 @@
   tratada como uma ampliação tardia da M2. A numeração indica agrupamento de escopo, não dependência:
   M7–M12 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
-
-### I-024 — `perigo` e `primario` são a mesma cor, e ela é trocável pelo usuário · frontend/design system
-
-- **Ideia:** desacoplar a severidade `perigo` do `--accent`, provavelmente apontando para `--vida`
-  (vermelho **fixo** da identidade, que já existe justamente por não acompanhar a troca de tema).
-- **Origem:** ficou visível na matriz 8×4 renderizada no gate visual da `ui-01b` (2026-08-28): as
-  linhas `primario` e `perigo` são pixel a pixel a mesma coisa nos estilos preenchido, texto e
-  link — só o estilo **padrão** difere (preenchido vs. contorno).
-- **Por quê:** com o accent padrão (vermelho) a ação destrutiva não se distingue da ação primária;
-  e com um accent azul ou verde escolhido pelo usuário, um botão de "Excluir" fica azul ou verde,
-  que é o oposto do sinal que ele deve dar. O `--vida` foi criado exatamente para o caso de "esta
-  cor não pode acompanhar o tema".
-- **Custo aparente:** baixo em código (uma entrada no mapa `$variantes` de
-  `botao.component.scss`), mas **muda o visual** dos 3 usos atuais de `.botao--perigo`
-  (`usuario/gestao` ×2, `encontro/painel` ×1) e das cópias locais que ainda não migraram — logo,
-  decidir junto com a `ui-04`, que é quando essas telas passam pelo pixel diff de qualquer forma.
 
 ### I-022 — Caderno: importar em lote, arrastar-e-soltar e exportar `.md` · campanha/caderno
 

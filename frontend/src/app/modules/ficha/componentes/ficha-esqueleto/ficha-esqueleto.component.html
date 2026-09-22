@@ -1,0 +1,78 @@
+<div class="ficha-esqueleto" [class.ficha-esqueleto--compacto]="compacto()">
+    <div class="ficha-esqueleto__linha">
+        <div class="ficha-esqueleto__coluna-agente">
+            <section class="ficha-esqueleto__cartao">
+                <header class="ficha-esqueleto__cabecalho">
+                    <app-esqueleto class="ficha-esqueleto__indice" />
+                    <app-esqueleto class="ficha-esqueleto__titulo-cartao" />
+                    <span class="ficha-esqueleto__regua"></span>
+                    <app-esqueleto class="ficha-esqueleto__meta" />
+                </header>
+
+                <div class="ficha-esqueleto__identidade">
+                    <div class="ficha-esqueleto__identidade-a">
+                        <app-esqueleto class="ficha-esqueleto__avatar" />
+                        <app-esqueleto class="ficha-esqueleto__linha-nome" />
+                        <app-esqueleto
+                            class="ficha-esqueleto__linha-texto ficha-esqueleto__linha-curta"
+                        />
+                        <div class="ficha-esqueleto__chips">
+                            <app-esqueleto class="ficha-esqueleto__chip-classe" />
+                            <app-esqueleto class="ficha-esqueleto__chip-classe" />
+                        </div>
+                    </div>
+
+                    <div class="ficha-esqueleto__identidade-b">
+                        <div class="ficha-esqueleto__grade ficha-esqueleto__grade--quatro">
+                            @for (indice of [0, 1, 2, 3]; track indice) {
+                                <app-esqueleto class="ficha-esqueleto__mini" />
+                            }
+                        </div>
+                        <div class="ficha-esqueleto__barras">
+                            <app-esqueleto class="ficha-esqueleto__barra" />
+                            <app-esqueleto class="ficha-esqueleto__barra" />
+                        </div>
+                        <div class="ficha-esqueleto__grade ficha-esqueleto__grade--cinco">
+                            @for (indice of [0, 1, 2, 3, 4]; track indice) {
+                                <app-esqueleto class="ficha-esqueleto__mini" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ficha-esqueleto__cartao">
+                <header class="ficha-esqueleto__cabecalho">
+                    <app-esqueleto class="ficha-esqueleto__indice" />
+                    <app-esqueleto class="ficha-esqueleto__titulo-cartao" />
+                    <span class="ficha-esqueleto__regua"></span>
+                </header>
+                <div class="ficha-esqueleto__grade ficha-esqueleto__grade--tres">
+                    @for (indice of [0, 1, 2, 3, 4, 5]; track indice) {
+                        <app-esqueleto class="ficha-esqueleto__atributo" />
+                    }
+                </div>
+                <app-esqueleto class="ficha-esqueleto__linha-texto" />
+                <app-esqueleto class="ficha-esqueleto__linha-texto ficha-esqueleto__linha-curta" />
+            </section>
+        </div>
+
+        <div class="ficha-esqueleto__coluna-status">
+            <div class="ficha-esqueleto__abas">
+                @for (indice of compacto() ? [0, 1, 2] : [0, 1, 2, 3, 4, 5]; track indice) {
+                    <app-esqueleto class="ficha-esqueleto__aba" />
+                }
+            </div>
+            <section class="ficha-esqueleto__cartao ficha-esqueleto__cartao--conteudo">
+                <div class="ficha-esqueleto__grade ficha-esqueleto__grade--cinco">
+                    @for (indice of [0, 1, 2, 3, 4]; track indice) {
+                        <app-esqueleto class="ficha-esqueleto__mini" />
+                    }
+                </div>
+                <app-esqueleto class="ficha-esqueleto__linha-texto" />
+                <app-esqueleto class="ficha-esqueleto__linha-texto ficha-esqueleto__linha-curta" />
+                <app-esqueleto class="ficha-esqueleto__bloco" />
+            </section>
+        </div>
+    </div>
+</div>

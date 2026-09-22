@@ -15,21 +15,25 @@ import type {
   CampanhaMembroInternoRecuperadoDto,
   CampanhaMembroPapelAlteradoDto,
   CampanhaRecuperarDto,
+  CampanhaSalaSairDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
+  FichaCondicoesAlteradasDto,
   FichaCriadaDto,
   FichaRecuperarDto,
+  FichaSalaSairDto,
   FichaResumoDto,
+  FichaCampanhaRemovidaDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
 import type {
   EncontroAlteradoDto,
   EncontroIniciativaPedidoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
-import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type { RolagemExcluidaDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
   PaginaCadernoEsquadraoPresencaDto,
@@ -122,6 +126,15 @@ export class CampanhaGateway implements OnGatewayConnection {
     return { sucesso: true };
   }
 
+  /** Abandona a sala de ficha pedida; não é mutação de domínio e não consulta services. */
+  @SubscribeMessage('ficha:sair')
+  async sairSalaFicha(
+    @ConnectedSocket() cliente: Socket,
+    @MessageBody() dto: FichaSalaSairDto,
+  ): Promise<void> {
+    await cliente.leave(this.salaFicha(dto.id));
+  }
+
   /**
    * Entra na sala `campanha:<id>` — só **membros** (§14), consultando
    * `CampanhaService.validarAcessoSalaCampanha` (que valida o vínculo do usuário na campanha,
@@ -163,6 +176,19 @@ export class CampanhaGateway implements OnGatewayConnection {
       await cliente.join(this.salaCampanhaMestre(dto.id));
     }
     return { sucesso: true };
+  }
+
+  /** Abandona todas as variantes de sala que uma campanha pode usar; não consulta services. */
+  @SubscribeMessage('campanha:sair')
+  async sairSalaCampanha(
+    @ConnectedSocket() cliente: Socket,
+    @MessageBody() dto: CampanhaSalaSairDto,
+  ): Promise<void> {
+    await Promise.all([
+      cliente.leave(this.salaCampanha(dto.id)),
+      cliente.leave(this.salaCampanhaMestre(dto.id)),
+      cliente.leave(this.salaCampanhaEspectador(dto.id)),
+    ]);
   }
 
   /**
@@ -234,10 +260,34 @@ export class CampanhaGateway implements OnGatewayConnection {
       dados: omitirCamposPrivados(ficha.dados),
     };
     this.servidor.to(this.salaFicha(ficha.id)).emit('ficha:alterada', fichaSemCamposPrivados);
+    // I-031: qualquer `ficha:alterada` pode ter tocado `estado.morrendo`/`machucado`/
+    // `inconsciente` (o gateway não sabe distinguir sem reabrir o documento) — avisa a sala ampla
+    // da campanha, sem payload de ficha, pra quem não tem acesso mas vê a condição na carteirinha
+    // (`CampanhaMembroFichaResumoDto`) refazer `listarMembros`. Ficha `CRIATURA`/avulsa não tem
+    // `campanhaId` de agente-jogador sempre presente — `null` não entra em sala nenhuma.
+    if (ficha.campanhaId !== null) {
+      this.emitirFichaCondicoesAlteradas({ campanhaId: ficha.campanhaId });
+    }
     // Best-effort: uma falha aqui (ex.: encontro apagado entre a alteração e este ponto) não pode
     // derrubar o broadcast de `ficha:alterada` que já aconteceu — mesmo espírito do `catch` por
     // socket em `emitirEncontroAlterado` logo abaixo.
     void this.encontroService.sincronizarFichaAlterada(ficha.id, ficha.campanhaId).catch(() => undefined);
+  }
+
+  /** Ver comentário em `emitirFichaAlterada` — payload mínimo, mesma receita de `emitirFichaVisibilidadeAlterada`. */
+  private emitirFichaCondicoesAlteradas(evento: FichaCondicoesAlteradasDto): void {
+    this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('ficha:condicoes-alteradas', evento);
+  }
+
+  /**
+   * Avisa a campanha que uma ficha saiu dela (`ficha:removida-da-campanha`) — o cliente refaz o GET
+   * autorizado e a ficha some do Esquadrão. Payload só com os ids: vale para qualquer tipo de
+   * ficha, sem carregar dado da ficha para a sala ampla.
+   */
+  emitirFichaRemovidaDaCampanha(evento: FichaCampanhaRemovidaDto): void {
+    this.servidor
+      .to(this.salaCampanha(evento.campanhaId))
+      .emit('ficha:removida-da-campanha', evento);
   }
 
   /**
@@ -329,6 +379,43 @@ export class CampanhaGateway implements OnGatewayConnection {
     this.servidor.to(this.salaFicha(evento.fichaId)).emit('ficha:acesso-revogado', evento);
   }
 
+  /** Remove das fichas os sockets do usuário cujo acesso acabou de ser revogado pela service. */
+  async expulsarUsuarioDaFicha(evento: FichaAcessoRevogadoDto): Promise<void> {
+    const sockets = await this.servidor.in(this.salaFicha(evento.fichaId)).fetchSockets();
+    await Promise.all(
+      sockets
+        .filter((socket) => (socket.data as { usuario?: JwtPayload }).usuario?.sub === evento.usuarioId)
+        .map((socket) => socket.leave(this.salaFicha(evento.fichaId))),
+    );
+  }
+
+  /** Aplica ao socket o papel já persistido pela service, sem reproduzir a autorização de domínio. */
+  async recalibrarSalasCampanhaUsuario(dto: {
+    readonly campanhaId: number;
+    readonly usuarioId: number;
+    readonly papel: TipoCampanhaMembroPapelEnum | null;
+  }): Promise<void> {
+    const salas = [
+      this.salaCampanha(dto.campanhaId),
+      this.salaCampanhaMestre(dto.campanhaId),
+      this.salaCampanhaEspectador(dto.campanhaId),
+    ];
+    const sockets = await this.servidor.in(salas).fetchSockets();
+    await Promise.all(sockets
+      .filter((socket) => (socket.data as { usuario?: JwtPayload }).usuario?.sub === dto.usuarioId)
+      .flatMap((socket) => [
+        ...salas.map((sala) => socket.leave(sala)),
+        ...(dto.papel === null ? [] : [socket.join(
+          dto.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+            ? this.salaCampanhaEspectador(dto.campanhaId)
+            : this.salaCampanha(dto.campanhaId),
+        )]),
+        ...(dto.papel === TipoCampanhaMembroPapelEnum.MESTRE
+          ? [socket.join(this.salaCampanhaMestre(dto.campanhaId))]
+          : []),
+      ]));
+  }
+
   /** Propaga a criação já persistida de uma página colaborativa à campanha. */
   emitirPaginaEsquadraoCriada(pagina: PaginaCadernoResumoDto): void {
     this.servidor.to(this.salaCampanha(pagina.campanhaId)).emit('caderno-esquadrao:pagina-criada', pagina);
@@ -383,6 +470,28 @@ export class CampanhaGateway implements OnGatewayConnection {
       return;
     }
     this.servidor.to(this.salaCampanhaMestre(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
+  }
+
+  /**
+   * Emite `rolagem:excluida` (soft delete por `ADMIN`) na mesma sala que `emitirRolagemRegistrada`
+   * usaria para a rolagem: `PUBLICA` na sala cheia + espectador (ou `ficha:<id>` para ficha solta),
+   * `PRIVADA` só na sala do mestre. Payload sem conteúdo (`RolagemExcluidaDto`), então nada privado
+   * vaza. Broadcast-only: a service chama depois de persistir.
+   */
+  emitirRolagemExcluida(rolagem: RolagemExcluidaDto): void {
+    if (rolagem.campanhaId === null) {
+      if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA && rolagem.fichaId !== null) {
+        this.servidor.to(this.salaFicha(rolagem.fichaId)).emit('rolagem:excluida', rolagem);
+      }
+      return;
+    }
+    if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
+      this.servidor
+        .to([this.salaCampanha(rolagem.campanhaId), this.salaCampanhaEspectador(rolagem.campanhaId)])
+        .emit('rolagem:excluida', rolagem);
+      return;
+    }
+    this.servidor.to(this.salaCampanhaMestre(rolagem.campanhaId)).emit('rolagem:excluida', rolagem);
   }
 
   /**

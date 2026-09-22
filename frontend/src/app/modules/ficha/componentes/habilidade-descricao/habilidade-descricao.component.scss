@@ -1,0 +1,27 @@
+// Teto de 5 linhas na leitura compacta da descrição de habilidade. O Milkdown renderiza o
+// documento em `.milkdown .editor` (ProseMirror), com `font: 13px/1.7` no compacto — o corte por
+// `-webkit-line-clamp` conta linhas através dos parágrafos/listas dele e põe as reticências na
+// última visível. `display: -webkit-box` é o que o line-clamp exige; sem `overflow: hidden` o
+// resto vazaria.
+
+:host {
+    display: block;
+}
+
+.habilidade-descricao__corpo {
+    // Conteúdo de `EditorMarkdown` (`::ng-deep`: o DOM do Milkdown é criado em runtime e a
+    // encapsulação de view não alcança).
+    ::ng-deep .milkdown .editor {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 5;
+        line-clamp: 5;
+        overflow: hidden;
+    }
+}
+
+.habilidade-descricao__rodape {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-4);
+}

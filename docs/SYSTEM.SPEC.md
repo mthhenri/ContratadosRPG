@@ -290,7 +290,7 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
 - **Salas:**
   - `ficha:<id>` — entrar exige a mesma permissão de visualização do REST (§14).
     Evento: `ficha:alterada`.
-  - `campanha:<id>` — mestre/jogador. Eventos: `ficha:criada`, `membro:entrou`,
+  - `campanha:<id>` — mestre/jogador. Eventos: `ficha:criada`, `ficha:removida-da-campanha`, `membro:entrou`,
     `campanha:membro-papel-alterado`, `campanha:inventario-alterado`, `caderno-esquadrao:*`.
   - `campanha:<id>:espectador` (m8-02) — só `ESPECTADOR`, sala própria e separada da de
     mestre/jogador. Recebe só o que é explicitamente encaminhado às duas salas (hoje, só

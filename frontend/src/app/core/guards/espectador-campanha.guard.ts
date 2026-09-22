@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { catchError, map, of } from 'rxjs';
+import { ResolveFn, Router } from '@angular/router';
+import { catchError, of } from 'rxjs';
+import type { CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 
 import { CampanhaProjecaoService } from '../../modules/campanha/campanha-projecao.service';
 
@@ -14,13 +15,12 @@ import { CampanhaProjecaoService } from '../../modules/campanha/campanha-projeca
  * projeção do painel — o backend já centraliza a regra ali (proibição #28); este guard só chama o
  * mesmo endpoint que a página vai carregar e propaga sucesso/falha, sem reimplementar permissão.
  */
-export const espectadorCampanhaGuard: CanActivateFn = (rota) => {
+export const espectadorCampanhaResolver: ResolveFn<CampanhaPainelEspectadorDto | ReturnType<Router['createUrlTree']>> = (rota) => {
   const campanhaProjecaoService = inject(CampanhaProjecaoService);
   const router = inject(Router);
   const campanhaId = Number(rota.paramMap.get('id'));
 
-  return campanhaProjecaoService.recuperarPainelEspectador(campanhaId, 1, 1).pipe(
-    map(() => true),
+  return campanhaProjecaoService.recuperarPainelEspectador(campanhaId, 1, 20).pipe(
     catchError(() => of(router.createUrlTree(['/acesso-negado']))),
   );
 };

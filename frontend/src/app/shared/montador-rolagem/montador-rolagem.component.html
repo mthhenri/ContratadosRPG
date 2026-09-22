@@ -1,18 +1,18 @@
-@if (!oculto()) {
-<button
-    app-botao-icone
-    tamanho="padrao"
-    variante="secundario"
-    type="button"
-    class="montador-rolagem__gatilho"
-    [class.montador-rolagem__gatilho--ativo]="aberto()"
-    [attr.aria-pressed]="aberto() ? 'true' : 'false'"
-    aria-label="Montar fórmula por botões"
-    [appTooltip]="aberto() ? 'Fechar o montador' : 'Montar fórmula por botões'"
-    (click)="alternar()"
->
-    <app-icone nome="dado" />
-</button>
+@if (!oculto() && permitido()) {
+    <button
+        app-botao-icone
+        tamanho="padrao"
+        variante="secundario"
+        type="button"
+        class="montador-rolagem__gatilho"
+        [class.montador-rolagem__gatilho--ativo]="aberto()"
+        [attr.aria-pressed]="aberto() ? 'true' : 'false'"
+        aria-label="Montar fórmula por botões"
+        [appTooltip]="aberto() ? 'Fechar o montador' : 'Montar fórmula por botões'"
+        (click)="alternar()"
+    >
+        <app-icone nome="dado-mais" />
+    </button>
 }
 
 <app-painel-flutuante
@@ -20,8 +20,8 @@
     id="montador-rolagem"
     titulo="Montador de rolagem"
     [aberto]="aberto()"
-    [largura]="380"
-    [altura]="580"
+    [largura]="mobileAtivo() ? null : tamanho().largura"
+    [altura]="mobileAtivo() ? null : tamanho().altura"
     [mobile]="mobileAtivo()"
     [posicaoInicial]="posicaoInicial"
     (fechar)="fechar()"
@@ -32,11 +32,76 @@
             type="text"
             [value]="formula()"
             (input)="aoDigitarPreview($event)"
+            (click)="aoPosicionarCursor($event)"
+            (keyup)="aoPosicionarCursor($event)"
             aria-label="Fórmula em edição"
             placeholder="Sua fórmula aparece aqui"
         />
 
         <div class="montador-rolagem__corpo" appOverflowFade>
+            <section class="montador-rolagem__grupo">
+                <h3 class="montador-rolagem__titulo">Editar</h3>
+                <div class="montador-rolagem__grade">
+                    <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        type="button"
+                        class="montador-rolagem__tile montador-rolagem__tile--operador"
+                        (click)="inserirOperador('+')"
+                    >
+                        +
+                    </button>
+                    <button
+                        app-botao
+                        variante="primario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        type="button"
+                        class="montador-rolagem__tile montador-rolagem__tile--operador"
+                        (click)="inserirOperador('-')"
+                    >
+                        −
+                    </button>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        type="button"
+                        class="montador-rolagem__tile"
+                        (click)="inserir('(')"
+                    >
+                        (
+                    </button>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        estilo="contorno"
+                        tamanho="pequeno"
+                        type="button"
+                        class="montador-rolagem__tile"
+                        (click)="inserir(')')"
+                    >
+                        )
+                    </button>
+                    @for (digito of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digito) {
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="contorno"
+                            tamanho="pequeno"
+                            type="button"
+                            class="montador-rolagem__tile"
+                            (click)="inserir('' + digito)"
+                        >
+                            {{ digito }}
+                        </button>
+                    }
+                </div>
+            </section>
+
             <section class="montador-rolagem__grupo">
                 <h3 class="montador-rolagem__titulo">Dado</h3>
                 <p class="montador-rolagem__dica">
@@ -86,8 +151,6 @@
                     @for (sigla of fontesExtra; track sigla) {
                         <button
                             app-botao
-                            variante="primario"
-                            estilo="contorno"
                             tamanho="pequeno"
                             type="button"
                             class="montador-rolagem__tile montador-rolagem__tile--extra"
@@ -162,8 +225,6 @@
                     @for (item of tiposDano; track item.sigla) {
                         <button
                             app-botao
-                            variante="secundario"
-                            estilo="contorno"
                             tamanho="pequeno"
                             type="button"
                             [class]="
@@ -245,7 +306,10 @@
                         </button>
                     }
                 </app-segmentado>
-                <app-segmentado rotulo="Modo da quantidade de dados" class="montador-rolagem__segmentado">
+                <app-segmentado
+                    rotulo="Modo da quantidade de dados"
+                    class="montador-rolagem__segmentado"
+                >
                     <button
                         app-segmentado-item
                         type="button"
@@ -264,15 +328,27 @@
                     </button>
                 </app-segmentado>
                 <div class="montador-rolagem__linha">
-                    <span class="montador-rolagem__rotulo-linha">{{ usaMultiplicadorComposto() ? "Multiplicador" : "Ajuste" }}</span>
+                    <span class="montador-rolagem__rotulo-linha">{{
+                        usaMultiplicadorComposto() ? "Multiplicador" : "Ajuste"
+                    }}</span>
                     <app-step-input
-                        [valorExterno]="usaMultiplicadorComposto() ? multiplicadorComposto() : ajusteComposto()"
-                        (valorAlterado)="usaMultiplicadorComposto() ? multiplicadorComposto.set($event) : ajusteComposto.set($event)"
+                        [valorExterno]="
+                            usaMultiplicadorComposto() ? multiplicadorComposto() : ajusteComposto()
+                        "
+                        (valorAlterado)="
+                            usaMultiplicadorComposto()
+                                ? multiplicadorComposto.set($event)
+                                : ajusteComposto.set($event)
+                        "
                         [min]="usaMultiplicadorComposto() ? 1 : -20"
                         [max]="20"
                         [comSinal]="!usaMultiplicadorComposto()"
                         tamanho="compacto"
-                        [ariaRotulo]="usaMultiplicadorComposto() ? 'Multiplicador da propriedade' : 'Ajuste da propriedade'"
+                        [ariaRotulo]="
+                            usaMultiplicadorComposto()
+                                ? 'Multiplicador da propriedade'
+                                : 'Ajuste da propriedade'
+                        "
                     />
                 </div>
                 <div class="montador-rolagem__grade">
@@ -334,53 +410,6 @@
                     </button>
                 </div>
             </section>
-
-            <section class="montador-rolagem__grupo">
-                <h3 class="montador-rolagem__titulo">Editar</h3>
-                <div class="montador-rolagem__grade">
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile montador-rolagem__tile--operador"
-                        (click)="inserirOperador('+')"
-                    >
-                        +
-                    </button>
-                    <button
-                        app-botao
-                        variante="primario"
-                        estilo="contorno"
-                        tamanho="pequeno"
-                        type="button"
-                        class="montador-rolagem__tile montador-rolagem__tile--operador"
-                        (click)="inserirOperador('-')"
-                    >
-                        −
-                    </button>
-                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir('(')">
-                        (
-                    </button>
-                    <button app-botao variante="secundario" estilo="contorno" tamanho="pequeno" type="button" class="montador-rolagem__tile" (click)="inserir(')')">
-                        )
-                    </button>
-                    @for (digito of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; track digito) {
-                        <button
-                            app-botao
-                            variante="secundario"
-                            estilo="contorno"
-                            tamanho="pequeno"
-                            type="button"
-                            class="montador-rolagem__tile"
-                            (click)="inserir('' + digito)"
-                        >
-                            {{ digito }}
-                        </button>
-                    }
-                </div>
-            </section>
         </div>
 
         <div class="montador-rolagem__rodape">
@@ -421,4 +450,13 @@
             </button>
         </div>
     </div>
+
+    @if (!mobileAtivo()) {
+        <span
+            painelRedimensionar
+            class="montador-rolagem__redimensionar"
+            aria-hidden="true"
+            (pointerdown)="iniciarRedimensionamento($event)"
+        ></span>
+    }
 </app-painel-flutuante>

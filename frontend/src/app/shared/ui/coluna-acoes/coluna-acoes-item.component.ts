@@ -22,6 +22,7 @@ import { Tooltip } from '../../tooltip/tooltip.directive';
   host: {
     '[class]': 'classes()',
     '[attr.aria-current]': 'ativo() ? "page" : null',
+    '[attr.aria-pressed]': 'pressionado()',
   },
 })
 export class ColunaAcoesItem {
@@ -30,10 +31,19 @@ export class ColunaAcoesItem {
   /** Item correspondente à rota atual, se aplicável — decidido pelo consumidor. */
   readonly ativo = input(false);
 
+  /**
+   * Item de alternância (`ui-37`: Editar combatentes, Selecionar, Adicionar avulso) — `null` (padrão)
+   * não é alternância e nada muda; `true`/`false` viram `aria-pressed` e, ligado, o mesmo destaque de
+   * `ativo` — sem o `aria-current="page"`, que só cabe a item correspondente à rota.
+   */
+  readonly pressionado = input<boolean | null>(null);
+
   /** Badge numérico opcional (ex.: convites pendentes) — usado ou não pelo consumidor. */
   readonly contagem = input<number | null>(null);
 
   protected readonly classes = computed(() =>
-    this.ativo() ? 'coluna-acoes__item coluna-acoes__item--ativo' : 'coluna-acoes__item',
+    this.ativo() || this.pressionado() === true
+      ? 'coluna-acoes__item coluna-acoes__item--ativo'
+      : 'coluna-acoes__item',
   );
 }

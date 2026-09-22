@@ -1,0 +1,578 @@
+@if (dados.carregando()) {
+<!-- Carregamento da visão do mestre: mesma casca da tela pronta (coluna de ações real, cabeçalho,
+     trilha | rolagens | palco com ficha resumida + grade), pra tela não "pular" quando o encontro
+     chega. Ainda não se sabe se há combate aberto; a silhueta é a do combate em curso, o caso em
+     que a tela é mais alta. A casca (`PainelEncontroShell`) só monta esta página enquanto o papel é
+     desconhecido ou o usuário é o mestre; quem não é passa à página do jogador. -->
+<div class="iniciativa-mestre">
+    <app-coluna-acoes id="iniciativa-mestre" rotulo="Ações da iniciativa">
+        @for (i of [0, 1, 2, 3, 4]; track i) {
+        <app-esqueleto class="iniciativa-mestre__esqueleto-acao" />
+        }
+    </app-coluna-acoes>
+
+    <div class="iniciativa-mestre__conteudo" role="status" aria-label="Carregando o combate">
+        <header class="iniciativa-mestre__cabecalho">
+            <app-esqueleto class="iniciativa-mestre__esqueleto-voltar" />
+            <span class="iniciativa-mestre__indice">//</span>
+            <app-esqueleto class="iniciativa-mestre__esqueleto-titulo" />
+            <span class="iniciativa-mestre__regua"></span>
+        </header>
+
+        <div class="iniciativa-mestre__linha">
+            <div class="iniciativa-mestre__trilha iniciativa-mestre__esqueleto-trilha">
+                <div class="iniciativa-mestre__esqueleto-contadores">
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-contador" />
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-contador" />
+                </div>
+                <div class="iniciativa-mestre__esqueleto-passos">
+                    @for (i of [0, 1, 2, 3, 4]; track i) {
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-passo" />
+                    }
+                </div>
+            </div>
+
+            <div class="iniciativa-mestre__rolagens">
+                <div class="iniciativa-mestre__esqueleto-rolagens">
+                    @for (i of [0, 1, 2, 3]; track i) {
+                    <app-esqueleto class="iniciativa-mestre__esqueleto-rolagem" />
+                    }
+                </div>
+            </div>
+
+            <div class="iniciativa-mestre__palco">
+                <app-esqueleto class="iniciativa-mestre__esqueleto-conducao" />
+
+                <div class="iniciativa-mestre__corpo">
+                    <section class="iniciativa-mestre__resumo">
+                        <app-esqueleto class="iniciativa-mestre__esqueleto-resumo" />
+                    </section>
+
+                    <section class="iniciativa-mestre__todos">
+                        <header class="iniciativa-mestre__secao">
+                            <h2 class="iniciativa-mestre__secao-titulo">Todos os combatentes</h2>
+                            <span class="iniciativa-mestre__secao-regua"></span>
+                        </header>
+                        <div class="grade grade--compacta grade--palco">
+                            @for (i of [0, 1, 2, 3]; track i) {
+                            <app-esqueleto class="iniciativa-mestre__esqueleto-combatente" />
+                            }
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+} @else {
+<!-- Visão do mestre (ui-37/ui-38): coluna de ações + trilha + rolagens + palco. A casca é a mesma de
+     `detalhe-mestre` — coluna encostada na topbar e na borda, conteúdo com o restante da largura.
+     Sem encontro (ui-38) a casca fica e o palco vira um estado vazio com "Novo combate". -->
+<div class="iniciativa-mestre">
+    <app-coluna-acoes id="iniciativa-mestre" rotulo="Ações da iniciativa">
+        @if (!dados.encontro()) {
+        <div class="coluna-acoes__categoria">Combate</div>
+        <button
+            app-coluna-acoes-item
+            icone="mais"
+            appTooltip="Abrir um combate novo nesta campanha"
+            [pressionado]="criandoEncontro()"
+            [disabled]="dados.emOperacao()"
+            (click)="abrirNovoCombate()"
+        >
+            Novo combate
+        </button>
+        } @else if (dados.mutavel()) {
+        <div class="coluna-acoes__categoria">Combate</div>
+        <button
+            app-coluna-acoes-item
+            icone="mais"
+            appTooltip="Escolher fichas da campanha para o combate"
+            [pressionado]="selecionandoCombatentes()"
+            [disabled]="dados.emOperacao()"
+            (click)="alternarSelecaoCombatentes()"
+        >
+            Selecionar combatentes
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="novo-agente"
+            appTooltip="Adicionar um inimigo improvisado, sem ficha"
+            [pressionado]="adicionandoAvulso()"
+            [disabled]="dados.emOperacao()"
+            (click)="alternarAdicaoAvulso()"
+        >
+            Adicionar avulso
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="editar"
+            appTooltip="Editar iniciativa e remover combatentes"
+            [pressionado]="modoEdicao()"
+            [disabled]="dados.emOperacao() || !dados.combatentes().length"
+            (click)="alternarEdicao()"
+        >
+            Editar combatentes
+        </button>
+        @if (dados.emCombate()) {
+        <button
+            app-coluna-acoes-item
+            icone="excluir"
+            appTooltip="Encerrar o combate — depois disso ele fica só de leitura"
+            [disabled]="dados.emOperacao()"
+            (click)="encerrarCombate()"
+        >
+            Encerrar combate
+        </button>
+        } }
+        <div class="coluna-acoes__categoria">Ferramentas</div>
+        <button
+            app-coluna-acoes-item
+            icone="calculadora"
+            appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
+            (click)="alternarCalculadora()"
+        >
+            Calculadora
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+    </app-coluna-acoes>
+
+    <div class="iniciativa-mestre__conteudo">
+        <header class="iniciativa-mestre__cabecalho">
+            <a
+                app-botao-icone
+                tamanho="padrao"
+                [routerLink]="['/campanhas', dados.campanhaId]"
+                aria-label="Voltar à campanha"
+                [appTooltip]="'Voltar à campanha'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            <span class="iniciativa-mestre__indice">//</span>
+            <h1 class="iniciativa-mestre__titulo">
+                {{ dados.encontro() ? 'Iniciativa · ' + dados.encontro()!.nome : 'Iniciativa' }}
+            </h1>
+            @if (dados.campanhaNome()) {
+            <span class="iniciativa-mestre__campanha">{{ dados.campanhaNome() }}</span>
+            } @if (dados.encontro(); as encontroCabecalho) {
+            <app-chip variante="sutil"
+                >{{ rotuloStatusEncontro(encontroCabecalho.status) }}</app-chip
+            >
+            }
+            <span class="iniciativa-mestre__regua"></span>
+            <!-- Encontros anteriores (m7-06): só o mestre navega pelo histórico. -->
+            @if (dados.vendoHistorico()) { @if (temCombateAberto()) {
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="pequeno"
+                type="button"
+                [appTooltip]="'Voltar ao combate em andamento'"
+                (click)="voltarAoCorrente()"
+            >
+                <app-icone nome="voltar" />
+                Combate atual
+            </button>
+            } @else {
+            <button
+                app-botao
+                variante="primario"
+                tamanho="pequeno"
+                type="button"
+                [appTooltip]="'Não há combate em andamento — abrir um novo'"
+                [disabled]="dados.emOperacao()"
+                (click)="abrirNovoCombate()"
+            >
+                <app-icone nome="mais" />
+                Novo combate
+            </button>
+            } } @if (dados.encontro() && historico().length) {
+            <!-- Combates encerrados (ui-38): menu ancorado no gatilho. Segue o dropdown de perfil da
+                 topbar: fecha pelo próprio botão, ao escolher um combate ou com Escape (listener no
+                 `host` da página). -->
+            <div class="iniciativa-mestre__historico">
+                <button
+                    app-botao
+                    #historicoGatilho
+                    variante="secundario"
+                    tamanho="pequeno"
+                    type="button"
+                    aria-haspopup="menu"
+                    [attr.aria-expanded]="historicoAberto()"
+                    [appTooltip]="'Combates encerrados desta campanha'"
+                    (click)="alternarHistorico()"
+                >
+                    <app-icone nome="d20" />
+                    {{ historico().length }} {{ historico().length === 1 ? 'encerrado' :
+                    'encerrados' }}
+                </button>
+                @if (historicoAberto()) {
+                <div class="historico__menu" role="menu">
+                    <span class="historico__legenda">Combates encerrados</span>
+                    @for (anterior of historico(); track anterior.id) {
+                    <button
+                        class="historico__item"
+                        type="button"
+                        role="menuitem"
+                        (click)="abrirDoHistorico(anterior)"
+                    >
+                        <ng-container
+                            *ngTemplateOutlet="linhaHistorico; context: { $implicit: anterior }"
+                        />
+                    </button>
+                    }
+                </div>
+                }
+            </div>
+            }
+        </header>
+
+        @if (dados.encontro(); as encontroAtual) {
+        <div class="iniciativa-mestre__linha">
+            <app-trilha-turnos
+                class="iniciativa-mestre__trilha"
+                [encontro]="encontroAtual"
+                [combatentes]="dados.combatentes()"
+            />
+
+            <div class="iniciativa-mestre__rolagens">
+                <app-historico-rolagens-sidebar
+                    [fixo]="true"
+                    titulo="Rolagens"
+                    [itens]="dados.rolagensFeed()"
+                    [carregando]="dados.carregandoRolagens()"
+                />
+            </div>
+
+            <div class="iniciativa-mestre__palco">
+                <app-conducao-turno
+                    [status]="encontroAtual.status"
+                    [nomeDaVez]="dados.combatenteDaVez()?.nome ?? null"
+                    [acoesRestantes]="dados.acoesRestantesDaVez()"
+                    [emOperacao]="dados.emOperacao()"
+                    [temCombatentes]="dados.combatentes().length > 0"
+                    [faltamIniciativas]="dados.faltamIniciativas()"
+                    (voltar)="voltarTurno()"
+                    (avancar)="dados.avancarTurno()"
+                    (encerrar)="encerrarCombate()"
+                    (pedirIniciativa)="pedirIniciativa()"
+                    (rolarIniciativas)="rolarTudo()"
+                    (iniciar)="iniciarCombate()"
+                />
+
+                @if (dados.mutavel() && selecionandoCombatentes()) {
+                <!-- Cartões sumarizados de agente/criatura/NPC da campanha, um por linha de tipo. Clicar
+                     alterna a presença no encontro; quem já está em campo chega marcado — reabrir o
+                     seletor depois de montar não perde a leitura de quem foi adicionado. -->
+                <app-seletor-combatentes
+                    [fichas]="dados.fichasCampanha()"
+                    [combatentes]="dados.combatentes()"
+                    [desabilitado]="dados.emOperacao()"
+                    (fichaAlternada)="alternarFichaNoEncontro($event)"
+                />
+                } @if (dados.mutavel() && adicionandoAvulso()) {
+                <form
+                    class="adicionar"
+                    [formGroup]="formularioAvulso"
+                    (ngSubmit)="adicionarAvulso()"
+                >
+                    <label class="adicionar__campo">
+                        <span class="adicionar__rotulo">Nome do avulso</span>
+                        <input
+                            class="painel__controle"
+                            type="text"
+                            formControlName="nomeAvulso"
+                            placeholder="Ex.: Sujeito Contido"
+                        />
+                    </label>
+
+                    <label class="adicionar__campo adicionar__campo--curto">
+                        <span class="adicionar__rotulo">Vida do avulso</span>
+                        <input
+                            class="painel__controle"
+                            type="number"
+                            formControlName="vidaMaximaAvulso"
+                            min="1"
+                        />
+                    </label>
+
+                    <label class="adicionar__campo">
+                        <span class="adicionar__rotulo">Cadência do avulso</span>
+                        <select class="painel__controle" formControlName="cadencia">
+                            @for (opcao of cadencias; track opcao) {
+                            <option [value]="opcao">{{ nomeCadencia(opcao) }}</option>
+                            }
+                        </select>
+                    </label>
+
+                    @if (formularioAvulso.controls.cadencia.value === CadenciaEnum.FRENETICA) {
+                    <label class="adicionar__campo adicionar__campo--curto">
+                        <span class="adicionar__rotulo">Turnos por rodada</span>
+                        <input
+                            class="painel__controle"
+                            type="number"
+                            formControlName="turnosPorRodada"
+                            min="4"
+                            step="1"
+                        />
+                    </label>
+                    }
+
+                    <label class="adicionar__campo adicionar__campo--identidade">
+                        <span class="adicionar__rotulo">Cor do avulso</span>
+                        <span
+                            class="adicionar__identidade"
+                            [style.--cor-avulso]="formularioAvulso.controls.corAvulso.value"
+                        >
+                            <span class="adicionar__preview" aria-hidden="true">
+                                @if (imagemAvulsoPreview(); as preview) {
+                                <img class="adicionar__preview-imagem" [src]="preview" alt="" />
+                                }
+                            </span>
+                            <input
+                                class="adicionar__cor"
+                                type="color"
+                                formControlName="corAvulso"
+                                aria-label="Cor do avulso"
+                            />
+                        </span>
+                    </label>
+
+                    <label class="adicionar__campo adicionar__campo--imagem">
+                        <span class="adicionar__rotulo">Imagem opcional</span>
+                        <span class="painel__controle adicionar__arquivo"
+                            >{{ imagemAvulsoArquivo()?.name ?? 'Escolher imagem' }}</span
+                        >
+                        <input
+                            class="adicionar__arquivo-entrada"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            aria-label="Imagem do avulso"
+                            (change)="selecionarImagemAvulso($event)"
+                        />
+                    </label>
+
+                    <button
+                        app-botao
+                        variante="primario"
+                        class="adicionar__acao"
+                        type="submit"
+                        [disabled]="dados.emOperacao() || formularioAvulso.invalid"
+                    >
+                        Adicionar
+                    </button>
+                    <button
+                        app-botao
+                        variante="secundario"
+                        class="adicionar__acao"
+                        type="button"
+                        [disabled]="dados.emOperacao()"
+                        (click)="cancelarAvulso()"
+                    >
+                        Cancelar
+                    </button>
+                </form>
+                }
+
+                <div class="iniciativa-mestre__corpo">
+                    <!-- Só há ficha resumida quando alguém está na vez: em montagem e no encerrado a
+                         coluna some e a grade de combatentes fica com o palco inteiro. -->
+                    @if (dados.combatenteDaVez(); as daVez) {
+                    <section class="iniciativa-mestre__resumo" aria-label="Combatente ativo">
+                        <app-resumo-combatente
+                            [combatente]="daVez"
+                            [nivelAmeaca]="dados.nivelAmeaca(daVez)"
+                            (abrirFicha)="abrirFichaFlutuante(daVez)"
+                        />
+                    </section>
+                    }
+
+                    <section class="iniciativa-mestre__todos" aria-label="Todos os combatentes">
+                        <header class="iniciativa-mestre__secao">
+                            <h2 class="iniciativa-mestre__secao-titulo">Todos os combatentes</h2>
+                            <span class="iniciativa-mestre__secao-regua"></span>
+                            <span class="iniciativa-mestre__secao-meta">
+                                {{ encontroAtual.combatentes.length }} {{
+                                encontroAtual.combatentes.length === 1 ? 'participante' :
+                                'participantes' }}
+                            </span>
+                        </header>
+
+                        @if (dados.combatentes().length) {
+                        <div class="grade grade--compacta grade--palco">
+                            @for (combatente of dados.combatentes(); track combatente.chaveVisual) {
+                            <app-cartao-combatente
+                                [combatente]="combatente"
+                                [ocorrencia]="combatente.ocorrencia"
+                                [totalOcorrencias]="combatente.totalOcorrencias"
+                                [ehTurnoAtual]="dados.ehDaVez(combatente)"
+                                [jaAgiu]="dados.jaAgiu(combatente)"
+                                [emCombate]="dados.emCombate()"
+                                [nivelAmeaca]="dados.nivelAmeaca(combatente)"
+                                [ehMestre]="true"
+                                [podeAjustar]="dados.mutavel() && !dados.emOperacao()"
+                                [emEdicao]="modoEdicao() && dados.mutavel() && combatente.ocorrencia === 1"
+                                (vidaAjustada)="ajustarVida(combatente, $event)"
+                                (energiaAjustada)="ajustarEnergia(combatente, $event)"
+                                (iniciativaAtribuida)="atribuirIniciativa(combatente, $event)"
+                                (formulaIniciativaAlterada)="
+                                    alterarFormulaIniciativa(combatente, $event)
+                                "
+                                (removido)="removerCombatente(combatente)"
+                                (abrirFicha)="abrirFichaFlutuante(combatente)"
+                                (corAvulsoAlterada)="alterarCorAvulso(combatente, $event)"
+                                (imagemAvulsoAlterada)="alterarImagemAvulso(combatente, $event)"
+                                (imagemAvulsoRemovida)="removerImagemAvulso(combatente)"
+                                (rolagemAvulsoAberta)="avulsoRolando.set(combatente)"
+                            />
+                            }
+                        </div>
+                        } @else {
+                        <app-estado-vazio
+                            tamanho="compacto"
+                            titulo="Nenhum combatente ainda. Adicione as fichas da campanha, as Ameaças e os avulsos que entram neste combate."
+                        />
+                        }
+                    </section>
+                </div>
+            </div>
+        </div>
+        } @else {
+        <app-estado-vazio
+            class="iniciativa-mestre__vazio"
+            icone="combate"
+            titulo="Nenhum combate em andamento."
+            linhaApoio="Abra um combate para montar a ordem de iniciativa e conduzir os turnos."
+        >
+            <button
+                app-botao
+                estadoVazioAcao
+                variante="primario"
+                tamanho="medio"
+                class="iniciativa-mestre__vazio-acao"
+                type="button"
+                [disabled]="dados.emOperacao()"
+                (click)="abrirNovoCombate()"
+            >
+                <app-icone nome="mais" />
+                Novo combate
+            </button>
+        </app-estado-vazio>
+        @if (historico().length) {
+        <section class="iniciativa-mestre__anteriores" aria-label="Combates anteriores">
+            <header class="iniciativa-mestre__secao">
+                <h2 class="iniciativa-mestre__secao-titulo">Combates anteriores</h2>
+                <span class="iniciativa-mestre__secao-regua"></span>
+                <span class="iniciativa-mestre__secao-meta">{{ historico().length }}</span>
+            </header>
+            <div class="historico__grade">
+                @for (anterior of historico(); track anterior.id) {
+                <button class="historico__card" type="button" (click)="abrirDoHistorico(anterior)">
+                    <ng-container
+                        *ngTemplateOutlet="linhaHistorico; context: { $implicit: anterior }"
+                    />
+                </button>
+                }
+            </div>
+        </section>
+        } }
+    </div>
+</div>
+
+<!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas, que sabe
+     restaurar em vez de fechar quando a janela está minimizada (mesmo racional de `detalhe-mestre`). -->
+<app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+@if (dados.usuarioAtivoId(); as usuarioId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
+    [usuarioAtivoId]="usuarioId"
+    [ehMestre]="true"
+    [membros]="dados.membrosDaCampanha()"
+    [temInventario]="false"
+    (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
+/>
+} }
+<!-- Janela de ficha do combatente clicado (o mestre olhando qualquer um): uma só instância, aberta
+     imperativamente por `abrirFichaFlutuante`. -->
+<app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />
+
+<!-- Conteúdo de uma linha do histórico (nome, data, rodadas e combatentes + seta) — compartilhado
+     pelo menu do cabeçalho (com combate) e pelos cartões do estado vazio (sem combate). -->
+<ng-template #linhaHistorico let-anterior>
+    <span class="historico__texto">
+        <span class="historico__nome">{{ anterior.nome }}</span>
+        <span class="historico__meta">
+            {{ anterior.createdDate | date: 'dd/MM/yyyy' }} · {{ anterior.rodadaAtual }}&nbsp;{{
+            anterior.rodadaAtual === 1 ? 'rodada' : 'rodadas' }} · {{ anterior.quantidadeCombatentes
+            }}&nbsp;{{ anterior.quantidadeCombatentes === 1 ? 'combatente' : 'combatentes' }}
+        </span>
+    </span>
+    <app-icone nome="chevron" class="historico__seta" />
+</ng-template>
+
+<!-- Novo combate (ui-38): o mestre nomeia o encontro; Enter envia, Esc/fundo/Cancelar fecham. -->
+@if (criandoEncontro()) {
+<app-modal [aberto]="true" titulo="Novo combate" [largura]="'480px'" (fechou)="fecharNovoCombate()">
+    <form class="novo-combate" [formGroup]="formularioCriacao" (ngSubmit)="criarEncontro()">
+        <p class="novo-combate__ajuda">Dê um nome ao encontro para montar a ordem de iniciativa.</p>
+        <app-campo rotulo="Nome do encontro" tamanho="amplo">
+            <input
+                appAutoFocus
+                class="novo-combate__entrada"
+                type="text"
+                formControlName="nome"
+                placeholder="Ex.: Contenção no Setor 12"
+                maxlength="120"
+                autocomplete="off"
+                required
+            />
+        </app-campo>
+        <div class="novo-combate__acoes">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                class="novo-combate__acao"
+                type="button"
+                (click)="fecharNovoCombate()"
+            >
+                Cancelar
+            </button>
+            <button
+                app-botao
+                variante="primario"
+                tamanho="medio"
+                class="novo-combate__acao"
+                type="submit"
+                [disabled]="formularioCriacao.invalid || dados.emOperacao()"
+            >
+                Abrir combate
+            </button>
+        </div>
+    </form>
+</app-modal>
+} @if (avulsoRolando(); as avulso) {
+<app-rolagem-avulso
+    [combatente]="avulso"
+    [ocultaInicial]="rolagemAvulsoOculta(avulso.id)"
+    (fechado)="avulsoRolando.set(null)"
+    (registrada)="dados.adicionarRolagemAoFeed($event)"
+    (ocultaAlterada)="alterarVisibilidadeRolagemAvulso(avulso.id, $event)"
+/>
+}
+
+<!-- A rolagem do avulso usa a mesma carta central das fichas. O serviço sozinho mantém o estado;
+     esta instância é quem torna o resultado visível nesta tela, mesmo com o histórico recolhido. -->
+<app-bandeja-dados />

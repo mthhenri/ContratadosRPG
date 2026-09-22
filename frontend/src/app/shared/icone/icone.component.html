@@ -167,6 +167,9 @@
         @case ("chevron") {
             <path d="m6 9 6 6 6-6" />
         }
+        @case ("chevron-direita") {
+            <path d="m9 6 6 6-6 6" />
+        }
         @case ("copiar") {
             <rect x="9" y="9" width="11" height="11" rx="2" />
             <path d="M5 15V5a2 2 0 0 1 2-2h10" />
@@ -207,7 +210,42 @@
             <path
                 d="M17.94 17.94A10.07 10.07 0 0 1 12 20C5 20 1 12 1 12a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
             />
-            <path d="M1 1 23 23" />
+            <line x1="1" y1="1" x2="23" y2="23" />
+        }
+        @case ("olho-rolagens") {
+            <!-- `olho` + selo de dado (2 pips) no canto inferior direito — mesma técnica de
+           `fragmento-construtor`/`fragmento-potencializador` (base + selo distintivo), pro item
+           "Tornar rolagens públicas"/"Ocultar rolagens" da coluna de ações não ficar idêntico ao
+           de "Acesso de visualização" (`olho-membros`) nem ao de "Exibir/Ocultar ficha` (`olho`
+           puro) — os 3 usavam o mesmo par olho/olho-fechado sem nada que os diferenciasse à
+           distância. O canto inferior direito do losango do `olho` (a lente só toca os pontos
+           médios das bordas, ex. `M1 12s4-8 11-8...`) fica vazio por construção — o selo não
+           precisa encolher a base. -->
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+            <circle cx="12" cy="12" r="3" />
+            <rect x="15.5" y="15.5" width="6.5" height="6.5" rx="1.4" />
+            <circle cx="17.3" cy="17.3" r="0.55" fill="currentColor" stroke="none" />
+            <circle cx="20.2" cy="20.2" r="0.55" fill="currentColor" stroke="none" />
+        }
+        @case ("olho-fechado-rolagens") {
+            <!-- Mesmo selo de dado de `olho-rolagens`, sobre `olho-fechado` — estado "Ocultar
+           rolagens" (rolagens já públicas) do mesmo toggle. -->
+            <path
+                d="M17.94 17.94A10.07 10.07 0 0 1 12 20C5 20 1 12 1 12a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+            />
+            <line x1="1" y1="1" x2="14.5" y2="14.5" />
+            <rect x="15.5" y="15.5" width="6.5" height="6.5" rx="1.4" />
+            <circle cx="17.3" cy="17.3" r="0.55" fill="currentColor" stroke="none" />
+            <circle cx="20.2" cy="20.2" r="0.55" fill="currentColor" stroke="none" />
+        }
+        @case ("olho-membros") {
+            <!-- `olho` + selo de uma pessoa (recorte reduzido de `agente`: cabeça + ombros) no
+           canto inferior direito — "Acesso de visualização" não é um toggle (ação fixa, sempre o
+           mesmo ícone), por isso não tem par aberto/fechado como `olho-rolagens`. -->
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+            <circle cx="12" cy="12" r="3" />
+            <circle cx="18.7" cy="16.6" r="1.3" />
+            <path d="M15.3 21.6a3.4 3.4 0 0 1 6.8 0" />
         }
         @case ("tema") {
             <path d="M5 21v-8M5 9V3M12 21v-7M12 10V3M19 21v-4M19 13V3" />
@@ -241,12 +279,6 @@
         @case ("sanidade") {
             <circle cx="12" cy="12" r="8.5" />
             <path d="M12 7.5a2.25 2.25 0 0 0 0 4.5 2.25 2.25 0 0 1 0 4.5" />
-        }
-        @case ("rolagens") {
-            <rect x="4" y="4" width="16" height="16" rx="3" />
-            <circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none" />
-            <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
-            <circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none" />
         }
         @case ("anotacoes") {
             <!-- Folha com linhas de texto: aba de Anotações (m3-32). -->
@@ -354,13 +386,121 @@
             />
         }
         @case ("dado") {
-            <!-- Dado d6 (face 5): gatilho de rolagem (distinto do glifo da aba "rolagens"). -->
+            <!-- Dado d6 (face 5): glifo genérico de dado, usado pela aba "Rolagens" (`d6` cobre o
+           gatilho do Montador — ver `dado-mais` abaixo). -->
             <rect x="4" y="4" width="16" height="16" rx="3" />
             <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none" />
             <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
+        }
+        @case ("dado-mais") {
+            <!-- d20 (icosaedro, mesmo recorte do case "d20" abaixo, só reescalado) reduzido pro canto
+           superior esquerdo + selo de "+" (canto inferior direito) — mesma técnica de
+           `olho-rolagens`/`fragmento-construtor` (base + selo distintivo, ver comentário de
+           `olho-rolagens` acima): gatilho do Montador de rolagem (monta uma fórmula por botões).
+           Antes usava o `dado` d6 (quadrado + pips) reduzido nesse mesmo canto — ao lado do selo,
+           também um quadrado com um traço central, lia como "um dado dentro de outro dado" em vez
+           de um dado + um botão de somar; o icosaedro reconhecível resolve a ambiguidade. -->
+            <svg
+                x="1"
+                y="1"
+                width="14"
+                height="14"
+                viewBox="0 0 512.021 512.021"
+                fill="currentColor"
+                stroke="none"
+            >
+                <path
+                    d="M490.421,137.707c-0.085-1.003-0.149-2.005-0.555-2.987c-0.107-0.256-0.32-0.427-0.448-0.683
+          c-0.277-0.533-0.597-0.981-0.96-1.472c-0.725-1.003-1.536-1.835-2.517-2.517c-0.256-0.171-0.363-0.491-0.64-0.64l-224-128
+          c-3.285-1.877-7.296-1.877-10.581,0l-224,128c-0.256,0.171-0.363,0.469-0.619,0.64c-1.024,0.704-1.899,1.557-2.645,2.624
+          c-0.299,0.427-0.597,0.811-0.832,1.28c-0.149,0.277-0.384,0.469-0.512,0.768c-0.469,1.173-0.619,2.389-0.661,3.584
+          c0,0.128-0.107,0.256-0.107,0.384v0.171c0,0.021,0,0.021,0,0.043v234.304c0,0.021,0,0.064,0,0.085v0.064
+          c0,0.213,0.149,0.405,0.171,0.619c0.085,1.493,0.32,2.987,1.045,4.352c0.043,0.085,0.128,0.107,0.171,0.192
+          c0.277,0.491,0.768,0.811,1.131,1.259c0.789,0.981,1.557,1.941,2.603,2.603c0.107,0.064,0.149,0.192,0.235,0.235l224,128
+          c1.664,0.939,3.477,1.408,5.312,1.408s3.648-0.469,5.291-1.408l224-128c0.107-0.064,0.149-0.192,0.256-0.256
+          c0.981-0.597,1.664-1.493,2.411-2.389c0.427-0.512,1.003-0.896,1.323-1.472c0.043-0.064,0.107-0.107,0.149-0.171
+          c0.576-1.109,0.683-2.325,0.853-3.52c0.064-0.491,0.384-0.939,0.384-1.451V138.688
+          C490.677,138.347,490.443,138.048,490.421,137.707z M455.52,136.981l-78.251,31.296L291.211,43.093L455.52,136.981z
+          M256.011,29.504l97.067,141.184H158.944L256.011,29.504z M220.747,43.115l-86.037,125.163L56.48,136.981L220.747,43.115z
+          M42.677,154.432l80.768,32.32L42.677,332.16V154.432z M138.635,203.392l98.325,178.773L49.248,364.288L138.635,203.392z
+          M245.344,482.965l-165.12-94.336l165.12,15.573V482.965z M256.011,372.544l-99.285-180.523h198.571L256.011,372.544z
+          M266.677,482.965v-78.571l165.035-15.723L266.677,482.965z M274.997,382.357l98.411-178.901l89.365,160.853L274.997,382.357z
+          M469.344,332.203l-80.811-145.451l80.811-32.32V332.203z"
+                />
+            </svg>
+            <rect x="15" y="15" width="7" height="7" rx="1.6" stroke-width="1" />
+            <path d="M18.5 16.4v3.2M16.9 18h3.2" stroke-width="1" />
+        }
+        @case ("dados") {
+            <!-- Dois d20 sobrepostos (ui-37): "rolar vários dados de uma vez" — hoje, "Rolar
+           iniciativas" na condução de turno do mestre. Mesmo icosaedro do case "d20"; o de trás
+           (canto superior esquerdo) leva um recorte com a silhueta do da frente (canto inferior
+           direito) alargada, pra a sobreposição ler como dois dados e não como uma mancha só. -->
+            <defs>
+                <mask
+                    id="dados-recorte"
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width="24"
+                    height="24"
+                >
+                    <rect width="24" height="24" fill="white" stroke="none" />
+                    <polygon
+                        points="16,8.6 22.86,12.54 22.86,19.46 16,23.4 9.14,19.46 9.14,12.54"
+                        fill="black"
+                        stroke="black"
+                        stroke-width="1.6"
+                        stroke-linejoin="round"
+                    />
+                </mask>
+                <path
+                    id="dados-icosaedro"
+                    d="M490.421,137.707c-0.085-1.003-0.149-2.005-0.555-2.987c-0.107-0.256-0.32-0.427-0.448-0.683
+          c-0.277-0.533-0.597-0.981-0.96-1.472c-0.725-1.003-1.536-1.835-2.517-2.517c-0.256-0.171-0.363-0.491-0.64-0.64l-224-128
+          c-3.285-1.877-7.296-1.877-10.581,0l-224,128c-0.256,0.171-0.363,0.469-0.619,0.64c-1.024,0.704-1.899,1.557-2.645,2.624
+          c-0.299,0.427-0.597,0.811-0.832,1.28c-0.149,0.277-0.384,0.469-0.512,0.768c-0.469,1.173-0.619,2.389-0.661,3.584
+          c0,0.128-0.107,0.256-0.107,0.384v0.171c0,0.021,0,0.021,0,0.043v234.304c0,0.021,0,0.064,0,0.085v0.064
+          c0,0.213,0.149,0.405,0.171,0.619c0.085,1.493,0.32,2.987,1.045,4.352c0.043,0.085,0.128,0.107,0.171,0.192
+          c0.277,0.491,0.768,0.811,1.131,1.259c0.789,0.981,1.557,1.941,2.603,2.603c0.107,0.064,0.149,0.192,0.235,0.235l224,128
+          c1.664,0.939,3.477,1.408,5.312,1.408s3.648-0.469,5.291-1.408l224-128c0.107-0.064,0.149-0.192,0.256-0.256
+          c0.981-0.597,1.664-1.493,2.411-2.389c0.427-0.512,1.003-0.896,1.323-1.472c0.043-0.064,0.107-0.107,0.149-0.171
+          c0.576-1.109,0.683-2.325,0.853-3.52c0.064-0.491,0.384-0.939,0.384-1.451V138.688
+          C490.677,138.347,490.443,138.048,490.421,137.707z M455.52,136.981l-78.251,31.296L291.211,43.093L455.52,136.981z
+          M256.011,29.504l97.067,141.184H158.944L256.011,29.504z M220.747,43.115l-86.037,125.163L56.48,136.981L220.747,43.115z
+          M42.677,154.432l80.768,32.32L42.677,332.16V154.432z M138.635,203.392l98.325,178.773L49.248,364.288L138.635,203.392z
+          M245.344,482.965l-165.12-94.336l165.12,15.573V482.965z M256.011,372.544l-99.285-180.523h198.571L256.011,372.544z
+          M266.677,482.965v-78.571l165.035-15.723L266.677,482.965z M274.997,382.357l98.411-178.901l89.365,160.853L274.997,382.357z
+          M469.344,332.203l-80.811-145.451l80.811-32.32V332.203z"
+                />
+            </defs>
+            <g mask="url(#dados-recorte)">
+                <svg
+                    x="0.5"
+                    y="0.5"
+                    width="15"
+                    height="15"
+                    viewBox="0 0 512.021 512.021"
+                    fill="currentColor"
+                    stroke="none"
+                >
+                    <use href="#dados-icosaedro" />
+                </svg>
+            </g>
+            <svg
+                x="8.5"
+                y="8.5"
+                width="15"
+                height="15"
+                viewBox="0 0 512.021 512.021"
+                fill="currentColor"
+                stroke="none"
+            >
+                <use href="#dados-icosaedro" />
+            </svg>
         }
         @case ("carregando") {
             <!-- Giro de carregamento do primitivo de botão (ui-01b): aro apagado + arco em
@@ -430,6 +570,12 @@
             <circle cx="10.5" cy="10.5" r="6.5" />
             <path d="m20 20-4.8-4.8" />
         }
+        @case ("info") {
+            <!-- Círculo com "i": informação — mostrar/ocultar o texto da missão da campanha. -->
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5" />
+            <path d="M12 8h.01" />
+        }
         @case ("vassoura") {
             <path d="m10 14 7.5-10.5" />
             <path d="m9 13 4 4" />
@@ -480,6 +626,17 @@
           M469.344,332.203l-80.811-145.451l80.811-32.32V332.203z"
                 />
             </svg>
+        }
+        @case ("d3") {
+            <!-- Sem SVG dedicado em `shared/src/icons/` (só d4/d6/d8/d10/d12/d20 foram recortados de
+           biblioteca externa) — desenhado à mão como um prisma triangular (a peça física mais comum
+           pra "D3" nas mesas, já que não existe um sólido regular de 3 faces): triângulo + aresta
+           central sugerindo a dobra do prisma, mesmo traço/peso dos ícones desenhados à mão do
+           arquivo (ver comentário de `fragmento-construtor`). Deixava de ter ícone próprio e caía no
+           glifo genérico `dado` — igual a vários outros dados na grade, sem nada que o distinguisse
+           à distância. -->
+            <path d="M12 4 20 19H4Z" />
+            <path d="M12 4v15" />
         }
         @case ("d4") {
             <!-- d4 (tetraedro) preenchido — recorte de `shared/src/icons/d4.svg`, mesmo tratamento do

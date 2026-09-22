@@ -226,15 +226,44 @@ describe('CartaoCombatente', () => {
     expect(texto(fixture, '.combatente__narrativo')).toBe('Inconsciente · perde o turno · Machucado');
   });
 
-  it('só oferece os steppers quando o ajuste está liberado', () => {
+  it('não oferece steppers de Vida/Energia pra quem tem ficha (origem FICHA), mesmo com o ajuste liberado', () => {
     const semAjuste = montar(base);
     expect((semAjuste.nativeElement as HTMLElement).querySelectorAll('.combatente__stepper').length)
       .toBe(0);
 
     const comAjuste = montar(base, { podeAjustar: true });
+    expect((comAjuste.nativeElement as HTMLElement).querySelectorAll('.combatente__stepper').length)
+      .toBe(0);
+    // "Receber dano" segue disponível — é fluxo de combate, não micro-ajuste (pedido do autor).
+    expect(
+      (comAjuste.nativeElement as HTMLElement).querySelector('.combatente__receber-dano'),
+    ).not.toBeNull();
+  });
+
+  it('só o avulso (sem ficha própria) oferece os steppers de Vida/Energia', () => {
+    const avulso = { ...base, origem: CombatenteOrigemEnum.AVULSO, fichaId: null };
+
+    const semAjuste = montar(avulso);
+    expect((semAjuste.nativeElement as HTMLElement).querySelectorAll('.combatente__stepper').length)
+      .toBe(0);
+
+    const comAjuste = montar(avulso, { podeAjustar: true });
     // Vida (−/+) e Energia (−/+).
     expect((comAjuste.nativeElement as HTMLElement).querySelectorAll('.combatente__stepper').length)
       .toBe(4);
+  });
+
+  it('o gatilho mobile "Ajustar" só existe pro avulso (nada pra revelar pra quem tem ficha)', () => {
+    const comFicha = montar(base, { podeAjustar: true });
+    expect(
+      (comFicha.nativeElement as HTMLElement).querySelector('.combatente__ajustar'),
+    ).toBeNull();
+
+    const avulso = { ...base, origem: CombatenteOrigemEnum.AVULSO, fichaId: null };
+    const comAvulso = montar(avulso, { podeAjustar: true });
+    expect(
+      (comAvulso.nativeElement as HTMLElement).querySelector('.combatente__ajustar'),
+    ).not.toBeNull();
   });
 
   it('só oferece o botão "Receber dano" quando o ajuste está liberado (m7-17)', () => {
@@ -277,10 +306,11 @@ describe('CartaoCombatente', () => {
   });
 
   it('acompanha o gatilho de ajuste do mobile, que só existe quando há o que ajustar (m7-08)', () => {
-    const semAjuste = montar(base);
+    const avulso = { ...base, origem: CombatenteOrigemEnum.AVULSO, fichaId: null };
+    const semAjuste = montar(avulso);
     expect((semAjuste.nativeElement as HTMLElement).querySelector('.combatente__ajustar')).toBeNull();
 
-    const fixture = montar(base, { podeAjustar: true });
+    const fixture = montar(avulso, { podeAjustar: true });
     const elementoAtual = fixture.nativeElement as HTMLElement;
     const gatilho = elementoAtual.querySelector<HTMLButtonElement>('.combatente__ajustar');
     expect(gatilho?.getAttribute('aria-expanded')).toBe('false');

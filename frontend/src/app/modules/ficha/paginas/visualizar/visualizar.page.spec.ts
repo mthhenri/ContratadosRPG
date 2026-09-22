@@ -35,6 +35,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { FichaVisualizar } from './visualizar.page';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import type { AjusteAtributos } from '../../componentes/ficha-visualizacao/ficha-visualizacao.component';
 import { FichaService } from '../../ficha.service';
@@ -87,6 +88,8 @@ describe('FichaVisualizar', () => {
     semCampanhaNaRota?: boolean;
     /** m3-28: `campanhaId` da ficha carregada — só relevante junto de `semCampanhaNaRota`. */
     fichaCampanhaId?: number | null;
+    /** Sobrescreve trechos de `dados` (ex.: `estado.vidaMaxima` para testar o Machucado, I-032). */
+    dadosExtra?: Partial<FichaJogadorDadosDto>;
   }) {
     const recuperada: FichaRecuperadaDto = {
       id: 42,
@@ -97,7 +100,7 @@ describe('FichaVisualizar', () => {
       imagemUrl: null,
       imagemFoco: null,
       oculta: false,
-      dados,
+      dados: { ...dados, ...opcoes.dadosExtra },
     };
     const fichaService = {
       recuperarFicha: vi.fn(() => of(recuperada)),
@@ -133,6 +136,7 @@ describe('FichaVisualizar', () => {
       fichaAlterada$: fichaAlterada$.asObservable(),
       acessoRevogado$: acessoRevogado$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       reconexao,
       conectado: signal(true),
     };
@@ -198,6 +202,17 @@ describe('FichaVisualizar', () => {
     expect(fichaService.listarAcessos).not.toHaveBeenCalled();
   });
 
+  it('enquanto carrega, mostra a silhueta da ficha e um título provisório no cabeçalho', () => {
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    fixture.componentInstance['carregando'].set(true);
+    fixture.detectChanges();
+
+    const silhueta = raiz.querySelector('app-ficha-esqueleto');
+    expect(silhueta?.getAttribute('role')).toBe('status');
+    expect(silhueta?.getAttribute('aria-label')).toBe('Carregando ficha');
+    expect(raiz.querySelector('app-ficha-visualizacao')).toBeNull();
+  });
+
   it('concentra as ferramentas da ficha na coluna de ações', () => {
     const { raiz } = montar({ usuarioLogadoId: 7 });
 
@@ -239,14 +254,26 @@ describe('FichaVisualizar', () => {
       fixture.detectChanges();
     };
 
+    const pressionado = (rotulo: string) =>
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item'))
+        .find((item) => item.textContent?.includes(rotulo))
+        ?.getAttribute('aria-pressed');
+    expect(['Histórico', 'Anotações', 'Calculadora'].map(pressionado)).toEqual(['false', 'false', 'false']);
+
     acionar('Histórico');
     expect(raiz.querySelector('.historico-rolagens__painel')).not.toBeNull();
+    expect(pressionado('Histórico')).toBe('true');
 
     acionar('Anotações');
     expect(raiz.querySelector('app-painel-flutuante .painel-flutuante__janela')).not.toBeNull();
+    expect(pressionado('Anotações')).toBe('true');
 
     acionar('Calculadora');
     expect(raiz.querySelector('app-calculadora-flutuante .painel-flutuante__janela')).not.toBeNull();
+    expect(pressionado('Calculadora')).toBe('true');
+
+    acionar('Histórico');
+    expect(pressionado('Histórico')).toBe('false');
   });
 
   it('gere o acesso via menu → dialog para o dono, com elegíveis corretos', () => {
@@ -285,17 +312,20 @@ describe('FichaVisualizar', () => {
       expect(raiz.textContent).toContain('Ocultar ficha');
     });
 
-    it('abre a mesma dialog de confirmação da ficha', () => {
-      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    it('abre a mesma confirmação da ficha, via ConfirmacaoService (ui-15)', () => {
+      const { raiz } = montar({ usuarioLogadoId: 7 });
+      const confirmar = vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
       const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find(
         (item) => item.textContent?.includes('Ocultar ficha'),
       );
       botao?.click();
-      fixture.detectChanges();
 
-      expect(document.body.textContent).toContain('Ocultar ficha?');
-      expect(document.body.textContent).toContain(
-        'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          titulo: 'Ocultar ficha?',
+          mensagem:
+            'Outros jogadores deixarão de ver esta ficha. Você e o mestre da campanha continuarão com acesso.',
+        }),
       );
     });
   });
@@ -339,16 +369,64 @@ describe('FichaVisualizar', () => {
   });
 
   describe('remover da campanha', () => {
-    it('oferece a ação quando a ficha está vinculada e remove antes de voltar ao acervo', () => {
-      const { raiz, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+    it('oferece a ação quando a ficha está vinculada, pede confirmação e remove antes de voltar ao acervo', async () => {
+      const { raiz, fixture, fichaService, navegarEspiao } = montar({ usuarioLogadoId: 7 });
+      let resolver: (valor: boolean) => void = () => undefined;
+      const confirmar = vi
+        .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
+        .mockImplementation(() => new Promise<boolean>((resolve) => (resolver = resolve)));
       const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find(
         (item) => item.textContent?.includes('Remover da campanha'),
       );
       expect(botao).toBeDefined();
       botao?.click();
+      fixture.detectChanges();
+
+      expect(confirmar).toHaveBeenCalledWith(
+        expect.objectContaining({ titulo: 'Remover da campanha', severidade: 'padrao' }),
+      );
+      expect(botao?.getAttribute('aria-pressed')).toBe('true');
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+
+      resolver(true);
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
 
       expect(fichaService.atribuirCampanha).toHaveBeenCalledWith(42, null);
       expect(navegarEspiao).toHaveBeenCalledWith(['/fichas']);
+      expect(botao?.getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('cancelar a confirmação não remove a ficha da campanha', async () => {
+      const { raiz, fichaService } = montar({ usuarioLogadoId: 7 });
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item'))
+        .find((item) => item.textContent?.includes('Remover da campanha'))
+        ?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(fichaService.atribuirCampanha).not.toHaveBeenCalled();
+    });
+
+    it('"Acesso de visualização" e "Excluir ficha" ficam selecionados enquanto a dialog está aberta', () => {
+      const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+      const item = (rotulo: string) =>
+        Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find((candidato) =>
+          candidato.textContent?.includes(rotulo),
+        )!;
+      expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
+
+      item('Acesso de visualização').click();
+      fixture.detectChanges();
+      expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('true');
+      fixture.componentInstance['fecharAcesso']();
+
+      item('Excluir ficha').click();
+      fixture.detectChanges();
+      expect(item('Excluir ficha').getAttribute('aria-pressed')).toBe('true');
+      expect(item('Acesso de visualização').getAttribute('aria-pressed')).toBe('false');
     });
 
     it('não oferece a ação quando a ficha já está solta no acervo', () => {
@@ -416,6 +494,29 @@ describe('FichaVisualizar', () => {
         oculta: false,
         dados: { ...dados, estado: { ...dados.estado, vidaAtual: 2 } },
       });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('deriva o Machucado (I-032) da Vida quando há vidaMaxima — liga em ≤ 50%, mantém entre 50%-99%, desliga em 100%', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture } = montar({
+        usuarioLogadoId: 7,
+        dadosExtra: { estado: { ...dados.estado, vidaMaxima: 40 } },
+      });
+      const componente = fixture.componentInstance;
+
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 20 });
+      expect(componente['ficha']()?.dados.estado.machucado).toBe(true);
+
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 30 });
+      // Histerese: entre 50% e 99% mantém o Machucado já ligado.
+      expect(componente['ficha']()?.dados.estado.machucado).toBe(true);
+
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 40 });
+      expect(componente['ficha']()?.dados.estado.machucado).toBe(false);
     } finally {
       vi.useRealTimers();
     }

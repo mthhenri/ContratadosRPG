@@ -1,0 +1,26 @@
+// Visão do espectador da tela "Iniciativa" — alvo de fidelidade: `PainelEncontroMestre`/
+// `PainelEncontroJogador` (mesmo parcial de casca) e o mockup aprovado "Central do Espectador".
+// Só tokens do tema "Terminal de Contenção" (proibição #29); os controles são primitivos de
+// `shared/ui/`.
+
+@use "tema/breakpoints" as bp;
+@use "../casca-iniciativa" as casca;
+
+@include casca.casca("iniciativa-espectador");
+@include casca.grade;
+@include casca.esqueleto-laterais("iniciativa-espectador");
+
+.iniciativa-espectador {
+    // Sem `app-coluna-acoes` nesta tela (espectador não gerencia combate nem tem Calculadora/
+    // Caderno aqui) — a casca reserva, no mobile, o piso da barra inferior fixa que a coluna de
+    // ações ocuparia em mestre/jogador; sem coluna nenhuma, esse respiro sobra vazio no rodapé.
+    @include bp.mobile {
+        &__conteudo {
+            padding-bottom: 12px;
+        }
+    }
+
+    &__esqueleto-combatente {
+        height: 140px;
+    }
+}

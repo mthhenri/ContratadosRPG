@@ -1,0 +1,22 @@
+<div class="habilidade-descricao__corpo" #corpo>
+    <app-editor-markdown
+        [valor]="valor()"
+        [somenteLeitura]="true"
+        [compacto]="true"
+        [rotulo]="rotulo()"
+    />
+</div>
+@if (truncada()) {
+    <div class="habilidade-descricao__rodape">
+        <button
+            app-botao-icone
+            tamanho="compacto"
+            type="button"
+            class="habilidade-descricao__ver"
+            aria-label="Ver a descrição completa"
+            [appTooltip]="textoCompleto()"
+        >
+            <app-icone nome="olho" />
+        </button>
+    </div>
+}

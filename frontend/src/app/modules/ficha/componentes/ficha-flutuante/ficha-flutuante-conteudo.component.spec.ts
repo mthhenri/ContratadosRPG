@@ -60,7 +60,6 @@ describe('FichaFlutuanteConteudo', () => {
     oculta: false,
     dados: {
       identidade: {
-        designacao: 'SCP-1471-A',
         origem: OrigemCriaturaEnum.ORIGINAL,
         conceito: 'x',
         naturezaFisica: 'x',
@@ -109,7 +108,7 @@ describe('FichaFlutuanteConteudo', () => {
           provide: FichaService,
           useValue: { recuperarFicha, recuperarFichaCriatura },
         },
-        { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioLogadoId }) } },
+        { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioLogadoId }), autenticado: () => false } },
       ],
     });
 

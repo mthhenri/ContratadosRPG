@@ -144,6 +144,19 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada de recuperação individual — o `id` vem do `@Param`, injetado no DTO pela\ncontroller (recuperação individual sempre `{ id }`, nunca primitivo)."
     },
+    "CampanhaSalaSairDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Mensagem de infraestrutura para abandonar as salas de uma campanha no Socket.IO."
+    },
     "CampanhaRecuperadaDto": {
         "type": "object",
         "properties": {
@@ -443,6 +456,15 @@ export const schemasContratosPublicos = {
             "acessoCompleto": {
                 "type": "boolean",
                 "description": "`true` quando o requisitante enxerga a ficha completa (dono, mestre, ou concessão ativa)."
+            },
+            "morrendo": {
+                "type": "boolean"
+            },
+            "machucado": {
+                "type": "boolean"
+            },
+            "inconsciente": {
+                "type": "boolean"
             }
         },
         "required": [
@@ -452,10 +474,13 @@ export const schemasContratosPublicos = {
             "arquetipo",
             "imagemUrl",
             "cor",
-            "acessoCompleto"
+            "acessoCompleto",
+            "morrendo",
+            "machucado",
+            "inconsciente"
         ],
         "additionalProperties": false,
-        "description": "Ficha de um membro, no recorte mínimo pra Equipe (m3-65): quando `acessoCompleto` é `false`,\né só a \"carteirinha\" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem\ntem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um\njogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha."
+        "description": "Ficha de um membro, no recorte mínimo pra Equipe (m3-65): quando `acessoCompleto` é `false`,\né só a \"carteirinha\" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem\ntem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um\njogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha.\n\nAs três condições (I-031) vêm **mesmo sem `acessoCompleto`** — é o único recorte de estado que\natravessa a carteirinha, pra quem joga em equipe saber quem está Machucado/Morrendo/Inconsciente\nsem precisar de acesso à ficha inteira (`sistema-v4.1.0.md` \"Condições\"; combina com o Machucado\nautomático da I-032, `resolverMachucadoPelaVida`). Vida/Energia numéricas continuam de fora."
     },
     "CampanhaMembroResumoDto": {
         "type": "object",
@@ -2234,6 +2259,10 @@ export const schemasContratosPublicos = {
             "identidade": {
                 "$ref": "#/components/schemas/FichaCriaturaIdentidadeDto"
             },
+            "registro": {
+                "type": "string",
+                "description": "Texto livre pro mestre catalogar a criatura no universo (ex.: \"SCP-049\") — opcional, sem\nformato imposto. Mesmo padrão de `FichaJogadorDadosDto.contrato`, mas sem rótulo fixo:\no valor exibido é o texto inteiro, não um sufixo de \"REGISTRO — \"."
+            },
             "na": {
                 "type": "string",
                 "enum": [
@@ -2376,16 +2405,13 @@ export const schemasContratosPublicos = {
     "FichaCriaturaIdentidadeDto": {
         "type": "object",
         "properties": {
-            "designacao": {
-                "type": "string",
-                "description": "Nome da criação — algo lembrável, não um código técnico."
-            },
             "origem": {
                 "type": "string",
                 "enum": [
                     "SCP_ADAPTADO",
                     "ORIGINAL"
-                ]
+                ],
+                "description": "Designação (nome da criação, \"algo lembrável, não um código técnico\") não tem campo aqui —\né `ficha.nome` (coluna relacional), editado sob o rótulo \"Designação\" em `CriaturaVisualizacao`.\nAntes desta task havia um campo `designacao` próprio, sincronizado com `ficha.nome` só no\ninstante da criação (`CriarCriatura`) e nunca mais depois — editar um sem o outro os\ndivergia (achado ao vivo, screenshot do autor). Fonte única agora, mesmo padrão de\n`FichaVisualizacao`/`ajusteNome` (ficha de jogador nunca teve essa duplicação)."
             },
             "conceito": {
                 "type": "string",
@@ -2418,7 +2444,6 @@ export const schemasContratosPublicos = {
             }
         },
         "required": [
-            "designacao",
             "origem",
             "conceito",
             "naturezaFisica",
@@ -2497,21 +2522,49 @@ export const schemasContratosPublicos = {
         "type": "object",
         "properties": {
             "terrestre": {
-                "type": "number"
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
             },
             "voador": {
-                "type": "number"
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
             },
             "aquatico": {
-                "type": "number"
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
             },
             "sobrenatural": {
-                "type": "number",
+                "oneOf": [
+                    {
+                        "type": "number"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ],
                 "description": "Ignora terreno/obstáculos e reações; ver guia para as regras especiais de uso em jogo."
             }
         },
         "additionalProperties": false,
-        "description": "Deslocamento da criatura — ao menos um modo preenchido (validado por\n`shared/regras/criatura`). Cada modo é independente e trocar entre os declarados não\nconsome ação. `terrestre` tem uma tabela de sugestão por Destreza no guia, mas o valor é\nsempre declarado pelo Mestre, nunca calculado automaticamente a partir do atributo."
+        "description": "Deslocamento da criatura — ao menos um modo preenchido (validado por\n`shared/regras/criatura`). Cada modo é independente e trocar entre os declarados não\nconsome ação. `terrestre` tem uma tabela de sugestão por Destreza no guia, mas o valor é\nsempre declarado pelo Mestre, nunca calculado automaticamente a partir do atributo. Cada modo\naceita `DeslocamentoValorEspecialEnum.INDETERMINADO` no lugar do número, para quando o Mestre\ndeclara o modo como sem limite prático (ex.: Sobrenatural sem alcance definido)."
     },
     "FichaCriaturaAtaqueDto": {
         "type": "object",
@@ -2526,9 +2579,11 @@ export const schemasContratosPublicos = {
             "custoAcao": {
                 "type": "string",
                 "enum": [
+                    "ACAO_LIVRE",
                     "MOVIMENTO",
                     "PADRAO",
-                    "COMPLETA"
+                    "COMPLETA",
+                    "TURNO"
                 ]
             },
             "dano": {
@@ -2734,6 +2789,35 @@ export const schemasContratosPublicos = {
             "vd": {
                 "type": "number",
                 "description": "Valor de Desafio (`FichaCriaturaDadosDto.vd`) — só presente numa ficha `CRIATURA`. Alimenta o\nseletor de combatentes do Encontro, que mostra NA + VD no lugar de classe/nível."
+            },
+            "registro": {
+                "type": "string",
+                "description": "Registro/contrato de catalogação (`FichaCriaturaDadosDto.registro`, ex.: \"SCP-049\") — só presente numa ficha `CRIATURA`."
+            },
+            "porte": {
+                "type": "string",
+                "enum": [
+                    "MINUSCULO",
+                    "MEDIO",
+                    "GRANDE",
+                    "ENORME",
+                    "GIGANTE",
+                    "TITANICO",
+                    "COLOSSAL"
+                ],
+                "description": "Porte (`FichaCriaturaDadosDto.porte`) — só presente numa ficha `CRIATURA`."
+            },
+            "comportamento": {
+                "type": "string",
+                "enum": [
+                    "CACADORA",
+                    "TERRITORIAL",
+                    "OPORTUNISTA",
+                    "INDIFERENTE",
+                    "INTELIGENTE",
+                    "CAOTICA"
+                ],
+                "description": "Comportamento (`FichaCriaturaDadosDto.identidade.comportamento`) — só presente numa ficha `CRIATURA`."
             },
             "classe": {
                 "type": "string",
@@ -3231,6 +3315,19 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Saída da revogação — confirmação do par (ficha, usuário) cuja concessão foi revogada."
     },
+    "FichaSalaSairDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Mensagem de infraestrutura para abandonar uma sala de ficha no Socket.IO."
+    },
     "FichaVisibilidadeAlteradaDto": {
         "type": "object",
         "properties": {
@@ -3247,6 +3344,23 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é\ndeliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem\nestá na sala ampla `campanha:<id>`."
+    },
+    "FichaCampanhaRemovidaDto": {
+        "type": "object",
+        "properties": {
+            "fichaId": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "fichaId",
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para\noutra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload\nmínimo de propósito (nenhum dado da ficha), então vale para qualquer tipo, inclusive\ncriatura/NPC, que não têm `ficha:criada` justamente por causa do recorte de visibilidade."
     },
     "FichaAcessosListarDto": {
         "type": "object",
@@ -3542,7 +3656,8 @@ export const schemasContratosPublicos = {
                     "OUTRA_CLASSE",
                     "PERSONALIDADE",
                     "ESPECIALIDADE",
-                    "CIVIL"
+                    "CIVIL",
+                    "UNICA"
                 ]
             },
             "custoEnergia": {
@@ -4640,6 +4755,48 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada da listagem do feed de uma campanha — o `campanhaId` vem do `@Param`. Exige ser\n**membro** da campanha (mesmo gate de `FichaService.listarFichas`); o recorte de visibilidade\n(`PRIVADA` só para o autor ou o mestre) é resolvido na service/repository, nunca no frontend."
     },
+    "RolagemExcluirDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da exclusão de uma rolagem — o `id` vem do `@Param`. Só o `ADMIN` (papel global da conta,\n`TipoUsuarioEnum`) exclui; a exclusão é soft delete (`is_deleted`), nunca física."
+    },
+    "RolagemExcluidaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "fichaId": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "visibilidade": {
+                "type": "string",
+                "enum": [
+                    "PUBLICA",
+                    "PRIVADA"
+                ]
+            }
+        },
+        "required": [
+            "id",
+            "fichaId",
+            "campanhaId",
+            "visibilidade"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da exclusão — também o payload de `rolagem:excluida` no tempo real. Carrega só o necessário\npara cada cliente tirar a rolagem da lista e para o gateway escolher a sala: nada do conteúdo\n(`resultado`, `rotulo`) viaja, então uma rolagem `PRIVADA` excluída não vaza para a sala cheia."
+    },
     "UsuarioCriarDto": {
         "type": "object",
         "properties": {
@@ -5448,6 +5605,14 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "responseSchema": "CampanhaPainelEspectadorDto"
     },
+    "CampanhaProjecaoController_recuperarEncontroAtivoPainelEspectador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/painel-espectador/encontro-ativo",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "EncontroRecuperadoDto"
+    },
     "CampanhaProjecaoController_recuperarPreviaJogador": {
         "controller": "CampanhaProjecaoController",
         "metodo": "get",
@@ -5455,6 +5620,14 @@ export const operacoesContratosPublicos = {
         "tag": "Campanhas",
         "publica": false,
         "responseSchema": "CampanhaPreviaJogadorDto"
+    },
+    "CampanhaProjecaoController_recuperarEncontroAtivoPreviaJogador": {
+        "controller": "CampanhaProjecaoController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/previa-jogador/:usuarioAlvoId/encontro-ativo",
+        "tag": "Campanhas",
+        "publica": false,
+        "responseSchema": "EncontroRecuperadoDto"
     },
     "CampanhaProjecaoController_recuperarFichaPreviaJogador": {
         "controller": "CampanhaProjecaoController",
@@ -5936,6 +6109,14 @@ export const operacoesContratosPublicos = {
         "tag": "Rolagens",
         "publica": false,
         "responseSchema": "RolagemResumoDto[]"
+    },
+    "RolagemController_excluir": {
+        "controller": "RolagemController",
+        "metodo": "delete",
+        "caminho": "/rolagem/:id",
+        "tag": "Rolagens",
+        "publica": false,
+        "responseSchema": "RolagemExcluidaDto"
     },
     "UsuarioController_recuperarPerfil": {
         "controller": "UsuarioController",

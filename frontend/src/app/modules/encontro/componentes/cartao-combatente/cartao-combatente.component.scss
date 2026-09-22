@@ -452,6 +452,17 @@
     // `app-barra-recurso` (ui-16) é dono do rótulo/valor/trilho e da cor por recurso — aqui só
     // sobra o layout dos steppers em volta dela. Cor e trilho vieram do primitivo; antes desta
     // task, Vida/Energia eram texto puro sem trilho algum.
+    // `flex: 1 1 0` em `&__recurso` (achado ao vivo, autor): sem ele, cada recurso ficava do
+    // tamanho do próprio conteúdo — só Vida sobrava estreita num card largo, e Vida+Energia lado a
+    // lado ficavam "grudadas" (uma do tamanho do texto, a outra também, sem dividir o espaço
+    // sobrando). Base `0` e o mesmo grow nos dois: sozinho, um recurso cresce até preencher a
+    // fileira inteira; junto de outro, os dois dividem o espaço meio a meio. **Sem** `min-width: 0`
+    // aqui, de propósito — isso desligaria a proteção automática do flexbox contra encolher abaixo
+    // do próprio conteúdo, e o filho (`&__barra`, com piso de 108px) ficaria livre para transbordar
+    // pra cima do recurso vizinho (achado ao vivo: "Vida 81" e "Energia 43" colidindo). Sem a
+    // proteção desligada, o recurso nunca fica menor que o que carrega dentro — se os dois não
+    // couberem lado a lado (`flex-wrap: wrap` no pai), cada um cai pra sua própria linha, cheio,
+    // em vez de se sobrepor.
     &__recursos {
         display: flex;
         flex-wrap: wrap;
@@ -462,10 +473,13 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
+        flex: 1 1 0;
     }
 
     &__barra {
-        min-width: 84px;
+        // Piso medido ao vivo: abaixo disso o rótulo ("Energia") e o valor ("43/43") do primitivo
+        // colidem — o `justify-content: space-between` interno dele não tem onde recuar.
+        min-width: 108px;
     }
 
     // Os dois rótulos viajam no DOM; a largura da tela escolhe qual aparece. O escondido sai do

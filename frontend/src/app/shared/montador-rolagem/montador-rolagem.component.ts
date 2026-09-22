@@ -15,6 +15,7 @@ import { Tooltip } from '../tooltip/tooltip.directive';
 import {
   adicionarDado,
   adicionarTipoDano,
+  apagarUltimoBloco,
   reposicionarOperadorPool,
 } from './montador-rolagem.util';
 
@@ -28,9 +29,9 @@ const ATRIBUTOS: readonly string[] = Object.keys(ABREVIACOES_ATRIBUTO);
  *  extenso). */
 const FONTES_EXTRA: readonly string[] = ['PROF', 'NIV'];
 
-/** Ícone de dado (`d4`..`d20`) por face — mesmo mapa de `resultado-rolagem.component.ts`. `d3`
- *  não tem SVG dedicado (fallback pro ícone genérico `dado`, só aqui). */
+/** Ícone de dado (`d3`..`d20`) por face — mesmo mapa de `resultado-rolagem.component.ts`. */
 const ICONE_POR_FACES: Readonly<Record<number, IconeNome>> = {
+  3: 'd3',
   4: 'd4',
   6: 'd6',
   8: 'd8',
@@ -67,6 +68,18 @@ const BREAKPOINT_MOBILE = 560;
 
 const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
 
+/** Tamanho de base 380×580 (ui-35) +50% horizontal/+25% vertical — pedido do autor, a caixa
+ *  original ficava apertada demais pra composição de fórmulas compostas. */
+const LARGURA_INICIAL = 570;
+const ALTURA_INICIAL = 725;
+const LARGURA_MINIMA = 320;
+const ALTURA_MINIMA = 420;
+
+interface Tamanho {
+  readonly largura: number;
+  readonly altura: number;
+}
+
 /**
  * Caixa flutuante de tokens para montar uma fórmula de rolagem sem decorar a sintaxe do motor
  * (`shared/regras/rolagem`) — ui-35, revisão de usabilidade. Mesma mecânica de
@@ -96,6 +109,9 @@ const POSICAO_INICIAL: PainelFlutuantePosicao = { x: 24, y: 120 };
   styleUrl: './montador-rolagem.component.scss',
   host: {
     '(window:resize)': 'aoRedimensionarViewport()',
+    '(window:pointermove)': 'aoMoverPonteiroRedimensionar($event)',
+    '(window:pointerup)': 'encerrarRedimensionamento()',
+    '(window:pointercancel)': 'encerrarRedimensionamento()',
   },
 })
 export class MontadorRolagem {
@@ -114,6 +130,11 @@ export class MontadorRolagem {
 
   /** A instância continua viva fora da aba Rolagens; nessa condição só o painel permanece visível. */
   readonly oculto = input(false);
+
+  /** Gate de acesso ao gatilho — hoje usado pela ficha de criatura/NPC pra restringir o Montador a
+   *  tester/admin (ver `RolagemRapida.podeUsarMontador`); a ficha de jogador não passa esse input e
+   *  mantém o padrão liberado. */
+  readonly permitido = input(true);
 
   /** O rodapé pede pro consumidor rolar — o painel não fecha sozinho (o jogador pode ajustar e
    *  rolar de novo, ex.: repetir com N diferente). */
@@ -135,6 +156,19 @@ export class MontadorRolagem {
   // === Caixa flutuante: aberto/fechado, mesmo padrão de `CalculadoraFlutuante.alternar()` ===
   protected readonly aberto = signal(false);
   private readonly painelRef = viewChild<PainelFlutuante>('painel');
+
+  /**
+   * Posição do cursor no visor — `null` até o jogador clicar/digitar ali dentro (padrão:
+   * `reposicionarOperadorPool` busca da esquerda pra direita). Só atualiza em interação real com o
+   * campo de texto (clique/teclado); clicar nos outros botões do teclado (dado, atributo etc.)
+   * nunca move essa posição — todo token novo entra por concatenação no fim da fórmula, então uma
+   * posição já registrada continua válida depois deles.
+   */
+  private readonly cursorVisor = signal<number | null>(null);
+
+  protected aoPosicionarCursor(evento: Event): void {
+    this.cursorVisor.set((evento.target as HTMLInputElement).selectionStart);
+  }
 
   protected alternar(): void {
     if (this.aberto() && this.painelRef()?.minimizado()) {
@@ -164,6 +198,40 @@ export class MontadorRolagem {
       : window.innerWidth <= BREAKPOINT_MOBILE;
   }
 
+  // === Redimensionar (desktop): sem maximizar — só a alça no canto, mesmo padrão de
+  // `CadernoFlutuante.iniciarRedimensionamento`/`aoMoverPonteiro`, mas com estado local (não há
+  // store aqui) e sem persistência entre sessões. ===
+  protected readonly tamanho = signal<Tamanho>({ largura: LARGURA_INICIAL, altura: ALTURA_INICIAL });
+  private redimensionando = false;
+  private origemRedimensionamento = { ponteiroX: 0, ponteiroY: 0, tamanho: this.tamanho() };
+
+  protected iniciarRedimensionamento(evento: PointerEvent): void {
+    if (this.mobileAtivo() || evento.button !== 0) return;
+    evento.preventDefault();
+    this.redimensionando = true;
+    this.origemRedimensionamento = {
+      ponteiroX: evento.clientX,
+      ponteiroY: evento.clientY,
+      tamanho: this.tamanho(),
+    };
+  }
+
+  protected aoMoverPonteiroRedimensionar(evento: PointerEvent): void {
+    if (!this.redimensionando) return;
+    const largura =
+      this.origemRedimensionamento.tamanho.largura + evento.clientX - this.origemRedimensionamento.ponteiroX;
+    const altura =
+      this.origemRedimensionamento.tamanho.altura + evento.clientY - this.origemRedimensionamento.ponteiroY;
+    this.tamanho.set({
+      largura: limitarDimensao(largura, LARGURA_MINIMA, window.innerWidth),
+      altura: limitarDimensao(altura, ALTURA_MINIMA, window.innerHeight),
+    });
+  }
+
+  protected encerrarRedimensionamento(): void {
+    this.redimensionando = false;
+  }
+
   // === Ação composta 1: "Dado por Propriedade + Ajuste" → `(ATR±n)dM` ===
   protected readonly atributoComposto = signal<string>(ATRIBUTOS[0]);
   protected readonly ajusteComposto = signal(1);
@@ -188,7 +256,9 @@ export class MontadorRolagem {
 
   /** Preview editável dentro do painel — mesmo texto do input original da Rolagem rápida. */
   protected aoDigitarPreview(evento: Event): void {
-    this.formula.set((evento.target as HTMLInputElement).value);
+    const alvo = evento.target as HTMLInputElement;
+    this.formula.set(alvo.value);
+    this.cursorVisor.set(alvo.selectionStart);
   }
 
   // === Inserção crua (tag de dano, operador por pool — encostado no texto atual) ===
@@ -220,8 +290,9 @@ export class MontadorRolagem {
     });
   }
 
+  /** Remove o último bloco aditivo (não só o último caractere) — ver `apagarUltimoBloco`. */
   protected apagarUltimo(): void {
-    this.formula.update((atual) => atual.slice(0, -1));
+    this.formula.update((atual) => apagarUltimoBloco(atual));
   }
 
   protected limpar(): void {
@@ -239,7 +310,7 @@ export class MontadorRolagem {
   }
 
   protected reposicionarPool(operador: string): void {
-    this.formula.update((atual) => reposicionarOperadorPool(atual, operador));
+    this.formula.update((atual) => reposicionarOperadorPool(atual, operador, this.cursorVisor()));
   }
 
   protected adicionarDano(tipo: string): void {
@@ -253,4 +324,11 @@ export class MontadorRolagem {
     }
     this.formula.update((atual) => `(${atual})#${this.repeticoesN()}`);
   }
+}
+
+/** Nunca menor que o mínimo nem maior que o viewport disponível — mesmo racional de
+ *  `caderno-flutuante.store.ts:limitarDimensao`. */
+function limitarDimensao(valor: number, minimo: number, viewport: number): number {
+  if (viewport <= minimo) return viewport;
+  return Math.min(Math.max(valor, minimo), viewport);
 }

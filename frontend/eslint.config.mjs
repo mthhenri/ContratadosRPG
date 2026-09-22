@@ -39,6 +39,11 @@ export default tseslint.config(
       ...angular.configs.templateRecommended,
       ...angular.configs.templateAccessibility,
     ],
-    rules: {},
+    rules: {
+      // `!= null` é o guard usado pra campo opcional que a SQL pode devolver como `null`
+      // (não `undefined`) — `!==` sozinho não cobre os dois (P-069). Sem essa opção o lint
+      // rejeitava o próprio padrão que o projeto adota pra esse caso.
+      '@angular-eslint/template/eqeqeq': ['error', { allowNullOrUndefined: true }],
+    },
   },
 );

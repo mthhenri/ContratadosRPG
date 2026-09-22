@@ -133,7 +133,7 @@
         type="button"
         role="menuitem"
         [disabled]="removendo() === menuAberto.id"
-        (click)="removerDaCampanha(menuAberto.id)"
+        (click)="pedirRemoverDaCampanha(menuAberto.id, menuAberto.nome)"
     >
         <app-icone nome="voltar" />
         <span>{{ removendo() === menuAberto.id ? 'Removendo…' : 'Remover da campanha' }}</span>

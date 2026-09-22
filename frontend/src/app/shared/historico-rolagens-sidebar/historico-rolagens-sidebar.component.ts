@@ -1,16 +1,13 @@
-import { DatePipe } from '@angular/common';
-import { Component, effect, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, input, model, output, signal, untracked } from '@angular/core';
 
-import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
 import { Icone } from '../icone/icone.component';
 import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
-import { ResultadoRolagem } from '../resultado-rolagem/resultado-rolagem.component';
+import { CartaoRolagem } from '../cartao-rolagem/cartao-rolagem.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
-import { Chip } from '../ui/chip/chip.component';
 import { EstadoVazio } from '../ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../ui/esqueleto/esqueleto.component';
 
@@ -33,13 +30,11 @@ import { Esqueleto } from '../ui/esqueleto/esqueleto.component';
   selector: 'app-historico-rolagens-sidebar',
   imports: [
     Icone,
-    ResultadoRolagem,
+    CartaoRolagem,
     OverflowFade,
-    DatePipe,
     AutoFocus,
     Tooltip,
     Botao,
-    Chip,
     EstadoVazio,
     Esqueleto,
   ],
@@ -62,6 +57,13 @@ export class HistoricoRolagensSidebar {
   readonly acimaDaCalculadora = input(false);
   /** Oculta o gatilho próprio quando a página oferece a ação pela coluna lateral. */
   readonly mostrarGatilho = input(true);
+  /**
+   * Coluna fixa da página (`ui-37`, Iniciativa do mestre) em vez de painel sobreposto: sempre
+   * renderizada, sem gatilho, sem fundo, sem botão de fechar, sem animação e sem foco automático.
+   * O painel preenche o container posicionado que o hospeda (`position: absolute; inset: 0`), então
+   * quem hospeda define a largura e a altura — a lista rola por dentro, sem alargar a linha.
+   */
+  readonly fixo = input(false);
 
   readonly carregarMais = output<void>();
   /**
@@ -72,12 +74,13 @@ export class HistoricoRolagensSidebar {
    */
   readonly abrirCalculadora = output<void>();
 
-  protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
   /** Estado bidirecional para a página reservar a faixa da barra lateral quando ela está aberta. */
   readonly aberto = model(false);
   /** Mantém o DOM durante a saída, mesmo depois de devolver a coluna para a página. */
   protected readonly painelRenderizado = signal(false);
   protected readonly saindo = signal(false);
+  /** O painel existe no DOM: sempre na coluna fixa; no modo sobreposto, só enquanto aberto/saindo. */
+  protected readonly renderizado = computed(() => this.fixo() || this.painelRenderizado());
   private encerramentoPendente: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {

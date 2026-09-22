@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   adicionarDado,
   adicionarTipoDano,
+  apagarUltimoBloco,
   incrementarUltimoDado,
   reposicionarOperadorPool,
 } from './montador-rolagem.util';
@@ -15,13 +16,51 @@ describe('composição do montador', () => {
     expect(adicionarDado('(', 6)).toBe('(d6');
   });
 
-  it('reposiciona o operador de pool no último dado elegível', () => {
-    expect(reposicionarOperadorPool('d20kh+d6', 'kl')).toBe('d20kh+d6kl');
-    expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20kh+d6cm1');
+  it('atributo/fonte extra "bare" no final vira fonte de dados (ATRdM) ao clicar num dado', () => {
+    expect(adicionarDado('FOR', 20)).toBe('FORd20');
+    expect(adicionarDado('PROF', 6)).toBe('PROFd6');
+    expect(adicionarDado('2d6+LUT', 20)).toBe('2d6+LUTd20');
+    // atributo já com dado (fonte já fechada): dado novo volta a ser aditivo com "+".
+    expect(adicionarDado('FORd6', 20)).toBe('FORd6+d20');
+  });
+
+  it('reposiciona o operador de pool no primeiro dado elegível da esquerda pra direita', () => {
+    // "d20kh" já tem "kh" exato — clicar "kl" nele é troca (kh↔kl), não redundância: aplica ali
+    // mesmo, no primeiro dado, sem pular pro "d6" que vem depois.
+    expect(reposicionarOperadorPool('d20kh+d6', 'kl')).toBe('d20kl+d6');
+    // "cm1" não tem nada a ver com "kh" — o primeiro dado ("d20kh") é elegível pra cm mesmo já
+    // tendo kh (família diferente), então fica nele, não no "d6kl" mais à direita.
+    expect(reposicionarOperadorPool('d20kh+d6kl', 'cm1')).toBe('d20khcm1+d6kl');
     expect(reposicionarOperadorPool('XYZd6', 'kh')).toBe('XYZd6');
     expect(reposicionarOperadorPool('lutad20', 'kh')).toBe('lutad20kh');
     expect(reposicionarOperadorPool('(LUT+2)d20', 'kh')).toBe('(LUT+2)d20kh');
     expect(reposicionarOperadorPool('(LUT*2)d20', 'kl')).toBe('(LUT*2)d20kl');
+  });
+
+  it('clique redundante (o dado já tem exatamente esse operador) pula pro próximo dado', () => {
+    // "d20kh" já tem "kh" exato — clicar "kh" de novo nele não muda nada, então vai pro "d6".
+    expect(reposicionarOperadorPool('d20kh+d6', 'kh')).toBe('d20kh+d6kh');
+    // "d20khcm1" já tem "cm1" exato — clicar "cm1" de novo pula pro "d6kh".
+    expect(reposicionarOperadorPool('d20khcm1+d6kh', 'cm1')).toBe('d20khcm1+d6khcm1');
+    // Todos os dados já têm o operador exato: nada a fazer, sem efeito.
+    expect(reposicionarOperadorPool('d20kh+d6kh', 'kh')).toBe('d20kh+d6kh');
+  });
+
+  it('kh/kl formam uma família mutuamente exclusiva (trocam no mesmo dado); cm convive com qualquer um dos dois', () => {
+    expect(reposicionarOperadorPool('d20kh', 'kl')).toBe('d20kl');
+    expect(reposicionarOperadorPool('d20kh', 'cm1')).toBe('d20khcm1');
+    expect(reposicionarOperadorPool('d20khcm1', 'cm2')).toBe('d20khcm2');
+    expect(reposicionarOperadorPool('d20khcm1', 'kl')).toBe('d20cm1kl');
+  });
+
+  it('cursor no visor escolhe o dado alvo, mesmo quando não é o primeiro da esquerda', () => {
+    const formula = 'd20+d6';
+    const cursorNoD6 = formula.indexOf('d6') + 1; // dentro do span do segundo candidato ("+d6")
+    expect(reposicionarOperadorPool(formula, 'kh', cursorNoD6)).toBe('d20+d6kh');
+    // Cursor fora de qualquer dado (ex.: início da fórmula) cai no padrão esquerda pra direita.
+    expect(reposicionarOperadorPool(formula, 'kh', 0)).toBe('d20kh+d6');
+    // Cursor null é o mesmo que não informar — também padrão esquerda pra direita.
+    expect(reposicionarOperadorPool(formula, 'kh', null)).toBe('d20kh+d6');
   });
 
   it('não altera uma fórmula sem dado ao reposicionar pool', () => {
@@ -43,6 +82,80 @@ describe('composição do montador', () => {
   it('não adiciona tipo de dano a atributo sem dado', () => {
     expect(adicionarTipoDano('FOR', 'F')).toBe('FOR');
     expect(adicionarTipoDano('2', 'F')).toBe('2[F]');
+  });
+});
+
+describe('apagarUltimoBloco', () => {
+  /** Aplica `apagarUltimoBloco` repetidamente e devolve a sequência de resultados, um por clique
+   *  — mais legível que chamar a função várias vezes em série no corpo do teste. */
+  function cliques(formulaInicial: string, quantidade: number): string[] {
+    const resultados: string[] = [];
+    let atual = formulaInicial;
+    for (let i = 0; i < quantidade; i++) {
+      atual = apagarUltimoBloco(atual);
+      resultados.push(atual);
+    }
+    return resultados;
+  }
+
+  it('exemplo do autor: desfaz cm, depois kh, depois o dado, depois o atributo — um por clique', () => {
+    expect(cliques('VIGd20khcm1', 4)).toEqual(['VIGd20kh', 'VIGd20', 'VIG', '']);
+  });
+
+  it('dado cru (quantidade+face) é um bloco só — não foi digitado em partes separadas', () => {
+    expect(apagarUltimoBloco('3d10')).toBe('');
+    expect(apagarUltimoBloco('d6')).toBe('');
+  });
+
+  it('tag de dano [...] some inteira antes de qualquer outra coisa no final', () => {
+    expect(apagarUltimoBloco('3d10[F]')).toBe('3d10');
+  });
+
+  it('repetição "#N" é seu próprio bloco, separado do grupo que ela fecha (que sai inteiro em seguida)', () => {
+    expect(cliques('(2d6+3)#2', 2)).toEqual(['(2d6+3)', '']);
+  });
+
+  it('número cru e operador/abre-parênteses soltos são blocos de 1 clique cada', () => {
+    expect(apagarUltimoBloco('2d6+5')).toBe('2d6+');
+    expect(apagarUltimoBloco('2d6+')).toBe('2d6');
+    expect(apagarUltimoBloco('2d6-')).toBe('2d6');
+    expect(apagarUltimoBloco('(')).toBe('');
+  });
+
+  it('atributo/fonte extra/atalho no final é um bloco só (FOR, PROF, CORPO...)', () => {
+    expect(apagarUltimoBloco('2d6+FOR')).toBe('2d6+');
+    expect(apagarUltimoBloco('2d6+PROF')).toBe('2d6+');
+    expect(apagarUltimoBloco('2d6+CORPO')).toBe('2d6+');
+  });
+
+  it('nunca corta dentro de um grupo (...) — sai inteiro assim que vira o menor bloco restante', () => {
+    expect(apagarUltimoBloco('(2d12+2d6)')).toBe('');
+    expect(cliques('(LUT+2)d20kh1cm1+PROF+5', 8)).toEqual([
+      '(LUT+2)d20kh1cm1+PROF+',
+      '(LUT+2)d20kh1cm1+PROF',
+      '(LUT+2)d20kh1cm1+',
+      '(LUT+2)d20kh1cm1',
+      '(LUT+2)d20kh1',
+      '(LUT+2)d20',
+      '(LUT+2)',
+      '',
+    ]);
+  });
+
+  it('decompõe um exemplo com tag, atributo e dois dados — bloco por bloco, até esvaziar', () => {
+    expect(cliques('3d10[F]+FOR+3d6[Q]', 7)).toEqual([
+      '3d10[F]+FOR+3d6',
+      '3d10[F]+FOR+',
+      '3d10[F]+FOR',
+      '3d10[F]+',
+      '3d10[F]',
+      '3d10',
+      '',
+    ]);
+  });
+
+  it('fórmula vazia devolve vazia', () => {
+    expect(apagarUltimoBloco('')).toBe('');
   });
 });
 

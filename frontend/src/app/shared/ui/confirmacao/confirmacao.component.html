@@ -1,5 +1,10 @@
 @if (servico.pedido(); as pedido) {
-    <app-modal [aberto]="true" [titulo]="pedido.titulo" (fechou)="cancelar()">
+    <app-modal
+        [aberto]="true"
+        [titulo]="pedido.titulo"
+        [fechavelPeloFundo]="!carregando()"
+        (fechou)="cancelar()"
+    >
         @if (perigo()) {
             <span modalIcone class="confirmacao__icone">
                 <app-icone nome="alerta" />
@@ -20,6 +25,8 @@
             modalAcoes
             class="confirmacao__acao"
             [variante]="perigo() ? 'perigo' : 'primario'"
+            [carregando]="carregando()"
+            [disabled]="carregando()"
             type="button"
             (click)="confirmar()"
         >
@@ -30,6 +37,7 @@
             modalAcoes
             class="confirmacao__acao"
             variante="secundario"
+            [disabled]="carregando()"
             type="button"
             (click)="cancelar()"
         >

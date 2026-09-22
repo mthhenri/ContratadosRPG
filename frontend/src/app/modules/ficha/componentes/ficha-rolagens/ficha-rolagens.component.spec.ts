@@ -6,7 +6,7 @@ import { HabilidadeCategoriaEnum, RolagemPresetTipoEnum } from '@contratados-rpg
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaRolagemDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
-import { MontadorRolagem } from '../../../../shared/montador-rolagem/montador-rolagem.component';
+import { RolagemRapida } from '../rolagem-rapida/rolagem-rapida.component';
 import { FichaRolagens } from './ficha-rolagens.component';
 
 /**
@@ -154,36 +154,6 @@ describe('FichaRolagens', () => {
     expect(arg.resultado.total).toBeGreaterThanOrEqual(20);
     expect(arg.resultado.critico).toBe(true);
     expect(arg.rotulo).toContain('CRÍTICO');
-  });
-
-  it('rolagem rápida rola na hora, sem salvar preset nem emitir a lista (m3-31)', () => {
-    const alvo = montar([]);
-    alvo.componentInstance['rapida'].setValue('2d6 + 3 [Físico]');
-    alvo.componentInstance['rolarRapida']();
-    expect(alvo.mostrar).toHaveBeenCalledOnce();
-    const arg = alvo.mostrar.mock.calls[0][0];
-    expect(arg.rotulo).toBe('Rolagem rápida');
-    expect(arg.formula).toBe('2d6 + 3 [Físico]');
-    // 2d6 (2..12) + 3 → total em [5, 15].
-    expect(arg.resultado.total).toBeGreaterThanOrEqual(5);
-    expect(arg.resultado.total).toBeLessThanOrEqual(15);
-    // Não salva: nenhuma emissão de rolagensMudou.
-    expect(alvo.emitidos).toEqual([]);
-  });
-
-  it('rolagem rápida expande os atalhos CORPO/FURTIVO antes de rolar (m3-38)', () => {
-    const alvo = montar([], { atalhosDano: { corpo: '2D6 + FOR [Físico]', furtivo: null } });
-    alvo.componentInstance['rapida'].setValue('CORPO');
-    alvo.componentInstance['rolarRapida']();
-    expect(alvo.mostrar).toHaveBeenCalledOnce();
-    expect(alvo.mostrar.mock.calls[0][0].formula).toBe('2D6 + FOR [Físico]');
-  });
-
-  it('rolagem rápida com fórmula inválida não rola', () => {
-    const alvo = montar([]);
-    alvo.componentInstance['rapida'].setValue('xyz');
-    alvo.componentInstance['rolarRapida']();
-    expect(alvo.mostrar).not.toHaveBeenCalled();
   });
 
   it('rola um passo e o joga na bandeja com total dentro da faixa', () => {
@@ -396,64 +366,24 @@ describe('FichaRolagens', () => {
     expect(alvo.mostrar.mock.calls[0][0].resultado.dados[0]?.valores).toHaveLength(5);
   });
 
-  describe('montador de rolagem (ui-35) — caixa flutuante de tokens da rolagem rápida', () => {
-    function montadorInstance(alvo: ReturnType<typeof montar>): MontadorRolagem {
-      return alvo.fixture.debugElement.query(By.directive(MontadorRolagem))
-        .componentInstance as MontadorRolagem;
-    }
-
-    it('sempre presente (a caixa flutuante controla o próprio aberto/fechado)', () => {
-      const alvo = montar([]);
-      expect(alvo.fixture.nativeElement.querySelector('app-montador-rolagem')).not.toBeNull();
-    });
-
-    it('token inserido no montador aparece na fórmula rápida e é rolável (mesmo FormControl)', () => {
-      const alvo = montar([]);
-      const montador = montadorInstance(alvo);
-      montador.formula.set('2d6 + FOR [Físico]');
-      alvo.fixture.detectChanges();
-
-      expect(alvo.componentInstance['rapida'].value).toBe('2d6 + FOR [Físico]');
-      alvo.componentInstance['rolarRapida']();
-      expect(alvo.mostrar).toHaveBeenCalledOnce();
-      expect(alvo.mostrar.mock.calls[0][0].formula).toBe('2d6 + FOR [Físico]');
-    });
-
-    it('o output (rolar) do montador dispara a mesma rolarRapida() do botão externo', () => {
-      const alvo = montar([]);
-      alvo.componentInstance['rapida'].setValue('2d6');
-      const montador = montadorInstance(alvo);
-      montador.rolar.emit();
-      expect(alvo.mostrar).toHaveBeenCalledOnce();
-      expect(alvo.mostrar.mock.calls[0][0].formula).toBe('2d6');
-    });
-
-    it('repassa atalhosDano e a validade já computada (rapidaValida) para o montador', () => {
+  describe('app-rolagem-rapida (extraída em rolagem-rapida-criatura) — repasse de inputs/output', () => {
+    it('sempre presente, recebe os derivados e re-emite rolagemFeita pra quem persiste o histórico', () => {
       const alvo = montar([], { atalhosDano: { corpo: '2D6 + FOR [Físico]', furtivo: null } });
-      alvo.componentInstance['rapida'].setValue('2d6');
-      alvo.fixture.detectChanges();
+      const rapida = alvo.fixture.debugElement.query(By.directive(RolagemRapida))
+        .componentInstance as RolagemRapida;
+      expect(rapida.atributos()).toEqual(atributos);
+      expect(rapida.atalhosDano()).toEqual({ corpo: '2D6 + FOR [Físico]', furtivo: null });
+      expect(rapida.podeRolar()).toBe(true);
 
-      const montador = montadorInstance(alvo);
-      expect(montador.atalhosDano()).toEqual({ corpo: '2D6 + FOR [Físico]', furtivo: null });
-      expect(montador.formulaValida()).toBe(true);
+      const emitidas: unknown[] = [];
+      alvo.componentInstance.rolagemFeita.subscribe((evento) => emitidas.push(evento));
+      const resultado = { total: 5, dados: [], critico: false } as never;
+      rapida.rolagemFeita.emit({ rotulo: 'Rolagem rápida', formula: '2d6', resultado });
+      expect(emitidas).toEqual([{ rotulo: 'Rolagem rápida', formula: '2d6', resultado }]);
     });
   });
 
   describe('podeRolar (m3-51) — visualizador não rola dados', () => {
-    it('esconde a rolagem rápida sem podeRolar', () => {
-      const alvo = montar([], { podeRolar: false });
-      expect(
-        alvo.fixture.nativeElement.querySelector('.ficha-rol__rapida'),
-      ).toBeNull();
-    });
-
-    it('rolarRapida não rola nem sem podeRolar mesmo com fórmula válida', () => {
-      const alvo = montar([], { podeRolar: false });
-      alvo.componentInstance['rapida'].setValue('2d6');
-      alvo.componentInstance['rolarRapida']();
-      expect(alvo.mostrar).not.toHaveBeenCalled();
-    });
-
     it('rolarPassoDoPreset não rola sem podeRolar', () => {
       const alvo = montar([{ nome: 'Ataque', formula: '1d20+LUT+2' }], { podeRolar: false });
       const vm = alvo.componentInstance['presets']()[0];

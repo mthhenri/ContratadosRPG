@@ -128,6 +128,10 @@ export class FichaEdicaoCriaturaService {
     this.alterarDados((dados) => ({ ...dados, identidade }));
   }
 
+  ajustarRegistro(registro: string): void {
+    this.alterarDados((dados) => ({ ...dados, registro }));
+  }
+
   ajustarNa(na: NivelAmeacaEnum): void {
     this.alterarDados((dados) => ({ ...dados, na }));
   }

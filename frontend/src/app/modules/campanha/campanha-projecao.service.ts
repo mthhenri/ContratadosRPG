@@ -7,6 +7,7 @@ import type {
   CampanhaPreviaJogadorDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 
 import { environment } from '../../../environments/environment';
 
@@ -47,6 +48,22 @@ export class CampanhaProjecaoService {
         `${this.base}/${id}/previa-jogador/${usuarioAlvoId}`,
       )
       .pipe(map((resposta) => resposta.dados as CampanhaPreviaJogadorDto));
+  }
+
+  recuperarEncontroAtivoPainelEspectador(id: number): Observable<EncontroRecuperadoDto | null> {
+    return this.httpClient
+      .get<StandardResponse<EncontroRecuperadoDto | null>>(
+        `${this.base}/${id}/painel-espectador/encontro-ativo`,
+      )
+      .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto | null));
+  }
+
+  recuperarEncontroAtivoPreviaJogador(id: number, usuarioAlvoId: number): Observable<EncontroRecuperadoDto | null> {
+    return this.httpClient
+      .get<StandardResponse<EncontroRecuperadoDto | null>>(
+        `${this.base}/${id}/previa-jogador/${usuarioAlvoId}/encontro-ativo`,
+      )
+      .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto | null));
   }
 
   /**

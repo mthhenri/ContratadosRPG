@@ -1,6 +1,8 @@
 // Casca da tela de visualização/edição da ficha de criatura — mesmo vocabulário visual de
 // `visualizar.page.scss` (m3-07, ui-34): coluna de ações + cabeçalho com índice/campanha/
-// classificação, menu kebab mobile, dialogs de acesso/exclusão. Reimplementado aqui (não `@use`)
+// classificação, dialogs de acesso/exclusão. Sem menu kebab mobile próprio (removido — a
+// coluna de ações já vira barra fixa de rodapé no mobile, ver `coluna-acoes.component.scss`,
+// então o menu duplicava os mesmos itens sem necessidade). Reimplementado aqui (não `@use`)
 // porque o encapsulamento de estilo do Angular não compartilha `.scss` entre componentes — só
 // tokens do tema "Terminal de Contenção" (proibição #29).
 
@@ -23,6 +25,9 @@
 
 .ficha-pagina {
     width: 100%;
+    // Mesmo ajuste de `visualizar.page.scss` (ficha de jogador) — ver o comentário lá: o piso de
+    // `100dvh` é pra `app-coluna-acoes` bater no rodapé (trilho de navegação, não conteúdo); some
+    // no `@include bp.mobile` abaixo, onde a coluna de ações vira barra fixa fora do fluxo.
     min-height: calc(100dvh - var(--altura-topbar));
     margin: 0;
     padding: 0;
@@ -54,11 +59,18 @@
         width: 100%;
         max-width: 100%;
         margin: 0;
+        // `app-coluna-acoes` já saiu da fileira aqui — o piso do desktop/tablet não tem mais ninguém
+        // pra esticar até ele.
+        min-height: 0;
     }
 
     &__conteudo {
         flex: 1 1 0;
         min-width: 0;
+        // Opta fora do `align-items: stretch` da fileira — ver o comentário em `.ficha-pagina` acima
+        // e em `visualizar.page.scss`: o piso é só pra `app-coluna-acoes`, o conteúdo real continua
+        // encolhendo pro próprio tamanho.
+        align-self: flex-start;
         padding: 24px var(--space-20) var(--space-20);
 
         @include bp.mobile {
@@ -173,73 +185,6 @@
             width: bp.$alvo-toque;
             height: bp.$alvo-toque;
         }
-    }
-
-    &__menu-container {
-        position: relative;
-        flex: 0 0 auto;
-    }
-
-    &__menu-botao {
-        width: 34px;
-        height: 30px;
-        font-size: 18px;
-
-        @include bp.mobile {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
-        }
-    }
-
-    &__menu-fundo {
-        position: fixed;
-        inset: 0;
-        z-index: 20;
-        background: transparent;
-        border: 0;
-        cursor: default;
-    }
-
-    &__menu {
-        position: absolute;
-        top: calc(100% + 6px);
-        right: 0;
-        z-index: 21;
-        min-width: 220px;
-        padding: 6px;
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-card);
-        box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
-    }
-
-    &__menu-item {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        width: 100%;
-        padding: 9px 10px;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        color: var(--text);
-        background: transparent;
-        border: 0;
-        text-align: left;
-
-        &:hover {
-            background: var(--surface-2);
-            color: var(--accent);
-        }
-
-        @include bp.mobile {
-            min-height: bp.$alvo-toque;
-        }
-    }
-
-    &__menu-contagem {
-        margin-left: auto;
-        font-size: 11px;
-        color: var(--text-mute);
     }
 
     &__carregando {
@@ -371,104 +316,5 @@
         @include bp.mobile {
             min-height: bp.$alvo-toque;
         }
-    }
-}
-
-.exclusao {
-    &__aviso {
-        margin: 0 0 16px;
-        font-family: var(--font-sans);
-        font-size: 13px;
-        color: var(--text);
-    }
-    &__acoes {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    &__acao {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 11px 18px;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-
-        @include bp.mobile {
-            min-height: bp.$alvo-toque;
-        }
-    }
-}
-
-// Dialog "Tornar rolagens públicas" — migrado de `criatura-visualizacao.component.scss`
-// (criatura-visualizacao-shell-ui34): o toggle que abre esta confirmação agora mora na coluna de
-// ações desta página.
-.revelar-rolagem {
-    &__aviso {
-        margin: 0 0 16px;
-        font: 13px/1.6 var(--font-sans);
-        color: var(--text-dim);
-    }
-    &__acoes {
-        display: flex;
-        gap: 10px;
-    }
-    &__acao {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-}
-
-// Esqueleto de carregamento — versão simplificada de coluna única (não replica as 3 colunas reais
-// de `CriaturaVisualizacao`, só evita o salto de largura contra `.ficha-pagina` acima). Identidade
-// (cor/raio/pulso) vem de `app-esqueleto`; aqui só a geometria de cada silhueta.
-.criatura-esqueleto {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    max-width: 900px;
-    margin: 0 auto;
-    width: 100%;
-
-    &__topo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    &__secao {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 16px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-card);
-    }
-
-    &__esqueleto-rotulo {
-        width: 130px;
-        height: 12px;
-    }
-    &__esqueleto-chip {
-        width: 150px;
-        height: 20px;
-        margin-left: auto;
-    }
-    &__esqueleto-titulo {
-        width: 40%;
-        max-width: 220px;
-        height: 16px;
-    }
-    &__esqueleto-linha {
-        width: 100%;
-        height: 12px;
-    }
-    &__esqueleto-curta {
-        width: 45%;
     }
 }

@@ -33,6 +33,13 @@
     "secure": false,
     "changeOrigin": true
   },
+  // Exclusão de rolagem por ADMIN (I-033): `DELETE /rolagem/:id`. Sem `/rolagem` aqui o dev server
+  // não a encaminha ao backend. Prefixo simples — não há rota de app "/rolagens".
+  "/rolagem": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/encontro": {
     "target": "http://localhost:3100",
     "secure": false,

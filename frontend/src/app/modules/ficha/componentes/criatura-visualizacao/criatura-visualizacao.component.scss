@@ -167,6 +167,59 @@
         &--status {
             align-self: stretch;
         }
+
+        // Ataques/Habilidades (pedido do autor): com muitos itens a coluna Status crescia e arrastava
+        // a de Identidade+Atributos junto (`&__linha-colunas{align-items:stretch}`). Mesma receita de
+        // `.ficha-visao__coluna--status` na ficha de jogador: `contain: size` tira o conteúdo desta
+        // coluna do cálculo da altura da fileira — que passa a ser a da coluna vizinha —, e
+        // `overflow: hidden` o impede de estourá-la; quem rola por dentro é a lista de cartões
+        // (`.ataque-lista__itens`/`.habilidade-lista__itens`), com o cabeçalho fixo. Só vale com as
+        // duas colunas lado a lado: empilhadas não há altura de referência (e a página inteira rola
+        // como uma coisa só, decisão m3-60 da ficha de jogador). A aba Geral fica de fora — a
+        // Descrição em Markdown pode ser longa e não rola por dentro.
+        &--status-rolavel {
+            // Coluna com altura travada: sem isto o flexbox reparte o aperto também com a barra de
+            // abas (`overflow-x: auto` a deixa encolher abaixo do conteúdo) e ela sai mais baixa
+            // que nas outras abas.
+            > app-abas {
+                flex-shrink: 0;
+            }
+
+            @media (min-width: (bp.$bp-tablet + 1px)) {
+                .criatura:not(.criatura--apertado) & {
+                    contain: size;
+                    overflow: hidden;
+                }
+            }
+
+            // Painel lateral de Rolagens aberto: `&--apertado` só empilha abaixo de
+            // `$bp-tablet + $reserva-painel-lateral` (ver `&--apertado &__linha-colunas`).
+            @media (min-width: (bp.$bp-tablet + bp.$reserva-painel-lateral + 1px)) {
+                .criatura--apertado & {
+                    contain: size;
+                    overflow: hidden;
+                }
+            }
+        }
+    }
+
+    // O card do painel precisa poder encolher abaixo do conteúdo (`min-height: 0`) e cortar o que
+    // passar, senão o `contain: size` da coluna acima não chega às listas — o card estouraria antes.
+    // Mesmos dois limiares da coluna.
+    &__coluna--status-rolavel &__cartao--painel {
+        @media (min-width: (bp.$bp-tablet + 1px)) {
+            .criatura:not(.criatura--apertado) & {
+                min-height: 0;
+                overflow: hidden;
+            }
+        }
+
+        @media (min-width: (bp.$bp-tablet + bp.$reserva-painel-lateral + 1px)) {
+            .criatura--apertado & {
+                min-height: 0;
+                overflow: hidden;
+            }
+        }
     }
 
     // --- Identidade em 2 colunas (pedido do autor) ---
@@ -350,7 +403,20 @@
         font: 11px var(--font-mono);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--text-mute);
+        color: var(--text-dim);
+    }
+    &__registro-entrada {
+        width: fit-content;
+        max-width: 100%;
+        min-width: 0;
+        font: 11px var(--font-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-control);
+        padding: 2px 5px;
     }
 
     // --- Classificação (chips + lápis / grade de selects) ---
@@ -738,44 +804,56 @@
         font: 10px/1.4 var(--font-mono);
         color: var(--vida);
     }
-    &__atributos-lista {
-        display: grid;
-        gap: 8px;
+    // Edição: mesma caixa de `&__atributo-card`, 3 colunas quando o card mede pelo menos 560px
+    // (pedido do autor, ajuste pós-mockup) — abaixo disso 3 colunas espremem demais o seletor de
+    // Modificador (4 barrinhas) e o conteúdo vaza da caixa, então cai pra 2 (mesma régua de
+    // container query de `&__atributos-grade` acima, só que com outro ponto de corte: aquele
+    // pensa no chip de texto da leitura, bem mais estreito que o seletor de Modificador precisa).
+    // Nunca acompanha as 5 colunas da leitura em telas largas — mesmo racional de
+    // `.ficha-atributos__grade.ficha-atributos__grade--edicao` na ficha de jogador, que também
+    // diverge da régua de colunas da leitura. Duas classes bastam pra vencer a regra de 1 classe
+    // dentro do `@container` de `&__atributos-grade`, em qualquer largura de container.
+    &__atributos-grade--edicao {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        @container (min-width: 560px) {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
     }
-    &__atributo-linha {
-        display: grid;
-        gap: 6px;
-        padding: 8px 10px;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-control);
+    // Órfão do grupo (5º item) centralizado só na régua de 2 colunas — a partir de 560px o grupo
+    // de 5 fecha 3+2 (a caixa de trás tem par, não é mais órfã), mesmo racional do `@container`
+    // de `&--sozinho` alguns blocos abaixo (pensado pra leitura, reaproveitado aqui com o mesmo
+    // ponto de corte da régua de colunas de edição acima).
+    &__atributos-grade--edicao &__atributo-card--sozinho {
+        grid-column: 1 / -1;
+        width: calc(50% - 4px);
+        margin: 0 auto;
+
+        @container (min-width: 560px) {
+            grid-column: auto;
+            width: auto;
+            margin: 0;
+        }
     }
-    &__atributo-linha-topo {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-    }
-    &__atributo-linha-nome {
-        font: 600 10px var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-dim);
-    }
-    // Mesmo stepper (passo −/+ ao redor do valor) da edição de Atributos da ficha de jogador
-    // (`ficha-atributo__stepper`/`ficha-atributo-linha__valor`) — trocou o `<input type="number">`
-    // digitável, que não seguia o padrão de edição no próprio lugar do resto do sistema.
-    &__atributo-linha-stepper {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    // Caixa em edição: mais compacta que antes (pedido do autor) — respiro menor entre as 3
+    // sub-linhas (identidade, stepper, seletor de Modificador) do que a leitura tem entre as suas
+    // 2 (abrev, valor+efetivo), mas sem exagerar agora que a caixa pode dividir linha com outras
+    // 2 (não só 1).
+    &__atributo-card--edicao {
+        gap: 5px;
+        padding: 8px 6px;
     }
     // Barrinhas de sinal (4 níveis) — mesmo widget de `.atributo__modificador` do assistente de
     // criação (`criar-criatura.page.scss`, m4-05), preservado sem mudança de interação.
+    // `width: 100%` — a caixa (`&__atributo-card`) é flex-column com `align-items: center`, que
+    // encolhe os filhos pro tamanho do conteúdo por padrão; sem isso as 4 barrinhas ficariam
+    // espremidas na largura natural dos botões, não na largura cheia da caixa (mesmo racional de
+    // `.ficha-atributo__stepper` na ficha de jogador).
     &__atributo-modificadores {
         display: flex;
         justify-content: space-between;
         gap: 3px;
+        width: 100%;
     }
     &__atributo-modificador {
         display: grid;
@@ -881,6 +959,7 @@
         font: 14px/1.6 var(--font-sans);
         color: var(--text-dim);
         max-width: 78ch;
+        white-space: pre-wrap;
     }
 
     // Gancho/Motivação: linha própria abaixo da descrição, separada por um filete (como no mockup).
@@ -1037,13 +1116,23 @@
         }
     }
 
+    // Mesma caixa "clara" de `FichaVisualizacao.ficha-status__anotacoes-caixa` (padding/fundo/
+    // borda ao redor do conteúdo) — faltava aqui e deixava o painel da criatura visualmente
+    // diferente do de jogador (achado ao vivo pelo autor).
+    &__anotacoes-caixa {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+    }
+
     // Dentro do `app-painel-flutuante` (mesmo racional de `FichaVisualizacao.ficha-status__
     // anotacoes-caixa--painel`): `flex: 1` deixa a caixa (e o campo de texto) crescer junto com a
     // janela ao arrastar a alça de redimensionar, sem vão em branco abaixo.
     &__anotacoes-caixa--painel {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
         flex: 1 1 auto;
         min-height: 220px;
 
@@ -1051,6 +1140,11 @@
             flex: 1 1 auto;
             min-height: 0;
         }
+    }
+
+    &__anotacoes-acoes {
+        display: flex;
+        gap: 6px;
     }
 
     // Alça de redimensionar do painel de Anotações — mesmo visual de

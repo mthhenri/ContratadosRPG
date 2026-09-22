@@ -1,4 +1,11 @@
-import type { ArquetipoEnum, ClasseEnum, NivelAmeacaEnum, TipoFichaEnum } from '../../enums';
+import type {
+  ArquetipoEnum,
+  ClasseEnum,
+  ComportamentoCriaturaEnum,
+  NivelAmeacaEnum,
+  PorteCriaturaEnum,
+  TipoFichaEnum,
+} from '../../enums';
 import type { AmplificadorAplicadoDto, CarrinhoItemDto } from '../../regras/compras';
 import type { FichaAtributosDto, FichaHabilidadeDto, FichaJogadorDadosDto } from './ficha.dtos';
 
@@ -133,6 +140,12 @@ export interface FichaResumoDto {
    * seletor de combatentes do Encontro, que mostra NA + VD no lugar de classe/nível.
    */
   readonly vd?: number | null;
+  /** Registro/contrato de catalogação (`FichaCriaturaDadosDto.registro`, ex.: "SCP-049") — só presente numa ficha `CRIATURA`. */
+  readonly registro?: string | null;
+  /** Porte (`FichaCriaturaDadosDto.porte`) — só presente numa ficha `CRIATURA`. */
+  readonly porte?: PorteCriaturaEnum | null;
+  /** Comportamento (`FichaCriaturaDadosDto.identidade.comportamento`) — só presente numa ficha `CRIATURA`. */
+  readonly comportamento?: ComportamentoCriaturaEnum | null;
   readonly classe: ClasseEnum;
   readonly arquetipo: ArquetipoEnum | null;
   readonly nivel: number;
@@ -526,12 +539,40 @@ export interface FichaAcessoRevogadoDto {
   readonly usuarioId: number;
 }
 
+/** Mensagem de infraestrutura para abandonar uma sala de ficha no Socket.IO. */
+export interface FichaSalaSairDto {
+  readonly id: number;
+}
+
 /**
  * Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é
  * deliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem
  * está na sala ampla `campanha:<id>`.
  */
 export interface FichaVisibilidadeAlteradaDto {
+  readonly fichaId: number;
+  readonly campanhaId: number;
+}
+
+/**
+ * Evento de tempo real (I-031): uma ficha `JOGADOR` da campanha pode ter mudado de condição
+ * (Morrendo/Machucado/Inconsciente) — emitido junto de todo `ficha:alterada` (não dá pra saber,
+ * no gateway, se a mudança tocou `estado` sem reabrir o documento). Payload mínimo de propósito,
+ * igual a `FichaVisibilidadeAlteradaDto`: não revela quem mudou nem o novo valor a quem está na
+ * sala ampla `campanha:<id>` sem acesso à ficha — o cliente refaz `listarMembros`, cujo recorte
+ * de carteirinha (`CampanhaMembroFichaResumoDto`) já inclui as três condições sempre.
+ */
+export interface FichaCondicoesAlteradasDto {
+  readonly campanhaId: number;
+}
+
+/**
+ * Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para
+ * outra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload
+ * mínimo de propósito (nenhum dado da ficha), então vale para qualquer tipo, inclusive
+ * criatura/NPC, que não têm `ficha:criada` justamente por causa do recorte de visibilidade.
+ */
+export interface FichaCampanhaRemovidaDto {
   readonly fichaId: number;
   readonly campanhaId: number;
 }
@@ -603,8 +644,12 @@ export interface FichaVitalidadeAlterarDto {
   readonly energiaAtual?: number;
 }
 
-/** Contrato interno da alteração pontual de vitalidade; `id` vem da controller. */
+/**
+ * Contrato interno da alteração pontual de vitalidade; `id` vem da controller. `estado.machucado`
+ * é opcional e só o service escreve (I-032, `resolverMachucadoPelaVida`) — o cliente nunca manda
+ * a condição por esta rota, ela é derivada da Vida que ele mandou.
+ */
 export interface FichaVitalidadeInternoAlterarDto {
   readonly id: number;
-  readonly estado: FichaVitalidadeAlterarDto;
+  readonly estado: FichaVitalidadeAlterarDto & { readonly machucado?: boolean };
 }
