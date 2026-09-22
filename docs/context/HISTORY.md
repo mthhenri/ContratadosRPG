@@ -1,5 +1,64 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-22 — `i-029-reacoes-resistencias-e-steppers-iniciativa`: extrai FichaReacoes/FichaResistencias (I-029) e tira os steppers de Vida/Energia da Iniciativa pra quem tem ficha
+
+Dois pedidos do autor na mesma conversa, sem spec própria, tratados como duas mudanças
+independentes (commits separados).
+
+**I-029 — `FichaReacoes`/`FichaResistencias` (`frontend/modules/ficha/componentes/ficha-reacoes`,
+`.../ficha-resistencias`):**
+
+- Os blocos "Reações" (Defesa/Esquiva/Bloqueio/Contra-ataque) e "Resistências" (5 tipos de dano)
+  viviam duplicados byte a byte em `FichaVisualizacao` e `FichaCampanhaCard`, cada um com sua
+  própria cópia de `editandoDerivado`/`editarDerivado`/`confirmarDerivado`/`cancelarDerivado` (e o
+  par equivalente de Resistências) — a única diferença de comportamento real era o booleano
+  `ajustavelAmplo` (sempre `ajustavel()` na ficha completa, sempre `false` na carteirinha).
+- Cada bloco virou um componente próprio, com seu **próprio** estado de edição local (a página-mãe
+  mantém sua própria cópia do mesmo mecanismo para os demais derivados da aba Status/Combate, que
+  não fazem parte destes blocos — não dava pra "mover" o sinal, ele é reusado em mais de um lugar
+  no mesmo arquivo). Inputs: `linhas`/`contraAtaqueLinha`/`temContraAtaque`/`ajustavelAmplo`/
+  `compacto`. Outputs: `ajusteDerivado`/`ajusteResistencia` (interfaces re-exportadas do local
+  canônico — `ficha-edicao.service.ts` importava de `ficha-visualizacao.component.ts`, continua
+  importando de lá via `export type`).
+- **Achado ao investigar:** a CSS dos dois blocos **não** era byte a byte idêntica entre os dois
+  hosts, ao contrário do que a ideia original presumia — `FichaCampanhaCard` usa uma grade fixa de
+  4/5 colunas com fonte menor (13px/9px), `FichaVisualizacao` usa uma fileira flex que cresce pra
+  preencher a coluna, fonte maior (15px/13px conforme o bloco), e só a ficha completa tem
+  `.ficha-mini__rotulo--duas-linhas` (Contra-ataque quebra em duas linhas no mobile). Os dois
+  componentes novos ganharam um input `[compacto]` que reproduz as duas densidades exatamente —
+  verificado visualmente lado a lado nos dois hosts.
+- **Identidade (nome/contrato/avatar/classe/Origem) não foi extraída nesta rodada** — decisão
+  tomada ao investigar, não perguntada ao autor: o bloco carrega uma dúzia de sinais de edição
+  locais (editor de classe, modal de Origem, recorte de enquadramento de imagem) que tornam a
+  extração bem maior e mais arriscada que Reações/Resistências. `IDEAS.md` `I-029` foi reescrita
+  para cobrir só o que falta (Identidade), com o resto do texto documentando o que já saiu.
+- Verificado ao vivo (`verify`, Playwright) em `1920×1080` e `360×800`, nos dois hosts (ficha
+  completa editável, carteirinha só leitura via "Prévia de jogador" do mestre): edição em Reações e
+  em Resistências confirmada persistida (badge "SALVO", refetch por REST). Suíte: shared 763/763,
+  backend 573/573, frontend 2063/2063 (+ os specs novos dos 2 componentes), lint 0 erros.
+
+**Steppers de Vida/Energia na Iniciativa — só o avulso (`cartao-combatente.component.ts`):**
+
+- Os botões `−`/`+` de ajuste rápido de Vida/Energia no cartão de combatente da tela Iniciativa
+  apareciam do mesmo jeito pra todo combatente, tivesse ficha (agente, NPC/criatura) ou não
+  (avulso). Pedido do autor: pra quem tem ficha, editar Vida/Energia ali duplicava um caminho de
+  edição que já existe na ficha completa e arriscava os dois números divergirem — "acho que é bom
+  tirar essas edições, até pra evitar problemas". Só o avulso, que não tem ficha própria pra abrir,
+  manteve os steppers.
+- Novo computed `podeAjustarVidaEnergia` = `podeAjustar() && origem === AVULSO`, substituindo
+  `podeAjustar()` nos 4 botões `−`/`+` (Vida e Energia) e no gatilho mobile "Ajustar"/"Fechar"
+  (`.combatente__ajustar`, que só existe pra revelar os steppers no mobile — sem steppers, o
+  gatilho não tem o que revelar). **"Receber dano" ficou de fora** — decisão revista em conversa: o
+  autor pediu primeiro para tirar tudo, depois reconsiderou e manteve "Receber dano" (fluxo de
+  combate — dano recebido — distinto de um micro-ajuste avulso), gated só por `podeAjustar()`, sem
+  mudança.
+- Só mudança de frontend — o backend não foi tocado; a Vida/Energia de combatente com ficha
+  continua sendo lida da própria ficha (`EncontroCombatenteResumoDto`), como já era.
+- Verificado ao vivo em `1920×1080` e `360×800`: encontro com um combatente com ficha e um avulso
+  lado a lado — o com ficha perde os steppers e o "Ajustar" mobile, mantém "Receber dano"; o avulso
+  mantém os dois. Testes atualizados/novos em `cartao-combatente.component.spec.ts` (a suíte já
+  soma ao 2065/2065 relatado acima).
+
 ## 2026-09-22 — `p074-p072-p071-fecho`: gatilho mobile independente do Esquadrão, blockquote do editor Markdown e fechamento do flake do Montador (fecha `P-074`/`P-072`/`P-071`)
 
 Pedido do autor: fechar as três dívidas registradas em `PROBLEMS.md` junto do fecho de
