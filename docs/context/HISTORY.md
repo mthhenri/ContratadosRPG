@@ -1,6 +1,48 @@
 # HISTORY.md — Histórico do Projeto
 
 
+## 2026-09-22 — habilidades-busca-descricao: escopo Título/Descrição/Ambos na busca do seletor de habilidades (I-028)
+
+Ideia `I-028`: a busca do seletor "Adicionar do sistema" (`app-ficha-habilidade-seletor`) só
+comparava contra `habilidade.nome`, forçando quem lembra o efeito mas não o nome exato a rolar a
+lista item a item. O autor sugeriu um controle de 3 opções (Título/Descrição/Ambos) em vez de um
+checkbox binário — bateu certinho com um primitivo já existente e não usado neste componente:
+`shared/ui/segmentado` (`app-segmentado`/`app-segmentado-item`), a mesma identidade já usada pelo
+filtro de texto do Leitor de Documentos (`leitor-documentos.component.html`, texto puro sem
+ícone — análogo escolhido para este corte, mais perto do formato "só rótulo" do que o filtro por
+ícone do Inventário) e pelo filtro por categoria do Inventário (`ficha-inventario.component.html`).
+
+**Escopo:** como `criar.page.ts` (guia de criação) já reusa o mesmo `FichaHabilidadeSeletor` que
+`ficha-habilidades.component` (lista da ficha viva), a mudança em um componente só cobriu os dois
+lugares que a ideia citava — nenhum catálogo de habilidades separado existe no guia.
+
+**Implementação:** novo `escopoBusca` (`signal<'titulo'|'descricao'|'ambos'>`, padrão `'titulo'` —
+preserva o comportamento anterior). O `computed` `habilidades` passou a decidir por `escopo`: em
+`'titulo'` só compara `nome`; em `'descricao'` só `descricao`; em `'ambos'`, qualquer um dos dois.
+`descricao` é `string` sempre presente em `HabilidadeBaseDto` (não opcional, ao contrário do que a
+spec inicial supôs) — uma descrição vazia (só em fixture de teste) simplesmente nunca casa, sem
+tratamento especial. Novo controle `app-segmentado` (3 `app-segmentado-item` de texto puro) logo
+abaixo do campo de busca, com `rotulo="Buscar em"` para o `aria-label` do grupo.
+
+**Testado:** `npm run test --workspace=frontend -- --include='**/ficha-habilidade-seletor.component.spec.ts'`
+— 10/10 verdes, incluindo os 6 casos novos (padrão é Título; Título não casa por descrição;
+Descrição casa por trecho sem exigir match no nome; Descrição não quebra numa habilidade com
+descrição vazia; Ambos casa por nome; Ambos casa por descrição sem match no nome).
+`npm run lint --workspace=frontend` — 0 erros (só os warnings de aspas pré-existentes no repo
+inteiro, nenhum introduzido por esta task).
+
+**Verificado ao vivo (skill `verify`):** Docker não respondia neste ambiente (sandbox sem
+`dockerd`) — subido um Postgres 16 local via `pg_ctlcluster` como alternativa ao compose, backend
+e frontend no ar normalmente contra ele. Fluxo real pelo guia de criação (`/fichas/nova` →
+Base → Classe Combatente/Lutador → Novo agente → Atributos [Modo livre] → Habilidades → pacote "4
+Gerais" → "Escolher Habilidade Geral"), Playwright em `1920×1080` e `360×800`. Confirmado nos
+dois viewports: "Título" ativo por padrão; buscar "investigado" (só na descrição de "Analisar
+Cenário") não acha nada em Título, acha em Descrição, acha em Ambos; buscar "sentido" em Ambos
+acha tanto por nome ("6º Sentido") quanto por descrição (Arrepio, Cautela Extra, Em Alerta,
+Intuição Aguçada, Percepção Repentina, Tático Urbano — todas com "Sentidos" no texto). Sem
+overflow em nenhum viewport, segmentado com a mesma identidade pill/`--accent` dos outros
+consumidores, alvos de toque OK no mobile.
+
 ## 2026-09-22 — criatura-ataques-habilidades-editor-alinhado: mesmo efeito de edição-no-lugar do jogador, formulário como 1º item, fórmulas empilhadas, ordem alfabética
 
 Pedido direto do autor com screenshot (criação de Ataque na ficha de criatura): 3 queixas sobre

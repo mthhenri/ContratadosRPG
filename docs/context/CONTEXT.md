@@ -2282,7 +2282,9 @@ classe escolhida; vem **antes** de Identidade na trilha — só depois de escolh
 sabe se um Experimento vai ter Peculiaridade, e portanto não vai ter Origem; sempre presente: pacote
 inicial obrigatório de 4 Gerais, 2 Gerais + 1 de Classe/Arquétipo ou 2 de Classe/Arquétipo; Civil
 escolhe 3 Civis; compõe ainda as vagas de `calcularProgressaoAcumulada`, sem duplicatas —
-Experimento não ganha vaga extra, escolhe Peculiaridade pelo mesmo pacote de qualquer outra classe)
+Experimento não ganha vaga extra, escolhe Peculiaridade pelo mesmo pacote de qualquer outra classe;
+o seletor "Adicionar do sistema" (`FichaHabilidadeSeletor`, mesmo componente da ficha viva) busca
+por Título, Descrição ou Ambos — `I-028`, `escopoBusca`, padrão Título)
 · **06 Identidade** (Personalidade + Origem com catálogo de Formações e `Outra`, imutáveis para o
 dono após a criação; desde `m3-75`, `criar()` trima as pontas de todo campo de texto livre —
 `personalidade`, `origem.nome/.descricao/.saberDeCampo`, cada `formacao[].texto/.parametro` e

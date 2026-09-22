@@ -119,3 +119,73 @@ describe('FichaHabilidadeSeletor — aba ativa não reseta ao adicionar/remover 
     expect(componente['subgrupoAtivo']()).toBe(ArquetipoEnum.LUTADOR);
   });
 });
+
+describe('FichaHabilidadeSeletor — busca por escopo (I-028)', () => {
+  const GRUPOS_ESCOPO_BUSCA: readonly GrupoHabilidades[] = [
+    {
+      id: 'gerais',
+      subgrupos: [
+        {
+          chave: null,
+          ehDaFicha: true,
+          habilidades: [
+            {
+              nome: 'Golpe Certeiro',
+              custoEnergia: 0,
+              categoria: HabilidadeCategoriaEnum.GERAL,
+              descricao: 'Ataque com precisão elevada contra um alvo vulnerável.',
+            },
+            {
+              nome: 'Investida',
+              custoEnergia: 1,
+              categoria: HabilidadeCategoriaEnum.GERAL,
+              descricao: '',
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  function montarComBusca(termo: string) {
+    const fixture = montar(GRUPOS_ESCOPO_BUSCA);
+    const componente = fixture.componentInstance;
+    componente['busca'].setValue(termo);
+    fixture.detectChanges();
+    return { fixture, componente };
+  }
+
+  it('padrão é "Título" ao abrir o seletor', () => {
+    const { componente } = montarComBusca('');
+    expect(componente['escopoBusca']()).toBe('titulo');
+  });
+
+  it('escopo "Título" não encontra por trecho só presente na descrição', () => {
+    const { componente } = montarComBusca('precisão');
+    expect(componente['habilidades']().map((h) => h.nome)).toEqual([]);
+  });
+
+  it('escopo "Descrição" encontra por trecho da descrição, sem exigir match no nome', () => {
+    const { componente } = montarComBusca('precisão');
+    componente['selecionarEscopoBusca']('descricao');
+    expect(componente['habilidades']().map((h) => h.nome)).toEqual(['Golpe Certeiro']);
+  });
+
+  it('escopo "Descrição" não quebra numa habilidade com descrição vazia', () => {
+    const { componente } = montarComBusca('investida');
+    componente['selecionarEscopoBusca']('descricao');
+    expect(componente['habilidades']().map((h) => h.nome)).toEqual([]);
+  });
+
+  it('escopo "Ambos" encontra por nome', () => {
+    const { componente } = montarComBusca('golpe');
+    componente['selecionarEscopoBusca']('ambos');
+    expect(componente['habilidades']().map((h) => h.nome)).toEqual(['Golpe Certeiro']);
+  });
+
+  it('escopo "Ambos" também encontra por descrição, sem match no nome', () => {
+    const { componente } = montarComBusca('vulnerável');
+    componente['selecionarEscopoBusca']('ambos');
+    expect(componente['habilidades']().map((h) => h.nome)).toEqual(['Golpe Certeiro']);
+  });
+});

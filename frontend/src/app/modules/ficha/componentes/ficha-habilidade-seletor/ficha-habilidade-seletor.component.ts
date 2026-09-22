@@ -15,7 +15,12 @@ import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.component';
+import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
 import { rotuloArquetipo, rotuloClasse } from '../../rotulos-ficha';
+
+/** Escopo da busca (`I-028`): comparar contra o nome, a descrição, ou ambos. */
+type EscopoBuscaHabilidade = 'titulo' | 'descricao' | 'ambos';
 
 /** Rótulo de cada aba (grupo) do seletor. */
 const ROTULO_ABA: Record<GrupoHabilidades['id'], string> = {
@@ -44,7 +49,17 @@ const VALORES_CLASSE = new Set<string>(Object.values(ClasseEnum));
  */
 @Component({
   selector: 'app-ficha-habilidade-seletor',
-  imports: [ReactiveFormsModule, OverflowFade, Tooltip, ClampTruncado, Botao, BotaoIcone, EstadoVazio],
+  imports: [
+    ReactiveFormsModule,
+    OverflowFade,
+    Tooltip,
+    ClampTruncado,
+    Botao,
+    BotaoIcone,
+    EstadoVazio,
+    Segmentado,
+    SegmentadoItem,
+  ],
   templateUrl: './ficha-habilidade-seletor.component.html',
   styleUrl: './ficha-habilidade-seletor.component.scss',
 })
@@ -107,9 +122,12 @@ export class FichaHabilidadeSeletor {
     },
   });
 
-  /** Texto de busca (filtra por nome no escopo ativo). */
+  /** Texto de busca (filtra nome e/ou descrição, conforme `escopoBusca`). */
   protected readonly busca = new FormControl('', { nonNullable: true });
   private readonly buscaTexto = signal('');
+
+  /** Escopo da busca (`I-028`) — "Título" é o padrão, preserva o comportamento anterior. */
+  protected readonly escopoBusca = signal<EscopoBuscaHabilidade>('titulo');
 
   constructor() {
     this.busca.valueChanges.subscribe((valor) => this.buscaTexto.set(valor));
@@ -133,11 +151,22 @@ export class FichaHabilidadeSeletor {
     );
   });
 
-  /** Habilidades do subgrupo em foco, filtradas pela busca. */
+  /** Habilidades do subgrupo em foco, filtradas pela busca (nome e/ou descrição, por `escopoBusca`). */
   protected readonly habilidades = computed<readonly HabilidadeCatalogoItemDto[]>(() => {
     const termo = this.buscaTexto().trim().toLowerCase();
     const lista = this.subgrupoSelecionado()?.habilidades ?? [];
-    return termo ? lista.filter((habilidade) => habilidade.nome.toLowerCase().includes(termo)) : lista;
+    if (!termo) {
+      return lista;
+    }
+    const escopo = this.escopoBusca();
+    return lista.filter((habilidade) => {
+      const casaNome = habilidade.nome.toLowerCase().includes(termo);
+      if (escopo === 'titulo') {
+        return casaNome;
+      }
+      const casaDescricao = habilidade.descricao.toLowerCase().includes(termo);
+      return escopo === 'descricao' ? casaDescricao : casaNome || casaDescricao;
+    });
   });
 
   /**
@@ -171,6 +200,10 @@ export class FichaHabilidadeSeletor {
   protected selecionarSubgrupo(chave: ClasseEnum | ArquetipoEnum | null): void {
     this.subgrupoAtivo.set(chave);
     this.busca.setValue('');
+  }
+
+  protected selecionarEscopoBusca(escopo: EscopoBuscaHabilidade): void {
+    this.escopoBusca.set(escopo);
   }
 
   protected estaNaFicha(nome: string): boolean {

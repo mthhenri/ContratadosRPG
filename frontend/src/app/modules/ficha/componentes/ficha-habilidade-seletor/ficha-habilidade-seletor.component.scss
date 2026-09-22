@@ -188,6 +188,12 @@
         }
     }
 
+    // Escopo da busca (I-028): mesma identidade de `app-segmentado` já usada pelo Leitor de
+    // Documentos/Caderno — largura do conteúdo, colado logo abaixo do campo de busca.
+    &__busca-escopo {
+        margin: 0 16px 12px;
+    }
+
     // === Lista (2 colunas + fade nas bordas roláveis) ===
     &__lista {
         list-style: none;
