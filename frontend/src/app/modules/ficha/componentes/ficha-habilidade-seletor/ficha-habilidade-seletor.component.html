@@ -65,6 +65,34 @@
             />
         </div>
 
+        <!-- Escopo da busca (I-028): título, descrição ou ambos -->
+        <app-segmentado class="seletor__busca-escopo" rotulo="Buscar em">
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="escopoBusca() === 'titulo'"
+                (click)="selecionarEscopoBusca('titulo')"
+            >
+                Título
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="escopoBusca() === 'descricao'"
+                (click)="selecionarEscopoBusca('descricao')"
+            >
+                Descrição
+            </button>
+            <button
+                app-segmentado-item
+                type="button"
+                [ativo]="escopoBusca() === 'ambos'"
+                (click)="selecionarEscopoBusca('ambos')"
+            >
+                Ambos
+            </button>
+        </app-segmentado>
+
         <!-- Lista do catálogo (2 colunas, fade nas bordas roláveis) -->
         <ul class="seletor__lista" appOverflowFade>
             @for (habilidade of habilidades(); track habilidade.nome + habilidade.categoria) {

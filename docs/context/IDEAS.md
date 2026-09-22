@@ -38,6 +38,14 @@
   desta ideia, continuam em
   `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
 
+### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
+
+- Promovida em 2026-09-22 a `docs/specs/done/habilidades-busca-descricao.spec.md` (implementada na
+  mesma tarefa). Em vez de só ampliar o filtro existente para também casar contra a descrição, o
+  autor pediu um controle de 3 opções (Título/Descrição/Ambos) em vez de um toggle binário —
+  resolvido com `app-segmentado`, primitivo já existente em `shared/ui/`. Cobre tanto o seletor de
+  habilidades da ficha quanto o guia de criação, que reusa o mesmo componente.
+
 ## Abertas
 
 ### I-030 — Log de iniciativa: retomar em outro formato · encontro/iniciativa
@@ -82,17 +90,6 @@
   por campo editável (nome/contrato/nível/prestígio/cor/imagem/classe/arquétipo/origem) e a
   migração do modal de Origem (`app-modal`) e do recorte de enquadramento
   (`app-ajuste-enquadramento-imagem`) para dentro dele.
-
-### I-028 — Pesquisar na descrição da habilidade · ficha/habilidades
-
-- **Ideia:** permitir buscar/filtrar habilidades pelo texto da descrição, não só pelo nome, no
-  seletor de habilidades da ficha (e possivelmente no catálogo do guia de criação).
-- **Origem:** pedido do autor em conversa (2026-09-11), junto de outros ajustes de ficha.
-- **Por quê:** com o catálogo de habilidades crescendo, lembrar o efeito mas não o nome exato
-  força uma busca manual item a item; buscar pela descrição encontraria a habilidade pelo que ela
-  faz.
-- **Custo aparente:** só frontend — provavelmente extends o filtro de texto já existente no
-  seletor de habilidades para também casar contra o campo de descrição, sem schema novo.
 
 ### I-027 — Janela externa para anotações/histórico de dados · frontend/UX
 
