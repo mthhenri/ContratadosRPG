@@ -1,5 +1,49 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-22 — `iniciativa-ajustes-visuais`: Vida/Energia 50/50 no cartão de combatente, confirmação padrão de rolagem pública e painel avulso maior
+
+Três pedidos visuais do autor na mesma conversa, com referência de print (o autor mandou uma
+captura de tela do estado atual pra apontar o problema), sem spec própria.
+
+**Vida/Energia 50/50 (`cartao-combatente.component.scss`):** o autor achou as barras "grudadas".
+`.combatente__recurso` ganhou `flex: 1 1 0` (sozinho, cresce até ocupar a fileira inteira; junto de
+outro, os dois dividem o espaço meio a meio) e `.combatente__barra` ganhou `min-width: 108px`
+(medido ao vivo — abaixo disso o rótulo "Energia" e o valor colidem, sem espaço pro
+`justify-content: space-between` interno do primitivo). **Armadilha encontrada por tentativa e
+erro:** a primeira versão também pôs `min-width: 0` em `&__recurso` (reflexo comum pra evitar que
+flex-item não encolha) — isso **desliga a proteção automática do flexbox** contra encolher abaixo
+do conteúdo, deixando o filho (`&__barra`, com seu piso de 108px) transbordar por cima do recurso
+vizinho em vez de forçar o pai a respeitar aquele piso. Tirar o `min-width: 0` do pai resolveu: sem
+essa desativação explícita, um flex item nunca fica menor que o próprio conteúdo mínimo — se os
+dois não cabem lado a lado, `flex-wrap: wrap` no pai empilha cada um na própria linha, cheio, nunca
+sobrepondo texto. Verificado que o 50/50 de fato acontece quando o card tem espaço (≥ ~230px de
+conteúdo) e cai pra empilhado sem sobreposição quando não tem (cards em grades muito densas,
+`auto-fill` com `minmax(320px, 1fr)` cria mais tracks do que cabem largos numa tela cheia).
+
+**"Tornar rolagens públicas" (`rolagem-avulso.component.ts`/`.html`):** a confirmação era um
+`app-modal` ad-hoc com botões próprios — exatamente o padrão que `ConfirmacaoService` (`ui-15`)
+existe para substituir (ver o comentário do próprio serviço: "no lugar dos três padrões
+concorrentes que o projeto praticava"). Migrado pro `ConfirmacaoService.confirmar(...)` — mesmo
+padrão já usado em `visualizar-criatura.page.ts` para a mesma confirmação, confirmando que a
+migração estava alinhada com o resto do código, não inventando um padrão novo. `confirmandoPublica`/
+`confirmarPublica`/o bloco `<app-modal>` saíram; `Modal` deixou de ser importado.
+
+**Painel de rolagem avulsa maior + botão Guia (`rolagem-avulso.component.scss`/`.html`):** largura
+`360px → 540px` (+50%, pedido direto), grid do formulário `1fr auto → 1fr auto auto` pra caber um
+terceiro botão. Novo `<app-guia-formula>` entre o toggle de visibilidade e "Rolar" — **decisão do
+autor** (perguntada explicitamente): o guia é o mesmo da Rolagem Rápida da ficha e explica sintaxe
+de atributo (LUT, PROF, NIV, CORPO/FURTIVO) que a rolagem avulsa não aceita (`FONTE_DE_FICHA`
+rejeita); o autor optou por reusar o guia completo do jeito que está, em vez de um modo restrito
+só-dados — registrado aqui para não ser "corrigido" sem querer numa passada futura.
+
+Verificado ao vivo (`verify`, Playwright) em `1920×1080` e `360×800`, com um combatente com ficha e
+um avulso lado a lado: Vida/Energia 50/50 num viewport com espaço (`1400×900`, onde o card real
+fica mais largo) e empilhado sem sobreposição nos dois viewports mandatórios; diálogo de
+confirmação no estilo padrão do `ConfirmacaoService`; painel avulso visivelmente mais largo com o
+botão Guia na posição pedida, abrindo o modal correto. Suíte: frontend 2066/2066 (2 specs
+atualizados — `rolagem-avulso.component.spec.ts` trocou o clique no botão ad-hoc por
+`ConfirmacaoService.responder(...)`, `painel-mestre.page.spec.ts` idem), lint 0 erros.
+
 ## 2026-09-22 — `i-029-reacoes-resistencias-e-steppers-iniciativa`: extrai FichaReacoes/FichaResistencias (I-029) e tira os steppers de Vida/Energia da Iniciativa pra quem tem ficha
 
 Dois pedidos do autor na mesma conversa, sem spec própria, tratados como duas mudanças
