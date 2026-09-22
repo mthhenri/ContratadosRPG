@@ -1959,35 +1959,6 @@
         padding-right: 26px;
     }
 
-    // Read-only glance (Defesa/Esquiva/Bloqueio/Contra-ataque, Resistências) — edição fica noutra aba.
-    &--somente-leitura {
-        .ficha-mini__valor {
-            color: var(--text-dim);
-        }
-    }
-
-    // Reações (Defesa/Esquiva/Bloqueio/Contra-ataque): rótulo + valor centralizados no box, como as
-    // Resistências vizinhas (`.ficha-resistencia` já é centralizada).
-    &--centralizado {
-        align-items: center;
-        text-align: center;
-
-        // O `app-valor-editavel` (`P-057`) nasce alinhado à esquerda (pensado pros boxes tipo
-        // Nível/Prestígio) — aqui pede `alinhamento="centro"` no template pra não puxar o número
-        // de volta pra esquerda. O campo de digitação também centraliza o texto, em vez do
-        // padrão do navegador (à esquerda).
-        .ficha-mini__entrada {
-            text-align: center;
-        }
-    }
-
-    // Contra-ataque: sem stat calculado hoje (só existe como habilidade narrativa) — contorno
-    // pontilhado sinaliza "ainda não é um dado real", distinto dos vizinhos com valor de verdade.
-    &--contra {
-        border-style: dashed;
-        border-color: var(--border-strong);
-    }
-
     &__rotulo {
         font-family: var(--font-mono);
         font-size: 9px;
@@ -2328,14 +2299,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
 
-    // Contra-ataque tinha coluna própria em `auto` (largura do rótulo, o mais longo dos quatro),
-    // que destoava das outras três e quebrava a simetria da fileira; o rótulo mais longo agora
-    // corta com "…" (`.ficha-mini--fino .ficha-mini__rotulo` abaixo), mesmo padrão já usado no
-    // valor da Patente.
-    &--com-contra {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
     // Status: Deslocamento/Dano C. a C./Dano Furtivo/Percepção — nenhuma precisa de mais espaço.
     &--quatro {
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2350,99 +2313,10 @@
         grid-template-columns: repeat(5, max-content) minmax(0, 1fr);
     }
 
-    &--com-contra,
     &--quatro,
     &--seis {
         @include bp.mobile {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-}
-
-// Resistências em miniatura no card de identidade (redesenho de comparação visual) — glance
-// somente leitura das 5 linhas de `TipoDanoEnum`; a edição continua na aba Combate. `margin-top`
-// dá o espaçamento que sumiu junto com `.ficha-cartao__divisor` quando Reações e Resistências
-// passaram a viver sob a mesma legenda (autor pediu de volta um "espacinho", sem virar divisor).
-.ficha-resistencias {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 10px;
-
-    @include bp.mobile {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-    }
-}
-
-// Mais rasa que `.ficha-mini--fino` (padding vertical 7px) — autor pediu as caixas de Resistência
-// mais finas que as de Reações logo acima, pra reforçar que é um glance secundário; padding vertical
-// afinado em duas rodadas (8px → 5px → 3px) até o autor aprovar a proporção.
-.ficha-resistencia {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 3px 4px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-control);
-
-    &__abrev {
-        font-family: var(--font-mono);
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-mute);
-    }
-
-    &__valor {
-        font-family: var(--font-mono);
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--text-dim);
-    }
-
-    // Campo de digitação direta da base manual — mesma filosofia de `.ficha-mini__entrada`: largura
-    // no tamanho do texto (2-3 dígitos), não do box inteiro.
-    &__entrada {
-        width: 3ch;
-        min-width: 2.5ch;
-        field-sizing: content;
-        font-family: var(--font-mono);
-        font-size: 15px;
-        font-weight: 700;
-        text-align: center;
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        padding: 1px 4px;
-        outline: none;
-        -moz-appearance: textfield;
-        -webkit-appearance: textfield;
-        appearance: textfield;
-
-        &:focus {
-            border-color: var(--accent-border);
-        }
-
-        &::-webkit-outer-spin-button,
-        &::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-    }
-
-    // Cor por tipo de dano — mesma paleta do chip de resumo da rolagem (`resultado-rolagem.component.scss`,
-    // `__grupo--<tipo>`): o valor ganha a cor cheia do tipo, a borda da caixa fica só sutil (`-border`,
-    // 40% opacidade). Sem glow aqui — reservado ao chip de resumo da rolagem, não à ficha inteira.
-    @each $tipo in fisico, balistico, explosao, quimico, geral {
-        &--#{$tipo} {
-            border-color: var(--dano-#{$tipo}-border);
-
-            .ficha-resistencia__valor {
-                color: var(--dano-#{$tipo});
-            }
         }
     }
 }

@@ -1,0 +1,85 @@
+<div
+    class="ficha-combate-rapido ficha-combate-rapido--com-contra"
+    [class.ficha-combate-rapido--compacto]="compacto()"
+>
+    @for (linha of linhas(); track linha.chave) {
+        <div
+            class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
+            [class.ficha-mini--somente-leitura]="!ajustavelAmplo()"
+        >
+            <span class="ficha-mini__rotulo">{{ linha.rotulo }}</span>
+            @if (ajustavelAmplo()) {
+                <app-valor-editavel
+                    class="ficha-mini__valor"
+                    [valor]="linha.display"
+                    [editando]="editandoDerivado() === linha.chave"
+                    [rotuloAria]="linha.rotulo"
+                    alinhamento="centro"
+                    (editarSolicitado)="editarDerivado(linha.chave)"
+                >
+                    <input
+                        #entradaDerivado
+                        class="ficha-mini__entrada"
+                        type="number"
+                        inputmode="numeric"
+                        [value]="linha.bruto"
+                        [attr.aria-label]="'Editar ' + linha.rotulo"
+                        (keydown.enter)="confirmarDerivado(linha, entradaDerivado.value)"
+                        (keydown.escape)="cancelarDerivado()"
+                        (blur)="confirmarDerivado(linha, entradaDerivado.value)"
+                    />
+                </app-valor-editavel>
+            } @else {
+                <span class="ficha-mini__valor">{{ linha.display }}</span>
+            }
+        </div>
+    }
+    <!-- Contra-ataque: calculado por variante da habilidade (Geral/Lutador/Vanguarda —
+         shared/regras/agente/defesa). Editável (override manual, m3-10) só quando o jogador tem a
+         habilidade; sem ela, segue o placeholder tracejado. -->
+    <div
+        class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
+        [class.ficha-mini--somente-leitura]="!ajustavelAmplo() || !temContraAtaque()"
+        [class.ficha-mini--contra]="!temContraAtaque()"
+        [appTooltip]="
+            temContraAtaque()
+                ? 'Contra-ataque'
+                : 'Ainda não calculado pelo motor — depende da habilidade de Contra-ataque'
+        "
+    >
+        <span
+            class="ficha-mini__rotulo"
+            [class.ficha-mini__rotulo--duas-linhas]="!compacto()"
+        >
+            Contra-ataque
+        </span>
+        @if (temContraAtaque()) {
+            @if (ajustavelAmplo()) {
+                <app-valor-editavel
+                    class="ficha-mini__valor"
+                    [valor]="contraAtaqueLinha().display"
+                    [editando]="editandoDerivado() === 'contraAtaque'"
+                    rotuloAria="Contra-ataque"
+                    alinhamento="centro"
+                    (editarSolicitado)="editarDerivado('contraAtaque')"
+                >
+                    <input
+                        #entradaDerivado
+                        class="ficha-mini__entrada"
+                        type="number"
+                        inputmode="numeric"
+                        [value]="contraAtaqueLinha().bruto"
+                        aria-label="Editar Contra-ataque"
+                        (keydown.enter)="confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)"
+                        (keydown.escape)="cancelarDerivado()"
+                        (blur)="confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)"
+                    />
+                </app-valor-editavel>
+            } @else {
+                <span class="ficha-mini__valor">{{ contraAtaqueLinha().display }}</span>
+            }
+        } @else {
+            <span class="ficha-mini__valor">—</span>
+        }
+    </div>
+</div>

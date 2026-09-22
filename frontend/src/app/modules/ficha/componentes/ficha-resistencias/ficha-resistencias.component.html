@@ -1,0 +1,42 @@
+<div class="ficha-resistencias" [class.ficha-resistencias--compacto]="compacto()">
+    @for (resistencia of linhas(); track resistencia.tipo) {
+        <div [class]="classeResistencia(resistencia.tipo)">
+            <span class="ficha-resistencia__abrev">{{ abreviacaoResistencia[resistencia.tipo] }}</span>
+            @if (ajustavelAmplo()) {
+                <app-valor-editavel
+                    class="ficha-resistencia__valor"
+                    variante="herdado"
+                    alinhamento="centro"
+                    [valor]="resistencia.total"
+                    [editando]="editandoResistencia() === resistencia.tipo"
+                    [rotuloAria]="'resistência ' + abreviacaoResistencia[resistencia.tipo]"
+                    [tooltip]="
+                        'Base manual ' +
+                        resistencia.manual +
+                        ' + equipamento ' +
+                        resistencia.equipamento +
+                        (resistencia.maestria !== undefined
+                            ? ' (inclui Maestria de Vigor ' + resistencia.maestria + ')'
+                            : '') +
+                        (resistencia.formacao !== 0 ? ' + formação ' + resistencia.formacao : '')
+                    "
+                    (editarSolicitado)="editarResistencia(resistencia.tipo)"
+                >
+                    <input
+                        #entradaResistencia
+                        class="ficha-resistencia__entrada"
+                        type="number"
+                        inputmode="numeric"
+                        [value]="resistencia.manual"
+                        [attr.aria-label]="'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]"
+                        (keydown.enter)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                        (keydown.escape)="cancelarResistencia()"
+                        (blur)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                    />
+                </app-valor-editavel>
+            } @else {
+                <span class="ficha-resistencia__valor">{{ resistencia.total }}</span>
+            }
+        </div>
+    }
+</div>

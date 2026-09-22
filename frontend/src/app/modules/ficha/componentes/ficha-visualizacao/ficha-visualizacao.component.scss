@@ -2251,22 +2251,6 @@
             text-overflow: ellipsis;
         }
 
-        // Contra-ataque no mobile (2×2, cada caixa ~metade da coluna): quebra em duas linhas
-        // ("Contra-"/"ataque") em vez de cortar com "…" — a largura fixa força a quebra no próprio
-        // hífen. Especificidade (0,3,0) vence a regra `nowrap` acima de propósito. Só no mobile: no
-        // desktop/tablet (4 caixas numa fileira só) a caixa de Contra-ataque cresceu o bastante
-        // (`flex-grow` maior, ver `.ficha-combate-rapido--com-contra`) pra caber numa linha via o
-        // `nowrap` normal, sem precisar da quebra manual.
-        .ficha-mini__rotulo.ficha-mini__rotulo--duas-linhas {
-            @include bp.mobile {
-                width: 46px;
-                margin: 0 auto;
-                white-space: normal;
-                overflow: visible;
-                text-overflow: clip;
-            }
-        }
-
         .ficha-mini__valor {
             font-size: 13px;
             white-space: nowrap;
@@ -2299,35 +2283,6 @@
     // no canto superior direito cai por cima do texto em vez de ao lado.
     &.ficha-mini--com-rolar {
         padding-right: 26px;
-    }
-
-    // Read-only glance (Defesa/Esquiva/Bloqueio/Contra-ataque, Resistências) — edição fica noutra aba.
-    &--somente-leitura {
-        .ficha-mini__valor {
-            color: var(--text-dim);
-        }
-    }
-
-    // Reações (Defesa/Esquiva/Bloqueio/Contra-ataque): rótulo + valor centralizados no box, como as
-    // Resistências vizinhas (`.ficha-resistencia` já é centralizada).
-    &--centralizado {
-        align-items: center;
-        text-align: center;
-
-        // O `app-valor-editavel` (`P-057`) nasce alinhado à esquerda (pensado pros boxes tipo
-        // Nível/Prestígio) — aqui pede `alinhamento="centro"` no template pra não puxar o número
-        // de volta pra esquerda. O campo de digitação também centraliza o texto, em vez do
-        // padrão do navegador (à esquerda).
-        .ficha-mini__entrada {
-            text-align: center;
-        }
-    }
-
-    // Contra-ataque: sem stat calculado hoje (só existe como habilidade narrativa) — contorno
-    // pontilhado sinaliza "ainda não é um dado real", distinto dos vizinhos com valor de verdade.
-    &--contra {
-        border-style: dashed;
-        border-color: var(--border-strong);
     }
 
     &__rotulo {
@@ -2691,26 +2646,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
 
-    // Reações (pedido do autor, revisto depois de estreitar a coluna de Reações/Vitalidade/
-    // Resistências): `flex: 1` em vez de `max-content` — a coluna ficou estreita o bastante para a
-    // versão "quadradinha" sobrar vão morto à direita; agora as 4 caixas preenchem o espaço
-    // disponível. Defesa/Esquiva/Bloqueio encolheram um pouco (`flex-grow` menor, pedido do autor)
-    // pra Contra-ataque crescer o suficiente e caber numa linha só — sem o texto quebrado em
-    // "Contra-"/"ataque" de antes (`.ficha-mini__rotulo--duas-linhas` saiu, não faz mais falta).
-    &--com-contra {
-        display: flex;
-        gap: 8px;
-
-        > .ficha-mini {
-            flex: 0.85 1 0;
-            min-width: 0;
-
-            &:last-child {
-                flex: 1.45 1 0;
-            }
-        }
-    }
-
     // Status: Deslocamento/Dano C. a C./Dano Furtivo/Percepção — nenhuma precisa de mais espaço.
     &--quatro {
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2734,126 +2669,6 @@
     &--seis {
         @include bp.mobile {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    // `--com-contra` é flex (não grid, ver acima) — o equivalente mobile a "2 por linha" é
-    // `flex-wrap` com cada caixa presa a ~metade da largura, não `grid-template-columns`. Reseta o
-    // `:last-child` mais largo do desktop (ver regra acima) — no 2×2 do mobile as 4 caixas voltam a
-    // dividir espaço igualmente, e Contra-ataque quebra em duas linhas de novo (ver
-    // `.ficha-mini__rotulo--duas-linhas`).
-    &--com-contra {
-        @include bp.mobile {
-            flex-wrap: wrap;
-
-            > .ficha-mini,
-            > .ficha-mini:last-child {
-                flex: 1 1 calc(50% - 4px);
-            }
-        }
-    }
-}
-
-// Resistências em miniatura no card de identidade (redesenho de comparação visual) — glance
-// somente leitura das 5 linhas de `TipoDanoEnum`; a edição continua na aba Combate. Mesmo
-// tratamento "quadradinho" das Reações vizinhas (pedido do autor): `max-content` em vez de `1fr`,
-// caixas sem esticar pra preencher a coluna.
-.ficha-resistencias {
-    // `flex: 1` nas 5 caixas (era `max-content`, pedido do round anterior) — pedido do autor agora:
-    // a fileira de Resistências ficava mais curta que a de Reações acima dela (menos conteúdo por
-    // caixa) e sobrava um vão morto até a borda direita do card. Mesmo tratamento de
-    // `.ficha-combate-rapido--com-contra` (Reações): cresce pra preencher, sem exagerar (não é
-    // `justify-content` nem largura fixa, só o espaço que sobrar dividido entre as 5).
-    display: flex;
-    gap: 6px;
-
-    > .ficha-resistencia {
-        flex: 1 1 0;
-        min-width: 0;
-    }
-}
-
-.ficha-resistencia {
-    // Cor por tipo de dano — mesma paleta `--dano-*` das Reações; o padrão pega o próprio
-    // `--dano-fisico` porque a caixa de Físico não carrega modificador (`FISICO` é o sufixo base
-    // de `classeResistencia()`, ver ficha-visualizacao.component.ts).
-    --cor-resistencia: var(--dano-fisico);
-    --borda-resistencia: var(--dano-fisico-border);
-
-    &--balistico {
-        --cor-resistencia: var(--dano-balistico);
-        --borda-resistencia: var(--dano-balistico-border);
-    }
-
-    &--explosao {
-        --cor-resistencia: var(--dano-explosao);
-        --borda-resistencia: var(--dano-explosao-border);
-    }
-
-    &--quimico {
-        --cor-resistencia: var(--dano-quimico);
-        --borda-resistencia: var(--dano-quimico-border);
-    }
-
-    &--geral {
-        --cor-resistencia: var(--dano-geral);
-        --borda-resistencia: var(--dano-geral-border);
-    }
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    // Fininha como em `FichaCampanhaCard` (pedido do autor) — padding vertical bem menor que o
-    // `.ficha-mini--fino` das Reações vizinhas, de propósito: aqui o glance é secundário.
-    padding: 3px 4px;
-    background: var(--surface-2);
-    border: 1px solid var(--borda-resistencia, var(--border));
-    border-radius: var(--radius-control);
-
-    &__abrev {
-        font-family: var(--font-mono);
-        font-size: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--text-mute);
-    }
-
-    &__valor {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--cor-resistencia);
-    }
-
-    // Campo de digitação direta da base manual — mesma filosofia de `.ficha-mini__entrada`: largura
-    // no tamanho do texto (2-3 dígitos), não do box inteiro.
-    &__entrada {
-        width: 3ch;
-        min-width: 2.5ch;
-        field-sizing: content;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 700;
-        text-align: center;
-        color: var(--text);
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-control);
-        padding: 1px 4px;
-        outline: none;
-        -moz-appearance: textfield;
-        -webkit-appearance: textfield;
-        appearance: textfield;
-
-        &:focus {
-            border-color: var(--accent-border);
-        }
-
-        &::-webkit-outer-spin-button,
-        &::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
         }
     }
 }

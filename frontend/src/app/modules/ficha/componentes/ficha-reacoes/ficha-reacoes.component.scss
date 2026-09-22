@@ -1,0 +1,184 @@
+@use "tema/breakpoints" as bp;
+
+// Defesa/Esquiva/Bloqueio/Contra-ataque em miniatura (I-029: extraído de `FichaVisualizacao`/
+// `FichaCampanhaCard`, onde vivia duplicado byte a byte) — glance somente leitura ou editável
+// (`[ajustavelAmplo]`); reusa `.ficha-mini` para o mesmo visual dos boxes de Nível/Prestígio da
+// Identidade, que continua vivendo nas duas páginas-mãe (fora do escopo desta extração).
+.ficha-combate-rapido {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+
+    // Padrão (`FichaVisualizacao`, ficha completa): fileira flex que cresce pra preencher a coluna
+    // — Defesa/Esquiva/Bloqueio encolhem um pouco (`flex-grow` menor) pra Contra-ataque crescer o
+    // suficiente e caber numa linha só, sem o texto quebrado em "Contra-"/"ataque".
+    &--com-contra {
+        display: flex;
+        gap: 8px;
+
+        > .ficha-mini {
+            flex: 0.85 1 0;
+            min-width: 0;
+
+            &:last-child {
+                flex: 1.45 1 0;
+            }
+        }
+    }
+
+    // Compacto (`FichaCampanhaCard`, carteirinha): volta a ser grade de 4 colunas iguais — a coluna
+    // é mais estreita ali, então o texto de Contra-ataque quebra em duas linhas
+    // (`.ficha-mini__rotulo--duas-linhas`, só ativo fora do compacto) em vez de esticar a caixa.
+    &--compacto.ficha-combate-rapido--com-contra {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+
+        > .ficha-mini,
+        > .ficha-mini:last-child {
+            flex: initial;
+        }
+    }
+
+    &--com-contra:not(&--compacto) {
+        @include bp.mobile {
+            flex-wrap: wrap;
+
+            > .ficha-mini,
+            > .ficha-mini:last-child {
+                flex: 1 1 calc(50% - 4px);
+            }
+        }
+    }
+
+    &--compacto.ficha-combate-rapido--com-contra {
+        @include bp.mobile {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+}
+
+// Mini stat box — mesma receita usada pela Identidade das páginas-mãe (Nível/Prestígio/Dinheiro),
+// só os modificadores que este bloco de fato usa.
+.ficha-mini {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 11px 10px;
+    min-width: 0;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    &--fino {
+        padding: 7px 8px;
+        gap: 4px;
+
+        .ficha-mini__rotulo {
+            display: block;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        // Contra-ataque no mobile, fora do compacto (2×2, cada caixa ~metade da coluna): quebra em
+        // duas linhas ("Contra-"/"ataque") em vez de cortar com "…" — a largura fixa força a quebra
+        // no próprio hífen. No compacto a caixa já nasce grade de 4 (depois 2 no mobile) e o corte
+        // com "…" basta, então a classe nem é aplicada (ver template).
+        .ficha-mini__rotulo.ficha-mini__rotulo--duas-linhas {
+            @include bp.mobile {
+                width: 46px;
+                margin: 0 auto;
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+            }
+        }
+
+        .ficha-mini__valor {
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @include bp.mobile {
+            .ficha-mini__valor {
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+        }
+
+        .ficha-mini__entrada {
+            font-size: 13px;
+        }
+    }
+
+    &--somente-leitura {
+        .ficha-mini__valor {
+            color: var(--text-dim);
+        }
+    }
+
+    &--centralizado {
+        align-items: center;
+        text-align: center;
+
+        .ficha-mini__entrada {
+            text-align: center;
+        }
+    }
+
+    // Contra-ataque sem a habilidade: contorno pontilhado sinaliza "ainda não é um dado real".
+    &--contra {
+        border-style: dashed;
+        border-color: var(--border-strong);
+    }
+
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__valor {
+        font-family: var(--font-mono);
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+    }
+
+    &__entrada {
+        width: 4ch;
+        min-width: 2.5ch;
+        max-width: 100%;
+        field-sizing: content;
+        font-family: var(--font-mono);
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 1px 5px;
+        outline: none;
+        -moz-appearance: textfield;
+        -webkit-appearance: textfield;
+        appearance: textfield;
+
+        &:focus {
+            border-color: var(--accent-border);
+        }
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    }
+}

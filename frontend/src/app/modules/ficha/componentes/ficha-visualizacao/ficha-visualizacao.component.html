@@ -946,192 +946,22 @@
                                         <span class="ficha-cartao__subrotulo-nota">só leitura</span>
                                     }
                                 </p>
-                                <div class="ficha-combate-rapido ficha-combate-rapido--com-contra">
-                                    @for (linha of defesaRapida(); track linha.chave) {
-                                        <div
-                                            class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
-                                            [class.ficha-mini--somente-leitura]="!ajustavelAmplo()"
-                                        >
-                                            <span class="ficha-mini__rotulo">{{
-                                                linha.rotulo
-                                            }}</span>
-                                            @if (ajustavelAmplo()) {
-                                                <app-valor-editavel
-                                                    class="ficha-mini__valor"
-                                                    [valor]="linha.display"
-                                                    [editando]="editandoDerivado() === linha.chave"
-                                                    [rotuloAria]="linha.rotulo"
-                                                    alinhamento="centro"
-                                                    (editarSolicitado)="editarDerivado(linha.chave)"
-                                                >
-                                                    <input
-                                                        #entradaDerivado
-                                                        class="ficha-mini__entrada"
-                                                        type="number"
-                                                        inputmode="numeric"
-                                                        [value]="linha.bruto"
-                                                        [attr.aria-label]="'Editar ' + linha.rotulo"
-                                                        (keydown.enter)="
-                                                            confirmarDerivado(
-                                                                linha,
-                                                                entradaDerivado.value
-                                                            )
-                                                        "
-                                                        (keydown.escape)="cancelarDerivado()"
-                                                        (blur)="
-                                                            confirmarDerivado(
-                                                                linha,
-                                                                entradaDerivado.value
-                                                            )
-                                                        "
-                                                    />
-                                                </app-valor-editavel>
-                                            } @else {
-                                                <span class="ficha-mini__valor">{{
-                                                    linha.display
-                                                }}</span>
-                                            }
-                                        </div>
-                                    }
-                                    <!-- Contra-ataque: calculado por variante da habilidade (Geral/Lutador/Vanguarda —
-               shared/regras/agente/defesa). Editável (override manual, m3-10) só quando o jogador
-               tem a habilidade; sem ela, segue o placeholder tracejado. -->
-                                    <div
-                                        class="ficha-mini ficha-mini--fino ficha-mini--centralizado"
-                                        [class.ficha-mini--somente-leitura]="
-                                            !ajustavelAmplo() || !temHabilidadeContraAtaque()
-                                        "
-                                        [class.ficha-mini--contra]="!temHabilidadeContraAtaque()"
-                                        [appTooltip]="
-                                            temHabilidadeContraAtaque()
-                                                ? 'Contra-ataque'
-                                                : 'Ainda não calculado pelo motor — depende da habilidade de Contra-ataque'
-                                        "
-                                    >
-                                        <span
-                                            class="ficha-mini__rotulo ficha-mini__rotulo--duas-linhas"
-                                            >Contra-ataque</span
-                                        >
-                                        @if (temHabilidadeContraAtaque()) {
-                                            @if (ajustavelAmplo()) {
-                                                <app-valor-editavel
-                                                    class="ficha-mini__valor"
-                                                    [valor]="contraAtaqueLinha().display"
-                                                    [editando]="
-                                                        editandoDerivado() === 'contraAtaque'
-                                                    "
-                                                    rotuloAria="Contra-ataque"
-                                                    alinhamento="centro"
-                                                    (editarSolicitado)="
-                                                        editarDerivado('contraAtaque')
-                                                    "
-                                                >
-                                                    <input
-                                                        #entradaDerivado
-                                                        class="ficha-mini__entrada"
-                                                        type="number"
-                                                        inputmode="numeric"
-                                                        [value]="contraAtaqueLinha().bruto"
-                                                        aria-label="Editar Contra-ataque"
-                                                        (keydown.enter)="
-                                                            confirmarDerivado(
-                                                                contraAtaqueLinha(),
-                                                                entradaDerivado.value
-                                                            )
-                                                        "
-                                                        (keydown.escape)="cancelarDerivado()"
-                                                        (blur)="
-                                                            confirmarDerivado(
-                                                                contraAtaqueLinha(),
-                                                                entradaDerivado.value
-                                                            )
-                                                        "
-                                                    />
-                                                </app-valor-editavel>
-                                            } @else {
-                                                <span class="ficha-mini__valor">{{
-                                                    contraAtaqueLinha().display
-                                                }}</span>
-                                            }
-                                        } @else {
-                                            <span class="ficha-mini__valor">—</span>
-                                        }
-                                    </div>
-                                </div>
+                                <app-ficha-reacoes
+                                    [linhas]="defesaRapida()"
+                                    [contraAtaqueLinha]="contraAtaqueLinha()"
+                                    [temContraAtaque]="temHabilidadeContraAtaque()"
+                                    [ajustavelAmplo]="ajustavelAmplo()"
+                                    (ajusteDerivado)="ajusteDerivado.emit($event)"
+                                />
 
                                 <!-- Resistências — sem cabeçalho próprio: lê como continuação de Reações, embaixo dela
              (pedido do autor). Editável no próprio lugar (dono/mestre): edita a base manual; o
              total exibido soma essa base com o que vem do equipamento (`shared/regras`, m3-36). -->
-                                <div class="ficha-resistencias">
-                                    @for (resistencia of resistencias(); track resistencia.tipo) {
-                                        <div [class]="classeResistencia(resistencia.tipo)">
-                                            <span class="ficha-resistencia__abrev">{{
-                                                abreviacaoResistencia[resistencia.tipo]
-                                            }}</span>
-                                            @if (ajustavelAmplo()) {
-                                                <app-valor-editavel
-                                                    class="ficha-resistencia__valor"
-                                                    variante="herdado"
-                                                    alinhamento="centro"
-                                                    [valor]="resistencia.total"
-                                                    [editando]="
-                                                        editandoResistencia() === resistencia.tipo
-                                                    "
-                                                    [rotuloAria]="
-                                                        'resistência ' +
-                                                        abreviacaoResistencia[resistencia.tipo]
-                                                    "
-                                                    [tooltip]="
-                                                        'Base manual ' +
-                                                        resistencia.manual +
-                                                        ' + equipamento ' +
-                                                        resistencia.equipamento +
-                                                        (resistencia.maestria !== undefined
-                                                            ? ' (inclui Maestria de Vigor ' +
-                                                              resistencia.maestria +
-                                                              ')'
-                                                            : '') +
-                                                        (resistencia.formacao !== 0
-                                                            ? ' + formação ' + resistencia.formacao
-                                                            : '')
-                                                    "
-                                                    (editarSolicitado)="
-                                                        editarResistencia(resistencia.tipo)
-                                                    "
-                                                >
-                                                    <input
-                                                        #entradaResistencia
-                                                        class="ficha-resistencia__entrada"
-                                                        type="number"
-                                                        inputmode="numeric"
-                                                        [value]="resistencia.manual"
-                                                        [attr.aria-label]="
-                                                            'Editar resistência ' +
-                                                            abreviacaoResistencia[resistencia.tipo]
-                                                        "
-                                                        (keydown.enter)="
-                                                            confirmarResistencia(
-                                                                resistencia.tipo,
-                                                                entradaResistencia.value
-                                                            )
-                                                        "
-                                                        (keydown.escape)="cancelarResistencia()"
-                                                        (blur)="
-                                                            confirmarResistencia(
-                                                                resistencia.tipo,
-                                                                entradaResistencia.value
-                                                            )
-                                                        "
-                                                    />
-                                                </app-valor-editavel>
-                                            } @else {
-                                                <span class="ficha-resistencia__valor">{{
-                                                    resistencia.total
-                                                }}</span>
-                                            }
-                                        </div>
-                                    }
-                                </div>
+                                <app-ficha-resistencias
+                                    [linhas]="resistencias()"
+                                    [ajustavelAmplo]="ajustavelAmplo()"
+                                    (ajusteResistencia)="ajusteResistencia.emit($event)"
+                                />
                             </div>
 
                             <!-- Linha de fechamento (pedido do autor): cobre a largura inteira do card, da coluna

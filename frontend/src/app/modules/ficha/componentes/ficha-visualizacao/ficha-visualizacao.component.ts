@@ -115,6 +115,8 @@ import {
   type CustoEnergiaFragmento,
 } from '../ficha-inventario/ficha-inventario.component';
 import { FichaRolagensPainel } from '../ficha-rolagens-painel/ficha-rolagens-painel.component';
+import { FichaReacoes, type AjusteDerivado } from '../ficha-reacoes/ficha-reacoes.component';
+import { FichaResistencias, type AjusteResistencia } from '../ficha-resistencias/ficha-resistencias.component';
 import { AjusteEnquadramentoImagem } from '../ajuste-enquadramento-imagem/ajuste-enquadramento-imagem.component';
 import { FichaSanidade, type EstadoSanidade } from '../ficha-sanidade/ficha-sanidade.component';
 import { GRUPOS_CLASSE, arquetiposDaClasse, ehClasseBase } from '../../opcoes-ficha';
@@ -308,17 +310,8 @@ export interface AjusteVitalidade {
   readonly valor: number;
 }
 
-/** Edição de um derivado (Informações Extras) — override persistido em `derivados[chave]` (m3-10). */
-export interface AjusteDerivado {
-  readonly chave: ChaveInfoExtra;
-  readonly valor: number | string;
-}
-
-/** Edição da base manual de uma resistência (ajuste pós-m3-36) — a página persiste em `derivados.resistencias`. */
-export interface AjusteResistencia {
-  readonly tipo: TipoDanoEnum;
-  readonly valor: number;
-}
+/** Reexportados do local canônico (`I-029`) — `ficha-edicao.service.ts` importa os dois daqui. */
+export type { AjusteDerivado, AjusteResistencia };
 
 /**
  * Edição em grupo dos atributos + Maestria + modificadores de teste + ajuste manual de dados — a
@@ -382,6 +375,8 @@ export interface AjusteClasse {
     FichaInventario,
     FichaHabilidades,
     FichaRolagensPainel,
+    FichaReacoes,
+    FichaResistencias,
     BandejaDados,
     OverflowFade,
     Tooltip,
@@ -2476,64 +2471,6 @@ export class FichaVisualizacao {
   protected readonly contraAtaqueLinha = computed<InfoExtra>(
     () => this.informacoesExtras().find((info) => info.chave === 'contraAtaque')!,
   );
-
-  /** Abreviação de exibição de cada `TipoDanoEnum` no grid compacto de Resistências (glance). */
-  protected readonly abreviacaoResistencia: Record<TipoDanoEnum, string> = {
-    [TipoDanoEnum.FISICO]: 'Físico',
-    [TipoDanoEnum.BALISTICO]: 'Balíst.',
-    [TipoDanoEnum.EXPLOSAO]: 'Explos.',
-    [TipoDanoEnum.QUIMICO]: 'Químico',
-    [TipoDanoEnum.GERAL]: 'Geral',
-  };
-
-  /**
-   * Modificador BEM (`ficha-resistencia--<sufixo>`) por tipo de dano — mesma paleta `--dano-*` já
-   * usada no chip de resumo de `resultado-rolagem.component.ts` e em `FichaCampanhaCard`
-   * (`SUFIXO_TIPO_DANO`/`classeResistencia`). Precisa de um sufixo ASCII à parte porque
-   * `TipoDanoEnum` guarda o rótulo acentuado ("Balístico") — um `.toLowerCase()` direto no valor
-   * do enum não bate com o modificador `&--balistico` do SCSS.
-   */
-  private static readonly SUFIXO_TIPO_DANO: Record<TipoDanoEnum, string> = {
-    [TipoDanoEnum.FISICO]: 'fisico',
-    [TipoDanoEnum.BALISTICO]: 'balistico',
-    [TipoDanoEnum.EXPLOSAO]: 'explosao',
-    [TipoDanoEnum.QUIMICO]: 'quimico',
-    [TipoDanoEnum.GERAL]: 'geral',
-  };
-
-  /** Classe da caixa de uma Resistência — combina o modificador base com o sufixo do tipo de dano. */
-  protected classeResistencia(tipo: TipoDanoEnum): string {
-    return `ficha-resistencia ficha-resistencia--${FichaVisualizacao.SUFIXO_TIPO_DANO[tipo]}`;
-  }
-
-  /** Tipo de dano em digitação direta na linha de Resistências, ou `null` fora de edição. */
-  protected readonly editandoResistencia = signal<TipoDanoEnum | null>(null);
-
-  /** Abre a digitação direta da base manual de uma Resistência (clique na linha). */
-  protected editarResistencia(tipo: TipoDanoEnum): void {
-    this.editandoResistencia.set(tipo);
-  }
-
-  /** Cancela a digitação da Resistência (Escape) sem alterar. */
-  protected cancelarResistencia(): void {
-    this.editandoResistencia.set(null);
-  }
-
-  /**
-   * Confirma a base manual de Resistência digitada (Enter/blur): emite se mudou. Sem trava de
-   * faixa (liberdade total — m3-10); o guard evita o commit duplo do blur após o Enter.
-   */
-  protected confirmarResistencia(tipo: TipoDanoEnum, texto: string): void {
-    if (this.editandoResistencia() !== tipo) {
-      return;
-    }
-    this.editandoResistencia.set(null);
-    const bruto = Number.parseInt(texto, 10);
-    const manualAtual = this.resistencias().find((linha) => linha.tipo === tipo)?.manual ?? 0;
-    if (!Number.isNaN(bruto) && bruto !== manualAtual) {
-      this.ajusteResistencia.emit({ tipo, valor: bruto });
-    }
-  }
 
   /** Resumo read-only das sub-coleções (contagem exibida nas abas ainda sem editor — m3-15). */
   protected readonly totalHabilidades = computed(() => this.dados().habilidades.length);
