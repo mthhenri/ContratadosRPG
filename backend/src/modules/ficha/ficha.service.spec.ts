@@ -1616,7 +1616,10 @@ describe('FichaService', () => {
         usuarioDono,
       );
 
-      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({ id: 5, estado: { vidaAtual: 17 } });
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 17, machucado: false },
+      });
     });
 
     it('preserva a ficha fora de dados.estado e emite a alteracao apos validar permissao', async () => {
@@ -1635,9 +1638,67 @@ describe('FichaService', () => {
 
       await expect(service.alterarVitalidade({ id: 5, estado: { vidaAtual: 17 } }, usuarioDono)).resolves.toBe(fichaAlterada);
 
-      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({ id: 5, estado: { vidaAtual: 17 } });
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 17, machucado: false },
+      });
       expect(fichaRepositorio.alterarFicha).not.toHaveBeenCalled();
       expect(campanhaGateway.emitirFichaAlterada).toHaveBeenCalledWith(fichaAlterada);
+    });
+
+    it('liga o Machucado (I-032) quando a Vida cai a 50% ou menos da máxima', async () => {
+      const fichaComMaximo: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        dados: criarDados({ estado: { ...criarDados().estado, vidaMaxima: 40 } }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaComMaximo);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaComMaximo);
+
+      await service.alterarVitalidade({ id: 5, estado: { vidaAtual: 20 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 20, machucado: true },
+      });
+    });
+
+    it('desliga o Machucado (I-032) só quando a Vida volta a 100%', async () => {
+      const fichaMachucada: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        dados: criarDados({ estado: { ...criarDados().estado, vidaMaxima: 40, machucado: true } }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaMachucada);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaMachucada);
+
+      await service.alterarVitalidade({ id: 5, estado: { vidaAtual: 30 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { vidaAtual: 30, machucado: true },
+      });
+
+      await service.alterarVitalidade({ id: 5, estado: { vidaAtual: 40 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenLastCalledWith({
+        id: 5,
+        estado: { vidaAtual: 40, machucado: false },
+      });
+    });
+
+    it('não mexe no Machucado quando só a Energia muda', async () => {
+      const fichaMachucada: FichaRecuperadaDto = {
+        ...fichaPersistida,
+        dados: criarDados({ estado: { ...criarDados().estado, vidaMaxima: 40, machucado: true } }),
+      };
+      fichaRepositorio.recuperarPorId.mockResolvedValue(fichaMachucada);
+      fichaRepositorio.alterarVitalidade.mockResolvedValue(fichaMachucada);
+
+      await service.alterarVitalidade({ id: 5, estado: { energiaAtual: 5 } }, usuarioDono);
+
+      expect(fichaRepositorio.alterarVitalidade).toHaveBeenCalledWith({
+        id: 5,
+        estado: { energiaAtual: 5 },
+      });
     });
   });
 

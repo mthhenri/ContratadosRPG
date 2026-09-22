@@ -210,6 +210,17 @@ describe('TempoRealService', () => {
     expect(recebidos).toEqual([{ fichaId: 5, campanhaId: 3 }]);
   });
 
+  it('repassa ficha:condicoes-alteradas com o payload mínimo da campanha (I-031)', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.fichaCondicoesAlteradas$.subscribe((evento) => recebidos.push(evento));
+
+    socketFake.disparar('ficha:condicoes-alteradas', { campanhaId: 3 });
+
+    expect(recebidos).toEqual([{ campanhaId: 3 }]);
+  });
+
   it('repassa ficha:removida-da-campanha com a campanha que a ficha deixou', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();

@@ -1,5 +1,68 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-22 — `i-032-i-031-machucado-e-condicoes-equipe`: Machucado automático pela Vida e condições dos colegas na carteirinha (fecha `I-032`/`I-031`)
+
+Pedido do autor em conversa, sem spec própria: implementar `I-032` (Machucado deixa de ser um
+toggle manual e passa a derivar da Vida) e `I-031` (jogadores veem as condições dos colegas sem
+acesso completo à ficha), nessa ordem — a segunda depende da primeira pra o estado exibido ser
+confiável. Decisões tomadas (as duas eram "decisão aberta" nas ideias originais): a regra é
+"Vida ≤ metade da máxima", não "um único golpe"; o toggle manual continua existindo (Anestesia
+etc.); e só as três condições atravessam a carteirinha sem `acessoCompleto` — não Vida em faixas.
+
+**I-032 — Machucado automático (`shared/regras/agente/machucado.ts`):**
+
+- `resolverMachucadoPelaVida({ vidaAtual, vidaMaxima, machucado })` — função pura com histerese:
+  liga com Vida ≤ 50% da máxima, mantém o valor atual entre 50% e 99% (não reabre/refecha à toa a
+  cada ajuste de 1 ponto), desliga só em 100%. Sem `vidaMaxima` (ficha sem snapshot), mantém o
+  valor recebido. 4 testes (`machucado.spec.ts`).
+- **Backend**: `FichaService.alterarVitalidade` chama a regra quando `estado.vidaAtual` está no
+  PATCH (não mexe se só `energiaAtual` mudou) e grava `machucado` explícito no `jsonb_set` —
+  `FichaVitalidadeInternoAlterarDto.estado` ganhou o campo opcional `machucado` (só o service
+  escreve; o cliente nunca manda a condição por essa rota, ela é derivada da Vida que ele mandou).
+- **Frontend**: `FichaEdicaoService.ajustarVitalidade` aplica a mesma regra otimisticamente quando
+  `campo === 'vidaAtual'` e a ficha já tem `vidaMaxima` — sem isso, o teste de PUT em lote de
+  `visualizar.page.spec.ts` quebrava (adicionava `machucado: false` explícito onde antes não
+  existia a chave).
+
+**I-031 — condições dos colegas na carteirinha (`CampanhaMembroFichaResumoDto`):**
+
+- `morrendo`/`machucado`/`inconsciente` entraram no recorte de "carteirinha" que
+  `CampanhaRepository.listarMembros` já monta por `json_build_object` — únicos campos que
+  atravessam mesmo quando `acessoCompleto` é `false` (Vida/Energia numéricas continuam de fora).
+  `EquipeFichaExibicao` (tipo `'teaser'`) ganhou `condicoes: readonly ItemFichaCondicao[]`,
+  populado em `montarEquipeExibicao` a partir desses três campos — a nova função
+  `condicoesAtivas()` (`campanha-equipe.util.ts`) filtra só as marcadas.
+- **UI**: `detalhe-jogador.page.html` e `previa-jogador.page.html` (mestre pré-visualizando um
+  jogador) renderizam os selos na carteirinha sem acesso — mesmo padrão visual de
+  `.ficha-hud__selo`/`.ficha-hud__condicoes` (`ficha-visualizacao.component.scss`, o selo mono
+  compacto do cabeçalho sticky mobile): mono, uppercase, aviso (`--warning`) exceto Morrendo/
+  Inconsciente que usam `--accent` (mesma distinção do análogo). Verificado ao vivo em 1920×1080 e
+  360×800 com dois usuários reais (colega sem acesso via REST) — o selo "MACHUCADO" apareceu na
+  carteirinha do colega assim que a Vida do dono caiu a ≤ 50%.
+- **Tempo real**: `ficha:condicoes-alteradas` (payload só `{ campanhaId }`, sala `campanha:<id>`)
+  emitido dentro de `CampanhaGateway.emitirFichaAlterada` sempre que `campanhaId` não é nulo — o
+  gateway não sabe, sem reabrir o documento, se a mutação tocou `estado`, então avisa a sala ampla
+  em toda alteração de ficha (mesma receita de payload mínimo de `ficha:visibilidade-alterada`).
+  `TempoRealService.fichaCondicoesAlteradas$` → `CampanhaDetalheDadosService`/
+  `CampanhaPreviaJogador` chamam `recarregarMembros()`/`invalidacoes.next('projecao')` — o único
+  jeito de atualizar a carteirinha de quem não está na sala `ficha:<id>` daquela ficha (sem acesso
+  = nunca entrou na sala). Verificado ao vivo: colega com a tela aberta viu o selo aparecer **sem
+  recarregar** assim que outra sessão (o dono) aplicou o dano.
+
+**Achado na verificação, registrado e não corrigido nesta task:** `P-074` — no mobile, um jogador
+sem ficha própria na campanha nunca alcança a aba "Esquadrão" (o painel lateral só abre pelo
+destino "Rolagens" da `.ficha-nav`, que só existe dentro de `app-ficha-campanha-card`, i.e., só
+com ficha própria). Pré-existente à I-031, mas passou a importar mais agora que a carteirinha
+carrega informação de segurança do grupo.
+
+**Testado:** `shared` 763/763, `backend` 573/573 (2 casos novos em `ficha.service.spec.ts` para o
+Machucado, 2 em `campanha.gateway.spec.ts` para o novo evento), `frontend` 2053/2053 (1 caso novo
+em `visualizar.page.spec.ts`, 1 em `detalhe-jogador.page.spec.ts`, 1 em `tempo-real.service.spec.ts`,
+2 em `campanha-detalhe-dados.service.spec.ts`, 1 em `previa-jogador.page.spec.ts`). `lint` raiz: 0
+erros (só os milhares de warnings pré-existentes do repositório inteiro, nenhum nos arquivos
+tocados). Contratos OpenAPI regerados (`npm run openapi:gerar-contratos`) por causa dos campos
+novos em `CampanhaMembroFichaResumoDto`.
+
 ## 2026-09-21 — `rolagem-excluir-admin`: lixeira de rolagem para ADMIN e `app-cartao-rolagem` compartilhado (fecha `I-033`)
 
 Pedido do autor em conversa, como administrador: apagar uma rolagem do histórico (`is_deleted`),

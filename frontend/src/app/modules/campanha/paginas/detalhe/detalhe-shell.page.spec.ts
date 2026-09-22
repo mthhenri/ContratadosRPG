@@ -53,6 +53,7 @@ describe('CampanhaDetalheShell', () => {
       membroEntrou$: new Subject().asObservable(),
       fichaAlterada$: new Subject().asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
+      fichaCondicoesAlteradas$: new Subject().asObservable(),
       fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
       rolagemExcluida$: new Subject().asObservable(),

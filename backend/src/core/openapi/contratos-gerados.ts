@@ -456,6 +456,15 @@ export const schemasContratosPublicos = {
             "acessoCompleto": {
                 "type": "boolean",
                 "description": "`true` quando o requisitante enxerga a ficha completa (dono, mestre, ou concessão ativa)."
+            },
+            "morrendo": {
+                "type": "boolean"
+            },
+            "machucado": {
+                "type": "boolean"
+            },
+            "inconsciente": {
+                "type": "boolean"
             }
         },
         "required": [
@@ -465,10 +474,13 @@ export const schemasContratosPublicos = {
             "arquetipo",
             "imagemUrl",
             "cor",
-            "acessoCompleto"
+            "acessoCompleto",
+            "morrendo",
+            "machucado",
+            "inconsciente"
         ],
         "additionalProperties": false,
-        "description": "Ficha de um membro, no recorte mínimo pra Equipe (m3-65): quando `acessoCompleto` é `false`,\né só a \"carteirinha\" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem\ntem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um\njogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha."
+        "description": "Ficha de um membro, no recorte mínimo pra Equipe (m3-65): quando `acessoCompleto` é `false`,\né só a \"carteirinha\" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem\ntem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um\njogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha.\n\nAs três condições (I-031) vêm **mesmo sem `acessoCompleto`** — é o único recorte de estado que\natravessa a carteirinha, pra quem joga em equipe saber quem está Machucado/Morrendo/Inconsciente\nsem precisar de acesso à ficha inteira (`sistema-v4.1.0.md` \"Condições\"; combina com o Machucado\nautomático da I-032, `resolverMachucadoPelaVida`). Vida/Energia numéricas continuam de fora."
     },
     "CampanhaMembroResumoDto": {
         "type": "object",
@@ -4743,6 +4755,48 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada da listagem do feed de uma campanha — o `campanhaId` vem do `@Param`. Exige ser\n**membro** da campanha (mesmo gate de `FichaService.listarFichas`); o recorte de visibilidade\n(`PRIVADA` só para o autor ou o mestre) é resolvido na service/repository, nunca no frontend."
     },
+    "RolagemExcluirDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da exclusão de uma rolagem — o `id` vem do `@Param`. Só o `ADMIN` (papel global da conta,\n`TipoUsuarioEnum`) exclui; a exclusão é soft delete (`is_deleted`), nunca física."
+    },
+    "RolagemExcluidaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "fichaId": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "visibilidade": {
+                "type": "string",
+                "enum": [
+                    "PUBLICA",
+                    "PRIVADA"
+                ]
+            }
+        },
+        "required": [
+            "id",
+            "fichaId",
+            "campanhaId",
+            "visibilidade"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da exclusão — também o payload de `rolagem:excluida` no tempo real. Carrega só o necessário\npara cada cliente tirar a rolagem da lista e para o gateway escolher a sala: nada do conteúdo\n(`resultado`, `rotulo`) viaja, então uma rolagem `PRIVADA` excluída não vaza para a sala cheia."
+    },
     "UsuarioCriarDto": {
         "type": "object",
         "properties": {
@@ -6055,6 +6109,14 @@ export const operacoesContratosPublicos = {
         "tag": "Rolagens",
         "publica": false,
         "responseSchema": "RolagemResumoDto[]"
+    },
+    "RolagemController_excluir": {
+        "controller": "RolagemController",
+        "metodo": "delete",
+        "caminho": "/rolagem/:id",
+        "tag": "Rolagens",
+        "publica": false,
+        "responseSchema": "RolagemExcluidaDto"
     },
     "UsuarioController_recuperarPerfil": {
         "controller": "UsuarioController",

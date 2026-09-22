@@ -139,6 +139,12 @@ export class CampanhaDetalheDadosService {
     this.tempoRealService.membroEntrou$
       .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: () => this.recarregarMembros() });
+    // I-031: condição de alguém pode ter mudado (Machucado automático — I-032 — ou toggle manual)
+    // — refaz `listarMembros` pra atualizar a carteirinha de quem não tem acesso completo à
+    // ficha (só ela carrega as condições nesse caso; `recarregarFichas` não alcança essa forma).
+    this.tempoRealService.fichaCondicoesAlteradas$
+      .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.recarregarMembros() });
 
     // Feed de rolagens em tempo real (m3-27; correção): rolagens `PUBLICA` chegam para qualquer
     // membro; `PRIVADA` só chega aqui quando esta tela é a do mestre (backend emite só na sala

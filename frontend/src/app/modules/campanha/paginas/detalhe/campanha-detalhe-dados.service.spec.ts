@@ -79,6 +79,7 @@ describe('CampanhaDetalheDadosService', () => {
     const membroEntrou$ = new Subject<unknown>();
     const fichaAlterada$ = new Subject<unknown>();
     const fichaVisibilidadeAlterada$ = new Subject<unknown>();
+    const fichaCondicoesAlteradas$ = new Subject<{ campanhaId: number }>();
     const fichaRemovidaDaCampanha$ = new Subject<unknown>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
@@ -94,6 +95,7 @@ describe('CampanhaDetalheDadosService', () => {
       membroEntrou$: membroEntrou$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
+      fichaCondicoesAlteradas$: fichaCondicoesAlteradas$.asObservable(),
       fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable() as Observable<RolagemResumoDto>,
       rolagemExcluida$: new Subject().asObservable(),
@@ -129,6 +131,7 @@ describe('CampanhaDetalheDadosService', () => {
       inventarioAlterado$,
       fichaAlterada$,
       fichaRemovidaDaCampanha$,
+      fichaCondicoesAlteradas$,
     };
   }
 
@@ -161,6 +164,32 @@ describe('CampanhaDetalheDadosService', () => {
     rolagemRegistrada$.next(rolagem({ id: 2 }));
     expect(service.rolagensFeed()[0].id).toBe(2);
     expect(service.rolagensFeed().length).toBe(2);
+  });
+
+  it('ficha:condicoes-alteradas (I-031) da própria campanha refaz o fetch de membros', () => {
+    const { campanhaService, fichaCondicoesAlteradas$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    campanhaService.listarMembros.mockClear();
+
+    fichaCondicoesAlteradas$.next({ campanhaId: CAMPANHA_ID });
+    TestBed.inject(ApplicationRef).tick();
+
+    expect(campanhaService.listarMembros).toHaveBeenCalledWith(CAMPANHA_ID);
+  });
+
+  it('ficha:condicoes-alteradas de outra campanha não refaz o fetch de membros', () => {
+    const { campanhaService, fichaCondicoesAlteradas$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    campanhaService.listarMembros.mockClear();
+
+    fichaCondicoesAlteradas$.next({ campanhaId: CAMPANHA_ID + 1 });
+    TestBed.inject(ApplicationRef).tick();
+
+    expect(campanhaService.listarMembros).not.toHaveBeenCalled();
   });
 
   it('recarregarMembrosEFichas refaz o fetch de membros e fichas', () => {

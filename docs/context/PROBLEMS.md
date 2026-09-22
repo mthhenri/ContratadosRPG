@@ -29,6 +29,24 @@
 
 ## Ativos
 
+### P-074 — No mobile, jogador sem ficha própria na campanha nunca alcança a aba "Esquadrão" · `ABERTO` · frontend
+
+- **Sintoma:** achado verificando a I-031 (Machucado dos colegas na carteirinha): em
+  `detalhe-jogador.page.html`, o painel lateral (Rolagens/Esquadrão/Inv. Esquadrão) só aparece no
+  mobile quando `destinoMobileFicha() === 'rolagens'` (`--oculto-mobile`), e esse destino só é
+  setado pela barra `.ficha-nav` — que só existe **dentro** de `app-ficha-campanha-card`, ou
+  seja, só quando o jogador **tem** ficha própria na campanha. Sem ficha própria, o jogador só
+  vê "Criar nova ficha"/"Vincular ficha existente" e nunca alcança a lista de colegas no mobile
+  (desktop/tablet não têm esse problema — lá o painel lateral sempre aparece).
+- **Causa:** o destino "Rolagens" que abre o painel lateral é emprestado da navegação da própria
+  ficha (`DestinoMobile`), então depende de haver uma ficha própria montada para existir a barra
+  que o dispara.
+- **Contorno:** nenhum no mobile — um jogador sem ficha própria abre a campanha em desktop/tablet
+  para ver os colegas, ou pede a alguém para checar por ele.
+- **Correção:** dar ao painel lateral um gatilho mobile independente da ficha própria (ex.: botão
+  fixo/kebab que abre o painel Esquadrão mesmo sem `app-ficha-campanha-card` montado).
+- **Desde:** achado ao vivo verificando `i-031-condicoes-equipe` (2026-09-21/22).
+
 ### P-072 — `EditorMarkdown` não estiliza blockquote (`>`) · `ACEITO` · frontend
 
 - **Sintoma:** conteúdo Markdown com citação (`> texto`) renderiza como parágrafo comum — sem

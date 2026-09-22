@@ -2621,8 +2621,16 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   retroativamente o redesenho da tela de ficha e novos ajustes dessa mesma frente entram nela em vez
   de virar spec solta. É a **exceção** consciente ao "active/ = task da sessão atual".
 - **A ficha permite estado incoerente de propósito** — a validação do backend só checa **teto**
-  (Vida ≤ máximo, Nível no intervalo da classe). Condições (Morrendo/Machucado/Inconsciente) são
-  alternadas à mão e nunca validadas; exceder o Inventário máximo é **aviso**, não trava.
+  (Vida ≤ máximo, Nível no intervalo da classe). Morrendo/Inconsciente continuam alternadas à mão e
+  nunca validadas; exceder o Inventário máximo é **aviso**, não trava. **Machucado é a exceção**
+  desde a I-032 (2026-09-22): derivado da Vida a cada ajuste de vitalidade (`resolverMachucadoPelaVida`,
+  `shared/regras/agente/machucado.ts`) com histerese (liga ≤ 50%, mantém entre 50%-99%, desliga só
+  em 100%), calculado tanto no backend (`FichaService.alterarVitalidade`) quanto no frontend
+  (`FichaEdicaoService.ajustarVitalidade`) — o toggle manual continua existindo (Anestesia etc.) e
+  vale até a próxima mudança de Vida. As três condições de qualquer ficha `JOGADOR` da campanha
+  (I-031) chegam a **todo** membro via `CampanhaMembroFichaResumoDto` — únicos campos que atravessam
+  a carteirinha sem `acessoCompleto` — e se propagam em tempo real por `ficha:condicoes-alteradas`
+  (payload só `campanhaId`, sala `campanha:<id>`, emitido junto de todo `ficha:alterada`).
 - **Gate de qualidade é definição de pronto** — toda tarefa exige evidência contra a spec e as
   convenções, revisão do diff e verificação proporcional. UI exige verificação ao vivo conforme
   `verify`; item sem uma verificação obrigatória permanece aberto. **Qualidade acima de velocidade**

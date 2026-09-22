@@ -15,6 +15,7 @@ import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
   FichaCampanhaRemovidaDto,
+  FichaCondicoesAlteradasDto,
   FichaResumoDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
@@ -86,6 +87,7 @@ export class TempoRealService {
   private readonly fichaCriadaSubject = new Subject<FichaResumoDto>();
   private readonly fichaVisibilidadeAlteradaSubject =
     new Subject<FichaVisibilidadeAlteradaDto>();
+  private readonly fichaCondicoesAlteradasSubject = new Subject<FichaCondicoesAlteradasDto>();
   private readonly fichaRemovidaDaCampanhaSubject = new Subject<FichaCampanhaRemovidaDto>();
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
@@ -112,6 +114,13 @@ export class TempoRealService {
   /** A visibilidade de uma ficha mudou; consumidores refazem o recorte autorizado da campanha. */
   readonly fichaVisibilidadeAlterada$: Observable<FichaVisibilidadeAlteradaDto> =
     this.fichaVisibilidadeAlteradaSubject.asObservable();
+  /**
+   * Uma ficha `JOGADOR` da campanha pode ter mudado de condição (I-031) — payload mínimo (só
+   * `campanhaId`, sala ampla `campanha:<id>`); consumidores refazem `listarMembros` pra atualizar
+   * as carteirinhas mesmo sem acesso completo à ficha.
+   */
+  readonly fichaCondicoesAlteradas$: Observable<FichaCondicoesAlteradasDto> =
+    this.fichaCondicoesAlteradasSubject.asObservable();
   /** Uma ficha saiu da campanha (voltou ao acervo ou foi movida); consumidores refazem o recorte. */
   readonly fichaRemovidaDaCampanha$: Observable<FichaCampanhaRemovidaDto> =
     this.fichaRemovidaDaCampanhaSubject.asObservable();
@@ -218,6 +227,10 @@ export class TempoRealService {
       'ficha:visibilidade-alterada',
       (evento: FichaVisibilidadeAlteradaDto) =>
         this.fichaVisibilidadeAlteradaSubject.next(evento),
+    );
+    this.socket.on(
+      'ficha:condicoes-alteradas',
+      (evento: FichaCondicoesAlteradasDto) => this.fichaCondicoesAlteradasSubject.next(evento),
     );
     this.socket.on('ficha:removida-da-campanha', (evento: FichaCampanhaRemovidaDto) =>
       this.fichaRemovidaDaCampanhaSubject.next(evento),

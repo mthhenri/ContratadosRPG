@@ -27,6 +27,7 @@ import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.com
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import {
   agruparFichasPorMembro,
+  condicoesAtivas,
   montarEquipeExibicao,
   ordenarMembros,
   type EquipeFichaExibicao,
@@ -147,6 +148,9 @@ export class CampanhaPreviaJogador {
   protected readonly equipeExibicao = computed<
     readonly { readonly membro: CampanhaMembroResumoDto; readonly fichas: readonly EquipeFichaExibicao[] }[]
   >(() => montarEquipeExibicao(this.membrosOrdenados(), this.fichasPorMembro()));
+
+  /** Só as condições marcadas (I-031) — exposto ao template da carteirinha. */
+  protected readonly condicoesAtivas = condicoesAtivas;
 
   protected readonly fichasDestinoInventario = computed(() =>
     (this.previa()?.fichas ?? [])
@@ -278,6 +282,12 @@ export class CampanhaPreviaJogador {
       .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
       .subscribe({ next: () => this.invalidacoes.next('projecao') });
     this.tempoRealService.fichaRemovidaDaCampanha$
+      .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
+      .subscribe({ next: () => this.invalidacoes.next('projecao') });
+    // I-031: condição de uma ficha fora do recorte visível ao alvo (`previa().fichas`) também
+    // pode ter mudado — o filtro de `fichaAlterada$` abaixo não alcança essa forma (a carteirinha
+    // some do `fichas`, mas as condições continuam vindo por `membros`, ver `CampanhaMembroFichaResumoDto`).
+    this.tempoRealService.fichaCondicoesAlteradas$
       .pipe(filter((evento) => evento.campanhaId === this.id), takeUntilDestroyed())
       .subscribe({ next: () => this.invalidacoes.next('projecao') });
 

@@ -555,6 +555,18 @@ export interface FichaVisibilidadeAlteradaDto {
 }
 
 /**
+ * Evento de tempo real (I-031): uma ficha `JOGADOR` da campanha pode ter mudado de condição
+ * (Morrendo/Machucado/Inconsciente) — emitido junto de todo `ficha:alterada` (não dá pra saber,
+ * no gateway, se a mudança tocou `estado` sem reabrir o documento). Payload mínimo de propósito,
+ * igual a `FichaVisibilidadeAlteradaDto`: não revela quem mudou nem o novo valor a quem está na
+ * sala ampla `campanha:<id>` sem acesso à ficha — o cliente refaz `listarMembros`, cujo recorte
+ * de carteirinha (`CampanhaMembroFichaResumoDto`) já inclui as três condições sempre.
+ */
+export interface FichaCondicoesAlteradasDto {
+  readonly campanhaId: number;
+}
+
+/**
  * Evento de tempo real: uma ficha saiu de uma campanha (voltou ao acervo solto ou foi movida para
  * outra) — `campanhaId` é a campanha que ela **deixou**, a sala que recebe o evento. Payload
  * mínimo de propósito (nenhum dado da ficha), então vale para qualquer tipo, inclusive
@@ -632,8 +644,12 @@ export interface FichaVitalidadeAlterarDto {
   readonly energiaAtual?: number;
 }
 
-/** Contrato interno da alteração pontual de vitalidade; `id` vem da controller. */
+/**
+ * Contrato interno da alteração pontual de vitalidade; `id` vem da controller. `estado.machucado`
+ * é opcional e só o service escreve (I-032, `resolverMachucadoPelaVida`) — o cliente nunca manda
+ * a condição por esta rota, ela é derivada da Vida que ele mandou.
+ */
 export interface FichaVitalidadeInternoAlterarDto {
   readonly id: number;
-  readonly estado: FichaVitalidadeAlterarDto;
+  readonly estado: FichaVitalidadeAlterarDto & { readonly machucado?: boolean };
 }

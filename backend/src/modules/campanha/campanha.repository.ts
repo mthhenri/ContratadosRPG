@@ -396,6 +396,8 @@ export class CampanhaRepository extends BaseRepository {
    * carteirinha (m3-65): por ficha, `acessoCompleto` é `true` pro mestre, pro dono, ou por
    * concessão ativa (`usuario_ficha_acesso`) — senão é só carteirinha. Ficha marcada `oculta`
    * de outro dono nem entra na lista (nem carteirinha), exceto pro mestre ou pro próprio dono.
+   * `morrendo`/`machucado`/`inconsciente` (I-031) vêm sempre, mesmo sem `acessoCompleto` — único
+   * recorte de estado que atravessa a carteirinha (ver doc de `CampanhaMembroFichaResumoDto`).
    * `json_agg`/`json_build_object` porque o `pg` decodifica JSON pra objeto/array JS sozinho, sem
    * parse manual (mesmo padrão de `minhaFichaResumo` em `listarPorUsuario`). Ordena por nome.
    */
@@ -419,6 +421,9 @@ export class CampanhaRepository extends BaseRepository {
                     'arquetipo', ficha.dados->>'arquetipo',
                     'imagemUrl', ficha.imagem_url,
                     'cor', ficha.cor,
+                    'morrendo', COALESCE((ficha.dados->'estado'->>'morrendo')::boolean, false),
+                    'machucado', COALESCE((ficha.dados->'estado'->>'machucado')::boolean, false),
+                    'inconsciente', COALESCE((ficha.dados->'estado'->>'inconsciente')::boolean, false),
                     'acessoCompleto', (
                       :usuarioAtivoEhMestre
                       OR ficha.usuario_id = :usuarioAtivoId

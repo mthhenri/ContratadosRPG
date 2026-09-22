@@ -350,6 +350,34 @@
         white-space: nowrap;
     }
 
+    // Condições (I-031) na carteirinha sem acesso — mesma receita de `.ficha-hud__selo`
+    // (`ficha-visualizacao.component.scss`) e de `detalhe-jogador.page.scss`, que a prévia espelha.
+    &__equipe-condicoes {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    &__equipe-selo {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-radius: var(--radius-compact);
+        padding: 1px 5px;
+        color: var(--warning);
+        border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+        background: color-mix(in srgb, var(--warning) 10%, transparent);
+
+        &[data-selo-condicao='morrendo'],
+        &[data-selo-condicao='inconsciente'] {
+            color: var(--accent);
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+        }
+    }
+
     // === "Rolagens" — painel de presets/rolagem avulsa (`FichaRolagensPainel`), sempre
     // `[podeRolar]="false"` (ver doc da classe). Sem o toggle mobile de `.detalhe__rolagens-painel`
     // (não há barra de abas na prévia — mais simples, empilha com o resto no mobile).

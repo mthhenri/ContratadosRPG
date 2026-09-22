@@ -88,6 +88,8 @@ describe('FichaVisualizar', () => {
     semCampanhaNaRota?: boolean;
     /** m3-28: `campanhaId` da ficha carregada — só relevante junto de `semCampanhaNaRota`. */
     fichaCampanhaId?: number | null;
+    /** Sobrescreve trechos de `dados` (ex.: `estado.vidaMaxima` para testar o Machucado, I-032). */
+    dadosExtra?: Partial<FichaJogadorDadosDto>;
   }) {
     const recuperada: FichaRecuperadaDto = {
       id: 42,
@@ -98,7 +100,7 @@ describe('FichaVisualizar', () => {
       imagemUrl: null,
       imagemFoco: null,
       oculta: false,
-      dados,
+      dados: { ...dados, ...opcoes.dadosExtra },
     };
     const fichaService = {
       recuperarFicha: vi.fn(() => of(recuperada)),
@@ -492,6 +494,29 @@ describe('FichaVisualizar', () => {
         oculta: false,
         dados: { ...dados, estado: { ...dados.estado, vidaAtual: 2 } },
       });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('deriva o Machucado (I-032) da Vida quando há vidaMaxima — liga em ≤ 50%, mantém entre 50%-99%, desliga em 100%', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture } = montar({
+        usuarioLogadoId: 7,
+        dadosExtra: { estado: { ...dados.estado, vidaMaxima: 40 } },
+      });
+      const componente = fixture.componentInstance;
+
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 20 });
+      expect(componente['ficha']()?.dados.estado.machucado).toBe(true);
+
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 30 });
+      // Histerese: entre 50% e 99% mantém o Machucado já ligado.
+      expect(componente['ficha']()?.dados.estado.machucado).toBe(true);
+
+      componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 40 });
+      expect(componente['ficha']()?.dados.estado.machucado).toBe(false);
     } finally {
       vi.useRealTimers();
     }

@@ -387,6 +387,24 @@ describe('CampanhaGateway', () => {
       expect(encontroService.sincronizarFichaAlterada).toHaveBeenCalledWith(5, 3);
     });
 
+    it('emite ficha:condicoes-alteradas na sala da campanha junto de ficha:alterada (I-031)', () => {
+      const ficha = { id: 5, campanhaId: 3, usuarioId: 10, nome: 'Agente Alfa', dados: {} };
+
+      gateway.emitirFichaAlterada(ficha as never);
+
+      expect(paraSala).toHaveBeenCalledWith('ficha:5');
+      expect(paraSala).toHaveBeenCalledWith('campanha:3');
+      expect(emitir).toHaveBeenCalledWith('ficha:condicoes-alteradas', { campanhaId: 3 });
+    });
+
+    it('não emite ficha:condicoes-alteradas quando a ficha não tem campanha (solta)', () => {
+      const ficha = { id: 5, campanhaId: null, usuarioId: 10, nome: 'Agente Alfa', dados: {} };
+
+      gateway.emitirFichaAlterada(ficha as never);
+
+      expect(emitir).not.toHaveBeenCalledWith('ficha:condicoes-alteradas', expect.anything());
+    });
+
     it('emite ficha:visibilidade-alterada na sala da campanha com payload mínimo', () => {
       gateway.emitirFichaVisibilidadeAlterada({ fichaId: 5, campanhaId: 3 });
 

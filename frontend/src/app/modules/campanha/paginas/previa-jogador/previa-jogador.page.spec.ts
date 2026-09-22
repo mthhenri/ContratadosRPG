@@ -103,7 +103,7 @@ describe('CampanhaPreviaJogador', () => {
           nome: 'Beta',
           papel: TipoCampanhaMembroPapelEnum.JOGADOR,
           fichas: [
-            { id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true },
+            { id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false },
           ],
         },
       ],
@@ -118,6 +118,7 @@ describe('CampanhaPreviaJogador', () => {
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const membroEntrou$ = new Subject<unknown>();
     const fichaVisibilidadeAlterada$ = new Subject<unknown>();
+    const fichaCondicoesAlteradas$ = new Subject<{ campanhaId: number }>();
     const fichaRemovidaDaCampanha$ = new Subject<unknown>();
     const fichaAlterada$ = new Subject<{ id: number }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
@@ -139,6 +140,7 @@ describe('CampanhaPreviaJogador', () => {
       rolagemExcluida$: new Subject().asObservable(),
       membroEntrou$: membroEntrou$.asObservable(),
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
+      fichaCondicoesAlteradas$: fichaCondicoesAlteradas$.asObservable(),
       fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
@@ -172,6 +174,7 @@ describe('CampanhaPreviaJogador', () => {
       rolagemRegistrada$,
       membroEntrou$,
       fichaRemovidaDaCampanha$,
+      fichaCondicoesAlteradas$,
       fichaAlterada$,
       encontroAlterado$,
     };
@@ -207,13 +210,13 @@ describe('CampanhaPreviaJogador', () => {
             usuarioId: ALVO_ID,
             nome: 'Beta',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true }],
+            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false }],
           },
           {
             usuarioId: COLEGA_ID,
             nome: 'Colega',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 20, nome: 'Ficha Oculta', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: false }],
+            fichas: [{ id: 20, nome: 'Ficha Oculta', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: false, morrendo: false, machucado: false, inconsciente: false }],
           },
         ],
       }),
@@ -236,13 +239,13 @@ describe('CampanhaPreviaJogador', () => {
             usuarioId: ALVO_ID,
             nome: 'Beta',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true }],
+            fichas: [{ id: 10, nome: 'Agente Beta', classe: ClasseEnum.COMBATENTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false }],
           },
           {
             usuarioId: COLEGA_ID,
             nome: 'Colega',
             papel: TipoCampanhaMembroPapelEnum.JOGADOR,
-            fichas: [{ id: 20, nome: 'Ficha do Colega', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true }],
+            fichas: [{ id: 20, nome: 'Ficha do Colega', classe: ClasseEnum.SUPORTE, arquetipo: null, imagemUrl: null, cor: null, acessoCompleto: true, morrendo: false, machucado: false, inconsciente: false }],
           },
         ],
       }),
@@ -292,6 +295,17 @@ describe('CampanhaPreviaJogador', () => {
     campanhaProjecaoService.recuperarPreviaJogador.mockClear();
 
     fichaRemovidaDaCampanha$.next({ fichaId: 5, campanhaId: CAMPANHA_ID });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    fixture.detectChanges();
+
+    expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+  });
+
+  it('ficha:condicoes-alteradas (I-031) da campanha em prévia refaz a projeção', async () => {
+    const { fixture, fichaCondicoesAlteradas$, campanhaProjecaoService } = montar();
+    campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+    fichaCondicoesAlteradas$.next({ campanhaId: CAMPANHA_ID });
     await new Promise((resolve) => setTimeout(resolve, 30));
     fixture.detectChanges();
 

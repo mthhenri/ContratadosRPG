@@ -38,6 +38,7 @@ import {
   type DestinoMobile,
 } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
 import {
+  condicoesAtivas,
   montarEquipeExibicao,
   type EquipeFichaExibicao,
 } from '../../campanha-equipe.util';
@@ -189,6 +190,9 @@ export class CampanhaDetalheJogador {
   protected readonly equipeExibicao = computed<
     readonly { readonly membro: CampanhaMembroResumoDto; readonly fichas: readonly EquipeFichaExibicao[] }[]
   >(() => montarEquipeExibicao(this.dados.membrosOrdenados(), this.dados.fichasPorMembro()));
+
+  /** Só as condições marcadas (I-031) — exposto ao template da carteirinha. */
+  protected readonly condicoesAtivas = condicoesAtivas;
 
   /** Card "Rolagens" da coluna lateral — alvo do destino `'rolagens'` da barra inferior do mobile. */
   private readonly cardRolagens = viewChild<ElementRef<HTMLElement>>('cardRolagens');

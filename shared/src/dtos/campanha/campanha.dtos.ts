@@ -307,6 +307,11 @@ export interface CampanhaMembrosListarDto {
  * é só a "carteirinha" — nome/classe/foto, sem vida/energia/etc. (esses continuam vindo, pra quem
  * tem acesso completo, de `GET /ficha?campanhaId=`, que não muda). Fichas marcadas `oculta` por um
  * jogador que não seja o dono/mestre requisitante nem entram nesta lista — não tem carteirinha.
+ *
+ * As três condições (I-031) vêm **mesmo sem `acessoCompleto`** — é o único recorte de estado que
+ * atravessa a carteirinha, pra quem joga em equipe saber quem está Machucado/Morrendo/Inconsciente
+ * sem precisar de acesso à ficha inteira (`sistema-v4.1.0.md` "Condições"; combina com o Machucado
+ * automático da I-032, `resolverMachucadoPelaVida`). Vida/Energia numéricas continuam de fora.
  */
 export interface CampanhaMembroFichaResumoDto {
   readonly id: number;
@@ -318,6 +323,9 @@ export interface CampanhaMembroFichaResumoDto {
   readonly cor: string | null;
   /** `true` quando o requisitante enxerga a ficha completa (dono, mestre, ou concessão ativa). */
   readonly acessoCompleto: boolean;
+  readonly morrendo: boolean;
+  readonly machucado: boolean;
+  readonly inconsciente: boolean;
 }
 
 /**

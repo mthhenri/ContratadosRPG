@@ -147,6 +147,9 @@ describe('CampanhaDetalheJogador', () => {
                 imagemUrl: ficha.imagemUrl,
                 cor: ficha.cor ?? null,
                 acessoCompleto: true,
+                morrendo: ficha.morrendo ?? false,
+                machucado: ficha.machucado ?? false,
+                inconsciente: ficha.inconsciente ?? false,
               })),
     }));
     const campanhaService = {
@@ -233,6 +236,7 @@ describe('CampanhaDetalheJogador', () => {
       membroEntrou$: new Subject().asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
+      fichaCondicoesAlteradas$: new Subject().asObservable(),
       fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
@@ -370,6 +374,39 @@ describe('CampanhaDetalheJogador', () => {
     expect(nomes).toContain('Jogador');
     expect(nomes).not.toContain('Colega');
     expect(raiz.querySelectorAll('.detalhe__equipe-membro')).toHaveLength(2);
+  });
+
+  it('a carteirinha sem acesso mostra o selo de Machucado (I-031), mesmo sem acessoCompleto', () => {
+    const membros: CampanhaMembroResumoDto[] = [
+      { usuarioId: 1, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] },
+      { usuarioId: 2, nome: 'Jogador', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
+      {
+        usuarioId: 3,
+        nome: 'Colega',
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+        fichas: [
+          {
+            id: 3,
+            nome: 'Kane',
+            classe: ClasseEnum.COMBATENTE,
+            arquetipo: ArquetipoEnum.LUTADOR,
+            imagemUrl: null,
+            cor: null,
+            acessoCompleto: false,
+            morrendo: false,
+            machucado: true,
+            inconsciente: false,
+          },
+        ],
+      },
+    ];
+    const { raiz } = montar({ usuarioId: 2, membros, fichas });
+
+    const carteirinha = raiz.querySelector('.detalhe__equipe-carteirinha')!;
+    const selos = Array.from(carteirinha.querySelectorAll('.detalhe__equipe-selo')).map((selo) =>
+      selo.textContent?.trim(),
+    );
+    expect(selos).toEqual(['Machucado']);
   });
 
   it('"Ver ficha" na Equipe troca a ficha exibida sem navegar; a de um colega vira só leitura', () => {

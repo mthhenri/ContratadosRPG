@@ -21,6 +21,7 @@ import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratad
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
+  FichaCondicoesAlteradasDto,
   FichaCriadaDto,
   FichaRecuperarDto,
   FichaSalaSairDto,
@@ -259,10 +260,23 @@ export class CampanhaGateway implements OnGatewayConnection {
       dados: omitirCamposPrivados(ficha.dados),
     };
     this.servidor.to(this.salaFicha(ficha.id)).emit('ficha:alterada', fichaSemCamposPrivados);
+    // I-031: qualquer `ficha:alterada` pode ter tocado `estado.morrendo`/`machucado`/
+    // `inconsciente` (o gateway não sabe distinguir sem reabrir o documento) — avisa a sala ampla
+    // da campanha, sem payload de ficha, pra quem não tem acesso mas vê a condição na carteirinha
+    // (`CampanhaMembroFichaResumoDto`) refazer `listarMembros`. Ficha `CRIATURA`/avulsa não tem
+    // `campanhaId` de agente-jogador sempre presente — `null` não entra em sala nenhuma.
+    if (ficha.campanhaId !== null) {
+      this.emitirFichaCondicoesAlteradas({ campanhaId: ficha.campanhaId });
+    }
     // Best-effort: uma falha aqui (ex.: encontro apagado entre a alteração e este ponto) não pode
     // derrubar o broadcast de `ficha:alterada` que já aconteceu — mesmo espírito do `catch` por
     // socket em `emitirEncontroAlterado` logo abaixo.
     void this.encontroService.sincronizarFichaAlterada(ficha.id, ficha.campanhaId).catch(() => undefined);
+  }
+
+  /** Ver comentário em `emitirFichaAlterada` — payload mínimo, mesma receita de `emitirFichaVisibilidadeAlterada`. */
+  private emitirFichaCondicoesAlteradas(evento: FichaCondicoesAlteradasDto): void {
+    this.servidor.to(this.salaCampanha(evento.campanhaId)).emit('ficha:condicoes-alteradas', evento);
   }
 
   /**

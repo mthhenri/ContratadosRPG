@@ -27,11 +27,26 @@
 
 ## Promovidas
 
-### I-033 — Admin apagar uma rolagem (soft delete) · rolagem/moderação
+### I-032 — Machucado marcado automaticamente pela Vida · ficha/condições
 
-- Implementada em 2026-09-21 **sem spec própria**, direto a pedido do autor: `DELETE /rolagem/:id`
-  só para `ADMIN` + lixeira no `app-cartao-rolagem` compartilhado + evento `rolagem:excluida`.
-  Ver `HISTORY.md` ("`rolagem-excluir-admin`"). O Mestre da campanha ainda não pode excluir.
+- Implementada em 2026-09-22 **sem spec própria**, a pedido do autor: Machucado passou a ser
+  derivado da Vida com histerese (liga em ≤ 50% da máxima, mantém entre 50% e 99%, desliga só em
+  100%), regra pura em `shared/regras/agente/machucado.ts` (`resolverMachucadoPelaVida`), aplicada
+  em `FichaService.alterarVitalidade` (backend) e `FichaEdicaoService.ajustarVitalidade`
+  (frontend). Decisões tomadas: a regra usa "Vida ≤ metade" (não "um único golpe"), e o toggle
+  manual continua existindo (Anestesia etc.) — vale até a próxima mudança de Vida. Ver
+  `HISTORY.md` ("i-032-i-031-machucado-e-condicoes-equipe").
+
+### I-031 — Jogadores veem o estado dos colegas (ex.: Machucado) · campanha/visibilidade
+
+- Implementada em 2026-09-22 **sem spec própria**, junto da I-032. Decisões tomadas: só as três
+  condições atravessam a carteirinha sem `acessoCompleto` (sem Vida em faixas) — novos campos
+  `morrendo`/`machucado`/`inconsciente` em `CampanhaMembroFichaResumoDto`
+  (`CampanhaRepository.listarMembros`). Tempo real coberto: `ficha:condicoes-alteradas` (payload
+  só `campanhaId`) emitido junto de todo `ficha:alterada`, sala `campanha:<id>`. Achado durante a
+  verificação ao vivo: `P-074` (jogador sem ficha própria não alcança a aba "Esquadrão" no
+  mobile) — não corrigido nesta task. Ver `HISTORY.md`
+  ("i-032-i-031-machucado-e-condicoes-equipe").
 
 ### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
 
@@ -69,38 +84,6 @@
   não uma variante de tamanho.
 
 ## Abertas
-
-### I-032 — Machucado marcado automaticamente pela Vida · ficha/condições
-
-- **Ideia:** a condição **Machucado** deixar de ser alternada só à mão: ser marcada sozinha quando a
-  Vida cai a metade ou menos, e limpa sozinha ao voltar a 100%.
-- **Origem:** conversa de 2026-09-21; o autor questionou por que o Machucado não se marca
-  automaticamente.
-- **Por quê:** o marcador manual desfaz o sentido da regra. `sistema-v4.1.0.md` define Machucado
-  como consequência mecânica da Vida ("removeu metade de sua vida; só é removido ao recuperar 100%
-  da Vida"), então esquecer de marcar gera divergência entre a Vida na ficha e a condição.
-- **Custo aparente:** regra pura em `shared/regras/` (Vida atual/Vida máxima → `machucado`), com
-  histerese: liga em ≤ 50%, mantém entre 50% e 99%, desliga só em 100%. Decisões abertas: a regra
-  é "Vida ≤ metade" ou "um único golpe tirou metade"? O texto diz "resultado de um golpe" e
-  Tolerância à Dor testa "um golpe que causaria Machucado". E o Mestre ainda pode forçar o valor à
-  mão (Anestesia menciona causar Machucado)? O backend já valida a ficha com `shared/regras`, então
-  o cálculo pode viver lá e o frontend só refletir; hoje `machucado?` é só um booleano em
-  `FichaDadosDto` (`ficha.dtos.ts`), alternado manualmente.
-
-### I-031 — Jogadores veem o estado dos colegas (ex.: Machucado) · campanha/visibilidade
-
-- **Ideia:** cada jogador enxergar um recorte de estado dos outros jogadores da campanha — em
-  especial as condições (Machucado, Morrendo, Inconsciente) — sem precisar de acesso à ficha
-  inteira.
-- **Origem:** conversa de 2026-09-21.
-- **Por quê:** quem joga em equipe precisa saber quem está ferido para agir (há habilidades que
-  reagem a aliado Machucado, ex.: Paramédico); hoje isso depende da ficha ser compartilhada
-  (`usuario_ficha_acesso`) ou de o jogador avisar em voz alta.
-- **Custo aparente:** recorte novo de leitura. As `condicoes` já vêm em `FichaResumoDto` para as
-  fichas visíveis (`campanha-equipe.util.ts`); falta decidir quais estados entram (só condições?
-  Vida em faixas, sem números?) e a permissão — encaixa com `I-010` (granularidade de
-  visualização). Tempo real: mudança de condição precisaria de evento para os colegas (skill
-  `tempo-real`). Combina com `I-032`: com Machucado automático o estado exibido é confiável.
 
 ### I-030 — Log de iniciativa: retomar em outro formato · encontro/iniciativa
 
@@ -377,22 +360,6 @@
   tratada como uma ampliação tardia da M2. A numeração indica agrupamento de escopo, não dependência:
   M7–M12 podem ser executadas em outra ordem — por exemplo, IA não depende obrigatoriamente de
   documentos.
-
-### I-024 — `perigo` e `primario` são a mesma cor, e ela é trocável pelo usuário · frontend/design system
-
-- **Ideia:** desacoplar a severidade `perigo` do `--accent`, provavelmente apontando para `--vida`
-  (vermelho **fixo** da identidade, que já existe justamente por não acompanhar a troca de tema).
-- **Origem:** ficou visível na matriz 8×4 renderizada no gate visual da `ui-01b` (2026-08-28): as
-  linhas `primario` e `perigo` são pixel a pixel a mesma coisa nos estilos preenchido, texto e
-  link — só o estilo **padrão** difere (preenchido vs. contorno).
-- **Por quê:** com o accent padrão (vermelho) a ação destrutiva não se distingue da ação primária;
-  e com um accent azul ou verde escolhido pelo usuário, um botão de "Excluir" fica azul ou verde,
-  que é o oposto do sinal que ele deve dar. O `--vida` foi criado exatamente para o caso de "esta
-  cor não pode acompanhar o tema".
-- **Custo aparente:** baixo em código (uma entrada no mapa `$variantes` de
-  `botao.component.scss`), mas **muda o visual** dos 3 usos atuais de `.botao--perigo`
-  (`usuario/gestao` ×2, `encontro/painel` ×1) e das cópias locais que ainda não migraram — logo,
-  decidir junto com a `ui-04`, que é quando essas telas passam pelo pixel diff de qualquer forma.
 
 ### I-022 — Caderno: importar em lote, arrastar-e-soltar e exportar `.md` · campanha/caderno
 

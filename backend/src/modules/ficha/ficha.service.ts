@@ -61,6 +61,7 @@ import {
   calcularStatsEfetivos,
   calcularVida,
   maestriaValida,
+  resolverMachucadoPelaVida,
 } from '@contratados-rpg/shared/regras/agente';
 import { calcularResumoCompras, type CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { validarFichaCriatura } from '@contratados-rpg/shared/regras/criatura';
@@ -695,9 +696,37 @@ export class FichaService {
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     const estado = this.extrairVitalidade(dto.estado);
     this.validarVitalidade(estado);
-    const fichaAlterada = await this.fichaRepositorio.alterarVitalidade({ id: dto.id, estado });
+    const estadoComMachucado = this.resolverMachucadoNaVitalidade(
+      fichaEncontrada.dados as FichaJogadorDadosDto,
+      estado,
+    );
+    const fichaAlterada = await this.fichaRepositorio.alterarVitalidade({
+      id: dto.id,
+      estado: estadoComMachucado,
+    });
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
     return fichaAlterada;
+  }
+
+  /**
+   * Deriva o Machucado (I-032) a partir da Vida quando `estado` traz `vidaAtual` — histerese de
+   * `resolverMachucadoPelaVida` (`shared/regras/agente`): liga em ≤ 50%, mantém entre 50%-99%,
+   * desliga só em 100%. Não altera nada quando só `energiaAtual` mudou (Vida intacta) — o toggle
+   * manual (Anestesia etc., `ajustarCondicoes`) continua valendo até a próxima mudança de Vida.
+   */
+  private resolverMachucadoNaVitalidade(
+    dadosAtuais: FichaJogadorDadosDto,
+    estado: FichaVitalidadeAlterarDto,
+  ): FichaVitalidadeAlterarDto & { readonly machucado?: boolean } {
+    if (estado.vidaAtual === undefined) {
+      return estado;
+    }
+    const machucado = resolverMachucadoPelaVida({
+      vidaAtual: estado.vidaAtual,
+      vidaMaxima: dadosAtuais.estado.vidaMaxima,
+      machucado: dadosAtuais.estado.machucado ?? false,
+    });
+    return { ...estado, machucado };
   }
 
   /**

@@ -174,6 +174,21 @@
                                     <span class="previa-jogador__equipe-ficha-vitais"
                                         >{{ ficha.classeTexto }}</span
                                     >
+                                    @if (condicoesAtivas(ficha.condicoes); as ativas) { @if
+                                    (ativas.length) {
+                                    <span
+                                        class="previa-jogador__equipe-condicoes"
+                                        aria-label="Condições"
+                                    >
+                                        @for (condicao of ativas; track condicao.chave) {
+                                        <span
+                                            class="previa-jogador__equipe-selo"
+                                            [attr.data-selo-condicao]="condicao.chave"
+                                            >{{ condicao.rotulo }}</span
+                                        >
+                                        }
+                                    </span>
+                                    } }
                                 </span>
                             </span>
                             } } }

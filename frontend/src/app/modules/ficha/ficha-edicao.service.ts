@@ -17,6 +17,7 @@ import {
   incrementarDanoFurtivo,
   calcularDanoCorpo,
   obterBonusAtributos,
+  resolverMachucadoPelaVida,
   type BonusAtributos,
 } from '@contratados-rpg/shared/regras/agente';
 import { aplicarFormacaoAosDerivados, materializarHabilidadePersonalidade, removerFormacaoDosDerivados } from '@contratados-rpg/shared/regras/identidade';
@@ -150,7 +151,17 @@ export class FichaEdicaoService {
     if (!fichaAtual) {
       return;
     }
-    const estado = { ...fichaAtual.dados.estado, [ajuste.campo]: ajuste.valor };
+    let estado = { ...fichaAtual.dados.estado, [ajuste.campo]: ajuste.valor };
+    if (ajuste.campo === 'vidaAtual' && estado.vidaMaxima !== undefined) {
+      estado = {
+        ...estado,
+        machucado: resolverMachucadoPelaVida({
+          vidaAtual: ajuste.valor,
+          vidaMaxima: estado.vidaMaxima,
+          machucado: estado.machucado ?? false,
+        }),
+      };
+    }
     this.ficha.set({ ...fichaAtual, dados: { ...fichaAtual.dados, estado } });
     this.agendarPersistencia();
   }
