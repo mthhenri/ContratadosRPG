@@ -27,27 +27,6 @@
 
 ## Promovidas
 
-### I-032 — Machucado marcado automaticamente pela Vida · ficha/condições
-
-- Implementada em 2026-09-22 **sem spec própria**, a pedido do autor: Machucado passou a ser
-  derivado da Vida com histerese (liga em ≤ 50% da máxima, mantém entre 50% e 99%, desliga só em
-  100%), regra pura em `shared/regras/agente/machucado.ts` (`resolverMachucadoPelaVida`), aplicada
-  em `FichaService.alterarVitalidade` (backend) e `FichaEdicaoService.ajustarVitalidade`
-  (frontend). Decisões tomadas: a regra usa "Vida ≤ metade" (não "um único golpe"), e o toggle
-  manual continua existindo (Anestesia etc.) — vale até a próxima mudança de Vida. Ver
-  `HISTORY.md` ("i-032-i-031-machucado-e-condicoes-equipe").
-
-### I-031 — Jogadores veem o estado dos colegas (ex.: Machucado) · campanha/visibilidade
-
-- Implementada em 2026-09-22 **sem spec própria**, junto da I-032. Decisões tomadas: só as três
-  condições atravessam a carteirinha sem `acessoCompleto` (sem Vida em faixas) — novos campos
-  `morrendo`/`machucado`/`inconsciente` em `CampanhaMembroFichaResumoDto`
-  (`CampanhaRepository.listarMembros`). Tempo real coberto: `ficha:condicoes-alteradas` (payload
-  só `campanhaId`) emitido junto de todo `ficha:alterada`, sala `campanha:<id>`. Achado durante a
-  verificação ao vivo: `P-074` (jogador sem ficha própria não alcança a aba "Esquadrão" no
-  mobile) — não corrigido nesta task. Ver `HISTORY.md`
-  ("i-032-i-031-machucado-e-condicoes-equipe").
-
 ### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
 
 - Promovida em 2026-09-21 a `docs/specs/backlog/m9-documentos-campanha.spec.md`. Nasceu do pedido
@@ -58,30 +37,6 @@
   como item de "Fora de escopo", não implementado. Os **cadernos privados**, que já tinham saído
   desta ideia, continuam em
   `docs/superpowers/specs/2026-08-12-cadernos-campanha-busca-design.md`, sem mudança.
-
-### I-024 — `perigo` e `primario` são a mesma cor · frontend/design system
-
-- Fechada em 2026-09-07 **sem spec própria**: ao investigar para implementar, `perigo` já não usa
-  `--accent` — `ui-12-tokens-semanticos-de-estado` (`docs/specs/done/`) desacoplou a severidade
-  antes desta ideia ser revisitada (`Botao`/`Chip` usam `--erro`, `app-valor-editavel` usa `--vida`,
-  ambos vermelho fixo). Nenhuma cópia local de `.botao--perigo` restava (`ui-04`/`ui-28`…`ui-32` já
-  tinham migrado os 3 usos citados). Nada a implementar — só o registro de que já está resolvida.
-
-### I-025 — Primitivo de "stat editável" para `ficha-mini`/`ficha-atributo` · frontend/design system
-
-- Fundida com `I-026` e fechada por
-  `docs/specs/done/i-024-025-026-stepper-passo-e-cores-perigo.spec.md` (2026-09-07). Metade da ideia
-  original (editar in-line + dadinho de rolar em `ficha-mini`) já tinha virado composição de
-  `app-valor-editavel` + `app-botao-icone` (`P-057`/`P-058`), sem precisar de primitivo novo. A
-  metade que sobrou — o stepper de segurar-repetir sem digitação de `ficha-atributo` — ganhou
-  `[digitavel]="false"`/`[comSinal]` no `app-step-input` existente, em vez de um primitivo à parte.
-
-### I-026 — `[tamanho]` compacto opt-in no `StepInput` · frontend/design system
-
-- Ver `I-025` acima — a mesma spec fechou as duas: o `[tamanho]` já existia (`padrao`/`compacto`/
-  `mini`) antes desta ideia ser revisitada, mas o problema real tinha mudado de forma (`.ficha-passo`
-  não é mais um stepper completo, só um botão avulso) — o que faltava era o modo `digitavel=false`,
-  não uma variante de tamanho.
 
 ## Abertas
 

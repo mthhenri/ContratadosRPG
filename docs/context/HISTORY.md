@@ -1,5 +1,43 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-22 — `p074-p072-p071-fecho`: gatilho mobile independente do Esquadrão, blockquote do editor Markdown e fechamento do flake do Montador (fecha `P-074`/`P-072`/`P-071`)
+
+Pedido do autor: fechar as três dívidas registradas em `PROBLEMS.md` junto do fecho de
+`I-032`/`I-031`, sem spec própria.
+
+**P-074 — jogador sem ficha própria não alcançava "Esquadrão" no mobile:**
+
+- Achado ao verificar `i-032-i-031-machucado-e-condicoes-equipe` ao vivo: o painel lateral
+  (Rolagens/Esquadrão/Inv. Esquadrão) de `detalhe-jogador.page` só saía de
+  `--oculto-mobile` quando `destinoMobileFicha() === 'rolagens'`, e esse sinal só era emitido
+  pela `.ficha-nav` **dentro** de `app-ficha-campanha-card` — que não existe sem ficha própria
+  montada.
+- Correção: novo método `abrirEsquadraoSemFicha()` em `detalhe-jogador.page.ts`, que seta
+  `destinoMobileFicha` para `'rolagens'` (revela o painel) e `painelLateralAtivo` para
+  `'esquadrao'` diretamente, sem depender da `.ficha-nav`. Novo botão "Ver Esquadrão" no estado
+  vazio (`detalhe__jogador-vazio-acoes`), mesmo primitivo `app-botao`/`variante="secundario"` dos
+  dois botões vizinhos ("Criar nova ficha"/"Vincular ficha existente") — nenhuma UI nova, só mais
+  uma ação na mesma fileira. No desktop/tablet o botão também aparece (o painel já é sempre
+  visível lá), mas seu único efeito é trocar a aba ativa — inofensivo.
+- Verificado ao vivo (`verify`, Playwright) em `1920×1080` e `360×800`: um jogador sem ficha
+  própria numa campanha nova, no mobile, clicou "Ver Esquadrão" e o painel apareceu com a aba
+  Esquadrão já selecionada, sem reload. Teste novo em
+  `detalhe-jogador.page.spec.ts` ("Ver Esquadrão" no estado vazio revela o painel lateral...).
+  Suíte completa: shared 763/763, backend 573/573, frontend 2054/2054 (2053 + 1 novo), lint 0
+  erros.
+
+**P-072 — blockquote sem estilo no `EditorMarkdown`:**
+
+- Regra nova em `editor-markdown.component.scss`: `:host ::ng-deep .milkdown .editor blockquote`
+  com borda-esquerda (`--border-strong`) e texto em `--text-mute`, no mesmo padrão das regras
+  vizinhas de `pre`/`table` já existentes no arquivo.
+
+**P-071 — flake do Montador na suíte completa do frontend:**
+
+- Não reproduziu em mais uma execução completa (2054/2054, a 8ª consecutiva desde o contorno de
+  2026-09-19). Sem uma reprodução em quase uma semana de execuções, a entrada foi removida de
+  `PROBLEMS.md` — se reaparecer, reabrir com o stack/ordem de arquivos daquele momento.
+
 ## 2026-09-22 — `i-032-i-031-machucado-e-condicoes-equipe`: Machucado automático pela Vida e condições dos colegas na carteirinha (fecha `I-032`/`I-031`)
 
 Pedido do autor em conversa, sem spec própria: implementar `I-032` (Machucado deixa de ser um

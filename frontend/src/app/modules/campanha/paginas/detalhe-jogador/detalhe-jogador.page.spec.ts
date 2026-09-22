@@ -479,6 +479,27 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('.detalhe__jogador-vazio')).not.toBeNull();
   });
 
+  it('"Ver Esquadrão" no estado vazio revela o painel lateral e ativa a aba Esquadrão (P-074)', async () => {
+    const { fixture, raiz } = montar({
+      usuarioId: 2,
+      membros: membrosDois(),
+      fichas: fichas.filter((ficha) => ficha.usuarioId !== 2),
+    });
+
+    const lateral = raiz.querySelector('.detalhe__jogador-lateral')!;
+    expect(lateral.classList.contains('detalhe__jogador-lateral--oculto-mobile')).toBe(true);
+
+    const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__jogador-vazio-acoes button')).find(
+      (elemento) => elemento.textContent?.includes('Ver Esquadrão'),
+    );
+    expect(botao).toBeTruthy();
+    botao!.click();
+    fixture.detectChanges();
+
+    expect(lateral.classList.contains('detalhe__jogador-lateral--oculto-mobile')).toBe(false);
+    expect(fixture.componentInstance['painelLateralAtivo']()).toBe('esquadrao');
+  });
+
   it('cancelar a confirmação de "Remover da campanha" não desatribui a ficha', async () => {
     const { fixture, raiz, fichaService } = montar({
       usuarioId: 2,

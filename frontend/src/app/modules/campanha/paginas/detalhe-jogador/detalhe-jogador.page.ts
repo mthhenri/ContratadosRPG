@@ -223,6 +223,18 @@ export class CampanhaDetalheJogador {
   }
 
   /**
+   * Gatilho mobile independente da ficha própria (P-074): sem `app-ficha-campanha-card` montado,
+   * a `.ficha-nav` que normalmente dispara `aoMudarDestinoFicha('rolagens')` nem existe, e o
+   * painel lateral (Rolagens/Esquadrão/Inv. Esquadrão) fica preso em `--oculto-mobile` para
+   * sempre. Este método replica o mesmo destino "rolagens" direto na aba Esquadrão, sem depender
+   * da ficha embutida.
+   */
+  protected abrirEsquadraoSemFicha(): void {
+    this.destinoMobileFicha.set('rolagens');
+    this.painelLateralAtivo.set('esquadrao');
+  }
+
+  /**
    * Energia gasta por um passo de preset rolado no painel da lateral — mesmo caminho de
    * `FichaVisualizacao.aoUtilizarHabilidade`: reusa a persistência de vitalidade em vez de abrir
    * um canal novo. Pode **negativar** — regra do documento.

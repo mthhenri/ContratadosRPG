@@ -150,6 +150,19 @@
     color: var(--accent);
 }
 
+// P-072: sem isto, blockquote (`>`) cai no estilo padrão do navegador e não se distingue do
+// resto do parágrafo dentro do reset do editor.
+:host ::ng-deep .milkdown .editor blockquote {
+    margin: 0.6em 0;
+    padding: 0.2em 0 0.2em 0.9em;
+    color: var(--text-mute);
+    border-left: 3px solid var(--border-strong);
+
+    p {
+        margin: 0.3em 0;
+    }
+}
+
 // Listas (ordenada/desordenada, P-072-like: sem isto, `ul`/`ol`/`li` renderizam sem nenhuma
 // marca visual — o plugin de lista do Milkdown não usa marcador nativo do navegador, e sim um
 // `data-label` (`•`/`1.`/`2.`...) no próprio `<li>`, que precisa de `::before` pra aparecer.

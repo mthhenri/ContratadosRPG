@@ -420,6 +420,20 @@
                             <app-icone nome="vincular" />
                             Vincular ficha existente
                         </button>
+                        <!-- P-074: sem ficha própria, a `.ficha-nav` que normalmente abre o painel
+                     lateral no mobile nunca existe — este botão é o gatilho independente. No
+                     desktop/tablet o painel já está sempre visível ao lado, então o botão só
+                     troca a aba ativa para Esquadrão, sem precisar de CSS de visibilidade. -->
+                        <button
+                            app-botao
+                            variante="secundario"
+                            class="botao botao--secundario detalhe__acao"
+                            type="button"
+                            (click)="abrirEsquadraoSemFicha()"
+                        >
+                            <app-icone nome="agente" />
+                            Ver Esquadrão
+                        </button>
                     </div>
                 </div>
                 }
