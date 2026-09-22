@@ -112,8 +112,11 @@
   só como painel lateral/flutuante dentro da mesma aba: **histórico de rolagens**, **anotações da
   ficha** e o **Caderno da campanha**. Decisão do autor (2026-09-22): via `window.open` com a mesma
   SPA roteada para o painel (opção A entre as cogitadas — ver descartadas abaixo), mantendo
-  sincronia em tempo real (WebSocket) com a janela principal. O visual da janela externa (chrome/
-  layout) ainda precisa ser definido antes de implementar.
+  sincronia em tempo real (WebSocket) com a janela principal. Visual decidido: header mínimo no
+  topo da janela com contexto ("CONTRATADOS RPG // <campanha ou ficha>", fonte mono igual ao resto
+  do app) + link para voltar à aba principal — não o cabeçalho do `app-painel-flutuante` (que tem
+  drag/minimizar, sem sentido numa janela real) nem sem chrome nenhum. Ordem de implementação: uma
+  spec por painel, **Histórico → Anotações → Caderno** (do menos pro mais acoplado à feature).
 - **Origem:** pedido do autor em conversa (2026-09-11) para o histórico de rolagens; ampliado em
   2026-09-22 para cobrir também anotações da ficha e Caderno, na mesma conversa em que a opção A
   foi escolhida.
