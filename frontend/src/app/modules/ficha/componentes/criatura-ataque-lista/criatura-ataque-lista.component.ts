@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -13,6 +13,12 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
 const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as CustoAcaoEnum[];
+
+/** Um ataque da ficha com o índice original (preservado ao ordenar por nome). */
+interface AtaqueIndexado {
+  readonly item: FichaCriaturaAtaqueDto;
+  readonly indice: number;
+}
 
 /** Editor no próprio lugar da lista `ataques` da ficha de criatura (m4-04b), com botão de rolagem por linha. */
 @Component({
@@ -53,6 +59,13 @@ export class CriaturaAtaqueLista {
     area: new FormControl(false, { nonNullable: true }),
     efeito: new FormControl('', { nonNullable: true }),
   });
+
+  /** Itens ordenados por nome, com o índice original preservado (edição/remoção operam sobre ele). */
+  protected readonly itensOrdenados = computed<AtaqueIndexado[]>(() =>
+    this.itens()
+      .map((item, indice) => ({ item, indice }))
+      .sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR', { sensitivity: 'base' })),
+  );
 
   protected editando(indice: number): boolean {
     return this.indiceEmEdicao() === indice;

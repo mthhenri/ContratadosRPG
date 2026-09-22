@@ -4,8 +4,19 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-14 · **Última decisão registrada:**
-> `criatura-classificacao-ordem-mobile` concluída — só no mobile (`bp.mobile`, `&__ident-corpo` já
+> **Última revisão:** 2026-09-22 · **Última decisão registrada:**
+> `criatura-ataques-habilidades-editor-alinhado` concluída — `CriaturaAtaqueLista`/
+> `CriaturaHabilidadeLista` alinhadas ao editor-no-lugar de `FichaHabilidades` (jogador): editar um
+> item mantém o card na própria célula da grade (removido o `grid-column: 1/-1` + moldura
+> tracejada que empurrava os cards seguintes), o formulário de Adicionar virou o 1º item da lista
+> (era `&__form-novo` no fim, fora do `<ul>`), as duas listas ordenam por nome
+> (`localeCompare('pt-BR')`) e as 3 fórmulas de Ataque (Teste/Dano/Dano crítico) empilharam numa
+> coluna só. `@container (min-width: 480px)` novo em `.ataque-lista__linha-inicial` evita squeeze
+> da fileira custo/nome/área agora que o card de edição não força mais largura cheia. Suíte focada
+> 10/10; completa `frontend` 1788/1794 (6 falhas pré-existentes sem relação). Verificado ao vivo
+> nos 4 viewports padrão, lista/adicionar/editar nas duas abas. Task solta, sem spec. Detalhe em
+> `HISTORY.md`.
+> Antes: `criatura-classificacao-ordem-mobile` concluída — só no mobile (`bp.mobile`, `&__ident-corpo` já
 > em 1 coluna), a fileira de Classificação (leitura ou edição — mesma posição entre si, ver entrada
 > abaixo) voltou pra logo abaixo da foto, antes da coluna Combate, em vez do fim do card inteiro.
 > `order` do CSS Grid dentro de `bp.mobile` (`&__ident-coluna--combate: order 2`;

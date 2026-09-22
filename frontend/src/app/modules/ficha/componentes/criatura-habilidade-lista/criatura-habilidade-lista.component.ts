@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -13,6 +13,12 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
 
 const TIPOS: readonly HabilidadeTipoCriaturaEnum[] = Object.values(HabilidadeTipoCriaturaEnum) as HabilidadeTipoCriaturaEnum[];
+
+/** Uma habilidade da ficha com o índice original (preservado ao ordenar por nome). */
+interface HabilidadeIndexada {
+  readonly item: FichaCriaturaHabilidadeDto;
+  readonly indice: number;
+}
 
 /** Editor no próprio lugar da lista `habilidades` (Habilidades Especiais) da ficha de criatura (m4-04b). */
 @Component({
@@ -42,6 +48,13 @@ export class CriaturaHabilidadeLista {
     descricao: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     restricao: new FormControl('', { nonNullable: true }),
   });
+
+  /** Itens ordenados por nome, com o índice original preservado (edição/remoção operam sobre ele). */
+  protected readonly itensOrdenados = computed<HabilidadeIndexada[]>(() =>
+    this.itens()
+      .map((item, indice) => ({ item, indice }))
+      .sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR', { sensitivity: 'base' })),
+  );
 
   protected editando(indice: number): boolean {
     return this.indiceEmEdicao() === indice;

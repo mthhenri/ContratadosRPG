@@ -29,14 +29,23 @@
         }
     </header>
 
-    @if (!itens().length) {
+    @if (!itens().length && !editando(-1)) {
         <app-estado-vazio tamanho="compacto" titulo="Nenhum ataque." />
     }
 
     <ul class="ataque-lista__itens">
-        @for (item of itens(); track $index) {
-            <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando($index)">
-                @if (editando($index)) {
+        @if (editando(-1)) {
+            <li class="ataque-lista__item ataque-lista__item--editando">
+                <ng-container
+                    *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
+                />
+            </li>
+        }
+        @for (entrada of itensOrdenados(); track entrada.indice) {
+            @let item = entrada.item;
+            @let idx = entrada.indice;
+            <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando(idx)">
+                @if (editando(idx)) {
                     <ng-container
                         *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
                     />
@@ -92,16 +101,16 @@
                                     class="ataque-lista__acao"
                                     type="button"
                                     aria-label="Editar"
-                                    (click)="editar($index)"
+                                    (click)="editar(idx)"
                                 >
                                     <app-icone nome="editar" />
                                 </button>
-                                @if (indiceRemovendo() === $index) {
+                                @if (indiceRemovendo() === idx) {
                                     <button
                                         app-botao
                                         class="ataque-lista__acao ataque-lista__acao--confirmar"
                                         type="button"
-                                        (click)="remover($index)"
+                                        (click)="remover(idx)"
                                     >
                                         Confirmar remoção
                                     </button>
@@ -119,7 +128,7 @@
                                         class="ataque-lista__acao"
                                         type="button"
                                         aria-label="Remover"
-                                        (click)="pedirRemocao($index)"
+                                        (click)="pedirRemocao(idx)"
                                     >
                                         <app-icone nome="excluir" />
                                     </button>
@@ -131,12 +140,6 @@
             </li>
         }
     </ul>
-
-    @if (editando(-1)) {
-        <div class="ataque-lista__form-novo">
-            <ng-container *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }" />
-        </div>
-    }
 </section>
 
 <!-- Formulário em grade rotulada: a linha de flex-wrap anterior deixava sete controles sem rótulo
