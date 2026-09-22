@@ -206,6 +206,9 @@
         &__rolar {
             min-height: bp.$alvo-toque;
         }
+        &__guia {
+            width: 100%;
+        }
         &--posicionada {
             right: auto;
             bottom: auto;
