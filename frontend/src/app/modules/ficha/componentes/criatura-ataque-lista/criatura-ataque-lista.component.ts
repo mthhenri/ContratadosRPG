@@ -1,4 +1,14 @@
-import { Component, effect, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -16,6 +26,12 @@ import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.com
 import { rotuloCustoAcao, rotuloCustoAcaoCurto } from '../../rotulos-criatura';
 
 const CUSTOS_ACAO: readonly CustoAcaoEnum[] = Object.values(CustoAcaoEnum) as CustoAcaoEnum[];
+
+/** Um ataque da ficha com o índice original (preservado ao ordenar por nome). */
+interface AtaqueIndexado {
+  readonly item: FichaCriaturaAtaqueDto;
+  readonly indice: number;
+}
 
 /** Editor no próprio lugar da lista `ataques` da ficha de criatura (m4-04b), com botão de rolagem por linha. */
 @Component({
@@ -68,6 +84,13 @@ export class CriaturaAtaqueLista {
     efeito: new FormControl('', { nonNullable: true }),
   });
 
+  /** Itens ordenados por nome, com o índice original preservado (edição/remoção operam sobre ele). */
+  protected readonly itensOrdenados = computed<AtaqueIndexado[]>(() =>
+    this.itens()
+      .map((item, indice) => ({ item, indice }))
+      .sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR', { sensitivity: 'base' })),
+  );
+
   protected editando(indice: number): boolean {
     return this.indiceEmEdicao() === indice;
   }
@@ -86,13 +109,14 @@ export class CriaturaAtaqueLista {
     }
   }
 
-  /** Formulário de item novo (`indiceEmEdicao === -1`), montado no fim da lista rolável. */
+  /** Formulário de item novo (`indiceEmEdicao === -1`), montado como 1º item da lista rolável. */
   private readonly formNovo = viewChild<ElementRef<HTMLElement>>('formNovo');
 
   constructor() {
     // A lista rola por dentro quando a coluna Status está travada na altura da vizinha
-    // (`CriaturaVisualizacao`): o formulário de item novo nasce no fim dela e pode ficar abaixo da
-    // dobra — traz ele à vista assim que existir. `nearest` só rola se precisar.
+    // (`CriaturaVisualizacao`): o formulário de item novo nasce no topo dela, mas a rolagem pode
+    // estar deslocada pra baixo (lista longa) — traz ele à vista assim que existir. `nearest` só
+    // rola se precisar.
     effect(() => {
       const alvo = this.formNovo()?.nativeElement;
       if (alvo && typeof alvo.scrollIntoView === 'function') {

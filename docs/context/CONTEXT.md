@@ -9,8 +9,24 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-21 · **Última decisão registrada:**
-> `espectador-coluna-acoes-e-iniciativa` concluída: Painel do espectador ganhou `app-coluna-acoes`
+> **Última revisão:** 2026-09-22 · **Última decisão registrada:**
+> `criatura-ataques-habilidades-editor-alinhado` concluída — `CriaturaAtaqueLista`/
+> `CriaturaHabilidadeLista` alinhadas ao editor-no-lugar de `FichaHabilidades` (jogador): editar um
+> item mantém o card na própria célula da grade (removido o `grid-column: 1/-1` + moldura
+> tracejada que empurrava os cards seguintes), o formulário de Adicionar virou o 1º item da lista
+> (era `&__form-novo` no fim, fora do `<ul>`), as duas listas ordenam por nome
+> (`localeCompare('pt-BR')`) e as 3 fórmulas de Ataque (Teste/Dano/Dano crítico) empilharam numa
+> coluna só. `@container (min-width: 480px)` novo em `.ataque-lista__linha-inicial` evita squeeze
+> da fileira custo/nome/área agora que o card de edição não força mais largura cheia. Reconciliado
+> à mão contra o trabalho concorrente de `criatura-ataque-lista`/`criatura-habilidade-lista` que
+> chegou primeiro em `master` (selos de custo/tipo coloridos, `EditorMarkdown`/
+> `HabilidadeDescricao`, `ConfirmacaoService` no lugar da confirmação inline, rolagem interna
+> `&__rolagem`) — as duas features convivem: a rolagem interna e o formulário de item novo
+> (`viewChild('formNovo')`/`scrollIntoView`) preservados, só a posição de montagem migrou do fim
+> pro início da lista. Suíte focada `criatura-ataque-lista`/`criatura-habilidade-lista` com 2 casos
+> novos por componente (ordenação, formulário como 1º item). Verificado ao vivo nos 4 viewports
+> padrão. Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `espectador-coluna-acoes-e-iniciativa` concluída: Painel do espectador ganhou `app-coluna-acoes`
 > ("Iniciativa" sempre visível + "Rolagens" como toggle que esconde a coluna e expande a grade de
 > fichas), cabeçalho no molde "shell" (índice `//` + chip + régua) e o ícone "i" de descrição da
 > campanha (mesmo padrão de `detalhe-jogador`). Nova página **separada**

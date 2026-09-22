@@ -123,12 +123,9 @@
         background: var(--surface-2);
         border: 1px solid var(--border);
         border-radius: 5px;
-        &--editando {
-            grid-column: 1 / -1;
-            background: transparent;
-            border-style: dashed;
-            border-color: var(--border-strong);
-        }
+        // Editar mantém o item na própria célula da grade (mesmo efeito de `FichaHabilidades` pro
+        // editor de habilidades do jogador) — a alteração fica no mesmo ponto da lista e no mesmo
+        // formato visual do card, sem expandir pra largura cheia nem empurrar os itens seguintes.
     }
     &__cabecalho-item {
         display: flex;
@@ -219,13 +216,6 @@
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
         width: 100%;
-    }
-    &__form-novo {
-        margin-top: 11px;
-        padding: 12px 14px;
-        background: var(--surface-2);
-        border: 1px dashed var(--border-strong);
-        border-radius: 5px;
     }
     &__campo {
         display: grid;

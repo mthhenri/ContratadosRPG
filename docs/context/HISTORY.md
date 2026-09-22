@@ -1,5 +1,99 @@
 # HISTORY.md — Histórico do Projeto
 
+
+## 2026-09-22 — criatura-ataques-habilidades-editor-alinhado: mesmo efeito de edição-no-lugar do jogador, formulário como 1º item, fórmulas empilhadas, ordem alfabética
+
+Pedido direto do autor com screenshot (criação de Ataque na ficha de criatura): 3 queixas sobre
+`CriaturaAtaqueLista`/`CriaturaHabilidadeLista` (`criatura-ataque-lista`/`criatura-habilidade-lista`,
+ambas com o mesmo desenho — comentário do próprio SCSS já dizia "mesmo desenho de cabeçalho/card
+de `criatura-ataque-lista`"). (1) Teste/Dano/Dano crítico do formulário de Ataques lado a lado
+(`.ataque-lista__formulas`, grade de 3 colunas) deveriam ficar empilhados. (2) Editar um ataque/
+habilidade não tinha "o mesmo efeito que temos na alteração de habilidades na ficha de jogador,
+que é manter a alteração visualmente no mesmo ponto da lista e no mesmo formato visual" —
+análogo escolhido e inspecionado no código: `FichaHabilidades` (`ficha-habilidades.component.*`,
+editor de habilidades do jogador). (3) O formulário de criar (Adicionar) ficava no fundo da
+lista (`&__form-novo`, fora do `<ul>`, depois de todos os itens) — pedido: virar o "primeiro
+item". Um 4º pedido veio junto: as duas listas deveriam ordenar por nome.
+
+**Causa raiz do item 2, achada comparando os dois componentes:** ambas as listas de criatura
+usam uma grade CSS `auto-fit, minmax(300px, 1fr)` pros cards (`&__itens`), e o item em edição
+ganhava `&--editando { grid-column: 1 / -1; background: transparent; border-style: dashed; }` —
+expande pra largura cheia da grade, empurrando os cards seguintes pra próxima linha e trocando o
+fundo/borda por um estilo diferente do card de leitura. `FichaHabilidades` (jogador) faz o
+oposto: `.habilidades__item--edicao` (a classe existe no HTML) **não tem nenhum estilo
+associado** no SCSS — o editor herda exatamente a aparência do `.habilidades__item` de leitura e
+fica na própria célula da grade de 2 colunas, sem espalhar nem reordenar nada. Replicado nos dois
+componentes de criatura: os blocos `&--editando`/`&--edicao` foram removidos das duas SCSS
+(nenhuma substituição — o item de edição agora é indistinguível em moldura do item de leitura,
+igual ao jogador), e `.ataque-lista__item`/`.habilidade-lista__item` ganharam `container-type:
+inline-size` pra alimentar o ajuste do item 1 abaixo.
+
+**Item 1 (fórmulas empilhadas) resolve, de quebra, o efeito colateral esperado do item 2:** sem o
+`grid-column: 1/-1`, o formulário de Ataques (mais complexo que o de Habilidades — custo de ação,
+nome, área, 3 fórmulas, efeito) precisa caber na largura de uma única célula da grade (300px+),
+não mais na largura da seção inteira. `.ataque-lista__formulas` virou uma coluna (`grid-
+template-columns: 1fr`, era `repeat(3, minmax(0,1fr))`) — Teste, Dano e Dano Crítico agora cada
+um na própria linha, como pedido. A fileira `custo de ação + nome + atinge área`
+(`.ataque-lista__linha-inicial`) continuava rígida (3 colunas fixas) e ficaria espremida numa
+célula de 300px; em vez de outro breakpoint de viewport (mesma lição já registrada nesta HISTORY
+mais de uma vez: "a largura que espreme é a do card, não a do viewport" — `ficha-atributos__grade`/
+`ficha-vitalidade`/`ficha-campanha-card`), ganhou `@container (min-width: 480px)` sobre o
+`container-type` do item — empilhada por padrão (mesmo comportamento que o antigo `bp.mobile` já
+dava no celular), lado a lado só quando a célula realmente tem espaço. `HabilidadeLista` não
+precisou de ajuste equivalente — seu formulário já usava `grid-template-columns: repeat(auto-fit,
+minmax(150px,1fr))`, responsivo à própria largura sem depender de largura cheia.
+
+**Item 3 (formulário de Adicionar como 1º item):** nos dois componentes, o bloco `@if
+(editando(-1))` que renderizava `&__form-novo` **fora** do `<ul>`, depois do `@for`, migrou pra
+**dentro** do `<ul>`, **antes** do `@for` — primeiro `<li>` da lista, mesma classe `&__item` do
+item normal (sem `&__form-novo`, removido do SCSS por não ter mais uso). O `@if` do estado vazio
+("Nenhum ataque."/"Nenhuma habilidade especial.") ganhou `&& !editando(-1)` — mesmo padrão que
+`FichaHabilidades` já usava pra não mostrar a mensagem de lista vazia com o formulário de
+adicionar aberto logo abaixo.
+
+**Item 4 (ordem alfabética):** as duas listas ganharam um `computed` `itensOrdenados`
+(`AtaqueIndexado`/`HabilidadeIndexada`, réplica do padrão `HabilidadeIndexada` que
+`FichaHabilidades` já usa pra busca/filtro) — mapeia `itens()` pra `{item, indice}`, ordena por
+`item.nome.localeCompare(b.item.nome, 'pt-BR', {sensitivity:'base'})` (mesmo padrão de
+`campanha-equipe.util.ts`/`detalhe-mestre.page.ts`/`ficha-inventario`), preservando o índice
+original — editar/remover continuam operando sobre o índice real da lista bruta, não da posição
+ordenada. O template trocou `itens()`/`$index` por `itensOrdenados()`/`entrada.indice` nos dois
+arquivos.
+
+Testes: `criatura-ataque-lista`/`criatura-habilidade-lista` focado 10/10 (specs existentes, sem
+caso novo — a spec de "organiza o formulário com custo, nome, área, fórmulas e efeito em
+textarea" já cobria a estrutura, só a disposição visual mudou); suíte completa `frontend`
+1788/1794 (6 falhas pré-existentes sem relação — `painel-flutuante` timeout,
+`inventario-esquadrao` card duplicado, `detalhe-jogador` `matchMedia` read-only em jsdom,
+`detalhe-mestre` duplicar-ficha — mesma classe já documentada nesta HISTORY); `tsc --noEmit`
+limpo; lint sem erro novo (só os avisos pré-existentes de aspas/tamanho de linha que já cobrem o
+arquivo inteiro, reproduzidos também num componente-irmão não tocado,
+`criatura-resistencia-lista`, como controle). Verificação ao vivo (Postgres 16 local sem Docker —
+daemon indisponível no ambiente, mesmo contorno de sessões anteriores — + backend + frontend
+reais, cenário via REST cru com 1 criatura solta e 3 ataques/3 habilidades com nomes fora de
+ordem) nos 4 viewports padrão: lista em ordem alfabética nas duas abas, formulário de Adicionar
+como primeiro card da grade (nunca no fim), Editar mantendo o card exatamente na própria posição/
+moldura (comparado lado a lado com `Investida`/`Zumbido Perfurante` intactos ao lado), fórmulas de
+Ataque empilhadas, sem overflow em nenhum viewport — inclusive `1366×768`, onde a célula do card
+é estreita o bastante pra exercitar o fallback do `@container`. `criatura-resistencia-lista`
+(mesmo padrão de formulário-no-fundo/edição-full-span) ficou fora do escopo — o pedido citou só
+Ataques e Habilidades. Task solta, sem spec.
+
+
+**Reconciliação com trabalho concorrente em `master`:** entre a implementação e a abertura do PR,
+`master` recebeu um lote de melhorias independentes nos dois mesmos componentes — selos de custo/
+tipo coloridos (`classeMarcaCusto`/`classeChipTipo`, tokens `--selo-*`), `EditorMarkdown`/
+`HabilidadeDescricao` no lugar de texto plano, `ConfirmacaoService` substituindo a confirmação
+inline (`indiceRemovendo`/`pedirRemocao`/`cancelarRemocao`, removidos), e rolagem interna da lista
+(`&__rolagem`/`appOverflowFade`, com `viewChild('formNovo')`/`effect(scrollIntoView)` trazendo o
+formulário de item novo à vista). Merge automático via `git merge` gerou conflito nos 4 arquivos
+de `.ts`/`.html` (0 conflito nos `.scss`, que o algoritmo combinou sozinho) — reconciliados à mão
+em vez de escolher um lado: o código final carrega as duas features. Único ajuste de fundo: o
+comentário/efeito de `formNovo` (que dizia "nasce no fim da lista rolável") passou a dizer "nasce
+como 1º item", e o teste de master que checava `.form-novo` dentro da área rolável foi ajustado
+pra checar o formulário como primeiro filho de `.itens` (a classe `&__form-novo` não existe mais —
+o item de adicionar usa a mesma `&__item` do item de leitura, ponto central desta task).
+
 ## 2026-09-22 — `iniciativa-ajustes-visuais`: Vida/Energia 50/50 no cartão de combatente, confirmação padrão de rolagem pública e painel avulso maior
 
 Três pedidos visuais do autor na mesma conversa, com referência de print (o autor mandou uma

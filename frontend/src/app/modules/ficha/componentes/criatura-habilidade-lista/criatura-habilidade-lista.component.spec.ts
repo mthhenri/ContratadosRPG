@@ -11,10 +11,10 @@ describe('CriaturaHabilidadeLista', () => {
     { nome: 'Pele de Pedra', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Reduz dano físico.' },
   ];
 
-  function montar(editavel = true) {
+  function montar(editavel = true, itensIniciais: FichaCriaturaHabilidadeDto[] = itens) {
     TestBed.configureTestingModule({ imports: [CriaturaHabilidadeLista] });
     const fixture = TestBed.createComponent(CriaturaHabilidadeLista);
-    fixture.componentRef.setInput('itens', itens);
+    fixture.componentRef.setInput('itens', itensIniciais);
     fixture.componentRef.setInput('editavel', editavel);
     fixture.detectChanges();
     const emitidos: (readonly FichaCriaturaHabilidadeDto[])[] = [];
@@ -28,6 +28,17 @@ describe('CriaturaHabilidadeLista', () => {
     expect(nomes).toEqual(['Pele de Pedra']);
   });
 
+  it('ordena as habilidades por nome', () => {
+    const desordenadas: FichaCriaturaHabilidadeDto[] = [
+      { nome: 'Visão no Escuro', tipo: HabilidadeTipoCriaturaEnum.PASSIVA, descricao: 'Enxerga no escuro.' },
+      { nome: 'Absorver Impacto', tipo: HabilidadeTipoCriaturaEnum.GATILHO, descricao: 'Reduz dano.' },
+      { nome: 'Metamorfose', tipo: HabilidadeTipoCriaturaEnum.ATIVA, descricao: 'Muda de forma.' },
+    ];
+    const { raiz } = montar(false, desordenadas);
+    const nomes = Array.from(raiz.querySelectorAll('.habilidade-lista__nome')).map((n) => n.textContent?.trim());
+    expect(nomes).toEqual(['Absorver Impacto', 'Metamorfose', 'Visão no Escuro']);
+  });
+
   it('mostra a descrição pelo componente com teto de linhas, que já traz o nome acessível', () => {
     const { raiz } = montar(false);
     const descricao = raiz.querySelector('app-habilidade-descricao.habilidade-lista__descricao');
@@ -39,14 +50,25 @@ describe('CriaturaHabilidadeLista', () => {
     ).toBe('Descrição de Pele de Pedra');
   });
 
+  it('o formulário de adicionar nasce como o primeiro item da lista', () => {
+    const { fixture, raiz } = montar(true);
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+
+    const primeiroItem = raiz.querySelector('.habilidade-lista__itens > .habilidade-lista__item');
+    expect(primeiroItem?.querySelector('.habilidade-lista__form')).not.toBeNull();
+    expect(primeiroItem?.querySelector('.habilidade-lista__nome')).toBeNull();
+  });
+
   it('lista e formulário de item novo ficam na mesma área rolável, com o cabeçalho fora dela', () => {
     const { fixture, raiz } = montar(true);
     fixture.componentInstance['adicionar']();
     fixture.detectChanges();
 
     const rolagem = raiz.querySelector('.habilidade-lista__rolagem')!;
-    expect(rolagem.querySelector('.habilidade-lista__itens')).not.toBeNull();
-    expect(rolagem.querySelector('.habilidade-lista__form-novo')).not.toBeNull();
+    const itensList = rolagem.querySelector('.habilidade-lista__itens');
+    expect(itensList).not.toBeNull();
+    expect(itensList?.querySelector('.habilidade-lista__form')).not.toBeNull();
     expect(rolagem.querySelector('.habilidade-lista__cabecalho')).toBeNull();
     expect(raiz.querySelector('.habilidade-lista__cabecalho')).not.toBeNull();
   });

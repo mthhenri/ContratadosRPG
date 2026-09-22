@@ -13,10 +13,10 @@ describe('CriaturaAtaqueLista', () => {
     { nome: 'Golpe de Pedra', teste: 'lutad20kh1+3', custoAcao: CustoAcaoEnum.PADRAO, dano: '4D12+10', danoCritico: '8D12+20', area: false },
   ];
 
-  function montar(editavel = true) {
+  function montar(editavel = true, itensIniciais: FichaCriaturaAtaqueDto[] = itens) {
     TestBed.configureTestingModule({ imports: [CriaturaAtaqueLista] });
     const fixture = TestBed.createComponent(CriaturaAtaqueLista);
-    fixture.componentRef.setInput('itens', itens);
+    fixture.componentRef.setInput('itens', itensIniciais);
     fixture.componentRef.setInput('editavel', editavel);
     fixture.detectChanges();
     const emitidos: (readonly FichaCriaturaAtaqueDto[])[] = [];
@@ -34,6 +34,17 @@ describe('CriaturaAtaqueLista', () => {
     expect(raiz.querySelector('.ataque-lista__cabecalho-item')?.textContent).not.toContain('4D12');
   });
 
+  it('ordena os ataques por nome', () => {
+    const desordenados: FichaCriaturaAtaqueDto[] = [
+      { nome: 'Zumbido Perfurante', teste: '1d20', custoAcao: CustoAcaoEnum.PADRAO, dano: '3D12', danoCritico: '6D12', area: false },
+      { nome: 'Ecoar', teste: '1d20', custoAcao: CustoAcaoEnum.PADRAO, dano: '2D12', danoCritico: '4D12', area: false },
+      { nome: 'Investida', teste: '1d20', custoAcao: CustoAcaoEnum.COMPLETA, dano: '4D12', danoCritico: '8D12', area: false },
+    ];
+    const { raiz } = montar(false, desordenados);
+    const nomes = Array.from(raiz.querySelectorAll('.ataque-lista__nome')).map((n) => n.textContent?.trim());
+    expect(nomes).toEqual(['Ecoar', 'Investida', 'Zumbido Perfurante']);
+  });
+
   it('cada botão de rolagem mostra a própria expressão no tooltip (teste, dano e dano crítico)', () => {
     const { fixture } = montar(false);
     const tooltipDe = (classe: string) =>
@@ -44,7 +55,7 @@ describe('CriaturaAtaqueLista', () => {
     expect(tooltipDe('.ataque-lista__rolar--critico')).toBe('Rolar dano crítico: 8D12+20');
   });
 
-  it('organiza o formulário com custo, nome, área, fórmulas e efeito no editor Markdown', () => {
+  it('organiza o formulário com custo, nome, área, fórmulas empilhadas e efeito no editor Markdown', () => {
     const { fixture, raiz } = montar();
     fixture.componentInstance['adicionar']();
     fixture.detectChanges();
@@ -57,6 +68,16 @@ describe('CriaturaAtaqueLista', () => {
     expect(linhaInicial.querySelector('input[type="checkbox"]')).not.toBeNull();
     expect(raiz.querySelectorAll('.ataque-lista__formulas .ataque-lista__campo')).toHaveLength(3);
     expect(raiz.querySelector('app-editor-markdown.ataque-lista__textarea')).not.toBeNull();
+  });
+
+  it('o formulário de adicionar nasce como o primeiro item da lista', () => {
+    const { fixture, raiz } = montar(true);
+    fixture.componentInstance['adicionar']();
+    fixture.detectChanges();
+
+    const primeiroItem = raiz.querySelector('.ataque-lista__itens > .ataque-lista__item');
+    expect(primeiroItem?.querySelector('.ataque-lista__form')).not.toBeNull();
+    expect(primeiroItem?.querySelector('.ataque-lista__nome')).toBeNull();
   });
 
   it('emite rolarAtaque ao clicar no botão de dado', () => {
@@ -100,8 +121,9 @@ describe('CriaturaAtaqueLista', () => {
     fixture.detectChanges();
 
     const rolagem = raiz.querySelector('.ataque-lista__rolagem')!;
-    expect(rolagem.querySelector('.ataque-lista__itens')).not.toBeNull();
-    expect(rolagem.querySelector('.ataque-lista__form-novo')).not.toBeNull();
+    const itensList = rolagem.querySelector('.ataque-lista__itens');
+    expect(itensList).not.toBeNull();
+    expect(itensList?.querySelector('.ataque-lista__form')).not.toBeNull();
     expect(rolagem.querySelector('.ataque-lista__cabecalho')).toBeNull();
     expect(raiz.querySelector('.ataque-lista__cabecalho')).not.toBeNull();
   });
