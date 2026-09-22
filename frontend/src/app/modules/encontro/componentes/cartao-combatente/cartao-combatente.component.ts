@@ -241,6 +241,18 @@ export class CartaoCombatente {
   protected readonly temEnergia = computed(() => this.combatente().energiaMaxima !== null);
 
   /**
+   * Habilita os steppers `−`/`+` de Vida/Energia — só o avulso, que não tem ficha própria pra
+   * abrir e editar lá (pedido do autor: pra quem tem ficha, ajustar Vida/Energia direto no cartão
+   * da Iniciativa duplicava um caminho de edição e arriscava divergir do valor real da ficha;
+   * "Receber dano" continua para todos, é fluxo de combate, não micro-ajuste). O gatilho mobile
+   * "Ajustar"/"Fechar" (`alternarAjuste`) só existe para revelar esses steppers, então segue o
+   * mesmo gate.
+   */
+  protected readonly podeAjustarVidaEnergia = computed(
+    () => this.podeAjustar() && this.combatente().origem === CombatenteOrigemEnum.AVULSO,
+  );
+
+  /**
    * Rodapé narrativo do cartão: as condições da ficha que quem joga alternou à mão
    * (`morrendo`/`machucado`/`inconsciente` — m3-10), lidas e nunca deduzidas da Vida. "Morrendo"
    * fica de fora porque já é a etiqueta do topo.
