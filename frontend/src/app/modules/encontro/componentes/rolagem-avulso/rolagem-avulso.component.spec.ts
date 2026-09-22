@@ -5,6 +5,7 @@ import type { EncontroCombatenteResumoDto } from '@contratados-rpg/shared/dtos/e
 import { CadenciaEnum, CombatenteOrigemEnum } from '@contratados-rpg/shared/enums';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { RolagemAvulso } from './rolagem-avulso.component';
@@ -78,22 +79,34 @@ describe('RolagemAvulso', () => {
     };
   }
 
-  it('nasce oculto e pede confirmação antes de tornar as próximas rolagens públicas', () => {
+  it('nasce oculto e pede confirmação (ui-15, ConfirmacaoService) antes de tornar as próximas rolagens públicas', async () => {
     const { fixture, elemento } = montar();
+    const confirmacaoService = TestBed.inject(ConfirmacaoService);
     const alternador = elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__visibilidade');
 
     expect(alternador?.getAttribute('aria-pressed')).toBe('true');
     alternador?.click();
     fixture.detectChanges();
 
-    expect(elemento.querySelector('app-modal')).not.toBeNull();
-    expect(elemento.querySelector('.modal__fechar')).not.toBeNull();
-    expect(elemento.querySelector('.modal__titulo')?.textContent).toContain('Tornar rolagens públicas');
+    expect(confirmacaoService.pedido()?.titulo).toBe('Tornar rolagens públicas');
     expect(alternador?.getAttribute('aria-pressed')).toBe('true');
 
-    elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__confirmar-publica')?.click();
+    await confirmacaoService.responder(true);
     fixture.detectChanges();
     expect(alternador?.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('cancelar a confirmação mantém as rolagens ocultas', async () => {
+    const { fixture, elemento } = montar();
+    const confirmacaoService = TestBed.inject(ConfirmacaoService);
+    const alternador = elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__visibilidade');
+
+    alternador?.click();
+    fixture.detectChanges();
+    await confirmacaoService.responder(false);
+    fixture.detectChanges();
+
+    expect(alternador?.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('pode ser arrastado pelo cabeçalho e permanece dentro do viewport', () => {

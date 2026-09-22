@@ -20,7 +20,9 @@
     z-index: 35;
     right: 24px;
     bottom: 88px;
-    width: min(360px, calc(100vw - 24px));
+    // +50% de largura (pedido do autor, achado ao vivo): a versão de 360px espremia
+    // rótulo/expressão/botões numa coluna estreita demais pro conteúdo.
+    width: min(540px, calc(100vw - 24px));
     padding: var(--pad-card);
     background: var(--surface);
     border: 1px solid var(--border-strong);
@@ -84,7 +86,7 @@
 
     &__formulario {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr auto auto;
         gap: 10px;
         align-items: end;
     }
@@ -207,7 +209,7 @@
         &--posicionada {
             right: auto;
             bottom: auto;
-            width: min(360px, calc(100vw - 24px));
+            width: min(540px, calc(100vw - 24px));
         }
     }
 }
@@ -218,33 +220,6 @@
     @include bp.mobile {
         top: 68px;
         bottom: auto;
-    }
-}
-
-.revelar-rolagem {
-    &__aviso {
-        margin: 0 0 16px;
-        color: var(--text-dim);
-        font: 13px/1.6 var(--font-sans);
-    }
-    &__acoes {
-        display: flex;
-        gap: 10px;
-        > button {
-            flex: 1;
-        }
-    }
-    &__acao {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    @include bp.mobile {
-        &__acoes {
-            flex-direction: column;
-        }
     }
 }
 

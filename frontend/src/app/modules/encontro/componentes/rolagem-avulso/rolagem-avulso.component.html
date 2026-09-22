@@ -56,6 +56,8 @@
             {{ oculta() ? "Rolagens Ocultas (Privadas)" : "Rolagens Públicas" }}
         </button>
 
+        <app-guia-formula class="rolagem-avulso__guia" />
+
         <button
             app-botao
             variante="secundario"
@@ -71,38 +73,3 @@
 
     <p class="rolagem-avulso__ajuda">Dados e operações livres, sem atributos de ficha.</p>
 </section>
-
-@if (confirmandoPublica()) {
-    <app-modal
-        [aberto]="true"
-        titulo="Tornar rolagens públicas"
-        (fechou)="confirmandoPublica.set(false)"
-    >
-        <div class="revelar-rolagem">
-            <p class="revelar-rolagem__aviso">
-                A partir de agora, as rolagens de {{ combatente().nome }} ficam visíveis para os
-                jogadores. Tem certeza?
-            </p>
-            <div class="revelar-rolagem__acoes">
-                <button
-                    app-botao
-                    variante="primario"
-                    class="revelar-rolagem__acao rolagem-avulso__confirmar-publica"
-                    type="button"
-                    (click)="confirmarPublica()"
-                >
-                    <app-icone nome="olho" /> Tornar pública
-                </button>
-                <button
-                    app-botao
-                    variante="secundario"
-                    class="revelar-rolagem__acao"
-                    type="button"
-                    (click)="confirmandoPublica.set(false)"
-                >
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </app-modal>
-}

@@ -11,8 +11,9 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
-import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
+import { GuiaFormula } from '../../../ficha/componentes/guia-formula/guia-formula.component';
 import { RolagemService } from '../../../ficha/rolagem.service';
 
 const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
@@ -33,7 +34,7 @@ const FONTE_DE_FICHA = /\b(?:DES|FOR|LUT|PON|VIG|INT|MED|SEN|SOC|VON|PROF|PROFIC
 /** Painel compacto de rolagem livre atribuído a um combatente avulso. */
 @Component({
   selector: 'app-rolagem-avulso',
-  imports: [Icone, Tooltip, Botao, BotaoIcone, Modal],
+  imports: [Icone, Tooltip, Botao, BotaoIcone, GuiaFormula],
   templateUrl: './rolagem-avulso.component.html',
   styleUrl: './rolagem-avulso.component.scss',
 })
@@ -41,6 +42,7 @@ export class RolagemAvulso implements OnInit {
   private readonly rolagemService = inject(RolagemService);
   private readonly bandeja = inject(BandejaDadosService);
   private readonly notificacaoService = inject(NotificacaoService);
+  private readonly confirmacaoService = inject(ConfirmacaoService);
 
   readonly combatente = input.required<EncontroCombatenteResumoDto>();
   readonly ocultaInicial = input(true);
@@ -50,7 +52,6 @@ export class RolagemAvulso implements OnInit {
 
   protected readonly expressao = signal('');
   protected readonly oculta = signal(true);
-  protected readonly confirmandoPublica = signal(false);
   protected readonly rolagemConfirmada = signal(false);
   private confirmacaoHandle: ReturnType<typeof setTimeout> | null = null;
   protected readonly painel = viewChild<ElementRef<HTMLElement>>('painel');
@@ -67,18 +68,25 @@ export class RolagemAvulso implements OnInit {
   }
 
   protected alternarVisibilidade(): void {
-    if (this.oculta()) {
-      this.confirmandoPublica.set(true);
+    if (!this.oculta()) {
+      this.oculta.set(true);
+      this.ocultaAlterada.emit(true);
       return;
     }
-    this.oculta.set(true);
-    this.ocultaAlterada.emit(true);
-  }
-
-  protected confirmarPublica(): void {
-    this.oculta.set(false);
-    this.ocultaAlterada.emit(false);
-    this.confirmandoPublica.set(false);
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Tornar rolagens públicas',
+        mensagem: `A partir de agora, as rolagens de ${this.combatente().nome} ficam visíveis para os jogadores. Tem certeza?`,
+        entidade: this.combatente().nome,
+        severidade: 'padrao',
+        rotuloConfirmar: 'Tornar pública',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.oculta.set(false);
+          this.ocultaAlterada.emit(false);
+        }
+      });
   }
 
   protected iniciarArraste(evento: PointerEvent): void {

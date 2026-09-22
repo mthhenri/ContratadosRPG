@@ -124,7 +124,7 @@ describe('PainelEncontroMestre', () => {
     expect(elemento.querySelector('[aria-label="Rolagens de Capanga"]')).not.toBeNull();
   });
 
-  it('preserva a visibilidade escolhida para cada avulso ao fechar e reabrir o painel', () => {
+  it('preserva a visibilidade escolhida para cada avulso ao fechar e reabrir o painel', async () => {
     const avulso = combatente(8, 'Capanga', {
       origem: CombatenteOrigemEnum.AVULSO,
       fichaId: null,
@@ -144,7 +144,7 @@ describe('PainelEncontroMestre', () => {
     fixture.detectChanges();
     elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__visibilidade')?.click();
     fixture.detectChanges();
-    elemento.querySelector<HTMLButtonElement>('.rolagem-avulso__confirmar-publica')?.click();
+    await TestBed.inject(ConfirmacaoService).responder(true);
     fixture.detectChanges();
     elemento.querySelector<HTMLButtonElement>('[aria-label="Fechar rolagens"]')?.click();
     fixture.detectChanges();
