@@ -33,113 +33,106 @@
         <app-estado-vazio tamanho="compacto" titulo="Nenhum ataque." />
     }
 
-    <ul class="ataque-lista__itens">
-        @if (editando(-1)) {
-            <li class="ataque-lista__item ataque-lista__item--editando">
-                <ng-container
-                    *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
-                />
-            </li>
-        }
-        @for (entrada of itensOrdenados(); track entrada.indice) {
-            @let item = entrada.item;
-            @let idx = entrada.indice;
-            <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando(idx)">
-                @if (editando(idx)) {
+    <div class="ataque-lista__rolagem" appOverflowFade>
+        <ul class="ataque-lista__itens">
+            @if (editando(-1)) {
+                <li class="ataque-lista__item" #formNovo>
                     <ng-container
-                        *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
+                        *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
                     />
-                } @else {
-                    <div class="ataque-lista__cabecalho-item">
-                        <span class="ataque-lista__nome">{{ item.nome }}</span>
-                        <span class="ataque-lista__dano">{{ item.dano }}</span>
-                    </div>
+                </li>
+            }
+            @for (entrada of itensOrdenados(); track entrada.indice) {
+                @let item = entrada.item;
+                @let idx = entrada.indice;
+                <li
+                    class="ataque-lista__item"
+                    [class.ataque-lista__item--editando]="editando(idx)"
+                >
+                    @if (editando(idx)) {
+                        <ng-container
+                            *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
+                        />
+                    } @else {
+                        <div class="ataque-lista__cabecalho-item">
+                            <span class="ataque-lista__nome">{{ item.nome }}</span>
+                        </div>
 
-                    <div class="ataque-lista__marcas">
-                        <span class="ataque-lista__marca">{{
-                            rotuloCustoAcaoCurto(item.custoAcao)
-                        }}</span>
-                        @if (item.area) {
-                            <span class="ataque-lista__marca">Área</span>
+                        <div class="ataque-lista__marcas">
+                            <span [class]="classeMarcaCusto(item.custoAcao)">{{
+                                rotuloCustoAcaoCurto(item.custoAcao)
+                            }}</span>
+                            @if (item.area) {
+                                <span class="ataque-lista__marca">Área</span>
+                            }
+                        </div>
+
+                        @if (item.efeito) {
+                            <app-editor-markdown
+                                class="ataque-lista__efeito"
+                                [valor]="item.efeito"
+                                [somenteLeitura]="true"
+                                [compacto]="true"
+                                [rotulo]="'Efeito adicional'"
+                            />
                         }
-                    </div>
 
-                    @if (item.efeito) {
-                        <p class="ataque-lista__efeito">{{ item.efeito }}</p>
-                    }
-
-                    <div class="ataque-lista__rodape">
-                        <button
-                            app-botao
-                            class="ataque-lista__rolar ataque-lista__rolar--teste"
-                            type="button"
-                            (click)="testar(item)"
-                        >
-                            <app-icone nome="d20" /> Teste
-                        </button>
-                        <button
-                            app-botao
-                            class="ataque-lista__rolar ataque-lista__rolar--dano"
-                            type="button"
-                            (click)="rolar(item)"
-                        >
-                            <app-icone nome="d20" /> Dano
-                        </button>
-                        <button
-                            app-botao
-                            class="ataque-lista__rolar ataque-lista__rolar--critico"
-                            type="button"
-                            [appTooltip]="'Rolar dano crítico'"
-                            (click)="criticar(item)"
-                        >
-                            <app-icone nome="d20" /> Crítico
-                        </button>
-                        @if (editavel() && modoEdicao()) {
-                            <div class="ataque-lista__acoes">
-                                <button
-                                    app-botao-icone
-                                    class="ataque-lista__acao"
-                                    type="button"
-                                    aria-label="Editar"
-                                    (click)="editar(idx)"
-                                >
-                                    <app-icone nome="editar" />
-                                </button>
-                                @if (indiceRemovendo() === idx) {
+                        <div class="ataque-lista__rodape">
+                            <button
+                                app-botao
+                                class="ataque-lista__rolar ataque-lista__rolar--teste"
+                                type="button"
+                                [appTooltip]="'Rolar teste: ' + item.teste"
+                                (click)="testar(item)"
+                            >
+                                <app-icone nome="d20" /> Teste
+                            </button>
+                            <button
+                                app-botao
+                                class="ataque-lista__rolar ataque-lista__rolar--dano"
+                                type="button"
+                                [appTooltip]="'Rolar dano: ' + item.dano"
+                                (click)="rolar(item)"
+                            >
+                                <app-icone nome="d20" /> Dano
+                            </button>
+                            <button
+                                app-botao
+                                class="ataque-lista__rolar ataque-lista__rolar--critico"
+                                type="button"
+                                [appTooltip]="'Rolar dano crítico: ' + item.danoCritico"
+                                (click)="criticar(item)"
+                            >
+                                <app-icone nome="d20" /> Crítico
+                            </button>
+                            @if (editavel() && modoEdicao()) {
+                                <div class="ataque-lista__acoes">
                                     <button
-                                        app-botao
-                                        class="ataque-lista__acao ataque-lista__acao--confirmar"
-                                        type="button"
-                                        (click)="remover(idx)"
-                                    >
-                                        Confirmar remoção
-                                    </button>
-                                    <button
-                                        app-botao
+                                        app-botao-icone
                                         class="ataque-lista__acao"
                                         type="button"
-                                        (click)="cancelarRemocao()"
+                                        aria-label="Editar"
+                                        (click)="editar(idx)"
                                     >
-                                        Cancelar
+                                        <app-icone nome="editar" />
                                     </button>
-                                } @else {
                                     <button
                                         app-botao-icone
                                         class="ataque-lista__acao"
                                         type="button"
                                         aria-label="Remover"
-                                        (click)="pedirRemocao(idx)"
+                                        (click)="remover(idx)"
                                     >
                                         <app-icone nome="excluir" />
                                     </button>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
-            </li>
-        }
-    </ul>
+                                </div>
+                            }
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
 </section>
 
 <!-- Formulário em grade rotulada: a linha de flex-wrap anterior deixava sete controles sem rótulo
@@ -201,16 +194,15 @@
                 />
             </label>
         </div>
-        <label class="ataque-lista__campo">
+        <div class="ataque-lista__campo">
             <span class="ataque-lista__campo-rotulo">Efeito adicional</span>
-            <textarea
+            <app-editor-markdown
                 class="ataque-lista__input ataque-lista__textarea"
                 formControlName="efeito"
-                placeholder="Opcional"
-                aria-label="Efeito"
-                rows="3"
-            ></textarea>
-        </label>
+                [compacto]="true"
+                [rotulo]="'Efeito adicional'"
+            />
+        </div>
         <div class="ataque-lista__form-acoes">
             <button
                 app-botao

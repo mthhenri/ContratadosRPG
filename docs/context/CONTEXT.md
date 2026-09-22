@@ -1,5 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
+> **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
+> Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
+> A retomada das jornadas autenticadas depende de restabelecer Docker/Postgres local, indisponível
+> na verificação de 15/09. Pendências e dados de teste mantidos estão discriminados no relatório.
+
 > **Formatação do frontend:** `frontend/.prettierrc.json` governa exclusivamente HTML/SCSS
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
@@ -12,10 +17,218 @@
 > (era `&__form-novo` no fim, fora do `<ul>`), as duas listas ordenam por nome
 > (`localeCompare('pt-BR')`) e as 3 fórmulas de Ataque (Teste/Dano/Dano crítico) empilharam numa
 > coluna só. `@container (min-width: 480px)` novo em `.ataque-lista__linha-inicial` evita squeeze
-> da fileira custo/nome/área agora que o card de edição não força mais largura cheia. Suíte focada
-> 10/10; completa `frontend` 1788/1794 (6 falhas pré-existentes sem relação). Verificado ao vivo
-> nos 4 viewports padrão, lista/adicionar/editar nas duas abas. Task solta, sem spec. Detalhe em
+> da fileira custo/nome/área agora que o card de edição não força mais largura cheia. Reconciliado
+> à mão contra o trabalho concorrente de `criatura-ataque-lista`/`criatura-habilidade-lista` que
+> chegou primeiro em `master` (selos de custo/tipo coloridos, `EditorMarkdown`/
+> `HabilidadeDescricao`, `ConfirmacaoService` no lugar da confirmação inline, rolagem interna
+> `&__rolagem`) — as duas features convivem: a rolagem interna e o formulário de item novo
+> (`viewChild('formNovo')`/`scrollIntoView`) preservados, só a posição de montagem migrou do fim
+> pro início da lista. Suíte focada `criatura-ataque-lista`/`criatura-habilidade-lista` com 2 casos
+> novos por componente (ordenação, formulário como 1º item). Verificado ao vivo nos 4 viewports
+> padrão. Task solta, sem spec. Detalhe em `HISTORY.md`.
+> Antes: `espectador-coluna-acoes-e-iniciativa` concluída: Painel do espectador ganhou `app-coluna-acoes`
+> ("Iniciativa" sempre visível + "Rolagens" como toggle que esconde a coluna e expande a grade de
+> fichas), cabeçalho no molde "shell" (índice `//` + chip + régua) e o ícone "i" de descrição da
+> campanha (mesmo padrão de `detalhe-jogador`). Nova página **separada**
+> `PainelEncontroEspectador` (`modules/encontro/paginas/painel-espectador/`, nunca misturada com
+> `PainelEncontroMestre`/`PainelEncontroJogador`) — mesma casca (`_casca-iniciativa.scss`), sem
+> `app-coluna-acoes` e sem nenhum controle de condução, reaproveitando a derivação pura de
+> `encontro-leitura.util.ts`. Rota nova `campanhas/:id/espectador/iniciativa`, mesmo
+> `espectadorCampanhaResolver` do painel — **fecha o `P-073`** (a causa raiz era essa tela reusar a
+> visão do mestre, que chama `listarMembros`/`GET /ficha?campanhaId`/`GET /campanha/:id`, recusados
+> pro papel `ESPECTADOR`). Precedido por um POC aprovado em conversa (artifact "Central do
+> Espectador"). Achado ao vivo, corrigido antes do fecho: `auto-fill` na grade de fichas expandida
+> espremia o(s) cartão(ões) na 1ª faixa em vez de esticar — trocado por `auto-fit`. Testes:
+> `espectador.page.spec.ts` 18/18 (4 testes do antigo modal substituídos), `painel-espectador.page.
+> spec.ts` novo 11/11; `npm run test --workspace=frontend` completo 141/141 arquivos, 2037/2037
+> testes; lint/build sem erros novos (só o warning de budget pré-existente, `P-004`, alheio à
+> task — nenhum arquivo tocado entra no chunk inicial). Verificado ao vivo nos dois viewports
+> obrigatórios, painel (4 estados) e Iniciativa (combate ativo e encerrado). Spec em
+> `docs/specs/done/espectador-coluna-acoes-e-iniciativa.spec.md`. Detalhe completo em `HISTORY.md`.
+> Antes: Fecham os dois skeletons pendentes da rodada anterior (pedido direto do autor): **ficha de
+> criatura** ganhou `CriaturaEsqueleto` reaproveitando a casca real (mesma família de
+> `FichaEsqueleto`), substituindo a silhueta ad-hoc de 1 coluna de `visualizar-criatura.page`;
+> **campanha do mestre** ganhou vida — `CampanhaLista` repassa `papel` via `[state]` da navegação,
+> `CampanhaDetalheShell` lê `papelHint` do `Router` e monta `CampanhaDetalheMestre` já enquanto
+> `dados.carregando()` quando o hint é `MESTRE` (antes esse skeleton nunca rodava, sempre caía em
+> jogador). Sem hint, comportamento de sempre. `npm run test --workspace=frontend` 140/140/2030/2030;
+> verificação ao vivo em `1920×1080`/`360×800` confirmou as duas silhuetas contra a tela real, sem
+> "pulo" de layout, sem overflow. Detalhe completo em `HISTORY.md`.
+> Antes: `criatura-designacao-fonte-unica` concluída (2026-09-21) — o nome da criatura tinha dois campos
+> divergentes: `ficha.nome` (relacional, usado no título da página/`CriaturaEsquadraoCard`/listas) e
+> `FichaCriaturaIdentidadeDto.designacao` (JSONB, editável pelo card Identidade). Só nasciam iguais
+> na criação; editar a Designação depois não propagava pra `ficha.nome` (achado do autor por
+> screenshot: "0 Eco" na Identidade vs. "Eco" no card da campanha). `designacao` saiu do DTO —
+> Designação agora lê/edita `ficha.nome` direto (`confirmarNome`/`nomeMudou`/`ajustarNome`, que já
+> existiam de ponta a ponta mas nenhum template chamava), mesmo padrão que `FichaVisualizacao`
+> (jogador) já usava pro próprio nome — conferido a pedido do autor que **não** tem a mesma
+> duplicação (`FichaIdentidadeDto` do jogador não tem campo de nome nenhum). Rótulo/posição/classes
+> CSS "Designação" intactos — só a fonte do valor mudou. `shared`/`backend`/`frontend`: 49+32+140
+> arquivos, 759+565+2028 testes, 0 erro novo de lint; contrato OpenAPI regenerado. Verificado ao
+> vivo (Postgres local sem Docker + backend + frontend reais): renomear pela Identidade atualiza o
+> cabeçalho da página **sem reload** e o card `CriaturaEsquadraoCard` da campanha, persiste após
+> reload, em `1920×1080` e `360×800`. Detalhe completo em `HISTORY.md`.
+> Antes: Brainstorming aprovado (2026-09-21): o M7 "Encontro de Combate" amplia para um módulo de
+> **Cenas** — pedido do autor para tipar a cena na criação (Combate/Investigação/Furtiva/
+> Perseguição/Resistência, `docs/core/sistema-v4.1.0.md` "⬡ Cenas") e abrir caminho para uma cena de
+> Investigação que organiza documentos e fichas dos jogadores numa mesma tela. `cena` nasce como
+> raiz nova (tipo, status `PLANEJADA→ATIVA→ENCERRADA`, ordem); `encontro` continua intocado em
+> nome/código, passando a pendurar numa `cena_id` — é a estrutura que só Combate/Furtiva/
+> Perseguição têm (`cenaTemIniciativa`). A cena de Investigação depende de uma M9 nova (biblioteca
+> de documentos da campanha, promovendo `I-014`), cuja spec de milestone também foi escrita nesta
+> rodada. Specs em `docs/specs/backlog/`: `m7-cenas.spec.md`, `m9-documentos-campanha.spec.md`,
+> `m7-21-contrato-migration-cena.spec.md`, `m7-22-backend-cena.spec.md`,
+> `m7-23-frontend-hub-cenas.spec.md` (as três últimas já detalhadas — juntas entregam o pedido
+> imediato do autor sem esperar a M9). Nenhum código alterado; detalhe completo em `HISTORY.md`.
+> Antes: `rede-01` fechou o ciclo de vida de salas Socket.IO: referência por consumidor no cliente, saída efetiva no gateway
+> e recalibração pós-revogação/vínculo/papel. A próxima otimização de rede é `rede-02` (carga inicial de projeções).
+> Antes: Iniciativa (`ui-39`): o `PainelEncontro` monolítico (mestre e jogador por `@if`) foi separado em
+> `PainelEncontroShell` (resolve o papel; provê o `EncontroPainelDadosService`) →
+> `PainelEncontroMestre`/`PainelEncontroJogador`, no molde de `detalhe-shell`. A visão do jogador ganhou a
+> composição do mestre (coluna de ações · trilha · Rolagens · palco) com a **própria ficha** no palco e o
+> bloco de ação (`app-acao-jogador`: rolar iniciativa / avançar turno) no topo da trilha; a trilha ganhou
+> `[trilhaAcao]`/`meuCombatenteId` ("Você"); o layout comum vive em `paginas/_casca-iniciativa.scss`.
+> Faixa 1081–1599px: trilha e Rolagens dividem uma coluna (o cartão de ficha só empilha por janela).
+> Frontend 139 arquivos / 2005 testes, lint sem erros, build ok. Detalhe em `HISTORY.md` e
+> `docs/design/DESIGN.md` ("Iniciativa — visão do jogador"). `P-073` (espectador) — fechado depois,
+> ver entrada `espectador-coluna-acoes-e-iniciativa` no topo deste arquivo.
+> Antes: `app-editor-markdown` compacto tinha `:host { flex: 1; }` herdado do modo página-cheia do
+> Caderno — dentro de um card `display:flex; flex-direction:column` sem altura fixa
+> (`habilidade-lista__item`), 2 instâncias compactas na mesma coluna (Descrição+Restrição)
+> dividiam o espaço ao meio em vez de crescer pro próprio conteúdo, sobrepondo texto (achado pelo
+> autor, print). Corrigido com `flex: none` no `:host(.editor-markdown--compacto)`. Selo de custo
+> de ação (Ataque)/tipo (Habilidade) trocou `--cor-ficha` por 3 tokens novos e fixos
+> (`--selo-cinza`/`--selo-tema`/`--selo-branco`, cada um com glow próprio) — Habilidade: Passiva
+> branco, Gatilho cinza, Ativa tema; Ataque: Movimento cinza, Padrão tema, Completa branco (pedido
+> do autor, não gostou do resultado anterior com `--cor-ficha`). `CustoAcaoEnum` ganhou
+> `ACAO_LIVRE`/`TURNO` (pedido do autor, documento oficial ainda não formaliza — ele atualiza
+> depois): `obterDanoReferenciaPorVd` aponta Turno pra mesma coluna "Turno" já existente na
+> tabela, Ação Livre devolve `'—'` (sem peso de dano no guia); cor proposta por mim (Ação Livre
+> sem glow, Turno = branco de Completa com glow mais largo). `npm run test --workspace=shared`
+> 49/49/759/759, `--workspace=frontend` 130/130/1840/1840; build/lint 0 erros novos. Detalhe em
 > `HISTORY.md`.
+> Antes: continuação de `editor-markdown-campos-texto-livre`: `ul`/`ol`/`li` no `EditorMarkdown` não
+> tinham nenhum marcador visual (mesma causa do blockquote/P-072 — o Milkdown usa `data-label` +
+> `::before`, não `list-style` nativo), corrigido com regras próprias em
+> `editor-markdown.component.scss`, verificado ao vivo (bullets/numeração/recuo aninhado corretos
+> nos 2 viewports e nos 3 contextos: página cheia, painel flutuante, peek compacto). Descrição de
+> Sequela/Trauma/Lesão (`ficha-sanidade.component.html`) virou `<textarea>` (a pedido explícito do
+> autor, **sem** Markdown — só multi-linha). Ícone `olho-fechado` (`icone.component.html`) não
+> tinha a `<line>` diagonal do "eye-off" original — parecia um olho semicerrado, não riscado —,
+> corrigido em `olho-fechado`/`olho-fechado-rolagens` (truncada nesta última pra não cortar o selo
+> de dado). `npm run test --workspace=frontend` 130/130/1840/1840; build/lint 0 erros novos.
+> Detalhe em `HISTORY.md`.
+> Antes: `editor-markdown-campos-texto-livre` concluída — história/anotações da ficha de jogador,
+> anotações/efeito adicional de Ataque/descrição+restrição de Habilidade da ficha de criatura e
+> descrição de Habilidade de jogador agora usam o mesmo editor Markdown do Caderno de Campanha
+> (`EditorMarkdown`, Milkdown), promovido de `modules/pagina-caderno/` para
+> `shared/ui/editor-markdown/` — ganhou `ControlValueAccessor` (uso com `formControlName` nos
+> formulários de Ataque/Habilidade), `[compacto]` (campo de formulário, não página inteira) e
+> `[rotulo]` (nome acessível, exigido pelo lint quando o `<label>` em volta virou `<div>`). Nenhuma
+> migração de schema — os 6 campos continuam `string`/`string | null` no JSONB, texto plano
+> existente aparece sem alteração. Achado ao vivo corrigido: o "peek" de leitura compacta (Efeito
+> adicional, Descrição/Restrição) ganhava uma 2ª caixa escura dentro do card que já o envolvia —
+> `:host(.editor-markdown--compacto.editor-markdown--somente-leitura)` zera fundo/`min-height`/
+> padding interno só nesse combo. Divergência assumida: `restricao` de Habilidade de criatura era
+> uma "tag clara" pequena/itálica, virou parágrafo maior sem itálico (aceito — o campo passou a
+> suportar Markdown completo). Blockquote (`>`) não tem estilo visual próprio no primitivo — gap
+> pré-existente do Caderno, não corrigido nesta task. `npm run test --workspace=frontend` completo:
+> 130/130 arquivos, 1840/1840 testes (5 testes pré-existentes reescritos — dependiam de `<textarea>`
+> ou de `raiz.textContent` síncrono que o Milkdown assíncrono não preenche a tempo); build/lint 0
+> erros novos. Verificado ao vivo (Postgres local sem Docker + backend + frontend reais, cenário via
+> REST) nos 2 viewports obrigatórios, leitura e edição dos 6 campos — pendente apenas o painel de
+> Anotações do jogador isoladamente no mobile (mecanismo idêntico já confirmado no mobile pelo
+> equivalente de criatura). Spec em `docs/specs/done/editor-markdown-campos-texto-livre.spec.md`.
+> Detalhe em `HISTORY.md`.
+> Antes: Ficha de criatura: `criatura-ataque-lista`/`criatura-habilidade-lista`/`criatura-resistencia-lista`
+> tinham a confirmação de remoção num antipadrão inline anterior ao `ConfirmacaoService` (ui-15) —
+> migradas, junto de "Tornar rolagens públicas" e (por pedido explícito do autor, numa segunda
+> rodada) "Excluir ficha". Esse último exigiu ampliar o primitivo: `ConfirmacaoPedido` ganhou
+> `aoConfirmar?: () => Promise<void>` — com ele, `ConfirmacaoService`/`Confirmacao` mantêm o diálogo
+> aberto com o botão de confirmar em `carregando` até a promessa assíncrona terminar, em vez de
+> fechar na hora (erro mantém o diálogo aberto pra nova tentativa). Além disso:
+> descrição/efeito/restrição de Habilidades e Ataques ganharam `white-space: pre-wrap`; chip de tipo
+> de Habilidade (Ativa/Gatilho/Passiva) e selo de custo de ação do Ataque (Completa/Padrão/Movimento)
+> ganharam cor por `--cor-ficha` (a cor de identidade da própria ficha, promovida pro `<article
+> class="criatura">` raiz) com brilho/sem brilho/grayscale 50% pelos 3 níveis; a caixa de Anotações
+> da criatura ganhou o padding/fundo que faltava (só existia o modificador `--painel`, sem a regra
+> base) e as duas fichas (criatura e jogador) ganharam botões explícitos "Salvar"/"Cancelar" no modo
+> de edição de Anotações. Avaliado e recusado (rules-first): "ação livre" não existe como custo de
+> ataque de criatura — a 4ª coluna da tabela de regras é "Turno", que `shared/regras` já trata
+> corretamente como soma agregada da rodada, não custo de uma ação isolada; `CustoAcaoEnum`
+> permanece com 3 valores. `npm run test --workspace=frontend` completo: 130/130 arquivos,
+> 1837/1837 testes; lint dos arquivos tocados sem erros. **Verificação visual (`verify`) executada**
+> nos dois viewports obrigatórios, com cenário isolado via REST — confirmado pessoalmente por
+> captura de tela (cores, quebras de linha, tags, os 5 diálogos migrados, painel de Anotações).
+> Único ponto não verificado ao vivo: o spinner de `carregando` do botão de excluir durante a
+> chamada assíncrona (coberto só por teste automatizado). Detalhe em `HISTORY.md`.
+> Antes: Lote de 6 problemas de `PROBLEMS.md` fechado a pedido direto do autor — P-068/P-021 (mesmo teste
+> de duplicar ficha do jogador, seletor pegava o item errado do menu "⋯"), P-069 (guard `!= null`
+> replicado em `EspectadorFichaCard`, e `eslint.config.mjs` ganhou `allowNullOrUndefined` pra esse
+> idioma parar de reprovar lint), P-020 (busca do catálogo priorizando nome sobre descrição, que
+> cruzava referência com outro item), P-022 (PROF/NIV do Montador sem cor apagada, mesma correção
+> de especificidade já aplicada em "Tipo de dano") e P-019 (`window.innerWidth`/`innerHeight`
+> vazando entre `caderno-flutuante`/`leitor-documentos` e o resto da suíte — `afterAll` restaurando
+> o valor original nos dois arquivos). Achado no processo, fora do escopo e registrado como novo
+> `P-071`: `ficha-visualizacao.component.spec.ts` tem um teste do Montador sensível a ordem de
+> suíte, causa não investigada. `npm run test --workspace=frontend` completo: 1829/1829 (só o novo
+> P-071, alheio a esta task); lint dos arquivos tocados sem erros. Verificação visual do ajuste de
+> PROF/NIV (P-022) **pendente** — aplicação real não foi levantada nesta task. Detalhe em
+> `HISTORY.md`.
+> Antes: `criatura-card-esquadrao-mestre` concluída — o card de criatura da grade "Criaturas" (visão de
+> mestre) saiu de markup hand-rolled dentro de `detalhe-mestre.page.html` (sem menu "⋯", sem barra
+> de Vida, sem última rolagem) para `CriaturaEsquadraoCard`, componente próprio que segue a mesma
+> receita visual do análogo `EspectadorFichaCard` (Esquadrão de jogadores da mesma tela — pedido
+> do autor: "seguir o mesmo que tem do jogador"): avatar (mantido em 100×100, tamanho que a
+> criatura já usava — só o jogador é 128×128), botão "Abrir ficha" sobre o avatar, menu "⋯" (abrir
+> ficha completa/duplicar/remover da campanha/excluir, reusando o mesmo dropdown genérico do
+> cartão de jogador — `menuFichaAberto` ganhou `tipo`/`donoNome` opcional pra servir os dois),
+> `app-barra-recurso` de Vida (sem Energia — criatura não tem), linha de reação só com Defesa
+> (criatura não tem Esquiva/Bloqueio/Contra-ataque de verdade) e a faixa "Última rolagem" no
+> rodapé. A legenda que antes dizia só "Ameaça" (texto estático, sem dado nenhum) virou o registro
+> real da criatura (`FichaCriaturaDadosDto.registro`, ex. "SCP-049", placeholder "SCP - ?????"); a
+> linha abaixo do nome virou "Porte · Comportamento · Nível de Ameaça" (antes só "NA {{na}}").
+> `FichaResumoDto` (shared) e `colunasResumo()` (backend) ganharam `registro`/`porte`/
+> `comportamento` — não existiam no resumo, só no documento completo. "Abrir ficha completa" para
+> criatura foi corrigido pra ir em `/campanhas/:id/criatura/:id` (rota própria da criatura), não
+> `/fichas/:id` (acervo, só entende `FichaVisualizacao` de jogador — abriria quebrado). Achado ao
+> vivo, corrigido antes do fecho: o guard `defesa !== undefined` (copiado do análogo) não cobre o
+> `null` que a SQL devolve pra uma criatura sem Defesa salva — virou `!= null`; o mesmo padrão em
+> `EspectadorFichaCard` (jogador) ficou registrado como problema aberto (`P-069`), fora do escopo
+> desta task — corrigido depois (ver `HISTORY.md` 2026-09-18). Testes: `criatura-esquadrao-card`
+> (novo, 9/9) + `detalhe-mestre` focado 38/39 (1 falha pré-existente e alheia — `P-068`, também
+> corrigida depois); build/lint dos três workspaces 0 erros novos.
+> Verificado ao vivo (Postgres + backend + frontend reais, seed via REST) em `1920×1080`/
+> `360×800`: grid com uma criatura completa e uma crítica (Vida 0, sem registro) lado a lado,
+> abertura do menu "⋯", duplicar (mensagem sem "de" para criatura), e "Abrir ficha completa"
+> confirmada abrindo `CriaturaVisualizacao` de verdade, sem erro de console. Task solta, sem spec.
+> Detalhe em `HISTORY.md`.
+> Antes: `icones-olho-selo` concluída — os 3 itens de "olho" da coluna de ações ("Tornar rolagens
+> públicas"/"Ocultar rolagens", "Acesso de visualização", "Exibir/Ocultar ficha") ficavam
+> parecidos demais entre si; ganharam a mesma técnica de "base + selo" de `fragmento-construtor`/
+> `fragmento-potencializador` — 3 ícones novos (`olho-rolagens`/`olho-fechado-rolagens` com selo
+> de dado; `olho-membros` com selo de uma pessoa), aplicados nos 5 lugares que renderizavam esses
+> itens (coluna de ações + menu mobile "⋯" de criatura/jogador, coluna de ações de
+> `detalhe-jogador`). `olho`/`olho-fechado` sem selo seguem só pro toggle "Exibir/Ocultar ficha".
+> Suíte focada `icone`/`visualizar-criatura`/`visualizar`/`detalhe-jogador` 102/102; build/lint 0
+> erros. Verificado ao vivo com captura em `deviceScaleFactor: 4` de cada ícone isolado (selos
+> distintos) e no tamanho real da coluna (`1920×1080`) e do menu mobile (`360×800`). Task solta,
+> sem spec. Detalhe em `HISTORY.md`.
+> Antes: `criatura-registro-scp-editavel` concluída — "REGISTRO — 0009" (calculado a partir do id da
+> ficha, nunca editável) virou `dados().registro` de verdade: texto livre (`app-valor-editavel`,
+> mesmo padrão de `designacao`), placeholder `"SCP - ?????"` quando vazio, sem rótulo fixo (autor
+> escolheu via `AskUserQuestion`, comparando com o Contrato do jogador — que mantém "CONTRATO — "
+> fixo e só o número editável, formato descartado aqui). Editável por quem já pode editar a
+> criatura (`ajustavel()`) — sem gate extra de "só mestre" como o Contrato, porque toda criatura já
+> pertence ao mestre. Campo novo em `FichaCriaturaDadosDto` (JSONB, sem migration). Correção do
+> autor no mesmo dia ("alinha ao centro" + cor cinza igual ao Contrato): `[alinhamento]="'centro'"`
+> e `[variante]="'herdado'"` no `app-valor-editavel` — os dois escapes que o primitivo já previa
+> pra esse caso, sem os quais `align-self` (nasce `flex-start`) e a cor `secundario` (`var(--text)`)
+> venciam o CSS do consumidor. Suíte focada `criatura-visualizacao` 43/43 + `ficha-flutuante`/
+> `visualizar-criatura` 30/30; build/lint 0 erros. Verificado ao vivo (Postgres + backend +
+> frontend reais, cenário via REST) em `1920×1080`/`360×800`, leitura, edição, persistência após
+> reload, centralização e cor medidas via `getBoundingClientRect`/`getComputedStyle`. Task solta,
+> sem spec. Detalhe em `HISTORY.md`.
 > Antes: `criatura-classificacao-ordem-mobile` concluída — só no mobile (`bp.mobile`, `&__ident-corpo` já
 > em 1 coluna), a fileira de Classificação (leitura ou edição — mesma posição entre si, ver entrada
 > abaixo) voltou pra logo abaixo da foto, antes da coluna Combate, em vez do fim do card inteiro.
@@ -297,12 +510,60 @@
 
 ## 1. Próxima Task
 
-**`criatura-visualizacao-shell-ui34` concluída (2026-09-14):** cabeçalho e coluna de ações da
+**Módulo de Cenas — specs prontas para implementar (2026-09-21):** `m7-21-contrato-migration-
+cena.spec.md`, `m7-22-backend-cena.spec.md` e `m7-23-frontend-hub-cenas.spec.md`
+(`docs/specs/backlog/`) juntas entregam o pedido do autor: tipar a cena na criação, com hub e
+redirecionamento das rotas de Iniciativa atuais. São a fundação do milestone `m7-cenas.spec.md`;
+seguir `m7-21 → m7-22 → m7-23` nessa ordem. A cena de Investigação (`m7-25`) só pode começar depois
+de `m9-documentos-campanha.spec.md` ter ao menos o backend de documento + revelar/ocultar prontos.
+Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. **Atenção:**
+a task `espectador-coluna-acoes-e-iniciativa` (concluída depois desta entrada ter sido escrita, ver
+topo do arquivo) acrescentou a rota `campanhas/:id/espectador/iniciativa` e a página
+`PainelEncontroEspectador` — quem mexer no redirecionamento das rotas de Iniciativa pelo módulo de
+Cenas precisa considerar essa terceira rota, além das de mestre/jogador.
+
+**Antes: `espectador-coluna-acoes-e-iniciativa` concluída (2026-09-21):** Painel do espectador
+padronizado (coluna de ações, cabeçalho "shell", toggle de descrição) e Iniciativa própria do
+espectador — fecha o `P-073`. Resumo completo no cabeçalho deste arquivo (acima) e relato integral
+em `HISTORY.md`. Spec em `docs/specs/done/espectador-coluna-acoes-e-iniciativa.spec.md`.
+
+**Antes: Sobreposição no `EditorMarkdown` compacto + repaint dos selos de custo/tipo concluído
+(2026-09-18):** `flex: none` corrige a sobreposição de Descrição+Restrição no card de Habilidade
+de criatura; selo de custo de ação/tipo de habilidade trocou `--cor-ficha` por 3 tokens fixos
+(cinza/tema/branco, cada um com glow); `CustoAcaoEnum` ganhou `ACAO_LIVRE`/`TURNO`. Resumo
+completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. Task solta, sem
+spec — continuação direta da task abaixo.
+
+**Antes: polimento de `editor-markdown-campos-texto-livre` concluído (2026-09-18):** listas
+ordenada/desordenada sem marcador no `EditorMarkdown` (mesma causa do P-072/blockquote),
+descrição de Sequela/Trauma/Lesão virou `<textarea>` (sem Markdown) e ícone `olho-fechado` sem a
+`<line>` diagonal do "eye-off" original. Resumo completo no cabeçalho deste arquivo (acima) e
+relato integral em `HISTORY.md`. Task solta, sem spec — continuação direta da task abaixo.
+
+**Antes: `editor-markdown-campos-texto-livre` concluída (2026-09-18):** história/anotações do jogador,
+anotações/efeito adicional/descrição+restrição da criatura e descrição de habilidade do jogador
+ganharam o editor Markdown do Caderno (`EditorMarkdown`, promovido para `shared/ui/`). Resumo
+completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. Spec em
+`docs/specs/done/editor-markdown-campos-texto-livre.spec.md`.
+
+**Antes: `icones-olho-selo` concluída (2026-09-14):** os 3 itens de "olho" da coluna de ações
+("Tornar rolagens públicas"/"Ocultar rolagens", "Acesso de visualização", "Exibir/Ocultar
+ficha") ganharam a técnica de "base + selo" de `fragmento-construtor`/`fragmento-potencializador`
+— `olho-rolagens`/`olho-fechado-rolagens` (selo de dado) e `olho-membros` (selo de uma pessoa),
+aplicados nos 5 lugares que renderizavam esses ícones. Resumo completo no cabeçalho deste arquivo
+(acima) e relato integral em `HISTORY.md`. Task solta, sem spec.
+
+**Antes: `criatura-registro-scp-editavel` concluída (2026-09-14):** "REGISTRO — 0009" (calculado do id
+da ficha, nunca editável) virou `dados().registro` de verdade — texto livre, sem rótulo fixo,
+placeholder `"SCP - ?????"` quando vazio, mesmo padrão clique-para-editar de `designacao`,
+centralizado e em cinza (`--text-dim`) via `[alinhamento]="'centro'"`/`[variante]="'herdado'"` do
+`app-valor-editavel`. Task solta, sem spec.
+
+**Antes: `criatura-visualizacao-shell-ui34` concluída (2026-09-14):** cabeçalho e coluna de ações da
 ficha de criatura alinhados ao padrão `ui-34` (jogador); Identidade+Atributos fundidos numa
 coluna (grade de 5 atributos via `@container`); selos de estado na Identidade; Histórico/
 Calculadora migraram pro próprio gatilho pra dentro da coluna de ações (correção do autor no meio
-da task). Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`.
-Spec em `docs/specs/done/criatura-visualizacao-shell-ui34.spec.md`.
+da task). Spec em `docs/specs/done/criatura-visualizacao-shell-ui34.spec.md`.
 
 **Antes: `ficha-campanha-card-resistencias-coloridas` concluída (2026-09-13):** No card de Identidade do
 `FichaCampanhaCard` (visão de campanha do jogador), as legendas separadas "Reações" (só leitura) e
@@ -1747,19 +2008,79 @@ crescer no mobile.
 
 Rolagem de dados: gramática v4, presets, teste de atributo, dano de item, iniciativa automática,
 calculadora flutuante e **histórico persistido** com visibilidade `PUBLICA`/`PRIVADA`. A "Rolagem
-rápida" ganhou um **montador de expressões** opcional (`ui-35`/`ui-36`, `MontadorRolagem`,
-`frontend/.../shared/montador-rolagem/`): caixa flutuante arrastável (mesmo primitivo
-`app-painel-flutuante` da `CalculadoraFlutuante`, gatilho inline no início do input, estilo do
-botão "Rolar") com um teclado de tokens (dado — ícone real + rótulo `D{faces}` sobreposto,
-clicar de novo soma quantidade no lugar de duplicar o termo, `incrementarUltimoDado` em
-`montador-rolagem.util.ts` —, atributo, `kh`/`kl` sempre 1, `cm` com N ajustável, tipo de dano,
+rápida" ganhou um **montador de expressões** opcional (`ui-35`/`ui-36`/`montador-rolagem-ajustes`,
+`MontadorRolagem`, `frontend/.../shared/montador-rolagem/`): caixa flutuante arrastável (mesmo
+primitivo `app-painel-flutuante` da `CalculadoraFlutuante`, gatilho inline no início do input,
+estilo do botão "Rolar") com um teclado de tokens (dado — ícone real + rótulo `D{faces}`
+sobreposto, clicar de novo soma quantidade no lugar de duplicar o termo, `incrementarUltimoDado`
+em `montador-rolagem.util.ts` —, atributo, `kh`/`kl` sempre 1, `cm` com N ajustável, tipo de dano,
 atalhos `CORPO`/`FURTIVO`) que escreve na mesma `FormControl` do input de texto original — o
 input continua existindo e editável, os dois convivem — mais duas ações compostas ("Dado por
 Propriedade + Ajuste" → `(ATR±n)dM`, "Repetir tudo" → `(<fórmula>)#N`) que fecham parênteses
 sozinhas para evitar o erro mais comum de montar essas duas formas na mão, e um rodapé fixo
-(Apagar último/Limpar/Rolar) sempre visível dentro do painel. O motor não mudou: o teclado só
-reproduz a gramática já existente, `validarFormula` continua sendo
-quem decide o que é aceito. Cada ficha
+(Apagar último/Limpar/Rolar) sempre visível dentro do painel. `validarFormula` continua sendo
+quem decide o que é aceito; a `montador-rolagem-ajustes` estendeu o motor
+(`shared/src/regras/rolagem/`) só nas duas formas sancionadas pela spec —
+`(ATR*Y)dM` (quantidade `atributo*multiplicador`, piso zero, sem desvantagem intrínseca) e
+`(termos-de-dado)[TIPO]` (grupo fechado tipando todos os pools internos) — e corrigiu a
+composição por botão: todo clique de dado novo entra como termo aditivo (`+dM`),
+`reposicionarOperadorPool` repõe `kh`/`kl`/`cmN` num dado elegível (`kh`/`kl` mutuamente
+exclusivos, `cm` convive com qualquer um dos dois), e o tipo de dano só escreve com um
+alvo elegível. Um segundo relato ao vivo do autor (2026-09-17) corrigiu mais um defeito e três
+ajustes de UI do painel: clicar num atributo "bare" (sem dado ainda) e depois num dado volta a
+fechar `ATRdM` (atributo como fonte de dados, ex.: `FORd20`) em vez de somar `+dM` do lado —
+`adicionarDado`/`ATRIBUTO_NO_FINAL` em `montador-rolagem.util.ts` reconhecem esse caso e concatenam
+direto, igual ao comportamento original da `cd1205a` que um `fix` seguinte (`242c5b0`, ao introduzir
+o `+` automático de segurança dos outros casos) tinha quebrado sem perceber; a seção "Editar"
+(operadores, parênteses, dígitos) passou a vir antes de "Dado" no teclado; o corpo do painel ganhou
+padding (texto/tiles encostavam nas paredes internas da caixa); no mobile a caixa agora preenche a
+tela inteira (só recuando por `safe-area-inset` de notch/home indicator, não mais por uma margem
+decorativa de 16px que sobrava nos quatro lados); no desktop o tamanho de base subiu +50% de largura
+e +25% de altura (380×580 → 570×725) e a janela ganhou uma alça de redimensionar por arraste no
+canto inferior direito (`iniciarRedimensionamento`/`aoMoverPonteiroRedimensionar`, mesmo racional de
+`CadernoFlutuante.iniciarRedimensionamento`, mas com estado local — sem store, sem persistência —
+e **sem** maximizar, pedido explícito do autor). Um terceiro relato ao vivo do autor, ainda
+2026-09-17, mudou dois comportamentos de composição: `⌫` (`apagarUltimoBloco`) agora remove o
+**último bloco aditivo** inteiro (o último termo top-level com o `+`/`-` que o antecede, sem
+cortar dentro de `(...)`/`[...]`) em vez de um caractere por vez; e `reposicionarOperadorPool`
+(que reposicionava sempre no **último** dado) passou a varrer da **esquerda pra direita** — ou a
+partir do dado sob o **cursor do visor**, quando o jogador clicou/digitou ali (`cursorVisor`,
+atualizado só por interação real com o `<input>`, nunca por clique nos outros botões) — e usa o
+primeiro dado que ainda não tem **exatamente** aquele operador; um clique redundante (dado já tem
+exatamente `kh`, ou já tem exatamente `cm1`) pula pro próximo dado. O critério é o operador exato,
+não a família: um dado com `kh` não bloqueia um clique de `kl` nele (troca em vez de pular),
+preservando o toggle `kh`↔`kl` já estabelecido. Um quarto relato, ainda 2026-09-17, refinou o
+apagar pra blocos menores ainda: `apagarUltimoBloco` virou uma cadeia de regras (tag `[...]` → `cmN`
+→ `kh`/`kl` → `#N` → dado cru `NdM` → grupo `(...)` inteiro → atributo/atalho → número → operador
+solto), cada uma removendo só a peça mais específica do final da fórmula — em `VIGd20khcm1`, `⌫`
+agora desfaz `cm1`, depois `kh`, depois `d20`, depois `VIG`, um clique por vez. E achou por que os
+botões de "Tipo de dano" (F/B/E/Q/G) não tinham cor nenhuma apesar do SCSS já prever `--dano-*` por
+tipo: especificidade — `app-botao[variante="secundario"][estilo="contorno"]` tinha uma regra de
+severidade em `botao.component.scss` mais específica que a do componente pai, sempre vencendo.
+Corrigido pelo padrão já estabelecido na `ui-29d` (`ValorEditavel`/`variante="herdado"`): omitir
+`[variante]`/`[estilo]` desses cinco botões, deixando o SCSS do montador pintar livre (cor + fundo
+`-dim` + borda, mesma paleta do chip de `resultado-rolagem`). O mesmo defeito de especificidade
+existia em PROF/NIV (`--extra`) — `P-022`, corrigido depois com o mesmo padrão (ver `HISTORY.md`
+2026-09-18). A instância do
+painel subiu para um nível
+persistente da visualização da ficha —
+uma única caixa que sobrevive à troca de aba, gatilho continua só na aba Rolagens.
+`FichaRolagensPainel` (visor+presets **e** o botão "Rolagem oculta") também sobrevive à troca de
+aba assim, alternando só `oculto()` — desde que a raiz inteira do template (não só
+`<app-ficha-rolagens>` de dentro) receba a classe `--oculto` quando escondido, senão o botão
+"Rolagem oculta" (que é irmão dela, não filho) vaza visível pras outras abas de Status (achado ao
+vivo pelo autor, corrigido). A barra "Rolagem
+rápida" em si (visor + `MontadorRolagem` + "Rolar") foi extraída de `FichaRolagens` pro componente
+`RolagemRapida` (`frontend/.../ficha/componentes/rolagem-rapida/`, controlado por inputs
+`atributos`/`proficiencia`/`nivel`/`atalhosDano`/`podeRolar`/`rolagemOculta`/`cor`/`oculto` + output
+`rolagemFeita`) — reusada pela aba Ataques da ficha de criatura (`CriaturaVisualizacao`, sem
+`proficiencia`/`nivel`/`atalhosDano`, que a criatura não tem), que nunca teve rolagem avulsa por
+fórmula livre antes disso. O ícone da aba "Rolagens" (jogador) é `'d6'` (era `'rolagens'`, removido
+do `IconeNome` por ficar sem consumidor); o gatilho do Montador usa `'dado-mais'` (`'dado'` + selo de
+"+" no canto, mesma técnica de `olho-rolagens`); o dado D3 do teclado de tokens ganhou ícone próprio
+(`'d3'`, prisma triangular desenhado à mão) em vez de cair no fallback genérico — `ICONE_POR_FACES`
+de `montador-rolagem.component.ts` e `resultado-rolagem.component.ts` (os dois mapas sempre andam
+juntos) ganharam a entrada `3: 'd3'`. Cada ficha
 tem uma **cor de identidade** própria (`m3-61`, coluna `ficha.cor`, swatch no cabeçalho —
 `ajustavelAmplo()`), independente do `--accent` de tema por usuário: colore o total/crítico de toda
 rolagem daquela ficha (bandeja de dados, histórico, feed "Rolagens Recentes" do painel de
@@ -1856,7 +2177,11 @@ corretamente e o jogador sem concessão não a vê (§14). Pendência registrada
 **Visualização/edição** (`frontend/src/app/modules/ficha/componentes/criatura-visualizacao/`,
 `CriaturaVisualizacao` + página `paginas/visualizar-criatura/`) — rota
 `/painel/:campanhaId/criatura/:id`, mesma guarda de mestre da rota `nova`; resolve a pendência da
-`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). Barra superior própria do
+`m4-04` com tela dedicada (não um `modo` novo em `FichaVisualizacao`). O cabeçalho da página
+(`visualizar-criatura.page.html`) não tem menu "⋯" (removido — duplicava 100% de
+`app-coluna-acoes`, que já vira barra fixa de ícones no rodapé no mobile); todas as ações
+(Histórico, Anotações, Calculadora, Caderno, Rolagem oculta, Acesso, Ocultar/Excluir ficha) vivem
+só na coluna. Barra superior própria do
 componente (`criatura__topo`, rótulo + régua + `chip-classificacao` `FICHA-CRT-{id zero-padded}`,
 igual estrutura de `ficha-visao__topo` do jogador — não fica na página) seguida de dashboard de 3
 colunas — Identidade (avatar com cor de identidade via `<input type="color">`, upload de imagem e
@@ -1868,8 +2193,10 @@ de 4 barras não fica no card — só dentro do modo de edição) · Status com 
 'geral' | 'descricao' | 'ataques' | 'habilidades'`, também divergência deliberada do mockup — que
 mostra 2): Geral (Cadência + Bônus de Iniciativa + Deslocamento na mesma linha — deslocamento é um
 terceiro item de `.criatura__stats--info`, não card próprio — e Regeneração opcional abaixo),
-Descrição (Conceito/Gancho/Motivação, Natureza Física/Tema de Horror, Anotações), Ataques e
-Habilidades (cada uma sua própria aba, grades de cards, Ataque com botões Teste e Dano) — mesmo
+Descrição (Conceito/Gancho/Motivação, Natureza Física/Tema de Horror, Anotações), Ataques (com a
+barra "Rolagem rápida" — `app-rolagem-rapida` — acima da lista de ataques, mesma barra/Montador da
+ficha de jogador) e Habilidades (cada uma sua própria aba, grades de cards, Ataque com botões Teste
+e Dano) — mesmo
 shell/padrões de `FichaVisualizacao` (jogador) e dos blocos canônicos de
 `docs/design/tema/_componentes.scss`, alvo de fidelidade
 `docs/design/examples/ficha-de-criatura.html`. Abas sempre ocupam 100% da barra (`flex: 1 1 0` em
@@ -1988,10 +2315,41 @@ progresso no topo, resumo operacional vira bottom sheet aberto por um botão ded
 
 ### Encontro de Combate — `backend/encontro`, `frontend/src/app/modules/encontro`
 
-Tela única (`PainelEncontro`, rota `/painel/:campanhaId/iniciativa`, `:encontroId` opcional para
-histórico) que bifurca por `ehMestre()`: o jogador é espectador, rola a própria iniciativa e só
-pode avançar/encerrar o turno da própria ficha (o backend confirma que o combatente do slot atual
-pertence à ficha do usuário ativo). O mestre mantém todos os controles de condução.
+Tela única (rota `/campanhas/:campanhaId/iniciativa`, `:encontroId` opcional para histórico) com
+duas visões em páginas separadas (`ui-39`): `PainelEncontroShell` resolve o papel
+(`EncontroPainelDadosService.visaoDoMestre`) e monta `PainelEncontroMestre` (todos os controles de
+condução) ou `PainelEncontroJogador` (rola a própria iniciativa e só pode avançar o turno da própria
+ficha — o backend confirma que o combatente do slot atual pertence à ficha do usuário ativo). O
+`EncontroPainelDadosService` (`@Injectable()`, provido pela casca) é o único ponto de carga e de
+assinatura de socket; papel desconhecido (membros a caminho) monta a página do mestre, que traz o
+esqueleto de carregamento.
+
+**Visão do mestre (`ui-37`).** Com um encontro carregado, o mestre vê o palco de uma só vista
+(`PainelEncontroMestre`): `app-coluna-acoes` (Combate/Ferramentas) | `app-trilha-turnos` | coluna fixa de
+Rolagens (`app-historico-rolagens-sidebar [fixo]`) | palco com `app-conducao-turno`,
+`app-resumo-combatente` (ficha resumida de quem age) e a grade `.grade--compacta.grade--palco`.
+Sem combate aberto
+(`ui-38`) o mestre mantém a mesma casca, com estado vazio e o dialog "Novo combate" (`app-modal`)
+no lugar do antigo formulário inline; "Combate atual" só aparece havendo combate aberto.
+Os combates encerrados: menu ancorado no gatilho "N encerrados" (com combate na tela) ou seção
+"Combates anteriores" em cartões (sem combate) — ver DESIGN. As leituras puras (turnos por rodada, origem, defesas, sigla) vivem
+em `encontro-leitura.util.ts` e são compartilhadas com o cartão. Composição em
+`docs/design/DESIGN.md` ("Iniciativa — visão do mestre").
+
+**Visão do jogador (`ui-39`).** Mesma casca (coluna de ações só com Ferramentas | `app-trilha-turnos` |
+Rolagens fixas | palco), com a própria ficha (`app-ficha-campanha-card`, `mostrarTopo=false`, sem
+cabeçalho de seção) e o bloco `app-acao-jogador` no topo da trilha — rolar a própria
+iniciativa (preset da ficha ou `iniciativaFormulaCustom`), avançar turno só na própria vez, "Faltam N
+turnos" (`turnosAteAVez`), o chamado do mestre (`iniciativaPedida`) e o aviso "Sua vez!". Sem combatente
+com ficha em campo o palco é a grade de leitura. Layout comum às duas visões no parcial
+`paginas/_casca-iniciativa.scss`; apoio de teste compartilhado em `painel-encontro.testing.ts`
+(excluído do build em `tsconfig.app.json`). Composição em `docs/design/DESIGN.md` ("Iniciativa — visão do
+jogador").
+
+**Foto ampliada na trilha.** Nas duas visões, o avatar de quem tem foto (ficha ou avulso com
+`imagemUrl`) abre o preview ampliado em hover sustentado de mouse (600 ms, foto inteira em 300×300,
+`contain`) — o mesmo do Esquadrão da campanha, via `appPreviewAvatar`
+(`shared/preview-avatar/`). Avatar de sigla e toque não abrem nada.
 
 Um combatente **avulso** (sem ficha) só existe dentro do encontro: cor obrigatória + imagem
 opcional persistidas em `encontro_combatente` (`cor_avulso`/`imagem_url_avulso`); o modo "Editar
@@ -2279,8 +2637,16 @@ Decisões que **continuam governando código novo**. Não as re-litigue sem fala
   retroativamente o redesenho da tela de ficha e novos ajustes dessa mesma frente entram nela em vez
   de virar spec solta. É a **exceção** consciente ao "active/ = task da sessão atual".
 - **A ficha permite estado incoerente de propósito** — a validação do backend só checa **teto**
-  (Vida ≤ máximo, Nível no intervalo da classe). Condições (Morrendo/Machucado/Inconsciente) são
-  alternadas à mão e nunca validadas; exceder o Inventário máximo é **aviso**, não trava.
+  (Vida ≤ máximo, Nível no intervalo da classe). Morrendo/Inconsciente continuam alternadas à mão e
+  nunca validadas; exceder o Inventário máximo é **aviso**, não trava. **Machucado é a exceção**
+  desde a I-032 (2026-09-22): derivado da Vida a cada ajuste de vitalidade (`resolverMachucadoPelaVida`,
+  `shared/regras/agente/machucado.ts`) com histerese (liga ≤ 50%, mantém entre 50%-99%, desliga só
+  em 100%), calculado tanto no backend (`FichaService.alterarVitalidade`) quanto no frontend
+  (`FichaEdicaoService.ajustarVitalidade`) — o toggle manual continua existindo (Anestesia etc.) e
+  vale até a próxima mudança de Vida. As três condições de qualquer ficha `JOGADOR` da campanha
+  (I-031) chegam a **todo** membro via `CampanhaMembroFichaResumoDto` — únicos campos que atravessam
+  a carteirinha sem `acessoCompleto` — e se propagam em tempo real por `ficha:condicoes-alteradas`
+  (payload só `campanhaId`, sala `campanha:<id>`, emitido junto de todo `ficha:alterada`).
 - **Gate de qualidade é definição de pronto** — toda tarefa exige evidência contra a spec e as
   convenções, revisão do diff e verificação proporcional. UI exige verificação ao vivo conforme
   `verify`; item sem uma verificação obrigatória permanece aberto. **Qualidade acima de velocidade**

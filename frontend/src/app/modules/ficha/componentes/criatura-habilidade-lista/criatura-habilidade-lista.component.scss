@@ -1,12 +1,22 @@
 @use "tema/breakpoints" as bp;
 
 :host {
-    display: block;
+    // Flex em coluna para a lista poder encolher e rolar por dentro (ver `&__itens`); fora de um
+    // flex-pai (ex.: empilhado) `flex`/`min-height` não têm efeito e o host segue como bloco.
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 // Habilidades da ficha de criatura — mesmo desenho de cabeçalho/card de `criatura-ataque-lista`,
 // alvo de fidelidade docs/design/examples/ficha-de-criatura.html.
 .habilidade-lista {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+
     &__cabecalho {
         display: flex;
         align-items: center;
@@ -56,6 +66,44 @@
         }
     }
 
+    // Área rolável (lista + formulário de item novo). Rola por dentro só quando a coluna Status está
+    // travada na altura da coluna vizinha (`CriaturaVisualizacao`, `&__coluna--status-rolavel`):
+    // cabeçalho fixo, cartões rolando com fade só onde há corte (`appOverflowFade`, mesmo desenho de
+    // `habilidades__lista` da ficha de jogador). Sem altura definida (empilhado/mobile) não há
+    // overflow e nada muda.
+    &__rolagem {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 22px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 22px;
+        }
+    }
+
     &__itens {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -98,15 +146,47 @@
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-compact);
     }
+    // Cor por tipo (pedido do autor, 2026-09-18 — substitui a escala anterior baseada em
+    // `--cor-ficha`, que ficava ilegível/sem graça em fichas de cor livre escura): Passiva em
+    // branco, De Gatilho em cinza, Ativa na cor do tema — os três tokens `--selo-*` de
+    // `_tokens.scss`, cada um já com o próprio glow (box-shadow).
+    &__chip--passiva {
+        color: var(--selo-branco);
+        border-color: var(--selo-branco-border);
+        background: var(--selo-branco-dim);
+        box-shadow: 0 0 8px var(--selo-branco-glow);
+    }
+    &__chip--gatilho {
+        color: var(--selo-cinza);
+        border-color: var(--selo-cinza-border);
+        background: var(--selo-cinza-dim);
+        box-shadow: 0 0 8px var(--selo-cinza-glow);
+    }
+    &__chip--ativa {
+        color: var(--selo-tema);
+        border-color: var(--selo-tema-border);
+        background: var(--selo-tema-dim);
+        box-shadow: 0 0 8px var(--selo-tema-glow);
+    }
     &__descricao {
         margin: 0;
         font: 13px/1.55 var(--font-sans);
         color: var(--text-dim);
+        white-space: pre-wrap;
     }
+    // "Tag clara" (pedido do autor) — mesmo desenho de `&__chip`, mas sem o tom de destaque:
+    // fundo levemente mais claro que o card e quebra de linha preservada (restrição pode ser
+    // um texto livre longo, não só uma palavra).
     &__restricao {
+        display: inline-block;
+        padding: 3px 7px;
         font: 11px var(--font-sans);
         font-style: italic;
         color: var(--text-mute);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-compact);
+        white-space: pre-wrap;
     }
     &__acoes {
         display: flex;
@@ -128,18 +208,12 @@
             border-color: var(--accent-border);
         }
     }
-    // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
-    // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
-    &__acao--confirmar {
-        width: auto;
-        padding: 0 8px;
-        color: var(--vida);
-    }
-
     // --- Formulário: grade rotulada (mesmo desenho do de Ataques) ---
+    // Nome ocupa o máximo da coluna; o Tipo (Ativa/Gatilho/Passiva) fica só com a largura que precisa,
+    // no fim da linha. Descrição/Restrição/ações ocupam a linha inteira (`--largo`/`__form-acoes`).
     &__form {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
         width: 100%;
     }

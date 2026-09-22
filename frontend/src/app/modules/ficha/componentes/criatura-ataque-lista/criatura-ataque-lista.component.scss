@@ -1,13 +1,23 @@
 @use "tema/breakpoints" as bp;
 
 :host {
-    display: block;
+    // Flex em coluna para a lista poder encolher e rolar por dentro (ver `&__itens`); fora de um
+    // flex-pai (ex.: empilhado) `flex`/`min-height` não têm efeito e o host segue como bloco.
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 // Ataques da ficha de criatura — alvo de fidelidade docs/design/examples/ficha-de-criatura.html:
 // cabeçalho "rótulo + contagem + régua + ações", cards em auto-fit de 300px com nome/dano na mesma
 // linha, marcas do ataque em selos e o rodapé Teste/Dano separado por uma linha.
 .ataque-lista {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+
     // Cabeçalho de seção canônico (título + contagem + régua), mesmo bloco de `.card__cabecalho`
     // (`_componentes.scss`) — replicado aqui porque o encapsulamento de estilos do Angular não
     // deixa a definição de outro componente vazar pra este.
@@ -60,6 +70,44 @@
         }
     }
 
+    // Área rolável (lista + formulário de item novo). Rola por dentro só quando a coluna Status está
+    // travada na altura da coluna vizinha (`CriaturaVisualizacao`, `&__coluna--status-rolavel`):
+    // cabeçalho fixo, cartões rolando com fade só onde há corte (`appOverflowFade`, mesmo desenho de
+    // `habilidades__lista` da ficha de jogador). Sem altura definida (empilhado/mobile) não há
+    // overflow e nada muda.
+    &__rolagem {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        --fade-topo: 0px;
+        --fade-base: 0px;
+        &.overflow-fade--topo,
+        &.overflow-fade--base {
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+            mask-image: linear-gradient(
+                to bottom,
+                transparent 0,
+                #000 var(--fade-topo),
+                #000 calc(100% - var(--fade-base)),
+                transparent 100%
+            );
+        }
+        &.overflow-fade--topo {
+            --fade-topo: 22px;
+        }
+        &.overflow-fade--base {
+            --fade-base: 22px;
+        }
+    }
+
     &__itens {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -86,20 +134,15 @@
         // reage à largura real da célula, não à do viewport.
         container-type: inline-size;
     }
+    // A expressão de dano deixou o cabeçalho (vive no tooltip dos botões de rolagem): o nome ocupa
+    // a largura inteira do card.
     &__cabecalho-item {
         display: flex;
         align-items: baseline;
-        justify-content: space-between;
-        gap: 10px;
     }
     &__nome {
         font: 600 14px var(--font-sans);
         color: var(--text);
-    }
-    &__dano {
-        font: 700 13px var(--font-mono);
-        color: var(--text);
-        white-space: nowrap;
     }
 
     &__marcas {
@@ -116,10 +159,45 @@
         border: 1px solid var(--border-strong);
         border-radius: var(--radius-compact);
     }
+    // Selo de custo de ação (pedido do autor, 2026-09-18 — substitui a escala anterior baseada
+    // em `--cor-ficha`, que ficava ilegível/sem graça em fichas de cor livre escura). Progressão
+    // de "peso" pelos tokens `--selo-*` de `_tokens.scss` (cada um já com o próprio glow):
+    // Movimento em cinza, Padrão na cor do tema, Completa em branco. Turno (ação que consome o
+    // turno inteiro, a mais cara de todas — `CustoAcaoEnum`, 2026-09-18) usa o mesmo branco de
+    // Completa com um glow mais largo, pra continuar lendo como "ainda mais" sem introduzir uma
+    // 4ª cor. Ação Livre (a mais barata) fica sem glow — só o contorno padrão de `&__marca`.
+    &__marca--acao_livre {
+        color: var(--text-mute);
+    }
+    &__marca--movimento {
+        color: var(--selo-cinza);
+        border-color: var(--selo-cinza-border);
+        background: var(--selo-cinza-dim);
+        box-shadow: 0 0 8px var(--selo-cinza-glow);
+    }
+    &__marca--padrao {
+        color: var(--selo-tema);
+        border-color: var(--selo-tema-border);
+        background: var(--selo-tema-dim);
+        box-shadow: 0 0 8px var(--selo-tema-glow);
+    }
+    &__marca--completa {
+        color: var(--selo-branco);
+        border-color: var(--selo-branco-border);
+        background: var(--selo-branco-dim);
+        box-shadow: 0 0 8px var(--selo-branco-glow);
+    }
+    &__marca--turno {
+        color: var(--selo-branco);
+        border-color: var(--selo-branco-border);
+        background: var(--selo-branco-dim);
+        box-shadow: 0 0 14px var(--selo-branco-glow);
+    }
     &__efeito {
         margin: 0;
         font: 13px/1.55 var(--font-sans);
         color: var(--text-dim);
+        white-space: pre-wrap;
     }
 
     &__rodape {
@@ -190,14 +268,6 @@
             border-color: var(--accent-border);
         }
     }
-    // `--negative` não existe no tema (`_tokens.scss`) — `--vida` é o vermelho fixo usado pra ações
-    // destrutivas em todo o resto do app (ex.: `.guia__formacao-remover:hover` no assistente).
-    &__acao--confirmar {
-        width: auto;
-        padding: 0 8px;
-        color: var(--vida);
-    }
-
     // --- Formulário: cabeçalho (custo, nome, área), três fórmulas iguais e efeito em texto livre. ---
     &__form {
         display: grid;

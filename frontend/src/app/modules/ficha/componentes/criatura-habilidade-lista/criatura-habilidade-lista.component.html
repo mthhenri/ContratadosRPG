@@ -33,79 +33,74 @@
         <app-estado-vazio tamanho="compacto" titulo="Nenhuma habilidade especial." />
     }
 
-    <ul class="habilidade-lista__itens">
-        @if (editando(-1)) {
-            <li class="habilidade-lista__item habilidade-lista__item--editando">
-                <ng-container
-                    *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
-                />
-            </li>
-        }
-        @for (entrada of itensOrdenados(); track entrada.indice) {
-            @let item = entrada.item;
-            @let idx = entrada.indice;
-            <li
-                class="habilidade-lista__item"
-                [class.habilidade-lista__item--editando]="editando(idx)"
-            >
-                @if (editando(idx)) {
+    <div class="habilidade-lista__rolagem" appOverflowFade>
+        <ul class="habilidade-lista__itens">
+            @if (editando(-1)) {
+                <li class="habilidade-lista__item" #formNovo>
                     <ng-container
-                        *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
+                        *ngTemplateOutlet="formulario; context: { $implicit: 'Adicionar' }"
                     />
-                } @else {
-                    <div class="habilidade-lista__cabecalho-item">
-                        <span class="habilidade-lista__nome">{{ item.nome }}</span>
-                        <span class="habilidade-lista__chip">{{ rotuloTipo(item.tipo) }}</span>
-                    </div>
-                    <p class="habilidade-lista__descricao">{{ item.descricao }}</p>
-                    @if (item.restricao) {
-                        <span class="habilidade-lista__restricao">{{ item.restricao }}</span>
-                    }
-                    @if (editavel() && modoEdicao()) {
-                        <div class="habilidade-lista__acoes">
-                            <button
-                                app-botao-icone
-                                class="habilidade-lista__acao"
-                                type="button"
-                                aria-label="Editar"
-                                (click)="editar(idx)"
-                            >
-                                <app-icone nome="editar" />
-                            </button>
-                            @if (indiceRemovendo() === idx) {
+                </li>
+            }
+            @for (entrada of itensOrdenados(); track entrada.indice) {
+                @let item = entrada.item;
+                @let idx = entrada.indice;
+                <li
+                    class="habilidade-lista__item"
+                    [class.habilidade-lista__item--editando]="editando(idx)"
+                >
+                    @if (editando(idx)) {
+                        <ng-container
+                            *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"
+                        />
+                    } @else {
+                        <div class="habilidade-lista__cabecalho-item">
+                            <span class="habilidade-lista__nome">{{ item.nome }}</span>
+                            <span [class]="classeChipTipo(item.tipo)">{{
+                                rotuloTipo(item.tipo)
+                            }}</span>
+                        </div>
+                        <app-habilidade-descricao
+                            class="habilidade-lista__descricao"
+                            [valor]="item.descricao"
+                            [rotulo]="'Descrição de ' + item.nome"
+                        />
+                        @if (item.restricao) {
+                            <app-editor-markdown
+                                class="habilidade-lista__restricao"
+                                [valor]="item.restricao"
+                                [somenteLeitura]="true"
+                                [compacto]="true"
+                                [rotulo]="'Restrição de ' + item.nome"
+                            />
+                        }
+                        @if (editavel() && modoEdicao()) {
+                            <div class="habilidade-lista__acoes">
                                 <button
-                                    app-botao
-                                    class="habilidade-lista__acao habilidade-lista__acao--confirmar"
-                                    type="button"
-                                    (click)="remover(idx)"
-                                >
-                                    Confirmar remoção
-                                </button>
-                                <button
-                                    app-botao
+                                    app-botao-icone
                                     class="habilidade-lista__acao"
                                     type="button"
-                                    (click)="cancelarRemocao()"
+                                    aria-label="Editar"
+                                    (click)="editar(idx)"
                                 >
-                                    Cancelar
+                                    <app-icone nome="editar" />
                                 </button>
-                            } @else {
                                 <button
                                     app-botao-icone
                                     class="habilidade-lista__acao"
                                     type="button"
                                     aria-label="Remover"
-                                    (click)="pedirRemocao(idx)"
+                                    (click)="remover(idx)"
                                 >
                                     <app-icone nome="excluir" />
                                 </button>
-                            }
-                        </div>
+                            </div>
+                        }
                     }
-                }
-            </li>
-        }
-    </ul>
+                </li>
+            }
+        </ul>
+    </div>
 </section>
 
 <!-- Formulário em grade rotulada, no mesmo desenho do de Ataques. -->
@@ -128,24 +123,24 @@
                 }
             </select>
         </label>
-        <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+        <div class="habilidade-lista__campo habilidade-lista__campo--largo">
             <span class="habilidade-lista__campo-rotulo">Descrição</span>
-            <textarea
+            <app-editor-markdown
                 class="habilidade-lista__textarea"
                 formControlName="descricao"
-                placeholder="O que a habilidade faz"
-                aria-label="Descrição"
-            ></textarea>
-        </label>
-        <label class="habilidade-lista__campo habilidade-lista__campo--largo">
+                [compacto]="true"
+                [rotulo]="'Descrição'"
+            />
+        </div>
+        <div class="habilidade-lista__campo habilidade-lista__campo--largo">
             <span class="habilidade-lista__campo-rotulo">Restrição</span>
-            <input
+            <app-editor-markdown
                 class="habilidade-lista__input"
                 formControlName="restricao"
-                placeholder="Opcional"
-                aria-label="Restrição"
+                [compacto]="true"
+                [rotulo]="'Restrição'"
             />
-        </label>
+        </div>
         <div class="habilidade-lista__form-acoes">
             <button
                 app-botao

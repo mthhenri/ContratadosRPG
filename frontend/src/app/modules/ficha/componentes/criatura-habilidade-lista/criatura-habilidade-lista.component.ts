@@ -1,4 +1,14 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -9,6 +19,10 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
+import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { HabilidadeDescricao } from '../habilidade-descricao/habilidade-descricao.component';
+import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { rotuloHabilidadeTipoCriatura } from '../../rotulos-criatura';
 
@@ -23,7 +37,18 @@ interface HabilidadeIndexada {
 /** Editor no próprio lugar da lista `habilidades` (Habilidades Especiais) da ficha de criatura (m4-04b). */
 @Component({
   selector: 'app-criatura-habilidade-lista',
-  imports: [ReactiveFormsModule, Botao, BotaoIcone, Icone, Tooltip, NgTemplateOutlet, EstadoVazio],
+  imports: [
+    ReactiveFormsModule,
+    Botao,
+    BotaoIcone,
+    EditorMarkdown,
+    HabilidadeDescricao,
+    Icone,
+    Tooltip,
+    NgTemplateOutlet,
+    EstadoVazio,
+    OverflowFade,
+  ],
   templateUrl: './criatura-habilidade-lista.component.html',
   styleUrl: './criatura-habilidade-lista.component.scss',
 })
@@ -37,10 +62,11 @@ export class CriaturaHabilidadeLista {
   protected readonly rotuloTipo = rotuloHabilidadeTipoCriatura;
 
   protected readonly indiceEmEdicao = signal<number | null>(null);
-  protected readonly indiceRemovendo = signal<number | null>(null);
   /** Editar/remover por item só aparece dentro deste modo — evita os ícones ficarem sempre
    * visíveis; o autor entra e sai dele de propósito (botão "Editar"/"Concluir" no cabeçalho). */
   protected readonly modoEdicao = signal(false);
+
+  private readonly confirmacaoService = inject(ConfirmacaoService);
 
   protected readonly itemForm = new FormGroup({
     nome: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -60,12 +86,34 @@ export class CriaturaHabilidadeLista {
     return this.indiceEmEdicao() === indice;
   }
 
+  /** Classe do chip de tipo — Passiva (branco+glow), Gatilho (cinza+glow) e Ativa (cor do
+   * tema+glow), mesma escala usada no selo de custo de ação de `criatura-ataque-lista` (pedido
+   * do autor, 2026-09-18). */
+  protected classeChipTipo(tipo: HabilidadeTipoCriaturaEnum): string {
+    return `habilidade-lista__chip habilidade-lista__chip--${tipo.toLowerCase()}`;
+  }
+
   protected alternarModoEdicao(): void {
     this.modoEdicao.update((valor) => !valor);
     if (!this.modoEdicao()) {
       this.cancelar();
-      this.cancelarRemocao();
     }
+  }
+
+  /** Formulário de item novo (`indiceEmEdicao === -1`), montado como 1º item da lista rolável. */
+  private readonly formNovo = viewChild<ElementRef<HTMLElement>>('formNovo');
+
+  constructor() {
+    // A lista rola por dentro quando a coluna Status está travada na altura da vizinha
+    // (`CriaturaVisualizacao`): o formulário de item novo nasce no topo dela, mas a rolagem pode
+    // estar deslocada pra baixo (lista longa) — traz ele à vista assim que existir. `nearest` só
+    // rola se precisar.
+    effect(() => {
+      const alvo = this.formNovo()?.nativeElement;
+      if (alvo && typeof alvo.scrollIntoView === 'function') {
+        alvo.scrollIntoView({ block: 'nearest' });
+      }
+    });
   }
 
   protected adicionar(): void {
@@ -81,14 +129,6 @@ export class CriaturaHabilidadeLista {
 
   protected cancelar(): void {
     this.indiceEmEdicao.set(null);
-  }
-
-  protected pedirRemocao(indice: number): void {
-    this.indiceRemovendo.set(indice);
-  }
-
-  protected cancelarRemocao(): void {
-    this.indiceRemovendo.set(null);
   }
 
   protected confirmar(): void {
@@ -107,9 +147,19 @@ export class CriaturaHabilidadeLista {
     this.cancelar();
   }
 
-  protected remover(indice: number): void {
+  protected async remover(indice: number): Promise<void> {
+    const item = this.itens()[indice];
+    const confirmado = await this.confirmacaoService.confirmar({
+      titulo: 'Remover habilidade?',
+      mensagem: `Remover ${item.nome}? Esta ação não pode ser desfeita.`,
+      entidade: item.nome,
+      severidade: 'perigo',
+      rotuloConfirmar: 'Remover habilidade',
+    });
+    if (!confirmado) {
+      return;
+    }
     this.emitir(this.itens().filter((_, i) => i !== indice));
-    this.indiceRemovendo.set(null);
     if (this.indiceEmEdicao() === indice) {
       this.cancelar();
     }
