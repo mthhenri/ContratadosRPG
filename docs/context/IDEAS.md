@@ -90,18 +90,71 @@
   por campo editável (nome/contrato/nível/prestígio/cor/imagem/classe/arquétipo/origem) e a
   migração do modal de Origem (`app-modal`) e do recorte de enquadramento
   (`app-ajuste-enquadramento-imagem`) para dentro dele.
+- **Investigação 2026-09-22 (sem implementação — decisão do autor foi só discutir, não tocar código):**
+  confirmado no HTML real que o bloco `Identidade` propriamente dito é menor que o `<section>` que o
+  hospeda em cada componente (`ficha-cartao--identidade` em `FichaVisualizacao`, linhas 77–1061;
+  `ficha-cartao` em `FichaCampanhaCard`, linhas 86–946) — em ambos, uma fatia grande do `<section>`
+  (Vitalidade/Saúde) é vitals coladas por layout, não Identidade de verdade. O trecho de
+  avatar+cor+enquadramento é **byte-idêntico** nos dois arquivos; os nomes de signal (`editandoClasse`,
+  `rascunhoClasse`, `corFichaForm`, `arquivoPendente`, `enquadramentoOrigem`, `editandoOrigem`,
+  `rascunhoOrigem`) também batem 1:1 no TS dos dois componentes. **Achado novo**, não registrado antes:
+  a ordem diverge entre os dois — `FichaVisualizacao` põe Personalidade/Origem **depois** da
+  Vitalidade (rodapé full-width do card); `FichaCampanhaCard` põe **antes** (dentro da coluna do
+  avatar). Isso significa que uma extração não pode assumir "um bloco fechado idêntico nos dois
+  lugares" — precisaria expor Personalidade/Origem como projeção separada (`ng-content`/sub-
+  componente) pra cada pai manter sua própria ordem, ou unificar a ordem visualmente num dos dois
+  (decisão de produto, não só refactor). Nenhuma das duas opções foi escolhida — fica para quando a
+  ideia for retomada para implementação.
 
-### I-027 — Janela externa para anotações/histórico de dados · frontend/UX
+### I-027 — Janela externa para histórico de rolagens, anotações da ficha e Caderno · frontend/UX
 
-- **Ideia:** permitir abrir o histórico de rolagens (ou outro painel de anotações/dados) numa
-  janela separada do navegador ("por fora"), em vez de só como painel lateral/flutuante dentro da
-  mesma aba.
-- **Origem:** pedido do autor em conversa (2026-09-11), junto de outros ajustes de ficha.
+- **Ideia:** permitir abrir três painéis numa janela separada do navegador ("por fora"), em vez de
+  só como painel lateral/flutuante dentro da mesma aba: **histórico de rolagens**, **anotações da
+  ficha** e o **Caderno da campanha**. Decisão do autor (2026-09-22): via `window.open` com a mesma
+  SPA roteada para o painel (opção A entre as cogitadas — ver descartadas abaixo), mantendo
+  sincronia em tempo real (WebSocket) com a janela principal. O visual da janela externa (chrome/
+  layout) ainda precisa ser definido antes de implementar.
+- **Origem:** pedido do autor em conversa (2026-09-11) para o histórico de rolagens; ampliado em
+  2026-09-22 para cobrir também anotações da ficha e Caderno, na mesma conversa em que a opção A
+  foi escolhida.
 - **Por quê:** mestres e jogadores que mantêm a mesa em uma tela e preferem acompanhar histórico/
-  anotações em outro monitor ou janela, sem competir por espaço com a ficha/campanha principal.
-- **Custo aparente:** a definir — depende de qual painel (histórico de rolagens, caderno) e se a
-  janela externa usa `window.open` com a mesma SPA roteada para aquele painel, mantendo sincronia
-  em tempo real (WebSocket) com a janela principal.
+  anotações/Caderno em outro monitor ou janela, sem competir por espaço com a ficha/campanha
+  principal.
+- **Investigação 2026-09-22 (arquitetura atual dos 3 painéis, antes de especificar):**
+  - `historico-rolagens-sidebar` (`shared/historico-rolagens-sidebar/`) já é **genérico/
+    apresentacional** — não injeta service de feature nem lê `ActivatedRoute`; recebe `itens`
+    (`RolagemResumoDto[]`) e flags de loading via `input()`, emite `carregarMais`. Bom candidato a
+    reuso, mas quem hoje resolve a busca/paginação é sempre a página que o hospeda — a janela
+    externa precisaria de algo que busque os dados por conta própria (a página não existe hoje).
+  - "Anotações da ficha" existe (`dados.anotacoes: string`, editor markdown num
+    `app-painel-flutuante`), mas está **duplicada sem wrapper compartilhado** entre
+    `FichaVisualizacao` (jogador) e `CriaturaVisualizacao` (criatura) — cada uma tem seu próprio
+    painel e liga em `FichaEdicaoService`/`FichaEdicaoCriaturaService` diretamente.
+  - `caderno-flutuante` é o mais **acoplado à feature**: recebe `campanhaId`/`membros`/`ehMestre`
+    como inputs obrigatórios e injeta direto `PaginaCadernoService`, `TempoRealService` e um Store
+    próprio (`CadernoFlutuanteStore`) — não tem hoje nenhum caminho de "servir sozinho" sem esses
+    inputs resolvidos por um pai.
+  - Existe um primitivo compartilhado de painel flutuante (`shared/ui/painel-flutuante/`,
+    `app-painel-flutuante`) usado por Caderno/Calculadora/Leitor de Documentos/Anotações — cuida de
+    drag, posição persistida, z-index, minimizar, fechar. `historico-rolagens-sidebar` **não** o
+    usa (é sidebar fixa, não janela arrastável).
+  - **Nenhuma rota hoje serve um painel isolado sem o shell da aplicação** — toda rota passa por
+    `LayoutComponent`/`app-layout`, que só pula a topbar completa para `/acesso-negado`
+    (`rotaIsolada()`). Uma janela externa precisaria de um destino de rota novo, isolado do shell,
+    para cada um dos três painéis — ainda não existe.
+- **Custo aparente:** alto — não é só `window.open` para uma rota existente (nenhuma serve hoje):
+  precisa (1) um padrão de rota "isolada" reutilizável para os três; (2) cada painel resolver seus
+  próprios dados a partir de params de URL (campanhaId/fichaId) em vez de receber via `@Input` de um
+  pai, o que hoje só o Caderno já faz parcialmente; (3) uma decisão de visual para o chrome da janela
+  externa (com ou sem topbar reduzida, mesmo tema) — ainda em aberto; (4) checar se
+  `historico-rolagens-sidebar` vale a pena virar de fato um primitivo de `shared/ui/` nessa mesma
+  oportunidade, como o autor cogitou.
+- **Opções descartadas:** **B** — `BroadcastChannel` entre abas sem 2ª conexão WS (a aba principal
+  seria a única dona do socket e repassaria eventos pra janela externa); descartada por acoplar as
+  duas abas (fechar a principal mata a externa) para um ganho irrelevante nessa escala. **C** —
+  Picture-in-Picture nativo (Document PiP API), reparentando o painel existente sem nova rota/
+  conexão; descartada como via principal por só funcionar em navegadores Chromium (sem Firefox/
+  Safari) — pode voltar como upgrade opcional depois da opção A.
 
 ### I-023 — Gate automático de convenções no CI · processo/qualidade
 
