@@ -15,7 +15,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
-import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
+import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -51,7 +51,7 @@ const UM_DIA_MS = 24 * 60 * 60 * 1000;
     RouterLink,
     Icone,
     OverflowFade,
-    ResultadoRolagem,
+    CartaoRolagem,
     Botao,
     BotaoIcone,
     Cartao,
@@ -191,9 +191,17 @@ export class CampanhaEspectador {
     this.tempoRealService.rolagemRegistrada$
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
+    // Exclusão por ADMIN (I-033): o evento leva só o id, sem conteúdo — mesma sala do registro.
+    this.tempoRealService.rolagemExcluida$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: (excluida) => this.onRolagemExcluida(excluida.id) });
 
     const relogio = setInterval(() => this.agora.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
+  }
+
+  private onRolagemExcluida(id: number): void {
+    this.rolagens.update((atuais) => atuais.filter((rolagem) => rolagem.id !== id));
   }
 
   private onRolagemRegistrada(rolagem: RolagemResumoDto): void {

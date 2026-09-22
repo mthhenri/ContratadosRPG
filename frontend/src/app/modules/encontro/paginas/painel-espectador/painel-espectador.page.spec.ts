@@ -146,6 +146,7 @@ describe('PainelEncontroEspectador', () => {
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
     };
 
@@ -263,6 +264,7 @@ describe('PainelEncontroEspectador', () => {
             entrarSalaCampanha: vi.fn(),
             sairSalaCampanha: vi.fn(),
             rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
+            rolagemExcluida$: new Subject().asObservable(),
             encontroAlterado$: new Subject<{ encontro: { campanhaId: number } }>().asObservable(),
           },
         },

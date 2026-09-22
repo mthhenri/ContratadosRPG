@@ -96,6 +96,7 @@ describe('CampanhaDetalheDadosService', () => {
       fichaVisibilidadeAlterada$: fichaVisibilidadeAlterada$.asObservable(),
       fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable() as Observable<RolagemResumoDto>,
+      rolagemExcluida$: new Subject().asObservable(),
       estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
       reconexao,

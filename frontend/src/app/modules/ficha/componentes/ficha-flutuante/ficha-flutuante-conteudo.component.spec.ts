@@ -108,7 +108,7 @@ describe('FichaFlutuanteConteudo', () => {
           provide: FichaService,
           useValue: { recuperarFicha, recuperarFichaCriatura },
         },
-        { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioLogadoId }) } },
+        { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioLogadoId }), autenticado: () => false } },
       ],
     });
 

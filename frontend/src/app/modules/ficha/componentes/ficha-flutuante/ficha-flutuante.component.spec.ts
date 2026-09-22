@@ -48,7 +48,7 @@ describe('FichaFlutuante', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: FichaService, useValue: { recuperarFicha } },
-        { provide: SessaoService, useValue: { usuario: () => ({ id: 7 }) } },
+        { provide: SessaoService, useValue: { usuario: () => ({ id: 7 }), autenticado: () => false } },
       ],
     });
     const fixture = TestBed.createComponent(FichaFlutuante);

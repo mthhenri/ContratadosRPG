@@ -100,6 +100,7 @@ describe('CampanhaEspectador', () => {
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
     };
 
     TestBed.configureTestingModule({
@@ -136,7 +137,7 @@ describe('CampanhaEspectador', () => {
 
     expect(raiz.querySelector('.espectador__titulo')?.textContent?.trim()).toBe('Contenção Delta');
     expect(raiz.querySelector('.espectador__selo')?.textContent).toContain('Modo espectador');
-    expect(raiz.querySelector('.espectador__item')?.textContent).toContain('1d20+5');
+    expect(raiz.querySelector('li[app-cartao-rolagem]')?.textContent).toContain('1d20+5');
   });
 
   it('mostra o esqueleto enquanto carrega', () => {
@@ -157,6 +158,7 @@ describe('CampanhaEspectador', () => {
             entrarSalaCampanha: vi.fn(),
             sairSalaCampanha: vi.fn(),
             rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
+            rolagemExcluida$: new Subject().asObservable(),
           },
         },
       ],
@@ -166,7 +168,7 @@ describe('CampanhaEspectador', () => {
     const raiz = fixture.nativeElement as HTMLElement;
 
     expect(raiz.querySelector('.espectador__esqueleto')).not.toBeNull();
-    expect(raiz.querySelector('.espectador__item')).toBeNull();
+    expect(raiz.querySelector('li[app-cartao-rolagem]')).toBeNull();
     expect(raiz.querySelector('.espectador__lista')).toBeNull();
   });
 
@@ -215,13 +217,13 @@ describe('CampanhaEspectador', () => {
 
     rolagemRegistrada$.next(existente);
     fixture.detectChanges();
-    expect(raiz.querySelectorAll('.espectador__item')).toHaveLength(1);
+    expect(raiz.querySelectorAll('li[app-cartao-rolagem]')).toHaveLength(1);
 
     const nova = rolagem({ id: 2, rotulo: '2d6+3' });
     rolagemRegistrada$.next(nova);
     fixture.detectChanges();
 
-    const itens = raiz.querySelectorAll('.espectador__item');
+    const itens = raiz.querySelectorAll('li[app-cartao-rolagem]');
     expect(itens).toHaveLength(2);
     expect(itens[0].textContent).toContain('2d6+3');
   });
@@ -249,7 +251,7 @@ describe('CampanhaEspectador', () => {
     fixture.detectChanges();
 
     expect(campanhaProjecaoService.recuperarPainelEspectador).toHaveBeenCalledWith(CAMPANHA_ID, 2, 20);
-    expect(raiz.querySelectorAll('.espectador__item')).toHaveLength(2);
+    expect(raiz.querySelectorAll('li[app-cartao-rolagem]')).toHaveLength(2);
     expect(raiz.querySelector('.espectador__mais')).toBeNull();
   });
 
@@ -289,6 +291,7 @@ describe('CampanhaEspectador', () => {
               entrarSalaCampanha: vi.fn(),
               sairSalaCampanha: vi.fn(),
               rolagemRegistrada$: new Subject<RolagemResumoDto>().asObservable(),
+              rolagemExcluida$: new Subject().asObservable(),
             },
           },
         ],

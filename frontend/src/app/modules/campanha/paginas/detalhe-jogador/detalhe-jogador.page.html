@@ -525,37 +525,10 @@
                             <ul class="detalhe__historico-lista">
                                 @for (item of dados.rolagensFeed(); track item.id) {
                                 <li
-                                    class="detalhe__historico-item"
-                                    [style.--cor-ficha]="item.corFicha"
-                                >
-                                    <div class="detalhe__historico-meta">
-                                        <span class="detalhe__historico-rotulo"
-                                            >{{ item.rotulo }}</span
-                                        >
-                                        <span class="detalhe__historico-autor"
-                                            >{{ item.nomeAutor }} · {{ item.nomeFicha }}</span
-                                        >
-                                        @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA)
-                                        {
-                                        <app-chip severidade="aviso" tom="contorno"
-                                            >privada</app-chip
-                                        >
-                                        }
-                                        <span class="detalhe__historico-data"
-                                            >{{ item.createdDate | date: 'dd/MM HH:mm' }}</span
-                                        >
-                                    </div>
-                                    @if (item.formula) {
-                                    <span class="detalhe__historico-formula"
-                                        >{{ item.formula }}</span
-                                    >
-                                    }
-                                    <app-resultado-rolagem
-                                        [resultado]="item.resultado"
-                                        [corFicha]="item.corFicha"
-                                        [compacto]="true"
-                                    />
-                                </li>
+                                    app-cartao-rolagem
+                                    [rolagem]="item"
+                                    [autor]="item.nomeAutor + ' · ' + item.nomeFicha"
+                                ></li>
                                 }
                             </ul>
                             }

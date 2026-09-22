@@ -288,6 +288,17 @@ export class CriaturaVisualizar {
       )
       .subscribe({ next: (rolagem) => this.onRolagemRemota(rolagem) });
 
+    // Rolagem excluída por um ADMIN (I-033): sai do histórico da barra lateral.
+    this.tempoRealService.rolagemExcluida$
+      .pipe(
+        filter((excluida) => excluida.fichaId === this.fichaId),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
+        next: (excluida) =>
+          this.historicoRolagens.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+      });
+
     effect(() => {
       if (this.tempoRealService.reconexao() > 0) {
         this.fichaService.recuperarFichaCriatura(this.fichaId).subscribe({

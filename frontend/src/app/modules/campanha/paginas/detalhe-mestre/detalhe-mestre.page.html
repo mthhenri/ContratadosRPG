@@ -288,28 +288,11 @@
                 } @else {
                 <ul class="detalhe-mestre__rolagens-lista">
                     @for (item of dados.rolagensFeed(); track item.id) {
-                    <li class="detalhe-mestre__rolagens-item" [style.--cor-ficha]="item.corFicha">
-                        <div class="detalhe-mestre__rolagens-meta">
-                            <span class="detalhe-mestre__rolagens-rotulo">{{ item.rotulo }}</span>
-                            <span class="detalhe-mestre__rolagens-autor"
-                                >{{ item.nomeAutor }} · {{ item.nomeFicha }}</span
-                            >
-                            @if (item.visibilidade === RolagemVisibilidadeEnum.PRIVADA) {
-                            <app-chip severidade="aviso" tom="contorno">privada</app-chip>
-                            }
-                            <span class="detalhe-mestre__rolagens-data"
-                                >{{ item.createdDate | date: 'dd/MM HH:mm' }}</span
-                            >
-                        </div>
-                        @if (item.formula) {
-                        <span class="detalhe-mestre__rolagens-formula">{{ item.formula }}</span>
-                        }
-                        <app-resultado-rolagem
-                            [resultado]="item.resultado"
-                            [corFicha]="item.corFicha"
-                            [compacto]="true"
-                        />
-                    </li>
+                    <li
+                        app-cartao-rolagem
+                        [rolagem]="item"
+                        [autor]="item.nomeAutor + ' · ' + item.nomeFicha"
+                    ></li>
                     }
                 </ul>
                 }

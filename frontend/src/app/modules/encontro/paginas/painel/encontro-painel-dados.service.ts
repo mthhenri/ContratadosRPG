@@ -242,6 +242,12 @@ export class EncontroPainelDadosService {
     this.tempoRealService.rolagemRegistrada$
       .pipe(takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.adicionarRolagemAoFeed(rolagem) });
+    this.tempoRealService.rolagemExcluida$
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (excluida) =>
+          this.rolagensDoFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+      });
   }
 
   /**

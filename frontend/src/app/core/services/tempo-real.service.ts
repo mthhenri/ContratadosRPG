@@ -18,7 +18,7 @@ import type {
   FichaResumoDto,
   FichaVisibilidadeAlteradaDto,
 } from '@contratados-rpg/shared/dtos/ficha';
-import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type { RolagemExcluidaDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
   PaginaCadernoEsquadraoPresencaDto,
@@ -90,6 +90,7 @@ export class TempoRealService {
   private readonly membroEntrouSubject = new Subject<CampanhaMembroEntradaDto>();
   private readonly acessoRevogadoSubject = new Subject<FichaAcessoRevogadoDto>();
   private readonly rolagemRegistradaSubject = new Subject<RolagemResumoDto>();
+  private readonly rolagemExcluidaSubject = new Subject<RolagemExcluidaDto>();
   private readonly estadoAlteradoSubject = new Subject<CampanhaEstadoAlteradaDto>();
   private readonly inventarioAlteradoSubject = new Subject<CampanhaInventarioAlteradoDto>();
   private readonly encontroAlteradoSubject = new Subject<EncontroAlteradoDto>();
@@ -131,6 +132,14 @@ export class TempoRealService {
    */
   readonly rolagemRegistrada$: Observable<RolagemResumoDto> =
     this.rolagemRegistradaSubject.asObservable();
+  /**
+   * Uma rolagem foi excluída por um `ADMIN` (I-033) — chega na mesma sala em que
+   * `rolagemRegistrada$` chegaria e leva só o `id` (sem conteúdo). Quem lista rolagens a tira da
+   * lista. Também é alimentado por `notificarRolagemExcluida` para o próprio admin que excluiu, que
+   * pode nem estar na sala.
+   */
+  readonly rolagemExcluida$: Observable<RolagemExcluidaDto> =
+    this.rolagemExcluidaSubject.asObservable();
   readonly estadoAlterado$: Observable<CampanhaEstadoAlteradaDto> =
     this.estadoAlteradoSubject.asObservable();
   readonly inventarioAlterado$: Observable<CampanhaInventarioAlteradoDto> =
@@ -236,6 +245,9 @@ export class TempoRealService {
     this.socket.on('rolagem:registrada', (rolagem: RolagemResumoDto) =>
       this.rolagemRegistradaSubject.next(rolagem),
     );
+    this.socket.on('rolagem:excluida', (rolagem: RolagemExcluidaDto) =>
+      this.rolagemExcluidaSubject.next(rolagem),
+    );
     this.socket.on('campanha:estado-alterado', (evento: CampanhaEstadoAlteradaDto) =>
       this.estadoAlteradoSubject.next(evento),
     );
@@ -335,5 +347,10 @@ export class TempoRealService {
     }
     referencias.set(id, quantidade - 1);
     return false;
+  }
+
+  /** Repassa localmente uma exclusão que este cliente acabou de fazer pelo REST (ver `rolagemExcluida$`). */
+  notificarRolagemExcluida(rolagem: RolagemExcluidaDto): void {
+    this.rolagemExcluidaSubject.next(rolagem);
   }
 }

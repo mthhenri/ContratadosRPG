@@ -235,6 +235,7 @@ describe('CampanhaDetalheJogador', () => {
       fichaVisibilidadeAlterada$: new Subject().asObservable(),
       fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       estadoAlterado$: new Subject().asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
       paginaEsquadraoCriada$: new Subject().asObservable(),
@@ -696,7 +697,7 @@ describe('CampanhaDetalheJogador', () => {
 
     const painelRolar = raiz.querySelector('.detalhe__painel-rolar');
     expect(painelRolar?.querySelector('app-ficha-rolagens-painel')).not.toBeNull();
-    expect(painelRolar?.querySelector('.detalhe__historico-item')?.textContent).toContain('Pontaria');
+    expect(painelRolar?.querySelector('li[app-cartao-rolagem]')?.textContent).toContain('Pontaria');
     expect(raiz.querySelector('.detalhe__painel-historico')).toBeNull();
     expect(raiz.querySelector('.detalhe__painel-sessao')).toBeNull();
     expect(raiz.querySelector('.rolagem-pill')).toBeNull();

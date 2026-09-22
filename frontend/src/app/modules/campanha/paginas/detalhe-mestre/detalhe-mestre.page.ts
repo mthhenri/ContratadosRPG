@@ -1,9 +1,9 @@
 import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { IconeNome } from '../../../../shared/icone/icone.component';
 
@@ -20,9 +20,8 @@ import { Segmentado } from '../../../../shared/ui/segmentado/segmentado.componen
 import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
-import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
+import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -67,15 +66,13 @@ const REGISTRO_SEM_CATALOGACAO = 'SCP - ?????';
     CadernoFlutuante,
     Botao,
     BotaoIcone,
-    Chip,
     EstadoVazio,
-    ResultadoRolagem,
+    CartaoRolagem,
     Icone,
     OverflowFade,
     Tooltip,
     Esqueleto,
     Modal,
-    DatePipe,
     NgTemplateOutlet,
   ],
   templateUrl: './detalhe-mestre.page.html',
@@ -92,7 +89,6 @@ export class CampanhaDetalheMestre {
 
   protected readonly TipoFichaEnum = TipoFichaEnum;
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
-  protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
 
   /** Painel lateral fixo (entregável 3) — sempre montado, alterna Rolagens⇆Inventário, nunca overlay. */
   protected readonly painelLateralAtivo = signal<'rolagens' | 'inventario'>('rolagens');

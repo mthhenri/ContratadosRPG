@@ -393,6 +393,17 @@ export class FichaVisualizar {
       )
       .subscribe({ next: (rolagem) => this.onRolagemRemota(rolagem) });
 
+    // Rolagem excluída por um ADMIN (I-033): sai do histórico da barra lateral.
+    this.tempoRealService.rolagemExcluida$
+      .pipe(
+        filter((excluida) => excluida.fichaId === this.fichaId),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
+        next: (excluida) =>
+          this.historicoRolagens.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+      });
+
     // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch da
     // ficha aberta. O documento buscado entra pelo mesmo merge, então uma edição local pendente
     // sobrevive ao refetch em vez de bloqueá-lo.

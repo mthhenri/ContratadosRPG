@@ -148,6 +148,13 @@ export class CampanhaDetalheDadosService {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: (rolagem) => this.rolagensFeed.update((atuais) => [rolagem, ...atuais]) });
 
+    this.tempoRealService.rolagemExcluida$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (excluida) =>
+          this.rolagensFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+      });
+
     this.tempoRealService.estadoAlterado$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

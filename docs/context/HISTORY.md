@@ -1,5 +1,49 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-21 — `rolagem-excluir-admin`: lixeira de rolagem para ADMIN e `app-cartao-rolagem` compartilhado (fecha `I-033`)
+
+Pedido do autor em conversa, como administrador: apagar uma rolagem do histórico (`is_deleted`),
+por um botão de lixeira discreto no cardzinho da rolagem, com confirmação. Ao apontar que o card
+"não estava centralizado", o autor esclareceu que queria **um componente reutilizado**: o mesmo
+bloco de HTML/SCSS do card (rótulo, autor, chip "privada", horário, fórmula, `app-resultado-rolagem`)
+estava copiado em quatro telas, então a lixeira foi feita depois da extração, uma vez só. Sem spec
+própria (a ideia `I-033` foi implementada direto, a pedido).
+
+- **Backend**: `DELETE /rolagem/:id` (`@TiposPermitidos(ADMIN)` na rota **e** conferência de
+  `tipo === ADMIN` em `RolagemService.excluirRolagem`, que é a árbitra). `RolagemRepository`
+  ganhou `recuperarParaExclusao` (recorte mínimo + visibilidade) e `excluirRolagem` (via
+  `executarSoftDelete`); 404 (`ResourceNotFoundException`) se não existe ou já foi excluída. Sem
+  migration — `rolagem` já tinha `is_deleted`/`deleted_date` (`0011`). Só o `ADMIN` global exclui;
+  o Mestre da campanha **não** (decisão desta tarefa, reavaliável).
+- **Tempo real**: novo evento `rolagem:excluida` (`CampanhaGateway.emitirRolagemExcluida`), mesma
+  sala que `emitirRolagemRegistrada` usaria (pública → sala cheia + espectador, ou `ficha:<id>` se
+  ficha solta; privada → só sala do mestre). Payload `RolagemExcluidaDto` (`id`, `fichaId`,
+  `campanhaId`, `visibilidade`), **sem conteúdo**, então privada não vaza. No frontend,
+  `TempoRealService.rolagemExcluida$` (+ `notificarRolagemExcluida`, que `RolagemService.excluir`
+  chama após o REST porque o admin pode nem estar na sala). Removem a rolagem da lista:
+  `campanha-detalhe-dados.service`, `previa-jogador`, `encontro-painel-dados.service`,
+  `espectador.page`, `visualizar.page` e `visualizar-criatura.page`.
+- **`app-cartao-rolagem`** (`frontend/src/app/shared/cartao-rolagem/`, `li[app-cartao-rolagem]`):
+  substitui os quatro cards copiados (`historico-rolagens-sidebar`, `espectador`, `detalhe-mestre`,
+  `detalhe-jogador`); inputs `rolagem`, `autor`, `tempo`. A lixeira (`app-botao-icone` mini, ícone
+  `excluir`) é `position:absolute` no canto inferior direito, `--text-mute` a 60% de opacidade,
+  vermelha (`--erro`) só em hover/foco; só renderiza para `ADMIN`. Confirma por `ConfirmacaoService`
+  com `aoConfirmar` (diálogo fica em "carregando" até o REST responder). O SCSS do espectador
+  usava px onde os outros usavam tokens — passou a usar os tokens do componente.
+- **Achado de infra dev**: o `proxy.conf.json` não encaminhava `/rolagem` ao backend (o DELETE
+  voltava 404 do próprio dev server). Adicionada a entrada `/rolagem`; **quem já tem `npm run
+  frontend:dev` rodando precisa reiniciar** para o proxy pegar.
+- **Verificação**: 2045 testes do frontend e 15 do backend de rolagem passam (mais o spec novo do
+  card e 3 casos de `excluirRolagem`); ao vivo (backend `3101` + frontend `4301` próprios, usuários
+  e campanha de teste, depois removidos por soft delete): admin vê 3 lixeiras e o jogador 0; DELETE
+  respondeu 200; o card sumiu para o admin e, **sem recarregar**, para o jogador; desktop
+  `1920×1080` e mobile `360×800` sem overflow horizontal, alvo de toque 44px, hover vermelho.
+  **Não verificado**: `1366×768`/`960×1080`, exclusão de rolagem privada por socket do mestre,
+  ficha solta (`ficha:<id>`) e as telas de espectador real e prévia de jogador.
+- **Armadilha**: specs que mockam `TempoRealService` precisam de `rolagemExcluida$` (adicionado em
+  9 specs e no `painel-encontro.testing.ts`); `RolagemService` agora injeta `TempoRealService`, então
+  specs com `SessaoService` mockado precisam de `autenticado()` (2 specs de `ficha-flutuante`).
+
 ## 2026-09-21 — `espectador-coluna-acoes-e-iniciativa`: redesenho do Painel do espectador e Iniciativa própria (fecha `P-073`)
 
 Pedido do autor em conversa, depois de revisar o Painel do espectador ao vivo e perguntar sobre o

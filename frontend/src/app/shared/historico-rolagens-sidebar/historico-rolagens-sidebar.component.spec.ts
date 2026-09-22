@@ -136,7 +136,7 @@ describe('HistoricoRolagensSidebar', () => {
     fixture.detectChanges();
 
     const formula = (fixture.nativeElement as HTMLElement).querySelector(
-      '.historico-rolagens__formula',
+      '.cartao-rolagem__formula',
     );
     expect(formula?.textContent?.trim()).toBe('2d6+3[Físico]');
   });
@@ -147,7 +147,7 @@ describe('HistoricoRolagensSidebar', () => {
     fixture.detectChanges();
 
     const painel = fixture.nativeElement as HTMLElement;
-    expect(painel.querySelector('.historico-rolagens__formula')).toBeNull();
+    expect(painel.querySelector('.cartao-rolagem__formula')).toBeNull();
   });
 
   describe('modo fixo (ui-37)', () => {
@@ -164,7 +164,7 @@ describe('HistoricoRolagensSidebar', () => {
       expect(raiz.querySelector('.historico-rolagens__fundo')).toBeNull();
       expect(raiz.querySelector('.historico-rolagens__fechar')).toBeNull();
       expect(raiz.querySelector('.historico-rolagens__painel--fixo')).not.toBeNull();
-      expect(raiz.querySelector('.historico-rolagens__rotulo')?.textContent).toContain('Ataque');
+      expect(raiz.querySelector('.cartao-rolagem__rotulo')?.textContent).toContain('Ataque');
     });
 
     it('não é focável, então o autofoco do painel sobreposto nunca rouba o foco da página', () => {

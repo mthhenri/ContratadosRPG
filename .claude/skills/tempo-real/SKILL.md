@@ -48,6 +48,7 @@ description: >
 | `CampanhaService.entrarCampanha` | `membro:entrou` → `campanha:<id>` | `campanha/detalhe` refaz membros/fichas |
 | Estado ou inventário de campanha | `campanha:estado-alterado` / `campanha:inventario-alterado` → `campanha:<id>` | `campanha/detalhe` atualiza estado ou refaz inventário |
 | `RolagemService.registrarRolagem` pública | `rolagem:registrada` → `campanha:<id>`; ficha solta → `ficha:<id>` | detalhe, ficha, criatura e painel de encontro acrescentam ao feed |
+| `RolagemService.excluirRolagem` (só ADMIN) | `rolagem:excluida` → mesma sala do registro (privada só `campanha:<id>:mestre`); payload sem conteúdo | detalhe, prévia, espectador, painel de encontro e visualizar/criatura removem a rolagem da lista |
 | `EncontroService` | `encontro:alterado` / `encontro:iniciativa-pedido` → `campanha:<id>` | `painel-encontro` e `campanha/detalhe` atualizam o estado/chamado |
 
 `CampanhaGateway.emitirFichaAlterada` tem uma ponte deliberada: após transmitir, chama

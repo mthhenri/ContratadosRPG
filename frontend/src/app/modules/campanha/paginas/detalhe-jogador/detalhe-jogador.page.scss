@@ -681,54 +681,11 @@ app-coluna-acoes {
         gap: var(--space-8);
     }
 
-    &__historico-item {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
-        padding: var(--space-12) var(--space-16);
-        background: var(--surface-2);
-        border-radius: var(--radius-control);
-        box-shadow: inset 2px 0 0 var(--cor-ficha, var(--border-strong));
-    }
 
-    &__historico-meta {
-        display: flex;
-        align-items: baseline;
-        flex-wrap: wrap;
-        gap: var(--space-8);
-        line-height: 1.2;
-    }
 
-    &__historico-rotulo {
-        font-family: var(--font-mono);
-        font-weight: 700;
-        font-size: 13px;
-        color: var(--text);
-    }
 
-    &__historico-formula {
-        display: block;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--text-dim);
-        opacity: 75%;
-        overflow-wrap: anywhere;
-    }
 
-    &__historico-autor {
-        font-size: 11px;
-        color: var(--text-dim);
-        overflow-wrap: anywhere;
-    }
 
-    &__historico-data {
-        flex: none;
-        margin-left: auto;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--text-mute);
-        white-space: nowrap;
-    }
 
     &__historico-esqueleto {
         display: flex;

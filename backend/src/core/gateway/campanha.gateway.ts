@@ -32,7 +32,7 @@ import type {
   EncontroAlteradoDto,
   EncontroIniciativaPedidoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
-import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
+import type { RolagemExcluidaDto, RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
   PaginaCadernoEsquadraoPresencaDto,
@@ -456,6 +456,28 @@ export class CampanhaGateway implements OnGatewayConnection {
       return;
     }
     this.servidor.to(this.salaCampanhaMestre(rolagem.campanhaId)).emit('rolagem:registrada', rolagem);
+  }
+
+  /**
+   * Emite `rolagem:excluida` (soft delete por `ADMIN`) na mesma sala que `emitirRolagemRegistrada`
+   * usaria para a rolagem: `PUBLICA` na sala cheia + espectador (ou `ficha:<id>` para ficha solta),
+   * `PRIVADA` só na sala do mestre. Payload sem conteúdo (`RolagemExcluidaDto`), então nada privado
+   * vaza. Broadcast-only: a service chama depois de persistir.
+   */
+  emitirRolagemExcluida(rolagem: RolagemExcluidaDto): void {
+    if (rolagem.campanhaId === null) {
+      if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA && rolagem.fichaId !== null) {
+        this.servidor.to(this.salaFicha(rolagem.fichaId)).emit('rolagem:excluida', rolagem);
+      }
+      return;
+    }
+    if (rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA) {
+      this.servidor
+        .to([this.salaCampanha(rolagem.campanhaId), this.salaCampanhaEspectador(rolagem.campanhaId)])
+        .emit('rolagem:excluida', rolagem);
+      return;
+    }
+    this.servidor.to(this.salaCampanhaMestre(rolagem.campanhaId)).emit('rolagem:excluida', rolagem);
   }
 
   /**

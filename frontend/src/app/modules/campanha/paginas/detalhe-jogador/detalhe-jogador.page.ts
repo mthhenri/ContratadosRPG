@@ -10,18 +10,17 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaAcessoResumoDto, FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
-import { ResultadoRolagem } from '../../../../shared/resultado-rolagem/resultado-rolagem.component';
+import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -47,7 +46,6 @@ import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.comp
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Cartao } from '../../../../shared/ui/cartao/cartao.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
@@ -85,12 +83,11 @@ const PX_PREVIEW_AVATAR = 300;
     FichaCampanhaCard,
     FichaEsqueleto,
     FichaRolagensPainel,
-    ResultadoRolagem,
+    CartaoRolagem,
     Tooltip,
     Botao,
     BotaoIcone,
     Cartao,
-    Chip,
     ColunaAcoes,
     ColunaAcoesItem,
     EstadoVazio,
@@ -98,7 +95,6 @@ const PX_PREVIEW_AVATAR = 300;
     Esqueleto,
     Segmentado,
     SegmentadoItem,
-    DatePipe,
   ],
   providers: [FichaEdicaoService, FichaRolagemRegistroService],
   templateUrl: './detalhe-jogador.page.html',
@@ -122,7 +118,6 @@ export class CampanhaDetalheJogador {
 
   /** Exposto ao template só para o chip "Mestre" na lista de Equipe. */
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
-  protected readonly RolagemVisibilidadeEnum = RolagemVisibilidadeEnum;
 
   /** Painel lateral fixo (Rolagens/Esquadrão/Inv. Esquadrão) — sempre montado, nunca overlay (mesmo padrão do mestre). */
   protected readonly painelLateralAtivo = signal<'rolar' | 'esquadrao' | 'inventario'>('rolar');

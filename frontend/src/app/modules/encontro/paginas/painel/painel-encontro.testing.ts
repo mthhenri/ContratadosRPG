@@ -357,6 +357,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
           encontroAlterado$,
           encontroIniciativaPedido$,
           rolagemRegistrada$,
+          rolagemExcluida$: new Subject<never>(),
           paginaEsquadraoCriada$,
           paginaEsquadraoAlterada$,
           paginaEsquadraoExcluida$,

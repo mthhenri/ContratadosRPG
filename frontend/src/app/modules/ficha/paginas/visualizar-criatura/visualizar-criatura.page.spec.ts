@@ -107,6 +107,7 @@ describe('CriaturaVisualizar', () => {
       fichaAlterada$: fichaAlterada$.asObservable(),
       acessoRevogado$: acessoRevogado$.asObservable(),
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
+      rolagemExcluida$: new Subject().asObservable(),
       reconexao,
       conectado: signal(true),
     };

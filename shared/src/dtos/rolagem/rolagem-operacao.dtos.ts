@@ -123,3 +123,23 @@ export interface RolagemCampanhaPublicaInternoListarDto {
   readonly pagina: number;
   readonly itensPorPagina: number;
 }
+
+/**
+ * Entrada da exclusão de uma rolagem — o `id` vem do `@Param`. Só o `ADMIN` (papel global da conta,
+ * `TipoUsuarioEnum`) exclui; a exclusão é soft delete (`is_deleted`), nunca física.
+ */
+export interface RolagemExcluirDto {
+  readonly id: number;
+}
+
+/**
+ * Saída da exclusão — também o payload de `rolagem:excluida` no tempo real. Carrega só o necessário
+ * para cada cliente tirar a rolagem da lista e para o gateway escolher a sala: nada do conteúdo
+ * (`resultado`, `rotulo`) viaja, então uma rolagem `PRIVADA` excluída não vaza para a sala cheia.
+ */
+export interface RolagemExcluidaDto {
+  readonly id: number;
+  readonly fichaId: number | null;
+  readonly campanhaId: number | null;
+  readonly visibilidade: RolagemVisibilidadeEnum;
+}

@@ -1,14 +1,16 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
   RolagemCampanhaListarDto,
+  RolagemExcluidaDto,
+  RolagemExcluirDto,
   RolagemAvulsoRegistrarDto,
   RolagemListarDto,
   RolagemRegistrarDto,
   RolagemResumoDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/shared/enums';
 import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
-import { UnauthorizedAccessException } from '../../core/exceptions';
+import { ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
@@ -103,6 +105,26 @@ export class RolagemService {
     });
     this.campanhaGateway.emitirRolagemRegistrada(registrada);
     return registrada;
+  }
+
+  /**
+   * Exclui (soft delete) uma rolagem — só o `ADMIN` global pode. Confere o papel aqui, além do
+   * `@TiposPermitidos` da rota, porque a service é a árbitra de permissão (proibição #28).
+   * `ResourceNotFoundException` se a rolagem não existe ou já foi excluída. Emite
+   * `rolagem:excluida` só depois do soft delete persistir; o gateway escolhe a sala pela
+   * visibilidade, como no registro.
+   */
+  async excluirRolagem(dto: RolagemExcluirDto, usuarioAtivo: JwtPayload): Promise<RolagemExcluidaDto> {
+    if (usuarioAtivo.tipo !== TipoUsuarioEnum.ADMIN) {
+      throw new UnauthorizedAccessException();
+    }
+    const rolagem = await this.rolagemRepositorio.recuperarParaExclusao(dto.id);
+    if (!rolagem) {
+      throw new ResourceNotFoundException('Rolagem');
+    }
+    await this.rolagemRepositorio.excluirRolagem(rolagem.id);
+    this.campanhaGateway.emitirRolagemExcluida(rolagem);
+    return rolagem;
   }
 
   /**

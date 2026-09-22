@@ -259,6 +259,13 @@ export class CampanhaPreviaJogador {
           this.rolagensFeed.update((atuais) => (atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais])),
       });
 
+    this.tempoRealService.rolagemExcluida$
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (excluida) =>
+          this.rolagensFeed.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
+      });
+
     this.configurarCoordenadorInvalidacao();
 
     // Membro/ficha alterados em algum lugar da campanha refazem a projeção segura, mas somente

@@ -185,21 +185,12 @@
                     } @else {
                     <ul class="espectador__lista">
                         @for (item of rolagens(); track item.id) {
-                        <li class="espectador__item" [style.--cor-ficha]="item.corFicha">
-                            <div class="espectador__meta">
-                                <span class="espectador__rotulo">{{ item.rotulo }}</span>
-                                <span class="espectador__autor">{{ autorRolagem(item) }}</span>
-                                <span class="espectador__data">{{ tempoRolagem(item) }}</span>
-                            </div>
-                            @if (item.formula) {
-                            <span class="espectador__formula">{{ item.formula }}</span>
-                            }
-                            <app-resultado-rolagem
-                                [resultado]="item.resultado"
-                                [corFicha]="item.corFicha"
-                                [compacto]="true"
-                            />
-                        </li>
+                        <li
+                            app-cartao-rolagem
+                            [rolagem]="item"
+                            [autor]="autorRolagem(item)"
+                            [tempo]="tempoRolagem(item)"
+                        ></li>
                         }
                     </ul>
 
