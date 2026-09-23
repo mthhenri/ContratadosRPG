@@ -161,6 +161,18 @@
         white-space: nowrap;
     }
 
+    &__janela {
+        flex: none;
+
+        app-icone {
+            font-size: 14px;
+        }
+
+        @include bp.mobile {
+            display: none;
+        }
+    }
+
     &__regua {
         flex: 1;
         height: 1px;
@@ -290,12 +302,6 @@
         flex-direction: column;
         gap: var(--space-8);
     }
-
-
-
-
-
-
 
     &__mais {
         display: block;

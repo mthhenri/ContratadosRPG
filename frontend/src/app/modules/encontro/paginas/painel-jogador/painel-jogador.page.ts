@@ -13,6 +13,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
@@ -106,6 +107,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
 })
 export class PainelEncontroJogador {
   protected readonly dados = inject(EncontroPainelDadosService);
+  protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly encontroService = inject(EncontroService);
   private readonly fichaService = inject(FichaService);
   private readonly tempoRealService = inject(TempoRealService);

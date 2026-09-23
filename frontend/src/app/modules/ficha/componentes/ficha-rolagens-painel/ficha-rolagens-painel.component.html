@@ -6,8 +6,12 @@
            campanha, também vale pro teste de atributo e pro dano rolados de dentro do card. -->
         <button
             type="button"
+            app-botao
+            variante="secundario"
+            estilo="preenchido"
+            tamanho="pequeno"
+            posicaoIcone="esquerda"
             class="ficha-rolagem-oculta"
-            [class.ficha-rolagem-oculta--ativa]="registro.oculta()"
             [attr.aria-pressed]="registro.oculta()"
             [appTooltip]="
                 registro.oculta()

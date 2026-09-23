@@ -59,22 +59,30 @@
             </div>
         </div>
         } @else if (encontro(); as encontroAtual) {
-        <div class="iniciativa-espectador__linha">
+        <div
+            class="iniciativa-espectador__linha"
+            [class.iniciativa-espectador__linha--sem-rolagens]="
+                janelaHistorico.estaAbertaCampanha(campanhaId)
+            "
+        >
             <app-trilha-turnos
                 class="iniciativa-espectador__trilha"
                 [encontro]="encontroAtual"
                 [combatentes]="combatentesVisuais()"
             />
 
+            @if (!janelaHistorico.estaAbertaCampanha(campanhaId)) {
             <div class="iniciativa-espectador__rolagens">
                 <app-historico-rolagens-sidebar
                     [fixo]="true"
                     titulo="Rolagens"
                     [itens]="rolagens()"
                     [carregando]="carregandoRolagens()"
+                    [campanhaIdJanela]="campanhaId"
                 />
             </div>
 
+            }
             <div class="iniciativa-espectador__palco">
                 <section class="iniciativa-espectador__todos" aria-label="Todos os combatentes">
                     <header class="iniciativa-espectador__secao">

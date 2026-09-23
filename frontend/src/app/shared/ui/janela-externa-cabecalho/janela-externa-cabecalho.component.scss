@@ -1,0 +1,63 @@
+@use "tema/breakpoints" as bp;
+
+.janela-externa-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-height: var(--altura-topbar);
+    padding: var(--space-8) var(--space-16);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+
+    &__logo {
+        flex: none;
+        font-size: 24px;
+    }
+
+    &__marca {
+        flex: none;
+        color: var(--text);
+        font-weight: 700;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    &__separador {
+        color: var(--accent);
+        font-weight: 700;
+    }
+
+    &__contexto {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        color: var(--text-dim);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    @include bp.mobile {
+        flex-wrap: wrap;
+
+        &__marca {
+            display: none;
+        }
+
+        &__contexto {
+            flex-basis: calc(100% - 64px);
+        }
+
+        button {
+            margin-left: auto;
+        }
+
+        button,
+        a {
+            min-height: bp.$alvo-toque;
+            display: inline-flex;
+            align-items: center;
+        }
+    }
+}

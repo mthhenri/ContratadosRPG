@@ -4,6 +4,7 @@ import type {
   RolagemExcluidaDto,
   RolagemExcluirDto,
   RolagemAvulsoRegistrarDto,
+  RolagemCampanhaAvulsaRegistrarDto,
   RolagemListarDto,
   RolagemRegistrarDto,
   RolagemResumoDto,
@@ -97,6 +98,32 @@ export class RolagemService {
       fichaId: null,
       encontroCombatenteId: combatente.id,
       campanhaId: encontro.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+      rotulo: dto.rotulo,
+      formula: dto.formula,
+      visibilidade: dto.visibilidade,
+      resultado: dto.resultado,
+    });
+    this.campanhaGateway.emitirRolagemRegistrada(registrada);
+    return registrada;
+  }
+
+  /** Rolagem livre do mestre no feed da campanha, sem ficha ou combatente. */
+  async registrarRolagemAvulsaDaCampanha(
+    dto: RolagemCampanhaAvulsaRegistrarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<RolagemResumoDto> {
+    const membro = await this.campanhaRepositorio.recuperarMembro({
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+    });
+    if (membro?.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+      throw new UnauthorizedAccessException();
+    }
+    const registrada = await this.rolagemRepositorio.registrarRolagem({
+      fichaId: null,
+      encontroCombatenteId: null,
+      campanhaId: dto.campanhaId,
       usuarioId: usuarioAtivo.sub,
       rotulo: dto.rotulo,
       formula: dto.formula,

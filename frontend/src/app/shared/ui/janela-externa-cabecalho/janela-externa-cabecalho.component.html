@@ -1,0 +1,12 @@
+<header class="janela-externa-cabecalho">
+    <app-marca class="janela-externa-cabecalho__logo" />
+    <span class="janela-externa-cabecalho__marca">Contratados RPG</span>
+    <span class="janela-externa-cabecalho__separador" aria-hidden="true">//</span>
+    <span class="janela-externa-cabecalho__contexto">{{ contexto() }}</span>
+    <button app-botao variante="secundario" tamanho="pequeno" type="button" (click)="fechar()">
+        Fechar
+    </button>
+    <a app-botao variante="secundario" estilo="link" tamanho="pequeno" [routerLink]="voltarPara()">
+        Voltar à ficha
+    </a>
+</header>

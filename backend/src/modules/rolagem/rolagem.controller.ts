@@ -12,6 +12,7 @@ import {
 import type {
   RolagemRegistrarDto,
   RolagemAvulsoRegistrarDto,
+  RolagemCampanhaAvulsaRegistrarDto,
   RolagemExcluidaDto,
   RolagemResumoDto,
 } from '@contratados-rpg/shared/dtos/rolagem';
@@ -51,6 +52,18 @@ export class RolagemController {
   ): Promise<RolagemResumoDto> {
     return this.rolagemService.registrarRolagemAvulso(
       { ...dto, encontroId, combatenteId } satisfies RolagemAvulsoRegistrarDto,
+      usuarioAtivo,
+    );
+  }
+
+  @Post('campanha/:id/rolagem-avulsa')
+  registrarAvulsaDaCampanha(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RolagemRegistrarDto,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<RolagemResumoDto> {
+    return this.rolagemService.registrarRolagemAvulsaDaCampanha(
+      { ...dto, campanhaId: id } satisfies RolagemCampanhaAvulsaRegistrarDto,
       usuarioAtivo,
     );
   }

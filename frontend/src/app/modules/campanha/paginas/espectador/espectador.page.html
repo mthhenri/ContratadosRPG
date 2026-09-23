@@ -14,7 +14,7 @@
             icone="d20"
             appTooltip="Rolagens públicas"
             [pressionado]="rolagensVisiveis()"
-            (click)="rolagensVisiveis.set(!rolagensVisiveis())"
+            (click)="alternarRolagensVisiveis()"
         >
             Rolagens
         </button>
@@ -88,7 +88,9 @@
         -->
         <div
             class="espectador__grade"
-            [class.espectador__grade--sem-rolagens]="!rolagensVisiveis()"
+            [class.espectador__grade--sem-rolagens]="
+                !rolagensVisiveis() || janelaHistorico.estaAbertaCampanha(id)
+            "
         >
             <app-cartao class="espectador__jogadores">
                 <header class="espectador__secao">
@@ -147,10 +149,21 @@
                 </div>
             </app-cartao>
 
+            @if (!janelaHistorico.estaAbertaCampanha(id)) {
             <app-cartao class="espectador__feed">
                 <header class="espectador__secao">
                     <h2 class="espectador__secao-titulo">Rolagens públicas</h2>
                     <span class="espectador__secao-regua"></span>
+                    <button
+                        type="button"
+                        app-botao-icone
+                        tamanho="compacto"
+                        class="espectador__abrir-rolagens"
+                        (click)="janelaHistorico.abrirCampanha(id)"
+                        aria-label="Abrir em janela"
+                        [appTooltip]="'Abrir em janela'"
+                        ><app-icone nome="abrir-externo"
+                    /></button>
                     @if (!carregando()) {
                     <span class="espectador__secao-contagem" aria-hidden="true"
                         >{{ rolagens().length }}</span
@@ -207,6 +220,7 @@
                     } }
                 </div>
             </app-cartao>
+            }
         </div>
     </div>
 </section>

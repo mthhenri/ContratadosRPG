@@ -1,5 +1,13 @@
 @use "tema/breakpoints" as bp;
 
+.detalhe__abrir-rolagens {
+    flex: none;
+
+    @include bp.mobile {
+        display: none;
+    }
+}
+
 // Piso reservado no rodapé (mesmo problema do m3-60 em `visualizar.page.scss`, só que chegou aqui
 // depois, no m2-20): a visão do JOGADOR embute `<app-ficha-campanha-card>`, que tem
 // sua própria `.ficha-nav` fixa no rodapé no mobile — sem reservar o piso, a bandeja de dados
@@ -613,8 +621,8 @@ app-coluna-acoes {
         background: color-mix(in srgb, var(--warning) 10%, transparent);
 
         // Morrendo e Inconsciente são estados críticos — accent, não aviso (mesma distinção do HUD).
-        &[data-selo-condicao='morrendo'],
-        &[data-selo-condicao='inconsciente'] {
+        &[data-selo-condicao="morrendo"],
+        &[data-selo-condicao="inconsciente"] {
             color: var(--accent);
             border-color: var(--accent-border);
             background: var(--accent-dim);
@@ -710,12 +718,6 @@ app-coluna-acoes {
         flex-direction: column;
         gap: var(--space-8);
     }
-
-
-
-
-
-
 
     &__historico-esqueleto {
         display: flex;
@@ -1130,6 +1132,7 @@ app-coluna-acoes {
 
 // Com o botão "i" na linha de ações do mobile, é ele quem carrega o `margin-left: auto` — o "⋯" volta
 // a ficar colado ao lado dele em vez de os dois dividirem o espaço livre.
-.detalhe__cabecalho-acoes:has(.detalhe__cabecalho-info) .detalhe__cabecalho-menu-envoltorio--mobile {
+.detalhe__cabecalho-acoes:has(.detalhe__cabecalho-info)
+    .detalhe__cabecalho-menu-envoltorio--mobile {
     margin-left: 0;
 }

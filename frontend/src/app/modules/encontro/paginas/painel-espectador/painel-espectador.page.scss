@@ -11,6 +11,10 @@
 @include casca.esqueleto-laterais("iniciativa-espectador");
 
 .iniciativa-espectador {
+    &__linha--sem-rolagens &__todos {
+        align-self: stretch;
+    }
+
     // Sem `app-coluna-acoes` nesta tela (espectador não gerencia combate nem tem Calculadora/
     // Caderno aqui) — a casca reserva, no mobile, o piso da barra inferior fixa que a coluna de
     // ações ocuparia em mestre/jogador; sem coluna nenhuma, esse respiro sobra vazio no rodapé.

@@ -52,6 +52,13 @@ export class RolagemService {
       .pipe(map((resposta) => resposta.dados as RolagemResumoDto));
   }
 
+  /** Registra a rolagem livre do mestre diretamente no feed da campanha. */
+  registrarAvulsaDaCampanha(campanhaId: number, dto: RolagemRegistrarDto): Observable<RolagemResumoDto> {
+    return this.httpClient
+      .post<StandardResponse<RolagemResumoDto>>(`${environment.apiBase}/campanha/${campanhaId}/rolagem-avulsa`, dto)
+      .pipe(map((resposta) => resposta.dados as RolagemResumoDto));
+  }
+
   /** Histórico paginado de uma ficha (§10.5), mais recente primeiro. */
   listarPorFicha(
     fichaId: number,

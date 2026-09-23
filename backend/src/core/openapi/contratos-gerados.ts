@@ -3345,6 +3345,19 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Evento de tempo real que invalida a listagem autorizada de fichas de uma campanha. O payload é\ndeliberadamente mínimo: não revela nem o novo estado de visibilidade nem dados da ficha a quem\nestá na sala ampla `campanha:<id>`."
     },
+    "FichaCondicoesAlteradasDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Evento de tempo real (I-031): uma ficha `JOGADOR` da campanha pode ter mudado de condição\n(Morrendo/Machucado/Inconsciente) — emitido junto de todo `ficha:alterada` (não dá pra saber,\nno gateway, se a mudança tocou `estado` sem reabrir o documento). Payload mínimo de propósito,\nigual a `FichaVisibilidadeAlteradaDto`: não revela quem mudou nem o novo valor a quem está na\nsala ampla `campanha:<id>` sem acesso à ficha — o cliente refaz `listarMembros`, cujo recorte\nde carteirinha (`CampanhaMembroFichaResumoDto`) já inclui as três condições sempre."
+    },
     "FichaCampanhaRemovidaDto": {
         "type": "object",
         "properties": {
@@ -4661,6 +4674,40 @@ export const schemasContratosPublicos = {
         ],
         "additionalProperties": false,
         "description": "Entrada de uma rolagem livre atribuída a um combatente avulso do encontro."
+    },
+    "RolagemCampanhaAvulsaRegistrarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "rotulo": {
+                "type": "string"
+            },
+            "formula": {
+                "type": "string"
+            },
+            "visibilidade": {
+                "type": "string",
+                "enum": [
+                    "PUBLICA",
+                    "PRIVADA"
+                ]
+            },
+            "resultado": {
+                "type": "object",
+                "additionalProperties": true
+            }
+        },
+        "required": [
+            "campanhaId",
+            "rotulo",
+            "formula",
+            "visibilidade",
+            "resultado"
+        ],
+        "additionalProperties": false,
+        "description": "Rolagem livre do mestre diretamente na campanha, sem ficha nem combatente de encontro."
     },
     "RolagemResumoDto": {
         "type": "object",
@@ -6089,6 +6136,15 @@ export const operacoesContratosPublicos = {
         "controller": "RolagemController",
         "metodo": "post",
         "caminho": "/encontro/:encontroId/combatente/:combatenteId/rolagem",
+        "tag": "Rolagens",
+        "publica": false,
+        "requestSchema": "RolagemRegistrarDto",
+        "responseSchema": "RolagemResumoDto"
+    },
+    "RolagemController_registrarAvulsaDaCampanha": {
+        "controller": "RolagemController",
+        "metodo": "post",
+        "caminho": "/campanha/:id/rolagem-avulsa",
         "tag": "Rolagens",
         "publica": false,
         "requestSchema": "RolagemRegistrarDto",

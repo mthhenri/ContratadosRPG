@@ -244,15 +244,18 @@
                 [combatentes]="dados.combatentes()"
             />
 
+            @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
             <div class="iniciativa-mestre__rolagens">
                 <app-historico-rolagens-sidebar
                     [fixo]="true"
                     titulo="Rolagens"
                     [itens]="dados.rolagensFeed()"
                     [carregando]="dados.carregandoRolagens()"
+                    [campanhaIdJanela]="dados.campanhaId"
                 />
             </div>
 
+            }
             <div class="iniciativa-mestre__palco">
                 <app-conducao-turno
                     [status]="encontroAtual.status"

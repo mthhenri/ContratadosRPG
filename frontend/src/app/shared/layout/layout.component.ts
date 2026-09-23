@@ -80,7 +80,9 @@ export class Layout {
    *  quanto a não fechar por clique-fora; `Escape` é diferente porque é o que modal e painel de
    *  histórico já fazem, sem conflitar com essa decisão — ui-21). */
   protected readonly perfilAberto = signal(false);
-  protected readonly rotaIsolada = computed(() => this.urlAtual().startsWith('/acesso-negado'));
+  protected readonly rotaIsolada = computed(
+    () => this.urlAtual().startsWith('/acesso-negado') || this.urlAtual().startsWith('/janela/'),
+  );
 
   protected alternarPerfil(): void {
     this.perfilAberto.update((aberto) => !aberto);

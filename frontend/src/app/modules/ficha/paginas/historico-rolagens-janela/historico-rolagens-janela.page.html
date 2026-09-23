@@ -1,0 +1,18 @@
+<section class="historico-janela">
+    <app-janela-externa-cabecalho [contexto]="contexto()" [voltarPara]="voltarPara" />
+    <main class="historico-janela__conteudo">
+        @if (acessoNegado()) {
+        <p class="historico-janela__erro" role="alert">Não foi possível acessar esta ficha.</p>
+        } @else {
+        <app-historico-rolagens-sidebar
+            [fixo]="true"
+            [itens]="itens()"
+            [carregando]="carregando()"
+            [carregandoMais]="carregandoMais()"
+            [temMais]="temMais()"
+            [mostrarFicha]="false"
+            (carregarMais)="carregarMais()"
+        />
+        }
+    </main>
+</section>

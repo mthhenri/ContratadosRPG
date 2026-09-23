@@ -16,6 +16,7 @@ import { TopbarContextoService } from '../../../../core/services/topbar-contexto
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -66,6 +67,7 @@ const UM_DIA_MS = 24 * 60 * 60 * 1000;
   styleUrl: './espectador.page.scss',
 })
 export class CampanhaEspectador {
+  protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly campanhaProjecaoService = inject(CampanhaProjecaoService);
   private readonly campanhaService = inject(CampanhaService);
@@ -75,6 +77,14 @@ export class CampanhaEspectador {
 
   /** `id` da campanha, lido do parâmetro de rota (`/campanhas/:id/espectador`). */
   protected readonly id = Number(this.rotaAtiva.snapshot.paramMap.get('id'));
+
+  protected alternarRolagensVisiveis(): void {
+    if (this.janelaHistorico.estaAbertaCampanha(this.id)) {
+      this.janelaHistorico.abrirCampanha(this.id);
+      return;
+    }
+    this.rolagensVisiveis.update((visiveis) => !visiveis);
+  }
 
   protected readonly carregando = signal(true);
   protected readonly carregandoMais = signal(false);

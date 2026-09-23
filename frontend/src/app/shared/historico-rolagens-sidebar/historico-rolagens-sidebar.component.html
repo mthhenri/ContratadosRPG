@@ -1,4 +1,4 @@
-@if (mostrarGatilho() && !fixo()) {
+@if (mostrarGatilho() && !fixo() && !emJanela()) {
     <button
         type="button"
         class="historico-rolagens__gatilho utilitario-flutuante utilitario-flutuante--historico utilitario-flutuante--inline-mobile"
@@ -44,6 +44,19 @@
             <span class="historico-rolagens__contagem" aria-hidden="true">{{
                 itens().length
             }}</span>
+            @if (fichaIdJanela() !== null || campanhaIdJanela() !== null) {
+                <button
+                    type="button"
+                    app-botao-icone
+                    tamanho="compacto"
+                    class="historico-rolagens__janela"
+                    aria-label="Abrir em janela"
+                    [appTooltip]="'Abrir em janela'"
+                    (click)="abrirEmJanela()"
+                >
+                    <app-icone nome="abrir-externo" />
+                </button>
+            }
             @if (!fixo()) {
                 <button
                     class="historico-rolagens__fechar"

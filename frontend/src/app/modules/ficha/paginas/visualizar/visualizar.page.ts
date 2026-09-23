@@ -22,6 +22,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
@@ -108,6 +109,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
   styleUrl: './visualizar.page.scss',
 })
 export class FichaVisualizar {
+  protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly fichaVisualizacao = viewChild(FichaVisualizacao);
   private readonly cadernoRef = viewChild(CadernoFlutuante);
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
@@ -212,6 +214,14 @@ export class FichaVisualizar {
   protected readonly cadernoHabilitado = signal(false);
   /** A página reserva a faixa da direita enquanto o histórico está aberto. */
   protected readonly historicoSidebarAberto = signal(false);
+
+  protected alternarHistoricoSidebar(): void {
+    if (this.janelaHistorico.estaAbertaFicha(this.fichaId)) {
+      this.janelaHistorico.abrirFicha(this.fichaId);
+      return;
+    }
+    this.historicoSidebarAberto.update((aberto) => !aberto);
+  }
 
   /**
    * Menu "⋯" do cabeçalho — só existe no mobile (CSS): `app-coluna-acoes` vira barra fixa no

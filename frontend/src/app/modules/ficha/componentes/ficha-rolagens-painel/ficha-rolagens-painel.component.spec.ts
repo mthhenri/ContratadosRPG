@@ -58,6 +58,15 @@ describe('FichaRolagensPainel', () => {
     expect(fixture.nativeElement.querySelector('.ficha-rolagem-oculta')).not.toBeNull();
   });
 
+  it('usa o mesmo botão secundário preenchido do painel de rolagens do mestre', () => {
+    const fixture = montar(false);
+    const botao = fixture.nativeElement.querySelector('.ficha-rolagem-oculta') as HTMLButtonElement;
+
+    expect(botao.classList.contains('botao--secundario')).toBe(true);
+    expect(botao.classList.contains('botao--estilo-preenchido')).toBe(true);
+    expect(botao.classList.contains('botao--pequeno')).toBe(true);
+  });
+
   it('aba inativa (oculto=true): a raiz do painel inteiro ganha a classe --oculto, não só o editor de dentro', () => {
     const fixture = montar(true);
     const raiz = fixture.nativeElement.querySelector('.ficha-rolagens-painel');

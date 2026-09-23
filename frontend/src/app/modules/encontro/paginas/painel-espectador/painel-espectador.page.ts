@@ -13,6 +13,7 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
@@ -69,6 +70,7 @@ import { rotuloStatusEncontro } from '../../rotulos-encontro';
   styleUrl: './painel-espectador.page.scss',
 })
 export class PainelEncontroEspectador {
+  protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly campanhaProjecaoService = inject(CampanhaProjecaoService);
   private readonly rolagemService = inject(RolagemService);

@@ -405,7 +405,7 @@ describe('CampanhaDetalheMestre', () => {
       const { raiz, fixture } = montar();
       abrirDialogMembros(raiz, fixture);
 
-      expect(raiz.querySelector('app-modal')?.textContent).toContain('Membros');
+      expect(raiz.querySelector('app-modal[titulo="Membros"]')?.textContent).toContain('Membros');
       const carteirinhas = raiz.querySelectorAll('.detalhe-mestre__membro-carteirinha');
       expect(carteirinhas.length).toBeGreaterThan(0);
       expect(Array.from(carteirinhas).some((el) => el.tagName === 'BUTTON')).toBe(false);
@@ -453,7 +453,7 @@ describe('CampanhaDetalheMestre', () => {
 
       expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'previa', 2]);
       fixture.detectChanges();
-      expect(raiz.querySelector('app-modal')).toBeNull();
+      expect(raiz.querySelector('app-modal[titulo="Membros"]')).toBeNull();
     });
 
     it('"Remover" pede confirmação e, ao confirmar, chama CampanhaService.removerMembro', async () => {
@@ -491,7 +491,7 @@ describe('CampanhaDetalheMestre', () => {
       const { raiz, fixture } = montar();
       abrirDialogMembros(raiz, fixture);
 
-      const modal = raiz.querySelector('.modal') as HTMLElement;
+      const modal = raiz.querySelector('app-modal[titulo="Membros"] .modal') as HTMLElement;
       expect(modal.style.getPropertyValue('--modal-largura')).toBe('960px');
 
       const grade = raiz.querySelector('.detalhe-mestre__membros-grade') as HTMLElement;
@@ -513,12 +513,12 @@ describe('CampanhaDetalheMestre', () => {
   describe('dialog "Editar campanha"', () => {
     it('abre como dialog (não mais formulário inline) ao clicar em "Editar" na coluna de ações', () => {
       const { raiz, fixture } = montar();
-      expect(raiz.querySelector('app-modal')).toBeNull();
+      expect(raiz.querySelector('app-modal[titulo="Editar campanha"]')).toBeNull();
 
       (Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find((el) => el.textContent?.trim() === 'Editar') as HTMLButtonElement).click();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('app-modal')?.textContent).toContain('Editar campanha');
+      expect(raiz.querySelector('app-modal[titulo="Editar campanha"]')?.textContent).toContain('Editar campanha');
       expect((raiz.querySelector('input[formControlName="nome"]') as HTMLInputElement).value).toBe(campanhaBase.nome);
     });
 
@@ -542,7 +542,7 @@ describe('CampanhaDetalheMestre', () => {
         expect.objectContaining({ nome: 'Contenção Delta II' }),
       );
       fixture.detectChanges();
-      expect(raiz.querySelector('app-modal')).toBeNull();
+      expect(raiz.querySelector('app-modal[titulo="Editar campanha"]')).toBeNull();
     });
   });
 
@@ -681,8 +681,8 @@ describe('CampanhaDetalheMestre', () => {
       const { raiz, fixture } = montar();
       abrirDialogConvites(raiz, fixture);
 
-      expect(raiz.querySelector('app-modal')?.textContent).toContain(campanhaBase.codigoConvite);
-      expect(raiz.querySelector('app-modal')?.textContent).toContain(campanhaBase.codigoConviteEspectador);
+      expect(raiz.querySelector('app-modal[titulo="Convites"]')?.textContent).toContain(campanhaBase.codigoConvite);
+      expect(raiz.querySelector('app-modal[titulo="Convites"]')?.textContent).toContain(campanhaBase.codigoConviteEspectador);
     });
 
     it('copia o código de convite de jogador', async () => {
@@ -724,6 +724,36 @@ describe('CampanhaDetalheMestre', () => {
   });
 
   describe('painel lateral fixo Rolagens ⇆ Inventário', () => {
+    it('mantém a rolagem rápida e recolhe só o histórico enquanto a janela externa está aberta', () => {
+      const { raiz, fixture } = montar();
+      const janela = {
+        closed: false,
+        opener: window as Window | null,
+        location: { replace: vi.fn() },
+        close: vi.fn(),
+        focus: vi.fn(),
+      };
+      const abrir = vi.spyOn(window, 'open').mockReturnValue(janela as unknown as Window);
+      vi.useFakeTimers();
+      try {
+        expect(raiz.querySelector('app-rolagem-rapida')).not.toBeNull();
+        expect(raiz.querySelector('.detalhe-mestre__historico-cabecalho')).not.toBeNull();
+
+        (raiz.querySelector('.detalhe-mestre__abrir-rolagens') as HTMLElement).click();
+        fixture.detectChanges();
+        expect(raiz.querySelector('app-rolagem-rapida')).not.toBeNull();
+        expect(raiz.querySelector('.detalhe-mestre__historico-cabecalho')).toBeNull();
+
+        janela.closed = true;
+        vi.advanceTimersByTime(500);
+        fixture.detectChanges();
+        expect(raiz.querySelector('.detalhe-mestre__historico-cabecalho')).not.toBeNull();
+      } finally {
+        abrir.mockRestore();
+        vi.useRealTimers();
+      }
+    });
+
     it('está sempre montado (não é overlay) e começa em Rolagens', () => {
       const { raiz } = montar();
       expect(raiz.querySelector('.detalhe-mestre__painel-lateral')).not.toBeNull();

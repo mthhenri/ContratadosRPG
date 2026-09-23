@@ -418,6 +418,28 @@ describe('CampanhaEspectador', () => {
       expect(raiz.querySelector('.espectador__grade--sem-rolagens')).not.toBeNull();
     });
 
+    it('destaca o feed sem deixar coluna vazia e o restaura quando a janela fecha', () => {
+      const { fixture, raiz } = montar({ painelRetorno: painel([rolagem()]) });
+      const janela = { closed: false, opener: window, location: { replace: vi.fn() }, focus: vi.fn(), close: vi.fn() };
+      const abrir = vi.spyOn(window, 'open').mockReturnValue(janela as unknown as Window);
+      vi.useFakeTimers();
+      try {
+        (raiz.querySelector('.espectador__abrir-rolagens') as HTMLButtonElement).click();
+        fixture.detectChanges();
+        expect(raiz.querySelector('.espectador__feed')).toBeNull();
+        expect(raiz.querySelector('.espectador__grade--sem-rolagens')).not.toBeNull();
+
+        janela.closed = true;
+        vi.advanceTimersByTime(500);
+        fixture.detectChanges();
+        expect(raiz.querySelector('.espectador__feed')).not.toBeNull();
+        expect(raiz.querySelector('.espectador__grade--sem-rolagens')).toBeNull();
+      } finally {
+        abrir.mockRestore();
+        vi.useRealTimers();
+      }
+    });
+
     it('sem descrição, o ícone "i" não aparece', () => {
       const { raiz } = montar({ painelRetorno: painel([]) });
       expect(raiz.querySelector('.espectador__info')).toBeNull();

@@ -1,5 +1,13 @@
 @use "tema/breakpoints" as bp;
 
+.espectador__abrir-rolagens {
+    flex: none;
+
+    @include bp.mobile {
+        display: none;
+    }
+}
+
 // Casca com coluna de ações (mesmo contrato de `detalhe-mestre`/`_casca-iniciativa.scss`): coluna
 // de ações encostada na topbar e na borda esquerda do viewport, conteúdo com o restante da
 // largura — abandona o antigo `90vw` centrado (que só fazia sentido sem coluna lateral nenhuma).
@@ -409,12 +417,6 @@
         flex-direction: column;
         gap: 8px;
     }
-
-
-
-
-
-
 
     &__mais {
         display: block;

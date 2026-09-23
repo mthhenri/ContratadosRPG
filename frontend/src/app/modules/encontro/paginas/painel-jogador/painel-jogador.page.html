@@ -80,11 +80,7 @@
              no palco), pra ela não "pular" quando o encontro chega. Só vale para quem já se sabe que não
              é mestre — enquanto o papel é desconhecido, a casca monta a página do mestre. A coluna de
              ações e o cabeçalho são os reais: não dependem do encontro. -->
-        <div
-            class="iniciativa-jogador__linha"
-            role="status"
-            aria-label="Carregando o combate"
-        >
+        <div class="iniciativa-jogador__linha" role="status" aria-label="Carregando o combate">
             <div class="iniciativa-jogador__laterais">
                 <div class="iniciativa-jogador__trilha iniciativa-jogador__esqueleto-trilha">
                     <div class="iniciativa-jogador__esqueleto-contadores">
@@ -146,14 +142,17 @@
                     />
                 </app-trilha-turnos>
 
+                @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
                 <div class="iniciativa-jogador__rolagens">
                     <app-historico-rolagens-sidebar
                         [fixo]="true"
                         titulo="Rolagens"
                         [itens]="dados.rolagensFeed()"
                         [carregando]="dados.carregandoRolagens()"
+                        [campanhaIdJanela]="dados.campanhaId"
                     />
                 </div>
+                }
             </div>
 
             @if (meuCombatente()) {

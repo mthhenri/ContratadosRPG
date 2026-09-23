@@ -69,7 +69,12 @@
 
     &:hover:not(:disabled) {
         filter: none;
+        color: var(--text);
         border-color: var(--accent-border);
+    }
+
+    &:active:not(:disabled) {
+        color: var(--text);
     }
 }
 

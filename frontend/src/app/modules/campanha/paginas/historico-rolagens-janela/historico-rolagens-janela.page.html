@@ -1,0 +1,18 @@
+<section class="historico-janela">
+    <app-janela-externa-cabecalho
+        contexto="Rolagens da campanha"
+        [voltarPara]="'/campanhas/' + campanhaId"
+    />
+    <main class="historico-janela__conteudo">
+        @if (acessoNegado()) {
+        <p class="historico-janela__erro" role="alert">Não foi possível acessar estas rolagens.</p>
+        } @else {
+        <app-historico-rolagens-sidebar
+            [fixo]="true"
+            titulo="Histórico de rolagens"
+            [itens]="itens()"
+            [carregando]="carregando()"
+        />
+        }
+    </main>
+</section>

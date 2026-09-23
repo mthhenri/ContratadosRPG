@@ -5,6 +5,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 import { HistoricoRolagensSidebar } from './historico-rolagens-sidebar.component';
+import { HistoricoRolagensJanelaService } from './historico-rolagens-janela.service';
 
 function criarItem(sobrescritas: Partial<RolagemResumoDto> = {}): RolagemResumoDto {
   return {
@@ -78,6 +79,73 @@ describe('HistoricoRolagensSidebar', () => {
     expect(painel.querySelector('.historico-rolagens__titulo')?.textContent?.trim()).toBe(
       'Histórico de Rolagens da Campanha',
     );
+  });
+
+  it('abre a rota da ficha ou campanha em outra janela, inclusive na coluna fixa', () => {
+    const janela = TestBed.inject(HistoricoRolagensJanelaService);
+    const abrirFicha = vi.spyOn(janela, 'abrirFicha').mockReturnValue(true);
+    const abrirCampanhaSpy = vi.spyOn(janela, 'abrirCampanha').mockReturnValue(true);
+    try {
+      fixture.componentRef.setInput('fichaIdJanela', 42);
+      fixture.componentRef.setInput('tipoFichaJanela', 'criatura');
+      obterGatilho().click();
+      fixture.detectChanges();
+
+      const botao = fixture.nativeElement.querySelector('.historico-rolagens__janela') as HTMLButtonElement;
+      botao.click();
+      expect(abrirFicha).toHaveBeenCalledWith(42, 'criatura');
+
+      fixture.componentRef.setInput('tipoFichaJanela', 'jogador');
+      fixture.detectChanges();
+      botao.click();
+      expect(abrirFicha).toHaveBeenLastCalledWith(42, 'jogador');
+
+      fixture.componentRef.setInput('fichaIdJanela', null);
+      fixture.componentRef.setInput('campanhaIdJanela', 8);
+      fixture.componentRef.setInput('fixo', true);
+      fixture.detectChanges();
+      const abrirCampanha = fixture.nativeElement.querySelector(
+        '.historico-rolagens__janela',
+      ) as HTMLButtonElement;
+      expect(abrirCampanha).not.toBeNull();
+      expect(abrirCampanha.classList).toContain('botao-icone');
+      abrirCampanha.click();
+      expect(abrirCampanhaSpy).toHaveBeenLastCalledWith(8);
+    } finally {
+      abrirFicha.mockRestore();
+      abrirCampanhaSpy.mockRestore();
+    }
+  });
+
+  it('retira o painel sobreposto sem perder o estado e o devolve ao fechar a janela', () => {
+    vi.useFakeTimers();
+    const janela = {
+      closed: false,
+      opener: window as Window | null,
+      location: { replace: vi.fn() },
+      close: vi.fn(),
+      focus: vi.fn(),
+    };
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(janela as unknown as Window);
+    try {
+      fixture.componentRef.setInput('fichaIdJanela', 42);
+      obterGatilho().click();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.historico-rolagens__painel')).not.toBeNull();
+
+      (fixture.nativeElement.querySelector('.historico-rolagens__janela') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(fixture.componentRef.instance.aberto()).toBe(true);
+      expect(fixture.nativeElement.querySelector('.historico-rolagens__painel')).toBeNull();
+
+      janela.closed = true;
+      vi.advanceTimersByTime(500);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.historico-rolagens__painel')).not.toBeNull();
+    } finally {
+      abrir.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it('mantém o painel montado durante a saída e cancela essa saída ao reabrir', () => {

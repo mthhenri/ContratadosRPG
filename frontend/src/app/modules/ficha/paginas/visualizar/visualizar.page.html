@@ -1,12 +1,17 @@
-<section class="ficha-pagina" [class.ficha-pagina--lateral-aberta]="historicoSidebarAberto()">
+<section
+    class="ficha-pagina"
+    [class.ficha-pagina--lateral-aberta]="
+        historicoSidebarAberto() && !janelaHistorico.estaAbertaFicha(fichaId)
+    "
+>
     <app-coluna-acoes id="ficha-completa" rotulo="Ações da ficha">
         <div class="coluna-acoes__categoria">Ficha</div>
         <button
             app-coluna-acoes-item
             icone="d20"
             appTooltip="Histórico"
-            [pressionado]="historicoSidebarAberto()"
-            (click)="historicoSidebarAberto.update((aberto) => !aberto)"
+            [pressionado]="historicoSidebarAberto() && !janelaHistorico.estaAbertaFicha(fichaId)"
+            (click)="alternarHistoricoSidebar()"
         >
             Histórico
         </button>
@@ -141,6 +146,7 @@
              um. Precisam ficar juntos no DOM para o `flex` do grupo colocá-los um do lado do outro
              nessa faixa. -->
                 <app-historico-rolagens-sidebar
+                    [fichaIdJanela]="fichaId"
                     [(aberto)]="historicoSidebarAberto"
                     titulo="Histórico de Rolagens da Ficha"
                     [itens]="historicoRolagens()"

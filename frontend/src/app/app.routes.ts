@@ -8,6 +8,22 @@ import { previaJogadorCampanhaResolver } from './core/guards/previa-jogador-camp
 
 export const routes: Routes = [
   {
+    path: 'janela/ficha/:fichaId/historico-rolagens',
+    canActivate: [autenticacaoGuard],
+    loadComponent: () =>
+      import('./modules/ficha/paginas/historico-rolagens-janela/historico-rolagens-janela.page').then(
+        (pagina) => pagina.HistoricoRolagensJanela,
+      ),
+  },
+  {
+    path: 'janela/campanha/:campanhaId/historico-rolagens',
+    canActivate: [autenticacaoGuard],
+    loadComponent: () =>
+      import('./modules/campanha/paginas/historico-rolagens-janela/historico-rolagens-janela.page').then(
+        (pagina) => pagina.HistoricoRolagensCampanhaJanela,
+      ),
+  },
+  {
     path: 'acesso-negado',
     loadComponent: () =>
       import('./modules/acesso-negado/acesso-negado.page').then(

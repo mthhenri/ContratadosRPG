@@ -9,7 +9,13 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-22 · **Última decisão registrada:**
+> **Última revisão:** 2026-09-23 · **Última decisão registrada:**
+> A I-027 agora recolhe o histórico local quando ele é destacado em janela: fichas completas,
+> campanha e iniciativa, nos papéis de mestre, jogador e espectador. A rolagem rápida permanece
+> na campanha. O retorno ao fechar e popup bloqueado estão cobertos por testes; a spec segue
+> ativa até a conferência manual do fechamento da janela real. Anotações, fichas abertas e
+> cadernos permanecem fora desta fatia.
+> Antes:
 > `criatura-ataques-habilidades-editor-alinhado` concluída — `CriaturaAtaqueLista`/
 > `CriaturaHabilidadeLista` alinhadas ao editor-no-lugar de `FichaHabilidades` (jogador): editar um
 > item mantém o card na própria célula da grade (removido o `grid-column: 1/-1` + moldura
@@ -807,8 +813,9 @@ testado com só 1 Fraqueza, que não soma bônus por regra. "Espaço Reservado" 
 Operacional/Medicinal do inventário (autor escolheu "selecionar item no inventário" entre 3 opções
 de desenho, via `AskUserQuestion`); `calcularTotaisCarrinho` isenta de peso as unidades que a mod
 concede (`calcularItensIsentosEspacoReservado`), item removido do carrinho não quebra nada — a
-isenção só para de valer. Duas ideias (janela externa de histórico/anotações; busca por descrição
-de habilidade) só registradas em `IDEAS.md` (`I-027`/`I-028`), sem código. Detalhe completo,
+isenção só para de valer. As ideias de janela externa e busca por descrição foram registradas
+em `IDEAS.md` (`I-027`/`I-028`); ambas avançaram depois (I-027 parcialmente, I-028 concluída).
+Detalhe completo,
 achados, testes e viewports verificados em `HISTORY.md`.
 
 **`campanha-detalhe-mestre-coluna-acoes` concluída (2026-09-08):** `CampanhaDetalhe` (o componente

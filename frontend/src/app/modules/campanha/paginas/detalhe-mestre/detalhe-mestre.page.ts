@@ -3,7 +3,8 @@ import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
+import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { IconeNome } from '../../../../shared/icone/icone.component';
 
@@ -31,6 +32,10 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { CampanhaService } from '../../campanha.service';
 import { confirmarRemocaoDaCampanha } from '../../../ficha/ficha-confirmacoes';
 import { FichaService } from '../../../ficha/ficha.service';
+import { RolagemService } from '../../../ficha/rolagem.service';
+import type { RolagemRealizadaDto } from '../../../ficha/rolagem-realizada';
+import { RolagemRapida } from '../../../ficha/componentes/rolagem-rapida/rolagem-rapida.component';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { nomePorte, rotuloComportamento, rotuloNivelAmeaca } from '../../../ficha/rotulos-criatura';
 
 /** Hover sustentado antes de abrir a prévia ampliada de um avatar. */
@@ -41,6 +46,8 @@ const PX_PREVIEW_AVATAR = 300;
 
 /** Placeholder do registro/contrato quando a criatura não tem um catalogado — mesmo texto de `CriaturaVisualizacao.registroExibido`. */
 const REGISTRO_SEM_CATALOGACAO = 'SCP - ?????';
+
+const ATRIBUTOS_NEUTROS: FichaAtributosDto = { destreza: 0, forca: 0, luta: 0, pontaria: 0, vigor: 0, intelecto: 0, medicina: 0, sentidos: 0, social: 0, vontade: 0 };
 
 /**
  * Visão do MESTRE em `/campanhas/:id` — redesenho (`campanha-detalhe-mestre-coluna-acoes.spec.md`).
@@ -73,6 +80,7 @@ const REGISTRO_SEM_CATALOGACAO = 'SCP - ?????';
     Tooltip,
     Esqueleto,
     Modal,
+    RolagemRapida,
     NgTemplateOutlet,
   ],
   templateUrl: './detalhe-mestre.page.html',
@@ -80,8 +88,10 @@ const REGISTRO_SEM_CATALOGACAO = 'SCP - ?????';
 })
 export class CampanhaDetalheMestre {
   protected readonly dados = inject(CampanhaDetalheDadosService);
+  protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
+  private readonly rolagemService = inject(RolagemService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
@@ -92,6 +102,27 @@ export class CampanhaDetalheMestre {
 
   /** Painel lateral fixo (entregável 3) — sempre montado, alterna Rolagens⇆Inventário, nunca overlay. */
   protected readonly painelLateralAtivo = signal<'rolagens' | 'inventario'>('rolagens');
+  protected readonly rolagemAvulsaOculta = signal(false);
+  protected readonly atributosNeutros = ATRIBUTOS_NEUTROS;
+
+  protected alternarRolagemAvulsaOculta(): void {
+    this.rolagemAvulsaOculta.update((oculta) => !oculta);
+  }
+
+  protected registrarRolagemAvulsa(evento: RolagemRealizadaDto): void {
+    const campanhaId = this.dados.campanha()?.id;
+    if (!campanhaId) return;
+    this.rolagemService.registrarAvulsaDaCampanha(campanhaId, {
+      rotulo: evento.rotulo,
+      formula: evento.formula ?? null,
+      resultado: evento.resultado,
+      visibilidade: this.rolagemAvulsaOculta() ? RolagemVisibilidadeEnum.PRIVADA : RolagemVisibilidadeEnum.PUBLICA,
+    }).subscribe({
+      next: (rolagem) => this.dados.rolagensFeed.update((atuais) =>
+        atuais.some((item) => item.id === rolagem.id) ? atuais : [rolagem, ...atuais],
+      ),
+    });
+  }
 
   protected readonly fichaFlutuanteRef = viewChild<FichaFlutuante>('fichaFlutuante');
   private readonly cadernoRef = viewChild<CadernoFlutuante>('caderno');

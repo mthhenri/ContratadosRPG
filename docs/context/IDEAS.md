@@ -108,6 +108,9 @@
 
 ### I-027 — Janela externa para histórico de rolagens, anotações da ficha e Caderno · frontend/UX
 
+- **Estado:** primeira fatia (Histórico) implementada em
+  `docs/specs/done/rolagens-janela-externa.spec.md` em 2026-09-22. Anotações e Caderno ainda
+  aguardam specs próprias; esta entrada permanece aberta para preservar as duas fatias.
 - **Ideia:** permitir abrir três painéis numa janela separada do navegador ("por fora"), em vez de
   só como painel lateral/flutuante dentro da mesma aba: **histórico de rolagens**, **anotações da
   ficha** e o **Caderno da campanha**. Decisão do autor (2026-09-22): via `window.open` com a mesma
@@ -141,10 +144,10 @@
     `app-painel-flutuante`) usado por Caderno/Calculadora/Leitor de Documentos/Anotações — cuida de
     drag, posição persistida, z-index, minimizar, fechar. `historico-rolagens-sidebar` **não** o
     usa (é sidebar fixa, não janela arrastável).
-  - **Nenhuma rota hoje serve um painel isolado sem o shell da aplicação** — toda rota passa por
+  - **Na data da investigação, nenhuma rota servia um painel isolado sem o shell da aplicação** — toda rota passava por
     `LayoutComponent`/`app-layout`, que só pula a topbar completa para `/acesso-negado`
     (`rotaIsolada()`). Uma janela externa precisaria de um destino de rota novo, isolado do shell,
-    para cada um dos três painéis — ainda não existe.
+    para cada um dos três painéis. A primeira rota foi entregue na fatia do Histórico.
 - **Custo aparente:** alto — não é só `window.open` para uma rota existente (nenhuma serve hoje):
   precisa (1) um padrão de rota "isolada" reutilizável para os três; (2) cada painel resolver seus
   próprios dados a partir de params de URL (campanhaId/fichaId) em vez de receber via `@Input` de um

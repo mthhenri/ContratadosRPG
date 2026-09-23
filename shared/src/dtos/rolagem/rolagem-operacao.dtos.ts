@@ -36,6 +36,15 @@ export interface RolagemAvulsoRegistrarDto extends RolagemRegistrarDto {
   readonly combatenteId: number;
 }
 
+/** Rolagem livre do mestre diretamente na campanha, sem ficha nem combatente de encontro. */
+export interface RolagemCampanhaAvulsaRegistrarDto {
+  readonly campanhaId: number;
+  readonly rotulo: string;
+  readonly formula: string | null;
+  readonly visibilidade: RolagemVisibilidadeEnum;
+  readonly resultado: ResultadoRolagemDto;
+}
+
 /**
  * Entrada interna do `RolagemRepository.registrarRolagem` — `campanhaId`/`usuarioId` já resolvidos
  * pela service a partir da ficha (dono da rolagem = quem a disparou, não necessariamente o dono da

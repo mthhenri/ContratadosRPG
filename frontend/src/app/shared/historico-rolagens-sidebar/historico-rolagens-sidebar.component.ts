@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, model, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
 
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
@@ -8,8 +8,10 @@ import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
 import { CartaoRolagem } from '../cartao-rolagem/cartao-rolagem.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
+import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../ui/esqueleto/esqueleto.component';
+import { HistoricoRolagensJanelaService } from './historico-rolagens-janela.service';
 
 /**
  * Barra lateral de histórico de rolagens — substitui a antiga listagem embutida no painel da
@@ -35,6 +37,7 @@ import { Esqueleto } from '../ui/esqueleto/esqueleto.component';
     AutoFocus,
     Tooltip,
     Botao,
+    BotaoIcone,
     EstadoVazio,
     Esqueleto,
   ],
@@ -42,6 +45,7 @@ import { Esqueleto } from '../ui/esqueleto/esqueleto.component';
   styleUrl: './historico-rolagens-sidebar.component.scss',
 })
 export class HistoricoRolagensSidebar {
+  private readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   readonly titulo = input('Histórico de Rolagens');
   readonly itens = input.required<readonly RolagemResumoDto[]>();
   readonly carregando = input(false);
@@ -64,6 +68,11 @@ export class HistoricoRolagensSidebar {
    * quem hospeda define a largura e a altura — a lista rola por dentro, sem alargar a linha.
    */
   readonly fixo = input(false);
+  /** ID presente apenas quando o painel sobreposto pertence a uma ficha. */
+  readonly fichaIdJanela = input<number | null>(null);
+  readonly tipoFichaJanela = input<'jogador' | 'criatura'>('jogador');
+  /** ID presente quando o histórico pertence ao feed da campanha, inclusive em colunas fixas. */
+  readonly campanhaIdJanela = input<number | null>(null);
 
   readonly carregarMais = output<void>();
   /**
@@ -80,7 +89,16 @@ export class HistoricoRolagensSidebar {
   protected readonly painelRenderizado = signal(false);
   protected readonly saindo = signal(false);
   /** O painel existe no DOM: sempre na coluna fixa; no modo sobreposto, só enquanto aberto/saindo. */
-  protected readonly renderizado = computed(() => this.fixo() || this.painelRenderizado());
+  protected readonly emJanela = computed(() => {
+    const fichaId = this.fichaIdJanela();
+    const campanhaId = this.campanhaIdJanela();
+    return fichaId !== null
+      ? this.janelaHistorico.estaAbertaFicha(fichaId)
+      : campanhaId !== null && this.janelaHistorico.estaAbertaCampanha(campanhaId);
+  });
+  protected readonly renderizado = computed(
+    () => !this.emJanela() && (this.fixo() || this.painelRenderizado()),
+  );
   private encerramentoPendente: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -120,6 +138,13 @@ export class HistoricoRolagensSidebar {
 
   protected fechar(): void {
     this.aberto.set(false);
+  }
+
+  protected abrirEmJanela(): void {
+    const fichaId = this.fichaIdJanela();
+    const campanhaId = this.campanhaIdJanela();
+    if (fichaId !== null) this.janelaHistorico.abrirFicha(fichaId, this.tipoFichaJanela());
+    else if (campanhaId !== null) this.janelaHistorico.abrirCampanha(campanhaId);
   }
 
   /** Autor + (opcionalmente) o nome da ficha — junta os dois numa string só para o template. */

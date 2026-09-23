@@ -1,5 +1,75 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-23 — I-027: histórico local recolhido enquanto a janela externa está aberta
+
+O usuário aprovou o visual de antes/depois para os oito contextos de histórico. Um serviço
+compartilhado agora mantém uma janela por ficha/campanha, foca a existente em reaberturas e
+observa seu fechamento; abertura bloqueada ou falha preserva a interface local. O componente
+compartilhado recolhe o overlay das fichas sem perder o estado anterior. Mestre e jogador mantêm
+a rolagem rápida e retiram só o histórico; o espectador retira o cartão e amplia a grade; as
+três iniciativas retiram a coluna. A iniciativa do espectador precisou ainda esticar a grade de
+combatentes, pois sem a coluna seus cartões continuavam estreitos. Anotações, fichas abertas em
+janela e cadernos não foram alterados.
+
+**Referência visual:** sidebar de histórico e painel de rolagens já aprovados, comparados com o
+visual de antes/depois aprovado pelo autor. **Verificação:** testes do serviço (popup bloqueado,
+fechamento e janela duplicada), sidebar, mestre, espectador e iniciativa; suíte frontend final
+146/146 arquivos e 2095/2095 testes. Build e lint passaram, com apenas o warning de budget inicial
+preexistente. Na aplicação real, as oito visões foram inspecionadas em desktop; no mobile
+360×800 o controle ficou oculto e não houve overflow nos recortes conferidos. A janela aberta
+recolheu visualmente a área local. A verificação manual do evento de fechar a janela externa
+permanece pendente porque o navegador de inspeção não expôs a janela popup para encerrá-la;
+por isso a spec continua em `active/`.
+
+## 2026-09-23 — I-027: paridade do botão de visibilidade de rolagens
+
+O botão de visibilidade do jogador passou a usar `app-botao` secundário preenchido, como o da
+rolagem avulsa do mestre. As receitas visuais locais foram retiradas; o primitivo agora mantém
+`--text` também no hover e no estado pressionado dessa combinação. Antes, no mestre, o navegador
+media texto claro `rgb(230,232,235)` em repouso e quase preto `rgb(10,12,15)` no hover sobre o
+mesmo fundo escuro. Os botões preservam `aria-pressed`, ícone e rótulo de rolagens públicas/ocultas.
+
+O editor de rolagem rápida mantém um modal de ajuda montado mesmo fechado; seis testes antigos da
+página do mestre passaram a selecionar o primeiro `app-modal` em vez do diálogo sob teste. Seus
+seletores foram ancorados nos títulos Membros, Editar campanha e Convites, sem mudar o produto.
+
+**Verificado:** teste focado do jogador 3/3 (falhou antes da migração e passou depois), teste
+focado do mestre 35/35, suíte frontend 144/144 arquivos e 2078/2078 testes, build verde (warning
+de budget inicial preexistente), lint com zero erros e `git diff --check` sem erros. Na aplicação
+real, mestre e jogador foram comparados em 1920×1080 e 360×800, nos estados público/oculto e no
+hover; o texto permaneceu claro e as páginas móveis não tiveram overflow horizontal. A spec
+ampliada da I-027 continua ativa para os demais critérios de janela externa.
+
+## 2026-09-22 — rolagens-janela-externa: histórico em janela independente (I-027, primeira fatia)
+
+O histórico de rolagens de ficha de jogador e criatura ganhou “Abrir em janela” no painel
+sobreposto. A rota isolada `/janela/ficha/:fichaId/historico-rolagens` carrega a ficha e o
+histórico com a própria sessão, sem topbar completa. O cabeçalho compacto reutilizável usa a
+marca e os tokens da topbar; “Fechar” encerra a janela aberta por script, e “Voltar à ficha”
+oferece navegação na mesma janela. `HistoricoRolagensSidebar` é reusado em modo fixo; o botão de
+abrir aparece só no painel sobreposto das duas fichas. O tipo criatura chega na URL para usar
+o endpoint e a rota de retorno corretos. O backend continua arbitrando acesso ao REST e à sala.
+
+A janela entra na sala da ficha e, quando a ficha pertence a campanha, também na sala da
+campanha — é nesta última que o gateway publica rolagens públicas de campanha. Cada janela tem
+seu próprio socket e a reconexão refaz a primeira página. Rolagens privadas de campanha só
+chegam à sala do mestre pelo contrato atual do gateway; a janela do autor não recebe esse
+broadcast e as recupera pelo REST ao recarregar. As
+fatias de Anotações e Caderno permanecem abertas na I-027.
+
+**Verificado:** build do frontend (verde; warning de budget inicial preexistente), TypeScript
+sem erros, lint do frontend com 0 erros (warnings de estilo preexistentes), teste focado do
+histórico 13/13 e suíte completa 144/144 arquivos, 2077/2077 testes. Em aplicação real com
+Postgres, NestJS e Angular, a janela abriu pelo botão, exibiu o histórico e recebeu duas
+rolagens públicas sem reload (`window.__sentinela` preservada), inclusive uma após fechar a aba
+principal; outro teste rolou Destreza pelo botão real da ficha e apareceu na janela. Criatura
+carregou pelo endpoint próprio; usuário sem permissão recebeu erro sem
+lista de dados. Inspeção visual pessoal em 1920×1080 e 360×800, comparada à topbar e ao
+histórico fixo da Iniciativa: mesma identidade e densidade, lista com rolagem interna, sem
+overflow horizontal. O cabeçalho mobile foi ajustado durante a inspeção para mostrar o contexto
+e garantir 44 px nos controles. As rolagens criadas só para o teste foram removidas por soft
+delete do banco local.
+
 
 ## 2026-09-22 — habilidades-busca-descricao: escopo Título/Descrição/Ambos na busca do seletor de habilidades (I-028)
 

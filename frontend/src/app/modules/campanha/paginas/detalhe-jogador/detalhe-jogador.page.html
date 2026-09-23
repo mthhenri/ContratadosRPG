@@ -122,7 +122,13 @@
     >
         Calculadora
     </button>
-    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" [pressionado]="cadernoAberto()" (click)="alternarCaderno()">
+    <button
+        app-coluna-acoes-item
+        icone="caderno"
+        appTooltip="Caderno"
+        [pressionado]="cadernoAberto()"
+        (click)="alternarCaderno()"
+    >
         Caderno
     </button>
 </app-coluna-acoes>
@@ -513,9 +519,20 @@
                             />
                             }
 
+                            @if (!janelaHistorico.estaAbertaCampanha(dados.id)) {
                             <header class="detalhe__secao">
                                 <h2 class="detalhe__secao-titulo">Histórico</h2>
                                 <span class="detalhe__secao-regua"></span>
+                                <button
+                                    type="button"
+                                    app-botao-icone
+                                    tamanho="compacto"
+                                    class="detalhe__abrir-rolagens"
+                                    (click)="janelaHistorico.abrirCampanha(dados.id)"
+                                    aria-label="Abrir em janela"
+                                    [appTooltip]="'Abrir em janela'"
+                                    ><app-icone nome="abrir-externo"
+                                /></button>
                             </header>
 
                             @if (dados.carregandoRolagens()) {
@@ -545,6 +562,7 @@
                                 ></li>
                                 }
                             </ul>
+                            }
                             }
                         </div>
                     </div>

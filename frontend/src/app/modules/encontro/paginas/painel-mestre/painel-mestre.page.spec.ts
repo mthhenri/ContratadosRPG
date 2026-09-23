@@ -57,6 +57,29 @@ describe('PainelEncontroMestre', () => {
     expect(elemento.querySelector('app-bandeja-dados')).not.toBeNull();
   });
 
+  it('libera a coluna do histórico e a recompõe ao fechar a janela externa', () => {
+    const { fixture } = montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+    const janela = { closed: false, opener: window, location: { replace: vi.fn() }, focus: vi.fn(), close: vi.fn() };
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(janela as unknown as Window);
+    vi.useFakeTimers();
+    try {
+      expect(raiz.querySelector('.iniciativa-mestre__rolagens')).not.toBeNull();
+      (raiz.querySelector('.iniciativa-mestre__rolagens [aria-label="Abrir em janela"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(raiz.querySelector('.iniciativa-mestre__rolagens')).toBeNull();
+      expect(raiz.querySelector('.iniciativa-mestre__palco')).not.toBeNull();
+
+      janela.closed = true;
+      vi.advanceTimersByTime(500);
+      fixture.detectChanges();
+      expect(raiz.querySelector('.iniciativa-mestre__rolagens')).not.toBeNull();
+    } finally {
+      abrir.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it('trava a iniciativa das ocorrências adicionais e destaca somente o slot atual', () => {
     const { fixture } = montar();
     interno(fixture).modoEdicao.set(true);

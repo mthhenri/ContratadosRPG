@@ -22,6 +22,7 @@ import { rolarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
@@ -127,6 +128,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
 })
 export class PainelEncontroMestre {
   protected readonly dados = inject(EncontroPainelDadosService);
+  protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly encontroService = inject(EncontroService);
   private readonly notificacaoService = inject(NotificacaoService);
   private readonly confirmacaoService = inject(ConfirmacaoService);

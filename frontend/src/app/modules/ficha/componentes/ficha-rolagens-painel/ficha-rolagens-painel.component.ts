@@ -16,6 +16,7 @@ import { obterDadoExtraIniciativaFormacao } from '@contratados-rpg/shared/regras
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
+import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { NOME_PRESET_INICIATIVA } from '../../executar-rolagem';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { montarInformacoesExtras, normalizarEntrada } from '../../status-derivado';
@@ -40,7 +41,7 @@ import { FichaRolagens } from '../ficha-rolagens/ficha-rolagens.component';
  */
 @Component({
   selector: 'app-ficha-rolagens-painel',
-  imports: [FichaRolagens, Icone, Tooltip],
+  imports: [FichaRolagens, Icone, Tooltip, Botao],
   templateUrl: './ficha-rolagens-painel.component.html',
   styleUrl: './ficha-rolagens-painel.component.scss',
 })

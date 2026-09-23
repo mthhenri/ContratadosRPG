@@ -130,7 +130,13 @@
     >
         Calculadora
     </button>
-    <button app-coluna-acoes-item icone="caderno" appTooltip="Caderno" [pressionado]="cadernoAberto()" (click)="alternarCaderno()">
+    <button
+        app-coluna-acoes-item
+        icone="caderno"
+        appTooltip="Caderno"
+        [pressionado]="cadernoAberto()"
+        (click)="alternarCaderno()"
+    >
         Caderno
     </button>
 </app-coluna-acoes>
@@ -269,6 +275,49 @@
                 [hidden]="painelLateralAtivo() !== 'rolagens'"
                 appOverflowFade
             >
+                <div class="detalhe-mestre__rolar">
+                    <button
+                        type="button"
+                        app-botao
+                        variante="secundario"
+                        estilo="preenchido"
+                        tamanho="pequeno"
+                        posicaoIcone="esquerda"
+                        class="detalhe-mestre__visibilidade-rolagem"
+                        [attr.aria-pressed]="rolagemAvulsaOculta()"
+                        [appTooltip]="
+                            rolagemAvulsaOculta()
+                                ? 'Próximas rolagens: privadas'
+                                : 'Próximas rolagens: públicas'
+                        "
+                        (click)="alternarRolagemAvulsaOculta()"
+                    >
+                        <app-icone [nome]="rolagemAvulsaOculta() ? 'olho-fechado' : 'olho'" />
+                        {{ rolagemAvulsaOculta() ? 'Rolagens ocultas' : 'Rolagens públicas' }}
+                    </button>
+                    <app-rolagem-rapida
+                        [atributos]="atributosNeutros"
+                        [podeRolar]="true"
+                        [rolagemOculta]="rolagemAvulsaOculta()"
+                        [restringirMontadorATester]="true"
+                        (rolagemFeita)="registrarRolagemAvulsa($event)"
+                    />
+                </div>
+                @if (!janelaHistorico.estaAbertaCampanha(campanhaAtual.id)) {
+                <header class="detalhe-mestre__historico-cabecalho">
+                    <h2 class="detalhe-mestre__historico-titulo">Histórico</h2>
+                    <span class="detalhe-mestre__historico-regua"></span>
+                    <button
+                        type="button"
+                        app-botao-icone
+                        tamanho="compacto"
+                        class="detalhe-mestre__abrir-rolagens"
+                        (click)="janelaHistorico.abrirCampanha(campanhaAtual.id)"
+                        aria-label="Abrir em janela"
+                        [appTooltip]="'Abrir em janela'"
+                        ><app-icone nome="abrir-externo"
+                    /></button>
+                </header>
                 @if (dados.carregandoRolagens()) {
                 <div
                     class="detalhe-mestre__rolagens-esqueleto"
@@ -295,6 +344,7 @@
                     ></li>
                     }
                 </ul>
+                }
                 }
             </div>
 

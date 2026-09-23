@@ -1,0 +1,23 @@
+.historico-janela {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--bg);
+
+    &__conteudo {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+        padding: var(--space-8);
+    }
+
+    &__erro {
+        margin: var(--space-16);
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: 13px;
+    }
+}

@@ -168,6 +168,27 @@ describe('RolagemService', () => {
     });
   });
 
+  describe('registrarRolagemAvulsaDaCampanha', () => {
+    it('registra uma rolagem sem ficha nem combatente quando o autor é mestre', async () => {
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({ papel: TipoCampanhaMembroPapelEnum.MESTRE });
+      const registrada = criarResumo({ fichaId: null, encontroCombatenteId: null, campanhaId: 5 });
+      rolagemRepositorio.registrarRolagem.mockResolvedValue(registrada);
+
+      await service.registrarRolagemAvulsaDaCampanha(
+        { campanhaId: 5, rotulo: 'Rolagem rápida', formula: '2d6', visibilidade: RolagemVisibilidadeEnum.PUBLICA, resultado },
+        usuarioAtivo,
+      );
+
+      expect(rolagemRepositorio.registrarRolagem).toHaveBeenCalledWith(expect.objectContaining({
+        fichaId: null,
+        encontroCombatenteId: null,
+        campanhaId: 5,
+        usuarioId: usuarioAtivo.sub,
+      }));
+      expect(campanhaGateway.emitirRolagemRegistrada).toHaveBeenCalledWith(registrada);
+    });
+  });
+
   describe('registrarRolagem', () => {
     it('resolve campanhaId/usuarioId da ficha e do autenticado (não da ficha) e persiste', async () => {
       fichaService.recuperarFicha.mockResolvedValue({ id: 10, campanhaId: 5, usuarioId: 99, nome: 'Ficha' });

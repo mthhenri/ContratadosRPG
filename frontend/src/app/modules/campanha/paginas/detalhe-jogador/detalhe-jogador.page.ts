@@ -21,6 +21,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -103,6 +104,7 @@ const PX_PREVIEW_AVATAR = 300;
 })
 export class CampanhaDetalheJogador {
   protected readonly dados = inject(CampanhaDetalheDadosService);
+  protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly fichaService = inject(FichaService);
   /** Handlers `ajustar*` da ficha embutida — mesmo composable de `VisualizarPage`. */

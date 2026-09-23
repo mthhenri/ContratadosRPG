@@ -74,6 +74,7 @@ export type IconeNome =
   | 'coroa'
   | 'atualizar'
   | 'voltar'
+  | 'abrir-externo'
   | 'editar'
   | 'excluir'
   | 'olho'
