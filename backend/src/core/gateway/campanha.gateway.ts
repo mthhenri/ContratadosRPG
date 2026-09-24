@@ -379,17 +379,23 @@ export class CampanhaGateway implements OnGatewayConnection {
     this.servidor.to(this.salaFicha(evento.fichaId)).emit('ficha:acesso-revogado', evento);
   }
 
-  /** Remove das fichas os sockets do usuário cujo acesso acabou de ser revogado pela service. */
+  /**
+   * Remove das fichas os sockets do usuário cujo acesso acabou de ser revogado pela service.
+   * `RemoteSocket.leave` é síncrono (`void`) — só a busca dos sockets é assíncrona (P-077).
+   */
   async expulsarUsuarioDaFicha(evento: FichaAcessoRevogadoDto): Promise<void> {
     const sockets = await this.servidor.in(this.salaFicha(evento.fichaId)).fetchSockets();
-    await Promise.all(
-      sockets
-        .filter((socket) => (socket.data as { usuario?: JwtPayload }).usuario?.sub === evento.usuarioId)
-        .map((socket) => socket.leave(this.salaFicha(evento.fichaId))),
-    );
+    for (const socket of sockets) {
+      if ((socket.data as { usuario?: JwtPayload }).usuario?.sub !== evento.usuarioId) continue;
+      socket.leave(this.salaFicha(evento.fichaId));
+    }
   }
 
-  /** Aplica ao socket o papel já persistido pela service, sem reproduzir a autorização de domínio. */
+  /**
+   * Aplica ao socket o papel já persistido pela service, sem reproduzir a autorização de domínio.
+   * Sai de todas as salas de papel e entra só nas do papel novo (nenhuma quando `papel` é `null`).
+   * `RemoteSocket.join`/`leave` são síncronos (`void`) — só `fetchSockets` é assíncrono (P-077).
+   */
   async recalibrarSalasCampanhaUsuario(dto: {
     readonly campanhaId: number;
     readonly usuarioId: number;
@@ -401,19 +407,19 @@ export class CampanhaGateway implements OnGatewayConnection {
       this.salaCampanhaEspectador(dto.campanhaId),
     ];
     const sockets = await this.servidor.in(salas).fetchSockets();
-    await Promise.all(sockets
-      .filter((socket) => (socket.data as { usuario?: JwtPayload }).usuario?.sub === dto.usuarioId)
-      .flatMap((socket) => [
-        ...salas.map((sala) => socket.leave(sala)),
-        ...(dto.papel === null ? [] : [socket.join(
-          dto.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
-            ? this.salaCampanhaEspectador(dto.campanhaId)
-            : this.salaCampanha(dto.campanhaId),
-        )]),
-        ...(dto.papel === TipoCampanhaMembroPapelEnum.MESTRE
-          ? [socket.join(this.salaCampanhaMestre(dto.campanhaId))]
-          : []),
-      ]));
+    for (const socket of sockets) {
+      if ((socket.data as { usuario?: JwtPayload }).usuario?.sub !== dto.usuarioId) continue;
+      salas.forEach((sala) => socket.leave(sala));
+      if (dto.papel === null) continue;
+      socket.join(
+        dto.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
+          ? this.salaCampanhaEspectador(dto.campanhaId)
+          : this.salaCampanha(dto.campanhaId),
+      );
+      if (dto.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
+        socket.join(this.salaCampanhaMestre(dto.campanhaId));
+      }
+    }
   }
 
   /** Propaga a criação já persistida de uma página colaborativa à campanha. */

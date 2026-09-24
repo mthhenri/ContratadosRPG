@@ -696,10 +696,7 @@ export class FichaService {
     await this.validarPermissaoEdicao(fichaEncontrada, usuarioAtivo);
     const estado = this.extrairVitalidade(dto.estado);
     this.validarVitalidade(estado);
-    const estadoComMachucado = this.resolverMachucadoNaVitalidade(
-      fichaEncontrada.dados as FichaJogadorDadosDto,
-      estado,
-    );
+    const estadoComMachucado = this.resolverMachucadoNaVitalidade(fichaEncontrada.dados, estado);
     const fichaAlterada = await this.fichaRepositorio.alterarVitalidade({
       id: dto.id,
       estado: estadoComMachucado,

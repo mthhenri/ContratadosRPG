@@ -9,7 +9,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-24 · **Última decisão registrada:**
+> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `P-077` corrigido — `npm run lint`
+> da raiz volta a sair com 0 erros (laços síncronos no lugar de `Promise.all` sobre
+> `RemoteSocket.join`/`leave` em `CampanhaGateway`, asserção redundante removida em
+> `FichaService.alterarVitalidade`); salas conferidas ao vivo. Antes:
 > `p-076-rolagem-rapida-mestre-campanha` concluída (spec em `done/`), fecha o `P-076`: a migration
 > `0030` troca o CHECK `chk_rolagem_origem` por "no máximo um entre ficha e combatente, e nenhum dos
 > dois só com `campanha_id`", e a rolagem rápida do mestre na campanha volta a salvar (201) e a

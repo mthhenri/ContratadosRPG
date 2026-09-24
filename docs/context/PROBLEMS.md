@@ -99,21 +99,3 @@
   transparent)`, a mesma da barra ancorada do editor) ou decidir um token de sombra no tema. O
   botão também é um `<button>` nativo estilizado à mão — candidato a `app-botao-icone`.
 - **Desde:** achado em 2026-09-23 na revisão do editor Markdown (fora do escopo daquela task).
-
-### P-077 — `npm run lint` do backend falha com 3 erros em arquivos fora do diff · `ABERTO` · backend/lint
-
-- **Sintoma:** `npm run lint` (raiz) sai com código 1 no workspace `backend`: 3 erros e ~3055
-  avisos. `@typescript-eslint/await-thenable` em `backend/src/core/gateway/campanha.gateway.ts`
-  (linhas 386 e 404, `Promise.all` sobre o resultado de `fetchSockets`/`socket.join`) e
-  `@typescript-eslint/no-unnecessary-type-assertion` em `backend/src/modules/ficha/ficha.service.ts`
-  (linha 700, `fichaEncontrada.dados as FichaJogadorDadosDto`). `shared` e `frontend` passam com 0
-  erros.
-- **Causa:** a verificar. As linhas vêm dos commits `9777af1` (2026-09-21) e `ed81b9a`
-  (2026-09-22). Os fechos seguintes relataram "lint sem erros", provavelmente olhando só o
-  workspace ou os arquivos tocados.
-- **Contorno:** rodar o lint por workspace e comparar com a lista acima para separar erro novo de
-  preexistente.
-- **Correção:** ajustar as três linhas (tipar o `Promise.all` corretamente ou trocar pelo laço que a
-  regra aceita; remover a asserção desnecessária) e confirmar `npm run lint` com saída 0.
-- **Desde:** achado em 2026-09-24 no gate de conclusão da `p-076`, que não toca esses arquivos.
-

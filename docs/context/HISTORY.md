@@ -1,5 +1,35 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-24 — `P-077` corrigido: `npm run lint` do backend volta a sair com 0 erros
+
+Task solta, sem spec, pedida pelo autor logo depois da `p-076`. O lint do backend tinha 3 erros em
+código que a `p-076` não tocava.
+
+**`await-thenable` em `CampanhaGateway` (commit `9777af1`).** `expulsarUsuarioDaFicha` e
+`recalibrarSalasCampanhaUsuario` faziam `await Promise.all(...)` sobre `socket.leave`/`socket.join`
+dos sockets devolvidos por `fetchSockets()`. No socket.io 4.8 esses são `RemoteSocket`, e os dois
+métodos retornam `void`: o `Promise.all` não esperava nada. Viraram laços síncronos com a mesma
+ordem e o mesmo filtro por usuário: sair das três salas de papel e depois entrar nas do papel novo
+(nenhuma com `papel = null`; o mestre entra na sala cheia e na do mestre). Os métodos continuam
+`async` por causa do `fetchSockets`, e as services que os aguardam não mudam.
+
+**`no-unnecessary-type-assertion` em `FichaService.alterarVitalidade` (commit `ed81b9a`).** O
+`fichaEncontrada.dados as FichaJogadorDadosDto` era redundante: o tipo já é esse. A asserção saiu.
+
+**Verificação.** `npm run lint` na raiz saiu com código 0, e as linhas tocadas não têm avisos.
+Backend: 32 arquivos, 574 testes; `campanha.gateway.spec.ts` com 44 testes, incluindo expulsão e
+recalibração. O build do backend passou. Ao vivo, com um socket real da jogadora na campanha
+"Contenção P-076" (Postgres local, backend real):
+
+- como `JOGADOR`, recebeu inventário e rolagem pública, mas não a privada;
+- rebaixada a `ESPECTADOR` pelo `PATCH .../papel`, passou a receber só a rolagem pública;
+- promovida de volta a `JOGADOR`, voltou a receber tudo;
+- com acesso concedido à criatura "Eco" e dentro de `ficha:13`, recebeu `ficha:alterada`;
+- depois do `DELETE .../acesso/7`, recebeu `ficha:acesso-revogado` e não recebeu mais
+  `ficha:alterada`.
+
+O `ficha:condicoes-alteradas` continua chegando pela sala da campanha, como previsto.
+
 ## 2026-09-24 — `p-076-rolagem-rapida-mestre-campanha`: rolagem rápida do mestre volta a salvar e aparece como "Mestre" (fecha `P-076`)
 
 Desde `169ed1e2` a "Rolagem rápida" da página da campanha respondia 500 em toda rolagem: o
