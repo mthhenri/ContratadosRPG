@@ -114,7 +114,8 @@
 - **Correção:** migration trocando o CHECK por "no máximo um entre ficha e combatente, e nenhum dos
   dois só com `campanha_id` preenchido", mais teste de backend do registro avulso e verificação ao
   vivo do feed do mestre/jogador/espectador. Decisão do autor (2026-09-24): registrar e tratar em
-  task própria, fora da I-027.
+  task própria, fora da I-027 — spec em
+  `docs/specs/backlog/p-076-rolagem-rapida-mestre-campanha.spec.md` (aguarda revisão do autor).
 - **Desde:** commit `169ed1e2` (2026-09-23); achado na verificação ao vivo da I-027 em 2026-09-24.
 
 
