@@ -223,6 +223,27 @@ describe('HistoricoRolagensSidebar', () => {
     expect(painel.querySelector('.cartao-rolagem__formula')).toBeNull();
   });
 
+  it('mostra "Mestre" como origem da rolagem avulsa do mestre, nunca "null" (P-076)', () => {
+    fixture.componentRef.setInput("itens", [
+      criarItem({ fichaId: null, nomeAutor: "Codex", nomeFicha: null }),
+    ]);
+    obterGatilho().click();
+    fixture.detectChanges();
+
+    const autor = (fixture.nativeElement as HTMLElement).querySelector(".cartao-rolagem__autor");
+    expect(autor?.textContent?.trim()).toBe("Codex · Mestre");
+  });
+
+  it("omite a origem quando a tela já é o contexto da ficha (mostrarFicha = false)", () => {
+    fixture.componentRef.setInput("mostrarFicha", false);
+    fixture.componentRef.setInput("itens", [criarItem({ nomeAutor: "Codex" })]);
+    obterGatilho().click();
+    fixture.detectChanges();
+
+    const autor = (fixture.nativeElement as HTMLElement).querySelector(".cartao-rolagem__autor");
+    expect(autor?.textContent?.trim()).toBe("Codex");
+  });
+
   describe('modo fixo (ui-37)', () => {
     beforeEach(() => {
       fixture.componentRef.setInput('fixo', true);

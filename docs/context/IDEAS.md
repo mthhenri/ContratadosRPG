@@ -48,6 +48,20 @@
 
 ## Abertas
 
+### I-034 — Testes de repositório contra um Postgres real · backend/banco
+
+- **Ideia:** uma suíte pequena de integração que rode os repositórios (`*.repository.ts`) contra um
+  Postgres de verdade com as migrations aplicadas, para que CHECK, FK, `NOT NULL` e índices únicos
+  participem do teste — hoje todo teste de backend mocka o repositório.
+- **Origem:** `P-076` (2026-09-24). A rolagem rápida do mestre gravava ficha e combatente nulos e o
+  CHECK `chk_rolagem_origem` recusava toda linha; o teste da service passava porque o repositório
+  era mock. Só a verificação ao vivo achou o defeito, um dia depois do commit.
+- **Por quê:** mudança de service que cria uma combinação nova de colunas não tem hoje nenhum gate
+  automático contra o schema real; o defeito só aparece no navegador ou em produção.
+- **Custo aparente:** infraestrutura de teste (Postgres efêmero no CI, banco de teste isolado,
+  `db:migrate` antes da suíte, limpeza entre casos) e uma convenção de quais repositórios cobrir.
+  Nenhuma mudança de produto.
+
 ### I-030 — Log de iniciativa: retomar em outro formato · encontro/iniciativa
 
 - **Ideia:** reconstruir uma trilha de eventos do combate (dano sofrido e de quem veio, gasto de

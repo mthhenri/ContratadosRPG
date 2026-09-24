@@ -64,7 +64,8 @@ export interface RolagemInternoRegistrarDto {
 /**
  * Item de listagem/feed — usado tanto pelo histórico da ficha (`GET /ficha/:id/rolagem`) quanto
  * pelo feed da campanha (`GET /campanha/:id/rolagem`) e como saída do próprio registro. `nomeAutor`/
- * `nomeFicha` vêm de `JOIN` (nunca duplicados como coluna) — a listagem sempre resolve os dois.
+ * `nomeFicha` vêm de `JOIN` (nunca duplicados como coluna); `nomeFicha` só fica `null` na rolagem
+ * avulsa do mestre na campanha.
  * `createdDate` chega como string ISO (serialização padrão do `StandardResponse` sobre `Date`).
  */
 export interface RolagemResumoDto {
@@ -74,7 +75,11 @@ export interface RolagemResumoDto {
   readonly campanhaId: number | null;
   readonly usuarioId: number;
   readonly nomeAutor: string;
-  readonly nomeFicha: string;
+  /**
+   * Nome da ficha autora ou do combatente avulso. `null` significa rolagem avulsa do mestre na
+   * campanha, sem ficha nem combatente — quem exibe mostra "Mestre" como origem.
+   */
+  readonly nomeFicha: string | null;
   readonly rotulo: string;
   readonly formula: string | null;
   readonly visibilidade: RolagemVisibilidadeEnum;

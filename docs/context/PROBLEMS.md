@@ -100,22 +100,20 @@
   botão também é um `<button>` nativo estilizado à mão — candidato a `app-botao-icone`.
 - **Desde:** achado em 2026-09-23 na revisão do editor Markdown (fora do escopo daquela task).
 
-### P-076 — Rolagem rápida do mestre na campanha sempre falha com 500 · `ABERTO` · backend/banco
+### P-077 — `npm run lint` do backend falha com 3 erros em arquivos fora do diff · `ABERTO` · backend/lint
 
-- **Sintoma:** na página da campanha, o mestre rola pela "Rolagem rápida" (ex.: `1d20`) e recebe o
-  toast "Erro interno do servidor"; `POST /campanha/:id/rolagem-avulsa` responde 500 e nada é
-  salvo, então a rolagem não entra no feed nem chega a ninguém.
-- **Causa:** o CHECK `chk_rolagem_origem` da tabela `rolagem` exige exatamente um entre `ficha_id`
-  e `encontro_combatente_id` (`(ficha_id IS NOT NULL) <> (encontro_combatente_id IS NOT NULL)`). A
-  rolagem avulsa da campanha (`RolagemService.registrarRolagemAvulsaDaCampanha`) grava os dois
-  nulos — o endpoint e a UI entraram no commit `169ed1e2` sem migration que acompanhasse.
-- **Contorno:** rolar pela ficha do mestre ou pela Iniciativa (rolagem de combatente avulso), que
-  preenchem uma das duas colunas.
-- **Correção:** migration trocando o CHECK por "no máximo um entre ficha e combatente, e nenhum dos
-  dois só com `campanha_id` preenchido", mais teste de backend do registro avulso e verificação ao
-  vivo do feed do mestre/jogador/espectador. Decisão do autor (2026-09-24): registrar e tratar em
-  task própria, fora da I-027 — spec em
-  `docs/specs/backlog/p-076-rolagem-rapida-mestre-campanha.spec.md` (aguarda revisão do autor).
-- **Desde:** commit `169ed1e2` (2026-09-23); achado na verificação ao vivo da I-027 em 2026-09-24.
-
+- **Sintoma:** `npm run lint` (raiz) sai com código 1 no workspace `backend`: 3 erros e ~3055
+  avisos. `@typescript-eslint/await-thenable` em `backend/src/core/gateway/campanha.gateway.ts`
+  (linhas 386 e 404, `Promise.all` sobre o resultado de `fetchSockets`/`socket.join`) e
+  `@typescript-eslint/no-unnecessary-type-assertion` em `backend/src/modules/ficha/ficha.service.ts`
+  (linha 700, `fichaEncontrada.dados as FichaJogadorDadosDto`). `shared` e `frontend` passam com 0
+  erros.
+- **Causa:** a verificar. As linhas vêm dos commits `9777af1` (2026-09-21) e `ed81b9a`
+  (2026-09-22). Os fechos seguintes relataram "lint sem erros", provavelmente olhando só o
+  workspace ou os arquivos tocados.
+- **Contorno:** rodar o lint por workspace e comparar com a lista acima para separar erro novo de
+  preexistente.
+- **Correção:** ajustar as três linhas (tipar o `Promise.all` corretamente ou trocar pelo laço que a
+  regra aceita; remover a asserção desnecessária) e confirmar `npm run lint` com saída 0.
+- **Desde:** achado em 2026-09-24 no gate de conclusão da `p-076`, que não toca esses arquivos.
 

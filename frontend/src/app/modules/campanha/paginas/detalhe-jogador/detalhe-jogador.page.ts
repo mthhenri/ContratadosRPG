@@ -20,6 +20,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { BandejaDados } from '../../../../shared/bandeja-dados/bandeja-dados.component';
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
+import { montarAutoriaRolagem } from "../../../../shared/cartao-rolagem/autoria-rolagem.util";
 import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
@@ -367,6 +368,11 @@ export class CampanhaDetalheJogador {
     const critica = this.fichasCriticas()[0];
     return critica ? { id: critica.id, nome: critica.nome } : null;
   });
+
+  /** Autor + origem (ficha, combatente avulso ou "Mestre") — ver `montarAutoriaRolagem`. */
+  protected autorRolagem(rolagem: RolagemResumoDto): string {
+    return montarAutoriaRolagem(rolagem);
+  }
 
   /** Preview ampliado do avatar de um colega na Equipe, sem recorte (mesmo padrão do Esquadrão do mestre). */
   protected readonly previewAvatar = signal<{ url: string; top: number; left: number } | null>(null);

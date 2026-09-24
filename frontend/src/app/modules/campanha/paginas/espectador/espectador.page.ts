@@ -15,6 +15,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
+import { montarAutoriaRolagem } from "../../../../shared/cartao-rolagem/autoria-rolagem.util";
 import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
@@ -165,9 +166,9 @@ export class CampanhaEspectador {
     return rotuloRelativo(new Date(rolagem.createdDate).getTime(), this.agora());
   }
 
-  /** Autor + ficha, quando a rolagem partiu de uma (rolagem avulsa de encontro não tem ficha). */
+  /** Autor + origem (ficha, combatente avulso ou "Mestre") — ver `montarAutoriaRolagem`. */
   protected autorRolagem(rolagem: RolagemResumoDto): string {
-    return rolagem.nomeFicha ? `${rolagem.nomeAutor} · ${rolagem.nomeFicha}` : rolagem.nomeAutor;
+    return montarAutoriaRolagem(rolagem);
   }
 
   protected readonly semRolagens = computed(

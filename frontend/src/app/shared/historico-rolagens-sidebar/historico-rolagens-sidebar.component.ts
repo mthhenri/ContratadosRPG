@@ -5,6 +5,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { AutoFocus } from '../auto-focus/auto-focus.directive';
 import { Icone } from '../icone/icone.component';
 import { OverflowFade } from '../overflow-fade/overflow-fade.directive';
+import { montarAutoriaRolagem } from "../cartao-rolagem/autoria-rolagem.util";
 import { CartaoRolagem } from '../cartao-rolagem/cartao-rolagem.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { Botao } from '../ui/botao/botao.component';
@@ -154,8 +155,8 @@ export class HistoricoRolagensSidebar {
     }
   }
 
-  /** Autor + (opcionalmente) o nome da ficha — junta os dois numa string só para o template. */
+  /** Autor + (opcionalmente) a origem da rolagem — ver `montarAutoriaRolagem`. */
   protected metaAutor(item: RolagemResumoDto): string {
-    return this.mostrarFicha() ? `${item.nomeAutor} · ${item.nomeFicha}` : item.nomeAutor;
+    return montarAutoriaRolagem(item, this.mostrarFicha());
   }
 }

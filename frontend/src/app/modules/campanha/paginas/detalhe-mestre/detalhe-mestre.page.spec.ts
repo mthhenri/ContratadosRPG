@@ -23,6 +23,7 @@ import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.s
 import { CampanhaService } from '../../campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
+import { RolagemRapida } from "../../../ficha/componentes/rolagem-rapida/rolagem-rapida.component";
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
@@ -155,7 +156,10 @@ describe('CampanhaDetalheMestre', () => {
       }),
       recuperarFichaCriatura: vi.fn(() => of({})),
     };
-    const rolagemService = { listarPorCampanha: vi.fn(() => of([])) };
+    const rolagemService = {
+      listarPorCampanha: vi.fn(() => of([])),
+      registrarAvulsaDaCampanha: vi.fn(),
+    };
     const sessaoService = { usuario: () => ({ id: 1, login: 'x', nome: 'x' }) };
     const paginaCadernoService = {
       listarPaginas: vi.fn(() => of([])),
@@ -228,6 +232,7 @@ describe('CampanhaDetalheMestre', () => {
       confirmacaoService,
       dados,
       navegar,
+      rolagemService,
     };
   }
 
@@ -752,6 +757,42 @@ describe('CampanhaDetalheMestre', () => {
         abrir.mockRestore();
         vi.useRealTimers();
       }
+    });
+
+    it('põe a rolagem rápida avulsa no feed como "autor · Mestre", nunca "null" (P-076)', () => {
+      const { raiz, fixture, rolagemService } = montar();
+      rolagemService.registrarAvulsaDaCampanha.mockReturnValue(of({
+        id: 91,
+        fichaId: null,
+        encontroCombatenteId: null,
+        campanhaId: CAMPANHA_ID,
+        usuarioId: 1,
+        nomeAutor: "Codex",
+        nomeFicha: null,
+        rotulo: "1d20",
+        formula: "1d20",
+        visibilidade: "PUBLICA" as never,
+        resultado: { dados: [], atributos: [], constante: 0, total: 14 },
+        createdDate: new Date().toISOString(),
+        corFicha: null,
+      }));
+
+      const rapida = fixture.debugElement.query(By.directive(RolagemRapida));
+      rapida.componentInstance.rolagemFeita.emit({
+        rotulo: "1d20",
+        formula: "1d20",
+        resultado: { dados: [], atributos: [], constante: 0, total: 14 },
+      });
+      fixture.detectChanges();
+
+      expect(rolagemService.registrarAvulsaDaCampanha).toHaveBeenCalledWith(
+        CAMPANHA_ID,
+        expect.objectContaining({ rotulo: "1d20", visibilidade: "PUBLICA" }),
+      );
+      const autor = raiz.querySelector(
+        ".detalhe-mestre__rolagens-lista li[app-cartao-rolagem] .cartao-rolagem__autor",
+      );
+      expect(autor?.textContent?.trim()).toBe("Codex · Mestre");
     });
 
     it('está sempre montado (não é overlay) e começa em Rolagens', () => {

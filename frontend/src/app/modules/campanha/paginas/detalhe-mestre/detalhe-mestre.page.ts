@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum, TipoFichaEnum } from '@contratados-rpg/shared/enums';
 import type { FichaAtributosDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import type { RolagemResumoDto } from "@contratados-rpg/shared/dtos/rolagem";
 import type { IconeNome } from '../../../../shared/icone/icone.component';
 
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
@@ -22,6 +23,7 @@ import { SegmentadoItem } from '../../../../shared/ui/segmentado/segmentado-item
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { montarAutoriaRolagem } from "../../../../shared/cartao-rolagem/autoria-rolagem.util";
 import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
@@ -207,6 +209,11 @@ export class CampanhaDetalheMestre {
     }
     return lista;
   };
+
+  /** Autor + origem (ficha, combatente avulso ou "Mestre") — ver `montarAutoriaRolagem`. */
+  protected autorRolagem(rolagem: RolagemResumoDto): string {
+    return montarAutoriaRolagem(rolagem);
+  }
 
   /** A lista do feed já vem em ordem decrescente; o primeiro item da ficha é sua última rolagem. */
   protected ultimaRolagemFicha(fichaId: number) {
