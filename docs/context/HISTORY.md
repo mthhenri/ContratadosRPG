@@ -1,5 +1,37 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-23 — editor Markdown: faixa de tabela em grade alinhada
+
+O autor pediu para alinhar os botões e viu uma POC antes (`editor-markdown-tabela-uma-linha-e-grade`):
+duas propostas lado a lado (A, grade; B, linha contínua com separadores — irregular ao quebrar),
+depois a A em caderno largo, caderno estreito, campo curto e celular, tudo capturado no app real
+com o CSS da proposta injetado só na captura. Implementada a A: fora do celular a faixa de tabela
+é uma grade 4 × 2 (`display: contents` nos grupos, grupos `lateral` na 1ª coluna), botões de texto
+com 26px — antes 35px contra 26px dos de ícone — e rolagem lateral quando não cabe. A POC achou um
+problema do campo curto: dentro da lista de ataques, que rola, a faixa de tabela empurrava a barra
+para baixo da parte visível do cartão; agora a barra é trazida para a vista quando aparece ou
+cresce, com `scroll-margin-bottom` para não parar sob o degradê da lista (a 1ª tentativa parava
+exatamente na borda e a última linha ficava esmaecida). Verificado ao vivo sem CSS injetado:
+colunas em x = 289/428/593/765 nas duas linhas, 26px; janela de 520px rolando com degradê; campo
+curto com a barra visível sem rolagem manual; celular inalterado. Frontend 146 arquivos / 2136
+testes; lint sem erros.
+
+## 2026-09-23 — editor Markdown: tabela pode ficar com uma linha só
+
+O autor notou que uma tabela de duas linhas sumia inteira ao remover uma delas. Era regra minha
+da `editor-markdown-desfazer-e-tabelas`, presa ao schema do Milkdown: `table` é
+`table_header_row table_row+`, então cabeçalho + 0 linhas não existia — e investigando apareceu
+também que um Markdown com tabela só de cabeçalho (GFM válido) abria com uma linha vazia inventada.
+O Markdown salvo é o mesmo nos dois casos (a linha vazia não é serializada), então relaxar o schema
+é seguro: `tabelaAdmiteSoCabecalho` (`tableSchema.extendSchema`, `table_row*`) entra depois do
+`gfm` na fábrica e nos testes com o Milkdown real. Remover linha numa tabela de duas deixa uma;
+remover o cabeçalho sobe a linha de baixo; só a última linha que sobrou apaga a tabela.
+"+ Linha acima" no cabeçalho passou a pegar os tipos de linha/célula do schema (antes lia a 2ª
+linha, que pode não existir). Verificado ao vivo (1920×1080): 3 → 2 → 1 linha com a tabela na
+tela, "+ Linha abaixo" volta a 2, remover o cabeçalho → 1, remover a última → sem tabela. Testes
+novos com o Milkdown real (abrir só cabeçalho = 1 linha; remoções; "+ Acima" sem corpo). Frontend
+146 arquivos / 2133 testes; lint sem erros.
+
 ## 2026-09-23 — editor Markdown, rodada 3: espaço para escrever
 
 O autor viu protótipos dos dois pendentes da rodada 2 — capturas do app real com o CSS da proposta

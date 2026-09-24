@@ -146,6 +146,46 @@
     }
 }
 
+// Fora do celular a faixa de tabela é uma grade 4 × 2 de colunas alinhadas: linha em cima, coluna
+// embaixo, espelhadas (abaixo ↔ direita, acima ↔ esquerda, remover ↔ remover), e os grupos
+// laterais ("Texto abaixo", "Apagar tabela") empilhados na 1ª coluna. Antes a faixa quebrava onde
+// coubesse e nada ficava sobre nada. Sem largura para as 4 colunas, a grade inteira rola de lado
+// (as duas linhas juntas) com o degradê de continuação. No celular segue uma linha só.
+@media (min-width: #{bp.$bp-mobile + 1px}) {
+    .editor-markdown__faixa--tabela {
+        display: grid;
+        grid-template-columns: repeat(4, max-content);
+        grid-auto-rows: 26px;
+        gap: var(--space-4);
+        justify-content: start;
+        overflow-x: auto;
+        padding-block: 6px;
+
+        > .editor-markdown__grupo {
+            display: contents;
+        }
+
+        > .editor-markdown__grupo--lateral > .editor-markdown__acao-tabela {
+            grid-column: 1;
+            margin-right: var(--space-12);
+        }
+
+        // O 2º grupo lateral ("Apagar tabela") fica sob o 1º; os demais botões se encaixam nas
+        // colunas 2–4 pela ordem do template.
+        > .editor-markdown__grupo--lateral:last-child > .editor-markdown__acao-tabela {
+            grid-row: 2;
+        }
+
+        // Mesma altura dos botões de ícone da faixa de formatação (26px). Seletor composto de
+        // propósito: `app-botao tamanho="pequeno"` define `padding` com a especificidade de uma
+        // classe, e a ordem entre as duas folhas de estilo não é garantida.
+        .editor-markdown__acao-tabela {
+            height: 26px;
+            padding-block: 0;
+        }
+    }
+}
+
 :host ::ng-deep .milkdown {
     min-height: 100%;
     color: var(--text-dim);
@@ -342,6 +382,9 @@
         flex: none;
         border-top: 1px solid var(--border);
         border-bottom: 0;
+        // Folga ao ser trazida para a vista (`trazerBarraParaVista`): listas que rolam aplicam
+        // degradê na borda de baixo (`appOverflowFade`) e a barra encostada nela ficava esmaecida.
+        scroll-margin-bottom: 32px;
     }
 
     .editor-markdown__faixa {

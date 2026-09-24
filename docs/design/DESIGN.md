@@ -463,8 +463,11 @@ segundo clique (não há botão "texto normal"; bloco de código se faz digitand
 numa tabela aparece a **faixa contextual** de `app-botao tamanho="pequeno"` com rótulos que se
 explicam sozinhos, na ordem de uso: Texto abaixo · + Linha abaixo · + Linha acima · Remover
 linha · + Coluna à direita · + Coluna à esquerda · Remover coluna · Apagar tabela (remoções em
-`perigo`) — ícones de linha/coluna parecidos entre si eram a principal queixa. No mobile cada
-faixa é uma linha só com rolagem lateral e degradê; dentro de tabela cabe **uma faixa por vez**,
+`perigo`) — ícones de linha/coluna parecidos entre si eram a principal queixa. Fora do celular
+essa faixa é uma **grade 4 × 2** de colunas alinhadas (linha em cima, coluna embaixo, espelhadas;
+"Texto abaixo" e "Apagar tabela" empilhados na 1ª coluna), com os botões na altura dos de ícone
+(26px) e rolagem lateral quando não cabe. No mobile cada faixa é uma linha só com rolagem lateral
+e degradê; dentro de tabela cabe **uma faixa por vez**,
 trocada pelo botão "Formatar"/"Tabela" ao lado do histórico. Com foco, a barra se prende acima do
 teclado virtual (`visualViewport`) em `z-index: 20` — acima de `app-coluna-acoes` (15), abaixo das
 janelas arrastáveis (1200+). **Campo curto (`[compacto]`):** sem barra fora de uso; com o campo em

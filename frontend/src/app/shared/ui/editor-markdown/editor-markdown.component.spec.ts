@@ -248,6 +248,35 @@ describe('EditorMarkdown', () => {
     expect(botao('Refazer')!.disabled).toBe(true);
   });
 
+  it('marca "Texto abaixo" e "Apagar tabela" como grupos laterais da grade de tabela', () => {
+    informarEstado({ emTabela: true });
+    const laterais = [
+      ...fixture.nativeElement.querySelectorAll('.editor-markdown__grupo--lateral button'),
+    ].map((elemento) => (elemento as HTMLElement).textContent?.trim());
+
+    expect(laterais).toEqual(['Texto abaixo', 'Apagar tabela']);
+  });
+
+  it.each([
+    [true, 1],
+    [false, 0],
+  ])('campo curto=%s: ao ganhar foco, traz a barra para a vista %i vez(es)', async (compacto, vezes) => {
+    const rolar = vi.fn();
+    const barra = fixture.nativeElement.querySelector('.editor-markdown__barra') as HTMLElement;
+    Object.defineProperty(barra, 'scrollIntoView', { configurable: true, value: rolar });
+    fixture.componentRef.setInput('compacto', compacto);
+    fixture.detectChanges();
+
+    const superficie = fixture.nativeElement.querySelector('.editor-markdown__superficie') as HTMLElement;
+    superficie.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    fixture.detectChanges();
+    await new Promise((resolver) => requestAnimationFrame(resolver));
+    await new Promise((resolver) => requestAnimationFrame(resolver));
+
+    expect(rolar).toHaveBeenCalledTimes(vezes);
+    if (vezes) expect(rolar).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest' });
+  });
+
   it('avisa por focadoChange quando o foco entra e sai do editor', () => {
     const eventos: boolean[] = [];
     fixture.componentInstance.focadoChange.subscribe((focado) => eventos.push(focado));

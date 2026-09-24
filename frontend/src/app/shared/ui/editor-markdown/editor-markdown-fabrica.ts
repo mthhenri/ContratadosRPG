@@ -40,7 +40,11 @@ import {
   lerFormatosAtivos,
   sairDoBlocoDeCodigo,
 } from './editor-markdown-formatos';
-import { inserirLinhaAcimaDoCabecalho, removerEstruturaTabela } from './editor-markdown-tabela';
+import {
+  inserirLinhaAcimaDoCabecalho,
+  removerEstruturaTabela,
+  tabelaAdmiteSoCabecalho,
+} from './editor-markdown-tabela';
 
 const LIMITE_MARKDOWN = 100_000;
 /** Folga padrão do ProseMirror ao rolar até o cursor (`scrollMargin`), em px. */
@@ -171,6 +175,8 @@ function criarEditorMarkdown({
         })
         .use(commonmark)
         .use(gfm)
+        // Depois do `gfm`: troca o nó `table` dele por um que aceita tabela só com cabeçalho.
+        .use(tabelaAdmiteSoCabecalho)
         .use(listener)
         .use(estadoBarra)
         .use(collab);

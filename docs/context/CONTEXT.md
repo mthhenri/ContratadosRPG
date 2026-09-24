@@ -1859,8 +1859,9 @@ entre fonte e prévia. O Markdown puro continua sendo o formato persistido. A ba
 dentro; troca de página zera o histórico; cada ação da barra é um passo próprio), formatos que
 acendem no cursor e desligam com um segundo clique (código só em linha), e uma faixa contextual de
 tabela com rótulos completos ("Texto abaixo", "+ Linha abaixo"… "Apagar tabela"). "+ Linha acima"
-no cabeçalho cria um cabeçalho novo; remover o cabeçalho promove a 1ª linha; remover qualquer
-linha de uma tabela cabeçalho + 1 linha apaga a tabela. No mobile a barra rola de lado com
+no cabeçalho cria um cabeçalho novo; remover o cabeçalho promove a 1ª linha; a tabela pode ficar
+só com o cabeçalho (schema `table_row*`, `tabelaAdmiteSoCabecalho`) e só some ao remover a última
+linha. No mobile a barra rola de lado com
 degradê, mostra uma faixa por vez dentro de tabela ("Formatar"/"Tabela") e, com foco, se prende
 acima do teclado virtual (`editor-markdown-desfazer-e-tabelas`, `editor-markdown-barra-e-mobile`,
 `editor-markdown-usabilidade-rodada-2`, 2026-09-23). O hover do `app-botao-icone` só vale com

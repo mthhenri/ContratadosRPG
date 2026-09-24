@@ -1,3 +1,4 @@
+import { tableSchema } from '@milkdown/kit/preset/gfm';
 import type { Node as NoProseMirror } from '@milkdown/kit/prose/model';
 import { type Command, TextSelection } from '@milkdown/kit/prose/state';
 import {
@@ -12,10 +13,21 @@ import {
 export type EstruturaTabela = 'linha' | 'coluna';
 
 /**
- * Remove a linha/coluna do cursor sem deixar a tabela inválida. O schema GFM do Milkdown é
- * `table_header_row table_row+`, e o `deleteRow` do `prosemirror-tables` não conhece essa
- * restrição: apagar o cabeçalho deixava uma linha de cabeçalho sem células, e apagar a única
- * linha do corpo deixava uma linha vazia no lugar (parecia que nada acontecia).
+ * Tabela que admite só o cabeçalho. O schema padrão do Milkdown é `table_header_row table_row+`:
+ * o GFM aceita tabela só com cabeçalho (`| A | B |` + separador), mas o editor completava com uma
+ * linha vazia ao abrir e não deixava uma tabela de duas linhas perder uma — remover qualquer uma
+ * apagava a tabela inteira. O Markdown salvo é o mesmo nos dois schemas.
+ */
+export const tabelaAdmiteSoCabecalho = tableSchema.extendSchema((anterior) => (contexto) => ({
+  ...anterior(contexto),
+  content: 'table_header_row table_row*',
+}));
+
+/**
+ * Remove a linha/coluna do cursor sem deixar a tabela inválida. O `deleteRow` do
+ * `prosemirror-tables` não sabe que o GFM tem um único cabeçalho, sempre na 1ª linha: apagar o
+ * cabeçalho deixava uma linha de cabeçalho sem células. Aqui o cabeçalho removido é substituído
+ * pela 1ª linha do corpo, e só a última linha que sobrou apaga a tabela.
  */
 export function removerEstruturaTabela(estrutura: EstruturaTabela): Command {
   return (estado, despachar) => {
@@ -28,7 +40,7 @@ export function removerEstruturaTabela(estrutura: EstruturaTabela): Command {
     if (estrutura === 'coluna') {
       return mapa.width <= 1 ? deleteTable(estado, despachar) : deleteColumn(estado, despachar);
     }
-    if (mapa.height <= 2) return deleteTable(estado, despachar);
+    if (mapa.height <= 1) return deleteTable(estado, despachar);
     if (retangulo.top > 0) return deleteRow(estado, despachar);
 
     // Cabeçalho: a 1ª linha do corpo sobe e vira o novo cabeçalho, preservando alinhamento.
@@ -72,8 +84,10 @@ export function inserirLinhaAcimaDoCabecalho(): Command {
     if (celula.index(-1) !== 0) return false;
     const tabela = celula.node(-1);
     const cabecalho = tabela.child(0);
-    const tipoLinhaCorpo = tabela.child(1).type;
-    const tipoCelulaCorpo = tabela.child(1).child(0).type;
+    // Pelo schema, não pela 2ª linha: a tabela pode ter só o cabeçalho.
+    const tipoLinhaCorpo = estado.schema.nodes['table_row'];
+    const tipoCelulaCorpo = estado.schema.nodes['table_cell'];
+    if (!tipoLinhaCorpo || !tipoCelulaCorpo) return false;
 
     const celulasNovas: NoProseMirror[] = [];
     const celulasRebaixadas: NoProseMirror[] = [];

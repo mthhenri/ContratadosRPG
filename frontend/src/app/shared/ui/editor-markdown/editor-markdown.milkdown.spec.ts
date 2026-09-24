@@ -20,6 +20,7 @@ import {
   type EstruturaTabela,
   inserirLinhaAcimaDoCabecalho,
   removerEstruturaTabela,
+  tabelaAdmiteSoCabecalho,
 } from './editor-markdown-tabela';
 
 // Estes testes usam o Milkdown real (schema GFM de verdade) — a spec do componente substitui a
@@ -71,6 +72,7 @@ async function comCursorEm(
     })
     .use(commonmark)
     .use(gfm)
+    .use(tabelaAdmiteSoCabecalho)
     .create();
   editores.push(editor);
   editor.action((contexto) => {
@@ -128,11 +130,35 @@ describe('removerEstruturaTabela (schema GFM real)', () => {
     expect(linhasDaTabela(markdown)).toEqual(['a1,b1,c1', 'a2,b2,c2']);
   });
 
-  it.each(['A', 'a1'])('cabeçalho + 1 linha: remover %s apaga a tabela', async (celula) => {
+  it('cabeçalho + 1 linha: remover a linha deixa a tabela só com o cabeçalho', async () => {
     const tabela = '| A | B |\n| - | - |\n| a1 | b1 |\n\nfim\n';
-    const markdown = await removerNaCelula(tabela, celula, 'linha');
+    const markdown = await removerNaCelula(tabela, 'a1', 'linha');
+    expect(linhasDaTabela(markdown)).toEqual(['A,B']);
+  });
+
+  it('cabeçalho + 1 linha: remover o cabeçalho sobe a linha e a tabela continua', async () => {
+    const tabela = '| A | B |\n| - | - |\n| a1 | b1 |\n\nfim\n';
+    const markdown = await removerNaCelula(tabela, 'A', 'linha');
+    expect(linhasDaTabela(markdown)).toEqual(['a1,b1']);
+  });
+
+  it('só a última linha que sobrou apaga a tabela', async () => {
+    const markdown = await removerNaCelula('| A | B |\n| - | - |\n\nfim\n', 'A', 'linha');
     expect(markdown).not.toContain('|');
     expect(markdown).toContain('fim');
+  });
+
+  it('tabela só com cabeçalho abre com uma linha (sem linha vazia inventada)', async () => {
+    let linhas = -1;
+    await comCursorEm('| A | B |\n| - | - |\n\nfim\n', 'A', (view) => {
+      linhas = view.state.doc.firstChild!.childCount;
+    });
+    expect(linhas).toBe(1);
+  });
+
+  it('"+ Acima" funciona numa tabela só com cabeçalho', async () => {
+    const markdown = await executarEm('| A | B |\n| - | - |\n', 'A', inserirLinhaAcimaDoCabecalho());
+    expect(linhasDaTabela(markdown)).toEqual([',', 'A,B']);
   });
 
   it.each(['B', 'b1'])('remove a coluna do cursor estando em %s', async (celula) => {

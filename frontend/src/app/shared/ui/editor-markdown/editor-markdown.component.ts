@@ -47,6 +47,11 @@ interface BotaoBarraMarkdown {
 }
 
 interface GrupoTabelaMarkdown {
+  /**
+   * Fora do celular a faixa de tabela é uma grade 4 × 2 (linha em cima, coluna embaixo); os grupos
+   * laterais ("Texto abaixo", "Apagar tabela") ficam empilhados na 1ª coluna.
+   */
+  readonly lateral?: boolean;
   readonly acoes: readonly {
     readonly acao: AcaoMarkdown;
     readonly rotulo: string;
@@ -100,6 +105,7 @@ const GRUPOS_BARRA: readonly (readonly BotaoBarraMarkdown[])[] = [
 // título de grupo rolava para fora da tela e o botão ficava ambíguo.
 const GRUPOS_TABELA: readonly GrupoTabelaMarkdown[] = [
   {
+    lateral: true,
     acoes: [
       { acao: 'TABELA_SAIR', rotulo: 'Texto abaixo', dica: 'Continuar escrevendo abaixo da tabela' },
     ],
@@ -124,6 +130,7 @@ const GRUPOS_TABELA: readonly GrupoTabelaMarkdown[] = [
     ],
   },
   {
+    lateral: true,
     acoes: [
       { acao: 'TABELA_REMOVER', rotulo: 'Apagar tabela', dica: 'Apagar a tabela inteira', perigo: true },
     ],
@@ -257,7 +264,10 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
     effect((aoLimpar) => {
       const barra = this.barra()?.nativeElement;
       if (!barra || typeof ResizeObserver === 'undefined') return;
-      const observador = new ResizeObserver(() => this.atualizarAncoragem());
+      const observador = new ResizeObserver(() => {
+        this.atualizarAncoragem();
+        this.trazerBarraParaVista();
+      });
       observador.observe(barra);
       aoLimpar(() => observador.disconnect());
     });
@@ -362,7 +372,10 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
     window.visualViewport?.addEventListener('scroll', this.aoMudarViewport);
     window.addEventListener('resize', this.aoMudarViewport);
     // A classe `--focado` (que ancora a barra no mobile) só chega ao DOM na próxima renderização.
-    requestAnimationFrame(() => this.atualizarAncoragem());
+    requestAnimationFrame(() => {
+      this.atualizarAncoragem();
+      this.trazerBarraParaVista();
+    });
   }
 
   protected aoDesfocar(evento: FocusEvent): void {
@@ -420,6 +433,18 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
       faixa.classList.toggle('editor-markdown__faixa--mais-inicio', faixa.scrollLeft > 1);
       faixa.classList.toggle('editor-markdown__faixa--mais-fim', temMaisNoFim);
     }
+  }
+
+  /**
+   * Campo curto: a barra fica embaixo do texto e aparece só com o campo em uso. Dentro de uma
+   * lista que rola (ataques/habilidades de criatura), ao aparecer ou crescer (faixa de tabela) ela
+   * ficava abaixo da parte visível do cartão — achado na POC. Fora do campo curto a barra é
+   * `sticky`/ancorada e já está à vista.
+   */
+  private trazerBarraParaVista(): void {
+    const barra = this.barra()?.nativeElement;
+    if (!barra || !this.compacto() || !this.focado() || this.ancorada) return;
+    barra.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   }
 
   private pararDeObservarViewport(): void {

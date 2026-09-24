@@ -99,7 +99,11 @@
                 (scroll)="atualizarIndicadoresRolagem()"
             >
                 @for (grupo of gruposTabela; track $index) {
-                    <div class="editor-markdown__grupo" role="group">
+                    <div
+                        class="editor-markdown__grupo"
+                        [class.editor-markdown__grupo--lateral]="grupo.lateral"
+                        role="group"
+                    >
                         @for (botao of grupo.acoes; track botao.acao) {
                             <button
                                 app-botao
