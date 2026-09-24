@@ -9,7 +9,14 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `P-077` corrigido — `npm run lint`
+> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `previa-jogador-visao-real`
+> concluída (spec em `done/`): "ver como jogador" monta a própria `CampanhaDetalheJogador` com a
+> fonte de dados trocada por `CampanhaPreviaJogadorDadosService` (projeção do alvo) e a tela em
+> somente leitura por `CampanhaDetalheDadosService.previa()`; "ver como espectador" continua no
+> `CampanhaEspectador` real, que agora filtra as `PRIVADA` que o mestre recebe pela sala `:mestre`
+> (painel, Iniciativa do espectador e janela externa `?origem=espectador`). Verificado ao vivo nos
+> 4 viewports. Achado: item desabilitado da coluna de ações sem estado visual (`P-079`, decisão do
+> autor). Antes: `P-077` corrigido — `npm run lint`
 > da raiz volta a sair com 0 erros (laços síncronos no lugar de `Promise.all` sobre
 > `RemoteSocket.join`/`leave` em `CampanhaGateway`, asserção redundante removida em
 > `FichaService.alterarVitalidade`); salas conferidas ao vivo. Antes:
@@ -1504,8 +1511,9 @@ nunca receberia o evento, preso na sala errada desde a `m8-02`. Frontend: `Inici
 primitivos); a derivação de apresentação de `painel-encontro.page.ts` (ordenação visual, "de quem é
 a vez", colunas da grade) foi extraída para `encontro-leitura.util.ts` e a própria página do
 jogador/mestre foi refatorada para consumi-la, em vez de manter uma cópia paralela. Gatilho "Ver
-Iniciativa" (`app-modal`) aparece em `espectador.page`/`previa-jogador.page` só quando
-`encontroAtivo !== null`; `encontro:alterado` nunca é lido diretamente por essas duas páginas — só
+Iniciativa" (`app-modal`) aparecia em `espectador.page`/`previa-jogador.page` só quando
+`encontroAtivo !== null` (hoje o espectador tem tela própria e a prévia de jogador abre o modal
+pelo item "Iniciativa" da coluna de ações); `encontro:alterado` nunca é lido diretamente por essas duas páginas — só
 dispara um refetch REST (`recuperarPainelEspectador`/`recuperarPreviaJogador`, ambos sempre
 redigidos), porque o payload do socket carregaria o recorte de mestre para quem está conectado como
 mestre de verdade. Achado só na verificação ao vivo: `app-cartao` sem `[cartaoIndice]` deixava uma
@@ -1933,10 +1941,10 @@ virar jogador primeiro). O destino do espectador é uma rota própria,
 um feed dominante e paginado de rolagens públicas, sem nenhum controle de escrita; o mestre pode
 abri-la como prévia (mesmo payload que um espectador real recebe, nunca com privilégio de mestre) a
 partir de um link no tile "Convite de espectador". O mestre também tem a Prévia de jogador
-(`/campanhas/:id/previa/:usuarioAlvoId`, m8-04) — para um `JOGADOR` específico, mostra a mesma
-ficha própria/concedida, Equipe, Rolagens e Sessão que aquele jogador veria, calculadas com a
-identidade dele (nunca do mestre); controles de mutação nunca disparam REST/socket, mesmo os
-visualmente habilitados. O espectador e a prévia também têm um gatilho "Ver Iniciativa"
+(`/campanhas/:id/previa/:usuarioAlvoId`, m8-04) — para um `JOGADOR` específico, monta a própria
+visão de jogador (`CampanhaDetalheJogador`) com os dados calculados com a identidade dele (nunca do
+mestre), em somente leitura: controles de edição e ações de ficha barrados, e nenhuma saída para
+tela com o privilégio do mestre (`previa-jogador-visao-real`). O espectador e a prévia também têm um gatilho "Ver Iniciativa"
 (`m8-05`), que só aparece com um encontro ativo na campanha e abre a mesma composição de leitura
 (`IniciativaLeitura`) da tela "Iniciativa" de jogador/mestre — ordem, turno, rodada, cartões e log
 da rodada, redigidos do mesmo jeito (NPC não revelado continua sem números para nenhum dos dois) e

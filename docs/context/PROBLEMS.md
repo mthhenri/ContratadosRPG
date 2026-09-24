@@ -120,3 +120,17 @@
 - **Desde:** achado em 2026-09-24 na verificação ao vivo da `p-076`, com uma conta de jogador sem
   ficha. O comportamento é anterior a essa task.
 
+### P-079 — Item desabilitado da coluna de ações parece habilitado · `ABERTO` · frontend/ui
+
+- **Sintoma:** um `app-coluna-acoes-item` com `[disabled]` mantém a cor `--text-dim` e o hover
+  (`--surface-2`) dos itens ativos; só o clique deixa de funcionar. Na prévia de jogador, Criar/
+  Vincular/Acesso/Remover/Excluir/Caderno ficam idênticos à Calculadora, que está ativa. O mesmo
+  vale para a visão real do jogador ("Acesso de visualização"/"Remover"/"Excluir" sem ficha
+  própria).
+- **Causa:** `coluna-acoes-item.component.scss` não declara estado `:host(:disabled)`.
+- **Contorno:** nenhum visual; o `appTooltip` e o clique inerte são o único sinal.
+- **Correção:** a decidir com o autor — é ampliação de primitivo em `shared/ui/`. Caminho óbvio:
+  `:host(:disabled)` com a mesma opacidade/cursor do `app-botao` desabilitado e sem hover. Exige o
+  gate visual nas telas que usam a coluna.
+- **Desde:** achado em 2026-09-24 na verificação ao vivo da `previa-jogador-visao-real`. Anterior
+  a essa task.

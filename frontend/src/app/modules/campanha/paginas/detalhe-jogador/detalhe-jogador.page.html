@@ -54,6 +54,20 @@
 } @else if (dados.campanha(); as campanhaAtual) {
 <app-coluna-acoes id="campanha-detalhe-jogador" rotulo="Ações da ficha">
     <div class="coluna-acoes__categoria">Campanha</div>
+    @if (somenteLeitura()) {
+    <!-- Prévia: a rota `/iniciativa` responderia com o recorte do mestre — abre a leitura do
+         encontro já redigido para o alvo. Sem combate em andamento, fica desabilitado. -->
+    <button
+        app-coluna-acoes-item
+        icone="combate"
+        [appTooltip]="encontroAtivoPrevia() ? 'Iniciativa' : 'Nenhum combate em andamento'"
+        [pressionado]="iniciativaPreviaAberta()"
+        [disabled]="!encontroAtivoPrevia()"
+        (click)="abrirIniciativaPrevia()"
+    >
+        Iniciativa
+    </button>
+    } @else {
     <a
         app-coluna-acoes-item
         icone="combate"
@@ -62,11 +76,13 @@
     >
         Iniciativa
     </a>
+    }
     <div class="coluna-acoes__categoria">Ficha</div>
     <button
         app-coluna-acoes-item
         icone="agente"
         appTooltip="Criar nova ficha"
+        [disabled]="somenteLeitura()"
         (click)="abrirCriarFicha()"
     >
         Criar nova ficha
@@ -76,6 +92,7 @@
         icone="vincular"
         appTooltip="Vincular ficha existente"
         [pressionado]="dialogVincular()"
+        [disabled]="somenteLeitura()"
         (click)="abrirVincularFicha()"
     >
         Vincular ficha
@@ -127,6 +144,7 @@
         icone="caderno"
         appTooltip="Caderno"
         [pressionado]="cadernoAberto()"
+        [disabled]="somenteLeitura()"
         (click)="alternarCaderno()"
     >
         Caderno
@@ -135,8 +153,26 @@
 
 <section class="detalhe">
     <div class="detalhe__conteudo">
+        @if (dados.previa(); as previa) {
+        <div class="detalhe__preview-barra" role="status">
+            <app-icone nome="olho" />
+            <span class="detalhe__preview-texto">
+                Visualizando como <strong>{{ previa.nomeAlvo }}</strong> · prévia somente leitura
+            </span>
+            <a
+                app-botao
+                variante="secundario"
+                class="botao botao--secundario detalhe__acao detalhe__preview-sair"
+                [routerLink]="['/campanhas', campanhaAtual.id]"
+            >
+                Sair da prévia
+            </a>
+        </div>
+        }
+
         <header class="detalhe__cabecalho">
             <div class="detalhe__cabecalho-titulo-linha">
+                @if (!somenteLeitura()) {
                 <a
                     app-botao-icone
                     class="detalhe__cabecalho-voltar"
@@ -146,6 +182,7 @@
                 >
                     <app-icone nome="voltar" />
                 </a>
+                }
                 <span class="detalhe__cabecalho-indice">//</span>
                 <h1 class="detalhe__titulo">{{ campanhaAtual.nome }}</h1>
                 <span
@@ -177,7 +214,7 @@
                     [(aberta)]="calculadoraAberta"
                     [mostrarGatilho]="false"
                 />
-                @if (dados.usuarioAtivoId(); as usuarioId) {
+                @if (!somenteLeitura() && dados.usuarioAtivoId(); as usuarioId) {
                 <app-caderno-flutuante
                     #caderno
                     [mostrarGatilho]="false"
@@ -217,6 +254,19 @@
                         (click)="fecharMenu()"
                     ></button>
                     <div class="detalhe__cabecalho-menu" role="menu">
+                        @if (somenteLeitura()) {
+                        <button
+                            app-botao
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            [disabled]="!encontroAtivoPrevia()"
+                            (click)="abrirIniciativaPrevia()"
+                        >
+                            <app-icone nome="combate" />
+                            <span>Iniciativa</span>
+                        </button>
+                        } @else {
                         <a
                             app-botao
                             class="detalhe__cabecalho-menu-item"
@@ -227,11 +277,13 @@
                             <app-icone nome="combate" />
                             <span>Iniciativa</span>
                         </a>
+                        }
                         <button
                             app-botao
                             class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
+                            [disabled]="somenteLeitura()"
                             (click)="abrirCriarFicha()"
                         >
                             <app-icone nome="agente" />
@@ -242,6 +294,7 @@
                             class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
+                            [disabled]="somenteLeitura()"
                             (click)="abrirVincularFicha()"
                         >
                             <app-icone nome="vincular" />
@@ -262,6 +315,7 @@
                             class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
+                            [disabled]="somenteLeitura()"
                             (click)="alternarCaderno(); fecharMenu()"
                         >
                             <app-icone nome="caderno" />
@@ -319,6 +373,7 @@
             <span class="detalhe__banner-texto"
                 ><strong>{{ critica.nome }}</strong> está crítica (Vida ≤ 0).</span
             >
+            @if (!somenteLeitura()) {
             <a
                 app-botao
                 class="detalhe__banner-link"
@@ -326,6 +381,7 @@
             >
                 Ver ficha →
             </a>
+            }
         </div>
         }
 
@@ -338,6 +394,7 @@
                     [cabecalhoQuebravel]="true"
                 >
                     <span cartaoIndice><app-icone nome="agente" /></span>
+                    @if (!somenteLeitura()) {
                     <span cartaoFim class="detalhe__ficha-embutida-acoes">
                         <a
                             app-botao
@@ -349,6 +406,7 @@
                             Abrir completa
                         </a>
                     </span>
+                    }
 
                     <app-ficha-campanha-card
                         [fichaId]="fichaExibida.id"
@@ -388,6 +446,7 @@
                         (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
                     />
 
+                    @if (!somenteLeitura()) {
                     <a
                         app-botao
                         variante="secundario"
@@ -397,6 +456,7 @@
                     >
                         Abrir ficha completa
                     </a>
+                    }
                 </app-cartao>
                 } @else if (carregandoFichaExibida()) {
                 <p class="detalhe__estado">Carregando ficha…</p>
@@ -404,8 +464,15 @@
                 <!-- O estado vazio deixou de ser um beco — repete as duas ações do menu "⋯" do
                cabeçalho, que é onde elas moram. -->
                 <div class="detalhe__jogador-vazio">
+                    @if (dados.previa(); as previa) {
+                    <p class="detalhe__estado">
+                        {{ previa.nomeAlvo }} ainda não tem uma ficha nesta campanha.
+                    </p>
+                    } @else {
                     <p class="detalhe__estado">Você ainda não tem uma ficha nesta campanha.</p>
+                    }
                     <div class="detalhe__jogador-vazio-acoes">
+                        @if (!somenteLeitura()) {
                         <button
                             app-botao
                             variante="primario"
@@ -426,6 +493,7 @@
                             <app-icone nome="vincular" />
                             Vincular ficha existente
                         </button>
+                        }
                         <!-- P-074: sem ficha própria, a `.ficha-nav` que normalmente abre o painel
                      lateral no mobile nunca existe — este botão é o gatilho independente. No
                      desktop/tablet o painel já está sempre visível ao lado, então o botão só
@@ -478,6 +546,7 @@
                         >
                             <app-icone nome="agente" /> Esquadrão
                         </button>
+                        @if (mostrarInventarioEsquadrao()) {
                         <button
                             app-segmentado-item
                             [ativo]="painelLateralAtivo() === 'inventario'"
@@ -485,6 +554,7 @@
                         >
                             <app-icone nome="inventario" /> Inv. Esquadrão
                         </button>
+                        }
                     </app-segmentado>
 
                     <!-- "Rolagens" = Rolar (item 2, ui-33) + Histórico fundidos num só container
@@ -519,10 +589,13 @@
                             />
                             }
 
-                            @if (!janelaHistorico.estaAbertaCampanha(dados.id)) {
+                            <!-- Prévia: a janela externa lista o feed com o privilégio do mestre
+                                 (privadas de todo mundo), então o histórico fica sempre aqui. -->
+                            @if (somenteLeitura() || !janelaHistorico.estaAbertaCampanha(dados.id)) {
                             <header class="detalhe__secao">
                                 <h2 class="detalhe__secao-titulo">Histórico</h2>
                                 <span class="detalhe__secao-regua"></span>
+                                @if (!somenteLeitura()) {
                                 <button
                                     type="button"
                                     app-botao-icone
@@ -533,6 +606,7 @@
                                     [appTooltip]="'Abrir em janela'"
                                     ><app-icone nome="abrir-externo"
                                 /></button>
+                                }
                             </header>
 
                             @if (dados.carregandoRolagens()) {
@@ -698,7 +772,7 @@
                             [campanhaId]="campanhaAtual.id"
                             [itens]="dados.inventarioEsquadrao()"
                             [fichas]="dados.fichasDestinoInventario()"
-                            [somenteLeitura]="!campanhaAtual.naBase"
+                            [somenteLeitura]="somenteLeitura() || !campanhaAtual.naBase"
                             (alterado)="dados.inventarioEsquadrao.set($event)"
                         />
                     </div>
@@ -710,6 +784,17 @@
 }
 
 <app-bandeja-dados />
+
+@if (encontroAtivoPrevia(); as encontro) {
+<app-modal
+    [aberto]="iniciativaPreviaAberta()"
+    titulo="Iniciativa"
+    largura="960px"
+    (fechou)="iniciativaPreviaAberta.set(false)"
+>
+    <app-iniciativa-leitura [encontro]="encontro" [fichasCampanha]="dados.fichas()" />
+</app-modal>
+}
 
 @if (dialogVincular()) {
 <!-- Vincular ficha existente — só fichas do acervo **sem campanha**. Sem endpoint novo:

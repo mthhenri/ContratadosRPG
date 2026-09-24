@@ -6,7 +6,7 @@ import { filter, finalize } from 'rxjs';
 import type { CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
-import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { EncontroStatusEnum, RolagemVisibilidadeEnum } from '@contratados-rpg/shared/enums';
 
 import { CampanhaProjecaoService } from '../../../campanha/campanha-projecao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
@@ -116,16 +116,29 @@ export class PainelEncontroEspectador {
     this.rolagemService
       .listarPorCampanha(this.campanhaId)
       .pipe(finalize(() => this.carregandoRolagens.set(false)))
-      .subscribe({ next: (itens) => this.rolagens.set(itens) });
+      // Espectador real só recebe públicas; o mestre em prévia recebe também as privadas — a
+      // prévia mostra o recorte do espectador, então só as públicas entram.
+      .subscribe({
+        next: (itens) =>
+          this.rolagens.set(
+            itens.filter((rolagem) => rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
+          ),
+      });
 
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(this.campanhaId);
     this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(this.campanhaId));
 
     // Feed em tempo real (m8-03): só rolagens `PUBLICA` chegam pela sala do espectador — o backend
-    // nunca broadcasta privada por ali (§9). Guarda contra duplicata do id mais recente, igual
-    // `espectador.page.ts`.
-    this.tempoRealService.rolagemRegistrada$.pipe(takeUntilDestroyed()).subscribe({
+    // nunca broadcasta privada por ali (§9). O mestre em prévia, porém, está na sala
+    // `campanha:<id>:mestre`, que recebe as privadas: o filtro mantém o recorte do espectador.
+    // Guarda contra duplicata do id mais recente, igual `espectador.page.ts`.
+    this.tempoRealService.rolagemRegistrada$
+      .pipe(
+        filter((rolagem) => rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
       next: (rolagem) =>
         this.rolagens.update((atuais) =>
           atuais[0]?.id === rolagem.id ? atuais : [rolagem, ...atuais],

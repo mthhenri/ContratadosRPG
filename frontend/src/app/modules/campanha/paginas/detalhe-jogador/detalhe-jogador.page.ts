@@ -24,6 +24,7 @@ import { montarAutoriaRolagem } from "../../../../shared/cartao-rolagem/autoria-
 import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
+import { IniciativaLeitura } from '../../../encontro/componentes/iniciativa-leitura/iniciativa-leitura.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -71,6 +72,13 @@ const PX_PREVIEW_AVATAR = 300;
  * Sessão e o menu "⋯" de ações de ficha. Nenhuma mudança visual ou funcional aqui — o redesenho é
  * só da visão de mestre (`CampanhaDetalheMestre`). Dado e tempo real compartilhados vêm de
  * `CampanhaDetalheDadosService`, injetado (provido pelo `CampanhaDetalheShell`).
+ *
+ * **Prévia de jogador** ("ver como jogador" do mestre, m8-04): `CampanhaPreviaJogador` monta esta
+ * mesma tela com `CampanhaPreviaJogadorDadosService` no lugar do serviço de dados. Com
+ * `dados.previa()` preenchido, {@link somenteLeitura} barra toda mutação (ficha, rolagem,
+ * inventário, ações de ficha, caderno) e esconde as saídas para telas com o privilégio do mestre
+ * (ficha completa, Iniciativa de mestre, janela de histórico) — a tela continua sendo a do jogador,
+ * vista como o alvo.
  */
 @Component({
   selector: 'app-campanha-detalhe-jogador',
@@ -80,6 +88,7 @@ const PX_PREVIEW_AVATAR = 300;
     Icone,
     OverflowFade,
     InventarioEsquadrao,
+    IniciativaLeitura,
     BandejaDados,
     CalculadoraFlutuante,
     CadernoFlutuante,
@@ -123,6 +132,21 @@ export class CampanhaDetalheJogador {
   /** Exposto ao template só para o chip "Mestre" na lista de Equipe. */
   protected readonly TipoCampanhaMembroPapelEnum = TipoCampanhaMembroPapelEnum;
 
+  /** `true` na prévia de jogador do mestre — nenhuma ação da tela pode mutar nada. */
+  protected readonly somenteLeitura = computed(() => this.dados.previa() !== null);
+
+  /** Aba "Inv. Esquadrão" — na prévia, só quando o alvo acessa o inventário de esquadrão. */
+  protected readonly mostrarInventarioEsquadrao = computed(
+    () => this.dados.previa()?.podeAcessarInventarioEsquadrao ?? true,
+  );
+
+  /**
+   * Encontro em andamento visto pelo alvo (prévia) — a Iniciativa da prévia abre em modal de
+   * leitura sobre ele, nunca a rota `/iniciativa`, que responderia com o recorte do mestre.
+   */
+  protected readonly encontroAtivoPrevia = computed(() => this.dados.previa()?.encontroAtivo ?? null);
+  protected readonly iniciativaPreviaAberta = signal(false);
+
   /** Painel lateral fixo (Rolagens/Esquadrão/Inv. Esquadrão) — sempre montado, nunca overlay (mesmo padrão do mestre). */
   protected readonly painelLateralAtivo = signal<'rolar' | 'esquadrao' | 'inventario'>('rolar');
 
@@ -149,17 +173,24 @@ export class CampanhaDetalheJogador {
   protected readonly fichaExibidaDados = signal<FichaRecuperadaDto | null>(null);
   protected readonly carregandoFichaExibida = signal(false);
 
-  /** `true` quando o usuário autenticado pode editar a ficha exibida — dono ou mestre. */
+  /** `true` quando o usuário autenticado pode editar a ficha exibida — dono ou mestre; nunca na prévia. */
   protected readonly podeAjustarFichaExibida = computed(() => {
     const fichaExibida = this.fichaExibidaDados();
     return (
+      !this.somenteLeitura() &&
       fichaExibida !== null &&
       (this.dados.ehMestre() || fichaExibida.usuarioId === this.dados.usuarioAtivoId())
     );
   });
 
-  /** Ficha exibida quando ela é sua (dono) — controla o `[disabled]` das ações do menu do cabeçalho. */
+  /**
+   * Ficha exibida quando ela é sua (dono) — controla o `[disabled]` das ações do menu do cabeçalho.
+   * `null` na prévia: a ficha do alvo não é gerenciável por quem só está vendo como ele.
+   */
   protected readonly minhaFichaExibida = computed<FichaRecuperadaDto | null>(() => {
+    if (this.somenteLeitura()) {
+      return null;
+    }
     const fichaExibida = this.fichaExibidaDados();
     return fichaExibida && fichaExibida.usuarioId === this.dados.usuarioAtivoId() ? fichaExibida : null;
   });
@@ -262,6 +293,24 @@ export class CampanhaDetalheJogador {
   }
 
   /**
+   * Prévia: o payload do socket chega com o recorte do mestre, então a ficha exibida é refeita pela
+   * rota redigida para o alvo (`dados.recuperarFicha`) em vez de absorvida.
+   */
+  private recarregarFichaExibida(): void {
+    const fichaId = this.fichaExibidaId();
+    if (fichaId === null) {
+      return;
+    }
+    this.dados.recuperarFicha(fichaId).subscribe({
+      next: (ficha) => {
+        if (this.fichaExibidaId() === ficha.id) {
+          this.fichaExibidaDados.set(ficha);
+        }
+      },
+    });
+  }
+
+  /**
    * Absorve um documento vindo do servidor (broadcast `ficha:alterada` da ficha exibida agora) —
    * sem edição local pendente, substitui; com pendência, mescla campo a campo (o que o usuário
    * mexeu no card compacto prevalece, o resto do documento remoto entra).
@@ -335,7 +384,7 @@ export class CampanhaDetalheJogador {
         return;
       }
       this.carregandoFichaExibida.set(true);
-      this.fichaService
+      this.dados
         .recuperarFicha(fichaId)
         .pipe(finalize(() => this.carregandoFichaExibida.set(false)))
         .subscribe({
@@ -354,7 +403,12 @@ export class CampanhaDetalheJogador {
         filter((ficha) => ficha.id === this.fichaExibidaId()),
         takeUntilDestroyed(),
       )
-      .subscribe({ next: (fichaAlterada) => this.absorverFichaExibidaRemota(fichaAlterada) });
+      .subscribe({
+        next: (fichaAlterada) =>
+          this.somenteLeitura()
+            ? this.recarregarFichaExibida()
+            : this.absorverFichaExibidaRemota(fichaAlterada),
+      });
 
     // Cancela o agendamento do preview ampliado do avatar ao sair da página — senão um
     // `setTimeout` de hover sustentado ainda dispararia depois do destroy.
@@ -434,9 +488,18 @@ export class CampanhaDetalheJogador {
     this.cadernoRef()?.alternar();
   }
 
+  /** Iniciativa da prévia — modal de leitura sobre o encontro redigido para o alvo. */
+  protected abrirIniciativaPrevia(): void {
+    this.fecharMenu();
+    this.iniciativaPreviaAberta.set(true);
+  }
+
   /** Abre o assistente de criação de ficha, disparado do próprio detalhe. */
   protected abrirCriarFicha(): void {
     this.fecharMenu();
+    if (this.somenteLeitura()) {
+      return;
+    }
     void this.router.navigate(['/campanhas', this.dados.id, 'ficha', 'nova']);
   }
 
@@ -456,6 +519,9 @@ export class CampanhaDetalheJogador {
    */
   protected abrirVincularFicha(): void {
     this.fecharMenu();
+    if (this.somenteLeitura()) {
+      return;
+    }
     this.fichaParaVincular.set(null);
     this.dialogVincular.set(true);
     this.carregandoFichasSoltas.set(true);

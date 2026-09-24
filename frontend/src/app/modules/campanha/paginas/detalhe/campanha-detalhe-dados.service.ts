@@ -1,13 +1,14 @@
 import { DestroyRef, Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, finalize, forkJoin, merge } from 'rxjs';
+import { filter, finalize, forkJoin, merge, type Observable } from 'rxjs';
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import {
   CampanhaInventarioItemDto,
   CampanhaMembroResumoDto,
   CampanhaRecuperadaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { EncontroRecuperadoDto } from '@contratados-rpg/shared/dtos/encontro';
+import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 
 import { rotuloRelativo } from '../../../../shared/rotulo-relativo.util';
@@ -20,6 +21,18 @@ import { RolagemService } from '../../../ficha/rolagem.service';
 import { agruparFichasPorMembro, ordenarMembros, type ItemFicha } from '../../campanha-equipe.util';
 
 /**
+ * Contexto da prévia de jogador (m8-04) — preenchido só por `CampanhaPreviaJogadorDadosService`,
+ * quando o mestre abre `/campanhas/:id/previa/:usuarioAlvoId`. `null` na visão real.
+ */
+export interface CampanhaDetalhePreviaContexto {
+  readonly usuarioAlvoId: number;
+  readonly nomeAlvo: string;
+  readonly podeAcessarInventarioEsquadrao: boolean;
+  /** Encontro não-encerrado já redigido com a identidade do alvo (m8-05) — `null` sem combate. */
+  readonly encontroAtivo: EncontroRecuperadoDto | null;
+}
+
+/**
  * Dado e tempo real compartilhados entre `CampanhaDetalheMestre`/`CampanhaDetalheJogador`
  * (`campanha-detalhe-mestre-coluna-acoes.spec.md`, entregável 1) — extraído do antigo
  * `CampanhaDetalhe` monolítico para não duplicar fetch/assinaturas de socket entre os dois papéis.
@@ -28,21 +41,27 @@ import { agruparFichasPorMembro, ordenarMembros, type ItemFicha } from '../../ca
  */
 @Injectable()
 export class CampanhaDetalheDadosService {
-  private readonly campanhaService = inject(CampanhaService);
+  protected readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
   private readonly rolagemService = inject(RolagemService);
   private readonly sessaoService = inject(SessaoService);
-  private readonly tempoRealService = inject(TempoRealService);
-  private readonly topbarContexto = inject(TopbarContextoService);
-  private readonly destroyRef = inject(DestroyRef);
+  protected readonly tempoRealService = inject(TempoRealService);
+  protected readonly topbarContexto = inject(TopbarContextoService);
+  protected readonly destroyRef = inject(DestroyRef);
   /**
    * Capturado no construtor (contexto de injeção válido garantido) para permitir `effect()` fora
    * do construtor em `inicializar()` — chamado explicitamente pelo `CampanhaDetalheShell` depois
    * que o `id` da rota é conhecido, então não roda mais dentro do contexto de injeção implícito.
    */
-  private readonly injector = inject(Injector);
+  protected readonly injector = inject(Injector);
 
-  private idInterno = 0;
+  protected idInterno = 0;
+
+  /**
+   * Prévia de jogador (m8-04): com contexto, a visão de jogador vira somente leitura e passa a
+   * enxergar a campanha como o alvo — `usuarioAtivoId` passa a ser o do alvo. `null` na visão real.
+   */
+  readonly previa = signal<CampanhaDetalhePreviaContexto | null>(null);
 
   readonly campanha = signal<CampanhaRecuperadaDto | null>(null);
   readonly inventarioEsquadrao = signal<readonly CampanhaInventarioItemDto[]>([]);
@@ -52,8 +71,8 @@ export class CampanhaDetalheDadosService {
   readonly rolagensFeed = signal<readonly RolagemResumoDto[]>([]);
   readonly carregandoRolagens = signal(true);
 
-  private readonly ultimaAtualizacaoEm = signal<number | null>(null);
-  private readonly agoraInterno = signal(Date.now());
+  protected readonly ultimaAtualizacaoEm = signal<number | null>(null);
+  protected readonly agoraInterno = signal(Date.now());
   readonly agora = this.agoraInterno.asReadonly();
 
   /** "Atualizado agora/há Xs/há X min" — `null` antes do primeiro fetch completar. */
@@ -65,8 +84,13 @@ export class CampanhaDetalheDadosService {
     return `Atualizado ${rotuloRelativo(em, this.agora())}`;
   });
 
-  /** `id` do usuário autenticado — exposto para os dois papéis (seletor de dono etc). */
-  readonly usuarioAtivoId = computed(() => this.sessaoService.usuario()?.id ?? null);
+  /**
+   * `id` do usuário autenticado — exposto para os dois papéis (seletor de dono etc). Na prévia de
+   * jogador, o do alvo: é por ele que a tela decide "minha ficha", nunca pelo mestre que olha.
+   */
+  readonly usuarioAtivoId = computed(
+    () => this.previa()?.usuarioAlvoId ?? this.sessaoService.usuario()?.id ?? null,
+  );
 
   /** `true` quando o usuário autenticado é o `MESTRE` desta campanha (deriva dos membros). */
   readonly ehMestre = computed(() => {
@@ -97,6 +121,14 @@ export class CampanhaDetalheDadosService {
     return this.idInterno;
   }
 
+  /**
+   * Documento completo de uma ficha visível — a visão real usa a própria permissão do usuário;
+   * a prévia sobrescreve para a rota redigida para o alvo.
+   */
+  recuperarFicha(fichaId: number): Observable<FichaRecuperadaDto> {
+    return this.fichaService.recuperarFicha(fichaId);
+  }
+
   /** Chamado uma vez por `CampanhaDetalheShell` com o `id` resolvido do parâmetro de rota. */
   inicializar(id: number): void {
     this.idInterno = id;
@@ -113,14 +145,7 @@ export class CampanhaDetalheDadosService {
 
     // Tempo real (m3-05/m3-08): entra na sala `campanha:<id>` para as fichas/membros atualizarem
     // ao vivo. O recorte visível (§14) continua arbitrado pelo backend — o front só refaz o fetch.
-    this.tempoRealService.conectar();
-    this.tempoRealService.entrarSalaCampanha(id);
-    this.destroyRef.onDestroy(() => {
-      this.tempoRealService.sairSalaCampanha(id);
-      for (const fichaId of this.salasFichaAtivas) {
-        this.tempoRealService.sairSalaFicha(fichaId);
-      }
-    });
+    this.entrarSalas(id);
 
     merge(
       this.tempoRealService.fichaCriada$.pipe(filter((ficha) => ficha.campanhaId === id)),
@@ -194,6 +219,18 @@ export class CampanhaDetalheDadosService {
     // Relógio do "Atualizado há Xs" — só recomputa o texto, nunca refaz fetch.
     const relogio = setInterval(() => this.agoraInterno.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
+  }
+
+  /** Entra na sala `campanha:<id>` e sai dela (e das salas de ficha) quando a tela morre. */
+  protected entrarSalas(id: number): void {
+    this.tempoRealService.conectar();
+    this.tempoRealService.entrarSalaCampanha(id);
+    this.destroyRef.onDestroy(() => {
+      this.tempoRealService.sairSalaCampanha(id);
+      for (const fichaId of this.salasFichaAtivas) {
+        this.tempoRealService.sairSalaFicha(fichaId);
+      }
+    });
   }
 
   /**

@@ -1,5 +1,69 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-24 — `previa-jogador-visao-real`: "ver como jogador" passa a montar a visão real do jogador
+
+Pedido do autor: depois que a visão de jogador mudou de forma (coluna de ações, painel lateral
+segmentado Rolagens/Esquadrão/Inv. Esquadrão), os botões "ver como jogador" e "ver como
+espectador" tinham de usar o componente certo, só barrando a edição e emulando a pessoa. Spec em
+`docs/specs/done/previa-jogador-visao-real.spec.md`, escrita junto com a implementação.
+
+**O problema.** `CampanhaPreviaJogador` era uma cópia do layout antigo do jogador (cartões Equipe/
+Rolagens/Sessão), parada no tempo desde a m8-04. A visão real já era outra. "Ver como espectador"
+já montava o `CampanhaEspectador` real, mas o mestre continua nas salas dele: a sala
+`campanha:<id>:mestre` entrega as `PRIVADA` de todo mundo e o `GET /rolagem` do mestre também. O
+Painel do espectador filtrava pelo backend só na carga inicial (a projeção), então rolagens
+privadas chegavam ao vivo na prévia. O mesmo valia para a Iniciativa do espectador e para a janela
+externa aberta de lá. A prévia de jogador antiga tinha o mesmo vazamento pelo socket.
+
+**Como ficou.**
+- `CampanhaPreviaJogador` virou casca (molde de `CampanhaDetalheShell`): provê
+  `CampanhaPreviaJogadorDadosService` (novo, em `paginas/previa-jogador/`) no lugar de
+  `CampanhaDetalheDadosService` e monta `<app-campanha-detalhe-jogador />`. A tela não sabe de onde
+  vem o dado.
+- `CampanhaPreviaJogadorDadosService` estende o serviço de dados e o alimenta só pela projeção do
+  alvo. O coordenador de invalidação da página antiga (agrupa eventos em 25 ms, cancela o anterior)
+  mudou para cá. Payload de socket nunca é exibido: ficha/membro/estado viram refetch da projeção,
+  encontro vira `recuperarEncontroAtivoPreviaJogador`, e rolagem só entra se o alvo a receberia
+  (`PUBLICA`, ou `PRIVADA` feita por ele).
+- `CampanhaDetalheDadosService` ganhou `previa()` (contexto do alvo, `null` na visão real). Na
+  prévia, `usuarioAtivoId` é o do alvo, então "minha ficha" e a semente da ficha exibida seguem o
+  alvo sem nenhum `if` novo. `recuperarFicha()` passou a ser o ponto único de busca da ficha
+  exibida (a prévia sobrescreve com a rota redigida).
+- `CampanhaDetalheJogador` lê `dados.previa()` em `somenteLeitura`: ficha sem ajuste, sem rolagem e
+  sem mandar para a base; inventário somente leitura; Criar/Vincular/Acesso/Remover/Excluir/Caderno
+  desabilitados (coluna e menu "⋯"; o caderno nem é montado, carregaria o do mestre); sem "Abrir
+  completa", "voltar", "Ver ficha →" no banner e janela externa do histórico, todas saídas para
+  telas com o privilégio do mestre. "Iniciativa" abre `IniciativaLeitura` em modal (a rota
+  `/iniciativa` responderia com o recorte do mestre), desabilitada sem encontro. A barra "Visualizando
+  como … · prévia somente leitura" reusa a receita de `.espectador__preview-barra`, com o botão na
+  receita `.detalhe__acao`. Com a ficha do alvo recebendo `ficha:alterada`, a prévia refaz a
+  busca pela rota da prévia em vez de absorver o payload.
+- Espectador: `CampanhaEspectador` e `PainelEncontroEspectador` filtram `PUBLICA` no socket (e o
+  segundo também no REST), e `HistoricoRolagensCampanhaJanela` filtra quando aberta com
+  `?origem=espectador`. Para o espectador real nada muda: ele já só recebia públicas.
+- `previa-jogador.page.scss` saiu (a tela é a do jogador).
+
+**Testes.** `previa-jogador.page.spec.ts` reescrito (18 casos sobre a tela real: fonte de dados só
+pela projeção, somente leitura, saídas escondidas, estado vazio, colega no Esquadrão, inventário,
+tempo real, Iniciativa). Casos novos em `espectador`, `painel-espectador` e
+`historico-rolagens-janela`. Suíte do frontend: 148 arquivos, 2155 testes. `npm run lint` com 0
+erros (só avisos preexistentes). Build do frontend sem erro (só o aviso de budget do `P-004`).
+
+**Verificação ao vivo.** Postgres 16 local sem Docker (`pg_ctlcluster`) + `db:seed:dev` + backend
+e frontend reais, Playwright. Mestre "Codex" em prévia de "Jogador Stub 1" na "Campanha do Codex",
+comparado lado a lado com a visão real do próprio Stub 1 em `1920×1080`, `360×800`, `960×1080` e
+`1366×768`: mesma casca, mesma densidade, mesmas abas; na prévia faltam só os controles de edição
+(± de Vida/Energia, rolagem rápida, "Abrir completa"). Sem overflow nos quatro. Nenhuma requisição
+de escrita saiu da prévia, inclusive clicando nas condições e na Vida. Rolagem privada de outro
+jogador não aparece (REST e socket); a privada do próprio alvo aparece; pública chega ao vivo.
+Menu "⋯" no mobile com os itens barrados esmaecidos. Modal de Iniciativa aberto com um encontro
+criado via REST. Painel do espectador em prévia, a Iniciativa do espectador e a janela externa sem
+nenhuma `PRIVADA`, com públicas ao vivo.
+
+**Achado na verificação.** `app-coluna-acoes-item` não tem estado visual de desabilitado: o item
+barrado continua com a cor e o hover dos habilitados. Afeta também as telas reais (ex.: "Acesso de
+visualização" sem ficha própria). O primitivo fica como está até decisão do autor — `P-079`.
+
 ## 2026-09-24 — `P-077` corrigido: `npm run lint` do backend volta a sair com 0 erros
 
 Task solta, sem spec, pedida pelo autor logo depois da `p-076`. O lint do backend tinha 3 erros em

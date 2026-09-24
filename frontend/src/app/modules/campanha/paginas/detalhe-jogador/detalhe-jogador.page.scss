@@ -97,6 +97,49 @@ app-coluna-acoes {
     // título (índice+nome+régua) e ações (tempo real, voltar, histórico, kebab). No desktop ficam
     // lado a lado numa linha só; no mobile a linha de ações quebra pra baixo do nome, que fica com
     // a linha só pra si — dá mais destaque ao nome da campanha numa tela estreita.
+    // Barra da prévia de jogador ("ver como jogador" do mestre, m8-04) — mesma receita de
+    // `.espectador__preview-barra`, a barra de prévia já aprovada do Painel do espectador. O botão
+    // "Sair da prévia" usa a receita `.detalhe__acao` desta página (mesmas medidas de
+    // `.espectador__preview-sair`) e ganha linha própria no mobile.
+    &__preview-barra {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding: 10px 16px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        color: var(--accent);
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+            margin: 12px 12px 0;
+        }
+    }
+
+    &__preview-texto {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        color: var(--text);
+
+        @include bp.mobile {
+            flex-basis: 100%;
+        }
+    }
+
+    &__preview-sair {
+        flex: none;
+        justify-content: center;
+
+        @include bp.mobile {
+            width: 100%;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
     &__cabecalho {
         position: relative;
         display: flex;

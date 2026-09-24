@@ -228,6 +228,17 @@ describe('CampanhaEspectador', () => {
     expect(itens[0].textContent).toContain('2d6+3');
   });
 
+  it('rolagem PRIVADA vinda pelo socket (mestre em prévia está na sala `:mestre`) nunca entra no feed', () => {
+    const { fixture, raiz, rolagemRegistrada$ } = montar({ painelRetorno: painel([]) });
+
+    rolagemRegistrada$.next(
+      rolagem({ id: 3, rotulo: 'Segredo', visibilidade: RolagemVisibilidadeEnum.PRIVADA }),
+    );
+    fixture.detectChanges();
+
+    expect(raiz.querySelectorAll('li[app-cartao-rolagem]')).toHaveLength(0);
+  });
+
   it('mostra a rolagem avulsa do mestre como "autor · Mestre", nunca "null" (P-076)', () => {
     const { fixture, raiz, rolagemRegistrada$ } = montar({ painelRetorno: painel([]) });
 

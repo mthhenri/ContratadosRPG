@@ -289,6 +289,25 @@ describe('PainelEncontroEspectador', () => {
     expect(campanhaProjecaoService.recuperarPainelEspectador).toHaveBeenCalledWith(CAMPANHA_ID, 1, 20);
   });
 
+  it('mestre em prévia: rolagens PRIVADA (REST ou socket) ficam fora do histórico do espectador', () => {
+    const { fixture, raiz, rolagemRegistrada$ } = montar({
+      rolagensRetorno: [
+        rolagem({ id: 1 }),
+        rolagem({ id: 2, rotulo: 'Segredo REST', visibilidade: RolagemVisibilidadeEnum.PRIVADA }),
+      ],
+    });
+
+    rolagemRegistrada$.next(
+      rolagem({ id: 3, rotulo: 'Segredo socket', visibilidade: RolagemVisibilidadeEnum.PRIVADA }),
+    );
+    fixture.detectChanges();
+
+    const historico = raiz.querySelector('app-historico-rolagens-sidebar')?.textContent ?? '';
+    expect(historico).toContain('Ataque');
+    expect(historico).not.toContain('Segredo REST');
+    expect(historico).not.toContain('Segredo socket');
+  });
+
   it('incorpora rolagem:registrada pública em tempo real, sem duplicar', () => {
     const existente = rolagem({ id: 1 });
     const { fixture, raiz, rolagemRegistrada$ } = montar({ rolagensRetorno: [existente] });

@@ -1,8 +1,8 @@
 import { DestroyRef, Component, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
-import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import { filter, finalize } from 'rxjs';
+import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import type { CampanhaIdentidadeSeguraDto, CampanhaMembroResumoDto, CampanhaPainelEspectadorDto } from '@contratados-rpg/shared/dtos/campanha';
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
@@ -199,8 +199,13 @@ export class CampanhaEspectador {
     // `campanha:<id>:espectador` só é alvo de `rolagem:registrada` público, por construção).
     // Guarda contra duplicata do mesmo id — a rolagem mais recente do feed inicial (REST) pode
     // coincidir com a primeira que chega pelo socket, dependendo de quando cada um resolve.
+    // O mestre em prévia também está na sala `campanha:<id>:mestre`, que recebe as `PRIVADA` de
+    // todo mundo: o filtro mantém a prévia no recorte exato do espectador.
     this.tempoRealService.rolagemRegistrada$
-      .pipe(takeUntilDestroyed())
+      .pipe(
+        filter((rolagem) => rolagem.visibilidade === RolagemVisibilidadeEnum.PUBLICA),
+        takeUntilDestroyed(),
+      )
       .subscribe({ next: (rolagem) => this.onRolagemRegistrada(rolagem) });
     // Exclusão por ADMIN (I-033): o evento leva só o id, sem conteúdo — mesma sala do registro.
     this.tempoRealService.rolagemExcluida$
