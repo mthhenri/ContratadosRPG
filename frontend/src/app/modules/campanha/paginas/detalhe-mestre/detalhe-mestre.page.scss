@@ -304,6 +304,10 @@
     flex-direction: column;
     gap: var(--space-16);
     padding: 2px;
+
+    &[hidden] {
+        display: none;
+    }
 }
 
 .detalhe-mestre__rolar {

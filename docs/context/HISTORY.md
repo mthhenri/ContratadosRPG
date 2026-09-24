@@ -1,5 +1,16 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-23 — I-027: Inventário do mestre volta a substituir Rolagens
+
+Depois de destacar o histórico em janela, o painel de rolagens do mestre ganhou `display: flex`.
+Ao selecionar Inventário, `[hidden]` mudava corretamente, mas a regra de autor mantinha o painel
+visível e empurrava o inventário para baixo. O painel agora declara `display: none` quando oculto.
+Inspeção das outras superfícies da I-027 não encontrou a mesma combinação de `[hidden]` com
+`display` no elemento recolhido. O teste de componente (36/36) e o build frontend passaram; no
+navegador real, a alternância foi observada em 1920×1080 e 360×800, sem sobreposição ou coluna
+vazia. A spec ativa registra o que já foi entregue, a conferência pendente de fechar a janela
+real e as fatias futuras de anotações e Caderno.
+
 ## 2026-09-23 — I-027: histórico local recolhido enquanto a janela externa está aberta
 
 O usuário aprovou o visual de antes/depois para os oito contextos de histórico. Um serviço

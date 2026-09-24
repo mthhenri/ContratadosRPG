@@ -14,7 +14,9 @@
 > campanha e iniciativa, nos papéis de mestre, jogador e espectador. A rolagem rápida permanece
 > na campanha. O retorno ao fechar e popup bloqueado estão cobertos por testes; a spec segue
 > ativa até a conferência manual do fechamento da janela real. Anotações, fichas abertas e
-> cadernos permanecem fora desta fatia.
+> cadernos permanecem fora desta fatia. A troca Rolagens ⇄ Inventário do mestre foi corrigida
+> após o commit `169ed1e2` (`[hidden]` agora vence o `display: flex`) e verificada em desktop/mobile;
+> o estado de retomada e as próximas fatias estão na spec ativa da I-027.
 > Antes:
 > `criatura-ataques-habilidades-editor-alinhado` concluída — `CriaturaAtaqueLista`/
 > `CriaturaHabilidadeLista` alinhadas ao editor-no-lugar de `FichaHabilidades` (jogador): editar um
