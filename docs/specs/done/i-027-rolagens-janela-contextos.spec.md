@@ -2,11 +2,11 @@
 
 > Ampliação da I-027 concluída em `docs/specs/done/rolagens-janela-externa.spec.md`: o pedido do autor passa a cobrir todos os históricos de rolagem, inclusive os recortes de campanha e espectador.
 
-## Estado para retomada · 2026-09-23
+## Estado de fechamento · 2026-09-24
 
 - **Implementado no commit `169ed1e2`:** janela isolada de histórico para ficha de jogador e criatura, campanha de mestre/jogador/espectador e iniciativa dos três papéis; botão só de ícone com tooltip e oculto no mobile; recolhimento da área local ao abrir, preservando rolagem rápida na campanha. O retorno ao fechar e a abertura bloqueada têm testes automatizados.
 - **Correção posterior ao commit:** o Inventário do mestre aparecia abaixo das rolagens porque `display: flex` prevalecia sobre `[hidden]`. O painel agora usa `display: none` quando oculto. A alternância Rolagens ⇄ Inventário foi verificada na aplicação real em 1920×1080 e 360×800; as demais superfícies alteradas foram revisadas quanto à mesma combinação de `[hidden]` com `display`, sem outro caso encontrado.
-- **Ainda aberto nesta spec:** conferir ao vivo o fechamento da janela real e a restauração do painel nas oito visões. O teste de componente confirma a troca do atributo `hidden`, mas o ambiente de teste não reproduz a cascata de estilos do navegador; por isso a verificação visual continua obrigatória.
+- **Fechamento (2026-09-24):** o fechamento da janela real foi verificado ao vivo nas oito visões (popup capturado pelo Playwright e encerrado; histórico local volta na mesma posição, sem recarregar, e reabre recolhendo de novo). A verificação achou o "Voltar" da janela da campanha errado — rótulo "Voltar à ficha" e destino `/campanhas/:id` também para o espectador, que recebe 403 ali —, corrigido com a origem `?origem=espectador`. Achado fora desta correção e registrado como `P-076`: a rolagem rápida do mestre na campanha responde 500 (CHECK `chk_rolagem_origem`).
 - **Próximas fatias, não implementadas por esta spec:** abrir as anotações da ficha em janela e, depois, o Caderno da campanha em janela, cada um com spec própria antes de tocar código. Reaproveitar o padrão de rota isolada/cabeçalho e definir para cada painel como recolher o conteúdo local e restaurá-lo ao fechar, respeitando permissões e sincronização. O mapa de acoplamento de ambos está em `docs/context/IDEAS.md` (I-027); não confundir com a janela de ficha completa, que é outra superfície.
 
 ## Objetivo

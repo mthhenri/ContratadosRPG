@@ -426,6 +426,10 @@ describe('CampanhaEspectador', () => {
       try {
         (raiz.querySelector('.espectador__abrir-rolagens') as HTMLButtonElement).click();
         fixture.detectChanges();
+        // A janela do espectador volta ao painel dele, nunca a `/campanhas/:id` (403 para ele).
+        expect(janela.location.replace).toHaveBeenCalledWith(
+          expect.stringMatching(/^\/janela\/campanha\/\d+\/historico-rolagens\?origem=espectador$/),
+        );
         expect(raiz.querySelector('.espectador__feed')).toBeNull();
         expect(raiz.querySelector('.espectador__grade--sem-rolagens')).not.toBeNull();
 

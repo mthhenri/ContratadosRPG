@@ -38,6 +38,20 @@ describe('HistoricoRolagensJanelaService', () => {
     expect(service.estaAbertaCampanha(8)).toBe(false);
   });
 
+  it('marca a origem do espectador na URL sem criar uma segunda janela da campanha', () => {
+    const janela = janelaSimulada();
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(janela as unknown as Window);
+    const service = TestBed.inject(HistoricoRolagensJanelaService);
+
+    expect(service.abrirCampanha(8, 'espectador')).toBe(true);
+    expect(janela.location.replace).toHaveBeenCalledWith(
+      '/janela/campanha/8/historico-rolagens?origem=espectador',
+    );
+    expect(service.abrirCampanha(8)).toBe(true);
+    expect(abrir).toHaveBeenCalledTimes(1);
+    expect(service.estaAbertaCampanha(8)).toBe(true);
+  });
+
   it('não oculta quando o navegador bloqueia a abertura', () => {
     vi.spyOn(window, 'open').mockReturnValue(null);
     const service = TestBed.inject(HistoricoRolagensJanelaService);

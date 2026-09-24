@@ -110,7 +110,12 @@ describe('HistoricoRolagensSidebar', () => {
       expect(abrirCampanha).not.toBeNull();
       expect(abrirCampanha.classList).toContain('botao-icone');
       abrirCampanha.click();
-      expect(abrirCampanhaSpy).toHaveBeenLastCalledWith(8);
+      expect(abrirCampanhaSpy).toHaveBeenLastCalledWith(8, 'campanha');
+
+      fixture.componentRef.setInput('origemJanela', 'espectador');
+      fixture.detectChanges();
+      abrirCampanha.click();
+      expect(abrirCampanhaSpy).toHaveBeenLastCalledWith(8, 'espectador');
     } finally {
       abrirFicha.mockRestore();
       abrirCampanhaSpy.mockRestore();

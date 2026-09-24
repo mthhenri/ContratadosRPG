@@ -9,14 +9,16 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-23 · **Última decisão registrada:**
-> A I-027 agora recolhe o histórico local quando ele é destacado em janela: fichas completas,
-> campanha e iniciativa, nos papéis de mestre, jogador e espectador. A rolagem rápida permanece
-> na campanha. O retorno ao fechar e popup bloqueado estão cobertos por testes; a spec segue
-> ativa até a conferência manual do fechamento da janela real. Anotações, fichas abertas e
-> cadernos permanecem fora desta fatia. A troca Rolagens ⇄ Inventário do mestre foi corrigida
-> após o commit `169ed1e2` (`[hidden]` agora vence o `display: flex`) e verificada em desktop/mobile;
-> o estado de retomada e as próximas fatias estão na spec ativa da I-027.
+> **Última revisão:** 2026-09-24 · **Última decisão registrada:**
+> `i-027-rolagens-janela-contextos` concluída (spec em `done/`): o histórico de rolagens abre em
+> janela externa nas oito visões (fichas de jogador e criatura; campanha e Iniciativa de mestre,
+> jogador e espectador), recolhe a área local enquanto a janela existe e a devolve ao fechar —
+> verificado ao vivo com a janela real. A rolagem rápida permanece na campanha. A janela da
+> campanha oferece "Voltar à campanha"; aberta por uma visão do espectador
+> (`abrirCampanha(id, 'espectador')` → `?origem=espectador`) volta a `/campanhas/:id/espectador`.
+> **Aberto:** `P-076` — a rolagem rápida do mestre na campanha responde 500 (CHECK
+> `chk_rolagem_origem`); o autor decidiu tratar em task própria. Próximas fatias da I-027
+> (Anotações, depois Caderno) seguem em `IDEAS.md`, cada uma com spec própria.
 > Antes:
 > `criatura-ataques-habilidades-editor-alinhado` concluída — `CriaturaAtaqueLista`/
 > `CriaturaHabilidadeLista` alinhadas ao editor-no-lugar de `FichaHabilidades` (jogador): editar um

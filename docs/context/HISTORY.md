@@ -1,5 +1,45 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-24 — I-027 concluída: fechamento da janela real verificado e "Voltar" da janela da campanha
+
+A spec `i-027-rolagens-janela-contextos` estava ativa só pela conferência ao vivo de fechar a janela
+externa — a sessão anterior achou que o navegador de inspeção não expunha o popup. Expõe: no
+Playwright, `page.waitForEvent('popup')` junto do clique devolve a janela aberta por `window.open`,
+e `popup.close()` a encerra de verdade (o serviço detecta pelo intervalo de 500ms). Com sessões
+reais do banco de dev (Campanha do Codex: mestre `codex.dev`, jogador `jogador.stub.1`, espectador
+`espectador.stub`, Iniciativa em montagem), as oito visões foram percorridas em 1920×1080: abrir →
+popup na rota certa (ficha, criatura com `?tipo=criatura`, campanha) → área local recolhida →
+fechar o popup → área de volta na mesma posição, sem recarregar (sentinela preservada), sem overflow
+horizontal, sem erro de console → reabrir cria uma janela só e recolhe de novo. As capturas antes ×
+depois diferem só em 11–36 px de antisserrilhado dentro do próprio ícone do botão.
+
+**Achado na verificação e corrigido.** A janela da campanha dizia "Voltar à ficha" (o cabeçalho
+compartilhado tinha o rótulo fixo) e mandava todo mundo para `/campanhas/:id` — o espectador cai
+ali num 403 com toasts de erro. `JanelaExternaCabecalho` ganhou `rotuloVoltar` obrigatório ("Voltar
+à ficha" / "Voltar à campanha"); `abrirCampanha(campanhaId, origem)` acrescenta `?origem=espectador`
+quando chamado pelo painel do espectador ou pela Iniciativa dele (`[origemJanela]` no
+`HistoricoRolagensSidebar`), e a página da janela escolhe `/campanhas/:id/espectador`. A chave de
+janela continua uma por campanha, qualquer que seja a origem.
+
+**Recorte e tempo real (critérios 3 e 4), agora com dado que distingue:** o feed da campanha de dev
+só tinha rolagens públicas. Com uma privada do mestre e uma do jogador (pela ficha de cada um), a
+janela do mestre mostrou as duas, a do jogador só a dele e a do espectador nenhuma; uma pública
+registrada com a janela do espectador aberta apareceu sem recarregar. As rolagens de teste foram
+soft-deletadas no banco de dev (excluir pela API exige `ADMIN`). "Voltar" conferido clicando: mestre
+e jogador → `/campanhas/2`, espectador → `/campanhas/2/espectador`, sem toast de erro; cabeçalho
+sem overflow em 420 e 360 px de largura.
+
+**Achado fora do escopo → `P-076`:** a rolagem rápida do mestre na campanha (entrou em `169ed1e2`)
+responde 500 em toda rolagem — o CHECK `chk_rolagem_origem` exige ficha **ou** combatente e a
+rolagem avulsa da campanha não tem nenhum. Reproduzido na UI (toast "Erro interno do servidor",
+nada salvo). O autor escolheu registrar e fechar a I-027; a correção precisa de migration.
+
+**Testes:** serviço (origem na URL sem segunda janela), sidebar (repassa a origem), espectador
+(URL com `?origem=espectador`), Iniciativa do espectador (origem) e spec nova da janela da campanha
+(rótulo e destino por origem). Focados 5 arquivos / 51 testes; suíte frontend 147/147 arquivos e
+2140/2140 testes; lint com 0 erros (nenhum aviso novo nas linhas tocadas); build verde com o aviso
+de budget inicial preexistente (`P-004`).
+
 ## 2026-09-23 — editor Markdown: faixa de tabela em grade alinhada
 
 O autor pediu para alinhar os botões e viu uma POC antes (`editor-markdown-tabela-uma-linha-e-grade`):

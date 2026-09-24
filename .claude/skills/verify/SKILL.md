@@ -97,6 +97,10 @@ rápido). `[aria-label="Vida atual"]` **só existe** no modo de digitação.
 **Provar "sem recarregar":** plante `window.__sentinela` antes e confira depois — se a página
 recarregou, a variável some.
 
+**Janela externa (`window.open`) é observável:** `const [popup] = await Promise.all([page.waitForEvent('popup'),
+botao.click()])` devolve a janela aberta, e `popup.close()` a fecha de verdade — dá para verificar o
+que a aba de origem faz quando a janela some (a I-027 ficou aberta um dia achando que não dava).
+
 ## Vários navegadores e barras de rolagem
 
 Bug de CSS que depende do navegador (scrollbar, `contain`, `@supports`) pede os três do autor: Chrome,

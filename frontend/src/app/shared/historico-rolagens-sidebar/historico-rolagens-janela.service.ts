@@ -1,5 +1,8 @@
 import { Injectable, OnDestroy, signal } from '@angular/core';
 
+/** Visão que abriu o histórico da campanha — define para onde a janela oferece voltar. */
+export type OrigemJanelaCampanha = 'campanha' | 'espectador';
+
 /** Mantém a janela externa e o espaço do histórico local sincronizados nesta aba. */
 @Injectable({ providedIn: 'root' })
 export class HistoricoRolagensJanelaService implements OnDestroy {
@@ -25,8 +28,16 @@ export class HistoricoRolagensJanelaService implements OnDestroy {
     return this.abrir(`ficha:${fichaId}`, `/janela/ficha/${fichaId}/historico-rolagens${sufixo}`);
   }
 
-  abrirCampanha(campanhaId: number): boolean {
-    return this.abrir(`campanha:${campanhaId}`, `/janela/campanha/${campanhaId}/historico-rolagens`);
+  /**
+   * A origem só decide o "Voltar" da janela: o espectador não pode abrir `/campanhas/:id`. A janela
+   * continua sendo uma por campanha, qualquer que seja a visão que a abriu.
+   */
+  abrirCampanha(campanhaId: number, origem: OrigemJanelaCampanha = 'campanha'): boolean {
+    const sufixo = origem === 'espectador' ? '?origem=espectador' : '';
+    return this.abrir(
+      `campanha:${campanhaId}`,
+      `/janela/campanha/${campanhaId}/historico-rolagens${sufixo}`,
+    );
   }
 
   ngOnDestroy(): void {

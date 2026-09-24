@@ -11,7 +11,10 @@ import { Botao } from '../ui/botao/botao.component';
 import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import { EstadoVazio } from '../ui/estado-vazio/estado-vazio.component';
 import { Esqueleto } from '../ui/esqueleto/esqueleto.component';
-import { HistoricoRolagensJanelaService } from './historico-rolagens-janela.service';
+import {
+  HistoricoRolagensJanelaService,
+  type OrigemJanelaCampanha,
+} from './historico-rolagens-janela.service';
 
 /**
  * Barra lateral de histórico de rolagens — substitui a antiga listagem embutida no painel da
@@ -73,6 +76,8 @@ export class HistoricoRolagensSidebar {
   readonly tipoFichaJanela = input<'jogador' | 'criatura'>('jogador');
   /** ID presente quando o histórico pertence ao feed da campanha, inclusive em colunas fixas. */
   readonly campanhaIdJanela = input<number | null>(null);
+  /** Só muda o "Voltar" da janela da campanha; `espectador` nas visões do espectador. */
+  readonly origemJanela = input<OrigemJanelaCampanha>('campanha');
 
   readonly carregarMais = output<void>();
   /**
@@ -144,7 +149,9 @@ export class HistoricoRolagensSidebar {
     const fichaId = this.fichaIdJanela();
     const campanhaId = this.campanhaIdJanela();
     if (fichaId !== null) this.janelaHistorico.abrirFicha(fichaId, this.tipoFichaJanela());
-    else if (campanhaId !== null) this.janelaHistorico.abrirCampanha(campanhaId);
+    else if (campanhaId !== null) {
+      this.janelaHistorico.abrirCampanha(campanhaId, this.origemJanela());
+    }
   }
 
   /** Autor + (opcionalmente) o nome da ficha — junta os dois numa string só para o template. */

@@ -80,7 +80,7 @@ export class CampanhaEspectador {
 
   protected alternarRolagensVisiveis(): void {
     if (this.janelaHistorico.estaAbertaCampanha(this.id)) {
-      this.janelaHistorico.abrirCampanha(this.id);
+      this.janelaHistorico.abrirCampanha(this.id, 'espectador');
       return;
     }
     this.rolagensVisiveis.update((visiveis) => !visiveis);

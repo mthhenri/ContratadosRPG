@@ -14,6 +14,7 @@ import { Botao } from "../botao/botao.component";
 export class JanelaExternaCabecalho {
   readonly contexto = input.required<string>();
   readonly voltarPara = input.required<string>();
+  readonly rotuloVoltar = input.required<string>();
   protected fechar(): void {
     window.close();
   }

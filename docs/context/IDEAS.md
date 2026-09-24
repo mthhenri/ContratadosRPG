@@ -108,9 +108,11 @@
 
 ### I-027 — Janela externa para histórico de rolagens, anotações da ficha e Caderno · frontend/UX
 
-- **Estado:** primeira fatia (Histórico) implementada em
-  `docs/specs/done/rolagens-janela-externa.spec.md` em 2026-09-22. Anotações e Caderno ainda
-  aguardam specs próprias; esta entrada permanece aberta para preservar as duas fatias.
+- **Estado:** fatia do Histórico concluída — fichas em
+  `docs/specs/done/rolagens-janela-externa.spec.md` (2026-09-22) e as oito visões (fichas,
+  campanha e Iniciativa de mestre/jogador/espectador) em
+  `docs/specs/done/i-027-rolagens-janela-contextos.spec.md` (2026-09-24). Anotações e Caderno
+  ainda aguardam specs próprias; esta entrada permanece aberta para preservar as duas fatias.
 - **Ideia:** permitir abrir três painéis numa janela separada do navegador ("por fora"), em vez de
   só como painel lateral/flutuante dentro da mesma aba: **histórico de rolagens**, **anotações da
   ficha** e o **Caderno da campanha**. Decisão do autor (2026-09-22): via `window.open` com a mesma

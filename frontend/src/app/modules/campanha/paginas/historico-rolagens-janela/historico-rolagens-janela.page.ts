@@ -24,6 +24,11 @@ export class HistoricoRolagensCampanhaJanela {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly campanhaId = Number(this.rota.snapshot.paramMap.get('campanhaId'));
+  /** O espectador volta ao próprio painel: `/campanhas/:id` é só de membros que jogam/mestram. */
+  protected readonly voltarPara =
+    this.rota.snapshot.queryParamMap.get('origem') === 'espectador'
+      ? `/campanhas/${this.campanhaId}/espectador`
+      : `/campanhas/${this.campanhaId}`;
   protected readonly itens = signal<readonly RolagemResumoDto[]>([]);
   protected readonly carregando = signal(true);
   protected readonly acessoNegado = signal(false);

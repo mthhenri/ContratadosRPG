@@ -18,6 +18,7 @@ import { PainelEncontroEspectador } from './painel-espectador.page';
 import { CampanhaProjecaoService } from '../../../campanha/campanha-projecao.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
+import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 
 /**
  * Prova a Iniciativa do espectador (corrige `P-073`): mesma casca de mestre/jogador, mas sem
@@ -206,6 +207,16 @@ describe('PainelEncontroEspectador', () => {
     const { raiz, rolagemService } = montar({ rolagensRetorno: [rolagem()] });
     expect(rolagemService.listarPorCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
     expect(raiz.querySelector('app-historico-rolagens-sidebar')?.textContent).toContain('Ataque');
+  });
+
+  it('abre a janela externa com a origem do espectador', () => {
+    const { raiz } = montar({ rolagensRetorno: [rolagem()] });
+    const abrirCampanha = vi
+      .spyOn(TestBed.inject(HistoricoRolagensJanelaService), 'abrirCampanha')
+      .mockReturnValue(true);
+
+    (raiz.querySelector('.historico-rolagens__janela') as HTMLButtonElement).click();
+    expect(abrirCampanha).toHaveBeenCalledWith(CAMPANHA_ID, 'espectador');
   });
 
   it('sem encontro ativo, mostra o estado vazio (mesmo texto do jogador)', () => {
