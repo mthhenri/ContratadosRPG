@@ -235,7 +235,8 @@ identidade/permissão; `resultado` em JSONB reusa **1:1** `ResultadoRolagemDto`
 ```sql
 CREATE TABLE rolagem (
   -- BaseEntity...
-  ficha_id                     INTEGER NOT NULL,   -- fk_rolagem_ficha
+  ficha_id                     INTEGER,            -- fk_rolagem_ficha (nullable — origem, ver chk_rolagem_origem)
+  encontro_combatente_id       INTEGER,            -- fk_rolagem_encontro_combatente (combatente avulso, 0024)
   campanha_id                  INTEGER,            -- fk_rolagem_campanha (nullable — ficha solta, m3-28)
   usuario_id                   INTEGER NOT NULL,   -- fk_rolagem_usuario (autor da rolagem)
   rotulo                       VARCHAR NOT NULL,
@@ -243,9 +244,25 @@ CREATE TABLE rolagem (
   tipo_rolagem_visibilidade_id INTEGER NOT NULL,   -- fk_rolagem_tipo_rolagem_visibilidade
   resultado                    JSONB   NOT NULL    -- ResultadoRolagemDto — forma abaixo
 );
--- ix_rolagem_ficha:    (ficha_id)
--- ix_rolagem_campanha: (campanha_id)
+-- ix_rolagem_ficha:               (ficha_id)
+-- ix_rolagem_campanha:            (campanha_id)
+-- ix_rolagem_encontro_combatente: (encontro_combatente_id)
+-- chk_rolagem_origem (0030, P-076):
+--   NOT (ficha_id IS NOT NULL AND encontro_combatente_id IS NOT NULL)
+--   AND (ficha_id IS NOT NULL OR encontro_combatente_id IS NOT NULL OR campanha_id IS NOT NULL)
 ```
+
+**Origem da rolagem (`chk_rolagem_origem`).** Toda rolagem tem exatamente uma de três origens:
+
+- **ficha** — `ficha_id` preenchido, `encontro_combatente_id` nulo (o caso comum);
+- **combatente avulso** do encontro — `encontro_combatente_id` preenchido, `ficha_id` nulo
+  (`0024`; o nome exibido vem de `encontro_combatente.nome_avulso`);
+- **avulsa do mestre na campanha** — os dois nulos e `campanha_id` preenchido (rolagem rápida da
+  página da campanha, `0030`). Sem ficha nem combatente, `RolagemResumoDto.nomeFicha` chega `null`
+  e o frontend exibe "Mestre" como origem (`montarAutoriaRolagem`).
+
+Ficha **e** combatente juntos, ou nenhum dos dois sem campanha (linha que nenhum histórico
+mostraria), são recusados pelo CHECK.
 
 **Autor ≠ dono da ficha, sempre.** `usuario_id` é quem **disparou** a rolagem — o dono da ficha
 na maioria dos casos, mas também um visualizador com acesso concedido (`usuario_ficha_acesso`,
@@ -264,11 +281,14 @@ só para o **autor** e o **mestre** — o mesmo mecanismo cobre o mestre rolando
 = mestre). Rolagem numa ficha **sem campanha** (`campanha_id NULL`) só alimenta o histórico da
 própria ficha; nenhum feed de campanha a recebe.
 
-**Emissão em tempo real (evento `rolagem:registrada`, sala `campanha:<id>`).** Só rolagens
-`PUBLICA` são broadcastadas — emitir uma `PRIVADA` pela sala inteira (broadcast não-direcionado,
-§9) vazaria o conteúdo a quem não deveria vê-la; o autor/mestre a recebe via REST no próximo
-carregamento/refresh do feed (decisão de design v1, `docs/specs/done/m3-27-*.spec.md`). Ficha sem
-campanha (`campanha_id NULL`) não tem sala — o emit é guardado (no-op).
+**Emissão em tempo real (evento `rolagem:registrada`, `CampanhaGateway.emitirRolagemRegistrada`
+em `backend/src/core/gateway/campanha.gateway.ts`).** Toda rolagem é emitida após persistir, com a
+sala escolhida pela visibilidade: `PUBLICA` vai à sala cheia `campanha:<id>` e à sala do
+espectador `campanha:<id>:espectador`; `PRIVADA` vai **só** à sala `campanha:<id>:mestre`
+(ingressada apenas por quem entrou como `MESTRE`) — o autor já a recebe pela resposta REST do
+próprio POST, e jogador/espectador nunca ingressam essa sala. Ficha sem campanha
+(`campanha_id NULL`) não tem sala de campanha: a `PUBLICA` vai à sala `ficha:<id>` e a `PRIVADA` é
+no-op. `rolagem:excluida` (soft delete por `ADMIN`) segue o mesmo roteamento.
 
 ---
 

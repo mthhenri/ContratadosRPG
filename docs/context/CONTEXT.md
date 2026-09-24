@@ -9,16 +9,29 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-24 · **Última decisão registrada:**
+> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `P-077` corrigido — `npm run lint`
+> da raiz volta a sair com 0 erros (laços síncronos no lugar de `Promise.all` sobre
+> `RemoteSocket.join`/`leave` em `CampanhaGateway`, asserção redundante removida em
+> `FichaService.alterarVitalidade`); salas conferidas ao vivo. Antes:
+> `p-076-rolagem-rapida-mestre-campanha` concluída (spec em `done/`), fecha o `P-076`: a migration
+> `0030` troca o CHECK `chk_rolagem_origem` por "no máximo um entre ficha e combatente, e nenhum dos
+> dois só com `campanha_id`", e a rolagem rápida do mestre na campanha volta a salvar (201) e a
+> chegar ao feed em tempo real (pública: mestre, jogador, espectador e janela externa; privada: só o
+> mestre). `RolagemResumoDto.nomeFicha` passou a `string | null` (`null` = avulsa do mestre) e a
+> linha de autoria do cartão de rolagem tem fonte única em `montarAutoriaRolagem`
+> (`shared/cartao-rolagem/autoria-rolagem.util.ts`): `autor · ficha`, `autor · Mestre` ou só o
+> autor quando a tela omite a ficha. `SCHEMA.md` (`rolagem`) alinhado ao schema real. O `DOWN` da
+> `0030` falha enquanto houver rolagem avulsa gravada, inclusive soft-deletada — reverter exige
+> decidir antes o destino dessas linhas. Testes de repositório contra Postgres real ficaram como
+> `IDEAS.md` `I-034`. Próximas fatias da I-027 (Anotações, depois Caderno) seguem em `IDEAS.md`,
+> cada uma com spec própria.
+> Antes:
 > `i-027-rolagens-janela-contextos` concluída (spec em `done/`): o histórico de rolagens abre em
 > janela externa nas oito visões (fichas de jogador e criatura; campanha e Iniciativa de mestre,
 > jogador e espectador), recolhe a área local enquanto a janela existe e a devolve ao fechar —
 > verificado ao vivo com a janela real. A rolagem rápida permanece na campanha. A janela da
 > campanha oferece "Voltar à campanha"; aberta por uma visão do espectador
 > (`abrirCampanha(id, 'espectador')` → `?origem=espectador`) volta a `/campanhas/:id/espectador`.
-> **Aberto:** `P-076` — a rolagem rápida do mestre na campanha responde 500 (CHECK
-> `chk_rolagem_origem`); o autor decidiu tratar em task própria. Próximas fatias da I-027
-> (Anotações, depois Caderno) seguem em `IDEAS.md`, cada uma com spec própria.
 > Antes:
 > `criatura-ataques-habilidades-editor-alinhado` concluída — `CriaturaAtaqueLista`/
 > `CriaturaHabilidadeLista` alinhadas ao editor-no-lugar de `FichaHabilidades` (jogador): editar um

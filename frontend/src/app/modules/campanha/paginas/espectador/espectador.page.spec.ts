@@ -228,6 +228,16 @@ describe('CampanhaEspectador', () => {
     expect(itens[0].textContent).toContain('2d6+3');
   });
 
+  it('mostra a rolagem avulsa do mestre como "autor · Mestre", nunca "null" (P-076)', () => {
+    const { fixture, raiz, rolagemRegistrada$ } = montar({ painelRetorno: painel([]) });
+
+    rolagemRegistrada$.next(rolagem({ id: 9, fichaId: null, nomeAutor: "Codex", nomeFicha: null }));
+    fixture.detectChanges();
+
+    const autor = raiz.querySelector("li[app-cartao-rolagem] .cartao-rolagem__autor");
+    expect(autor?.textContent?.trim()).toBe("Codex · Mestre");
+  });
+
   it('"Carregar mais" busca a próxima página e acrescenta ao final', () => {
     const { fixture, raiz, campanhaProjecaoService } = montar({
       painelRetorno: painel([rolagem({ id: 1 })], 1, 2),

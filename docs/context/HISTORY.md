@@ -1,5 +1,95 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-24 — `P-077` corrigido: `npm run lint` do backend volta a sair com 0 erros
+
+Task solta, sem spec, pedida pelo autor logo depois da `p-076`. O lint do backend tinha 3 erros em
+código que a `p-076` não tocava.
+
+**`await-thenable` em `CampanhaGateway` (commit `9777af1`).** `expulsarUsuarioDaFicha` e
+`recalibrarSalasCampanhaUsuario` faziam `await Promise.all(...)` sobre `socket.leave`/`socket.join`
+dos sockets devolvidos por `fetchSockets()`. No socket.io 4.8 esses são `RemoteSocket`, e os dois
+métodos retornam `void`: o `Promise.all` não esperava nada. Viraram laços síncronos com a mesma
+ordem e o mesmo filtro por usuário: sair das três salas de papel e depois entrar nas do papel novo
+(nenhuma com `papel = null`; o mestre entra na sala cheia e na do mestre). Os métodos continuam
+`async` por causa do `fetchSockets`, e as services que os aguardam não mudam.
+
+**`no-unnecessary-type-assertion` em `FichaService.alterarVitalidade` (commit `ed81b9a`).** O
+`fichaEncontrada.dados as FichaJogadorDadosDto` era redundante: o tipo já é esse. A asserção saiu.
+
+**Verificação.** `npm run lint` na raiz saiu com código 0, e as linhas tocadas não têm avisos.
+Backend: 32 arquivos, 574 testes; `campanha.gateway.spec.ts` com 44 testes, incluindo expulsão e
+recalibração. O build do backend passou. Ao vivo, com um socket real da jogadora na campanha
+"Contenção P-076" (Postgres local, backend real):
+
+- como `JOGADOR`, recebeu inventário e rolagem pública, mas não a privada;
+- rebaixada a `ESPECTADOR` pelo `PATCH .../papel`, passou a receber só a rolagem pública;
+- promovida de volta a `JOGADOR`, voltou a receber tudo;
+- com acesso concedido à criatura "Eco" e dentro de `ficha:13`, recebeu `ficha:alterada`;
+- depois do `DELETE .../acesso/7`, recebeu `ficha:acesso-revogado` e não recebeu mais
+  `ficha:alterada`.
+
+O `ficha:condicoes-alteradas` continua chegando pela sala da campanha, como previsto.
+
+## 2026-09-24 — `p-076-rolagem-rapida-mestre-campanha`: rolagem rápida do mestre volta a salvar e aparece como "Mestre" (fecha `P-076`)
+
+Desde `169ed1e2` a "Rolagem rápida" da página da campanha respondia 500 em toda rolagem: o
+`RolagemService.registrarRolagemAvulsaDaCampanha` grava `ficha_id` e `encontro_combatente_id`
+nulos, e o CHECK `chk_rolagem_origem` exigia exatamente um dos dois. O teste da service passava
+porque o repositório é mockado. A alternativa de prender a rolagem a um combatente ou a uma ficha
+"Mestre" fictícia foi descartada com o autor (a linha apareceria na Iniciativa e a ficha do mestre
+pode não existir): "Mestre" fica só na exibição.
+
+**Banco.** Migration `0030 - Rolagem avulsa da campanha.sql` recria `chk_rolagem_origem` como
+`NOT (ficha AND combatente) AND (ficha OR combatente OR campanha_id)`. Assim a rolagem avulsa só é
+aceita dentro de uma campanha, e uma linha sem origem nenhuma, que nenhum histórico mostraria,
+continua recusada. O `DOWN` restaura a expressão antiga e avisa que falha enquanto houver linha
+avulsa, inclusive soft-deletada. Conferido de verdade: com uma linha avulsa soft-deletada, o
+`migrate:down` falhou no CHECK e a transação do Knex manteve a `0030` aplicada.
+
+**Contrato e UI.** `RolagemResumoDto.nomeFicha` passou a `string | null` (`null` = avulsa do
+mestre). O SQL do repositório segue `COALESCE(ficha.nome, encontro_combatente.nome_avulso)`, sem
+"Mestre". O contrato OpenAPI foi regenerado; o gerador representa o anulável como `string`, igual a
+`corFicha`. A linha de autoria do cartão ganhou fonte única, `montarAutoriaRolagem`
+(`frontend/src/app/shared/cartao-rolagem/autoria-rolagem.util.ts`): `autor · ficha`,
+`autor · Mestre` quando `nomeFicha` é `null`, ou só o autor com `mostrarFicha = false`. Os quatro
+pontos que montavam a linha à mão passaram a usá-la: `HistoricoRolagensSidebar.metaAutor`,
+`detalhe-mestre`, `detalhe-jogador` (novo `autorRolagem`) e `espectador`, que antes escondia a
+ficha quando o nome vinha vazio. `SCHEMA.md` (`rolagem`) passou a refletir o schema real:
+`ficha_id` anulável, `encontro_combatente_id`, o CHECK com as três origens e o roteamento de
+`rolagem:registrada` do gateway atual (`PRIVADA` só na sala `campanha:<id>:mestre`). O texto antigo
+dizia que a privada nunca era emitida.
+
+**Postgres real (critérios 1 e 2).** Postgres 16 local, sem Docker, via `pg_ctlcluster`.
+`db:migrate` → `db:rollback` (as 30 migrations) → `db:migrate` rodou sem erro, e a `0030` também foi
+revertida e reaplicada sozinha. No `psql`: dois nulos com `campanha_id` passou; dois nulos sem
+campanha e ficha + combatente foram recusados por `chk_rolagem_origem`. As linhas de teste e o
+encontro e o combatente de apoio foram soft-deletados.
+
+**Ao vivo (critério 3).** Stack real, com Playwright em 1920×1080 e 360×800. Contas criadas via
+REST: mestre "Codex", jogadora com a ficha "Vera" e espectador, todos na campanha "Contenção
+P-076". O mestre rolou `1d20` pela Rolagem rápida e recebeu 201, sem toast de erro. O cartão
+`Codex · Mestre` apareceu sem recarregar (sentinela preservada) no feed do mestre, da jogadora, do
+espectador e na janela externa da campanha. A privada (`2d6`, com "Rolagens ocultas") entrou só no
+mestre e na janela dele, com o selo "Privada"; jogadora e espectador não a receberam, nem depois de
+recarregar. As oito visões da I-027 foram conferidas nos dois viewports, com um combate em montagem
+para exibir o histórico da Iniciativa: nenhum cartão com "null" e nenhum overflow horizontal. As
+seis visões de campanha e de Iniciativa mostram `Codex · Mestre` ao lado de `Jogadora · Vera`, no
+mesmo cartão. A ficha da jogadora mostra só "Jogadora" (`mostrarFicha = false`), e a criatura não
+tem rolagem avulsa, como a spec prevê. O visual do cartão não mudou: a avulsa usa o `--accent`,
+porque `corFicha` é `null`. A captura do jogador no mobile sem ficha não mostra o destino
+"Rolagens", comportamento preexistente, por isso a ficha "Vera" entrou no cenário.
+
+**Testes.** A função pura cobre ficha, combatente avulso, rolagem do mestre e `mostrarFicha = false`.
+Os quatro consumidores ganharam um caso com `nomeFicha: null` (sidebar, espectador, detalhe do
+jogador e do mestre); no do mestre, a rolagem rápida emite `rolagemFeita`, o serviço devolve a
+rolagem avulsa e o feed mostra `Codex · Mestre`. A sidebar também ganhou o caso
+`mostrarFicha = false`. O teste existente da service continua valendo. Focados: 5 arquivos, 106
+testes. Suítes: `shared` 50/763, `backend` 32/574, `frontend` 148/2149. Os builds de `backend` e
+`frontend` passaram; o frontend mantém o aviso de budget `P-004`. No lint, `shared` e `frontend` têm
+0 erros e nenhum aviso nas linhas do diff. O `backend` sai com 3 erros **preexistentes** em
+arquivos que a task não toca (`campanha.gateway.ts` e `ficha.service.ts`), registrados em
+`P-077`. A lacuna de teste de repositório sem Postgres real virou `IDEAS.md` `I-034`.
+
 ## 2026-09-24 — I-027 concluída: fechamento da janela real verificado e "Voltar" da janela da campanha
 
 A spec `i-027-rolagens-janela-contextos` estava ativa só pela conferência ao vivo de fechar a janela

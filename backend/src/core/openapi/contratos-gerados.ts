@@ -4731,7 +4731,8 @@ export const schemasContratosPublicos = {
                 "type": "string"
             },
             "nomeFicha": {
-                "type": "string"
+                "type": "string",
+                "description": "Nome da ficha autora ou do combatente avulso. `null` significa rolagem avulsa do mestre na\ncampanha, sem ficha nem combatente — quem exibe mostra \"Mestre\" como origem."
             },
             "rotulo": {
                 "type": "string"
@@ -4774,7 +4775,7 @@ export const schemasContratosPublicos = {
             "corFicha"
         ],
         "additionalProperties": false,
-        "description": "Item de listagem/feed — usado tanto pelo histórico da ficha (`GET /ficha/:id/rolagem`) quanto\npelo feed da campanha (`GET /campanha/:id/rolagem`) e como saída do próprio registro. `nomeAutor`/\n`nomeFicha` vêm de `JOIN` (nunca duplicados como coluna) — a listagem sempre resolve os dois.\n`createdDate` chega como string ISO (serialização padrão do `StandardResponse` sobre `Date`)."
+        "description": "Item de listagem/feed — usado tanto pelo histórico da ficha (`GET /ficha/:id/rolagem`) quanto\npelo feed da campanha (`GET /campanha/:id/rolagem`) e como saída do próprio registro. `nomeAutor`/\n`nomeFicha` vêm de `JOIN` (nunca duplicados como coluna); `nomeFicha` só fica `null` na rolagem\navulsa do mestre na campanha.\n`createdDate` chega como string ISO (serialização padrão do `StandardResponse` sobre `Date`)."
     },
     "RolagemListarDto": {
         "type": "object",

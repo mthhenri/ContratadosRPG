@@ -100,22 +100,23 @@
   botão também é um `<button>` nativo estilizado à mão — candidato a `app-botao-icone`.
 - **Desde:** achado em 2026-09-23 na revisão do editor Markdown (fora do escopo daquela task).
 
-### P-076 — Rolagem rápida do mestre na campanha sempre falha com 500 · `ABERTO` · backend/banco
+### P-078 — Jogador sem ficha no celular não encontra o histórico de rolagens da campanha · `ABERTO` · frontend/campanha
 
-- **Sintoma:** na página da campanha, o mestre rola pela "Rolagem rápida" (ex.: `1d20`) e recebe o
-  toast "Erro interno do servidor"; `POST /campanha/:id/rolagem-avulsa` responde 500 e nada é
-  salvo, então a rolagem não entra no feed nem chega a ninguém.
-- **Causa:** o CHECK `chk_rolagem_origem` da tabela `rolagem` exige exatamente um entre `ficha_id`
-  e `encontro_combatente_id` (`(ficha_id IS NOT NULL) <> (encontro_combatente_id IS NOT NULL)`). A
-  rolagem avulsa da campanha (`RolagemService.registrarRolagemAvulsaDaCampanha`) grava os dois
-  nulos — o endpoint e a UI entraram no commit `169ed1e2` sem migration que acompanhasse.
-- **Contorno:** rolar pela ficha do mestre ou pela Iniciativa (rolagem de combatente avulso), que
-  preenchem uma das duas colunas.
-- **Correção:** migration trocando o CHECK por "no máximo um entre ficha e combatente, e nenhum dos
-  dois só com `campanha_id` preenchido", mais teste de backend do registro avulso e verificação ao
-  vivo do feed do mestre/jogador/espectador. Decisão do autor (2026-09-24): registrar e tratar em
-  task própria, fora da I-027 — spec em
-  `docs/specs/backlog/p-076-rolagem-rapida-mestre-campanha.spec.md` (aguarda revisão do autor).
-- **Desde:** commit `169ed1e2` (2026-09-23); achado na verificação ao vivo da I-027 em 2026-09-24.
-
+- **Sintoma:** em `360×800`, o jogador sem ficha na campanha abre `/campanhas/:id` e vê só "Você
+  ainda não tem uma ficha nesta campanha" com os botões "Criar nova ficha", "Vincular ficha
+  existente" e "Ver Esquadrão". Nenhum cartão de rolagem aparece e nada indica que o histórico
+  existe. No desktop o painel lateral de Rolagens aparece normalmente.
+- **Causa:** em `detalhe-jogador.page.html`, o painel lateral (Rolagens/Esquadrão/Inv. Esquadrão)
+  recebe `detalhe__jogador-lateral--oculto-mobile` (`display: none`) enquanto
+  `destinoMobileFicha()` for diferente de `'rolagens'`. O sinal começa em `'agente'` e só muda
+  pela `.ficha-nav` da ficha embutida (`abaStatusMudou` → `aoMudarDestinoFicha`), que não existe
+  sem ficha. A única saída é `abrirEsquadraoSemFicha()`, que abre o painel já na aba Esquadrão.
+- **Contorno:** tocar em "Ver Esquadrão" e depois na aba "Rolagens" do painel lateral. Conferido
+  ao vivo em 2026-09-24: o feed da campanha aparece completo, com os 7 cartões.
+- **Correção:** a decidir com o autor. Uma opção é mostrar o painel lateral no mobile sem ficha
+  (por exemplo, abrir em "Rolagens" por padrão ou exibir o painel abaixo do estado vazio). Outra é
+  dar ao estado vazio uma ação "Ver rolagens" ao lado de "Ver Esquadrão". É mudança de UI: exige o
+  gate visual (`design-fidelity` + `verify`).
+- **Desde:** achado em 2026-09-24 na verificação ao vivo da `p-076`, com uma conta de jogador sem
+  ficha. O comportamento é anterior a essa task.
 

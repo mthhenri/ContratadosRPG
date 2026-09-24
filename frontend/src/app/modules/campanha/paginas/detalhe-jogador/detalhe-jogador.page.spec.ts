@@ -761,6 +761,30 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('.rolagem-pill')).toBeNull();
   });
 
+  it('mostra a rolagem avulsa do mestre como "autor · Mestre", nunca "null" (P-076)', () => {
+    const rolagem: RolagemResumoDto = {
+      id: 2,
+      fichaId: null,
+      encontroCombatenteId: null,
+      campanhaId: CAMPANHA_ID,
+      usuarioId: 1,
+      nomeAutor: "Codex",
+      nomeFicha: null,
+      rotulo: "1d20",
+      formula: "1d20",
+      visibilidade: RolagemVisibilidadeEnum.PUBLICA,
+      resultado: { dados: [], atributos: [], constante: 0, total: 14 },
+      createdDate: new Date().toISOString(),
+      corFicha: null,
+    };
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas, rolagens: [rolagem] });
+
+    const autor = raiz.querySelector(
+      ".detalhe__painel-rolar li[app-cartao-rolagem] .cartao-rolagem__autor",
+    );
+    expect(autor?.textContent?.trim()).toBe("Codex · Mestre");
+  });
+
   it('a aba "Esquadrão" (antigo cartão Equipe) fica sempre montada, com o avatar da ficha', () => {
     const { fixture, raiz } = montar({
       usuarioId: 2,
