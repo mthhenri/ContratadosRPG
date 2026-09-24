@@ -47,10 +47,7 @@
                 : 'Ainda não calculado pelo motor — depende da habilidade de Contra-ataque'
         "
     >
-        <span
-            class="ficha-mini__rotulo"
-            [class.ficha-mini__rotulo--duas-linhas]="!compacto()"
-        >
+        <span class="ficha-mini__rotulo" [class.ficha-mini__rotulo--duas-linhas]="!compacto()">
             Contra-ataque
         </span>
         @if (temContraAtaque()) {
@@ -70,7 +67,9 @@
                         inputmode="numeric"
                         [value]="contraAtaqueLinha().bruto"
                         aria-label="Editar Contra-ataque"
-                        (keydown.enter)="confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)"
+                        (keydown.enter)="
+                            confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)
+                        "
                         (keydown.escape)="cancelarDerivado()"
                         (blur)="confirmarDerivado(contraAtaqueLinha(), entradaDerivado.value)"
                     />

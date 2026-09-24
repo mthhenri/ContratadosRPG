@@ -45,10 +45,7 @@
             @for (entrada of itensOrdenados(); track entrada.indice) {
                 @let item = entrada.item;
                 @let idx = entrada.indice;
-                <li
-                    class="ataque-lista__item"
-                    [class.ataque-lista__item--editando]="editando(idx)"
-                >
+                <li class="ataque-lista__item" [class.ataque-lista__item--editando]="editando(idx)">
                     @if (editando(idx)) {
                         <ng-container
                             *ngTemplateOutlet="formulario; context: { $implicit: 'Confirmar' }"

@@ -161,7 +161,9 @@
                             [class.habilidades__chip--personalidade]="
                                 habilidade.categoria === Categoria.PERSONALIDADE
                             "
-                            [class.habilidades__chip--unica]="habilidade.categoria === Categoria.UNICA"
+                            [class.habilidades__chip--unica]="
+                                habilidade.categoria === Categoria.UNICA
+                            "
                             [class.habilidades__chip--inicial]="ehInicial(habilidade)"
                         >
                             {{ rotuloChip(habilidade) }}

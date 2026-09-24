@@ -370,8 +370,8 @@
         border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
         background: color-mix(in srgb, var(--warning) 10%, transparent);
 
-        &[data-selo-condicao='morrendo'],
-        &[data-selo-condicao='inconsciente'] {
+        &[data-selo-condicao="morrendo"],
+        &[data-selo-condicao="inconsciente"] {
             color: var(--accent);
             border-color: var(--accent-border);
             background: var(--accent-dim);

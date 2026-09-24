@@ -1,7 +1,9 @@
 <div class="ficha-resistencias" [class.ficha-resistencias--compacto]="compacto()">
     @for (resistencia of linhas(); track resistencia.tipo) {
         <div [class]="classeResistencia(resistencia.tipo)">
-            <span class="ficha-resistencia__abrev">{{ abreviacaoResistencia[resistencia.tipo] }}</span>
+            <span class="ficha-resistencia__abrev">{{
+                abreviacaoResistencia[resistencia.tipo]
+            }}</span>
             @if (ajustavelAmplo()) {
                 <app-valor-editavel
                     class="ficha-resistencia__valor"
@@ -28,8 +30,12 @@
                         type="number"
                         inputmode="numeric"
                         [value]="resistencia.manual"
-                        [attr.aria-label]="'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]"
-                        (keydown.enter)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
+                        [attr.aria-label]="
+                            'Editar resistência ' + abreviacaoResistencia[resistencia.tipo]
+                        "
+                        (keydown.enter)="
+                            confirmarResistencia(resistencia.tipo, entradaResistencia.value)
+                        "
                         (keydown.escape)="cancelarResistencia()"
                         (blur)="confirmarResistencia(resistencia.tipo, entradaResistencia.value)"
                     />

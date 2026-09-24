@@ -4,22 +4,28 @@
     @if (privada()) {
         <app-chip severidade="aviso" tom="contorno">privada</app-chip>
     }
-    <span class="cartao-rolagem__data">{{ tempo() ?? (rolagem().createdDate | date: "dd/MM HH:mm") }}</span>
+    <span class="cartao-rolagem__data">{{
+        tempo() ?? (rolagem().createdDate | date: "dd/MM HH:mm")
+    }}</span>
 </div>
 @if (rolagem().formula) {
     <span class="cartao-rolagem__formula">{{ rolagem().formula }}</span>
 }
-<app-resultado-rolagem [resultado]="rolagem().resultado" [corFicha]="rolagem().corFicha" [compacto]="true" />
-    @if (ehAdmin()) {
-        <button
-            app-botao-icone
-            tamanho="mini"
-            type="button"
-            class="cartao-rolagem__excluir"
-            appTooltip="Excluir rolagem"
-            aria-label="Excluir rolagem"
-            (click)="excluir()"
-        >
-            <app-icone nome="excluir" />
-        </button>
-    }
+<app-resultado-rolagem
+    [resultado]="rolagem().resultado"
+    [corFicha]="rolagem().corFicha"
+    [compacto]="true"
+/>
+@if (ehAdmin()) {
+    <button
+        app-botao-icone
+        tamanho="mini"
+        type="button"
+        class="cartao-rolagem__excluir"
+        appTooltip="Excluir rolagem"
+        aria-label="Excluir rolagem"
+        (click)="excluir()"
+    >
+        <app-icone nome="excluir" />
+    </button>
+}

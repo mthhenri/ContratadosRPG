@@ -69,13 +69,11 @@
                                         aria-label="Designação"
                                         [disabled]="!ajustavel()"
                                         (keydown.enter)="
-                                            confirmarNome(entradaDesignacao.value);
-                                            cancelarEdicao()
+                                            confirmarNome(entradaDesignacao.value); cancelarEdicao()
                                         "
                                         (keydown.escape)="cancelarEdicao()"
                                         (blur)="
-                                            confirmarNome(entradaDesignacao.value);
-                                            cancelarEdicao()
+                                            confirmarNome(entradaDesignacao.value); cancelarEdicao()
                                         "
                                     />
                                 </app-valor-editavel>
