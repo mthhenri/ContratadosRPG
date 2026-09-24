@@ -141,6 +141,21 @@ export class CadernoFlutuante implements OnDestroy {
   protected readonly avisoImportacao = signal<{ texto: string; erro: boolean } | null>(null);
   private readonly termoBuscaAtual = signal('');
   protected readonly ehMobile = signal(this.verificarMobile());
+  /** Foco dentro do editor da página (texto ou barra de formatação). */
+  protected readonly editorFocado = signal(false);
+  /**
+   * Escrevendo no celular: abas de escopo, busca e filtros saem da frente — com o teclado aberto
+   * eles ocupavam ~290px e sobravam ~94px para o texto (medido em 360×470). Só com texto editável:
+   * o mestre lendo o caderno de um jogador continua com as abas à vista. Exigir a vista de conteúdo
+   * protege contra um `focusout` que não chega quando o editor some da tela (volta à lista).
+   */
+  protected readonly escrevendoNoCelular = computed(
+    () =>
+      this.ehMobile() &&
+      this.editorFocado() &&
+      !this.somenteLeitura() &&
+      this.estado().vistaMobile === 'CONTEUDO',
+  );
   protected readonly maximizada = signal(false);
   protected readonly semVagaInventario = computed(() => !this.ehMestre() || !this.temInventario());
   protected readonly jogadores = computed(() =>

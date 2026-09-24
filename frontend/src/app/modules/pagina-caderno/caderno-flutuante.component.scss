@@ -802,3 +802,10 @@ $largura-caderno-sobreposicao: 640px;
         }
     }
 }
+
+// Escrevendo no celular (`escrevendoNoCelular()`): escopo e busca saem da frente do texto. Fica no
+// fim do arquivo para vencer o `display` das regras-base de mesma especificidade.
+.caderno__escopo--escrevendo,
+.caderno__busca--escrevendo {
+    display: none;
+}

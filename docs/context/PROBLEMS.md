@@ -89,4 +89,15 @@
   fora do escopo escolhido pelo dono, registradas em "Fora de Escopo" da spec.
 - **Desde:** reportado pelo dono em 2026-08-11.
 
+### P-075 — Botão "voltar ao topo" do editor Markdown usa token de sombra inexistente · `ABERTO` · frontend
+
+- **Sintoma:** `.editor-markdown__voltar-topo` declara `box-shadow: 0 8px 20px var(--shadow)`, mas
+  `--shadow` não existe em `_tokens.scss` — a sombra não é aplicada.
+- **Causa:** token inventado na criação do botão; nunca houve `--shadow` no tema.
+- **Contorno:** o botão continua legível pelo fundo `--accent`.
+- **Correção:** trocar pela receita já usada no produto (`color-mix(in srgb, var(--bg) 62%,
+  transparent)`, a mesma da barra ancorada do editor) ou decidir um token de sombra no tema. O
+  botão também é um `<button>` nativo estilizado à mão — candidato a `app-botao-icone`.
+- **Desde:** achado em 2026-09-23 na revisão do editor Markdown (fora do escopo daquela task).
+
 

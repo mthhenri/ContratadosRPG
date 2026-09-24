@@ -115,8 +115,8 @@ describe('CadernoFlutuante', () => {
               obterMarkdown: () => markdown,
               definirMarkdown: (valor: string) => { markdown = valor; },
               definirSomenteLeitura: vi.fn(),
-              aplicarFormato: vi.fn(),
-              estaEmTabela: vi.fn(() => false),
+              aplicarAcao: vi.fn(),
+              definirMargemInferiorRolagem: vi.fn(),
             };
           },
         },
@@ -498,6 +498,36 @@ describe('CadernoFlutuante', () => {
     clicar('[data-pagina-id="11"]');
     expect(raiz().querySelector('.caderno__redimensionar')).toBeNull();
     expect(obter('[aria-label="Voltar para páginas"]')).toBeTruthy();
+  });
+
+  it('no mobile, escrevendo no texto tira escopo e busca da frente; ao sair, voltam', () => {
+    definirViewport(360, 800);
+    window.dispatchEvent(new Event('resize'));
+    fixture.detectChanges();
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[data-pagina-id="11"]');
+    const editor = obter('app-editor-markdown');
+    const escondidos = () => [
+      obter('.caderno__escopo').classList.contains('caderno__escopo--escrevendo'),
+      obter('.caderno__busca').classList.contains('caderno__busca--escrevendo'),
+    ];
+    expect(escondidos()).toEqual([false, false]);
+
+    editor.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    fixture.detectChanges();
+    expect(escondidos()).toEqual([true, true]);
+
+    editor.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: document.body }));
+    fixture.detectChanges();
+    expect(escondidos()).toEqual([false, false]);
+  });
+
+  it('no desktop, escrever no texto não esconde escopo nem busca', () => {
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[data-pagina-id="11"]');
+    obter('app-editor-markdown').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    fixture.detectChanges();
+    expect(obter('.caderno__escopo').classList).not.toContain('caderno__escopo--escrevendo');
   });
 
   it('no mobile, modo Esquadrão troca de lista para conteúdo ao abrir uma página existente (P-041)', () => {

@@ -38,6 +38,8 @@ import { Component, input } from '@angular/core';
  * de Sistema/Guia do Mestre).
  * `dados`, dois d20 sobrepostos (ui-37): "Rolar iniciativas" na condução de turno do mestre.
  * `info`, círculo com "i": mostra/oculta o texto da missão no cabeçalho da campanha do jogador.
+ * `desfazer`/`refazer`, setas em gancho ("arrow-back-up"/"arrow-forward-up" da Tabler Icons, MIT):
+ * histórico da barra do editor Markdown.
  */
 export type IconeNome =
   | 'agente'
@@ -128,7 +130,9 @@ export type IconeNome =
   | 'fantasma'
   | 'membros'
   | 'vincular'
-  | 'caderno';
+  | 'caderno'
+  | 'desfazer'
+  | 'refazer';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

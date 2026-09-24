@@ -37,11 +37,22 @@ import { BotaoIcone } from './botao-icone.component';
     >
       <span aria-hidden="true">+</span>
     </button>
+    <button
+      app-botao-icone
+      [ativo]="ativo()"
+      [attr.aria-pressed]="ativo()"
+      aria-label="Negrito"
+      [appTooltip]="'Negrito'"
+      type="button"
+    >
+      <strong aria-hidden="true">B</strong>
+    </button>
   `,
   imports: [BotaoIcone, RouterLink],
 })
 class Hospedeiro {
   readonly desabilitado = signal(false);
+  readonly ativo = signal(false);
 }
 
 describe('BotaoIcone', () => {
@@ -88,6 +99,22 @@ describe('BotaoIcone', () => {
     const primario = botoes[2];
 
     expect(primario.classList).toContain('botao-icone--primario');
+  });
+
+  it('destaca a alternância com `ativo` sem sobrescrever o `aria-pressed` do consumidor', () => {
+    const fixture = montar();
+    const botoes = (fixture.nativeElement as HTMLElement).querySelectorAll('button');
+    const alternancia = botoes[3];
+
+    expect(alternancia.getAttribute('aria-pressed')).toBe('false');
+    expect(alternancia.classList).not.toContain('botao-icone--ativo');
+
+    fixture.componentInstance.ativo.set(true);
+    fixture.detectChanges();
+
+    expect(alternancia.getAttribute('aria-pressed')).toBe('true');
+    expect(alternancia.classList).toContain('botao-icone--ativo');
+    expect(botoes[0].classList).not.toContain('botao-icone--ativo');
   });
 
   it('preserva o estado desabilitado nativo', () => {

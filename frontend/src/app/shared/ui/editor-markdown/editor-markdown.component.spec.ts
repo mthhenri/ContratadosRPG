@@ -3,19 +3,25 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { Tooltip } from '../../tooltip/tooltip.directive';
 import { EDITOR_MARKDOWN_FACTORY, EditorMarkdown } from './editor-markdown.component';
+import {
+  type AcaoMarkdown,
+  ESTADO_EDITOR_MARKDOWN_INICIAL,
+  type EstadoEditorMarkdown,
+} from './editor-markdown-formatos';
 
 describe('EditorMarkdown', () => {
   let fixture: ComponentFixture<EditorMarkdown>;
   let aoAlterar: (markdown: string) => void;
+  let aoAlterarEstado: (estado: EstadoEditorMarkdown) => void;
   let markdownAtual: string;
   const definirMarkdown = vi.fn((markdown: string) => {
     markdownAtual = markdown;
     queueMicrotask(() => aoAlterar(markdown));
   });
   const definirSomenteLeitura = vi.fn();
-  const aplicarFormato = vi.fn();
-  const estaEmTabela = vi.fn(() => false);
+  const aplicarAcao = vi.fn();
   const destruir = vi.fn();
 
   beforeEach(async () => {
@@ -29,17 +35,19 @@ describe('EditorMarkdown', () => {
           useValue: (opcoes: {
             valorInicial: string;
             aoAlterar: (markdown: string) => void;
+            aoAlterarEstado: (estado: EstadoEditorMarkdown) => void;
           }) => {
             markdownAtual = opcoes.valorInicial;
             aoAlterar = opcoes.aoAlterar;
+            aoAlterarEstado = opcoes.aoAlterarEstado;
             return {
               criar: () => Promise.resolve(),
               destruir,
               obterMarkdown: () => markdownAtual,
               definirMarkdown,
               definirSomenteLeitura,
-              aplicarFormato,
-              estaEmTabela,
+              aplicarAcao,
+              definirMargemInferiorRolagem: vi.fn(),
             };
           },
         },
@@ -95,26 +103,172 @@ describe('EditorMarkdown', () => {
     expect(destruir).toHaveBeenCalledOnce();
   });
 
+  function informarEstado(parcial: Partial<EstadoEditorMarkdown>): void {
+    aoAlterarEstado({ ...ESTADO_EDITOR_MARKDOWN_INICIAL, ...parcial });
+    fixture.detectChanges();
+  }
+
+  function botao(rotulo: string): HTMLButtonElement | null {
+    return fixture.nativeElement.querySelector(`[aria-label="${rotulo}"]`);
+  }
+
   it.each([
+    ['Desfazer', 'DESFAZER'],
+    ['Título principal', 'TITULO_1'],
+    ['Negrito', 'NEGRITO'],
+    ['Lista numerada', 'LISTA_NUMERADA'],
+    ['Citação', 'CITACAO'],
     ['Inserir tabela', 'TABELA'],
-    ['Adicionar linha', 'LINHA_ADICIONAR'],
-    ['Remover linha', 'LINHA_REMOVER'],
-    ['Adicionar coluna', 'COLUNA_ADICIONAR'],
-    ['Remover coluna', 'COLUNA_REMOVER'],
-  ])('aciona %s pelo formato %s', (rotulo, formato) => {
-    const botao = fixture.nativeElement.querySelector(`[aria-label="${rotulo}"]`) as HTMLButtonElement;
-    expect(botao).not.toBeNull();
-    botao.disabled = false;
-    botao.click();
-    expect(aplicarFormato).toHaveBeenCalledWith(formato);
+  ])('aciona %s pela ação %s', (rotulo, acao) => {
+    informarEstado({ podeDesfazer: true });
+    botao(rotulo)!.click();
+    expect(aplicarAcao).toHaveBeenCalledWith(acao);
   });
 
-  it('desabilita ações estruturais fora de tabela', () => {
-    for (const rotulo of ['Adicionar linha', 'Remover linha', 'Adicionar coluna', 'Remover coluna']) {
-      const botao = fixture.nativeElement.querySelector(`[aria-label="${rotulo}"]`) as HTMLButtonElement;
-      expect(botao.disabled).toBe(true);
-      expect(botao.getAttribute('aria-disabled')).toBe('true');
+  it('usa os primitivos de botão na barra', () => {
+    const botoes = fixture.nativeElement.querySelectorAll('.editor-markdown__barra button');
+    expect(botoes.length).toBeGreaterThan(0);
+    for (const elemento of botoes) {
+      expect((elemento as HTMLElement).classList).toContain('botao-icone');
     }
+  });
+
+  it('deixa Desfazer/Refazer fora da faixa que rola de lado', () => {
+    const historico = fixture.nativeElement.querySelector('.editor-markdown__historico') as HTMLElement;
+    const faixa = fixture.nativeElement.querySelector('.editor-markdown__faixa--formatacao') as HTMLElement;
+
+    expect(historico.contains(botao('Desfazer'))).toBe(true);
+    expect(historico.contains(botao('Refazer'))).toBe(true);
+    expect(faixa.contains(botao('Desfazer'))).toBe(false);
+  });
+
+  it('botão "Código" explica como fazer um bloco (o botão só marca código em linha)', () => {
+    const dica = fixture.debugElement
+      .query((elemento) => elemento.nativeElement === botao('Código'))
+      .injector.get(Tooltip)
+      .appTooltip();
+    expect(dica).toContain('```');
+  });
+
+  it('não oferece mais o botão avulso de texto normal (os formatos alternam)', () => {
+    expect(botao('Texto normal')).toBeNull();
+  });
+
+  it('mostra a faixa de tabela só com o cursor em tabela, sem depender de clique', () => {
+    expect(fixture.nativeElement.querySelector('[aria-label="Ações da tabela"]')).toBeNull();
+
+    informarEstado({ emTabela: true });
+    expect(fixture.nativeElement.querySelector('[aria-label="Ações da tabela"]')).not.toBeNull();
+
+    informarEstado({ emTabela: false });
+    expect(fixture.nativeElement.querySelector('[aria-label="Ações da tabela"]')).toBeNull();
+  });
+
+  it.each([
+    ['Inserir linha acima', 'LINHA_ACIMA'],
+    ['Inserir linha abaixo', 'LINHA_ABAIXO'],
+    ['Remover a linha atual', 'LINHA_REMOVER'],
+    ['Inserir coluna à esquerda', 'COLUNA_ESQUERDA'],
+    ['Inserir coluna à direita', 'COLUNA_DIREITA'],
+    ['Remover a coluna atual', 'COLUNA_REMOVER'],
+    ['Continuar escrevendo abaixo da tabela', 'TABELA_SAIR'],
+    ['Apagar a tabela inteira', 'TABELA_REMOVER'],
+  ])('a faixa de tabela aciona "%s" (%s) com botão rotulado', (rotulo, acao) => {
+    informarEstado({ emTabela: true });
+    const alvo = botao(rotulo)!;
+    expect(alvo.classList).toContain('botao');
+    expect(alvo.textContent?.trim().length).toBeGreaterThan(0);
+    alvo.click();
+    expect(aplicarAcao).toHaveBeenCalledWith(acao as AcaoMarkdown);
+  });
+
+  it('ordena a faixa de tabela pelo uso, com rótulos que se explicam sem título de grupo', () => {
+    informarEstado({ emTabela: true });
+    const rotulos = [
+      ...fixture.nativeElement.querySelectorAll('.editor-markdown__faixa--tabela button'),
+    ].map((elemento) => (elemento as HTMLElement).textContent?.trim());
+
+    expect(rotulos).toEqual([
+      'Texto abaixo',
+      '+ Linha abaixo',
+      '+ Linha acima',
+      'Remover linha',
+      '+ Coluna à direita',
+      '+ Coluna à esquerda',
+      'Remover coluna',
+      'Apagar tabela',
+    ]);
+    expect(botao('Inserir linha acima')!.disabled).toBe(false);
+  });
+
+  it('não oferece inserir tabela com o cursor já dentro de uma', () => {
+    expect(botao('Inserir tabela')!.disabled).toBe(false);
+    informarEstado({ emTabela: true });
+    expect(botao('Inserir tabela')!.disabled).toBe(true);
+  });
+
+  it('dentro de tabela troca entre a faixa de tabela e a de texto (uma por vez no celular)', () => {
+    const barra = () => fixture.nativeElement.querySelector('.editor-markdown__barra') as HTMLElement;
+    expect(botao('Mostrar formatação de texto')).toBeNull();
+
+    informarEstado({ emTabela: true });
+    expect(barra().classList).toContain('editor-markdown__barra--em-tabela');
+    expect(barra().classList).not.toContain('editor-markdown__barra--mostrando-texto');
+
+    botao('Mostrar formatação de texto')!.click();
+    fixture.detectChanges();
+    expect(barra().classList).toContain('editor-markdown__barra--mostrando-texto');
+    expect(botao('Mostrar ações da tabela')!.textContent?.trim()).toBe('Tabela');
+    expect(barra().textContent).not.toMatch(/\bTexto\b(?! abaixo)/);
+
+    // Sair da tabela e entrar em outra volta a mostrar as ações de tabela.
+    informarEstado({ emTabela: false });
+    informarEstado({ emTabela: true });
+    expect(barra().classList).not.toContain('editor-markdown__barra--mostrando-texto');
+  });
+
+  it('reflete os formatos ativos do cursor como alternância pressionada', () => {
+    expect(botao('Negrito')!.getAttribute('aria-pressed')).toBe('false');
+
+    informarEstado({ ativos: new Set<AcaoMarkdown>(['NEGRITO', 'TITULO_1']) });
+
+    expect(botao('Negrito')!.getAttribute('aria-pressed')).toBe('true');
+    expect(botao('Título principal')!.getAttribute('aria-pressed')).toBe('true');
+    expect(botao('Itálico')!.getAttribute('aria-pressed')).toBe('false');
+    expect(botao('Inserir tabela')!.hasAttribute('aria-pressed')).toBe(false);
+  });
+
+  it('desabilita desfazer/refazer quando o histórico não tem para onde ir', () => {
+    expect(botao('Desfazer')!.disabled).toBe(true);
+    expect(botao('Refazer')!.disabled).toBe(true);
+
+    informarEstado({ podeDesfazer: true });
+
+    expect(botao('Desfazer')!.disabled).toBe(false);
+    expect(botao('Refazer')!.disabled).toBe(true);
+  });
+
+  it('avisa por focadoChange quando o foco entra e sai do editor', () => {
+    const eventos: boolean[] = [];
+    fixture.componentInstance.focadoChange.subscribe((focado) => eventos.push(focado));
+    const superficie = fixture.nativeElement.querySelector('.editor-markdown__superficie') as HTMLElement;
+
+    superficie.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    superficie.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    superficie.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: document.body }));
+
+    expect(eventos).toEqual([true, false]);
+  });
+
+  it('marca o host como focado enquanto o foco está dentro do editor', () => {
+    const superficie = fixture.nativeElement.querySelector('.editor-markdown__superficie') as HTMLElement;
+    superficie.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.classList).toContain('editor-markdown--focado');
+
+    superficie.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: document.body }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.classList).not.toContain('editor-markdown--focado');
   });
 
   it('explica uma ação de formatação ao passar o ponteiro sobre o botão', () => {
@@ -182,8 +336,8 @@ describe('EditorMarkdown como ControlValueAccessor', () => {
               obterMarkdown: () => markdownAtual,
               definirMarkdown,
               definirSomenteLeitura: vi.fn(),
-              aplicarFormato: vi.fn(),
-              estaEmTabela: () => false,
+              aplicarAcao: vi.fn(),
+              definirMargemInferiorRolagem: vi.fn(),
             };
           },
         },

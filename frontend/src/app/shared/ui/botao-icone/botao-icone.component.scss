@@ -23,10 +23,16 @@
         border-color 0.15s ease,
         background-color 0.15s ease;
 
-    &:hover:not(:disabled) {
-        color: var(--accent);
-        background: var(--surface-2);
-        border-color: var(--accent-border);
+    // Só com ponteiro que paira (mouse, caneta com hover). No toque o navegador mantém `:hover`
+    // depois do toque até o próximo toque em outro lugar — e este hover (ícone/borda em
+    // `--accent`) é quase o mesmo desenho do `--ativo`: um formato recém-desligado no editor
+    // Markdown continuava parecendo ligado (medido ao vivo, 360×800).
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            color: var(--accent);
+            background: var(--surface-2);
+            border-color: var(--accent-border);
+        }
     }
 
     &:disabled {
@@ -61,9 +67,11 @@
     font-size: 12px;
     border-color: transparent;
 
-    &:hover:not(:disabled) {
-        background: transparent;
-        border-color: transparent;
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            background: transparent;
+            border-color: transparent;
+        }
     }
 }
 
@@ -79,8 +87,26 @@
 :host(.botao-icone--preenchido) {
     background: var(--surface-2);
 
-    &:hover:not(:disabled) {
-        background: var(--surface);
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            background: var(--surface);
+        }
+    }
+}
+
+// Alternância ligada (`[ativo]`): mesmo destaque do item ativo de `app-segmentado`. Vem antes da
+// severidade — nenhum consumidor combina as duas, e a severidade explícita deve vencer se um dia
+// combinar.
+:host(.botao-icone--ativo) {
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-color: var(--accent-border);
+
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
     }
 }
 

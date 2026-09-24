@@ -59,10 +59,19 @@ export class BotaoIcone {
    */
   readonly preenchido = input(false);
 
+  /**
+   * Alternância ligada (barra do editor Markdown): aplica o destaque de item ativo — mesma receita
+   * de `app-segmentado` (`--accent-dim`/`--accent-border`). Só visual: `aria-pressed` continua no
+   * consumidor (`[attr.aria-pressed]`), como os toggles existentes (mostrar senha, "i" da missão)
+   * já fazem — um binding aqui apagaria o deles.
+   */
+  readonly ativo = input(false);
+
   protected readonly classes = computed(() => {
     const partes = ['botao-icone', `botao-icone--${this.tamanho()}`];
     if (this.redondo()) partes.push('botao-icone--redondo');
     if (this.preenchido()) partes.push('botao-icone--preenchido');
+    if (this.ativo()) partes.push('botao-icone--ativo');
     const variante = this.variante();
     if (variante) partes.push(`botao-icone--${variante}`);
     return partes.join(' ');

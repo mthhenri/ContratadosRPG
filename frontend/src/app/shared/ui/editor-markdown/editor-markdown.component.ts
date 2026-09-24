@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  InjectionToken,
   OnDestroy,
   computed,
   effect,
@@ -13,184 +12,128 @@ import {
   output,
   signal,
   viewChild,
+  viewChildren,
 } from '@angular/core';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import {
-  Editor,
-  defaultValueCtx,
-  editorViewCtx,
-  rootCtx,
-} from '@milkdown/kit/core';
-import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
-import { collab, collabServiceCtx } from '@milkdown/plugin-collab';
-import {
-  addColAfterCommand,
-  addRowAfterCommand,
-  deleteSelectedCellsCommand,
-  gfm,
-  insertTableCommand,
-  selectColCommand,
-  selectRowCommand,
-} from '@milkdown/kit/preset/gfm';
-import { isInTable, selectionCell, TableMap } from '@milkdown/kit/prose/tables';
-import {
-  commonmark,
-  createCodeBlockCommand,
-  toggleEmphasisCommand,
-  toggleInlineCodeCommand,
-  toggleStrongCommand,
-  turnIntoTextCommand,
-  wrapInBlockquoteCommand,
-  wrapInBulletListCommand,
-  wrapInHeadingCommand,
-  wrapInOrderedListCommand,
-} from '@milkdown/kit/preset/commonmark';
-import { callCommand, getMarkdown, replaceAll } from '@milkdown/kit/utils';
 import type { Awareness } from 'y-protocols/awareness';
 import type { Doc } from 'yjs';
 
-import { Icone } from '../../icone/icone.component';
+import { Icone, type IconeNome } from '../../icone/icone.component';
 import { Tooltip } from '../../tooltip/tooltip.directive';
+import { Botao } from '../botao/botao.component';
+import { BotaoIcone } from '../botao-icone/botao-icone.component';
+import {
+  EDITOR_MARKDOWN_FACTORY,
+  type EditorMarkdownInstancia,
+} from './editor-markdown-fabrica';
+import {
+  type AcaoMarkdown,
+  ESTADO_EDITOR_MARKDOWN_INICIAL,
+  type EstadoEditorMarkdown,
+} from './editor-markdown-formatos';
 
-type FormatoMarkdown =
-  | 'TEXTO'
-  | 'TITULO_1'
-  | 'TITULO_2'
-  | 'NEGRITO'
-  | 'ITALICO'
-  | 'LISTA'
-  | 'LISTA_NUMERADA'
-  | 'CITACAO'
-  | 'CODIGO'
-  | 'TABELA'
-  | 'LINHA_ADICIONAR'
-  | 'LINHA_REMOVER'
-  | 'COLUNA_ADICIONAR'
-  | 'COLUNA_REMOVER';
+export { EDITOR_MARKDOWN_FACTORY } from './editor-markdown-fabrica';
 
-const LIMITE_MARKDOWN = 100_000;
-
-interface EditorMarkdownOpcoes {
-  readonly raiz: HTMLElement;
-  readonly valorInicial: string;
-  readonly documentoColaborativo: Doc | null;
-  /** Presença Yjs (cursor/seleção remotos) do modo colaborativo; ausente no caderno privado. */
-  readonly awareness: Awareness | null;
-  readonly aoAlterar: (markdown: string) => void;
+interface BotaoBarraMarkdown {
+  readonly acao: AcaoMarkdown;
+  readonly rotulo: string;
+  readonly dica: string;
+  readonly icone?: IconeNome;
+  /** Glifo textual no lugar do ícone (H1, B, I…); `estilo` reproduz o efeito do próprio formato. */
+  readonly glifo?: string;
+  readonly estilo?: 'negrito' | 'italico';
+  /** Alternância: mostra `aria-pressed`/destaque quando o formato está ativo no cursor. */
+  readonly alterna?: boolean;
 }
 
-interface EditorMarkdownInstancia {
-  criar(): Promise<void>;
-  destruir(): void;
-  obterMarkdown(): string;
-  definirMarkdown(markdown: string): void;
-  definirSomenteLeitura(somenteLeitura: boolean): void;
-  aplicarFormato(formato: FormatoMarkdown): void;
-  estaEmTabela(): boolean;
+interface GrupoTabelaMarkdown {
+  readonly acoes: readonly {
+    readonly acao: AcaoMarkdown;
+    readonly rotulo: string;
+    readonly dica: string;
+    readonly perigo?: boolean;
+  }[];
 }
 
-type EditorMarkdownFactory = (opcoes: EditorMarkdownOpcoes) => EditorMarkdownInstancia;
+/** Faixa visível dentro de tabela no celular — só cabe uma linha acima do teclado. */
+type FaixaEmTabela = 'TABELA' | 'TEXTO';
 
-export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>(
-  'EDITOR_MARKDOWN_FACTORY',
-  {
-    providedIn: 'root',
-    factory: () => ({ raiz, valorInicial, documentoColaborativo, awareness, aoAlterar }) => {
-      let editor: Editor | null = null;
-      const aplicarFormato = (formato: FormatoMarkdown): void => {
-        if (!editor) return;
-        const formatos = {
-          TEXTO: () => editor!.action(callCommand(turnIntoTextCommand.key)),
-          TITULO_1: () => editor!.action(callCommand(wrapInHeadingCommand.key, 1)),
-          TITULO_2: () => editor!.action(callCommand(wrapInHeadingCommand.key, 2)),
-          NEGRITO: () => editor!.action(callCommand(toggleStrongCommand.key)),
-          ITALICO: () => editor!.action(callCommand(toggleEmphasisCommand.key)),
-          LISTA: () => editor!.action(callCommand(wrapInBulletListCommand.key)),
-          LISTA_NUMERADA: () => editor!.action(callCommand(wrapInOrderedListCommand.key)),
-          CITACAO: () => editor!.action(callCommand(wrapInBlockquoteCommand.key)),
-          CODIGO: () => editor!.action(callCommand(toggleInlineCodeCommand.key)) ||
-            editor!.action(callCommand(createCodeBlockCommand.key)),
-          TABELA: () => editor!.action(callCommand(insertTableCommand.key, { row: 3, col: 3 })),
-          LINHA_ADICIONAR: () => editor!.action(callCommand(addRowAfterCommand.key)),
-          COLUNA_ADICIONAR: () => editor!.action(callCommand(addColAfterCommand.key)),
-          LINHA_REMOVER: () => selecionarEstrutura('linha'),
-          COLUNA_REMOVER: () => selecionarEstrutura('coluna'),
-        } satisfies Record<FormatoMarkdown, () => unknown>;
-        formatos[formato]();
-        editor.action((contexto) => contexto.get(editorViewCtx).focus());
-      };
-      const selecionarEstrutura = (estrutura: 'linha' | 'coluna'): unknown => {
-        if (!editor) return false;
-        const indice = editor.action((contexto) => {
-          const estado = contexto.get(editorViewCtx).state;
-          if (!isInTable(estado)) return null;
-          const celula = selectionCell(estado);
-          const tabela = celula.node(-1);
-          const mapa = TableMap.get(tabela);
-          const retangulo = mapa.findCell(celula.pos - celula.start(-1));
-          return estrutura === 'linha' ? retangulo.top : retangulo.left;
-        });
-        if (indice === null) return false;
-        const comando = estrutura === 'linha' ? selectRowCommand : selectColCommand;
-        editor.action(callCommand(comando.key, { index: indice }));
-        return editor.action(callCommand(deleteSelectedCellsCommand.key));
-      };
-      return {
-        criar: async () => {
-          editor = await Editor.make()
-            .config((contexto) => {
-              contexto.set(rootCtx, raiz);
-              contexto.set(defaultValueCtx, valorInicial);
-              contexto.get(listenerCtx).markdownUpdated((_contexto, markdown, anterior) => {
-                if (markdown === anterior) return;
-                if (markdown.length > LIMITE_MARKDOWN) {
-                  editor?.action(replaceAll(markdown.slice(0, LIMITE_MARKDOWN)));
-                  return;
-                }
-                aoAlterar(markdown);
-              });
-            })
-            .use(commonmark)
-            .use(gfm)
-            .use(listener)
-            .use(collab)
-            .create();
-          // `collabServiceCtx` só é registrado pelo pipeline depois que `.use(collab)` roda —
-          // chamar `bindDoc`/`connect` dentro do `.config()` acima (antes do pipeline existir)
-          // lança `MilkdownError: Context not bind`. Precisa ser uma ação pós-`create()`.
-          if (documentoColaborativo) {
-            editor.action((contexto) => {
-              const servico = contexto
-                .get(collabServiceCtx)
-                .bindDoc(documentoColaborativo)
-                .bindXmlFragment(documentoColaborativo.getXmlFragment('prosemirror'));
-              // `setAwareness` precisa vir antes de `connect()` — só aí o `#createPlugins()`
-              // interno decide incluir o `yCursorPlugin` (cursor/seleção remotos, P-039).
-              if (awareness) servico.setAwareness(awareness);
-              servico.connect();
-            });
-          }
-        },
-        destruir: () => { editor?.destroy(); },
-        obterMarkdown: () => editor?.action(getMarkdown()) ?? valorInicial,
-        definirMarkdown: (markdown) => { editor?.action(replaceAll(markdown)); },
-        definirSomenteLeitura: (somenteLeitura) => {
-          editor?.action((contexto) =>
-            contexto.get(editorViewCtx).setProps({ editable: () => !somenteLeitura }),
-          );
-        },
-        aplicarFormato,
-        estaEmTabela: () =>
-          editor?.action((contexto) => isInTable(contexto.get(editorViewCtx).state)) ?? false,
-      };
+/** Fora da rolagem lateral: depois de um erro, desfazer tem de estar à vista, sem procurar. */
+const BOTOES_HISTORICO: readonly BotaoBarraMarkdown[] = [
+  { acao: 'DESFAZER', rotulo: 'Desfazer', dica: 'Desfazer (Ctrl+Z)', icone: 'desfazer' },
+  { acao: 'REFAZER', rotulo: 'Refazer', dica: 'Refazer (Ctrl+Y)', icone: 'refazer' },
+];
+
+const GRUPOS_BARRA: readonly (readonly BotaoBarraMarkdown[])[] = [
+  [
+    { acao: 'TITULO_1', rotulo: 'Título principal', dica: 'Título principal (H1)', glifo: 'H1', alterna: true },
+    { acao: 'TITULO_2', rotulo: 'Subtítulo', dica: 'Subtítulo (H2)', glifo: 'H2', alterna: true },
+  ],
+  [
+    { acao: 'NEGRITO', rotulo: 'Negrito', dica: 'Negrito (Ctrl+B)', glifo: 'B', estilo: 'negrito', alterna: true },
+    { acao: 'ITALICO', rotulo: 'Itálico', dica: 'Itálico (Ctrl+I)', glifo: 'I', estilo: 'italico', alterna: true },
+    {
+      acao: 'CODIGO',
+      rotulo: 'Código',
+      dica: 'Código em linha. Para um bloco de código, digite ``` e espaço',
+      glifo: '</>',
+      alterna: true,
     },
+  ],
+  [
+    { acao: 'LISTA', rotulo: 'Lista', dica: 'Lista com marcadores', glifo: '• —', alterna: true },
+    { acao: 'LISTA_NUMERADA', rotulo: 'Lista numerada', dica: 'Lista numerada', glifo: '1.', alterna: true },
+    {
+      acao: 'CITACAO',
+      rotulo: 'Citação',
+      dica: 'Citação: destaca um trecho como fala ou referência',
+      glifo: '“',
+      alterna: true,
+    },
+  ],
+  [{ acao: 'TABELA', rotulo: 'Inserir tabela', dica: 'Inserir tabela 3 × 3', icone: 'tabela' }],
+];
+
+// Ordem pelo uso no celular, onde a faixa rola de lado: sair da tabela primeiro (sem setas no
+// teclado virtual é o único jeito de continuar escrevendo abaixo dela), apagar por último. Cada
+// rótulo se explica sozinho ("Remover linha", não "Remover" sob um título "Linha"): no celular o
+// título de grupo rolava para fora da tela e o botão ficava ambíguo.
+const GRUPOS_TABELA: readonly GrupoTabelaMarkdown[] = [
+  {
+    acoes: [
+      { acao: 'TABELA_SAIR', rotulo: 'Texto abaixo', dica: 'Continuar escrevendo abaixo da tabela' },
+    ],
   },
-);
+  {
+    acoes: [
+      { acao: 'LINHA_ABAIXO', rotulo: '+ Linha abaixo', dica: 'Inserir linha abaixo' },
+      { acao: 'LINHA_ACIMA', rotulo: '+ Linha acima', dica: 'Inserir linha acima' },
+      { acao: 'LINHA_REMOVER', rotulo: 'Remover linha', dica: 'Remover a linha atual', perigo: true },
+    ],
+  },
+  {
+    acoes: [
+      { acao: 'COLUNA_DIREITA', rotulo: '+ Coluna à direita', dica: 'Inserir coluna à direita' },
+      { acao: 'COLUNA_ESQUERDA', rotulo: '+ Coluna à esquerda', dica: 'Inserir coluna à esquerda' },
+      {
+        acao: 'COLUNA_REMOVER',
+        rotulo: 'Remover coluna',
+        dica: 'Remover a coluna atual',
+        perigo: true,
+      },
+    ],
+  },
+  {
+    acoes: [
+      { acao: 'TABELA_REMOVER', rotulo: 'Apagar tabela', dica: 'Apagar a tabela inteira', perigo: true },
+    ],
+  },
+];
 
 @Component({
   selector: 'app-editor-markdown',
   standalone: true,
-  imports: [Icone, Tooltip],
+  imports: [Botao, BotaoIcone, Icone, Tooltip],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -198,45 +141,18 @@ export const EDITOR_MARKDOWN_FACTORY = new InjectionToken<EditorMarkdownFactory>
       multi: true,
     },
   ],
-  template: `
-    @if (!somenteLeituraEfetiva()) {
-      <div class="editor-markdown__barra" role="toolbar" aria-label="Formatação Markdown">
-        <button type="button" aria-label="Texto normal" [appTooltip]="'Texto normal'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TEXTO')">¶</button>
-        <button type="button" aria-label="Título principal" [appTooltip]="'Título principal (H1)'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TITULO_1')">H1</button>
-        <button type="button" aria-label="Subtítulo" [appTooltip]="'Subtítulo (H2)'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TITULO_2')">H2</button>
-        <span aria-hidden="true"></span>
-        <button type="button" aria-label="Negrito" [appTooltip]="'Negrito'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('NEGRITO')"><strong>B</strong></button>
-        <button type="button" aria-label="Itálico" [appTooltip]="'Itálico'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('ITALICO')"><em>I</em></button>
-        <button type="button" aria-label="Código" [appTooltip]="'Código em linha ou bloco de código'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('CODIGO')">&lt;/&gt;</button>
-        <span aria-hidden="true"></span>
-        <button type="button" aria-label="Lista" [appTooltip]="'Lista não numerada'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LISTA')">• —</button>
-        <button type="button" aria-label="Lista numerada" [appTooltip]="'Lista numerada'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LISTA_NUMERADA')">1.</button>
-        <button type="button" aria-label="Citação" [appTooltip]="'Citação: destaca um trecho como fala ou referência'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('CITACAO')">“</button>
-        <span aria-hidden="true"></span>
-        <button type="button" aria-label="Inserir tabela" [appTooltip]="'Inserir tabela 3 × 3'" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('TABELA')"><app-icone nome="tabela" /></button>
-        <button type="button" aria-label="Adicionar linha" [appTooltip]="'Inserir linha abaixo'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LINHA_ADICIONAR')"><app-icone nome="linha-adicionar" /></button>
-        <button type="button" aria-label="Remover linha" [appTooltip]="'Remover linha atual'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('LINHA_REMOVER')"><app-icone nome="linha-remover" /></button>
-        <button type="button" aria-label="Adicionar coluna" [appTooltip]="'Inserir coluna à direita'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('COLUNA_ADICIONAR')"><app-icone nome="coluna-adicionar" /></button>
-        <button type="button" aria-label="Remover coluna" [appTooltip]="'Remover coluna atual'" [disabled]="!emTabela()" [attr.aria-disabled]="!emTabela()" (mousedown)="$event.preventDefault()" (click)="aplicarFormato('COLUNA_REMOVER')"><app-icone nome="coluna-remover" /></button>
-      </div>
-    }
-    <div #raiz class="editor-markdown__superficie"></div>
-    @if (mostrarVoltarAoTopo()) {
-      <button class="editor-markdown__voltar-topo" type="button" aria-label="Voltar ao topo" [appTooltip]="'Voltar ao topo'" (click)="voltarAoTopo()">
-        <app-icone nome="teto" />
-      </button>
-    }
-  `,
+  templateUrl: './editor-markdown.component.html',
   styleUrl: './editor-markdown.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'editor-markdown',
     '[class.editor-markdown--somente-leitura]': 'somenteLeituraEfetiva()',
     '[class.editor-markdown--compacto]': 'compacto()',
+    '[class.editor-markdown--focado]': 'focado()',
     '[attr.aria-label]': 'rotuloAria()',
-    '(click)': 'alterarEstadoTabela()',
-    '(keyup)': 'alterarEstadoTabela()',
     '(scroll)': 'alterarPosicaoRolagem()',
+    '(focusin)': 'aoFocar()',
+    '(focusout)': 'aoDesfocar($event)',
   },
 })
 export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAccessor {
@@ -264,15 +180,34 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
       (this.somenteLeituraEfetiva() ? 'Conteúdo Markdown somente leitura' : 'Editor Markdown'),
   );
   readonly valorChange = output<string>();
-  protected readonly emTabela = signal(false);
+  /**
+   * Foco entra/sai do editor (texto ou barra). O caderno usa para tirar abas/busca da frente
+   * enquanto se escreve no celular.
+   */
+  readonly focadoChange = output<boolean>();
+  protected readonly botoesHistorico = BOTOES_HISTORICO;
+  protected readonly gruposBarra = GRUPOS_BARRA;
+  protected readonly gruposTabela = GRUPOS_TABELA;
+  protected readonly estado = signal<EstadoEditorMarkdown>(ESTADO_EDITOR_MARKDOWN_INICIAL);
   protected readonly mostrarVoltarAoTopo = signal(false);
+  /** Qual faixa aparece dentro de tabela no celular; volta a `TABELA` ao entrar numa tabela. */
+  protected readonly faixaEmTabela = signal<FaixaEmTabela>('TABELA');
+  /** Foco dentro do editor — no mobile é o que prende a barra acima do teclado virtual. */
+  protected readonly focado = signal(false);
 
   private readonly criarEditor = inject(EDITOR_MARKDOWN_FACTORY);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly raiz = viewChild.required<ElementRef<HTMLElement>>('raiz');
+  private readonly barra = viewChild<ElementRef<HTMLElement>>('barra');
+  private readonly faixas = viewChildren<ElementRef<HTMLElement>>('faixa');
   private instancia: EditorMarkdownInstancia | null = null;
   private sincronizando = false;
   private destruido = false;
+  /** Distância atual entre o fim do containing block da barra ancorada e o fim da área visível. */
+  private deslocamentoTeclado = 0;
+  private ancorada = false;
+  private alturaAncorada = 0;
+  private readonly aoMudarViewport = (): void => this.atualizarAncoragem();
 
   /**
    * `writeValue`/`registerOnChange` (Reactive Forms — `formControlName="efeito"` em Ataque/
@@ -317,6 +252,15 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
       const somenteLeitura = this.somenteLeituraEfetiva();
       this.instancia?.definirSomenteLeitura(somenteLeitura);
     });
+    // A faixa de tabela aparecer/sumir muda a altura da barra ancorada; a largura das faixas
+    // muda o indicador de "tem mais botões à direita".
+    effect((aoLimpar) => {
+      const barra = this.barra()?.nativeElement;
+      if (!barra || typeof ResizeObserver === 'undefined') return;
+      const observador = new ResizeObserver(() => this.atualizarAncoragem());
+      observador.observe(barra);
+      aoLimpar(() => observador.disconnect());
+    });
   }
 
   async ngAfterViewInit(): Promise<void> {
@@ -335,6 +279,10 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
           this.onTouched?.();
         }
         this.valorChange.emit(markdown);
+      },
+      aoAlterarEstado: (estado) => {
+        if (!estado.emTabela) this.faixaEmTabela.set('TABELA');
+        this.estado.set(estado);
       },
     });
     this.instancia = instancia;
@@ -355,6 +303,7 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
 
   ngOnDestroy(): void {
     this.destruido = true;
+    this.pararDeObservarViewport();
     this.instancia?.destruir();
     this.instancia = null;
   }
@@ -376,12 +325,25 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
     this.desabilitadoCva.set(desabilitado);
   }
 
-  protected aplicarFormato(formato: FormatoMarkdown): void {
-    if (!this.somenteLeituraEfetiva()) this.instancia?.aplicarFormato(formato);
+  protected aplicarAcao(acao: AcaoMarkdown): void {
+    if (!this.somenteLeituraEfetiva()) this.instancia?.aplicarAcao(acao);
   }
 
-  protected alterarEstadoTabela(): void {
-    this.emTabela.set(this.instancia?.estaEmTabela() ?? false);
+  protected estaAtivo(acao: AcaoMarkdown): boolean {
+    return this.estado().ativos.has(acao);
+  }
+
+  protected estaDesabilitado(acao: AcaoMarkdown): boolean {
+    const estado = this.estado();
+    if (acao === 'DESFAZER') return !estado.podeDesfazer;
+    if (acao === 'REFAZER') return !estado.podeRefazer;
+    // O schema não aceita tabela dentro de célula.
+    if (acao === 'TABELA') return estado.emTabela;
+    return false;
+  }
+
+  protected alternarFaixaEmTabela(): void {
+    this.faixaEmTabela.update((faixa) => (faixa === 'TABELA' ? 'TEXTO' : 'TABELA'));
   }
 
   protected alterarPosicaoRolagem(): void {
@@ -390,5 +352,79 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
 
   protected voltarAoTopo(): void {
     this.host.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  protected aoFocar(): void {
+    if (this.focado()) return;
+    this.focado.set(true);
+    this.focadoChange.emit(true);
+    window.visualViewport?.addEventListener('resize', this.aoMudarViewport);
+    window.visualViewport?.addEventListener('scroll', this.aoMudarViewport);
+    window.addEventListener('resize', this.aoMudarViewport);
+    // A classe `--focado` (que ancora a barra no mobile) só chega ao DOM na próxima renderização.
+    requestAnimationFrame(() => this.atualizarAncoragem());
+  }
+
+  protected aoDesfocar(evento: FocusEvent): void {
+    const destino = evento.relatedTarget as Node | null;
+    if (destino && this.host.nativeElement.contains(destino)) return;
+    this.focado.set(false);
+    this.focadoChange.emit(false);
+    this.pararDeObservarViewport();
+    requestAnimationFrame(() => this.atualizarAncoragem());
+  }
+
+  /**
+   * No mobile, com foco, a barra é `position: fixed; bottom: var(--editor-markdown-teclado)`.
+   * O `fixed` é relativo ao containing block — que pode não ser a janela: o painel flutuante do
+   * caderno tem `container-type`, que o torna containing block de descendentes `fixed`. Por isso
+   * o deslocamento é medido (fim atual da barra + deslocamento atual = fim do containing block)
+   * contra o fim da área visível (`visualViewport`, que encolhe com o teclado virtual), em vez
+   * de supor `window.innerHeight`.
+   */
+  protected atualizarAncoragem(): void {
+    const barra = this.barra()?.nativeElement;
+    const estiloHost = (this.host.nativeElement as HTMLElement).style;
+    const ancorada = !!barra && this.focado() && getComputedStyle(barra).position === 'fixed';
+    if (!ancorada) {
+      if (this.ancorada) {
+        this.ancorada = false;
+        this.deslocamentoTeclado = 0;
+        this.alturaAncorada = 0;
+        estiloHost.removeProperty('--editor-markdown-teclado');
+        estiloHost.removeProperty('--editor-markdown-altura-barra');
+        this.instancia?.definirMargemInferiorRolagem(0);
+      }
+      this.atualizarIndicadoresRolagem();
+      return;
+    }
+    this.ancorada = true;
+    const viewport = window.visualViewport;
+    const fimVisivel = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+    const fimContainingBlock = barra.getBoundingClientRect().bottom + this.deslocamentoTeclado;
+    this.deslocamentoTeclado = Math.max(0, Math.round(fimContainingBlock - fimVisivel));
+    estiloHost.setProperty('--editor-markdown-teclado', `${this.deslocamentoTeclado}px`);
+    const altura = barra.offsetHeight;
+    if (altura !== this.alturaAncorada) {
+      this.alturaAncorada = altura;
+      estiloHost.setProperty('--editor-markdown-altura-barra', `${altura}px`);
+      this.instancia?.definirMargemInferiorRolagem(altura);
+    }
+    this.atualizarIndicadoresRolagem();
+  }
+
+  /** Degradê na borda da faixa que ainda tem botões fora da vista (rolagem lateral no mobile). */
+  protected atualizarIndicadoresRolagem(): void {
+    for (const { nativeElement: faixa } of this.faixas()) {
+      const temMaisNoFim = faixa.scrollLeft + faixa.clientWidth < faixa.scrollWidth - 1;
+      faixa.classList.toggle('editor-markdown__faixa--mais-inicio', faixa.scrollLeft > 1);
+      faixa.classList.toggle('editor-markdown__faixa--mais-fim', temMaisNoFim);
+    }
+  }
+
+  private pararDeObservarViewport(): void {
+    window.visualViewport?.removeEventListener('resize', this.aoMudarViewport);
+    window.visualViewport?.removeEventListener('scroll', this.aoMudarViewport);
+    window.removeEventListener('resize', this.aoMudarViewport);
   }
 }

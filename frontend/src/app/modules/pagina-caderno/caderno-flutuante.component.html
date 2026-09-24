@@ -64,7 +64,7 @@
         </button>
     }
 
-    <div class="caderno__escopo">
+    <div class="caderno__escopo" [class.caderno__escopo--escrevendo]="escrevendoNoCelular()">
         <app-segmentado class="caderno__segmentado" rotulo="Caderno consultado">
             <button
                 app-segmentado-item
@@ -109,7 +109,7 @@
         }
     </div>
 
-    <div class="caderno__busca">
+    <div class="caderno__busca" [class.caderno__busca--escrevendo]="escrevendoNoCelular()">
         <label class="caderno__busca-campo">
             <app-icone nome="busca" />
             <input
@@ -420,12 +420,14 @@
                             [awareness]="colaboracaoEsquadrao.awareness()"
                             [somenteLeitura]="false"
                             (valorChange)="alterarConteudoMarkdown($event)"
+                            (focadoChange)="editorFocado.set($event)"
                         />
                     } @else {
                         <app-editor-markdown
                             [valor]="store.rascunho().conteudoMarkdown"
                             [somenteLeitura]="somenteLeitura()"
                             (valorChange)="alterarConteudoMarkdown($event)"
+                            (focadoChange)="editorFocado.set($event)"
                         />
                     }
 

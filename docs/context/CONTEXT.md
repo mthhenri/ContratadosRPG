@@ -1852,9 +1852,22 @@ com fundo de fechamento.
 
 O **Caderno** também integra os utilitários da campanha. Cada membro possui um caderno privado por
 campanha, formado por páginas com título e Markdown, sem imagens ou anexos. A página usa Milkdown
-para edição visual direta: o conteúdo formatado é a própria superfície editável, com barra compacta
-para títulos, ênfase, listas, citação e código, sem alternância entre fonte e prévia. O Markdown puro
-continua sendo o formato persistido. O autor administra suas
+para edição visual direta: o conteúdo formatado é a própria superfície editável, sem alternância
+entre fonte e prévia. O Markdown puro continua sendo o formato persistido. A barra (a mesma em todo
+`app-editor-markdown`: caderno e campos de ficha/criatura) tem desfazer/refazer fixos à esquerda
+(Ctrl+Z, Ctrl+Y e Ctrl+Shift+Z em todos os modos — histórico local fora do Esquadrão, pilha do Yjs
+dentro; troca de página zera o histórico; cada ação da barra é um passo próprio), formatos que
+acendem no cursor e desligam com um segundo clique (código só em linha), e uma faixa contextual de
+tabela com rótulos completos ("Texto abaixo", "+ Linha abaixo"… "Apagar tabela"). "+ Linha acima"
+no cabeçalho cria um cabeçalho novo; remover o cabeçalho promove a 1ª linha; remover qualquer
+linha de uma tabela cabeçalho + 1 linha apaga a tabela. No mobile a barra rola de lado com
+degradê, mostra uma faixa por vez dentro de tabela ("Formatar"/"Tabela") e, com foco, se prende
+acima do teclado virtual (`editor-markdown-desfazer-e-tabelas`, `editor-markdown-barra-e-mobile`,
+`editor-markdown-usabilidade-rodada-2`, 2026-09-23). O hover do `app-botao-icone` só vale com
+ponteiro que paira (no toque ficava grudado e um formato desligado parecia ligado). No celular,
+escrevendo numa página editável, escopo e busca do caderno saem da frente e voltam ao sair do texto
+(saída `focadoChange` do editor). Nos campos curtos (`[compacto]`) a barra só aparece com o campo
+em uso, numa linha, embaixo do texto (`editor-markdown-espaco-para-escrever`). O autor administra suas
 páginas com salvamento automático e controle de versão; em conflito, o texto local permanece visível
 até o usuário recarregar a versão persistida. O mestre alterna entre o próprio caderno editável e os
 cadernos dos jogadores em modo estritamente somente leitura; jogadores não veem cadernos alheios.

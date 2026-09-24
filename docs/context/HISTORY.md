@@ -1,5 +1,67 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-23 — editor Markdown, rodada 3: espaço para escrever
+
+O autor viu protótipos dos dois pendentes da rodada 2 — capturas do app real com o CSS da proposta
+injetado só na captura — e aprovou os dois (`editor-markdown-espaco-para-escrever`). **Caderno no
+celular:** escrevendo numa página editável, escopo e busca com filtros saem da frente e voltam ao
+sair do texto; o editor ganhou a saída `focadoChange`. A condição também exige a vista de conteúdo
+(um `focusout` pode não chegar quando o editor some) e ignora somente leitura. Medido em 360×470
+(parte visível acima do teclado): texto visível de 94px para 202px. **Campos curtos:** a barra só
+aparece com o campo em uso, numa linha, embaixo do texto — o protótipo com a barra em cima mostrou
+que ela empurrava o texto ~30px para baixo, para fora do ponteiro. O autor tinha mandado um print do
+"Efeito adicional" com a barra ocupando quase todo o campo; esse print também mostrava a 2ª linha de
+botões recuada sob o H1, efeito da coluna fixa de Desfazer/Refazer da rodada 2 — resolvido pela
+linha única. Só a área de texto rola: os consumidores aplicam `resize: vertical` no host, e com
+altura fixa a barra no fim do conteúdo sumiria. No celular a barra continua ancorada acima do teclado
+(a regra do compacto, mais específica, ficou restrita a telas maiores que o breakpoint).
+
+Verificado ao vivo (1920×1080 e 360×800): campo curto sem barra fora de uso; com foco o topo do texto
+fica em y=690 antes e depois (não se move); redimensionado a 110px a barra segue visível; no celular
+`position: fixed` acima do teclado; caderno volta abas/busca ao tocar no título. Testes novos:
+`focadoChange` e esconder/mostrar no caderno (mobile e desktop); o dublê do editor na spec do caderno
+ainda usava a API antiga (`aplicarFormato`/`estaEmTabela`) e foi atualizado. O lint pegou um
+caractere de controle (backspace no lugar de `\b`) numa regex da spec do editor, criado por escape
+de shell na rodada 2 — o teste passava por acaso; corrigido. Frontend 146 arquivos / 2130 testes;
+lint sem erros.
+
+## 2026-09-23 — `app-botao-icone`: hover só com ponteiro que paira
+
+Autorizado pelo autor (ponto 1 da rodada 2 do editor Markdown). No toque, o navegador mantém
+`:hover` depois do toque; o hover do primitivo (ícone e borda em `--accent`) é quase o desenho do
+`--ativo`, então no editor um formato recém-desligado continuava parecendo ligado. Os quatro
+blocos de hover do primitivo (base, `mini`, `preenchido`, `ativo`) passaram para
+`@media (hover: hover)`; as variantes de severidade (`_variantes.scss`, compartilhadas com
+`app-botao`) ficaram como estavam — o hover delas só clareia e não se confunde com ativo.
+Verificado ao vivo: no toque (360×800) o negrito desligado volta à cor neutra; com mouse
+(1920×1080) o hover continua mudando a borda.
+
+## 2026-09-23 — editor Markdown, rodada 2 de usabilidade: surpresas e passos escondidos
+
+Segunda revisão ao vivo do editor, pensando em quem se frustra com processo difícil
+(`editor-markdown-usabilidade-rodada-2`). Aplicado o que não dependia de decisão do autor:
+`</>` passou a ser só código em linha (sem seleção, o Milkdown convertia o parágrafo inteiro em
+bloco de código — reproduzido no app); Desfazer/Refazer saíram da rolagem para uma área fixa;
+dentro de tabela o celular mostra uma faixa por vez, trocada por "Formatar"/"Tabela" (barra de
+110px → 55px acima do teclado); faixa de tabela com rótulos completos na ordem de uso ("Texto
+abaixo" primeiro, "Apagar tabela" por último); "+ Linha acima" no cabeçalho cria cabeçalho novo em
+vez de ficar desabilitado sem explicação; "Inserir tabela" desabilitado dentro de tabela.
+
+**Achados na verificação ao vivo** (`verify`, 1920×1080 e 360×800), corrigidos antes do fecho:
+desfazer um "Apagar tabela" feito logo depois de digitar voltava para **antes** da tabela — o
+histórico funde transações a menos de 500 ms. Cada ação da barra agora fecha o passo antes e
+depois (`closeHistory`; `stopCapturing` do Yjs), com teste de regressão que falhava antes da
+correção. A 1ª versão tinha "Texto" (trocar faixa) ao lado de "Texto abaixo" e botões "Remover"
+que dependiam de um título de grupo que rolava para fora da tela — viraram "Formatar" e rótulos
+completos. Medido no app: Desfazer e "Texto abaixo" visíveis sem rolar no celular; sem overflow;
+sem erro de console. Frontend 146 arquivos / 2127 testes; lint sem erros.
+
+**Pendentes (decisão do autor):** no toque o estilo de hover fica grudado e um formato
+desligado continua vermelho (medido: `aria-pressed=false` com cor de destaque) — correção no
+`app-botao-icone` afeta o app inteiro; no celular com teclado aberto o topo do caderno (abas, busca,
+filtros, título) ocupa ~290px (em 360×460 sobraram 16px para o texto); barra só com foco nos campos
+compactos (dois editores no formulário de habilidade de criatura mostram duas barras completas).
+
 ## 2026-09-23 — I-027: Inventário do mestre volta a substituir Rolagens
 
 Depois de destacar o histórico em janela, o painel de rolagens do mestre ganhou `display: flex`.
@@ -10,6 +72,50 @@ Inspeção das outras superfícies da I-027 não encontrou a mesma combinação 
 navegador real, a alternância foi observada em 1920×1080 e 360×800, sem sobreposição ou coluna
 vazia. A spec ativa registra o que já foi entregue, a conferência pendente de fechar a janela
 real e as fatias futuras de anotações e Caderno.
+
+## 2026-09-23 — editor Markdown: desfazer/refazer, tabelas e barra mobile
+
+Usuários reclamaram, pelos cadernos, de Ctrl+Z/Ctrl+Y inconsistentes, de remover linha/coluna
+"não funcional completamente", de tabelas confusas e do editor ruim no celular. A revisão cobriu o
+`app-editor-markdown` inteiro (caderno e campos de ficha/criatura) e virou duas specs.
+
+**Parte 1 — comportamento** (`editor-markdown-desfazer-e-tabelas`). Fora do modo Esquadrão o
+editor não tinha histórico nenhum: Ctrl+Z caía no undo nativo do navegador, que não conversa com o
+ProseMirror. Entrou o `history` do Milkdown só fora do colaborativo (lá o `yUndoPlugin` já liga os
+atalhos; os dois juntos desfariam edição remota), e `definirMarkdown` passou a recriar o estado
+(`replaceAll(…, true)`) — sem isso, Ctrl+Z logo após trocar de página trazia o texto da página
+anterior. Remover linha: reproduzido num script com o schema GFM (`table_header_row table_row+`),
+o `deleteRow` do `prosemirror-tables` deixava um cabeçalho sem células ao remover o cabeçalho e uma
+linha vazia ao remover a única linha do corpo. `removerEstruturaTabela` agora promove a 1ª linha a
+cabeçalho e apaga a tabela quando sobraria uma linha só. O estado "em tabela" passou a vir de um
+plugin de view do ProseMirror em vez de `click`/`keyup` no host (não via seleção por toque nem eco
+do Yjs).
+
+**Parte 2 — barra** (`editor-markdown-barra-e-mobile`, decisões do autor na sessão). Barra de
+`app-botao-icone` (ganhou `[ativo]`, só visual — um binding de `aria-pressed` no primitivo apagou
+o dos consumidores existentes e derrubou 2 testes de campanha, por isso o atributo ficou no
+consumidor), ícones `desfazer`/`refazer` (Tabler), formatos alternáveis (H1/H2, listas com troca
+de tipo da lista inteira, citação, bloco de código — o botão "¶" saiu) e faixa contextual "Tabela"
+com `app-botao` rotulados. "Linha acima" fica bloqueada no cabeçalho (o comando do Milkdown criaria
+linha comum antes dele). No mobile a barra rola de lado com degradê e, focada, prende-se acima do
+teclado medindo o `visualViewport`. A fábrica do Milkdown saiu do componente para
+`editor-markdown-fabrica.ts`, e o template para `.html`.
+
+**Testes.** 18 casos novos com o Milkdown real (`editor-markdown.milkdown.spec.ts`: remoções de
+tabela, histórico por atalho e pela barra, histórico zerado na troca, formatos alternáveis) — a
+spec do componente usa um dublê da fábrica e por isso nunca pegou a tabela inválida. Frontend
+146 arquivos / 2119 testes verdes; lint sem erros (avisos preexistentes de aspas/`max-len`).
+
+**Verificação ao vivo** (`verify`, stack local, Playwright): caderno e efeito de ataque de
+criatura (compacto) em 1920×1080 e 360×800 — inicial, foco, formato ativo, tabela no cabeçalho,
+linha nova, sair da tabela, desfazer, desfoco. Análogo: cabeçalho de ferramentas da Iniciativa
+(`app-botao-icone`) + estado ativo de `app-segmentado`. Sem overflow horizontal, alvos de 44px no
+mobile, sem erro de console. Achados **na** verificação e corrigidos: a barra sem foco quebrava em
+3 linhas (~150px) no celular → linha única; o separador de grupo sobrava no início da linha quando
+a barra quebrava no campo compacto → só espaçamento; a barra ancorada ficava **por baixo** da
+navegação inferior (`app-coluna-acoes`, z 15) no campo da ficha → `z-index: 20`; o glifo `•—` lia
+como seta. **Pendente:** teclado virtual real (iOS/Android) não é reproduzível no Playwright — a
+ancoragem sobre o teclado precisa de conferência em aparelho. Achado fora do escopo: `P-075`.
 
 ## 2026-09-23 — I-027: histórico local recolhido enquanto a janela externa está aberta
 

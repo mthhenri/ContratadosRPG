@@ -1,3 +1,5 @@
+@use "tema/breakpoints" as bp;
+
 :host {
     position: relative;
     min-width: 0;
@@ -40,59 +42,107 @@
     }
 }
 
+// Barra: histórico fixo (fora da rolagem) + faixa de formatação + faixa contextual "Tabela" (só
+// com o cursor numa tabela). Os botões são `app-botao-icone`/`app-botao`; aqui só layout e tamanho.
 .editor-markdown__barra {
     position: sticky;
     z-index: 1;
     top: 0;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 42px;
-    padding: 5px 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+        "historico formatacao"
+        "tabela tabela";
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
+}
+
+.editor-markdown__historico {
+    grid-area: historico;
+    display: flex;
+    align-items: center;
+    align-self: start;
+    gap: var(--space-4);
+    padding: 5px 0 5px var(--space-8);
+}
+
+// A troca Texto/Tabela só existe no celular, onde cabe uma faixa por vez. Seletor composto: o
+// `display: inline-flex` de `app-botao tamanho="pequeno"` tem a mesma especificidade de uma classe
+// só, e a ordem entre as duas folhas de estilo não é garantida.
+.editor-markdown__historico .editor-markdown__alternar-faixa {
+    display: none;
+}
+
+.editor-markdown__faixa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    // Grupos separados só por espaço: um separador de borda sobrava no começo da linha quando o
+    // grupo quebrava (campo compacto estreito).
+    gap: var(--space-4) var(--space-20);
+    min-width: 0;
+    padding: 5px var(--space-8);
+    scrollbar-width: none;
 
     &::-webkit-scrollbar {
         display: none;
     }
 
-    button {
-        min-width: 30px;
-        min-height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-        padding: 5px 7px;
-        color: var(--text-dim);
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: var(--radius-control);
-        font: 600 10px var(--font-mono);
-        cursor: pointer;
-
-        &:hover,
-        &:focus-visible {
-            color: var(--accent);
-            background: var(--accent-dim);
-            border-color: var(--accent-border);
-            outline: none;
-        }
-
-        &:disabled {
-            opacity: 0.4;
-            cursor: default;
-        }
+    // Degradê na borda que ainda tem botões fora da vista (só existe com rolagem lateral).
+    &--mais-fim {
+        mask-image: linear-gradient(to right, var(--bg) calc(100% - 32px), transparent);
     }
 
-    > span {
-        width: 1px;
-        height: 20px;
-        flex: 0 0 auto;
-        margin-inline: 3px;
-        background: var(--border);
+    &--mais-inicio {
+        mask-image: linear-gradient(to left, var(--bg) calc(100% - 32px), transparent);
+    }
+
+    &--mais-inicio.editor-markdown__faixa--mais-fim {
+        mask-image: linear-gradient(
+            to right,
+            transparent,
+            var(--bg) 32px,
+            var(--bg) calc(100% - 32px),
+            transparent
+        );
+    }
+
+    &--formatacao {
+        grid-area: formatacao;
+    }
+
+    &--tabela {
+        grid-area: tabela;
+        border-top: 1px solid var(--border);
+    }
+}
+
+.editor-markdown__grupo {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: var(--space-4);
+}
+
+.editor-markdown__glifo {
+    font: 600 10px var(--font-mono);
+    line-height: 1;
+
+    &--negrito {
+        font-weight: 800;
+    }
+
+    &--italico {
+        font-style: italic;
+    }
+}
+
+.editor-markdown__acao-tabela {
+    flex: 0 0 auto;
+    white-space: nowrap;
+
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
     }
 }
 
@@ -271,16 +321,53 @@
     flex: none;
 }
 
-:host(.editor-markdown--compacto) .editor-markdown__barra {
-    min-height: 34px;
+// Campo curto editável: a barra só aparece com o campo em uso e fica **embaixo** do texto — em
+// cima, ao aparecer, empurrava o texto ~30px para baixo, para fora do ponteiro. Sempre à mostra ela
+// ocupava a maior parte do campo (duas linhas de botões para uma frase). Quem rola é só a área de
+// texto: os consumidores aplicam `resize: vertical` no host, e com altura fixa a barra no fim do
+// conteúdo sumiria na rolagem.
+:host(.editor-markdown--compacto:not(.editor-markdown--somente-leitura)) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .editor-markdown__superficie {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    .editor-markdown__barra {
+        order: 2;
+        flex: none;
+        border-top: 1px solid var(--border);
+        border-bottom: 0;
+    }
+
+    .editor-markdown__faixa {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    // Só fora do mobile: lá, com foco, a barra continua presa acima do teclado (`position: fixed`
+    // no fim do arquivo) — esta regra, mais específica, a venceria.
+    @media (min-width: #{bp.$bp-mobile + 1px}) {
+        .editor-markdown__barra {
+            position: static;
+        }
+    }
+}
+
+:host(.editor-markdown--compacto:not(.editor-markdown--focado)) .editor-markdown__barra {
+    display: none;
+}
+
+:host(.editor-markdown--compacto) .editor-markdown__faixa {
     padding: 3px 6px;
 }
 
-:host(.editor-markdown--compacto) .editor-markdown__barra button {
-    min-width: 24px;
-    min-height: 24px;
-    padding: 3px 5px;
-    font-size: 9px;
+:host(.editor-markdown--compacto) .editor-markdown__historico {
+    padding: 3px 0 3px 6px;
 }
 
 :host(.editor-markdown--compacto) ::ng-deep .milkdown .editor {
@@ -318,12 +405,7 @@
     padding: 0;
 }
 
-@media (max-width: 560px) {
-    .editor-markdown__barra button {
-        min-width: 36px;
-        min-height: 36px;
-    }
-
+@include bp.mobile {
     :host ::ng-deep .milkdown .editor {
         padding: 14px 14px 72px;
         font-size: 13px;
@@ -344,5 +426,73 @@
         td {
             padding: 8px 6px;
         }
+    }
+}
+
+// Mobile: cada faixa é uma linha só com rolagem lateral e degradê de continuação — quebrar em
+// várias linhas levava a barra a ~150px de altura numa tela de 360px.
+@include bp.mobile {
+    .editor-markdown__faixa {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    // Dentro de tabela, uma faixa por vez ao lado do histórico: a de tabela por padrão, a de
+    // formatação pelo botão "Texto". Duas faixas empilhadas somavam 110px acima do teclado.
+    .editor-markdown__historico .editor-markdown__alternar-faixa {
+        display: inline-flex;
+        min-height: bp.$alvo-toque;
+        margin-left: var(--space-4);
+    }
+
+    .editor-markdown__barra--em-tabela {
+        grid-template-areas: "historico tabela";
+
+        .editor-markdown__faixa--formatacao {
+            display: none;
+        }
+
+        .editor-markdown__faixa--tabela {
+            border-top: 0;
+        }
+    }
+
+    .editor-markdown__barra--em-tabela.editor-markdown__barra--mostrando-texto {
+        grid-template-areas: "historico formatacao";
+
+        .editor-markdown__faixa--formatacao {
+            display: flex;
+        }
+
+        .editor-markdown__faixa--tabela {
+            display: none;
+        }
+    }
+}
+
+// Mobile com foco: a barra sai do topo e se prende logo acima do teclado virtual. O deslocamento
+// (`--editor-markdown-teclado`) e a altura da barra vêm de `atualizarAncoragem()`, medidos contra
+// o `visualViewport`.
+@include bp.mobile {
+    :host(.editor-markdown--focado) .editor-markdown__barra {
+        position: fixed;
+        // Acima da navegação inferior do mobile (`app-coluna-acoes`, z 15) — enquanto se digita a
+        // barra é o controle da vez — e abaixo das janelas arrastáveis (faixa 1200+).
+        z-index: 20;
+        top: auto;
+        right: 0;
+        bottom: var(--editor-markdown-teclado, 0px);
+        left: 0;
+        border-top: 1px solid var(--border-strong);
+        border-bottom: 0;
+        box-shadow: 0 -8px 20px color-mix(in srgb, var(--bg) 62%, transparent);
+    }
+
+    :host(.editor-markdown--focado) ::ng-deep .milkdown .editor {
+        padding-bottom: calc(var(--editor-markdown-altura-barra, 0px) + 24px);
+    }
+
+    :host(.editor-markdown--focado) .editor-markdown__voltar-topo {
+        display: none;
     }
 }

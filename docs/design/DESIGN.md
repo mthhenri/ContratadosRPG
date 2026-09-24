@@ -167,7 +167,7 @@ aponta, bloco a bloco, para a implementação correspondente.
 | `.barra-recurso` | Recurso com máximo — rótulo, valor atual/máximo e trilho de progresso (`ui-16`) | `recurso`: `vida` (`--vida`) ou `energia` (`--energy`); `--alerta` automático abaixo de 25% (`--warning`, vence a cor do recurso); `[editavel]` liga a digitação por clique (com `[maximoEditavel]` quando o máximo exibido já soma bônus e a edição precisa partir só da base armazenada); slot `[barraRecursoAcao]` ao lado do rótulo | **`<app-barra-recurso rotulo="…" [recurso]="…" [atual]="…" [maximo]="…">`** (`shared/ui/barra-recurso/`) |
 | `.stepper` | Input numérico com botões `−`/`+` | `[tamanho]` `padrao`/`compacto`/`mini`; `[digitavel]` (default `true`) — `false` troca o `<input>` central por texto só-leitura e os botões passam a usar segurar-para-repetir (`appHoldRepeat`) em vez de clique único, para o padrão de "ajuste rápido" sem digitação (atributo, modificador de teste, custo de habilidade...); `[comSinal]` (só com `digitavel=false`) antepõe `+` a valores positivos e marca `--ativo` quando != 0 | **`<app-step-input [formControl]="…">`** (`shared/ui/stepper/`) |
 | `.botao` | Botão de ação | **8 severidades** — `primario`, `secundario`, `positivo`, `info`, `aviso`, `perigo`, `ajuda`, `contraste` — × **4 estilos** (`preenchido`, `contorno`, `texto`, `link`), + `tamanho` (`pequeno`/`medio`/`grande`, ver "Degraus de tamanho" abaixo), `posicaoIcone`, `fluido` e `carregando` (guarda `Enter`/`Espaço`, ver "`carregando` × `disabled`" abaixo). Opacidade de desabilitado única: `0.55`, sem escape hatch por consumidor. Sem `rounded`/`raised`: contrariam o raio máximo e a regra de sombra deste documento | **`<button app-botao variante="…">`** |
-| `.botao-icone` | Ação unitária sem rótulo visual | `mini` (16px, sem borda — ícone inline dentro de outro controle, ex. dadinho de um pill), `compacto` (26px) e `padrao` (32px); em mobile `compacto`/`padrao` passam ao alvo de toque de 44px (`mini` não, é sempre inline). `[redondo]` (ui-30): raio 50% em vez do raio de controle padrão, para selos circulares sobre canto de foto/card (enquadrar/remover avatar, "i" de informação) — combina com qualquer `tamanho`. Aceita `<button>` ou `<a>` (ui-28). Exige `aria-label` e `appTooltip`; foco e desabilitado são nativos (`:disabled` não afeta `<a>`) | **`<button app-botao-icone aria-label="…" appTooltip="…">`** ou **`<a app-botao-icone aria-label="…" appTooltip="…">`** |
+| `.botao-icone` | Ação unitária sem rótulo visual | `mini` (16px, sem borda — ícone inline dentro de outro controle, ex. dadinho de um pill), `compacto` (26px) e `padrao` (32px); em mobile `compacto`/`padrao` passam ao alvo de toque de 44px (`mini` não, é sempre inline). `[redondo]` (ui-30): raio 50% em vez do raio de controle padrão, para selos circulares sobre canto de foto/card (enquadrar/remover avatar, "i" de informação) — combina com qualquer `tamanho`. `[ativo]`: destaque de alternância ligada (mesma receita do item ativo de `.segmentado`) — só visual, o `aria-pressed` continua no consumidor. O hover só existe com `@media (hover: hover)`: no toque o `:hover` fica grudado depois do toque e, com ícone/borda em `--accent`, lia como "ativo". Aceita `<button>` ou `<a>` (ui-28). Exige `aria-label` e `appTooltip`; foco e desabilitado são nativos (`:disabled` não afeta `<a>`) | **`<button app-botao-icone aria-label="…" appTooltip="…">`** ou **`<a app-botao-icone aria-label="…" appTooltip="…">`** |
 | `.campo` | Invólucro de campo — rótulo mono uppercase, dica e mensagem de erro em volta do controle | `--compacto` (rótulo 9px), padrão (10px), `--amplo` (11px + `--tracking-label`) | **`<app-campo rotulo="…">`** |
 | `.chip-classificacao` | Selo mono uppercase com borda (ex.: "CLASSE-E // CONFIDENCIAL") | Rótulo: `padrao` (`--accent`) ou `sutil` (`--text-mute`/`--border-strong`). Estado: severidade `primario`, `secundario`, `aviso` ou `perigo`, tom `sutil` (fundo 12% + borda 40%) ou `contorno` | **`<app-chip variante="…">`** ou **`<app-chip severidade="…" tom="…">`** |
 | `.selecionavel--ativo` | Estado ativo de item selecionável/tab avulso | — | — |
@@ -452,6 +452,24 @@ como a `ui-01` estabeleceu; a `ui-19` não mudou esse contrato, só migrou os co
 Todo degrau soma `gap: var(--space-8)` e `text-transform: uppercase`. Alvo de toque de 44px no
 mobile é responsabilidade do consumidor (`min-height`/`min-width` na própria classe BEM ou
 `bp.$alvo-toque`) nos três degraus — nenhum deles garante 44px sozinho no desktop.
+
+### Barra do editor Markdown (`app-editor-markdown`)
+
+Desfazer · Refazer ficam numa área fixa à esquerda, fora da rolagem (depois de um erro têm de
+estar à vista). Ao lado, a faixa de formatação de `app-botao-icone tamanho="compacto"` em grupos
+separados só por espaço (H1 · H2 | Negrito · Itálico · Código em linha | Lista · Lista numerada ·
+Citação | Inserir tabela); formatos alternáveis usam `[ativo]` + `aria-pressed` e desligam com um
+segundo clique (não há botão "texto normal"; bloco de código se faz digitando ```). Com o cursor
+numa tabela aparece a **faixa contextual** de `app-botao tamanho="pequeno"` com rótulos que se
+explicam sozinhos, na ordem de uso: Texto abaixo · + Linha abaixo · + Linha acima · Remover
+linha · + Coluna à direita · + Coluna à esquerda · Remover coluna · Apagar tabela (remoções em
+`perigo`) — ícones de linha/coluna parecidos entre si eram a principal queixa. No mobile cada
+faixa é uma linha só com rolagem lateral e degradê; dentro de tabela cabe **uma faixa por vez**,
+trocada pelo botão "Formatar"/"Tabela" ao lado do histórico. Com foco, a barra se prende acima do
+teclado virtual (`visualViewport`) em `z-index: 20` — acima de `app-coluna-acoes` (15), abaixo das
+janelas arrastáveis (1200+). **Campo curto (`[compacto]`):** sem barra fora de uso; com o campo em
+uso, a barra aparece numa linha **embaixo** do texto (em cima empurrava o texto ao aparecer) e só a
+área de texto rola, para a barra continuar visível com o campo redimensionado.
 
 ### Fila de notificações — ícone, ação e duração (`ui-20`)
 

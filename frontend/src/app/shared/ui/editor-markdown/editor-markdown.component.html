@@ -1,0 +1,135 @@
+@if (!somenteLeituraEfetiva()) {
+    <!-- `mousedown` cancelado na barra inteira: tocar/clicar num botão não tira o foco (nem o
+         teclado virtual) do texto. -->
+    <div
+        #barra
+        class="editor-markdown__barra"
+        [class.editor-markdown__barra--em-tabela]="estado().emTabela"
+        [class.editor-markdown__barra--mostrando-texto]="faixaEmTabela() === 'TEXTO'"
+        (mousedown)="$event.preventDefault()"
+    >
+        <div class="editor-markdown__historico" role="group" aria-label="Histórico">
+            @for (botao of botoesHistorico; track botao.acao) {
+                <button
+                    app-botao-icone
+                    class="editor-markdown__botao"
+                    type="button"
+                    tamanho="compacto"
+                    [disabled]="estaDesabilitado(botao.acao)"
+                    [attr.aria-label]="botao.rotulo"
+                    [appTooltip]="botao.dica"
+                    (click)="aplicarAcao(botao.acao)"
+                >
+                    <app-icone [nome]="botao.icone!" />
+                </button>
+            }
+            @if (estado().emTabela) {
+                <!-- Só no celular (CSS): troca a única faixa que cabe acima do teclado. -->
+                <button
+                    app-botao
+                    class="editor-markdown__alternar-faixa"
+                    type="button"
+                    tamanho="pequeno"
+                    variante="secundario"
+                    [attr.aria-label]="
+                        faixaEmTabela() === 'TABELA'
+                            ? 'Mostrar formatação de texto'
+                            : 'Mostrar ações da tabela'
+                    "
+                    [appTooltip]="
+                        faixaEmTabela() === 'TABELA'
+                            ? 'Mostrar formatação de texto'
+                            : 'Mostrar ações da tabela'
+                    "
+                    (click)="alternarFaixaEmTabela()"
+                >
+                    {{ faixaEmTabela() === "TABELA" ? "Formatar" : "Tabela" }}
+                </button>
+            }
+        </div>
+        <div
+            #faixa
+            class="editor-markdown__faixa editor-markdown__faixa--formatacao"
+            role="toolbar"
+            aria-label="Formatação Markdown"
+            (scroll)="atualizarIndicadoresRolagem()"
+        >
+            @for (grupo of gruposBarra; track $index) {
+                <div class="editor-markdown__grupo" role="group">
+                    @for (botao of grupo; track botao.acao) {
+                        <button
+                            app-botao-icone
+                            class="editor-markdown__botao"
+                            type="button"
+                            tamanho="compacto"
+                            [ativo]="estaAtivo(botao.acao)"
+                            [attr.aria-pressed]="botao.alterna ? estaAtivo(botao.acao) : null"
+                            [disabled]="estaDesabilitado(botao.acao)"
+                            [attr.aria-label]="botao.rotulo"
+                            [appTooltip]="botao.dica"
+                            (click)="aplicarAcao(botao.acao)"
+                        >
+                            @if (botao.icone) {
+                                <app-icone [nome]="botao.icone" />
+                            } @else {
+                                <span
+                                    class="editor-markdown__glifo"
+                                    [class.editor-markdown__glifo--negrito]="
+                                        botao.estilo === 'negrito'
+                                    "
+                                    [class.editor-markdown__glifo--italico]="
+                                        botao.estilo === 'italico'
+                                    "
+                                    aria-hidden="true"
+                                    >{{ botao.glifo }}</span
+                                >
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (estado().emTabela) {
+            <div
+                #faixa
+                class="editor-markdown__faixa editor-markdown__faixa--tabela"
+                role="toolbar"
+                aria-label="Ações da tabela"
+                (scroll)="atualizarIndicadoresRolagem()"
+            >
+                @for (grupo of gruposTabela; track $index) {
+                    <div class="editor-markdown__grupo" role="group">
+                        @for (botao of grupo.acoes; track botao.acao) {
+                            <button
+                                app-botao
+                                class="editor-markdown__acao-tabela"
+                                type="button"
+                                tamanho="pequeno"
+                                [variante]="botao.perigo ? 'perigo' : 'secundario'"
+                                [disabled]="estaDesabilitado(botao.acao)"
+                                [attr.aria-label]="botao.dica"
+                                [appTooltip]="botao.dica"
+                                (click)="aplicarAcao(botao.acao)"
+                            >
+                                {{ botao.rotulo }}
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+<div #raiz class="editor-markdown__superficie"></div>
+@if (mostrarVoltarAoTopo()) {
+    <button
+        class="editor-markdown__voltar-topo"
+        type="button"
+        aria-label="Voltar ao topo"
+        [appTooltip]="'Voltar ao topo'"
+        (click)="voltarAoTopo()"
+    >
+        <app-icone nome="teto" />
+    </button>
+}
