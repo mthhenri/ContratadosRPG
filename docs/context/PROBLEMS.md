@@ -99,3 +99,24 @@
   transparent)`, a mesma da barra ancorada do editor) ou decidir um token de sombra no tema. O
   botão também é um `<button>` nativo estilizado à mão — candidato a `app-botao-icone`.
 - **Desde:** achado em 2026-09-23 na revisão do editor Markdown (fora do escopo daquela task).
+
+### P-078 — Jogador sem ficha no celular não encontra o histórico de rolagens da campanha · `ABERTO` · frontend/campanha
+
+- **Sintoma:** em `360×800`, o jogador sem ficha na campanha abre `/campanhas/:id` e vê só "Você
+  ainda não tem uma ficha nesta campanha" com os botões "Criar nova ficha", "Vincular ficha
+  existente" e "Ver Esquadrão". Nenhum cartão de rolagem aparece e nada indica que o histórico
+  existe. No desktop o painel lateral de Rolagens aparece normalmente.
+- **Causa:** em `detalhe-jogador.page.html`, o painel lateral (Rolagens/Esquadrão/Inv. Esquadrão)
+  recebe `detalhe__jogador-lateral--oculto-mobile` (`display: none`) enquanto
+  `destinoMobileFicha()` for diferente de `'rolagens'`. O sinal começa em `'agente'` e só muda
+  pela `.ficha-nav` da ficha embutida (`abaStatusMudou` → `aoMudarDestinoFicha`), que não existe
+  sem ficha. A única saída é `abrirEsquadraoSemFicha()`, que abre o painel já na aba Esquadrão.
+- **Contorno:** tocar em "Ver Esquadrão" e depois na aba "Rolagens" do painel lateral. Conferido
+  ao vivo em 2026-09-24: o feed da campanha aparece completo, com os 7 cartões.
+- **Correção:** a decidir com o autor. Uma opção é mostrar o painel lateral no mobile sem ficha
+  (por exemplo, abrir em "Rolagens" por padrão ou exibir o painel abaixo do estado vazio). Outra é
+  dar ao estado vazio uma ação "Ver rolagens" ao lado de "Ver Esquadrão". É mudança de UI: exige o
+  gate visual (`design-fidelity` + `verify`).
+- **Desde:** achado em 2026-09-24 na verificação ao vivo da `p-076`, com uma conta de jogador sem
+  ficha. O comportamento é anterior a essa task.
+
