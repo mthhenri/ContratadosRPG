@@ -53,17 +53,29 @@
 </section>
 } @else if (dados.campanha(); as campanhaAtual) {
 <app-coluna-acoes id="campanha-detalhe-jogador" rotulo="Ações da ficha">
+    @if (dados.previa(); as previa) {
+    <!-- Prévia de jogador: o aviso "visualizando como" e a saída moram no topo da coluna (antes
+         eram uma barra acima do cabeçalho). Retraída, a categoria some e o tooltip do item diz quem
+         está sendo visualizado. -->
+    <div class="coluna-acoes__categoria">Prévia · {{ previa.nomeAlvo }}</div>
+    <a
+        app-coluna-acoes-item
+        icone="olho"
+        [appTooltip]="'Visualizando como ' + previa.nomeAlvo + ' — sair da prévia'"
+        [routerLink]="['/campanhas', campanhaAtual.id]"
+    >
+        Sair da prévia
+    </a>
+    }
     <div class="coluna-acoes__categoria">Campanha</div>
     @if (somenteLeitura()) {
-    <!-- Prévia: a rota `/iniciativa` responderia com o recorte do mestre — abre a leitura do
-         encontro já redigido para o alvo. Sem combate em andamento, fica desabilitado. -->
+    <!-- Prévia: a Iniciativa fica indisponível (a rota `/iniciativa` responderia com o recorte do
+         mestre). -->
     <button
         app-coluna-acoes-item
         icone="combate"
-        [appTooltip]="encontroAtivoPrevia() ? 'Iniciativa' : 'Nenhum combate em andamento'"
-        [pressionado]="iniciativaPreviaAberta()"
-        [disabled]="!encontroAtivoPrevia()"
-        (click)="abrirIniciativaPrevia()"
+        appTooltip="Iniciativa indisponível na prévia"
+        [disabled]="true"
     >
         Iniciativa
     </button>
@@ -153,23 +165,6 @@
 
 <section class="detalhe">
     <div class="detalhe__conteudo">
-        @if (dados.previa(); as previa) {
-        <div class="detalhe__preview-barra" role="status">
-            <app-icone nome="olho" />
-            <span class="detalhe__preview-texto">
-                Visualizando como <strong>{{ previa.nomeAlvo }}</strong> · prévia somente leitura
-            </span>
-            <a
-                app-botao
-                variante="secundario"
-                class="botao botao--secundario detalhe__acao detalhe__preview-sair"
-                [routerLink]="['/campanhas', campanhaAtual.id]"
-            >
-                Sair da prévia
-            </a>
-        </div>
-        }
-
         <header class="detalhe__cabecalho">
             <div class="detalhe__cabecalho-titulo-linha">
                 @if (!somenteLeitura()) {
@@ -254,14 +249,27 @@
                         (click)="fecharMenu()"
                     ></button>
                     <div class="detalhe__cabecalho-menu" role="menu">
+                        @if (dados.previa(); as previa) {
+                        <!-- Mobile: a coluna não existe nesta página, então a saída da prévia
+                             abre o menu, no mesmo lugar que ocupa no topo da coluna. -->
+                        <a
+                            app-botao
+                            class="detalhe__cabecalho-menu-item"
+                            role="menuitem"
+                            [routerLink]="['/campanhas', campanhaAtual.id]"
+                            (click)="fecharMenu()"
+                        >
+                            <app-icone nome="olho" />
+                            <span>Sair da prévia · {{ previa.nomeAlvo }}</span>
+                        </a>
+                        }
                         @if (somenteLeitura()) {
                         <button
                             app-botao
                             class="detalhe__cabecalho-menu-item"
                             type="button"
                             role="menuitem"
-                            [disabled]="!encontroAtivoPrevia()"
-                            (click)="abrirIniciativaPrevia()"
+                            [disabled]="true"
                         >
                             <app-icone nome="combate" />
                             <span>Iniciativa</span>
@@ -784,17 +792,6 @@
 }
 
 <app-bandeja-dados />
-
-@if (encontroAtivoPrevia(); as encontro) {
-<app-modal
-    [aberto]="iniciativaPreviaAberta()"
-    titulo="Iniciativa"
-    largura="960px"
-    (fechou)="iniciativaPreviaAberta.set(false)"
->
-    <app-iniciativa-leitura [encontro]="encontro" [fichasCampanha]="dados.fichas()" />
-</app-modal>
-}
 
 @if (dialogVincular()) {
 <!-- Vincular ficha existente — só fichas do acervo **sem campanha**. Sem endpoint novo:

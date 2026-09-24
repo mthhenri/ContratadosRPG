@@ -24,7 +24,6 @@ import { montarAutoriaRolagem } from "../../../../shared/cartao-rolagem/autoria-
 import { CartaoRolagem } from '../../../../shared/cartao-rolagem/cartao-rolagem.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
 import { InventarioEsquadrao } from '../../componentes/inventario-esquadrao/inventario-esquadrao.component';
-import { IniciativaLeitura } from '../../../encontro/componentes/iniciativa-leitura/iniciativa-leitura.component';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { OverflowFade } from '../../../../shared/overflow-fade/overflow-fade.directive';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -77,7 +76,7 @@ const PX_PREVIEW_AVATAR = 300;
  * mesma tela com `CampanhaPreviaJogadorDadosService` no lugar do serviço de dados. Com
  * `dados.previa()` preenchido, {@link somenteLeitura} barra toda mutação (ficha, rolagem,
  * inventário, ações de ficha, caderno) e esconde as saídas para telas com o privilégio do mestre
- * (ficha completa, Iniciativa de mestre, janela de histórico) — a tela continua sendo a do jogador,
+ * (ficha completa, Iniciativa — desabilitada —, janela de histórico) — a tela continua sendo a do jogador,
  * vista como o alvo.
  */
 @Component({
@@ -88,7 +87,6 @@ const PX_PREVIEW_AVATAR = 300;
     Icone,
     OverflowFade,
     InventarioEsquadrao,
-    IniciativaLeitura,
     BandejaDados,
     CalculadoraFlutuante,
     CadernoFlutuante,
@@ -139,13 +137,6 @@ export class CampanhaDetalheJogador {
   protected readonly mostrarInventarioEsquadrao = computed(
     () => this.dados.previa()?.podeAcessarInventarioEsquadrao ?? true,
   );
-
-  /**
-   * Encontro em andamento visto pelo alvo (prévia) — a Iniciativa da prévia abre em modal de
-   * leitura sobre ele, nunca a rota `/iniciativa`, que responderia com o recorte do mestre.
-   */
-  protected readonly encontroAtivoPrevia = computed(() => this.dados.previa()?.encontroAtivo ?? null);
-  protected readonly iniciativaPreviaAberta = signal(false);
 
   /** Painel lateral fixo (Rolagens/Esquadrão/Inv. Esquadrão) — sempre montado, nunca overlay (mesmo padrão do mestre). */
   protected readonly painelLateralAtivo = signal<'rolar' | 'esquadrao' | 'inventario'>('rolar');
@@ -486,12 +477,6 @@ export class CampanhaDetalheJogador {
   /** Alterna a janela do caderno — mesmo racional de `alternarCalculadora()` acima. */
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
-  }
-
-  /** Iniciativa da prévia — modal de leitura sobre o encontro redigido para o alvo. */
-  protected abrirIniciativaPrevia(): void {
-    this.fecharMenu();
-    this.iniciativaPreviaAberta.set(true);
   }
 
   /** Abre o assistente de criação de ficha, disparado do próprio detalhe. */

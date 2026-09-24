@@ -38,57 +38,6 @@
         }
     }
 
-    // Barra de prévia do mestre — mesma receita de `.detalhe__preview-barra` (ui-15/m2-19), mas
-    // com texto mais longo que o original ("Modo prévia · você vê exatamente..."): no mobile o
-    // botão precisa da própria linha, senão o texto quebrado por baixo dele se sobrepõe.
-    &__preview-barra {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 16px;
-        background: var(--accent-dim);
-        border: 1px solid var(--accent-border);
-        border-radius: var(--radius-control);
-        color: var(--accent);
-
-        @include bp.mobile {
-            flex-wrap: wrap;
-        }
-    }
-
-    &__preview-texto {
-        flex: 1;
-        min-width: 0;
-        font-family: var(--font-sans);
-        font-size: 13px;
-        color: var(--text);
-
-        @include bp.mobile {
-            flex-basis: 100%;
-        }
-    }
-
-    // `app-botao` nasce deliberadamente sem `display`/`padding`/`font-size` (só a base — `ui-01`,
-    // ver `botao.component.scss`) até o consumidor pedir `[tamanho]` ou trazer a própria receita.
-    // `.detalhe__preview-sair` (o "Sair da visualização" original de "Ver como jogador") usa
-    // `.detalhe__acao`; esta é a mesma receita, para o botão sair idêntico nos dois lugares.
-    &__preview-sair {
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 9px 16px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: var(--tracking-label);
-
-        @include bp.mobile {
-            width: 100%;
-            min-height: bp.$alvo-toque;
-        }
-    }
-
     // Cabeçalho no molde "shell" do produto (índice `//` + título + chip + régua — mesmo contrato
     // de `detalhe-mestre__cabecalho`/`_casca-iniciativa.scss`).
     &__cabecalho {

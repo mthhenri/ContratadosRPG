@@ -1,6 +1,30 @@
 <section class="espectador">
     <app-coluna-acoes id="espectador" rotulo="Ações do espectador">
+        @if (ehMestrePreview()) {
+        <!-- Prévia do mestre: o aviso e a saída moram no topo da coluna (antes eram uma barra acima
+             do cabeçalho), mesmo arranjo da prévia de jogador. No mobile a coluna vira a barra
+             inferior e o item segue lá, só com o ícone. -->
+        <div class="coluna-acoes__categoria">Prévia · Espectador</div>
+        <a
+            app-coluna-acoes-item
+            icone="olho"
+            appTooltip="Visualizando como espectador — sair da prévia"
+            [routerLink]="['/campanhas', id]"
+        >
+            Sair da prévia
+        </a>
+        }
         <div class="coluna-acoes__categoria">Espectador</div>
+        @if (ehMestrePreview()) {
+        <button
+            app-coluna-acoes-item
+            icone="combate"
+            appTooltip="Iniciativa indisponível na prévia"
+            [disabled]="true"
+        >
+            Iniciativa
+        </button>
+        } @else {
         <a
             app-coluna-acoes-item
             icone="combate"
@@ -9,6 +33,7 @@
         >
             Iniciativa
         </a>
+        }
         <button
             app-coluna-acoes-item
             icone="d20"
@@ -21,23 +46,6 @@
     </app-coluna-acoes>
 
     <div class="espectador__conteudo">
-        @if (ehMestrePreview()) {
-        <div class="espectador__preview-barra" role="status">
-            <app-icone nome="olho" />
-            <span class="espectador__preview-texto">
-                Modo prévia · você vê exatamente o recorte que um espectador vê
-            </span>
-            <a
-                app-botao
-                variante="secundario"
-                class="botao botao--secundario espectador__preview-sair"
-                [routerLink]="['/campanhas', id]"
-            >
-                Sair da visualização
-            </a>
-        </div>
-        }
-
         <header class="espectador__cabecalho">
             @if (!ehMestrePreview()) {
             <a

@@ -1,5 +1,41 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-24 — Prévias de jogador e espectador: aviso na coluna de ações, Iniciativa desabilitada, item desabilitado com estado visual
+
+Pedido do autor sobre a prévia "ver como jogador": tirar a barra "Visualizando como X · prévia
+somente leitura · Sair da prévia" do topo da página e levá-la para a barra lateral; desabilitar a
+Iniciativa na coluna; dar estilo aos botões desabilitados.
+
+**Como ficou.**
+- `detalhe-jogador.page.html`: com `dados.previa()`, a `app-coluna-acoes` abre com a categoria
+  "Prévia · <alvo>" e um item-link `olho` "Sair da prévia" (tooltip "Visualizando como <alvo> —
+  sair da prévia"), que volta para `/campanhas/:id`. Retraída, a categoria fica transparente como
+  as demais e o tooltip carrega o nome. A coluna não existe no mobile nesta página, então o mesmo
+  link abre o menu "⋯" ("Sair da prévia · <alvo>"). A `.detalhe__preview-barra` e seu SCSS saíram.
+- Iniciativa da prévia: `[disabled]="true"` na coluna e no menu "⋯", com tooltip "Iniciativa
+  indisponível na prévia". O modal `app-iniciativa-leitura`, `encontroAtivoPrevia`,
+  `iniciativaPreviaAberta` e `abrirIniciativaPrevia` saíram da página. O
+  `CampanhaPreviaJogadorDadosService` continua buscando `encontroAtivo` (projeção +
+  `recuperarEncontroAtivoPreviaJogador`); hoje nenhuma tela usa isso.
+- `P-079` corrigido: `coluna-acoes-item.component.scss` ganhou `:host(:disabled)` (cor
+  `--text-mute`, opacidade 0,55 e `cursor: default`, os mesmos de `app-botao`, sem fundo nem
+  destaque de ativo). O hover passou a ser `:hover:not(:disabled)`. Vale em todas as telas que usam
+  a coluna.
+
+- Na sequência, o mesmo na prévia "ver como espectador" (`espectador.page.*`): a
+  `.espectador__preview-barra` ("Modo prévia · Sair da visualização") e seu SCSS saíram. Com
+  `ehMestrePreview()`, a coluna abre com "Prévia · Espectador" e o item-link `olho` "Sair da
+  prévia" (tooltip "Visualizando como espectador — sair da prévia"). A Iniciativa vira `<button>`
+  desabilitado ("Iniciativa indisponível na prévia") no lugar do link para
+  `/espectador/iniciativa`; o espectador real continua com o link. Aqui a coluna existe no mobile
+  (barra inferior): a categoria "Prévia" é a primeira e some lá (regra `:first-child`), e o item
+  aparece só com o ícone. Specs do espectador: 21/21.
+
+**Verificação.** Specs de `previa-jogador`, `detalhe-jogador` e `coluna-acoes`: 52/52. ESLint nos
+arquivos tocados: 0 erros (os avisos de aspas/largura já existiam). Gate visual ao vivo
+(`design-fidelity` + `verify`, `1920×1080`/`360×800`) **pendente**: a aplicação não foi executada
+nesta sessão.
+
 ## 2026-09-24 — `previa-jogador-visao-real`: "ver como jogador" passa a montar a visão real do jogador
 
 Pedido do autor: depois que a visão de jogador mudou de forma (coluna de ações, painel lateral

@@ -84,6 +84,10 @@ describe('CampanhaEspectador', () => {
     };
   }
 
+  function itensColuna(raiz: HTMLElement): HTMLElement[] {
+    return Array.from(raiz.querySelectorAll<HTMLElement>('app-coluna-acoes [app-coluna-acoes-item]'));
+  }
+
   function montar(opts: {
     painelRetorno?: CampanhaPainelEspectadorDto;
     campanhas?: CampanhaResumoDto[];
@@ -178,7 +182,7 @@ describe('CampanhaEspectador', () => {
     expect(raiz.querySelector('.espectador__lista')).toBeNull();
   });
 
-  it('espectador real não vê a barra de prévia, e tem "voltar às campanhas"', () => {
+  it('espectador real não vê a prévia na coluna, e tem "voltar às campanhas" e Iniciativa ativa', () => {
     const { raiz } = montar({
       campanhas: [
         { id: CAMPANHA_ID, nome: 'x', descricao: null, papel: TipoCampanhaMembroPapelEnum.ESPECTADOR,
@@ -188,10 +192,11 @@ describe('CampanhaEspectador', () => {
       ],
     });
     expect(raiz.querySelector('.espectador__preview-barra')).toBeNull();
+    expect(itensColuna(raiz).map((item) => item.textContent?.trim())).toEqual(['Iniciativa', 'Rolagens']);
     expect(raiz.querySelector('.espectador__voltar')).not.toBeNull();
   });
 
-  it('mestre em prévia vê a barra inequívoca, com "Sair da visualização" — sem "voltar às campanhas"', () => {
+  it('mestre em prévia vê "Sair da prévia" na coluna e a Iniciativa desabilitada — sem "voltar às campanhas"', () => {
     const { raiz } = montar({
       campanhas: [
         { id: CAMPANHA_ID, nome: 'x', descricao: null, papel: TipoCampanhaMembroPapelEnum.MESTRE,
@@ -201,13 +206,16 @@ describe('CampanhaEspectador', () => {
       ],
     });
 
-    const barra = raiz.querySelector('.espectador__preview-barra');
-    expect(barra).not.toBeNull();
-    expect(barra?.textContent).toContain('Modo prévia');
-    expect(raiz.querySelector('.espectador__preview-sair')?.getAttribute('href')).toBe(
-      `/campanhas/${CAMPANHA_ID}`,
-    );
-    // Mestre em prévia não tem o "voltar às campanhas" genérico — a saída é pela barra.
+    expect(raiz.querySelector('.espectador__preview-barra')).toBeNull();
+    expect(raiz.querySelector('app-coluna-acoes .coluna-acoes__categoria')?.textContent).toContain('Prévia');
+    const [sair, iniciativa] = itensColuna(raiz);
+    expect(sair.textContent).toContain('Sair da prévia');
+    expect(sair.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}`);
+    expect(iniciativa.tagName).toBe('BUTTON');
+    expect(iniciativa.textContent).toContain('Iniciativa');
+    expect((iniciativa as HTMLButtonElement).disabled).toBe(true);
+    expect(iniciativa.getAttribute('href')).toBeNull();
+    // Mestre em prévia não tem o "voltar às campanhas" genérico — a saída é pela coluna.
     expect(raiz.querySelector('.espectador__voltar')).toBeNull();
   });
 

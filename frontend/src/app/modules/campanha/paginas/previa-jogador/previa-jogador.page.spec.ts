@@ -260,13 +260,14 @@ describe('CampanhaPreviaJogador', () => {
 
   const esperarCoordenador = () => new Promise((resolve) => setTimeout(resolve, 30));
 
-  it('monta a visão real do jogador, com a barra de prévia e a projeção pedida pelo alvo', () => {
+  it('monta a visão real do jogador, com a prévia na coluna e a projeção pedida pelo alvo', () => {
     const { raiz, campanhaProjecaoService } = montar();
 
     expect(raiz.querySelector('app-campanha-detalhe-jogador')).not.toBeNull();
     expect(raiz.querySelector('app-coluna-acoes')).not.toBeNull();
     expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
-    expect(raiz.querySelector('.detalhe__preview-texto')?.textContent).toContain('Beta');
+    expect(raiz.querySelector('.detalhe__preview-barra')).toBeNull();
+    expect(raiz.querySelector('app-coluna-acoes .coluna-acoes__categoria')?.textContent).toContain('Beta');
     expect(raiz.querySelector('.detalhe__titulo')?.textContent).toContain('Contenção Delta');
   });
 
@@ -274,7 +275,7 @@ describe('CampanhaPreviaJogador', () => {
     const { campanhaProjecaoService, raiz } = montar({ previaResolvida: previa() });
 
     expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
-    expect(raiz.querySelector('.detalhe__preview-texto')?.textContent).toContain('Beta');
+    expect(raiz.querySelector('app-coluna-acoes .coluna-acoes__categoria')?.textContent).toContain('Beta');
   });
 
   it('nunca chama as rotas que respondem com o privilégio do mestre', () => {
@@ -332,10 +333,10 @@ describe('CampanhaPreviaJogador', () => {
     expect(raiz.querySelector('.detalhe__historico-lista')).not.toBeNull();
   });
 
-  it('"Sair da prévia" volta ao detalhe da campanha do mestre', () => {
+  it('"Sair da prévia" na coluna volta ao detalhe da campanha do mestre', () => {
     const { raiz } = montar();
 
-    expect(raiz.querySelector('.detalhe__preview-sair')?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}`);
+    expect(itemColuna(raiz, 'Sair da prévia').getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}`);
   });
 
   it('estado vazio fala do alvo e não oferece criar/vincular', () => {
@@ -431,22 +432,16 @@ describe('CampanhaPreviaJogador', () => {
   });
 
   describe('Iniciativa', () => {
-    it('sem combate em andamento, o item fica desabilitado', () => {
-      const { raiz } = montar();
-
-      expect(itemColuna(raiz, 'Iniciativa').disabled).toBe(true);
-    });
-
-    it('com encontro redigido para o alvo, abre a leitura em modal em vez da rota do mestre', () => {
+    it('fica desabilitada mesmo com combate em andamento, sem abrir leitura nem a rota do mestre', () => {
       const { fixture, raiz } = montar({ previaResposta: previa({ encontroAtivo }) });
 
       const item = itemColuna(raiz, 'Iniciativa');
       expect(item.tagName).toBe('BUTTON');
-      expect(item.disabled).toBe(false);
+      expect(item.disabled).toBe(true);
       item.click();
       fixture.detectChanges();
 
-      expect(raiz.querySelector('app-iniciativa-leitura')).not.toBeNull();
+      expect(raiz.querySelector('app-iniciativa-leitura')).toBeNull();
     });
 
     it('encontro:alterado isolado busca só o encontro seguro do alvo', async () => {

@@ -25,7 +25,7 @@
     cursor: pointer;
     appearance: none;
 
-    &:hover {
+    &:hover:not(:disabled) {
         color: var(--text);
         background: var(--surface-2);
     }
@@ -51,6 +51,17 @@
     color: var(--text);
     background: var(--accent-dim);
     box-shadow: inset 2px 0 0 var(--accent);
+}
+
+// P-079: desabilitado com a mesma opacidade/cursor canônicos de `app-botao` (`botao.component.scss`),
+// sem hover e com a cor mais apagada da escala — antes só o clique deixava de funcionar e o item
+// ficava idêntico aos ativos. Declarado depois de `--ativo` para vencer um item pressionado inerte.
+:host(:disabled) {
+    color: var(--text-mute);
+    background: transparent;
+    box-shadow: none;
+    opacity: 0.55;
+    cursor: default;
 }
 
 .coluna-acoes__item-icone {

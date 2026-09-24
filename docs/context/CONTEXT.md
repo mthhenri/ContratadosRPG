@@ -9,14 +9,19 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `previa-jogador-visao-real`
+> **Última revisão:** 2026-09-24 · **Última decisão registrada:** ajuste das prévias de jogador
+> e de espectador pedido pelo autor — a barra de prévia saiu do topo das duas páginas e virou o
+> primeiro grupo da coluna de ações ("Prévia · X" + item "Sair da prévia"; no mobile do jogador, o
+> primeiro item do menu "⋯"; no espectador, a barra inferior); a Iniciativa fica sempre
+> desabilitada nas duas prévias (o modal de leitura do jogador saiu); `app-coluna-acoes-item`
+> ganhou `:host(:disabled)` (`P-079` corrigido). Gate visual ao vivo **pendente**. Antes: `previa-jogador-visao-real`
 > concluída (spec em `done/`): "ver como jogador" monta a própria `CampanhaDetalheJogador` com a
 > fonte de dados trocada por `CampanhaPreviaJogadorDadosService` (projeção do alvo) e a tela em
 > somente leitura por `CampanhaDetalheDadosService.previa()`; "ver como espectador" continua no
 > `CampanhaEspectador` real, que agora filtra as `PRIVADA` que o mestre recebe pela sala `:mestre`
 > (painel, Iniciativa do espectador e janela externa `?origem=espectador`). Verificado ao vivo nos
-> 4 viewports. Achado: item desabilitado da coluna de ações sem estado visual (`P-079`, decisão do
-> autor). Antes: `P-077` corrigido — `npm run lint`
+> 4 viewports. Achado: item desabilitado da coluna de ações sem estado visual (`P-079`, já
+> corrigido). Antes: `P-077` corrigido — `npm run lint`
 > da raiz volta a sair com 0 erros (laços síncronos no lugar de `Promise.all` sobre
 > `RemoteSocket.join`/`leave` em `CampanhaGateway`, asserção redundante removida em
 > `FichaService.alterarVitalidade`); salas conferidas ao vivo. Antes:
