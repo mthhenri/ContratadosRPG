@@ -1,0 +1,44 @@
+@use "tema/breakpoints" as bp;
+
+// `display: contents`: selo e botão entram direto no flex do cabeçalho do painel (ou da faixa de
+// escopo da janela), como antes da extração.
+:host {
+    display: contents;
+}
+
+.caderno {
+    &__salvamento {
+        padding: 4px 7px;
+        color: var(--accent);
+        border: 1px solid var(--accent-border);
+        border-radius: var(--radius-control);
+        font: 600 9px/1 var(--font-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        &--erro {
+            color: var(--vida);
+            border-color: var(--vida-border);
+        }
+    }
+    &__recarregar {
+        min-height: 28px;
+        padding: 0 7px;
+        color: var(--accent);
+        background: transparent;
+        border: 1px solid var(--accent-border);
+        font-size: 8px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+}
+
+@include bp.mobile {
+    .caderno {
+        &__salvamento,
+        &__recarregar {
+            display: none;
+        }
+    }
+}

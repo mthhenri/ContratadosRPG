@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
@@ -11,6 +12,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { CadernoFlutuante } from './caderno-flutuante.component';
+import { CadernoJanelaService } from './caderno-janela.service';
 import { EDITOR_MARKDOWN_FACTORY } from '../../shared/ui/editor-markdown/editor-markdown.component';
 import { PaginaCadernoService } from './pagina-caderno.service';
 import { SessaoService } from '../../core/services/sessao.service';
@@ -66,6 +68,12 @@ describe('CadernoFlutuante', () => {
     entrarSalaCampanha: ReturnType<typeof vi.fn>;
     enviarPresencaEsquadrao: ReturnType<typeof vi.fn>;
   };
+  /** Janela externa do Caderno (I-027) — `aberta` simula a janela existir nesta aba. */
+  let janela: {
+    aberta: ReturnType<typeof signal<boolean>>;
+    estaAberta: (campanhaId: number) => boolean;
+    abrir: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     // `app-painel-flutuante` persiste posição/minimizado em `localStorage` por `[id]` ("caderno")
@@ -98,9 +106,19 @@ describe('CadernoFlutuante', () => {
       entrarSalaCampanha: vi.fn(),
       enviarPresencaEsquadrao: vi.fn(),
     };
+    const aberta = signal(false);
+    janela = {
+      aberta,
+      estaAberta: (campanhaId: number) => campanhaId === 3 && aberta(),
+      abrir: vi.fn(() => {
+        aberta.set(true);
+        return true;
+      }),
+    };
     await TestBed.configureTestingModule({
       imports: [CadernoFlutuante],
       providers: [
+        { provide: CadernoJanelaService, useValue: janela },
         { provide: PaginaCadernoService, useValue: api },
         { provide: TempoRealService, useValue: tempoReal },
         { provide: SessaoService, useValue: { usuario: () => ({ id: 7, nome: 'QA' }) } },
@@ -210,7 +228,111 @@ describe('CadernoFlutuante', () => {
 
   it("projeta o corpo flexível do caderno diretamente no corpo do painel", () => {
     clicar("[aria-label=\"Abrir caderno\"]");
-    expect(obter(".caderno__corpo").parentElement).toBe(obter(".painel-flutuante__corpo"));
+    // `app-caderno-conteudo` é `display: contents`: os blocos do corpo participam do flex do painel.
+    const conteudo = obter("app-caderno-conteudo");
+    expect(conteudo.parentElement).toBe(obter(".painel-flutuante__corpo"));
+    expect(obter(".caderno__corpo").parentElement).toBe(conteudo);
+    expect(getComputedStyle(conteudo).display).toBe("contents");
+  });
+
+  it('abre o caderno em janela externa e tira o painel da tela', () => {
+    abrirPagina();
+    aoAlterarEditor('pendente antes da janela');
+    fixture.detectChanges();
+
+    clicar('[aria-label="Abrir caderno em janela"]');
+
+    expect(api.alterarPagina).toHaveBeenCalledWith(11, expect.objectContaining({
+      conteudoMarkdown: 'pendente antes da janela',
+    }));
+    expect(janela.abrir).toHaveBeenCalledWith(3);
+    expect(raiz().querySelector('.painel-flutuante__janela')).toBeNull();
+    expect(fixture.componentInstance.aberto()).toBe(false);
+  });
+
+  it('não oferece a janela externa no mobile', () => {
+    definirViewport(360, 800);
+    window.dispatchEvent(new Event('resize'));
+    fixture.detectChanges();
+    clicar('[aria-label="Abrir caderno"]');
+
+    expect(raiz().querySelector('[aria-label="Abrir caderno em janela"]')).toBeNull();
+  });
+
+  it('com o caderno em janela, abrir e alternar focam a janela em vez do painel', () => {
+    janela.aberta.set(true);
+    fixture.detectChanges();
+
+    fixture.componentInstance.abrir();
+    fixture.componentInstance.alternar();
+    fixture.detectChanges();
+
+    expect(janela.abrir).toHaveBeenCalledTimes(2);
+    expect(raiz().querySelector('.painel-flutuante__janela')).toBeNull();
+    expect(api.listarPaginas).not.toHaveBeenCalled();
+  });
+
+  it('ao fechar a janela, devolve o painel e recarrega a lista e a página abertas', () => {
+    abrirPagina();
+    clicar('[aria-label="Abrir caderno em janela"]');
+    api.listarPaginas.mockClear();
+    api.recuperarPagina.mockClear();
+    api.recuperarPagina.mockReturnValue(
+      of({ ...pagina, conteudoMarkdown: 'escrito na janela', updatedDate: 'v2' }),
+    );
+
+    janela.aberta.set(false);
+    fixture.detectChanges();
+
+    expect(obter('.painel-flutuante__janela')).toBeTruthy();
+    expect(fixture.componentInstance.aberto()).toBe(true);
+    expect(api.listarPaginas).toHaveBeenCalledWith(3);
+    expect(api.recuperarPagina).toHaveBeenCalledWith(11);
+    expect(fixture.componentInstance['store'].paginaAtiva()?.updatedDate).toBe('v2');
+  });
+
+  it('ao fechar a janela, mantém a página nova sem título que não pôde ser salva', () => {
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Criar página"]');
+    aoAlterarEditor('rascunho sem título');
+    fixture.detectChanges();
+    clicar('[aria-label="Abrir caderno em janela"]');
+    api.listarPaginas.mockClear();
+
+    janela.aberta.set(false);
+    fixture.detectChanges();
+
+    expect(api.listarPaginas).not.toHaveBeenCalled();
+    expect(fixture.componentInstance['store'].rascunho().conteudoMarkdown).toBe(
+      'rascunho sem título',
+    );
+  });
+
+  it('recolher encerra a sessão do Esquadrão e restaurar reabre a mesma página', () => {
+    const paginaEsquadrao: PaginaCadernoDto = {
+      ...pagina,
+      id: 21,
+      tipo: TipoPaginaCadernoEnum.ESQUADRAO,
+      usuarioAutorId: null,
+      autorNome: null,
+    };
+    api.listarPaginasEsquadrao.mockReturnValue(
+      of([{ ...paginaEsquadrao, conteudoMarkdown: undefined }]),
+    );
+    api.recuperarEstadoPaginaEsquadrao.mockReturnValue(new Subject());
+    clicar('[aria-label="Abrir caderno"]');
+    clicar('[aria-label="Selecionar caderno do esquadrão"]');
+    clicar('[data-pagina-id="21"]');
+    fixture.componentInstance['store'].refletirPaginaColaborativa(paginaEsquadrao);
+    expect(api.recuperarEstadoPaginaEsquadrao).toHaveBeenCalledTimes(1);
+
+    clicar('[aria-label="Abrir caderno em janela"]');
+    janela.aberta.set(false);
+    fixture.detectChanges();
+
+    expect(api.listarPaginasEsquadrao).toHaveBeenCalledTimes(2);
+    expect(api.recuperarEstadoPaginaEsquadrao).toHaveBeenCalledTimes(2);
+    expect(api.recuperarEstadoPaginaEsquadrao).toHaveBeenLastCalledWith(21);
   });
 
   it('maximiza a janela e restaura tamanho e posição anteriores no desktop', () => {

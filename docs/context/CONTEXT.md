@@ -9,7 +9,14 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `P-081` corrigido — o
+> **Última revisão:** 2026-09-25 · **Última decisão registrada:** `i-027-caderno-janela-externa`
+> concluída (spec em `done/`) e, com ela, a `I-027` inteira: o Caderno da campanha abre em janela
+> externa (`/janela/campanha/:id/caderno`, `960×720`) pelo ícone "Abrir em janela" do painel (fora
+> do mobile). O corpo do painel virou `CadernoConteudo` e o selo de salvamento `CadernoSalvamento`
+> (`modules/pagina-caderno/`), usados pelo painel e pela página `CadernoJanela`; a fachada é
+> `CadernoJanelaService`. Com a janela aberta, o `CadernoFlutuante` de qualquer página da mesma aba
+> fica recolhido e os cliques em "Caderno" focam a janela; ao fechá-la, o painel volta e recarrega
+> lista e página aberta. Verificado ao vivo em `1920×1080`/`360×800`. Antes: `P-081` corrigido — o
 > `EditorMarkdown` ganhou `confirmarValor()` (lê o markdown na hora, sem o debounce do `listener`
 > do Milkdown), chamado no `focusout` do próprio editor e pelos Salvar de Anotações e História;
 > gate ao vivo **pendente**. Antes: `i-027-anotacoes-janela-externa`
@@ -20,7 +27,7 @@
 > (`shared/janela-externa/`). `P-080` corrigido: o backend preserva `anotacoes`/`historia`
 > gravadas quando o PUT chega sem a chave, e dono/mestre buscam o documento completo pelo REST ao
 > receber `ficha:alterada` (o broadcast omite esses campos). Verificado ao vivo nos dois
-> viewports. Resta o Caderno em janela (`IDEAS.md` `I-027`). Antes: ajuste das prévias de jogador
+> viewports. Antes: ajuste das prévias de jogador
 > e de espectador pedido pelo autor — a barra de prévia saiu do topo das duas páginas e virou o
 > primeiro grupo da coluna de ações ("Prévia · X" + item "Sair da prévia"; no mobile do jogador, o
 > primeiro item do menu "⋯"; no espectador, a barra inferior); a Iniciativa fica sempre
@@ -853,7 +860,7 @@ Operacional/Medicinal do inventário (autor escolheu "selecionar item no invent�
 de desenho, via `AskUserQuestion`); `calcularTotaisCarrinho` isenta de peso as unidades que a mod
 concede (`calcularItensIsentosEspacoReservado`), item removido do carrinho não quebra nada — a
 isenção só para de valer. As ideias de janela externa e busca por descrição foram registradas
-em `IDEAS.md` (`I-027`/`I-028`); ambas avançaram depois (I-027 parcialmente, I-028 concluída).
+em `IDEAS.md` (`I-027`/`I-028`); ambas avançaram depois (ambas concluídas — I-027 em 2026-09-25).
 Detalhe completo,
 achados, testes e viewports verificados em `HISTORY.md`.
 

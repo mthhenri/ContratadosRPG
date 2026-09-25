@@ -1,5 +1,62 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-25 — I-027, fatia do Caderno: Caderno da campanha em janela externa; I-027 concluída
+
+Pedido do autor: "faz a próxima parte do I-027" — a 3ª e última fatia (Histórico → Anotações →
+**Caderno**). Spec escrita e fechada nesta tarefa: `docs/specs/done/i-027-caderno-janela-externa.spec.md`.
+
+**Como ficou.**
+- `CadernoConteudo` (`modules/pagina-caderno/caderno-conteudo.*`) é o corpo que vivia dentro do
+  `app-painel-flutuante` de `CadernoFlutuante` (escopo, busca, lista, editor, confirmações), com
+  `:host { display: contents }` para continuar na coluna flexível do painel. Não provê store nem
+  sessão colaborativa: quem hospeda provê. A janela seria a segunda cópia. O efeito duplicado
+  byte a byte do título colaborativo ficou uma vez só.
+- `CadernoSalvamento` (selo "Salvando…/Salvo/Falha/Conflito" + "Recarregar versão") saiu do
+  cabeçalho do painel para ser usado também na janela, num slot `[cadernoEscopoExtra]` do corpo.
+- `CadernoFlutuante` ficou com gatilho, painel, maximizar, redimensionar e o botão novo
+  `abrir-externo` "Abrir em janela" (fora do mobile; grava o pendente e abre síncrono no clique).
+  A fachada `CadernoJanelaService` usa o contexto `caderno:<campanhaId>`, abre
+  `/janela/campanha/:id/caderno` com `960×720`. O recolher mora no próprio `CadernoFlutuante`, então
+  as seis páginas que o hospedam não mudaram: com a janela aberta, `aberto()` é `false` (item da
+  coluna não pressionado) e `abrir()`/`alternar()` focam a janela. Ao recolher, o corpo grava o
+  pendente e encerra a sessão Yjs do Esquadrão; ao fechar a janela, o painel volta ao estado
+  anterior e o corpo relista o modo atual e rebusca a página aberta (novo
+  `CadernoFlutuanteStore.recarregarPaginas()`, que não desseleciona) — o caderno privado não tem
+  tempo real e a versão velha daria "Conflito de versão". Rascunho que não pôde ser salvo (página
+  nova sem título) não é recarregado.
+- `CadernoJanela` (`modules/pagina-caderno/paginas/caderno-janela/`): `recuperarCampanha` +
+  `listarMembros`, decide mestre/jogador pelo próprio vínculo; espectador, não membro ou REST
+  negado → estado vazio de acesso negado. `JanelaExternaCabecalho` "Caderno · <campanha>" / "Voltar
+  à campanha"; entra na sala `campanha:<id>`; resultado "Ficha" da busca abre
+  `/campanhas/:id/ficha/:fichaId#anotacoes` numa aba nova (a janela não comanda a aba principal);
+  `beforeunload` com rascunho não salvo ou gravação em andamento.
+
+**Testes.** `caderno-janela.service.spec.ts` (4), `caderno-janela.page.spec.ts` (6), 6 casos novos
+em `caderno-flutuante.component.spec.ts` (abrir em janela e grava o pendente, sem botão no mobile,
+foco com a janela aberta, restaurar recarrega lista e página, rascunho sem título preservado,
+sessão do Esquadrão encerrada e reaberta) e 1 no store. Os 35 testes existentes do painel
+continuaram como integração com o corpo real; só o de estrutura do corpo projetado mudou. Suíte do
+frontend: 153 arquivos / 2196 testes; `npm run lint --workspace=frontend` com 0 erros (avisos
+preexistentes); build verde com o aviso de orçamento do `P-004` (inicial 544,98 kB, +0,13 kB).
+
+**Verificação ao vivo** (stack do autor já no ar, Playwright com `waitForEvent('popup')`; mestre,
+jogadora e espectador criados por REST na campanha "Caderno I-027", soft-deletada ao fim). Análogos:
+`AnotacoesJanela`/`HistoricoRolagensCampanhaJanela` (casco) e o painel do Caderno (corpo). Em
+`1920×1080`: página criada no painel ("Salvo"), "Abrir em janela" → popup em
+`/janela/campanha/71/caderno`, painel fora da tela, item "Caderno" com `aria-pressed=false`;
+edição na janela salva; clicar "Caderno" com a janela aberta não abre outra; modos Jogadores (com
+seletor) e busca com resultados; lista recolhida; fechar o popup → painel de volta sem recarregar
+(sentinela intacta) com o texto escrito na janela, e a edição seguinte salva sem conflito. Com a
+janela aberta, navegar na mesma aba até a Iniciativa: "Caderno" não pressionado e só foca a janela;
+fechada a janela, o clique abre o painel. Página do Esquadrão criada na janela do mestre aparece no
+painel da jogadora sem recarregar, com o texto. Espectador: acesso negado, nenhuma página. Em
+`360×800`: painel sem o botão, janela em lista → conteúdo. Sem overflow horizontal em nenhum; nenhum
+erro de console.
+
+**Achado sem reprodução.** Na primeira execução, a janela do mestre mostrou "acesso negado"
+enquanto o dev server servia os módulos recém-recompilados; três execuções seguidas e a rota aberta
+direto carregaram normalmente. Registrado na spec; não virou `PROBLEMS.md` por falta de reprodução.
+
 ## 2026-09-24 — P-081: Salvar logo após digitar no editor Markdown não perde mais o fim do texto
 
 Pedido do autor: resolver `P-081`. Sem spec (correção de defeito registrado em `PROBLEMS.md`).

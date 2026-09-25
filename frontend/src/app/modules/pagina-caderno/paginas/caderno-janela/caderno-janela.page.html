@@ -1,0 +1,32 @@
+<section class="caderno-janela">
+    <app-janela-externa-cabecalho
+        [contexto]="contexto()"
+        [voltarPara]="voltarPara"
+        rotuloVoltar="Voltar à campanha"
+    />
+    @if (estado() === "pronto") {
+        <main class="caderno-janela__corpo">
+            <app-caderno-conteudo
+                [campanhaId]="campanhaId"
+                [ehMestre]="ehMestre()"
+                [membros]="membros()"
+                [mobile]="ehMobile()"
+                (abrirFicha)="abrirFicha($event)"
+            >
+                <app-caderno-salvamento cadernoEscopoExtra />
+            </app-caderno-conteudo>
+        </main>
+    } @else {
+        <main class="caderno-janela__estado">
+            @if (estado() === "negado") {
+                <app-estado-vazio
+                    icone="caderno"
+                    titulo="Não foi possível acessar o caderno desta campanha."
+                    linhaApoio="Só o mestre e os jogadores da campanha usam o Caderno."
+                />
+            } @else {
+                <app-esqueleto class="caderno-janela__esqueleto" />
+            }
+        </main>
+    }
+</section>

@@ -32,6 +32,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'janela/campanha/:campanhaId/caderno',
+    canActivate: [autenticacaoGuard],
+    loadComponent: () =>
+      import('./modules/pagina-caderno/paginas/caderno-janela/caderno-janela.page').then(
+        (pagina) => pagina.CadernoJanela,
+      ),
+  },
+  {
     path: 'acesso-negado',
     loadComponent: () =>
       import('./modules/acesso-negado/acesso-negado.page').then(

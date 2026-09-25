@@ -193,6 +193,19 @@ describe('CadernoFlutuanteStore', () => {
     expect(store.rascunho().conteudoMarkdown).toBe('texto local');
   });
 
+  it('relista o próprio caderno sem desselecionar a página aberta', () => {
+    const outra = { ...pagina, id: 12, titulo: 'Criada em outra janela' };
+    store.abrir(3);
+    store.selecionarPagina(pagina);
+    api.listarPaginas.mockReturnValue(of([outra, pagina]));
+
+    store.recarregarPaginas();
+
+    expect(api.listarPaginas).toHaveBeenLastCalledWith(3);
+    expect(store.paginas().map((item) => item.id)).toEqual([12, 11]);
+    expect(store.paginaAtiva()?.id).toBe(11);
+  });
+
   it('recarrega a versão persistida somente quando o usuário pede', () => {
     const versaoServidor = { ...pagina, titulo: 'Versão do servidor', updatedDate: 'v2' };
     api.recuperarPagina.mockReturnValue(of(versaoServidor));

@@ -1,0 +1,15 @@
+@if (rotulo()) {
+    <span class="caderno__salvamento" [class.caderno__salvamento--erro]="erro()" aria-live="polite">{{
+        rotulo()
+    }}</span>
+    @if (store.estadoSalvamento() === "CONFLITO") {
+        <button
+            app-botao
+            class="caderno__recarregar"
+            type="button"
+            (click)="store.recarregarPaginaAtiva()"
+        >
+            Recarregar versão
+        </button>
+    }
+}

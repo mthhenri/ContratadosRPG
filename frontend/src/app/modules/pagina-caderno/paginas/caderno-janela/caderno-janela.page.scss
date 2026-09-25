@@ -1,0 +1,35 @@
+// Mesmo casco de `AnotacoesJanela`/`HistoricoRolagensJanela`: cabeçalho fixo e só o corpo rola. O
+// corpo repete o do painel flutuante (superfície, coluna flexível e `container-type`, que a regra de
+// sobreposição da lista abaixo de 640px lê), sem moldura: a janela do navegador já é a moldura.
+.caderno-janela {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--bg);
+
+    &__corpo {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        overflow: auto;
+        color: var(--text);
+        background: var(--surface);
+        container-type: inline-size;
+    }
+
+    &__estado {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+        padding: var(--space-8);
+    }
+
+    &__esqueleto {
+        flex: 1;
+    }
+}

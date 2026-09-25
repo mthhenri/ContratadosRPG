@@ -285,6 +285,12 @@ export class CadernoFlutuanteStore {
     this.carregarPaginas(campanhaId);
   }
 
+  /** Relista o próprio caderno sem desselecionar a página aberta (painel restaurado — I-027). */
+  recarregarPaginas(): void {
+    const campanhaId = this.campanhaIdInterno();
+    if (campanhaId !== null) this.carregarPaginas(campanhaId);
+  }
+
   definirResultados(resultado: PaginatedResult<BuscaCampanhaResultadoDto>): void {
     this.resultadosBuscaInternos.set(resultado);
   }

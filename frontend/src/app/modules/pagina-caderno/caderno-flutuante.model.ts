@@ -8,6 +8,15 @@ export const CADERNO_TAMANHO_STORAGE_KEY = 'contratados-rpg:caderno-geometria:v1
 export const CADERNO_AUTOSAVE_DELAY = 800;
 export const CADERNO_LARGURA_MINIMA = 440;
 export const CADERNO_ALTURA_MINIMA = 520;
+/** Abaixo disso o caderno navega lista ↔ conteúdo (painel em folha cheia, janela estreita). */
+export const CADERNO_BREAKPOINT_MOBILE = 560;
+
+/** Mesmo breakpoint para o painel flutuante e para a janela externa (I-027). */
+export function consultarCadernoMobile(): boolean {
+  return typeof window.matchMedia === 'function'
+    ? window.matchMedia(`(max-width: ${CADERNO_BREAKPOINT_MOBILE}px)`).matches
+    : window.innerWidth <= CADERNO_BREAKPOINT_MOBILE;
+}
 
 export type EstadoSalvamentoCaderno =
   | 'INATIVO'
