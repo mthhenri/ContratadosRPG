@@ -35,12 +35,12 @@ export class AnotacoesFichaEditor {
     this.editando.set(false);
   }
 
-  protected confirmar(): void {
+  /** `texto` vem de `EditorMarkdown.confirmarValor()`, não do `rascunho` — este chega atrasado (P-081). */
+  protected confirmar(texto: string): void {
     if (!this.editando()) {
       return;
     }
     this.editando.set(false);
-    const texto = this.rascunho();
     if (texto !== this.valor()) {
       this.salvar.emit(texto);
     }

@@ -46,7 +46,7 @@ import {
   tabelaAdmiteSoCabecalho,
 } from './editor-markdown-tabela';
 
-const LIMITE_MARKDOWN = 100_000;
+export const LIMITE_MARKDOWN = 100_000;
 /** Folga padrão do ProseMirror ao rolar até o cursor (`scrollMargin`), em px. */
 const MARGEM_ROLAGEM = 5;
 

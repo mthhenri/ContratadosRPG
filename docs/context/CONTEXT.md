@@ -9,7 +9,10 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `i-027-anotacoes-janela-externa`
+> **Última revisão:** 2026-09-24 · **Última decisão registrada:** `P-081` corrigido — o
+> `EditorMarkdown` ganhou `confirmarValor()` (lê o markdown na hora, sem o debounce do `listener`
+> do Milkdown), chamado no `focusout` do próprio editor e pelos Salvar de Anotações e História;
+> gate ao vivo **pendente**. Antes: `i-027-anotacoes-janela-externa`
 > concluída (spec em `done/`): as anotações das fichas de jogador e criatura abrem em janela
 > externa (`/janela/ficha/:id/anotacoes`, `640×720`) pelo ícone "Abrir em janela" do painel, que
 > sai da tela enquanto a janela existe e volta ao fechá-la; o editor duplicado virou
@@ -17,7 +20,7 @@
 > (`shared/janela-externa/`). `P-080` corrigido: o backend preserva `anotacoes`/`historia`
 > gravadas quando o PUT chega sem a chave, e dono/mestre buscam o documento completo pelo REST ao
 > receber `ficha:alterada` (o broadcast omite esses campos). Verificado ao vivo nos dois
-> viewports. Resta o Caderno em janela (`IDEAS.md` `I-027`). Novo: `P-081`. Antes: ajuste das prévias de jogador
+> viewports. Resta o Caderno em janela (`IDEAS.md` `I-027`). Antes: ajuste das prévias de jogador
 > e de espectador pedido pelo autor — a barra de prévia saiu do topo das duas páginas e virou o
 > primeiro grupo da coluna de ações ("Prévia · X" + item "Sair da prévia"; no mobile do jogador, o
 > primeiro item do menu "⋯"; no espectador, a barra inferior); a Iniciativa fica sempre

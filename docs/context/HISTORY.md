@@ -1,5 +1,39 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-24 — P-081: Salvar logo após digitar no editor Markdown não perde mais o fim do texto
+
+Pedido do autor: resolver `P-081`. Sem spec (correção de defeito registrado em `PROBLEMS.md`).
+
+**Causa.** `EditorMarkdown` só emitia `valorChange` pelo `markdownUpdated` do plugin `listener`
+do Milkdown, que é debounced (~200ms). Os hospedeiros liam o rascunho no clique de Salvar, antes
+da emissão — na verificação da janela de anotações, gravou vazio.
+
+**Correção.**
+- `EditorMarkdown.confirmarValor()` (público): lê `obterMarkdown()` da instância na hora, propaga
+  pelo mesmo caminho do `listener` (`propagarMarkdown`: `valorChange` + `onChange` do CVA, com as
+  mesmas guardas de sincronização/somente leitura/sem mudança) e devolve o texto. Antes do
+  `criar()` terminar devolve o `valorEfetivo()` (a instância ainda só conhece o `valorInicial`);
+  acima de `LIMITE_MARKDOWN` (agora exportado da fábrica) devolve o texto truncado e deixa a
+  emissão para o `listener`, que já truncava o documento.
+- O `focusout` do editor (foco saindo do host) chama `confirmarValor()`. O `focusout` dispara no
+  `mousedown`/toque, antes do `click` — isso cobre todos os hospedeiros sem mudança, inclusive os
+  formulários CVA (Efeito de ataque, Descrição/Restrição de habilidade da criatura, Descrição de
+  habilidade da ficha) e o Caderno.
+- Os dois Salvar explícitos passam o retorno em vez do rascunho: `AnotacoesFichaEditor`
+  (`confirmar(editor.confirmarValor())`, painel e janela externa) e a História de
+  `FichaVisualizacao` (`confirmarHistoria(editorHistoria.confirmarValor())`) — cobre o clique que
+  não tira o foco (clique programático, automação).
+
+**Testes.** `editor-markdown.component.spec.ts`: `confirmarValor` emite o texto pendente, não
+emite sem mudança, `focusout` confirma (modo `valor`) e grava no `FormControl` (modo CVA).
+`editor-markdown.milkdown.spec.ts` (Milkdown real): logo após uma edição o `listener` ainda não
+emitiu e `obterMarkdown()` já traz a edição — a premissa da correção. `anotacoes-ficha-editor`:
+Salvar usa `confirmarValor()` mesmo com o rascunho atrasado. Suíte do frontend: 151 arquivos,
+2179 testes verdes; `npm run lint --workspace=frontend` com 0 erros (avisos preexistentes).
+
+**Pendente.** Reprodução ao vivo (digitar e clicar Salvar em menos de 200ms na janela de
+anotações) não foi executada nesta tarefa — a aplicação não foi levantada.
+
 ## 2026-09-24 — I-027, fatia das Anotações: anotações da ficha em janela externa; P-080 (anotações/história apagadas pelo eco) corrigido
 
 Pedido do autor: implementar a 2ª fatia da I-027 (Histórico → **Anotações** → Caderno). Spec

@@ -368,3 +368,26 @@ describe('EDITOR_MARKDOWN_FACTORY — histórico (Milkdown real)', () => {
     }
   });
 });
+
+describe('EDITOR_MARKDOWN_FACTORY — leitura síncrona (Milkdown real, P-081)', () => {
+  it('obterMarkdown já traz a edição que o listener debounced ainda não emitiu', async () => {
+    const emitidos: string[] = [];
+    const instancia = TestBed.inject(EDITOR_MARKDOWN_FACTORY)({
+      raiz: criarRaiz(),
+      valorInicial: 'Registro\n',
+      documentoColaborativo: null,
+      awareness: null,
+      aoAlterar: (markdown) => emitidos.push(markdown),
+      aoAlterarEstado: () => undefined,
+    });
+    await instancia.criar();
+    try {
+      instancia.aplicarAcao('TABELA');
+
+      expect(emitidos).toEqual([]);
+      expect(instancia.obterMarkdown()).toContain('|');
+    } finally {
+      instancia.destruir();
+    }
+  });
+});

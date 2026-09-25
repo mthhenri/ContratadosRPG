@@ -25,6 +25,7 @@ import { BotaoIcone } from '../botao-icone/botao-icone.component';
 import {
   EDITOR_MARKDOWN_FACTORY,
   type EditorMarkdownInstancia,
+  LIMITE_MARKDOWN,
 } from './editor-markdown-fabrica';
 import {
   type AcaoMarkdown,
@@ -210,6 +211,8 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
   private instancia: EditorMarkdownInstancia | null = null;
   private sincronizando = false;
   private destruido = false;
+  /** Até o `criar()` terminar, `obterMarkdown()` devolve o `valorInicial`, não o texto atual. */
+  private criado = false;
   /** Distância atual entre o fim do containing block da barra ancorada e o fim da área visível. */
   private deslocamentoTeclado = 0;
   private ancorada = false;
@@ -279,17 +282,7 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
       valorInicial: this.valorEfetivo(),
       documentoColaborativo: this.documentoColaborativo(),
       awareness: this.awareness(),
-      aoAlterar: (markdown) => {
-        if (this.sincronizando || this.somenteLeituraEfetiva() || markdown === this.valorEfetivo()) {
-          return;
-        }
-        if (this.usandoCva()) {
-          this.valorCva.set(markdown);
-          this.onChange?.(markdown);
-          this.onTouched?.();
-        }
-        this.valorChange.emit(markdown);
-      },
+      aoAlterar: (markdown) => this.propagarMarkdown(markdown),
       aoAlterarEstado: (estado) => {
         if (!estado.emTabela) this.faixaEmTabela.set('TABELA');
         this.estado.set(estado);
@@ -309,6 +302,7 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
       instancia.definirMarkdown(this.valorEfetivo());
     }
     instancia.definirSomenteLeitura(this.somenteLeituraEfetiva());
+    this.criado = true;
   }
 
   ngOnDestroy(): void {
@@ -333,6 +327,22 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
 
   setDisabledState(desabilitado: boolean): void {
     this.desabilitadoCva.set(desabilitado);
+  }
+
+  /**
+   * Lê o markdown atual do editor e o propaga agora (`valorChange`/CVA), sem esperar o
+   * `markdownUpdated` do plugin `listener`, que é debounced (~200 ms): um "Salvar" clicado logo
+   * depois da última tecla lia o rascunho sem o fim do texto (P-081). Quem confirma um rascunho
+   * chama isto e usa o retorno; o `focusout` do próprio editor também chama, o que cobre os
+   * formulários CVA.
+   */
+  confirmarValor(): string {
+    if (!this.criado || !this.instancia) return this.valorEfetivo();
+    const markdown = this.instancia.obterMarkdown();
+    // Acima do limite o `listener` trunca o documento e emite depois; o retorno já sai truncado.
+    if (markdown.length > LIMITE_MARKDOWN) return markdown.slice(0, LIMITE_MARKDOWN);
+    this.propagarMarkdown(markdown);
+    return markdown;
   }
 
   protected aplicarAcao(acao: AcaoMarkdown): void {
@@ -381,6 +391,7 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
   protected aoDesfocar(evento: FocusEvent): void {
     const destino = evento.relatedTarget as Node | null;
     if (destino && this.host.nativeElement.contains(destino)) return;
+    this.confirmarValor();
     this.focado.set(false);
     this.focadoChange.emit(false);
     this.pararDeObservarViewport();
@@ -445,6 +456,18 @@ export class EditorMarkdown implements AfterViewInit, OnDestroy, ControlValueAcc
     const barra = this.barra()?.nativeElement;
     if (!barra || !this.compacto() || !this.focado() || this.ancorada) return;
     barra.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }
+
+  private propagarMarkdown(markdown: string): void {
+    if (this.sincronizando || this.somenteLeituraEfetiva() || markdown === this.valorEfetivo()) {
+      return;
+    }
+    if (this.usandoCva()) {
+      this.valorCva.set(markdown);
+      this.onChange?.(markdown);
+      this.onTouched?.();
+    }
+    this.valorChange.emit(markdown);
   }
 
   private pararDeObservarViewport(): void {

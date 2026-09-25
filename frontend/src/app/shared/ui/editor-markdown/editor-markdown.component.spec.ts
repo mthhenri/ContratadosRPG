@@ -98,6 +98,37 @@ describe('EditorMarkdown', () => {
     expect(alteracoes).toEqual([]);
   });
 
+  it('confirmarValor lê o texto atual e emite sem esperar o listener debounced (P-081)', () => {
+    const alteracoes: string[] = [];
+    fixture.componentInstance.valorChange.subscribe((valor) => alteracoes.push(valor));
+    // Digitado, mas o `markdownUpdated` do listener ainda não disparou.
+    markdownAtual = '# Registro\n\nfim do texto';
+
+    expect(fixture.componentInstance.confirmarValor()).toBe('# Registro\n\nfim do texto');
+    expect(alteracoes).toEqual(['# Registro\n\nfim do texto']);
+  });
+
+  it('confirmarValor não emite quando o texto não mudou', () => {
+    const alteracoes: string[] = [];
+    fixture.componentInstance.valorChange.subscribe((valor) => alteracoes.push(valor));
+
+    expect(fixture.componentInstance.confirmarValor()).toBe('# Registro');
+    expect(alteracoes).toEqual([]);
+  });
+
+  it('perder o foco para fora do editor confirma o texto pendente (P-081)', () => {
+    const alteracoes: string[] = [];
+    fixture.componentInstance.valorChange.subscribe((valor) => alteracoes.push(valor));
+    markdownAtual = '# Registro atualizado';
+
+    fixture.nativeElement.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    fixture.nativeElement.dispatchEvent(
+      new FocusEvent('focusout', { bubbles: true, relatedTarget: document.body }),
+    );
+
+    expect(alteracoes).toEqual(['# Registro atualizado']);
+  });
+
   it('destrói a instância junto com o componente', () => {
     fixture.destroy();
     expect(destruir).toHaveBeenCalledOnce();
@@ -390,6 +421,18 @@ describe('EditorMarkdown como ControlValueAccessor', () => {
     aoAlterar('Texto **novo**');
 
     expect(fixture.componentInstance.controle.value).toBe('Texto **novo**');
+  });
+
+  it('perder o foco grava no FormControl o texto que o listener ainda não emitiu (P-081)', async () => {
+    const fixture = TestBed.createComponent(HospedeFormulario);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const editor = fixture.nativeElement.querySelector('app-editor-markdown') as HTMLElement;
+    markdownAtual = '# Inicial com fim';
+
+    editor.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null }));
+
+    expect(fixture.componentInstance.controle.value).toBe('# Inicial com fim');
   });
 
   it('reflete `disable()` do FormControl como somente leitura', async () => {

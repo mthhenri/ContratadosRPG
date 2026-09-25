@@ -1,6 +1,7 @@
 <div class="anotacoes-ficha">
     @if (editando()) {
         <app-editor-markdown
+            #editor
             class="anotacoes-ficha__campo"
             [valor]="rascunho()"
             [rotulo]="'Anotações'"
@@ -13,7 +14,7 @@
                 variante="primario"
                 tamanho="pequeno"
                 type="button"
-                (click)="confirmar()"
+                (click)="confirmar(editor.confirmarValor())"
             >
                 Salvar
             </button>

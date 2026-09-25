@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { AnotacoesFichaEditor } from './anotacoes-ficha-editor.component';
@@ -53,7 +53,8 @@ describe('AnotacoesFichaEditor', () => {
 
     botao(raiz, 'Editar anotações').click();
     fixture.detectChanges();
-    editor(fixture).valorChange.emit('Depois.');
+    // O `valorChange` do editor é debounced: o rascunho ainda não tem o texto digitado (P-081).
+    vi.spyOn(editor(fixture), 'confirmarValor').mockReturnValue('Depois.');
     botao(raiz, 'Salvar').click();
     fixture.detectChanges();
 
