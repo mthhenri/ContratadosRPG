@@ -19,8 +19,8 @@
             app-coluna-acoes-item
             icone="anotacoes"
             appTooltip="Anotações"
-            [pressionado]="anotacoesAbertas()"
-            (click)="anotacoesAbertas.update((abertas) => !abertas)"
+            [pressionado]="anotacoesAbertas() && !janelaAnotacoes.estaAberta(fichaId)"
+            (click)="alternarAnotacoes()"
         >
             Anotações
         </button>
@@ -204,7 +204,7 @@
                             class="ficha-pagina__menu-item"
                             type="button"
                             role="menuitem"
-                            (click)="anotacoesAbertas.update((abertas) => !abertas); fecharMenu()"
+                            (click)="alternarAnotacoes(); fecharMenu()"
                         >
                             <app-icone nome="anotacoes" />
                             <span>Anotações</span>
@@ -302,8 +302,9 @@
             [oculta]="fichaAtual.oculta"
             [dados]="fichaAtual.dados"
             [ajustavel]="podeGerenciar()"
-            [anotacoesPainelAberto]="anotacoesAbertas()"
+            [anotacoesPainelAberto]="anotacoesAbertas() && !janelaAnotacoes.estaAberta(fichaId)"
             (anotacoesPainelAbertoChange)="anotacoesAbertas.set($event)"
+            (anotacoesAbrirJanela)="janelaAnotacoes.abrir(fichaId)"
             [podeRolar]="podeGerenciar()"
             [ehMestre]="ehMestre()"
             [apertado]="historicoSidebarAberto()"

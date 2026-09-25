@@ -1,0 +1,39 @@
+// Cresce com quem hospeda (painel flutuante redimensionável ou janela externa): `flex: 1` na caixa e
+// no campo evita o vão em branco abaixo do texto ao aumentar a altura.
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.anotacoes-ficha {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 220px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+
+    &__campo {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+        padding: 10px 12px;
+    }
+
+    &__acoes {
+        display: flex;
+        gap: 6px;
+    }
+}

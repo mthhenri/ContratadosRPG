@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { filter, finalize, map, of, switchMap } from 'rxjs';
+import { catchError, filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
 import { normalizarPresetLegado } from '@contratados-rpg/shared/regras/rolagem';
@@ -23,6 +23,7 @@ import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-da
 import { CalculadoraFlutuante } from '../../../../shared/calculadora-flutuante/calculadora-flutuante.component';
 import { HistoricoRolagensSidebar } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-sidebar.component';
 import { HistoricoRolagensJanelaService } from '../../../../shared/historico-rolagens-sidebar/historico-rolagens-janela.service';
+import { AnotacoesJanelaService } from '../../anotacoes-janela.service';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
@@ -110,6 +111,7 @@ const ITENS_POR_PAGINA_HISTORICO = 20;
 })
 export class FichaVisualizar {
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
+  protected readonly janelaAnotacoes = inject(AnotacoesJanelaService);
   private readonly fichaVisualizacao = viewChild(FichaVisualizacao);
   private readonly cadernoRef = viewChild(CadernoFlutuante);
   /** Caderno aberto (mesmo minimizado) — marca o item "Caderno" da coluna de ações. */
@@ -214,6 +216,18 @@ export class FichaVisualizar {
   protected readonly cadernoHabilitado = signal(false);
   /** A página reserva a faixa da direita enquanto o histórico está aberto. */
   protected readonly historicoSidebarAberto = signal(false);
+
+  /**
+   * Com as anotações abertas em janela externa (I-027), o painel local fica fora da tela e o item
+   * da coluna foca a janela em vez de alternar o painel; fechar a janela devolve o painel.
+   */
+  protected alternarAnotacoes(): void {
+    if (this.janelaAnotacoes.estaAberta(this.fichaId)) {
+      this.janelaAnotacoes.abrir(this.fichaId);
+      return;
+    }
+    this.anotacoesAbertas.update((abertas) => !abertas);
+  }
 
   protected alternarHistoricoSidebar(): void {
     if (this.janelaHistorico.estaAbertaFicha(this.fichaId)) {
@@ -371,9 +385,18 @@ export class FichaVisualizar {
     this.tempoRealService.entrarSalaFicha(this.fichaId);
     this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaFicha(this.fichaId));
 
+    // O broadcast omite `anotacoes`/`historia` para a sala inteira (§14); dono/mestre buscam o
+    // documento completo pelo REST — absorver o payload apagaria esses campos da tela (P-080).
     this.tempoRealService.fichaAlterada$
       .pipe(
         filter((ficha) => ficha.id === this.fichaId),
+        switchMap((fichaAlterada) =>
+          this.podeGerenciar()
+            ? this.fichaService
+                .recuperarFicha(this.fichaId)
+                .pipe(catchError(() => of(fichaAlterada)))
+            : of(fichaAlterada),
+        ),
         takeUntilDestroyed(),
       )
       .subscribe({ next: (fichaAlterada) => this.absorverRemoto(fichaAlterada) });

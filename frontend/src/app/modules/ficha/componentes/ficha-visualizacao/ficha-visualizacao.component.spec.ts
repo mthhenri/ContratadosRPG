@@ -27,6 +27,7 @@ import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { AnotacoesFichaEditor } from '../anotacoes-ficha-editor/anotacoes-ficha-editor.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
 import { FichaInventario } from '../ficha-inventario/ficha-inventario.component';
@@ -2557,7 +2558,7 @@ describe('FichaVisualizacao', () => {
   describe('Anotações (m3-51) — gate de visualização igual à História', () => {
     it('não mostra a caixa de anotações quando não ajustável (visualizador)', () => {
       const { raiz } = montar(dados, 'Corvo', 42, false, false);
-      expect(raiz.querySelector('.ficha-status__anotacoes-caixa')).toBeNull();
+      expect(raiz.querySelector('app-anotacoes-ficha-editor')).toBeNull();
       expect(raiz.textContent).not.toContain('Veterano de contenção.');
     });
 
@@ -2576,19 +2577,37 @@ describe('FichaVisualizacao', () => {
     it('anotacoes ausente (omitida no backend pro visualizador) não quebra a leitura', () => {
       const semAnotacoes = { ...dados, anotacoes: undefined };
       const { raiz } = montar(semAnotacoes as FichaJogadorDadosDto, 'Corvo', 42, false, false);
-      expect(raiz.querySelector('.ficha-status__anotacoes-caixa')).toBeNull();
+      expect(raiz.querySelector('app-anotacoes-ficha-editor')).toBeNull();
     });
 
-    it('emite ajusteAnotacoes com o texto confirmado (blur) quando muda', () => {
+    it('repassa como ajusteAnotacoes o texto salvo no editor do painel', () => {
       const alvo = montar(dados, 'Corvo', 42, true, false);
+      alvo.fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      alvo.fixture.detectChanges();
       const emitidos: string[] = [];
       alvo.fixture.componentInstance.ajusteAnotacoes.subscribe((a) => emitidos.push(a));
-      const componente = alvo.fixture.componentInstance;
+      const editor = alvo.fixture.debugElement.query(By.css('app-anotacoes-ficha-editor'))
+        .componentInstance as AnotacoesFichaEditor;
 
-      componente['editarAnotacoes']();
-      componente['confirmarAnotacoes']('Nova anotação.');
+      editor.salvar.emit('Nova anotação.');
 
       expect(emitidos).toEqual(['Nova anotação.']);
+    });
+
+    it('"Abrir em janela" emite anotacoesAbrirJanela e some durante a edição', () => {
+      const alvo = montar(dados, 'Corvo', 42, true, false);
+      alvo.fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      alvo.fixture.detectChanges();
+      let aberturas = 0;
+      alvo.fixture.componentInstance.anotacoesAbrirJanela.subscribe(() => aberturas++);
+      const seletor = '#ficha-anotacoes [aria-label="Abrir anotações em janela"]';
+
+      (alvo.raiz.querySelector(seletor) as HTMLButtonElement).click();
+      expect(aberturas).toBe(1);
+
+      alvo.fixture.componentInstance['editandoAnotacoes'].set(true);
+      alvo.fixture.detectChanges();
+      expect(alvo.raiz.querySelector(seletor)).toBeNull();
     });
   });
 

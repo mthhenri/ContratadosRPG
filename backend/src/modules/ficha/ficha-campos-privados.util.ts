@@ -21,3 +21,21 @@ export function omitirCamposPrivados(dados: FichaJogadorDadosDto): FichaJogadorD
   }
   return dadosFiltrados;
 }
+
+/**
+ * Devolve `recebidos` com os `CAMPOS_PRIVADOS_FICHA` que **faltam** nele copiados de `armazenados`.
+ * O broadcast de `ficha:alterada` chega sem esses campos a toda a sala, então uma aba que absorve o
+ * evento e depois salva manda o documento sem eles — gravar assim apagava anotações e história
+ * escritas em outra aba ou pelo mestre (P-080). Chave ausente é "não enviei"; string vazia continua
+ * sendo "apaguei" e é gravada. Vale para jogador e criatura (a criatura também tem `anotacoes`).
+ * Não muta os documentos recebidos.
+ */
+export function preservarCamposPrivados<T extends object>(armazenados: object, recebidos: T): T {
+  const preservados = { ...recebidos } as Record<string, unknown>;
+  for (const campo of CAMPOS_PRIVADOS_FICHA) {
+    if (!(campo in preservados) && campo in armazenados) {
+      preservados[campo] = (armazenados as Record<string, unknown>)[campo];
+    }
+  }
+  return preservados as T;
+}

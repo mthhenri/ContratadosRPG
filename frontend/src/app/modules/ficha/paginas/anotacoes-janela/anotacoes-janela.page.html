@@ -1,0 +1,24 @@
+<section class="anotacoes-janela">
+    <app-janela-externa-cabecalho
+        [contexto]="contexto()"
+        [voltarPara]="voltarPara"
+        rotuloVoltar="Voltar à ficha"
+    />
+    <main class="anotacoes-janela__conteudo">
+        @if (estado() === "pronto") {
+        <app-anotacoes-ficha-editor
+            [valor]="anotacoes()"
+            [(editando)]="editando"
+            (salvar)="salvar($event)"
+        />
+        } @else if (estado() === "negado") {
+        <app-estado-vazio
+            icone="anotacoes"
+            titulo="Não foi possível acessar as anotações desta ficha."
+            linhaApoio="Só o dono da ficha e o mestre da campanha editam as anotações."
+        />
+        } @else {
+        <app-esqueleto class="anotacoes-janela__esqueleto" />
+        }
+    </main>
+</section>

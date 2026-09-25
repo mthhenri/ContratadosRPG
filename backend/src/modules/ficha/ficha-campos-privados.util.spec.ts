@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FichaJogadorDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import { ClasseEnum } from '@contratados-rpg/shared/enums';
-import { omitirCamposPrivados } from './ficha-campos-privados.util';
+import { omitirCamposPrivados, preservarCamposPrivados } from './ficha-campos-privados.util';
 
 function criarDados(overrides: Partial<FichaJogadorDadosDto> = {}): FichaJogadorDadosDto {
   return {
@@ -65,5 +65,32 @@ describe('omitirCamposPrivados', () => {
     const dadosFiltrados = omitirCamposPrivados(dados);
 
     expect(dadosFiltrados).toEqual(dados);
+  });
+});
+
+describe('preservarCamposPrivados', () => {
+  it('copia do documento gravado os campos privados ausentes no enviado', () => {
+    const gravados = criarDados({ anotacoes: 'Pista.', historia: 'Origem.' });
+    const enviados = omitirCamposPrivados(criarDados({ nivel: 2 }));
+
+    const resultado = preservarCamposPrivados(gravados, enviados);
+
+    expect(resultado.anotacoes).toBe('Pista.');
+    expect(resultado.historia).toBe('Origem.');
+    expect(resultado.nivel).toBe(2);
+    expect('anotacoes' in enviados).toBe(false);
+  });
+
+  it('respeita o valor enviado, inclusive vazio', () => {
+    const gravados = criarDados({ anotacoes: 'Pista.' });
+
+    expect(preservarCamposPrivados(gravados, criarDados({ anotacoes: '' })).anotacoes).toBe('');
+    expect(preservarCamposPrivados(gravados, criarDados({ anotacoes: 'Nova.' })).anotacoes).toBe('Nova.');
+  });
+
+  it('não inventa a chave quando o documento gravado também não a tem', () => {
+    const resultado = preservarCamposPrivados(criarDados(), omitirCamposPrivados(criarDados()));
+
+    expect('historia' in resultado).toBe(false);
   });
 });

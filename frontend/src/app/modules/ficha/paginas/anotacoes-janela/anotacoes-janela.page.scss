@@ -1,0 +1,22 @@
+// Mesmo casco de `HistoricoRolagensJanela`: cabeçalho fixo e só o conteúdo rola.
+.anotacoes-janela {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--bg);
+
+    &__conteudo {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        padding: var(--space-8);
+    }
+
+    &__esqueleto {
+        flex: 1;
+    }
+}

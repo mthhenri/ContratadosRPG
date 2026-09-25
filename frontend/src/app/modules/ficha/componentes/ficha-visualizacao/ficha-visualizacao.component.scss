@@ -453,19 +453,6 @@
     }
 }
 
-// Dentro do `app-painel-flutuante` (m3-32/redimensionamento): `flex:1` deixa a caixa (e, por
-// tabela, o campo de texto) crescer junto com a janela ao arrastar a alça de redimensionar — sem
-// isso a caixa ficava presa no `min-height` e sobrava vão em branco abaixo dela.
-.ficha-status__anotacoes-caixa--painel {
-    flex: 1 1 auto;
-    min-height: 220px;
-
-    .ficha-status__anotacoes-campo {
-        flex: 1 1 auto;
-        min-height: 0;
-    }
-}
-
 // Alça de redimensionar do painel de Anotações — mesmo visual/comportamento de
 // `CadernoFlutuante.__redimensionar` (canto inferior direito, arraste livre nos dois eixos).
 .ficha-status__anotacoes-redimensionar {

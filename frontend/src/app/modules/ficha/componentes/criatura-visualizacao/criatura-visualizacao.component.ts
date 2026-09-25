@@ -46,7 +46,7 @@ import { Abas } from '../../../../shared/ui/abas/abas.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
-import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { AnotacoesFichaEditor } from '../anotacoes-ficha-editor/anotacoes-ficha-editor.component';
 import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
 import { ValorEditavel } from '../../../../shared/ui/valor-editavel/valor-editavel.component';
@@ -143,7 +143,7 @@ const ANOTACOES_ALTURA_MINIMA = 260;
     Botao,
     BotaoIcone,
     Campo,
-    EditorMarkdown,
+    AnotacoesFichaEditor,
     Icone,
     Tooltip,
     AutoFocus,
@@ -201,6 +201,8 @@ export class CriaturaVisualizacao {
    * padrão de `FichaVisualizacao.anotacoesPainelAberto`. */
   readonly anotacoesPainelAberto = input(false);
   readonly anotacoesPainelAbertoChange = output<boolean>();
+  /** "Abrir em janela" do painel de Anotações (I-027) — a página abre a janela externa. */
+  readonly anotacoesAbrirJanela = output<void>();
 
   /**
    * `[mobile]` de `app-painel-flutuante` para o painel de Anotações — reage à largura real da
@@ -420,17 +422,11 @@ export class CriaturaVisualizacao {
     this.ajustarVida(-total);
   }
 
-  /** Rascunho do editor Markdown de Anotações — `app-editor-markdown` não tem `.value` de DOM. */
-  protected readonly rascunhoAnotacoes = signal('');
-
   protected editando(chave: string): boolean {
     return this.campoEmEdicao() === chave;
   }
 
   protected editar(chave: string): void {
-    if (chave === 'anotacoes') {
-      this.rascunhoAnotacoes.set(this.dados().anotacoes ?? '');
-    }
     this.campoEmEdicao.set(chave);
   }
 
@@ -656,10 +652,6 @@ export class CriaturaVisualizacao {
 
   protected aoHabilidadesMudar(habilidades: readonly FichaCriaturaHabilidadeDto[]): void {
     this.habilidadesMudou.emit(habilidades);
-  }
-
-  protected confirmarAnotacoes(anotacoes: string): void {
-    this.anotacoesMudou.emit(anotacoes);
   }
 
   /** Início do redimensionamento do painel de Anotações (pointerdown na alça do canto) — mesma

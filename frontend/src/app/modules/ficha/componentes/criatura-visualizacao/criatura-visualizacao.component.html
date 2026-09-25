@@ -1715,57 +1715,25 @@
         [ignorarMinimizadoPersistido]="true"
         (fechar)="anotacoesPainelAbertoChange.emit(false)"
     >
-        <div class="criatura__anotacoes-caixa criatura__anotacoes-caixa--painel">
-            @if (editando("anotacoes")) {
-                <app-editor-markdown
-                    class="criatura__anotacoes"
-                    [valor]="rascunhoAnotacoes()"
-                    [rotulo]="'Anotações'"
-                    (valorChange)="rascunhoAnotacoes.set($event)"
-                    (keydown.escape)="cancelarEdicao()"
-                />
-                <div class="criatura__anotacoes-acoes">
-                    <button
-                        app-botao
-                        variante="primario"
-                        tamanho="pequeno"
-                        type="button"
-                        (click)="confirmarAnotacoes(rascunhoAnotacoes()); cancelarEdicao()"
-                    >
-                        Salvar
-                    </button>
-                    <button
-                        app-botao
-                        variante="secundario"
-                        tamanho="pequeno"
-                        type="button"
-                        (click)="cancelarEdicao()"
-                    >
-                        Cancelar
-                    </button>
-                </div>
-            } @else {
-                <button
-                    app-botao
-                    variante="secundario"
-                    tamanho="pequeno"
-                    type="button"
-                    (click)="editar('anotacoes')"
-                >
-                    Editar anotações
-                </button>
-                @if (dados().anotacoes) {
-                    <app-editor-markdown
-                        class="criatura__anotacoes"
-                        [valor]="dados().anotacoes ?? ''"
-                        [somenteLeitura]="true"
-                        [rotulo]="'Anotações'"
-                    />
-                } @else {
-                    <p class="criatura__vazio">Sem anotações.</p>
-                }
-            }
-        </div>
+        @if (!anotacoesEhMobile() && !editando("anotacoes")) {
+            <button
+                painelAcoesExtras
+                app-botao-icone
+                type="button"
+                aria-label="Abrir anotações em janela"
+                appTooltip="Abrir em janela"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="anotacoesAbrirJanela.emit()"
+            >
+                <app-icone nome="abrir-externo" />
+            </button>
+        }
+        <app-anotacoes-ficha-editor
+            [valor]="dados().anotacoes ?? ''"
+            [editando]="editando('anotacoes')"
+            (editandoChange)="$event ? editar('anotacoes') : cancelarEdicao()"
+            (salvar)="anotacoesMudou.emit($event)"
+        />
 
         @if (!anotacoesEhMobile()) {
             <span

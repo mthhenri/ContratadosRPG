@@ -74,6 +74,21 @@ describe('FichaVisualizar', () => {
     anotacoes: '',
   };
 
+  /** A ficha 42 como o REST a devolve no boot de `montar` (sem `dadosExtra`). */
+  function recuperadaBase(): FichaRecuperadaDto {
+    return {
+      id: 42,
+      campanhaId: 9,
+      usuarioId: 7,
+      nome: 'Kane',
+      cor: null,
+      imagemUrl: null,
+      imagemFoco: null,
+      oculta: false,
+      dados,
+    };
+  }
+
   const membros: CampanhaMembroResumoDto[] = [
     { usuarioId: 7, nome: 'Dono', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
     { usuarioId: 11, nome: 'Vera', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] },
@@ -177,6 +192,14 @@ describe('FichaVisualizar', () => {
     const router = TestBed.inject(Router);
     const navegarEspiao = vi.spyOn(router, 'navigate');
     fixture.detectChanges();
+    /**
+     * `ficha:alterada` como o servidor faz: o documento passa a ser o do REST (dono/mestre buscam
+     * o completo ao receber o eco — P-080) e o evento chega pela sala.
+     */
+    const emitirAlteracao = (remota: FichaAlteradaDto) => {
+      fichaService.recuperarFicha.mockReturnValue(of(remota as FichaRecuperadaDto));
+      fichaAlterada$.next(remota);
+    };
     return {
       fixture,
       raiz: fixture.nativeElement as HTMLElement,
@@ -184,6 +207,7 @@ describe('FichaVisualizar', () => {
       campanhaService,
       tempoRealService,
       fichaAlterada$,
+      emitirAlteracao,
       acessoRevogado$,
       rolagemRegistrada$,
       reconexao,
@@ -274,6 +298,39 @@ describe('FichaVisualizar', () => {
 
     acionar('Histórico');
     expect(pressionado('Histórico')).toBe('false');
+  });
+
+  it('anotações em janela: recolhe o painel, foca a janela pelo item da coluna e devolve ao fechar', () => {
+    const janela = { closed: false, opener: window as Window | null, focus: vi.fn(), close: vi.fn(), location: { replace: vi.fn() } };
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(janela as unknown as Window);
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    const itemAnotacoes = () =>
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('.coluna-acoes__item')).find((item) =>
+        item.textContent?.includes('Anotações'),
+      )!;
+    const painel = () => raiz.querySelector('#ficha-anotacoes .painel-flutuante__janela');
+
+    itemAnotacoes().click();
+    fixture.detectChanges();
+    raiz.querySelector<HTMLButtonElement>('[aria-label="Abrir anotações em janela"]')!.click();
+    fixture.detectChanges();
+
+    expect(janela.location.replace).toHaveBeenCalledWith('/janela/ficha/42/anotacoes');
+    expect(painel()).toBeNull();
+    expect(itemAnotacoes().getAttribute('aria-pressed')).toBe('false');
+
+    itemAnotacoes().click();
+    fixture.detectChanges();
+    expect(abrir).toHaveBeenCalledTimes(1);
+    expect(janela.focus).toHaveBeenCalledTimes(1);
+    expect(painel()).toBeNull();
+
+    janela.closed = true;
+    window.dispatchEvent(new Event('focus'));
+    fixture.detectChanges();
+    expect(painel()).not.toBeNull();
+    expect(itemAnotacoes().getAttribute('aria-pressed')).toBe('true');
+    abrir.mockRestore();
   });
 
   it('gere o acesso via menu → dialog para o dono, com elegíveis corretos', () => {
@@ -1244,7 +1301,7 @@ describe('FichaVisualizar', () => {
 
   it('aplica o ficha:alterada recebido por WebSocket sem recarregar (critério de aceite)', () => {
     // O mestre (99) vê a ficha aberta; um ficha:alterada do jogador chega pela sala e atualiza a tela.
-    const { fixture, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 99 });
+    const { fixture, emitirAlteracao, fichaService } = montar({ usuarioLogadoId: 99 });
     const componente = fixture.componentInstance;
     expect(componente['ficha']()?.nome).toBe('Kane');
 
@@ -1259,18 +1316,18 @@ describe('FichaVisualizar', () => {
       oculta: false,
       dados: { ...dados, estado: { ...dados.estado, vidaAtual: 1 } },
     };
-    fichaAlterada$.next(remota);
+    emitirAlteracao(remota);
 
-    // Atualizou o estado local — sem novo GET (recuperarFicha só no boot).
+    // Atualizou o estado local sem recarregar — o mestre busca o documento completo pelo REST.
     expect(componente['ficha']()?.nome).toBe('Kane Ferido');
     expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(1);
-    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(2);
   });
 
   it('mescla o remoto com a edição local pendente: o campo remoto entra e o local sobrevive (m3-17)', () => {
     vi.useFakeTimers();
     try {
-      const { fixture, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
+      const { fixture, emitirAlteracao } = montar({ usuarioLogadoId: 99 });
       const componente = fixture.componentInstance;
 
       // O mestre ajusta a Vida (edição local pendente, debounce de 500ms em voo).
@@ -1278,7 +1335,7 @@ describe('FichaVisualizar', () => {
       expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(4);
 
       // Dentro da janela, o jogador renomeia a ficha — campo que o mestre NÃO está editando.
-      fichaAlterada$.next({
+      emitirAlteracao({
         id: 42,
         campanhaId: 9,
         usuarioId: 7,
@@ -1297,11 +1354,11 @@ describe('FichaVisualizar', () => {
   it('o PUT em lote carrega o campo remoto mesclado — não sobrescreve a edição concorrente (m3-17)', () => {
     vi.useFakeTimers();
     try {
-      const { fixture, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 99 });
+      const { fixture, emitirAlteracao, fichaService } = montar({ usuarioLogadoId: 99 });
       const componente = fixture.componentInstance;
 
       componente['fichaEdicao'].ajustarVitalidade({ campo: 'vidaAtual', valor: 4 });
-      fichaAlterada$.next({
+      emitirAlteracao({
         id: 42,
         campanhaId: 9,
         usuarioId: 7,
@@ -1327,7 +1384,7 @@ describe('FichaVisualizar', () => {
   it('ignora eventos de outra ficha; no MESMO campo a edição local vence até salvar', () => {
     vi.useFakeTimers();
     try {
-      const { fixture, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
+      const { fixture, emitirAlteracao, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
       const componente = fixture.componentInstance;
 
       // Evento de outra ficha (id 7) é ignorado.
@@ -1342,7 +1399,7 @@ describe('FichaVisualizar', () => {
 
       // Mesmo campo (`nome`) editado nos dois lados: o local vence até salvar (m3-17).
       componente['fichaEdicao'].ajustarNome('Editando');
-      fichaAlterada$.next({
+      emitirAlteracao({
         id: 42,
         campanhaId: 9,
         usuarioId: 7,
@@ -1353,7 +1410,7 @@ describe('FichaVisualizar', () => {
 
       // Ao concluir o save (debounced), a resposta autoritativa reconcilia e libera novos remotos.
       vi.advanceTimersByTime(500);
-      fichaAlterada$.next({
+      emitirAlteracao({
         id: 42,
         campanhaId: 9,
         usuarioId: 7,
@@ -1369,7 +1426,7 @@ describe('FichaVisualizar', () => {
   it('um erro de save libera a edição pendente — não congela os live-updates', () => {
     vi.useFakeTimers();
     try {
-      const { fixture, fichaService, fichaAlterada$ } = montar({ usuarioLogadoId: 99 });
+      const { fixture, fichaService, emitirAlteracao } = montar({ usuarioLogadoId: 99 });
       const componente = fixture.componentInstance;
 
       // O próximo save falha (ex.: 400/403 revalidado pelo backend).
@@ -1378,7 +1435,7 @@ describe('FichaVisualizar', () => {
       vi.advanceTimersByTime(500); // dispara o save → erro → catchError libera a flag
 
       // Com a flag liberada, um ficha:alterada remoto volta a ser aplicado (não fica congelado).
-      fichaAlterada$.next({
+      emitirAlteracao({
         id: 42,
         campanhaId: 9,
         usuarioId: 7,
@@ -1389,6 +1446,28 @@ describe('FichaVisualizar', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('ao receber o eco sem anotações/história, dono/mestre mantêm os campos privados pelo REST (P-080)', () => {
+    const { fixture, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 99 });
+    const completo = { ...recuperadaBase(), dados: { ...dados, anotacoes: 'Nota nova.' } };
+    fichaService.recuperarFicha.mockReturnValue(of(completo as FichaRecuperadaDto));
+    const semPrivados = { ...dados };
+    delete semPrivados.anotacoes;
+    delete semPrivados.historia;
+
+    fichaAlterada$.next({ ...completo, dados: semPrivados } as FichaAlteradaDto);
+
+    expect(fixture.componentInstance['ficha']()?.dados.anotacoes).toBe('Nota nova.');
+  });
+
+  it('visualizador só-acesso absorve o payload do eco sem nova busca', () => {
+    const { fixture, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 11 });
+
+    fichaAlterada$.next({ ...recuperadaBase(), nome: 'Kane Visto' } as FichaAlteradaDto);
+
+    expect(fixture.componentInstance['ficha']()?.nome).toBe('Kane Visto');
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
   });
 
   it('o refetch da reconexão mescla em vez de engolir a edição local pendente (m3-17)', () => {

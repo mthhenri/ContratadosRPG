@@ -100,6 +100,22 @@
   botão também é um `<button>` nativo estilizado à mão — candidato a `app-botao-icone`.
 - **Desde:** achado em 2026-09-23 na revisão do editor Markdown (fora do escopo daquela task).
 
+### P-081 — Clicar "Salvar" logo após digitar no editor Markdown perde o fim do texto · `ABERTO` · frontend
+
+- **Sintoma:** nos editores de texto livre com Salvar/Cancelar (painel e janela de Anotações,
+  História e demais consumidores de `(valorChange)` + botão de confirmar), um clique em "Salvar"
+  em menos de ~200ms depois da última tecla grava o rascunho sem o que acabou de ser digitado —
+  na verificação da janela de anotações, gravou vazio.
+- **Causa:** `EditorMarkdown` emite `valorChange` pelo `markdownUpdated` do plugin `listener` do
+  Milkdown (`editor-markdown-fabrica.ts`), que é debounced (~200ms). O hospedeiro lê o rascunho no
+  clique, antes da emissão.
+- **Contorno:** esperar um instante antes de salvar; digitação humana normal raramente fica abaixo
+  do atraso.
+- **Correção:** expor no `EditorMarkdown` uma leitura síncrona do markdown atual (ou um flush do
+  listener) e fazer os hospedeiros confirmarem por ela, não pelo último `valorChange`.
+- **Desde:** achado em 2026-09-24 na verificação ao vivo de `i-027-anotacoes-janela-externa`
+  (comportamento anterior à tarefa — o painel de anotações tinha o mesmo encadeamento).
+
 ### P-078 — Jogador sem ficha no celular não encontra o histórico de rolagens da campanha · `ABERTO` · frontend/campanha
 
 - **Sintoma:** em `360×800`, o jogador sem ficha na campanha abre `/campanhas/:id` e vê só "Você

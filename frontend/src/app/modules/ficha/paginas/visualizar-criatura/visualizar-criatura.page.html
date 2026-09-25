@@ -19,8 +19,8 @@
             app-coluna-acoes-item
             icone="anotacoes"
             appTooltip="Anotações"
-            [pressionado]="anotacoesAbertas()"
-            (click)="anotacoesAbertas.update((abertas) => !abertas)"
+            [pressionado]="anotacoesAbertas() && !janelaAnotacoes.estaAberta(fichaId)"
+            (click)="alternarAnotacoes()"
         >
             Anotações
         </button>
@@ -160,8 +160,9 @@
             [dados]="fichaAtual.dados"
             [ajustavel]="podeGerenciar()"
             [apertado]="historicoSidebarAberto()"
-            [anotacoesPainelAberto]="anotacoesAbertas()"
+            [anotacoesPainelAberto]="anotacoesAbertas() && !janelaAnotacoes.estaAberta(fichaId)"
             (anotacoesPainelAbertoChange)="anotacoesAbertas.set($event)"
+            (anotacoesAbrirJanela)="janelaAnotacoes.abrir(fichaId, 'criatura')"
             (vitalidadeMudou)="fichaEdicao.ajustarVitalidade($event)"
             (defesaMudou)="fichaEdicao.ajustarDefesa($event)"
             (identidadeMudou)="fichaEdicao.ajustarIdentidade($event)"

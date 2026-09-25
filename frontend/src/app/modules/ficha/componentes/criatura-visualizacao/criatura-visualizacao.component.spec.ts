@@ -9,6 +9,7 @@ import type { FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 
 import { CriaturaVisualizacao } from './criatura-visualizacao.component';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { AnotacoesFichaEditor } from '../anotacoes-ficha-editor/anotacoes-ficha-editor.component';
 import { BandejaDadosService } from '../../../../shared/bandeja-dados/bandeja-dados.service';
 import { FichaRolagemRegistroService } from '../../ficha-rolagem-registro.service';
 import { TemaService } from '../../../../core/services/tema.service';
@@ -573,15 +574,37 @@ describe('CriaturaVisualizacao', () => {
       expect(emitidos).toEqual([false]);
     });
 
-    it('emite anotacoesMudou com o texto confirmado (blur) ao editar', () => {
+    it('emite anotacoesMudou com o texto salvo e liga a edição à chave única da criatura', () => {
       const { fixture, eventos } = montar();
       fixture.componentRef.setInput('anotacoesPainelAberto', true);
       fixture.detectChanges();
+      const editor = fixture.debugElement.query(By.css('app-anotacoes-ficha-editor'))
+        .componentInstance as AnotacoesFichaEditor;
+
+      // `model.set` emite `editandoChange` — é o que o botão "Editar anotações" faz.
+      editor.editando.set(true);
+      fixture.detectChanges();
+      expect(fixture.componentInstance['editando']('anotacoes')).toBe(true);
+
+      editor.salvar.emit('Nova anotação de campo.');
+      expect(eventos['anotacoesMudou']).toEqual(['Nova anotação de campo.']);
+    });
+
+    it('"Abrir em janela" emite anotacoesAbrirJanela e some durante a edição', () => {
+      const { fixture } = montar();
+      fixture.componentRef.setInput('anotacoesPainelAberto', true);
+      fixture.detectChanges();
+      let aberturas = 0;
+      fixture.componentInstance.anotacoesAbrirJanela.subscribe(() => aberturas++);
+      const raiz = fixture.nativeElement as HTMLElement;
+      const seletor = '#criatura-anotacoes [aria-label="Abrir anotações em janela"]';
+
+      raiz.querySelector<HTMLButtonElement>(seletor)!.click();
+      expect(aberturas).toBe(1);
 
       fixture.componentInstance['editar']('anotacoes');
-      fixture.componentInstance['confirmarAnotacoes']('Nova anotação de campo.');
-
-      expect(eventos['anotacoesMudou']).toEqual(['Nova anotação de campo.']);
+      fixture.detectChanges();
+      expect(raiz.querySelector(seletor)).toBeNull();
     });
   });
 });

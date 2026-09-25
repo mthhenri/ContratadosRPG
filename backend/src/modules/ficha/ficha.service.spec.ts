@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type {
   FichaCriaturaDadosDto,
   FichaIdentidadeDto,
+  FichaInternoAlterarDto,
   FichaInternoCriarDto,
   FichaJogadorDadosDto,
   FichaOrigemDto,
@@ -41,6 +42,7 @@ import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
+import { omitirCamposPrivados } from './ficha-campos-privados.util';
 import type { FichaRepository } from './ficha.repository';
 import { FichaService, PRESET_INICIATIVA_PADRAO } from './ficha.service';
 
@@ -1722,6 +1724,38 @@ describe('FichaService', () => {
       expect(resultado).toBe(fichaAlterada);
     });
 
+    it('mantém anotações e história gravadas quando o documento enviado chega sem elas (P-080)', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({
+        ...fichaPersistida,
+        dados: criarDados({ anotacoes: 'Pista do cais.', historia: 'Nasceu no porto.' }),
+      });
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaPersistida);
+      // O que uma aba manda depois de absorver o `ficha:alterada` (que omite os campos privados).
+      const semPrivados = omitirCamposPrivados(criarDados());
+
+      await service.alterarFicha({ id: 5, nome: 'Agente Alfa', dados: semPrivados }, usuarioDono);
+
+      const [enviado] = fichaRepositorio.alterarFicha.mock.calls[0] as [FichaInternoAlterarDto];
+      expect(enviado.dados.anotacoes).toBe('Pista do cais.');
+      expect(enviado.dados.historia).toBe('Nasceu no porto.');
+    });
+
+    it('grava anotações vazias quando o autor as apaga de propósito', async () => {
+      fichaRepositorio.recuperarPorId.mockResolvedValue({
+        ...fichaPersistida,
+        dados: criarDados({ anotacoes: 'Pista do cais.' }),
+      });
+      fichaRepositorio.alterarFicha.mockResolvedValue(fichaPersistida);
+
+      await service.alterarFicha(
+        { id: 5, nome: 'Agente Alfa', dados: criarDados({ anotacoes: '' }) },
+        usuarioDono,
+      );
+
+      const [enviado] = fichaRepositorio.alterarFicha.mock.calls[0] as [FichaInternoAlterarDto];
+      expect(enviado.dados.anotacoes).toBe('');
+    });
+
     it('repassa imagemFoco ao repositório quando informado', async () => {
       fichaRepositorio.recuperarPorId.mockResolvedValue(fichaPersistida);
       const foco = { x: 30, y: 70, escala: 1.5 };
@@ -3159,6 +3193,22 @@ describe('FichaService', () => {
           oculta: undefined,
           dados: criarDadosCriatura(),
         });
+      });
+
+      it('mantém as anotações gravadas da criatura quando o documento chega sem elas (P-080)', async () => {
+        fichaRepositorio.recuperarPorId.mockResolvedValue({
+          ...fichaCriaturaPersistida,
+          dados: { ...criarDadosCriatura(), anotacoes: 'Rosto novo catalogado.' },
+        });
+        fichaRepositorio.alterarFicha.mockResolvedValue(fichaCriaturaPersistida);
+        const semAnotacoes = omitirCamposPrivados(
+          criarDadosCriatura() as unknown as FichaJogadorDadosDto,
+        ) as unknown as FichaCriaturaDadosDto;
+
+        await service.alterarFichaCriatura({ id: 9, nome: 'A Estátua', dados: semAnotacoes }, usuarioMestre);
+
+        const [enviado] = fichaRepositorio.alterarFicha.mock.calls[0] as [FichaInternoAlterarDto];
+        expect(enviado.dados.anotacoes).toBe('Rosto novo catalogado.');
       });
 
       it('lança BusinessException para enquadramento fora dos limites', async () => {

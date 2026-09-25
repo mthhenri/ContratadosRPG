@@ -1,5 +1,78 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-24 — I-027, fatia das Anotações: anotações da ficha em janela externa; P-080 (anotações/história apagadas pelo eco) corrigido
+
+Pedido do autor: implementar a 2ª fatia da I-027 (Histórico → **Anotações** → Caderno). Spec
+escrita e fechada nesta tarefa: `docs/specs/done/i-027-anotacoes-janela-externa.spec.md`.
+
+**Como ficou.**
+- `JanelaExternaService` (`shared/janela-externa/`) é o mecanismo genérico que vivia dentro de
+  `HistoricoRolagensJanelaService` (mapa contexto → `Window`, `about:blank` + `opener = null` +
+  `location.replace`, detecção de fechamento por intervalo/`focus`/`visibilitychange`), agora com
+  tamanho por janela. O serviço do histórico delega sem mudar a API; a fachada nova
+  `AnotacoesJanelaService` (`modules/ficha/`) usa o contexto `anotacoes:<fichaId>` e abre
+  `/janela/ficha/:id/anotacoes` (`?tipo=criatura` na criatura) com `640×720`.
+- `AnotacoesFichaEditor` (`modules/ficha/componentes/anotacoes-ficha-editor/`) substitui o bloco
+  duplicado nos painéis de `FichaVisualizacao` e `CriaturaVisualizacao` (leitura em markdown,
+  Editar → `app-editor-markdown` + Salvar/Cancelar); a janela seria a terceira cópia. `editando`
+  é `model` — a criatura liga pela chave única dela (`editar('anotacoes')`). O vazio virou
+  `app-estado-vazio` compacto e o painel da criatura ficou idêntico ao do jogador; as regras SCSS
+  `ficha-status__anotacoes-caixa--painel` e `criatura__anotacoes*` que só serviam ao painel saíram.
+- Cabeçalho dos dois painéis: `app-botao-icone` `abrir-externo` "Abrir em janela"
+  (`painelAcoesExtras`), fora do mobile e fora da edição (não perde rascunho). As páginas
+  `visualizar`/`visualizar-criatura` passam `anotacoesAbertas() && !janelaAnotacoes.estaAberta()`
+  ao painel e `alternarAnotacoes()` na coluna e no menu "⋯": com a janela aberta, o item deixa de
+  ficar pressionado e foca a janela; fechar a janela devolve o painel.
+- `AnotacoesJanela` (`modules/ficha/paginas/anotacoes-janela/`): busca a ficha (jogador ou
+  criatura) e os membros, decide dono/mestre como o `podeGerenciar` das páginas, usa
+  `JanelaExternaCabecalho` ("Anotações de <nome>" / "Voltar à ficha"), persiste pela instância
+  própria de `FichaEdicaoService`/`FichaEdicaoCriaturaService` e aplica o merge de três vias das
+  páginas. Sem permissão ou com o REST negado: `app-estado-vazio` de acesso negado, nenhum dado.
+  `beforeunload` pede confirmação com save debounced pendente ou rascunho aberto.
+
+**Achados na verificação ao vivo, corrigidos antes do fecho.**
+1. A janela nascia com `480×720`, abaixo do breakpoint mobile (560px). Com foco, o editor
+   Markdown prende a barra de ferramentas no rodapé (o lugar do teclado virtual), e numa janela
+   de desktop ela cobria Salvar/Cancelar. A janela passou a nascer com `640×720`.
+2. **`P-080` — perda de dado anterior à tarefa.** O `ficha:alterada` omite `anotacoes`/`historia`
+   para a sala inteira (`omitirCamposPrivados`), e as páginas absorviam esse payload. Uma segunda
+   aba ficava sem os campos e, no save seguinte (PUT do documento inteiro), eles sumiam do banco.
+   Reproduzido sem a janela: mestre e dono com a ficha 7 aberta, o mestre altera a Vida, o dono
+   altera a Vida → `anotacoes` ausente no banco. Uma aba sozinha escapava porque a resposta REST,
+   completa, chega depois do eco. Correção escolhida pelo autor entre três opções:
+   `preservarCamposPrivados` em `FichaService.alterarFicha`/`alterarFichaCriatura` (chave ausente
+   = "não enviei", mantém o gravado; string vazia continua apagando) e, no frontend, dono/mestre
+   buscam o documento completo pelo REST ao receber `ficha:alterada` (janela, `FichaVisualizar`,
+   `CriaturaVisualizar`) — o contrato que o comentário do gateway já descrevia. Visualizador
+   só-acesso segue absorvendo o payload. Repetido o cenário das duas abas: anotações preservadas.
+
+**Fora do escopo, registrado.** `P-081`: clicar Salvar a menos de ~200ms da última tecla perde o
+fim do texto (o `markdownUpdated` do Milkdown é debounced) — comportamento anterior, idêntico no
+painel. A ordem "salvar na janela e, na mesma fração de segundo, alterar a Vida na aba principal"
+ainda faz o último PUT vencer: é a janela de 1 RTT que o `m3-17` deixou fora de escopo por decisão
+do autor (exige escrita condicional no backend).
+
+**Verificação ao vivo** (stack do autor, Playwright com a janela real capturada por
+`waitForEvent('popup')`; contas `jogador.stub.1`, `codex.dev`, `jogador.stub.2`, `espectador.stub`;
+fichas 7 e 11 restauradas ao fim): análogos `HistoricoRolagensJanela` (casco e cabeçalho) e o
+painel de anotações existente (corpo). Em `1920×1080`: botão no painel do jogador e da criatura,
+ausente durante a edição; abrir → popup na rota certa, painel local fora, item não pressionado;
+clicar "Anotações" com a janela aberta → nenhum popup novo; Vida alterada na aba principal e depois
+anotações salvas na janela → os dois valores no banco (Vida 49, texto novo), e o contrário com o
+save da janela concluído → os dois preservados; fechar o popup → painel de volta com o texto novo,
+sentinela intacta; reabrir → uma janela só; criatura salva pela janela e o painel mostra o texto
+depois de fechar; mestre abre as anotações da ficha do jogador. `jogador.stub.2` e o espectador
+recebem acesso negado sem o texto. Em `360×800`: sem botão de janela nos painéis de jogador (menu
+"⋯") e criatura, folha cheia em leitura e edição, janela sem overflow; janela também sem overflow
+em `1920×1080`. Nenhum erro de console.
+
+**Gates.** Frontend: 151 arquivos / 2174 testes; backend: 32 arquivos / 580 testes (com os casos
+novos de `preservarCamposPrivados` e dos dois `alterar*`); `npm run lint` com 0 erros nos três
+workspaces; build do frontend verde com o aviso de orçamento preexistente (`P-004`, inicial
+inalterado em 544,85 kB); `tsc --noEmit` do backend com os 17 erros de tipo preexistentes em specs
+alheias (nenhum novo). Passe de `convencoes-check` limpo (acertos só de `font-family`/
+`border-radius` consumindo tokens).
+
 ## 2026-09-24 — Prévias de jogador e espectador: aviso na coluna de ações, Iniciativa desabilitada, item desabilitado com estado visual
 
 Pedido do autor sobre a prévia "ver como jogador": tirar a barra "Visualizando como X · prévia

@@ -1,0 +1,45 @@
+<div class="anotacoes-ficha">
+    @if (editando()) {
+        <app-editor-markdown
+            class="anotacoes-ficha__campo"
+            [valor]="rascunho()"
+            [rotulo]="'Anotações'"
+            (valorChange)="rascunho.set($event)"
+            (keydown.escape)="cancelar()"
+        />
+        <div class="anotacoes-ficha__acoes">
+            <button
+                app-botao
+                variante="primario"
+                tamanho="pequeno"
+                type="button"
+                (click)="confirmar()"
+            >
+                Salvar
+            </button>
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="pequeno"
+                type="button"
+                (click)="cancelar()"
+            >
+                Cancelar
+            </button>
+        </div>
+    } @else {
+        <button app-botao variante="secundario" tamanho="pequeno" type="button" (click)="editar()">
+            Editar anotações
+        </button>
+        @if (valor().trim()) {
+            <app-editor-markdown
+                class="anotacoes-ficha__campo"
+                [valor]="valor()"
+                [somenteLeitura]="true"
+                [rotulo]="'Anotações'"
+            />
+        } @else {
+            <app-estado-vazio tamanho="compacto" titulo="Sem anotações." />
+        }
+    }
+</div>

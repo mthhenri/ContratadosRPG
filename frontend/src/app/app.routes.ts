@@ -16,6 +16,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'janela/ficha/:fichaId/anotacoes',
+    canActivate: [autenticacaoGuard],
+    loadComponent: () =>
+      import('./modules/ficha/paginas/anotacoes-janela/anotacoes-janela.page').then(
+        (pagina) => pagina.AnotacoesJanela,
+      ),
+  },
+  {
     path: 'janela/campanha/:campanhaId/historico-rolagens',
     canActivate: [autenticacaoGuard],
     loadComponent: () =>

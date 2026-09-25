@@ -81,7 +81,7 @@ import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
-import { omitirCamposPrivados } from './ficha-campos-privados.util';
+import { omitirCamposPrivados, preservarCamposPrivados } from './ficha-campos-privados.util';
 import { FichaRepository } from './ficha.repository';
 
 /**
@@ -476,7 +476,8 @@ export class FichaService {
    * altera, só o mestre (`validarContratoSomenteMestre`). `ResourceNotFoundException` se a ficha
    * não existir; `UnauthorizedAccessException` se o autor não puder editá-la; `BusinessException`
    * se os dados forem incoerentes, a Identidade travada for alterada pelo dono, ou o dono tentar
-   * alterar o Contrato.
+   * alterar o Contrato. `CAMPOS_PRIVADOS_FICHA` ausentes no documento enviado são mantidos como
+   * estão gravados (`preservarCamposPrivados`, P-080).
    */
   async alterarFicha(
     dto: FichaInternoAlterarDto,
@@ -496,7 +497,10 @@ export class FichaService {
       this.validarContratoSomenteMestre(fichaEncontrada.dados.contrato, dto.dados.contrato);
     }
 
-    const fichaAlterada = await this.fichaRepositorio.alterarFicha(dto);
+    const fichaAlterada = await this.fichaRepositorio.alterarFicha({
+      ...dto,
+      dados: preservarCamposPrivados(fichaEncontrada.dados, dto.dados),
+    });
     this.campanhaGateway.emitirFichaAlterada(fichaAlterada);
     if (
       fichaAlterada.campanhaId !== null &&
@@ -951,7 +955,10 @@ export class FichaService {
       cor: dto.cor,
       imagemFoco: dto.imagemFoco,
       oculta: dto.oculta,
-      dados: dto.dados as unknown as FichaJogadorDadosDto,
+      dados: preservarCamposPrivados(
+        fichaEncontrada.dados,
+        dto.dados as unknown as FichaJogadorDadosDto,
+      ),
     });
 
     // `FichaRecuperadaDto` (retorno de `alterarFicha`) e `FichaAlteradaDto` têm forma idêntica —

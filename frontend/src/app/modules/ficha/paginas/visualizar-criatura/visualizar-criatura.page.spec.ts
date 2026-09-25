@@ -222,6 +222,36 @@ describe('CriaturaVisualizar', () => {
     expect(botao.getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('anotações em janela: abre a rota da criatura, recolhe o painel e devolve ao fechar', () => {
+    const janela = { closed: false, opener: window as Window | null, focus: vi.fn(), close: vi.fn(), location: { replace: vi.fn() } };
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(janela as unknown as Window);
+    const { raiz, fixture } = montar({ usuarioLogadoId: 7 });
+    const botao = Array.from(raiz.querySelectorAll<HTMLButtonElement>('[app-coluna-acoes-item]')).find(
+      (el) => el.textContent?.trim() === 'Anotações',
+    )!;
+    const painel = () => raiz.querySelector('#criatura-anotacoes .painel-flutuante__janela');
+
+    botao.click();
+    fixture.detectChanges();
+    raiz.querySelector<HTMLButtonElement>('[aria-label="Abrir anotações em janela"]')!.click();
+    fixture.detectChanges();
+
+    expect(janela.location.replace).toHaveBeenCalledWith('/janela/ficha/4/anotacoes?tipo=criatura');
+    expect(painel()).toBeNull();
+    expect(botao.getAttribute('aria-pressed')).toBe('false');
+
+    botao.click();
+    fixture.detectChanges();
+    expect(abrir).toHaveBeenCalledTimes(1);
+    expect(janela.focus).toHaveBeenCalledTimes(1);
+
+    janela.closed = true;
+    window.dispatchEvent(new Event('focus'));
+    fixture.detectChanges();
+    expect(painel()).not.toBeNull();
+    abrir.mockRestore();
+  });
+
   it('gere o acesso via menu → dialog para o mestre (dono da criatura)', () => {
     const { raiz, fixture, fichaService } = montar({ usuarioLogadoId: 7 });
     expect(fixture.componentInstance['podeGerenciar']()).toBe(true);
@@ -231,17 +261,21 @@ describe('CriaturaVisualizar', () => {
     expect(raiz.querySelector('app-modal .acesso')).not.toBeNull();
   });
 
-  it('entra na sala de tempo real da criatura e absorve ficha:alterada sem recarregar', () => {
-    const { fixture, tempoRealService, fichaAlterada$ } = montar({ usuarioLogadoId: 7 });
+  it('entra na sala de tempo real da criatura e, no eco, busca o documento completo pelo REST (P-080)', () => {
+    const { fixture, tempoRealService, fichaAlterada$, fichaService } = montar({ usuarioLogadoId: 7 });
     expect(tempoRealService.entrarSalaFicha).toHaveBeenCalledWith(4);
-
-    fichaAlterada$.next({
+    const completa = {
       id: 4, campanhaId: 9, usuarioId: 7, nome: 'Renomeada Remotamente', cor: null, imagemUrl: null,
-      oculta: false, dados,
-    } as FichaCriaturaAlteradaDto);
+      oculta: false, dados: { ...dados, anotacoes: 'Rosto catalogado.' },
+    } as FichaCriaturaAlteradaDto;
+    fichaService.recuperarFichaCriatura.mockReturnValue(of(completa));
+
+    // O broadcast chega sem `anotacoes` (omitida para a sala inteira).
+    fichaAlterada$.next({ ...completa, dados: { ...dados, anotacoes: undefined } });
     fixture.detectChanges();
 
     expect(fixture.componentInstance['ficha']()?.nome).toBe('Renomeada Remotamente');
+    expect(fixture.componentInstance['ficha']()?.dados.anotacoes).toBe('Rosto catalogado.');
   });
 
   describe('tempo real de rolagem (m3-77)', () => {

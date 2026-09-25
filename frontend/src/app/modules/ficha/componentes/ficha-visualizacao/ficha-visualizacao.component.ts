@@ -101,6 +101,7 @@ import { BarraRecurso } from '../../../../shared/ui/barra-recurso/barra-recurso.
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
+import { AnotacoesFichaEditor } from '../anotacoes-ficha-editor/anotacoes-ficha-editor.component';
 import { Modal } from '../../../../shared/ui/modal/modal.component';
 import { PainelFlutuante } from '../../../../shared/ui/painel-flutuante/painel-flutuante.component';
 import { StepInput } from '../../../../shared/ui/stepper/step-input.component';
@@ -384,6 +385,7 @@ export interface AjusteClasse {
     Botao,
     BotaoIcone,
     EditorMarkdown,
+    AnotacoesFichaEditor,
     Modal,
     PainelFlutuante,
     StepInput,
@@ -441,6 +443,8 @@ export class FichaVisualizacao {
   /** O painel de Anotações é aberto pela coluna de ações da ficha completa. */
   readonly anotacoesPainelAberto = input(false);
   readonly anotacoesPainelAbertoChange = output<boolean>();
+  /** "Abrir em janela" do painel de Anotações (I-027) — a página abre a janela externa. */
+  readonly anotacoesAbrirJanela = output<void>();
 
   /**
    * `[mobile]` de `app-painel-flutuante` para o painel de Anotações — reage à largura real da
@@ -1584,38 +1588,10 @@ export class FichaVisualizacao {
     return mapa;
   });
   /**
-   * `anotacoes` (m3-51) é opcional — ausente para um visualizador (omitida no backend, mesmo
-   * mecanismo de `historia`/m3-50) e em fichas sem texto definido; `??` cobre os dois casos antes do
-   * `.trim()`.
+   * `true` enquanto o painel de Anotações tem rascunho aberto — espelhado de
+   * `AnotacoesFichaEditor.editando`; o "Abrir em janela" some nesse estado para não perder o texto.
    */
-  protected readonly anotacoes = computed(() => (this.dados().anotacoes ?? '').trim());
-
-  /** `true` enquanto a aba Anotações (m3-32) está em edição (editor Markdown aberto). */
   protected readonly editandoAnotacoes = signal(false);
-  /** Rascunho do editor Markdown de Anotações — `app-editor-markdown` não tem `.value` de DOM. */
-  protected readonly rascunhoAnotacoes = signal('');
-
-  /** Abre a edição das Anotações (aba própria — distinta do peek read-only da Visão Geral). */
-  protected editarAnotacoes(): void {
-    this.rascunhoAnotacoes.set(this.dados().anotacoes ?? '');
-    this.editandoAnotacoes.set(true);
-  }
-
-  /** Cancela a edição das Anotações sem alterar. */
-  protected cancelarAnotacoes(): void {
-    this.editandoAnotacoes.set(false);
-  }
-
-  /** Confirma o texto digitado (blur/Ctrl+Enter): emite se mudou. Sem trim — espaço é do usuário. */
-  protected confirmarAnotacoes(texto: string): void {
-    if (!this.editandoAnotacoes()) {
-      return;
-    }
-    this.editandoAnotacoes.set(false);
-    if (texto !== (this.dados().anotacoes ?? '')) {
-      this.ajusteAnotacoes.emit(texto);
-    }
-  }
 
   /** Início do redimensionamento do painel de Anotações (pointerdown na alça do canto). */
   protected iniciarRedimensionamentoAnotacoes(evento: PointerEvent): void {
