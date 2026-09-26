@@ -75,3 +75,23 @@ DTOs mínimos, tabelas de referência e migration de backfill dos encontros exis
 ## Dependências
 
 `m7-01`/`m7-03` (`encontro` e `tipo_encontro_status` existentes, molde a seguir).
+
+## Decisões tomadas na implementação (2026-09-26)
+
+- **Numeração:** a `0030` já tinha sido usada (`0030 - Rolagem avulsa da campanha.sql`, P-076).
+  As migrations desta task são `0031` (schema) e `0032` (backfill).
+- **`NOT NULL` de `encontro.cena_id` adiado para `m7-22`** (decisão do autor). Aplicá-lo aqui
+  quebraria o `POST` de encontro existente (`EncontroRepository.criarEncontro` não grava
+  `cena_id`), contrariando o critério "nenhum endpoint muda de comportamento". A coluna fica
+  nullable; `m7-22` faz o backfill dos encontros que nascerem sem cena nesse intervalo e aplica o
+  `NOT NULL`.
+- **Um-para-um reforçado no banco:** `uix_encontro_cena_ativo` (`UNIQUE (cena_id) WHERE
+  is_deleted = false AND cena_id IS NOT NULL`), conforme a decisão #1 do milestone.
+- **Backfill cobre também encontros soft-deletados** (a cena espelha `is_deleted`/`deleted_date`),
+  para o `NOT NULL` futuro não esbarrar neles; `ordem` segue a criação dentro da campanha. O
+  trigger de `updated_date` de `encontro` fica desligado durante o vínculo, para nenhum dado do
+  encontro mudar além de `cena_id`.
+- **Identificação das cenas do backfill no `DOWN`:** o `UP` roda numa transação só, então essas
+  cenas têm `created_date` estritamente maior que o do encontro que embrulham. Cena criada pela
+  aplicação nasce com o seu encontro na mesma transação (`created_date` igual) ou não tem encontro
+  — `m7-22` precisa preservar essa propriedade.

@@ -1,5 +1,53 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m7-21: contrato e schema da Cena, com backfill dos encontros existentes
+
+Pedido do autor: "pode fazer a m7-21", a 1ª task do milestone `m7-cenas.spec.md`. Spec em
+`docs/specs/done/m7-21-contrato-migration-cena.spec.md`. Contrato e banco apenas: nenhum
+endpoint, service ou tela mudou.
+
+**O que entrou.**
+- `shared`: `CenaTipoEnum` (`COMBATE`/`INVESTIGACAO`/`FURTIVA`/`PERSEGUICAO`/`RESISTENCIA`) e
+  `CenaStatusEnum` (`PLANEJADA`/`ATIVA`/`ENCERRADA`), um arquivo cada em `shared/src/enums/`;
+  função pura `cenaTemIniciativa` (`shared/src/regras/cena/`, verdadeira para Combate, Furtiva e
+  Perseguição); `CenaCriarDto`/`CenaCriadaDto` (`shared/src/dtos/cena/`). Subpaths
+  `./dtos/cena` e `./regras/cena` publicados no `exports` de `shared/package.json`.
+- Migration `0031`: `tipo_cena`, `tipo_cena_status` (seed), tabela `cena` (`campanha_id`,
+  `tipo_cena_id`, `tipo_cena_status_id`, `nome`, `ordem`), `encontro.cena_id` (FK) e
+  `uix_encontro_cena_ativo` (um encontro vivo por cena, decisão #1 do milestone).
+- Migration `0032`: para cada encontro sem cena (inclusive soft-deletado), uma cena `COMBATE` com
+  o mesmo nome, status mapeado (`MONTAGEM/ATIVO/ENCERRADO → PLANEJADA/ATIVA/ENCERRADA`), mesmo
+  estado de exclusão e `ordem` por criação dentro da campanha. O trigger de `updated_date` de
+  `encontro` fica desligado durante o vínculo, para nada do encontro mudar além de `cena_id`.
+
+**Desvios da spec, registrados na própria spec.**
+- A spec previa `0030`/`0031`, mas a `0030` já tinha sido usada (P-076); ficaram `0031`/`0032`.
+- **`NOT NULL` de `encontro.cena_id` adiado para a `m7-22`, por decisão do autor**
+  (`AskUserQuestion`). Aplicá-lo agora quebraria o `POST` de encontro atual, que não grava
+  `cena_id`, contrariando o critério "nenhum endpoint muda de comportamento". A `m7-22` ganhou o
+  item 7: backfill dos encontros que nascerem sem cena nesse intervalo, `NOT NULL` e o destino do
+  `POST` de encontro solto.
+- Para o `DOWN` da `0032` identificar só as cenas que o `UP` criou, sem heurística por nome: o
+  `UP` roda numa transação, então essas cenas têm `created_date` estritamente maior que o do
+  encontro que embrulham. Uma cena da aplicação nasce com o seu encontro na mesma transação ou não
+  tem encontro. A `m7-22` precisa manter essa propriedade (anotado na spec dela).
+
+**Verificação.** O banco de dev estava na `0029` e recebeu `0030` → `0031` → `0032` via
+`knex migrate:up`, uma por vez: 22 encontros (11 em MONTAGEM, 11 ENCERRADO) viraram 22 cenas
+`COMBATE`, 0 sem cena e 0 divergentes em nome, campanha, exclusão ou status. Os hashes MD5 de
+`encontro` (sem `cena_id`, com `updated_date`), `encontro_combatente` e `encontro_evento` são
+idênticos antes e depois. Numa transação com `ROLLBACK` foram exercitados os casos ausentes do
+banco de dev: `ATIVO → ATIVA` e soft-delete espelhado com o mesmo `deleted_date`. Também foi
+conferido que o `DOWN` preserva uma cena "da aplicação" (criada junto do seu encontro) e só apaga
+as do backfill. A simetria foi testada com `migrate:down` ×2: o retrato do catálogo (colunas,
+constraints, índices, triggers e sequences, 304 itens) ficou idêntico ao anterior à task, sem
+mudança de dados. Em seguida, `migrate:up` ×2 reaplicou tudo limpo e o dev ficou na `0032`. O
+`INSERT` atual de `criarEncontro`, rodado com `ROLLBACK`, continua funcionando e grava
+`cena_id` nulo. Resultados: `npm run test --workspace=shared` com 51 arquivos e 769 testes
+(6 novos de `cenaTemIniciativa`); `--workspace=backend` com 32 arquivos e 580 testes; lint de
+`shared` e `backend` com 0 erros (os warnings `quotes` dos arquivos novos são os mesmos do
+restante do código, que usa aspas simples). Sem UI, então sem gate visual.
+
 ## 2026-09-26 — Revisão estática de requests do site
 
 Pedido do autor: conferir momento, desperdício e escopo de dados das requests. Rastreados

@@ -85,10 +85,24 @@ CREATE TABLE tipo_encontro_status (
   descricao VARCHAR NOT NULL
 );
 -- uix_tipo_encontro_status_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+
+CREATE TABLE tipo_cena (
+  -- BaseEntity...
+  codigo    VARCHAR NOT NULL,   -- COMBATE | INVESTIGACAO | FURTIVA | PERSEGUICAO | RESISTENCIA
+  descricao VARCHAR NOT NULL
+);
+-- uix_tipo_cena_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+
+CREATE TABLE tipo_cena_status (
+  -- BaseEntity...
+  codigo    VARCHAR NOT NULL,   -- PLANEJADA | ATIVA | ENCERRADA
+  descricao VARCHAR NOT NULL
+);
+-- uix_tipo_cena_status_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
 ```
 
 Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoUsuarioEnum`, `TipoFichaEnum`, `RolagemVisibilidadeEnum`,
-`EncontroStatusEnum`
+`EncontroStatusEnum`, `CenaTipoEnum`, `CenaStatusEnum`
 (em `shared/src/enums/`). `RolagemVisibilidadeEnum` é coluna relacional de `rolagem` (não vive no
 JSONB) — a exceção do §10.3 abaixo não se aplica a ela, segue a regra geral §10.2.12.
 
@@ -292,6 +306,30 @@ no-op. `rolagem:excluida` (soft delete por `ADMIN`) segue o mesmo roteamento.
 
 ---
 
+## cena (M7 — m7-21)
+
+A **Cena**: raiz tipada da mesa (`docs/core/sistema-v4.1.0.md`, "⬡ Cenas"), com ciclo de vida
+`PLANEJADA → ATIVA → ENCERRADA`. O `encontro` (iniciativa) é uma estrutura que a cena pode ter —
+só os tipos em que `cenaTemIniciativa` (`shared/regras/cena`) é verdadeiro — e pendura nela por
+`encontro.cena_id`, no máximo um por cena.
+
+```sql
+CREATE TABLE cena (
+  -- BaseEntity...
+  campanha_id          INTEGER NOT NULL,  -- fk_cena_campanha
+  tipo_cena_id         INTEGER NOT NULL,  -- fk_cena_tipo_cena
+  tipo_cena_status_id  INTEGER NOT NULL,  -- fk_cena_tipo_cena_status
+  nome                 VARCHAR NOT NULL,
+  ordem                INTEGER NOT NULL   -- ordem manual das cenas planejadas da campanha
+);
+-- ix_cena_campanha: (campanha_id)
+```
+
+A invariante **no máximo uma cena `ATIVA` por campanha** não vira índice parcial único, pelo mesmo
+motivo de `encontro` (subquery proibida no predicado do índice) — é arbitrada pela `CenaService`
+(m7-22). Os encontros anteriores à m7-21 ganharam, pela migration `0032`, uma cena `COMBATE`
+equivalente (mesmo nome, status mapeado `MONTAGEM/ATIVO/ENCERRADO → PLANEJADA/ATIVA/ENCERRADA`).
+
 ## encontro (M7 — m7-01/m7-03)
 
 O **Encontro de Combate**: ordem de iniciativa com a Cadência das criaturas intercalada, rodadas e
@@ -309,10 +347,16 @@ CREATE TABLE encontro (
   tipo_encontro_status_id  INTEGER NOT NULL,  -- fk_encontro_tipo_encontro_status
   nome                     VARCHAR NOT NULL,
   rodada_atual             INTEGER NOT NULL,  -- 0 enquanto MONTAGEM; 1+ quando ATIVO
-  turno_indice             INTEGER NOT NULL   -- posição corrente em ordem_rodada (0-based)
+  turno_indice             INTEGER NOT NULL,  -- posição corrente em ordem_rodada (0-based)
+  cena_id                  INTEGER            -- fk_encontro_cena (m7-21); NOT NULL fecha em m7-22
 );
 -- ix_encontro_campanha: (campanha_id)
+-- uix_encontro_cena_ativo: UNIQUE (cena_id) WHERE is_deleted = false AND cena_id IS NOT NULL
 ```
+
+`cena_id` ainda é nullable: até a m7-22, o `POST` de encontro existente cria encontro sem cena. A
+m7-22, que passa a criar o encontro dentro da cena, faz o backfill dos encontros que nascerem sem
+cena nesse intervalo e aplica o `NOT NULL`.
 
 A invariante **um encontro não-encerrado por campanha** não vira índice parcial único: o predicado
 precisaria resolver o id de `ENCERRADO` em `tipo_encontro_status`, e o PostgreSQL proíbe subquery

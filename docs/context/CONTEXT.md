@@ -14,8 +14,12 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-25 · **Última decisão registrada:** `i-027-caderno-janela-externa`
-> concluída (spec em `done/`) e, com ela, a `I-027` inteira: o Caderno da campanha abre em janela
+> **Última revisão:** 2026-09-26 · **Última decisão registrada:** `m7-21-contrato-migration-cena`
+> concluída (spec em `done/`): contrato da Cena em `shared` (`CenaTipoEnum`, `CenaStatusEnum`,
+> `cenaTemIniciativa`, `CenaCriarDto`/`CenaCriadaDto`) e migrations `0031` (schema `cena` +
+> `encontro.cena_id`) e `0032` (backfill de uma cena `COMBATE` por encontro). O `NOT NULL` de
+> `encontro.cena_id` foi adiado pelo autor para a `m7-22`. Próxima: `m7-22`. Antes:
+> `i-027-caderno-janela-externa` concluída (spec em `done/`) e, com ela, a `I-027` inteira: o Caderno da campanha abre em janela
 > externa (`/janela/campanha/:id/caderno`, `960×720`) pelo ícone "Abrir em janela" do painel (fora
 > do mobile). O corpo do painel virou `CadernoConteudo` e o selo de salvamento `CadernoSalvamento`
 > (`modules/pagina-caderno/`), usados pelo painel e pela página `CadernoJanela`; a fachada é
@@ -567,11 +571,13 @@
 
 ## 1. Próxima Task
 
-**Módulo de Cenas — specs prontas para implementar (2026-09-21):** `m7-21-contrato-migration-
-cena.spec.md`, `m7-22-backend-cena.spec.md` e `m7-23-frontend-hub-cenas.spec.md`
-(`docs/specs/backlog/`) juntas entregam o pedido do autor: tipar a cena na criação, com hub e
-redirecionamento das rotas de Iniciativa atuais. São a fundação do milestone `m7-cenas.spec.md`;
-seguir `m7-21 → m7-22 → m7-23` nessa ordem. A cena de Investigação (`m7-25`) só pode começar depois
+**Módulo de Cenas — próxima: `m7-22-backend-cena.spec.md`.** `m7-21` concluída em 2026-09-26
+(contrato `CenaTipoEnum`/`CenaStatusEnum`/`cenaTemIniciativa`/`CenaCriarDto`, migrations
+`0031`/`0032` com backfill de uma cena `COMBATE` por encontro). **`encontro.cena_id` ainda é
+nullable**: o `NOT NULL` foi adiado pelo autor para a `m7-22` (item 7 da spec dela), que também
+decide o destino do `POST` de encontro solto. `m7-22` e `m7-23` (`docs/specs/backlog/`) completam o
+pedido do autor: tipar a cena na criação, com hub e redirecionamento das rotas de Iniciativa atuais.
+São a fundação do milestone `m7-cenas.spec.md`; seguir `m7-22 → m7-23` nessa ordem. A cena de Investigação (`m7-25`) só pode começar depois
 de `m9-documentos-campanha.spec.md` ter ao menos o backend de documento + revelar/ocultar prontos.
 Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. **Atenção:**
 a task `espectador-coluna-acoes-e-iniciativa` (concluída depois desta entrada ter sido escrita, ver
@@ -1735,7 +1741,9 @@ de Criação de Ameaças" — atributos, modificadores, saúde, defesa, resistê
 regeneração, deslocamento, cadência/iniciativa (Frenética declara `turnosPorRodada` >= 4, inclusive
 para combatentes avulsos; após o cálculo, a Iniciativa desenha um cartão por slot intercalado de
 `ordemRodada`, com iniciativa travada nas ocorrências adicionais), ataques, `validarFichaCriatura` — contra
-`docs/core/guia_de_mestre-v4.0.0.md`, caso de teste completo "A Estátua").
+`docs/core/guia_de_mestre-v4.0.0.md`, caso de teste completo "A Estátua"). `encontro/` (ordem
+intercalada, condições, receber dano) e `cena/` (`m7-21`: `cenaTemIniciativa`, a fonte única de
+"este tipo de cena tem iniciativa") completam o motor.
 
 **Fonte única:** frontend e backend consomem o mesmo motor. Nenhuma regra de jogo é reimplementada
 em nenhum dos dois lados.
@@ -2389,6 +2397,10 @@ permite UI customizada), com aviso de que o progresso está salvo. Mobile: trilh
 progresso no topo, resumo operacional vira bottom sheet aberto por um botão dedicado no cabeçalho.
 
 ### Encontro de Combate — `backend/encontro`, `frontend/src/app/modules/encontro`
+
+**Cena-mãe (`m7-21`, só banco).** Todo encontro anterior a 2026-09-26 pendura numa `cena`
+`COMBATE` equivalente (`encontro.cena_id`, migration `0032`). Nenhum código lê ou grava `cena_id`
+ainda; encontros criados pelo `POST` atual nascem com `cena_id` nulo até a `m7-22`.
 
 Tela única (rota `/campanhas/:campanhaId/iniciativa`, `:encontroId` opcional para histórico) com
 duas visões em páginas separadas (`ui-39`): `PainelEncontroShell` resolve o papel

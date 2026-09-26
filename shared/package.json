@@ -36,6 +36,10 @@
       "types": "./dist/dtos/encontro/index.d.ts",
       "default": "./dist/dtos/encontro/index.js"
     },
+    "./dtos/cena": {
+      "types": "./dist/dtos/cena/index.d.ts",
+      "default": "./dist/dtos/cena/index.js"
+    },
     "./dtos/rolagem": {
       "types": "./dist/dtos/rolagem/index.d.ts",
       "default": "./dist/dtos/rolagem/index.js"
@@ -91,6 +95,10 @@
     "./regras/criatura": {
       "types": "./dist/regras/criatura/index.d.ts",
       "default": "./dist/regras/criatura/index.js"
+    },
+    "./regras/cena": {
+      "types": "./dist/regras/cena/index.d.ts",
+      "default": "./dist/regras/cena/index.js"
     }
   },
   "files": [

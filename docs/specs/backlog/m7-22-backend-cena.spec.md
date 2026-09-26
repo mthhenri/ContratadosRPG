@@ -63,7 +63,16 @@ CRUD de cena (criar/abrir/encerrar/reordenar/listar/recuperar), a trava que impe
 6. **Evento `cena:alterada`** (`CampanhaGateway.emitirCenaAlterada`, mesmo molde de
    `emitirEncontroAlterado`), emitido pela `CenaService` depois de cada mutação persistida, na sala
    `campanha:<id>` — exceto quando a cena está `PLANEJADA` (trava do item 4, mesma regra).
-7. DTOs restantes em `shared/src/dtos/cena/`: `CenaAbrirDto`/`CenaEncerrarDto` (`{ id }`),
+7. **`NOT NULL` de `encontro.cena_id`** (adiado da `m7-21` por decisão do autor — ver a seção
+   "Decisões tomadas na implementação" de `docs/specs/done/m7-21-contrato-migration-cena.spec.md`):
+   migration nova (próximo número livre) que cria uma cena `COMBATE` equivalente para todo encontro
+   com `cena_id` nulo — os criados pelo `POST` de encontro entre a `m7-21` e esta task, mesmo
+   mapeamento de status da `0032` — e aplica o `NOT NULL`. A partir daqui o encontro só nasce
+   dentro da `CenaService`, **na mesma transação da cena** (o `DOWN` da `0032` depende disso para
+   distinguir as cenas do backfill: cena de aplicação tem `created_date` igual ao do seu encontro).
+   O `POST campanha/:id/encontro` atual deixa de criar encontro solto: ou passa a criar a cena
+   `COMBATE` junto, ou é substituído pelo `POST campanha/:id/cena` — decidir e documentar aqui.
+8. DTOs restantes em `shared/src/dtos/cena/`: `CenaAbrirDto`/`CenaEncerrarDto` (`{ id }`),
    `CenaReordenarDto { campanhaId, ordem: readonly number[] }`, `CenaResumoDto` (item de listagem:
    id, nome, tipo, status, `temEncontro: boolean`), `CenaRecuperadaDto` (estado completo — inclui o
    `EncontroRecuperadoDto` quando `temEncontro`), `CenaAlteradaDto` (payload do broadcast).
