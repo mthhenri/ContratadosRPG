@@ -110,12 +110,13 @@ Mesma casca "coluna de ações | coluna | Rolagens | palco" da Iniciativa (`ui-3
 | `m7-22` | backend + tempo real | CRUD de cena (criar/abrir/encerrar/reordenar), `cena:alterada`, trava anti-vazamento de `PLANEJADA` (decisão #7), "Encerrar" do encontro passa a encerrar a cena. | `m7-21` |
 | `m7-23` | frontend | Hub de cenas, "Nova cena" com seletor de tipo, chips por tipo, redirects de `/iniciativa`, renomeação da coluna de ações. **Entrega o pedido imediato do autor** (tipagem na criação). | `m7-22` |
 | `m7-24` | frontend | Painel de cena sem iniciativa (Resistência: cabeçalho, grade de cards, Rolagens, Encerrar) e visão do jogador equivalente. | `m7-23` |
-| `m7-25` | backend + frontend | Painel de Investigação completo (coluna Documentos, apresentar, palco com documento + fichas). | `m7-24`, `m9-documentos-campanha` (ao menos a task de backend + revelar/ocultar) |
+| `m7-25` | backend + frontend | Painel de Investigação completo (coluna Documentos, apresentar, palco com documento + fichas). | `m7-24`, `m9-02` (backend de documento + revelar/ocultar) e `m9-04` (o `LeitorDocumento` do palco) — `docs/specs/backlog/m9-documentos-campanha.spec.md` |
 | `m7-26` | responsivo | Passe mobile (~360px, sem scroll horizontal) do hub e dos painéis novos, reusando os tokens de `m1-15`. | `m7-23`, `m7-24`, `m7-25` |
 
 **Ordem:** `m7-21 → m7-22 → m7-23` entregam a tipagem na criação e podem fechar sozinhas, sem
-esperar a M9. `m7-24` segue direto depois. `m7-25` só começa quando a M9 tiver, no mínimo, backend
-de documento + revelar/ocultar prontos. `m7-26` fecha o milestone.
+esperar a M9. `m7-24` segue direto depois. `m7-25` só começa quando a M9 tiver, no mínimo, o backend
+de documento + revelar/ocultar (`m9-02`) e o leitor de documento (`m9-04`) prontos — a busca
+(`m9-03`) e a biblioteca do jogador (`m9-05`) não a bloqueiam. `m7-26` fecha o milestone.
 
 ## Critérios de aceite do módulo
 

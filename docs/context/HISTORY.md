@@ -1,5 +1,34 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — M9: guarda-chuva quebrado em seis specs no backlog
+
+Pedido do autor, ao perguntar se havia uma `m7-25`: abrir a M9 criando todas as suas specs no
+backlog. A `m7-25` (Investigação completa) depende da biblioteca de documentos, e a M9 só existia
+como o guarda-chuva `m9-documentos-campanha.spec.md`. Só documentação — nenhum código mudou.
+
+Specs novas em `docs/specs/backlog/`: `m9-01-contrato-migration-documento`,
+`m9-02-backend-documento`, `m9-03-backend-busca-documento`, `m9-04-frontend-biblioteca-mestre`,
+`m9-05-frontend-biblioteca-jogador-espectador` e `m9-06-refinamento-mobile-biblioteca`. Cada uma foi
+escrita contra o código (módulo `pagina-caderno` para a busca, `FichaService.alterarImagem` e o
+`core/armazenamento` para o upload, `emitirCenaAlterada` para a trava de tempo real, `HubCenas` e o
+Caderno como análogos de UI), não só contra o esboço.
+
+O que o detalhamento mudou no guarda-chuva (seção "Ajustes da quebra" dele):
+- o `LeitorDocumento` passa da `m9-05` para a `m9-04`, e a UI de busca da `m9-04` para a `m9-05` —
+  assim a `m7-25` só espera `m9-02` + `m9-04` (`m7-cenas.spec.md` atualizado);
+- `imagem_foco` sai do MVP (sem consumidor); reordenar entra; não há `DELETE` da imagem;
+- `documento:alterado` não leva conteúdo e obedece a uma trava anti-vazamento no molde da `m7-22`
+  (documento oculto só gera evento para `campanha:<id>:mestre`);
+- a interface chama a área de **"Biblioteca"**, porque "Documentos" já é o leitor de PDFs das regras
+  na topbar;
+- o achado de proxy que a `m7-23` teve com `/cena` reaparece: a rota de app `/documentos` (plural) é
+  prefixo-casada por uma chave `/documento` do `proxy.conf.json` — a `m9-04` usa regex com fronteira,
+  como `/ficha` × `/fichas`.
+
+Decisões deixadas para o autor confirmar antes de implementar: o espectador lê o revelado (revisão da
+decisão #4 do `m8`), a URL da imagem é pública e não revogável (como o avatar), teto de imagem em
+5 MB, salvar explícito no editor e revelar sem confirmação.
+
 ## 2026-09-26 — I-036: título da ficha flutuante com o nome da ficha
 
 Pedido do autor, logo após a `m7-24`: trocar o "Ficha do combatente" fixo da `app-ficha-flutuante`
