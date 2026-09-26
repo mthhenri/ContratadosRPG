@@ -83,4 +83,19 @@ describe('Icone', () => {
     const formas = nomes.map(assinatura);
     expect(new Set(formas).size).toBe(formas.length);
   });
+
+  it('os glifos da biblioteca (m9-04) são próprios e distintos dos vizinhos', () => {
+    const nomes: IconeNome[] = [
+      'biblioteca',
+      'documentos',
+      'caderno',
+      'anotacoes',
+      'imagem',
+      'tamanho-real',
+      'ajustar-largura',
+    ];
+    const formas = nomes.map(assinatura);
+    expect(formas.every((forma) => forma !== '')).toBe(true);
+    expect(new Set(formas).size).toBe(nomes.length);
+  });
 });

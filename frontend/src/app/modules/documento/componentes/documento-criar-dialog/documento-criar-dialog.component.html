@@ -1,0 +1,70 @@
+<!-- Novo documento (m9-04): título + tipo; Enter cria, Esc/fundo/Cancelar fecham. -->
+<app-modal [aberto]="true" titulo="Novo documento" [largura]="'480px'" (fechou)="fechou.emit()">
+    <form class="novo-documento" [formGroup]="formulario" (ngSubmit)="criar()">
+        <p class="novo-documento__ajuda">
+            O documento nasce oculto: só você o vê até revelá-lo para a mesa.
+        </p>
+        <app-campo
+            rotulo="Título"
+            tamanho="amplo"
+            [dica]="tamanhoTitulo() + '/' + tituloMaximo"
+            [erro]="erroTitulo()"
+        >
+            <input
+                appAutoFocus
+                class="campo__controle"
+                type="text"
+                formControlName="titulo"
+                placeholder="Ex.: Carta do informante"
+                [attr.maxlength]="tituloMaximo"
+                autocomplete="off"
+                required
+            />
+        </app-campo>
+        <div class="novo-documento__tipo">
+            <span class="novo-documento__rotulo">Tipo</span>
+            <app-segmentado rotulo="Tipo do documento" [fluido]="true">
+                <button
+                    app-segmentado-item
+                    class="novo-documento__tipo-item"
+                    type="button"
+                    [ativo]="tipo() === tipoTexto"
+                    (click)="escolherTipo(tipoTexto)"
+                >
+                    <app-icone nome="anotacoes" /> Texto
+                </button>
+                <button
+                    app-segmentado-item
+                    class="novo-documento__tipo-item"
+                    type="button"
+                    [ativo]="tipo() === tipoImagem"
+                    (click)="escolherTipo(tipoImagem)"
+                >
+                    <app-icone nome="imagem" /> Imagem
+                </button>
+            </app-segmentado>
+        </div>
+        <div class="novo-documento__acoes">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                class="novo-documento__acao novo-documento__acao--cancelar"
+                type="button"
+                (click)="fechou.emit()"
+            >
+                Cancelar
+            </button>
+            <button
+                app-botao
+                variante="primario"
+                tamanho="medio"
+                class="novo-documento__acao"
+                type="submit"
+                [carregando]="enviando()"
+            >
+                Criar
+            </button>
+        </div>
+    </form>
+</app-modal>

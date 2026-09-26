@@ -309,4 +309,15 @@ describe('TempoRealService', () => {
     socketFake.disparar('cena:alterada', evento);
     expect(recebidos).toEqual([evento]);
   });
+
+  it('repassa a biblioteca alterada (m9-02) com o aviso tal como chegou', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.documentoAlterado$.subscribe((evento) => recebidos.push(evento));
+
+    const evento = { campanhaId: 9, documentoId: 4, alteracao: 'REVELADO' };
+    socketFake.disparar('documento:alterado', evento);
+    expect(recebidos).toEqual([evento]);
+  });
 });

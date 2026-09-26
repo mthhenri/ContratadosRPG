@@ -1,4 +1,9 @@
-import { HttpErrorResponse, HttpInterceptorFn, HttpStatusCode } from '@angular/common/http';
+import {
+  HttpContextToken,
+  HttpErrorResponse,
+  HttpInterceptorFn,
+  HttpStatusCode,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
@@ -6,6 +11,14 @@ import { StandardResponse } from '@contratados-rpg/shared/interfaces';
 
 import { SessaoService } from '../services/sessao.service';
 import { NotificacaoService } from '../../shared/ui/notificacao/notificacao.service';
+
+/**
+ * Status de erro que a tela trata **no próprio controle** — o interceptor não os anuncia em
+ * toast, para a mesma falha não aparecer duas vezes. Ex.: a biblioteca (m9-04) mostra a recusa de
+ * um upload de imagem junto do botão e o conflito de versão (409) como aviso no editor. O resto
+ * continua saindo em toast, e o tratamento do 401 não muda.
+ */
+export const ERROS_TRATADOS_NA_TELA = new HttpContextToken<readonly number[]>(() => []);
 
 /**
  * Captura erros de requisição HTTP e exibe uma notificação (`NotificacaoService`, ui-02) com a
@@ -27,6 +40,9 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (request, next) => {
       if (erro.status === HttpStatusCode.Unauthorized && sessaoService.autenticado()) {
         sessaoService.sair();
         void router.navigate(['/login'], { queryParams: { retorno: router.url } });
+      }
+      if (request.context.get(ERROS_TRATADOS_NA_TELA).includes(erro.status)) {
+        return throwError(() => erro);
       }
       const respostaPadrao = erro.error as StandardResponse | null;
       const mensagem =

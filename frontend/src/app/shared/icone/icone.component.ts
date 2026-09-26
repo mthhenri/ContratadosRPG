@@ -40,6 +40,11 @@ import { Component, input } from '@angular/core';
  * `info`, círculo com "i": mostra/oculta o texto da missão no cabeçalho da campanha do jogador.
  * `desfazer`/`refazer`, setas em gancho ("arrow-back-up"/"arrow-forward-up" da Tabler Icons, MIT):
  * histórico da barra do editor Markdown.
+ * Biblioteca de documentos da campanha (m9-04), todos da Tabler Icons (MIT): `biblioteca`, estante de
+ * livros ("books") — item "Biblioteca" do mestre, distinto de `documentos` (livro aberto, leitor
+ * global das regras) e de `caderno`; `imagem`, moldura com montanha ("photo") — tipo de documento
+ * de imagem (o de texto usa `anotacoes`); `tamanho-real`/`ajustar-largura`, setas para fora/para
+ * dentro ("arrows-maximize"/"arrows-minimize") — alternância de tamanho do leitor de imagem.
  */
 export type IconeNome =
   | 'agente'
@@ -132,7 +137,11 @@ export type IconeNome =
   | 'vincular'
   | 'caderno'
   | 'desfazer'
-  | 'refazer';
+  | 'refazer'
+  | 'biblioteca'
+  | 'imagem'
+  | 'tamanho-real'
+  | 'ajustar-largura';
 
 /**
  * Ícone monocromático de linha (SVG inline, `stroke: currentColor`) — reutilizado nos menus de

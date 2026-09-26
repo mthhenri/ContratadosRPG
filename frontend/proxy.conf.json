@@ -53,6 +53,15 @@
     "secure": false,
     "changeOrigin": true
   },
+  // Documento de campanha (m9-02): `GET/PUT/DELETE /documento/:id`, `POST /documento/:id/revelar|
+  // ocultar|imagem`. Regex com o mesmo boundary de /ficha e /cena — a rota de app da biblioteca é
+  // "/campanhas/:id/documentos" (plural), e o boundary impede que um "/documentos" seja encaminhado
+  // à API por prefixo (Vite: doesProxyContextMatchUrl faz url.startsWith(context)).
+  "^/documento(?:$|[/?])": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/usuario": {
     "target": "http://localhost:3100",
     "secure": false,

@@ -1,0 +1,57 @@
+<!-- Leitor de documento (m9-04): texto pelo editor Markdown em somente leitura; imagem com esqueleto,
+     erro e a alternância "ajustar à largura" ↔ "tamanho real". -->
+@if (ehTexto()) {
+<app-editor-markdown
+    class="leitor-documento__texto"
+    [valor]="documento().conteudoMarkdown ?? ''"
+    [somenteLeitura]="true"
+    [rotulo]="documento().titulo"
+/>
+} @else if (imagemUrl(); as url) { @if (estadoImagem() === 'ERRO') {
+<app-estado-vazio
+    icone="imagem"
+    titulo="Não foi possível carregar a imagem."
+    linhaApoio="O arquivo não respondeu. Tente recarregar a página."
+/>
+} @else {
+<div class="leitor-documento__imagem">
+    <div class="leitor-documento__barra">
+        <button
+            app-botao-icone
+            tamanho="padrao"
+            type="button"
+            [attr.aria-label]="tamanhoReal() ? 'Ajustar à largura' : 'Ver em tamanho real'"
+            [appTooltip]="tamanhoReal() ? 'Ajustar à largura' : 'Ver em tamanho real'"
+            [attr.aria-pressed]="tamanhoReal()"
+            [disabled]="estadoImagem() !== 'PRONTA'"
+            (click)="alternarTamanho()"
+        >
+            <app-icone [nome]="tamanhoReal() ? 'ajustar-largura' : 'tamanho-real'" />
+        </button>
+    </div>
+    <div
+        class="leitor-documento__quadro"
+        [class.leitor-documento__quadro--real]="tamanhoReal()"
+        [attr.tabindex]="tamanhoReal() ? 0 : null"
+        [attr.aria-label]="tamanhoReal() ? 'Imagem em tamanho real, role para ver' : null"
+    >
+        @if (estadoImagem() === 'CARREGANDO') {
+        <app-esqueleto class="leitor-documento__esqueleto" role="status" aria-label="Carregando a imagem" />
+        }
+        <img
+            class="leitor-documento__img"
+            [class.leitor-documento__img--carregando]="estadoImagem() === 'CARREGANDO'"
+            [src]="url"
+            [alt]="documento().titulo"
+            (load)="aoCarregarImagem()"
+            (error)="aoFalharImagem()"
+        />
+    </div>
+</div>
+} } @else {
+<app-estado-vazio
+    icone="imagem"
+    titulo="Nenhuma imagem ainda."
+    linhaApoio="Este documento ainda não tem um arquivo de imagem."
+/>
+}

@@ -1,0 +1,82 @@
+// Leitor de documento (m9-04). O texto é o próprio `app-editor-markdown` em somente leitura (o do
+// Caderno); a imagem fica num quadro com a superfície do editor (`--bg` + borda), a barra com a
+// alternância de tamanho acima. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+}
+
+.leitor-documento {
+    &__texto {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+    }
+
+    &__imagem {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        min-height: 0;
+        min-width: 0;
+    }
+
+    &__barra {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    // Ajustada: a imagem cabe na largura e o quadro cresce com ela. Tamanho real: o quadro tem teto de
+    // altura e rola nos dois eixos.
+    &__quadro {
+        position: relative;
+        min-width: 0;
+        padding: var(--space-8);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+
+        &--real {
+            max-height: 70dvh;
+            overflow: auto;
+
+            &:focus-visible {
+                outline: 2px solid var(--accent-border);
+                outline-offset: 2px;
+            }
+        }
+    }
+
+    &__esqueleto {
+        display: block;
+        width: 100%;
+        height: 320px;
+
+        @include bp.mobile {
+            height: 200px;
+        }
+    }
+
+    &__img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+
+        .leitor-documento__quadro--real & {
+            max-width: none;
+        }
+
+        // Some até carregar (o esqueleto ocupa o lugar), sem sair do DOM — o `load` precisa dele.
+        &--carregando {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+    }
+}

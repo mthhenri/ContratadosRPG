@@ -1,0 +1,65 @@
+// Dialog "Novo documento" — mesma receita do "Nova cena" (`cena-criar-dialog`): só o layout do
+// formulário; caixa, cabeçalho e foco são do `app-modal`, rótulo/dica/erro e o controle
+// (`campo__controle`) do `app-campo`, o seletor de tipo do `app-segmentado`.
+@use "tema/breakpoints" as bp;
+
+.novo-documento {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+
+    &__ajuda {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+
+    &__tipo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    // Mesmo rótulo do `app-campo tamanho="amplo"` — o segmentado não é um controle de formulário
+    // nativo, então não entra num `<label>`.
+    &__rotulo {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-label);
+        color: var(--text-mute);
+    }
+
+    &__tipo-item {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__acoes {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-8);
+
+        @include bp.mobile {
+            flex-direction: column-reverse;
+        }
+    }
+
+    // Cancelar fica à esquerda, longe da ação que cria.
+    &__acao--cancelar {
+        margin-right: auto;
+
+        @include bp.mobile {
+            margin-right: 0;
+        }
+    }
+
+    &__acao {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

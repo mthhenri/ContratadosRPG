@@ -1,0 +1,17 @@
+<!-- Casca da biblioteca (m9-04): a silhueta enquanto o papel não é conhecido; depois, a página do
+     mestre. Quem não é mestre é levado de volta à campanha até a m9-05. -->
+@if (carregando()) {
+<div class="biblioteca-casca" role="status" aria-label="Carregando a biblioteca">
+    <app-esqueleto class="biblioteca-casca__cabecalho" />
+    <div class="biblioteca-casca__corpo">
+        <div class="biblioteca-casca__lista">
+            @for (i of [0, 1, 2]; track i) {
+            <app-esqueleto class="biblioteca-casca__linha" />
+            }
+        </div>
+        <app-esqueleto class="biblioteca-casca__painel" />
+    </div>
+</div>
+} @else if (ehMestre()) {
+<app-biblioteca-mestre />
+}

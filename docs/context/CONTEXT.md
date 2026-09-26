@@ -19,6 +19,13 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-26 · **Última decisão registrada:**
+> `m9-04-frontend-biblioteca-mestre` concluída (spec em `done/`): página **Biblioteca** do mestre
+> (`/campanhas/:id/documentos`, item na coluna de ações) — lista com chips Revelado/Oculto e setas de
+> ordem, documento lido e editado no próprio lugar (salvar explícito, conflito 409 com "Recarregar",
+> "Descartar alterações?" ao trocar/fechar/sair), revelar/ocultar com toast, upload de imagem,
+> `LeitorDocumento` compartilhado (a `m7-25` já pode começar), `documentoAlterado$`, quatro glifos
+> novos e `ERROS_TRATADOS_NA_TELA` no interceptor. Quem não é mestre volta à campanha até a `m9-05`.
+> Antes:
 > `m9-02-backend-documento` concluída (spec em `done/`): módulo `backend/documento` (CRUD, ordem,
 > revelar/ocultar, upload de imagem em `documentos/`), `documento:alterado` com trava anti-vazamento
 > e `core/armazenamento` com pasta parametrizada. Só backend; próximas: `m9-04` (desbloqueia a
@@ -597,8 +604,8 @@
 
 ## 1. Próxima Task
 
-**Módulo de Cenas — próxima: `m7-25` (Investigação completa), bloqueada pela M9, que está em
-andamento — falta a `m9-04` (o backend da `m9-02` já está pronto).** `m7-21` (contrato + schema), `m7-22` (backend +
+**Módulo de Cenas — próxima: `m7-25` (Investigação completa), desbloqueada: a `m9-02` (backend de
+documento) e a `m9-04` (`LeitorDocumento`) estão prontas.** `m7-21` (contrato + schema), `m7-22` (backend +
 tempo real), `m7-23` (hub + "Nova cena" tipada) e `m7-24` (painel de cena sem iniciativa) concluídas
 em 2026-09-26. **Deploy: `m7-22` e `m7-23` sobem juntas** (os encontros de backfill em `MONTAGEM`
 vivem em cenas `PLANEJADA`, que só o hub deixa o mestre abrir); a `m7-24` é só frontend e pode ir
@@ -607,15 +614,14 @@ junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e
 (o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
 da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
 
-**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01` e `m9-02` concluídas
-(2026-09-26); próximas `m9-04` (desbloqueia a `m7-25`) e `m9-03`, independentes entre si.** `m9-01`
-(contrato + migration `0034` `documento`, pronta) → `m9-02` (backend + `documento:alterado` com trava
-anti-vazamento, pronta) → `m9-03` (busca no backend) em paralelo com `m9-04`
-(biblioteca do mestre + `LeitorDocumento`) → `m9-05` (jogador, espectador e busca) → `m9-06` (passe
-mobile). As decisões do guarda-chuva foram **confirmadas pelo autor** (espectador lê o revelado, URL
-pública da imagem, salvar explícito, revelar sem confirmação), com o teto de imagem subido para
-**10 MB**. Continua em aberto só a escolha dos ícones de imagem/biblioteca (`m9-04`, item 4 das
-decisões — perguntar ao autor ao chegar lá).
+**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01`, `m9-02` e `m9-04` concluídas
+(2026-09-26); próxima `m9-03` (busca no backend), depois `m9-05`.** `m9-01` (contrato + migration
+`0034` `documento`) → `m9-02` (backend + `documento:alterado` com trava anti-vazamento) → `m9-04`
+(biblioteca do mestre + `LeitorDocumento`) → `m9-03` (busca no backend) → `m9-05` (jogador,
+espectador e busca; hoje quem não é mestre é levado de volta à campanha) → `m9-06` (passe
+responsivo). Decisões do guarda-chuva **confirmadas pelo autor** (espectador lê o revelado, URL
+pública da imagem, salvar explícito, revelar sem confirmação, teto de imagem de **10 MB**, glifos
+`biblioteca`/`imagem`/`tamanho-real`/`ajustar-largura`).
 
 **Antes: `espectador-coluna-acoes-e-iniciativa` concluída (2026-09-21):** Painel do espectador
 padronizado (coluna de ações, cabeçalho "shell", toggle de descrição) e Iniciativa própria do
@@ -2578,6 +2584,18 @@ sala cheia + espectador. Toda escrita avança o `updatedDate` (inclusive revelar
 `PUT` usa-o como versão otimista (409). A URL da imagem é pública e não revogável (decisão
 confirmada da M9); a imagem de um documento removido fica no armazenamento (`I-038`). O
 `DocumentoModule` exporta a `DocumentoService` para a `m7-25`.
+
+**Frontend (`m9-04`, `frontend/src/app/modules/documento/`):** rota `campanhas/:campanhaId/documentos`
+(antes do prefixo `campanhas`, só `autenticacaoGuard` + `rascunhoDocumentoGuard` no `canDeactivate`);
+a casca `BibliotecaDocumentos` resolve o papel pelos membros e monta a `BibliotecaMestre` — quem não
+é mestre (ou não pode listar membros) volta à campanha até a `m9-05`. A página guarda a versão
+otimista de onde a edição partiu e adota a que cada escrita do próprio mestre devolve; com edição
+aberta, as ações de versão (revelar, remover, setas) saem de alcance. Todo `documento:alterado` (e a
+reconexão) refaz a lista; versão do aberto diferente e sem edição → recarrega; `REMOVIDO` de outra
+sessão fecha o painel com aviso. `LeitorDocumento` (`componentes/leitor-documento/`) é somente
+leitura e serve à mesa e à `m7-25`. O 409 do salvar e o 400 do upload não viram toast:
+`ERROS_TRATADOS_NA_TELA` (`core/interceptors/error-handler.interceptor.ts`). Composição visual em
+`docs/design/DESIGN.md`, "Biblioteca de documentos".
 
 `emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
 com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só

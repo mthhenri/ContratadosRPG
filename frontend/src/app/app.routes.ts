@@ -94,6 +94,15 @@ export const routes: Routes = [
     canActivate: [autenticacaoGuard],
     loadChildren: () => import('./modules/cena/cena.routes').then((modulo) => modulo.cenaRoutes),
   },
+  // Biblioteca de documentos da campanha (m9-04). Mesma convenção das cenas: precede a rota
+  // `campanhas` genérica para ser casada antes do prefixo mais curto, e só `autenticacaoGuard` — o
+  // papel é resolvido na tela e o recorte de verdade (trava anti-vazamento) é do backend.
+  {
+    path: 'campanhas/:campanhaId/documentos',
+    canActivate: [autenticacaoGuard],
+    loadChildren: () =>
+      import('./modules/documento/documento.routes').then((modulo) => modulo.documentoRoutes),
+  },
   // Endereços da antiga tela "Iniciativa" (links salvos, abas abertas): a mesa vai para o hub, e o
   // combate do histórico para a cena dona do encontro (resolvida no backend).
   {

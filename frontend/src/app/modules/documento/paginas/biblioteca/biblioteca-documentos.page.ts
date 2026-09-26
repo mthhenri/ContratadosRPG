@@ -1,0 +1,69 @@
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+
+import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
+import { TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+
+import { SessaoService } from '../../../../core/services/sessao.service';
+import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
+import { CampanhaService } from '../../../campanha/campanha.service';
+import type { TelaComRascunhoDocumento } from '../../rascunho-documento.guard';
+import { BibliotecaMestre } from '../biblioteca-mestre/biblioteca-mestre.page';
+
+/**
+ * Casca da biblioteca de documentos (m9-04) — `/campanhas/:campanhaId/documentos`. Resolve
+ * **quem** olha (membros + sessão, como o `HubCenas`) e bifurca: o mestre monta a
+ * `BibliotecaMestre`. A visão do jogador e do espectador chega na `m9-05`; até lá, **quem não é
+ * mestre volta à campanha** (pendência explícita, não funcionalidade). O recorte de verdade é do
+ * backend: mesmo que alguém chegue aqui, a listagem de quem não é mestre só traz os revelados.
+ *
+ * Enquanto o papel não é conhecido, só a silhueta da página — sem ela o mestre veria um vão.
+ */
+@Component({
+  selector: 'app-biblioteca-documentos',
+  imports: [Esqueleto, BibliotecaMestre],
+  templateUrl: './biblioteca-documentos.page.html',
+  styleUrl: './biblioteca-documentos.page.scss',
+})
+export class BibliotecaDocumentos implements TelaComRascunhoDocumento {
+  private readonly campanhaService = inject(CampanhaService);
+  private readonly sessaoService = inject(SessaoService);
+  private readonly roteador = inject(Router);
+  private readonly rotaAtiva = inject(ActivatedRoute);
+
+  protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
+
+  private readonly membros = signal<readonly CampanhaMembroResumoDto[] | null>(null);
+  private readonly mestre = viewChild(BibliotecaMestre);
+
+  protected readonly ehMestre = computed(() => {
+    const usuarioId = this.sessaoService.usuario()?.id;
+    return (this.membros() ?? []).some(
+      (membro) =>
+        membro.usuarioId === usuarioId && membro.papel === TipoCampanhaMembroPapelEnum.MESTRE,
+    );
+  });
+
+  protected readonly carregando = computed(() => this.membros() === null);
+
+  constructor() {
+    // `ESPECTADOR` não pode listar membros (403): o erro também leva de volta à campanha.
+    this.campanhaService.listarMembros(this.campanhaId).subscribe({
+      next: (membros) => {
+        this.membros.set(membros);
+        if (!this.ehMestre()) {
+          this.voltarACampanha();
+        }
+      },
+      error: () => this.voltarACampanha(),
+    });
+  }
+
+  podeSair(): boolean | Promise<boolean> {
+    return this.mestre()?.podeSair() ?? true;
+  }
+
+  private voltarACampanha(): void {
+    void this.roteador.navigate(['/campanhas', this.campanhaId], { replaceUrl: true });
+  }
+}

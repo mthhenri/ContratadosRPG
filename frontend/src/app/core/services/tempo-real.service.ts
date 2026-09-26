@@ -8,6 +8,7 @@ import type {
   CampanhaMembroEntradaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
+import type { DocumentoBibliotecaAlteradaDto } from '@contratados-rpg/shared/dtos/documento';
 import type {
   EncontroAlteradoDto,
   EncontroIniciativaPedidoDto,
@@ -98,6 +99,7 @@ export class TempoRealService {
   private readonly inventarioAlteradoSubject = new Subject<CampanhaInventarioAlteradoDto>();
   private readonly encontroAlteradoSubject = new Subject<EncontroAlteradoDto>();
   private readonly cenaAlteradaSubject = new Subject<CenaAlteradaDto>();
+  private readonly documentoAlteradoSubject = new Subject<DocumentoBibliotecaAlteradaDto>();
   private readonly encontroIniciativaPedidoSubject = new Subject<
     EncontroIniciativaPedidoDto & { campanhaId: number }
   >();
@@ -169,6 +171,14 @@ export class TempoRealService {
    * que não pode ver.
    */
   readonly cenaAlterada$: Observable<CenaAlteradaDto> = this.cenaAlteradaSubject.asObservable();
+  /**
+   * A biblioteca de documentos da campanha mudou (m9-02) — só **que** mudou (`alteracao` e o
+   * `documentoId`, `null` numa reordenação), sem título nem conteúdo: a tela refaz a listagem por
+   * REST, já recortada pelo papel. Documento oculto só chega ao mestre (sala
+   * `campanha:<id>:mestre`, trava anti-vazamento).
+   */
+  readonly documentoAlterado$: Observable<DocumentoBibliotecaAlteradaDto> =
+    this.documentoAlteradoSubject.asObservable();
   /**
    * O mestre pediu que os jogadores rolem a própria iniciativa (m7). Não carrega estado — é
    * uma chamada; quem escuta decide o que fazer (o painel do mestre só confirma o envio).
@@ -281,6 +291,9 @@ export class TempoRealService {
     );
     this.socket.on('cena:alterada', (evento: CenaAlteradaDto) =>
       this.cenaAlteradaSubject.next(evento),
+    );
+    this.socket.on('documento:alterado', (evento: DocumentoBibliotecaAlteradaDto) =>
+      this.documentoAlteradoSubject.next(evento),
     );
     this.socket.on(
       'encontro:iniciativa-pedido',

@@ -137,7 +137,7 @@ para a mesa, remove e reordena — tudo atualizado ao vivo pelo `documento:alter
 `m9-02` (endpoints e `documento:alterado`), `m7-23` (`HubCenas`, o análogo), `ui-15` (confirmação
 destrutiva), `ui-20` (notificações), `docs/design/DESIGN.md`, `shared/ui/editor-markdown`.
 
-## Decisões assumidas ao especificar (1–3 confirmadas pelo autor em 2026-09-26; 4 ainda em aberto)
+## Decisões assumidas ao especificar (confirmadas pelo autor em 2026-09-26)
 
 1. **Rótulo "Biblioteca"** para a entrada de navegação e o título da página, porque "Documentos" já é o
    leitor de PDFs das regras na topbar. A rota e os nomes de código seguem em português do domínio
@@ -147,10 +147,10 @@ destrutiva), `ui-20` (notificações), `docs/design/DESIGN.md`, `shared/ui/edito
    mestre edita à vontade e publica com "Salvar".
 3. **Revelar sem confirmação.** Fluxo frequente durante a sessão e reversível; a proteção é o toast e o
    chip. (A `m7-25` pode reforçar isso no "Apresentar".)
-4. **Ícones:** `IconeNome` não tem um ícone de **imagem** nem de **biblioteca** (`documentos` é o da
-   topbar; `olho`/`olho-fechado` cobrem o estado). Antes de escolher, propor ao autor (regra de
-   `shared/ui`); candidatos para o texto: `anotacoes`. **Ainda não decidido** — perguntar ao autor ao
-   abrir esta task.
+4. **Ícones** (decididos pelo autor ao abrir a task): três glifos novos da Tabler Icons (MIT) em
+   `app-icone` — `biblioteca` (estante, "books") para a entrada e o estado vazio, `imagem` ("photo")
+   para o tipo imagem e `tamanho-real`/`ajustar-largura` ("arrows-maximize"/"arrows-minimize") para a
+   alternância do leitor; o tipo texto reusa `anotacoes`.
 
 ## Riscos e Mitigação
 
@@ -165,3 +165,28 @@ destrutiva), `ui-20` (notificações), `docs/design/DESIGN.md`, `shared/ui/edito
   do documento precisa dar espaço a ela — verificar no `360×800` com o editor focado.
 - **Perda de rascunho** ao navegar: a confirmação de saída cobre trocar de documento e fechar o editor;
   para sair da rota, usar o mecanismo que o Caderno/ficha já usam, ou registrar o limite no fecho.
+
+## Decisões tomadas na implementação
+
+1. **Erro no controle, sem toast genérico:** o `errorHandlerInterceptor` anunciava toda falha HTTP em
+   toast. Nasceu o `HttpContextToken` `ERROS_TRATADOS_NA_TELA` (lista de status que a tela trata no
+   próprio controle); o `DocumentoService` o usa para o 409 do `alterar` e o 400 do `enviarImagem`. O
+   401 e os demais status seguem como antes.
+2. **Sair da rota com rascunho:** não havia mecanismo pronto no Caderno/ficha para navegação interna
+   (o Caderno só tem `beforeunload`). A rota ganhou o `rascunhoDocumentoGuard` (`canDeactivate`), que
+   pergunta o mesmo "Descartar alterações?"; fechar a aba é coberto pelo `beforeunload` da página.
+3. **Edição trava o que mexe na versão:** com o editor aberto, o cabeçalho troca Revelar/Editar/
+   Remover por Salvar/Cancelar e as setas da lista ficam desabilitadas — assim a versão otimista só
+   avança por escrita do próprio mestre (upload de imagem), cuja resposta é adotada.
+4. **Recarga do aberto pela versão:** em vez de reagir ao tipo de cada evento, a lista refeita compara
+   o `updatedDate` do resumo com o do aberto; diferente e sem edição, o aberto é recarregado (cobre
+   `ALTERADO`, e também a reordenação de outra sessão, que avança a versão). `REMOVIDO` do aberto é
+   tratado pelo evento, ignorando o eco da remoção feita pelo próprio mestre (o eco pode chegar antes
+   da resposta REST).
+5. **Upload na hora, título no Salvar:** escolher o arquivo já envia (o arquivo é o conteúdo do
+   documento e a escolha é um ato explícito); "Salvar" grava só o título. Um `IMAGEM` sem arquivo tem
+   o "Revelar" desabilitado, com uma nota no painel.
+6. **Sem nenhum documento, o painel não aparece** — dois estados vazios lado a lado eram redundantes
+   (achado na verificação ao vivo).
+7. **Proxy:** a spec descrevia uma chave `"/documento"` já existente; não havia nenhuma. A regex
+   `^/documento(?:$|[/?])` entrou do zero, com o comentário da colisão com a rota plural.

@@ -1,0 +1,51 @@
+// Silhueta da biblioteca enquanto o papel é resolvido — a mesma geometria da página do mestre
+// (cabeçalho, lista à esquerda, painel à direita; no mobile, só a lista). Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+
+.biblioteca-casca {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    padding: 24px var(--space-20) var(--space-20);
+    margin: -24px -20px;
+
+    @include bp.mobile {
+        padding: 12px;
+        margin: 0;
+    }
+
+    &__cabecalho {
+        height: 32px;
+    }
+
+    &__corpo {
+        display: flex;
+        gap: var(--space-16);
+    }
+
+    &__lista {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        width: 340px;
+
+        @include bp.mobile {
+            width: 100%;
+        }
+    }
+
+    &__linha {
+        height: 56px;
+    }
+
+    &__painel {
+        flex: 1;
+        height: 360px;
+
+        @include bp.mobile {
+            display: none;
+        }
+    }
+}

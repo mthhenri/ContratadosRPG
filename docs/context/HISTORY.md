@@ -1,5 +1,90 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m9-04: biblioteca do mestre e `LeitorDocumento`
+
+Página **Biblioteca** (`/campanhas/:id/documentos`) em `frontend/src/app/modules/documento/`, com item
+"Biblioteca" na coluna de ações do `detalhe-mestre`, ao lado de "Cenas". O autor escolheu os ícones
+ao abrir a task: três glifos novos da Tabler (MIT) em `app-icone` — `biblioteca` (estante),
+`imagem` e o par `tamanho-real`/`ajustar-largura`; o tipo texto reusa `anotacoes`.
+
+- **Transporte:** `DocumentoService` (um método por endpoint da `m9-02`, upload em `FormData` no
+  campo `arquivo`) e `TempoRealService.documentoAlterado$`. O `errorHandlerInterceptor` ganhou o
+  `HttpContextToken` `ERROS_TRATADOS_NA_TELA`. Com ele, o 409 do salvar e o 400 do upload aparecem
+  no próprio controle, sem toast genérico.
+- **Casca e rota:** `BibliotecaDocumentos` resolve o papel e monta a `BibliotecaMestre`. Quem não
+  é mestre volta à campanha; o espectador também volta, porque não pode listar membros e recebe
+  403. É pendência explícita até a `m9-05`. A rota tem `rascunhoDocumentoGuard` (`canDeactivate`).
+  O proxy ganhou `^/documento(?:$|[/?])`; a chave `/documento` que a spec descrevia não existia.
+- **Página:**
+  - O layout segue a casca do hub (`casca` com o bloco `biblioteca`), com lista à esquerda e o
+    documento à direita. No celular são duas vistas, como no Caderno.
+  - O `.documento-cartao` segue a receita do `.cena-cartao` e leva o chip Revelado/Oculto e as
+    setas de ordem, que enviam a lista completa.
+  - O documento é lido pelo `LeitorDocumento` e editado no mesmo lugar, com o título em
+    `app-campo` e o texto no `app-editor-markdown`. "Salvar" é explícito e chama
+    `confirmarValor()`.
+  - O conflito aparece como faixa de aviso com "Recarregar", sem descartar o rascunho.
+  - Trocar de documento, cancelar, criar outro ou sair da rota com rascunho pede "Descartar
+    alterações?".
+  - Revelar e Ocultar valem na hora e mostram toast.
+  - Remover pede confirmação destrutiva.
+  - "Novo documento" abre um `app-modal` com título e tipo (`app-segmentado`). Um `TEXTO` abre
+    direto no editor; um `IMAGEM` abre pedindo o arquivo.
+  - O upload é validado no cliente com as constantes de `shared`.
+- **Versão otimista:** a edição guarda a versão de onde partiu, e cada escrita do próprio mestre
+  adota a versão que a resposta devolve. Com o editor aberto, revelar, remover e as setas saem de
+  alcance. A lista refeita compara o `updatedDate` do aberto: se mudou e não há edição, recarrega
+  o conteúdo. Um `REMOVIDO` vindo de outra sessão fecha o painel com aviso. O eco da própria
+  remoção é ignorado, porque pode chegar antes da resposta REST.
+- **`LeitorDocumento`:**
+  - O texto usa o editor Markdown em modo somente leitura.
+  - A imagem mostra esqueleto enquanto carrega e estado de erro se falhar.
+  - Tem a alternância entre ajustar à largura e tamanho real.
+  - A `m7-25` pode consumi-lo.
+- **Design:** nova seção "Biblioteca de documentos" em `docs/design/DESIGN.md`.
+
+Testes: frontend com 2326 testes verdes em 165 arquivos. Os testes novos cobrem:
+
+- `DocumentoService`, `documentoAlterado$`, `ERROS_TRATADOS_NA_TELA`, os glifos e o item de
+  navegação;
+- `LeitorDocumento` (6 testes), o diálogo de criação (3) e a casca (5);
+- a página (24 testes).
+
+Lint do frontend com 0 erros; os avisos de `max-len` que restam são de linhas antigas.
+
+**Verificação ao vivo** (skill `verify`): backend isolado na 3101 e `ng serve` na 4301 com proxy
+próprio, porque o `ng serve` da 4300 não tem a entrada `/documento`. O roteiro Playwright fechou
+com todas as checagens verdes em `1920×1080` e `360×800`:
+
+- esqueleto e estado vazio;
+- validação do modal;
+- `TEXTO` digitado e salvo inteiro, até a última tecla;
+- upload de um JPEG real, com arquivo de tipo inválido e acima de 10 MB recusados no cliente;
+- alternância de tamanho da imagem;
+- revelar e ocultar, com toast e chip, e o socket cru de um jogador recebendo `REVELADO` e
+  `OCULTADO` (a listagem do jogador só traz o revelado);
+- revelar e depois salvar, sem o próprio 409;
+- reordenar, com setas desabilitadas nos limites;
+- conflito com duas abas e "Recarregar";
+- "Descartar alterações?" ao trocar de documento e ao sair da rota;
+- foco visível;
+- remover com confirmação;
+- `REMOVIDO` vindo de fora;
+- no mobile: duas vistas e o voltar, alvos de toque ≥ 44 px e nenhum overflow horizontal em
+  nenhum estado.
+
+A comparação com o hub de cenas nos mesmos viewports mostrou o mesmo cabeçalho, o mesmo divisor,
+os mesmos cartões e a mesma tipografia. A inspeção pegou dois defeitos, corrigidos antes do fecho:
+
+- dois estados vazios lado a lado na biblioteca vazia; agora o painel some;
+- no celular, o ícone de tipo ficava numa linha sozinho acima do título.
+
+Limpeza: o build `verificacao-m904` e as imagens de teste foram apagados. As contas `m904*` e as
+campanhas 79 a 82 ficaram no banco de dev.
+
+**Para o autor:** o `ng serve` da 4300 precisa ser reiniciado para ler o proxy novo. Sem isso, as
+chamadas a `/documento/:id` não chegam ao backend.
+
 ## 2026-09-26 — m9-02: backend da biblioteca de documentos, com trava anti-vazamento
 
 Módulo `backend/src/modules/documento/` (repository, service, controller, módulo exportando a

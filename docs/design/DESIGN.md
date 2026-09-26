@@ -419,6 +419,41 @@ fixos de cada consumidor ficam no fluxo normal, e a região que deve preencher o
 o seu próprio `flex: 1; min-height: 0`. Esse contrato mantém caderno, leitor e futuros utilitários
 com a altura íntegra sem obrigar calculadoras ou conteúdos naturalmente compactos a crescer.
 
+### Biblioteca de documentos (`m9-04`)
+
+A página **Biblioteca** (`/campanhas/:id/documentos`; o rótulo não é "Documentos" porque esse é o
+leitor das regras na topbar) junta dois análogos aprovados: a **casca do hub de cenas** e a
+composição **lista | conteúdo do Caderno**. A `m9-05` (visão da mesa) reusa a mesma composição sem
+os controles do mestre.
+
+- **Casca:** o mixin `casca` de `_casca-iniciativa.scss` com o bloco `biblioteca`, sem coluna de
+  ações — cabeçalho com voltar, `//`, "Biblioteca", nome da campanha, régua e a ação principal
+  (`app-botao` `primario` `pequeno`, "Novo documento"); divisor de seção "Documentos" com a contagem.
+- **Lista** (360px no desktop): `ol` de **`.documento-cartao`**, a receita do `.cena-cartao` do hub
+  (superfície, borda, raio de cartão, hover com `--accent-border`). O cartão leva o ícone do tipo
+  (`anotacoes` para texto, `imagem` para imagem), o título em mono e, abaixo, o rótulo do tipo e o
+  **chip de estado**: `Revelado` (`severidade="primario"` + `olho`) ou `Oculto` (`secundario` +
+  `olho-fechado`). O aberto fica com a borda de destaque parada e o ícone em `--accent`. As setas de
+  ordem são as do hub (`app-botao-icone` `padrao` + `chevron` girado), desabilitadas nos limites.
+- **Painel** (resto da largura): a caixa do cartão (`--surface`, borda, raio) com o cabeçalho do
+  documento (ícone + título, chip de estado e as ações `Revelar`/`Ocultar`, `Editar`, `Remover` em
+  `app-botao` `pequeno`) e o corpo — o `app-leitor-documento` ou, no mesmo lugar, a edição (título em
+  `app-campo` + `campo__controle`, texto no `app-editor-markdown`, limites de `shared` como dica).
+  Na edição, as ações do cabeçalho saem e o rodapé traz `Cancelar`/`Salvar`. Sem documento aberto,
+  um `app-estado-vazio` sem a caixa; sem nenhum documento, o painel nem aparece (o vazio da lista
+  basta).
+- **Leitor** (`app-leitor-documento`, também do palco da Investigação na `m7-25`): texto pelo
+  editor Markdown em somente leitura, dentro da borda do cartão; imagem num quadro `--bg` com
+  esqueleto até carregar, `app-estado-vazio` se a URL falhar e a alternância `tamanho-real` ↔
+  `ajustar-largura` (`app-botao-icone` com `aria-pressed`; no tamanho real o quadro rola e recebe
+  foco).
+- **Conflito de versão:** faixa de aviso inline no editor (`--warning` a 12% de fundo e 40% de borda,
+  a receita do chip `aviso`) com `Recarregar` (`app-botao` `aviso` `contorno`) — nunca um toast
+  genérico, e o rascunho continua no editor.
+- **Mobile:** duas vistas, como o Caderno — a lista, ou o documento com um "voltar" (`app-botao`
+  `secundario` `texto`, "Documentos") que só existe abaixo de `bp.mobile`. Ações e setas passam ao
+  alvo de 44px.
+
 ### Acabamento do botão (`ui-19`)
 
 `app-botao` cobre 8 severidades × 4 estilos e ~20 consumidores; esta task fechou três lacunas
