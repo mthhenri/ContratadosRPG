@@ -18,14 +18,18 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-26 · **Última decisão registrada:** `m7-23-frontend-hub-cenas`
+> **Última revisão:** 2026-09-26 · **Última decisão registrada:**
+> `m7-24-frontend-painel-cena-sem-iniciativa` concluída (spec em `done/`): cenas de Resistência e
+> Investigação abrem um painel sem trilha de turnos — mestre com coluna de ações (Abrir/Encerrar
+> cena + Ferramentas) | Rolagens | grade de agentes do Esquadrão ao vivo; jogador com a própria
+> ficha no palco. Sem backend novo. Próxima do milestone: `m7-25` (Investigação completa), que
+> espera o backend de documento da M9. Antes: `m7-23-frontend-hub-cenas`
 > concluída (spec em `done/`): hub de cenas (`/campanhas/:id/cenas`), dialog "Nova cena" com o tipo
 > obrigatório (Planejar / Abrir agora), chips por tipo, reordenação por setas, `PainelCenaShell`
 > (`/cenas/:cenaId`, bifurca por `cenaTemIniciativa` e por papel), redirects de `/iniciativa` e
 > `/iniciativa/:encontroId`, item "Iniciativa" → "Cenas" na navegação do mestre e do jogador,
 > `cenaId` em `EncontroRecuperadoDto`/`EncontroResumoDto` e a entrada `/cena` no `proxy.conf.json`.
-> Com ela, `m7-22` + `m7-23` estão prontas para subir juntas. Próxima: `m7-24` (spec ainda por
-> detalhar). Antes: `m7-22-backend-cena` concluída
+> Com ela, `m7-22` + `m7-23` estão prontas para subir juntas. Antes: `m7-22-backend-cena` concluída
 > (spec em `done/`): módulo `backend/cena` (CRUD de cena, `cena:alterada`, trava anti-vazamento de
 > cena `PLANEJADA`), `TransacaoService` (primeira transação em runtime do backend), "Encerrar" do
 > encontro encerra a cena-mãe e migration `0033` (`encontro.cena_id NOT NULL` + reconciliação). Só
@@ -584,13 +588,12 @@
 
 ## 1. Próxima Task
 
-**Módulo de Cenas — próxima: `m7-24` (painel de cena sem iniciativa).** `m7-21` (contrato +
-schema), `m7-22` (backend + tempo real) e `m7-23` (hub + "Nova cena" tipada) concluídas em
-2026-09-26 — o pedido imediato do autor (tipar a cena na criação) está entregue. **Deploy: `m7-22`
-e `m7-23` sobem juntas** (os encontros de backfill em `MONTAGEM` vivem em cenas `PLANEJADA`, que só
-o hub deixa o mestre abrir). A `m7-24` ainda não tem spec própria — só a linha da tabela em
-`m7-cenas.spec.md`; detalhá-la é o primeiro passo. Até lá, cena de Investigação/Resistência abre
-um placeholder honesto no `PainelCenaShell` ("ainda não está disponível" + voltar ao hub). A cena
+**Módulo de Cenas — próxima: `m7-25` (Investigação completa), bloqueada pela M9.** `m7-21`
+(contrato + schema), `m7-22` (backend + tempo real), `m7-23` (hub + "Nova cena" tipada) e `m7-24`
+(painel de cena sem iniciativa) concluídas em 2026-09-26. **Deploy: `m7-22` e `m7-23` sobem juntas**
+(os encontros de backfill em `MONTAGEM` vivem em cenas `PLANEJADA`, que só o hub deixa o mestre
+abrir); a `m7-24` é só frontend e pode ir junto ou depois. A mecânica da Resistência (Atributo, DT,
+Limiar) ficou fora e está em `IDEAS.md` `I-035`. A cena
 de Investigação completa (`m7-25`) só começa depois de `m9-documentos-campanha.spec.md` ter ao
 menos o backend de documento + revelar/ocultar prontos. A Iniciativa do espectador
 (`campanhas/:id/espectador/iniciativa`) ficou fora da `m7-23` e segue com a rota e o rótulo de
@@ -2426,14 +2429,30 @@ exigem a cena aberta.
 nem as envia ao jogador), encerradas; "Nova cena" (`CenaCriarDialog`: nome + tipo obrigatório,
 "Planejar"/"Abrir agora", confirmação quando já há cena ativa), "Abrir" e "Encerrar". Qualquer
 `cena:alterada` da campanha refaz a listagem. `/campanhas/:campanhaId/cenas/:cenaId` é o
-`PainelCenaShell`: `cenaTemIniciativa(tipo)` → o painel de Iniciativa abaixo; senão, o
-placeholder da `m7-24`. As URLs antigas redirecionam: `/iniciativa` → hub; `/iniciativa/:encontroId`
+`PainelCenaShell`: `cenaTemIniciativa(tipo)` → o painel de Iniciativa abaixo; senão, o painel sem
+iniciativa (`m7-24`), também bifurcado por papel. As URLs antigas redirecionam: `/iniciativa` → hub; `/iniciativa/:encontroId`
 → a cena dona do encontro (`redirecionarEncontroParaCena`, consulta `EncontroRecuperadoDto.cenaId`;
 falha → hub). No painel, o voltar vai ao hub, "Nova cena" leva ao dialog do hub (`?nova=1`), o menu
 de encerrados abre a cena dona de cada combate, e cena `PLANEJADA` ganha o selo "Cena planejada" +
 o item "Abrir cena" (pedir iniciativa/iniciar avisam em vez de chamar o backend). `/cena` precisa
 estar no `frontend/proxy.conf.json` (entrou na `m7-23`) — sem ele, `GET /cena/:id` não sai do dev
 server.
+
+**Painel de cena sem iniciativa (`m7-24`, `modules/cena/paginas/painel-sem-iniciativa-*`).**
+Resistência e Investigação (a `m7-25` acrescenta à Investigação a coluna de Documentos no mesmo
+componente). Casca `casca` da Iniciativa sem trilha — **coluna de ações | Rolagens | palco**; blocos
+BEM `cena-mestre`/`cena-jogador`. Mestre: categoria "Cena" com "Abrir cena" (`PLANEJADA`) ou
+"Encerrar cena" (`ATIVA`), confirmação + `CenaService` + `definirCena`; encerrada é só leitura (só
+Ferramentas); palco "Agentes" = `app-espectador-ficha-card` das fichas `JOGADOR` de membros, na
+ordem de `ordenarMembros`/`agruparFichasPorMembro` (`campanha-equipe.util.ts`), com
+`[mostrarAcoes]` + `[mostrarMenu]="false"` (só o abrir da ficha flutuante; o input `mostrarMenu`
+entrou no card nesta task, `true` por padrão). Grade com colunas de `min(440px, 100%)` — o card do
+Esquadrão tem ~460px e abaixo de ~440px o rótulo "Energia" encosta no valor. Jogador: só
+Ferramentas, a própria ficha (primeira ficha `JOGADOR` dele na campanha) no mesmo
+`app-ficha-campanha-card` da `ui-39`, estado vazio sem ficha. **Fichas ao vivo:** o
+`EncontroPainelDadosService` entra nas salas `ficha:<id>` do conjunto exibido **só quando
+`semIniciativa()`** e refaz `listarFichas` a cada `ficha:alterada` de uma delas; o painel de
+Iniciativa não entra em sala de ficha nenhuma (teste da casca prova).
 
 Tela de Iniciativa (painel de uma cena com iniciativa) com
 duas visões em páginas separadas (`ui-39`): `PainelCenaShell` (antes `PainelEncontroShell`) resolve o papel

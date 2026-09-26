@@ -1,0 +1,163 @@
+<!-- Cena sem iniciativa — visão do jogador (m7-24): a casca da `ui-39` sem a trilha — coluna de ações
+     (Ferramentas) | Rolagens | palco com a própria ficha. -->
+<div class="cena-jogador" [class.cena-jogador--com-ficha]="comFicha()">
+    <app-coluna-acoes id="cena-jogador" rotulo="Ações da cena">
+        <div class="coluna-acoes__categoria">Ferramentas</div>
+        <button
+            app-coluna-acoes-item
+            icone="calculadora"
+            appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
+            (click)="alternarCalculadora()"
+        >
+            Calculadora
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+    </app-coluna-acoes>
+
+    <div class="cena-jogador__conteudo">
+        <header class="cena-jogador__cabecalho">
+            <a
+                app-botao-icone
+                tamanho="padrao"
+                [routerLink]="['/campanhas', dados.campanhaId, 'cenas']"
+                aria-label="Voltar às cenas"
+                [appTooltip]="'Voltar às cenas'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            <span class="cena-jogador__indice">//</span>
+            <!-- Só no mobile, com a ficha no palco: a coluna de ações vira barra fixa no rodapé e
+                 colidiria com a barra da ficha embutida, então as ferramentas sobem para o cabeçalho
+                 — a mesma saída do `PainelEncontroJogador`. -->
+            <div class="cena-jogador__ferramentas">
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    aria-label="Calculadora"
+                    [appTooltip]="'Calculadora'"
+                    (click)="alternarCalculadora()"
+                >
+                    <app-icone nome="calculadora" />
+                </button>
+                <button
+                    app-botao-icone
+                    tamanho="padrao"
+                    type="button"
+                    aria-label="Caderno"
+                    [appTooltip]="'Caderno'"
+                    (click)="alternarCaderno()"
+                >
+                    <app-icone nome="caderno" />
+                </button>
+            </div>
+            @if (dados.cena(); as cena) {
+            <h1 class="cena-jogador__titulo">{{ rotuloTipoCena(cena.tipo) }} · {{ cena.nome }}</h1>
+            @if (dados.campanhaNome()) {
+            <span class="cena-jogador__campanha">{{ dados.campanhaNome() }}</span>
+            }
+            <app-chip variante="sutil">{{ rotuloStatusCena(cena.status) }}</app-chip>
+            }
+            <span class="cena-jogador__regua"></span>
+        </header>
+
+        <div class="cena-jogador__linha">
+            @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
+            <div class="cena-jogador__rolagens">
+                <app-historico-rolagens-sidebar
+                    [fixo]="true"
+                    titulo="Rolagens"
+                    [itens]="dados.rolagensFeed()"
+                    [carregando]="dados.carregandoRolagens()"
+                    [campanhaIdJanela]="dados.campanhaId"
+                />
+            </div>
+            }
+
+            <section class="cena-jogador__palco" aria-label="Minha ficha">
+                @if (semFicha()) {
+                <app-estado-vazio
+                    class="cena-jogador__vazio"
+                    icone="ficha"
+                    titulo="Você não tem ficha nesta campanha."
+                    linhaApoio="Acompanhe as rolagens da mesa por aqui."
+                />
+                } @else if (meuFichaDados(); as ficha) {
+                <!-- O mesmo `app-ficha-campanha-card` do `PainelEncontroJogador`, sem reescrever nada. -->
+                <app-ficha-campanha-card
+                    [fichaId]="ficha.id"
+                    [nome]="ficha.nome"
+                    [cor]="ficha.cor"
+                    [imagemUrl]="ficha.imagemUrl"
+                    [dados]="ficha.dados"
+                    [ajustavel]="true"
+                    [podeRolar]="true"
+                    [ehMestre]="false"
+                    [mostrarRolagensCompacto]="true"
+                    [mostrarTopo]="false"
+                    (ajusteVitalidade)="fichaEdicao.ajustarVitalidade($event)"
+                    (ajusteDerivado)="fichaEdicao.ajustarDerivado($event)"
+                    (ajusteResistencia)="fichaEdicao.ajustarResistencia($event)"
+                    (ajusteAtributos)="fichaEdicao.ajustarAtributos($event)"
+                    (ajusteNome)="fichaEdicao.ajustarNome($event)"
+                    (ajusteCor)="fichaEdicao.ajustarCor($event)"
+                    (ajusteCampoDados)="fichaEdicao.ajustarCampoDados($event)"
+                    (ajusteClasse)="fichaEdicao.ajustarClasse($event)"
+                    (ajusteSanidade)="fichaEdicao.ajustarSanidade($event)"
+                    (ajusteCondicoes)="fichaEdicao.ajustarCondicoes($event)"
+                    (ajusteHabilidades)="fichaEdicao.ajustarHabilidades($event)"
+                    (ajusteInventario)="fichaEdicao.ajustarInventario($event)"
+                    (ajusteRolagens)="fichaEdicao.ajustarRolagens($event)"
+                    (ajusteCombos)="fichaEdicao.ajustarCombos($event)"
+                    (ajusteFragmentosConsumidos)="fichaEdicao.ajustarFragmentosConsumidos($event)"
+                    (ajusteAnotacoes)="fichaEdicao.ajustarAnotacoes($event)"
+                    (ajusteHistoria)="fichaEdicao.ajustarHistoria($event)"
+                    (ajustePersonalidade)="fichaEdicao.ajustarPersonalidade($event)"
+                    (ajusteHabilidadePersonalidade)="
+                        fichaEdicao.ajustarHabilidadePersonalidade($event)
+                    "
+                    (ajusteOrigem)="fichaEdicao.ajustarOrigem($event)"
+                    (origemLimpa)="fichaEdicao.limparOrigem()"
+                    (ajusteContrato)="fichaEdicao.ajustarContrato($event)"
+                />
+                } @else {
+                <app-esqueleto
+                    class="cena-jogador__esqueleto-ficha"
+                    role="status"
+                    aria-label="Carregando sua ficha"
+                />
+                }
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas. -->
+<app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+@if (dados.usuarioAtivoId(); as usuarioId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
+    [usuarioAtivoId]="usuarioId"
+    [ehMestre]="false"
+    [membros]="dados.membrosDaCampanha()"
+    [temInventario]="false"
+    (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
+/>
+}
+<!-- Janela do "Ver ficha" do Caderno: uma só instância, aberta imperativamente. -->
+<app-ficha-flutuante #fichaFlutuante [ehMestre]="false" />
+
+<!-- As rolagens da própria ficha usam a mesma carta central das fichas. -->
+<app-bandeja-dados />

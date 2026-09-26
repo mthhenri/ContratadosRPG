@@ -11,7 +11,11 @@ import type {
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
-import type { FichaRecuperadaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type {
+  FichaAlteradaDto,
+  FichaRecuperadaDto,
+  FichaResumoDto,
+} from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import type {
   PaginaCadernoEsquadraoAlteradaDto,
@@ -284,6 +288,27 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const membrosPendentes$ = new Subject<CampanhaMembroResumoDto[]>();
   const encontroPendente$ = new Subject<EncontroRecuperadoDto>();
   const cenaAlterada$ = new Subject<CenaAlteradaDto>();
+  const fichaAlterada$ = new Subject<FichaAlteradaDto>();
+  const tempoReal = {
+    conectar: vi.fn(),
+    entrarSalaCampanha: vi.fn(),
+    sairSalaCampanha: vi.fn(),
+    entrarSalaFicha: vi.fn(),
+    sairSalaFicha: vi.fn(),
+    enviarPresencaEsquadrao: vi.fn(),
+    conectado: () => true,
+    reconexao: () => 0,
+    encontroAlterado$,
+    cenaAlterada$,
+    fichaAlterada$,
+    encontroIniciativaPedido$,
+    rolagemRegistrada$,
+    rolagemExcluida$: new Subject<never>(),
+    paginaEsquadraoCriada$,
+    paginaEsquadraoAlterada$,
+    paginaEsquadraoExcluida$,
+    presencaEsquadraoCaderno$,
+  };
   const cenaDe = (
     encontro: EncontroRecuperadoDto | null,
     status: CenaStatusEnum = cenaStatus ?? statusDaCena(estado),
@@ -391,23 +416,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
       { provide: CampanhaService, useValue: campanhaService },
       {
         provide: TempoRealService,
-        useValue: {
-          conectar: vi.fn(),
-          entrarSalaCampanha: vi.fn(),
-          sairSalaCampanha: vi.fn(),
-          enviarPresencaEsquadrao: vi.fn(),
-          conectado: () => true,
-          reconexao: () => 0,
-          encontroAlterado$,
-          cenaAlterada$,
-          encontroIniciativaPedido$,
-          rolagemRegistrada$,
-          rolagemExcluida$: new Subject<never>(),
-          paginaEsquadraoCriada$,
-          paginaEsquadraoAlterada$,
-          paginaEsquadraoExcluida$,
-          presencaEsquadraoCaderno$,
-        },
+        useValue: tempoReal,
       },
       {
         // `paramMap` como Observable: o serviço escuta a troca de `:cenaId` em vez de ler o
@@ -427,6 +436,8 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     encontroService,
     cenaService,
     cenaAlterada$,
+    fichaAlterada$,
+    tempoReal,
     fichaService,
     campanhaService,
     encontroAlterado$,

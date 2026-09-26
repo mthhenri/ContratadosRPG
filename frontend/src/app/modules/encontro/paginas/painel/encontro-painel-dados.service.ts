@@ -17,7 +17,9 @@ import {
   EncontroStatusEnum,
   NivelAmeacaEnum,
   TipoCampanhaMembroPapelEnum,
+  TipoFichaEnum,
 } from '@contratados-rpg/shared/enums';
+import { cenaTemIniciativa } from '@contratados-rpg/shared/regras/cena';
 
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
@@ -150,6 +152,19 @@ export class EncontroPainelDadosService {
    */
   readonly cenaPlanejada = computed(() => this.cena()?.status === CenaStatusEnum.PLANEJADA);
 
+  /**
+   * `true` quando a cena da tela não tem trilha de turnos (Investigação/Resistência, m7-24) — o
+   * palco é a grade dos agentes da campanha, que acompanha as fichas ao vivo. `false` enquanto a
+   * cena carrega: o ramo com iniciativa nunca entra em sala de ficha.
+   */
+  readonly semIniciativa = computed(() => {
+    const cena = this.cena();
+    return cena !== null && !cenaTemIniciativa(cena.tipo);
+  });
+
+  /** Salas `ficha:<id>` em que esta tela entrou — só as da grade de agentes da cena sem iniciativa. */
+  private readonly salasFichaAtivas = new Set<number>();
+
   /** `true` quando a tela está mostrando um encontro do histórico, não o combate da mesa. */
   readonly vendoHistorico = computed(
     () => this.encontro()?.status === EncontroStatusEnum.ENCERRADO,
@@ -261,6 +276,27 @@ export class EncontroPainelDadosService {
       }
     });
 
+    // Fichas ao vivo na grade da cena sem iniciativa (m7-24) — o mecanismo do Esquadrão
+    // (`CampanhaDetalheDadosService.sincronizarSalasFicha`): entra nas salas `ficha:<id>` das
+    // fichas exibidas, sai das que deixaram de aparecer e, a cada `ficha:alterada` de uma delas,
+    // refaz a listagem. Com iniciativa o conjunto é vazio: o painel de Iniciativa não assina nada.
+    effect(() => {
+      const donos = new Set(this.membrosDaCampanha().map((membro) => membro.usuarioId));
+      const idsExibidos = this.semIniciativa()
+        ? this.fichasCampanha()
+            .filter((ficha) => ficha.tipo === TipoFichaEnum.JOGADOR && donos.has(ficha.usuarioId))
+            .map((ficha) => ficha.id)
+        : [];
+      untracked(() => this.sincronizarSalasFicha(idsExibidos));
+    });
+    this.destroyRef.onDestroy(() => this.sincronizarSalasFicha([]));
+    this.tempoRealService.fichaAlterada$
+      .pipe(
+        filter((ficha) => this.salasFichaAtivas.has(ficha.id)),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: () => this.recarregarFichas() });
+
     // Nome da campanha — só precisa vir uma vez, não a cada `carregar()` (a rota troca de encontro,
     // não de campanha).
     this.campanhaService.recuperarCampanha(this.campanhaId).subscribe({
@@ -312,6 +348,30 @@ export class EncontroPainelDadosService {
     this.campanhaService
       .listarMembros(this.campanhaId)
       .subscribe({ next: (membros) => this.membrosInterno.set(membros) });
+  }
+
+  /** Ingressa nas salas das fichas exibidas e sai das que deixaram de aparecer. */
+  private sincronizarSalasFicha(idsExibidos: readonly number[]): void {
+    const idsAtuais = new Set(idsExibidos);
+    for (const fichaId of idsAtuais) {
+      if (!this.salasFichaAtivas.has(fichaId)) {
+        this.tempoRealService.entrarSalaFicha(fichaId);
+        this.salasFichaAtivas.add(fichaId);
+      }
+    }
+    for (const fichaId of this.salasFichaAtivas) {
+      if (!idsAtuais.has(fichaId)) {
+        this.tempoRealService.sairSalaFicha(fichaId);
+        this.salasFichaAtivas.delete(fichaId);
+      }
+    }
+  }
+
+  /** Refaz só a listagem de fichas — o resumo alterado chega pelo mesmo recorte da carga (§14). */
+  private recarregarFichas(): void {
+    this.fichaService
+      .listarFichas(this.campanhaId)
+      .subscribe({ next: (fichas) => this.fichasDaCampanha.set(fichas) });
   }
 
   /** Busca inicial do feed. A permissão e o recorte de privadas pertencem ao backend. */

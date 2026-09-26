@@ -59,6 +59,30 @@
 
 ## Abertas
 
+### I-035 — Mecânica da cena de Resistência no painel · cenas/regras
+
+- **Ideia:** dar ao painel da cena de Resistência a mecânica do capítulo "⬥ Resistência" de
+  `docs/core/sistema-v4.1.0.md` — Atributo Principal, DT inicial móvel, Limiar de sucessos e
+  fracassos, "três falhas removem um sucesso" e "um crítico remove um fracasso" —, com a regra em
+  `shared/regras/cena` e o painel só apresentando o placar.
+- **Origem:** `m7-24` (2026-09-26), que entregou só a casca do painel sem iniciativa e deixou a
+  mecânica fora de escopo, no mesmo tratamento que a decisão #10 do milestone `m7-cenas` deu a
+  Furtiva e Perseguição.
+- **Por quê:** hoje a Resistência é um painel de agentes + Rolagens; o mestre conduz o Limiar de
+  cabeça. O placar é exatamente o estado que a mesa perde entre uma rolagem e outra.
+- **Custo aparente:** estado próprio da cena (JSONB ou tabela), endpoint e evento de tempo real,
+  motor puro com testes e um bloco no palco — uma task de backend e uma de frontend.
+
+### I-036 — Título neutro da ficha flutuante fora do combate · frontend/ficha
+
+- **Ideia:** deixar o título da `app-ficha-flutuante` ("Ficha do combatente", fixo) configurável ou
+  neutro ("Ficha"), para quem a abre fora de um combate.
+- **Origem:** verificação da `m7-24` (2026-09-26): no painel da cena sem iniciativa, o mestre abre a
+  ficha de um agente e a janela diz "Ficha do combatente" numa cena sem combatentes.
+- **Por quê:** é o único texto da tela que contradiz o tipo da cena; mudar o componente estava fora
+  do escopo da task.
+- **Custo aparente:** um input de título no `FichaFlutuante` e o valor nos consumidores.
+
 ### I-034 — Testes de repositório contra um Postgres real · backend/banco
 
 - **Ideia:** uma suíte pequena de integração que rode os repositórios (`*.repository.ts`) contra um

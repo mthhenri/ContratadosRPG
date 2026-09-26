@@ -2,26 +2,9 @@
 <app-painel-encontro-mestre />
 } @else {
 <app-painel-encontro-jogador />
-} } @else {
-<!-- Cena sem iniciativa (Investigação/Resistência): o painel próprio é da m7-24. Até lá, só um
-     aviso honesto e o caminho de volta ao hub — nenhuma funcionalidade fingida. -->
-<div class="painel-cena__pendente">
-    <app-estado-vazio
-        icone="documentos"
-        [titulo]="dados.cena()!.nome + ' · ' + rotuloTipoCena(dados.cena()!.tipo)"
-        linhaApoio="O painel de cenas sem iniciativa ainda não está disponível."
-    >
-        <a
-            app-botao
-            estadoVazioAcao
-            variante="secundario"
-            tamanho="medio"
-            class="painel-cena__voltar"
-            [routerLink]="['/campanhas', dados.campanhaId, 'cenas']"
-        >
-            <app-icone nome="voltar" />
-            Voltar às cenas
-        </a>
-    </app-estado-vazio>
-</div>
-}
+} } @else { @if (dados.visaoDoMestre()) {
+<!-- Cena sem iniciativa (Investigação/Resistência, m7-24): casca sem trilha de turnos. -->
+<app-painel-cena-sem-iniciativa-mestre />
+} @else {
+<app-painel-cena-sem-iniciativa-jogador />
+} }

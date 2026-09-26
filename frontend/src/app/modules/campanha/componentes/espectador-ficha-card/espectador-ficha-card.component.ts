@@ -48,6 +48,11 @@ export class EspectadorFichaCard {
 
   /** Modo interativo — `false` por padrão (espectador, só leitura). */
   readonly mostrarAcoes = input(false);
+  /**
+   * Com `mostrarAcoes`, liga o gatilho do menu "⋯" — `true` por padrão (Esquadrão). O painel da
+   * cena sem iniciativa (m7-24) só abre a ficha e não tem menu: desliga para não deixar um "⋯" mudo.
+   */
+  readonly mostrarMenu = input(true);
   /** Se o menu "⋯" DESTE cartão está aberto — controlado pelo pai, como o antigo `menuFichaAberto`. */
   readonly menuAberto = input(false);
 

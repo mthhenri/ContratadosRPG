@@ -1,15 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { cenaTemIniciativa } from '@contratados-rpg/shared/regras/cena';
 
-import { Botao } from '../../../../shared/ui/botao/botao.component';
-import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
-import { Icone } from '../../../../shared/icone/icone.component';
 import { EncontroPainelDadosService } from '../../../encontro/paginas/painel/encontro-painel-dados.service';
 import { PainelEncontroJogador } from '../../../encontro/paginas/painel-jogador/painel-jogador.page';
 import { PainelEncontroMestre } from '../../../encontro/paginas/painel-mestre/painel-mestre.page';
-import { rotuloTipoCena } from '../../rotulos-cena';
+import { PainelCenaSemIniciativaJogador } from '../painel-sem-iniciativa-jogador/painel-sem-iniciativa-jogador.page';
+import { PainelCenaSemIniciativaMestre } from '../painel-sem-iniciativa-mestre/painel-sem-iniciativa-mestre.page';
 
 /**
  * Casca de `/campanhas/:campanhaId/cenas/:cenaId` (m7-23, sucessora do `PainelEncontroShell` da
@@ -17,20 +14,24 @@ import { rotuloTipoCena } from '../../rotulos-cena';
  *
  * 1. **Tipo da cena** (`cenaTemIniciativa`, `shared/regras/cena` — nunca um `if` por tipo aqui):
  *    com iniciativa (Combate/Furtiva/Perseguição) segue para o painel de Iniciativa de sempre;
- *    sem iniciativa (Investigação/Resistência) mostra um placeholder — o painel próprio desses
- *    tipos é da `m7-24` (pendência declarada, não funcionalidade).
- * 2. **Papel** (`EncontroPainelDadosService.visaoDoMestre`), como antes: `PainelEncontroMestre` ou
- *    `PainelEncontroJogador`, sem mudança nesses componentes além do que o hub exigiu.
+ *    sem iniciativa (Investigação/Resistência) segue para o painel sem trilha de turnos (m7-24).
+ * 2. **Papel** (`EncontroPainelDadosService.visaoDoMestre`), nos dois ramos: `PainelEncontroMestre`
+ *    ou `PainelEncontroJogador` com iniciativa; `PainelCenaSemIniciativaMestre` ou
+ *    `PainelCenaSemIniciativaJogador` sem.
  *
  * Enquanto a cena não chega, o tipo é desconhecido e a casca segue o caminho da Iniciativa, cuja
  * página do mestre já traz o esqueleto da tela — quem carrega não "pula" de uma visão para outra.
  */
 @Component({
   selector: 'app-painel-cena-shell',
-  imports: [RouterLink, Botao, EstadoVazio, Icone, PainelEncontroMestre, PainelEncontroJogador],
+  imports: [
+    PainelEncontroMestre,
+    PainelEncontroJogador,
+    PainelCenaSemIniciativaMestre,
+    PainelCenaSemIniciativaJogador,
+  ],
   providers: [EncontroPainelDadosService],
   templateUrl: './painel-cena-shell.page.html',
-  styleUrl: './painel-cena-shell.page.scss',
 })
 export class PainelCenaShell {
   protected readonly dados = inject(EncontroPainelDadosService);
@@ -40,6 +41,4 @@ export class PainelCenaShell {
     const cena = this.dados.cena();
     return cena === null || cenaTemIniciativa(cena.tipo);
   });
-
-  protected readonly rotuloTipoCena = rotuloTipoCena;
 }

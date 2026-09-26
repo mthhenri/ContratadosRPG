@@ -17,7 +17,7 @@ import { PainelCenaShell } from './painel-cena-shell.page';
 
 /**
  * Prova a casca do painel de uma cena (m7-23, sucessora da casca da Iniciativa da `ui-39`): decide
- * pelo **tipo** da cena (`cenaTemIniciativa`) e, com iniciativa, pelo **papel** — página do mestre
+ * pelo **tipo** da cena (`cenaTemIniciativa`) e, nos dois ramos, pelo **papel** — página do mestre
  * ou do jogador, no molde do `detalhe-shell` da campanha. O que cada página faz é provado no spec
  * dela; aqui só quem monta quem — e que o papel errado nunca dispara o efeito do outro.
  */
@@ -42,23 +42,40 @@ describe('PainelCenaShell', () => {
 
         expect(elemento.querySelector('app-painel-encontro-mestre')).not.toBeNull();
         expect(elemento.querySelector('app-conducao-turno')).not.toBeNull();
-        expect(elemento.querySelector('.painel-cena__pendente')).toBeNull();
+        expect(elemento.querySelector('app-painel-cena-sem-iniciativa-mestre')).toBeNull();
       },
     );
 
-    it.each([CenaTipoEnum.INVESTIGACAO, CenaTipoEnum.RESISTENCIA])(
-      '%s mostra o placeholder da m7-24, com o caminho de volta ao hub',
+    describe.each([CenaTipoEnum.INVESTIGACAO, CenaTipoEnum.RESISTENCIA])(
+      '%s (sem iniciativa, m7-24)',
       (cenaTipo) => {
-        const elemento = montar({ cenaTipo, semEncontro: true }).fixture
-          .nativeElement as HTMLElement;
+        it('monta o painel sem iniciativa do mestre para o mestre', () => {
+          const elemento = montar({ cenaTipo, semEncontro: true, usuarioId: USUARIO_MESTRE })
+            .fixture.nativeElement as HTMLElement;
 
-        expect(elemento.querySelector('app-painel-encontro-mestre')).toBeNull();
-        expect(elemento.querySelector('app-painel-encontro-jogador')).toBeNull();
-        const pendente = elemento.querySelector('.painel-cena__pendente');
-        expect(texto(pendente)).toContain('ainda não está disponível');
-        expect(pendente?.querySelector('a')?.getAttribute('href')).toBe(
-          `/campanhas/${CAMPANHA_ID}/cenas`,
-        );
+          expect(elemento.querySelector('app-painel-cena-sem-iniciativa-mestre')).not.toBeNull();
+          expect(elemento.querySelector('app-painel-cena-sem-iniciativa-jogador')).toBeNull();
+          expect(elemento.querySelector('app-painel-encontro-mestre')).toBeNull();
+          expect(elemento.querySelector('app-trilha-turnos')).toBeNull();
+        });
+
+        it('monta o painel sem iniciativa do jogador para quem não é mestre', () => {
+          const elemento = montar({ cenaTipo, semEncontro: true, usuarioId: USUARIO_JOGADOR })
+            .fixture.nativeElement as HTMLElement;
+
+          expect(elemento.querySelector('app-painel-cena-sem-iniciativa-jogador')).not.toBeNull();
+          expect(elemento.querySelector('app-painel-cena-sem-iniciativa-mestre')).toBeNull();
+          expect(elemento.querySelector('app-painel-encontro-jogador')).toBeNull();
+        });
+      },
+    );
+
+    it.each([CenaTipoEnum.COMBATE, CenaTipoEnum.FURTIVA, CenaTipoEnum.PERSEGUICAO])(
+      '%s não entra em sala de ficha nenhuma (só o ramo sem iniciativa acompanha fichas)',
+      (cenaTipo) => {
+        const { tempoReal } = montar({ cenaTipo, incluirFichaDoJogador: true });
+
+        expect(tempoReal.entrarSalaFicha).not.toHaveBeenCalled();
       },
     );
 
@@ -66,7 +83,7 @@ describe('PainelCenaShell', () => {
       const elemento = montar({ encontroPendente: true }).fixture.nativeElement as HTMLElement;
 
       expect(elemento.querySelector('app-painel-encontro-mestre')).not.toBeNull();
-      expect(elemento.querySelector('.painel-cena__pendente')).toBeNull();
+      expect(elemento.querySelector('app-painel-cena-sem-iniciativa-mestre')).toBeNull();
     });
   });
 

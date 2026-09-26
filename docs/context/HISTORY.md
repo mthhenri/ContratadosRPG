@@ -1,5 +1,83 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m7-24: painel de cena sem iniciativa (Resistência e Investigação)
+
+Pedido do autor: "faça a spec m7-24". Troca o placeholder que a `m7-23` deixou no
+`PainelCenaShell` por um painel de verdade para as cenas sem iniciativa, nas duas visões.
+
+**O que mudou.**
+- **`PainelCenaSemIniciativaMestre`** (`modules/cena/paginas/painel-sem-iniciativa-mestre/`), com a
+  casca `casca` e o bloco `cena-mestre`:
+  - composição **coluna de ações | Rolagens | palco**, sem trilha nem condução;
+  - na coluna, a categoria "Cena" com "Abrir cena" (planejada) ou "Encerrar cena" (ativa), e as
+    Ferramentas (Calculadora, Caderno);
+  - cabeçalho "`{Tipo} · {nome}`", nome da campanha, chip de status e o selo "Cena planejada";
+  - palco "Agentes": `app-espectador-ficha-card` das fichas de jogador de membros, na ordem do
+    Esquadrão (`ordenarMembros`/`agruparFichasPorMembro`), com a última rolagem do feed; o abrir do
+    card leva à `app-ficha-flutuante`. Sem agentes, um estado vazio compacto;
+  - abrir e encerrar seguem o padrão do `PainelEncontroMestre`: confirmação, `CenaService`,
+    `definirCena`. Cena encerrada é só leitura (some a categoria "Cena").
+- **`PainelCenaSemIniciativaJogador`** (`painel-sem-iniciativa-jogador/`, bloco `cena-jogador`):
+  - só Ferramentas e Rolagens;
+  - a própria ficha no palco pelo mesmo `app-ficha-campanha-card` e com a mesma edição do
+    `PainelEncontroJogador`, incluindo o recorte do mobile em que as ferramentas sobem ao cabeçalho;
+  - quem não tem ficha na campanha vê um estado vazio.
+- **`PainelCenaShell`**: o ramo sem iniciativa agora bifurca por papel; o placeholder e o SCSS dele
+  saíram.
+- **Fichas ao vivo** no `EncontroPainelDadosService`, pelo mecanismo do Esquadrão:
+  - o novo `semIniciativa()` liga um `effect` que entra/sai das salas `ficha:<id>` das fichas
+    exibidas;
+  - cada `ficha:alterada` de uma delas refaz `listarFichas`;
+  - com iniciativa o conjunto é vazio, então o painel de Iniciativa segue sem assinar sala de ficha.
+  - Preferi repetir as ~15 linhas de sincronização a extrair um helper de `CampanhaDetalheDadosService`:
+    a extração tocaria também a prévia do jogador, que herda o método, e isso sai do escopo.
+- **`EspectadorFichaCard`** ganhou `mostrarMenu` (padrão `true`, Esquadrão inalterado). Motivo: o
+  "Abrir ficha" do card só existia junto do menu "⋯", e o painel não tem menu. Deixar um "⋯" mudo
+  seria pior que um input compatível.
+- **Testes** (Vitest):
+  - specs novos das duas páginas: composição sem trilha, grade, abrir/encerrar com confirmação e
+    cancelamento, encerrada só leitura, selo de planejada, a própria ficha, estado vazio;
+  - fichas ao vivo: atualiza o card e ignora ficha fora da grade;
+  - casca: Resistência e Investigação montam o painel certo por papel; Combate, Furtiva e
+    Perseguição não entram em sala de ficha;
+  - o harness `painel-encontro.testing.ts` ganhou `fichaAlterada$`, `entrarSalaFicha`/`sairSalaFicha`
+    e expõe o dublê do tempo real.
+
+**Gates.**
+- `npm run test --workspace=frontend`: 159 arquivos, 2274 testes, todos verdes.
+- `npm run lint --workspace=frontend`: 0 erros. Os avisos de aspas já existiam.
+
+**Verificação ao vivo** (skill `verify`, 1920×1080 e 360×800). O `ng serve` que estava no ar subiu
+antes da `m7-23` pôr `/cena` no proxy, e `GET /cena/:id` voltava "Http failure during parsing". Por
+isso a verificação rodou num par isolado (backend 3101, frontend 4301 com o proxy apontado para
+3101). Duas contas, mestre e jogadora, em abas distintas:
+- **Resistência ativa, mestre e jogadora, nos dois viewports:** sem trilha, sem overflow
+  horizontal, alvos de 44px no mobile.
+- **Card ao vivo:** a jogadora reduziu a vida na própria ficha (outra aba) e o card do mestre foi
+  de 10/11 para 9/11 sem recarregar (sentinela preservada).
+- **Investigação planejada:** a jogadora foi devolvida ao hub (403 da `m7-22`). O mestre abriu a
+  cena pelo painel e a Resistência encerrou; a jogadora, na aba da Resistência, viu o chip virar
+  "Encerrada" ao vivo e passou a ver a Investigação no hub.
+- **Investigação encerrada:** o mestre a encerrou, a jogadora viu ao vivo, a coluna ficou só com as
+  Ferramentas e a cena aparece nas encerradas do hub. O estado também foi visto em 360px.
+- **Abrir ficha:** o clique no card abre a ficha flutuante.
+- **Regressão:** Combate planejado segue no painel de Iniciativa, igual nos dois viewports.
+- **Comparação com o análogo** (Esquadrão do `detalhe-mestre` e `ui-37`/`ui-39`): mesma casca,
+  cabeçalho, chips, coluna e card.
+
+**Achado que só apareceu na verificação.** Em 1920 a grade com colunas de 320px deixava o card com
+332px, e o rótulo "ENERGIA" encostava no valor da barra. O mesmo card tem ~463px no Esquadrão. O
+piso da coluna subiu para `min(440px, 100%)` (3 colunas de ~447px no palco de 1920) e a captura
+repetida ficou correta. Nenhum teste unitário pegaria isso.
+
+**Efeito colateral no ambiente do autor.** O backend isolado (`nest start --watch` na 3101) compila
+para a mesma `backend/dist`, e durante a verificação o processo da API do autor na 3100 caiu; o
+watcher dele ficou vivo sem reerguer a aplicação. Nada no código mudou por isso, mas o
+`npm run dev` do autor precisa ser reiniciado.
+
+**Fora de escopo, registrado.** Mecânica da Resistência → `IDEAS.md` `I-035`. Título "Ficha do
+combatente" da janela flutuante, fixo e fora de lugar numa cena sem combate → `I-036`.
+
 ## 2026-09-26 — m7-23: hub de cenas, "Nova cena" tipada e redirects da Iniciativa
 
 Pedido do autor: "pode fazer a m7-23". Entrega o pedido imediato do milestone de Cenas: a cena

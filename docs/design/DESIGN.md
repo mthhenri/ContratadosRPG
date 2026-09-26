@@ -380,7 +380,9 @@ jogador"). A tela é uma **casca** (`PainelCenaShell`, desde a `m7-23` o painel 
 `PainelEncontroMestre` ou `PainelEncontroJogador`, no molde de `detalhe-shell`; o layout comum das
 duas vive no parcial `paginas/_casca-iniciativa.scss` (mixin `casca`), incluído por cada página com o
 próprio bloco BEM (`iniciativa-mestre`/`iniciativa-jogador`) — e também pelo hub de cenas
-(`hub-cenas`), que não usa a coluna de ações. Quem inclui o mixin herda os elementos dele
+(`hub-cenas`), que não usa a coluna de ações, e pelos painéis de cena sem iniciativa
+(`cena-mestre`/`cena-jogador`, `m7-24`: a mesma composição **sem a trilha** — coluna de ações |
+Rolagens | palco com a grade de agentes do Esquadrão ou a própria ficha). Quem inclui o mixin herda os elementos dele
 (`__linha`, `__trilha`, `__palco`...): não reutilize esses nomes para outra coisa no próprio bloco.
 
 - **Coluna de ações:** só **Ferramentas** (Calculadora, Caderno, `[pressionado]`). No mobile, com a

@@ -1,0 +1,154 @@
+<!-- Cena sem iniciativa — visão do mestre (m7-24): a casca da `ui-37` sem a trilha de turnos —
+     coluna de ações | Rolagens | palco com a grade de agentes da campanha. -->
+<div class="cena-mestre">
+    <app-coluna-acoes id="cena-mestre" rotulo="Ações da cena">
+        @if (dados.carregando()) {
+        @for (i of [0, 1, 2]; track i) {
+        <app-esqueleto class="cena-mestre__esqueleto-acao" />
+        }
+        } @else {
+        @if (dados.cena(); as cena) {
+        @if (cena.status !== CenaStatusEnum.ENCERRADA) {
+        <div class="coluna-acoes__categoria">Cena</div>
+        @if (cena.status === CenaStatusEnum.PLANEJADA) {
+        <button
+            app-coluna-acoes-item
+            icone="entrar"
+            appTooltip="Abrir a cena para a mesa — os jogadores passam a vê-la"
+            [disabled]="dados.emOperacao()"
+            (click)="abrirCena()"
+        >
+            Abrir cena
+        </button>
+        } @else {
+        <button
+            app-coluna-acoes-item
+            icone="excluir"
+            appTooltip="Encerrar a cena — depois disso ela fica só de leitura"
+            [disabled]="dados.emOperacao()"
+            (click)="encerrarCena()"
+        >
+            Encerrar cena
+        </button>
+        } } }
+        <div class="coluna-acoes__categoria">Ferramentas</div>
+        <button
+            app-coluna-acoes-item
+            icone="calculadora"
+            appTooltip="Calculadora"
+            [pressionado]="calculadoraAberta()"
+            (click)="alternarCalculadora()"
+        >
+            Calculadora
+        </button>
+        <button
+            app-coluna-acoes-item
+            icone="caderno"
+            appTooltip="Caderno"
+            [pressionado]="cadernoAberto()"
+            (click)="alternarCaderno()"
+        >
+            Caderno
+        </button>
+        }
+    </app-coluna-acoes>
+
+    <div class="cena-mestre__conteudo">
+        <header class="cena-mestre__cabecalho">
+            <a
+                app-botao-icone
+                tamanho="padrao"
+                [routerLink]="['/campanhas', dados.campanhaId, 'cenas']"
+                aria-label="Voltar às cenas"
+                [appTooltip]="'Voltar às cenas'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            <span class="cena-mestre__indice">//</span>
+            @if (dados.cena(); as cena) {
+            <h1 class="cena-mestre__titulo">{{ rotuloTipoCena(cena.tipo) }} · {{ cena.nome }}</h1>
+            @if (dados.campanhaNome()) {
+            <span class="cena-mestre__campanha">{{ dados.campanhaNome() }}</span>
+            }
+            <app-chip variante="sutil">{{ rotuloStatusCena(cena.status) }}</app-chip>
+            @if (dados.cenaPlanejada()) {
+            <app-chip severidade="aviso">Cena planejada</app-chip>
+            } }
+            <span class="cena-mestre__regua"></span>
+        </header>
+
+        <div class="cena-mestre__linha">
+            @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
+            <div class="cena-mestre__rolagens">
+                <app-historico-rolagens-sidebar
+                    [fixo]="true"
+                    titulo="Rolagens"
+                    [itens]="dados.rolagensFeed()"
+                    [carregando]="dados.carregandoRolagens()"
+                    [campanhaIdJanela]="dados.campanhaId"
+                />
+            </div>
+            }
+
+            <div class="cena-mestre__palco">
+                <section class="cena-mestre__todos" aria-label="Agentes">
+                    <header class="cena-mestre__secao">
+                        <h2 class="cena-mestre__secao-titulo">Agentes</h2>
+                        <span class="cena-mestre__secao-regua"></span>
+                        @if (!dados.carregando()) {
+                        <span class="cena-mestre__secao-meta">
+                            {{ agentes().length }} {{ agentes().length === 1 ? 'agente' :
+                            'agentes' }}
+                        </span>
+                        }
+                    </header>
+
+                    @if (dados.carregando()) {
+                    <div class="cena-mestre__agentes" role="status" aria-label="Carregando a cena">
+                        @for (i of [0, 1, 2]; track i) {
+                        <app-esqueleto class="cena-mestre__esqueleto-agente" />
+                        }
+                    </div>
+                    } @else if (agentes().length) {
+                    <ul class="cena-mestre__agentes">
+                        @for (agente of agentes(); track agente.id) {
+                        <li>
+                            <app-espectador-ficha-card
+                                [ficha]="agente"
+                                [ultimaRolagem]="ultimaRolagemFicha(agente.id)"
+                                [mostrarAcoes]="true"
+                                [mostrarMenu]="false"
+                                (abrirFicha)="abrirFichaFlutuante(agente)"
+                            />
+                        </li>
+                        }
+                    </ul>
+                    } @else {
+                    <app-estado-vazio
+                        tamanho="compacto"
+                        titulo="Nenhum agente na campanha ainda."
+                    />
+                    }
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas. -->
+<app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />
+@if (dados.usuarioAtivoId(); as usuarioId) {
+<app-caderno-flutuante
+    #caderno
+    [mostrarGatilho]="false"
+    [campanhaId]="dados.campanhaId"
+    [campanhaNome]="dados.campanhaNome()"
+    [usuarioAtivoId]="usuarioId"
+    [ehMestre]="true"
+    [membros]="dados.membrosDaCampanha()"
+    [temInventario]="false"
+    (abrirFicha)="abrirFichaFlutuanteDeAnotacoes($event)"
+/>
+}
+<!-- Janela de ficha do agente clicado: uma só instância, aberta imperativamente. -->
+<app-ficha-flutuante #fichaFlutuante [ehMestre]="true" />

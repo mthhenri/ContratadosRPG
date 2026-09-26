@@ -1,0 +1,47 @@
+// Cena sem iniciativa — visão do jogador (m7-24). Casca comum da Iniciativa (`_casca-iniciativa.scss`,
+// análogo `ui-39`) sem a trilha: coluna de ações | Rolagens | palco com a própria ficha. O recorte do
+// mobile com a ficha no palco é o do `PainelEncontroJogador`. Só tokens (proibição #29).
+
+@use "tema/breakpoints" as bp;
+@use "../../../encontro/paginas/casca-iniciativa" as casca;
+
+@include casca.casca("cena-jogador");
+
+.cena-jogador {
+    // Ferramentas no cabeçalho — só existem no mobile com a ficha no palco (ver `--com-ficha`).
+    &__ferramentas {
+        display: none;
+        gap: var(--space-8);
+    }
+
+    // Mobile com a ficha embutida: a barra fixa do cartão (`.ficha-nav`) ocupa a faixa da barra da
+    // coluna de ações, que some; as ferramentas sobem para o cabeçalho.
+    &--com-ficha {
+        @include bp.mobile {
+            app-coluna-acoes {
+                display: none;
+            }
+
+            .cena-jogador__ferramentas {
+                display: flex;
+                margin-left: auto;
+            }
+        }
+    }
+
+    &__esqueleto-ficha {
+        display: block;
+        min-height: 480px;
+    }
+
+    // Acima do tablet as Rolagens são uma coluna ao lado da ficha, que pode ser bem mais alta que a
+    // janela: a coluna acompanha a rolagem da página (`sticky`) com a altura da janela.
+    @media (min-width: #{bp.$bp-tablet + 1px}) {
+        &__rolagens {
+            position: sticky;
+            top: var(--space-16);
+            align-self: flex-start;
+            height: calc(100dvh - 2 * var(--space-16));
+        }
+    }
+}

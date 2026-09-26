@@ -1,0 +1,47 @@
+// Cena sem iniciativa — visão do mestre (m7-24). Casca comum da Iniciativa (`_casca-iniciativa.scss`,
+// análogo `ui-37`) sem a trilha: coluna de ações | Rolagens | palco. Aqui só a grade de agentes (a
+// do Esquadrão de `detalhe-mestre`) e a geometria do esqueleto. Só tokens (proibição #29).
+
+@use "tema/breakpoints" as bp;
+@use "../../../encontro/paginas/casca-iniciativa" as casca;
+
+@include casca.casca("cena-mestre");
+
+.cena-mestre {
+    // A grade ocupa o palco inteiro — sem a ficha resumida ao lado, o `align-self` da casca sobra.
+    &__todos {
+        align-self: stretch;
+    }
+
+    // Grade do Esquadrão (`.detalhe-mestre__esquadrao-grid`): cartões do espectador na largura que
+    // têm lá (~460px em 1920) — abaixo de ~440px o rótulo "Energia" encosta no valor da barra.
+    // `min()` evita estourar um container mais estreito que isso; uma coluna no mobile.
+    &__agentes {
+        list-style: none;
+        margin: 0;
+        padding: 2px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr));
+        gap: var(--space-8);
+        align-items: start;
+
+        @include bp.mobile {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    &__esqueleto-acao {
+        flex: none;
+        height: 44px;
+
+        @include bp.mobile {
+            flex: 1 1 0;
+            min-width: 0;
+            height: bp.$alvo-toque;
+        }
+    }
+
+    &__esqueleto-agente {
+        height: 196px;
+    }
+}
