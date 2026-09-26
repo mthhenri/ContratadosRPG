@@ -36,16 +36,21 @@
 - **Causa:** GET sem cancelamento/conferência de ID em `detalhe-jogador.page.ts` e intenção sem
   ID no debounce de `FichaEdicaoService`.
 - **Correção:** associar escrita à origem e coordenar troca, pendências e respostas obsoletas.
-- **Desde:** revisão estática de 2026-09-26; reprodução ao vivo pendente.
+- **Desde:** revisão de 2026-09-26; confirmado no Chromium: PUT 200 grava Alfa em Beta ao
+  trocar durante debounce, com GET de Beta atrasado 1,5 s. Resposta obsoleta também reproduzida.
 - **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-082.
+- **Spec:** [autosave e seleção](../specs/backlog/p-082-ficha-autosave-e-selecao.spec.md).
 
 ### P-083 — Reconexão antiga duplica cargas ao navegar · `ABERTO` · frontend/tempo real
 
 - **Sintoma:** depois de uma reconexão, novas telas fazem carga inicial e refetch adicional.
 - **Causa:** effects testam o contador global `reconexao() > 0` na montagem.
 - **Correção:** observar apenas incrementos posteriores à montagem de cada consumidor.
+- **Reprodução:** Chromium, reabrir campanha após reconectar: 8 GETs em vez de 6; membros e
+  fichas duplicados.
 - **Desde:** revisão estática de 2026-09-26.
 - **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-083.
+- **Spec:** [reconexão sem duplicação](../specs/backlog/p-083-reconexao-sem-carga-duplicada.spec.md).
 
 ### P-084 — Ressincronização incompleta da campanha · `ABERTO` · frontend/tempo real
 
@@ -53,8 +58,10 @@
   continuar antigos; feed do Encontro também não é recuperado na reconexão.
 - **Causa:** campanha refaz só membros/resumos; ficha embutida não refaz GET com o mesmo ID.
 - **Correção:** invalidar recursos carregados sujeitos a eventos perdidos, preservando edição.
-- **Desde:** revisão estática de 2026-09-26; reprodução com dois clientes pendente.
+- **Desde:** revisão de 2026-09-26; confirmado com mestre/jogador no Chromium para estado
+  operacional e dinheiro da ficha. Inventário/feeds/Encontro ainda sem reprodução.
 - **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-084.
+- **Spec:** [ressincronização](../specs/backlog/p-084-ressincronizacao-recursos.spec.md).
 
 ### P-085 — Edição de ficha provoca recarga ampla de membros e fichas · `ABERTO` · requests
 
@@ -63,8 +70,11 @@
   fichas pelos dois eventos, sem coordenar invalidação.
 - **Correção:** service emite condições só quando mudarem; atualizar recorte necessário e
   agrupar eventos sem ampliar exposição de dados privados.
+- **Reprodução:** editar somente dinheiro gerou GETs de membros e fichas em cada um dos dois
+  painéis, além do PUT do jogador.
 - **Desde:** revisão estática de 2026-09-26.
 - **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-085.
+- **Spec:** [invalidação seletiva](../specs/backlog/p-085-invalidacao-seletiva-ficha.spec.md).
 
 ### P-086 — Estado operacional refaz campanha e inventário · `ABERTO` · requests
 
@@ -72,8 +82,10 @@
 - **Causa:** consumidor ignora estado recebido no evento e chama `recarregarCampanhaEInventario`;
   trocar estado não altera os itens.
 - **Correção:** aplicar estado recebido e invalidar inventário quando seus dados mudarem.
+- **Reprodução:** clique Na Base/Em Missão fez dois GETs em cada painel (mestre e jogador).
 - **Desde:** revisão estática de 2026-09-26.
 - **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-086.
+- **Spec:** [estado sem refetch](../specs/backlog/p-086-estado-campanha-sem-refetch.spec.md).
 
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 

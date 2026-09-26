@@ -3,7 +3,11 @@
 > **Requests — pendências abertas:** revisão estática identificou `P-082`…`P-086`, incluindo
 > risco de troca de destino do autosave ao selecionar outra ficha, cargas duplicadas e
 > ressincronização incompleta. [Evidências e limites](../reviews/requests-2026-09-26.md).
-> Correções e reprodução dinâmica pendentes; nenhum comportamento foi alterado pela revisão.
+> Reprodução no Chromium confirmou os cinco achados com mestre/jogador: inclusive PUT aceito
+> na ficha errada e dados antigos após reconexão. Carga inicial verificada em desktop/mobile.
+> Cenário isolado excluído; contas de teste mantidas conforme autorizado. Correções especificadas
+> em seis tasks no backlog, ordenadas em [requests-correcoes](../specs/backlog/requests-correcoes.spec.md).
+> Implementação pendente; prioridade inicial é P-082 (autosave/seleção).
 
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.

@@ -1,0 +1,25 @@
+{
+  "campanhaId": 72,
+  "fichas": [
+    36,
+    37
+  ],
+  "contasMantidas": [
+    62,
+    63
+  ],
+  "verificacao": [
+    {
+      "path": "/ficha/36",
+      "status": 404
+    },
+    {
+      "path": "/ficha/37",
+      "status": 404
+    },
+    {
+      "path": "/campanha/72",
+      "status": 404
+    }
+  ]
+}

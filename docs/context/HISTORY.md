@@ -65,6 +65,23 @@ Em `360×800`: sem overflow horizontal em nenhuma tela e todos os alvos com pelo
 2. **Colisão de BEM no mobile.** O hub usava `hub-cenas__linha`, mas o mixin `casca` já define `&__linha` (trilha | rolagens | palco) com `flex-direction: column` no tablet e no mobile. Em 360px, os cartões curtos e o "Encerrar" encolhiam e ficavam centralizados. O elemento foi renomeado para `__item` e ganhou um comentário.
 3. **"Nova cena" do cabeçalho com 33px de altura no mobile.** Recebeu o piso de toque. Por fim, o "Encerrar" foi alinhado à direita, como os controles das planejadas.
 
+## 2026-09-26 — Specs de correção da revisão de requests
+
+Pedido do autor: montar as specs a partir da revisão reproduzida no navegador. Criado o
+guarda-chuva `requests-correcoes.spec.md` e seis tasks no backlog: P-082 (autosave e seleção),
+P-083 (reconexão sem duplicação), P-084 (ressincronização de recursos), P-085 (invalidação
+seletiva), P-086 (estado aplicado sem refetch) e inventário sob demanda. P-082 vem primeiro
+pela gravação incorreta comprovada; a spec exige concluir salvamento antes da troca e manter
+a origem/edição em caso de falha. P-084 depende de P-082/P-083; inventário depende de P-084/P-086.
+
+Cada task segue o template, delimita arquivos/responsabilidades e traz critérios verificáveis
+de regressão, permissões e contagem de requests. Gates comuns reunidos no guarda-chuva;
+reprodução com dois clientes e viewports desktop/mobile, sem transformar contagem de GETs
+em teto que impeça novas chamadas legítimas de Cenas. Oportunidade de endpoint mínimo para
+nome da campanha não foi promovida sem medir benefício. Nenhum código implementado ou problema
+encerrado. Conferidos seções obrigatórias, links locais e diff documental; sem execução de
+build/testes por se tratar somente de especificação.
+
 ## 2026-09-26 — m7-22: backend da Cena, trava anti-vazamento e encontro sempre dentro de uma cena
 
 Segunda task do milestone `m7-cenas`. Nasceu o módulo `backend/src/modules/cena/`
@@ -130,6 +147,36 @@ produção) vivem em cenas `PLANEJADA`: com esta task só o mestre os vê, e ini
 iniciativa/encerrar exigem abrir a cena, o que antes do hub da `m7-23` só se faz pela API. Por isso
 `m7-22` e `m7-23` sobem juntas. A `m7-23` recebeu na spec as notas de contrato, inclusive expor
 `cenaId` no `EncontroRecuperadoDto` para o redirect de `/iniciativa/:encontroId`.
+
+## 2026-09-26 — Requests: reprodução autenticada confirma P-082…P-086
+
+Após o autor autorizar o cenário isolado, criadas duas contas (62/63), campanha 72 e fichas
+36/37 pela API local. Chromium real com mestre/jogador confirmou: autosave envia documento de
+Alfa para Beta e o backend grava (200); GET atrasado de Beta substitui a última seleção Alfa;
+reabrir campanha após reconexão faz 8 GETs em vez de 6; reconexão deixa estado operacional e
+dinheiro antigos; editar dinheiro recarrega membros/fichas nos dois clientes; mudar Na Base/Em
+Missão refaz campanha/inventário nos dois clientes. Atraso controlado de 1,5 s só no GET de Beta.
+Desconexão isolada no contexto do jogador com espera de 48 s e confirmação do fechamento do
+socket; servidor compartilhado preservado. Sem replay dos eventos perdidos.
+
+Carga inicial também observada em 360×800; Caderno só buscou páginas ao abrir, e 5 s de repouso
+não produziram fetch/XHR de dados. Relatório e evidências em `docs/reviews/requests-2026-09-26.md`.
+Campanha/fichas excluídas via API, leituras posteriores 404; contas mantidas como autorizado.
+Nenhuma correção de código. P-084 de inventário/feeds/Encontro e jornadas de espectador seguem
+sem reprodução; o resultado não certifica todas as rotas. Revisão do diff documental e
+`git diff --check`; sem build/lint/testes, pois o trabalho foi reprodução no navegador.
+
+## 2026-09-26 — Revisão de requests no navegador: área pública verificada, autenticação pendente
+
+Solicitada reprodução da auditoria anterior no navegador. Chromium real contra o frontend
+local: sete simulações visitadas; classe/Vigor alterados em 1920×1080 e 360×800 sem fetch/XHR.
+Acesso a campanhas sem sessão redirecionou para login sem requests de dados. O login com
+credenciais de desenvolvimento falhou; a criação de contas/campanha isoladas foi bloqueada
+pela revisão automática de aprovação por persistir dados. Autorização específica solicitada,
+com limpeza posterior de campanha/fichas e permanência das contas. Nenhuma campanha existente
+foi alterada. P-082…P-086 permanecem apenas com evidência estática; a revisão autenticada está
+aberta. Detalhes em `docs/reviews/requests-2026-09-26.md`. Diff desta rodada somente documental,
+sem mudanças de aplicação ou build/lint/testes.
 
 ## 2026-09-26 — m7-21: contrato e schema da Cena, com backfill dos encontros existentes
 
