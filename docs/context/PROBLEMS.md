@@ -87,6 +87,21 @@
 - **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-086.
 - **Spec:** [estado sem refetch](../specs/backlog/p-086-estado-campanha-sem-refetch.spec.md).
 
+### P-087 — Checagem de tipos completa do backend tem 17 erros fora do build · `ABERTO` · backend/testes
+
+- **Sintoma:** `npx tsc --noEmit -p backend/tsconfig.json` acusa 17 erros: 3 em
+  `tools/gerar-openapi-contratos.ts` (`declaracao.name` possivelmente `undefined`), 5 em
+  `tools/database/seed-dev.ts`, 3 em `tools/database/seed-dev.spec.ts` e 6 em specs de
+  `src/` (`openapi.document`, `encontro-conducao.service`, `ficha.service`, `rolagem.service`).
+  `tsconfig.build.json` sai com 0 e a suíte do vitest passa.
+- **Causa:** nenhum gate roda a checagem com o `tsconfig.json` completo — o build exclui specs e
+  `tools/`, e o vitest transpila sem checar tipos. Os erros se acumularam sem ninguém ver.
+- **Contorno:** nenhum necessário em runtime; ao verificar um import novo, comparar a contagem
+  antes/depois em vez de esperar 0.
+- **Correção:** corrigir os 17 e incluir `tsc --noEmit -p tsconfig.json` no lint ou no gate do
+  backend.
+- **Desde:** encontrado na `m9-01` (2026-09-26); os erros são anteriores à task.
+
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo

@@ -19,8 +19,11 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-26 · **Última decisão registrada:**
-> M9 quebrada em seis specs no backlog (`m9-01`…`m9-06`, só documentação; a `m7-25` espera `m9-02` +
-> `m9-04` — ver §1). Antes:
+> `m9-01-contrato-migration-documento` concluída (spec em `done/`): `TipoDocumentoEnum`, limites em
+> `shared/src/validators/documento.validators.ts` (imagem até 10 MB), DTOs da entidade em
+> `shared/src/dtos/documento/` e migration `0034` (`tipo_documento` + `documento` com busca textual
+> mantida por trigger). Sem endpoint nem tela; próxima: `m9-02` (ver §1). Antes: M9 quebrada em seis
+> specs no backlog e decisões do guarda-chuva confirmadas pelo autor. Antes:
 > `m7-24-frontend-painel-cena-sem-iniciativa` concluída (spec em `done/`): cenas de Resistência e
 > Investigação abrem um painel sem trilha de turnos — mestre com coluna de ações (Abrir/Encerrar
 > cena + Ferramentas) | Rolagens | grade de agentes do Esquadrão ao vivo; jogador com a própria
@@ -590,8 +593,8 @@
 
 ## 1. Próxima Task
 
-**Módulo de Cenas — próxima: `m7-25` (Investigação completa), bloqueada pela M9; a M9 ainda não
-começou — a próxima a implementar é a `m9-01`.** `m7-21` (contrato + schema), `m7-22` (backend +
+**Módulo de Cenas — próxima: `m7-25` (Investigação completa), bloqueada pela M9, que está em
+andamento — a próxima a implementar é a `m9-02`.** `m7-21` (contrato + schema), `m7-22` (backend +
 tempo real), `m7-23` (hub + "Nova cena" tipada) e `m7-24` (painel de cena sem iniciativa) concluídas
 em 2026-09-26. **Deploy: `m7-22` e `m7-23` sobem juntas** (os encontros de backfill em `MONTAGEM`
 vivem em cenas `PLANEJADA`, que só o hub deixa o mestre abrir); a `m7-24` é só frontend e pode ir
@@ -600,13 +603,14 @@ junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e
 (o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
 da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
 
-**M9 — Documentos de campanha ("Biblioteca"): quebrada em seis specs no backlog (2026-09-26).**
-`m9-01` (contrato + migration `documento`) → `m9-02` (backend + `documento:alterado` com trava
-anti-vazamento) → `m9-03` (busca no backend) em paralelo com `m9-04` (biblioteca do mestre +
-`LeitorDocumento`) → `m9-05` (jogador, espectador e busca) → `m9-06` (passe mobile). O guarda-chuva
-`m9-documentos-campanha.spec.md` registra os ajustes da quebra e as **decisões que pedem confirmação
-do autor antes de implementar** (espectador lê o revelado, URL pública da imagem, teto de 5 MB,
-salvar explícito).
+**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01` concluída (2026-09-26),
+próxima `m9-02`.** `m9-01` (contrato + migration `0034` `documento`, pronta) → `m9-02` (backend +
+`documento:alterado` com trava anti-vazamento) → `m9-03` (busca no backend) em paralelo com `m9-04`
+(biblioteca do mestre + `LeitorDocumento`) → `m9-05` (jogador, espectador e busca) → `m9-06` (passe
+mobile). As decisões do guarda-chuva foram **confirmadas pelo autor** (espectador lê o revelado, URL
+pública da imagem, salvar explícito, revelar sem confirmação), com o teto de imagem subido para
+**10 MB**. Continua em aberto só a escolha dos ícones de imagem/biblioteca (`m9-04`, item 4 das
+decisões — perguntar ao autor ao chegar lá).
 
 **Antes: `espectador-coluna-acoes-e-iniciativa` concluída (2026-09-21):** Painel do espectador
 padronizado (coluna de ações, cabeçalho "shell", toggle de descrição) e Iniciativa própria do

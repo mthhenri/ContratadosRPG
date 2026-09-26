@@ -99,10 +99,17 @@ CREATE TABLE tipo_cena_status (
   descricao VARCHAR NOT NULL
 );
 -- uix_tipo_cena_status_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
+
+CREATE TABLE tipo_documento (
+  -- BaseEntity...
+  codigo    VARCHAR NOT NULL,   -- TEXTO | IMAGEM (m9-01)
+  descricao VARCHAR NOT NULL
+);
+-- uix_tipo_documento_codigo_ativo: UNIQUE (codigo) WHERE is_deleted = false
 ```
 
 Enums TS espelhos: `TipoCampanhaMembroPapelEnum`, `TipoUsuarioEnum`, `TipoFichaEnum`, `RolagemVisibilidadeEnum`,
-`EncontroStatusEnum`, `CenaTipoEnum`, `CenaStatusEnum`
+`EncontroStatusEnum`, `CenaTipoEnum`, `CenaStatusEnum`, `TipoDocumentoEnum`
 (em `shared/src/enums/`). `RolagemVisibilidadeEnum` é coluna relacional de `rolagem` (não vive no
 JSONB) — a exceção do §10.3 abaixo não se aplica a ela, segue a regra geral §10.2.12.
 
@@ -337,6 +344,37 @@ Estados válidos do par cena/encontro a partir da m7-22: `PLANEJADA/MONTAGEM` (p
 vê), `ATIVA/MONTAGEM` (mesa rolando iniciativa), `ATIVA/ATIVO` (combate) e `ENCERRADA/ENCERRADO`
 (histórico). Encerrar a cena encerra o encontro junto; iniciar o combate exige a cena `ATIVA`. Só a
 cena `ATIVA` pode ser encerrada — uma `ENCERRADA` é sempre uma cena que a mesa já viu.
+
+## documento (M9 — m9-01)
+
+O **documento de campanha** da "Biblioteca": texto em markdown (`TEXTO`) ou imagem (`IMAGEM`) que o
+mestre cria oculto e revela à campanha inteira. PDF fica fora do MVP.
+
+```sql
+CREATE TABLE documento (
+  -- BaseEntity...
+  campanha_id        INTEGER      NOT NULL, -- fk_documento_campanha
+  tipo_documento_id  INTEGER      NOT NULL, -- fk_documento_tipo_documento
+  titulo             VARCHAR(120) NOT NULL, -- chk_documento_titulo: 1..120 sem contar espaços das pontas
+  conteudo_markdown  TEXT,                  -- só TEXTO; chk_documento_conteudo: até 100 000
+  imagem_url         VARCHAR,               -- só IMAGEM; URL pública do core/armazenamento
+  revelado           BOOLEAN      NOT NULL, -- false ao nascer; o mestre revela/oculta
+  ordem              INTEGER      NOT NULL, -- ordem manual da biblioteca da campanha
+  busca              TSVECTOR     NOT NULL  -- mantido por trg_documento_busca
+);
+-- chk_documento_conteudo_ou_imagem: NOT (conteudo_markdown IS NOT NULL AND imagem_url IS NOT NULL)
+-- ix_documento_campanha_ordem: (campanha_id, ordem)
+-- ix_documento_busca: GIN (busca)
+```
+
+`fn_documento_busca` mantém o vetor no molde de `pagina_caderno` (`titulo` peso A,
+`conteudo_markdown` peso B, configuração `contratados_portugues` da `0018`); um documento `IMAGEM`
+tem só o título no vetor. O banco garante apenas que um documento nunca carrega markdown **e**
+imagem juntos; a coerência com o tipo (`TEXTO` ⇒ sem `imagem_url`, `IMAGEM` ⇒ sem
+`conteudo_markdown`) exigiria consultar `tipo_documento` num CHECK, o que o PostgreSQL não permite,
+e é arbitrada pela `DocumentoService` (m9-02) — assim como o recorte por papel (jogador e
+espectador só leem `revelado = true`). Os limites vivem em `shared/src/validators/documento.validators.ts`
+(`DOCUMENTO_TITULO_MAXIMO`, `DOCUMENTO_CONTEUDO_MAXIMO`, teto de imagem de 10 MB).
 
 ## encontro (M7 — m7-01/m7-03)
 

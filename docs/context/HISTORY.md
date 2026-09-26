@@ -1,5 +1,60 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m9-01: contrato e migration do documento de campanha
+
+O autor confirmou as decisões que o guarda-chuva da M9 deixara em aberto (espectador lê os
+documentos revelados, URL pública e não revogável da imagem, salvar explícito, revelar sem
+confirmação) e subiu o teto de imagem de 5 MB para **10 MB**; as specs `m9-01`, `m9-02`, `m9-04`,
+`m9-05` e o guarda-chuva foram ajustados antes de começar. A escolha dos ícones de imagem e de
+biblioteca (`m9-04`) continua para ser perguntada quando a tela chegar.
+
+Entregue, sem nenhum endpoint, service ou tela:
+
+- `TipoDocumentoEnum` (`TEXTO | IMAGEM`), com o nome da convenção escrita (`tipo_documento` →
+  `TipoDocumentoEnum`), não o da Cena (`CenaTipoEnum`).
+- `shared/src/validators/documento.validators.ts`: título 120, conteúdo 100 000, imagem até
+  10 MB (`10 * 1024 * 1024`) e MIMEs `jpeg`/`png`/`webp`.
+- `shared/src/dtos/documento/` (`Criar`/`Criado`/`Recuperar`/`Recuperado`/`Alterar` com
+  `updatedDate` otimista/`Alterado`/`Remover`/`Resumo` sem `conteudoMarkdown`) e a entrada
+  `./dtos/documento` em `shared/package.json`. Os DTOs de revelar/ocultar/reordenar/imagem/evento
+  ficam para a `m9-02`, e os de busca para a `m9-03`.
+- Migration `0034 - Tabelas tipo_documento e documento.sql` (a `0034` estava livre): seed de
+  `tipo_documento`; `documento` com os CHECKs de título, conteúdo e "nunca markdown e imagem
+  juntos"; `fn_documento_busca` no molde da `0018` (título A, corpo B, só usando a
+  `contratados_portugues`); `ix_documento_campanha_ordem` e `ix_documento_busca` (GIN). A
+  coerência tipo × coluna fica para a `DocumentoService`, porque um CHECK não pode consultar
+  `tipo_documento`.
+- `docs/SCHEMA.md`: `tipo_documento` nas tabelas de referência e a seção `documento`.
+
+Verificado:
+
+- `npm run test -w shared`: 52 arquivos / 771 testes, com o novo `documento.spec.ts` (valores do
+  enum e limites). `npm run test -w backend`: 34 / 621. `npm run lint -w shared`: 0 erros; os
+  18 avisos dos arquivos novos são todos `quotes`, a mesma regra dos ~5 000 avisos
+  preexistentes do workspace, que usa aspas simples em todo lugar.
+- `npm run build -w shared` gera `dist/dtos/documento`. Um arquivo temporário (fora do diff)
+  importando `dtos/documento`, `enums` e `validators` compilou no frontend (`tsconfig.app.json`,
+  com uma linha de erro proposital para provar que o arquivo foi checado) e no backend (mesma
+  contagem de erros com e sem o arquivo).
+- Banco de dev, com o SQL rodado contra o Postgres real: `tipo_documento` com 2 linhas; título
+  só com espaços cai no `chk_documento_titulo`; 121 caracteres cai antes, no `VARCHAR(120)` (como
+  no caderno); markdown + imagem cai no `chk_documento_conteudo_ou_imagem`; 100 001 caracteres cai
+  no `chk_documento_conteudo`; um `TEXTO` inserido sem mencionar `busca` ganha o vetor pelo
+  trigger; um `IMAGEM` fica só com o título no vetor; `cafe` casa "Carta do Café"; `UPDATE` do
+  título refaz o vetor (deixa de casar `cafe`); com `enable_seqscan = off` a busca usa
+  `Bitmap Index Scan on ix_documento_busca` e a listagem por campanha usa
+  `ix_documento_campanha_ordem`. Tudo em transações desfeitas, sem linha sobrando.
+- `DOWN → UP → DOWN`: colunas, funções, triggers, índices, constraints e configurações de
+  busca idênticos ao snapshot anterior à task nas duas voltas (a `contratados_portugues`
+  sobrevive). O banco de dev terminou na `0034`.
+- Banco limpo descartável (`m901_limpo`): as 34 migrations sobem num lote só e o rollback
+  completo também passa; o banco foi removido depois.
+
+Achados fora do escopo, registrados em vez de corrigidos: `P-087` (a checagem de tipos com o
+`tsconfig.json` completo do backend tem 17 erros preexistentes em specs e `tools/`, que nenhum gate
+roda) e `I-037` (a lista de MIMEs de imagem está repetida em oito lugares do frontend e do backend
+e poderia seguir o molde da constante do documento).
+
 ## 2026-09-26 — M9: guarda-chuva quebrado em seis specs no backlog
 
 Pedido do autor, ao perguntar se havia uma `m7-25`: abrir a M9 criando todas as suas specs no

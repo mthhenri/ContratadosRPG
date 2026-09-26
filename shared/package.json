@@ -44,6 +44,10 @@
       "types": "./dist/dtos/rolagem/index.d.ts",
       "default": "./dist/dtos/rolagem/index.js"
     },
+    "./dtos/documento": {
+      "types": "./dist/dtos/documento/index.d.ts",
+      "default": "./dist/dtos/documento/index.js"
+    },
     "./dtos/pagina-caderno": {
       "types": "./dist/dtos/pagina-caderno/index.d.ts",
       "default": "./dist/dtos/pagina-caderno/index.js"

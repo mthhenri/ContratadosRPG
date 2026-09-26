@@ -126,7 +126,7 @@ só esses. Os três papéis buscam pelo título e pelo conteúdo, cada um dentro
 `documentoAlterado$`, seção de design), `m8-03`/`m8-07` (painel do espectador, resolver e prévias),
 `docs/design/DESIGN.md`.
 
-## Decisões assumidas ao especificar (confirmar com o autor antes de implementar)
+## Decisões assumidas ao especificar (confirmadas pelo autor em 2026-09-26)
 
 1. **O espectador tem Biblioteca** — é a revisão da decisão #4 do `m8` assumida na `m9-02`. Se o autor
    decidir que é só do jogador, esta task perde o item 3 e o item de navegação do espectador (e o

@@ -44,7 +44,7 @@ mantida pelo banco.
    `tipo_documento`; PDF fica de fora do MVP (guarda-chuva, decisão #1).
 2. **Limites** (`shared/src/validators/documento.validators.ts`, export em
    `shared/src/validators/index.ts`): `DOCUMENTO_TITULO_MAXIMO = 120`,
-   `DOCUMENTO_CONTEUDO_MAXIMO = 100_000`, `DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024`
+   `DOCUMENTO_CONTEUDO_MAXIMO = 100_000`, `DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES = 10 * 1024 * 1024`
    e `DOCUMENTO_IMAGEM_MIMES_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp']` (o cliente
    valida antes de enviar, o backend valida de verdade). O teto de imagem é maior que o do avatar
    (2 MB) porque um documento de imagem costuma ser mapa, carta ou foto de cena — ver "Decisões
@@ -121,10 +121,10 @@ mantida pelo banco.
 migration `0031` (molde de tabela `tipo_*`), `docs/CONVENTIONS.md` (enums, migrations, DTOs),
 `dto-conventions`.
 
-## Decisões assumidas ao especificar (confirmar com o autor antes de implementar)
+## Decisões assumidas ao especificar (confirmadas pelo autor em 2026-09-26)
 
-1. **Teto da imagem em 5 MB**, contra 2 MB do avatar da ficha. Constante nomeada, um único lugar
-   para mudar.
+1. **Teto da imagem em 10 MB** (o autor subiu dos 5 MB propostos), contra 2 MB do avatar da ficha.
+   Constante nomeada, um único lugar para mudar.
 2. **`imagem_foco` fora do MVP**, pelo motivo acima.
 
 ## Riscos e Mitigação

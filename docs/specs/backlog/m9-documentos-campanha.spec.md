@@ -132,7 +132,7 @@ Ao detalhar as tasks contra o código, o esboço do guarda-chuva mudou em pontos
 8. **Busca própria**, com endpoint e DTOs próprios (`GET campanha/:id/documento/busca`), sem estender a
    busca do caderno: o papel (o espectador busca o revelado) e o recorte são outros.
 
-### Decisões que pedem confirmação do autor antes de implementar
+### Decisões confirmadas pelo autor (2026-09-26)
 
 - **O espectador lê os documentos revelados** (decisão #3 daqui) — é a **revisão explícita** da
   decisão #4 do `m8` ("nunca vê cadernos…"), que falava do caderno, não de documentos que o mestre
@@ -140,7 +140,7 @@ Ao detalhar as tasks contra o código, o esboço do guarda-chuva mudou em pontos
 - **A URL da imagem é pública e não revogável** (é como o `core/armazenamento` já serve o avatar):
   ocultar depois de revelar não invalida uma URL que um jogador já viu. Sigilo forte exigiria proxy
   autenticado ou URL assinada — upgrade, com custo de tráfego (`m9-02`).
-- **Teto de imagem em 5 MB** (o do avatar é 2 MB).
+- **Teto de imagem em 10 MB** (o do avatar é 2 MB; o autor subiu dos 5 MB propostos).
 - **Salvar explícito** no editor do mestre (sem autosave) e **revelar sem confirmação** (`m9-04`).
 
 ## Critérios de aceite do módulo

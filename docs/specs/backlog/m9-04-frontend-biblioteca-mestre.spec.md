@@ -113,7 +113,7 @@ para a mesa, remove e reordena — tudo atualizado ao vivo pelo `documento:alter
 - **Verificação pela skill `verify` em `1920×1080` e `360×800`**, com backend e frontend reais
   (portas isoladas se o `ng serve` do autor tiver o proxy antigo — sem `^/documento` ele não roteia a
   API), percorrendo: lista vazia e esqueleto; criar um `TEXTO` e um `IMAGEM` (upload de JPEG real;
-  arquivo de tipo inválido e acima de 5 MB recusados); editar e salvar; **conflito de versão com duas
+  arquivo de tipo inválido e acima de 10 MB recusados); editar e salvar; **conflito de versão com duas
   abas**; trocar de documento com rascunho; revelar e ocultar (o toast, o chip, e — como a visão do
   jogador só chega na `m9-05` — o efeito para a mesa provado com um `socket.io-client` cru de jogador:
   recebe `REVELADO`/`OCULTADO`); remover; reordenar (uma seta no limite fica desabilitada); no mobile,
@@ -137,7 +137,7 @@ para a mesa, remove e reordena — tudo atualizado ao vivo pelo `documento:alter
 `m9-02` (endpoints e `documento:alterado`), `m7-23` (`HubCenas`, o análogo), `ui-15` (confirmação
 destrutiva), `ui-20` (notificações), `docs/design/DESIGN.md`, `shared/ui/editor-markdown`.
 
-## Decisões assumidas ao especificar (confirmar com o autor antes de implementar)
+## Decisões assumidas ao especificar (1–3 confirmadas pelo autor em 2026-09-26; 4 ainda em aberto)
 
 1. **Rótulo "Biblioteca"** para a entrada de navegação e o título da página, porque "Documentos" já é o
    leitor de PDFs das regras na topbar. A rota e os nomes de código seguem em português do domínio
@@ -149,7 +149,8 @@ destrutiva), `ui-20` (notificações), `docs/design/DESIGN.md`, `shared/ui/edito
    chip. (A `m7-25` pode reforçar isso no "Apresentar".)
 4. **Ícones:** `IconeNome` não tem um ícone de **imagem** nem de **biblioteca** (`documentos` é o da
    topbar; `olho`/`olho-fechado` cobrem o estado). Antes de escolher, propor ao autor (regra de
-   `shared/ui`); candidatos para o texto: `anotacoes`.
+   `shared/ui`); candidatos para o texto: `anotacoes`. **Ainda não decidido** — perguntar ao autor ao
+   abrir esta task.
 
 ## Riscos e Mitigação
 

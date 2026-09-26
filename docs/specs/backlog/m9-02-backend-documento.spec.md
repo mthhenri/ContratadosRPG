@@ -168,7 +168,7 @@ ou por socket.
 por visibilidade de `emitirCenaAlterada`), `core/armazenamento`, `docs/CONVENTIONS.md`,
 `dto-conventions`.
 
-## Decisões assumidas ao especificar (confirmar com o autor antes de implementar)
+## Decisões assumidas ao especificar (confirmadas pelo autor em 2026-09-26)
 
 1. **O espectador lê os documentos revelados.** É o que o guarda-chuva da M9 diz (decisão #3 e
    critérios), mas contradiz a decisão #4 do `m8` ("nunca vê cadernos…"), que é sobre o caderno, não
@@ -181,7 +181,7 @@ por visibilidade de `emitirCenaAlterada`), `core/armazenamento`, `docs/CONVENTIO
    revelar não invalida uma URL que um jogador já viu**. Aceitável para o MVP; a alternativa (proxy
    autenticado `GET documento/:id/imagem` que devolve os bytes, ou URL assinada com validade) fecha o
    buraco ao custo de tráfego pelo Cloud Run — vira upgrade se o autor quiser sigilo forte.
-3. **Teto de imagem: 5 MB** (`m9-01`).
+3. **Teto de imagem: 10 MB** (`m9-01`; o autor subiu dos 5 MB propostos).
 
 ## Riscos e Mitigação
 

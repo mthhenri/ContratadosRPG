@@ -66,6 +66,18 @@
 
 ## Abertas
 
+### I-037 — Uma constante compartilhada para os MIMEs de imagem · shared/validators
+
+- **Ideia:** substituir a lista `['image/jpeg', 'image/png', 'image/webp']` repetida no frontend
+  (`ficha-campanha-card`, `ficha-visualizacao`, `criar`, `criar-criatura`, `painel-mestre` ×2) e o
+  mapa MIME→extensão de `ficha.service.ts`/`encontro.service.ts` por uma constante em
+  `shared/src/validators`, como a `DOCUMENTO_IMAGEM_MIMES_PERMITIDOS` que a `m9-01` criou para o
+  documento.
+- **Origem:** `m9-01` (2026-09-26), ao procurar um precedente para a lista de MIMEs do documento.
+- **Por quê:** aceitar um formato novo (ex.: AVIF) hoje exige editar oito lugares, e o cliente
+  pode divergir do backend sem nenhum teste perceber.
+- **Custo aparente:** baixo — troca mecânica, com um teste de contrato no `shared`.
+
 ### I-035 — Mecânica da cena de Resistência no painel · cenas/regras
 
 - **Ideia:** dar ao painel da cena de Resistência a mecânica do capítulo "⬥ Resistência" de
