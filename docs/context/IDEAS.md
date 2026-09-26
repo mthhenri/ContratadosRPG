@@ -27,6 +27,13 @@
 
 ## Promovidas
 
+### I-036 — Título neutro da ficha flutuante fora do combate · frontend/ficha
+
+- Implementada em 2026-09-26, a pedido do autor, logo depois da `m7-24` (sem spec própria: uma
+  linha de template e um `computed`). A janela passou de "Ficha do combatente" fixo para
+  "Ficha · {nome}", com o nome lido do documento que o conteúdo já carrega (jogador ou criatura).
+  Detalhe em `HISTORY.md`.
+
 ### I-014 — M9 sugerido: documentos e anotações de campanha · campanha/documentos
 
 - Promovida em 2026-09-21 a `docs/specs/backlog/m9-documentos-campanha.spec.md`. Nasceu do pedido
@@ -72,16 +79,6 @@
   cabeça. O placar é exatamente o estado que a mesa perde entre uma rolagem e outra.
 - **Custo aparente:** estado próprio da cena (JSONB ou tabela), endpoint e evento de tempo real,
   motor puro com testes e um bloco no palco — uma task de backend e uma de frontend.
-
-### I-036 — Título neutro da ficha flutuante fora do combate · frontend/ficha
-
-- **Ideia:** deixar o título da `app-ficha-flutuante` ("Ficha do combatente", fixo) configurável ou
-  neutro ("Ficha"), para quem a abre fora de um combate.
-- **Origem:** verificação da `m7-24` (2026-09-26): no painel da cena sem iniciativa, o mestre abre a
-  ficha de um agente e a janela diz "Ficha do combatente" numa cena sem combatentes.
-- **Por quê:** é o único texto da tela que contradiz o tipo da cena; mudar o componente estava fora
-  do escopo da task.
-- **Custo aparente:** um input de título no `FichaFlutuante` e o valor nos consumidores.
 
 ### I-034 — Testes de repositório contra um Postgres real · backend/banco
 

@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — I-036: título da ficha flutuante com o nome da ficha
+
+Pedido do autor, logo após a `m7-24`: trocar o "Ficha do combatente" fixo da `app-ficha-flutuante`
+por "Ficha - NOME" (ou por "Ficha de Jogador/Criatura"). Ficou a primeira opção, com o separador
+"·" dos demais títulos do produto ("Resistência · Tempestade de areia").
+
+- `FichaFlutuanteConteudo` expõe `nome`, um `computed` sobre o documento que ele já busca
+  (`fichaJogador`/`fichaCriatura`). Não há consulta nova, e uma renomeação feita na própria janela
+  aparece no título, porque a edição grava no mesmo sinal.
+- `FichaFlutuante` lê esse sinal por `viewChild` e monta `titulo()`: "Ficha · {nome}", ou só "Ficha"
+  enquanto carrega. O `aria-label` da janela e dos botões Minimizar/Fechar vem do mesmo título.
+- O primitivo `app-painel-flutuante` já trunca o título com reticências, então nome longo não
+  empurra os botões.
+
+**Gates.**
+- `npm run test --workspace=frontend`: 159 arquivos, 2275 testes (um novo para o título; dois
+  seletores do spec da janela passaram a usar o `aria-label` novo).
+- Lint: 0 erros.
+- Ao vivo (par isolado 3101/4301): na cena sem iniciativa, o mestre abriu a ficha do agente e a
+  janela mostrou "Ficha · K. Amaral" em 1920×1080 e em 360×800, sem overflow.
+
+`IDEAS.md` `I-036` → Promovidas.
+
 ## 2026-09-26 — m7-24: painel de cena sem iniciativa (Resistência e Investigação)
 
 Pedido do autor: "faça a spec m7-24". Troca o placeholder que a `m7-23` deixou no

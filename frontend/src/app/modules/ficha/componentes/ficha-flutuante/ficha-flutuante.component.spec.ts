@@ -97,6 +97,16 @@ describe('FichaFlutuante', () => {
     }
   });
 
+  it('o título é "Ficha · {nome}" da ficha carregada', () => {
+    const { fixture } = montar();
+    fixture.componentInstance.abrir(alvoA);
+    fixture.detectChanges();
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.painel-flutuante__titulo-grupo h2')?.textContent?.trim(),
+    ).toBe('Ficha · K. Amaral');
+  });
+
   it('minimizar esconde a janela e mostra o gatilho; reabrir desfaz', () => {
     const { fixture } = montar();
     fixture.componentInstance.abrir(alvoA);
@@ -104,7 +114,7 @@ describe('FichaFlutuante', () => {
 
     const elemento = fixture.nativeElement as HTMLElement;
     elemento
-      .querySelector<HTMLButtonElement>('[aria-label="Minimizar Ficha do combatente"]')
+      .querySelector<HTMLButtonElement>('[aria-label="Minimizar Ficha · K. Amaral"]')
       ?.click();
     fixture.detectChanges();
     expect(elemento.querySelector('.painel-flutuante__janela')?.hasAttribute('hidden')).toBe(true);
@@ -122,7 +132,7 @@ describe('FichaFlutuante', () => {
     fixture.detectChanges();
 
     (fixture.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>('[aria-label="Fechar Ficha do combatente"]')
+      .querySelector<HTMLButtonElement>('[aria-label="Fechar Ficha · K. Amaral"]')
       ?.click();
     fixture.detectChanges();
 

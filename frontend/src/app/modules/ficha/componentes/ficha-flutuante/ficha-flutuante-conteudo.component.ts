@@ -47,6 +47,12 @@ export class FichaFlutuanteConteudo {
   protected readonly fichaJogador = signal<FichaRecuperadaDto | null>(null);
   protected readonly fichaCriatura = signal<FichaCriaturaRecuperadaDto | null>(null);
 
+  /**
+   * Nome da ficha carregada — o título da janela (`FichaFlutuante`). `null` enquanto carrega; segue
+   * uma renomeação feita aqui mesmo, porque a edição grava no mesmo sinal.
+   */
+  readonly nome = computed(() => this.fichaJogador()?.nome ?? this.fichaCriatura()?.nome ?? null);
+
   /** Mestre edita qualquer ficha; jogador só a própria — mesma regra de `CampanhaDetalhe`. */
   protected readonly ajustavel = computed(
     () => this.ehMestre() || this.alvo().usuarioIdDono === this.sessaoService.usuario()?.id,

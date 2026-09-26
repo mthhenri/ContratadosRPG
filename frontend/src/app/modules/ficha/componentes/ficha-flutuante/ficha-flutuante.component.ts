@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, input, signal, viewChild } from '@angular/core';
 
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Tooltip } from '../../../../shared/tooltip/tooltip.directive';
@@ -49,6 +49,17 @@ export class FichaFlutuante {
   protected readonly ehMobile = signal(this.verificarMobile());
 
   protected readonly painelRef = viewChild<PainelFlutuante>('painel');
+  private readonly conteudoRef = viewChild(FichaFlutuanteConteudo);
+
+  /**
+   * "Ficha · {nome}" da ficha exibida, lido do documento que o conteúdo já carregou (jogador ou
+   * criatura, sem consulta nova); só "Ficha" enquanto ele chega. Neutro: a janela abre de
+   * combate, de cena sem iniciativa e do Caderno.
+   */
+  protected readonly titulo = computed(() => {
+    const nome = this.conteudoRef()?.nome();
+    return nome ? `Ficha · ${nome}` : 'Ficha';
+  });
   private readonly gatilhoElemento = viewChild<ElementRef<HTMLButtonElement>>('gatilho');
 
   private geometriaAntesDeMaximizar: FichaFlutuanteGeometria | null = null;

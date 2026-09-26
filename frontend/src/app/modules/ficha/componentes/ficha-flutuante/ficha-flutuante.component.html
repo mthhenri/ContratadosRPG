@@ -14,7 +14,7 @@
 <app-painel-flutuante
     #painel="appPainelFlutuante"
     id="ficha-flutuante"
-    titulo="Ficha do combatente"
+    [titulo]="titulo()"
     [aberto]="aberto()"
     [mobile]="ehMobile()"
     [maximizada]="maximizada()"
