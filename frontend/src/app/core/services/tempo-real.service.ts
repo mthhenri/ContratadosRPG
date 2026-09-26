@@ -7,6 +7,7 @@ import type {
   CampanhaInventarioAlteradoDto,
   CampanhaMembroEntradaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
+import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   EncontroAlteradoDto,
   EncontroIniciativaPedidoDto,
@@ -96,6 +97,7 @@ export class TempoRealService {
   private readonly estadoAlteradoSubject = new Subject<CampanhaEstadoAlteradaDto>();
   private readonly inventarioAlteradoSubject = new Subject<CampanhaInventarioAlteradoDto>();
   private readonly encontroAlteradoSubject = new Subject<EncontroAlteradoDto>();
+  private readonly cenaAlteradaSubject = new Subject<CenaAlteradaDto>();
   private readonly encontroIniciativaPedidoSubject = new Subject<
     EncontroIniciativaPedidoDto & { campanhaId: number }
   >();
@@ -160,6 +162,13 @@ export class TempoRealService {
    */
   readonly encontroAlterado$: Observable<EncontroAlteradoDto> =
     this.encontroAlteradoSubject.asObservable();
+  /**
+   * Uma cena da campanha mudou (m7-22) — só o resumo (`CenaResumoDto`); o estado do encontro dela
+   * segue pelo `encontro:alterado`. Cena `PLANEJADA` só chega ao mestre (sala
+   * `campanha:<id>:mestre`, trava anti-vazamento): o jogador nunca recebe o evento de uma cena
+   * que não pode ver.
+   */
+  readonly cenaAlterada$: Observable<CenaAlteradaDto> = this.cenaAlteradaSubject.asObservable();
   /**
    * O mestre pediu que os jogadores rolem a própria iniciativa (m7). Não carrega estado — é
    * uma chamada; quem escuta decide o que fazer (o painel do mestre só confirma o envio).
@@ -269,6 +278,9 @@ export class TempoRealService {
     );
     this.socket.on('encontro:alterado', (evento: EncontroAlteradoDto) =>
       this.encontroAlteradoSubject.next(evento),
+    );
+    this.socket.on('cena:alterada', (evento: CenaAlteradaDto) =>
+      this.cenaAlteradaSubject.next(evento),
     );
     this.socket.on(
       'encontro:iniciativa-pedido',

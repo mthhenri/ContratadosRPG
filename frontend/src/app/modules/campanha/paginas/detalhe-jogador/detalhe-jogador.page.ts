@@ -76,7 +76,7 @@ const PX_PREVIEW_AVATAR = 300;
  * mesma tela com `CampanhaPreviaJogadorDadosService` no lugar do serviço de dados. Com
  * `dados.previa()` preenchido, {@link somenteLeitura} barra toda mutação (ficha, rolagem,
  * inventário, ações de ficha, caderno) e esconde as saídas para telas com o privilégio do mestre
- * (ficha completa, Iniciativa — desabilitada —, janela de histórico) — a tela continua sendo a do jogador,
+ * (ficha completa, Cenas — desabilitadas —, janela de histórico) — a tela continua sendo a do jogador,
  * vista como o alvo.
  */
 @Component({

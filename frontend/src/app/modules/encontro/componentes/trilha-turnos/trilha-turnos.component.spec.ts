@@ -66,6 +66,7 @@ describe('TrilhaTurnos', () => {
   const ativo: EncontroRecuperadoDto = {
     id: 1,
     campanhaId: 9,
+    cenaId: 900,
     nome: 'Contenção no Setor 12',
     status: EncontroStatusEnum.ATIVO,
     rodadaAtual: 2,

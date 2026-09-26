@@ -1,0 +1,178 @@
+// Hub de cenas (m7-23). Análogo aprovado: a Iniciativa do mestre sem combate (ui-38) — a casca
+// `_casca-iniciativa` (cabeçalho `//` + título + régua, divisor de seção) e os cartões "Combates
+// anteriores" (`.historico__card` de `painel-mestre.page.scss`), cuja receita o `.cena-cartao`
+// repete. Sem coluna de ações: o hub só navega e conduz o ciclo das cenas. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+@use "../../../encontro/paginas/casca-iniciativa" as casca;
+
+@include casca.casca("hub-cenas");
+
+.hub-cenas {
+    &__conteudo {
+        // A casca reserva o piso da barra inferior da coluna de ações, que o hub não tem.
+        @include bp.mobile {
+            padding-bottom: 12px;
+        }
+    }
+
+    &__bloco {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__lista {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    // Um cartão com os controles dele ao lado; no mobile os controles descem para baixo do cartão.
+    // (`__item`, não `__linha`: a casca já usa `__linha` para trilha | rolagens | palco.)
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+
+        @include bp.mobile {
+            flex-wrap: wrap;
+        }
+
+        .cena-cartao {
+            flex: 1;
+            min-width: 0;
+
+            @include bp.mobile {
+                flex-basis: 100%;
+            }
+        }
+
+        // "Encerrar" da cena ativa desce à direita, como os controles das planejadas.
+        > .hub-cenas__acao {
+            @include bp.mobile {
+                margin-left: auto;
+            }
+        }
+    }
+
+    &__controles {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+
+        @include bp.mobile {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+
+    &__acao {
+        flex: none;
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    // `chevron` é a seta para baixo; girada, "subir" (mesmo recurso do `app-paginador`).
+    &__seta-cima {
+        transform: rotate(180deg);
+    }
+
+    &__grade {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: var(--space-12);
+
+        @include bp.mobile {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__esqueleto-ativa {
+        height: 76px;
+    }
+
+    &__esqueleto-linha {
+        height: 56px;
+    }
+}
+
+// Cartão de cena — receita de `.historico__card` (superfície, borda, raio de cartão, hover com a
+// borda de destaque e a seta acendendo).
+.cena-cartao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-12);
+    padding: var(--space-12) 14px;
+    color: inherit;
+    text-decoration: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+
+    @include bp.mobile {
+        min-height: bp.$alvo-toque;
+    }
+
+    &:hover {
+        background: var(--surface-2);
+        border-color: var(--accent-border);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    // A cena em andamento: a mesma borda de destaque, parada, e mais respiro.
+    &--ativa {
+        padding: var(--space-16) 18px;
+        border-color: var(--accent-border);
+
+        .cena-cartao__nome {
+            font-size: 15px;
+        }
+    }
+
+    &__texto {
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+    }
+
+    &__nome {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    // O glifo `chevron` aponta para baixo; girado, indica "abrir".
+    &__seta {
+        flex: none;
+        color: var(--text-mute);
+        transform: rotate(-90deg);
+    }
+
+    &:hover &__seta {
+        color: var(--accent);
+    }
+}

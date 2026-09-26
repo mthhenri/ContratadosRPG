@@ -2066,6 +2066,9 @@ export const schemasContratosPublicos = {
             "campanhaId": {
                 "type": "number"
             },
+            "cenaId": {
+                "type": "number"
+            },
             "nome": {
                 "type": "string"
             },
@@ -2105,6 +2108,7 @@ export const schemasContratosPublicos = {
         "required": [
             "id",
             "campanhaId",
+            "cenaId",
             "nome",
             "status",
             "rodadaAtual",
@@ -2114,7 +2118,7 @@ export const schemasContratosPublicos = {
             "eventos"
         ],
         "additionalProperties": false,
-        "description": "Estado completo do encontro — o que a tela \"Iniciativa\" precisa para desenhar tudo: cabeçalho\n(`rodadaAtual`, `turnoIndice`), lista de combatentes, a `ordemRodada` já intercalada por\n`shared/regras/encontro` e o log. `turnoIndice` aponta para uma posição de `ordemRodada`."
+        "description": "Estado completo do encontro — o que a tela \"Iniciativa\" precisa para desenhar tudo: cabeçalho\n(`rodadaAtual`, `turnoIndice`), lista de combatentes, a `ordemRodada` já intercalada por\n`shared/regras/encontro` e o log. `turnoIndice` aponta para uma posição de `ordemRodada`.\n`cenaId` é a cena dona do encontro (m7-21: todo encontro vive dentro de uma cena)."
     },
     "EncontroAlteradoDto": {
         "type": "object",
@@ -2136,6 +2140,9 @@ export const schemasContratosPublicos = {
                 "type": "number"
             },
             "campanhaId": {
+                "type": "number"
+            },
+            "cenaId": {
                 "type": "number"
             },
             "nome": {
@@ -2162,6 +2169,7 @@ export const schemasContratosPublicos = {
         "required": [
             "id",
             "campanhaId",
+            "cenaId",
             "nome",
             "status",
             "rodadaAtual",
@@ -2169,7 +2177,7 @@ export const schemasContratosPublicos = {
             "createdDate"
         ],
         "additionalProperties": false,
-        "description": "Item de listagem dos encontros de uma campanha (corrente + histórico)."
+        "description": "Item de listagem dos encontros de uma campanha (corrente + histórico), com a cena dona."
     },
     "EncontroIniciarDto": {
         "type": "object",

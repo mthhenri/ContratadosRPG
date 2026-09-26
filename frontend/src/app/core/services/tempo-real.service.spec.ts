@@ -295,4 +295,18 @@ describe('TempoRealService', () => {
     socketFake.disparar('campanha:inventario-alterado', { campanhaId: 9 });
     expect(recebidos).toEqual([{ id: 9, naBase: false }, { campanhaId: 9 }]);
   });
+
+  it('repassa a cena alterada (m7-22) com o resumo tal como chegou', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.cenaAlterada$.subscribe((evento) => recebidos.push(evento));
+
+    const evento = {
+      campanhaId: 9,
+      cena: { id: 3, nome: 'Galpão', tipo: 'COMBATE', status: 'ATIVA', temEncontro: true },
+    };
+    socketFake.disparar('cena:alterada', evento);
+    expect(recebidos).toEqual([evento]);
+  });
 });

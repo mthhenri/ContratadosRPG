@@ -69,7 +69,7 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
  * motor daqui) — e o avanço do turno, só na própria vez. Sem combatente com ficha em campo (quem
  * só assiste), o palco mostra a grade de leitura; sem encontro, um estado vazio.
  *
- * Extraída do antigo `PainelEncontro` monolítico. Quem a monta é `PainelEncontroShell`, e o dado e
+ * Extraída do antigo `PainelEncontro` monolítico. Quem a monta é `PainelCenaShell`, e o dado e
  * o tempo real vêm de `EncontroPainelDadosService`. **Nenhuma regra vive aqui:** a ordem da rodada
  * e a Cadência chegam prontas do backend; o que a tela deriva é só apresentação.
  */

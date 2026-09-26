@@ -287,10 +287,12 @@ export interface EncontroRecuperarDto {
  * Estado completo do encontro — o que a tela "Iniciativa" precisa para desenhar tudo: cabeçalho
  * (`rodadaAtual`, `turnoIndice`), lista de combatentes, a `ordemRodada` já intercalada por
  * `shared/regras/encontro` e o log. `turnoIndice` aponta para uma posição de `ordemRodada`.
+ * `cenaId` é a cena dona do encontro (m7-21: todo encontro vive dentro de uma cena).
  */
 export interface EncontroRecuperadoDto {
   readonly id: number;
   readonly campanhaId: number;
+  readonly cenaId: number;
   readonly nome: string;
   readonly status: EncontroStatusEnum;
   readonly rodadaAtual: number;
@@ -309,10 +311,11 @@ export interface EncontroAlteradoDto {
   readonly encontro: EncontroRecuperadoDto;
 }
 
-/** Item de listagem dos encontros de uma campanha (corrente + histórico). */
+/** Item de listagem dos encontros de uma campanha (corrente + histórico), com a cena dona. */
 export interface EncontroResumoDto {
   readonly id: number;
   readonly campanhaId: number;
+  readonly cenaId: number;
   readonly nome: string;
   readonly status: EncontroStatusEnum;
   readonly rodadaAtual: number;

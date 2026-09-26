@@ -63,6 +63,7 @@ describe('IniciativaLeitura', () => {
   const encontro: EncontroRecuperadoDto = {
     id: 1,
     campanhaId: 8,
+    cenaId: 900,
     nome: 'Contenção no Setor 12',
     status: EncontroStatusEnum.ATIVO,
     rodadaAtual: 2,

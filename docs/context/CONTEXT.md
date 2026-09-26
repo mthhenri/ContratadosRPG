@@ -14,11 +14,18 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-26 · **Última decisão registrada:** `m7-22-backend-cena` concluída
+> **Última revisão:** 2026-09-26 · **Última decisão registrada:** `m7-23-frontend-hub-cenas`
+> concluída (spec em `done/`): hub de cenas (`/campanhas/:id/cenas`), dialog "Nova cena" com o tipo
+> obrigatório (Planejar / Abrir agora), chips por tipo, reordenação por setas, `PainelCenaShell`
+> (`/cenas/:cenaId`, bifurca por `cenaTemIniciativa` e por papel), redirects de `/iniciativa` e
+> `/iniciativa/:encontroId`, item "Iniciativa" → "Cenas" na navegação do mestre e do jogador,
+> `cenaId` em `EncontroRecuperadoDto`/`EncontroResumoDto` e a entrada `/cena` no `proxy.conf.json`.
+> Com ela, `m7-22` + `m7-23` estão prontas para subir juntas. Próxima: `m7-24` (spec ainda por
+> detalhar). Antes: `m7-22-backend-cena` concluída
 > (spec em `done/`): módulo `backend/cena` (CRUD de cena, `cena:alterada`, trava anti-vazamento de
 > cena `PLANEJADA`), `TransacaoService` (primeira transação em runtime do backend), "Encerrar" do
 > encontro encerra a cena-mãe e migration `0033` (`encontro.cena_id NOT NULL` + reconciliação). Só
-> backend — a tela é a `m7-23`, que **sobe junto** (ver §1). Próxima: `m7-23`. Antes:
+> backend — a tela é a `m7-23`, que **sobe junto** (ver §1). Antes:
 > `m7-21-contrato-migration-cena` concluída: contrato da Cena em `shared` e migrations `0031`/`0032`
 > (schema `cena` + backfill de uma cena `COMBATE` por encontro). Antes:
 > `i-027-caderno-janela-externa` concluída (spec em `done/`) e, com ela, a `I-027` inteira: o Caderno da campanha abre em janela
@@ -573,19 +580,17 @@
 
 ## 1. Próxima Task
 
-**Módulo de Cenas — próxima: `m7-23-frontend-hub-cenas.spec.md`.** `m7-21` (contrato + schema) e
-`m7-22` (backend + tempo real) concluídas em 2026-09-26. A `m7-23` completa o pedido do autor —
-tipar a cena na criação, com hub e redirecionamento das rotas de Iniciativa atuais — e já traz na
-spec as notas de contrato vindas da `m7-22` (inclusive expor `cenaId` no `EncontroRecuperadoDto`
-para o redirect). **Deploy: `m7-22` e `m7-23` sobem juntas.** Os encontros de backfill que estavam
-em `MONTAGEM` vivem em cenas `PLANEJADA`: com a `m7-22` só o mestre os vê, e iniciar, pedir
-iniciativa e encerrar exigem abrir a cena, o que antes do hub só se faz pela API. A cena de Investigação (`m7-25`) só pode começar depois
-de `m9-documentos-campanha.spec.md` ter ao menos o backend de documento + revelar/ocultar prontos.
-Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. **Atenção:**
-a task `espectador-coluna-acoes-e-iniciativa` (concluída depois desta entrada ter sido escrita, ver
-topo do arquivo) acrescentou a rota `campanhas/:id/espectador/iniciativa` e a página
-`PainelEncontroEspectador` — quem mexer no redirecionamento das rotas de Iniciativa pelo módulo de
-Cenas precisa considerar essa terceira rota, além das de mestre/jogador.
+**Módulo de Cenas — próxima: `m7-24` (painel de cena sem iniciativa).** `m7-21` (contrato +
+schema), `m7-22` (backend + tempo real) e `m7-23` (hub + "Nova cena" tipada) concluídas em
+2026-09-26 — o pedido imediato do autor (tipar a cena na criação) está entregue. **Deploy: `m7-22`
+e `m7-23` sobem juntas** (os encontros de backfill em `MONTAGEM` vivem em cenas `PLANEJADA`, que só
+o hub deixa o mestre abrir). A `m7-24` ainda não tem spec própria — só a linha da tabela em
+`m7-cenas.spec.md`; detalhá-la é o primeiro passo. Até lá, cena de Investigação/Resistência abre
+um placeholder honesto no `PainelCenaShell` ("ainda não está disponível" + voltar ao hub). A cena
+de Investigação completa (`m7-25`) só começa depois de `m9-documentos-campanha.spec.md` ter ao
+menos o backend de documento + revelar/ocultar prontos. A Iniciativa do espectador
+(`campanhas/:id/espectador/iniciativa`) ficou fora da `m7-23` e segue com a rota e o rótulo de
+antes (ela já mostra só o encontro da cena ativa).
 
 **Antes: `espectador-coluna-acoes-e-iniciativa` concluída (2026-09-21):** Painel do espectador
 padronizado (coluna de ações, cabeçalho "shell", toggle de descrição) e Iniciativa própria do
@@ -2405,14 +2410,29 @@ migrations `0032`/`0033`) e só nasce dentro dela, pela `CenaService` (`backend/
 na mesma transação — só para os tipos em que `cenaTemIniciativa` é verdadeiro. O ciclo de vida é o
 da cena: abrir (`PLANEJADA → ATIVA`) torna o encontro visível à mesa, encerrar a cena encerra o
 encontro junto, e no máximo uma cena `ATIVA` por campanha (abrir/criar já ativa encerra a atual na
-mesma operação). `POST campanha/:id/encontro` e `POST encontro/:id/encerrar` mantêm a URL, mas
-vivem no `CenaController` (criam uma cena `COMBATE` ativa / encerram a cena-mãe) até a `m7-23`
-trocar a tela. **Trava anti-vazamento:** encontro de cena `PLANEJADA` é só do mestre — `GET` 403,
+mesma operação). `POST campanha/:id/encontro` e `POST encontro/:id/encerrar` mantêm a URL no
+`CenaController` (criam uma cena `COMBATE` ativa / encerram a cena-mãe), mas desde a `m7-23`
+nenhuma tela os chama — o frontend cria e encerra pelos endpoints de cena (`CenaService` do
+frontend, `modules/cena/`). **Trava anti-vazamento:** encontro de cena `PLANEJADA` é só do mestre — `GET` 403,
 listagem omite, broadcast descarta o recorte de jogador/espectador; iniciar e pedir iniciativa
 exigem a cena aberta.
 
-Tela única (rota `/campanhas/:campanhaId/iniciativa`, `:encontroId` opcional para histórico) com
-duas visões em páginas separadas (`ui-39`): `PainelEncontroShell` resolve o papel
+**Hub e painel de cena (`m7-23`, `frontend/src/app/modules/cena/`).** `/campanhas/:campanhaId/cenas`
+é o `HubCenas`: cena ativa em destaque, planejadas na ordem manual (setas; só o mestre, e o backend
+nem as envia ao jogador), encerradas; "Nova cena" (`CenaCriarDialog`: nome + tipo obrigatório,
+"Planejar"/"Abrir agora", confirmação quando já há cena ativa), "Abrir" e "Encerrar". Qualquer
+`cena:alterada` da campanha refaz a listagem. `/campanhas/:campanhaId/cenas/:cenaId` é o
+`PainelCenaShell`: `cenaTemIniciativa(tipo)` → o painel de Iniciativa abaixo; senão, o
+placeholder da `m7-24`. As URLs antigas redirecionam: `/iniciativa` → hub; `/iniciativa/:encontroId`
+→ a cena dona do encontro (`redirecionarEncontroParaCena`, consulta `EncontroRecuperadoDto.cenaId`;
+falha → hub). No painel, o voltar vai ao hub, "Nova cena" leva ao dialog do hub (`?nova=1`), o menu
+de encerrados abre a cena dona de cada combate, e cena `PLANEJADA` ganha o selo "Cena planejada" +
+o item "Abrir cena" (pedir iniciativa/iniciar avisam em vez de chamar o backend). `/cena` precisa
+estar no `frontend/proxy.conf.json` (entrou na `m7-23`) — sem ele, `GET /cena/:id` não sai do dev
+server.
+
+Tela de Iniciativa (painel de uma cena com iniciativa) com
+duas visões em páginas separadas (`ui-39`): `PainelCenaShell` (antes `PainelEncontroShell`) resolve o papel
 (`EncontroPainelDadosService.visaoDoMestre`) e monta `PainelEncontroMestre` (todos os controles de
 condução) ou `PainelEncontroJogador` (rola a própria iniciativa e só pode avançar o turno da própria
 ficha — o backend confirma que o combatente do slot atual pertence à ficha do usuário ativo). O

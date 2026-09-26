@@ -1,9 +1,10 @@
 import { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { Subject, map, of } from 'rxjs';
 import { vi } from 'vitest';
 
+import type { CenaAlteradaDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   EncontroAlteradoDto,
   EncontroRecuperadoDto,
@@ -19,6 +20,8 @@ import type {
 import {
   ArquetipoEnum,
   CadenciaEnum,
+  CenaStatusEnum,
+  CenaTipoEnum,
   ClasseEnum,
   CombatenteOrigemEnum,
   EncontroStatusEnum,
@@ -33,6 +36,7 @@ import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
+import { CenaService } from '../../../cena/cena.service';
 import { EncontroService } from '../../encontro.service';
 import { EncontroPainelDadosService } from './encontro-painel-dados.service';
 
@@ -42,8 +46,13 @@ import { EncontroPainelDadosService } from './encontro-painel-dados.service';
  * **tela** deriva — de quem é a vez, quem já agiu, quantas ações restam — a partir da
  * `ordemRodada` que o backend calculou com `shared/regras/encontro`: nenhuma regra de
  * ordem/Cadência é recalculada aqui, e a ordem chega pronta.
+ *
+ * Desde a m7-23 a tela é a de uma **cena** (`/cenas/:cenaId`): o dublê do `CenaService` devolve a
+ * cena `CENA_ID` com o encontro do teste pendurado — status da cena coerente com o do encontro
+ * (m7-22), salvo quando o teste pede outro.
  */
 export const CAMPANHA_ID = 9;
+export const CENA_ID = 900;
 export const USUARIO_MESTRE = 1;
 export const USUARIO_JOGADOR = 7;
 
@@ -92,6 +101,7 @@ export const criarCombatente = (
 export const encontroAtivo: EncontroRecuperadoDto = {
   id: 1,
   campanhaId: CAMPANHA_ID,
+  cenaId: 900,
   nome: 'Contenção no Setor 12',
   status: EncontroStatusEnum.ATIVO,
   rodadaAtual: 2,
@@ -218,14 +228,26 @@ export const fichasDeTeste = [
   },
 ] as unknown as FichaResumoDto[];
 
+/** O status de cena que acompanha cada status de encontro (pares válidos da m7-22). */
+const statusDaCena = (encontro: EncontroRecuperadoDto): CenaStatusEnum =>
+  encontro.status === EncontroStatusEnum.ENCERRADO
+    ? CenaStatusEnum.ENCERRADA
+    : CenaStatusEnum.ATIVA;
+
 export interface OpcoesDoPainel {
   readonly estado?: EncontroRecuperadoDto;
+  /** Status da cena da rota — por padrão, o par do status do encontro. */
+  readonly cenaStatus?: CenaStatusEnum;
+  /** Tipo da cena da rota — por padrão, `COMBATE`. */
+  readonly cenaTipo?: CenaTipoEnum;
+  /** A cena chega sem encontro (`encontro: null`) — o estado vazio da tela. */
+  readonly semEncontro?: boolean;
   readonly usuarioId?: number;
   readonly historicoExtra?: readonly EncontroResumoDto[];
   readonly incluirFichaDoJogador?: boolean;
   /** Os membros nunca chegam (`listarMembros` fica pendente) — o papel é desconhecido. */
   readonly membrosPendentes?: boolean;
-  /** A lista de encontros chega, mas o encontro em si (`recuperarEncontro`) fica pendente. */
+  /** A cena (e com ela o encontro) fica pendente. */
   readonly encontroPendente?: boolean;
   /**
    * Não provê o `EncontroPainelDadosService` no `TestBed`: a casca o declara nos próprios
@@ -242,6 +264,9 @@ export interface OpcoesDoPainel {
 export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const {
     estado = encontroAtivo,
+    cenaStatus,
+    cenaTipo = CenaTipoEnum.COMBATE,
+    semEncontro = false,
     usuarioId = USUARIO_MESTRE,
     historicoExtra = [],
     incluirFichaDoJogador = false,
@@ -258,12 +283,41 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const presencaEsquadraoCaderno$ = new Subject<unknown>();
   const membrosPendentes$ = new Subject<CampanhaMembroResumoDto[]>();
   const encontroPendente$ = new Subject<EncontroRecuperadoDto>();
+  const cenaAlterada$ = new Subject<CenaAlteradaDto>();
+  const cenaDe = (
+    encontro: EncontroRecuperadoDto | null,
+    status: CenaStatusEnum = cenaStatus ?? statusDaCena(estado),
+  ): CenaRecuperadaDto => ({
+    id: CENA_ID,
+    campanhaId: CAMPANHA_ID,
+    nome: estado.nome,
+    tipo: cenaTipo,
+    status,
+    encontro,
+  });
+  const cenaService = {
+    recuperarCena: vi.fn(() =>
+      encontroPendente
+        ? encontroPendente$.pipe(map((encontro) => cenaDe(encontro)))
+        : of(cenaDe(semEncontro ? null : estado)),
+    ),
+    abrirCena: vi.fn(() => of(cenaDe(estado, CenaStatusEnum.ATIVA))),
+    encerrarCena: vi.fn(() =>
+      of(
+        cenaDe(
+          { ...estado, status: EncontroStatusEnum.ENCERRADO },
+          CenaStatusEnum.ENCERRADA,
+        ),
+      ),
+    ),
+  };
   const encontroService = {
     listarPorCampanha: vi.fn(() =>
       of([
         {
           id: estado.id,
           campanhaId: estado.campanhaId,
+          cenaId: CENA_ID,
           nome: estado.nome,
           status: estado.status,
           rodadaAtual: estado.rodadaAtual,
@@ -273,17 +327,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
         ...historicoExtra,
       ]),
     ),
-    recuperarEncontro: vi.fn(() => (encontroPendente ? encontroPendente$ : of(estado))),
-    criarEncontro: vi.fn(() =>
-      of({
-        id: estado.id,
-        campanhaId: estado.campanhaId,
-        nome: 'Contenção no Setor 12',
-        status: EncontroStatusEnum.MONTAGEM,
-        rodadaAtual: 0,
-        createdDate: '2026-08-17T00:00:00.000Z',
-      }),
-    ),
+    recuperarEncontro: vi.fn(() => of(estado)),
     rolarIniciativasFaltantes: vi.fn(() => of(estado)),
     atribuirIniciativa: vi.fn(() => of(estado)),
     alterarFormulaIniciativa: vi.fn(() => of(estado)),
@@ -294,7 +338,6 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     ajustarVida: vi.fn(() => of(estado)),
     adicionarCombatente: vi.fn(() => of(estado)),
     removerCombatente: vi.fn(() => of(estado)),
-    encerrarEncontro: vi.fn(() => of(estado)),
     alterarIdentidadeAvulso: vi.fn(() => of(estado)),
     alterarImagemAvulso: vi.fn(() => of(estado)),
     excluirImagemAvulso: vi.fn(() => of(estado)),
@@ -315,6 +358,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
       provideRouter([]),
       ...(semServicoDeDados ? [] : [EncontroPainelDadosService]),
       { provide: EncontroService, useValue: encontroService },
+      { provide: CenaService, useValue: cenaService },
       {
         provide: RolagemService,
         useValue: {
@@ -355,6 +399,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
           conectado: () => true,
           reconexao: () => 0,
           encontroAlterado$,
+          cenaAlterada$,
           encontroIniciativaPedido$,
           rolagemRegistrada$,
           rolagemExcluida$: new Subject<never>(),
@@ -365,12 +410,14 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
         },
       },
       {
-        // `paramMap` como Observable: o serviço escuta a troca de `:encontroId` (histórico) em vez
-        // de ler o snapshot uma vez, porque o Angular reusa o componente entre esses dois estados.
+        // `paramMap` como Observable: o serviço escuta a troca de `:cenaId` em vez de ler o
+        // snapshot uma vez, porque o Angular reusa o componente ao ir de uma cena a outra.
         provide: ActivatedRoute,
         useValue: {
           snapshot: { paramMap: new Map([['campanhaId', String(CAMPANHA_ID)]]) },
-          paramMap: of(convertToParamMap({ campanhaId: String(CAMPANHA_ID) })),
+          paramMap: of(
+            convertToParamMap({ campanhaId: String(CAMPANHA_ID), cenaId: String(CENA_ID) }),
+          ),
         },
       },
     ],
@@ -378,6 +425,8 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
 
   return {
     encontroService,
+    cenaService,
+    cenaAlterada$,
     fichaService,
     campanhaService,
     encontroAlterado$,

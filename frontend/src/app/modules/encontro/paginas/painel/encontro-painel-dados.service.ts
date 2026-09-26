@@ -1,8 +1,9 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
-import { Observable, filter, finalize, of, switchMap } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, filter, finalize } from 'rxjs';
 
+import type { CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   EncontroCombatenteResumoDto,
   EncontroRecuperadoDto,
@@ -12,6 +13,7 @@ import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campa
 import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
+  CenaStatusEnum,
   EncontroStatusEnum,
   NivelAmeacaEnum,
   TipoCampanhaMembroPapelEnum,
@@ -23,6 +25,7 @@ import { TopbarContextoService } from '../../../../core/services/topbar-contexto
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
+import { CenaService } from '../../../cena/cena.service';
 import { EncontroService } from '../../encontro.service';
 import {
   combatenteEhDaVez,
@@ -36,8 +39,13 @@ import {
  * Dado e tempo real compartilhados entre `PainelEncontroMestre` e `PainelEncontroJogador`
  * (`ui-39`) — extraído do antigo `PainelEncontro` monolítico, no molde de
  * `CampanhaDetalheDadosService`, para não duplicar carga nem assinaturas de socket entre os dois
- * papéis. Provido por `PainelEncontroShell` (`providers`, escopo de rota — uma instância por
- * navegação para `/campanhas/:campanhaId/iniciativa`), nunca `providedIn: 'root'`.
+ * papéis. Provido por `PainelCenaShell` (`providers`, escopo de rota — uma instância por navegação
+ * para `/campanhas/:campanhaId/cenas/:cenaId`), nunca `providedIn: 'root'`.
+ *
+ * **A tela é de uma cena (m7-23).** O `:cenaId` da rota diz qual; o encontro exibido é o dela
+ * (`CenaRecuperadaDto.encontro`, já no recorte de quem pediu). O backend recusa ao jogador a cena
+ * `PLANEJADA` (trava anti-vazamento, m7-22) — nesse caso, e em qualquer falha de carga, a tela
+ * devolve o usuário ao hub de cenas em vez de mostrar um palco vazio.
  *
  * **Nenhuma regra vive aqui.** A ordem da rodada e a intercalação de Cadência chegam prontas do
  * backend (`ordemRodada`, `shared/regras/encontro`); o que o serviço deriva é só apresentação — de
@@ -47,9 +55,14 @@ import {
  * chamada e, para os demais participantes, pelo broadcast `encontro:alterado` na sala
  * `campanha:<id>`. A reconexão refaz o fetch, como nas telas de ficha.
  */
+/** A cena da tela, sem o encontro — que vive no próprio sinal, trocado a cada broadcast. */
+export type CenaDoPainelDto = Omit<CenaRecuperadaDto, 'encontro'>;
+
 @Injectable()
 export class EncontroPainelDadosService {
   private readonly encontroService = inject(EncontroService);
+  private readonly cenaService = inject(CenaService);
+  private readonly roteador = inject(Router);
   private readonly campanhaService = inject(CampanhaService);
   private readonly fichaService = inject(FichaService);
   private readonly rolagemService = inject(RolagemService);
@@ -62,13 +75,11 @@ export class EncontroPainelDadosService {
   /** `campanhaId` da rota — sempre presente (a rota só existe sob `/campanhas/:campanhaId`). */
   readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
 
-  /**
-   * `encontroId` da rota — presente só quando se abre um encontro **do histórico**. Sem ele a tela
-   * resolve sozinha o encontro aberto da campanha, que é o caso normal de mesa.
-   */
-  private readonly encontroIdDaRota = signal<string | null>(null);
+  /** `cenaId` da rota — a cena que a tela mostra. Sinal porque trocar de cena reusa o componente. */
+  private readonly cenaIdDaRota = signal<number | null>(null);
 
   private readonly carregandoEncontro = signal(true);
+  private readonly cenaAtual = signal<CenaDoPainelDto | null>(null);
   private readonly encontroAtual = signal<EncontroRecuperadoDto | null>(null);
   private readonly fichasDaCampanha = signal<readonly FichaResumoDto[]>([]);
   private readonly encontrosDaCampanhaInterno = signal<readonly EncontroResumoDto[]>([]);
@@ -78,6 +89,8 @@ export class EncontroPainelDadosService {
   private readonly carregandoFeed = signal(true);
   private readonly emOperacaoInterno = signal(false);
 
+  /** A cena da tela — `null` só enquanto carrega. */
+  readonly cena = this.cenaAtual.asReadonly();
   readonly encontro = this.encontroAtual.asReadonly();
   readonly fichasCampanha = this.fichasDaCampanha.asReadonly();
   /** Todos os encontros da campanha — o aberto (se houver) e o histórico dos encerrados. */
@@ -130,6 +143,12 @@ export class EncontroPainelDadosService {
   readonly emMontagem = computed(() => this.encontro()?.status === EncontroStatusEnum.MONTAGEM);
 
   readonly emCombate = computed(() => this.encontro()?.status === EncontroStatusEnum.ATIVO);
+
+  /**
+   * `true` quando a cena ainda está `PLANEJADA` (só o mestre a vê): dá para montar o encontro, mas
+   * pedir iniciativa e iniciar o combate exigem abri-la antes (o backend recusa, m7-22).
+   */
+  readonly cenaPlanejada = computed(() => this.cena()?.status === CenaStatusEnum.PLANEJADA);
 
   /** `true` quando a tela está mostrando um encontro do histórico, não o combate da mesa. */
   readonly vendoHistorico = computed(
@@ -193,12 +212,12 @@ export class EncontroPainelDadosService {
 
     this.carregarRolagens();
 
-    // `paramMap` (e não o `snapshot`) porque abrir um encontro do histórico troca só o parâmetro:
-    // o Angular reusa o componente, e um `snapshot` lido no construtor ficaria congelado no
-    // primeiro valor. Emite de imediato, então também faz a carga inicial.
+    // `paramMap` (e não o `snapshot`) porque ir de uma cena a outra troca só o parâmetro: o
+    // Angular reusa o componente, e um `snapshot` lido no construtor ficaria congelado no primeiro
+    // valor. Emite de imediato, então também faz a carga inicial.
     this.rotaAtiva.paramMap.pipe(takeUntilDestroyed()).subscribe({
       next: (parametros) => {
-        this.encontroIdDaRota.set(parametros.get('encontroId'));
+        this.cenaIdDaRota.set(Number(parametros.get('cenaId')));
         this.carregar();
       },
     });
@@ -207,19 +226,33 @@ export class EncontroPainelDadosService {
     this.tempoRealService.entrarSalaCampanha(this.campanhaId);
     this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(this.campanhaId));
 
+    // Só o encontro **desta** cena: o de outra cena (a que o mestre abriu depois, por exemplo) não
+    // arrasta quem está nesta tela — ir até ela é pelo hub.
     this.tempoRealService.encontroAlterado$
       .pipe(
-        filter((evento) => evento.encontro.campanhaId === this.campanhaId),
+        filter(
+          (evento) =>
+            evento.encontro.campanhaId === this.campanhaId &&
+            evento.encontro.cenaId === this.cenaIdDaRota(),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: (evento) => this.encontroAtual.set(evento.encontro) });
+
+    // Abrir/encerrar a cena desta tela (por aqui, pelo hub ou por outra aba do mestre).
+    this.tempoRealService.cenaAlterada$
+      .pipe(
+        filter(
+          (evento) =>
+            evento.campanhaId === this.campanhaId && evento.cena.id === this.cenaIdDaRota(),
+        ),
         takeUntilDestroyed(),
       )
       .subscribe({
-        next: (evento) => {
-          // Quem está lendo um encontro do histórico não é arrastado para o combate corrente.
-          if (this.vendoHistorico() && evento.encontro.id !== this.encontro()?.id) {
-            return;
-          }
-          this.encontroAtual.set(evento.encontro);
-        },
+        next: ({ cena }) =>
+          this.cenaAtual.update((atual) =>
+            atual ? { ...atual, nome: cena.nome, tipo: cena.tipo, status: cena.status } : atual,
+          ),
       });
 
     effect(() => {
@@ -251,30 +284,27 @@ export class EncontroPainelDadosService {
   }
 
   /**
-   * Carrega o encontro da tela e o contexto de apresentação. Sem `:encontroId` na rota, o encontro
-   * é o **aberto** da campanha (o caso de mesa); com ele, é o do histórico que o usuário escolheu.
+   * Carrega a cena da rota (com o encontro dela) e o contexto de apresentação. A lista de encontros
+   * da campanha só alimenta o menu de encerrados do mestre — não decide o que a tela mostra.
    */
   private carregar(): void {
+    const cenaId = this.cenaIdDaRota();
+    if (cenaId === null) {
+      return;
+    }
     this.carregandoEncontro.set(true);
-    // A carga só termina quando o encontro em si chega — encadeado, e não disparado de dentro do
-    // `next` da lista: entre a lista e o encontro a tela já não "carrega" e ainda não tem encontro,
-    // e piscaria o estado vazio ("Nenhum combate em andamento" / "Novo combate") por uma ida à rede.
+    this.cenaService
+      .recuperarCena(cenaId)
+      .pipe(finalize(() => this.carregandoEncontro.set(false)))
+      .subscribe({
+        next: (recuperada) => this.definirCena(recuperada),
+        // Cena planejada para quem não é mestre (403) ou inexistente (404): de volta ao hub.
+        error: () => void this.roteador.navigate(['/campanhas', this.campanhaId, 'cenas']),
+      });
+
     this.encontroService
       .listarPorCampanha(this.campanhaId)
-      .pipe(
-        switchMap((encontros) => {
-          this.encontrosDaCampanhaInterno.set(encontros);
-          const idDaRota = this.encontroIdDaRota();
-          const pedido = idDaRota === null ? null : Number(idDaRota);
-          const alvo =
-            pedido === null
-              ? encontros.find((resumo) => resumo.status !== EncontroStatusEnum.ENCERRADO)
-              : encontros.find((resumo) => resumo.id === pedido);
-          return alvo ? this.encontroService.recuperarEncontro(alvo.id) : of(null);
-        }),
-        finalize(() => this.carregandoEncontro.set(false)),
-      )
-      .subscribe({ next: (estado) => this.encontroAtual.set(estado) });
+      .subscribe({ next: (encontros) => this.encontrosDaCampanhaInterno.set(encontros) });
 
     this.fichaService
       .listarFichas(this.campanhaId)
@@ -302,6 +332,13 @@ export class EncontroPainelDadosService {
   /** Troca o estado da tela pelo do encontro recém-criado/recuperado (fora do `executarNoEncontro`). */
   definirEncontro(estado: EncontroRecuperadoDto): void {
     this.encontroAtual.set(estado);
+  }
+
+  /** Troca a cena e o encontro dela de uma vez — carga e respostas de abrir/encerrar a cena. */
+  definirCena(recuperada: CenaRecuperadaDto): void {
+    const { encontro, ...cena } = recuperada;
+    this.cenaAtual.set(cena);
+    this.encontroAtual.set(encontro);
   }
 
   /** `true` quando é a vez deste combatente. */

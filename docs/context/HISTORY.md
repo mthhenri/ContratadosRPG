@@ -1,5 +1,70 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m7-23: hub de cenas, "Nova cena" tipada e redirects da Iniciativa
+
+Pedido do autor: "pode fazer a m7-23". Entrega o pedido imediato do milestone de Cenas: a cena
+nasce tipada. Fecha o par de deploy com a `m7-22` (as duas sobem juntas).
+
+**O que mudou.**
+- **Contrato:** `cenaId` em `EncontroRecuperadoDto` (a spec pedia, para o redirect) e em
+  `EncontroResumoDto` (para o menu de encerrados do painel abrir a cena dona de cada combate).
+  Backend: `montarEstado` e `listarPorCampanha` do encontro passaram a devolvê-lo; OpenAPI
+  regenerado.
+- **Módulo `frontend/src/app/modules/cena/`** (novo):
+  - `CenaService`, o transporte dos endpoints da `m7-22`;
+  - `rotulos-cena.ts`;
+  - `cena.routes.ts`, com o hub e `:cenaId`;
+  - `redirecionar-encontro-para-cena.ts`;
+  - `CenaCriarDialog`: nome e tipo obrigatório; "Planejar"/"Abrir agora"; confirmação quando já há cena ativa;
+  - `HubCenas`: ativa em destaque, planejadas com setas, encerradas; "Abrir"/"Encerrar"; relista a cada `cena:alterada`;
+  - `PainelCenaShell`, que sucede o `PainelEncontroShell` e bifurca por `cenaTemIniciativa` e por papel. Tipo sem iniciativa cai num placeholder declarado como pendência da `m7-24`.
+- **Rotas:**
+  - `encontro.routes.ts` saiu e entrou `campanhas/:campanhaId/cenas`;
+  - `/iniciativa` redireciona para o hub (`redirectTo` estático);
+  - `/iniciativa/:encontroId` usa uma `RedirectFunction` assíncrona que consulta `GET encontro/:id` e cai no hub se a consulta falhar.
+- **Navegação:** "Iniciativa" virou "Cenas" na coluna de ações do mestre e na do jogador (coluna
+  e menu do cabeçalho; na prévia continua desabilitado). O espectador ficou de fora.
+- **Painel existente:**
+  - `EncontroPainelDadosService` carrega pela cena da rota. Aceita só o `encontro:alterado` da própria cena, acompanha `cena:alterada` e volta ao hub em 403/404.
+  - No `PainelEncontroMestre`/`Jogador`, só o que o hub tornou inevitável: o voltar vai ao hub; o dialog "Novo combate" saiu ("Nova cena" abre o do hub com `?nova=1`); o menu de encerrados leva à cena; "Combate atual"/"Novo combate" do cabeçalho saíram; cena planejada ganha selo e "Abrir cena", e pedir/iniciar avisam antes de chamar o backend; encerrar passa pela cena.
+  - Saíram `criarEncontro`/`encerrarEncontro` do `EncontroService` do frontend. As rotas legadas continuam no backend, sem consumidor de tela.
+- **`TempoRealService`:** novo `cenaAlterada$`.
+
+**Decisão de escopo registrada.** O `encontro/` ficou no lugar e o `cena/` nasceu ao lado, em vez
+de mover ~35 arquivos numa task que já troca rotas e navegação. Detalhe e demais decisões (1–8)
+em `docs/specs/done/m7-23-frontend-hub-cenas.spec.md`.
+
+**Testes.**
+- Frontend: 2252 testes em 157 arquivos, todos verdes. Specs novos: `CenaService`, `CenaCriarDialog` (inclui criar com os cinco tipos), `HubCenas`, `PainelCenaShell` (tipos com e sem iniciativa) e o redirect.
+- Specs atualizados: dados do painel, mestre, jogador, navegação, `app.routes` (roteamento real de `/iniciativa` até a guarda da rota nova) e `tempo-real`.
+- Backend: 621 testes; só mudou a fixture da revelação, com `cenaId`.
+- Shared: 769 testes.
+- Lint: zero erros nos três workspaces; os warnings de `quotes` já existiam.
+- Os erros de `tsc` nos specs de ficha/rolagem/seed/conducao/openapi já existiam e seguem registrados na `m7-22`.
+
+**Verificação ao vivo** (skill `verify`): backend e frontend isolados em 3101/4301 com a origem
+casada, para não mexer nos do autor. Cenário: mestre e jogadora em contextos separados.
+
+Em `1920×1080` foram confirmados:
+- `/iniciativa` cai no hub;
+- o dialog abre com as duas ações desabilitadas sem tipo;
+- as cinco cenas foram criadas (quatro planejadas pelo dialog, Combate aberta agora) e cada uma aparece com o chip do tipo;
+- a jogadora não viu nenhuma planejada, sem recarregar (sentinela preservada);
+- as setas reordenam as planejadas;
+- "Abrir agora" com cena ativa pediu confirmação e entrou no painel. A jogadora viu, ao vivo, a nova cena "em cena" e a antiga no histórico;
+- os painéis de Iniciativa de mestre e jogador estão iguais aos de antes;
+- `/iniciativa/:encontroId` levou à cena dona do encontro;
+- cena de Investigação mostra o placeholder, e a de Furtiva planejada mostra "Cena planejada" + "Abrir cena";
+- a jogadora que força a URL de uma planejada recebe 403 e volta ao hub;
+- a coluna da campanha mostra "Cenas".
+
+Em `360×800`: sem overflow horizontal em nenhuma tela e todos os alvos com pelo menos 44px.
+
+**Achados que só apareceram na verificação.**
+1. **`/cena` faltava no `frontend/proxy.conf.json`.** Os testes não pegam isso, e em dev `GET /cena/:id` não sairia do servidor. Entrou uma regex com o mesmo boundary de `/ficha`/`/campanha`. Um `ng serve` já no ar precisa reiniciar.
+2. **Colisão de BEM no mobile.** O hub usava `hub-cenas__linha`, mas o mixin `casca` já define `&__linha` (trilha | rolagens | palco) com `flex-direction: column` no tablet e no mobile. Em 360px, os cartões curtos e o "Encerrar" encolhiam e ficavam centralizados. O elemento foi renomeado para `__item` e ganhou um comentário.
+3. **"Nova cena" do cabeçalho com 33px de altura no mobile.** Recebeu o piso de toque. Por fim, o "Encerrar" foi alinhado à direita, como os controles das planejadas.
+
 ## 2026-09-26 — m7-22: backend da Cena, trava anti-vazamento e encontro sempre dentro de uma cena
 
 Segunda task do milestone `m7-cenas`. Nasceu o módulo `backend/src/modules/cena/`

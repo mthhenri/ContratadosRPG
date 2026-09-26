@@ -45,6 +45,14 @@
     "secure": false,
     "changeOrigin": true
   },
+  // Cena (m7-22/m7-23): `GET /cena/:id`, `POST /cena/:id/abrir|encerrar`. Regex com o mesmo
+  // boundary de /ficha e /campanha — a rota de app das cenas é "/campanhas/:id/cenas", mas o
+  // boundary deixa explícito que só a API singular é encaminhada.
+  "^/cena(?:$|[/?])": {
+    "target": "http://localhost:3100",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/usuario": {
     "target": "http://localhost:3100",
     "secure": false,

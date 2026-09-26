@@ -255,14 +255,19 @@ describe('CampanhaDetalheMestre', () => {
     expect(raiz.querySelector('app-espectador-ficha-card')).toBeNull();
   });
 
-  it('renderiza a coluna de ações com Membros, Iniciativa, Convites, Editar, Excluir, Calculadora, Caderno', () => {
+  it('renderiza a coluna de ações com Membros, Cenas, Convites, Editar, Excluir, Calculadora, Caderno', () => {
     const { raiz } = montar();
     const rotulos = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).map((el) =>
       el.textContent?.trim(),
     );
     expect(rotulos).toEqual(
-      expect.arrayContaining(['Membros', 'Iniciativa', 'Convites', 'Editar', 'Excluir', 'Calculadora', 'Caderno']),
+      expect.arrayContaining(['Membros', 'Cenas', 'Convites', 'Editar', 'Excluir', 'Calculadora', 'Caderno']),
     );
+    // O item "Cenas" (m7-23, antiga "Iniciativa") leva ao hub de cenas.
+    const cenas = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+      (el) => el.textContent?.trim() === 'Cenas',
+    );
+    expect(cenas?.getAttribute('href')).toMatch(/^\/campanhas\/\d+\/cenas$/);
   });
 
   it('não renderiza banner de crítico nem coluna "Membros" ao lado do Esquadrão', () => {

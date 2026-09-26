@@ -138,6 +138,7 @@ describe('CampanhaPreviaJogador', () => {
   const encontroAtivo: EncontroRecuperadoDto = {
     id: 9,
     campanhaId: CAMPANHA_ID,
+    cenaId: 900,
     nome: 'Emboscada no Setor 4',
     status: EncontroStatusEnum.ATIVO,
     rodadaAtual: 1,
@@ -431,11 +432,11 @@ describe('CampanhaPreviaJogador', () => {
     });
   });
 
-  describe('Iniciativa', () => {
+  describe('Cenas (antiga Iniciativa, m7-23)', () => {
     it('fica desabilitada mesmo com combate em andamento, sem abrir leitura nem a rota do mestre', () => {
       const { fixture, raiz } = montar({ previaResposta: previa({ encontroAtivo }) });
 
-      const item = itemColuna(raiz, 'Iniciativa');
+      const item = itemColuna(raiz, 'Cenas');
       expect(item.tagName).toBe('BUTTON');
       expect(item.disabled).toBe(true);
       item.click();

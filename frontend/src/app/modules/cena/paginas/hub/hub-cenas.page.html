@@ -1,0 +1,193 @@
+<!-- Hub de cenas (m7-23): a casca da Iniciativa sem a coluna de ações — cabeçalho da tela, a cena em
+     andamento em destaque, as planejadas (só o mestre) e o histórico. Cada cartão leva ao painel da
+     cena; os controles de condução (abrir, reordenar, encerrar) ficam ao lado do cartão. -->
+<div class="hub-cenas">
+    <div class="hub-cenas__conteudo">
+        <header class="hub-cenas__cabecalho">
+            <a
+                app-botao-icone
+                tamanho="padrao"
+                [routerLink]="['/campanhas', campanhaId]"
+                aria-label="Voltar à campanha"
+                [appTooltip]="'Voltar à campanha'"
+            >
+                <app-icone nome="voltar" />
+            </a>
+            <span class="hub-cenas__indice">//</span>
+            <h1 class="hub-cenas__titulo">Cenas</h1>
+            @if (campanhaNome()) {
+            <span class="hub-cenas__campanha">{{ campanhaNome() }}</span>
+            }
+            <span class="hub-cenas__regua"></span>
+            @if (!carregando() && ehMestre()) {
+            <button
+                app-botao
+                variante="primario"
+                tamanho="pequeno"
+                class="hub-cenas__acao"
+                type="button"
+                [disabled]="emOperacao()"
+                (click)="abrirNovaCena()"
+            >
+                <app-icone nome="mais" />
+                Nova cena
+            </button>
+            }
+        </header>
+
+        @if (carregando()) {
+        <div class="hub-cenas__esqueleto" role="status" aria-label="Carregando as cenas">
+            <app-esqueleto class="hub-cenas__esqueleto-ativa" />
+            @for (i of [0, 1, 2]; track i) {
+            <app-esqueleto class="hub-cenas__esqueleto-linha" />
+            }
+        </div>
+        } @else {
+        <section class="hub-cenas__bloco" aria-label="Cena em andamento">
+            <header class="hub-cenas__secao">
+                <h2 class="hub-cenas__secao-titulo">Em cena</h2>
+                <span class="hub-cenas__secao-regua"></span>
+            </header>
+            @if (ativa(); as cena) {
+            <div class="hub-cenas__item">
+                <a
+                    class="cena-cartao cena-cartao--ativa"
+                    [routerLink]="['/campanhas', campanhaId, 'cenas', cena.id]"
+                >
+                    <ng-container
+                        *ngTemplateOutlet="conteudoCartao; context: { $implicit: cena }"
+                    />
+                </a>
+                @if (ehMestre()) {
+                <button
+                    app-botao
+                    variante="secundario"
+                    tamanho="pequeno"
+                    class="hub-cenas__acao"
+                    type="button"
+                    [appTooltip]="'Encerrar a cena — ela vai para o histórico'"
+                    [disabled]="emOperacao()"
+                    (click)="encerrarAtiva(cena)"
+                >
+                    Encerrar
+                </button>
+                }
+            </div>
+            } @else {
+            <app-estado-vazio
+                tamanho="compacto"
+                icone="combate"
+                titulo="Nenhuma cena em andamento."
+                [linhaApoio]="
+                    ehMestre()
+                        ? 'Abra uma cena planejada ou crie uma nova.'
+                        : 'Quando o mestre abrir uma cena, ela aparece aqui.'
+                "
+            />
+            }
+        </section>
+
+        @if (ehMestre()) {
+        <section class="hub-cenas__bloco" aria-label="Cenas planejadas">
+            <header class="hub-cenas__secao">
+                <h2 class="hub-cenas__secao-titulo">Planejadas</h2>
+                <span class="hub-cenas__secao-regua"></span>
+                <span class="hub-cenas__secao-meta">{{ planejadas().length }}</span>
+            </header>
+            @if (planejadas().length) {
+            <ol class="hub-cenas__lista">
+                @for (cena of planejadas(); track cena.id; let primeira = $first; let ultima =
+                $last) {
+                <li class="hub-cenas__item">
+                    <a
+                        class="cena-cartao"
+                        [routerLink]="['/campanhas', campanhaId, 'cenas', cena.id]"
+                    >
+                        <ng-container
+                            *ngTemplateOutlet="conteudoCartao; context: { $implicit: cena }"
+                        />
+                    </a>
+                    <div class="hub-cenas__controles">
+                        <button
+                            app-botao-icone
+                            tamanho="padrao"
+                            type="button"
+                            [attr.aria-label]="'Subir ' + cena.nome"
+                            [appTooltip]="'Subir na ordem'"
+                            [disabled]="primeira || emOperacao()"
+                            (click)="moverPlanejada(cena, -1)"
+                        >
+                            <app-icone nome="chevron" class="hub-cenas__seta-cima" />
+                        </button>
+                        <button
+                            app-botao-icone
+                            tamanho="padrao"
+                            type="button"
+                            [attr.aria-label]="'Descer ' + cena.nome"
+                            [appTooltip]="'Descer na ordem'"
+                            [disabled]="ultima || emOperacao()"
+                            (click)="moverPlanejada(cena, 1)"
+                        >
+                            <app-icone nome="chevron" />
+                        </button>
+                        <button
+                            app-botao
+                            variante="secundario"
+                            tamanho="pequeno"
+                            class="hub-cenas__acao"
+                            type="button"
+                            [appTooltip]="'Abrir a cena para a mesa'"
+                            [disabled]="emOperacao()"
+                            (click)="abrirPlanejada(cena)"
+                        >
+                            Abrir
+                        </button>
+                    </div>
+                </li>
+                }
+            </ol>
+            } @else {
+            <app-estado-vazio
+                tamanho="compacto"
+                titulo="Nenhuma cena planejada. Planeje as próximas cenas para abri-las na hora certa."
+            />
+            }
+        </section>
+        } @if (encerradas().length) {
+        <section class="hub-cenas__bloco" aria-label="Cenas encerradas">
+            <header class="hub-cenas__secao">
+                <h2 class="hub-cenas__secao-titulo">Encerradas</h2>
+                <span class="hub-cenas__secao-regua"></span>
+                <span class="hub-cenas__secao-meta">{{ encerradas().length }}</span>
+            </header>
+            <div class="hub-cenas__grade">
+                @for (cena of encerradas(); track cena.id) {
+                <a class="cena-cartao" [routerLink]="['/campanhas', campanhaId, 'cenas', cena.id]">
+                    <ng-container
+                        *ngTemplateOutlet="conteudoCartao; context: { $implicit: cena }"
+                    />
+                </a>
+                }
+            </div>
+        </section>
+        } }
+    </div>
+</div>
+
+<!-- Conteúdo de um cartão de cena (nome + tipo + seta) — o mesmo nos três blocos. -->
+<ng-template #conteudoCartao let-cena>
+    <span class="cena-cartao__texto">
+        <span class="cena-cartao__nome">{{ cena.nome }}</span>
+        <app-chip variante="sutil">{{ rotuloTipoCena(cena.tipo) }}</app-chip>
+    </span>
+    <app-icone nome="chevron" class="cena-cartao__seta" />
+</ng-template>
+
+@if (criandoCena() && !carregando() && ehMestre()) {
+<app-cena-criar-dialog
+    [campanhaId]="campanhaId"
+    [haCenaAtiva]="ativa() !== null"
+    (criada)="aoCriarCena($event)"
+    (fechou)="fecharNovaCena()"
+/>
+}

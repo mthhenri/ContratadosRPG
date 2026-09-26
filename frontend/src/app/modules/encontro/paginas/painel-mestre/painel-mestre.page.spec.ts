@@ -8,6 +8,7 @@ import type {
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
   CadenciaEnum,
+  CenaStatusEnum,
   CombatenteOrigemEnum,
   EncontroStatusEnum,
   RolagemVisibilidadeEnum,
@@ -15,13 +16,16 @@ import {
 } from '@contratados-rpg/shared/enums';
 
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
+import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import {
   CAMPANHA_ID,
+  CENA_ID,
   USUARIO_JOGADOR,
   USUARIO_MESTRE,
   botaoDaConducao,
   criarCombatente as combatente,
   encontroAtivo,
+  encontroEmMontagem,
   itemDaColuna,
   montarPainel,
   texto,
@@ -31,7 +35,8 @@ import { PainelEncontroMestre } from './painel-mestre.page';
 /**
  * Prova a visão do mestre da tela "Iniciativa" (m7-05, `ui-37`/`ui-38`), extraída do antigo
  * `PainelEncontro` (`ui-39`): coluna de ações, trilha, condução, ficha resumida, grade, montagem,
- * histórico e "Novo combate". A leitura da ordem da rodada (de quem é a vez, quem já agiu) mora no
+ * histórico e — desde a m7-23 — o que muda por ela ser o painel de uma cena ("Nova cena" no hub,
+ * cena planejada, encerrar pela cena). A leitura da ordem da rodada (de quem é a vez, quem já agiu) mora no
  * `EncontroPainelDadosService` e é provada no spec dele.
  */
 describe('PainelEncontroMestre', () => {
@@ -591,8 +596,8 @@ describe('PainelEncontroMestre', () => {
       expect(encontroService.voltarTurno).toHaveBeenCalledWith(encontroAtivo.id);
     });
 
-    it('pede confirmação (ui-15) antes de encerrar; cancelar não chama encerrarEncontro', async () => {
-      const { fixture, encontroService } = montar(encontroAtivo);
+    it('pede confirmação (ui-15) antes de encerrar; cancelar não encerra a cena', async () => {
+      const { fixture, cenaService } = montar(encontroAtivo);
       const confirmar = vi
         .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
         .mockResolvedValue(false);
@@ -604,11 +609,11 @@ describe('PainelEncontroMestre', () => {
       await Promise.resolve();
 
       expect(confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Encerrar combate' }));
-      expect(encontroService.encerrarEncontro).not.toHaveBeenCalled();
+      expect(cenaService.encerrarCena).not.toHaveBeenCalled();
     });
 
-    it('confirmar (ui-15) chama encerrarEncontro', async () => {
-      const { fixture, encontroService } = montar(encontroAtivo);
+    it('confirmar (ui-15) encerra a cena do combate e a tela fica só de leitura (m7-23)', async () => {
+      const { fixture, cenaService } = montar(encontroAtivo);
       vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(true);
       const elemento = fixture.nativeElement as HTMLElement;
 
@@ -617,11 +622,15 @@ describe('PainelEncontroMestre', () => {
       await Promise.resolve();
       await Promise.resolve();
 
-      expect(encontroService.encerrarEncontro).toHaveBeenCalledWith(encontroAtivo.id);
+      expect(cenaService.encerrarCena).toHaveBeenCalledWith(CENA_ID);
+      fixture.detectChanges();
+      expect(texto(fixture.nativeElement.querySelector('.iniciativa-mestre__cabecalho app-chip'))).toBe(
+        'Encerrado',
+      );
     });
 
     it('a coluna de ações encerra com a mesma confirmação', async () => {
-      const { fixture, encontroService } = montar(encontroAtivo);
+      const { fixture, cenaService } = montar(encontroAtivo);
       const confirmar = vi
         .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
         .mockResolvedValue(true);
@@ -633,7 +642,7 @@ describe('PainelEncontroMestre', () => {
       await Promise.resolve();
 
       expect(confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Encerrar combate' }));
-      expect(encontroService.encerrarEncontro).toHaveBeenCalledWith(encontroAtivo.id);
+      expect(cenaService.encerrarCena).toHaveBeenCalledWith(CENA_ID);
     });
 
     it('nunca mostra "Rolar iniciativas" depois que o combate começou', () => {
@@ -647,6 +656,7 @@ describe('PainelEncontroMestre', () => {
     const encerrado: EncontroResumoDto = {
       id: 2,
       campanhaId: CAMPANHA_ID,
+      cenaId: 902,
       nome: 'Emboscada no Setor 4',
       status: EncontroStatusEnum.ENCERRADO,
       rodadaAtual: 5,
@@ -682,7 +692,7 @@ describe('PainelEncontroMestre', () => {
       );
     });
 
-    it('escolher um combate do menu abre o registro dele e fecha o menu', () => {
+    it('escolher um combate do menu abre a cena dona dele e fecha o menu', () => {
       const { fixture } = montar(encontroAtivo, USUARIO_MESTRE, [encerrado]);
       const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       const elemento = fixture.nativeElement as HTMLElement;
@@ -691,7 +701,7 @@ describe('PainelEncontroMestre', () => {
       elemento.querySelector<HTMLButtonElement>('.historico__item')!.click();
       fixture.detectChanges();
 
-      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'iniciativa', encerrado.id]);
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', encerrado.cenaId]);
       expect(elemento.querySelector('.historico__menu')).toBeNull();
     });
 
@@ -745,7 +755,7 @@ describe('PainelEncontroMestre', () => {
         expect(elemento.querySelector('.iniciativa-tela')).toBeNull();
       });
 
-      it('com a lista de encontros já na tela e o encontro em voo, segue na silhueta — não pisca o estado vazio', () => {
+      it('com a cena (e o encontro dela) em voo, segue na silhueta — não pisca o estado vazio', () => {
         const { fixture, encontroPendente$ } = montarPainel(PainelEncontroMestre, {
           usuarioId: USUARIO_MESTRE,
           encontroPendente: true,
@@ -792,6 +802,14 @@ describe('PainelEncontroMestre', () => {
         expect(item.getAttribute('aria-pressed')).toBe('true');
         expect(item.classList).toContain('coluna-acoes__item--ativo');
       }
+    });
+
+    it('o voltar do cabeçalho leva ao hub de cenas (m7-23), não à campanha', () => {
+      const elemento = montar().fixture.nativeElement as HTMLElement;
+      const voltar = elemento.querySelector('.iniciativa-mestre__cabecalho a');
+
+      expect(voltar?.getAttribute('aria-label')).toBe('Voltar às cenas');
+      expect(voltar?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/cenas`);
     });
 
     it('descreve o encontro no cabeçalho: título, campanha e estado', () => {
@@ -910,26 +928,22 @@ describe('PainelEncontroMestre', () => {
       expect(elemento.textContent).not.toContain('Combate encerrado.');
     });
 
-    describe('sem combate aberto (ui-38)', () => {
-      /** Só há um encontro na campanha e ele já está encerrado: nenhum combate aberto. */
+    describe('cena sem encontro (ui-38)', () => {
+      /** Caso-limite: a cena da rota chega sem encontro; o histórico ainda tem um encerrado. */
       const soEncerrado: EncontroRecuperadoDto = {
         ...encontroAtivo,
         status: EncontroStatusEnum.ENCERRADO,
       };
+      const montarSemEncontro = () =>
+        montarPainel(PainelEncontroMestre, { estado: soEncerrado, semEncontro: true });
 
-      const abrirDialog = (raiz: HTMLElement, fixture: ReturnType<typeof montar>['fixture']) => {
-        itemDaColuna(raiz, 'Novo combate')!.click();
-        fixture.detectChanges();
-        return raiz.querySelector('app-modal dialog') as HTMLDialogElement | null;
-      };
-
-      it('mantém a casca do mestre: coluna com "Novo combate", cabeçalho sem nome e estado vazio', () => {
-        const { fixture } = montar(soEncerrado);
+      it('mantém a casca do mestre: coluna com "Nova cena", cabeçalho sem nome e estado vazio', () => {
+        const { fixture } = montarSemEncontro();
         const elemento = fixture.nativeElement as HTMLElement;
 
         expect(elemento.querySelector('.iniciativa-mestre')).not.toBeNull();
-        expect(elemento.querySelector('form.abertura')).toBeNull();
-        expect(itemDaColuna(elemento, 'Novo combate')).toBeDefined();
+        expect(itemDaColuna(elemento, 'Nova cena')).toBeDefined();
+        expect(itemDaColuna(elemento, 'Novo combate')).toBeUndefined();
         expect(itemDaColuna(elemento, 'Selecionar combatentes')).toBeUndefined();
         expect(itemDaColuna(elemento, 'Calculadora')).toBeDefined();
         expect(texto(elemento.querySelector('.iniciativa-mestre__titulo'))).toBe('Iniciativa');
@@ -941,8 +955,8 @@ describe('PainelEncontroMestre', () => {
         expect(elemento.querySelector('app-modal')).toBeNull();
       });
 
-      it('lista os combates anteriores no próprio estado vazio, sem gatilho no cabeçalho', () => {
-        const { fixture } = montar(soEncerrado);
+      it('lista os combates anteriores no próprio estado vazio; cada um abre a cena dele', () => {
+        const { fixture } = montarSemEncontro();
         const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const elemento = fixture.nativeElement as HTMLElement;
 
@@ -952,94 +966,120 @@ describe('PainelEncontroMestre', () => {
         const cartoes = elemento.querySelectorAll<HTMLButtonElement>('.historico__card');
         expect(cartoes).toHaveLength(1);
         expect(texto(cartoes[0].querySelector('.historico__nome'))).toBe(soEncerrado.nome);
-        expect(
-          Array.from(
-            elemento.querySelectorAll('.iniciativa-mestre__cabecalho button'),
-          ).some((botao) => texto(botao).includes('encerrado')),
-        ).toBe(false);
 
         cartoes[0].click();
-        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'iniciativa', soEncerrado.id]);
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas', CENA_ID]);
       });
 
-      it('o estado vazio e a coluna abrem o dialog "Novo combate"', () => {
-        const { fixture } = montar(soEncerrado);
+      it('o estado vazio e a coluna levam ao "Nova cena" do hub (m7-23), sem dialog local', () => {
+        const { fixture } = montarSemEncontro();
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
         const elemento = fixture.nativeElement as HTMLElement;
 
         elemento.querySelector<HTMLButtonElement>('.iniciativa-mestre__vazio button')!.click();
+        itemDaColuna(elemento, 'Nova cena')!.click();
         fixture.detectChanges();
 
-        expect(elemento.querySelector('app-modal')).not.toBeNull();
-        expect(texto(elemento.querySelector('app-modal .modal__titulo'))).toBe('Novo combate');
-        expect(itemDaColuna(elemento, 'Novo combate')!.getAttribute('aria-pressed')).toBe('true');
-      });
-
-      it('Abrir combate fica desabilitado sem nome e envia o nome (com trim), fechando o dialog', () => {
-        const { fixture, encontroService } = montar(soEncerrado);
-        const elemento = fixture.nativeElement as HTMLElement;
-        abrirDialog(elemento, fixture);
-        const enviar = elemento.querySelector<HTMLButtonElement>('app-modal button[type="submit"]')!;
-        const campo = elemento.querySelector<HTMLInputElement>('app-modal input')!;
-
-        expect(enviar.disabled).toBe(true);
-
-        campo.value = '  Contenção no Setor 12  ';
-        campo.dispatchEvent(new Event('input'));
-        fixture.detectChanges();
-        expect(enviar.disabled).toBe(false);
-
-        elemento
-          .querySelector<HTMLFormElement>('app-modal form')!
-          .dispatchEvent(new Event('submit'));
-        fixture.detectChanges();
-
-        expect(encontroService.criarEncontro).toHaveBeenCalledWith(CAMPANHA_ID, {
-          nome: 'Contenção no Setor 12',
+        expect(navegar).toHaveBeenCalledTimes(2);
+        expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas'], {
+          queryParams: { nova: 1 },
         });
         expect(elemento.querySelector('app-modal')).toBeNull();
       });
+    });
 
-      it('Cancelar fecha o dialog sem criar nada', () => {
-        const { fixture, encontroService } = montar(soEncerrado);
-        const elemento = fixture.nativeElement as HTMLElement;
-        abrirDialog(elemento, fixture);
+    it('lendo um encerrado, o cabeçalho não oferece "Combate atual" nem "Novo combate" — é o hub', () => {
+      const { fixture, encontroAlterado$ } = montar();
+      encontroAlterado$.next({
+        encontro: { ...encontroAtivo, status: EncontroStatusEnum.ENCERRADO },
+      });
+      fixture.detectChanges();
+      const rotulos = Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+          '.iniciativa-mestre__cabecalho button',
+        ),
+      ).map((botao) => texto(botao));
 
-        Array.from(elemento.querySelectorAll<HTMLButtonElement>('app-modal button'))
-          .find((botao) => texto(botao) === 'Cancelar')!
-          .click();
-        fixture.detectChanges();
+      expect(rotulos).not.toContain('Combate atual');
+      expect(rotulos).not.toContain('Novo combate');
+    });
 
-        expect(elemento.querySelector('app-modal')).toBeNull();
-        expect(encontroService.criarEncontro).not.toHaveBeenCalled();
+    describe('cena planejada (m7-22/m7-23)', () => {
+      const montarPlanejada = () =>
+        montarPainel(PainelEncontroMestre, {
+          estado: encontroEmMontagem,
+          cenaStatus: CenaStatusEnum.PLANEJADA,
+        });
+
+      it('sinaliza a cena planejada no cabeçalho e oferece "Abrir cena" na coluna', () => {
+        const elemento = montarPlanejada().fixture.nativeElement as HTMLElement;
+
+        const chips = Array.from(
+          elemento.querySelectorAll('.iniciativa-mestre__cabecalho app-chip'),
+        ).map((chip) => texto(chip));
+        expect(chips).toEqual(['Montagem', 'Cena planejada']);
+        expect(itemDaColuna(elemento, 'Abrir cena')).toBeDefined();
+        // A montagem segue livre.
+        expect(itemDaColuna(elemento, 'Selecionar combatentes')).toBeDefined();
       });
 
-      it('lendo um encerrado, "Combate atual" só aparece havendo combate aberto', () => {
-        const encerrado: EncontroRecuperadoDto = {
-          ...encontroAtivo,
-          id: 99,
-          status: EncontroStatusEnum.ENCERRADO,
-        };
-        const rotulos = (raiz: HTMLElement): string[] =>
-          Array.from(
-            raiz.querySelectorAll<HTMLButtonElement>('.iniciativa-mestre__cabecalho button'),
-          ).map((botao) => texto(botao));
+      it('numa cena ativa não há "Abrir cena" nem o selo de planejada', () => {
+        const elemento = montar(encontroEmMontagem).fixture.nativeElement as HTMLElement;
 
-        // Há combate aberto (o padrão de `montar`): o botão volta a ele.
-        const comAberto = montar();
-        comAberto.encontroAlterado$.next({ encontro: encerrado });
-        comAberto.fixture.detectChanges();
-        const comAbertoRaiz = comAberto.fixture.nativeElement as HTMLElement;
-        expect(rotulos(comAbertoRaiz)).toContain('Combate atual');
-        expect(rotulos(comAbertoRaiz)).not.toContain('Novo combate');
-        TestBed.resetTestingModule();
+        expect(itemDaColuna(elemento, 'Abrir cena')).toBeUndefined();
+        expect(texto(elemento.querySelector('.iniciativa-mestre__cabecalho'))).not.toContain(
+          'Cena planejada',
+        );
+      });
 
-        // Nenhum aberto: o mesmo lugar oferece criar um.
-        const semAberto = montar(soEncerrado);
-        semAberto.encontroAlterado$.next({ encontro: encerrado });
-        semAberto.fixture.detectChanges();
-        const semAbertoRaiz = semAberto.fixture.nativeElement as HTMLElement;
-        expect(rotulos(semAbertoRaiz)).not.toContain('Combate atual');
-        expect(rotulos(semAbertoRaiz)).toContain('Novo combate');
+      it('"Abrir cena" confirma, abre pela cena e a tela deixa de ser planejada', async () => {
+        const { fixture, cenaService } = montarPlanejada();
+        const confirmar = vi
+          .spyOn(TestBed.inject(ConfirmacaoService), 'confirmar')
+          .mockResolvedValue(true);
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        itemDaColuna(elemento, 'Abrir cena')!.click();
+        await Promise.resolve();
+        await Promise.resolve();
+        fixture.detectChanges();
+
+        expect(confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Abrir cena' }));
+        expect(cenaService.abrirCena).toHaveBeenCalledWith(CENA_ID);
+        expect(itemDaColuna(elemento, 'Abrir cena')).toBeUndefined();
+      });
+
+      it('cancelar a confirmação não abre a cena', async () => {
+        const { fixture, cenaService } = montarPlanejada();
+        vi.spyOn(TestBed.inject(ConfirmacaoService), 'confirmar').mockResolvedValue(false);
+
+        itemDaColuna(fixture.nativeElement as HTMLElement, 'Abrir cena')!.click();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(cenaService.abrirCena).not.toHaveBeenCalled();
+      });
+
+      it('pedir iniciativa e iniciar avisam que a cena precisa ser aberta, sem chamar o backend', () => {
+        const { fixture, encontroService } = montarPainel(PainelEncontroMestre, {
+          estado: {
+            ...encontroEmMontagem,
+            combatentes: encontroEmMontagem.combatentes.map((c) => ({ ...c, iniciativa: 12 })),
+          },
+          cenaStatus: CenaStatusEnum.PLANEJADA,
+        });
+        const notificar = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar');
+        const elemento = fixture.nativeElement as HTMLElement;
+
+        botaoDaConducao(elemento, 'Pedir iniciativa')!.click();
+        botaoDaConducao(elemento, 'Iniciar combate')!.click();
+
+        expect(encontroService.pedirIniciativa).not.toHaveBeenCalled();
+        expect(encontroService.iniciarEncontro).not.toHaveBeenCalled();
+        expect(notificar).toHaveBeenCalledTimes(2);
+        expect(notificar).toHaveBeenCalledWith(
+          expect.objectContaining({ severidade: 'aviso', resumo: 'Cena planejada' }),
+        );
       });
     });
   });

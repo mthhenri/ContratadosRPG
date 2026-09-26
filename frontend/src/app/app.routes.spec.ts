@@ -96,6 +96,11 @@ describe('Rotas — autenticação', () => {
     expect(elemento.querySelector('.ficha-pagina')).not.toBeNull();
   });
 
+  it('a antiga /iniciativa redireciona ao hub de cenas (m7-23), que exige sessão', async () => {
+    const { urlFinal } = await navegar('/campanhas/1/iniciativa');
+    expect(urlFinal).toBe('/login?retorno=%2Fcampanhas%2F1%2Fcenas');
+  });
+
   it('não mantém rota nem redirecionamento de compatibilidade para /painel', () => {
     expect(routes.some((candidata) => candidata.path?.startsWith('painel'))).toBe(false);
   });

@@ -1,0 +1,65 @@
+// Dialog "Nova cena" — mesma receita do antigo "Novo combate" (`painel-mestre.page.scss`,
+// `.novo-combate`): só o layout do formulário; caixa, cabeçalho e foco são do `app-modal`, rótulo
+// e erro do `app-campo`.
+@use "tema/breakpoints" as bp;
+
+.nova-cena {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+
+    &__ajuda {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+
+    // O controle segue a receita de input do login — o `<select>` usa a mesma, para os dois campos
+    // do dialog terem uma altura e uma borda só.
+    &__entrada {
+        width: 100%;
+        padding: 10px 12px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-control);
+
+        &:focus {
+            outline: none;
+            border-color: var(--accent-border);
+        }
+
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__acoes {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-8);
+
+        @include bp.mobile {
+            flex-direction: column-reverse;
+        }
+    }
+
+    // Cancelar fica à esquerda, longe das duas ações que criam.
+    &__acao--cancelar {
+        margin-right: auto;
+
+        @include bp.mobile {
+            margin-right: 0;
+        }
+    }
+
+    &__acao {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+}

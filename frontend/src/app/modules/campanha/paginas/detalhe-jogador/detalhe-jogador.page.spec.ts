@@ -735,6 +735,20 @@ describe('CampanhaDetalheJogador', () => {
     expect(raiz.querySelector('.detalhe__painel-iniciativa')).toBeNull();
   });
 
+  it('o item "Cenas" (m7-23, antiga "Iniciativa") da coluna leva ao hub de cenas', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    const cenas = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+      (el) => el.textContent?.trim() === 'Cenas',
+    );
+
+    expect(cenas?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/cenas`);
+    expect(
+      Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).some(
+        (el) => el.textContent?.trim() === 'Iniciativa',
+      ),
+    ).toBe(false);
+  });
+
   it('aba "Rolagens" funde o painel de rolar com o Histórico completo no mesmo container, sem aba/painel de Sessão', () => {
     const rolagem: RolagemResumoDto = {
       id: 1,

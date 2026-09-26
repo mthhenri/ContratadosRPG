@@ -69,24 +69,24 @@
     }
     <div class="coluna-acoes__categoria">Campanha</div>
     @if (somenteLeitura()) {
-    <!-- Prévia: a Iniciativa fica indisponível (a rota `/iniciativa` responderia com o recorte do
+    <!-- Prévia: as Cenas ficam indisponíveis (a rota `/cenas` responderia com o recorte do
          mestre). -->
     <button
         app-coluna-acoes-item
         icone="combate"
-        appTooltip="Iniciativa indisponível na prévia"
+        appTooltip="Cenas indisponíveis na prévia"
         [disabled]="true"
     >
-        Iniciativa
+        Cenas
     </button>
     } @else {
     <a
         app-coluna-acoes-item
         icone="combate"
-        appTooltip="Iniciativa"
-        [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
+        appTooltip="Cenas"
+        [routerLink]="['/campanhas', campanhaAtual.id, 'cenas']"
     >
-        Iniciativa
+        Cenas
     </a>
     }
     <div class="coluna-acoes__categoria">Ficha</div>
@@ -272,18 +272,18 @@
                             [disabled]="true"
                         >
                             <app-icone nome="combate" />
-                            <span>Iniciativa</span>
+                            <span>Cenas</span>
                         </button>
                         } @else {
                         <a
                             app-botao
                             class="detalhe__cabecalho-menu-item"
                             role="menuitem"
-                            [routerLink]="['/campanhas', campanhaAtual.id, 'iniciativa']"
+                            [routerLink]="['/campanhas', campanhaAtual.id, 'cenas']"
                             (click)="fecharMenu()"
                         >
                             <app-icone nome="combate" />
-                            <span>Iniciativa</span>
+                            <span>Cenas</span>
                         </a>
                         }
                         <button

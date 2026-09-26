@@ -1053,6 +1053,7 @@ export class EncontroService {
       estado: {
         id: encontro.id,
         campanhaId: encontro.campanhaId,
+        cenaId: encontro.cenaId,
         nome: encontro.nome,
         status: encontro.status,
         rodadaAtual: encontro.rodadaAtual,

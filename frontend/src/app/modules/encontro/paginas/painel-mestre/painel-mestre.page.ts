@@ -29,17 +29,15 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
-import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.component';
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
-import { Modal } from '../../../../shared/ui/modal/modal.component';
-import { AutoFocus } from '../../../../shared/auto-focus/auto-focus.directive';
 import { CadernoFlutuante } from '../../../pagina-caderno/caderno-flutuante.component';
 import { FichaFlutuante } from '../../../ficha/componentes/ficha-flutuante/ficha-flutuante.component';
 import { nomeCadencia } from '../../../ficha/rotulos-criatura';
+import { CenaService } from '../../../cena/cena.service';
 import { CartaoCombatente } from '../../componentes/cartao-combatente/cartao-combatente.component';
 import { ConducaoTurno } from '../../componentes/conducao-turno/conducao-turno.component';
 import { ResumoCombatente } from '../../componentes/resumo-combatente/resumo-combatente.component';
@@ -79,7 +77,8 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
  * casca com um estado vazio (`ui-38`).
  *
  * Extraída do antigo `PainelEncontro` monolítico (`ui-39`), que alternava mestre e jogador por
- * `@if`. Quem a monta é `PainelEncontroShell`, e o dado e o tempo real vêm de
+ * `@if`. Quem a monta é `PainelCenaShell` (m7-23: o painel é o de uma cena com iniciativa), e o
+ * dado e o tempo real vêm de
  * `EncontroPainelDadosService`. Enquanto o papel ainda é desconhecido (membros a caminho) a
  * casca também monta esta página, que já traz o esqueleto de carregamento da visão do mestre —
  * quem carrega não "pula" de uma visão para outra.
@@ -88,13 +87,17 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
  * usuário antes de responder e de transmitir. **Nenhuma regra vive aqui:** a ordem da rodada e a
  * intercalação de Cadência chegam prontas do backend (`ordemRodada`, `shared/regras/encontro`); o
  * `Rolar iniciativas` usa o motor de rolagem do shared (`rolarFormula`), não um `Math.random`.
+ *
+ * **Dentro do hub de cenas (m7-23):** criar uma cena e navegar entre cenas é do hub — o "Nova cena"
+ * daqui leva ao dialog de lá, o voltar do cabeçalho volta a ele e o menu de encerrados abre a cena
+ * dona de cada combate. Numa cena ainda `PLANEJADA` a montagem segue livre, mas pedir iniciativa e
+ * iniciar exigem abrir a cena antes (item "Abrir cena" da coluna).
  */
 @Component({
   selector: 'app-painel-encontro-mestre',
   imports: [
     DatePipe,
     NgTemplateOutlet,
-    AutoFocus,
     RouterLink,
     ReactiveFormsModule,
     Icone,
@@ -115,10 +118,8 @@ const ATRIBUTOS_NEUTROS: FichaAtributosDto = {
     BandejaDados,
     Botao,
     BotaoIcone,
-    Campo,
     Esqueleto,
     EstadoVazio,
-    Modal,
   ],
   templateUrl: './painel-mestre.page.html',
   styleUrl: './painel-mestre.page.scss',
@@ -130,6 +131,7 @@ export class PainelEncontroMestre {
   protected readonly dados = inject(EncontroPainelDadosService);
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly encontroService = inject(EncontroService);
+  private readonly cenaService = inject(CenaService);
   private readonly notificacaoService = inject(NotificacaoService);
   private readonly confirmacaoService = inject(ConfirmacaoService);
   private readonly formBuilder = inject(FormBuilder);
@@ -158,13 +160,6 @@ export class PainelEncontroMestre {
       .filter((resumo) => resumo.id !== this.dados.encontro()?.id),
   );
 
-  /** `true` quando a campanha tem um combate em montagem ou em andamento (não só encerrados). */
-  protected readonly temCombateAberto = computed(() =>
-    this.dados
-      .encontrosDaCampanha()
-      .some((resumo) => resumo.status !== EncontroStatusEnum.ENCERRADO),
-  );
-
   /** Lista de encontros anteriores aberta. */
   protected readonly historicoAberto = signal(false);
 
@@ -187,14 +182,6 @@ export class PainelEncontroMestre {
   protected readonly rotuloStatusEncontro = rotuloStatusEncontro;
   protected readonly nomeCadencia = nomeCadencia;
   protected readonly cadencias = Object.values(CadenciaEnum);
-
-  /** Dialog "Novo combate" aberto — o mestre nomeia o encontro e a montagem começa (`ui-38`). */
-  protected readonly criandoEncontro = signal(false);
-
-  /** Formulário de criação do encontro (quando a campanha ainda não tem um aberto). */
-  protected readonly formularioCriacao = this.formBuilder.nonNullable.group({
-    nome: ['', [Validators.required, Validators.maxLength(120)]],
-  });
 
   /**
    * Formulário do combatente avulso — a ficha da campanha entra pelo seletor de cartões
@@ -256,34 +243,55 @@ export class PainelEncontroMestre {
 
   // ── Montagem ───────────────────────────────────────────────────────────────
 
-  /** Abre o dialog "Novo combate" com o campo limpo. */
-  protected abrirNovoCombate(): void {
-    this.formularioCriacao.reset({ nome: '' });
-    this.criandoEncontro.set(true);
+  /**
+   * "Nova cena" (m7-23, sucessor do "Novo combate"): o dialog vive no hub, que o abre sozinho ao
+   * chegar com `?nova=1`.
+   */
+  protected abrirNovaCena(): void {
+    void this.roteador.navigate(['/campanhas', this.dados.campanhaId, 'cenas'], {
+      queryParams: { nova: 1 },
+    });
   }
 
-  /** Fecha o dialog sem criar nada. */
-  protected fecharNovoCombate(): void {
-    this.criandoEncontro.set(false);
-  }
-
-  /** Cria o encontro da campanha e já abre o painel de montagem. */
-  protected criarEncontro(): void {
-    if (this.formularioCriacao.invalid || this.dados.emOperacao()) {
+  /**
+   * Abre a cena planejada desta tela para a mesa (`PLANEJADA → ATIVA`). O painel não sabe se há
+   * outra cena em andamento — a confirmação avisa que, havendo, ela será encerrada (m7-22).
+   */
+  protected abrirCena(): void {
+    const cena = this.dados.cena();
+    if (!cena || this.dados.emOperacao()) {
       return;
     }
-    this.dados.executar(
-      this.encontroService.criarEncontro(this.dados.campanhaId, {
-        nome: this.formularioCriacao.getRawValue().nome.trim(),
-      }),
-      (criado) => {
-        this.formularioCriacao.reset({ nome: '' });
-        this.criandoEncontro.set(false);
-        this.encontroService
-          .recuperarEncontro(criado.id)
-          .subscribe({ next: (estado) => this.dados.definirEncontro(estado) });
-      },
-    );
+    this.confirmacaoService
+      .confirmar({
+        titulo: 'Abrir cena',
+        mensagem: `Abrir ${cena.nome} para a mesa? Se houver outra cena em andamento, ela será encerrada.`,
+        entidade: cena.nome,
+        rotuloConfirmar: 'Abrir',
+      })
+      .then((confirmado) => {
+        if (confirmado) {
+          this.dados.executar(this.cenaService.abrirCena(cena.id), (aberta) =>
+            this.dados.definirCena(aberta),
+          );
+        }
+      });
+  }
+
+  /**
+   * Numa cena planejada o backend recusa pedir iniciativa e iniciar (m7-22). Avisa antes, em vez de
+   * deixar a chamada falhar — e diz o que fazer.
+   */
+  private avisarCenaPlanejada(): boolean {
+    if (!this.dados.cenaPlanejada()) {
+      return false;
+    }
+    this.notificacaoService.notificar({
+      severidade: 'aviso',
+      resumo: 'Cena planejada',
+      detalhe: 'Abra a cena para a mesa antes de pedir iniciativa ou iniciar o combate.',
+    });
+    return true;
   }
 
   /** Abre/fecha o seletor de combatentes (cartões de agente/criatura/NPC). */
@@ -530,7 +538,7 @@ export class PainelEncontroMestre {
   /** Chama os jogadores a rolar a própria iniciativa (broadcast, sem mudar estado). */
   protected pedirIniciativa(): void {
     const encontroAtual = this.dados.encontro();
-    if (!encontroAtual || this.dados.emOperacao()) {
+    if (!encontroAtual || this.dados.emOperacao() || this.avisarCenaPlanejada()) {
       return;
     }
     this.dados.executarNoEncontro(this.encontroService.pedirIniciativa(encontroAtual.id), () =>
@@ -547,7 +555,7 @@ export class PainelEncontroMestre {
   /** Inicia o combate — exige todo mundo com iniciativa. */
   protected iniciarCombate(): void {
     const encontroAtual = this.dados.encontro();
-    if (!encontroAtual || this.dados.emOperacao()) {
+    if (!encontroAtual || this.dados.emOperacao() || this.avisarCenaPlanejada()) {
       return;
     }
     this.modoEdicao.set(false);
@@ -564,10 +572,13 @@ export class PainelEncontroMestre {
     }
   }
 
-  /** Pede confirmação (ui-15) e encerra o combate — depois disso o encontro fica só de leitura. */
+  /**
+   * Pede confirmação (ui-15) e encerra o combate — depois disso o encontro fica só de leitura. Pelo
+   * endpoint da cena (m7-23): encerrar o combate é encerrar a cena dele, que leva o encontro junto.
+   */
   protected encerrarCombate(): void {
-    const encontroAtual = this.dados.encontro();
-    if (!encontroAtual || this.dados.emOperacao()) {
+    const cena = this.dados.cena();
+    if (!cena || !this.dados.encontro() || this.dados.emOperacao()) {
       return;
     }
     this.confirmacaoService
@@ -578,7 +589,9 @@ export class PainelEncontroMestre {
       })
       .then((confirmado) => {
         if (confirmado) {
-          this.dados.executarNoEncontro(this.encontroService.encerrarEncontro(encontroAtual.id));
+          this.dados.executar(this.cenaService.encerrarCena(cena.id), (encerrada) =>
+            this.dados.definirCena(encerrada),
+          );
         }
       });
   }
@@ -614,16 +627,12 @@ export class PainelEncontroMestre {
   }
 
   /**
-   * Abre um encontro do histórico. Navega em vez de trocar o sinal para que a URL identifique o que
-   * está na tela — o combate encerrado é um documento, e um documento tem endereço.
+   * Abre um encontro do histórico — pela cena dona dele (m7-23). Navega em vez de trocar o sinal
+   * para que a URL identifique o que está na tela: a cena encerrada é um documento, e um documento
+   * tem endereço.
    */
   protected abrirDoHistorico(resumo: EncontroResumoDto): void {
     this.historicoAberto.set(false);
-    void this.roteador.navigate(['/campanhas', this.dados.campanhaId, 'iniciativa', resumo.id]);
-  }
-
-  /** Volta do histórico para o combate corrente da campanha. */
-  protected voltarAoCorrente(): void {
-    void this.roteador.navigate(['/campanhas', this.dados.campanhaId, 'iniciativa']);
+    void this.roteador.navigate(['/campanhas', this.dados.campanhaId, 'cenas', resumo.cenaId]);
   }
 }

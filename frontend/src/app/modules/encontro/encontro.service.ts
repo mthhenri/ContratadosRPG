@@ -10,8 +10,6 @@ import type {
   EncontroCombatenteIniciativaAtribuirDto,
   EncontroCombatenteIniciativaFormulaAlterarDto,
   EncontroCombatenteVidaAjustarDto,
-  EncontroCriadoDto,
-  EncontroCriarDto,
   EncontroRecuperadoDto,
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
@@ -25,8 +23,9 @@ import { environment } from '../../../environments/environment';
  * mutação devolve o **estado completo** (`EncontroRecuperadoDto`), então a tela troca o estado
  * inteiro em vez de aplicar delta — o mesmo payload que chega pelo broadcast `encontro:alterado`.
  *
- * As rotas não têm prefixo comum: criar/listar vivem sob `campanha/:id/encontro`, o resto sob
- * `encontro/...` (espelha `EncontroController`).
+ * As rotas não têm prefixo comum: listar vive sob `campanha/:id/encontro`, o resto sob
+ * `encontro/...` (espelha `EncontroController`). Criar e encerrar são da cena desde a m7-23
+ * (`CenaService`): o encontro nasce com a cena e se encerra com ela.
  */
 @Injectable({ providedIn: 'root' })
 export class EncontroService {
@@ -36,13 +35,6 @@ export class EncontroService {
 
   private baseCampanha(campanhaId: number): string {
     return `${environment.apiBase}/campanha/${campanhaId}/encontro`;
-  }
-
-  /** Cria um encontro em `MONTAGEM` na campanha (só mestre — o backend barra o jogador com 403). */
-  criarEncontro(campanhaId: number, dto: EncontroCriarDto): Observable<EncontroCriadoDto> {
-    return this.httpClient
-      .post<StandardResponse<EncontroCriadoDto>>(this.baseCampanha(campanhaId), dto)
-      .pipe(map((resposta) => resposta.dados as EncontroCriadoDto));
   }
 
   /** Lista os encontros da campanha (o corrente + o histórico encerrado). */
@@ -160,13 +152,6 @@ export class EncontroService {
   iniciarEncontro(encontroId: number): Observable<EncontroRecuperadoDto> {
     return this.httpClient
       .post<StandardResponse<EncontroRecuperadoDto>>(`${this.base}/${encontroId}/iniciar`, {})
-      .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
-  }
-
-  /** Encerra o combate (`ATIVO` → `ENCERRADO`) — depois disso o encontro é imutável. */
-  encerrarEncontro(encontroId: number): Observable<EncontroRecuperadoDto> {
-    return this.httpClient
-      .post<StandardResponse<EncontroRecuperadoDto>>(`${this.base}/${encontroId}/encerrar`, {})
       .pipe(map((resposta) => resposta.dados as EncontroRecuperadoDto));
   }
 

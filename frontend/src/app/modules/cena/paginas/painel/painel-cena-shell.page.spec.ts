@@ -1,34 +1,73 @@
 import { TestBed } from '@angular/core/testing';
 
-import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { CenaTipoEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import {
   CAMPANHA_ID,
+  CENA_ID,
   USUARIO_JOGADOR,
   USUARIO_MESTRE,
   encontroAtivo,
   encontroEmMontagem,
   montarPainel,
   texto,
-} from './painel-encontro.testing';
-import { PainelEncontroShell } from './painel-shell.page';
+} from '../../../encontro/paginas/painel/painel-encontro.testing';
+import { PainelCenaShell } from './painel-cena-shell.page';
 
 /**
- * Prova a casca da tela "Iniciativa" (`ui-39`): resolve o papel do usuário e monta a página do
- * mestre ou a do jogador, no molde do `detalhe-shell` da campanha. O que cada página faz é provado
- * no spec dela; aqui só quem monta quem — e que o papel errado nunca dispara o efeito do outro.
+ * Prova a casca do painel de uma cena (m7-23, sucessora da casca da Iniciativa da `ui-39`): decide
+ * pelo **tipo** da cena (`cenaTemIniciativa`) e, com iniciativa, pelo **papel** — página do mestre
+ * ou do jogador, no molde do `detalhe-shell` da campanha. O que cada página faz é provado no spec
+ * dela; aqui só quem monta quem — e que o papel errado nunca dispara o efeito do outro.
  */
-describe('PainelEncontroShell', () => {
+describe('PainelCenaShell', () => {
   const montar = (opcoes: Parameters<typeof montarPainel>[1] = {}) =>
-    montarPainel(PainelEncontroShell, { ...opcoes, semServicoDeDados: true });
+    montarPainel(PainelCenaShell, { ...opcoes, semServicoDeDados: true });
 
-  it('provê o serviço de dados à árvore da rota e o inicializa com a campanha da rota', () => {
-    const { dados, encontroService } = montar();
+  it('provê o serviço de dados à árvore da rota e carrega a cena da rota uma só vez', () => {
+    const { dados, cenaService } = montar();
 
     expect(dados.campanhaId).toBe(CAMPANHA_ID);
     // Uma só carga para as duas páginas: a casca é o único ponto de fetch.
-    expect(encontroService.listarPorCampanha).toHaveBeenCalledTimes(1);
+    expect(cenaService.recuperarCena).toHaveBeenCalledTimes(1);
+    expect(cenaService.recuperarCena).toHaveBeenCalledWith(CENA_ID);
+  });
+
+  describe('bifurcação pelo tipo da cena (cenaTemIniciativa)', () => {
+    it.each([CenaTipoEnum.COMBATE, CenaTipoEnum.FURTIVA, CenaTipoEnum.PERSEGUICAO])(
+      '%s monta o painel de Iniciativa de sempre',
+      (cenaTipo) => {
+        const elemento = montar({ cenaTipo }).fixture.nativeElement as HTMLElement;
+
+        expect(elemento.querySelector('app-painel-encontro-mestre')).not.toBeNull();
+        expect(elemento.querySelector('app-conducao-turno')).not.toBeNull();
+        expect(elemento.querySelector('.painel-cena__pendente')).toBeNull();
+      },
+    );
+
+    it.each([CenaTipoEnum.INVESTIGACAO, CenaTipoEnum.RESISTENCIA])(
+      '%s mostra o placeholder da m7-24, com o caminho de volta ao hub',
+      (cenaTipo) => {
+        const elemento = montar({ cenaTipo, semEncontro: true }).fixture
+          .nativeElement as HTMLElement;
+
+        expect(elemento.querySelector('app-painel-encontro-mestre')).toBeNull();
+        expect(elemento.querySelector('app-painel-encontro-jogador')).toBeNull();
+        const pendente = elemento.querySelector('.painel-cena__pendente');
+        expect(texto(pendente)).toContain('ainda não está disponível');
+        expect(pendente?.querySelector('a')?.getAttribute('href')).toBe(
+          `/campanhas/${CAMPANHA_ID}/cenas`,
+        );
+      },
+    );
+
+    it('enquanto a cena não chega, segue pela Iniciativa (esqueleto do mestre)', () => {
+      const elemento = montar({ encontroPendente: true }).fixture.nativeElement as HTMLElement;
+
+      expect(elemento.querySelector('app-painel-encontro-mestre')).not.toBeNull();
+      expect(elemento.querySelector('.painel-cena__pendente')).toBeNull();
+    });
   });
 
   it('monta a página do mestre para o mestre', () => {

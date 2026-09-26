@@ -376,10 +376,12 @@ a seção "Combates anteriores" (cartões) logo abaixo do estado vazio.
 
 Mesma casca da visão do mestre — **coluna de ações | trilha | Rolagens | palco** —, em que o palco é a
 **própria ficha** do jogador e as ações dele moram no topo da trilha (mock aprovado "POC Iniciativa do
-jogador"). A tela é uma **casca** (`PainelEncontroShell`) que resolve o papel e monta
+jogador"). A tela é uma **casca** (`PainelCenaShell`, desde a `m7-23` o painel de uma cena com iniciativa) que resolve o papel e monta
 `PainelEncontroMestre` ou `PainelEncontroJogador`, no molde de `detalhe-shell`; o layout comum das
 duas vive no parcial `paginas/_casca-iniciativa.scss` (mixin `casca`), incluído por cada página com o
-próprio bloco BEM (`iniciativa-mestre`/`iniciativa-jogador`).
+próprio bloco BEM (`iniciativa-mestre`/`iniciativa-jogador`) — e também pelo hub de cenas
+(`hub-cenas`), que não usa a coluna de ações. Quem inclui o mixin herda os elementos dele
+(`__linha`, `__trilha`, `__palco`...): não reutilize esses nomes para outra coisa no próprio bloco.
 
 - **Coluna de ações:** só **Ferramentas** (Calculadora, Caderno, `[pressionado]`). No mobile, com a
   ficha no palco, ela some — a barra fixa do rodapé colide com a `.ficha-nav` do cartão de ficha (mesma

@@ -143,8 +143,8 @@ export class EncontroRepository extends BaseRepository {
     incluirCenaPlanejada: boolean;
   }): Promise<EncontroResumoDto[]> {
     return this.executarConsulta<EncontroResumoDto>(
-      `SELECT encontro.id, encontro.campanha_id AS "campanhaId", encontro.nome,
-              tipo_encontro_status.codigo AS status,
+      `SELECT encontro.id, encontro.campanha_id AS "campanhaId", encontro.cena_id AS "cenaId",
+              encontro.nome, tipo_encontro_status.codigo AS status,
               encontro.rodada_atual AS "rodadaAtual",
               (SELECT COUNT(*) FROM encontro_combatente
                 WHERE encontro_combatente.encontro_id = encontro.id

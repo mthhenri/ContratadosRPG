@@ -73,6 +73,7 @@ describe('PainelEncontroEspectador', () => {
   const encontroAtivo: EncontroRecuperadoDto = {
     id: 1,
     campanhaId: CAMPANHA_ID,
+    cenaId: 900,
     nome: 'Emboscada no Setor 4',
     status: EncontroStatusEnum.ATIVO,
     rodadaAtual: 2,

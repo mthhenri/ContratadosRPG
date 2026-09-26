@@ -110,3 +110,35 @@ o porquê no fecho desta task (`HISTORY.md`).
 
 `m7-22` (endpoints e eventos de cena), `docs/design/DESIGN.md` ("Iniciativa — visão do mestre"/
 "visão do jogador") para a composição preservada.
+
+## Decisões tomadas na implementação (2026-09-26)
+
+1. **Escopo do módulo:** `encontro/` ficou onde estava; `cena/` nasceu ao lado
+   (`frontend/src/app/modules/cena/`), e o `PainelCenaShell` importa as páginas de
+   `../encontro/...`. Mover ~35 arquivos numa task que já troca rotas e navegação aumentaria o
+   diff e o risco de regressão sem ganho funcional; a árvore pode ser reorganizada numa task
+   própria.
+2. **Mudanças no `PainelEncontroMestre`/`PainelEncontroJogador` além do import** — as mínimas que
+   o hub tornou inevitáveis, sem mudar composição nem densidade: o voltar do cabeçalho leva ao hub;
+   o dialog "Novo combate" saiu (o "Nova cena" do painel leva ao dialog do hub com `?nova=1`); o
+   menu de encerrados abre a cena dona do combate (por isso `cenaId` entrou também no
+   `EncontroResumoDto`); os botões "Combate atual"/"Novo combate" do cabeçalho de um encerrado
+   saíram (o hub faz esse papel); cena `PLANEJADA` ganha o selo "Cena planejada" e o item "Abrir
+   cena", e pedir iniciativa/iniciar avisam em vez de chamar o backend (nota da `m7-22`);
+   "Encerrar combate" encerra pela cena (`POST cena/:id/encerrar`).
+3. **`EncontroPainelDadosService`** carrega pela cena da rota (`GET cena/:id`) em vez de resolver
+   "o encontro aberto da campanha"; o broadcast de encontro só vale para o da própria cena, e
+   `cena:alterada` atualiza o status. Falha de carga (403 de cena planejada para o jogador, 404) →
+   volta ao hub.
+4. **Hub sem coluna de ações:** a casca `_casca-iniciativa` (cabeçalho `//`, divisor de seção) com
+   a receita de `.historico__card` para os cartões; "Nova cena" no cabeçalho (mesmo botão do antigo
+   "Novo combate" do cabeçalho). "Encerrar" da cena ativa ficou no hub porque, até a `m7-24`, uma
+   cena sem iniciativa não tem outro lugar para ser encerrada.
+5. **Reordenação por setas** (`app-botao-icone` + `chevron` girado, precedente do `app-paginador`)
+   — o projeto não tinha primitivo de drag-and-drop.
+6. **Tempo real do hub:** qualquer `cena:alterada` da campanha refaz a listagem (o evento não traz a
+   ordem das planejadas, e o recorte do jogador continua do backend).
+7. **Espectador fora do escopo:** `campanhas/:id/espectador/iniciativa` e o rótulo "Iniciativa" da
+   coluna do espectador ficaram como estavam.
+8. **Proxy de dev:** `/cena` entrou no `frontend/proxy.conf.json` (achado da verificação ao vivo —
+   sem ele `GET /cena/:id` não sai do dev server). Um `ng serve` já no ar precisa ser reiniciado.

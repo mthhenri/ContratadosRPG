@@ -157,6 +157,7 @@ describe('PainelEncontroJogador', () => {
       const encerrado: EncontroResumoDto = {
         id: 2,
         campanhaId: CAMPANHA_ID,
+        cenaId: 900,
         nome: 'Emboscada no Setor 4',
         status: EncontroStatusEnum.ENCERRADO,
         rodadaAtual: 5,
@@ -228,12 +229,19 @@ describe('PainelEncontroJogador', () => {
       expect(elemento.querySelector('app-trilha-turnos')).not.toBeNull();
     });
 
-    it('sem combate aberto, mantém a casca e o palco vira um estado vazio', () => {
-      const soEncerrado: EncontroRecuperadoDto = {
-        ...encontroAtivo,
-        status: EncontroStatusEnum.ENCERRADO,
-      };
-      const elemento = montar(soEncerrado).fixture.nativeElement as HTMLElement;
+    it('o voltar do cabeçalho leva ao hub de cenas (m7-23)', () => {
+      const elemento = montar().fixture.nativeElement as HTMLElement;
+      const voltar = elemento.querySelector('.iniciativa-jogador__cabecalho a');
+
+      expect(voltar?.getAttribute('aria-label')).toBe('Voltar às cenas');
+      expect(voltar?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/cenas`);
+    });
+
+    it('cena sem encontro: mantém a casca e o palco vira um estado vazio', () => {
+      const elemento = montarPainel(PainelEncontroJogador, {
+        usuarioId: USUARIO_JOGADOR,
+        semEncontro: true,
+      }).fixture.nativeElement as HTMLElement;
 
       expect(elemento.querySelector('app-coluna-acoes')).not.toBeNull();
       expect(texto(elemento.querySelector('.iniciativa-jogador__titulo'))).toBe('Iniciativa');

@@ -1,0 +1,62 @@
+<!-- Nova cena (m7-23, sucessor do "Novo combate" da ui-38): nome + tipo; Enter abre agora,
+     Esc/fundo/Cancelar fecham. -->
+<app-modal [aberto]="true" titulo="Nova cena" [largura]="'480px'" (fechou)="fechou.emit()">
+    <form class="nova-cena" [formGroup]="formulario" (ngSubmit)="enviar()">
+        <p class="nova-cena__ajuda">
+            Dê um nome e um tipo à cena. Planejada, ela fica só com você até ser aberta.
+        </p>
+        <app-campo rotulo="Nome" tamanho="amplo">
+            <input
+                appAutoFocus
+                class="nova-cena__entrada"
+                type="text"
+                formControlName="nome"
+                placeholder="Ex.: Contenção no Setor 12"
+                maxlength="120"
+                autocomplete="off"
+                required
+            />
+        </app-campo>
+        <app-campo rotulo="Tipo" tamanho="amplo">
+            <select class="nova-cena__entrada" formControlName="tipo" required>
+                <option [ngValue]="null" disabled>Escolha o tipo…</option>
+                @for (tipo of tipos; track tipo) {
+                <option [ngValue]="tipo">{{ rotuloTipoCena(tipo) }}</option>
+                }
+            </select>
+        </app-campo>
+        <div class="nova-cena__acoes">
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                class="nova-cena__acao nova-cena__acao--cancelar"
+                type="button"
+                (click)="fechou.emit()"
+            >
+                Cancelar
+            </button>
+            <button
+                app-botao
+                variante="secundario"
+                tamanho="medio"
+                class="nova-cena__acao"
+                type="button"
+                [disabled]="formulario.invalid || enviando()"
+                (click)="criar(false)"
+            >
+                Planejar
+            </button>
+            <button
+                app-botao
+                variante="primario"
+                tamanho="medio"
+                class="nova-cena__acao"
+                type="submit"
+                [disabled]="formulario.invalid || enviando()"
+            >
+                Abrir agora
+            </button>
+        </div>
+    </form>
+</app-modal>

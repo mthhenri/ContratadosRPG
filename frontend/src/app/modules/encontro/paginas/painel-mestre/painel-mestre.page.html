@@ -2,7 +2,7 @@
 <!-- Carregamento da visão do mestre: mesma casca da tela pronta (coluna de ações real, cabeçalho,
      trilha | rolagens | palco com ficha resumida + grade), pra tela não "pular" quando o encontro
      chega. Ainda não se sabe se há combate aberto; a silhueta é a do combate em curso, o caso em
-     que a tela é mais alta. A casca (`PainelEncontroShell`) só monta esta página enquanto o papel é
+     que a tela é mais alta. A casca (`PainelCenaShell`) só monta esta página enquanto o papel é
      desconhecido ou o usuário é o mestre; quem não é passa à página do jogador. -->
 <div class="iniciativa-mestre">
     <app-coluna-acoes id="iniciativa-mestre" rotulo="Ações da iniciativa">
@@ -67,7 +67,7 @@
 } @else {
 <!-- Visão do mestre (ui-37/ui-38): coluna de ações + trilha + rolagens + palco. A casca é a mesma de
      `detalhe-mestre` — coluna encostada na topbar e na borda, conteúdo com o restante da largura.
-     Sem encontro (ui-38) a casca fica e o palco vira um estado vazio com "Novo combate". -->
+     Sem encontro (ui-38) a casca fica e o palco vira um estado vazio com "Nova cena" (m7-23). -->
 <div class="iniciativa-mestre">
     <app-coluna-acoes id="iniciativa-mestre" rotulo="Ações da iniciativa">
         @if (!dados.encontro()) {
@@ -75,15 +75,26 @@
         <button
             app-coluna-acoes-item
             icone="mais"
-            appTooltip="Abrir um combate novo nesta campanha"
-            [pressionado]="criandoEncontro()"
+            appTooltip="Criar uma cena nova nesta campanha"
             [disabled]="dados.emOperacao()"
-            (click)="abrirNovoCombate()"
+            (click)="abrirNovaCena()"
         >
-            Novo combate
+            Nova cena
         </button>
         } @else if (dados.mutavel()) {
         <div class="coluna-acoes__categoria">Combate</div>
+        @if (dados.cenaPlanejada()) {
+        <!-- Cena planejada (m7-23): a montagem segue livre, mas a mesa só entra depois de aberta. -->
+        <button
+            app-coluna-acoes-item
+            icone="entrar"
+            appTooltip="Abrir a cena para a mesa — os jogadores passam a vê-la"
+            [disabled]="dados.emOperacao()"
+            (click)="abrirCena()"
+        >
+            Abrir cena
+        </button>
+        }
         <button
             app-coluna-acoes-item
             icone="mais"
@@ -151,9 +162,9 @@
             <a
                 app-botao-icone
                 tamanho="padrao"
-                [routerLink]="['/campanhas', dados.campanhaId]"
-                aria-label="Voltar à campanha"
-                [appTooltip]="'Voltar à campanha'"
+                [routerLink]="['/campanhas', dados.campanhaId, 'cenas']"
+                aria-label="Voltar às cenas"
+                [appTooltip]="'Voltar às cenas'"
             >
                 <app-icone nome="voltar" />
             </a>
@@ -167,35 +178,13 @@
             <app-chip variante="sutil"
                 >{{ rotuloStatusEncontro(encontroCabecalho.status) }}</app-chip
             >
+            } @if (dados.cenaPlanejada()) {
+            <app-chip severidade="aviso">Cena planejada</app-chip>
             }
             <span class="iniciativa-mestre__regua"></span>
-            <!-- Encontros anteriores (m7-06): só o mestre navega pelo histórico. -->
-            @if (dados.vendoHistorico()) { @if (temCombateAberto()) {
-            <button
-                app-botao
-                variante="secundario"
-                tamanho="pequeno"
-                type="button"
-                [appTooltip]="'Voltar ao combate em andamento'"
-                (click)="voltarAoCorrente()"
-            >
-                <app-icone nome="voltar" />
-                Combate atual
-            </button>
-            } @else {
-            <button
-                app-botao
-                variante="primario"
-                tamanho="pequeno"
-                type="button"
-                [appTooltip]="'Não há combate em andamento — abrir um novo'"
-                [disabled]="dados.emOperacao()"
-                (click)="abrirNovoCombate()"
-            >
-                <app-icone nome="mais" />
-                Novo combate
-            </button>
-            } } @if (dados.encontro() && historico().length) {
+            <!-- Encontros anteriores (m7-06): só o mestre navega pelo histórico — cada um abre a cena
+                 dona dele. Voltar à cena em andamento ou criar outra é pelo hub (m7-23). -->
+            @if (dados.encontro() && historico().length) {
             <!-- Combates encerrados (ui-38): menu ancorado no gatilho. Segue o dropdown de perfil da
                  topbar: fecha pelo próprio botão, ao escolher um combate ou com Escape (listener no
                  `host` da página). -->
@@ -464,10 +453,10 @@
                 class="iniciativa-mestre__vazio-acao"
                 type="button"
                 [disabled]="dados.emOperacao()"
-                (click)="abrirNovoCombate()"
+                (click)="abrirNovaCena()"
             >
                 <app-icone nome="mais" />
-                Novo combate
+                Nova cena
             </button>
         </app-estado-vazio>
         @if (historico().length) {
@@ -525,48 +514,7 @@
     <app-icone nome="chevron" class="historico__seta" />
 </ng-template>
 
-<!-- Novo combate (ui-38): o mestre nomeia o encontro; Enter envia, Esc/fundo/Cancelar fecham. -->
-@if (criandoEncontro()) {
-<app-modal [aberto]="true" titulo="Novo combate" [largura]="'480px'" (fechou)="fecharNovoCombate()">
-    <form class="novo-combate" [formGroup]="formularioCriacao" (ngSubmit)="criarEncontro()">
-        <p class="novo-combate__ajuda">Dê um nome ao encontro para montar a ordem de iniciativa.</p>
-        <app-campo rotulo="Nome do encontro" tamanho="amplo">
-            <input
-                appAutoFocus
-                class="novo-combate__entrada"
-                type="text"
-                formControlName="nome"
-                placeholder="Ex.: Contenção no Setor 12"
-                maxlength="120"
-                autocomplete="off"
-                required
-            />
-        </app-campo>
-        <div class="novo-combate__acoes">
-            <button
-                app-botao
-                variante="secundario"
-                tamanho="medio"
-                class="novo-combate__acao"
-                type="button"
-                (click)="fecharNovoCombate()"
-            >
-                Cancelar
-            </button>
-            <button
-                app-botao
-                variante="primario"
-                tamanho="medio"
-                class="novo-combate__acao"
-                type="submit"
-                [disabled]="formularioCriacao.invalid || dados.emOperacao()"
-            >
-                Abrir combate
-            </button>
-        </div>
-    </form>
-</app-modal>
-} @if (avulsoRolando(); as avulso) {
+@if (avulsoRolando(); as avulso) {
 <app-rolagem-avulso
     [combatente]="avulso"
     [ocultaInicial]="rolagemAvulsoOculta(avulso.id)"

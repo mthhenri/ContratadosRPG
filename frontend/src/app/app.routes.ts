@@ -5,6 +5,7 @@ import { adminGuard } from './core/guards/admin.guard';
 import { mestreCampanhaGuard } from './core/guards/mestre-campanha.guard';
 import { espectadorCampanhaResolver } from './core/guards/espectador-campanha.guard';
 import { previaJogadorCampanhaResolver } from './core/guards/previa-jogador-campanha.guard';
+import { redirecionarEncontroParaCena } from './modules/cena/redirecionar-encontro-para-cena';
 
 export const routes: Routes = [
   {
@@ -83,20 +84,31 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/ficha/criatura.routes').then((modulo) => modulo.criaturaRoutes),
   },
-  // A tela "Iniciativa" (m7-05 mestre, m7-06 jogador). Mesma convenção das rotas de
-  // ficha/criatura: precede a rota `painel` genérica para ser casada antes do prefixo mais curto.
-  // Só `autenticacaoGuard`: mestre e jogador entram pela mesma rota e a tela bifurca por papel —
-  // o recorte de verdade é do backend (ver `encontro.routes.ts`).
+  // Cenas (m7-23): o hub e o painel de cada cena — o painel de Iniciativa (m7-05 mestre, m7-06
+  // jogador) passou a ser o de uma cena com iniciativa. Mesma convenção das rotas de
+  // ficha/criatura: precede a rota `campanhas` genérica para ser casada antes do prefixo mais
+  // curto. Só `autenticacaoGuard`: mestre e jogador entram pela mesma rota e a tela bifurca por
+  // papel — o recorte de verdade é do backend (ver `cena.routes.ts`).
+  {
+    path: 'campanhas/:campanhaId/cenas',
+    canActivate: [autenticacaoGuard],
+    loadChildren: () => import('./modules/cena/cena.routes').then((modulo) => modulo.cenaRoutes),
+  },
+  // Endereços da antiga tela "Iniciativa" (links salvos, abas abertas): a mesa vai para o hub, e o
+  // combate do histórico para a cena dona do encontro (resolvida no backend).
   {
     path: 'campanhas/:campanhaId/iniciativa',
-    canActivate: [autenticacaoGuard],
-    loadChildren: () =>
-      import('./modules/encontro/encontro.routes').then((modulo) => modulo.encontroRoutes),
+    pathMatch: 'full',
+    redirectTo: 'campanhas/:campanhaId/cenas',
+  },
+  {
+    path: 'campanhas/:campanhaId/iniciativa/:encontroId',
+    redirectTo: redirecionarEncontroParaCena,
   },
   // Painel do espectador ao vivo (m8-03) — só o espectador real da campanha ou o mestre em
   // prévia (`espectadorCampanhaGuard`, que usa a própria projeção do painel como autoridade,
   // já que `ESPECTADOR` não pode chamar `listarMembros`). Mesma convenção de precedência das
-  // rotas acima (ficha/criatura/iniciativa): casa antes do prefixo genérico `campanhas`.
+  // rotas acima (ficha/criatura/cenas): casa antes do prefixo genérico `campanhas`.
   {
     path: 'campanhas/:id/espectador',
     canActivate: [autenticacaoGuard],
@@ -107,7 +119,7 @@ export const routes: Routes = [
       ),
   },
   // Iniciativa do espectador (corrige P-073) — arquivo próprio e separado de
-  // `PainelEncontroMestre`/`PainelEncontroJogador` (`encontro.routes.ts`), reaproveitando o mesmo
+  // `PainelEncontroMestre`/`PainelEncontroJogador` (`cena.routes.ts`), reaproveitando o mesmo
   // `espectadorCampanhaResolver` do painel: nunca chama os endpoints que o backend recusa (403)
   // para `ESPECTADOR` (`listarMembros`/`GET /ficha?campanhaId`/`GET /campanha/:id`).
   {

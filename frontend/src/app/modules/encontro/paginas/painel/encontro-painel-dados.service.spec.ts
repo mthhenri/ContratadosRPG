@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { Subject, of } from 'rxjs';
+import { Router } from '@angular/router';
+import { Subject, of, throwError } from 'rxjs';
 
 import type {
   EncontroRecuperadoDto,
@@ -7,6 +8,8 @@ import type {
 } from '@contratados-rpg/shared/dtos/encontro';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
+  CenaStatusEnum,
+  CenaTipoEnum,
   EncontroStatusEnum,
   NivelAmeacaEnum,
   RolagemVisibilidadeEnum,
@@ -18,6 +21,7 @@ import { EncontroPainelDadosService } from './encontro-painel-dados.service';
 import type { CombatenteVisualDto } from '../../encontro-leitura.util';
 import {
   CAMPANHA_ID,
+  CENA_ID,
   USUARIO_JOGADOR,
   USUARIO_MESTRE,
   configurarPainel,
@@ -38,12 +42,21 @@ describe('EncontroPainelDadosService', () => {
   };
 
   describe('carga e papel', () => {
-    it('carrega o encontro aberto, as fichas, os membros e o nome da campanha', () => {
-      const { dados, encontroService, fichaService, campanhaService } = montar();
+    it('carrega a cena da rota com o encontro dela, as fichas, os membros e o nome da campanha', () => {
+      const { dados, cenaService, encontroService, fichaService, campanhaService } = montar();
 
       expect(dados.campanhaId).toBe(CAMPANHA_ID);
+      expect(cenaService.recuperarCena).toHaveBeenCalledWith(CENA_ID);
+      // A lista de encontros só alimenta o menu de encerrados — não escolhe o encontro da tela.
       expect(encontroService.listarPorCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
-      expect(encontroService.recuperarEncontro).toHaveBeenCalledWith(encontroAtivo.id);
+      expect(encontroService.recuperarEncontro).not.toHaveBeenCalled();
+      expect(dados.cena()).toEqual({
+        id: CENA_ID,
+        campanhaId: CAMPANHA_ID,
+        nome: 'Contenção no Setor 12',
+        tipo: CenaTipoEnum.COMBATE,
+        status: CenaStatusEnum.ATIVA,
+      });
       expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
       expect(campanhaService.listarMembros).toHaveBeenCalledWith(CAMPANHA_ID);
       expect(dados.encontro()?.nome).toBe('Contenção no Setor 12');
@@ -87,10 +100,10 @@ describe('EncontroPainelDadosService', () => {
       expect(dados.visaoDoMestre()).toBe(true);
     });
 
-    it('continua carregando entre a lista de encontros e o encontro — não cai no estado vazio', () => {
+    it('continua carregando enquanto a cena não chega — não cai no estado vazio', () => {
       const { dados, encontroPendente$ } = montar({ encontroPendente: true });
 
-      // Os membros já chegaram e a lista também; falta o encontro em si.
+      // Os membros já chegaram; falta a cena (e com ela o encontro).
       expect(dados.membros()).not.toBeNull();
       expect(dados.encontro()).toBeNull();
       expect(dados.carregando()).toBe(true);
@@ -102,16 +115,28 @@ describe('EncontroPainelDadosService', () => {
       expect(dados.carregando()).toBe(false);
     });
 
-    it('sem encontro aberto a carga termina sem buscar nenhum encontro', () => {
-      const encerrado: EncontroRecuperadoDto = {
-        ...encontroAtivo,
-        status: EncontroStatusEnum.ENCERRADO,
-      };
-      const { dados, encontroService } = montar({ estado: encerrado });
+    it('cena sem encontro: a carga termina com a cena e sem encontro', () => {
+      const { dados } = montar({ semEncontro: true, cenaTipo: CenaTipoEnum.INVESTIGACAO });
 
-      expect(encontroService.recuperarEncontro).not.toHaveBeenCalled();
+      expect(dados.cena()?.tipo).toBe(CenaTipoEnum.INVESTIGACAO);
       expect(dados.encontro()).toBeNull();
       expect(dados.carregando()).toBe(false);
+    });
+
+    it('cena recusada pelo backend (planejada para o jogador, 403) devolve ao hub', () => {
+      const { cenaService } = configurarPainel({ usuarioId: USUARIO_JOGADOR });
+      cenaService.recuperarCena.mockReturnValue(throwError(() => new Error('403')) as never);
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const dados = TestBed.inject(EncontroPainelDadosService);
+
+      expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID, 'cenas']);
+      expect(dados.encontro()).toBeNull();
+    });
+
+    it('reconhece a cena planejada — só ela bloqueia pedir iniciativa e iniciar', () => {
+      expect(montar().dados.cenaPlanejada()).toBe(false);
+      TestBed.resetTestingModule();
+      expect(montar({ cenaStatus: CenaStatusEnum.PLANEJADA }).dados.cenaPlanejada()).toBe(true);
     });
   });
 
@@ -243,17 +268,34 @@ describe('EncontroPainelDadosService', () => {
       expect(dados.encontro()?.rodadaAtual).toBe(2);
     });
 
-    it('quem lê um encontro do histórico não é arrastado para o combate corrente', () => {
+    it('ignora o encontro de outra cena da campanha — a tela é de uma cena só (m7-23)', () => {
       const { dados, encontroAlterado$ } = montar();
-      const encerrado = { ...encontroAtivo, status: EncontroStatusEnum.ENCERRADO };
-      encontroAlterado$.next({ encontro: encerrado });
-      expect(dados.vendoHistorico()).toBe(true);
 
-      // Outro encontro (id diferente) da mesma campanha muda: a tela do histórico não o segue.
-      encontroAlterado$.next({ encontro: { ...encontroAtivo, id: 99, rodadaAtual: 30 } });
+      // O mestre abriu outra cena: o combate dela muda, e quem está nesta tela não é arrastado.
+      encontroAlterado$.next({
+        encontro: { ...encontroAtivo, id: 99, cenaId: 901, rodadaAtual: 30 },
+      });
 
       expect(dados.encontro()?.id).toBe(encontroAtivo.id);
       expect(dados.encontro()?.rodadaAtual).toBe(encontroAtivo.rodadaAtual);
+    });
+
+    it('acompanha a `cena:alterada` desta cena e ignora a das outras', () => {
+      const { dados, cenaAlterada$ } = montar({ cenaStatus: CenaStatusEnum.PLANEJADA });
+      const resumo = {
+        id: CENA_ID,
+        nome: 'Contenção no Setor 12',
+        tipo: CenaTipoEnum.COMBATE,
+        status: CenaStatusEnum.ATIVA,
+        temEncontro: true,
+      };
+
+      cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena: { ...resumo, id: 901 } });
+      expect(dados.cenaPlanejada()).toBe(true);
+
+      cenaAlterada$.next({ campanhaId: CAMPANHA_ID, cena: resumo });
+      expect(dados.cena()?.status).toBe(CenaStatusEnum.ATIVA);
+      expect(dados.cenaPlanejada()).toBe(false);
     });
 
     it('acrescenta rolagens públicas recebidas ao vivo, sem duplicar a mesma', () => {
@@ -314,6 +356,7 @@ describe('EncontroPainelDadosService', () => {
       const encerrado: EncontroResumoDto = {
         id: 2,
         campanhaId: CAMPANHA_ID,
+        cenaId: 902,
         nome: 'Emboscada no Setor 4',
         status: EncontroStatusEnum.ENCERRADO,
         rodadaAtual: 5,
