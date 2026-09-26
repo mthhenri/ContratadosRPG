@@ -60,4 +60,42 @@ describe('DocumentoRepository', () => {
     expect(resultado).toBeNull();
     expect(raw).toHaveBeenCalledTimes(1);
   });
+
+  it('a busca aplica o recorte no mesmo WHERE da contagem e pagina pela relevância', async () => {
+    const raw = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ total: '1' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    const repositorio = new DocumentoRepository({ raw } as unknown as Knex);
+
+    const resultado = await repositorio.buscarDocumentos({
+      campanhaId: 5,
+      termo: 'carta',
+      apenasRevelados: true,
+      pagina: 2,
+      limite: 10,
+    });
+
+    type Chamada = [string, Record<string, unknown>];
+    const [sqlContagem, parametrosContagem] = raw.mock.calls[0] as Chamada;
+    const [sqlSelecao, parametrosSelecao] = raw.mock.calls[1] as Chamada;
+    for (const sql of [sqlContagem, sqlSelecao]) {
+      expect(sql).toContain("'public.contratados_portugues'::regconfig");
+      expect(sql).toContain('(NOT :apenasRevelados::boolean OR documento.revelado = true)');
+      expect(sql).toContain('documento.busca @@ consulta.valor');
+      expect(sql).toContain('documento.is_deleted = false');
+    }
+    expect(sqlContagem).toContain('SELECT COUNT(*) AS total FROM resultados');
+    expect(sqlSelecao).toContain("'StartSel=⟦, StopSel=⟧, MaxWords=28, MinWords=12'");
+    expect(sqlSelecao).toContain('ORDER BY relevancia DESC, "updatedDate" DESC, id DESC');
+    expect(parametrosContagem).toEqual({ campanhaId: 5, termo: 'carta', apenasRevelados: true });
+    expect(parametrosSelecao).toEqual({
+      campanhaId: 5,
+      termo: 'carta',
+      apenasRevelados: true,
+      itensPorPagina: 10,
+      deslocamento: 10,
+    });
+    expect(resultado).toMatchObject({ totalItens: 1, paginaAtual: 2, totalPaginas: 1 });
+  });
 });

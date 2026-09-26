@@ -1,5 +1,63 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m9-03: busca textual na biblioteca, recortada pelo papel
+
+`GET campanha/:campanhaId/documento/busca?termo=&pagina=&limite=` no `DocumentoController`, com
+`DocumentoService.buscarDocumentos` e `DocumentoRepository.buscarDocumentos`. DTOs em
+`shared/src/dtos/documento/`: `DocumentoBuscarDto`, `DocumentoBuscaResultadoDto` (com `revelado`,
+para a tela do mestre distinguir o oculto sem outra consulta) e o interno `DocumentoBuscaInternoDto`.
+Contratos OpenAPI regenerados (`npm run openapi:gerar-contratos -w backend`).
+
+A busca repete o molde da do caderno: `websearch_to_tsquery` com `contratados_portugues`, `ts_rank`,
+`ts_headline` com `⟦ ⟧`, contagem separada e ordem `relevancia DESC, "updatedDate" DESC, id`. Também
+reusa as validações e os limites `BUSCA_CAMPANHA_*`, sem redeclará-los. O que muda é o recorte:
+`apenasRevelados = !podeLerNaoReveladas(papel)` é a mesma função da listagem e entra no `WHERE` que a
+contagem também usa. Assim, `totalItens` e `totalPaginas` não deixam adivinhar quantos ocultos
+existem. Não-membro recebe 403, e termo vazio devolve página vazia sem consultar.
+
+Três pontos em que a implementação se afastou do texto da spec (registrados nela):
+- o filtro usa a forma `NOT :apenasRevelados::boolean` da `listarPorCampanha`;
+- o `updatedDate` sai no texto ISO do módulo;
+- nenhum índice parcial foi criado (ver o plano abaixo).
+
+**Testes:** 7 novos na service (recorte por papel, "nunca sem recorte para quem não é mestre", 403,
+termo vazio, termo/página/limite inválidos, termo no limite exato), 1 no repository (mesmo `WHERE`
+na contagem e na seleção, paginação) e 1 na controller. Resultado: `shared` 772, `backend` 711 e
+`npm run lint -w backend`/`-w shared` com 0 erros. Os avisos de estilo são os preexistentes do
+workspace; as linhas longas novas foram quebradas.
+
+**Ao vivo, contra o Postgres real** (backend compilado à parte na 3101, sem tocar o da 3100;
+roteiro com mestre, jogador, espectador e forasteiro na campanha 83): 36 de 36 checagens OK.
+- `cafe`, `CAFÉ` e `Cafe` acham "Café da manhã"; `documentos` acha "Documento de campo".
+- `"carta cifrada"` casa só a frase, e `carta -mapa` exclui "Carta com mapa".
+- Título peso `A` vence corpo peso `B` ("Relicário de prata" antes de "Inventário da capela").
+- 25 relatórios paginados em 10/10/5, com `totalItens` 25, ids distintos e ordem estável entre duas
+  chamadas.
+- Jogador e espectador recebem `totalItens = 1` com um segredo revelado e outro oculto, e `0` para
+  um termo que só o oculto tem (texto ou imagem). Revelado o segundo, o jogador vê 2; ocultado de
+  novo, some na chamada seguinte.
+- Todo trecho traz `⟦ ⟧`, é texto do próprio documento e nenhum vaza o oculto.
+- Termo vazio ou ausente devolve página vazia. Termo de 201 caracteres, limite 51, página 0 e
+  página não numérica devolvem 400. Não-membro recebe 403, sem token 401, e sintaxe estranha não
+  quebra.
+
+**`EXPLAIN (ANALYZE)`** com 10 000 documentos inseridos na campanha 83 dentro de uma transação
+revertida (a contagem voltou a 54):
+- Termo seletivo (`contrabandista`, 14 resultados revelados): `Bitmap Index Scan on
+  ix_documento_busca` → `Bitmap Heap Scan` com filtro `NOT is_deleted AND revelado AND campanha_id`,
+  1,7 ms.
+- Termo presente em ~98% das linhas (`investigação`, 9 800 linhas): `Seq Scan on documento`,
+  4,6 ms. Com essa cobertura, varrer a tabela é a escolha certa do planner.
+- O índice parcial `WHERE is_deleted = false` só tiraria ~2% das linhas e não mudaria nenhum dos
+  dois planos, então não foi criado.
+
+A primeira rodada do `EXPLAIN` saiu com zero resultados por um erro nos dados de teste: todo
+múltiplo de 250 também é de 50, então todos os documentos com o termo nasceram excluídos. O plano
+já usava o índice; os dados foram corrigidos e o plano medido de novo com resultados reais.
+
+Limpeza: backend da 3101 encerrado e build `backend/verificacao-m903` apagado. As contas `m903*` e a
+campanha 83 ficaram no banco de dev.
+
 ## 2026-09-26 — m9-04: biblioteca do mestre e `LeitorDocumento`
 
 Página **Biblioteca** (`/campanhas/:id/documentos`) em `frontend/src/app/modules/documento/`, com item

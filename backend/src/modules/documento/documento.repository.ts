@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Knex } from 'knex';
 import type {
+  DocumentoBuscaInternoDto,
+  DocumentoBuscaResultadoDto,
   DocumentoImagemInternoAlterarDto,
   DocumentoInternoAlterarDto,
   DocumentoInternoCriarDto,
@@ -13,6 +15,7 @@ import type {
   DocumentoResumoDto,
   DocumentoRevelacaoInternoAlterarDto,
 } from '@contratados-rpg/shared/dtos/documento';
+import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -107,6 +110,58 @@ export class DocumentoRepository extends BaseRepository {
        ORDER BY documento.ordem ASC, documento.id ASC`,
       { campanhaId: dto.campanhaId, apenasRevelados: dto.apenasRevelados },
     );
+  }
+
+  /**
+   * Busca textual na biblioteca (m9-03), no molde da busca do caderno: `websearch_to_tsquery` com a
+   * configuração `contratados_portugues` sobre o vetor `busca` (título peso `A`, markdown `B`; um
+   * `IMAGEM` só tem o título), `ts_rank` e o trecho com o termo entre `⟦ ⟧`. O recorte de
+   * `apenasRevelados` está no **mesmo `WHERE`** que a contagem usa — o total e o número de páginas
+   * nunca deixam adivinhar quantos ocultos existem.
+   */
+  async buscarDocumentos(
+    dto: DocumentoBuscaInternoDto,
+  ): Promise<PaginatedResult<DocumentoBuscaResultadoDto>> {
+    const consultaComum = `WITH consulta AS (
+      SELECT websearch_to_tsquery(
+        'public.contratados_portugues'::regconfig,
+        :termo
+      ) AS valor
+    ), resultados AS (
+      SELECT documento.id,
+             documento.titulo,
+             tipo_documento.codigo AS tipo,
+             ts_headline(
+               'public.contratados_portugues'::regconfig,
+               concat_ws(' ', documento.titulo, documento.conteudo_markdown),
+               consulta.valor,
+               'StartSel=⟦, StopSel=⟧, MaxWords=28, MinWords=12'
+             ) AS trecho,
+             documento.revelado,
+             ${this.dataComoTexto('documento.updated_date')} AS "updatedDate",
+             ts_rank(documento.busca, consulta.valor) AS relevancia
+      FROM documento
+      CROSS JOIN consulta
+      ${this.juncaoTipo()}
+      WHERE documento.campanha_id = :campanhaId
+        AND documento.is_deleted = false
+        AND (NOT :apenasRevelados::boolean OR documento.revelado = true)
+        AND documento.busca @@ consulta.valor
+    )`;
+
+    return this.executarConsultaPaginada<DocumentoBuscaResultadoDto>({
+      sqlSelect: `${consultaComum} SELECT * FROM resultados`,
+      sqlContagem: `${consultaComum} SELECT COUNT(*) AS total FROM resultados`,
+      parametrosSql: {
+        campanhaId: dto.campanhaId,
+        termo: dto.termo,
+        apenasRevelados: dto.apenasRevelados,
+      },
+      pagina: dto.pagina,
+      itensPorPagina: dto.limite,
+      ordenarPor: 'relevancia DESC, "updatedDate" DESC, id',
+      direcao: 'DESC',
+    });
   }
 
   /** Ids de todos os documentos ativos da campanha — a service confere contra eles a nova ordem. */

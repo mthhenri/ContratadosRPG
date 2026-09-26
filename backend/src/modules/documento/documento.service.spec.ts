@@ -9,7 +9,12 @@ import {
   TipoDocumentoEnum,
   TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
-import { DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES } from '@contratados-rpg/shared/validators';
+import { PaginatedResult } from '@contratados-rpg/shared/interfaces';
+import {
+  BUSCA_CAMPANHA_LIMITE_MAXIMO,
+  BUSCA_CAMPANHA_TERMO_MAXIMO,
+  DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES,
+} from '@contratados-rpg/shared/validators';
 import { ArmazenamentoPastaEnum } from '../../core/armazenamento';
 import {
   BusinessException,
@@ -60,6 +65,7 @@ interface DocumentoRepositorioDublado {
   criarDocumento: Mock<DocumentoRepository['criarDocumento']>;
   recuperarPorId: Mock<DocumentoRepository['recuperarPorId']>;
   listarPorCampanha: Mock<DocumentoRepository['listarPorCampanha']>;
+  buscarDocumentos: Mock<DocumentoRepository['buscarDocumentos']>;
   listarIdsPorCampanha: Mock<DocumentoRepository['listarIdsPorCampanha']>;
   alterarDocumento: Mock<DocumentoRepository['alterarDocumento']>;
   alterarRevelado: Mock<DocumentoRepository['alterarRevelado']>;
@@ -105,6 +111,11 @@ describe('DocumentoService', () => {
       ),
       recuperarPorId: vi.fn<DocumentoRepository['recuperarPorId']>().mockResolvedValue(criarDocumento()),
       listarPorCampanha: vi.fn<DocumentoRepository['listarPorCampanha']>().mockResolvedValue([]),
+      buscarDocumentos: vi.fn<DocumentoRepository['buscarDocumentos']>((dto) =>
+        Promise.resolve(
+          new PaginatedResult({ itens: [], totalItens: 0, paginaAtual: dto.pagina, totalPaginas: 0 }),
+        ),
+      ),
       listarIdsPorCampanha: vi.fn<DocumentoRepository['listarIdsPorCampanha']>().mockResolvedValue([70, 71, 72]),
       alterarDocumento: vi.fn<DocumentoRepository['alterarDocumento']>((dto) =>
         Promise.resolve(criarDocumento({ ...dto, updatedDate: '2026-09-26T12:05:00.000000Z' })),
@@ -269,6 +280,79 @@ describe('DocumentoService', () => {
 
       await expect(service.recuperarDocumento({ id: 70 }, usuario(FORASTEIRO))).rejects.toBeInstanceOf(
         UnauthorizedAccessException,
+      );
+    });
+  });
+
+  describe('buscarDocumentos', () => {
+    it('o mestre busca sem recorte; jogador e espectador, só nos revelados', async () => {
+      await service.buscarDocumentos({ campanhaId: 5, termo: ' carta ' }, usuario(MESTRE));
+      await service.buscarDocumentos(
+        { campanhaId: 5, termo: 'carta', pagina: 2, limite: 10 },
+        usuario(JOGADOR),
+      );
+      await service.buscarDocumentos({ campanhaId: 5, termo: 'carta' }, usuario(ESPECTADOR));
+
+      expect(documentoRepositorio.buscarDocumentos.mock.calls.map(([dto]) => dto)).toEqual([
+        { campanhaId: 5, termo: 'carta', apenasRevelados: false, pagina: 1, limite: 20 },
+        { campanhaId: 5, termo: 'carta', apenasRevelados: true, pagina: 2, limite: 10 },
+        { campanhaId: 5, termo: 'carta', apenasRevelados: true, pagina: 1, limite: 20 },
+      ]);
+    });
+
+    it('nunca consulta sem recorte para quem não é mestre', async () => {
+      for (const sub of [JOGADOR, ESPECTADOR]) {
+        await service.buscarDocumentos({ campanhaId: 5, termo: 'carta' }, usuario(sub));
+      }
+
+      const recortes = documentoRepositorio.buscarDocumentos.mock.calls.map(
+        ([dto]) => dto.apenasRevelados,
+      );
+      expect(recortes).toEqual([true, true]);
+    });
+
+    it('quem não é membro → 403, sem consultar', async () => {
+      await expect(
+        service.buscarDocumentos({ campanhaId: 5, termo: 'carta' }, usuario(FORASTEIRO)),
+      ).rejects.toBeInstanceOf(UnauthorizedAccessException);
+      expect(documentoRepositorio.buscarDocumentos).not.toHaveBeenCalled();
+    });
+
+    it('termo vazio (ou só espaços) devolve página vazia sem consultar', async () => {
+      const resultado = await service.buscarDocumentos(
+        { campanhaId: 5, termo: '   ' },
+        usuario(MESTRE),
+      );
+
+      expect(resultado).toEqual(
+        new PaginatedResult({ itens: [], totalItens: 0, paginaAtual: 1, totalPaginas: 0 }),
+      );
+      expect(documentoRepositorio.buscarDocumentos).not.toHaveBeenCalled();
+    });
+
+    it('termo acima do limite, página e limite inválidos → 400, sem consultar', async () => {
+      const casos = [
+        { termo: 'a'.repeat(BUSCA_CAMPANHA_TERMO_MAXIMO + 1) },
+        { termo: 'carta', pagina: 0 },
+        { termo: 'carta', pagina: 1.5 },
+        { termo: 'carta', limite: 0 },
+        { termo: 'carta', limite: BUSCA_CAMPANHA_LIMITE_MAXIMO + 1 },
+      ];
+      for (const caso of casos) {
+        await expect(
+          service.buscarDocumentos({ campanhaId: 5, ...caso }, usuario(MESTRE)),
+        ).rejects.toBeInstanceOf(BusinessException);
+      }
+      expect(documentoRepositorio.buscarDocumentos).not.toHaveBeenCalled();
+    });
+
+    it('aceita o termo no limite exato', async () => {
+      const termo = 'a'.repeat(BUSCA_CAMPANHA_TERMO_MAXIMO);
+
+      await service.buscarDocumentos({ campanhaId: 5, termo }, usuario(MESTRE));
+
+      expect(documentoRepositorio.buscarDocumentos).toHaveBeenCalledWith(
+        expect.objectContaining({ termo }),
       );
     });
   });

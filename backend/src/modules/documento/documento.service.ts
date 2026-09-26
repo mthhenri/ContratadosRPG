@@ -2,6 +2,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import type {
   DocumentoAlteradoDto,
   DocumentoAlterarDto,
+  DocumentoBuscaResultadoDto,
+  DocumentoBuscarDto,
   DocumentoCriadoDto,
   DocumentoCriarDto,
   DocumentoImagemAlteradaDto,
@@ -22,7 +24,10 @@ import {
   TipoCampanhaMembroPapelEnum,
   TipoDocumentoEnum,
 } from '@contratados-rpg/shared/enums';
+import { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import {
+  BUSCA_CAMPANHA_LIMITE_MAXIMO,
+  BUSCA_CAMPANHA_TERMO_MAXIMO,
   DOCUMENTO_CONTEUDO_MAXIMO,
   DOCUMENTO_IMAGEM_MIMES_PERMITIDOS,
   DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES,
@@ -129,6 +134,51 @@ export class DocumentoService {
     return this.documentoRepositorio.listarPorCampanha({
       campanhaId: dto.campanhaId,
       apenasRevelados: !this.podeLerNaoReveladas(papel),
+    });
+  }
+
+  /**
+   * Busca textual na biblioteca (m9-03): o mestre busca em todos; jogador e espectador, só nos
+   * revelados — o mesmo `podeLerNaoReveladas` da listagem, aplicado **antes** da consulta. Termo,
+   * página e limite seguem as regras da busca do caderno; termo vazio devolve página vazia sem
+   * consultar.
+   */
+  async buscarDocumentos(
+    dto: DocumentoBuscarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<PaginatedResult<DocumentoBuscaResultadoDto>> {
+    const papel = await this.validarMembro(dto.campanhaId, usuarioAtivo);
+    const termo = typeof dto.termo === 'string' ? dto.termo.trim() : '';
+    if (termo.length > BUSCA_CAMPANHA_TERMO_MAXIMO) {
+      throw new BusinessException(
+        `Termo de busca deve ter no máximo ${BUSCA_CAMPANHA_TERMO_MAXIMO} caracteres`,
+      );
+    }
+    const pagina = dto.pagina ?? 1;
+    const limite = dto.limite ?? 20;
+    if (!Number.isInteger(pagina) || pagina < 1) {
+      throw new BusinessException('Página da busca deve ser um inteiro maior que zero');
+    }
+    if (!Number.isInteger(limite) || limite < 1 || limite > BUSCA_CAMPANHA_LIMITE_MAXIMO) {
+      throw new BusinessException(
+        `Limite da busca deve estar entre 1 e ${BUSCA_CAMPANHA_LIMITE_MAXIMO}`,
+      );
+    }
+    if (!termo) {
+      return new PaginatedResult({
+        itens: [],
+        totalItens: 0,
+        paginaAtual: pagina,
+        totalPaginas: 0,
+      });
+    }
+
+    return this.documentoRepositorio.buscarDocumentos({
+      campanhaId: dto.campanhaId,
+      termo,
+      apenasRevelados: !this.podeLerNaoReveladas(papel),
+      pagina,
+      limite,
     });
   }
 

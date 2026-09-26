@@ -1801,6 +1801,70 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Payload de `documento:alterado`. Só avisa **que** algo mudou (`documentoId` é `null` numa\nreordenação): sem título, conteúdo nem `imagemUrl` — quem precisa do dado o busca por REST, já\nrecortado pelo papel. O nome foge de `DocumentoAlteradoDto`, que é a saída do `PUT`."
     },
+    "DocumentoBuscarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "termo": {
+                "type": "string"
+            },
+            "pagina": {
+                "type": "number"
+            },
+            "limite": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "termo"
+        ],
+        "additionalProperties": false,
+        "description": "Consulta da busca textual na biblioteca (`m9-03`) — o `campanhaId` vem da rota. Tem endpoint\npróprio, fora da busca do caderno: o papel e o recorte são outros (o espectador busca o revelado).\nLimites de termo e página reusam os do caderno (`BUSCA_CAMPANHA_*`)."
+    },
+    "DocumentoBuscaResultadoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "trecho": {
+                "type": "string"
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "updatedDate": {
+                "type": "string"
+            },
+            "relevancia": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "titulo",
+            "tipo",
+            "trecho",
+            "revelado",
+            "updatedDate",
+            "relevancia"
+        ],
+        "additionalProperties": false,
+        "description": "Item da busca na biblioteca. `trecho` traz o termo entre `⟦ ⟧` (contrato do caderno).\n`revelado` deixa a tela do mestre distinguir o oculto sem outra consulta — para jogador e\nespectador é sempre `true`. A resposta é `PaginatedResult<DocumentoBuscaResultadoDto>`."
+    },
     "EncontroLinhaDto": {
         "type": "object",
         "properties": {
@@ -6520,6 +6584,14 @@ export const operacoesContratosPublicos = {
         "tag": "Documentos",
         "publica": false,
         "responseSchema": "DocumentoResumoDto[]"
+    },
+    "DocumentoController_buscar": {
+        "controller": "DocumentoController",
+        "metodo": "get",
+        "caminho": "/campanha/:campanhaId/documento/busca",
+        "tag": "Documentos",
+        "publica": false,
+        "responseSchema": "PaginatedResult<DocumentoBuscaResultadoDto>"
     },
     "DocumentoController_reordenar": {
         "controller": "DocumentoController",

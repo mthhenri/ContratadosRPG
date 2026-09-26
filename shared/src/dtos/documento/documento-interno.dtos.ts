@@ -47,3 +47,15 @@ export interface DocumentoOrdemInternoAlterarDto {
   readonly id: number;
   readonly ordem: number;
 }
+
+/**
+ * Entrada interna da busca, com termo aparado e página validada pela service. `apenasRevelados` é
+ * o mesmo recorte da listagem e vira `WHERE` — a contagem usa o mesmo filtro.
+ */
+export interface DocumentoBuscaInternoDto {
+  readonly campanhaId: number;
+  readonly termo: string;
+  readonly apenasRevelados: boolean;
+  readonly pagina: number;
+  readonly limite: number;
+}

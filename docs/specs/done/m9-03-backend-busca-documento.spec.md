@@ -89,3 +89,17 @@ no resultado, nem na contagem, nem na paginação.
 
 `m9-01` (coluna `busca` e índice GIN), `m9-02` (módulo, service, função de recorte por papel),
 `0018` (configuração `contratados_portugues`), a busca do caderno como molde.
+
+## Decisões tomadas na implementação
+
+1. **Forma do filtro de revelado:** `(NOT :apenasRevelados::boolean OR documento.revelado = true)`,
+   a mesma da `listarPorCampanha` da `m9-02`, no lugar do `(:apenasRevelados = false OR ...)` escrito
+   acima. O efeito é o mesmo; o módulo fica com uma forma só.
+2. **`updatedDate` do resultado** sai no texto ISO com microssegundos do resto do módulo
+   (`dataComoTexto`), não como `timestamptz` cru como no caderno. A ordenação `"updatedDate" DESC`
+   continua cronológica, porque o formato é fixo e em UTC.
+3. **Índice parcial não criado.** Com 10 000 documentos, um termo seletivo usa
+   `Bitmap Index Scan on ix_documento_busca` (1,7 ms). Um termo presente em ~98% das linhas cai em
+   varredura sequencial (4,6 ms), que é a escolha certa do planner. Um índice parcial
+   `WHERE is_deleted = false` só tiraria ~2% das linhas e não mudaria nenhum dos dois planos.
+   Planos no `HISTORY.md`.

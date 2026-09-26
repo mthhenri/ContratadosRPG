@@ -19,6 +19,11 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-26 · **Última decisão registrada:**
+> `m9-03-backend-busca-documento` concluída (spec em `done/`): `GET campanha/:id/documento/busca`
+> (`DocumentoService.buscarDocumentos`), busca textual no molde da do caderno, com o recorte de
+> `podeLerNaoReveladas` no mesmo `WHERE` da contagem — jogador e espectador nunca veem um oculto,
+> nem no total. Provada contra o Postgres real; `EXPLAIN` com 10 000 documentos usa
+> `ix_documento_busca` para termo seletivo. Só backend; próxima: `m9-05` (ver §1). Antes:
 > `m9-04-frontend-biblioteca-mestre` concluída (spec em `done/`): página **Biblioteca** do mestre
 > (`/campanhas/:id/documentos`, item na coluna de ações) — lista com chips Revelado/Oculto e setas de
 > ordem, documento lido e editado no próprio lugar (salvar explícito, conflito 409 com "Recarregar",
@@ -614,8 +619,8 @@ junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e
 (o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
 da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
 
-**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01`, `m9-02` e `m9-04` concluídas
-(2026-09-26); próxima `m9-03` (busca no backend), depois `m9-05`.** `m9-01` (contrato + migration
+**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01`, `m9-02`, `m9-04` e `m9-03`
+concluídas (2026-09-26); próxima `m9-05` (jogador, espectador e a tela de busca).** `m9-01` (contrato + migration
 `0034` `documento`) → `m9-02` (backend + `documento:alterado` com trava anti-vazamento) → `m9-04`
 (biblioteca do mestre + `LeitorDocumento`) → `m9-03` (busca no backend) → `m9-05` (jogador,
 espectador e busca; hoje quem não é mestre é levado de volta à campanha) → `m9-06` (passe
@@ -2584,6 +2589,14 @@ sala cheia + espectador. Toda escrita avança o `updatedDate` (inclusive revelar
 `PUT` usa-o como versão otimista (409). A URL da imagem é pública e não revogável (decisão
 confirmada da M9); a imagem de um documento removido fica no armazenamento (`I-038`). O
 `DocumentoModule` exporta a `DocumentoService` para a `m7-25`.
+
+**Busca (`m9-03`):** `GET campanha/:campanhaId/documento/busca?termo=&pagina=&limite=` →
+`PaginatedResult<DocumentoBuscaResultadoDto>` (com `revelado`, para o mestre distinguir o oculto).
+Endpoint próprio, fora da busca do caderno (`campanha/:id/busca`): papel e recorte são outros — o
+espectador busca o revelado. Mesmo molde (`websearch_to_tsquery` com `contratados_portugues`,
+`ts_rank`, trecho com `⟦ ⟧`) e os mesmos limites `BUSCA_CAMPANHA_*`. O recorte
+`apenasRevelados = !podeLerNaoReveladas(papel)` está no `WHERE` que a contagem também usa, então o
+total não revela quantos ocultos existem.
 
 **Frontend (`m9-04`, `frontend/src/app/modules/documento/`):** rota `campanhas/:campanhaId/documentos`
 (antes do prefixo `campanhas`, só `autenticacaoGuard` + `rascunhoDocumentoGuard` no `canDeactivate`);

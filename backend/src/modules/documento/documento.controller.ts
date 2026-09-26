@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
   ParseIntPipe,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -14,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type {
   DocumentoAlteradoDto,
   DocumentoAlterarDto,
+  DocumentoBuscaResultadoDto,
   DocumentoCriadoDto,
   DocumentoCriarDto,
   DocumentoImagemAlteradaDto,
@@ -24,6 +27,7 @@ import type {
   DocumentoReveladoDto,
 } from '@contratados-rpg/shared/dtos/documento';
 import type { FichaImagemArquivoDto } from '@contratados-rpg/shared/dtos/ficha';
+import type { PaginatedResult } from '@contratados-rpg/shared/interfaces';
 import { DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES } from '@contratados-rpg/shared/validators';
 import { ActiveUser } from '../../core/decorators';
 import { DocumentarController } from '../../core/openapi';
@@ -46,10 +50,10 @@ function montarArquivoImagem(arquivo: Express.Multer.File | undefined): FichaIma
 
 /**
  * Endpoints da biblioteca de documentos (m9-02) — rotas **protegidas**:
- * `campanha/:campanhaId/documento` para criar, listar e reordenar e `documento/:id/...` para o
- * documento em si. Controller burra: só mescla o id da rota no DTO (e monta o arquivo do upload) e
- * repassa à service. Não há `DELETE documento/:id/imagem`: a imagem é o conteúdo do documento —
- * troca-se por upload.
+ * `campanha/:campanhaId/documento` para criar, listar, buscar e reordenar e `documento/:id/...`
+ * para o documento em si. Controller burra: só mescla o id da rota no DTO (e monta o arquivo do
+ * upload) e repassa à service. Não há `DELETE documento/:id/imagem`: a imagem é o conteúdo do
+ * documento — troca-se por upload.
  */
 @Controller()
 @DocumentarController('Documentos')
@@ -71,6 +75,21 @@ export class DocumentoController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<DocumentoResumoDto[]> {
     return this.documentoService.listarDocumentos({ campanhaId }, usuarioAtivo);
+  }
+
+  /** Busca textual na biblioteca (m9-03) — recortada pelo papel de quem busca, na service. */
+  @Get('campanha/:campanhaId/documento/busca')
+  buscar(
+    @Param('campanhaId', ParseIntPipe) campanhaId: number,
+    @Query('termo') termo: string,
+    @Query('pagina', new DefaultValuePipe(1), ParseIntPipe) pagina: number,
+    @Query('limite', new DefaultValuePipe(20), ParseIntPipe) limite: number,
+    @ActiveUser() usuarioAtivo: JwtPayload,
+  ): Promise<PaginatedResult<DocumentoBuscaResultadoDto>> {
+    return this.documentoService.buscarDocumentos(
+      { campanhaId, termo, pagina, limite },
+      usuarioAtivo,
+    );
   }
 
   @Put('campanha/:campanhaId/documento/ordem')

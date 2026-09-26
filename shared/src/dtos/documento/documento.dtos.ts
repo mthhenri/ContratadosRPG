@@ -4,7 +4,7 @@ import type { FichaImagemArquivoDto } from '../ficha/ficha-operacao.dtos';
 /**
  * DTOs do módulo `documento` (M9, "Biblioteca") — o documento de campanha que o mestre cria oculto
  * e revela aos jogadores. O contrato da entidade nasceu em `m9-01`; os de comportamento
- * (revelar/ocultar/reordenar/listar/imagem/evento), em `m9-02`; os de busca chegam em `m9-03`.
+ * (revelar/ocultar/reordenar/listar/imagem/evento), em `m9-02`; os de busca, em `m9-03`.
  * Limites em `validators/documento.validators.ts`.
  */
 
@@ -161,4 +161,31 @@ export interface DocumentoBibliotecaAlteradaDto {
   readonly campanhaId: number;
   readonly documentoId: number | null;
   readonly alteracao: DocumentoAlteracaoEnum;
+}
+
+/**
+ * Consulta da busca textual na biblioteca (`m9-03`) — o `campanhaId` vem da rota. Tem endpoint
+ * próprio, fora da busca do caderno: o papel e o recorte são outros (o espectador busca o revelado).
+ * Limites de termo e página reusam os do caderno (`BUSCA_CAMPANHA_*`).
+ */
+export interface DocumentoBuscarDto {
+  readonly campanhaId: number;
+  readonly termo: string;
+  readonly pagina?: number;
+  readonly limite?: number;
+}
+
+/**
+ * Item da busca na biblioteca. `trecho` traz o termo entre `⟦ ⟧` (contrato do caderno).
+ * `revelado` deixa a tela do mestre distinguir o oculto sem outra consulta — para jogador e
+ * espectador é sempre `true`. A resposta é `PaginatedResult<DocumentoBuscaResultadoDto>`.
+ */
+export interface DocumentoBuscaResultadoDto {
+  readonly id: number;
+  readonly titulo: string;
+  readonly tipo: TipoDocumentoEnum;
+  readonly trecho: string;
+  readonly revelado: boolean;
+  readonly updatedDate: string;
+  readonly relevancia: number;
 }

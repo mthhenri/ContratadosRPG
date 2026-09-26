@@ -69,4 +69,16 @@ describe('DocumentoController', () => {
       usuario,
     );
   });
+
+  it('a busca repassa a campanha da rota com termo, página e limite', async () => {
+    const buscarDocumentos = vi.fn().mockResolvedValue({ itens: [] });
+    const controller = new DocumentoController({ buscarDocumentos } as unknown as DocumentoService);
+
+    await controller.buscar(5, 'carta', 2, 10, usuario);
+
+    expect(buscarDocumentos).toHaveBeenCalledWith(
+      { campanhaId: 5, termo: 'carta', pagina: 2, limite: 10 },
+      usuario,
+    );
+  });
 });
