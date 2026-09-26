@@ -38,6 +38,7 @@ const TAGS_POR_CONTROLLER: Readonly<Record<string, string>> = {
     RolagemController: "Rolagens",
     PaginaCadernoController: "Caderno",
     EncontroController: "Encontros",
+    CenaController: "Cenas",
 };
 
 function listarArquivosTypescript(diretorio: string): string[] {

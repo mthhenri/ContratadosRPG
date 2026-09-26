@@ -9,8 +9,6 @@ import type {
   EncontroCombatenteIniciativaFormulaAlterarDto,
   EncontroCombatenteIdentidadeAlterarDto,
   EncontroCombatenteVidaAjustarDto,
-  EncontroCriadoDto,
-  EncontroCriarDto,
   EncontroIniciativaRolarDto,
   EncontroRecuperadoDto,
   EncontroResumoDto,
@@ -22,7 +20,9 @@ import { EncontroService } from './encontro.service';
 
 /**
  * Endpoints do Encontro de Combate (m7-03) — rotas **protegidas**, sem prefixo comum:
- * `campanha/:id/encontro` para criar/listar e `encontro/:id/...` para o encontro em si.
+ * `campanha/:id/encontro` para listar e `encontro/:id/...` para o encontro em si. Criar
+ * (`POST campanha/:id/encontro`) e encerrar (`POST encontro/:id/encerrar`) mantêm a URL, mas vivem
+ * no `CenaController` desde a m7-22 — o ciclo de vida do encontro é o da cena-mãe.
  * Controller burra: só monta o DTO com o `id` do `@Param` (microinteligência sancionada — §7.1) e
  * repassa à service. Permissões vivem na service.
  */
@@ -30,15 +30,6 @@ import { EncontroService } from './encontro.service';
 @DocumentarController('Encontros')
 export class EncontroController {
   constructor(private readonly encontroService: EncontroService) {}
-
-  @Post('campanha/:id/encontro')
-  criar(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: EncontroCriarDto,
-    @ActiveUser() usuarioAtivo: JwtPayload,
-  ): Promise<EncontroCriadoDto> {
-    return this.encontroService.criarEncontro({ ...dto, campanhaId: id }, usuarioAtivo);
-  }
 
   @Get('campanha/:id/encontro')
   listarPorCampanha(
@@ -127,14 +118,6 @@ export class EncontroController {
     @ActiveUser() usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     return this.encontroService.iniciarEncontro({ id }, usuarioAtivo);
-  }
-
-  @Post('encontro/:id/encerrar')
-  encerrar(
-    @Param('id', ParseIntPipe) id: number,
-    @ActiveUser() usuarioAtivo: JwtPayload,
-  ): Promise<EncontroRecuperadoDto> {
-    return this.encontroService.encerrarEncontro({ id }, usuarioAtivo);
   }
 
   @Post('encontro/:id/turno/avancar')

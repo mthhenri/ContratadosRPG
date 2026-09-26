@@ -16,7 +16,7 @@ import type {
   EncontroLinhaDto,
   EncontroResumoDto,
 } from '@contratados-rpg/shared/dtos/encontro';
-import { EncontroStatusEnum } from '@contratados-rpg/shared/enums';
+import { CenaStatusEnum, EncontroStatusEnum } from '@contratados-rpg/shared/enums';
 import { BaseRepository } from '../../core/base/base.repository';
 import { KNEX_CONNECTION } from '../../database/database.provider';
 
@@ -24,7 +24,9 @@ import { KNEX_CONNECTION } from '../../database/database.provider';
  * Repositório do módulo `encontro` (m7-03) — SQL bruto only, sem lógica de negócio. Dono das
  * queries de `encontro`, `encontro_combatente` e `encontro_evento` (proibição #23); permissão e
  * regra são arbitradas na service. `status` traduz `codigo ↔ id` de `tipo_encontro_status` no SQL
- * (§10.2.12) — a service só vê o `codigo` (`EncontroStatusEnum`).
+ * (§10.2.12) — a service só vê o `codigo` (`EncontroStatusEnum`). Toda linha de encontro traz também
+ * o status da cena-mãe (m7-22), resolvido pelo `JOIN` — é o dado da trava anti-vazamento de cena
+ * `PLANEJADA`; nenhuma escrita em `cena` sai daqui (dona: `CenaRepository`).
  *
  * **Fonte única:** nenhuma query aqui grava vida/energia de combatente com ficha. Só o avulso tem
  * `vida_atual_avulso`; quem tem ficha muda pela `FichaService`, dona dessa regra.
@@ -35,33 +37,45 @@ export class EncontroRepository extends BaseRepository {
     super(conexao, 'encontro');
   }
 
-  /** Colunas do recorte `EncontroLinhaDto`, com o `codigo` do status resolvido pelo `JOIN`. */
+  /**
+   * Colunas do recorte `EncontroLinhaDto`, com o `codigo` do status do encontro e o da cena-mãe
+   * resolvidos pelos `JOIN`s.
+   */
   private colunasEncontro(): string {
-    return `encontro.id, encontro.campanha_id AS "campanhaId", encontro.nome,
+    return `encontro.id, encontro.campanha_id AS "campanhaId", encontro.cena_id AS "cenaId",
+            tipo_cena_status.codigo AS "cenaStatus", encontro.nome,
             tipo_encontro_status.codigo AS status,
             encontro.rodada_atual AS "rodadaAtual", encontro.turno_indice AS "turnoIndice"`;
   }
 
-  /** `JOIN` que resolve o `codigo` do status em `colunasEncontro()`. */
+  /** `JOIN`s que resolvem o `codigo` do status do encontro e o da cena-mãe. */
   private juncaoStatus(): string {
     return `INNER JOIN tipo_encontro_status
               ON tipo_encontro_status.id = encontro.tipo_encontro_status_id
-             AND tipo_encontro_status.is_deleted = false`;
+             AND tipo_encontro_status.is_deleted = false
+            INNER JOIN cena
+              ON cena.id = encontro.cena_id
+             AND cena.is_deleted = false
+            INNER JOIN tipo_cena_status
+              ON tipo_cena_status.id = cena.tipo_cena_status_id
+             AND tipo_cena_status.is_deleted = false`;
   }
 
   /**
    * Insere o encontro e devolve a linha já com o `codigo` do status (o `RETURNING` não junta a
    * tabela de referência). Padrão `INSERT ... SELECT ... RETURNING`, BaseEntity explícita, sem
-   * `VALUES` e sem `DEFAULT`.
+   * `VALUES` e sem `DEFAULT`. Chamado só pela `CenaService`, dentro da transação que cria a cena —
+   * `created_date` sai igual ao da cena (`NOW()` é o instante da transação), o que o `DOWN` da
+   * migration 0032 usa para distinguir cena de aplicação de cena de backfill.
    */
   async criarEncontro(dto: EncontroInternoCriarDto): Promise<EncontroLinhaDto> {
     const [encontroInserido] = await this.executarConsulta<{ id: number }>(
-      `INSERT INTO encontro (campanha_id, tipo_encontro_status_id, nome, rodada_atual, turno_indice, created_date, updated_date, is_deleted)
-       SELECT :campanhaId,
+      `INSERT INTO encontro (campanha_id, cena_id, tipo_encontro_status_id, nome, rodada_atual, turno_indice, created_date, updated_date, is_deleted)
+       SELECT :campanhaId, :cenaId,
               (SELECT id FROM tipo_encontro_status WHERE codigo = :status AND is_deleted = false),
               :nome, 0, 0, NOW(), NOW(), false
        RETURNING id`,
-      { campanhaId: dto.campanhaId, status: dto.status, nome: dto.nome },
+      { campanhaId: dto.campanhaId, cenaId: dto.cenaId, status: dto.status, nome: dto.nome },
     );
 
     return this.recuperarPorId({ id: encontroInserido.id }) as Promise<EncontroLinhaDto>;
@@ -80,25 +94,54 @@ export class EncontroRepository extends BaseRepository {
   }
 
   /**
-   * O encontro **não-encerrado** da campanha, se houver — a invariante de "um por campanha" é
-   * arbitrada pela service com esta consulta (o PostgreSQL não aceita subquery no predicado de um
-   * índice parcial; ver a migration 0021).
+   * O encontro não-encerrado da cena **ativa** da campanha, se houver — o combate "em andamento"
+   * que a mesa vê (m7-22: a invariante de uma cena ativa por campanha é da `CenaService`).
    */
-  async recuperarAbertoPorCampanha(dto: { campanhaId: number }): Promise<EncontroLinhaDto | null> {
+  async recuperarAbertoDaCenaAtiva(dto: { campanhaId: number }): Promise<EncontroLinhaDto | null> {
     const [encontroAberto] = await this.executarConsulta<EncontroLinhaDto>(
       `SELECT ${this.colunasEncontro()}
        FROM encontro
        ${this.juncaoStatus()}
        WHERE encontro.campanha_id = :campanhaId
          AND encontro.is_deleted = false
-         AND tipo_encontro_status.codigo <> :statusEncerrado`,
-      { campanhaId: dto.campanhaId, statusEncerrado: EncontroStatusEnum.ENCERRADO },
+         AND tipo_encontro_status.codigo <> :statusEncerrado
+         AND tipo_cena_status.codigo = :statusCenaAtiva`,
+      {
+        campanhaId: dto.campanhaId,
+        statusEncerrado: EncontroStatusEnum.ENCERRADO,
+        statusCenaAtiva: CenaStatusEnum.ATIVA,
+      },
     );
     return encontroAberto ?? null;
   }
 
-  /** Encontros de uma campanha (corrente + histórico), mais recente primeiro. */
-  async listarPorCampanha(dto: { campanhaId: number }): Promise<EncontroResumoDto[]> {
+  /**
+   * Todos os encontros não-encerrados da campanha — o da cena ativa e os das cenas planejadas que
+   * o mestre está pré-montando (m7-22). Usado para ressincronizar os cartões depois que uma ficha
+   * muda fora do módulo.
+   */
+  async listarAbertosPorCampanha(dto: { campanhaId: number }): Promise<EncontroLinhaDto[]> {
+    return this.executarConsulta<EncontroLinhaDto>(
+      `SELECT ${this.colunasEncontro()}
+       FROM encontro
+       ${this.juncaoStatus()}
+       WHERE encontro.campanha_id = :campanhaId
+         AND encontro.is_deleted = false
+         AND tipo_encontro_status.codigo <> :statusEncerrado
+       ORDER BY encontro.id ASC`,
+      { campanhaId: dto.campanhaId, statusEncerrado: EncontroStatusEnum.ENCERRADO },
+    );
+  }
+
+  /**
+   * Encontros de uma campanha (corrente + histórico), mais recente primeiro. Sem
+   * `incluirCenaPlanejada`, os encontros de cena `PLANEJADA` ficam de fora — é o recorte de quem não
+   * é mestre (trava anti-vazamento, m7-22).
+   */
+  async listarPorCampanha(dto: {
+    campanhaId: number;
+    incluirCenaPlanejada: boolean;
+  }): Promise<EncontroResumoDto[]> {
     return this.executarConsulta<EncontroResumoDto>(
       `SELECT encontro.id, encontro.campanha_id AS "campanhaId", encontro.nome,
               tipo_encontro_status.codigo AS status,
@@ -110,8 +153,13 @@ export class EncontroRepository extends BaseRepository {
        FROM encontro
        ${this.juncaoStatus()}
        WHERE encontro.campanha_id = :campanhaId AND encontro.is_deleted = false
+         AND (:incluirCenaPlanejada::boolean OR tipo_cena_status.codigo <> :statusCenaPlanejada)
        ORDER BY encontro.created_date DESC`,
-      { campanhaId: dto.campanhaId },
+      {
+        campanhaId: dto.campanhaId,
+        incluirCenaPlanejada: dto.incluirCenaPlanejada,
+        statusCenaPlanejada: CenaStatusEnum.PLANEJADA,
+      },
     );
   }
 

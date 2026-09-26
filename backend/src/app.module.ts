@@ -14,6 +14,7 @@ import { CampanhaModule } from './modules/campanha/campanha.module';
 import { CampanhaProjecaoModule } from './modules/campanha-projecao/campanha-projecao.module';
 import { FichaModule } from './modules/ficha/ficha.module';
 import { EncontroModule } from './modules/encontro/encontro.module';
+import { CenaModule } from './modules/cena/cena.module';
 import { RolagemModule } from './modules/rolagem/rolagem.module';
 import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.module';
 
@@ -37,6 +38,7 @@ import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.mod
     FichaModule,
     RolagemModule,
     EncontroModule,
+    CenaModule,
     PaginaCadernoModule,
     GatewayModule,
   ],

@@ -1,5 +1,71 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m7-22: backend da Cena, trava anti-vazamento e encontro sempre dentro de uma cena
+
+Segunda task do milestone `m7-cenas`. Nasceu o módulo `backend/src/modules/cena/`
+(`CenaRepository`/`CenaService`/`CenaController`, tag OpenAPI "Cenas") com `POST/GET
+campanha/:id/cena`, `PUT campanha/:id/cena/ordem`, `GET cena/:id`, `POST cena/:id/abrir` e
+`POST cena/:id/encerrar`, mais os DTOs restantes em `shared/src/dtos/cena/` (abrir, encerrar,
+reordenar, resumo, recuperada, alterada e os internos). Evento novo `cena:alterada`
+(`CampanhaGateway.emitirCenaAlterada`): cena `PLANEJADA` só na sala do mestre, aberta/encerrada
+na sala cheia + espectador.
+
+**Transação em runtime.** O backend só tinha transação nas migrations. A spec exige trocar a cena
+ativa e criar cena + encontro "na mesma transação", então nasceu o `TransacaoService`
+(`backend/src/database/`, global): a service envolve as escritas num callback e o `BaseRepository`
+lê a transação corrente de um `AsyncLocalStorage`, sem receber `trx` — o SQL continua no
+repositório dono da tabela e a `CenaService` reaproveita `EncontroRepository.criarEncontro`.
+Emissões saem depois do commit. Convenção nova em `docs/CONVENTIONS.md` ("Escrita atômica").
+
+**Encontro subordinado à cena.** `EncontroService.criarEncontro` saiu (item 3 da spec: removido,
+não mantido como checagem redundante — a invariante antiga "um encontro aberto por campanha" deu
+lugar a "uma cena ativa por campanha"). `encerrarEncontro` virou `encerrarEncontroDaCena`,
+chamado pela `CenaService` dentro da transação; encerrar a cena encerra o encontro junto e abrir
+ou criar outra já ativa encerra a atual na mesma operação. As rotas antigas `POST
+campanha/:id/encontro` e `POST encontro/:id/encerrar` mantêm a URL para o painel atual não quebrar,
+mas passaram ao `CenaController`: a primeira cria uma cena `COMBATE` já ativa (recusando se houver
+cena em andamento, como antes); a segunda encerra a cena-mãe. `recuperarAbertoPorCampanha` virou
+`recuperarAbertoDaCenaAtiva` (espectador/prévia) e `listarAbertosPorCampanha` (ressincronização
+de ficha, agora percorrendo todos os encontros abertos).
+
+**Trava anti-vazamento.** Toda linha de encontro traz o status da cena-mãe (`JOIN`). Encontro de
+cena `PLANEJADA`: `GET` recusa não-mestre com 403; a listagem o omite; o recorte por usuário do
+`encontro:alterado` estoura para jogador/espectador e o gateway descarta o socket (mestre monta
+combatentes sem nada chegar à mesa); jogador não atribui iniciativa nem avança turno; pedir
+iniciativa e iniciar o combate são recusados até abrir a cena. Só a cena `ATIVA` encerra, para que
+o histórico do jogador (ativa + encerradas — ponto em aberto do milestone, decidido e registrado em
+`m7-cenas.spec.md`) nunca exponha um preparo descartado.
+
+**Migration `0033`.** Backfill dos encontros com `cena_id` nulo (mesmo molde da `0032`, `ordem`
+depois da maior da campanha) e `encontro.cena_id NOT NULL`. Achado no banco de dev: um encontro
+de backfill (`MONTAGEM` → cena `PLANEJADA`) foi encerrado pelo endpoint antigo depois da `0032`,
+deixando cena planejada com encontro encerrado. A `0033` passou a realinhar o status da cena para
+encontros `ATIVO`/`ENCERRADO` (os únicos que o intervalo faz avançar). Dev: 22 encontros/22 cenas,
+divergência 1 → 0, `NOT NULL` aplicado, hash de `encontro` idêntico antes/depois; ensaio com
+`ROLLBACK` de encontros sem cena (`MONTAGEM`/`ENCERRADO`) confirmou mapeamento e `ordem`; `down` +
+`up` da `0033` limpos.
+
+**Verificação.** Testes novos: `cena.service.spec.ts` (27: criação planejada/ativa, troca de ativa
+dentro da transação e antes da criação, falha sem emissão, 403 em todas as mutações para jogador,
+abrir/encerrar/rota antiga, reordenação e suas recusas, trava de `GET`/listagem),
+`transacao.service.spec.ts` (4), 12 casos novos no `EncontroService` (trava, iniciar/pedir
+iniciativa em cena planejada, `encerrarEncontroDaCena`, `emitirEncontroAlterado`, ressincronização
+com vários abertos) no lugar dos 5 de `criarEncontro`/`encerrarEncontro` que saíram, e
+`emitirCenaAlterada` no gateway (3). Backend 34 arquivos/621 testes (eram 580); shared 51/769; lint de
+backend e shared sem erros. Ensaio integrado contra o Postgres de dev (services e repositórios
+reais, gateway dublado, transação externa desfeita): 20 cenários OK — inclusive `created_date`
+igual entre cena e encontro (o critério do `DOWN` da `0032`), nunca duas ativas, abrir outra
+encerrando a anterior com o encontro, e o jogador sem receber `encontro:alterado` da cena planejada
+até ela abrir. `TransacaoService` conferido com Knex real (`txid` igual dentro, inclusive após
+`await`; diferente fora; erro desfaz). Sem tela nesta task — nada de UI a verificar; o frontend
+atual não consome nenhum DTO alterado e chama as mesmas URLs.
+
+**Pendência de deploy:** os 10 encontros de backfill em `MONTAGEM` do dev (e os equivalentes em
+produção) vivem em cenas `PLANEJADA`: com esta task só o mestre os vê, e iniciar/pedir
+iniciativa/encerrar exigem abrir a cena, o que antes do hub da `m7-23` só se faz pela API. Por isso
+`m7-22` e `m7-23` sobem juntas. A `m7-23` recebeu na spec as notas de contrato, inclusive expor
+`cenaId` no `EncontroRecuperadoDto` para o redirect de `/iniciativa/:encontroId`.
+
 ## 2026-09-26 — m7-21: contrato e schema da Cena, com backfill dos encontros existentes
 
 Pedido do autor: "pode fazer a m7-21", a 1ª task do milestone `m7-cenas.spec.md`. Spec em

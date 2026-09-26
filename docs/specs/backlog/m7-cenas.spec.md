@@ -152,9 +152,10 @@ de documento + revelar/ocultar prontos. `m7-26` fecha o milestone.
 
 ## Pontos em aberto (registrar a decisão ao implementar, não silenciosamente)
 
-- **Histórico de cenas encerradas para o jogador:** hoje o jogador não tem o menu "N encerrados" do
-  mestre (`ui-37`) — confirmar se uma cena `ENCERRADA` continua listada para ele no hub, e com que
-  recorte, antes de `m7-23`.
+- ~~**Histórico de cenas encerradas para o jogador**~~ — **decidido na `m7-22`:** o backend lista ao
+  jogador (e ao espectador) a cena `ATIVA` e as `ENCERRADA`; as `PLANEJADA` só ao mestre. Como só a
+  cena `ATIVA` pode ser encerrada, toda `ENCERRADA` é uma cena que a mesa já viu. Como o hub da
+  `m7-23` apresenta esse histórico ao jogador continua decisão de tela.
 - **Visão do Espectador (`m8`) numa cena:** `m8-05` deu ao espectador a mesma visão read-only do
   jogador para o Encontro. Confirmar se isso se estende a todos os tipos de cena (em especial
   Investigação, cujos documentos podem ter sensibilidade diferente) antes de `m7-25`.

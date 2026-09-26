@@ -1070,6 +1070,286 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Entrada da ficha completa dentro da prévia de jogador (m8-04, complemento `PreviaJogadorFicha`\nantes do verbo) — `campanhaId`/`usuarioAlvoId`/`fichaId` vêm todos do `@Param`. `campanhaId` é\nchecado contra a campanha real da ficha (defesa em profundidade — a autorização de fato é toda\nde `FichaService.recuperarFichaParaAlvo`, que nunca recebe `campanhaId`: deriva a campanha da\nprópria ficha)."
     },
+    "CenaLinhaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "COMBATE",
+                    "INVESTIGACAO",
+                    "FURTIVA",
+                    "PERSEGUICAO",
+                    "RESISTENCIA"
+                ]
+            },
+            "status": {
+                "type": "string",
+                "enum": [
+                    "PLANEJADA",
+                    "ATIVA",
+                    "ENCERRADA"
+                ]
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "encontroId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nome",
+            "tipo",
+            "status",
+            "ordem",
+            "encontroId"
+        ],
+        "additionalProperties": false,
+        "description": "Linha crua de `cena`, com o `codigo` de tipo/status resolvido e o encontro dela, se houver."
+    },
+    "CenaCriarDto": {
+        "type": "object",
+        "properties": {
+            "nome": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "COMBATE",
+                    "INVESTIGACAO",
+                    "FURTIVA",
+                    "PERSEGUICAO",
+                    "RESISTENCIA"
+                ]
+            },
+            "ativarImediatamente": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "nome",
+            "tipo",
+            "ativarImediatamente"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da criação da cena — o `campanhaId` vem da rota. `ativarImediatamente` cria a cena já\n`ATIVA` (encerrando a ativa atual da campanha); caso contrário nasce `PLANEJADA`."
+    },
+    "CenaCriadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "COMBATE",
+                    "INVESTIGACAO",
+                    "FURTIVA",
+                    "PERSEGUICAO",
+                    "RESISTENCIA"
+                ]
+            },
+            "status": {
+                "type": "string",
+                "enum": [
+                    "PLANEJADA",
+                    "ATIVA",
+                    "ENCERRADA"
+                ]
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nome",
+            "tipo",
+            "status"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da criação — a cena recém-criada."
+    },
+    "CenaRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da recuperação individual da cena (recuperação individual sempre `{ id }`)."
+    },
+    "CenaAbrirDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"abrir\" (`PLANEJADA → ATIVA`) — o `id` vem da rota."
+    },
+    "CenaEncerrarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"encerrar\" (`ATIVA → ENCERRADA`) — o `id` vem da rota."
+    },
+    "CenaReordenarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                }
+            }
+        },
+        "required": [
+            "campanhaId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da reordenação das cenas `PLANEJADA` da campanha — o `campanhaId` vem da rota. `ordem`\nlista os ids de **todas** as cenas planejadas, na nova ordem (a primeira é a próxima a abrir)."
+    },
+    "CenaResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "COMBATE",
+                    "INVESTIGACAO",
+                    "FURTIVA",
+                    "PERSEGUICAO",
+                    "RESISTENCIA"
+                ]
+            },
+            "status": {
+                "type": "string",
+                "enum": [
+                    "PLANEJADA",
+                    "ATIVA",
+                    "ENCERRADA"
+                ]
+            },
+            "temEncontro": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "id",
+            "nome",
+            "tipo",
+            "status",
+            "temEncontro"
+        ],
+        "additionalProperties": false,
+        "description": "Item de listagem das cenas de uma campanha. `temEncontro` diz se a cena tem a estrutura de\niniciativa (`encontro`) pendurada — o id do encontro só chega pelo estado completo."
+    },
+    "CenaRecuperadaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "nome": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "COMBATE",
+                    "INVESTIGACAO",
+                    "FURTIVA",
+                    "PERSEGUICAO",
+                    "RESISTENCIA"
+                ]
+            },
+            "status": {
+                "type": "string",
+                "enum": [
+                    "PLANEJADA",
+                    "ATIVA",
+                    "ENCERRADA"
+                ]
+            },
+            "encontro": {
+                "$ref": "#/components/schemas/EncontroRecuperadoDto"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "nome",
+            "tipo",
+            "status",
+            "encontro"
+        ],
+        "additionalProperties": false,
+        "description": "Estado completo da cena. `encontro` é o estado do encontro dela **já no recorte de quem pediu**\n(revelação m7-06) — `null` quando o tipo não tem iniciativa (`cenaTemIniciativa`)."
+    },
+    "CenaAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "cena": {
+                "$ref": "#/components/schemas/CenaResumoDto"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "cena"
+        ],
+        "additionalProperties": false,
+        "description": "Payload de broadcast (`cena:alterada`) — o resumo da cena após uma mutação já persistida,\nemitido pela service **depois** de salvar (§9, broadcast-only). Cena `PLANEJADA` só chega à sala\ndo mestre (trava anti-vazamento, m7-22); o estado do encontro segue pelo `encontro:alterado`."
+    },
     "EncontroLinhaDto": {
         "type": "object",
         "properties": {
@@ -1078,6 +1358,17 @@ export const schemasContratosPublicos = {
             },
             "campanhaId": {
                 "type": "number"
+            },
+            "cenaId": {
+                "type": "number"
+            },
+            "cenaStatus": {
+                "type": "string",
+                "enum": [
+                    "PLANEJADA",
+                    "ATIVA",
+                    "ENCERRADA"
+                ]
             },
             "nome": {
                 "type": "string"
@@ -1100,13 +1391,15 @@ export const schemasContratosPublicos = {
         "required": [
             "id",
             "campanhaId",
+            "cenaId",
+            "cenaStatus",
             "nome",
             "status",
             "rodadaAtual",
             "turnoIndice"
         ],
         "additionalProperties": false,
-        "description": "Linha crua de `encontro`, como o repositório a devolve."
+        "description": "Linha crua de `encontro`, como o repositório a devolve, com o status da **cena-mãe** (m7-22)\nresolvido pelo `JOIN` — é dele que depende a trava anti-vazamento de cena `PLANEJADA`."
     },
     "EncontroCombatenteLinhaDto": {
         "type": "object",
@@ -5685,14 +5978,72 @@ export const operacoesContratosPublicos = {
         "publica": false,
         "responseSchema": "FichaRecuperadaDto"
     },
-    "EncontroController_criar": {
-        "controller": "EncontroController",
+    "CenaController_criar": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/campanha/:id/cena",
+        "tag": "Cenas",
+        "publica": false,
+        "requestSchema": "CenaCriarDto",
+        "responseSchema": "CenaCriadaDto"
+    },
+    "CenaController_listarPorCampanha": {
+        "controller": "CenaController",
+        "metodo": "get",
+        "caminho": "/campanha/:id/cena",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaResumoDto[]"
+    },
+    "CenaController_reordenar": {
+        "controller": "CenaController",
+        "metodo": "put",
+        "caminho": "/campanha/:id/cena/ordem",
+        "tag": "Cenas",
+        "publica": false,
+        "requestSchema": "CenaReordenarDto",
+        "responseSchema": "CenaResumoDto[]"
+    },
+    "CenaController_recuperar": {
+        "controller": "CenaController",
+        "metodo": "get",
+        "caminho": "/cena/:id",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaRecuperadaDto"
+    },
+    "CenaController_abrir": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/cena/:id/abrir",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaRecuperadaDto"
+    },
+    "CenaController_encerrar": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/cena/:id/encerrar",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "CenaRecuperadaDto"
+    },
+    "CenaController_criarEncontro": {
+        "controller": "CenaController",
         "metodo": "post",
         "caminho": "/campanha/:id/encontro",
-        "tag": "Encontros",
+        "tag": "Cenas",
         "publica": false,
         "requestSchema": "EncontroCriarDto",
         "responseSchema": "EncontroCriadoDto"
+    },
+    "CenaController_encerrarEncontro": {
+        "controller": "CenaController",
+        "metodo": "post",
+        "caminho": "/encontro/:id/encerrar",
+        "tag": "Cenas",
+        "publica": false,
+        "responseSchema": "EncontroRecuperadoDto"
     },
     "EncontroController_listarPorCampanha": {
         "controller": "EncontroController",
@@ -5774,14 +6125,6 @@ export const operacoesContratosPublicos = {
         "controller": "EncontroController",
         "metodo": "post",
         "caminho": "/encontro/:id/iniciar",
-        "tag": "Encontros",
-        "publica": false,
-        "responseSchema": "EncontroRecuperadoDto"
-    },
-    "EncontroController_encerrar": {
-        "controller": "EncontroController",
-        "metodo": "post",
-        "caminho": "/encontro/:id/encerrar",
         "tag": "Encontros",
         "publica": false,
         "responseSchema": "EncontroRecuperadoDto"

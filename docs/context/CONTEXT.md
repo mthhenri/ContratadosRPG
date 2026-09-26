@@ -14,11 +14,13 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-26 · **Última decisão registrada:** `m7-21-contrato-migration-cena`
-> concluída (spec em `done/`): contrato da Cena em `shared` (`CenaTipoEnum`, `CenaStatusEnum`,
-> `cenaTemIniciativa`, `CenaCriarDto`/`CenaCriadaDto`) e migrations `0031` (schema `cena` +
-> `encontro.cena_id`) e `0032` (backfill de uma cena `COMBATE` por encontro). O `NOT NULL` de
-> `encontro.cena_id` foi adiado pelo autor para a `m7-22`. Próxima: `m7-22`. Antes:
+> **Última revisão:** 2026-09-26 · **Última decisão registrada:** `m7-22-backend-cena` concluída
+> (spec em `done/`): módulo `backend/cena` (CRUD de cena, `cena:alterada`, trava anti-vazamento de
+> cena `PLANEJADA`), `TransacaoService` (primeira transação em runtime do backend), "Encerrar" do
+> encontro encerra a cena-mãe e migration `0033` (`encontro.cena_id NOT NULL` + reconciliação). Só
+> backend — a tela é a `m7-23`, que **sobe junto** (ver §1). Próxima: `m7-23`. Antes:
+> `m7-21-contrato-migration-cena` concluída: contrato da Cena em `shared` e migrations `0031`/`0032`
+> (schema `cena` + backfill de uma cena `COMBATE` por encontro). Antes:
 > `i-027-caderno-janela-externa` concluída (spec em `done/`) e, com ela, a `I-027` inteira: o Caderno da campanha abre em janela
 > externa (`/janela/campanha/:id/caderno`, `960×720`) pelo ícone "Abrir em janela" do painel (fora
 > do mobile). O corpo do painel virou `CadernoConteudo` e o selo de salvamento `CadernoSalvamento`
@@ -571,13 +573,13 @@
 
 ## 1. Próxima Task
 
-**Módulo de Cenas — próxima: `m7-22-backend-cena.spec.md`.** `m7-21` concluída em 2026-09-26
-(contrato `CenaTipoEnum`/`CenaStatusEnum`/`cenaTemIniciativa`/`CenaCriarDto`, migrations
-`0031`/`0032` com backfill de uma cena `COMBATE` por encontro). **`encontro.cena_id` ainda é
-nullable**: o `NOT NULL` foi adiado pelo autor para a `m7-22` (item 7 da spec dela), que também
-decide o destino do `POST` de encontro solto. `m7-22` e `m7-23` (`docs/specs/backlog/`) completam o
-pedido do autor: tipar a cena na criação, com hub e redirecionamento das rotas de Iniciativa atuais.
-São a fundação do milestone `m7-cenas.spec.md`; seguir `m7-22 → m7-23` nessa ordem. A cena de Investigação (`m7-25`) só pode começar depois
+**Módulo de Cenas — próxima: `m7-23-frontend-hub-cenas.spec.md`.** `m7-21` (contrato + schema) e
+`m7-22` (backend + tempo real) concluídas em 2026-09-26. A `m7-23` completa o pedido do autor —
+tipar a cena na criação, com hub e redirecionamento das rotas de Iniciativa atuais — e já traz na
+spec as notas de contrato vindas da `m7-22` (inclusive expor `cenaId` no `EncontroRecuperadoDto`
+para o redirect). **Deploy: `m7-22` e `m7-23` sobem juntas.** Os encontros de backfill que estavam
+em `MONTAGEM` vivem em cenas `PLANEJADA`: com a `m7-22` só o mestre os vê, e iniciar, pedir
+iniciativa e encerrar exigem abrir a cena, o que antes do hub só se faz pela API. A cena de Investigação (`m7-25`) só pode começar depois
 de `m9-documentos-campanha.spec.md` ter ao menos o backend de documento + revelar/ocultar prontos.
 Resumo completo no cabeçalho deste arquivo (acima) e relato integral em `HISTORY.md`. **Atenção:**
 a task `espectador-coluna-acoes-e-iniciativa` (concluída depois desta entrada ter sido escrita, ver
@@ -2398,9 +2400,16 @@ progresso no topo, resumo operacional vira bottom sheet aberto por um botão ded
 
 ### Encontro de Combate — `backend/encontro`, `frontend/src/app/modules/encontro`
 
-**Cena-mãe (`m7-21`, só banco).** Todo encontro anterior a 2026-09-26 pendura numa `cena`
-`COMBATE` equivalente (`encontro.cena_id`, migration `0032`). Nenhum código lê ou grava `cena_id`
-ainda; encontros criados pelo `POST` atual nascem com `cena_id` nulo até a `m7-22`.
+**Cena-mãe (`m7-21`/`m7-22`).** Todo encontro pendura numa `cena` (`encontro.cena_id NOT NULL`,
+migrations `0032`/`0033`) e só nasce dentro dela, pela `CenaService` (`backend/src/modules/cena/`),
+na mesma transação — só para os tipos em que `cenaTemIniciativa` é verdadeiro. O ciclo de vida é o
+da cena: abrir (`PLANEJADA → ATIVA`) torna o encontro visível à mesa, encerrar a cena encerra o
+encontro junto, e no máximo uma cena `ATIVA` por campanha (abrir/criar já ativa encerra a atual na
+mesma operação). `POST campanha/:id/encontro` e `POST encontro/:id/encerrar` mantêm a URL, mas
+vivem no `CenaController` (criam uma cena `COMBATE` ativa / encerram a cena-mãe) até a `m7-23`
+trocar a tela. **Trava anti-vazamento:** encontro de cena `PLANEJADA` é só do mestre — `GET` 403,
+listagem omite, broadcast descarta o recorte de jogador/espectador; iniciar e pedir iniciativa
+exigem a cena aberta.
 
 Tela única (rota `/campanhas/:campanhaId/iniciativa`, `:encontroId` opcional para histórico) com
 duas visões em páginas separadas (`ui-39`): `PainelEncontroShell` resolve o papel
@@ -2478,13 +2487,15 @@ abrir uma ficha pela Iniciativa limita a janela a `1100×600` (mestre) ou geomet
 Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway nunca recebe escrita.
 Handshake autenticado pelo mesmo `JwtService` do Passport. Salas `ficha:<id>` e `campanha:<id>`,
 reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterada`, `membro:entrou`,
-`rolagem:registrada`, `campanha:estado-alterado`, `campanha:inventario-alterado` e
-`encontro:alterado` (por usuário — ver "Encontro de Combate" abaixo). Os eventos de
-inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
+`rolagem:registrada`, `campanha:estado-alterado`, `campanha:inventario-alterado`,
+`encontro:alterado` (por usuário — ver "Encontro de Combate" abaixo) e `cena:alterada` (`m7-22`:
+cena `PLANEJADA` só na sala `campanha:<id>:mestre`; aberta/encerrada na sala cheia + espectador).
+Os eventos de inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
 
 `CampanhaGateway.emitirFichaAlterada` também aciona `EncontroService.sincronizarFichaAlterada` após
 todo `ficha:alterada` (correção pós-`m7-17`, ver topo do arquivo): se a ficha alterada for
-combatente de um encontro aberto da mesma campanha, o encontro é remontado e `encontro:alterado` é
+combatente de algum encontro aberto da mesma campanha (desde a `m7-22` pode haver vários — o da
+cena ativa e os das planejadas), o encontro é remontado e `encontro:alterado` é
 retransmitido — sem isso, qualquer edição de Vida/Energia/Condição feita **fora** do
 `EncontroService` (ficha flutuante do próprio Encontro, ou a ficha "solta" de um combatente ativo)
 persistia corretamente mas nunca atualizava os cartões da Iniciativa em tempo real. `GatewayModule`

@@ -21,6 +21,7 @@ const DESCRICOES_TAG: Readonly<Record<string, string>> = {
     "Rolagens": "Registro e históricos de rolagens de dados.",
     "Caderno": "Páginas privadas, caderno do esquadrão e busca de campanha.",
     "Encontros": "Encontros de combate, combatentes, turnos, recursos e condições.",
+    "Cenas": "Cenas da campanha: criação tipada, preparo, abertura, encerramento e ordem.",
 };
 
 type Schema = SchemaObject | ReferenceObject;

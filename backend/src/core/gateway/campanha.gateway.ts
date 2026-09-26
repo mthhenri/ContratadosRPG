@@ -17,7 +17,12 @@ import type {
   CampanhaRecuperarDto,
   CampanhaSalaSairDto,
 } from '@contratados-rpg/shared/dtos/campanha';
-import { RolagemVisibilidadeEnum, TipoCampanhaMembroPapelEnum } from '@contratados-rpg/shared/enums';
+import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
+import {
+  CenaStatusEnum,
+  RolagemVisibilidadeEnum,
+  TipoCampanhaMembroPapelEnum,
+} from '@contratados-rpg/shared/enums';
 import type {
   FichaAcessoRevogadoDto,
   FichaAlteradaDto,
@@ -547,14 +552,31 @@ export class CampanhaGateway implements OnGatewayConnection {
         try {
           encontro = await montarParaUsuario(usuario);
         } catch {
-          // Socket de quem perdeu o vínculo com a campanha entre o `join` e a emissão: não recebe
-          // o evento, e o resto da sala não é penalizado por isso.
+          // Recorte recusado — quem perdeu o vínculo com a campanha entre o `join` e a emissão, ou
+          // quem não é mestre diante do encontro de uma cena `PLANEJADA` (trava anti-vazamento,
+          // m7-22): não recebe o evento, e o resto da sala não é penalizado por isso.
           continue;
         }
         porUsuario.set(usuario.sub, encontro);
       }
       socket.emit('encontro:alterado', { encontro } satisfies EncontroAlteradoDto);
     }
+  }
+
+  /**
+   * Emite `cena:alterada` (m7-22) depois de uma mutação de cena já persistida. A sala depende do
+   * status, pelo mesmo raciocínio de visibilidade de `emitirRolagemRegistrada`: cena `PLANEJADA` é
+   * exclusiva do mestre (trava anti-vazamento, decisão #7 do milestone) e vai só para
+   * `campanha:<id>:mestre`; `ATIVA`/`ENCERRADA` vão para a sala cheia e a do espectador, que tem a
+   * mesma visão read-only do jogador (m8-05). O payload é o resumo — nada do encontro, que segue
+   * pelo `encontro:alterado` com o recorte por usuário.
+   */
+  emitirCenaAlterada(evento: CenaAlteradaDto): void {
+    const salas =
+      evento.cena.status === CenaStatusEnum.PLANEJADA
+        ? [this.salaCampanhaMestre(evento.campanhaId)]
+        : [this.salaCampanha(evento.campanhaId), this.salaCampanhaEspectador(evento.campanhaId)];
+    this.servidor.to(salas).emit('cena:alterada', evento);
   }
 
   /**

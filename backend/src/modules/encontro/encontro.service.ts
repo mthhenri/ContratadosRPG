@@ -11,8 +11,6 @@ import type {
   EncontroCombatenteIniciativaAtribuirDto,
   EncontroCombatenteIniciativaFormulaAlterarDto,
   EncontroCombatenteLinhaDto,
-  EncontroCriarDto,
-  EncontroCriadoDto,
   EncontroEncerrarDto,
   EncontroIniciarDto,
   EncontroIniciativaPedidoDto,
@@ -28,6 +26,7 @@ import type {
 import type { FichaCriaturaDadosDto } from '@contratados-rpg/shared/dtos/ficha';
 import {
   CadenciaEnum,
+  CenaStatusEnum,
   EncontroEventoTipoEnum,
   EncontroStatusEnum,
   TipoCampanhaMembroPapelEnum,
@@ -51,8 +50,20 @@ import { montarCombatenteResumo } from './encontro-combatente.mapper';
 import { ocultarNaoRevelados } from './encontro-revelacao';
 
 /**
- * Regras do módulo `encontro` (m7-03) — a **montagem** do Encontro de Combate: criar, reunir
- * combatentes e coletar as iniciativas. A condução (turnos, vida, condições, log) é a `m7-04`.
+ * O estado completo do encontro mais o que o recorte por usuário precisa saber para redigi-lo:
+ * as fichas de identidade visível (m7-16) e o status da cena-mãe (trava anti-vazamento, m7-22).
+ */
+interface MontagemEncontro {
+  readonly estado: EncontroRecuperadoDto;
+  readonly fichaIdsIdentidadeVisivel: ReadonlySet<number>;
+  readonly cenaStatus: CenaStatusEnum;
+}
+
+/**
+ * Regras do módulo `encontro` (m7-03) — a **montagem** do Encontro de Combate: reunir combatentes
+ * e coletar as iniciativas. A condução (turnos, vida, condições, log) é a `m7-04`. Criar e
+ * encerrar o encontro são da `CenaService` desde a m7-22: o encontro é a estrutura de iniciativa
+ * de uma cena, e o ciclo de vida é o da cena-mãe.
  *
  * **Permissões (§14).** Conduzir e montar é privilégio do **mestre** da campanha; **ler** é de
  * qualquer membro. O papel vem de `CampanhaRepository.recuperarMembro` — a mesma fonte usada pelo
@@ -77,59 +88,35 @@ export class EncontroService {
     private readonly armazenamentoProvedor: ArmazenamentoProvedor,
   ) {}
 
+  // A criação do encontro saiu daqui na m7-22: o encontro só nasce dentro de uma cena, pela
+  // `CenaService`, na mesma transação da cena (a invariante "uma ativa por campanha" é dela).
+
   /**
-   * Cria o encontro da campanha, em `MONTAGEM` e sem combatentes. Só o **mestre** cria, e a
-   * campanha aceita no máximo **um** encontro não-encerrado por vez — invariante arbitrada aqui
-   * porque o PostgreSQL não aceita subquery no predicado de um índice parcial (migration 0021).
+   * Recupera o estado completo do encontro. Exige ser **membro** da campanha — e, enquanto a
+   * cena-mãe estiver `PLANEJADA`, ser o **mestre** (trava anti-vazamento, m7-22).
    */
-  async criarEncontro(
-    dto: EncontroCriarDto & { campanhaId: number },
-    usuarioAtivo: JwtPayload,
-  ): Promise<EncontroCriadoDto> {
-    await this.validarMestre(dto.campanhaId, usuarioAtivo);
-
-    const encontroAberto = await this.encontroRepositorio.recuperarAbertoPorCampanha({
-      campanhaId: dto.campanhaId,
-    });
-    if (encontroAberto) {
-      throw new BusinessException(
-        'A campanha já tem um encontro em andamento — encerre-o antes de abrir outro',
-      );
-    }
-
-    const encontroCriado = await this.encontroRepositorio.criarEncontro({
-      campanhaId: dto.campanhaId,
-      nome: dto.nome,
-      status: EncontroStatusEnum.MONTAGEM,
-    });
-
-    await this.emitirEstado(encontroCriado, usuarioAtivo);
-    return {
-      id: encontroCriado.id,
-      campanhaId: encontroCriado.campanhaId,
-      nome: encontroCriado.nome,
-      status: encontroCriado.status,
-    };
-  }
-
-  /** Recupera o estado completo do encontro. Exige ser **membro** da campanha. */
   async recuperarEncontro(
     dto: EncontroRecuperarDto,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
     const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.id);
     await this.validarMembro(encontroEncontrado.campanhaId, usuarioAtivo);
-    const { estado, fichaIdsIdentidadeVisivel } = await this.montarEstado(encontroEncontrado);
-    return this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioAtivo);
+    return this.montarEstadoParaUsuario(await this.montarEstado(encontroEncontrado), usuarioAtivo);
   }
 
-  /** Encontros da campanha (corrente + histórico). Exige ser **membro**. */
+  /**
+   * Encontros da campanha (corrente + histórico). Exige ser **membro**; só o mestre vê os
+   * encontros de cenas `PLANEJADA` (m7-22).
+   */
   async listarPorCampanha(
     dto: { campanhaId: number },
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroResumoDto[]> {
-    await this.validarMembro(dto.campanhaId, usuarioAtivo);
-    return this.encontroRepositorio.listarPorCampanha(dto);
+    const membro = await this.validarMembro(dto.campanhaId, usuarioAtivo);
+    return this.encontroRepositorio.listarPorCampanha({
+      campanhaId: dto.campanhaId,
+      incluirCenaPlanejada: membro.papel === TipoCampanhaMembroPapelEnum.MESTRE,
+    });
   }
 
   /**
@@ -297,6 +284,7 @@ export class EncontroService {
 
     const membro = await this.validarMembro(encontroEncontrado.campanhaId, usuarioAtivo);
     if (membro.papel !== TipoCampanhaMembroPapelEnum.MESTRE) {
+      this.validarCenaVisivel(encontroEncontrado);
       await this.validarCombatenteDoJogador(combatenteEncontrado, usuarioAtivo);
     }
 
@@ -374,6 +362,10 @@ export class EncontroService {
 
     if (encontroEncontrado.status !== EncontroStatusEnum.MONTAGEM) {
       throw new BusinessException('Só um encontro em montagem pode ser iniciado');
+    }
+    if (encontroEncontrado.cenaStatus === CenaStatusEnum.PLANEJADA) {
+      // Pré-montar é o preparo; rodar o combate é coisa da mesa — encontro ATIVO só em cena ATIVA.
+      throw new BusinessException('Abra a cena antes de iniciar o combate');
     }
 
     const combatentes = await this.encontroRepositorio.listarCombatentes({
@@ -467,24 +459,38 @@ export class EncontroService {
   }
 
   /**
-   * Encerra o combate (`ATIVO` → `ENCERRADO`). Vira histórico imutável; as fichas ficam com a vida
-   * em que pararam — o encontro nunca "desfaz" o que aconteceu na mesa.
+   * Encerra o combate (`MONTAGEM`/`ATIVO` → `ENCERRADO`). Vira histórico imutável; as fichas ficam
+   * com a vida em que pararam — o encontro nunca "desfaz" o que aconteceu na mesa.
+   *
+   * Desde a m7-22 só a `CenaService` chama isto, ao encerrar a cena-mãe (nunca existe cena
+   * `ENCERRADA` com encontro aberto, nem o inverso): ela já validou o mestre e abriu a transação, e
+   * transmite o estado com {@link emitirEncontroAlterado} **depois** de confirmar — por isso aqui
+   * não há validação de papel nem emissão. Encontro já encerrado é no-op.
    */
-  async encerrarEncontro(
-    dto: EncontroEncerrarDto,
-    usuarioAtivo: JwtPayload,
-  ): Promise<EncontroRecuperadoDto> {
+  async encerrarEncontroDaCena(dto: EncontroEncerrarDto): Promise<void> {
     const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.id);
-    await this.validarMestre(encontroEncontrado.campanhaId, usuarioAtivo);
-    this.validarEncontroMutavel(encontroEncontrado);
-
-    const encontroEncerrado = await this.encontroRepositorio.alterarStatus({
+    if (encontroEncontrado.status === EncontroStatusEnum.ENCERRADO) {
+      return;
+    }
+    await this.encontroRepositorio.alterarStatus({
       id: encontroEncontrado.id,
       status: EncontroStatusEnum.ENCERRADO,
       rodadaAtual: encontroEncontrado.rodadaAtual,
       turnoIndice: encontroEncontrado.turnoIndice,
     });
-    return this.emitirEstado(encontroEncerrado, usuarioAtivo);
+  }
+
+  /**
+   * Transmite o estado corrente do encontro na sala da campanha, um recorte por usuário — o
+   * mesmo `encontro:alterado` de toda mutação deste service. Usado pela `CenaService` depois de
+   * confirmar uma troca de status da cena-mãe (abrir torna o encontro visível aos jogadores;
+   * encerrar o fecha para todos).
+   */
+  async emitirEncontroAlterado(dto: EncontroRecuperarDto): Promise<void> {
+    const montagem = await this.montarEstado(await this.recuperarEncontroObrigatorio(dto.id));
+    await this.campanhaGateway.emitirEncontroAlterado(montagem.estado.campanhaId, (usuarioDoSocket) =>
+      this.montarEstadoParaUsuario(montagem, usuarioDoSocket),
+    );
   }
 
   /**
@@ -641,6 +647,10 @@ export class EncontroService {
     const encontroEncontrado = await this.recuperarEncontroObrigatorio(dto.id);
     await this.validarMestre(encontroEncontrado.campanhaId, usuarioAtivo);
     this.validarEncontroMutavel(encontroEncontrado);
+    if (encontroEncontrado.cenaStatus === CenaStatusEnum.PLANEJADA) {
+      // O chamado vai para a sala inteira: numa cena planejada ele denunciaria o combate (m7-22).
+      throw new BusinessException('Abra a cena antes de pedir a iniciativa aos jogadores');
+    }
 
     this.campanhaGateway.emitirEncontroIniciativaPedido({
       id: encontroEncontrado.id,
@@ -658,29 +668,30 @@ export class EncontroService {
    *
    * Chamado pelo `CampanhaGateway.emitirFichaAlterada` (que não decide nada sozinho — proibição
    * #25, só encaminha) depois de todo `ficha:alterada`. No-op quando a ficha não pertence a uma
-   * campanha ou não é combatente de um encontro ainda aberto (`MONTAGEM`/`ATIVO`) — a maioria das
-   * chamadas cai aqui, então a consulta fica restrita a achar o encontro aberto antes de montar
-   * qualquer estado.
+   * campanha ou não é combatente de nenhum encontro ainda aberto (`MONTAGEM`/`ATIVO`) — a maioria
+   * das chamadas cai aqui, então a consulta fica restrita a achar os encontros abertos antes de
+   * montar qualquer estado. Desde a m7-22 pode haver mais de um aberto (o da cena ativa e os das
+   * cenas planejadas); o de cena planejada só chega ao mestre, pela trava de
+   * {@link montarEstadoParaUsuario}.
    */
   async sincronizarFichaAlterada(fichaId: number, campanhaId: number | null): Promise<void> {
     if (campanhaId === null) {
       return;
     }
-    const encontroAberto = await this.encontroRepositorio.recuperarAbertoPorCampanha({ campanhaId });
-    if (!encontroAberto) {
-      return;
-    }
-    const combatentes = await this.encontroRepositorio.listarCombatentes({
-      encontroId: encontroAberto.id,
-    });
-    if (!combatentes.some((combatente) => combatente.fichaId === fichaId)) {
-      return;
-    }
+    const encontrosAbertos = await this.encontroRepositorio.listarAbertosPorCampanha({ campanhaId });
+    for (const encontroAberto of encontrosAbertos) {
+      const combatentes = await this.encontroRepositorio.listarCombatentes({
+        encontroId: encontroAberto.id,
+      });
+      if (!combatentes.some((combatente) => combatente.fichaId === fichaId)) {
+        continue;
+      }
 
-    const { estado, fichaIdsIdentidadeVisivel } = await this.montarEstado(encontroAberto);
-    await this.campanhaGateway.emitirEncontroAlterado(estado.campanhaId, (usuarioDoSocket) =>
-      this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioDoSocket),
-    );
+      const montagem = await this.montarEstado(encontroAberto);
+      await this.campanhaGateway.emitirEncontroAlterado(montagem.estado.campanhaId, (usuarioDoSocket) =>
+        this.montarEstadoParaUsuario(montagem, usuarioDoSocket),
+      );
+    }
   }
 
   // ── Apoio da condução ──────────────────────────────────────────────────────
@@ -738,6 +749,7 @@ export class EncontroService {
     if (membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
       return;
     }
+    this.validarCenaVisivel(encontro);
 
     const turnoAtual = ordemRodada[encontro.turnoIndice];
     if (
@@ -934,6 +946,17 @@ export class EncontroService {
     }
   }
 
+  /**
+   * Trava anti-vazamento (m7-22, decisão #7 do milestone): o encontro de uma cena `PLANEJADA` é
+   * exclusivo do mestre. Quem chama já sabe que o usuário **não** é mestre; a recusa é de acesso
+   * (403), nunca um payload vazio.
+   */
+  private validarCenaVisivel(encontro: { cenaStatus: CenaStatusEnum }): void {
+    if (encontro.cenaStatus === CenaStatusEnum.PLANEJADA) {
+      throw new UnauthorizedAccessException();
+    }
+  }
+
   /** Encontro encerrado é histórico imutável. */
   private validarEncontroMutavel(encontro: EncontroLinhaDto): void {
     if (encontro.status === EncontroStatusEnum.ENCERRADO) {
@@ -999,11 +1022,10 @@ export class EncontroService {
    * está oculta (`ficha.oculta`, já carregado na mesma linha do combatente — proibição #28 é sobre
    * reimplementar a consulta de **permissão** dos números, não sobre reler uma coluna já em mãos).
    * `montarEstadoParaUsuario` usa esse conjunto pra decidir quem mantém a "carteirinha" mesmo sem
-   * `usuario_ficha_acesso`.
+   * `usuario_ficha_acesso`. E devolve o status da cena-mãe (m7-22), que a mesma função usa para a
+   * trava anti-vazamento.
    */
-  private async montarEstado(
-    encontro: EncontroLinhaDto,
-  ): Promise<{ estado: EncontroRecuperadoDto; fichaIdsIdentidadeVisivel: ReadonlySet<number> }> {
+  private async montarEstado(encontro: EncontroLinhaDto): Promise<MontagemEncontro> {
     const linhasCombatentes = await this.encontroRepositorio.listarCombatentes({
       encontroId: encontro.id,
     });
@@ -1040,6 +1062,7 @@ export class EncontroService {
         eventos,
       },
       fichaIdsIdentidadeVisivel,
+      cenaStatus: encontro.cenaStatus,
     };
   }
 
@@ -1054,16 +1077,21 @@ export class EncontroService {
    * `listarFichas` sempre o rejeita (decisão de produto #4, m8-espectadores-campanha — espectador
    * nunca vê ficha), então o conjunto sai vazio direto, sem chamar a service — não é uma segunda
    * regra, é o mesmo fato já conhecido, só evitando a exceção.
+   *
+   * **Trava anti-vazamento (m7-22).** Encontro de cena `PLANEJADA` recusa (403) quem não é mestre —
+   * na leitura REST e no broadcast: o gateway descarta o socket cujo recorte estoura, então o
+   * `encontro:alterado` de uma cena em preparo só chega ao mestre.
    */
   private async montarEstadoParaUsuario(
-    estado: EncontroRecuperadoDto,
-    fichaIdsIdentidadeVisivel: ReadonlySet<number>,
+    montagem: MontagemEncontro,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
+    const { estado, fichaIdsIdentidadeVisivel } = montagem;
     const membro = await this.validarMembro(estado.campanhaId, usuarioAtivo);
     if (membro.papel === TipoCampanhaMembroPapelEnum.MESTRE) {
       return estado;
     }
+    this.validarCenaVisivel(montagem);
     const fichasVisiveis =
       membro.papel === TipoCampanhaMembroPapelEnum.ESPECTADOR
         ? []
@@ -1107,15 +1135,15 @@ export class EncontroService {
   }
 
   /**
-   * Base comum das duas leituras acima: acha o encontro não-encerrado da campanha
-   * (`recuperarAbertoPorCampanha`, a mesma consulta que já arbitra "um encontro por campanha" em
-   * `criarEncontro` — proibição #28) e aplica a revelação (m7-06) com o conjunto de fichas dado.
+   * Base comum das duas leituras acima: acha o encontro não-encerrado da cena **ativa** da campanha
+   * (`recuperarAbertoDaCenaAtiva` — encontro de cena planejada nunca chega a espectador nem a
+   * prévia de jogador, m7-22) e aplica a revelação (m7-06) com o conjunto de fichas dado.
    */
   private async recuperarEncontroAbertoRedigido(
     campanhaId: number,
     fichasVisiveis: readonly { readonly id: number }[],
   ): Promise<EncontroRecuperadoDto | null> {
-    const encontroAberto = await this.encontroRepositorio.recuperarAbertoPorCampanha({ campanhaId });
+    const encontroAberto = await this.encontroRepositorio.recuperarAbertoDaCenaAtiva({ campanhaId });
     if (!encontroAberto) {
       return null;
     }
@@ -1146,11 +1174,10 @@ export class EncontroService {
     encontro: EncontroLinhaDto,
     usuarioAtivo: JwtPayload,
   ): Promise<EncontroRecuperadoDto> {
-    const { estado, fichaIdsIdentidadeVisivel } = await this.montarEstado(encontro);
-    await this.campanhaGateway.emitirEncontroAlterado(estado.campanhaId, (usuarioDoSocket) =>
-      this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioDoSocket),
+    const montagem = await this.montarEstado(encontro);
+    await this.campanhaGateway.emitirEncontroAlterado(montagem.estado.campanhaId, (usuarioDoSocket) =>
+      this.montarEstadoParaUsuario(montagem, usuarioDoSocket),
     );
-    return this.montarEstadoParaUsuario(estado, fichaIdsIdentidadeVisivel, usuarioAtivo);
+    return this.montarEstadoParaUsuario(montagem, usuarioAtivo);
   }
-
 }

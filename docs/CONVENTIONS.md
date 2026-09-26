@@ -298,6 +298,12 @@ async alterar(dto: FichaInternoAlterarDto, usuarioAtivo: JwtPayload) {
 }
 ```
 
+**Escrita atômica** (várias escritas que não podem ficar pela metade — trocar a cena ativa, criar a
+cena com o seu encontro): a service envolve só as escritas em `transacaoService.executar(...)`
+(`backend/src/database/transacao.service.ts`, m7-22). Todo repositório chamado dentro do callback
+participa da mesma transação sem receber `trx`; o SQL continua no repositório dono da tabela.
+Emissão de tempo real fica **fora** do callback, depois do commit.
+
 ### Repository — só SQL
 Sem lógica. `executarConsulta()` / `executarComando()` / `executarSoftDelete()`.
 Nunca recebe primitivo nem `Partial<Model>` — sempre DTO interno

@@ -61,6 +61,22 @@ de Iniciativa e a renomeação do item de navegação — sem regredir o painel 
    (`m7-22`); `criarEncontro` deixa de ser chamado direto pela tela — a criação passa a ser
    `cenaService.criarCena`.
 
+### Notas vindas da `m7-22` (backend já entregue)
+
+- Endpoints: `POST/GET campanha/:id/cena`, `PUT campanha/:id/cena/ordem` (`CenaReordenarDto`, com
+  **todas** as planejadas), `GET cena/:id` (`CenaRecuperadaDto`, com o encontro no recorte do
+  usuário), `POST cena/:id/abrir`, `POST cena/:id/encerrar`; evento `cena:alterada`
+  (`CenaAlteradaDto`). A listagem já vem ordenada: ativa, planejadas pela `ordem`, encerradas.
+- `POST campanha/:id/encontro` e `POST encontro/:id/encerrar` continuam respondendo (agora pela
+  `CenaService`) só para o painel atual não quebrar — a tela nova usa os endpoints de cena.
+- Só a cena `ATIVA` encerra (planejada não); encontro de cena planejada não inicia nem pede
+  iniciativa — o painel do mestre precisa oferecer "Abrir" antes dessas ações.
+- O redirect `.../iniciativa/:encontroId` precisa do `cenaId` do encontro, que o
+  `EncontroRecuperadoDto` ainda **não** expõe (a linha interna já tem `cenaId`): acrescentar o campo
+  nesta task.
+- Os encontros de backfill em `MONTAGEM` estão em cenas `PLANEJADA` (só o mestre os vê) — o hub é o
+  primeiro lugar onde o mestre consegue abri-los. Esta task sobe junto com a `m7-22`.
+
 ## Critérios de Aceite
 
 - Criar uma cena exige escolher um tipo; o hub mostra esse tipo como chip em toda cena listada.

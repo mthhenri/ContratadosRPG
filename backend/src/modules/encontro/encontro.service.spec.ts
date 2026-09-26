@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type {
   EncontroCombatenteLinhaDto,
   EncontroLinhaDto,
 } from '@contratados-rpg/shared/dtos/encontro';
 import {
   CadenciaEnum,
+  CenaStatusEnum,
   EncontroStatusEnum,
   FormacaoBonusEnum,
   ItemCategoriaEnum,
@@ -23,9 +24,9 @@ import type { EncontroRepository } from './encontro.repository';
 import { EncontroService } from './encontro.service';
 
 interface EncontroRepositorioDublado {
-  criarEncontro: ReturnType<typeof vi.fn>;
   recuperarPorId: ReturnType<typeof vi.fn>;
-  recuperarAbertoPorCampanha: ReturnType<typeof vi.fn>;
+  recuperarAbertoDaCenaAtiva: ReturnType<typeof vi.fn>;
+  listarAbertosPorCampanha: ReturnType<typeof vi.fn>;
   listarPorCampanha: ReturnType<typeof vi.fn>;
   listarCombatentes: ReturnType<typeof vi.fn>;
   recuperarCombatentePorId: ReturnType<typeof vi.fn>;
@@ -55,6 +56,8 @@ function criarEncontroLinha(overrides: Partial<EncontroLinhaDto> = {}): Encontro
   return {
     id: 50,
     campanhaId: 5,
+    cenaId: 900,
+    cenaStatus: CenaStatusEnum.ATIVA,
     nome: 'Operação Cinza-Pálido',
     status: EncontroStatusEnum.MONTAGEM,
     rodadaAtual: 0,
@@ -109,9 +112,9 @@ describe('EncontroService', () => {
 
   beforeEach(() => {
     encontroRepositorio = {
-      criarEncontro: vi.fn(),
       recuperarPorId: vi.fn(),
-      recuperarAbertoPorCampanha: vi.fn().mockResolvedValue(null),
+      recuperarAbertoDaCenaAtiva: vi.fn().mockResolvedValue(null),
+      listarAbertosPorCampanha: vi.fn().mockResolvedValue([]),
       listarPorCampanha: vi.fn(),
       listarCombatentes: vi.fn().mockResolvedValue([]),
       recuperarCombatentePorId: vi.fn(),
@@ -142,50 +145,99 @@ describe('EncontroService', () => {
     );
   });
 
-  describe('criarEncontro', () => {
-    it('cria em MONTAGEM e transmite o estado depois de persistir', async () => {
-      const encontroCriado = criarEncontroLinha();
-      encontroRepositorio.criarEncontro.mockResolvedValue(encontroCriado);
+  describe('trava anti-vazamento de cena planejada (m7-22)', () => {
+    /** Papel por usuário — o gateway pergunta o recorte de cada socket com o próprio usuário. */
+    function papelPorUsuario(usuario: { usuarioId: number }): { papel: TipoCampanhaMembroPapelEnum } {
+      return {
+        papel:
+          usuario.usuarioId === mestre.sub
+            ? TipoCampanhaMembroPapelEnum.MESTRE
+            : TipoCampanhaMembroPapelEnum.JOGADOR,
+      };
+    }
 
-      const resultado = await service.criarEncontro(
-        { campanhaId: 5, nome: 'Operação Cinza-Pálido' },
+    beforeEach(() => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ cenaStatus: CenaStatusEnum.PLANEJADA }),
+      );
+      (
+        campanhaRepositorio.recuperarMembro as Mock<(dto: { usuarioId: number }) => Promise<unknown>>
+      ).mockImplementation((dto) => Promise.resolve(papelPorUsuario(dto)));
+    });
+
+    it('mestre adiciona combatente a encontro de cena planejada — o broadcast recusa o recorte do jogador', async () => {
+      await service.adicionarCombatente(
+        {
+          encontroId: 50,
+          fichaId: null,
+          nomeAvulso: 'Sentinela',
+          vidaMaximaAvulso: 10,
+          cadencia: null,
+          corAvulso: '#4a9d6b',
+        },
         mestre,
       );
 
-      expect(encontroRepositorio.criarEncontro).toHaveBeenCalledWith({
-        campanhaId: 5,
-        nome: 'Operação Cinza-Pálido',
-        status: EncontroStatusEnum.MONTAGEM,
-      });
-      expect(resultado.status).toBe(EncontroStatusEnum.MONTAGEM);
-      expect(campanhaGateway.emitirEncontroAlterado).toHaveBeenCalled();
+      expect(campanhaGateway.emitirEncontroAlterado).toHaveBeenCalledTimes(1);
+      const montarParaUsuario = campanhaGateway.emitirEncontroAlterado.mock.calls[0][1] as (
+        usuario: JwtPayload,
+      ) => Promise<unknown>;
+      // O gateway descarta o socket cujo recorte estoura: nada chega ao jogador conectado.
+      await expect(montarParaUsuario(jogador)).rejects.toThrow(UnauthorizedAccessException);
+      await expect(montarParaUsuario(mestre)).resolves.toMatchObject({ id: 50 });
     });
 
-    it('recusa um segundo encontro enquanto houver um não-encerrado na campanha', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(criarEncontroLinha());
-
-      await expect(service.criarEncontro({ campanhaId: 5, nome: 'Outro' }, mestre)).rejects.toThrow(
-        BusinessException,
+    it('GET do encontro de cena planejada recusa o jogador (403, não payload vazio) e atende o mestre', async () => {
+      await expect(service.recuperarEncontro({ id: 50 }, jogador)).rejects.toThrow(
+        UnauthorizedAccessException,
       );
-      expect(encontroRepositorio.criarEncontro).not.toHaveBeenCalled();
+      await expect(service.recuperarEncontro({ id: 50 }, mestre)).resolves.toMatchObject({ id: 50 });
+      expect(fichaService.listarFichas).not.toHaveBeenCalled();
     });
 
-    it('jogador não cria encontro', async () => {
-      campanhaRepositorio.recuperarMembro.mockResolvedValue({
-        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+    it('cena aberta libera o jogador — o mesmo encontro, já em cena ATIVA, chega a ele', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ cenaStatus: CenaStatusEnum.ATIVA }),
+      );
+
+      await expect(service.recuperarEncontro({ id: 50 }, jogador)).resolves.toMatchObject({ id: 50 });
+    });
+
+    it('jogador não atribui iniciativa em encontro de cena planejada, nem da própria ficha', async () => {
+      encontroRepositorio.recuperarCombatentePorId.mockResolvedValue(
+        criarCombatenteLinha({ fichaId: 20, nomeAvulso: null, vidaMaximaAvulso: null, vidaAtualAvulso: null }),
+      );
+
+      await expect(service.atribuirIniciativa({ id: 100, iniciativa: 15 }, jogador)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
+      expect(encontroRepositorio.alterarIniciativa).not.toHaveBeenCalled();
+    });
+
+    it('listagem omite encontros de cena planejada para quem não é mestre', async () => {
+      encontroRepositorio.listarPorCampanha.mockResolvedValue([]);
+
+      await service.listarPorCampanha({ campanhaId: 5 }, jogador);
+      await service.listarPorCampanha({ campanhaId: 5 }, mestre);
+
+      expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(1, {
+        campanhaId: 5,
+        incluirCenaPlanejada: false,
       });
-
-      await expect(
-        service.criarEncontro({ campanhaId: 5, nome: 'Emboscada' }, jogador),
-      ).rejects.toThrow(UnauthorizedAccessException);
+      expect(encontroRepositorio.listarPorCampanha).toHaveBeenNthCalledWith(2, {
+        campanhaId: 5,
+        incluirCenaPlanejada: true,
+      });
     });
+  });
 
-    it('quem não é membro da campanha não cria encontro', async () => {
-      campanhaRepositorio.recuperarMembro.mockResolvedValue(null);
+  describe('emitirEncontroAlterado (usado pela CenaService depois do commit)', () => {
+    it('transmite o estado corrente na sala da campanha', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
 
-      await expect(
-        service.criarEncontro({ campanhaId: 5, nome: 'Emboscada' }, jogador),
-      ).rejects.toThrow(UnauthorizedAccessException);
+      await service.emitirEncontroAlterado({ id: 50 });
+
+      expect(campanhaGateway.emitirEncontroAlterado).toHaveBeenCalledWith(5, expect.any(Function));
     });
   });
 
@@ -824,7 +876,7 @@ describe('EncontroService', () => {
 
   describe('recuperarEncontroAtivoParaEspectador (m8-05, Painel do espectador)', () => {
     it('devolve null sem encontro em andamento — sem consultar ficha nenhuma', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(null);
+      encontroRepositorio.recuperarAbertoDaCenaAtiva.mockResolvedValue(null);
 
       const resultado = await service.recuperarEncontroAtivoParaEspectador({ campanhaId: 5 });
 
@@ -834,7 +886,7 @@ describe('EncontroService', () => {
     });
 
     it('redige o encontro em andamento sem nenhuma ficha visível, sem validar o requisitante (mestre em prévia recebe o mesmo que o espectador real)', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(
+      encontroRepositorio.recuperarAbertoDaCenaAtiva.mockResolvedValue(
         criarEncontroLinha({ status: EncontroStatusEnum.ATIVO, rodadaAtual: 1 }),
       );
       encontroRepositorio.listarCombatentes.mockResolvedValue([
@@ -871,7 +923,7 @@ describe('EncontroService', () => {
 
   describe('recuperarEncontroAtivoParaAlvo (m8-05, prévia de jogador)', () => {
     it('devolve null sem encontro em andamento', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(null);
+      encontroRepositorio.recuperarAbertoDaCenaAtiva.mockResolvedValue(null);
 
       const resultado = await service.recuperarEncontroAtivoParaAlvo({
         campanhaId: 5,
@@ -882,7 +934,7 @@ describe('EncontroService', () => {
     });
 
     it('redige o encontro com a identidade do alvo, nunca do mestre requisitante — ficha visível ao alvo permanece revelada', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(
+      encontroRepositorio.recuperarAbertoDaCenaAtiva.mockResolvedValue(
         criarEncontroLinha({ status: EncontroStatusEnum.ATIVO }),
       );
       fichaService.listarFichasParaAlvo.mockResolvedValue([{ id: 40 }]);
@@ -940,22 +992,22 @@ describe('EncontroService', () => {
     it('não faz nada quando a ficha não pertence a nenhuma campanha', async () => {
       await service.sincronizarFichaAlterada(30, null);
 
-      expect(encontroRepositorio.recuperarAbertoPorCampanha).not.toHaveBeenCalled();
+      expect(encontroRepositorio.listarAbertosPorCampanha).not.toHaveBeenCalled();
       expect(campanhaGateway.emitirEncontroAlterado).not.toHaveBeenCalled();
     });
 
     it('não faz nada quando a campanha não tem encontro aberto', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(null);
+      encontroRepositorio.listarAbertosPorCampanha.mockResolvedValue([]);
 
       await service.sincronizarFichaAlterada(30, 5);
 
-      expect(encontroRepositorio.recuperarAbertoPorCampanha).toHaveBeenCalledWith({ campanhaId: 5 });
+      expect(encontroRepositorio.listarAbertosPorCampanha).toHaveBeenCalledWith({ campanhaId: 5 });
       expect(encontroRepositorio.listarCombatentes).not.toHaveBeenCalled();
       expect(campanhaGateway.emitirEncontroAlterado).not.toHaveBeenCalled();
     });
 
     it('não faz nada quando a ficha não é combatente do encontro aberto', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarAbertosPorCampanha.mockResolvedValue([criarEncontroLinha()]);
       encontroRepositorio.listarCombatentes.mockResolvedValue([
         criarCombatenteLinha({ fichaId: 99 }),
       ]);
@@ -966,7 +1018,7 @@ describe('EncontroService', () => {
     });
 
     it('remonta e transmite o estado quando a ficha alterada é combatente do encontro aberto', async () => {
-      encontroRepositorio.recuperarAbertoPorCampanha.mockResolvedValue(criarEncontroLinha());
+      encontroRepositorio.listarAbertosPorCampanha.mockResolvedValue([criarEncontroLinha()]);
       // `listarCombatentes` é consultado duas vezes: a checagem de pertencimento e a montagem do
       // estado (`montarEstado`) — mesma linha respondendo às duas chamadas.
       encontroRepositorio.listarCombatentes.mockResolvedValue([
@@ -976,6 +1028,20 @@ describe('EncontroService', () => {
       await service.sincronizarFichaAlterada(30, 5);
 
       expect(campanhaGateway.emitirEncontroAlterado).toHaveBeenCalledWith(5, expect.any(Function));
+    });
+
+    it('com mais de um encontro aberto (cena ativa + cena planejada), transmite cada um em que a ficha é combatente', async () => {
+      encontroRepositorio.listarAbertosPorCampanha.mockResolvedValue([
+        criarEncontroLinha({ id: 50 }),
+        criarEncontroLinha({ id: 51, cenaId: 901, cenaStatus: CenaStatusEnum.PLANEJADA }),
+      ]);
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarCombatenteLinha({ fichaId: 30 }),
+      ]);
+
+      await service.sincronizarFichaAlterada(30, 5);
+
+      expect(campanhaGateway.emitirEncontroAlterado).toHaveBeenCalledTimes(2);
     });
   });
 });

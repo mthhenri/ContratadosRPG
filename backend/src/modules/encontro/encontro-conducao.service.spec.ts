@@ -5,13 +5,14 @@ import type {
 } from '@contratados-rpg/shared/dtos/encontro';
 import {
   CadenciaEnum,
+  CenaStatusEnum,
   EncontroEventoTipoEnum,
   EncontroStatusEnum,
   TipoCampanhaMembroPapelEnum,
   TipoFichaEnum,
   TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
-import { BusinessException } from '../../core/exceptions';
+import { BusinessException, UnauthorizedAccessException } from '../../core/exceptions';
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
@@ -37,6 +38,8 @@ function criarEncontroLinha(overrides: Partial<EncontroLinhaDto> = {}): Encontro
   return {
     id: 50,
     campanhaId: 5,
+    cenaId: 900,
+    cenaStatus: CenaStatusEnum.ATIVA,
     nome: 'Operação Cinza-Pálido',
     status: EncontroStatusEnum.ATIVO,
     rodadaAtual: 1,
@@ -112,9 +115,7 @@ describe('EncontroService — condução (m7-04)', () => {
 
   beforeEach(() => {
     encontroRepositorio = {
-      criarEncontro: vi.fn(),
       recuperarPorId: vi.fn().mockResolvedValue(criarEncontroLinha()),
-      recuperarAbertoPorCampanha: vi.fn().mockResolvedValue(null),
       listarPorCampanha: vi.fn(),
       listarCombatentes: vi.fn().mockResolvedValue([]),
       recuperarCombatentePorId: vi.fn(),
@@ -198,6 +199,16 @@ describe('EncontroService — condução (m7-04)', () => {
       );
     });
 
+    it('encontro de cena planejada não começa — rodar o combate é da mesa (m7-22)', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ status: EncontroStatusEnum.MONTAGEM, cenaStatus: CenaStatusEnum.PLANEJADA }),
+      );
+      encontroRepositorio.listarCombatentes.mockResolvedValue([criarCombatenteLinha({ iniciativa: 12 })]);
+
+      await expect(service.iniciarEncontro({ id: 50 }, mestre)).rejects.toThrow(BusinessException);
+      expect(encontroRepositorio.alterarStatus).not.toHaveBeenCalled();
+    });
+
     it('encontro já ativo não é iniciado de novo', async () => {
       encontroRepositorio.recuperarPorId.mockResolvedValue(criarEncontroLinha());
 
@@ -239,6 +250,24 @@ describe('EncontroService — condução (m7-04)', () => {
       });
 
       await expect(service.avancarTurno({ id: 50 }, jogador)).rejects.toThrow();
+      expect(encontroRepositorio.alterarTurno).not.toHaveBeenCalled();
+    });
+
+    it('recusa o jogador em encontro de cena planejada, mesmo no turno da própria ficha (m7-22)', async () => {
+      encontroRepositorio.listarCombatentes.mockResolvedValue([
+        criarAgenteLinha({ id: 1, iniciativa: 18 }),
+      ]);
+      encontroRepositorio.combatentePertenceAoUsuario.mockResolvedValue(true);
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ cenaStatus: CenaStatusEnum.PLANEJADA }),
+      );
+      campanhaRepositorio.recuperarMembro.mockResolvedValue({
+        papel: TipoCampanhaMembroPapelEnum.JOGADOR,
+      });
+
+      await expect(service.avancarTurno({ id: 50 }, jogador)).rejects.toThrow(
+        UnauthorizedAccessException,
+      );
       expect(encontroRepositorio.alterarTurno).not.toHaveBeenCalled();
     });
 
@@ -526,18 +555,24 @@ describe('EncontroService — condução (m7-04)', () => {
       });
       expect(encontroRepositorio.alterarIniciativa).not.toHaveBeenCalled();
     });
+
+    it('recusa o chamado em encontro de cena planejada — ele iria à sala inteira (m7-22)', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ status: EncontroStatusEnum.MONTAGEM, cenaStatus: CenaStatusEnum.PLANEJADA }),
+      );
+
+      await expect(service.pedirIniciativa({ id: 50 }, mestre)).rejects.toThrow(BusinessException);
+      expect(campanhaGateway.emitirEncontroIniciativaPedido).not.toHaveBeenCalled();
+    });
   });
 
-  describe('encerrarEncontro', () => {
-    it('vai para ENCERRADO preservando rodada/turno em que parou', async () => {
+  describe('encerrarEncontroDaCena (chamado pela CenaService, dentro da transação)', () => {
+    it('vai para ENCERRADO preservando rodada/turno em que parou, sem emitir', async () => {
       encontroRepositorio.recuperarPorId.mockResolvedValue(
         criarEncontroLinha({ rodadaAtual: 3, turnoIndice: 2 }),
       );
-      encontroRepositorio.alterarStatus.mockResolvedValue(
-        criarEncontroLinha({ status: EncontroStatusEnum.ENCERRADO, rodadaAtual: 3, turnoIndice: 2 }),
-      );
 
-      await service.encerrarEncontro({ id: 50 }, mestre);
+      await service.encerrarEncontroDaCena({ id: 50 });
 
       expect(encontroRepositorio.alterarStatus).toHaveBeenCalledWith({
         id: 50,
@@ -545,6 +580,18 @@ describe('EncontroService — condução (m7-04)', () => {
         rodadaAtual: 3,
         turnoIndice: 2,
       });
+      // Quem transmite é a CenaService, só depois do commit.
+      expect(campanhaGateway.emitirEncontroAlterado).not.toHaveBeenCalled();
+    });
+
+    it('encontro já encerrado é no-op', async () => {
+      encontroRepositorio.recuperarPorId.mockResolvedValue(
+        criarEncontroLinha({ status: EncontroStatusEnum.ENCERRADO }),
+      );
+
+      await service.encerrarEncontroDaCena({ id: 50 });
+
+      expect(encontroRepositorio.alterarStatus).not.toHaveBeenCalled();
     });
   });
 });

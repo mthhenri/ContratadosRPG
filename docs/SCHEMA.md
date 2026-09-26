@@ -306,7 +306,7 @@ no-op. `rolagem:excluida` (soft delete por `ADMIN`) segue o mesmo roteamento.
 
 ---
 
-## cena (M7 — m7-21)
+## cena (M7 — m7-21/m7-22)
 
 A **Cena**: raiz tipada da mesa (`docs/core/sistema-v4.1.0.md`, "⬡ Cenas"), com ciclo de vida
 `PLANEJADA → ATIVA → ENCERRADA`. O `encontro` (iniciativa) é uma estrutura que a cena pode ter —
@@ -327,8 +327,16 @@ CREATE TABLE cena (
 
 A invariante **no máximo uma cena `ATIVA` por campanha** não vira índice parcial único, pelo mesmo
 motivo de `encontro` (subquery proibida no predicado do índice) — é arbitrada pela `CenaService`
-(m7-22). Os encontros anteriores à m7-21 ganharam, pela migration `0032`, uma cena `COMBATE`
-equivalente (mesmo nome, status mapeado `MONTAGEM/ATIVO/ENCERRADO → PLANEJADA/ATIVA/ENCERRADA`).
+(m7-22), que encerra a ativa e ativa a nova **na mesma transação** (`TransacaoService`). Os
+encontros anteriores à m7-21 ganharam, pela migration `0032`, uma cena `COMBATE` equivalente (mesmo
+nome, status mapeado `MONTAGEM/ATIVO/ENCERRADO → PLANEJADA/ATIVA/ENCERRADA`); a `0033` fez o mesmo
+para os criados entre as duas tasks e realinhou o status das cenas cujo encontro avançou nesse
+intervalo.
+
+Estados válidos do par cena/encontro a partir da m7-22: `PLANEJADA/MONTAGEM` (preparo, só o mestre
+vê), `ATIVA/MONTAGEM` (mesa rolando iniciativa), `ATIVA/ATIVO` (combate) e `ENCERRADA/ENCERRADO`
+(histórico). Encerrar a cena encerra o encontro junto; iniciar o combate exige a cena `ATIVA`. Só a
+cena `ATIVA` pode ser encerrada — uma `ENCERRADA` é sempre uma cena que a mesa já viu.
 
 ## encontro (M7 — m7-01/m7-03)
 
@@ -348,21 +356,19 @@ CREATE TABLE encontro (
   nome                     VARCHAR NOT NULL,
   rodada_atual             INTEGER NOT NULL,  -- 0 enquanto MONTAGEM; 1+ quando ATIVO
   turno_indice             INTEGER NOT NULL,  -- posição corrente em ordem_rodada (0-based)
-  cena_id                  INTEGER            -- fk_encontro_cena (m7-21); NOT NULL fecha em m7-22
+  cena_id                  INTEGER NOT NULL   -- fk_encontro_cena (m7-21; NOT NULL desde a 0033, m7-22)
 );
 -- ix_encontro_campanha: (campanha_id)
 -- uix_encontro_cena_ativo: UNIQUE (cena_id) WHERE is_deleted = false AND cena_id IS NOT NULL
 ```
 
-`cena_id` ainda é nullable: até a m7-22, o `POST` de encontro existente cria encontro sem cena. A
-m7-22, que passa a criar o encontro dentro da cena, faz o backfill dos encontros que nascerem sem
-cena nesse intervalo e aplica o `NOT NULL`.
+Desde a m7-22 o encontro só nasce dentro da `CenaService`, na mesma transação da cena — por isso
+`encontro.created_date` é igual ao da cena de aplicação, e o `DOWN` da `0032` distingue as cenas de
+backfill (criadas depois do encontro) por `encontro.created_date < cena.created_date`.
 
-A invariante **um encontro não-encerrado por campanha** não vira índice parcial único: o predicado
-precisaria resolver o id de `ENCERRADO` em `tipo_encontro_status`, e o PostgreSQL proíbe subquery
-no `WHERE` de um índice (fixar o id numérico do seed seria frágil a qualquer reordenação da tabela
-de referência). Quem arbitra é a `EncontroService`, que recusa criar um segundo encontro enquanto
-houver um não-encerrado na campanha.
+A antiga invariante **um encontro não-encerrado por campanha** deixou de existir: cada cena
+planejada pode ter o seu encontro em `MONTAGEM`. O que vale é **uma cena `ATIVA` por campanha**
+(seção `cena` acima), e o encontro "em andamento" que a mesa vê é o não-encerrado da cena ativa.
 
 ## encontro_combatente (M7 — m7-01/m7-03)
 
@@ -421,6 +427,12 @@ CREATE TABLE encontro_evento (
 `campanha:<id>`).** Broadcast-only (§9): toda mutação entra por REST e a service emite **após**
 salvar. Mudanças de vida de combatente com ficha continuam propagando pelo `ficha:alterada` já
 existente. O contrato tipado vive em `shared/src/dtos/encontro/` (`m7-01`).
+
+**Trava anti-vazamento (m7-22).** Encontro de cena `PLANEJADA` é exclusivo do mestre: `GET
+encontro/:id` recusa (403) quem não é mestre, a listagem o omite, o `encontro:alterado` recusa o
+recorte do jogador/espectador (o gateway descarta o socket) e `encontro:iniciativa-pedido` não é
+emitido. A cena tem o próprio evento, `cena:alterada` (`CenaAlteradaDto`, resumo), que vai à sala do
+mestre enquanto a cena está `PLANEJADA` e à sala cheia + espectador depois de aberta.
 
 ---
 

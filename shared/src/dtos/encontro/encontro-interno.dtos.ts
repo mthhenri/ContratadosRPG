@@ -1,7 +1,13 @@
 import type { FichaCriaturaDadosDto } from '../ficha/ficha-criatura.dtos';
 import type { FichaJogadorDadosDto } from '../ficha/ficha.dtos';
 import type { FichaImagemFocoDto } from '../ficha/ficha-operacao.dtos';
-import type { CadenciaEnum, EncontroEventoTipoEnum, EncontroStatusEnum, TipoFichaEnum } from '../../enums';
+import type {
+  CadenciaEnum,
+  CenaStatusEnum,
+  EncontroEventoTipoEnum,
+  EncontroStatusEnum,
+  TipoFichaEnum,
+} from '../../enums';
 import type { CondicaoCombatenteDto } from './encontro.dtos';
 
 /**
@@ -9,10 +15,15 @@ import type { CondicaoCombatenteDto } from './encontro.dtos';
  * `EncontroRepository`, nunca chegam ao frontend. `Interno` vem antes do verbo (CONVENTIONS).
  */
 
-/** Linha crua de `encontro`, como o repositório a devolve. */
+/**
+ * Linha crua de `encontro`, como o repositório a devolve, com o status da **cena-mãe** (m7-22)
+ * resolvido pelo `JOIN` — é dele que depende a trava anti-vazamento de cena `PLANEJADA`.
+ */
 export interface EncontroLinhaDto {
   readonly id: number;
   readonly campanhaId: number;
+  readonly cenaId: number;
+  readonly cenaStatus: CenaStatusEnum;
   readonly nome: string;
   readonly status: EncontroStatusEnum;
   readonly rodadaAtual: number;
@@ -57,9 +68,13 @@ export interface EncontroCombatenteLinhaDto {
   readonly imagemUrlAvulso: string | null;
 }
 
-/** Entrada interna da criação do encontro — nasce em `MONTAGEM`, rodada 0, turno 0. */
+/**
+ * Entrada interna da criação do encontro — nasce em `MONTAGEM`, rodada 0, turno 0, sempre dentro
+ * de uma cena (m7-22: só a `CenaService` cria encontro, na mesma transação da cena).
+ */
 export interface EncontroInternoCriarDto {
   readonly campanhaId: number;
+  readonly cenaId: number;
   readonly nome: string;
   readonly status: EncontroStatusEnum;
 }

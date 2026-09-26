@@ -591,6 +591,34 @@ describe('CampanhaGateway', () => {
       });
     });
 
+    describe('emitirCenaAlterada (m7-22, trava anti-vazamento)', () => {
+      function criarEvento(status: string) {
+        return {
+          campanhaId: 3,
+          cena: { id: 900, nome: 'Emboscada', tipo: 'COMBATE', status, temEncontro: true },
+        };
+      }
+
+      it('cena PLANEJADA vai só para a sala do mestre — nunca para a sala cheia nem para o espectador', () => {
+        const evento = criarEvento('PLANEJADA');
+
+        gateway.emitirCenaAlterada(evento as never);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith(['campanha:3:mestre']);
+        expect(emitir).toHaveBeenCalledWith('cena:alterada', evento);
+      });
+
+      it.each(['ATIVA', 'ENCERRADA'])('cena %s vai para a sala cheia e para a do espectador', (status) => {
+        const evento = criarEvento(status);
+
+        gateway.emitirCenaAlterada(evento as never);
+
+        expect(paraSala).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
+        expect(emitir).toHaveBeenCalledWith('cena:alterada', evento);
+      });
+    });
+
     describe('emitirEncontroAlterado (m7-06, estendido à sala do espectador em m8-05)', () => {
       /** Socket conectado dublado — só o que o laço de `emitirEncontroAlterado` usa. */
       function criarSocketConectado(usuarioConectado: JwtPayload | undefined) {

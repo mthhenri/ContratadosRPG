@@ -1,5 +1,6 @@
 import type { Knex } from 'knex';
 import { PaginatedResult } from '@contratados-rpg/shared/interfaces';
+import { contextoTransacao } from '../../database/transacao.service';
 
 /**
  * Parâmetros de uma listagem paginada (SYSTEM.SPEC §10.5). `ordenarPor` deve vir de uma
@@ -30,12 +31,20 @@ export interface ParametrosConsultaPaginada {
  *   }
  * }
  * ```
+ *
+ * Dentro de `TransacaoService.executar`, toda consulta sai pela transação corrente em vez da
+ * conexão — o repositório não muda nada para participar dela.
  */
 export abstract class BaseRepository {
   constructor(
     protected readonly conexao: Knex,
     private readonly nomeTabela: string,
   ) {}
+
+  /** A transação aberta pela service chamadora, se houver; senão, a conexão. */
+  private obterExecutor(): Knex {
+    return contextoTransacao.getStore() ?? this.conexao;
+  }
 
   /**
    * Executa uma consulta SQL bruta (`SELECT`) com parâmetros nomeados e retorna as
@@ -46,7 +55,7 @@ export abstract class BaseRepository {
     sql: string,
     parametros: Record<string, unknown> = {},
   ): Promise<TResultado[]> {
-    const resultado = await this.conexao.raw<{ rows: TResultado[] }>(sql, parametros);
+    const resultado = await this.obterExecutor().raw<{ rows: TResultado[] }>(sql, parametros);
     return resultado.rows;
   }
 
@@ -58,7 +67,7 @@ export abstract class BaseRepository {
     sql: string,
     parametros: Record<string, unknown> = {},
   ): Promise<number> {
-    const resultado = await this.conexao.raw<{ rowCount: number }>(sql, parametros);
+    const resultado = await this.obterExecutor().raw<{ rowCount: number }>(sql, parametros);
     return resultado.rowCount ?? 0;
   }
 
