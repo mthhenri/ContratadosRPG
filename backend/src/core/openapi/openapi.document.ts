@@ -8,9 +8,13 @@ import {
     type SchemaObject,
 } from "@nestjs/swagger";
 import type { INestApplication } from "@nestjs/common";
+import { DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES } from "@contratados-rpg/shared/validators";
 import { operacoesContratosPublicos, schemasContratosPublicos } from "./contratos-gerados";
 
 const NOME_SEGURANCA_JWT = "jwt";
+
+/** Teto do avatar de ficha e de avulso (m3-62) — as services o fixam em 2 MiB. */
+const TAMANHO_MAXIMO_AVATAR_MIB = 2;
 
 const DESCRICOES_TAG: Readonly<Record<string, string>> = {
     "Operação": "Verificações operacionais públicas da API.",
@@ -22,6 +26,7 @@ const DESCRICOES_TAG: Readonly<Record<string, string>> = {
     "Caderno": "Páginas privadas, caderno do esquadrão e busca de campanha.",
     "Encontros": "Encontros de combate, combatentes, turnos, recursos e condições.",
     "Cenas": "Cenas da campanha: criação tipada, preparo, abertura, encerramento e ordem.",
+    "Documentos": "Biblioteca de documentos da campanha: texto e imagem, ordem e revelação à mesa.",
 };
 
 type Schema = SchemaObject | ReferenceObject;
@@ -137,7 +142,14 @@ function ajustarParametrosCaminho(caminho: string, operacao: OperationObject): v
     operacao.parameters = parametros;
 }
 
-function configurarUpload(operacao: OperationObject): void {
+/** Teto do upload de imagem, em MiB, pela rota: o documento (m9-02) tem o próprio; o resto é avatar. */
+function tamanhoMaximoUploadMiB(caminho: string): number {
+    return caminho.startsWith("/documento/")
+        ? DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 * 1024)
+        : TAMANHO_MAXIMO_AVATAR_MIB;
+}
+
+function configurarUpload(operacao: OperationObject, tamanhoMaximoMiB: number): void {
     operacao.requestBody = {
         required: true,
         content: {
@@ -151,7 +163,8 @@ function configurarUpload(operacao: OperationObject): void {
             },
         },
     };
-    operacao.description = `${operacao.description ?? ""} Aceita JPEG, PNG ou WEBP de até 2 MiB.`.trim();
+    operacao.description =
+        `${operacao.description ?? ""} Aceita JPEG, PNG ou WEBP de até ${tamanhoMaximoMiB} MiB.`.trim();
 }
 
 /**
@@ -242,7 +255,7 @@ export function enriquecerDocumentoOpenApi(documento: OpenAPIObject): void {
                 };
             }
             if (caminho.endsWith("/imagem") && metodo === "post") {
-                configurarUpload(operation);
+                configurarUpload(operation, tamanhoMaximoUploadMiB(caminho));
             }
             operation.responses = { "200": respostaSucesso(contrato.responseSchema) };
             if (contrato.requestSchema) operation.responses["400"] = respostaErro("Entrada inválida.");

@@ -21,6 +21,7 @@ vi.mock('@aws-sdk/client-s3', () => ({
   },
 }));
 
+import { ArmazenamentoPastaEnum } from './armazenamento-provedor.interface';
 import { ArmazenamentoR2Provedor } from './armazenamento-r2.provedor';
 
 describe('ArmazenamentoR2Provedor (m3-62)', () => {
@@ -42,7 +43,12 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
     const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
     const conteudo = new Uint8Array([1, 2, 3]);
 
-    const salvo = await provedor.salvarImagem({ conteudo, mimetype: 'image/webp', extensao: 'webp' });
+    const salvo = await provedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.AGENTES,
+      conteudo,
+      mimetype: 'image/webp',
+      extensao: 'webp',
+    });
 
     expect(salvo.caminho).toMatch(
       /^https:\/\/pub-hash\.r2\.dev\/agentes\/[0-9a-f-]+\.webp$/,
@@ -58,6 +64,21 @@ describe('ArmazenamentoR2Provedor (m3-62)', () => {
     expect(comando.Key).toMatch(/^agentes\/[0-9a-f-]+\.webp$/);
     expect(comando.Body).toBe(conteudo);
     expect(comando.ContentType).toBe('image/webp');
+  });
+
+  it('salva a imagem de documento na chave documentos/<uuid>.<extensão> (m9-02)', async () => {
+    const provedor = new ArmazenamentoR2Provedor(configuracaoR2);
+
+    const salvo = await provedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.DOCUMENTOS,
+      conteudo: new Uint8Array([7]),
+      mimetype: 'image/png',
+      extensao: 'png',
+    });
+
+    expect(salvo.caminho).toMatch(/^https:\/\/pub-hash\.r2\.dev\/documentos\/[0-9a-f-]+\.png$/);
+    const comando = construtoresComandoRecebidos[0] as { Key: string };
+    expect(comando.Key).toMatch(/^documentos\/[0-9a-f-]+\.png$/);
   });
 
   it('exclui via DeleteObjectCommand extraindo a chave da URL pública', async () => {

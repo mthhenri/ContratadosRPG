@@ -1,9 +1,10 @@
-import type { TipoDocumentoEnum } from '../../enums';
+import type { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '../../enums';
+import type { FichaImagemArquivoDto } from '../ficha/ficha-operacao.dtos';
 
 /**
  * DTOs do módulo `documento` (M9, "Biblioteca") — o documento de campanha que o mestre cria oculto
  * e revela aos jogadores. O contrato da entidade nasceu em `m9-01`; os de comportamento
- * (revelar/ocultar/reordenar/listar/imagem/evento) chegam em `m9-02` e os de busca em `m9-03`.
+ * (revelar/ocultar/reordenar/listar/imagem/evento), em `m9-02`; os de busca chegam em `m9-03`.
  * Limites em `validators/documento.validators.ts`.
  */
 
@@ -94,4 +95,70 @@ export interface DocumentoResumoDto {
   readonly revelado: boolean;
   readonly ordem: number;
   readonly updatedDate: string;
+}
+
+/** Entrada da listagem da biblioteca de uma campanha — o `campanhaId` vem da rota. */
+export interface DocumentoListarDto {
+  readonly campanhaId: number;
+}
+
+/** Entrada de "revelar à mesa" — o `id` vem da rota. */
+export interface DocumentoRevelarDto {
+  readonly id: number;
+}
+
+/** Saída de "revelar à mesa". */
+export interface DocumentoReveladoDto {
+  readonly id: number;
+  readonly revelado: boolean;
+  readonly updatedDate: string;
+}
+
+/** Entrada de "ocultar da mesa" — o `id` vem da rota. */
+export interface DocumentoOcultarDto {
+  readonly id: number;
+}
+
+/** Saída de "ocultar da mesa". */
+export interface DocumentoOcultadoDto {
+  readonly id: number;
+  readonly revelado: boolean;
+  readonly updatedDate: string;
+}
+
+/**
+ * Entrada da reordenação da biblioteca — o `campanhaId` vem da rota. `ordem` lista os ids de
+ * **todos** os documentos ativos da campanha, na nova ordem.
+ */
+export interface DocumentoReordenarDto {
+  readonly campanhaId: number;
+  readonly ordem: readonly number[];
+}
+
+/**
+ * Entrada da troca da imagem de um documento `IMAGEM` — o `id` vem da rota; `arquivo` é montado
+ * pela controller a partir do `Express.Multer.File` (mesmo value object do avatar da ficha). MIME e
+ * tamanho são validados na service pelos limites de `documento.validators.ts`.
+ */
+export interface DocumentoImagemAlterarDto {
+  readonly id: number;
+  readonly arquivo: FichaImagemArquivoDto;
+}
+
+/** Saída da troca da imagem. */
+export interface DocumentoImagemAlteradaDto {
+  readonly id: number;
+  readonly imagemUrl: string;
+  readonly updatedDate: string;
+}
+
+/**
+ * Payload de `documento:alterado`. Só avisa **que** algo mudou (`documentoId` é `null` numa
+ * reordenação): sem título, conteúdo nem `imagemUrl` — quem precisa do dado o busca por REST, já
+ * recortado pelo papel. O nome foge de `DocumentoAlteradoDto`, que é a saída do `PUT`.
+ */
+export interface DocumentoBibliotecaAlteradaDto {
+  readonly campanhaId: number;
+  readonly documentoId: number | null;
+  readonly alteracao: DocumentoAlteracaoEnum;
 }

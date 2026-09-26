@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { TipoDocumentoEnum } from '../../enums';
+import { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '../../enums';
 import {
   DOCUMENTO_CONTEUDO_MAXIMO,
   DOCUMENTO_IMAGEM_MIMES_PERMITIDOS,
@@ -11,6 +11,17 @@ import {
 describe('contratos de documento de campanha', () => {
   it('preserva os códigos públicos dos tipos de documento', () => {
     expect(Object.values(TipoDocumentoEnum)).toEqual(['TEXTO', 'IMAGEM']);
+  });
+
+  it('preserva os códigos públicos do evento documento:alterado', () => {
+    expect(Object.values(DocumentoAlteracaoEnum)).toEqual([
+      'CRIADO',
+      'ALTERADO',
+      'REVELADO',
+      'OCULTADO',
+      'REMOVIDO',
+      'REORDENADO',
+    ]);
   });
 
   it('expõe os mesmos limites usados pelas três camadas', () => {

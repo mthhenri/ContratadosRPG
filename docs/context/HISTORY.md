@@ -1,5 +1,59 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m9-02: backend da biblioteca de documentos, com trava anti-vazamento
+
+Módulo `backend/src/modules/documento/` (repository, service, controller, módulo exportando a
+`DocumentoService` para a `m7-25`): criar, listar, recuperar, alterar (versão otimista, 409),
+remover, reordenar (transação), revelar/ocultar (idempotentes) e trocar a imagem de um `IMAGEM`.
+Nove rotas: `POST/GET campanha/:campanhaId/documento`, `PUT .../documento/ordem`,
+`GET/PUT/DELETE documento/:id`, `POST documento/:id/revelar|ocultar|imagem`.
+
+- **Recorte e trava.** `podeLerNaoReveladas` (via `CampanhaService.ehMestre`) é o único ponto que
+  decide a leitura. Jogador e espectador listam só o revelado (filtro no SQL); um oculto responde
+  404 a quem não é mestre — no `GET` e também nas mutações, para que um 403 não confirme que o id
+  existe (decisão da implementação; sobre um revelado a mutação é 403, como a spec pede).
+  `CampanhaGateway.emitirDocumentoAlterado(evento, visivelParaMesa)` manda o que nunca foi visível à
+  mesa só para `campanha:<id>:mestre`; o payload é `{ campanhaId, documentoId, alteracao }`.
+- **Shared:** `DocumentoAlteracaoEnum`, os DTOs de comportamento (listar, revelar/ocultar,
+  reordenar, imagem, `DocumentoBibliotecaAlteradaDto`) e `documento-interno.dtos.ts`.
+- **Armazenamento:** `ArmazenamentoImagemSalvar` ganhou `pasta: ArmazenamentoPastaEnum`
+  (`AGENTES`/`DOCUMENTOS`); `construirChaveImagemFicha` virou `construirChaveImagem(pasta, extensao)`.
+  Ficha e avulso do encontro continuam em `agentes/` (testes dos dois provedores e das duas services
+  travam isso).
+- **Upload:** teto do Multer em limite + 1 byte, com `ImagemDocumentoGrandeInterceptor` convertendo o
+  413 em inglês na `BusinessException` (400) da service; upload sem arquivo vira arquivo vazio na
+  controller e 400 na service.
+- **OpenAPI:** tag "Documentos"; a descrição do upload passou a anunciar o teto por rota (10 MiB no
+  documento, 2 MiB nos avatares). `openapi:gerar-contratos` rodado duas vezes, sem diff residual.
+
+Testes: `documento.service.spec.ts` (62 casos: matriz mutação × jogador/espectador/não membro, 404
+do oculto em cada mutação, recorte da listagem, emissão com a visibilidade certa, idempotência,
+validações, reordenação na transação, fluxo de imagem), controller, interceptor, repository e
+`emitirDocumentoAlterado` no `campanha.gateway.spec.ts` (cada linha da tabela da spec). Duas
+mutações de teste (recorte liberado para todos; emissão sempre na sala cheia) derrubaram 7 e 4
+casos — os testes pegam a quebra da trava. Suítes: `shared` 772, `backend` 703 (38 arquivos);
+lint `shared`/`backend` 0 erros (avisos novos só `quotes`, regra preexistente, e `max-len` nos specs
+na faixa do `cena.service.spec`); `tsc -p tsconfig.build.json` limpo; `tsconfig.json` completo com os
+mesmos 17 erros do `P-087`.
+
+Verificação ao vivo (skill `verify`, só backend): backend isolado na 3101, compilado com `tsc` para
+uma pasta temporária (o `nest build` apagaria o `dist` do backend do autor na 3100), roteiro com
+REST + três `socket.io-client` (mestre, jogador, espectador) e um não membro — cerca de 80
+checagens, todas verdes na rodada final: CRIADO só no mestre e payload sem conteúdo; jogador e
+espectador sem o oculto na lista, 404 idêntico ao de id inexistente e nenhuma tentativa recusada
+gerando evento; REVELADO/ALTERADO/OCULTADO/REORDENADO uma vez em cada socket; 409 sem sobrescrever;
+tipo inválido, acima de 10 MB (mensagem em português), sem arquivo e upload num `TEXTO` → 400 sem
+gravar arquivo; imagem em `backend/uploads/documentos/`, servida em `/uploads`, a troca apagando a
+anterior; reordenação inválida sem mudar o banco; REMOVIDO de oculto só no mestre.
+
+**Achado só ao vivo:** com `fileSize` igual ao limite, um PNG de **exatamente** 10 MB voltava 400 — o
+busboy recusa o arquivo que atinge o teto. Corrigido para limite + 1 e confirmado na segunda rodada.
+O mesmo roteiro confirmou um defeito antigo: `POST /ficha/:id/imagem` sem arquivo responde 500
+(`P-088`). Registrados também `I-038` (faxina de imagens órfãs, pedida pela spec) e, na `m9-04`, o
+aviso de que revelar/reordenar avançam a versão otimista. Limpeza: servidor derrubado, pasta
+temporária e as duas imagens de teste apagadas; os usuários `m902*` e as campanhas 77 e 78 ficaram
+no banco de dev.
+
 ## 2026-09-26 — m9-01: contrato e migration do documento de campanha
 
 O autor confirmou as decisões que o guarda-chuva da M9 deixara em aberto (espectador lê os

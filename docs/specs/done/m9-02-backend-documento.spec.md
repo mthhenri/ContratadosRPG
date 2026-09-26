@@ -183,6 +183,29 @@ por visibilidade de `emitirCenaAlterada`), `core/armazenamento`, `docs/CONVENTIO
    buraco ao custo de tráfego pelo Cloud Run — vira upgrade se o autor quiser sigilo forte.
 3. **Teto de imagem: 10 MB** (`m9-01`; o autor subiu dos 5 MB propostos).
 
+## Decisões tomadas na implementação (2026-09-26)
+
+1. **Mutação sobre um documento oculto, por quem não é mestre, é 404** (não 403). Um 403 ali
+   confirmaria que o id existe, contra a regra de `GET` ("a resposta não confirma que o documento
+   existe"). Sobre um documento **revelado** a mutação continua 403, como os critérios pedem.
+   Quem não é membro recebe 403 — o mesmo desenho de `cena`.
+2. **Teto do Multer = limite + 1 byte.** O busboy recusa o arquivo que *atinge* `fileSize`; com o
+   teto igual ao limite, um PNG de exatamente 10 MB voltava 400 (achado só na verificação ao vivo).
+   O `LIMIT_FILE_SIZE` do Multer vira a mesma `BusinessException` (400, em português) da service
+   pelo `ImagemDocumentoGrandeInterceptor`, declarado antes do `FileInterceptor`.
+3. **Upload sem arquivo** chega à service como arquivo vazio (`montarArquivoImagem` na controller) e
+   volta 400 "Envie um arquivo de imagem" — o avatar da ficha, no mesmo caso, quebra com 500
+   (`P-088`, fora do escopo).
+4. **Pasta como `ArmazenamentoPastaEnum`** (`AGENTES` | `DOCUMENTOS`) em `core/armazenamento`, com o
+   nome real da pasta num mapa em `armazenamento-chave.util.ts` — string enum com valor igual ao nome
+   (CONVENTIONS), técnico, nunca sai do backend. Ficha e avulso do encontro passam `AGENTES`.
+5. **A versão otimista muda a cada escrita.** `fn_set_updated_date` roda em todo `UPDATE`: revelar,
+   ocultar, reordenar e trocar a imagem também avançam o `updatedDate`. As respostas trazem a versão
+   nova (`DocumentoReveladoDto`, `DocumentoOcultadoDto`, `DocumentoImagemAlteradaDto` e a lista da
+   reordenação) — a `m9-04` precisa usá-la para não levar o próprio 409 ao salvar depois.
+6. **OpenAPI:** a descrição do upload deixou de fixar "2 MiB" para toda rota `/imagem` — o
+   `/documento/:id/imagem` anuncia 10 MiB a partir de `DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES`.
+
 ## Riscos e Mitigação
 
 - **Vazamento pelo evento ou pelo recorte** é o risco central (o mesmo da `m7-22`). O teste do

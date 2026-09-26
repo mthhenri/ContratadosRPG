@@ -66,6 +66,18 @@
 
 ## Abertas
 
+### I-038 — Faxina das imagens órfãs no armazenamento · backend/armazenamento
+
+- **Ideia:** apagar do disco/bucket as imagens que nenhuma linha viva referencia — a de um
+  documento removido (soft delete mantém `imagem_url`, e o arquivo fica) e as de ficha/avulso
+  excluídos —, por um job ou comando de manutenção que cruza o armazenamento com o banco.
+- **Origem:** `m9-02` (2026-09-26), que deixou a remoção do arquivo fora de escopo para o soft delete
+  continuar recuperável.
+- **Por quê:** a URL é pública e não revogável (decisão confirmada da M9): enquanto o arquivo
+  existir, quem guardou o endereço de um documento removido ainda o abre. E o bucket só cresce.
+- **Custo aparente:** médio — listar o bucket (R2) e o disco, cruzar com três colunas `imagem_url`,
+  e decidir uma carência antes de apagar (remoção recuperável).
+
 ### I-037 — Uma constante compartilhada para os MIMEs de imagem · shared/validators
 
 - **Ideia:** substituir a lista `['image/jpeg', 'image/png', 'image/webp']` repetida no frontend

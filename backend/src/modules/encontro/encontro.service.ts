@@ -40,7 +40,11 @@ import {
 } from '@contratados-rpg/shared/regras/encontro';
 import { validarFormula } from '@contratados-rpg/shared/regras/rolagem';
 import { BusinessException, ResourceNotFoundException, UnauthorizedAccessException } from '../../core/exceptions';
-import { ARMAZENAMENTO_PROVEDOR, type ArmazenamentoProvedor } from '../../core/armazenamento';
+import {
+  ARMAZENAMENTO_PROVEDOR,
+  ArmazenamentoPastaEnum,
+  type ArmazenamentoProvedor,
+} from '../../core/armazenamento';
 import { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
@@ -234,6 +238,7 @@ export class EncontroService {
       throw new BusinessException('Imagem maior que o limite permitido (2MB)');
     }
     const imagemSalva = await this.armazenamentoProvedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.AGENTES,
       conteudo: dto.arquivo.conteudo,
       mimetype: dto.arquivo.mimetype,
       extensao,

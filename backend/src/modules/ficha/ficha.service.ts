@@ -71,7 +71,11 @@ import {
   FORMACOES,
   type FormacaoDefinicaoDto,
 } from '@contratados-rpg/shared/regras/identidade';
-import { ARMAZENAMENTO_PROVEDOR, type ArmazenamentoProvedor } from '../../core/armazenamento';
+import {
+  ARMAZENAMENTO_PROVEDOR,
+  ArmazenamentoPastaEnum,
+  type ArmazenamentoProvedor,
+} from '../../core/armazenamento';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -775,6 +779,7 @@ export class FichaService {
     }
 
     const imagemSalva = await this.armazenamentoProvedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.AGENTES,
       conteudo: dto.arquivo.conteudo,
       mimetype: dto.arquivo.mimetype,
       extensao,

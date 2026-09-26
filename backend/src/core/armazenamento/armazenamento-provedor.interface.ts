@@ -9,19 +9,33 @@ export interface ArmazenamentoProvedor {
   excluirImagem(dto: ArmazenamentoImagemExcluir): Promise<void>;
 }
 
-/** Entrada de `salvarImagem` — o conteúdo bruto e a extensão já resolvida do MIME validado na service. */
+/**
+ * Pasta de destino de uma imagem — cada módulo dono grava na sua (`AGENTES` para os avatares de
+ * ficha e de avulso do encontro, `DOCUMENTOS` para os documentos de campanha). Técnico, nunca sai do
+ * backend; o nome real da pasta está em `armazenamento-chave.util.ts`.
+ */
+export enum ArmazenamentoPastaEnum {
+  AGENTES = 'AGENTES',
+  DOCUMENTOS = 'DOCUMENTOS',
+}
+
+/**
+ * Entrada de `salvarImagem` — a pasta de destino, o conteúdo bruto e a extensão já resolvida do
+ * MIME validado na service.
+ */
 export interface ArmazenamentoImagemSalvar {
+  readonly pasta: ArmazenamentoPastaEnum;
   readonly conteudo: Uint8Array;
   readonly mimetype: string;
   readonly extensao: string;
 }
 
-/** Saída de `salvarImagem` — o caminho/URL a persistir em `ficha.imagem_url`. */
+/** Saída de `salvarImagem` — o caminho/URL a persistir (`ficha.imagem_url`, `documento.imagem_url`...). */
 export interface ArmazenamentoImagemSalva {
   readonly caminho: string;
 }
 
-/** Entrada de `excluirImagem` — o `caminho` gravado em `ficha.imagem_url`. */
+/** Entrada de `excluirImagem` — o `caminho` que `salvarImagem` devolveu. */
 export interface ArmazenamentoImagemExcluir {
   readonly caminho: string;
 }

@@ -32,7 +32,7 @@ import {
   calcularVida,
 } from '@contratados-rpg/shared/regras/agente';
 import type { CarrinhoItemDto } from '@contratados-rpg/shared/regras/compras';
-import type { ArmazenamentoProvedor } from '../../core/armazenamento';
+import { ArmazenamentoPastaEnum, type ArmazenamentoProvedor } from '../../core/armazenamento';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -2634,6 +2634,7 @@ describe('FichaService', () => {
       const resultado = await service.alterarImagem({ id: 5, arquivo: arquivoJpeg }, usuarioDono);
 
       expect(armazenamentoProvedor.salvarImagem).toHaveBeenCalledWith({
+        pasta: ArmazenamentoPastaEnum.AGENTES,
         conteudo: arquivoJpeg.conteudo,
         mimetype: 'image/jpeg',
         extensao: 'jpg',

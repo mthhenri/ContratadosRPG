@@ -1350,6 +1350,457 @@ export const schemasContratosPublicos = {
         "additionalProperties": false,
         "description": "Payload de broadcast (`cena:alterada`) — o resumo da cena após uma mutação já persistida,\nemitido pela service **depois** de salvar (§9, broadcast-only). Cena `PLANEJADA` só chega à sala\ndo mestre (trava anti-vazamento, m7-22); o estado do encontro segue pelo `encontro:alterado`."
     },
+    "DocumentoCriarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "conteudoMarkdown": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "campanhaId",
+            "titulo",
+            "tipo"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da criação. `conteudoMarkdown` só faz sentido para `TEXTO`; a imagem de um documento\n`IMAGEM` chega depois, por upload (`m9-02`). Todo documento nasce oculto."
+    },
+    "DocumentoCriadoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "conteudoMarkdown": {
+                "type": "string"
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "titulo",
+            "tipo",
+            "conteudoMarkdown",
+            "imagemUrl",
+            "revelado",
+            "ordem",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da criação — o documento recém-criado."
+    },
+    "DocumentoRecuperarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da recuperação individual de um documento."
+    },
+    "DocumentoRecuperadoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "conteudoMarkdown": {
+                "type": "string"
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "titulo",
+            "tipo",
+            "conteudoMarkdown",
+            "imagemUrl",
+            "revelado",
+            "ordem",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da recuperação individual — o documento completo, com o conteúdo para o leitor."
+    },
+    "DocumentoAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "conteudoMarkdown": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "titulo",
+            "conteudoMarkdown",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da alteração com a versão otimista (`updatedDate`) que o cliente editou.\n`conteudoMarkdown` é `null` para `IMAGEM`; a imagem troca por upload próprio (`m9-02`)."
+    },
+    "DocumentoAlteradoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "conteudoMarkdown": {
+                "type": "string"
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "createdDate": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "titulo",
+            "tipo",
+            "conteudoMarkdown",
+            "imagemUrl",
+            "revelado",
+            "ordem",
+            "createdDate",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da alteração — o documento como ficou persistido."
+    },
+    "DocumentoRemoverDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da exclusão lógica de um documento."
+    },
+    "DocumentoResumoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "campanhaId": {
+                "type": "number"
+            },
+            "titulo": {
+                "type": "string"
+            },
+            "tipo": {
+                "type": "string",
+                "enum": [
+                    "TEXTO",
+                    "IMAGEM"
+                ]
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "ordem": {
+                "type": "number"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "campanhaId",
+            "titulo",
+            "tipo",
+            "imagemUrl",
+            "revelado",
+            "ordem",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Item de listagem da biblioteca. Sem `conteudoMarkdown` (até 100 000 caracteres por item — o\nleitor recupera o documento inteiro); com `imagemUrl` porque a lista mostra a miniatura."
+    },
+    "DocumentoListarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "campanhaId"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da listagem da biblioteca de uma campanha — o `campanhaId` vem da rota."
+    },
+    "DocumentoRevelarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"revelar à mesa\" — o `id` vem da rota."
+    },
+    "DocumentoReveladoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "revelado",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Saída de \"revelar à mesa\"."
+    },
+    "DocumentoOcultarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "id"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada de \"ocultar da mesa\" — o `id` vem da rota."
+    },
+    "DocumentoOcultadoDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "revelado": {
+                "type": "boolean"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "revelado",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Saída de \"ocultar da mesa\"."
+    },
+    "DocumentoReordenarDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "ordem": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                }
+            }
+        },
+        "required": [
+            "campanhaId",
+            "ordem"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da reordenação da biblioteca — o `campanhaId` vem da rota. `ordem` lista os ids de\n**todos** os documentos ativos da campanha, na nova ordem."
+    },
+    "DocumentoImagemAlterarDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "arquivo": {
+                "$ref": "#/components/schemas/FichaImagemArquivoDto"
+            }
+        },
+        "required": [
+            "id",
+            "arquivo"
+        ],
+        "additionalProperties": false,
+        "description": "Entrada da troca da imagem de um documento `IMAGEM` — o `id` vem da rota; `arquivo` é montado\npela controller a partir do `Express.Multer.File` (mesmo value object do avatar da ficha). MIME e\ntamanho são validados na service pelos limites de `documento.validators.ts`."
+    },
+    "DocumentoImagemAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "number"
+            },
+            "imagemUrl": {
+                "type": "string"
+            },
+            "updatedDate": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "id",
+            "imagemUrl",
+            "updatedDate"
+        ],
+        "additionalProperties": false,
+        "description": "Saída da troca da imagem."
+    },
+    "DocumentoBibliotecaAlteradaDto": {
+        "type": "object",
+        "properties": {
+            "campanhaId": {
+                "type": "number"
+            },
+            "documentoId": {
+                "type": "number"
+            },
+            "alteracao": {
+                "type": "string",
+                "enum": [
+                    "CRIADO",
+                    "ALTERADO",
+                    "REVELADO",
+                    "OCULTADO",
+                    "REMOVIDO",
+                    "REORDENADO"
+                ]
+            }
+        },
+        "required": [
+            "campanhaId",
+            "documentoId",
+            "alteracao"
+        ],
+        "additionalProperties": false,
+        "description": "Payload de `documento:alterado`. Só avisa **que** algo mudou (`documentoId` é `null` numa\nreordenação): sem título, conteúdo nem `imagemUrl` — quem precisa do dado o busca por REST, já\nrecortado pelo papel. O nome foge de `DocumentoAlteradoDto`, que é a saída do `PUT`."
+    },
     "EncontroLinhaDto": {
         "type": "object",
         "properties": {
@@ -6052,6 +6503,81 @@ export const operacoesContratosPublicos = {
         "tag": "Cenas",
         "publica": false,
         "responseSchema": "EncontroRecuperadoDto"
+    },
+    "DocumentoController_criar": {
+        "controller": "DocumentoController",
+        "metodo": "post",
+        "caminho": "/campanha/:campanhaId/documento",
+        "tag": "Documentos",
+        "publica": false,
+        "requestSchema": "DocumentoCriarDto",
+        "responseSchema": "DocumentoCriadoDto"
+    },
+    "DocumentoController_listar": {
+        "controller": "DocumentoController",
+        "metodo": "get",
+        "caminho": "/campanha/:campanhaId/documento",
+        "tag": "Documentos",
+        "publica": false,
+        "responseSchema": "DocumentoResumoDto[]"
+    },
+    "DocumentoController_reordenar": {
+        "controller": "DocumentoController",
+        "metodo": "put",
+        "caminho": "/campanha/:campanhaId/documento/ordem",
+        "tag": "Documentos",
+        "publica": false,
+        "requestSchema": "DocumentoReordenarDto",
+        "responseSchema": "DocumentoResumoDto[]"
+    },
+    "DocumentoController_recuperar": {
+        "controller": "DocumentoController",
+        "metodo": "get",
+        "caminho": "/documento/:id",
+        "tag": "Documentos",
+        "publica": false,
+        "responseSchema": "DocumentoRecuperadoDto"
+    },
+    "DocumentoController_alterar": {
+        "controller": "DocumentoController",
+        "metodo": "put",
+        "caminho": "/documento/:id",
+        "tag": "Documentos",
+        "publica": false,
+        "requestSchema": "DocumentoAlterarDto",
+        "responseSchema": "DocumentoAlteradoDto"
+    },
+    "DocumentoController_remover": {
+        "controller": "DocumentoController",
+        "metodo": "delete",
+        "caminho": "/documento/:id",
+        "tag": "Documentos",
+        "publica": false,
+        "responseSchema": "null"
+    },
+    "DocumentoController_revelar": {
+        "controller": "DocumentoController",
+        "metodo": "post",
+        "caminho": "/documento/:id/revelar",
+        "tag": "Documentos",
+        "publica": false,
+        "responseSchema": "DocumentoReveladoDto"
+    },
+    "DocumentoController_ocultar": {
+        "controller": "DocumentoController",
+        "metodo": "post",
+        "caminho": "/documento/:id/ocultar",
+        "tag": "Documentos",
+        "publica": false,
+        "responseSchema": "DocumentoOcultadoDto"
+    },
+    "DocumentoController_alterarImagem": {
+        "controller": "DocumentoController",
+        "metodo": "post",
+        "caminho": "/documento/:id/imagem",
+        "tag": "Documentos",
+        "publica": false,
+        "responseSchema": "DocumentoImagemAlteradaDto"
     },
     "EncontroController_listarPorCampanha": {
         "controller": "EncontroController",

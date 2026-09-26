@@ -154,6 +154,10 @@ destrutiva), `ui-20` (notificações), `docs/design/DESIGN.md`, `shared/ui/edito
 
 ## Riscos e Mitigação
 
+- **Versão otimista depois de revelar/ocultar/reordenar/trocar imagem** (`m9-02`, decisão 5 da
+  implementação): toda escrita avança o `updatedDate`. Guardar a versão que cada resposta devolve —
+  senão o mestre que revela e depois salva uma edição leva o próprio 409.
+
 - **Revelar por engano** é irreversível na prática (a mesa já viu). Mitigação: o botão sempre traz o
   rótulo da ação ("Revelar"/"Ocultar"), o chip do estado atual fica ao lado e o toast diz o que
   aconteceu. Se o uso mostrar acidentes, reforçar com confirmação é uma linha.

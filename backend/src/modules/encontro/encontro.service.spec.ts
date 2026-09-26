@@ -15,7 +15,7 @@ import {
   TipoUsuarioEnum,
 } from '@contratados-rpg/shared/enums';
 import { BusinessException, UnauthorizedAccessException } from '../../core/exceptions';
-import type { ArmazenamentoProvedor } from '../../core/armazenamento';
+import { ArmazenamentoPastaEnum, type ArmazenamentoProvedor } from '../../core/armazenamento';
 import type { CampanhaGateway } from '../../core/gateway/campanha.gateway';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
@@ -405,6 +405,9 @@ describe('EncontroService', () => {
         mestre,
       );
 
+      expect(armazenamentoProvedor.salvarImagem).toHaveBeenCalledWith(
+        expect.objectContaining({ pasta: ArmazenamentoPastaEnum.AGENTES }),
+      );
       expect(armazenamentoProvedor.excluirImagem).toHaveBeenCalledWith({
         caminho: '/uploads/anterior.webp',
       });

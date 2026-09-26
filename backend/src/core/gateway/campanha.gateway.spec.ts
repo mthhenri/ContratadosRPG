@@ -619,6 +619,41 @@ describe('CampanhaGateway', () => {
       });
     });
 
+    describe('emitirDocumentoAlterado (m9-02, trava anti-vazamento)', () => {
+      function criarEvento(alteracao: string, documentoId: number | null = 70) {
+        return { campanhaId: 3, documentoId, alteracao };
+      }
+
+      it.each(['CRIADO', 'ALTERADO', 'REMOVIDO'])(
+        '%s de documento oculto vai só para a sala do mestre — nunca para a sala cheia nem para o espectador',
+        (alteracao) => {
+          const evento = criarEvento(alteracao);
+
+          gateway.emitirDocumentoAlterado(evento as never, false);
+
+          expect(paraSala).toHaveBeenCalledTimes(1);
+          expect(paraSala).toHaveBeenCalledWith(['campanha:3:mestre']);
+          expect(emitir).toHaveBeenCalledWith('documento:alterado', evento);
+        },
+      );
+
+      it.each([
+        ['ALTERADO', 70],
+        ['REMOVIDO', 70],
+        ['REVELADO', 70],
+        ['OCULTADO', 70],
+        ['REORDENADO', null],
+      ] as const)('%s visível à mesa vai para a sala cheia e para a do espectador', (alteracao, documentoId) => {
+        const evento = criarEvento(alteracao, documentoId);
+
+        gateway.emitirDocumentoAlterado(evento as never, true);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
+        expect(emitir).toHaveBeenCalledWith('documento:alterado', evento);
+      });
+    });
+
     describe('emitirEncontroAlterado (m7-06, estendido à sala do espectador em m8-05)', () => {
       /** Socket conectado dublado — só o que o laço de `emitirEncontroAlterado` usa. */
       function criarSocketConectado(usuarioConectado: JwtPayload | undefined) {

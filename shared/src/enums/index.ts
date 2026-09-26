@@ -42,3 +42,4 @@ export * from './cena-status.enum';
 export * from './personalidade-estagio.enum';
 export * from './deslocamento-valor-especial.enum';
 export * from './tipo-documento.enum';
+export * from './documento-alteracao.enum';

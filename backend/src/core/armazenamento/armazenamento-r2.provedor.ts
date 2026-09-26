@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import type { ConfiguracaoArmazenamento } from '../../config/config.service';
-import { construirChaveImagemFicha } from './armazenamento-chave.util';
+import { construirChaveImagem } from './armazenamento-chave.util';
 import type {
   ArmazenamentoImagemExcluir,
   ArmazenamentoImagemSalva,
@@ -14,9 +14,8 @@ type ConfiguracaoArmazenamentoR2 = Extract<ConfiguracaoArmazenamento, { provedor
 /**
  * Armazenamento no Cloudflare R2 (produção, `ARMAZENAMENTO_PROVEDOR=r2`) — S3-compatible via
  * `@aws-sdk/client-s3`, apontando o `endpoint` para o domínio da conta (SDK oficial recomendado
- * pela Cloudflare). Grava sob a chave `agentes/<uuid>.<extensão>` — `agentes/` é a pasta que o
- * autor já criou dentro do bucket (separada de futuras pastas para outros tipos de imagem, ex.
- * avatar de usuário) — e devolve a URL pública (domínio custom ou `*.r2.dev`) — durável, sobrevive
+ * pela Cloudflare). Grava sob a chave `<pasta>/<uuid>.<extensão>` (`agentes/` para os avatares,
+ * `documentos/` para os documentos de campanha — `armazenamento-chave.util.ts`) e devolve a URL pública (domínio custom ou `*.r2.dev`) — durável, sobrevive
  * a redeploy.
  */
 export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
@@ -34,7 +33,7 @@ export class ArmazenamentoR2Provedor implements ArmazenamentoProvedor {
   }
 
   async salvarImagem(dto: ArmazenamentoImagemSalvar): Promise<ArmazenamentoImagemSalva> {
-    const chave = construirChaveImagemFicha(dto.extensao);
+    const chave = construirChaveImagem(dto.pasta, dto.extensao);
     await this.clienteS3.send(
       new PutObjectCommand({
         Bucket: this.configuracao.r2Bucket,

@@ -17,6 +17,7 @@ import { EncontroModule } from './modules/encontro/encontro.module';
 import { CenaModule } from './modules/cena/cena.module';
 import { RolagemModule } from './modules/rolagem/rolagem.module';
 import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.module';
+import { DocumentoModule } from './modules/documento/documento.module';
 
 /**
  * Módulo raiz da aplicação. Registra a infraestrutura genérica (`core/`) global, o
@@ -40,6 +41,7 @@ import { PaginaCadernoModule } from './modules/pagina-caderno/pagina-caderno.mod
     EncontroModule,
     CenaModule,
     PaginaCadernoModule,
+    DocumentoModule,
     GatewayModule,
   ],
   controllers: [HealthController],

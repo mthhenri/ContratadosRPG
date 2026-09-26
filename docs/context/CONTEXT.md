@@ -19,6 +19,10 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-26 · **Última decisão registrada:**
+> `m9-02-backend-documento` concluída (spec em `done/`): módulo `backend/documento` (CRUD, ordem,
+> revelar/ocultar, upload de imagem em `documentos/`), `documento:alterado` com trava anti-vazamento
+> e `core/armazenamento` com pasta parametrizada. Só backend; próximas: `m9-04` (desbloqueia a
+> `m7-25`) e `m9-03` (ver §1). Antes:
 > `m9-01-contrato-migration-documento` concluída (spec em `done/`): `TipoDocumentoEnum`, limites em
 > `shared/src/validators/documento.validators.ts` (imagem até 10 MB), DTOs da entidade em
 > `shared/src/dtos/documento/` e migration `0034` (`tipo_documento` + `documento` com busca textual
@@ -594,7 +598,7 @@
 ## 1. Próxima Task
 
 **Módulo de Cenas — próxima: `m7-25` (Investigação completa), bloqueada pela M9, que está em
-andamento — a próxima a implementar é a `m9-02`.** `m7-21` (contrato + schema), `m7-22` (backend +
+andamento — falta a `m9-04` (o backend da `m9-02` já está pronto).** `m7-21` (contrato + schema), `m7-22` (backend +
 tempo real), `m7-23` (hub + "Nova cena" tipada) e `m7-24` (painel de cena sem iniciativa) concluídas
 em 2026-09-26. **Deploy: `m7-22` e `m7-23` sobem juntas** (os encontros de backfill em `MONTAGEM`
 vivem em cenas `PLANEJADA`, que só o hub deixa o mestre abrir); a `m7-24` é só frontend e pode ir
@@ -603,9 +607,10 @@ junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e
 (o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
 da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
 
-**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01` concluída (2026-09-26),
-próxima `m9-02`.** `m9-01` (contrato + migration `0034` `documento`, pronta) → `m9-02` (backend +
-`documento:alterado` com trava anti-vazamento) → `m9-03` (busca no backend) em paralelo com `m9-04`
+**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01` e `m9-02` concluídas
+(2026-09-26); próximas `m9-04` (desbloqueia a `m7-25`) e `m9-03`, independentes entre si.** `m9-01`
+(contrato + migration `0034` `documento`, pronta) → `m9-02` (backend + `documento:alterado` com trava
+anti-vazamento, pronta) → `m9-03` (busca no backend) em paralelo com `m9-04`
 (biblioteca do mestre + `LeitorDocumento`) → `m9-05` (jogador, espectador e busca) → `m9-06` (passe
 mobile). As decisões do guarda-chuva foram **confirmadas pelo autor** (espectador lê o revelado, URL
 pública da imagem, salvar explícito, revelar sem confirmação), com o teto de imagem subido para
@@ -2544,8 +2549,10 @@ Gateway Socket.IO **broadcast-only**: toda mutação passa por REST, o gateway n
 Handshake autenticado pelo mesmo `JwtService` do Passport. Salas `ficha:<id>` e `campanha:<id>`,
 reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterada`, `membro:entrou`,
 `rolagem:registrada`, `campanha:estado-alterado`, `campanha:inventario-alterado`,
-`encontro:alterado` (por usuário — ver "Encontro de Combate" abaixo) e `cena:alterada` (`m7-22`:
-cena `PLANEJADA` só na sala `campanha:<id>:mestre`; aberta/encerrada na sala cheia + espectador).
+`encontro:alterado` (por usuário — ver "Encontro de Combate" abaixo), `cena:alterada` (`m7-22`:
+cena `PLANEJADA` só na sala `campanha:<id>:mestre`; aberta/encerrada na sala cheia + espectador) e
+`documento:alterado` (`m9-02`: o que nunca foi visível à mesa só na sala do mestre — ver "Biblioteca
+de documentos" abaixo).
 Os eventos de inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
 
 `CampanhaGateway.emitirFichaAlterada` também aciona `EncontroService.sincronizarFichaAlterada` após
@@ -2557,6 +2564,20 @@ retransmitido — sem isso, qualquer edição de Vida/Energia/Condição feita *
 persistia corretamente mas nunca atualizava os cartões da Iniciativa em tempo real. `GatewayModule`
 importa `EncontroModule` (`forwardRef`, mesmo padrão de `FichaModule`/`CampanhaModule`); a direção
 inversa (`Ficha` → `Encontro`) continua proibida.
+
+### Biblioteca de documentos — `backend/documento` (M9)
+
+Documento de campanha `TEXTO` (markdown) ou `IMAGEM` (upload em `documentos/` do armazenamento),
+tabela `documento` da migration `0034`. Só o mestre cria, edita, ordena, revela e oculta; todo
+documento nasce **oculto**. `DocumentoService.podeLerNaoReveladas` é o recorte único: jogador e
+espectador leem só o revelado — a listagem filtra no SQL, e um oculto responde **404** a quem não é
+mestre, no `GET` e em qualquer mutação (a mesma resposta de um id inexistente). `documento:alterado`
+leva só `{ campanhaId, documentoId, alteracao }` (nunca título, conteúdo ou URL): criar, alterar ou
+remover um oculto vai só à sala do mestre; revelar, ocultar, reordenar e mexer num revelado vão à
+sala cheia + espectador. Toda escrita avança o `updatedDate` (inclusive revelar/reordenar), e o
+`PUT` usa-o como versão otimista (409). A URL da imagem é pública e não revogável (decisão
+confirmada da M9); a imagem de um documento removido fica no armazenamento (`I-038`). O
+`DocumentoModule` exporta a `DocumentoService` para a `m7-25`.
 
 `emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
 com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só

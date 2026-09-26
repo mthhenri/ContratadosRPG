@@ -18,6 +18,7 @@ import type {
   CampanhaSalaSairDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
+import type { DocumentoBibliotecaAlteradaDto } from '@contratados-rpg/shared/dtos/documento';
 import {
   CenaStatusEnum,
   RolagemVisibilidadeEnum,
@@ -577,6 +578,21 @@ export class CampanhaGateway implements OnGatewayConnection {
         ? [this.salaCampanhaMestre(evento.campanhaId)]
         : [this.salaCampanha(evento.campanhaId), this.salaCampanhaEspectador(evento.campanhaId)];
     this.servidor.to(salas).emit('cena:alterada', evento);
+  }
+
+  /**
+   * Emite `documento:alterado` (m9-02) depois de uma mutação da biblioteca já persistida. Trava
+   * anti-vazamento no molde de `emitirCenaAlterada`: o que nunca foi visível à mesa — criar, alterar
+   * ou remover um documento **oculto** — vai só para `campanha:<id>:mestre`; o que a mesa vê ou via
+   * (revelar, ocultar, alterar ou remover um revelado, reordenar) vai para a sala cheia e a do
+   * espectador, que lê o revelado como o jogador. Quem decide `visivelParaMesa` é a
+   * `DocumentoService`; o payload nunca carrega título, conteúdo nem `imagemUrl`.
+   */
+  emitirDocumentoAlterado(evento: DocumentoBibliotecaAlteradaDto, visivelParaMesa: boolean): void {
+    const salas = visivelParaMesa
+      ? [this.salaCampanha(evento.campanhaId), this.salaCampanhaEspectador(evento.campanhaId)]
+      : [this.salaCampanhaMestre(evento.campanhaId)];
+    this.servidor.to(salas).emit('documento:alterado', evento);
   }
 
   /**

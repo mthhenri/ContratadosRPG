@@ -87,6 +87,18 @@
 - **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-086.
 - **Spec:** [estado sem refetch](../specs/backlog/p-086-estado-campanha-sem-refetch.spec.md).
 
+### P-088 — Upload de avatar sem arquivo responde 500 · `ABERTO` · backend/ficha
+
+- **Sintoma:** `POST /ficha/:id/imagem` (e o equivalente do avulso do encontro,
+  `encontro.controller.ts:84`) sem o campo `arquivo` no multipart responde **500 "Erro interno do
+  servidor"**, qualquer que seja o id. Verificado ao vivo na `m9-02`.
+- **Causa:** a controller lê `arquivo.buffer` de um `@UploadedFile()` `undefined` e estoura
+  `TypeError` antes de a service validar qualquer coisa.
+- **Contorno:** o frontend sempre envia o arquivo; só uma chamada direta cai aqui.
+- **Correção:** o que o `DocumentoController` faz — montar o value object por um helper que
+  transforma "sem arquivo" em arquivo vazio, e a service recusar com 400 "Envie um arquivo de imagem".
+- **Desde:** m3-62 (avatar); encontrado na `m9-02` (2026-09-26).
+
 ### P-087 — Checagem de tipos completa do backend tem 17 erros fora do build · `ABERTO` · backend/testes
 
 - **Sintoma:** `npx tsc --noEmit -p backend/tsconfig.json` acusa 17 erros: 3 em

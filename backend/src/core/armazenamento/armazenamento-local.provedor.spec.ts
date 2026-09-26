@@ -2,6 +2,7 @@ import { readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ArmazenamentoLocalProvedor } from './armazenamento-local.provedor';
+import { ArmazenamentoPastaEnum } from './armazenamento-provedor.interface';
 
 const diretorioUploads = resolve(__dirname, '..', '..', '..', 'uploads');
 
@@ -27,7 +28,12 @@ describe('ArmazenamentoLocalProvedor (m3-62)', () => {
   it('grava o conteúdo em backend/uploads/agentes/<uuid>.<extensão> e devolve o caminho público', async () => {
     const conteudo = new Uint8Array([1, 2, 3, 4]);
 
-    const salvo = await provedor.salvarImagem({ conteudo, mimetype: 'image/png', extensao: 'png' });
+    const salvo = await provedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.AGENTES,
+      conteudo,
+      mimetype: 'image/png',
+      extensao: 'png',
+    });
     arquivosCriados.push(salvo.caminho);
 
     expect(salvo.caminho).toMatch(/^\/uploads\/agentes\/[0-9a-f-]+\.png$/);
@@ -36,8 +42,25 @@ describe('ArmazenamentoLocalProvedor (m3-62)', () => {
     expect(Uint8Array.from(gravado)).toEqual(conteudo);
   });
 
+  it('grava a imagem de documento em backend/uploads/documentos/ (m9-02)', async () => {
+    const conteudo = new Uint8Array([5, 6]);
+
+    const salvo = await provedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.DOCUMENTOS,
+      conteudo,
+      mimetype: 'image/webp',
+      extensao: 'webp',
+    });
+    arquivosCriados.push(salvo.caminho);
+
+    expect(salvo.caminho).toMatch(/^\/uploads\/documentos\/[0-9a-f-]+\.webp$/);
+    const gravado = await readFile(resolve(diretorioUploads, salvo.caminho.replace('/uploads/', '')));
+    expect(Uint8Array.from(gravado)).toEqual(conteudo);
+  });
+
   it('exclui o arquivo gravado a partir do caminho público', async () => {
     const salvo = await provedor.salvarImagem({
+      pasta: ArmazenamentoPastaEnum.AGENTES,
       conteudo: new Uint8Array([9]),
       mimetype: 'image/jpeg',
       extensao: 'jpg',
