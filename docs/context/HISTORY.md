@@ -1,5 +1,22 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — Revisão estática de requests do site
+
+Pedido do autor: conferir momento, desperdício e escopo de dados das requests. Rastreados
+serviços HTTP, consumidores de campanha/ficha/Encontro, sessão, guards, prévias, histórico e
+Caderno, incluindo emissores de eventos e consultas relevantes do backend. Relatório:
+[`requests-2026-09-26.md`](../reviews/requests-2026-09-26.md).
+
+Registrados `P-082` a `P-086`: seleção de ficha sem isolamento de GET/autosave; duplicação de
+carga após reconexão anterior; ressincronização incompleta; invalidação ampla a cada edição;
+GETs evitáveis ao alternar Na Base/Em Missão. Separadas oportunidades de adiar inventário oculto
+e reduzir campanha completa usada somente pelo nome. Confirmados debounce/cancelamento na busca
+do Caderno, limite de 50 rolagens e necessidade do refetch que preserva campos privados (P-080).
+
+Sem mudança de aplicação, spec ou commit. Evidência estática, sem captura de rede nem reprodução
+ao vivo; não foram executados build/lint/testes para o diff documental. Correções e validação
+dinâmica permanecem abertas; números de GETs do relatório são derivados do código.
+
 ## 2026-09-25 — I-027, fatia do Caderno: Caderno da campanha em janela externa; I-027 concluída
 
 Pedido do autor: "faz a próxima parte do I-027" — a 3ª e última fatia (Histórico → Anotações →

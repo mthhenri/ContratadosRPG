@@ -1,5 +1,10 @@
 # CONTEXT.md — Painel do Projeto
 
+> **Requests — pendências abertas:** revisão estática identificou `P-082`…`P-086`, incluindo
+> risco de troca de destino do autosave ao selecionar outra ficha, cargas duplicadas e
+> ressincronização incompleta. [Evidências e limites](../reviews/requests-2026-09-26.md).
+> Correções e reprodução dinâmica pendentes; nenhum comportamento foi alterado pela revisão.
+
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
 > A retomada das jornadas autenticadas depende de restabelecer Docker/Postgres local, indisponível

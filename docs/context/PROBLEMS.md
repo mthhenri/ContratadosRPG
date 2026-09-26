@@ -29,6 +29,52 @@
 
 ## Ativos
 
+### P-082 — Troca de ficha não isola requests e salvamento pendente · `ABERTO` · frontend/ficha
+
+- **Sintoma:** resposta antiga pode substituir a seleção atual; edição agendada pode usar o ID
+  da nova seleção, perdendo a edição original ou tentando gravar dados na ficha errada.
+- **Causa:** GET sem cancelamento/conferência de ID em `detalhe-jogador.page.ts` e intenção sem
+  ID no debounce de `FichaEdicaoService`.
+- **Correção:** associar escrita à origem e coordenar troca, pendências e respostas obsoletas.
+- **Desde:** revisão estática de 2026-09-26; reprodução ao vivo pendente.
+- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-082.
+
+### P-083 — Reconexão antiga duplica cargas ao navegar · `ABERTO` · frontend/tempo real
+
+- **Sintoma:** depois de uma reconexão, novas telas fazem carga inicial e refetch adicional.
+- **Causa:** effects testam o contador global `reconexao() > 0` na montagem.
+- **Correção:** observar apenas incrementos posteriores à montagem de cada consumidor.
+- **Desde:** revisão estática de 2026-09-26.
+- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-083.
+
+### P-084 — Ressincronização incompleta da campanha · `ABERTO` · frontend/tempo real
+
+- **Sintoma:** após queda, estado operacional, inventário, rolagens e ficha embutida podem
+  continuar antigos; feed do Encontro também não é recuperado na reconexão.
+- **Causa:** campanha refaz só membros/resumos; ficha embutida não refaz GET com o mesmo ID.
+- **Correção:** invalidar recursos carregados sujeitos a eventos perdidos, preservando edição.
+- **Desde:** revisão estática de 2026-09-26; reprodução com dois clientes pendente.
+- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-084.
+
+### P-085 — Edição de ficha provoca recarga ampla de membros e fichas · `ABERTO` · requests
+
+- **Sintoma:** até editar nome provoca GETs de listas inteiras nos painéis conectados.
+- **Causa:** gateway emite condições alteradas sem verificar mudança; detalhe refaz membros e
+  fichas pelos dois eventos, sem coordenar invalidação.
+- **Correção:** service emite condições só quando mudarem; atualizar recorte necessário e
+  agrupar eventos sem ampliar exposição de dados privados.
+- **Desde:** revisão estática de 2026-09-26.
+- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-085.
+
+### P-086 — Estado operacional refaz campanha e inventário · `ABERTO` · requests
+
+- **Sintoma:** alternar Na Base/Em Missão dispara dois GETs adicionais por painel de campanha.
+- **Causa:** consumidor ignora estado recebido no evento e chama `recarregarCampanhaEInventario`;
+  trocar estado não altera os itens.
+- **Correção:** aplicar estado recebido e invalidar inventário quando seus dados mudarem.
+- **Desde:** revisão estática de 2026-09-26.
+- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-086.
+
 ### P-003 — Backend não valida a estrutura do corpo das requisições · `ACEITO` · backend
 
 - **Sintoma:** nenhum `ValidationPipe` está registrado. Um corpo malformado (campo ausente, tipo
@@ -119,4 +165,3 @@
   gate visual (`design-fidelity` + `verify`).
 - **Desde:** achado em 2026-09-24 na verificação ao vivo da `p-076`, com uma conta de jogador sem
   ficha. O comportamento é anterior a essa task.
-
