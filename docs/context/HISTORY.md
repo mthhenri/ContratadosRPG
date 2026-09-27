@@ -1,5 +1,73 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-27 — m9-06: passe responsivo da Biblioteca de documentos (M9 concluída)
+
+Última task do milestone M9 — só apresentação, nos quatro viewports padrão (`360×800`, `960×1080`,
+`1366×768`, `1920×1080`) das três visões (mestre, jogador, espectador). Nenhuma regra, permissão
+ou contrato mudou.
+
+**Verificação ao vivo, não só leitura de código.** Cenário montado por REST (mestre, jogador e
+espectador reais, uma campanha, 44 documentos) com os casos "difíceis" que a spec pedia: título de
+exatamente 120 caracteres, tabela Markdown de 5 colunas, imagem de `4000×3000` (gerada com
+`ffmpeg`), 40 documentos de enchimento e os estados vazio/indisponível/conflito de versão
+provocados de verdade (REST em paralelo à sessão do Playwright, não simulação de UI). 24
+combinações página × viewport capturadas sem `scrollWidth > clientWidth` em nenhuma.
+
+**Defeito 1: título sem truncamento na lista.** `.documento-cartao__nome`
+(`documento-cartao.component.scss`) só tinha `overflow-wrap: anywhere` — um título de 120
+caracteres quebrava em ~8 linhas e estourava a altura do cartão (visível nos quatro viewports,
+pior no mobile). Corrigido com a mesma receita de `.trilha__nome`
+(`trilha-turnos.component.scss`, `-webkit-line-clamp: 2`), já usada no projeto para nome de card —
+sem inventar uma regra local, como a spec pedia. O painel do documento aberto continua **sem**
+clamp: ao ler o documento, o título precisa aparecer por inteiro, e as ações
+(Revelar/Ocultar/Editar/Remover) já cabiam antes dele mesmo com o título de 120 caracteres
+quebrando em várias linhas, então o clamp ali não era necessário para o critério de aceite.
+
+**Defeito 2: Salvar/Cancelar cobertos pela barra do editor, sem precisar de teclado nenhum.**
+Achado ao vivo, não por leitura de CSS: bastava focar o `app-editor-markdown` em 360×800 editando
+um documento curto — a barra dele vira `position: fixed` sobre o fim do viewport
+(`editor-markdown.component.scss`), e o rodapé Cancelar/Salvar, que na Biblioteca vem *depois* do
+editor no fluxo da página (ao contrário do Caderno e das anotações da ficha, onde o editor cresce
+dentro de um container de altura própria e o rodapé fica sempre fora dele), ficava parcialmente
+atrás da barra mesmo rolando até o fim da página (`Salvar` a 14px sob a barra no scroll máximo,
+medido por `boundingBox()`). Corrigido sem tocar o primitivo compartilhado: `biblioteca-mestre.
+page.ts` ganhou o signal `editorFocado`, ligado ao `(focadoChange)` que o `EditorMarkdown` já
+expõe; `biblioteca-mestre.page.scss` reserva `padding-bottom: 64px` no rodapé só com
+`.biblioteca__edicao--editor-focado` e só em `bp.mobile`. Confirmado ao vivo: `Salvar` volta a
+ficar 50px acima da barra, sem mudar nada no desktop (onde a barra nunca vira `fixed`).
+
+**Confirmado correto sem precisar de mudança** (checado ao vivo, não por leitura de CSS): setas de
+reordenar e ações do mestre já ficam ≥44px no mobile (regra por primitivo/`.biblioteca__acao`,
+preexistente); tabela larga do leitor rola **dentro do bloco** — confirmado rolando de verdade
+(`table.scrollWidth` 481 vs `clientWidth` 256 em 360px, e a rolagem manual revelou as colunas
+4 e 5 sem mover a página); imagem grande ajusta à largura e alterna para tamanho real com scroll
+nos dois eixos; busca (campo, resultados, destaque, "Carregar mais") e o dialog "Novo documento"
+cabem em 360px; lista de 40 itens rola até o último sem cortar; o aviso "Este documento não está
+mais disponível" e o de conflito de versão aparecem legíveis, provocados via REST em paralelo à
+sessão da UI (não simulados no template).
+
+**Faixa `561–1080px` (item 1 da spec): decisão registrada, sem breakpoint novo.** A lista fixa de
+360px ao lado do painel (o mesmo arranjo do desktop) já coube sem espremer em `960×1080` com
+conteúdo real (tabela de 5 colunas, título longo) — decisão anotada em `DESIGN.md` "Biblioteca de
+documentos" em vez de um `bp.tablet` que nada exigia.
+
+**Pendência que fica aberta: teclado virtual real, só no caso extremo.** Depois do Defeito 2
+corrigido, uma simulação sintética mais agressiva (sobrescrever `visualViewport.height` para 55%
+da tela e disparar `resize`, já que o teclado real não é reproduzível no Playwright — mesma
+limitação de `docs/specs/done/editor-markdown-barra-e-mobile.spec.md`) ainda mostra a barra do
+editor cobrindo parte do campo `Título` quando ele fica acima do editor — cenário que só a
+Biblioteca tem (o editor em outras telas ocupa a tela inteira quando focado, sem `Título` acima).
+Como a simulação não reproduz o auto-scroll que navegadores móveis fazem ao focar um campo
+editável atrás do teclado (o que provavelmente resolveria sozinho, rolando o `Título` para fora
+da tela em vez de deixá-lo atrás da barra), não há como confirmar se esse resíduo é real sem um
+aparelho físico — registrado como pendência em vez de "corrigido às cegas" com um ajuste não
+verificável.
+
+**Testes e lint.** 9 arquivos de spec / 76 testes do módulo `documento` verdes (sem teste novo —
+mudança de apresentação pura, já coberta pelos specs existentes de `lista-documentos`/
+`busca-documentos`/páginas); lint do frontend sem erros novos (avisos preexistentes de aspas);
+`prettier --check` verde nos arquivos tocados.
+
 ## 2026-09-26 — m9-05: Biblioteca do jogador e do espectador, e a busca nas três visões
 
 Jogador e espectador passam a ler, ao vivo, o que o mestre revelou, e os três papéis buscam na

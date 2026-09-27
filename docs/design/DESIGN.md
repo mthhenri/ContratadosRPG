@@ -453,6 +453,13 @@ os controles do mestre.
 - **Mobile:** duas vistas, como o Caderno — a lista, ou o documento com um "voltar" (`app-botao`
   `secundario` `texto`, "Documentos") que só existe abaixo de `bp.mobile`. Ações e setas passam ao
   alvo de 44px.
+- **Faixa 561–1080px (`m9-06`):** sem breakpoint próprio — a lista fixa de 360px ao lado do painel
+  (o mesmo arranjo do desktop) já cabe sem espremer em `960×1080`, a tela dividida de referência do
+  projeto; abaixo de `bp.mobile` (560px) o layout já virou as duas vistas do celular. Título de até
+  120 caracteres na lista usa a mesma receita de `.trilha__nome` (`trilha-turnos.component.scss`) —
+  `-webkit-line-clamp: 2` em vez de só `overflow-wrap`, que deixava o cartão com a altura de um
+  título de oito linhas; o painel do documento aberto continua sem clamp (o título precisa ficar
+  legível por inteiro quando lido).
 - **Estrutura comum (`m9-05`):** casca, coluna da lista, painel e as duas vistas do celular moram
   em `app-biblioteca-layout` (`modules/documento/componentes/`), usado pelas três visões. O que é
   só do mestre entra por projeção (`[bibliotecaAcao]`, `[bibliotecaAcoesDocumento]`,

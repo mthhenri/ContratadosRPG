@@ -18,7 +18,28 @@
 > (`printWidth: 100`, quatro espaços); `npm run format:html-scss --workspace=frontend` é o corte
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
-> **Última revisão:** 2026-09-26 · **Última decisão registrada:**
+> **Última revisão:** 2026-09-27 · **Última decisão registrada:**
+> `m9-06-refinamento-mobile-biblioteca` concluída (spec em `done/`): passe de apresentação nos
+> quatro viewports (`360×800`, `960×1080`, `1366×768`, `1920×1080`) das três visões da Biblioteca.
+> Dois defeitos reais encontrados ao vivo (nenhum por leitura de CSS): (1) `.documento-cartao__nome`
+> não truncava — um título de 120 caracteres (caso de teste da spec) estourava o cartão em ~8
+> linhas; corrigido com a mesma receita de `.trilha__nome` (`-webkit-line-clamp: 2`), sem clamp no
+> título do painel aberto (precisa ficar legível por inteiro). (2) Em `360×800`, só focar o editor
+> ao editar um documento curto já cobria `Salvar`/`Cancelar` com a barra do editor — sem precisar
+> de teclado nenhum, porque na Biblioteca o rodapé vem depois do editor no fluxo da página, ao
+> contrário do Caderno/anotações da ficha; corrigido com o signal `editorFocado` (ligado ao
+> `(focadoChange)` que o `EditorMarkdown` já expunha) reservando `padding-bottom: 64px` no rodapé só
+> em mobile e só com o editor focado, sem tocar o primitivo compartilhado. `561–1080px` não precisou
+> de breakpoint próprio — decisão registrada em `DESIGN.md` "Biblioteca de documentos". Confirmados
+> sem alteração: ações do mestre (Revelar/Ocultar/Editar/Remover) cabem em 360px com alvo ≥44px;
+> tabela larga do leitor rola dentro do bloco (`overflow-x` do `EditorMarkdown`, testado com scroll
+> real); imagem grande ajusta/tamanho real; busca, dialog "Novo documento" e os estados "documento
+> indisponível"/conflito de versão sem overflow. **Pendência sem fechamento possível nesta sessão:**
+> depois do defeito (2) corrigido, uma simulação sintética mais agressiva de teclado (não
+> reprodutível de verdade no Playwright, mesma limitação da `editor-markdown-barra-e-mobile`) ainda
+> mostra a barra do editor sobre parte do `Título` acima dela (só
+> a Biblioteca combina os dois) não foi confirmada em aparelho. M9 (`m9-01` a `m9-06`) está
+> **concluída**. Antes:
 > `m9-05-frontend-biblioteca-jogador-espectador` concluída (spec em `done/`): **Biblioteca** do
 > jogador (casca da rota comum) e do espectador (`/campanhas/:id/espectador/documentos`, pelo
 > resolver do painel, sem endpoint proibido) — só o revelado, somente leitura, ao vivo (revelado
@@ -627,13 +648,17 @@ junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e
 (o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
 da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
 
-**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01` a `m9-05` concluídas
-(2026-09-26); próxima `m9-06` (passe responsivo fino, `960×1080` e `1366×768`).** `m9-01` (contrato +
+**M9 — Documentos de campanha ("Biblioteca"): concluída — `m9-01` a `m9-06`
+(2026-09-27).** `m9-01` (contrato +
 migration `0034` `documento`) → `m9-02` (backend + `documento:alterado` com trava anti-vazamento) →
 `m9-04` (biblioteca do mestre + `LeitorDocumento`) → `m9-03` (busca no backend) → `m9-05` (jogador,
-espectador e busca nas três visões) → `m9-06` (passe responsivo). Decisões do guarda-chuva **confirmadas pelo autor** (espectador lê o revelado, URL
+espectador e busca nas três visões) → `m9-06` (passe responsivo — truncamento de título na lista,
+comportamento de `561–1080px` registrado em `DESIGN.md`). Decisões do guarda-chuva **confirmadas pelo autor** (espectador lê o revelado, URL
 pública da imagem, salvar explícito, revelar sem confirmação, teto de imagem de **10 MB**, glifos
-`biblioteca`/`imagem`/`tamanho-real`/`ajustar-largura`).
+`biblioteca`/`imagem`/`tamanho-real`/`ajustar-largura`). Pendência sem verificação possível em
+Playwright: barra do `EditorMarkdown` ancorada sobre o teclado virtual com o campo `Título` acima
+dela (só a Biblioteca combina os dois) — precisa de conferência em aparelho real, mesma limitação
+já registrada para `editor-markdown-barra-e-mobile`.
 
 **Antes: `espectador-coluna-acoes-e-iniciativa` concluída (2026-09-21):** Painel do espectador
 padronizado (coluna de ações, cabeçalho "shell", toggle de descrição) e Iniciativa própria do

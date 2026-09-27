@@ -124,6 +124,13 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   protected readonly tituloEditado = signal('');
   /** O rascunho do texto como o editor o propagou (debounced — ver `confirmarValor()`). */
   protected readonly conteudoEdicao = signal('');
+  /**
+   * No mobile, com o editor focado, a barra dele vira `position: fixed` sobre o rodapé
+   * Cancelar/Salvar — diferente do Caderno/anotações da ficha, aqui o rodapé vem depois do editor
+   * no fluxo da página, não dentro de um container com altura própria. Reserva o espaço da barra
+   * pra ele continuar alcançável (m9-06, `biblioteca-mestre.page.scss`).
+   */
+  protected readonly editorFocado = signal(false);
   /** O salvar voltou 409: outra sessão alterou o documento depois que a edição começou. */
   protected readonly conflito = signal(false);
   protected readonly salvando = signal(false);
@@ -366,6 +373,7 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
     this.conteudoEdicao.set(documento.conteudoMarkdown ?? '');
     this.conflito.set(false);
     this.erroImagem.set(null);
+    this.editorFocado.set(false);
     this.editando.set(true);
   }
 

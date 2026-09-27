@@ -77,11 +77,10 @@
     </div>
 
     <div bibliotecaCorpoDocumento class="biblioteca__documento-corpo">
-        @if (aberto(); as documento) {
-        @if (!editando() && !documento.revelado && !podeRevelar()) {
+        @if (aberto(); as documento) { @if (!editando() && !documento.revelado && !podeRevelar()) {
         <p class="biblioteca__nota">Envie a imagem para poder revelar este documento.</p>
         } @if (editando()) {
-        <div class="biblioteca__edicao">
+        <div class="biblioteca__edicao" [class.biblioteca__edicao--editor-focado]="editorFocado()">
             <app-campo
                 rotulo="Título"
                 [dica]="tituloEditado().length + '/' + tituloMaximo"
@@ -106,6 +105,7 @@
                     [valor]="conteudoEdicao()"
                     [rotulo]="'Conteúdo do documento'"
                     (valorChange)="conteudoEdicao.set($event)"
+                    (focadoChange)="editorFocado.set($event)"
                 />
                 <span class="biblioteca__dica">
                     {{ conteudoEdicao().length }}/{{ conteudoMaximo }} caracteres
@@ -146,15 +146,12 @@
                 <p class="biblioteca__erro" role="alert">{{ mensagem }}</p>
                 }
             </div>
-            }
-
-            @if (conflito()) {
+            } @if (conflito()) {
             <div class="biblioteca__conflito" role="alert">
                 <app-icone nome="alerta" class="biblioteca__conflito-icone" />
                 <p class="biblioteca__conflito-texto">
-                    Este documento foi alterado em outra sessão. Seu rascunho continua aqui
-                    — copie o que quiser guardar; "Recarregar" traz a versão atual e descarta
-                    o rascunho.
+                    Este documento foi alterado em outra sessão. Seu rascunho continua aqui — copie
+                    o que quiser guardar; "Recarregar" traz a versão atual e descarta o rascunho.
                 </p>
                 <button
                     app-botao

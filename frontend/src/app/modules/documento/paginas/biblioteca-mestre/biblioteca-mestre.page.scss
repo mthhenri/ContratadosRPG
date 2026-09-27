@@ -47,6 +47,17 @@
         gap: var(--space-16);
     }
 
+    // No mobile, com o editor focado, a barra dele vira `position: fixed` sobre o fim da tela
+    // (`editor-markdown.component.scss`) — diferente do Caderno e das anotações da ficha, aqui o
+    // rodapé Cancelar/Salvar vem *depois* do editor no fluxo da página (não dentro de um container
+    // com altura própria), então a barra o cobria sem essa reserva (m9-06, achado ao vivo: o botão
+    // Salvar ficava parcialmente atrás da barra mesmo rolando até o fim da página).
+    &__edicao--editor-focado &__edicao-acoes {
+        @include bp.mobile {
+            padding-bottom: 64px;
+        }
+    }
+
     &__conteudo-edicao,
     &__imagem-edicao {
         display: flex;

@@ -59,12 +59,20 @@
         gap: 6px;
     }
 
+    // Até duas linhas (mesma receita de `.trilha__nome`, `trilha-turnos.component.scss`): um
+    // título de até 120 caracteres (m9-06) não pode estourar a altura do cartão na lista — o
+    // painel do documento aberto mostra o título inteiro, sem clamp.
     &__nome {
+        display: -webkit-box;
+        overflow: hidden;
         font-family: var(--font-mono);
         font-size: 13px;
         font-weight: 700;
         color: var(--text);
         overflow-wrap: anywhere;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
     }
 
     &__meta {
