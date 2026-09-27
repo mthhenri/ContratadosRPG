@@ -1,0 +1,59 @@
+<!-- Lista da biblioteca (m9-04 → m9-05): esqueleto, vazio ou os cartões — setas só para o mestre. -->
+@if (carregando()) {
+<div class="lista-documentos__esqueleto" role="status" aria-label="Carregando os documentos">
+    @for (i of [0, 1, 2]; track i) {
+    <app-esqueleto class="lista-documentos__esqueleto-linha" />
+    }
+</div>
+} @else if (documentos().length === 0) {
+<app-estado-vazio
+    tamanho="compacto"
+    icone="biblioteca"
+    [titulo]="vazioTitulo()"
+    [linhaApoio]="vazioApoio()"
+/>
+} @else {
+<ol class="lista-documentos__itens">
+    @for (documento of documentos(); track documento.id; let primeiro = $first; let ultimo = $last) {
+    <li class="lista-documentos__item">
+        <!-- O conteúdo do botão (ícone, título, tipo, chip) é o template do próprio
+             `app-documento-cartao`; a regra não enxerga através do componente de atributo. -->
+        <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
+        <button
+            app-documento-cartao
+            [titulo]="documento.titulo"
+            [tipo]="documento.tipo"
+            [revelado]="mostrarEstado() ? documento.revelado : null"
+            [aberto]="abertoId() === documento.id"
+            (click)="selecionar.emit(documento.id)"
+        ></button>
+        @if (ordenavel()) {
+        <div class="lista-documentos__controles">
+            <button
+                app-botao-icone
+                tamanho="padrao"
+                type="button"
+                [attr.aria-label]="'Subir ' + documento.titulo"
+                [appTooltip]="'Subir na ordem'"
+                [disabled]="primeiro || bloqueado()"
+                (click)="mover.emit({ documento, deslocamento: -1 })"
+            >
+                <app-icone nome="chevron" class="lista-documentos__seta-cima" />
+            </button>
+            <button
+                app-botao-icone
+                tamanho="padrao"
+                type="button"
+                [attr.aria-label]="'Descer ' + documento.titulo"
+                [appTooltip]="'Descer na ordem'"
+                [disabled]="ultimo || bloqueado()"
+                (click)="mover.emit({ documento, deslocamento: 1 })"
+            >
+                <app-icone nome="chevron" />
+            </button>
+        </div>
+        }
+    </li>
+    }
+</ol>
+}

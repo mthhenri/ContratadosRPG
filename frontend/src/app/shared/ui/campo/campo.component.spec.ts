@@ -104,4 +104,46 @@ describe('Campo', () => {
     expect(campo().classList.contains('campo--amplo')).toBe(true);
     expect(campo().classList.contains('campo--compacto')).toBe(false);
   });
+
+  describe('com ícone', () => {
+    @Component({
+      imports: [Campo],
+      template: `
+        <app-campo rotulo="Buscar" [icone]="icone()">
+          <input class="campo__controle" type="search" />
+        </app-campo>
+      `,
+    })
+    class HospedeiroIcone {
+      readonly icone = signal<'busca' | undefined>('busca');
+    }
+
+    function montarIcone() {
+      TestBed.configureTestingModule({ imports: [HospedeiroIcone] });
+      const fixture = TestBed.createComponent(HospedeiroIcone);
+      fixture.detectChanges();
+      return fixture;
+    }
+
+    it('desenha o ícone decorativo depois do rótulo, sem tirar o controle do <label>', () => {
+      const elemento = montarIcone().nativeElement as HTMLElement;
+      const campo = elemento.querySelector('label.campo') as HTMLElement;
+      const icone = campo.querySelector(':scope > app-icone.campo__icone');
+
+      expect(campo.classList.contains('campo--com-icone')).toBe(true);
+      expect(campo.firstElementChild?.classList.contains('campo__rotulo')).toBe(true);
+      expect(icone?.getAttribute('aria-hidden')).toBe('true');
+      expect(campo.querySelector(':scope > input.campo__controle')).not.toBeNull();
+    });
+
+    it('sem ícone, não há modificador nem ícone', () => {
+      const fixture = montarIcone();
+      fixture.componentInstance.icone.set(undefined);
+      fixture.detectChanges();
+      const campo = (fixture.nativeElement as HTMLElement).querySelector('label.campo')!;
+
+      expect(campo.classList.contains('campo--com-icone')).toBe(false);
+      expect(campo.querySelector('.campo__icone')).toBeNull();
+    });
+  });
 });

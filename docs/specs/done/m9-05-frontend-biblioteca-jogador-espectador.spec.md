@@ -143,3 +143,38 @@ só esses. Os três papéis buscam pelo título e pelo conteúdo, cada um dentro
   documento). Segmentar por marcador e renderizar cada trecho como texto.
 - **Extração do layout:** refatorar a página do mestre para compartilhar o esqueleto pode regredir a
   `m9-04`; os testes e a verificação visual da `m9-04` precisam continuar valendo depois da extração.
+
+## Decisões tomadas na implementação (2026-09-26)
+
+1. **`app-campo` com ícone — decisão do autor.** O primitivo não tinha ícone. Perguntado, o autor
+   escolheu ampliá-lo: novo input opcional `icone`, desenhado dentro do controle. O controle
+   continua filho direto do `<label>`, e sem ícone nada muda.
+2. **Campo `type="text"` + `inputmode="search"`**, não `type="search"`: o "×" nativo do navegador
+   sai branco, fora dos tokens. É o mesmo tipo da busca do Caderno.
+3. **Divisor acima da busca.** O divisor "Documentos N" vira "Resultados N" com termo, e fica acima
+   do campo, para a busca ser um componente fechado (campo + resultados).
+4. **Estado da mesa num store por página** (`BibliotecaLeituraStore`), dividido por jogador e
+   espectador. O mestre manteve o próprio estado da `m9-04`: ele tem edição, versão otimista e o
+   eco do próprio `REMOVIDO`.
+5. **Aviso de indisponível** como notificação `aviso` (o mesmo canal do "removido em outra sessão"
+   do mestre). Vale também para o aberto que some da lista sem evento, o caso da reconexão.
+6. **Evento com a busca ativa** refaz a primeira página em silêncio. As páginas já carregadas com
+   "Carregar mais" recolhem.
+7. **Kebab do jogador na prévia:** o item "Biblioteca" fica desabilitado sem tooltip, igual ao
+   "Cenas" vizinho. O tooltip "Biblioteca indisponível na prévia" fica na coluna de ações.
+
+## Fecho
+
+- **Análogo registrado:** a página do mestre da `m9-04`. Comparação em 1920×1080 e 360×800:
+  - mesma casca, divisor, cartão, painel e leitor;
+  - mesma densidade e hierarquia, sem os controles do mestre;
+  - o cartão da mesa ocupa a coluna, porque não há setas.
+  O espectador segue a navegação do `CampanhaEspectador`: item na coluna "Espectador" e voltar ao
+  painel.
+- **Verificado:**
+  - `npm run test -w frontend`: 2360/2360;
+  - `npm run lint -w frontend`: 0 erros;
+  - `verify` com três sessões reais: 109/109 checagens em 1920×1080 e 360×800, com todos os itens
+    dos critérios de aceite (detalhes em `HISTORY.md`).
+- **Pendente (fora de escopo):** passe fino em `960×1080` e `1366×768` (`m9-06`); cartão "Documento
+  apresentado" (`m7-25`).

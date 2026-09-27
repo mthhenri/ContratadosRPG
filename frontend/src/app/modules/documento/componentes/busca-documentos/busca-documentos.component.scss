@@ -1,0 +1,74 @@
+// Busca da biblioteca (m9-05). O campo é o `app-campo` com ícone; os resultados usam o mesmo
+// `app-documento-cartao` da lista, com o trecho abaixo da linha de meta. "Carregar mais" repete o do
+// histórico de rolagens do espectador. Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+}
+
+.busca-documentos {
+    &__resultados {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__itens {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__item {
+        display: flex;
+    }
+
+    // O trecho do `ts_headline`: texto corrido, no máximo três linhas, com o termo em destaque.
+    &__trecho {
+        display: -webkit-box;
+        overflow: hidden;
+        font: 12px/1.5 var(--font-sans);
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+
+    // O termo encontrado: o tom de destaque do tema, sem o amarelo padrão do navegador.
+    &__destaque {
+        padding: 0 2px;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--accent-dim);
+        box-shadow: inset 0 -1px 0 var(--accent-border);
+        border-radius: var(--radius-compact);
+    }
+
+    &__mais {
+        align-self: center;
+    }
+
+    &__acao {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__esqueleto-linha {
+        height: 84px;
+    }
+}

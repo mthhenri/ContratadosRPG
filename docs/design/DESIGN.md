@@ -453,6 +453,28 @@ os controles do mestre.
 - **Mobile:** duas vistas, como o Caderno — a lista, ou o documento com um "voltar" (`app-botao`
   `secundario` `texto`, "Documentos") que só existe abaixo de `bp.mobile`. Ações e setas passam ao
   alvo de 44px.
+- **Estrutura comum (`m9-05`):** casca, coluna da lista, painel e as duas vistas do celular moram
+  em `app-biblioteca-layout` (`modules/documento/componentes/`), usado pelas três visões. O que é
+  só do mestre entra por projeção (`[bibliotecaAcao]`, `[bibliotecaAcoesDocumento]`,
+  `[bibliotecaCorpoDocumento]`) e por input (`mostrarEstado` liga os chips, `ordenavel` as setas).
+  O cartão é o `button[app-documento-cartao]`, o mesmo na lista e na busca.
+- **Visão da mesa (jogador e espectador, `m9-05`):** a mesma biblioteca **menos** os controles —
+  sem "Novo documento", sem chip de estado (para a mesa, tudo é revelado), sem setas e sem ações no
+  documento aberto; o cartão ocupa a coluna inteira. Vazio: "Nenhum documento revelado ainda." /
+  "O que o mestre revelar aparece aqui ao vivo." Um documento revelado entra na lista ao vivo, mas
+  **nada abre sozinho**; o aberto que é ocultado ou removido fecha com o aviso "Este documento não
+  está mais disponível." (notificação `aviso`). O espectador tem a rota própria
+  (`/campanhas/:id/espectador/documentos`), com o voltar ao painel do espectador; nas prévias do
+  mestre o item "Biblioteca" fica desabilitado com o tooltip "Biblioteca indisponível na prévia".
+- **Busca (`m9-05`):** no topo da coluna da lista, abaixo do divisor — `app-campo` "Buscar" com o
+  ícone `busca` dentro do controle (input `icone` do primitivo, que acende em `--accent` no foco) e
+  `inputmode="search"` (não `type="search"`: o "×" nativo fugiria dos tokens). Com termo, os
+  resultados tomam o lugar da lista e o divisor vira "Resultados" com o total. Cada resultado é o
+  mesmo cartão com o **trecho** abaixo (12px `--text-dim`, até três linhas) e o termo num `<mark>`
+  com fundo `--accent-dim`, sublinhado `--accent-border` e texto `--text` 600 — o trecho é
+  segmentado em texto, nunca `innerHTML`. Estados: esqueleto, `app-estado-vazio` "Nada encontrado."
+  com o termo citado, erro com "Tentar de novo", e "Carregar mais" (`app-botao` `secundario`
+  `contorno` `pequeno`) enquanto houver páginas. O chip Revelado/Oculto só aparece para o mestre.
 
 ### Acabamento do botão (`ui-19`)
 

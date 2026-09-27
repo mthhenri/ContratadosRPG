@@ -1,5 +1,5 @@
 <!-- Casca da biblioteca (m9-04): a silhueta enquanto o papel não é conhecido; depois, a página do
-     mestre. Quem não é mestre é levado de volta à campanha até a m9-05. -->
+     mestre ou a do jogador (m9-05). Qualquer outro papel volta à campanha. -->
 @if (carregando()) {
 <div class="biblioteca-casca" role="status" aria-label="Carregando a biblioteca">
     <app-esqueleto class="biblioteca-casca__cabecalho" />
@@ -14,4 +14,6 @@
 </div>
 } @else if (ehMestre()) {
 <app-biblioteca-mestre />
+} @else if (ehJogador()) {
+<app-biblioteca-jogador />
 }

@@ -69,8 +69,8 @@
     }
     <div class="coluna-acoes__categoria">Campanha</div>
     @if (somenteLeitura()) {
-    <!-- Prévia: as Cenas ficam indisponíveis (a rota `/cenas` responderia com o recorte do
-         mestre). -->
+    <!-- Prévia: as Cenas e a Biblioteca ficam indisponíveis (as rotas `/cenas` e `/documentos`
+         responderiam com o recorte do mestre). -->
     <button
         app-coluna-acoes-item
         icone="combate"
@@ -78,6 +78,14 @@
         [disabled]="true"
     >
         Cenas
+    </button>
+    <button
+        app-coluna-acoes-item
+        icone="biblioteca"
+        appTooltip="Biblioteca indisponível na prévia"
+        [disabled]="true"
+    >
+        Biblioteca
     </button>
     } @else {
     <a
@@ -87,6 +95,14 @@
         [routerLink]="['/campanhas', campanhaAtual.id, 'cenas']"
     >
         Cenas
+    </a>
+    <a
+        app-coluna-acoes-item
+        icone="biblioteca"
+        appTooltip="Biblioteca"
+        [routerLink]="['/campanhas', campanhaAtual.id, 'documentos']"
+    >
+        Biblioteca
     </a>
     }
     <div class="coluna-acoes__categoria">Ficha</div>
@@ -274,6 +290,16 @@
                             <app-icone nome="combate" />
                             <span>Cenas</span>
                         </button>
+                        <button
+                            app-botao
+                            class="detalhe__cabecalho-menu-item"
+                            type="button"
+                            role="menuitem"
+                            [disabled]="true"
+                        >
+                            <app-icone nome="biblioteca" />
+                            <span>Biblioteca</span>
+                        </button>
                         } @else {
                         <a
                             app-botao
@@ -284,6 +310,16 @@
                         >
                             <app-icone nome="combate" />
                             <span>Cenas</span>
+                        </a>
+                        <a
+                            app-botao
+                            class="detalhe__cabecalho-menu-item"
+                            role="menuitem"
+                            [routerLink]="['/campanhas', campanhaAtual.id, 'documentos']"
+                            (click)="fecharMenu()"
+                        >
+                            <app-icone nome="biblioteca" />
+                            <span>Biblioteca</span>
                         </a>
                         }
                         <button

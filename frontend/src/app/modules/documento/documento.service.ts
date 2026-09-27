@@ -1,10 +1,12 @@
-import { HttpClient, HttpContext, HttpStatusCode } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams, HttpStatusCode } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import type {
   DocumentoAlteradoDto,
   DocumentoAlterarDto,
+  DocumentoBuscaResultadoDto,
+  DocumentoBuscarDto,
   DocumentoCriadoDto,
   DocumentoCriarDto,
   DocumentoImagemAlteradaDto,
@@ -13,15 +15,15 @@ import type {
   DocumentoResumoDto,
   DocumentoReveladoDto,
 } from '@contratados-rpg/shared/dtos/documento';
-import { StandardResponse } from '@contratados-rpg/shared/interfaces';
+import type { PaginatedResult, StandardResponse } from '@contratados-rpg/shared/interfaces';
 
 import { environment } from '../../../environments/environment';
 import { ERROS_TRATADOS_NA_TELA } from '../../core/interceptors/error-handler.interceptor';
 
 /**
- * Cliente HTTP do módulo `documento` (m9-04) — um método por endpoint da m9-02. Só transporte:
- * extrai o `dados` do `StandardResponse` (a autoridade é o backend, §14 — inclusive a trava
- * anti-vazamento: quem não é mestre nunca recebe um documento oculto).
+ * Cliente HTTP do módulo `documento` (m9-04) — um método por endpoint da m9-02 e da busca da m9-03.
+ * Só transporte: extrai o `dados` do `StandardResponse` (a autoridade é o backend, §14 — inclusive
+ * a trava anti-vazamento: quem não é mestre nunca recebe um documento oculto).
  *
  * Mesma divisão de rotas do `DocumentoController`: criar/listar/reordenar sob
  * `campanha/:id/documento`, o resto sob `documento/:id`. Duas chamadas declaram erros que a tela
@@ -43,6 +45,26 @@ export class DocumentoService {
     return this.httpClient
       .get<StandardResponse<DocumentoResumoDto[]>>(this.baseCampanha(campanhaId))
       .pipe(map((resposta) => resposta.dados as DocumentoResumoDto[]));
+  }
+
+  /**
+   * Busca textual na biblioteca (m9-03) — título e conteúdo, já recortada pelo papel no backend: o
+   * mestre acha os ocultos, jogador e espectador só o revelado. `trecho` traz o termo entre `⟦ ⟧`.
+   */
+  buscar(dto: DocumentoBuscarDto): Observable<PaginatedResult<DocumentoBuscaResultadoDto>> {
+    let parametros = new HttpParams().set('termo', dto.termo);
+    if (dto.pagina !== undefined) {
+      parametros = parametros.set('pagina', dto.pagina);
+    }
+    if (dto.limite !== undefined) {
+      parametros = parametros.set('limite', dto.limite);
+    }
+    return this.httpClient
+      .get<StandardResponse<PaginatedResult<DocumentoBuscaResultadoDto>>>(
+        `${this.baseCampanha(dto.campanhaId)}/busca`,
+        { params: parametros },
+      )
+      .pipe(map((resposta) => resposta.dados as PaginatedResult<DocumentoBuscaResultadoDto>));
   }
 
   /** O documento completo, com o conteúdo para o leitor. */

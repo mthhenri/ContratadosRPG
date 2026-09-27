@@ -1,0 +1,17 @@
+<!-- Biblioteca do espectador (m9-05): a mesma leitura do jogador; o voltar leva ao painel do
+     espectador e o nome da campanha vem do painel resolvido. -->
+<app-biblioteca-layout
+    [campanhaId]="campanhaId"
+    [campanhaNome]="campanhaNome"
+    [voltarRota]="['/campanhas', campanhaId, 'espectador']"
+    voltarRotulo="Voltar ao Painel do espectador"
+    [documentos]="store.documentos()"
+    [carregandoLista]="store.carregandoLista()"
+    [abertoId]="store.abertoId()"
+    [documento]="store.aberto()"
+    vazioTitulo="Nenhum documento revelado ainda."
+    vazioApoio="O que o mestre revelar aparece aqui ao vivo."
+    painelVazioApoio="Escolha um documento na lista para ler."
+    (selecionar)="store.selecionar($event)"
+    (fecharDocumento)="store.fecharDocumento()"
+/>

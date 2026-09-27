@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, Subject, filter, finalize, merge, switchMap, tap } from 'rxjs';
 
 import type {
@@ -31,17 +31,14 @@ import {
 
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
-import { Icone, type IconeNome } from '../../../../shared/icone/icone.component';
+import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
-import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
-import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
-import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
-import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca-layout.component';
 import { DocumentoCriarDialog } from '../../componentes/documento-criar-dialog/documento-criar-dialog.component';
 import { LeitorDocumento } from '../../componentes/leitor-documento/leitor-documento.component';
 import { DocumentoService } from '../../documento.service';
@@ -51,18 +48,20 @@ import type { TelaComRascunhoDocumento } from '../../rascunho-documento.guard';
 const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 * 1024);
 
 /**
- * Biblioteca do mestre (m9-04) — todos os documentos da campanha, revelados e ocultos: criar,
- * ler e editar no próprio lugar, revelar/ocultar para a mesa, remover e reordenar.
+ * Biblioteca do mestre (m9-04) — todos os documentos da campanha, revelados e ocultos: criar, ler e
+ * editar no próprio lugar, revelar/ocultar para a mesa, remover e reordenar.
  *
- * Duas colunas no desktop (lista | documento aberto) e duas vistas no celular (a lista, ou o
- * documento com um "voltar"), como o Caderno. A casca e os cartões são os do `HubCenas`.
+ * A composição (casca, lista com busca, painel e as duas vistas do celular) é a estrutura comum da
+ * Biblioteca, `BibliotecaLayout` (m9-05), a mesma da visão da mesa; aqui entra só o que é do
+ * mestre: chips de estado, setas de ordem, "Novo documento", as ações e a edição do documento
+ * aberto.
  *
  * **Salvar explícito, sem autosave:** com o documento já revelado, cada digitação salva chegaria à
  * mesa. A edição guarda a versão otimista (`updatedDate`) de onde partiu; toda escrita do próprio
  * mestre (revelar, ocultar, trocar a imagem) avança essa versão com a que a resposta devolve —
- * senão o mestre levaria o próprio 409. Com edição aberta, as ações que mexem na versão ficam
- * fora de alcance (o cabeçalho troca por Salvar/Cancelar e as setas da lista travam), e um 409 no
- * salvar vira aviso com "Recarregar", sem descartar o rascunho.
+ * senão o mestre levaria o próprio 409. Com edição aberta, as ações que mexem na versão ficam fora
+ * de alcance (o cabeçalho troca por Salvar/Cancelar e as setas da lista travam), e um 409 no salvar
+ * vira aviso com "Recarregar", sem descartar o rascunho.
  *
  * **Tempo real:** todo `documento:alterado` da campanha (e a reconexão) refaz a lista. Se a versão
  * do documento aberto mudou e não há edição em curso, ele é recarregado; um `REMOVIDO` do aberto
@@ -72,15 +71,11 @@ const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 *
   selector: 'app-biblioteca-mestre',
   imports: [
     ReactiveFormsModule,
-    RouterLink,
     Icone,
     Botao,
-    BotaoIcone,
     Campo,
-    Chip,
     EditorMarkdown,
-    Esqueleto,
-    EstadoVazio,
+    BibliotecaLayout,
     DocumentoCriarDialog,
     LeitorDocumento,
   ],
@@ -196,14 +191,6 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
       .listar(this.campanhaId)
       .pipe(finalize(() => this.carregandoLista.set(false)))
       .subscribe({ next: (documentos) => this.documentos.set(documentos) });
-  }
-
-  protected iconeTipo(tipo: TipoDocumentoEnum): IconeNome {
-    return tipo === TipoDocumentoEnum.IMAGEM ? 'imagem' : 'anotacoes';
-  }
-
-  protected rotuloTipo(tipo: TipoDocumentoEnum): string {
-    return tipo === TipoDocumentoEnum.IMAGEM ? 'Imagem' : 'Texto';
   }
 
   // ── Rascunho ────────────────────────────────────────────────────────────────

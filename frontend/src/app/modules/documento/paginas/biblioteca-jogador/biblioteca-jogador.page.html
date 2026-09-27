@@ -1,0 +1,17 @@
+<!-- Biblioteca do jogador (m9-05): a estrutura comum sem os controles do mestre — só o revelado,
+     lido no LeitorDocumento. -->
+<app-biblioteca-layout
+    [campanhaId]="campanhaId"
+    [campanhaNome]="campanhaNome()"
+    [voltarRota]="['/campanhas', campanhaId]"
+    voltarRotulo="Voltar à campanha"
+    [documentos]="store.documentos()"
+    [carregandoLista]="store.carregandoLista()"
+    [abertoId]="store.abertoId()"
+    [documento]="store.aberto()"
+    vazioTitulo="Nenhum documento revelado ainda."
+    vazioApoio="O que o mestre revelar aparece aqui ao vivo."
+    painelVazioApoio="Escolha um documento na lista para ler."
+    (selecionar)="store.selecionar($event)"
+    (fecharDocumento)="store.fecharDocumento()"
+/>

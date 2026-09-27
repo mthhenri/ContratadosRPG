@@ -1,0 +1,13 @@
+<app-icone class="documento-cartao__tipo" [nome]="icone()" />
+<span class="documento-cartao__texto">
+    <span class="documento-cartao__nome">{{ titulo() }}</span>
+    <span class="documento-cartao__meta">
+        <span class="documento-cartao__rotulo-tipo">{{ rotuloTipo() }}</span>
+        @if (revelado() === true) {
+        <app-chip severidade="primario"><app-icone nome="olho" /> Revelado</app-chip>
+        } @else if (revelado() === false) {
+        <app-chip severidade="secundario"><app-icone nome="olho-fechado" /> Oculto</app-chip>
+        }
+    </span>
+    <ng-content />
+</span>

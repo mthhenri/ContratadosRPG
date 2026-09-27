@@ -749,6 +749,14 @@ describe('CampanhaDetalheJogador', () => {
     ).toBe(false);
   });
 
+  it('o item "Biblioteca" (m9-05) da coluna leva à biblioteca da campanha', () => {
+    const { raiz } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    const naColuna = Array.from(raiz.querySelectorAll('[app-coluna-acoes-item]')).find(
+      (el) => el.textContent?.trim() === 'Biblioteca',
+    );
+    expect(naColuna?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/documentos`);
+  });
+
   it('aba "Rolagens" funde o painel de rolar com o Histórico completo no mesmo container, sem aba/painel de Sessão', () => {
     const rolagem: RolagemResumoDto = {
       id: 1,

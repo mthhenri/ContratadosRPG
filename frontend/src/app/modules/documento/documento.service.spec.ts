@@ -65,6 +65,23 @@ describe('DocumentoService', () => {
     expect(recebido).toEqual([resumo]);
   });
 
+  it('busca na biblioteca com termo, página e limite na query', () => {
+    const { servico, http } = criar();
+    let recebido: unknown;
+    servico
+      .buscar({ campanhaId: 3, termo: 'galpão do porto', pagina: 2, limite: 20 })
+      .subscribe((dados) => (recebido = dados));
+
+    const requisicao = http.expectOne((req) => req.url.endsWith('/campanha/3/documento/busca'));
+    expect(requisicao.request.method).toBe('GET');
+    expect(requisicao.request.params.get('termo')).toBe('galpão do porto');
+    expect(requisicao.request.params.get('pagina')).toBe('2');
+    expect(requisicao.request.params.get('limite')).toBe('20');
+    const pagina = { itens: [], totalItens: 0, paginaAtual: 2, totalPaginas: 0 };
+    requisicao.flush(envelope(pagina));
+    expect(recebido).toEqual(pagina);
+  });
+
   it('recupera o documento completo por id', () => {
     const { servico, http } = criar();
     let recebido: unknown;

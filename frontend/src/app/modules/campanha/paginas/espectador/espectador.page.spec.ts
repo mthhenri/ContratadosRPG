@@ -192,11 +192,13 @@ describe('CampanhaEspectador', () => {
       ],
     });
     expect(raiz.querySelector('.espectador__preview-barra')).toBeNull();
-    expect(itensColuna(raiz).map((item) => item.textContent?.trim())).toEqual(['Iniciativa', 'Rolagens']);
+    expect(itensColuna(raiz).map((item) => item.textContent?.trim())).toEqual(['Iniciativa', 'Biblioteca', 'Rolagens']);
+    const biblioteca = itensColuna(raiz)[1];
+    expect(biblioteca.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador/documentos`);
     expect(raiz.querySelector('.espectador__voltar')).not.toBeNull();
   });
 
-  it('mestre em prévia vê "Sair da prévia" na coluna e a Iniciativa desabilitada — sem "voltar às campanhas"', () => {
+  it('mestre em prévia vê "Sair da prévia" na coluna e a Iniciativa e a Biblioteca desabilitadas — sem "voltar às campanhas"', () => {
     const { raiz } = montar({
       campanhas: [
         { id: CAMPANHA_ID, nome: 'x', descricao: null, papel: TipoCampanhaMembroPapelEnum.MESTRE,
@@ -208,13 +210,17 @@ describe('CampanhaEspectador', () => {
 
     expect(raiz.querySelector('.espectador__preview-barra')).toBeNull();
     expect(raiz.querySelector('app-coluna-acoes .coluna-acoes__categoria')?.textContent).toContain('Prévia');
-    const [sair, iniciativa] = itensColuna(raiz);
+    const [sair, iniciativa, biblioteca] = itensColuna(raiz);
     expect(sair.textContent).toContain('Sair da prévia');
     expect(sair.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}`);
     expect(iniciativa.tagName).toBe('BUTTON');
     expect(iniciativa.textContent).toContain('Iniciativa');
     expect((iniciativa as HTMLButtonElement).disabled).toBe(true);
     expect(iniciativa.getAttribute('href')).toBeNull();
+    expect(biblioteca.tagName).toBe('BUTTON');
+    expect(biblioteca.textContent).toContain('Biblioteca');
+    expect((biblioteca as HTMLButtonElement).disabled).toBe(true);
+    expect(biblioteca.getAttribute('href')).toBeNull();
     // Mestre em prévia não tem o "voltar às campanhas" genérico — a saída é pela coluna.
     expect(raiz.querySelector('.espectador__voltar')).toBeNull();
   });

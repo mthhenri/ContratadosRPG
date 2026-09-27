@@ -11,15 +11,22 @@ import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { BibliotecaDocumentos } from './biblioteca-documentos.page';
 
-/** Dublê da página do mestre — a casca só decide **se** ela aparece. */
+/** Dublês das páginas — a casca só decide **qual** aparece. */
 @Component({ selector: 'app-biblioteca-mestre', template: '' })
 class BibliotecaMestreDuble {}
 
-/** Prova a casca da biblioteca (m9-04): silhueta, página do mestre e o retorno dos demais. */
+@Component({ selector: 'app-biblioteca-jogador', template: '' })
+class BibliotecaJogadorDuble {}
+
+/**
+ * Prova a casca da biblioteca (m9-04, m9-05): silhueta, página do mestre, página do jogador e o
+ * retorno de quem não tem biblioteca nesta rota.
+ */
 describe('BibliotecaDocumentos', () => {
   const CAMPANHA_ID = 9;
   const MESTRE = 1;
   const JOGADOR = 7;
+  const FORA = 99;
   const membros: CampanhaMembroResumoDto[] = [
     { usuarioId: MESTRE, nome: 'Mestre', papel: TipoCampanhaMembroPapelEnum.MESTRE, fichas: [] as never },
     { usuarioId: JOGADOR, nome: 'Bia', papel: TipoCampanhaMembroPapelEnum.JOGADOR, fichas: [] as never },
@@ -40,7 +47,7 @@ describe('BibliotecaDocumentos', () => {
       ],
     });
     TestBed.overrideComponent(BibliotecaDocumentos, {
-      set: { imports: [Esqueleto, BibliotecaMestreDuble] },
+      set: { imports: [Esqueleto, BibliotecaMestreDuble, BibliotecaJogadorDuble] },
     });
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(BibliotecaDocumentos);
@@ -61,9 +68,17 @@ describe('BibliotecaDocumentos', () => {
     expect(navegar).not.toHaveBeenCalled();
   });
 
-  it('quem não é mestre volta à campanha (a visão da mesa chega na m9-05)', () => {
+  it('o jogador vê a página do jogador, não a do mestre', () => {
     const { raiz, navegar } = montar(JOGADOR);
+    expect(raiz.querySelector('app-biblioteca-jogador')).not.toBeNull();
     expect(raiz.querySelector('app-biblioteca-mestre')).toBeNull();
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
+  it('quem não está entre os membros volta à campanha', () => {
+    const { raiz, navegar } = montar(FORA);
+    expect(raiz.querySelector('app-biblioteca-mestre')).toBeNull();
+    expect(raiz.querySelector('app-biblioteca-jogador')).toBeNull();
     expect(navegar).toHaveBeenCalledWith(['/campanhas', CAMPANHA_ID], { replaceUrl: true });
   });
 

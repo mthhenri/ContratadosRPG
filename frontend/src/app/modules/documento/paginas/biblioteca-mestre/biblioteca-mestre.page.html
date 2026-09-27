@@ -1,340 +1,206 @@
-<!-- Biblioteca do mestre (m9-04): cabeçalho do hub de cenas; lista de documentos | documento aberto
-     (no celular, uma vista por vez, como o Caderno). O documento é lido e editado no próprio lugar. -->
-<div class="biblioteca">
-    <div class="biblioteca__conteudo">
-        <header class="biblioteca__cabecalho">
-            <a
-                app-botao-icone
-                tamanho="padrao"
-                [routerLink]="['/campanhas', campanhaId]"
-                aria-label="Voltar à campanha"
-                [appTooltip]="'Voltar à campanha'"
-            >
-                <app-icone nome="voltar" />
-            </a>
-            <span class="biblioteca__indice">//</span>
-            <h1 class="biblioteca__titulo">Biblioteca</h1>
-            @if (campanhaNome()) {
-            <span class="biblioteca__campanha">{{ campanhaNome() }}</span>
-            }
-            <span class="biblioteca__regua"></span>
-            <button
-                app-botao
-                variante="primario"
-                tamanho="pequeno"
-                class="biblioteca__acao"
-                type="button"
-                [disabled]="emOperacao()"
-                (click)="abrirNovoDocumento()"
-            >
-                <app-icone nome="mais" />
-                Novo documento
-            </button>
-        </header>
+<!-- Biblioteca do mestre (m9-04): a estrutura comum da Biblioteca (m9-05, `app-biblioteca-layout`)
+     com o que é só do mestre — "Novo documento", chips de estado, setas de ordem, as ações do
+     documento aberto e a edição no próprio lugar. -->
+<app-biblioteca-layout
+    [campanhaId]="campanhaId"
+    [campanhaNome]="campanhaNome()"
+    [voltarRota]="['/campanhas', campanhaId]"
+    voltarRotulo="Voltar à campanha"
+    [documentos]="documentos()"
+    [carregandoLista]="carregandoLista()"
+    [abertoId]="abertoId()"
+    [documento]="aberto()"
+    [mostrarEstado]="true"
+    [ordenavel]="true"
+    [bloqueado]="bloqueado()"
+    vazioTitulo="Nenhum documento ainda."
+    vazioApoio="Crie cartas, relatórios e imagens para revelar à mesa na hora certa."
+    painelVazioApoio="Escolha um documento na lista para ler, editar ou revelar à mesa."
+    (selecionar)="selecionar($event)"
+    (mover)="mover($event.documento, $event.deslocamento)"
+    (fecharDocumento)="fecharDocumento()"
+>
+    <button
+        bibliotecaAcao
+        app-botao
+        variante="primario"
+        tamanho="pequeno"
+        class="biblioteca__acao"
+        type="button"
+        [disabled]="emOperacao()"
+        (click)="abrirNovoDocumento()"
+    >
+        <app-icone nome="mais" />
+        Novo documento
+    </button>
 
-        <div class="biblioteca__corpo" [class.biblioteca__corpo--documento]="abertoId() !== null">
-            <section class="biblioteca__lista" aria-label="Documentos da campanha">
-                <header class="biblioteca__secao">
-                    <h2 class="biblioteca__secao-titulo">Documentos</h2>
-                    <span class="biblioteca__secao-regua"></span>
-                    @if (!carregandoLista()) {
-                    <span class="biblioteca__secao-meta">{{ documentos().length }}</span>
-                    }
-                </header>
+    <!-- Com edição aberta, as ações que mexem na versão saem (o rodapé traz Cancelar/Salvar). -->
+    <div bibliotecaAcoesDocumento class="biblioteca__documento-acoes">
+        @if (aberto(); as documento) { @if (!editando()) {
+        <button
+            app-botao
+            [variante]="documento.revelado ? 'secundario' : 'primario'"
+            tamanho="pequeno"
+            class="biblioteca__acao"
+            type="button"
+            [disabled]="bloqueado() || (!documento.revelado && !podeRevelar())"
+            (click)="alternarRevelacao()"
+        >
+            <app-icone [nome]="documento.revelado ? 'olho-fechado' : 'olho'" />
+            {{ documento.revelado ? 'Ocultar' : 'Revelar' }}
+        </button>
+        <button
+            app-botao
+            variante="secundario"
+            tamanho="pequeno"
+            class="biblioteca__acao"
+            type="button"
+            [disabled]="bloqueado()"
+            (click)="iniciarEdicao()"
+        >
+            <app-icone nome="editar" />
+            Editar
+        </button>
+        <button
+            app-botao
+            variante="perigo"
+            tamanho="pequeno"
+            class="biblioteca__acao"
+            type="button"
+            [disabled]="bloqueado()"
+            (click)="remover()"
+        >
+            <app-icone nome="excluir" />
+            Remover
+        </button>
+        } }
+    </div>
 
-                @if (carregandoLista()) {
-                <div class="biblioteca__esqueleto" role="status" aria-label="Carregando os documentos">
-                    @for (i of [0, 1, 2]; track i) {
-                    <app-esqueleto class="biblioteca__esqueleto-linha" />
-                    }
-                </div>
-                } @else if (documentos().length === 0) {
-                <app-estado-vazio
-                    tamanho="compacto"
-                    icone="biblioteca"
-                    titulo="Nenhum documento ainda."
-                    linhaApoio="Crie cartas, relatórios e imagens para revelar à mesa na hora certa."
+    <div bibliotecaCorpoDocumento class="biblioteca__documento-corpo">
+        @if (aberto(); as documento) {
+        @if (!editando() && !documento.revelado && !podeRevelar()) {
+        <p class="biblioteca__nota">Envie a imagem para poder revelar este documento.</p>
+        } @if (editando()) {
+        <div class="biblioteca__edicao">
+            <app-campo
+                rotulo="Título"
+                [dica]="tituloEditado().length + '/' + tituloMaximo"
+                [erro]="erroTitulo()"
+            >
+                <input
+                    class="campo__controle"
+                    type="text"
+                    [formControl]="tituloEdicao"
+                    [attr.maxlength]="tituloMaximo"
+                    autocomplete="off"
+                    required
                 />
-                } @else {
-                <ol class="biblioteca__itens">
-                    @for (documento of documentos(); track documento.id; let primeiro = $first; let
-                    ultimo = $last) {
-                    <li class="biblioteca__item">
-                        <button
-                            type="button"
-                            class="documento-cartao"
-                            [class.documento-cartao--aberto]="abertoId() === documento.id"
-                            [attr.aria-current]="abertoId() === documento.id ? 'true' : null"
-                            (click)="selecionar(documento.id)"
-                        >
-                            <app-icone
-                                class="documento-cartao__tipo"
-                                [nome]="iconeTipo(documento.tipo)"
-                            />
-                            <span class="documento-cartao__texto">
-                                <span class="documento-cartao__nome">{{ documento.titulo }}</span>
-                                <span class="documento-cartao__meta">
-                                    <span class="documento-cartao__rotulo-tipo">{{
-                                        rotuloTipo(documento.tipo)
-                                    }}</span>
-                                    @if (documento.revelado) {
-                                    <app-chip severidade="primario">
-                                        <app-icone nome="olho" /> Revelado
-                                    </app-chip>
-                                    } @else {
-                                    <app-chip severidade="secundario">
-                                        <app-icone nome="olho-fechado" /> Oculto
-                                    </app-chip>
-                                    }
-                                </span>
-                            </span>
-                        </button>
-                        <div class="biblioteca__controles">
-                            <button
-                                app-botao-icone
-                                tamanho="padrao"
-                                type="button"
-                                [attr.aria-label]="'Subir ' + documento.titulo"
-                                [appTooltip]="'Subir na ordem'"
-                                [disabled]="primeiro || bloqueado()"
-                                (click)="mover(documento, -1)"
-                            >
-                                <app-icone nome="chevron" class="biblioteca__seta-cima" />
-                            </button>
-                            <button
-                                app-botao-icone
-                                tamanho="padrao"
-                                type="button"
-                                [attr.aria-label]="'Descer ' + documento.titulo"
-                                [appTooltip]="'Descer na ordem'"
-                                [disabled]="ultimo || bloqueado()"
-                                (click)="mover(documento, 1)"
-                            >
-                                <app-icone nome="chevron" />
-                            </button>
-                        </div>
-                    </li>
-                    }
-                </ol>
+            </app-campo>
+
+            @if (abertoEhTexto()) {
+            <div class="biblioteca__conteudo-edicao">
+                <span class="biblioteca__rotulo">Conteúdo</span>
+                <app-editor-markdown
+                    #editor
+                    class="biblioteca__editor"
+                    [valor]="conteudoEdicao()"
+                    [rotulo]="'Conteúdo do documento'"
+                    (valorChange)="conteudoEdicao.set($event)"
+                />
+                <span class="biblioteca__dica">
+                    {{ conteudoEdicao().length }}/{{ conteudoMaximo }} caracteres
+                </span>
+            </div>
+            } @else {
+            <div class="biblioteca__imagem-edicao">
+                <span class="biblioteca__rotulo">Imagem</span>
+                @if (documento.imagemUrl) {
+                <app-leitor-documento [documento]="documento" />
                 }
-            </section>
+                <div class="biblioteca__upload">
+                    <button
+                        app-botao
+                        [variante]="documento.imagemUrl ? 'secundario' : 'primario'"
+                        tamanho="pequeno"
+                        class="biblioteca__acao"
+                        type="button"
+                        [carregando]="enviandoImagem()"
+                        (click)="entradaImagem.click()"
+                    >
+                        <app-icone nome="imagem" />
+                        {{ documento.imagemUrl ? 'Trocar imagem' : 'Escolher imagem' }}
+                    </button>
+                    <input
+                        #entradaImagem
+                        type="file"
+                        hidden
+                        tabindex="-1"
+                        [accept]="mimesAceitos"
+                        (change)="aoSelecionarImagem($event)"
+                    />
+                    <span class="biblioteca__dica">
+                        JPEG, PNG ou WEBP, até {{ tamanhoMaximoImagemMb }} MB.
+                    </span>
+                </div>
+                @if (erroImagem(); as mensagem) {
+                <p class="biblioteca__erro" role="alert">{{ mensagem }}</p>
+                }
+            </div>
+            }
 
-            <!-- Sem nenhum documento, o estado vazio da lista basta: o painel nem aparece. -->
-            @if (abertoId() !== null || (!carregandoLista() && documentos().length > 0)) {
-            <section class="biblioteca__painel" aria-label="Documento aberto">
-                @if (abertoId() === null) {
-                <app-estado-vazio
-                    icone="biblioteca"
-                    titulo="Nenhum documento aberto."
-                    linhaApoio="Escolha um documento na lista para ler, editar ou revelar à mesa."
-                />
-                } @else {
+            @if (conflito()) {
+            <div class="biblioteca__conflito" role="alert">
+                <app-icone nome="alerta" class="biblioteca__conflito-icone" />
+                <p class="biblioteca__conflito-texto">
+                    Este documento foi alterado em outra sessão. Seu rascunho continua aqui
+                    — copie o que quiser guardar; "Recarregar" traz a versão atual e descarta
+                    o rascunho.
+                </p>
+                <button
+                    app-botao
+                    variante="aviso"
+                    estilo="contorno"
+                    tamanho="pequeno"
+                    class="biblioteca__acao"
+                    type="button"
+                    (click)="recarregarVersao()"
+                >
+                    <app-icone nome="atualizar" />
+                    Recarregar
+                </button>
+            </div>
+            }
+
+            <footer class="biblioteca__edicao-acoes">
                 <button
                     app-botao
                     variante="secundario"
-                    estilo="texto"
                     tamanho="pequeno"
-                    class="biblioteca__voltar"
+                    class="biblioteca__acao"
                     type="button"
-                    (click)="fecharDocumento()"
+                    (click)="cancelarEdicao()"
                 >
-                    <app-icone nome="voltar" />
-                    Documentos
+                    Cancelar
                 </button>
-
-                @if (aberto(); as documento) {
-                <header class="biblioteca__documento-cabecalho">
-                    <div class="biblioteca__documento-identidade">
-                        <span class="biblioteca__documento-nome">
-                            <app-icone
-                                class="biblioteca__documento-tipo"
-                                [nome]="iconeTipo(documento.tipo)"
-                            />
-                            <h2 class="biblioteca__documento-titulo">{{ documento.titulo }}</h2>
-                        </span>
-                        @if (documento.revelado) {
-                        <app-chip severidade="primario">
-                            <app-icone nome="olho" /> Revelado
-                        </app-chip>
-                        } @else {
-                        <app-chip severidade="secundario">
-                            <app-icone nome="olho-fechado" /> Oculto
-                        </app-chip>
-                        }
-                    </div>
-                    @if (!editando()) {
-                    <div class="biblioteca__documento-acoes">
-                        <button
-                            app-botao
-                            [variante]="documento.revelado ? 'secundario' : 'primario'"
-                            tamanho="pequeno"
-                            class="biblioteca__acao"
-                            type="button"
-                            [disabled]="bloqueado() || (!documento.revelado && !podeRevelar())"
-                            (click)="alternarRevelacao()"
-                        >
-                            <app-icone [nome]="documento.revelado ? 'olho-fechado' : 'olho'" />
-                            {{ documento.revelado ? 'Ocultar' : 'Revelar' }}
-                        </button>
-                        <button
-                            app-botao
-                            variante="secundario"
-                            tamanho="pequeno"
-                            class="biblioteca__acao"
-                            type="button"
-                            [disabled]="bloqueado()"
-                            (click)="iniciarEdicao()"
-                        >
-                            <app-icone nome="editar" />
-                            Editar
-                        </button>
-                        <button
-                            app-botao
-                            variante="perigo"
-                            tamanho="pequeno"
-                            class="biblioteca__acao"
-                            type="button"
-                            [disabled]="bloqueado()"
-                            (click)="remover()"
-                        >
-                            <app-icone nome="excluir" />
-                            Remover
-                        </button>
-                    </div>
-                    }
-                </header>
-
-                @if (!editando() && !documento.revelado && !podeRevelar()) {
-                <p class="biblioteca__nota">Envie a imagem para poder revelar este documento.</p>
-                } @if (editando()) {
-                <div class="biblioteca__edicao">
-                    <app-campo
-                        rotulo="Título"
-                        [dica]="tituloEditado().length + '/' + tituloMaximo"
-                        [erro]="erroTitulo()"
-                    >
-                        <input
-                            class="campo__controle"
-                            type="text"
-                            [formControl]="tituloEdicao"
-                            [attr.maxlength]="tituloMaximo"
-                            autocomplete="off"
-                            required
-                        />
-                    </app-campo>
-
-                    @if (abertoEhTexto()) {
-                    <div class="biblioteca__conteudo-edicao">
-                        <span class="biblioteca__rotulo">Conteúdo</span>
-                        <app-editor-markdown
-                            #editor
-                            class="biblioteca__editor"
-                            [valor]="conteudoEdicao()"
-                            [rotulo]="'Conteúdo do documento'"
-                            (valorChange)="conteudoEdicao.set($event)"
-                        />
-                        <span class="biblioteca__dica">
-                            {{ conteudoEdicao().length }}/{{ conteudoMaximo }} caracteres
-                        </span>
-                    </div>
-                    } @else {
-                    <div class="biblioteca__imagem-edicao">
-                        <span class="biblioteca__rotulo">Imagem</span>
-                        @if (documento.imagemUrl) {
-                        <app-leitor-documento [documento]="documento" />
-                        }
-                        <div class="biblioteca__upload">
-                            <button
-                                app-botao
-                                [variante]="documento.imagemUrl ? 'secundario' : 'primario'"
-                                tamanho="pequeno"
-                                class="biblioteca__acao"
-                                type="button"
-                                [carregando]="enviandoImagem()"
-                                (click)="entradaImagem.click()"
-                            >
-                                <app-icone nome="imagem" />
-                                {{ documento.imagemUrl ? 'Trocar imagem' : 'Escolher imagem' }}
-                            </button>
-                            <input
-                                #entradaImagem
-                                type="file"
-                                hidden
-                                tabindex="-1"
-                                [accept]="mimesAceitos"
-                                (change)="aoSelecionarImagem($event)"
-                            />
-                            <span class="biblioteca__dica">
-                                JPEG, PNG ou WEBP, até {{ tamanhoMaximoImagemMb }} MB.
-                            </span>
-                        </div>
-                        @if (erroImagem(); as mensagem) {
-                        <p class="biblioteca__erro" role="alert">{{ mensagem }}</p>
-                        }
-                    </div>
-                    }
-
-                    @if (conflito()) {
-                    <div class="biblioteca__conflito" role="alert">
-                        <app-icone nome="alerta" class="biblioteca__conflito-icone" />
-                        <p class="biblioteca__conflito-texto">
-                            Este documento foi alterado em outra sessão. Seu rascunho continua aqui
-                            — copie o que quiser guardar; "Recarregar" traz a versão atual e descarta
-                            o rascunho.
-                        </p>
-                        <button
-                            app-botao
-                            variante="aviso"
-                            estilo="contorno"
-                            tamanho="pequeno"
-                            class="biblioteca__acao"
-                            type="button"
-                            (click)="recarregarVersao()"
-                        >
-                            <app-icone nome="atualizar" />
-                            Recarregar
-                        </button>
-                    </div>
-                    }
-
-                    <footer class="biblioteca__edicao-acoes">
-                        <button
-                            app-botao
-                            variante="secundario"
-                            tamanho="pequeno"
-                            class="biblioteca__acao"
-                            type="button"
-                            (click)="cancelarEdicao()"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            app-botao
-                            variante="primario"
-                            tamanho="pequeno"
-                            class="biblioteca__acao"
-                            type="button"
-                            [carregando]="salvando()"
-                            [disabled]="conflito() || enviandoImagem()"
-                            (click)="salvar()"
-                        >
-                            Salvar
-                        </button>
-                    </footer>
-                </div>
-                } @else {
-                <app-leitor-documento class="biblioteca__leitor" [documento]="documento" />
-                } } @else {
-                <div class="biblioteca__esqueleto-painel" role="status" aria-label="Carregando o documento">
-                    <app-esqueleto class="biblioteca__esqueleto-titulo" />
-                    <app-esqueleto class="biblioteca__esqueleto-corpo" />
-                </div>
-                } }
-            </section>
-            }
+                <button
+                    app-botao
+                    variante="primario"
+                    tamanho="pequeno"
+                    class="biblioteca__acao"
+                    type="button"
+                    [carregando]="salvando()"
+                    [disabled]="conflito() || enviandoImagem()"
+                    (click)="salvar()"
+                >
+                    Salvar
+                </button>
+            </footer>
         </div>
+        } @else {
+        <app-leitor-documento class="biblioteca__leitor" [documento]="documento" />
+        } }
     </div>
-</div>
+</app-biblioteca-layout>
 
 @if (criando()) {
 <app-documento-criar-dialog

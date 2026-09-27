@@ -140,6 +140,17 @@ export const routes: Routes = [
         (pagina) => pagina.PainelEncontroEspectador,
       ),
   },
+  // Biblioteca do espectador (m9-05) — mesma receita da Iniciativa acima: o resolver do painel dá o
+  // nome da campanha e barra quem não pode abrir o painel; a página só chama a API de documento.
+  {
+    path: 'campanhas/:id/espectador/documentos',
+    canActivate: [autenticacaoGuard],
+    resolve: { painelEspectador: espectadorCampanhaResolver },
+    loadComponent: () =>
+      import('./modules/documento/paginas/biblioteca-espectador/biblioteca-espectador.page').then(
+        (pagina) => pagina.BibliotecaEspectador,
+      ),
+  },
   // Prévia de jogador (m8-04) — só o mestre da campanha, para um `usuarioAlvoId` `JOGADOR` ativo
   // (`previaJogadorCampanhaGuard`, mesmo racional de `espectadorCampanhaGuard`: usa a própria
   // projeção como autoridade). Mesma convenção de precedência das rotas acima.

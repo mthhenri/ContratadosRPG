@@ -10,8 +10,12 @@
     class="campo"
     [class.campo--compacto]="tamanho() === 'compacto'"
     [class.campo--amplo]="tamanho() === 'amplo'"
+    [class.campo--com-icone]="!!icone()"
 >
     <span class="campo__rotulo">{{ rotulo() }}</span>
+    @if (icone(); as nome) {
+        <app-icone class="campo__icone" aria-hidden="true" [nome]="nome" />
+    }
     <ng-content />
     @if (dica()) {
         <span class="campo__dica">{{ dica() }}</span>

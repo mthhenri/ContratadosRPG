@@ -1,20 +1,10 @@
-// Biblioteca do mestre (m9-04). Análogos aprovados: a casca e os cartões do hub de cenas (m7-23 —
-// `_casca-iniciativa` + `.cena-cartao`, cuja receita o `.documento-cartao` repete) e a composição
-// lista | conteúdo do Caderno, que no celular vira duas vistas com um "voltar". Só tokens (#29).
+// Biblioteca do mestre (m9-04) — só o que é do mestre: a ação do cabeçalho, as ações e a edição do
+// documento aberto. A casca, a lista, o painel e as duas vistas do celular são da estrutura comum,
+// `app-biblioteca-layout` (m9-05). Só tokens (#29).
 
 @use "tema/breakpoints" as bp;
-@use "../../../encontro/paginas/casca-iniciativa" as casca;
-
-@include casca.casca("biblioteca");
 
 .biblioteca {
-    &__conteudo {
-        // A casca reserva o piso da barra inferior da coluna de ações, que a biblioteca não tem.
-        @include bp.mobile {
-            padding-bottom: 12px;
-        }
-    }
-
     &__acao {
         flex: none;
 
@@ -23,157 +13,22 @@
         }
     }
 
-    // Lista | documento. No celular, uma vista por vez: a lista, ou o documento aberto.
-    &__corpo {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        align-items: flex-start;
-        gap: var(--space-20);
-
-        @include bp.mobile {
-            flex-direction: column;
-            align-items: stretch;
-        }
-    }
-
-    &__lista {
-        flex: none;
-        display: flex;
-        flex-direction: column;
-        width: 360px;
-
-        @include bp.mobile {
-            width: auto;
-
-            .biblioteca__corpo--documento & {
-                display: none;
-            }
-        }
-    }
-
-    &__itens {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-
-    // Um cartão com as setas ao lado — como as planejadas do hub; aqui cabem sempre na linha.
-    &__item {
-        display: flex;
-        align-items: center;
-        gap: var(--space-8);
-    }
-
-    &__controles {
-        flex: none;
-        display: flex;
-        align-items: center;
-        gap: var(--space-4);
-    }
-
-    // `chevron` é a seta para baixo; girada, "subir" (mesmo recurso do hub e do `app-paginador`).
-    &__seta-cima {
-        transform: rotate(180deg);
-    }
-
-    &__esqueleto {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-8);
-    }
-
-    &__esqueleto-linha {
-        height: 62px;
-    }
-
-    // Documento aberto: a caixa do cartão (superfície, borda, raio), com o leitor ou o editor dentro.
-    &__painel {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-16);
-        padding: var(--space-16);
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-card);
-
-        @include bp.mobile {
-            padding: var(--space-12);
-
-            .biblioteca__corpo:not(.biblioteca__corpo--documento) & {
-                display: none;
-            }
-        }
-
-        // Sem documento aberto, o estado vazio fala sozinho — sem a caixa em volta dele.
-        &:has(> app-estado-vazio) {
-            padding: 0;
-            background: none;
-            border: 0;
-        }
-    }
-
-    // "Voltar" à lista só existe no celular, onde lista e documento são vistas separadas.
-    &__voltar {
-        display: none;
-        align-self: flex-start;
-
-        @include bp.mobile {
-            display: inline-flex;
-            min-height: bp.$alvo-toque;
-        }
-    }
-
-    &__documento-cabecalho {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--space-12);
-        padding-bottom: var(--space-12);
-        border-bottom: 1px solid var(--border);
-    }
-
-    &__documento-identidade {
-        min-width: 0;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px 10px;
-    }
-
-    // Ícone e título andam juntos — o chip é que desce de linha quando falta espaço.
-    &__documento-nome {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    &__documento-tipo {
-        flex: none;
-        color: var(--accent);
-    }
-
-    &__documento-titulo {
-        margin: 0;
-        min-width: 0;
-        font-family: var(--font-mono);
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--text);
-        overflow-wrap: anywhere;
-    }
-
     &__documento-acoes {
         display: flex;
         flex-wrap: wrap;
         gap: var(--space-8);
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    // O corpo do documento aberto, projetado no painel: o mesmo respiro do painel entre nota e corpo.
+    &__documento-corpo {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-16);
     }
 
     &__nota {
@@ -270,98 +125,5 @@
         display: flex;
         justify-content: flex-end;
         gap: var(--space-8);
-    }
-
-    &__esqueleto-painel {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-12);
-    }
-
-    &__esqueleto-titulo {
-        height: 32px;
-    }
-
-    &__esqueleto-corpo {
-        height: 280px;
-    }
-}
-
-// Cartão de documento — receita do `.cena-cartao` do hub (superfície, borda, raio de cartão, hover
-// com a borda de destaque). O aberto fica com a borda de destaque parada, como a cena em andamento.
-.documento-cartao {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--space-12);
-    padding: var(--space-12) 14px;
-    font: inherit;
-    color: inherit;
-    text-align: left;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    cursor: pointer;
-    transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease;
-
-    @include bp.mobile {
-        min-height: bp.$alvo-toque;
-    }
-
-    &:hover {
-        background: var(--surface-2);
-        border-color: var(--accent-border);
-    }
-
-    &:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-    }
-
-    &--aberto {
-        background: var(--surface-2);
-        border-color: var(--accent-border);
-
-        .documento-cartao__tipo {
-            color: var(--accent);
-        }
-    }
-
-    &__tipo {
-        flex: none;
-        color: var(--text-mute);
-    }
-
-    &__texto {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    &__nome {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--text);
-        overflow-wrap: anywhere;
-    }
-
-    &__meta {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px 10px;
-    }
-
-    &__rotulo-tipo {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-mute);
     }
 }

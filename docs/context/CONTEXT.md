@@ -19,11 +19,19 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-26 · **Última decisão registrada:**
+> `m9-05-frontend-biblioteca-jogador-espectador` concluída (spec em `done/`): **Biblioteca** do
+> jogador (casca da rota comum) e do espectador (`/campanhas/:id/espectador/documentos`, pelo
+> resolver do painel, sem endpoint proibido) — só o revelado, somente leitura, ao vivo (revelado
+> entra sem abrir; oculto/removido do aberto fecha com aviso; versão nova recarrega em silêncio;
+> reconexão refaz). **Busca** nas três visões (`BuscaDocumentos`, trecho em `<mark>` sem
+> `innerHTML`). Estrutura comum extraída (`BibliotecaLayout`, `ListaDocumentos`,
+> `DocumentoCartao`); `app-campo` ganhou o input `icone` (decisão do autor). Itens "Biblioteca" nas
+> colunas do jogador e do espectador, desabilitados nas prévias. Próxima: `m9-06` (ver §1). Antes:
 > `m9-03-backend-busca-documento` concluída (spec em `done/`): `GET campanha/:id/documento/busca`
 > (`DocumentoService.buscarDocumentos`), busca textual no molde da do caderno, com o recorte de
 > `podeLerNaoReveladas` no mesmo `WHERE` da contagem — jogador e espectador nunca veem um oculto,
 > nem no total. Provada contra o Postgres real; `EXPLAIN` com 10 000 documentos usa
-> `ix_documento_busca` para termo seletivo. Só backend; próxima: `m9-05` (ver §1). Antes:
+> `ix_documento_busca` para termo seletivo. Só backend. Antes:
 > `m9-04-frontend-biblioteca-mestre` concluída (spec em `done/`): página **Biblioteca** do mestre
 > (`/campanhas/:id/documentos`, item na coluna de ações) — lista com chips Revelado/Oculto e setas de
 > ordem, documento lido e editado no próprio lugar (salvar explícito, conflito 409 com "Recarregar",
@@ -619,12 +627,11 @@ junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e
 (o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
 da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
 
-**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01`, `m9-02`, `m9-04` e `m9-03`
-concluídas (2026-09-26); próxima `m9-05` (jogador, espectador e a tela de busca).** `m9-01` (contrato + migration
-`0034` `documento`) → `m9-02` (backend + `documento:alterado` com trava anti-vazamento) → `m9-04`
-(biblioteca do mestre + `LeitorDocumento`) → `m9-03` (busca no backend) → `m9-05` (jogador,
-espectador e busca; hoje quem não é mestre é levado de volta à campanha) → `m9-06` (passe
-responsivo). Decisões do guarda-chuva **confirmadas pelo autor** (espectador lê o revelado, URL
+**M9 — Documentos de campanha ("Biblioteca"): em andamento — `m9-01` a `m9-05` concluídas
+(2026-09-26); próxima `m9-06` (passe responsivo fino, `960×1080` e `1366×768`).** `m9-01` (contrato +
+migration `0034` `documento`) → `m9-02` (backend + `documento:alterado` com trava anti-vazamento) →
+`m9-04` (biblioteca do mestre + `LeitorDocumento`) → `m9-03` (busca no backend) → `m9-05` (jogador,
+espectador e busca nas três visões) → `m9-06` (passe responsivo). Decisões do guarda-chuva **confirmadas pelo autor** (espectador lê o revelado, URL
 pública da imagem, salvar explícito, revelar sem confirmação, teto de imagem de **10 MB**, glifos
 `biblioteca`/`imagem`/`tamanho-real`/`ajustar-largura`).
 
@@ -2598,17 +2605,27 @@ espectador busca o revelado. Mesmo molde (`websearch_to_tsquery` com `contratado
 `apenasRevelados = !podeLerNaoReveladas(papel)` está no `WHERE` que a contagem também usa, então o
 total não revela quantos ocultos existem.
 
-**Frontend (`m9-04`, `frontend/src/app/modules/documento/`):** rota `campanhas/:campanhaId/documentos`
-(antes do prefixo `campanhas`, só `autenticacaoGuard` + `rascunhoDocumentoGuard` no `canDeactivate`);
-a casca `BibliotecaDocumentos` resolve o papel pelos membros e monta a `BibliotecaMestre` — quem não
-é mestre (ou não pode listar membros) volta à campanha até a `m9-05`. A página guarda a versão
-otimista de onde a edição partiu e adota a que cada escrita do próprio mestre devolve; com edição
-aberta, as ações de versão (revelar, remover, setas) saem de alcance. Todo `documento:alterado` (e a
-reconexão) refaz a lista; versão do aberto diferente e sem edição → recarrega; `REMOVIDO` de outra
-sessão fecha o painel com aviso. `LeitorDocumento` (`componentes/leitor-documento/`) é somente
-leitura e serve à mesa e à `m7-25`. O 409 do salvar e o 400 do upload não viram toast:
-`ERROS_TRATADOS_NA_TELA` (`core/interceptors/error-handler.interceptor.ts`). Composição visual em
-`docs/design/DESIGN.md`, "Biblioteca de documentos".
+**Frontend (`m9-04`/`m9-05`, `frontend/src/app/modules/documento/`):** rota
+`campanhas/:campanhaId/documentos` (antes do prefixo `campanhas`, só `autenticacaoGuard` +
+`rascunhoDocumentoGuard` no `canDeactivate`); a casca `BibliotecaDocumentos` resolve o papel pelos
+membros e monta a `BibliotecaMestre` ou a `BibliotecaJogador` — outro papel (ou quem não pode listar
+membros) volta à campanha. O espectador tem a rota própria `campanhas/:id/espectador/documentos`
+(`espectadorCampanhaResolver`, como a Iniciativa dele): o nome vem do painel resolvido e a página só
+chama a API de documento. As três visões montam o `BibliotecaLayout` (casca, lista com a
+`BuscaDocumentos` no topo, painel e duas vistas no celular; o que é do mestre entra por projeção) e
+o `DocumentoCartao`. Jogador e espectador dividem o `BibliotecaLeituraStore` (provido por página):
+todo `documento:alterado` e a reconexão refazem a lista; `OCULTADO`/`REMOVIDO` do aberto — ou o
+aberto que sumiu da lista — fecham o painel com "Este documento não está mais disponível."; versão
+nova recarrega em silêncio; `REVELADO` só entra na lista. A busca refaz a primeira página em
+silêncio a cada evento e segmenta o trecho por `⟦ ⟧` (`trecho-destacado.ts`) — nunca `innerHTML`.
+Mestre: a página guarda a versão otimista de onde a edição partiu e adota a que cada escrita do
+próprio mestre devolve; com edição aberta, as ações de versão (revelar, remover, setas) saem de
+alcance. Todo `documento:alterado` (e a reconexão) refaz a lista; versão do aberto diferente e sem
+edição → recarrega; `REMOVIDO` de outra sessão fecha o painel com aviso. `LeitorDocumento`
+(`componentes/leitor-documento/`) é somente leitura e serve à mesa e à `m7-25`. O 409 do salvar e o
+400 do upload não viram toast: `ERROS_TRATADOS_NA_TELA`
+(`core/interceptors/error-handler.interceptor.ts`). Composição visual em `docs/design/DESIGN.md`,
+"Biblioteca de documentos".
 
 `emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
 com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só

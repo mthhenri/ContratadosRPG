@@ -1,0 +1,154 @@
+// Estrutura comum da Biblioteca (m9-04, extraída na m9-05). Análogos aprovados: a casca do hub de
+// cenas (m7-23 — `_casca-iniciativa`) e a composição lista | conteúdo do Caderno, que no celular
+// vira duas vistas com um "voltar". Só tokens (#29).
+
+@use "tema/breakpoints" as bp;
+@use "../../../encontro/paginas/casca-iniciativa" as casca;
+
+:host {
+    display: block;
+}
+
+@include casca.casca("biblioteca");
+
+.biblioteca {
+    &__conteudo {
+        // A casca reserva o piso da barra inferior da coluna de ações, que a biblioteca não tem.
+        @include bp.mobile {
+            padding-bottom: 12px;
+        }
+    }
+
+    // Lista | documento. No celular, uma vista por vez: a lista, ou o documento aberto.
+    &__corpo {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-20);
+
+        @include bp.mobile {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    &__lista {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+        width: 360px;
+
+        // O respiro entre divisor, busca e lista é o `gap` da coluna, não a margem do divisor.
+        > .biblioteca__secao {
+            margin-bottom: 0;
+        }
+
+        @include bp.mobile {
+            width: auto;
+
+            .biblioteca__corpo--documento & {
+                display: none;
+            }
+        }
+    }
+
+    // Documento aberto: a caixa do cartão (superfície, borda, raio), com o leitor ou o editor dentro.
+    &__painel {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-16);
+        padding: var(--space-16);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+
+        @include bp.mobile {
+            padding: var(--space-12);
+
+            .biblioteca__corpo:not(.biblioteca__corpo--documento) & {
+                display: none;
+            }
+        }
+
+        // Sem documento aberto, o estado vazio fala sozinho — sem a caixa em volta dele.
+        &--vazio {
+            padding: 0;
+            background: none;
+            border: 0;
+        }
+    }
+
+    // "Voltar" à lista só existe no celular, onde lista e documento são vistas separadas.
+    &__voltar {
+        display: none;
+        align-self: flex-start;
+
+        @include bp.mobile {
+            display: inline-flex;
+            min-height: bp.$alvo-toque;
+        }
+    }
+
+    &__documento-cabecalho {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-12);
+        padding-bottom: var(--space-12);
+        border-bottom: 1px solid var(--border);
+    }
+
+    &__documento-identidade {
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+    }
+
+    // Ícone e título andam juntos — o chip é que desce de linha quando falta espaço.
+    &__documento-nome {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    &__documento-tipo {
+        flex: none;
+        color: var(--accent);
+    }
+
+    &__documento-titulo {
+        margin: 0;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+
+    &__leitor {
+        min-height: 0;
+    }
+
+    &__esqueleto-painel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-12);
+    }
+
+    &__esqueleto-titulo {
+        height: 32px;
+    }
+
+    &__esqueleto-corpo {
+        height: 280px;
+    }
+}

@@ -1,5 +1,111 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-26 — m9-05: Biblioteca do jogador e do espectador, e a busca nas três visões
+
+Jogador e espectador passam a ler, ao vivo, o que o mestre revelou, e os três papéis buscam na
+biblioteca. Só frontend; o backend já estava pronto (`m9-02`, `m9-03`).
+
+**Estrutura comum extraída, sem copiar o template.** A página do mestre da `m9-04` foi quebrada em:
+- `BibliotecaLayout`: casca do hub de cenas, coluna da lista com a busca no topo, painel do documento
+  e as duas vistas do celular;
+- `ListaDocumentos`: esqueleto, vazio, cartões e as setas só com `ordenavel`;
+- `DocumentoCartao`: o `button[app-documento-cartao]`, o mesmo na lista e na busca.
+
+O que é só do mestre entra por projeção (`[bibliotecaAcao]`, `[bibliotecaAcoesDocumento]`,
+`[bibliotecaCorpoDocumento]`) e por input (`mostrarEstado`, `ordenavel`). Sem projeção, o corpo é o
+`LeitorDocumento`. Os 59 testes da `m9-04` (página, casca, leitor, dialog, service) seguiram verdes
+logo depois da extração, antes de qualquer página nova. A captura de 1920 do mestre bate com a da
+`m9-04`.
+
+**Jogador:** a casca `BibliotecaDocumentos` monta a `BibliotecaJogador` para o papel `JOGADOR`, e só
+outro papel volta à campanha. **Espectador:** rota própria `campanhas/:id/espectador/documentos`,
+com `autenticacaoGuard` e `espectadorCampanhaResolver`, como a Iniciativa dele. O nome da campanha
+vem do painel resolvido, e a página só chama a API de documento. O spec prova isso na rede
+(`HttpTestingController`, serviços reais), e não só em métodos que ficaram sem chamada.
+
+As duas dividem o `BibliotecaLeituraStore` (provido por página). Todo `documento:alterado` e a
+reconexão refazem a lista. Para o documento aberto:
+- `OCULTADO`/`REMOVIDO` fecham o painel com "Este documento não está mais disponível.";
+- versão nova recarrega o conteúdo em silêncio, sem esqueleto;
+- `REVELADO` só entra na lista: nada abre sozinho.
+
+Um aberto que some da lista sem evento fecha do mesmo jeito, o que cobre a reconexão depois de um
+ocultar perdido.
+
+**Busca** (`BuscaDocumentos`, nas três visões): estados ocioso, buscando, sem resultado, erro e
+com resultado, "Carregar mais" e o chip Revelado/Oculto só com `mostrarEstado`. O trecho é
+segmentado por `⟦ ⟧` (`trecho-destacado.ts`): cada parte vai como texto, e o destaque é um `<mark>`,
+nunca `innerHTML`. Um trecho com `<img onerror>` sai literal. Com a busca ativa, cada evento refaz a
+primeira página em silêncio.
+
+**Navegação:**
+- item "Biblioteca" na categoria Campanha da coluna do jogador e no kebab;
+- item na coluna "Espectador";
+- nas prévias de jogador e de espectador, desabilitado com "Biblioteca indisponível na prévia".
+
+**Decisão do autor:** o `app-campo` não tinha ícone, e a spec pede o campo com o ícone `busca`.
+Perguntado, o autor escolheu **ampliar o primitivo**. Novo input opcional `icone`: o ícone é irmão do
+controle no `<label>`, e uma grade põe os dois na mesma célula. O controle continua filho direto do
+`<label>` (asterisco de obrigatório), e sem ícone nada muda.
+
+**Achados que só apareceram testando/vendo:**
+- O "Tentar de novo" do erro da busca não aparecia: o `app-estado-vazio` só projeta
+  `[estadoVazioAcao]`. O teste pegou, e o atributo entrou.
+- Na captura, o `type="search"` desenhava o "×" nativo branco, fora dos tokens. O campo virou
+  `type="text"` + `inputmode="search"` (teclado de busca no celular), como a busca do Caderno.
+- Duas suspeitas visuais se revelaram artefatos de captura, conferidos no DOM:
+  - uma borda de destaque num cartão não aberto era a transição de 0,15s;
+  - o texto menor numa captura do jogador era a fonte ainda carregando.
+
+**Testes** novos ou alterados no frontend:
+- `BuscaDocumentos`: 12;
+- página do jogador: 10;
+- página do espectador: 2;
+- `segmentarTrecho`: 4;
+- `app-campo`: 2;
+- `buscar` no service: 1;
+- casca: jogador e forasteiro;
+- itens de navegação no jogador, no espectador (real e prévia) e na prévia de jogador.
+
+`npm run test -w frontend`: 2360 testes em 169 arquivos, todos passando. `npm run lint -w frontend`:
+0 erros (os avisos são os preexistentes do workspace). Uma exceção de lint local e justificada:
+`elements-content` no `<button app-documento-cartao>` da lista, cujo conteúdo vem do próprio
+componente.
+
+**Ao vivo** (skill `verify`), com três sessões reais: mestre, jogador e espectador, este pelo convite
+próprio. O `ng serve` do autor na 4300 estava com o proxy antigo (`/documento` caía no `index.html`),
+então o teste rodou num par isolado: backend compilado à parte na 3101 e `ng serve` na 4301 com proxy
+para a 3101. Os servidores do autor não foram tocados. Última rodada: **109 de 109 checagens OK**,
+entre elas:
+- **Criar e revelar:** o mestre cria pela tela, e mesa e espectador não veem nem recarregam
+  (sentinela e zero listagens). O mestre revela, e o documento aparece ao vivo nas duas telas, sem
+  abrir.
+- **Leitura e edição:** o jogador lê o texto e a imagem. O mestre edita o revelado, e o leitor do
+  jogador atualiza título e texto sozinho, sem esqueleto.
+- **Ocultar:** o mestre oculta o aberto. Jogador e espectador fecham com o aviso, e o item sai da
+  lista. A busca do jogador não acha o documento; a do mestre acha, com o chip Oculto.
+- **REST e erros:** um oculto pedido por REST devolve 404 ao jogador e ao espectador. O espectador
+  não teve nenhum 4xx nem erro de console, fora os dois 500 do polling do `socket.io` dentro da
+  janela em que o backend foi derrubado de propósito.
+- **Busca:** "contencao" acha "contenção", e "porto" acha "portos", nas três visões, com `<mark>`
+  no trecho. Resultado abre o documento.
+- **Reconexão:** backend derrubado, `UPDATE documento SET revelado = false` direto no Postgres,
+  backend de volta. A lista do jogador e a do espectador se refazem sozinhas, e o aberto fecha.
+- **Navegação:** itens das colunas levam à biblioteca, e as duas prévias mostram o item desabilitado
+  com tooltip.
+- **360×800, nas três visões:** as duas vistas, o voltar, sem overflow, cartões, voltar e "voltar"
+  do documento ≥ 44px, foco visível no cartão, e o resultado da busca abrindo a vista do documento
+  com a busca mantida ao voltar.
+
+**Comparação visual** com a página do mestre da `m9-04` (análogo aprovado da spec), em 1920 e 360:
+- mesma casca, cabeçalho, divisor, cartão, painel e leitor;
+- mesma densidade e hierarquia, sem os controles do mestre;
+- o cartão da mesa ocupa a coluna inteira, porque não há setas;
+- parece o mesmo produto.
+
+Dados de teste que ficaram no banco de dev: campanhas 84–89 e as contas `m905*`. `backend/verificacao-m905`
+foi apagado.
+
 ## 2026-09-26 — m9-03: busca textual na biblioteca, recortada pelo papel
 
 `GET campanha/:campanhaId/documento/busca?termo=&pagina=&limite=` no `DocumentoController`, com

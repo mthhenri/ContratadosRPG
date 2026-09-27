@@ -34,6 +34,27 @@
             Iniciativa
         </a>
         }
+        <!-- Biblioteca (m9-05): na prévia fica indisponível, como a Iniciativa — a rota responderia
+             com o recorte do mestre, não o do espectador. -->
+        @if (ehMestrePreview()) {
+        <button
+            app-coluna-acoes-item
+            icone="biblioteca"
+            appTooltip="Biblioteca indisponível na prévia"
+            [disabled]="true"
+        >
+            Biblioteca
+        </button>
+        } @else {
+        <a
+            app-coluna-acoes-item
+            icone="biblioteca"
+            appTooltip="Biblioteca"
+            [routerLink]="['/campanhas', id, 'espectador', 'documentos']"
+        >
+            Biblioteca
+        </a>
+        }
         <button
             app-coluna-acoes-item
             icone="d20"

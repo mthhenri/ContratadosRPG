@@ -1,5 +1,7 @@
 import { Component, ViewEncapsulation, input } from '@angular/core';
 
+import { Icone, type IconeNome } from '../../icone/icone.component';
+
 /**
  * Degraus do rótulo. Saem da auditoria da ui-01 sobre os 40 blocos `&__rotulo` do frontend, que
  * são sempre mono + UPPERCASE + `--text-mute` e variam só no tamanho: 10px (9 ocorrências, o
@@ -27,6 +29,7 @@ export type CampoTamanho = 'compacto' | 'padrao' | 'amplo';
  */
 @Component({
   selector: 'app-campo',
+  imports: [Icone],
   templateUrl: './campo.component.html',
   styleUrl: './campo.component.scss',
   encapsulation: ViewEncapsulation.None,
@@ -43,6 +46,13 @@ export class Campo {
 
   /** Mensagem de erro já decidida pelo consumidor. Vazia esconde o elemento. */
   readonly erro = input('');
+
+  /**
+   * Ícone decorativo à esquerda, **dentro** do controle (m9-05 — o campo de busca). O ícone é
+   * irmão do controle no `<label>`, e uma grade põe os dois na mesma célula: o controle continua
+   * filho direto do `<label>` e ganha o recuo à esquerda. Sem ícone, nada muda.
+   */
+  readonly icone = input<IconeNome>();
 }
 
 /** Mantém os formulários legados em um `<label>` usando a mesma receita do `app-campo`. */

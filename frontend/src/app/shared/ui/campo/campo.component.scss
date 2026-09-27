@@ -106,4 +106,44 @@ label[app-campo] .campo__rotulo {
             letter-spacing: var(--tracking-label);
         }
     }
+
+    // Ícone dentro do controle (m9-05, busca). Grade de uma coluna: rótulo na 1ª linha, ícone e
+    // controle na mesma célula da 2ª — o controle segue filho direto do `<label>` (asterisco de
+    // obrigatório) e recua à esquerda para o ícone; dica e erro descem para as linhas seguintes.
+    &--com-icone {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+
+        > * {
+            grid-column: 1;
+        }
+
+        > .campo__rotulo {
+            grid-row: 1;
+        }
+
+        > :not(.campo__rotulo, .campo__icone, .campo__dica, .campo__erro) {
+            grid-row: 2;
+        }
+
+        > .campo__controle {
+            padding-left: 36px;
+        }
+
+        &:focus-within > .campo__icone {
+            color: var(--accent);
+        }
+    }
+
+    &__icone {
+        grid-row: 2;
+        position: relative;
+        z-index: 1;
+        align-self: center;
+        justify-self: start;
+        margin-left: var(--space-12);
+        color: var(--text-mute);
+        pointer-events: none;
+        transition: color 0.15s ease;
+    }
 }

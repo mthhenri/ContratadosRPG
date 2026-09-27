@@ -1,0 +1,45 @@
+// Lista da biblioteca (m9-04, extraída na m9-05). Um cartão por linha, com as setas de ordem ao
+// lado quando o mestre ordena — como as planejadas do hub de cenas. Só tokens (#29).
+
+:host {
+    display: block;
+}
+
+.lista-documentos {
+    &__itens {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+    }
+
+    &__controles {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+    }
+
+    // `chevron` é a seta para baixo; girada, "subir" (mesmo recurso do hub e do `app-paginador`).
+    &__seta-cima {
+        transform: rotate(180deg);
+    }
+
+    &__esqueleto {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-8);
+    }
+
+    &__esqueleto-linha {
+        height: 62px;
+    }
+}

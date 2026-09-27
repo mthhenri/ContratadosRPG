@@ -432,6 +432,15 @@ describe('CampanhaPreviaJogador', () => {
     });
   });
 
+  it('a Biblioteca (m9-05) fica desabilitada na prévia, sem link para a rota do mestre', () => {
+    const { raiz } = montar();
+
+    const item = itemColuna(raiz, 'Biblioteca');
+    expect(item.tagName).toBe('BUTTON');
+    expect(item.disabled).toBe(true);
+    expect(item.getAttribute('href')).toBeNull();
+  });
+
   describe('Cenas (antiga Iniciativa, m7-23)', () => {
     it('fica desabilitada mesmo com combate em andamento, sem abrir leitura nem a rota do mestre', () => {
       const { fixture, raiz } = montar({ previaResposta: previa({ encontroAtivo }) });

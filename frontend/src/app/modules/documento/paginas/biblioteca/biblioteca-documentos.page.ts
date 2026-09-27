@@ -8,20 +8,22 @@ import { SessaoService } from '../../../../core/services/sessao.service';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import type { TelaComRascunhoDocumento } from '../../rascunho-documento.guard';
+import { BibliotecaJogador } from '../biblioteca-jogador/biblioteca-jogador.page';
 import { BibliotecaMestre } from '../biblioteca-mestre/biblioteca-mestre.page';
 
 /**
- * Casca da biblioteca de documentos (m9-04) — `/campanhas/:campanhaId/documentos`. Resolve
- * **quem** olha (membros + sessão, como o `HubCenas`) e bifurca: o mestre monta a
- * `BibliotecaMestre`. A visão do jogador e do espectador chega na `m9-05`; até lá, **quem não é
- * mestre volta à campanha** (pendência explícita, não funcionalidade). O recorte de verdade é do
- * backend: mesmo que alguém chegue aqui, a listagem de quem não é mestre só traz os revelados.
+ * Casca da biblioteca de documentos (m9-04) — `/campanhas/:campanhaId/documentos`. Resolve **quem**
+ * olha (membros + sessão, como o `HubCenas`) e bifurca: o mestre monta a `BibliotecaMestre`, o
+ * jogador a `BibliotecaJogador` (m9-05). O espectador não passa por aqui — não pode listar membros
+ * (403) e tem a rota própria, `campanhas/:id/espectador/documentos`; o erro o leva de volta à
+ * campanha, como qualquer outro papel sem biblioteca nesta rota. O recorte de verdade é do backend:
+ * a listagem de quem não é mestre só traz os revelados.
  *
  * Enquanto o papel não é conhecido, só a silhueta da página — sem ela o mestre veria um vão.
  */
 @Component({
   selector: 'app-biblioteca-documentos',
-  imports: [Esqueleto, BibliotecaMestre],
+  imports: [Esqueleto, BibliotecaMestre, BibliotecaJogador],
   templateUrl: './biblioteca-documentos.page.html',
   styleUrl: './biblioteca-documentos.page.scss',
 })
@@ -36,13 +38,15 @@ export class BibliotecaDocumentos implements TelaComRascunhoDocumento {
   private readonly membros = signal<readonly CampanhaMembroResumoDto[] | null>(null);
   private readonly mestre = viewChild(BibliotecaMestre);
 
-  protected readonly ehMestre = computed(() => {
+  /** O papel de quem olha, pela própria linha na lista de membros. */
+  private readonly papel = computed(() => {
     const usuarioId = this.sessaoService.usuario()?.id;
-    return (this.membros() ?? []).some(
-      (membro) =>
-        membro.usuarioId === usuarioId && membro.papel === TipoCampanhaMembroPapelEnum.MESTRE,
-    );
+    return (this.membros() ?? []).find((membro) => membro.usuarioId === usuarioId)?.papel ?? null;
   });
+  protected readonly ehMestre = computed(() => this.papel() === TipoCampanhaMembroPapelEnum.MESTRE);
+  protected readonly ehJogador = computed(
+    () => this.papel() === TipoCampanhaMembroPapelEnum.JOGADOR,
+  );
 
   protected readonly carregando = computed(() => this.membros() === null);
 
@@ -51,7 +55,7 @@ export class BibliotecaDocumentos implements TelaComRascunhoDocumento {
     this.campanhaService.listarMembros(this.campanhaId).subscribe({
       next: (membros) => {
         this.membros.set(membros);
-        if (!this.ehMestre()) {
+        if (!this.ehMestre() && !this.ehJogador()) {
           this.voltarACampanha();
         }
       },

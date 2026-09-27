@@ -1,0 +1,103 @@
+<!-- Busca da biblioteca (m9-05): o campo e, com termo, os resultados no lugar da lista. O trecho é
+     segmentado em texto puro; o destaque é um <mark>, nunca innerHTML. O campo é `text` com
+     `inputmode="search"` (teclado de busca no celular) — o `type="search"` traria o "×" nativo do
+     navegador, fora dos tokens. -->
+<app-campo rotulo="Buscar" icone="busca">
+    <input
+        class="campo__controle"
+        type="text"
+        inputmode="search"
+        placeholder="Título ou conteúdo…"
+        autocomplete="off"
+        enterkeyhint="search"
+        [formControl]="termo"
+        [attr.maxlength]="termoMaximo"
+    />
+</app-campo>
+
+@if (ativa()) {
+<div class="busca-documentos__resultados">
+    @switch (estado()) {
+    @case ('ERRO') {
+    <app-estado-vazio
+        tamanho="compacto"
+        icone="alerta"
+        titulo="Não foi possível buscar agora."
+        linhaApoio="Verifique a conexão e tente de novo."
+    >
+        <button
+            estadoVazioAcao
+            app-botao
+            variante="secundario"
+            estilo="contorno"
+            tamanho="pequeno"
+            class="busca-documentos__acao"
+            type="button"
+            (click)="tentarDeNovo()"
+        >
+            <app-icone nome="atualizar" />
+            Tentar de novo
+        </button>
+    </app-estado-vazio>
+    }
+    @case ('PRONTO') {
+    @if (exibidos().length === 0) {
+    <app-estado-vazio
+        tamanho="compacto"
+        icone="busca"
+        titulo="Nada encontrado."
+        [linhaApoio]="'Nenhum documento com “' + termoBuscado() + '”.'"
+    />
+    } @else {
+    <ol class="busca-documentos__itens">
+        @for (item of exibidos(); track item.resultado.id) {
+        <li class="busca-documentos__item">
+            <button
+                app-documento-cartao
+                [titulo]="item.resultado.titulo"
+                [tipo]="item.resultado.tipo"
+                [revelado]="mostrarEstado() ? item.resultado.revelado : null"
+                [aberto]="abertoId() === item.resultado.id"
+                (click)="selecionar.emit(item.resultado.id)"
+            >
+                @if (item.segmentos.length > 0) {
+                <span class="busca-documentos__trecho">
+                    @for (segmento of item.segmentos; track $index) {
+                    @if (segmento.destaque) {
+                    <mark class="busca-documentos__destaque">{{ segmento.texto }}</mark>
+                    } @else {
+                    <span>{{ segmento.texto }}</span>
+                    }
+                    }
+                </span>
+                }
+            </button>
+        </li>
+        }
+    </ol>
+    @if (temMais()) {
+    <button
+        app-botao
+        variante="secundario"
+        estilo="contorno"
+        tamanho="pequeno"
+        class="busca-documentos__acao busca-documentos__mais"
+        type="button"
+        [carregando]="carregandoMais()"
+        (click)="carregarMais()"
+    >
+        Carregar mais
+    </button>
+    }
+    }
+    }
+    @default {
+    <div class="busca-documentos__esqueleto" role="status" aria-label="Buscando os documentos">
+        @for (i of [0, 1, 2]; track i) {
+        <app-esqueleto class="busca-documentos__esqueleto-linha" />
+        }
+    </div>
+    }
+    }
+</div>
+}
