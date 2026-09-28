@@ -1850,8 +1850,9 @@ secrets, IAM, trigger do Cloud Build — todo esse conhecimento foi extraído ao
 migração e está em `HISTORY.md`).
 
 Não há spec ativa no momento (`m8-06` concluída — ver acima; módulo `m8-espectadores-campanha`
-inteiro fechado). Resta `ui-23` no backlog (stat sem valor/rodapé do cartão — ver "Fila do backlog"
-abaixo). A única frente de código de milestone ainda pendente é o **M4** (`m4-05`…`m4-10`,
+inteiro fechado). `ui-23` (stat sem valor/rodapé do cartão) já foi concluída — ver `HISTORY.md`
+2026-09-02; a fila abaixo estava desatualizada. A única frente de código de milestone ainda
+pendente é o **M4** (`m4-05`…`m4-10`,
 criatura/NPC — ver seção 3), ao lado de `m3-53` (M3). M0, M1, M2, M6, M7 e M8 estão concluídos,
 incluindo todos os ajustes avulsos de pós-milestone.
 
@@ -1862,7 +1863,6 @@ incluindo todos os ajustes avulsos de pós-milestone.
 | `civil-guia-criacao` | ficha | mapeia o escopo de `PROBLEMS.md` `P-018` (o guia de criação trata a classe Civil como um agente comum em vários passos) — spec de levantamento, ainda não implementa |
 | `m3-53` | ficha | exportar ficha em PDF fiel ao tema |
 | `m4-05`…`m4-10` | criatura/NPC | 6 tasks restantes do M4 — contrato/regras/backend/frontend de NPC, listagem/revelação no painel do mestre, refinamento mobile |
-| `ui-23` | frontend/design system | última spec restante da auditoria visual (stat sem valor/rodapé do cartão) — não citada na ordem sugerida original como bloqueante de milestone |
 
 Milestones ainda não abertos: `m5-guia-missao`. O M8 `m8-espectadores-campanha` está **concluído**
 (`m8-01`…`m8-06`).
