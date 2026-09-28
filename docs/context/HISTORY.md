@@ -49,7 +49,24 @@ restaura o `naBase` anterior ao PUT. Suíte completa do frontend verde (173 arqu
 `npm run lint` (raiz): zero erros, só os avisos de aspas/comprimento de linha já conhecidos do
 repositório. `npm run build -w frontend`: aprovado, mesmo aviso preexistente de orçamento do bundle
 (550,83 kB para 450 kB, P-004). `shared`/`backend` não foram tocados por esta task — nenhum gate
-deles precisou rodar de novo. `convencoes-check` sobre o diff: sem DTO/enum novo, sem
+deles precisou rodar de novo.
+
+**Verificação ao vivo (Playwright + REST + Postgres real — sem Docker disponível neste ambiente,
+subido via cluster nativo `postgresql-16` já instalado, `npm run db:migrate`/`db:seed:dev`).**
+Backend e frontend reais em `:3100`/`:4300`, dois contextos de navegador simultâneos: mestre
+(`codex.dev`, 1920×1080) e jogador (`jogador.stub.1`, 360×800) na mesma campanha semeada
+("Campanha do Codex"), com captura de método/rota de toda requisição REST (Socket.IO/assets
+excluídos). Carga inicial: 5 GETs por cliente (`campanha/:id`, `/membros`, `ficha?campanhaId`,
+`/rolagem`, `/inventario`), igual ao baseline já estabelecido por `p-084`/`p-085` — sem regressão.
+Clique do mestre em Na Base → Em Missão: **exatamente 1 requisição no total** (`PUT
+/campanha/2/estado`, o próprio mestre) — zero GETs, e o jogador convergiu para "EM MISSÃO" só pelo
+evento de socket, sem nenhuma requisição própria. Clique de volta (Em Missão → Na Base): mesmo
+resultado, 1 PUT, 0 GETs, os dois clientes convergem. Texto/ícone do badge corretos nos dois
+viewports, sem overflow, screenshots capturados nos quatro momentos (antes/depois de cada clique,
+mestre e jogador). Ambiente revertido ao final: servidores de dev encerrados, cluster Postgres
+nativo parado (`pg_ctlcluster 16 main stop`), `.env` local permanece (git-ignored, não versionado).
+
+`convencoes-check` sobre o diff: sem DTO/enum novo, sem
 `atualizar`/`atualizado`, sem `NgModule`/`ngModel`, nenhuma query/SQL tocada (só frontend); a
 leitura manual é o que pegou a duplicação de regra revertida acima — a busca mecânica sozinha não
 teria acusado.

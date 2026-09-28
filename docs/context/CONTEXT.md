@@ -32,7 +32,10 @@
 > propósito — é `identidade.naBase` 1:1 só no backend (`campanha-projecao.service.ts`); uma
 > primeira tentativa de espelhar essa igualdade no frontend duplicava a regra do lado errado da
 > fronteira e quebrou um teste existente que as mantém deliberadamente independentes — revertida,
-> o campo continua atualizado só pela próxima invalidação real de `'projecao'`.
+> o campo continua atualizado só pela próxima invalidação real de `'projecao'`. Verificado ao vivo
+> (Postgres nativo, sem Docker no ambiente; backend/frontend reais; mestre 1920×1080/jogador
+> 360×800 em dois navegadores): cada clique produziu exatamente 1 PUT e 0 GETs, convergindo os
+> dois clientes só por Socket.IO.
 > `requests-correcoes`: 5/6 (`p-082`…`p-086`) — resta o inventário sob demanda (task 6).
 > Antes: `p-085-invalidacao-seletiva-ficha` concluída (spec em `done/`, `P-085` fechado em
 > `PROBLEMS.md`): `FichaService`, com o estado persistido antes/depois, decide se os recortes
