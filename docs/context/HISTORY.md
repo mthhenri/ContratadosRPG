@@ -1,5 +1,67 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — m9-08: importar Markdown como rascunho na Biblioteca
+
+Executada após a m9-07. A edição de documento TEXTO ganhou "Importar Markdown" abaixo do editor,
+na mesma receita de "Trocar imagem" (`biblioteca__upload`, `app-botao` secundário pequeno,
+ícone canônico). Lê o arquivo localmente; confirma a substituição quando o editor tem texto,
+conserva o título e informa que é necessário Salvar. Avisos somem ao salvar, cancelar ou mudar de
+documento. Nenhum upload, endpoint, DTO, migration ou dependência foi acrescentado.
+
+Normalização, detecção de front matter e validação pura passaram para
+`frontend/src/app/shared/markdown/importar-markdown.ts`, com testes junto. A validação comum aceita
+.md/.markdown sem diferenciar caixa, limita bytes a 1.000.000 e recebe o teto de caracteres do
+consumidor; conteúdo vazio e excedente são recusados sem truncar. Derivação do título permanece no
+Caderno, que consome a mesma normalização/validação e conserva suas asserções de importação.
+A extração evita duplicar regra. O handler local na página extensa é orquestração da edição já
+existente (arquivo, confirmação, rascunho e aviso); não introduz persistência nem outra regra de
+domínio e não exige um novo componente para este recorte.
+
+Revisão independente encontrou leitura pendente após destruir a página: a continuação poderia
+abrir a confirmação global sobre a rota seguinte. Reproduzido por teste vermelho e corrigido pela
+invalidação da sequência em `DestroyRef.onDestroy`; a mesma sequência já protegia troca/reinício
+da edição. Testes cobrem também a troca de documento durante a leitura.
+
+Verificação pessoal com `verify` (Chromium, API/Postgres reais, mestre e jogador, 1920×1080 e
+360×800): títulos/listas/tabela GFM com alinhamento e imagem remota importados; imagem vira link;
+nenhuma requisição ao escolher arquivo; confirmação/cancelamento; rascunho pede descarte; .txt,
+>1 MB e vazio recusados sem mudar o editor; Salvar envia somente JSON de texto; jogador recebe
+somente depois de Salvar pelo evento existente; F5 preserva tabela e alinhamentos. Botão exclusivo
+de TEXTO em edição, alvo mobile ≥44px, aviso visível e sem overflow. Comparação com "Trocar imagem"
+aprovada: mesma identidade, densidade, hierarquia, primitivo/tamanho e formato de dica/erro; sem
+controles genéricos ou divergência visual. Busca sobre o documento já aberto também foi confirmada
+sem alternância no desktop (m9-07).
+
+Gates finais: `npm run test --workspaces --if-present -- --watch=false`: shared 52 arquivos/772
+testes, backend 38/715, frontend 173/2439 — todos passaram. `npm run lint`: zero erros (warnings
+existentes). `npm run build -w frontend`: aprovado, warning de budget P-004 (550,83 kB para aviso
+450 kB). Avisos do Canvas no ambiente de testes permanecem sem falha. As primeiras rodadas tiveram
+bloqueios de leitura do sandbox e inconsistências transitórias nos serviços de campanha da task
+concorrente; gates repetidos após estabilização, sem alterar esses arquivos. Diff completo deste
+recorte revisado com `convencoes-check`: tokens, formulários reativos, primitivos completos, nenhum
+backend/shared ou package.json tocado pela task; buscas mecânicas sem violação (font-family usa
+token), `git diff --check` limpo. Cenário temporário removido por soft delete (campanha e oito
+documentos); as imagens de referência seguem a política existente do armazenamento (I-038).
+Specs m9-07/m9-08 em `done/`; nenhuma pendência destas duas tasks.
+
+## 2026-09-28 — m9-07: segundo clique fecha o documento da Biblioteca
+
+A lista alterna a seleção nas três visões; a busca sai pelo output próprio `abrir` do
+`BibliotecaLayout` e usa `abrirDocumento`, que preserva o aberto. O mestre delega o fechamento
+a `fecharDocumento`, incluindo a confirmação de descarte e a manutenção da edição ao cancelar.
+O cartão expõe `aria-pressed` true/false. Nenhuma regra foi colocada no cartão ou na lista.
+
+Análogos: fechamento pelo voltar do celular e painel vazio da própria Biblioteca (m9-04/m9-05).
+Verificação pessoal ao vivo (skill `verify`, Chromium, REST e Postgres reais): mestre/jogador em
+1920×1080, 960×1080 e 360×800; abrir/fechar, manter e descartar rascunho, foco no cartão por Enter,
+fluxo mobile e ausência de overflow. Painel vazio idêntico à primeira carga; mesmas densidade,
+hierarquia, controles e estados. Nenhuma divergência visual encontrada.
+
+Gates: testes focados 41/41; frontend completo 172 arquivos, 2420/2420 testes;
+`npm run lint` dos três workspaces: 0 erros (warnings existentes); `npm run build -w frontend`:
+aprovado, warning de budget P-004. Revisão manual integral do diff da task: sem backend/shared,
+hardcodes, duplicação de regra ou mudança em arquivos concorrentes. Spec movida para `done/`.
+
 ## 2026-09-28 — p-085: invalidação seletiva das listas de ficha (P-085 fechado)
 
 Quarta das 6 tasks de `requests-correcoes`. A emissão ampla de

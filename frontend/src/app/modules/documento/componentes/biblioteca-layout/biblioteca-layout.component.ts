@@ -74,6 +74,8 @@ export class BibliotecaLayout {
   readonly painelVazioApoio = input.required<string>();
 
   readonly selecionar = output<number>();
+  /** Navegação pela busca: abre sem alternar o documento já aberto. */
+  readonly abrir = output<number>();
   readonly mover = output<DocumentoMovimento>();
   /** "Voltar" do celular: a página fecha o documento (o mestre pergunta antes, se há rascunho). */
   readonly fecharDocumento = output<void>();

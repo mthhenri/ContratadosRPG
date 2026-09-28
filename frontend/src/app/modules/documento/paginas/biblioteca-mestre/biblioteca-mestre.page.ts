@@ -22,6 +22,7 @@ import {
 
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { TopbarContextoService } from '../../../../core/services/topbar-contexto.service';
+import { normalizarMarkdownImportado, possuiFrontMatterYaml, validarArquivoMarkdown, type FalhaImportacaoMarkdown } from '../../../../shared/markdown/importar-markdown';
 import { Icone } from '../../../../shared/icone/icone.component';
 import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
@@ -127,6 +128,10 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   protected readonly salvando = signal(false);
   protected readonly erroImagem = signal<string | null>(null);
   protected readonly enviandoImagem = signal(false);
+  protected readonly avisoImportacao = signal<{ texto: string; erro: boolean } | null>(null);
+  protected readonly importandoMarkdown = signal(false);
+  /** Invalida uma leitura local pendente ao sair ou reiniciar a edição. */
+  private sequenciaEdicao = 0;
 
   /** O id que este mestre remove: o eco `REMOVIDO` dele não é "removido em outra sessão". */
   private removendoId: number | null = null;
@@ -149,7 +154,10 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.topbarContexto.limpar());
+    this.destroyRef.onDestroy(() => {
+      this.sequenciaEdicao++;
+      this.topbarContexto.limpar();
+    });
     this.tituloEdicao.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((titulo) => this.tituloEditado.set(titulo));
@@ -257,7 +265,17 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
     this.iniciarEdicao();
   }
 
+  /** A lista alterna a seleção; o fechamento preserva a confirmação de descarte. */
   protected async selecionar(id: number): Promise<void> {
+    if (id === this.abertoId()) {
+      await this.fecharDocumento();
+      return;
+    }
+    await this.abrirDocumento(id);
+  }
+
+  /** A busca navega sem fechar o documento que já está aberto. */
+  protected async abrirDocumento(id: number): Promise<void> {
     if (id === this.abertoId() || !(await this.confirmarDescarte())) {
       return;
     }
@@ -356,6 +374,9 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
     if (!documento) {
       return;
     }
+    this.sequenciaEdicao++;
+    this.avisoImportacao.set(null);
+    this.importandoMarkdown.set(false);
     this.tituloEdicao.reset(documento.titulo);
     this.tituloEditado.set(documento.titulo);
     this.conteudoEdicao.set(documento.conteudoMarkdown ?? '');
@@ -445,6 +466,62 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
     });
   }
 
+  /** Importa somente texto local para o rascunho; persistência continua exclusiva de Salvar. */
+  protected async aoSelecionarMarkdown(evento: Event): Promise<void> {
+    const entrada = evento.target as HTMLInputElement;
+    const arquivo = entrada.files?.[0] ?? null;
+    entrada.value = '';
+    if (!arquivo || !this.editando() || !this.abertoEhTexto() || this.importandoMarkdown()) return;
+    const sequencia = this.sequenciaEdicao;
+    this.avisoImportacao.set(null);
+    const falhaArquivo = validarArquivoMarkdown(arquivo, DOCUMENTO_CONTEUDO_MAXIMO);
+    if (falhaArquivo) {
+      this.definirFalhaImportacao(falhaArquivo);
+      return;
+    }
+    this.importandoMarkdown.set(true);
+    try {
+      const texto = await arquivo.text();
+      if (sequencia !== this.sequenciaEdicao) return;
+      const conteudoMarkdown = normalizarMarkdownImportado(texto);
+      const falhaConteudo = validarArquivoMarkdown(arquivo, DOCUMENTO_CONTEUDO_MAXIMO, conteudoMarkdown);
+      if (falhaConteudo) {
+        this.definirFalhaImportacao(falhaConteudo);
+        return;
+      }
+      const conteudoAtual = this.editor()?.confirmarValor() ?? this.conteudoEdicao();
+      if (conteudoAtual.trim()) {
+        const confirmado = await this.confirmacaoService.confirmar({
+          titulo: 'Substituir o conteúdo?',
+          mensagem: 'O texto atual do documento será trocado pelo conteúdo do arquivo. Nada é salvo até clicar em Salvar.',
+          rotuloConfirmar: 'Substituir',
+          rotuloCancelar: 'Cancelar',
+        });
+        if (!confirmado || sequencia !== this.sequenciaEdicao) return;
+      }
+      this.conteudoEdicao.set(conteudoMarkdown);
+      this.avisoImportacao.set({
+        texto: `Importado de "${arquivo.name}".${possuiFrontMatterYaml(texto) ? ' Front matter removido.' : ''} Salve para gravar.`,
+        erro: false,
+      });
+    } catch {
+      if (sequencia === this.sequenciaEdicao) {
+        this.avisoImportacao.set({ texto: 'Não foi possível ler o arquivo. Tente novamente.', erro: true });
+      }
+    } finally {
+      if (sequencia === this.sequenciaEdicao) this.importandoMarkdown.set(false);
+    }
+  }
+
+  private definirFalhaImportacao(falha: FalhaImportacaoMarkdown): void {
+    const textos = {
+      EXTENSAO: 'Formato inválido: envie um arquivo .md',
+      TAMANHO: `Arquivo maior que o limite do documento (${DOCUMENTO_CONTEUDO_MAXIMO.toLocaleString('pt-BR')} caracteres)`,
+      VAZIO: 'O arquivo não tem conteúdo',
+    } as const;
+    this.avisoImportacao.set({ texto: textos[falha], erro: true });
+  }
+
   /** Arquivo escolhido: valida tipo e tamanho aqui (constantes de `shared`) antes de enviar. */
   protected aoSelecionarImagem(evento: Event): void {
     const entrada = evento.target as HTMLInputElement;
@@ -505,6 +582,9 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   }
 
   private sairDaEdicao(): void {
+    this.sequenciaEdicao++;
+    this.avisoImportacao.set(null);
+    this.importandoMarkdown.set(false);
     this.editando.set(false);
     this.conflito.set(false);
     this.erroImagem.set(null);

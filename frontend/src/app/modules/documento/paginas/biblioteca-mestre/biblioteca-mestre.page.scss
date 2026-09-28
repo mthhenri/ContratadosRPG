@@ -99,6 +99,14 @@
         gap: var(--space-8) var(--space-12);
     }
 
+    &__aviso-importacao {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        overflow-wrap: anywhere;
+    }
+
     &__erro {
         margin: 0;
         font-family: var(--font-mono);

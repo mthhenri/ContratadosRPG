@@ -15,7 +15,7 @@
             <span class="biblioteca__indice">//</span>
             <h1 class="biblioteca__titulo">Biblioteca</h1>
             @if (campanhaNome()) {
-            <span class="biblioteca__campanha">{{ campanhaNome() }}</span>
+                <span class="biblioteca__campanha">{{ campanhaNome() }}</span>
             }
             <span class="biblioteca__regua"></span>
             <ng-content select="[bibliotecaAcao]" />
@@ -25,102 +25,111 @@
             <section class="biblioteca__lista" aria-label="Documentos da campanha">
                 <header class="biblioteca__secao">
                     <h2 class="biblioteca__secao-titulo">
-                        {{ buscaAtiva() ? 'Resultados' : 'Documentos' }}
+                        {{ buscaAtiva() ? "Resultados" : "Documentos" }}
                     </h2>
                     <span class="biblioteca__secao-regua"></span>
                     @if (contagem() !== null) {
-                    <span class="biblioteca__secao-meta">{{ contagem() }}</span>
+                        <span class="biblioteca__secao-meta">{{ contagem() }}</span>
                     }
                 </header>
 
                 @if (mostrarBusca()) {
-                <app-busca-documentos
-                    [campanhaId]="campanhaId()"
-                    [mostrarEstado]="mostrarEstado()"
-                    [abertoId]="abertoId()"
-                    (selecionar)="selecionar.emit($event)"
-                    (ativaChange)="buscaAtiva.set($event)"
-                    (totalChange)="totalBusca.set($event)"
-                />
-                } @if (!buscaAtiva()) {
-                <app-lista-documentos
-                    [documentos]="documentos()"
-                    [carregando]="carregandoLista()"
-                    [abertoId]="abertoId()"
-                    [mostrarEstado]="mostrarEstado()"
-                    [ordenavel]="ordenavel()"
-                    [bloqueado]="bloqueado()"
-                    [vazioTitulo]="vazioTitulo()"
-                    [vazioApoio]="vazioApoio()"
-                    (selecionar)="selecionar.emit($event)"
-                    (mover)="mover.emit($event)"
-                />
+                    <app-busca-documentos
+                        [campanhaId]="campanhaId()"
+                        [mostrarEstado]="mostrarEstado()"
+                        [abertoId]="abertoId()"
+                        (selecionar)="abrir.emit($event)"
+                        (ativaChange)="buscaAtiva.set($event)"
+                        (totalChange)="totalBusca.set($event)"
+                    />
+                }
+                @if (!buscaAtiva()) {
+                    <app-lista-documentos
+                        [documentos]="documentos()"
+                        [carregando]="carregandoLista()"
+                        [abertoId]="abertoId()"
+                        [mostrarEstado]="mostrarEstado()"
+                        [ordenavel]="ordenavel()"
+                        [bloqueado]="bloqueado()"
+                        [vazioTitulo]="vazioTitulo()"
+                        [vazioApoio]="vazioApoio()"
+                        (selecionar)="selecionar.emit($event)"
+                        (mover)="mover.emit($event)"
+                    />
                 }
             </section>
 
             @if (mostrarPainel()) {
-            <section
-                class="biblioteca__painel"
-                [class.biblioteca__painel--vazio]="abertoId() === null"
-                aria-label="Documento aberto"
-            >
-                @if (abertoId() === null) {
-                <app-estado-vazio
-                    icone="biblioteca"
-                    titulo="Nenhum documento aberto."
-                    [linhaApoio]="painelVazioApoio()"
-                />
-                } @else {
-                <button
-                    app-botao
-                    variante="secundario"
-                    estilo="texto"
-                    tamanho="pequeno"
-                    class="biblioteca__voltar"
-                    type="button"
-                    (click)="fecharDocumento.emit()"
+                <section
+                    class="biblioteca__painel"
+                    [class.biblioteca__painel--vazio]="abertoId() === null"
+                    aria-label="Documento aberto"
                 >
-                    <app-icone nome="voltar" />
-                    Documentos
-                </button>
+                    @if (abertoId() === null) {
+                        <app-estado-vazio
+                            icone="biblioteca"
+                            titulo="Nenhum documento aberto."
+                            [linhaApoio]="painelVazioApoio()"
+                        />
+                    } @else {
+                        <button
+                            app-botao
+                            variante="secundario"
+                            estilo="texto"
+                            tamanho="pequeno"
+                            class="biblioteca__voltar"
+                            type="button"
+                            (click)="fecharDocumento.emit()"
+                        >
+                            <app-icone nome="voltar" />
+                            Documentos
+                        </button>
 
-                @if (documento(); as aberto) {
-                <header class="biblioteca__documento-cabecalho">
-                    <div class="biblioteca__documento-identidade">
-                        <span class="biblioteca__documento-nome">
-                            <app-icone
-                                class="biblioteca__documento-tipo"
-                                [nome]="iconeTipo(aberto.tipo)"
-                            />
-                            <h2 class="biblioteca__documento-titulo">{{ aberto.titulo }}</h2>
-                        </span>
-                        @if (mostrarEstado()) { @if (aberto.revelado) {
-                        <app-chip severidade="primario">
-                            <app-icone nome="olho" /> Revelado
-                        </app-chip>
+                        @if (documento(); as aberto) {
+                            <header class="biblioteca__documento-cabecalho">
+                                <div class="biblioteca__documento-identidade">
+                                    <span class="biblioteca__documento-nome">
+                                        <app-icone
+                                            class="biblioteca__documento-tipo"
+                                            [nome]="iconeTipo(aberto.tipo)"
+                                        />
+                                        <h2 class="biblioteca__documento-titulo">
+                                            {{ aberto.titulo }}
+                                        </h2>
+                                    </span>
+                                    @if (mostrarEstado()) {
+                                        @if (aberto.revelado) {
+                                            <app-chip severidade="primario">
+                                                <app-icone nome="olho" /> Revelado
+                                            </app-chip>
+                                        } @else {
+                                            <app-chip severidade="secundario">
+                                                <app-icone nome="olho-fechado" /> Oculto
+                                            </app-chip>
+                                        }
+                                    }
+                                </div>
+                                <ng-content select="[bibliotecaAcoesDocumento]" />
+                            </header>
+
+                            <ng-content select="[bibliotecaCorpoDocumento]">
+                                <app-leitor-documento
+                                    class="biblioteca__leitor"
+                                    [documento]="aberto"
+                                />
+                            </ng-content>
                         } @else {
-                        <app-chip severidade="secundario">
-                            <app-icone nome="olho-fechado" /> Oculto
-                        </app-chip>
-                        } }
-                    </div>
-                    <ng-content select="[bibliotecaAcoesDocumento]" />
-                </header>
-
-                <ng-content select="[bibliotecaCorpoDocumento]">
-                    <app-leitor-documento class="biblioteca__leitor" [documento]="aberto" />
-                </ng-content>
-                } @else {
-                <div
-                    class="biblioteca__esqueleto-painel"
-                    role="status"
-                    aria-label="Carregando o documento"
-                >
-                    <app-esqueleto class="biblioteca__esqueleto-titulo" />
-                    <app-esqueleto class="biblioteca__esqueleto-corpo" />
-                </div>
-                } }
-            </section>
+                            <div
+                                class="biblioteca__esqueleto-painel"
+                                role="status"
+                                aria-label="Carregando o documento"
+                            >
+                                <app-esqueleto class="biblioteca__esqueleto-titulo" />
+                                <app-esqueleto class="biblioteca__esqueleto-corpo" />
+                            </div>
+                        }
+                    }
+                </section>
             }
         </div>
     </div>

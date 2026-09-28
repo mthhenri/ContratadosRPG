@@ -435,6 +435,9 @@ os controles do mestre.
   **chip de estado**: `Revelado` (`severidade="primario"` + `olho`) ou `Oculto` (`secundario` +
   `olho-fechado`). O aberto fica com a borda de destaque parada e o ícone em `--accent`. As setas de
   ordem são as do hub (`app-botao-icone` `padrao` + `chevron` girado), desabilitadas nos limites.
+- **Seleção (`m9-07`):** clicar de novo no cartão aberto fecha o painel; `aria-pressed` reflete
+  a seleção e o foco permanece no cartão. Com rascunho, o mestre confirma o descarte. O resultado
+  da busca apenas abre: clicar no documento já aberto mantém o painel.
 - **Painel** (resto da largura): a caixa do cartão (`--surface`, borda, raio) com o cabeçalho do
   documento (ícone + título, chip de estado e as ações `Revelar`/`Ocultar`, `Editar`, `Remover` em
   `app-botao` `pequeno`) e o corpo — o `app-leitor-documento` ou, no mesmo lugar, a edição (título em
@@ -442,6 +445,11 @@ os controles do mestre.
   Na edição, as ações do cabeçalho saem e o rodapé traz `Cancelar`/`Salvar`. Sem documento aberto,
   um `app-estado-vazio` sem a caixa; sem nenhum documento, o painel nem aparece (o vazio da lista
   basta).
+- **Importação (`m9-08`):** na edição de texto, "Importar Markdown" fica abaixo do editor ao lado
+  da dica de caracteres, na mesma receita de "Trocar imagem" (`biblioteca__upload`, `app-botao`
+  secundário pequeno + ícone `importar`). Lê `.md`/`.markdown` localmente, confirma a substituição
+  quando há texto e mantém o título. O aviso inline (`role="status"`) informa sucesso/erro; só
+  Salvar grava e comunica à mesa. No mobile, o botão mantém alvo de 44px.
 - **Leitor** (`app-leitor-documento`, também do palco da Investigação na `m7-25`): texto pelo
   editor Markdown em somente leitura, dentro da borda do cartão; imagem num quadro `--bg` com
   esqueleto até carregar, `app-estado-vazio` se a URL falhar e a alternância `tamanho-real` ↔

@@ -23,7 +23,7 @@ import { iconeTipoDocumento, rotuloTipoDocumento } from '../../documento-tipo';
     class: 'documento-cartao',
     type: 'button',
     '[class.documento-cartao--aberto]': 'aberto()',
-    '[attr.aria-current]': "aberto() ? 'true' : null",
+    '[attr.aria-pressed]': 'aberto()',
   },
 })
 export class DocumentoCartao {

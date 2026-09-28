@@ -726,10 +726,10 @@ integrá-la. Fontes e gates em
 [requests-correcoes](../specs/backlog/requests-correcoes.spec.md); tasks em
 `docs/specs/backlog/p-086-*.spec.md` e `requests-inventario-sob-demanda.spec.md`.
 
-**Biblioteca — melhorias especificadas (2026-09-28), não iniciadas:** `m9-07` (segundo clique fecha o
-documento aberto), `m9-08` (importar `.md` num documento de texto), `m9-09` (presença de leitura —
-contrato e backend) e `m9-10` (presença — tela do mestre, depende da `m9-09`). Specs em
-`docs/specs/backlog/m9-{07,08,09,10}-*.spec.md`, cada uma com decisões assumidas a confirmar. Antes:
+**Biblioteca — melhorias (2026-09-28):** `m9-07` (segundo clique fecha) e `m9-08` (importar
+Markdown como rascunho) concluídas, specs em `done/`. Permanecem no backlog `m9-09` (presença de
+leitura — contrato e backend) e `m9-10` (presença — tela do mestre, depende da `m9-09`), cada uma
+com decisões assumidas a confirmar. Antes:
 
 **Módulo de Cenas — `m7-25` (Investigação completa), desbloqueada: a `m9-02` (backend de
 documento) e a `m9-04` (`LeitorDocumento`) estão prontas.** `m7-21` (contrato + schema), `m7-22` (backend +
@@ -2736,7 +2736,9 @@ membros) volta à campanha. O espectador tem a rota própria `campanhas/:id/espe
 (`espectadorCampanhaResolver`, como a Iniciativa dele): o nome vem do painel resolvido e a página só
 chama a API de documento. As três visões montam o `BibliotecaLayout` (casca, lista com a
 `BuscaDocumentos` no topo, painel e duas vistas no celular; o que é do mestre entra por projeção) e
-o `DocumentoCartao`. Jogador e espectador dividem o `BibliotecaLeituraStore` (provido por página):
+o `DocumentoCartao`. A lista alterna abrir/fechar pelo segundo clique (`aria-pressed`);
+a busca apenas abre pelo output `abrir`. O mestre mantém a confirmação de descarte no fechamento.
+Jogador e espectador dividem o `BibliotecaLeituraStore` (provido por página):
 todo `documento:alterado` e a reconexão refazem a lista; `OCULTADO`/`REMOVIDO` do aberto — ou o
 aberto que sumiu da lista — fecham o painel com "Este documento não está mais disponível."; versão
 nova recarrega em silêncio; `REVELADO` só entra na lista. A busca refaz a primeira página em
@@ -2749,6 +2751,13 @@ edição → recarrega; `REMOVIDO` de outra sessão fecha o painel com aviso. `L
 400 do upload não viram toast: `ERROS_TRATADOS_NA_TELA`
 (`core/interceptors/error-handler.interceptor.ts`). Composição visual em `docs/design/DESIGN.md`,
 "Biblioteca de documentos".
+
+**Importar Markdown (`m9-08`):** na edição de TEXTO, o mestre lê .md/.markdown localmente,
+confirma substituir quando há texto e mantém o título. Conteúdo normalizado é rascunho até Salvar;
+aviso inline some ao salvar/cancelar/trocar. Normalização e validação comum ao Caderno vivem em
+`frontend/src/app/shared/markdown/importar-markdown.ts` (1 MB, vazio e limite de caracteres
+recebido do consumidor, recusa sem truncar). Leitura pendente é invalidada ao trocar/reiniciar a
+edição e destruir a página. Sem upload do arquivo ou mudança de backend.
 
 `emitirRolagemRegistrada` (m3-27/`m3-77`) usa **duas salas mutuamente exclusivas**, nunca as duas:
 com campanha, só `campanha:<id>` (como sempre); ficha solta (`campanhaId === null`, m3-28), só

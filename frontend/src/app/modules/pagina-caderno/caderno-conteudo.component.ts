@@ -36,13 +36,12 @@ import { EditorMarkdown } from '../../shared/ui/editor-markdown/editor-markdown.
 import { PaginaCadernoService } from './pagina-caderno.service';
 import { CadernoEsquadraoColaborativoService } from './caderno-esquadrao-colaborativo.service';
 import {
-  derivarTituloDeArquivo,
   normalizarMarkdownImportado,
   possuiFrontMatterYaml,
   type FalhaImportacaoMarkdown,
-} from './importar-markdown';
-
-const TAMANHO_MAXIMO_IMPORTACAO_BYTES = 1_000_000;
+  validarArquivoMarkdown,
+} from '../../shared/markdown/importar-markdown';
+import { derivarTituloDeArquivo } from './importar-markdown';
 
 type ModoCaderno = 'MEU' | 'ESQUADRAO' | 'JOGADORES';
 
@@ -326,23 +325,17 @@ export class CadernoConteudo {
     entrada.value = '';
     if (!arquivo) return;
     this.avisoImportacao.set(null);
-    if (!/\.(?:md|markdown)$/iu.test(arquivo.name)) {
-      this.definirFalhaImportacao('EXTENSAO');
-      return;
-    }
-    if (arquivo.size > TAMANHO_MAXIMO_IMPORTACAO_BYTES) {
-      this.definirFalhaImportacao('TAMANHO');
+    const falhaArquivo = validarArquivoMarkdown(arquivo, PAGINA_CADERNO_CONTEUDO_MAXIMO);
+    if (falhaArquivo) {
+      this.definirFalhaImportacao(falhaArquivo);
       return;
     }
     const texto = await arquivo.text();
     const frontMatterRemovido = possuiFrontMatterYaml(texto);
     const conteudoMarkdown = normalizarMarkdownImportado(texto);
-    if (conteudoMarkdown.length > PAGINA_CADERNO_CONTEUDO_MAXIMO) {
-      this.definirFalhaImportacao('TAMANHO');
-      return;
-    }
-    if (!conteudoMarkdown) {
-      this.definirFalhaImportacao('VAZIO');
+    const falhaConteudo = validarArquivoMarkdown(arquivo, PAGINA_CADERNO_CONTEUDO_MAXIMO, conteudoMarkdown);
+    if (falhaConteudo) {
+      this.definirFalhaImportacao(falhaConteudo);
       return;
     }
     this.store.importarPagina({

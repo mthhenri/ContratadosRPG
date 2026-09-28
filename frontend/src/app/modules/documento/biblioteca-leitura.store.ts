@@ -75,7 +75,17 @@ export class BibliotecaLeituraStore {
       .subscribe({ next: (documentos) => this.documentos.set(documentos) });
   }
 
+  /** A lista alterna entre o documento aberto e o painel vazio. */
   selecionar(id: number): void {
+    if (id === this.abertoId()) {
+      this.fecharDocumento();
+      return;
+    }
+    this.abrirDocumento(id);
+  }
+
+  /** Resultado da busca abre sem alternar a seleção atual. */
+  abrirDocumento(id: number): void {
     if (id !== this.abertoId()) {
       this.carregar(id, false);
     }

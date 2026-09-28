@@ -17,6 +17,7 @@
     vazioApoio="Crie cartas, relatórios e imagens para revelar à mesa na hora certa."
     painelVazioApoio="Escolha um documento na lista para ler, editar ou revelar à mesa."
     (selecionar)="selecionar($event)"
+    (abrir)="abrirDocumento($event)"
     (mover)="mover($event.documento, $event.deslocamento)"
     (fecharDocumento)="fecharDocumento()"
 >
@@ -107,9 +108,41 @@
                     (valorChange)="conteudoEdicao.set($event)"
                     (focadoChange)="editorFocado.set($event)"
                 />
-                <span class="biblioteca__dica">
-                    {{ conteudoEdicao().length }}/{{ conteudoMaximo }} caracteres
-                </span>
+                <div class="biblioteca__upload">
+                    <button
+                        app-botao
+                        variante="secundario"
+                        tamanho="pequeno"
+                        class="biblioteca__acao"
+                        type="button"
+                        [carregando]="importandoMarkdown()"
+                        [disabled]="salvando()"
+                        (click)="entradaMarkdown.click()"
+                    >
+                        <app-icone nome="importar" />
+                        Importar Markdown
+                    </button>
+                    <input
+                        #entradaMarkdown
+                        type="file"
+                        hidden
+                        tabindex="-1"
+                        accept=".md,.markdown,text/markdown"
+                        (change)="aoSelecionarMarkdown($event)"
+                    />
+                    <span class="biblioteca__dica">
+                        {{ conteudoEdicao().length }}/{{ conteudoMaximo }} caracteres
+                    </span>
+                </div>
+                @if (avisoImportacao(); as aviso) {
+                <p
+                    class="biblioteca__aviso-importacao"
+                    [class.biblioteca__erro]="aviso.erro"
+                    role="status"
+                >
+                    {{ aviso.texto }}
+                </p>
+                }
             </div>
             } @else {
             <div class="biblioteca__imagem-edicao">
@@ -186,7 +219,7 @@
                     class="biblioteca__acao"
                     type="button"
                     [carregando]="salvando()"
-                    [disabled]="conflito() || enviandoImagem()"
+                    [disabled]="conflito() || enviandoImagem() || importandoMarkdown()"
                     (click)="salvar()"
                 >
                     Salvar

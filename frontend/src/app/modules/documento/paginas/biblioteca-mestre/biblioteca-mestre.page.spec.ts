@@ -18,6 +18,7 @@ import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-mar
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
 import { DocumentoCriarDialog } from '../../componentes/documento-criar-dialog/documento-criar-dialog.component';
+import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca-layout.component';
 import { DocumentoService } from '../../documento.service';
 import { BibliotecaMestre } from './biblioteca-mestre.page';
 
@@ -163,6 +164,173 @@ describe('BibliotecaMestre', () => {
   function tituloEdicao(raiz: HTMLElement): HTMLInputElement {
     return painel(raiz).querySelector('input.campo__controle') as HTMLInputElement;
   }
+
+  it('segundo clique fecha e aria-pressed acompanha a seleção', async () => {
+    const contexto = montar();
+    const cartao = contexto.raiz.querySelector<HTMLButtonElement>('.documento-cartao')!;
+    expect(cartao.getAttribute('aria-pressed')).toBe('false');
+    await abrir(contexto, 'Carta do informante');
+    expect(cartao.getAttribute('aria-pressed')).toBe('true');
+    cartao.focus();
+    await abrir(contexto, 'Carta do informante');
+    expect(texto(painel(contexto.raiz))).toContain('Nenhum documento aberto.');
+    expect(cartao.getAttribute('aria-pressed')).toBe('false');
+    expect(document.activeElement).toBe(cartao);
+  });
+
+  it('segundo clique com rascunho pergunta e cancelar mantém a edição', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('rascunho');
+    contexto.confirmar.mockResolvedValue(false);
+    await abrir(contexto, 'Carta do informante');
+    expect(contexto.confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Descartar alterações?' }));
+    expect(editor(contexto.fixture)).toBeTruthy();
+    contexto.confirmar.mockResolvedValue(true);
+    await abrir(contexto, 'Carta do informante');
+    expect(texto(painel(contexto.raiz))).toContain('Nenhum documento aberto.');
+  });
+
+  it('segundo clique em edição sem mudança fecha sem perguntar', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('# Texto');
+    await abrir(contexto, 'Carta do informante');
+    expect(contexto.confirmar).not.toHaveBeenCalled();
+    expect(texto(painel(contexto.raiz))).toContain('Nenhum documento aberto.');
+  });
+
+  it('abrir pela busca o documento já aberto mantém o painel', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    const layout = contexto.fixture.debugElement.query(By.directive(BibliotecaLayout)).componentInstance as BibliotecaLayout;
+    layout.abrir.emit(1);
+    await estabilizar(contexto.fixture);
+    expect(texto(painel(contexto.raiz).querySelector('h2'))).toBe('Carta do informante');
+    expect(contexto.documentoService.recuperar).toHaveBeenCalledTimes(1);
+  });
+
+  async function importar(contexto: ReturnType<typeof montar>, nome: string, conteudo: string): Promise<HTMLInputElement> {
+    const entrada = contexto.raiz.querySelector<HTMLInputElement>('input[accept=".md,.markdown,text/markdown"]')!;
+    const arquivo = { name: nome, size: conteudo.length, text: vi.fn().mockResolvedValue(conteudo) };
+    Object.defineProperty(entrada, 'files', { configurable: true, value: [arquivo] });
+    entrada.dispatchEvent(new Event('change'));
+    await estabilizar(contexto.fixture);
+    return entrada;
+  }
+
+  it('importar com editor vazio cria rascunho sem perguntar nem salvar e conserva título', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    expect(botao(contexto.raiz, 'Importar Markdown')).toBeUndefined();
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('');
+    const entrada = await importar(contexto, 'Carta.MD', '---\ntitulo: Outro\n---\n# Importado');
+    expect(contexto.confirmar).not.toHaveBeenCalled();
+    expect(editor(contexto.fixture).valor()).toBe('# Importado\n');
+    expect(tituloEdicao(contexto.raiz).value).toBe('Carta do informante');
+    expect(contexto.documentoService.alterar).not.toHaveBeenCalled();
+    expect(texto(contexto.raiz.querySelector('[role="status"].biblioteca__aviso-importacao'))).toContain('Front matter removido. Salve para gravar.');
+    expect(entrada.value).toBe('');
+  });
+
+  it('importar com texto confirma a substituição e cancelar conserva o rascunho', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockImplementation(() => editor(contexto.fixture).valor());
+    contexto.confirmar.mockResolvedValue(false);
+    await importar(contexto, 'arquivo.md', '# Novo');
+    expect(contexto.confirmar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Substituir o conteúdo?', rotuloConfirmar: 'Substituir', rotuloCancelar: 'Cancelar' }));
+    expect(editor(contexto.fixture).valor()).toBe('# Texto');
+    contexto.confirmar.mockResolvedValue(true);
+    await importar(contexto, 'arquivo.md', '# Novo');
+    expect(editor(contexto.fixture).valor()).toBe('# Novo\n');
+    expect(contexto.documentoService.alterar).not.toHaveBeenCalled();
+    await abrir(contexto, 'Relatório');
+    expect(contexto.confirmar).toHaveBeenLastCalledWith(expect.objectContaining({ titulo: 'Descartar alterações?' }));
+    expect(contexto.raiz.querySelector('.biblioteca__aviso-importacao')).toBeNull();
+  });
+
+  it('arquivo .txt não altera o editor e mostra erro; imagem não tem botão de importar', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('# Texto');
+    await importar(contexto, 'arquivo.txt', '# Novo');
+    expect(editor(contexto.fixture).valor()).toBe('# Texto');
+    expect(texto(contexto.raiz.querySelector('.biblioteca__aviso-importacao'))).toBe('Formato inválido: envie um arquivo .md');
+    await abrir(contexto, 'Mapa do porto');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    expect(botao(contexto.raiz, 'Importar Markdown')).toBeUndefined();
+  });
+
+  it('leitura pendente não importa em outro documento nem mantém aviso', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('# Texto');
+    let concluirLeitura!: (texto: string) => void;
+    const leitura = new Promise<string>((resolve) => { concluirLeitura = resolve; });
+    const entrada = contexto.raiz.querySelector<HTMLInputElement>('input[accept=".md,.markdown,text/markdown"]')!;
+    Object.defineProperty(entrada, 'files', { value: [{ name: 'lento.md', size: 10, text: () => leitura }] });
+    entrada.dispatchEvent(new Event('change'));
+    contexto.fixture.detectChanges();
+    await abrir(contexto, 'Relatório');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    concluirLeitura('# Importação antiga');
+    await estabilizar(contexto.fixture);
+    expect(editor(contexto.fixture).valor()).toBe('# Texto');
+    expect(contexto.raiz.querySelector('.biblioteca__aviso-importacao')).toBeNull();
+    expect(contexto.confirmar).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['vazio.md', '   ', 'O arquivo não tem conteúdo'],
+    ['grande.md', 'a'.repeat(100_001), 'Arquivo maior que o limite do documento (100.000 caracteres)'],
+    ['bytes.md', 'a'.repeat(1_000_001), 'Arquivo maior que o limite do documento (100.000 caracteres)'],
+  ])('recusa %s sem mudar o texto', async (nome, conteudo, mensagem) => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('# Texto');
+    await importar(contexto, nome, conteudo);
+    expect(editor(contexto.fixture).valor()).toBe('# Texto');
+    expect(texto(contexto.raiz.querySelector('.biblioteca__aviso-importacao'))).toBe(mensagem);
+    expect(contexto.documentoService.alterar).not.toHaveBeenCalled();
+    botao(painel(contexto.raiz), 'Cancelar')!.click();
+    await estabilizar(contexto.fixture);
+    expect(contexto.raiz.querySelector('.biblioteca__aviso-importacao')).toBeNull();
+  });
+
+  it('destruir a página durante leitura não abre confirmação na próxima tela', async () => {
+    const contexto = montar();
+    await abrir(contexto, 'Carta do informante');
+    botao(painel(contexto.raiz), 'Editar')!.click();
+    await estabilizar(contexto.fixture);
+    vi.spyOn(editor(contexto.fixture), 'confirmarValor').mockReturnValue('# Texto');
+    let concluirLeitura!: (texto: string) => void;
+    const leitura = new Promise<string>((resolve) => { concluirLeitura = resolve; });
+    const entrada = contexto.raiz.querySelector<HTMLInputElement>('input[accept=".md,.markdown,text/markdown"]')!;
+    Object.defineProperty(entrada, 'files', { value: [{ name: 'lento.md', size: 10, text: () => leitura }] });
+    entrada.dispatchEvent(new Event('change'));
+    contexto.fixture.destroy();
+    concluirLeitura('# Importação antiga');
+    await leitura;
+    await Promise.resolve();
+    expect(contexto.confirmar).not.toHaveBeenCalled();
+  });
 
   // ── Lista ─────────────────────────────────────────────────────────────────
 

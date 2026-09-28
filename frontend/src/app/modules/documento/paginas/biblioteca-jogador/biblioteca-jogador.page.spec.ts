@@ -1,3 +1,4 @@
+import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -13,6 +14,7 @@ import { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '@contratados-rpg/shar
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca-layout.component';
 import { DocumentoService } from '../../documento.service';
 import { BibliotecaJogador } from './biblioteca-jogador.page';
 
@@ -120,6 +122,20 @@ describe('BibliotecaJogador', () => {
     fixture.detectChanges();
   };
   const tituloAberto = (raiz: HTMLElement) => texto(raiz.querySelector('.biblioteca__documento-titulo'));
+
+  it('lista alterna fechar e busca mantém o aberto no store de leitura', () => {
+    const { fixture, raiz, documentoService } = montar();
+    abrir(fixture, 'Carta do informante');
+    const layout = fixture.debugElement.query(By.directive(BibliotecaLayout)).componentInstance as BibliotecaLayout;
+    layout.abrir.emit(1);
+    fixture.detectChanges();
+    expect(tituloAberto(raiz)).toBe('Carta do informante');
+    expect(documentoService.recuperar).toHaveBeenCalledTimes(1);
+    abrir(fixture, 'Carta do informante');
+    expect(tituloAberto(raiz)).toBe('');
+    expect(texto(raiz)).toContain('Nenhum documento aberto.');
+    expect(raiz.querySelector('.documento-cartao')?.getAttribute('aria-pressed')).toBe('false');
+  });
 
   it('mostra o esqueleto enquanto a lista carrega', () => {
     const { raiz } = montar({ pendente: true });
