@@ -35,7 +35,8 @@ export class BibliotecaDocumentos implements TelaComRascunhoDocumento {
 
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
 
-  private readonly membros = signal<readonly CampanhaMembroResumoDto[] | null>(null);
+  /** Também desce ao mestre: os nomes da presença de leitura (m9-10), sem um segundo GET. */
+  protected readonly membros = signal<readonly CampanhaMembroResumoDto[] | null>(null);
   private readonly mestre = viewChild(BibliotecaMestre);
 
   /** O papel de quem olha, pela própria linha na lista de membros. */

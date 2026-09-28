@@ -174,6 +174,8 @@ describe('BibliotecaJogador', () => {
       expect(botoes).not.toContain(rotulo);
     }
     expect(raiz.querySelector('section[aria-label="Documento aberto"] app-chip')).toBeNull();
+    // Presença de leitura (m9-10) é só do mestre: nem chip "N lendo" nem "Lendo agora".
+    expect(raiz.querySelector('.documento-cartao__leitores, .biblioteca__leitores')).toBeNull();
   });
 
   it('REVELADO acrescenta o documento à lista sem abrir nada', () => {

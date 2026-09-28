@@ -490,6 +490,17 @@ os controles do mestre.
   segmentado em texto, nunca `innerHTML`. Estados: esqueleto, `app-estado-vazio` "Nada encontrado."
   com o termo citado, erro com "Tentar de novo", e "Carregar mais" (`app-botao` `secundario`
   `contorno` `pequeno`) enquanto houver páginas. O chip Revelado/Oculto só aparece para o mestre.
+- **Presença de leitura (`m9-10`, só o mestre):** quem está com o documento aberto agora. No cartão
+  (lista e busca), mais um `app-chip` na linha de meta, depois do chip de estado: `severidade=
+  "primario"` **`tom="contorno"`** + ícone `olho-membros` e a contagem ("1 lendo", "3 lendo") —
+  mesma cor do Revelado, mas sem fundo e com o olho + pessoa, para não ser lido como estado
+  (decisão do autor). Sem leitores, nada aparece (nunca "0 lendo"). O tooltip (`appTooltip`) lista
+  os nomes ("Ana, Bruno e Carla (espectador)"); os mesmos nomes vão escondidos (receita de texto
+  oculto da `coluna-acoes-item`) no rótulo acessível do cartão. No documento aberto, uma linha
+  própria abaixo do título e do chip de estado: rótulo "Lendo agora" no tom do rótulo do tipo (mono
+  10px caixa-alta, `--text-mute`, ícone `olho-membros`) e um `app-chip` `secundario` `contorno` por
+  nome, o espectador com "(espectador)"; some quando ninguém lê. Sem `aria-live` — presença muda o
+  tempo todo e seria ruído. Jogador e espectador não recebem o dado nem o indicador.
 
 ### Acabamento do botão (`ui-19`)
 

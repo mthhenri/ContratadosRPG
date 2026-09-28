@@ -100,6 +100,8 @@ describe('BibliotecaEspectador', () => {
     const voltar = raiz.querySelector('a[aria-label="Voltar ao Painel do espectador"]');
     expect(voltar?.getAttribute('href')).toBe(`/campanhas/${CAMPANHA_ID}/espectador`);
     expect(raiz.querySelector('.documento-cartao app-chip')).toBeNull();
+    // Presença de leitura (m9-10) é só do mestre: nem chip "N lendo" nem "Lendo agora".
+    expect(raiz.querySelector('.documento-cartao__leitores, .biblioteca__leitores')).toBeNull();
     expect(raiz.textContent).not.toContain('Novo documento');
   });
 });

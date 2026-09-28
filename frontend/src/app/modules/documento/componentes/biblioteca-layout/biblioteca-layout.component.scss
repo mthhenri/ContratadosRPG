@@ -138,6 +138,38 @@
         min-height: 0;
     }
 
+    // "Lendo agora" (m9-10): linha própria abaixo do título e do chip de estado, no tom do rótulo do
+    // tipo do cartão (mono 10px caixa-alta, `--text-mute`); os nomes em chips neutros de contorno.
+    &__leitores {
+        flex-basis: 100%;
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+    }
+
+    &__leitores-rotulo {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-mute);
+    }
+
+    &__leitores-lista {
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
     &__esqueleto-painel {
         display: flex;
         flex-direction: column;

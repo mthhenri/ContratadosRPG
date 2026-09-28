@@ -82,6 +82,17 @@
         gap: 6px 10px;
     }
 
+    // Os nomes dos leitores: só no rótulo acessível do cartão (o visível é a contagem, o tooltip
+    // mostra os nomes) — mesma receita de texto oculto de `coluna-acoes-item.component.scss`.
+    &__leitores-nomes {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
     &__rotulo-tipo {
         font-family: var(--font-mono);
         font-size: 10px;

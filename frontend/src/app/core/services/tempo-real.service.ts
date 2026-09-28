@@ -10,6 +10,7 @@ import type {
 import type { CenaAlteradaDto, CenaDocumentoAlteradoDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   DocumentoBibliotecaAlteradaDto,
+  DocumentoLeitoresDto,
   DocumentoLeituraInformarDto,
 } from '@contratados-rpg/shared/dtos/documento';
 import type {
@@ -116,6 +117,7 @@ export class TempoRealService {
   private readonly cenaAlteradaSubject = new Subject<CenaAlteradaDto>();
   private readonly cenaDocumentoAlteradoSubject = new Subject<CenaDocumentoAlteradoDto>();
   private readonly documentoAlteradoSubject = new Subject<DocumentoBibliotecaAlteradaDto>();
+  private readonly documentoLeitoresSubject = new Subject<DocumentoLeitoresDto>();
   private readonly encontroIniciativaPedidoSubject = new Subject<
     EncontroIniciativaPedidoDto & { campanhaId: number }
   >();
@@ -194,6 +196,13 @@ export class TempoRealService {
    */
   readonly documentoAlterado$: Observable<DocumentoBibliotecaAlteradaDto> =
     this.documentoAlteradoSubject.asObservable();
+  /**
+   * Quem está lendo cada documento da Biblioteca (m9-09) — o **retrato completo** da campanha, sem
+   * o mestre; só a sala `campanha:<id>:mestre` (ou o próprio socket do mestre, ao informar leitura)
+   * recebe. Quem escuta substitui o que tem, sem reconciliar (m9-10).
+   */
+  readonly documentoLeitores$: Observable<DocumentoLeitoresDto> =
+    this.documentoLeitoresSubject.asObservable();
   /**
    * O mestre pediu que os jogadores rolem a própria iniciativa (m7). Não carrega estado — é
    * uma chamada; quem escuta decide o que fazer (o painel do mestre só confirma o envio).
@@ -313,6 +322,9 @@ export class TempoRealService {
     );
     this.socket.on('documento:alterado', (evento: DocumentoBibliotecaAlteradaDto) =>
       this.documentoAlteradoSubject.next(evento),
+    );
+    this.socket.on('documento:leitores', (retrato: DocumentoLeitoresDto) =>
+      this.documentoLeitoresSubject.next(retrato),
     );
     this.socket.on(
       'encontro:iniciativa-pedido',

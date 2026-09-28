@@ -12,6 +12,11 @@ import { Botao } from '../../../../shared/ui/botao/botao.component';
 import { Campo } from '../../../../shared/ui/campo/campo.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import {
+  NENHUM_LEITOR,
+  leitoresDoDocumento,
+  type DocumentoLeitoresPorDocumento,
+} from '../../documento-leitores';
 import { DocumentoService } from '../../documento.service';
 import { segmentarTrecho, type SegmentoTrecho } from '../../trecho-destacado';
 import { DocumentoCartao } from '../documento-cartao/documento-cartao.component';
@@ -61,6 +66,8 @@ export class BuscaDocumentos {
   readonly campanhaId = input.required<number>();
   /** Chip Revelado/Oculto nos resultados — só o mestre (para a mesa é sempre revelado). */
   readonly mostrarEstado = input(false);
+  /** Quem está lendo cada documento (m9-10) — só o mestre; o mesmo chip do cartão da lista. */
+  readonly leitoresPorDocumento = input<DocumentoLeitoresPorDocumento>(NENHUM_LEITOR);
   /** O documento aberto na página, para marcar o resultado correspondente. */
   readonly abertoId = input<number | null>(null);
 
@@ -71,6 +78,7 @@ export class BuscaDocumentos {
   readonly totalChange = output<number | null>();
 
   protected readonly termoMaximo = BUSCA_CAMPANHA_TERMO_MAXIMO;
+  protected readonly leitoresDoDocumento = leitoresDoDocumento;
   protected readonly termo = new FormControl('', { nonNullable: true });
 
   /** O termo como está no campo agora (sem esperar o debounce) — decide se a busca está ativa. */

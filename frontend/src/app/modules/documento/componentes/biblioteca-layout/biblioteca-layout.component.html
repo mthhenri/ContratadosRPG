@@ -37,6 +37,7 @@
                     <app-busca-documentos
                         [campanhaId]="campanhaId()"
                         [mostrarEstado]="mostrarEstado()"
+                        [leitoresPorDocumento]="leitoresPorDocumento()"
                         [abertoId]="abertoId()"
                         (selecionar)="abrir.emit($event)"
                         (ativaChange)="buscaAtiva.set($event)"
@@ -49,6 +50,7 @@
                         [carregando]="carregandoLista()"
                         [abertoId]="abertoId()"
                         [mostrarEstado]="mostrarEstado()"
+                        [leitoresPorDocumento]="leitoresPorDocumento()"
                         [ordenavel]="ordenavel()"
                         [bloqueado]="bloqueado()"
                         [vazioTitulo]="vazioTitulo()"
@@ -107,6 +109,34 @@
                                                 <app-icone nome="olho-fechado" /> Oculto
                                             </app-chip>
                                         }
+                                    }
+                                    @if (leitoresAberto().length > 0) {
+                                        <!-- m9-10: quem está lendo agora (só o mestre recebe).
+                                             Sem `aria-live`: presença muda o tempo todo. -->
+                                        <div class="biblioteca__leitores">
+                                            <span class="biblioteca__leitores-rotulo">
+                                                <app-icone nome="olho-membros" />
+                                                Lendo agora
+                                            </span>
+                                            <ul class="biblioteca__leitores-lista">
+                                                @for (
+                                                    leitor of leitoresAberto();
+                                                    track leitor.usuarioId
+                                                ) {
+                                                    <li>
+                                                        <app-chip
+                                                            severidade="secundario"
+                                                            tom="contorno"
+                                                        >
+                                                            {{ leitor.nome }}
+                                                            @if (leitor.espectador) {
+                                                                (espectador)
+                                                            }
+                                                        </app-chip>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
                                     }
                                 </div>
                                 <ng-content select="[bibliotecaAcoesDocumento]" />

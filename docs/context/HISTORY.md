@@ -1,5 +1,67 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — m9-10: presença de leitura na Biblioteca do mestre (chip "N lendo" e "Lendo agora")
+
+O mestre passa a ver, ao vivo, quem está com cada documento aberto — consumindo o
+`documento:leitores` da `m9-09`.
+
+**Decisão do autor (pedida pela spec):** o chip de leitores não podia confundir com o Revelado
+(`primario` + `olho`). O `app-chip` só tem quatro severidades e dois tons; foram apresentadas as
+opções e o autor escolheu `primario` **`tom="contorno"`** + o glifo existente `olho-membros` (olho
++ pessoa) — mesma cor do Revelado, sem fundo e com outro ícone. Nenhum glifo novo.
+
+**Estado:** a página do mestre já passa de 650 linhas, então a presença foi extraída para a
+`BibliotecaLeitoresStore` (provida pela `BibliotecaMestre`, morre com ela). Ela absorveu o
+`informarLeitura(null)` da montagem e da `reconexao$` que a `m9-09` deixara na página (é isso que
+entrega o retrato), escuta o novo `TempoRealService.documentoLeitores$` filtrado pela campanha e
+substitui o retrato a cada evento. `leitoresPorDocumento` é um `computed` que resolve nomes pela lista
+de membros que a casca `BibliotecaDocumentos` já carrega para decidir o papel — passada à página
+pelo novo input `membros`, sem GET novo. `usuarioId` desconhecido mostra "Membro" e recarrega
+`listarMembros` **uma vez por id** (sem laço se continuar desconhecido; um retrato que chega durante
+a recarga é reconferido ao fim). O mestre é filtrado também no cliente, por defesa. Os tipos de
+apresentação (`DocumentoLeitorNomeado`, o mapa, `descreverLeitores` com `Intl.ListFormat` pt-BR)
+ficam em `documento-leitores.ts`, para cartão/lista/busca/layout não dependerem da store.
+
+**Tela:** o mapa desce pelo `BibliotecaLayout` (novo input `leitoresPorDocumento`, vazio por
+padrão — jogador e espectador nunca recebem outro) à `ListaDocumentos`, à `BuscaDocumentos` (coube na
+mesma linha de meta, sem mudar a densidade) e ao `DocumentoCartao` (input `leitores`). O chip mostra
+"N lendo"; o tooltip lista os nomes; os mesmos nomes vão num texto oculto dentro do chip, para
+entrar no nome acessível do cartão. No painel, "Lendo agora" é uma linha própria (`flex-basis: 100%`)
+na identidade do cabeçalho, com um chip `secundario` `contorno` por nome e "(espectador)" quando é
+o caso. Nada em `aria-live`. `DESIGN.md` ("Biblioteca de documentos") registra os dois.
+
+**Análogo registrado:** o chip Revelado/Oculto do `app-documento-cartao` (mesmo primitivo, mesma
+linha de meta) e o cabeçalho do documento aberto do `BibliotecaLayout`.
+
+**Testes:** frontend 2500/2500 (175 arquivos), com `biblioteca-leitores.store.spec.ts` novo
+(agrupamento e ordem dos nomes, mestre fora, espectador identificado e descrito, retrato substituído
+e vazio, outra campanha ignorada, desconhecido → "Membro" + uma recarga, id que continua
+desconhecido não recarrega, conhecido não recarrega, informa na abertura e na reconexão), casos na
+`biblioteca-mestre.page.spec.ts` (chip e rótulo acessível, "Lendo agora", vazio some com chip e
+linha, reconexão reinforma e o retrato novo substitui), na casca (membros descem ao mestre), nas
+páginas do jogador e do espectador (sem indicador) e no `tempo-real.service.spec.ts` (repasse de
+`documento:leitores`). Numa primeira rodada da suíte completa, `campanha-detalhe-dados.service.spec.ts`
+("reconexao$ traz uma rolagem feita durante a queda") falhou uma vez e passou isolado e na
+re-execução completa — intermitência fora do módulo tocado. `eslint` do frontend: 0 erros (só os
+avisos de estilo preexistentes).
+
+**Verificação ao vivo (`verify`):** stack real, três sessões Chromium (mestre, jogador, espectador
+pelo convite próprio), mestre em `1920×1080`, `960×1080` e `360×800`: sem indicador ao abrir (nunca
+"0"); jogador abre um revelado → "1 lendo" na hora, tooltip "Ana Jogadora"; espectador abre o mesmo
+→ "2 lendo", espectador identificado; mestre abre → "Lendo agora" com os dois; jogador fecha pelo
+segundo clique (`m9-07`) → "1 lendo"; troca para o título longo → o chip acompanha; o chip aparece no
+resultado da busca; fechar a aba do jogador → sai; mestre oculta o documento do espectador → some;
+jogador e espectador sem indicador nenhum. Sem overflow horizontal nos três viewports (lista com
+título de 109 caracteres + chip de estado + chip de leitores, documento aberto, busca); no `360×800`
+cartões de 77–121px e foco visível. **Reconexão:** backend encerrado de verdade (PID da 3100) e
+subido pelo `nest --watch` (linha de comentário em `main.ts`, restaurado e conferido por `diff`);
+uma página **nova** do mestre, aberta depois da volta, viu o espectador em "1 lendo" — só possível
+porque o espectador reinformou na reconexão —, e a página antiga seguiu recebendo retratos. Achado
+só no roteiro: derrubado o backend, abrir um documento na mesa falha no GET e a store da mesa fecha o
+painel (comportamento da `m9-05`), então "trocar de documento durante a queda" não serve como prova;
+a página nova do mestre serviu. Comparação visual: o chip de leitores tem a mesma caixa e tipografia
+do Revelado/Oculto e se distingue pelo tom e pelo ícone; "Lendo agora" repete o tom do rótulo do tipo.
+
 ## 2026-09-28 — m9-09: presença de leitura da Biblioteca (contrato, backend e envio do cliente)
 
 O mestre passa a poder saber, ao vivo, quem está com cada documento aberto. Esta task entrega o

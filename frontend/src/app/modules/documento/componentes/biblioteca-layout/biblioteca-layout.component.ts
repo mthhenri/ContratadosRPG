@@ -12,6 +12,11 @@ import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.compon
 import { Chip } from '../../../../shared/ui/chip/chip.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import {
+  NENHUM_LEITOR,
+  leitoresDoDocumento,
+  type DocumentoLeitoresPorDocumento,
+} from '../../documento-leitores';
 import { iconeTipoDocumento } from '../../documento-tipo';
 import { BuscaDocumentos } from '../busca-documentos/busca-documentos.component';
 import { LeitorDocumento } from '../leitor-documento/leitor-documento.component';
@@ -65,6 +70,11 @@ export class BibliotecaLayout {
 
   /** Chip Revelado/Oculto na lista, na busca e no documento aberto — só o mestre. */
   readonly mostrarEstado = input(false);
+  /**
+   * Quem está lendo cada documento (m9-10) — chip "N lendo" na lista e na busca, "Lendo agora" no
+   * documento aberto. Só o mestre passa; a mesa fica com o mapa vazio e nada aparece.
+   */
+  readonly leitoresPorDocumento = input<DocumentoLeitoresPorDocumento>(NENHUM_LEITOR);
   /** Setas de ordem na lista — só o mestre. */
   readonly ordenavel = input(false);
   readonly bloqueado = input(false);
@@ -84,6 +94,10 @@ export class BibliotecaLayout {
   protected readonly totalBusca = signal<number | null>(null);
 
   protected readonly iconeTipo = iconeTipoDocumento;
+
+  protected readonly leitoresAberto = computed(() =>
+    leitoresDoDocumento(this.leitoresPorDocumento(), this.abertoId()),
+  );
 
   /** A busca só some com a biblioteca carregada e vazia — buscar no nada não ajuda ninguém. */
   protected readonly mostrarBusca = computed(

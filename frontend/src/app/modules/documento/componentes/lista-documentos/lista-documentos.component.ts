@@ -6,6 +6,11 @@ import { Icone } from '../../../../shared/icone/icone.component';
 import { BotaoIcone } from '../../../../shared/ui/botao-icone/botao-icone.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import {
+  NENHUM_LEITOR,
+  leitoresDoDocumento,
+  type DocumentoLeitoresPorDocumento,
+} from '../../documento-leitores';
 import { DocumentoCartao } from '../documento-cartao/documento-cartao.component';
 
 /** Pedido de troca de posição de um documento — `-1` sobe, `+1` desce. */
@@ -32,6 +37,8 @@ export class ListaDocumentos {
   readonly abertoId = input<number | null>(null);
   /** Chip Revelado/Oculto em cada cartão — só o mestre. */
   readonly mostrarEstado = input(false);
+  /** Quem está lendo cada documento (m9-10) — só o mestre recebe; a mesa fica com o vazio. */
+  readonly leitoresPorDocumento = input<DocumentoLeitoresPorDocumento>(NENHUM_LEITOR);
   /** Setas de ordem — só o mestre. */
   readonly ordenavel = input(false);
   /** Setas travadas (escrita em voo, edição aberta). */
@@ -41,4 +48,6 @@ export class ListaDocumentos {
 
   readonly selecionar = output<number>();
   readonly mover = output<DocumentoMovimento>();
+
+  protected readonly leitoresDoDocumento = leitoresDoDocumento;
 }

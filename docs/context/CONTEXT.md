@@ -778,10 +778,11 @@ abrir o painel — ver cabeçalho deste arquivo). Specs todas em `done/`; nenhum
 guarda-chuva. Fontes: [requests-correcoes](../specs/done/requests-correcoes.spec.md).
 
 **Biblioteca — melhorias (2026-09-28):** `m9-07` (segundo clique fecha), `m9-08` (importar
-Markdown como rascunho) e `m9-09` (presença de leitura — contrato, backend e envio do cliente;
+Markdown como rascunho), `m9-09` (presença de leitura — contrato, backend e envio do cliente;
 `documento:leitura`/`documento:leitores` gravados na §9 do `SYSTEM.SPEC.md` com aprovação do autor)
-concluídas, specs em `done/`. Próxima da série: `m9-10` (presença — tela do mestre, consome `documento:leitores`); a
-`m9-11` (Biblioteca em painel flutuante) segue no backlog. Antes:
+e `m9-10` (presença na tela do mestre — chip "N lendo" no cartão e "Lendo agora" no documento
+aberto) concluídas, specs em `done/`. Resta a `m9-11` (Biblioteca em painel flutuante), no backlog.
+Antes:
 
 **Módulo de Cenas — 5/6, falta só `m7-26` (passe responsivo dedicado do módulo inteiro).**
 `m7-21` (contrato + schema), `m7-22` (backend + tempo real), `m7-23` (hub + "Nova cena" tipada),
@@ -2838,9 +2839,16 @@ para `campanha:<id>:mestre` — quando muda; um socket do mestre que informa rec
 direto. Limpeza: `handleDisconnect`, `campanha:sair`, `recalibrarSalasCampanhaUsuario` (papel
 alterado ou acesso revogado tira o usuário da campanha) e ocultar/remover (a `DocumentoService` tira
 os leitores não-mestre do documento). No cliente, `TempoRealService.informarLeitura`; a
-`BibliotecaLeituraStore` informa ao abrir/trocar, fechar, destruir e em cada `reconexao$`; a página
-do mestre informa `null` ao montar e em cada `reconexao$` só para receber o retrato. Nada exibe a
-presença ainda — a tela é da `m9-10`.
+`BibliotecaLeituraStore` informa ao abrir/trocar, fechar, destruir e em cada `reconexao$`.
+
+**Presença na tela do mestre (`m9-10`):** `BibliotecaLeitoresStore` (provida pela
+`BibliotecaMestre`, extraída para não inchar a página) informa `null` ao montar e em cada
+`reconexao$` — é o que entrega o retrato — e substitui o retrato a cada `documento:leitores`
+(`TempoRealService.documentoLeitores$`), filtrado pela campanha. Os nomes vêm dos membros que a
+casca `BibliotecaDocumentos` já carregou (input `membros` da página, sem GET novo); `usuarioId`
+desconhecido aparece como "Membro" e recarrega `listarMembros` uma vez por id. O mapa
+`documentoId → leitores` (`documento-leitores.ts`, tipos de apresentação) desce pelo
+`BibliotecaLayout` à lista, à busca e ao painel; jogador e espectador ficam com o mapa vazio.
 
 **Importar Markdown (`m9-08`):** na edição de TEXTO, o mestre lê .md/.markdown localmente,
 confirma substituir quando há texto e mantém o título. Conteúdo normalizado é rascunho até Salvar;

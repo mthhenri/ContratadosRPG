@@ -1,10 +1,11 @@
-import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, Subject, filter, finalize, merge, switchMap, tap } from 'rxjs';
 
+import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   DocumentoBibliotecaAlteradaDto,
   DocumentoCriadoDto,
@@ -30,6 +31,7 @@ import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmaca
 import { EditorMarkdown } from '../../../../shared/ui/editor-markdown/editor-markdown.component';
 import { NotificacaoService } from '../../../../shared/ui/notificacao/notificacao.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { BibliotecaLeitoresStore } from '../../biblioteca-leitores.store';
 import { BibliotecaLayout } from '../../componentes/biblioteca-layout/biblioteca-layout.component';
 import { DocumentoCriarDialog } from '../../componentes/documento-criar-dialog/documento-criar-dialog.component';
 import { LeitorDocumento } from '../../componentes/leitor-documento/leitor-documento.component';
@@ -58,6 +60,10 @@ const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 *
  * **Tempo real:** todo `documento:alterado` da campanha (e a reconexão) refaz a lista. Se a versão
  * do documento aberto mudou e não há edição em curso, ele é recarregado; um `REMOVIDO` do aberto
  * fecha o painel com aviso.
+ *
+ * **Presença de leitura (m9-10):** quem está lendo cada documento vem da `BibliotecaLeitoresStore`
+ * (provida aqui, extraída para não inchar a página) e desce ao layout: chip no cartão e "Lendo agora"
+ * no documento aberto. Os nomes saem da lista de membros que a casca já carregou (`membros`).
  */
 @Component({
   selector: 'app-biblioteca-mestre',
@@ -73,6 +79,7 @@ const TAMANHO_MAXIMO_IMAGEM_MB = DOCUMENTO_IMAGEM_TAMANHO_MAXIMO_BYTES / (1024 *
   ],
   templateUrl: './biblioteca-mestre.page.html',
   styleUrl: './biblioteca-mestre.page.scss',
+  providers: [BibliotecaLeitoresStore],
   host: {
     '(window:beforeunload)': 'avisarRascunhoAoFechar($event)',
   },
@@ -86,6 +93,10 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   private readonly notificacaoService = inject(NotificacaoService);
   private readonly rotaAtiva = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly leitoresStore = inject(BibliotecaLeitoresStore);
+
+  /** Os membros que a casca já carregou para decidir o papel — nomes da presença de leitura. */
+  readonly membros = input<readonly CampanhaMembroResumoDto[]>([]);
 
   protected readonly campanhaId = Number(this.rotaAtiva.snapshot.paramMap.get('campanhaId'));
 
@@ -95,6 +106,7 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
   protected readonly tamanhoMaximoImagemMb = TAMANHO_MAXIMO_IMAGEM_MB;
 
   protected readonly documentos = signal<readonly DocumentoResumoDto[]>([]);
+  protected readonly leitoresPorDocumento = this.leitoresStore.leitoresPorDocumento;
   protected readonly carregandoLista = signal(true);
   protected readonly campanhaNome = signal('');
   /** Uma escrita em voo — trava os controles para não repetir a mutação. */
@@ -176,13 +188,8 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
       this.tempoRealService.sairSalaCampanha(this.campanhaId);
     });
 
-    // Presença de leitura (m9-09): o mestre fica fora do retrato, mas informar é o que lhe entrega
-    // o retrato atual — na abertura e a cada reconexão (`reconexao$`, P-083), quando o backend
-    // perdeu o estado. O que ele lê não importa ao retrato; a exibição é da `m9-10`.
-    this.tempoRealService.informarLeitura(this.campanhaId, null);
-    this.tempoRealService.reconexao$
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => this.tempoRealService.informarLeitura(this.campanhaId, null));
+    // Presença de leitura (m9-09/m9-10): informar na abertura e em cada reconexão, e o retrato.
+    this.leitoresStore.iniciar(this.campanhaId, this.membros);
 
     merge(
       this.recarregar$,

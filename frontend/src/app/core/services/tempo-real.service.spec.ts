@@ -380,6 +380,20 @@ describe('TempoRealService', () => {
     expect(recebidos).toEqual([evento]);
   });
 
+  it('repassa o retrato de leitores da Biblioteca (m9-10) tal como chegou', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.documentoLeitores$.subscribe((retrato) => recebidos.push(retrato));
+
+    const retrato = {
+      campanhaId: 9,
+      leitores: [{ documentoId: 70, usuarioId: 2, papel: 'JOGADOR' }],
+    };
+    socketFake.disparar('documento:leitores', retrato);
+    expect(recebidos).toEqual([retrato]);
+  });
+
   it('repassa a coluna Documentos alterada (m7-25) dataless, tal como chegou', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();

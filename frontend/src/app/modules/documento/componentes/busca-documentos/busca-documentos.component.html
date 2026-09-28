@@ -57,6 +57,7 @@
                 [titulo]="item.resultado.titulo"
                 [tipo]="item.resultado.tipo"
                 [revelado]="mostrarEstado() ? item.resultado.revelado : null"
+                [leitores]="leitoresDoDocumento(leitoresPorDocumento(), item.resultado.id)"
                 [aberto]="abertoId() === item.resultado.id"
                 (click)="selecionar.emit(item.resultado.id)"
             >

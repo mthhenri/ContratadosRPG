@@ -13,7 +13,7 @@
     </div>
 </div>
 } @else if (ehMestre()) {
-<app-biblioteca-mestre />
+<app-biblioteca-mestre [membros]="membros() ?? []" />
 } @else if (ehJogador()) {
 <app-biblioteca-jogador />
 }

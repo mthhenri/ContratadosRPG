@@ -8,6 +8,21 @@
         } @else if (revelado() === false) {
         <app-chip severidade="secundario"><app-icone nome="olho-fechado" /> Oculto</app-chip>
         }
+        @if (leitores().length > 0) {
+        <!-- Presença de leitura (m9-10, só o mestre): a contagem é o texto visível; os nomes vão
+             no tooltip e, escondidos, no rótulo acessível do cartão. Sem `aria-live` — seria ruído. -->
+        <app-chip
+            class="documento-cartao__leitores"
+            severidade="primario"
+            tom="contorno"
+            [appTooltip]="descricaoLeitores()"
+        >
+            <app-icone nome="olho-membros" /> {{ leitores().length }} lendo<span
+                class="documento-cartao__leitores-nomes"
+                >: {{ descricaoLeitores() }}</span
+            >
+        </app-chip>
+        }
     </span>
     <ng-content />
 </span>

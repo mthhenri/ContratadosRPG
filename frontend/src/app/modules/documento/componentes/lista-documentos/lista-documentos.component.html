@@ -16,7 +16,7 @@
 <ol class="lista-documentos__itens">
     @for (documento of documentos(); track documento.id; let primeiro = $first; let ultimo = $last) {
     <li class="lista-documentos__item">
-        <!-- O conteúdo do botão (ícone, título, tipo, chip) é o template do próprio
+        <!-- O conteúdo do botão (ícone, título, tipo, chips) é o template do próprio
              `app-documento-cartao`; a regra não enxerga através do componente de atributo. -->
         <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
         <button
@@ -24,6 +24,7 @@
             [titulo]="documento.titulo"
             [tipo]="documento.tipo"
             [revelado]="mostrarEstado() ? documento.revelado : null"
+            [leitores]="leitoresDoDocumento(leitoresPorDocumento(), documento.id)"
             [aberto]="abertoId() === documento.id"
             (click)="selecionar.emit(documento.id)"
         ></button>

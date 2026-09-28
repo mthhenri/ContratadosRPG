@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
@@ -13,7 +14,9 @@ import { BibliotecaDocumentos } from './biblioteca-documentos.page';
 
 /** Dublês das páginas — a casca só decide **qual** aparece. */
 @Component({ selector: 'app-biblioteca-mestre', template: '' })
-class BibliotecaMestreDuble {}
+class BibliotecaMestreDuble {
+  readonly membros = input<readonly CampanhaMembroResumoDto[]>([]);
+}
 
 @Component({ selector: 'app-biblioteca-jogador', template: '' })
 class BibliotecaJogadorDuble {}
@@ -62,10 +65,12 @@ describe('BibliotecaDocumentos', () => {
     expect(raiz.querySelector('app-biblioteca-mestre')).toBeNull();
   });
 
-  it('o mestre vê a página do mestre', () => {
-    const { raiz, navegar } = montar(MESTRE);
+  it('o mestre vê a página do mestre, com os membros já carregados (m9-10, sem GET novo)', () => {
+    const { fixture, raiz, navegar } = montar(MESTRE);
     expect(raiz.querySelector('app-biblioteca-mestre')).not.toBeNull();
     expect(navegar).not.toHaveBeenCalled();
+    const mestre = fixture.debugElement.query(By.directive(BibliotecaMestreDuble));
+    expect((mestre.componentInstance as BibliotecaMestreDuble).membros()).toEqual(membros);
   });
 
   it('o jogador vê a página do jogador, não a do mestre', () => {

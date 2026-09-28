@@ -5,12 +5,18 @@ import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 
+import type { CampanhaMembroResumoDto } from '@contratados-rpg/shared/dtos/campanha';
 import type {
   DocumentoBibliotecaAlteradaDto,
+  DocumentoLeitoresDto,
   DocumentoRecuperadoDto,
   DocumentoResumoDto,
 } from '@contratados-rpg/shared/dtos/documento';
-import { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '@contratados-rpg/shared/enums';
+import {
+  DocumentoAlteracaoEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoDocumentoEnum,
+} from '@contratados-rpg/shared/enums';
 
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
@@ -64,11 +70,13 @@ describe('BibliotecaMestre', () => {
   interface Opcoes {
     readonly documentos?: readonly DocumentoResumoDto[];
     readonly listagemPendente?: boolean;
+    readonly membros?: readonly CampanhaMembroResumoDto[];
   }
 
   function montar(opcoes: Opcoes = {}) {
-    const { documentos = [carta, mapa, relatorio], listagemPendente = false } = opcoes;
+    const { documentos = [carta, mapa, relatorio], listagemPendente = false, membros = [] } = opcoes;
     const documentoAlterado$ = new Subject<DocumentoBibliotecaAlteradaDto>();
+    const documentoLeitores$ = new Subject<DocumentoLeitoresDto>();
     const listagem$ = new Subject<DocumentoResumoDto[]>();
     const lista = [...documentos];
     const documentoService = {
@@ -93,6 +101,7 @@ describe('BibliotecaMestre', () => {
       reconexao: signal(0),
       reconexao$: reconexao$.asObservable(),
       documentoAlterado$,
+      documentoLeitores$,
     };
     TestBed.configureTestingModule({
       providers: [
@@ -102,6 +111,7 @@ describe('BibliotecaMestre', () => {
           provide: CampanhaService,
           useValue: {
             recuperarCampanha: vi.fn(() => of({ id: CAMPANHA_ID, nome: 'Campanha de Teste' })),
+            listarMembros: vi.fn(() => of([...membros])),
           },
         },
         { provide: TempoRealService, useValue: tempoReal },
@@ -118,6 +128,7 @@ describe('BibliotecaMestre', () => {
       .mockResolvedValue(true);
     const notificar = vi.spyOn(TestBed.inject(NotificacaoService), 'notificar');
     const fixture = TestBed.createComponent(BibliotecaMestre);
+    fixture.componentRef.setInput('membros', membros);
     fixture.detectChanges();
     const raiz = fixture.nativeElement as HTMLElement;
     return {
@@ -127,6 +138,7 @@ describe('BibliotecaMestre', () => {
       documentoService,
       tempoReal,
       documentoAlterado$,
+      documentoLeitores$,
       listagem$,
       confirmar,
       notificar,
@@ -405,6 +417,103 @@ describe('BibliotecaMestre', () => {
   it('abrir a biblioteca depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
     const { documentoService } = montar();
     expect(documentoService.listar).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Presença de leitura (m9-10) ───────────────────────────────────────────
+
+  describe('presença de leitura (m9-10)', () => {
+    const { MESTRE, JOGADOR, ESPECTADOR } = TipoCampanhaMembroPapelEnum;
+    const membros: CampanhaMembroResumoDto[] = [
+      { usuarioId: 1, nome: 'Mestra', papel: MESTRE, fichas: [] },
+      { usuarioId: 2, nome: 'Bruno', papel: JOGADOR, fichas: [] },
+      { usuarioId: 3, nome: 'Ana', papel: JOGADOR, fichas: [] },
+      { usuarioId: 4, nome: 'Carla', papel: ESPECTADOR, fichas: [] },
+    ];
+    const cartaoDe = (raiz: HTMLElement, titulo: string) =>
+      Array.from(raiz.querySelectorAll<HTMLButtonElement>('.documento-cartao')).find(
+        (item) => texto(item.querySelector('.documento-cartao__nome')) === titulo,
+      )!;
+    const chipLeitores = (raiz: HTMLElement, titulo: string) =>
+      cartaoDe(raiz, titulo).querySelector('.documento-cartao__leitores');
+
+    it('informa leitura ao abrir a página, para receber o retrato', () => {
+      const { tempoReal } = montar({ membros });
+      expect(tempoReal.informarLeitura).toHaveBeenCalledWith(CAMPANHA_ID, null);
+    });
+
+    it('o retrato vira o chip "N lendo" no cartão, com os nomes no rótulo acessível', () => {
+      const { fixture, raiz, documentoLeitores$ } = montar({ membros });
+      expect(raiz.querySelector('.documento-cartao__leitores')).toBeNull();
+
+      documentoLeitores$.next({
+        campanhaId: CAMPANHA_ID,
+        leitores: [
+          { documentoId: carta.id, usuarioId: 2, papel: JOGADOR },
+          { documentoId: carta.id, usuarioId: 4, papel: ESPECTADOR },
+        ],
+      });
+      fixture.detectChanges();
+
+      const chip = chipLeitores(raiz, 'Carta do informante');
+      expect(texto(chip?.querySelector('.chip'))).toBe('2 lendo: Bruno e Carla (espectador)');
+      expect(texto(chip?.querySelector('.documento-cartao__leitores-nomes'))).toBe(
+        ': Bruno e Carla (espectador)',
+      );
+      expect(texto(cartaoDe(raiz, 'Carta do informante'))).toContain('2 lendo');
+      expect(chipLeitores(raiz, 'Mapa do porto')).toBeNull();
+    });
+
+    it('o documento aberto mostra "Lendo agora" com os nomes; o vazio some com chip e linha', async () => {
+      const contexto = montar({ membros });
+      const { fixture, raiz, documentoLeitores$ } = contexto;
+      await abrir(contexto, 'Carta do informante');
+      expect(painel(raiz).querySelector('.biblioteca__leitores')).toBeNull();
+
+      documentoLeitores$.next({
+        campanhaId: CAMPANHA_ID,
+        leitores: [
+          { documentoId: carta.id, usuarioId: 3, papel: JOGADOR },
+          { documentoId: carta.id, usuarioId: 4, papel: ESPECTADOR },
+        ],
+      });
+      fixture.detectChanges();
+
+      const linha = painel(raiz).querySelector('.biblioteca__leitores');
+      expect(texto(linha?.querySelector('.biblioteca__leitores-rotulo'))).toBe('Lendo agora');
+      expect(Array.from(linha?.querySelectorAll('app-chip') ?? []).map(texto)).toEqual([
+        'Ana',
+        'Carla (espectador)',
+      ]);
+      expect(raiz.querySelector('[aria-live] .biblioteca__leitores')).toBeNull();
+
+      documentoLeitores$.next({ campanhaId: CAMPANHA_ID, leitores: [] });
+      fixture.detectChanges();
+      expect(painel(raiz).querySelector('.biblioteca__leitores')).toBeNull();
+      expect(raiz.querySelector('.documento-cartao__leitores')).toBeNull();
+    });
+
+    it('reconexão informa de novo e o retrato fresco substitui o antigo', () => {
+      const { fixture, raiz, tempoReal, reconexao$, documentoLeitores$ } = montar({ membros });
+      documentoLeitores$.next({
+        campanhaId: CAMPANHA_ID,
+        leitores: [{ documentoId: carta.id, usuarioId: 2, papel: JOGADOR }],
+      });
+      fixture.detectChanges();
+      tempoReal.informarLeitura.mockClear();
+
+      reconexao$.next();
+      expect(tempoReal.informarLeitura).toHaveBeenCalledWith(CAMPANHA_ID, null);
+
+      documentoLeitores$.next({
+        campanhaId: CAMPANHA_ID,
+        leitores: [{ documentoId: mapa.id, usuarioId: 3, papel: JOGADOR }],
+      });
+      fixture.detectChanges();
+      expect(chipLeitores(raiz, 'Carta do informante')).toBeNull();
+      expect(texto(chipLeitores(raiz, 'Mapa do porto')?.querySelector('.chip'))).toBe(
+        '1 lendo: Ana',
+      );
+    });
   });
 
   // ── Documento aberto ──────────────────────────────────────────────────────
