@@ -1,5 +1,28 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — Specs de melhoria da Biblioteca (m9-07 a m9-10), sem código
+
+Pedido do autor com três melhorias na Biblioteca de documentos, escritas como quatro specs avulsas
+pós-M9 em `docs/specs/backlog/`:
+
+- `m9-07-biblioteca-desselecionar-documento`: segundo clique no cartão aberto fecha o documento
+  (mestre, jogador e espectador); a decisão é da página/store, o cartão só emite; com rascunho sujo
+  pergunta o descarte; resultado de busca não alterna; `aria-current` vira `aria-pressed`.
+- `m9-08-documento-importar-markdown`: "Importar Markdown" na edição de documento `TEXTO`, lido no
+  navegador (sem upload), substituindo o conteúdo com confirmação e ficando como rascunho até o
+  Salvar. Reaproveita a normalização de `caderno-importar-markdown`, movida para um lugar comum do
+  frontend com o limite recebido por parâmetro.
+- `m9-09-backend-presenca-leitura-documento` + `m9-10-frontend-presenca-leitura-documento`: quem
+  está com cada documento aberto. O modelo de retransmissão do Caderno do Esquadrão (P-039) foi
+  descartado de propósito — não dá retrato a quem chega depois e, emitido na sala comum, vazaria o
+  documento oculto que o mestre lê. Estado em memória numa service do módulo `documento`, retrato
+  completo emitido só em `campanha:<id>:mestre`, limpeza em desconexão/saída/revogação/ocultar. A
+  `m9-09` propõe acrescentar os dois eventos ao §9 do `SYSTEM.SPEC.md`, a apresentar ao autor antes.
+
+Decisões assumidas e marcadas para confirmação nas próprias specs: busca não alterna; importar
+substitui (não cria nem acrescenta) e não salva sozinho; só o mestre vê os leitores; espectadores
+entram no retrato. Nenhum código alterado.
+
 ## 2026-09-28 — p-084: ressincronização de recursos após reconexão (P-084 fechado)
 
 Terceira das 6 tasks de `requests-correcoes`. Corrige a lacuna que a `p-083` deixou de propósito
