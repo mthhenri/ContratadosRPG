@@ -1,14 +1,9 @@
 # CONTEXT.md — Painel do Projeto
 
-> **Requests — pendências abertas:** revisão estática identificou `P-082`…`P-086`, incluindo
-> risco de troca de destino do autosave ao selecionar outra ficha, cargas duplicadas e
-> ressincronização incompleta. [Evidências e limites](../reviews/requests-2026-09-26.md).
-> Reprodução no Chromium confirmou os cinco achados com mestre/jogador: inclusive PUT aceito
-> na ficha errada e dados antigos após reconexão. Carga inicial verificada em desktop/mobile.
-> Cenário isolado excluído; contas de teste mantidas conforme autorizado. Correções especificadas
-> em seis tasks no backlog, ordenadas em [requests-correcoes](../specs/backlog/requests-correcoes.spec.md).
-> `p-082`…`p-086` (5/6) **concluídas** (specs em `done/`) — `P-082`…`P-086` fechados em
-> `PROBLEMS.md`. Resta o inventário sob demanda (task 6, `requests-inventario-sob-demanda`).
+> **Requests — revisão de 2026-09-26 fechada:** as seis tasks do guarda-chuva
+> [requests-correcoes](../specs/done/requests-correcoes.spec.md) (`p-082`…`p-086` +
+> `requests-inventario-sob-demanda`) estão concluídas, specs em `done/`; `P-082`…`P-086` fechados
+> em `PROBLEMS.md`. [Evidências e limites da revisão original](../reviews/requests-2026-09-26.md).
 
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
@@ -20,7 +15,29 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-28 · **Última decisão registrada:**
-> `p-086-estado-campanha-sem-refetch` concluída (spec em `done/`, `P-086` fechado em
+> `requests-inventario-sob-demanda` concluída (spec em `done/`) — **`requests-correcoes` fechado,
+> 6/6**: o inventário de esquadrão saiu da carga inicial de `CampanhaDetalheDadosService.carregar()`
+> e só busca quando o painel "Inv. Esquadrão"/"Inventário" fica visível (`app-inventario-esquadrao`
+> é sempre montado, `[hidden]` — "abrir" é só o signal `painelLateralAtivo` da página mudando, sem
+> ciclo de vida do Angular pra ganchar). Novo `EstadoInventario`
+> (`NAO_CARREGADO|CARREGANDO|PRONTO|DESATUALIZADO|ERRO`) no service base, com
+> `solicitarInventario`/`fecharInventario` (chamados por um `effect()` novo nas duas páginas,
+> observando `painelLateralAtivo`), `aplicarInventarioLocal` (mutação aplica sem GET) e
+> `invalidarInventario` (evento `campanha:inventario-alterado`/reconexão: só marca `DESATUALIZADO`
+> com o painel fechado, busca na hora se aberto) — mesmo padrão de reentrada por `finalize()` que
+> `invalidarMembros`/`invalidarFichas` já usavam. Prévia de jogador perdeu o caminho paralelo que
+> tinha pra inventário dentro do coordenador (`bufferTime`+`switchMap`); agora só sobrescreve
+> `buscarInventario()` com o gate de permissão, herdando o resto do service base.
+> `app-inventario-esquadrao` ganhou `estado`/`tentarNovamente`: `CARREGANDO`/`NAO_CARREGADO`/
+> `DESATUALIZADO` mostram o mesmo esqueleto de "Carregando rolagens"; `ERRO` reusa o par
+> `app-estado-vazio`+retry de `busca-documentos` (análogo aprovado). Verificado ao vivo (Postgres
+> nativo, backend/frontend reais, mestre 1920×1080/jogador 360×800): carga inicial com **zero**
+> GETs de inventário nos dois clientes; abrir a aba faz **exatamente 1** GET; reabrir sem mudança,
+> **zero** adicionais; mestre adiciona item com o painel aberto (aplica local + 1 GET do próprio
+> eco, aceito) enquanto o **jogador com o painel fechado não faz nenhuma requisição**; jogador abre
+> depois e vê o item novo após **exatamente 1** GET. Cenário limpo ao final (inventário resetado via
+> SQL no banco de dev).
+> Antes: `p-086-estado-campanha-sem-refetch` concluída (spec em `done/`, `P-086` fechado em
 > `PROBLEMS.md`): `CampanhaEstadoAlteradaDto` (`{ id, naBase }`) passou a ser aplicado direto no
 > signal `campanha` (mestre, jogador e prévia de jogador do mestre) em vez de refazer
 > `recarregarCampanhaEInventario` (2 GETs) — o inventário nunca muda por esse evento, só
@@ -36,7 +53,6 @@
 > (Postgres nativo, sem Docker no ambiente; backend/frontend reais; mestre 1920×1080/jogador
 > 360×800 em dois navegadores): cada clique produziu exatamente 1 PUT e 0 GETs, convergindo os
 > dois clientes só por Socket.IO.
-> `requests-correcoes`: 5/6 (`p-082`…`p-086`) — resta o inventário sob demanda (task 6).
 > Antes: `p-085-invalidacao-seletiva-ficha` concluída (spec em `done/`, `P-085` fechado em
 > `PROBLEMS.md`): `FichaService`, com o estado persistido antes/depois, decide se os recortes
 > `fichas` e/ou `membros` mudaram e emite um único `ficha:recortes-alterados`; o gateway só
@@ -733,13 +749,12 @@
 
 ## 1. Próxima Task
 
-**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 5/6
-concluídas: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada), `p-084`
-(ressincronização de recursos), `p-085` (invalidação seletiva da ficha) e `p-086` (estado Na
-Base/Em Missão aplicado sem refetch, mestre/jogador/prévia — ver cabeçalho deste arquivo). Resta
-`requests-inventario-sob-demanda`** (task 6, única pendente do guarda-chuva). Fontes e gates em
-[requests-correcoes](../specs/backlog/requests-correcoes.spec.md); spec em
-`docs/specs/backlog/requests-inventario-sob-demanda.spec.md`.
+**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) —
+concluído, 6/6**: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada),
+`p-084` (ressincronização de recursos), `p-085` (invalidação seletiva da ficha), `p-086` (estado Na
+Base/Em Missão aplicado sem refetch) e `requests-inventario-sob-demanda` (inventário só busca ao
+abrir o painel — ver cabeçalho deste arquivo). Specs todas em `done/`; nenhuma pendência do
+guarda-chuva. Fontes: [requests-correcoes](../specs/done/requests-correcoes.spec.md).
 
 **Biblioteca — melhorias (2026-09-28):** `m9-07` (segundo clique fecha) e `m9-08` (importar
 Markdown como rascunho) concluídas, specs em `done/`. Permanecem no backlog `m9-09` (presença de

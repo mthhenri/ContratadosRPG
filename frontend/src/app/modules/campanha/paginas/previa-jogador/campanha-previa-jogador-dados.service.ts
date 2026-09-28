@@ -19,7 +19,7 @@ import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import { CampanhaProjecaoService } from '../../campanha-projecao.service';
 import { CampanhaDetalheDadosService } from '../detalhe/campanha-detalhe-dados.service';
 
-type IntencaoInvalidacao = 'projecao' | 'inventario' | 'encontro';
+type IntencaoInvalidacao = 'projecao' | 'encontro';
 
 /**
  * Fonte de dados da prévia de jogador (m8-04) — o mestre abre a **mesma** `CampanhaDetalheJogador`
@@ -70,7 +70,8 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       this.aplicarPrevia(previaInicial);
       this.carregando.set(false);
       this.carregandoRolagens.set(false);
-      this.carregarInventario();
+      // Inventário NÃO entra na carga inicial (requests-inventario-sob-demanda) — só na 1ª vez
+      // que o painel "Inv. Esquadrão" fica visível, via `solicitarInventario`.
     } else {
       this.carregarPrevia();
     }
@@ -80,10 +81,15 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
     this.configurarCoordenadorInvalidacao();
 
     // `reconexao$` (P-083) — só reconexões futuras à montagem; o coordenador de invalidação
-    // acima já agrupa/serializa esta com qualquer outra intenção concorrente.
-    this.tempoRealService.reconexao$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.invalidacoes.next('projecao') });
+    // acima já agrupa/serializa esta com qualquer outra intenção concorrente. Inventário fica de
+    // fora do coordenador (requests-inventario-sob-demanda) — `invalidarInventario` (herdado) só
+    // busca se o painel estiver aberto.
+    this.tempoRealService.reconexao$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.invalidacoes.next('projecao');
+        this.invalidarInventario();
+      },
+    });
 
     const relogio = setInterval(() => this.agoraInterno.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));
@@ -99,12 +105,13 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
   }
 
   /** Inventário do esquadrão — só quando a projeção diz que o alvo o acessa. */
-  override carregarInventario(): void {
+  protected override buscarInventario(): void {
     if (!this.previa()?.podeAcessarInventarioEsquadrao) {
       this.inventarioEsquadrao.set([]);
+      this.estadoInventario.set('PRONTO');
       return;
     }
-    super.carregarInventario();
+    super.buscarInventario();
   }
 
   /** Membros e fichas vêm juntos na projeção — refazê-la cobre os dois. */
@@ -114,7 +121,7 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
 
   override recarregarCampanhaEInventario(): void {
     this.invalidacoes.next('projecao');
-    this.invalidacoes.next('inventario');
+    this.invalidarInventario();
   }
 
   private carregarPrevia(): void {
@@ -131,7 +138,7 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       .subscribe({
         next: (previa) => {
           this.aplicarPrevia(previa, geracaoEstadoNoInicio);
-          this.carregarInventario();
+          // Inventário NÃO entra na carga inicial (requests-inventario-sob-demanda).
         },
       });
   }
@@ -189,9 +196,11 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       .pipe(filter((evento) => evento.id === id), takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: (evento) => this.aplicarEstadoOperacional(evento.naBase) });
 
+    // requests-inventario-sob-demanda: fora do coordenador — `invalidarInventario` (herdado) só
+    // busca se o painel estiver aberto, com a mesma reconciliação que o resto do fluxo real usa.
     this.tempoRealService.inventarioAlterado$
       .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: () => this.invalidacoes.next('inventario') });
+      .subscribe({ next: () => this.invalidarInventario() });
 
     this.tempoRealService.encontroAlterado$
       .pipe(
@@ -230,18 +239,6 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
                     ),
                   ),
                 ),
-            );
-          }
-
-          if (intencoes.includes('inventario')) {
-            requisicoes.push(
-              this.campanhaService.recuperarInventario(this.idInterno).pipe(
-                tap((inventario) => {
-                  if (this.previa()?.podeAcessarInventarioEsquadrao) {
-                    this.inventarioEsquadrao.set(inventario.itens);
-                  }
-                }),
-              ),
             );
           }
 

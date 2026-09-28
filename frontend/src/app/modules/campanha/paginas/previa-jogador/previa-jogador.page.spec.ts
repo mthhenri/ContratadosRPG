@@ -393,6 +393,19 @@ describe('CampanhaPreviaJogador', () => {
     expect(inventario.somenteLeitura()).toBe(true);
   });
 
+  it('com acesso ao inventário, nada é buscado até abrir a aba "Inv. Esquadrão" (requests-inventario-sob-demanda)', () => {
+    const { raiz, fixture, campanhaService } = montar();
+    expect(campanhaService.recuperarInventario).not.toHaveBeenCalled();
+
+    const abaInventario = Array.from(
+      raiz.querySelectorAll<HTMLButtonElement>('.detalhe__painel-lateral .segmentado__item'),
+    ).find((botao) => botao.textContent?.includes('Inv. Esquadrão'))!;
+    abaInventario.click();
+    fixture.detectChanges();
+
+    expect(campanhaService.recuperarInventario).toHaveBeenCalledTimes(1);
+  });
+
   describe('tempo real', () => {
     it('rolagem pública e privada do próprio alvo entram no feed; privada de terceiro nunca', () => {
       const { fixture, raiz, rolagemRegistrada$ } = montar({ previaResposta: previa({ rolagens: [] }) });

@@ -898,5 +898,33 @@ describe('CampanhaDetalheMestre', () => {
       ).toBe(false);
       expect(raiz.querySelector('app-inventario-esquadrao')).not.toBeNull();
     });
+
+    // === requests-inventario-sob-demanda: o painel de inventário só busca ao ser aberto.
+
+    it('não busca inventário na carga inicial (Rolagens é a aba padrão)', () => {
+      const { campanhaService } = montar();
+      expect(campanhaService.recuperarInventario).not.toHaveBeenCalled();
+    });
+
+    it('abrir "Inventário" dispara exatamente um GET; alternar de volta e reabrir sem mudança não duplica', () => {
+      const { raiz, fixture, campanhaService } = montar();
+      const itemRolagens = Array.from(raiz.querySelectorAll('[app-segmentado-item]')).find((el) =>
+        el.textContent?.includes('Rolagens'),
+      ) as HTMLButtonElement;
+      const itemInventario = Array.from(raiz.querySelectorAll('[app-segmentado-item]')).find((el) =>
+        el.textContent?.includes('Inventário'),
+      ) as HTMLButtonElement;
+
+      itemInventario.click();
+      fixture.detectChanges();
+      expect(campanhaService.recuperarInventario).toHaveBeenCalledTimes(1);
+
+      itemRolagens.click();
+      fixture.detectChanges();
+      itemInventario.click();
+      fixture.detectChanges();
+
+      expect(campanhaService.recuperarInventario).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -1,5 +1,99 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — requests-inventario-sob-demanda: inventário só busca ao abrir o painel (guarda-chuva `requests-correcoes` fechado, 6/6)
+
+Sexta e última task de `requests-correcoes`. O inventário de esquadrão entrava na carga inicial de
+`CampanhaDetalheDadosService.carregar()` mesmo quando o painel "Inv. Esquadrão"/"Inventário" nunca
+era aberto — o componente `app-inventario-esquadrao` já existe sempre no DOM nas duas telas
+(`[hidden]`, nunca `@if`/desmontagem), então "abrir o painel" nunca foi um evento de ciclo de vida
+do Angular, só uma troca de valor no signal local `painelLateralAtivo` da página.
+
+**Máquina de estados no service base.** Novo `EstadoInventario` (`NAO_CARREGADO | CARREGANDO |
+PRONTO | DESATUALIZADO | ERRO`, convenção `Estado*` em maiúsculas já usada em `EstadoBusca`/
+`EstadoImagem`/`EstadoSincronizacao`) e `estadoInventario` como signal público. Inventário saiu da
+carga inicial — `carregar()` não chama mais `carregarInventario()`. Quatro métodos novos
+substituem o antigo `carregarInventario()` único e incondicional:
+
+- `solicitarInventario()` — chamado pela página quando o painel fica visível; busca só se o estado
+  ainda não é `CARREGANDO`/`PRONTO` (1ª vez, `DESATUALIZADO` ou `ERRO` sempre buscam).
+- `fecharInventario()` — chamado quando o painel deixa de estar visível.
+- `aplicarInventarioLocal(itens)` — aplica a resposta de uma mutação (adicionar/alterar/remover/
+  ajustar/transferir, todas já devolvem o inventário inteiro) sem GET novo.
+- `invalidarInventario()` — chamado pelo evento `campanha:inventario-alterado` (payload só
+  `{ campanhaId }`, nunca os itens) e pela reconexão: com o painel fechado só marca
+  `DESATUALIZADO`; com o painel aberto busca na hora.
+- `buscarInventario()` (protegido, único ponto que chama `GET /campanha/:id/inventario`) usa o
+  mesmo padrão de reentrada por `finalize()` que `invalidarMembros`/`invalidarFichas` já usavam —
+  um evento chegado durante o GET marca `inventarioInvalido`; ao terminar, refaz se o painel segue
+  aberto ou marca `DESATUALIZADO` se ele fechou nesse meio-tempo — nunca fica preso em
+  `CARREGANDO`.
+
+**Páginas.** `detalhe-mestre.page.ts`/`detalhe-jogador.page.ts` ganharam um `effect()` observando
+`painelLateralAtivo()`: `'inventario'` chama `solicitarInventario()`, qualquer outro valor chama
+`fecharInventario()`. A mesma página de jogador é reusada pela prévia do mestre (`CampanhaPreviaJogador`),
+então o mesmo efeito cobre os dois fluxos sem duplicar wiring. `mandarItemFichaParaBase`
+(transferência ficha→base) trocou a chamada direta ao antigo `carregarInventario()` por
+`invalidarInventario()` — mesma fonte de qualquer outra invalidação, sem forçar GET com o painel
+fechado.
+
+**Prévia de jogador.** `CampanhaPreviaJogadorDadosService` tinha um caminho paralelo inteiro para
+inventário dentro do coordenador de invalidação (`invalidacoes.next('inventario')`,
+`bufferTime`+`switchMap`) — removido; agora sobrescreve só `buscarInventario()` (protegido, gate de
+`podeAcessarInventarioEsquadrao`) e delega `solicitarInventario`/`fecharInventario`/
+`invalidarInventario` ao service base, herdados sem mudança. `IntencaoInvalidacao` perdeu o membro
+`'inventario'`. Reconexão da prévia ganhou `invalidarInventario()` ao lado de `'projecao'` — antes
+não invalidava inventário nenhum ao reconectar.
+
+**Componente `app-inventario-esquadrao`.** Novo input `estado: EstadoInventario` (obrigatório) e
+output `tentarNovamente`. Template: `CARREGANDO`/`NAO_CARREGADO`/`DESATUALIZADO` mostram o mesmo
+esqueleto (3 blocos `app-esqueleto`, mesmo padrão de "Carregando rolagens" já usado no histórico da
+campanha); `ERRO` reusa o par `app-estado-vazio` + botão `estadoVazioAcao` `contorno`/`pequeno` +
+"Tentar de novo" já estabelecido em `busca-documentos` (análogo aprovado: mesmo componente, mesmo
+recorte de "GET sob demanda com erro e retry"); `PRONTO` é o conteúdo antigo do componente, intocado.
+`InventarioEsquadraoSidebar` (componente existente mas **sem nenhum consumidor em produção** — só
+`itens`/`aberto` já feitos, nunca `[app-inventario-esquadrao-sidebar]` em nenhum template) ganhou o
+mesmo `estado`/`tentarNovamente` encaminhados, só para continuar compilando.
+
+**Testes.** `campanha-detalhe-dados.service.spec.ts` ganhou 13 casos novos (carga inicial não busca;
+1ª abertura busca e aplica `PRONTO`; reabrir sem invalidação não duplica; cliques repetidos durante
+`CARREGANDO` não duplicam; erro vira `ERRO` e retry busca de novo; evento com painel fechado marca
+`DESATUALIZADO` sem GET e reabrir busca uma vez; evento com painel aberto busca na hora; evento de
+outra campanha não invalida; evento durante GET lento reencadeia ou marca desatualizado conforme o
+painel; `aplicarInventarioLocal` sem GET; reconexão com painel fechado/aberto). `inventario-
+esquadrao.component.spec.ts` ganhou 4 casos dos estados visuais. `detalhe-mestre.page.spec.ts`,
+`detalhe-jogador.page.spec.ts` e `previa-jogador.page.spec.ts` ganharam casos de contagem de GET ao
+abrir/alternar/reabrir a aba pelas três telas reais (clique de verdade, não chamada direta ao
+service). Suíte completa do frontend verde (173 arquivos / 2464 testes). `npm run lint` (raiz): zero
+erros, só os avisos de aspas/comprimento de linha já conhecidos. `npm run build -w frontend`:
+aprovado, mesmo aviso preexistente de orçamento do bundle (550,83 kB para 450 kB, P-004).
+`shared`/`backend` não foram tocados — nenhum gate deles precisou rodar de novo. `convencoes-check`
+sobre o diff: sem DTO/enum novo, sem `atualizar`/`atualizado`, sem `NgModule`/`ngModel`, nenhum SQL
+tocado (só frontend), sem estilo hardcoded nem `title`/`style` nativos.
+
+**Verificação ao vivo (Playwright + REST + Postgres real — cluster nativo, sem Docker neste
+ambiente).** Backend e frontend reais, mestre (`codex.dev`, 1920×1080) e jogador
+(`jogador.stub.1`, 360×800) na "Campanha do Codex", captura de toda requisição REST por ação.
+Carga inicial: **zero** GETs de `/campanha/2/inventario` em qualquer um dos dois clientes. Mestre
+abre a aba "Inventário": **exatamente 1 GET**; alternar para "Rolagens" e reabrir sem mudança:
+**zero** GETs adicionais. Mestre adiciona um item custom com o painel aberto: aplica local (POST +
+o eco do próprio evento faz 1 GET extra — aceito, mesmo trade-off documentado em `p-086`: o payload
+do evento não carrega dados, não dá pra distinguir o próprio eco de uma mudança concorrente sem
+inventar um identificador de origem no backend, fora do escopo desta task) — e, importante, o
+**jogador com o painel fechado não fez nenhuma requisição** durante essa mutação do mestre. Jogador
+então navega até "ROLAGENS" (mobile: a barra lateral só existe com esse destino ativo no nav
+inferior) e abre "Inv. Esquadrão": **exatamente 1 GET**, e o item criado pelo mestre já aparece —
+confirma "reabrir mostra valor correto após uma consulta" depois de um evento perdido com o painel
+fechado. Estado vazio (`app-estado-vazio` com ícone/título/linha de apoio e os controles "Item
+custom"/"Adicionar itens") renderizado corretamente nos dois viewports, sem overflow; o card do
+item novo no mobile mostra categoria, nome, peso/custo e os controles de quantidade/"Pegar"
+corretamente. Cenário limpo ao final: inventário da campanha resetado para `[]` via SQL (mesmo
+banco de desenvolvimento/seed, sem dado de produção envolvido); servidores de dev encerrados,
+cluster Postgres nativo parado.
+
+`requests-correcoes` está **concluído**: as 6 tasks (`p-082`…`p-086` + esta) fecharam; `P-082`…
+`P-086` fechados em `PROBLEMS.md`; a oportunidade de "carregamento antecipado do inventário" da
+revisão de 2026-09-26 também está resolvida.
+
 ## 2026-09-28 — p-086: estado Na Base/Em Missão aplicado sem refetch (P-086 fechado)
 
 Quinta das 6 tasks de `requests-correcoes`. `CampanhaEstadoAlteradaDto` (payload de

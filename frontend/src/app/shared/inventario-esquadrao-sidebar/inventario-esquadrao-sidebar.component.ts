@@ -5,6 +5,7 @@ import { Icone } from '../icone/icone.component';
 import { Tooltip } from '../tooltip/tooltip.directive';
 import { BotaoIcone } from '../ui/botao-icone/botao-icone.component';
 import { InventarioEsquadrao } from '../../modules/campanha/componentes/inventario-esquadrao/inventario-esquadrao.component';
+import type { EstadoInventario } from '../../modules/campanha/paginas/detalhe/campanha-detalhe-dados.service';
 
 @Component({
   selector: 'app-inventario-esquadrao-sidebar',
@@ -15,8 +16,10 @@ import { InventarioEsquadrao } from '../../modules/campanha/componentes/inventar
 export class InventarioEsquadraoSidebar {
   readonly campanhaId = input.required<number>();
   readonly itens = input.required<readonly CampanhaInventarioItemDto[]>();
+  readonly estado = input.required<EstadoInventario>();
   readonly fichas = input<readonly { id: number; nome: string }[]>([]);
   readonly alterado = output<readonly CampanhaInventarioItemDto[]>();
+  readonly tentarNovamente = output<void>();
   /** Estado bidirecional para a página reservar a faixa da barra lateral quando ela está aberta. */
   readonly aberto = model(false);
   protected readonly painelRenderizado = signal(false);

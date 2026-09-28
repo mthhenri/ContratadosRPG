@@ -1,7 +1,24 @@
+@use "tema/breakpoints" as bp;
+
 .inventario-esquadrao {
     display: flex;
     flex-direction: column;
     gap: 12px;
+
+    // Carregando/desatualizado (requests-inventario-sob-demanda) — silhueta dos cards reais de
+    // `&__item` (mesmo raio, geometria aproximada), mesmo padrão do esqueleto de rolagens.
+    &__esqueleto {
+        display: grid;
+        gap: 8px;
+    }
+    &__esqueleto-item {
+        height: 84px;
+    }
+    &__erro-acao {
+        @include bp.mobile {
+            min-height: bp.$alvo-toque;
+        }
+    }
 
     &__acoes,
     &__acoes-controles,

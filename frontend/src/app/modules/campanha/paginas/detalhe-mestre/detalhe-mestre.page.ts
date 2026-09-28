@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -104,6 +104,18 @@ export class CampanhaDetalheMestre {
 
   /** Painel lateral fixo (entregável 3) — sempre montado, alterna Rolagens⇆Inventário, nunca overlay. */
   protected readonly painelLateralAtivo = signal<'rolagens' | 'inventario'>('rolagens');
+  /**
+   * Inventário sob demanda (`requests-inventario-sob-demanda`) — o painel `[hidden]` nunca
+   * desmonta `app-inventario-esquadrao`, então "abrir"/"fechar" é só este signal mudando de
+   * valor; o `dados-service` decide sozinho se isso vira GET (1ª vez, ou invalidado) ou no-op.
+   */
+  private readonly _efeitoInventarioAberto = effect(() => {
+    if (this.painelLateralAtivo() === 'inventario') {
+      this.dados.solicitarInventario();
+    } else {
+      this.dados.fecharInventario();
+    }
+  });
   protected readonly rolagemAvulsaOculta = signal(false);
   protected readonly atributosNeutros = ATRIBUTOS_NEUTROS;
 

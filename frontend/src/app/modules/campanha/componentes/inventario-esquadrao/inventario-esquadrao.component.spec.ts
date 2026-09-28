@@ -27,6 +27,7 @@ describe('InventarioEsquadrao', () => {
     fixture = TestBed.createComponent(InventarioEsquadrao);
     fixture.componentRef.setInput('campanhaId', 8);
     fixture.componentRef.setInput('itens', []);
+    fixture.componentRef.setInput('estado', 'PRONTO');
     fixture.componentRef.setInput('fichas', [{ id: 3, nome: 'Vera' }]);
     fixture.componentRef.setInput('somenteLeitura', false);
     fixture.detectChanges();
@@ -236,5 +237,55 @@ describe('InventarioEsquadrao', () => {
     expect(fixture.nativeElement.querySelector('.inventario-esquadrao__quantidade')).toBeNull();
     expect(fixture.nativeElement.querySelector('.inventario-esquadrao__pegar')).toBeNull();
     expect(fixture.nativeElement.querySelector('[aria-label="Remover Kit médico"]')).toBeNull();
+  });
+
+  // === requests-inventario-sob-demanda: estados CARREGANDO/NAO_CARREGADO/DESATUALIZADO/ERRO —
+  // o pai controla `estado`, o componente só decide o que renderizar.
+
+  it('mostra esqueleto enquanto carrega, sem lista nem estado vazio', () => {
+    fixture.componentRef.setInput('estado', 'CARREGANDO');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    expect(raiz.querySelector('[role="status"][aria-label="Carregando inventário"]')).not.toBeNull();
+    expect(raiz.querySelectorAll('app-esqueleto').length).toBeGreaterThan(0);
+    expect(raiz.textContent).not.toContain('Nenhum item armazenado');
+  });
+
+  it('mostra esqueleto também em NAO_CARREGADO e DESATUALIZADO', () => {
+    const raiz = fixture.nativeElement as HTMLElement;
+    for (const estado of ['NAO_CARREGADO', 'DESATUALIZADO']) {
+      fixture.componentRef.setInput('estado', estado);
+      fixture.detectChanges();
+      expect(raiz.querySelector('[role="status"][aria-label="Carregando inventário"]')).not.toBeNull();
+    }
+  });
+
+  it('estado ERRO mostra retry e emite tentarNovamente ao clicar', () => {
+    const tentativas: void[] = [];
+    fixture.componentRef.instance.tentarNovamente.subscribe(() => tentativas.push(undefined));
+    fixture.componentRef.setInput('estado', 'ERRO');
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    expect(raiz.textContent).toContain('Não foi possível carregar o inventário');
+    const retry = Array.from(raiz.querySelectorAll('button')).find((b) => b.textContent?.includes('Tentar de novo'));
+    expect(retry).not.toBeUndefined();
+    retry?.click();
+
+    expect(tentativas.length).toBe(1);
+  });
+
+  it('PRONTO com itens some com o esqueleto e mostra a lista normalmente', () => {
+    fixture.componentRef.setInput('estado', 'PRONTO');
+    fixture.componentRef.setInput('itens', [{
+      id: 'item-1', nome: 'Kit médico', categoria: ItemCategoriaEnum.MEDICINAL,
+      custo: 2, peso: 1, quantidade: 2,
+    }]);
+    fixture.detectChanges();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    expect(raiz.querySelector('[role="status"][aria-label="Carregando inventário"]')).toBeNull();
+    expect(raiz.textContent).toContain('Kit médico');
   });
 });

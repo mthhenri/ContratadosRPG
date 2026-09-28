@@ -300,6 +300,7 @@ describe('CampanhaDetalheJogador', () => {
       fixture,
       raiz: fixture.nativeElement as HTMLElement,
       dados,
+      campanhaService,
       fichaService,
       confirmacaoService,
       navegar,
@@ -944,6 +945,31 @@ describe('CampanhaDetalheJogador', () => {
       (botao) => botao.textContent?.replace(/\s+/g, ' ').trim(),
     );
     expect(abas).toEqual(['Rolagens', 'Esquadrão', 'Inv. Esquadrão']);
+  });
+
+  // === requests-inventario-sob-demanda: o painel "Inv. Esquadrão" só busca ao ser aberto.
+
+  it('não busca inventário na carga inicial (Rolar é a aba padrão)', () => {
+    const { campanhaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    expect(campanhaService.recuperarInventario).not.toHaveBeenCalled();
+  });
+
+  it('abrir "Inv. Esquadrão" dispara exatamente um GET; alternar de volta e reabrir sem mudança não duplica', () => {
+    const { raiz, fixture, campanhaService } = montar({ usuarioId: 2, membros: membrosDois(), fichas });
+    const abas = Array.from(raiz.querySelectorAll<HTMLButtonElement>('.detalhe__painel-lateral .segmentado__item'));
+    const abaInventario = abas.find((botao) => botao.textContent?.includes('Inv. Esquadrão'))!;
+    const abaRolagens = abas.find((botao) => botao.textContent?.includes('Rolagens'))!;
+
+    abaInventario.click();
+    fixture.detectChanges();
+    expect(campanhaService.recuperarInventario).toHaveBeenCalledTimes(1);
+
+    abaRolagens.click();
+    fixture.detectChanges();
+    abaInventario.click();
+    fixture.detectChanges();
+
+    expect(campanhaService.recuperarInventario).toHaveBeenCalledTimes(1);
   });
 
   it('não duplica "Iniciativa" ao lado das abas — a ação mora só na coluna de ações/kebab', () => {
