@@ -30,14 +30,6 @@
         }
     }
 
-    // Identidade (cor/borda/hover) é do `app-botao-icone` (ui-29); aqui só sobra o tamanho, igual
-    // ao par minimizar/fechar de `app-painel-flutuante` (ui-17).
-    &__acao-janela {
-        width: 32px;
-        height: 32px;
-        font-size: 17px;
-    }
-
     &__corpo {
         flex: 1;
         min-width: 0;
@@ -71,15 +63,6 @@
             height: 8px;
             border-right: 1px solid var(--accent);
             border-bottom: 1px solid var(--accent);
-        }
-    }
-}
-
-@media (max-width: 560px) {
-    .ficha-flutuante {
-        &__acao-janela {
-            width: bp.$alvo-toque;
-            height: bp.$alvo-toque;
         }
     }
 }

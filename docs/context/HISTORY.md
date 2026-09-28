@@ -1,5 +1,21 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — Correção visual: maximizar da ficha flutuante volta à geometria compacta
+
+O botão de maximizar da `FichaFlutuante` recebia o tamanho `compacto` canônico do
+`app-botao-icone` (26×26), mas a classe local `.ficha-flutuante__acao-janela` sobrescrevia só esse
+controle para 32×32. A sobrescrita foi removida; minimizar, maximizar e fechar agora usam a mesma
+geometria do cabeçalho compartilhado de `app-painel-flutuante`, sem alterar comportamento,
+iconografia ou outros consumidores.
+
+O teste focado reproduziu a classe divergente antes da correção e passou depois (9/9). A suíte
+frontend passou 2414/2414, o build de produção concluiu e o lint terminou sem erros (avisos
+preexistentes). Na aplicação real, o análogo aprovado — o cabeçalho do Caderno, que usa os mesmos
+primitivos — manteve todas as ações em 26×26 nos viewports 1920×1080, 1366×768 e 960×1080; em
+360×800, maximizar não é oferecido e minimizar/fechar ficaram em 44×44. Não houve overflow
+horizontal nos viewports medidos. A própria `FichaFlutuante` ficou coberta pelo teste que confirma
+a ausência da sobrescrita e a adoção do tamanho compacto do primitivo.
+
 ## 2026-09-28 — Specs de melhoria da Biblioteca (m9-07 a m9-10), sem código
 
 Pedido do autor com três melhorias na Biblioteca de documentos, escritas como quatro specs avulsas

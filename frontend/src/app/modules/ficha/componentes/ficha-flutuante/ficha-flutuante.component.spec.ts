@@ -107,6 +107,26 @@ describe('FichaFlutuante', () => {
     ).toBe('Ficha · K. Amaral');
   });
 
+  it('mantém maximizar com a mesma geometria de minimizar e fechar', () => {
+    const { fixture } = montar();
+    fixture.componentInstance.abrir(alvoA);
+    fixture.detectChanges();
+
+    const elemento = fixture.nativeElement as HTMLElement;
+    const minimizar = elemento.querySelector<HTMLElement>(
+      '[aria-label="Minimizar Ficha · K. Amaral"]',
+    );
+    const maximizar = elemento.querySelector<HTMLElement>('[aria-label="Maximizar ficha"]');
+    const fechar = elemento.querySelector<HTMLElement>('[aria-label="Fechar Ficha · K. Amaral"]');
+
+    expect(maximizar?.classList).not.toContain('ficha-flutuante__acao-janela');
+    expect(maximizar?.classList).toContain('botao-icone--compacto');
+    expect(getComputedStyle(maximizar!).width).toBe(getComputedStyle(minimizar!).width);
+    expect(getComputedStyle(maximizar!).height).toBe(getComputedStyle(minimizar!).height);
+    expect(getComputedStyle(maximizar!).width).toBe(getComputedStyle(fechar!).width);
+    expect(getComputedStyle(maximizar!).height).toBe(getComputedStyle(fechar!).height);
+  });
+
   it('minimizar esconde a janela e mostra o gatilho; reabrir desfaz', () => {
     const { fixture } = montar();
     fixture.componentInstance.abrir(alvoA);
