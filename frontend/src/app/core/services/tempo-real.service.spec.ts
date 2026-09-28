@@ -316,6 +316,28 @@ describe('TempoRealService', () => {
     expect(socketFake.emitidos).toEqual([]);
   });
 
+  it('informa a leitura da Biblioteca pelo documento:leitura (m9-09), mesmo antes do connect', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+
+    servico.informarLeitura(9, 70);
+    socketFake.disparar('connect');
+    servico.informarLeitura(9, null);
+
+    expect(socketFake.emitidos).toEqual([
+      { evento: 'documento:leitura', payload: { campanhaId: 9, documentoId: 70 } },
+      { evento: 'documento:leitura', payload: { campanhaId: 9, documentoId: null } },
+    ]);
+  });
+
+  it('sem socket (sem sessão), informar leitura é no-op', () => {
+    const { servico } = criar(() => null);
+    servico.conectar();
+
+    expect(() => servico.informarLeitura(9, 70)).not.toThrow();
+    expect(socketFake.emitidos).toEqual([]);
+  });
+
   it('marca desconectado no disconnect e desliga tudo no desconectar()', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();

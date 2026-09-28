@@ -5,6 +5,8 @@ import { TipoCampanhaMembroPapelEnum, TipoUsuarioEnum } from '@contratados-rpg/s
 import { UnauthorizedAccessException } from '../exceptions';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import type { CampanhaService } from '../../modules/campanha/campanha.service';
+import type { DocumentoLeituraService } from '../../modules/documento/documento-leitura.service';
+import type { DocumentoService } from '../../modules/documento/documento.service';
 import type { EncontroService } from '../../modules/encontro/encontro.service';
 import type { FichaService } from '../../modules/ficha/ficha.service';
 import { CampanhaGateway } from './campanha.gateway';
@@ -23,6 +25,15 @@ interface CampanhaServiceDublado {
 
 interface EncontroServiceDublado {
   sincronizarFichaAlterada: ReturnType<typeof vi.fn>;
+}
+
+interface DocumentoServiceDublado {
+  informarLeitura: ReturnType<typeof vi.fn>;
+}
+
+interface DocumentoLeituraServiceDublado {
+  removerLeituraConexao: ReturnType<typeof vi.fn>;
+  removerLeituraUsuario: ReturnType<typeof vi.fn>;
 }
 
 interface SocketDublado {
@@ -51,6 +62,7 @@ function criarSocket(
   const emitirParaSala = vi.fn();
   const toSala = vi.fn(() => ({ emit: emitirParaSala }));
   const cliente = {
+    id: 'socket-1',
     data: opcoes.usuario ? { usuario: opcoes.usuario } : {},
     handshake: { auth: { token: opcoes.token }, headers: {} },
     rooms: new Set(opcoes.salas ?? []),
@@ -67,6 +79,8 @@ describe('CampanhaGateway', () => {
   let fichaService: FichaServiceDublado;
   let campanhaService: CampanhaServiceDublado;
   let encontroService: EncontroServiceDublado;
+  let documentoService: DocumentoServiceDublado;
+  let documentoLeituraService: DocumentoLeituraServiceDublado;
   let gateway: CampanhaGateway;
 
   const usuario: JwtPayload = { sub: 42, login: 'agente.novato', tipo: TipoUsuarioEnum.NORMAL, tokenVersao: 1 };
@@ -76,11 +90,15 @@ describe('CampanhaGateway', () => {
     fichaService = { recuperarFicha: vi.fn() };
     campanhaService = { validarAcessoSalaCampanha: vi.fn() };
     encontroService = { sincronizarFichaAlterada: vi.fn().mockResolvedValue(undefined) };
+    documentoService = { informarLeitura: vi.fn().mockResolvedValue(undefined) };
+    documentoLeituraService = { removerLeituraConexao: vi.fn(), removerLeituraUsuario: vi.fn() };
     gateway = new CampanhaGateway(
       jwtService as unknown as JwtService,
       fichaService as unknown as FichaService,
       campanhaService as unknown as CampanhaService,
       encontroService as unknown as EncontroService,
+      documentoService as unknown as DocumentoService,
+      documentoLeituraService as unknown as DocumentoLeituraService,
     );
   });
 
@@ -243,6 +261,61 @@ describe('CampanhaGateway', () => {
       expect(leave).toHaveBeenCalledWith('campanha:3:espectador');
       expect(campanhaService.validarAcessoSalaCampanha).not.toHaveBeenCalled();
     });
+
+    it('campanha:sair limpa a presença de leitura deste socket nessa campanha (m9-09)', async () => {
+      const { cliente } = criarSocket({ usuario });
+
+      await gateway.sairSalaCampanha(cliente, { id: 3 });
+
+      expect(documentoLeituraService.removerLeituraConexao).toHaveBeenCalledWith({
+        conexaoId: 'socket-1',
+        campanhaId: 3,
+      });
+    });
+
+    it('a desconexão limpa a presença de leitura do socket em qualquer campanha (m9-09)', () => {
+      const { cliente } = criarSocket({ usuario });
+
+      gateway.handleDisconnect(cliente);
+
+      expect(documentoLeituraService.removerLeituraConexao).toHaveBeenCalledWith({
+        conexaoId: 'socket-1',
+        campanhaId: null,
+      });
+    });
+  });
+
+  describe('documento:leitura (m9-09, presença de leitura — delegação pura)', () => {
+    it('delega à DocumentoService com o id da conexão, sem regra própria', async () => {
+      const { cliente, join, toSala } = criarSocket({ usuario });
+
+      await gateway.informarLeituraDocumento(cliente, { campanhaId: 3, documentoId: 70 });
+
+      expect(documentoService.informarLeitura).toHaveBeenCalledWith(
+        { campanhaId: 3, documentoId: 70, conexaoId: 'socket-1' },
+        usuario,
+      );
+      expect(campanhaService.validarAcessoSalaCampanha).not.toHaveBeenCalled();
+      expect(join).not.toHaveBeenCalled();
+      expect(toSala).not.toHaveBeenCalled();
+    });
+
+    it('socket sem usuário não chega à service', async () => {
+      const { cliente } = criarSocket();
+
+      await gateway.informarLeituraDocumento(cliente, { campanhaId: 3, documentoId: null });
+
+      expect(documentoService.informarLeitura).not.toHaveBeenCalled();
+    });
+
+    it('recusa da service (não-membro) é silenciosa', async () => {
+      documentoService.informarLeitura.mockRejectedValue(new UnauthorizedAccessException());
+      const { cliente } = criarSocket({ usuario });
+
+      await expect(
+        gateway.informarLeituraDocumento(cliente, { campanhaId: 3, documentoId: 70 }),
+      ).resolves.toBeUndefined();
+    });
   });
 
   describe('recalibração pós-permissão', () => {
@@ -279,6 +352,24 @@ describe('CampanhaGateway', () => {
       expect(socketAlvo.leave).toHaveBeenCalledWith('campanha:3:mestre');
       expect(socketAlvo.leave).toHaveBeenCalledWith('campanha:3:espectador');
       expect(socketAlvo.join).toHaveBeenCalledWith('campanha:3:espectador');
+      expect(documentoLeituraService.removerLeituraUsuario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: usuario.sub,
+      });
+    });
+
+    it('acesso revogado (papel null) também limpa a presença de leitura do usuário (m9-09)', async () => {
+      const fetchSockets = vi.fn().mockResolvedValue([]);
+      (gateway as unknown as { servidor: Server }).servidor = {
+        in: vi.fn(() => ({ fetchSockets })),
+      } as unknown as Server;
+
+      await gateway.recalibrarSalasCampanhaUsuario({ campanhaId: 3, usuarioId: 7, papel: null });
+
+      expect(documentoLeituraService.removerLeituraUsuario).toHaveBeenCalledWith({
+        campanhaId: 3,
+        usuarioId: 7,
+      });
     });
   });
 
@@ -650,6 +741,32 @@ describe('CampanhaGateway', () => {
         expect(paraSala).toHaveBeenCalledTimes(1);
         expect(paraSala).toHaveBeenCalledWith(['campanha:3', 'campanha:3:espectador']);
         expect(emitir).toHaveBeenCalledWith('documento:alterado', evento);
+      });
+    });
+
+    describe('emitirDocumentoLeitores (m9-09, presença só para o mestre)', () => {
+      const retrato = {
+        campanhaId: 3,
+        leitores: [{ documentoId: 70, usuarioId: 2, papel: TipoCampanhaMembroPapelEnum.JOGADOR }],
+      };
+
+      it('vai só para campanha:<id>:mestre — nunca a sala cheia nem a do espectador', () => {
+        gateway.emitirDocumentoLeitores(retrato);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith('campanha:3:mestre');
+        expect(paraSala).not.toHaveBeenCalledWith(expect.arrayContaining(['campanha:3']));
+        expect(paraSala).not.toHaveBeenCalledWith('campanha:3');
+        expect(paraSala).not.toHaveBeenCalledWith('campanha:3:espectador');
+        expect(emitir).toHaveBeenCalledWith('documento:leitores', retrato);
+      });
+
+      it('o retrato inicial vai só para a conexão do mestre que informou', () => {
+        gateway.emitirDocumentoLeitoresParaConexao('socket-mestre', retrato);
+
+        expect(paraSala).toHaveBeenCalledTimes(1);
+        expect(paraSala).toHaveBeenCalledWith('socket-mestre');
+        expect(emitir).toHaveBeenCalledWith('documento:leitores', retrato);
       });
     });
 

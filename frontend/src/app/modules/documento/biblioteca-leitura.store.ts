@@ -27,6 +27,10 @@ import { DocumentoService } from './documento.service';
  * `REVELADO` só acrescenta à lista — nada abre sozinho, para não interromper quem está lendo. Se o
  * aberto sumir da lista sem evento (a reconexão depois de um ocultar perdido), fecha do mesmo
  * jeito.
+ *
+ * **Presença de leitura (m9-09):** a store informa ao gateway o documento aberto — ao abrir, ao
+ * fechar (`null`), ao destruir a página (`null`) e de novo a cada reconexão, porque o backend perde
+ * o estado do socket antigo. Só o mestre recebe quem está lendo; a exibição é da `m9-10`.
  */
 @Injectable()
 export class BibliotecaLeituraStore {
@@ -43,12 +47,23 @@ export class BibliotecaLeituraStore {
 
   /** Pedidos de recarga da lista (evento). */
   private readonly recarregar$ = new Subject<void>();
+  /** A campanha desta página — `null` até `iniciar`; a presença só é informada depois dele. */
+  private campanhaId: number | null = null;
 
   /** Carrega a lista e entra na sala da campanha; sai dela quando a página é destruída. */
   iniciar(campanhaId: number): void {
+    this.campanhaId = campanhaId;
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(campanhaId);
-    this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(campanhaId));
+    this.destroyRef.onDestroy(() => {
+      this.tempoRealService.informarLeitura(campanhaId, null);
+      this.tempoRealService.sairSalaCampanha(campanhaId);
+    });
+
+    // `reconexao$` (P-083): o backend perdeu a presença do socket antigo — informa o aberto de novo.
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.tempoRealService.informarLeitura(campanhaId, this.abertoId()));
 
     merge(
       this.recarregar$,
@@ -93,13 +108,21 @@ export class BibliotecaLeituraStore {
 
   /** "Voltar" do celular: fecha o documento e mostra a lista. */
   fecharDocumento(): void {
+    const estavaAberto = this.abertoId() !== null;
     this.abertoId.set(null);
     this.aberto.set(null);
+    if (estavaAberto) {
+      this.informarLeitura(null);
+    }
   }
 
   /** `silencioso`: troca o conteúdo sem passar pelo esqueleto (versão nova do mesmo documento). */
   private carregar(id: number, silencioso: boolean): void {
+    const trocou = id !== this.abertoId();
     this.abertoId.set(id);
+    if (trocou) {
+      this.informarLeitura(id);
+    }
     if (!silencioso) {
       this.aberto.set(null);
     }
@@ -150,6 +173,12 @@ export class BibliotecaLeituraStore {
         evento.alteracao === DocumentoAlteracaoEnum.REMOVIDO)
     ) {
       this.fecharIndisponivel();
+    }
+  }
+
+  private informarLeitura(documentoId: number | null): void {
+    if (this.campanhaId !== null) {
+      this.tempoRealService.informarLeitura(this.campanhaId, documentoId);
     }
   }
 

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AutenticacaoModule } from '../../modules/autenticacao/autenticacao.module';
 import { CampanhaModule } from '../../modules/campanha/campanha.module';
+import { DocumentoModule } from '../../modules/documento/documento.module';
 import { EncontroModule } from '../../modules/encontro/encontro.module';
 import { FichaModule } from '../../modules/ficha/ficha.module';
 import { CampanhaGateway } from './campanha.gateway';
@@ -19,6 +20,10 @@ import { CampanhaGateway } from './campanha.gateway';
  * services) e este módulo importa aqueles (para consultar as services na entrada em sala e, no caso
  * de `EncontroModule`, para acionar a resincronização): a dependência é mútua, resolvida com
  * `forwardRef` nos dois lados.
+ *
+ * `DocumentoModule` (m9-09) entra pelo mesmo motivo: `documento:leitura` é delegado à
+ * `DocumentoService` (que decide quem pode ler o quê) e a limpeza da presença à
+ * `DocumentoLeituraService` (dona do estado em memória).
  */
 @Module({
   imports: [
@@ -26,6 +31,7 @@ import { CampanhaGateway } from './campanha.gateway';
     forwardRef(() => FichaModule),
     forwardRef(() => CampanhaModule),
     forwardRef(() => EncontroModule),
+    forwardRef(() => DocumentoModule),
   ],
   providers: [CampanhaGateway],
   exports: [CampanhaGateway],

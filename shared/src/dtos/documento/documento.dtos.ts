@@ -1,4 +1,8 @@
-import type { DocumentoAlteracaoEnum, TipoDocumentoEnum } from '../../enums';
+import type {
+  DocumentoAlteracaoEnum,
+  TipoCampanhaMembroPapelEnum,
+  TipoDocumentoEnum,
+} from '../../enums';
 import type { FichaImagemArquivoDto } from '../ficha/ficha-operacao.dtos';
 
 /**
@@ -188,4 +192,32 @@ export interface DocumentoBuscaResultadoDto {
   readonly revelado: boolean;
   readonly updatedDate: string;
   readonly relevancia: number;
+}
+
+/**
+ * Entrada de `documento:leitura` (`m9-09`, cliente → servidor pelo WebSocket): o documento que este
+ * socket está lendo agora na biblioteca da campanha, ou `null` quando não está lendo nenhum.
+ * Presença efêmera, sem persistência (como a do Caderno do Esquadrão) — por isso não é REST.
+ */
+export interface DocumentoLeituraInformarDto {
+  readonly campanhaId: number;
+  readonly documentoId: number | null;
+}
+
+/** Um leitor de um documento no retrato de presença — value object do `DocumentoLeitoresDto`. */
+export interface DocumentoLeitorDto {
+  readonly documentoId: number;
+  readonly usuarioId: number;
+  readonly papel: TipoCampanhaMembroPapelEnum;
+}
+
+/**
+ * Payload de `documento:leitores` (`m9-09`), só para a sala do mestre: o **retrato completo** de
+ * quem está lendo cada documento da campanha, nunca um delta — o cliente substitui o que tem. Um
+ * usuário aparece uma vez por documento (várias abas no mesmo documento contam uma); o mestre
+ * nunca aparece.
+ */
+export interface DocumentoLeitoresDto {
+  readonly campanhaId: number;
+  readonly leitores: readonly DocumentoLeitorDto[];
 }

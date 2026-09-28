@@ -8,6 +8,7 @@ import type {
   DocumentoCriarDto,
   DocumentoImagemAlteradaDto,
   DocumentoImagemAlterarDto,
+  DocumentoLeituraInternoInformarDto,
   DocumentoListarDto,
   DocumentoOcultadoDto,
   DocumentoOcultarDto,
@@ -49,6 +50,7 @@ import { TransacaoService } from '../../database/transacao.service';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
+import { DocumentoLeituraService } from './documento-leitura.service';
 import { DocumentoRepository } from './documento.repository';
 
 /** Extensão de arquivo de cada MIME aceito — nomeia o blob (`documentos/<uuid>.<extensão>`). */
@@ -84,8 +86,12 @@ export class DocumentoService {
   constructor(
     private readonly documentoRepositorio: DocumentoRepository,
     private readonly campanhaRepositorio: CampanhaRepository,
+    // `forwardRef` (m9-09): o `CampanhaGateway` passou a importar esta service, e o arquivo da
+    // `CampanhaService` importa o gateway — sem ele, a classe chega `undefined` no carregamento.
+    @Inject(forwardRef(() => CampanhaService))
     private readonly campanhaService: CampanhaService,
     private readonly transacaoService: TransacaoService,
+    private readonly documentoLeituraService: DocumentoLeituraService,
     @Inject(ARMAZENAMENTO_PROVEDOR)
     private readonly armazenamentoProvedor: ArmazenamentoProvedor,
     @Inject(forwardRef(() => CampanhaGateway))
@@ -283,6 +289,10 @@ export class DocumentoService {
       DocumentoAlteracaoEnum.OCULTADO,
       true,
     );
+    this.documentoLeituraService.removerLeitoresDocumento({
+      campanhaId: documentoOcultado.campanhaId,
+      documentoId: documentoOcultado.id,
+    });
     return {
       id: documentoOcultado.id,
       revelado: documentoOcultado.revelado,
@@ -300,6 +310,10 @@ export class DocumentoService {
       DocumentoAlteracaoEnum.REMOVIDO,
       documento.revelado,
     );
+    this.documentoLeituraService.removerLeitoresDocumento({
+      campanhaId: documento.campanhaId,
+      documentoId: documento.id,
+    });
   }
 
   /**
@@ -390,6 +404,52 @@ export class DocumentoService {
       imagemUrl: imagemSalva.caminho,
       updatedDate: documentoAlterado.updatedDate,
     };
+  }
+
+  /**
+   * Presença de leitura (`m9-09`): a conexão informa o documento que está lendo, ou `null`. Exige
+   * ser membro da campanha (a mesma regra da entrada na sala, `validarAcessoSalaCampanha` —
+   * proibição #28); quem não é → lança, e nada é registrado. Um `documentoId` que este usuário não
+   * pode ler — oculto para quem não é mestre, inexistente ou de outra campanha — é tratado como
+   * `null`: ninguém "lê" um documento que o `GET documento/:id` lhe negaria. O estado e a emissão
+   * ficam com a `DocumentoLeituraService`.
+   */
+  async informarLeitura(
+    dto: DocumentoLeituraInternoInformarDto,
+    usuarioAtivo: JwtPayload,
+  ): Promise<void> {
+    if (!Number.isInteger(dto.campanhaId) || dto.campanhaId < 1) {
+      throw new BusinessException('Campanha da leitura inválida');
+    }
+    const documentoInformado = dto.documentoId ?? null;
+    if (
+      documentoInformado !== null &&
+      (!Number.isInteger(documentoInformado) || documentoInformado < 1)
+    ) {
+      throw new BusinessException('Documento da leitura inválido');
+    }
+
+    const membroEncontrado = await this.campanhaService.validarAcessoSalaCampanha(
+      { id: dto.campanhaId },
+      usuarioAtivo,
+    );
+    let documentoId: number | null = null;
+    if (documentoInformado !== null) {
+      try {
+        const { documento } = await this.recuperarLegivel(documentoInformado, usuarioAtivo);
+        documentoId = documento.campanhaId === dto.campanhaId ? documento.id : null;
+      } catch {
+        documentoId = null;
+      }
+    }
+
+    this.documentoLeituraService.registrarLeitura({
+      conexaoId: dto.conexaoId,
+      campanhaId: dto.campanhaId,
+      usuarioId: usuarioAtivo.sub,
+      papel: membroEncontrado.papel,
+      documentoId,
+    });
   }
 
   // ── Apoio ──────────────────────────────────────────────────────────────────

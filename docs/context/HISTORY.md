@@ -1,5 +1,73 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — m9-09: presença de leitura da Biblioteca (contrato, backend e envio do cliente)
+
+O mestre passa a poder saber, ao vivo, quem está com cada documento aberto. Esta task entrega o
+contrato, o backend e o envio do cliente; a exibição é da `m9-10`.
+
+**Contrato (`shared/src/dtos/documento/`):** `DocumentoLeituraInformarDto` (entrada do socket,
+`documentoId | null`), `DocumentoLeitoresDto` (retrato completo da campanha) e o value object
+`DocumentoLeitorDto` (`documentoId`, `usuarioId`, `papel`), conforme os nomes sugeridos na spec e
+`dto-conventions`. Internos (gateway → service → estado): `DocumentoLeituraInternoInformarDto`
+(acrescenta o `conexaoId`), `DocumentoLeituraInternoRegistrarDto`,
+`DocumentoLeituraConexaoInternoRemoverDto`, `DocumentoLeituraUsuarioInternoRemoverDto` e
+`DocumentoLeituraDocumentoInternoRemoverDto`.
+
+**Backend:** estado e decisão fora do gateway (proibição #25/#28). A permissão ficou na
+`DocumentoService.informarLeitura` — dona do recorte "quem lê o quê" — e não na nova service, para
+evitar um ciclo `DocumentoService` ↔ `DocumentoLeituraService` (a `DocumentoService` precisa da de
+presença para limpar ao ocultar/remover). Ela valida o payload, exige vínculo pela mesma
+`CampanhaService.validarAcessoSalaCampanha` da entrada na sala, e reusa `recuperarLegivel` (a
+verificação do `GET documento/:id`): negado ou de outra campanha vira `null`. A
+`DocumentoLeituraService` guarda um mapa em memória por socket, monta o retrato agrupado por
+usuário+documento sem o mestre, em ordem estável, compara antes/depois e só emite quando muda; para
+um socket do mestre, entrega o retrato atual direto na conexão (`servidor.to(socketId)`) — escolhido
+em vez do ack para que a `m9-10` escute um único evento. `CampanhaGateway` ganhou
+`@SubscribeMessage('documento:leitura')` (só extrai o usuário e delega), `handleDisconnect`,
+limpeza em `campanha:sair` e em `recalibrarSalasCampanhaUsuario`, e os emissores
+`emitirDocumentoLeitores` (só `campanha:<id>:mestre`) e `emitirDocumentoLeitoresParaConexao`.
+`GatewayModule` importa `DocumentoModule` por `forwardRef`, que agora exporta a
+`DocumentoLeituraService`.
+
+**Cliente:** `TempoRealService.informarLeitura` emite mesmo antes do primeiro `connect` (o
+socket.io bufferiza; o backend valida a campanha sem depender da sala), diferente da presença do
+Caderno. `BibliotecaLeituraStore` informa ao abrir/trocar (não ao recarregar em silêncio a mesma
+versão), ao fechar — inclusive o alternar da `m9-07` e o fechamento por indisponível —, `null` ao
+destruir (antes de sair da sala, porque `campanha:sair` só é emitido pelo último consumidor da sala)
+e de novo a cada `reconexao$`. A página do mestre informa `null` ao montar e a cada reconexão, só
+para receber o retrato.
+
+**Achado só no boot real:** testes e `tsc` verdes, mas o Nest não subiu — `CampanhaService` chegava
+`undefined` na `DocumentoService` por ciclo de import em tempo de carga (gateway → `DocumentoService`
+→ `CampanhaService` → gateway). Corrigido com `@Inject(forwardRef(() => CampanhaService))`, o mesmo
+remédio do gateway.
+
+**Testes:** backend 746 (39 arquivos), com `documento-leitura.service.spec.ts` novo (abrir/trocar/
+fechar, duas abas contam uma vez, mestre fora, emissão só quando muda, desconexão, `campanha:sair`,
+troca de campanha, papel/revogação, ocultar/remover) e casos novos em `documento.service.spec.ts`
+(oculto, inexistente e outra campanha viram `null`; não-membro e payload inválido recusados; retrato
+direto ao mestre; ocultar/remover limpam) e `campanha.gateway.spec.ts` (delegação sem regra;
+`documento:leitores` só na sala do mestre, nunca `campanha:<id>` nem a do espectador; limpeza na
+desconexão, `campanha:sair` e recalibração). Frontend 2445 (174), com
+`biblioteca-leitura.store.spec.ts` novo (abrir, trocar, fechar, alternar, indisponível, reconectar,
+destruir antes de sair da sala) e casos em `tempo-real.service.spec.ts`. Shared 772 (52). Lint dos
+três workspaces sem erros (só os avisos de estilo preexistentes do repositório).
+
+**Verificação ao vivo (`verify`):** Postgres e backend/frontend reais, três sessões Chromium
+(mestre, jogador, espectador) capturando `documento:leitores` nos frames de WebSocket e nas
+respostas de polling — 11/11: mestre recebe o retrato vazio ao abrir; jogador abre um revelado →
+retrato com ele; espectador abre outro → retrato com os dois; socket cru do jogador forçando o id de
+um oculto → nenhum retrato com o oculto; fechar a aba do jogador → sai; mestre oculta o documento
+aberto do jogador → sai; revelado de novo e reaberto → volta; backend derrubado de verdade (processo
+encerrado, TCP fechado) e subido → depois da reconexão o retrato voltou a ter os dois leitores
+reais; jogador e espectador não receberam nenhum `documento:leitores` em toda a sessão. Tocar só o
+`mtime` do arquivo não reiniciou o `nest --watch` — a queda foi feita encerrando o processo.
+
+**Constituição:** `SYSTEM.SPEC.md` §9 ganhou a sala `campanha:<id>:mestre` (com o que ela recebe
+de exclusivo) e o item da presença de leitura (`documento:leitura` de entrada, `documento:leitores`
+só para o mestre, efêmera e fora da proibição #25) — texto apresentado ao autor antes de gravar,
+como a spec exige, e aprovado. Spec movida para `done/`. Sem mudança de UI nesta task, então o gate visual não se aplica.
+
 ## 2026-09-28 — m9-08: importar Markdown como rascunho na Biblioteca
 
 Executada após a m9-07. A edição de documento TEXTO ganhou "Importar Markdown" abaixo do editor,

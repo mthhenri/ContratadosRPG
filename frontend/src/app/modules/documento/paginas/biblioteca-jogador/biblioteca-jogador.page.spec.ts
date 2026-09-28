@@ -67,6 +67,7 @@ describe('BibliotecaJogador', () => {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
+      informarLeitura: vi.fn(),
       reconexao: signal(0),
       reconexao$: reconexao$.asObservable(),
       documentoAlterado$,

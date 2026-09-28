@@ -66,6 +66,21 @@
 
 ## Abertas
 
+### I-039 — Salas e presença compartilhadas entre instâncias do backend · tempo real/infra
+
+- **Ideia:** se o backend passar a rodar em mais de uma instância, trocar o estado de tempo real
+  que hoje vive na memória do processo por um compartilhado: o adapter do Socket.IO (salas e
+  emissão entre instâncias, ex.: `@socket.io/redis-adapter`) **e**, junto, a presença de leitura
+  da Biblioteca (`DocumentoLeituraService`, `m9-09`), que é um mapa em memória por processo.
+- **Origem:** `m9-09` (2026-09-28), "Fora de Escopo" da spec — a presença foi desenhada para um
+  processo único, como as salas.
+- **Por quê:** com duas instâncias, o mestre conectado a uma não recebe `documento:alterado` nem
+  `documento:leitores` de quem está na outra, e o retrato de presença fica partido ao meio.
+- **Custo aparente:** médio — dependência de infraestrutura (Redis ou equivalente), adapter no
+  `WsIoAdapter` e a presença movida para o armazenamento compartilhado (com expiração, porque uma
+  instância que morre não roda o `handleDisconnect` dos sockets dela). Só vale quando o deploy
+  exigir escala horizontal.
+
 ### I-038 — Faxina das imagens órfãs no armazenamento · backend/armazenamento
 
 - **Ideia:** apagar do disco/bucket as imagens que nenhuma linha viva referencia — a de um

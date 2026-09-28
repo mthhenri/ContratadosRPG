@@ -8,7 +8,10 @@ import type {
   CampanhaMembroEntradaDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
-import type { DocumentoBibliotecaAlteradaDto } from '@contratados-rpg/shared/dtos/documento';
+import type {
+  DocumentoBibliotecaAlteradaDto,
+  DocumentoLeituraInformarDto,
+} from '@contratados-rpg/shared/dtos/documento';
 import type {
   EncontroAlteradoDto,
   EncontroIniciativaPedidoDto,
@@ -339,6 +342,19 @@ export class TempoRealService {
     if (this.conectado()) {
       this.socket?.emit('caderno-esquadrao:presenca', evento);
     }
+  }
+
+  /**
+   * Informa ao gateway o documento da Biblioteca que esta aba está lendo, ou `null` (m9-09) —
+   * presença efêmera que só o mestre recebe (`documento:leitores`). Não é mutação: nada é gravado.
+   * Diferente da presença do Caderno, não é descartada sem conexão: antes do primeiro `connect` o
+   * socket.io guarda o envio e o entrega ao conectar (o gateway valida a campanha por conta própria,
+   * sem depender da sala). Numa reconexão, quem lê informa de novo (`reconexao$`), porque o backend
+   * perdeu o estado do socket antigo.
+   */
+  informarLeitura(campanhaId: number, documentoId: number | null): void {
+    const leitura: DocumentoLeituraInformarDto = { campanhaId, documentoId };
+    this.socket?.emit('documento:leitura', leitura);
   }
 
   /** Esquece a sala `ficha:<id>` (ao sair da tela) — para não reingressar nela numa reconexão. */

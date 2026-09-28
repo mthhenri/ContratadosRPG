@@ -4,6 +4,7 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -18,7 +19,11 @@ import type {
   CampanhaSalaSairDto,
 } from '@contratados-rpg/shared/dtos/campanha';
 import type { CenaAlteradaDto } from '@contratados-rpg/shared/dtos/cena';
-import type { DocumentoBibliotecaAlteradaDto } from '@contratados-rpg/shared/dtos/documento';
+import type {
+  DocumentoBibliotecaAlteradaDto,
+  DocumentoLeitoresDto,
+  DocumentoLeituraInformarDto,
+} from '@contratados-rpg/shared/dtos/documento';
 import {
   CenaStatusEnum,
   RolagemVisibilidadeEnum,
@@ -48,6 +53,8 @@ import type {
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../../modules/autenticacao/jwt-payload.interface';
 import { CampanhaService } from '../../modules/campanha/campanha.service';
+import { DocumentoLeituraService } from '../../modules/documento/documento-leitura.service';
+import { DocumentoService } from '../../modules/documento/documento.service';
 import { EncontroService } from '../../modules/encontro/encontro.service';
 import { omitirCamposPrivados } from '../../modules/ficha/ficha-campos-privados.util';
 import { FichaService } from '../../modules/ficha/ficha.service';
@@ -75,11 +82,15 @@ interface EntradaSalaResultado {
  *    (`caderno-esquadrao:presenca`, P-039) — o único caminho em que o próprio cliente dispara o
  *    encaminhamento em vez de uma service; não é mutação (nada é persistido) e continua exigindo a
  *    mesma permissão de sala do item 2, ver `retransmitirPresencaEsquadrao`.
+ * 5. **Presença de leitura da Biblioteca** (`documento:leitura`, m9-09) — também efêmera e sem
+ *    persistência, mas **não** retransmitida: o gateway só delega à `DocumentoService` (permissão)
+ *    e à `DocumentoLeituraService` (estado em memória e retrato), que devolve o retrato só à sala
+ *    do mestre. Ver `informarLeituraDocumento`.
  *
  * A origem do Socket.IO é travada em `APP_FRONTEND_ORIGEM` pelo `WsIoAdapter` (§10.6).
  */
 @WebSocketGateway()
-export class CampanhaGateway implements OnGatewayConnection {
+export class CampanhaGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   private readonly servidor!: Server;
 
@@ -91,6 +102,10 @@ export class CampanhaGateway implements OnGatewayConnection {
     private readonly campanhaService: CampanhaService,
     @Inject(forwardRef(() => EncontroService))
     private readonly encontroService: EncontroService,
+    @Inject(forwardRef(() => DocumentoService))
+    private readonly documentoService: DocumentoService,
+    @Inject(forwardRef(() => DocumentoLeituraService))
+    private readonly documentoLeituraService: DocumentoLeituraService,
   ) {}
 
   /**
@@ -105,6 +120,14 @@ export class CampanhaGateway implements OnGatewayConnection {
       return;
     }
     this.definirUsuario(cliente, usuario);
+  }
+
+  /**
+   * Socket caiu (aba fechada, rede, deploy): a presença de leitura dele sai do retrato sem depender
+   * do cliente avisar (m9-09) — senão ficaria "lendo" para sempre.
+   */
+  handleDisconnect(cliente: Socket): void {
+    this.documentoLeituraService.removerLeituraConexao({ conexaoId: cliente.id, campanhaId: null });
   }
 
   /**
@@ -184,7 +207,10 @@ export class CampanhaGateway implements OnGatewayConnection {
     return { sucesso: true };
   }
 
-  /** Abandona todas as variantes de sala que uma campanha pode usar; não consulta services. */
+  /**
+   * Abandona todas as variantes de sala que uma campanha pode usar e limpa a presença de leitura
+   * deste socket nessa campanha (m9-09); não consulta permissão.
+   */
   @SubscribeMessage('campanha:sair')
   async sairSalaCampanha(
     @ConnectedSocket() cliente: Socket,
@@ -195,6 +221,30 @@ export class CampanhaGateway implements OnGatewayConnection {
       cliente.leave(this.salaCampanhaMestre(dto.id)),
       cliente.leave(this.salaCampanhaEspectador(dto.id)),
     ]);
+    this.documentoLeituraService.removerLeituraConexao({ conexaoId: cliente.id, campanhaId: dto.id });
+  }
+
+  /**
+   * Presença de leitura da Biblioteca (m9-09): o cliente informa o documento que está lendo (ou
+   * `null`). **Delegação pura** — a `DocumentoService` valida o vínculo com a campanha e se esse
+   * usuário pode ler esse documento, e a `DocumentoLeituraService` guarda o estado e emite o retrato
+   * (`documento:leitores`) só para `campanha:<id>:mestre`. Recusa (não-membro, payload inválido) é
+   * silenciosa, como a da presença do Caderno.
+   */
+  @SubscribeMessage('documento:leitura')
+  async informarLeituraDocumento(
+    @ConnectedSocket() cliente: Socket,
+    @MessageBody() dto: DocumentoLeituraInformarDto,
+  ): Promise<void> {
+    const usuario = this.obterUsuario(cliente);
+    if (!usuario) {
+      return;
+    }
+    try {
+      await this.documentoService.informarLeitura({ ...dto, conexaoId: cliente.id }, usuario);
+    } catch {
+      return;
+    }
   }
 
   /**
@@ -392,6 +442,8 @@ export class CampanhaGateway implements OnGatewayConnection {
   /**
    * Aplica ao socket o papel já persistido pela service, sem reproduzir a autorização de domínio.
    * Sai de todas as salas de papel e entra só nas do papel novo (nenhuma quando `papel` é `null`).
+   * A presença de leitura desse usuário na campanha é limpa (m9-09): o recorte do que ele pode ler
+   * pode ter mudado, e o cliente volta ao retrato quando informar de novo.
    * `RemoteSocket.join`/`leave` são síncronos (`void`) — só `fetchSockets` é assíncrono (P-077).
    */
   async recalibrarSalasCampanhaUsuario(dto: {
@@ -418,6 +470,10 @@ export class CampanhaGateway implements OnGatewayConnection {
         socket.join(this.salaCampanhaMestre(dto.campanhaId));
       }
     }
+    this.documentoLeituraService.removerLeituraUsuario({
+      campanhaId: dto.campanhaId,
+      usuarioId: dto.usuarioId,
+    });
   }
 
   /** Propaga a criação já persistida de uma página colaborativa à campanha. */
@@ -588,6 +644,24 @@ export class CampanhaGateway implements OnGatewayConnection {
   }
 
   /**
+   * Emite `documento:leitores` (m9-09) — o retrato de quem está lendo cada documento — **só** em
+   * `campanha:<id>:mestre`. Nunca na sala cheia nem na do espectador: mostraria a leitura de um
+   * jogador aos outros. Chamado pela `DocumentoLeituraService` quando o retrato muda.
+   */
+  emitirDocumentoLeitores(retrato: DocumentoLeitoresDto): void {
+    this.servidor.to(this.salaCampanhaMestre(retrato.campanhaId)).emit('documento:leitores', retrato);
+  }
+
+  /**
+   * Entrega o retrato atual de presença direto a um socket do mestre que acabou de informar leitura
+   * (m9-09) — quem abre a Biblioteca depois dos jogadores já vê quem está lendo. Só a
+   * `DocumentoLeituraService` chama, e só para uma conexão de papel `MESTRE`.
+   */
+  emitirDocumentoLeitoresParaConexao(conexaoId: string, retrato: DocumentoLeitoresDto): void {
+    this.servidor.to(conexaoId).emit('documento:leitores', retrato);
+  }
+
+  /**
    * Emite `encontro:iniciativa-pedido` na sala `campanha:<id>` (m7-04) — o mestre chamando os
    * jogadores a rolar a própria iniciativa. É só o **chamado**: a rolagem em si entra pelo fluxo
    * REST de rolagem, como qualquer outra (§9, broadcast-only).
@@ -660,8 +734,8 @@ export class CampanhaGateway implements OnGatewayConnection {
 
   /**
    * Sala própria do mestre (m3-27, correção) — ingressada só por quem entra em `campanha:entrar`
-   * com papel `MESTRE`, além da sala cheia. Hoje só recebe `rolagem:registrada` `PRIVADA`
-   * (`emitirRolagemRegistrada`); qualquer outro broadcast continua pela sala cheia normal.
+   * com papel `MESTRE`, além da sala cheia. Recebe o que é exclusivo do mestre: `rolagem:registrada`
+   * `PRIVADA`, cena `PLANEJADA`, documento oculto e o retrato `documento:leitores` (m9-09).
    */
   private salaCampanhaMestre(campanhaId: number): string {
     return `campanha:${campanhaId}:mestre`;

@@ -171,7 +171,18 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
 
     this.tempoRealService.conectar();
     this.tempoRealService.entrarSalaCampanha(this.campanhaId);
-    this.destroyRef.onDestroy(() => this.tempoRealService.sairSalaCampanha(this.campanhaId));
+    this.destroyRef.onDestroy(() => {
+      this.tempoRealService.informarLeitura(this.campanhaId, null);
+      this.tempoRealService.sairSalaCampanha(this.campanhaId);
+    });
+
+    // Presença de leitura (m9-09): o mestre fica fora do retrato, mas informar é o que lhe entrega
+    // o retrato atual — na abertura e a cada reconexão (`reconexao$`, P-083), quando o backend
+    // perdeu o estado. O que ele lê não importa ao retrato; a exibição é da `m9-10`.
+    this.tempoRealService.informarLeitura(this.campanhaId, null);
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.tempoRealService.informarLeitura(this.campanhaId, null));
 
     merge(
       this.recarregar$,

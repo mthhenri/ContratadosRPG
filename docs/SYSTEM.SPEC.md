@@ -296,6 +296,17 @@ Idênticos ao padrão de referência do autor (ver `CONVENTIONS.md`):
     mestre/jogador. Recebe só o que é explicitamente encaminhado às duas salas (hoje, só
     `rolagem:registrada` pública) — nunca os eventos de ficha/inventário/caderno/gestão de membro
     acima, fechado por construção (a sala nunca é alvo desses `emit()`).
+  - `campanha:<id>:mestre` — só quem entrou como `MESTRE`, além da sala cheia. Recebe o que é
+    exclusivo do mestre: `rolagem:registrada` `PRIVADA`, `cena:alterada` de cena `PLANEJADA`,
+    `documento:alterado` de documento oculto e `documento:leitores`.
+- **Presença de leitura da Biblioteca (m9-09):** o cliente envia `documento:leitura`
+  (`{ campanhaId, documentoId | null }`). É presença efêmera, sem persistência nem REST, como a do
+  Caderno, e não é a mutação que a proibição #25 veda. O gateway só delega: a `DocumentoService`
+  valida o vínculo e se o usuário pode ler o documento (senão conta como `null`), e a
+  `DocumentoLeituraService` guarda o estado em memória por processo. O retrato completo
+  `documento:leitores` vai **só** para `campanha:<id>:mestre`, nunca para a sala cheia nem para a
+  do espectador. A presença é limpa na desconexão, em `campanha:sair`, na troca de papel ou
+  revogação, e ao ocultar ou remover o documento.
 - **Permissões:** a service de ficha/campanha é o único árbitro — o gateway consulta a
   mesma verificação usada pelo REST. Proibido duplicar regra de permissão no gateway.
 - **Resiliência:** cliente ressincroniza (refetch da ficha aberta) ao reconectar —

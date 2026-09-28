@@ -726,10 +726,11 @@ integrá-la. Fontes e gates em
 [requests-correcoes](../specs/backlog/requests-correcoes.spec.md); tasks em
 `docs/specs/backlog/p-086-*.spec.md` e `requests-inventario-sob-demanda.spec.md`.
 
-**Biblioteca — melhorias (2026-09-28):** `m9-07` (segundo clique fecha) e `m9-08` (importar
-Markdown como rascunho) concluídas, specs em `done/`. Permanecem no backlog `m9-09` (presença de
-leitura — contrato e backend) e `m9-10` (presença — tela do mestre, depende da `m9-09`), cada uma
-com decisões assumidas a confirmar. Antes:
+**Biblioteca — melhorias (2026-09-28):** `m9-07` (segundo clique fecha), `m9-08` (importar
+Markdown como rascunho) e `m9-09` (presença de leitura — contrato, backend e envio do cliente;
+`documento:leitura`/`documento:leitores` gravados na §9 do `SYSTEM.SPEC.md` com aprovação do autor)
+concluídas, specs em `done/`. Próxima da série: `m9-10` (presença — tela do mestre, consome `documento:leitores`); a
+`m9-11` (Biblioteca em painel flutuante) segue no backlog. Antes:
 
 **Módulo de Cenas — `m7-25` (Investigação completa), desbloqueada: a `m9-02` (backend de
 documento) e a `m9-04` (`LeitorDocumento`) estão prontas.** `m7-21` (contrato + schema), `m7-22` (backend +
@@ -2689,7 +2690,9 @@ reusando a permissão §14 das services. Eventos: `ficha:criada`, `ficha:alterad
 `encontro:alterado` (por usuário — ver "Encontro de Combate" abaixo), `cena:alterada` (`m7-22`:
 cena `PLANEJADA` só na sala `campanha:<id>:mestre`; aberta/encerrada na sala cheia + espectador) e
 `documento:alterado` (`m9-02`: o que nunca foi visível à mesa só na sala do mestre — ver "Biblioteca
-de documentos" abaixo).
+de documentos" abaixo). **Presença de leitura (`m9-09`):** o cliente envia `documento:leitura`
+(`{ campanhaId, documentoId | null }`) e o mestre recebe `documento:leitores` — ver "Biblioteca de
+documentos".
 Os eventos de inventário/estado sinalizam o frontend para reler a fonte de verdade por REST.
 `ficha:recortes-alterados` leva `{ campanhaId, fichas, membros }`: `FichaService` compara as
 projeções persistidas antes/depois e decide os flags; o gateway somente transporta. Os consumidores
@@ -2751,6 +2754,21 @@ edição → recarrega; `REMOVIDO` de outra sessão fecha o painel com aviso. `L
 400 do upload não viram toast: `ERROS_TRATADOS_NA_TELA`
 (`core/interceptors/error-handler.interceptor.ts`). Composição visual em `docs/design/DESIGN.md`,
 "Biblioteca de documentos".
+
+**Presença de leitura (`m9-09`):** efêmera, sem banco e sem REST. O cliente envia
+`documento:leitura` `{ campanhaId, documentoId | null }`; o gateway só delega à
+`DocumentoService.informarLeitura` (exige vínculo pela `validarAcessoSalaCampanha`; um id que o
+usuário não pode ler — oculto, inexistente, de outra campanha — vira `null`), que registra na
+`DocumentoLeituraService`: mapa em memória `socketId → { campanhaId, usuarioId, papel, documentoId }`,
+por processo (como as salas; várias instâncias em `IDEAS.md` `I-039`). O retrato
+(`DocumentoLeitoresDto`, sempre completo) agrupa por usuário+documento, omite o mestre e só sai —
+para `campanha:<id>:mestre` — quando muda; um socket do mestre que informa recebe o retrato atual
+direto. Limpeza: `handleDisconnect`, `campanha:sair`, `recalibrarSalasCampanhaUsuario` (papel
+alterado ou acesso revogado tira o usuário da campanha) e ocultar/remover (a `DocumentoService` tira
+os leitores não-mestre do documento). No cliente, `TempoRealService.informarLeitura`; a
+`BibliotecaLeituraStore` informa ao abrir/trocar, fechar, destruir e em cada `reconexao$`; a página
+do mestre informa `null` ao montar e em cada `reconexao$` só para receber o retrato. Nada exibe a
+presença ainda — a tela é da `m9-10`.
 
 **Importar Markdown (`m9-08`):** na edição de TEXTO, o mestre lê .md/.markdown localmente,
 confirma substituir quando há texto e mantém o título. Conteúdo normalizado é rascunho até Salvar;

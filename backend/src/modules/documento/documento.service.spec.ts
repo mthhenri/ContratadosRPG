@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type {
   DocumentoBibliotecaAlteradaDto,
+  DocumentoLeitoresDto,
   DocumentoRecuperadoDto,
 } from '@contratados-rpg/shared/dtos/documento';
 import {
@@ -27,6 +28,7 @@ import type { TransacaoService } from '../../database/transacao.service';
 import type { JwtPayload } from '../autenticacao/jwt-payload.interface';
 import type { CampanhaRepository } from '../campanha/campanha.repository';
 import { CampanhaService } from '../campanha/campanha.service';
+import { DocumentoLeituraService } from './documento-leitura.service';
 import type { DocumentoRepository } from './documento.repository';
 import { DocumentoService } from './documento.service';
 
@@ -81,7 +83,12 @@ describe('DocumentoService', () => {
   let armazenamentoProvedor: { salvarImagem: Mock; excluirImagem: Mock };
   let campanhaGateway: {
     emitirDocumentoAlterado: Mock<(evento: DocumentoBibliotecaAlteradaDto, visivelParaMesa: boolean) => void>;
+    emitirDocumentoLeitores: Mock<(retrato: DocumentoLeitoresDto) => void>;
+    emitirDocumentoLeitoresParaConexao: Mock<(conexaoId: string, retrato: DocumentoLeitoresDto) => void>;
   };
+  let campanhaService: CampanhaService;
+  let validarAcessoSalaCampanha: Mock<CampanhaService['validarAcessoSalaCampanha']>;
+  let documentoLeituraService: DocumentoLeituraService;
   let dentroDaTransacao: boolean;
   let ordemGravadaNaTransacao: boolean[];
   let service: DocumentoService;
@@ -153,14 +160,28 @@ describe('DocumentoService', () => {
       salvarImagem: vi.fn().mockResolvedValue({ caminho: '/uploads/documentos/nova.png' }),
       excluirImagem: vi.fn().mockResolvedValue(undefined),
     };
-    campanhaGateway = { emitirDocumentoAlterado: vi.fn() };
+    campanhaGateway = {
+      emitirDocumentoAlterado: vi.fn(),
+      emitirDocumentoLeitores: vi.fn(),
+      emitirDocumentoLeitoresParaConexao: vi.fn(),
+    };
     // Os predicados de papel são os reais (proibição #28: nenhum módulo compara papel na mão).
-    const campanhaService = Object.create(CampanhaService.prototype) as CampanhaService;
+    campanhaService = Object.create(CampanhaService.prototype) as CampanhaService;
+    // A entrada na sala (`validarAcessoSalaCampanha`) é dublada pelo mesmo mapa de papéis.
+    validarAcessoSalaCampanha = vi.spyOn(campanhaService, 'validarAcessoSalaCampanha').mockImplementation((_dto, usuarioAtivo) => {
+      const papel = PAPEL_POR_USUARIO[usuarioAtivo.sub];
+      return papel
+        ? Promise.resolve({ papel } as never)
+        : Promise.reject(new UnauthorizedAccessException());
+    });
+    // Presença real (em memória), com o gateway dublado — o retrato é observado pelas emissões.
+    documentoLeituraService = new DocumentoLeituraService(campanhaGateway as unknown as CampanhaGateway);
     service = new DocumentoService(
       documentoRepositorio as unknown as DocumentoRepository,
       campanhaRepositorio as unknown as CampanhaRepository,
       campanhaService,
       transacaoService as unknown as TransacaoService,
+      documentoLeituraService,
       armazenamentoProvedor,
       campanhaGateway as unknown as CampanhaGateway,
     );
@@ -627,6 +648,99 @@ describe('DocumentoService', () => {
         service.alterarImagemDocumento({ id: 70, arquivo: arquivoPng }, usuario(MESTRE)),
       ).rejects.toBeInstanceOf(BusinessException);
       expectSemEscrita();
+    });
+  });
+  describe('informarLeitura (m9-09, presença)', () => {
+    /** Último retrato emitido à sala do mestre. */
+    function ultimoRetrato(): DocumentoLeitoresDto | undefined {
+      return campanhaGateway.emitirDocumentoLeitores.mock.calls.at(-1)?.[0];
+    }
+
+    it('jogador lendo um revelado entra no retrato do mestre', async () => {
+      documentoRepositorio.recuperarPorId.mockResolvedValue(criarDocumento({ revelado: true }));
+
+      await service.informarLeitura({ conexaoId: 's-j', campanhaId: 5, documentoId: 70 }, usuario(JOGADOR));
+
+      expect(ultimoRetrato()).toEqual({
+        campanhaId: 5,
+        leitores: [{ documentoId: 70, usuarioId: JOGADOR, papel: TipoCampanhaMembroPapelEnum.JOGADOR }],
+      });
+    });
+
+    it('jogador informando um oculto vira null — não "lê" o que o GET lhe negaria', async () => {
+      documentoRepositorio.recuperarPorId.mockResolvedValue(criarDocumento({ revelado: false }));
+
+      await service.informarLeitura({ conexaoId: 's-j', campanhaId: 5, documentoId: 70 }, usuario(JOGADOR));
+
+      expect(campanhaGateway.emitirDocumentoLeitores).not.toHaveBeenCalled();
+      expect(documentoLeituraService.montarRetrato(5).leitores).toEqual([]);
+    });
+
+    it('espectador informando um id inexistente vira null', async () => {
+      documentoRepositorio.recuperarPorId.mockResolvedValue(null);
+
+      await service.informarLeitura({ conexaoId: 's-e', campanhaId: 5, documentoId: 999 }, usuario(ESPECTADOR));
+
+      expect(documentoLeituraService.montarRetrato(5).leitores).toEqual([]);
+    });
+
+    it('um documento revelado de outra campanha vira null', async () => {
+      documentoRepositorio.recuperarPorId.mockResolvedValue(criarDocumento({ revelado: true, campanhaId: 8 }));
+
+      await service.informarLeitura({ conexaoId: 's-j', campanhaId: 5, documentoId: 70 }, usuario(JOGADOR));
+
+      expect(documentoLeituraService.montarRetrato(5).leitores).toEqual([]);
+      expect(documentoLeituraService.montarRetrato(8).leitores).toEqual([]);
+    });
+
+    it('quem não é membro é recusado e nada é registrado', async () => {
+      await expect(
+        service.informarLeitura({ conexaoId: 's-f', campanhaId: 5, documentoId: null }, usuario(FORASTEIRO)),
+      ).rejects.toBeInstanceOf(UnauthorizedAccessException);
+
+      expect(campanhaGateway.emitirDocumentoLeitores).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirDocumentoLeitoresParaConexao).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      [{ campanhaId: 0, documentoId: null }],
+      [{ campanhaId: 5, documentoId: 1.5 }],
+      [{ campanhaId: 5, documentoId: 'x' as unknown as number }],
+    ])('payload inválido %o → BusinessException, sem consultar', async (payload) => {
+      await expect(
+        service.informarLeitura({ conexaoId: 's-j', ...payload }, usuario(JOGADOR)),
+      ).rejects.toBeInstanceOf(BusinessException);
+
+      expect(validarAcessoSalaCampanha).not.toHaveBeenCalled();
+    });
+
+    it('o mestre recebe o retrato atual na própria conexão, sem aparecer nele', async () => {
+      documentoRepositorio.recuperarPorId.mockResolvedValue(criarDocumento({ revelado: true }));
+      await service.informarLeitura({ conexaoId: 's-j', campanhaId: 5, documentoId: 70 }, usuario(JOGADOR));
+      campanhaGateway.emitirDocumentoLeitores.mockClear();
+
+      await service.informarLeitura({ conexaoId: 's-m', campanhaId: 5, documentoId: 70 }, usuario(MESTRE));
+
+      expect(campanhaGateway.emitirDocumentoLeitores).not.toHaveBeenCalled();
+      expect(campanhaGateway.emitirDocumentoLeitoresParaConexao).toHaveBeenCalledWith('s-m', {
+        campanhaId: 5,
+        leitores: [{ documentoId: 70, usuarioId: JOGADOR, papel: TipoCampanhaMembroPapelEnum.JOGADOR }],
+      });
+    });
+
+    it.each([
+      ['ocultar', () => service.ocultarDocumento({ id: 70 }, usuario(MESTRE))],
+      ['remover', () => service.removerDocumento({ id: 70 }, usuario(MESTRE))],
+    ])('%s tira do documento os leitores não-mestre, sem esperar o cliente', async (_nome, executar) => {
+      documentoRepositorio.recuperarPorId.mockResolvedValue(criarDocumento({ revelado: true }));
+      await service.informarLeitura({ conexaoId: 's-j', campanhaId: 5, documentoId: 70 }, usuario(JOGADOR));
+      await service.informarLeitura({ conexaoId: 's-e', campanhaId: 5, documentoId: 70 }, usuario(ESPECTADOR));
+      campanhaGateway.emitirDocumentoLeitores.mockClear();
+
+      await executar();
+
+      expect(campanhaGateway.emitirDocumentoLeitores).toHaveBeenCalledTimes(1);
+      expect(ultimoRetrato()).toEqual({ campanhaId: 5, leitores: [] });
     });
   });
 });
