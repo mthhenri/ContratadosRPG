@@ -40,6 +40,7 @@ describe('BibliotecaEspectador', () => {
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       reconexao: signal(0),
+      reconexao$: new Subject<void>().asObservable(),
       documentoAlterado$: new Subject<DocumentoBibliotecaAlteradaDto>(),
     };
     const painel = {

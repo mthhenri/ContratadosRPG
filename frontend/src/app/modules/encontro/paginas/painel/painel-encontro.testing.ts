@@ -289,6 +289,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const encontroPendente$ = new Subject<EncontroRecuperadoDto>();
   const cenaAlterada$ = new Subject<CenaAlteradaDto>();
   const fichaAlterada$ = new Subject<FichaAlteradaDto>();
+  const reconexao$ = new Subject<void>();
   const tempoReal = {
     conectar: vi.fn(),
     entrarSalaCampanha: vi.fn(),
@@ -298,6 +299,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     enviarPresencaEsquadrao: vi.fn(),
     conectado: () => true,
     reconexao: () => 0,
+    reconexao$: reconexao$.asObservable(),
     encontroAlterado$,
     cenaAlterada$,
     fichaAlterada$,
@@ -445,6 +447,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     rolagemRegistrada$,
     membrosPendentes$,
     encontroPendente$,
+    reconexao$,
   };
 }
 

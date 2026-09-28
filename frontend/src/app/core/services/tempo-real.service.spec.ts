@@ -258,6 +258,54 @@ describe('TempoRealService', () => {
     ]);
   });
 
+  // === P-083: `reconexao$` — mecanismo comum para telas ressincronizarem só em reconexões
+  // FUTURAS à própria assinatura, nunca numa já ocorrida antes de montar (ver nota de classe).
+
+  it('reconexao$ nunca emite na primeira conexão (só reconexões reais)', () => {
+    const { servico } = criar(() => 'jwt');
+    const recebidos: unknown[] = [];
+    servico.reconexao$.subscribe(() => recebidos.push(undefined));
+
+    servico.conectar();
+    socketFake.disparar('connect');
+
+    expect(recebidos).toEqual([]);
+  });
+
+  it('reconexao$ emite a cada reconexão real, na ordem, para quem já estava assinado', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    const recebidos: unknown[] = [];
+    servico.reconexao$.subscribe(() => recebidos.push(undefined));
+
+    socketFake.disparar('connect'); // primeira conexão — não é reconexão
+    expect(recebidos).toHaveLength(0);
+
+    socketFake.disparar('connect'); // 1ª reconexão real
+    expect(recebidos).toHaveLength(1);
+
+    socketFake.disparar('connect'); // 2ª reconexão real, sucessiva
+    expect(recebidos).toHaveLength(2);
+  });
+
+  it('reconexao$ não reproduz pra quem assina DEPOIS de uma reconexão já ocorrida', () => {
+    const { servico } = criar(() => 'jwt');
+    servico.conectar();
+    socketFake.disparar('connect'); // primeira conexão
+    socketFake.disparar('connect'); // reconexão — já aconteceu antes da assinatura abaixo
+
+    // Um consumidor "montado" só agora (ex.: tela aberta depois da reconexão) não deve ver essa
+    // reconexão antiga como se fosse um evento novo — é exatamente o achado da revisão de
+    // 2026-09-26 (GET duplicado ao reabrir uma tela depois de reconectar).
+    const recebidos: unknown[] = [];
+    servico.reconexao$.subscribe(() => recebidos.push(undefined));
+    expect(recebidos).toEqual([]);
+
+    // Mas uma reconexão futura, depois dessa assinatura, continua chegando normalmente.
+    socketFake.disparar('connect');
+    expect(recebidos).toHaveLength(1);
+  });
+
   it('esquece a sala ao sair — não reingressa nela numa reconexão', () => {
     const { servico } = criar(() => 'jwt');
     servico.conectar();

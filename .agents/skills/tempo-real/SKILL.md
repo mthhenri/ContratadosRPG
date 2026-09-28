@@ -82,8 +82,14 @@ consumidores esquecidos, sem corrigir o problema nesta investigação.
 ## 5. Reconexão e verificação
 
 Evento perdido não tem replay. `TempoRealService` reingressa em suas salas a cada reconexão e
-incrementa `reconexao`; cada tela precisa então refazer seu GET autorizado. Ao desenhar consumidor
-novo, assine tanto o evento quanto essa ressincronização, quando a tela mantiver estado carregado.
+emite `reconexao$` (`Observable<void>`); cada tela precisa então refazer seu GET autorizado. Ao
+desenhar consumidor novo, assine tanto o evento quanto essa ressincronização, quando a tela mantiver
+estado carregado — **sempre** `reconexao$.pipe(takeUntilDestroyed(...)).subscribe(...)` (ou dentro de
+um `merge(...)` já existente), **nunca** `effect(() => { if (reconexao() > 0) ... })`: o `effect`
+lê o contador (`reconexao`, só depuração/teste) já maior que zero se qualquer reconexão anterior à
+montagem deste consumidor já tiver ocorrido, duplicando a carga inicial — a causa raiz do P-083
+(`docs/specs/done/p-083-reconexao-sem-carga-duplicada.spec.md`). Um `Subject` nunca reproduz o
+passado para quem assina depois; é essa semântica que resolve o bug por construção.
 
 Para a execução real, siga a seção “Tempo real (WebSocket)” da skill
 [`verify`](../verify/SKILL.md): dois usuários (mestre e jogador), JWT em `auth.token`, confirmação

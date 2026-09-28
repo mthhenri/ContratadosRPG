@@ -79,14 +79,11 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
     this.assinarTempoReal(id);
     this.configurarCoordenadorInvalidacao();
 
-    effect(
-      () => {
-        if (this.tempoRealService.reconexao() > 0) {
-          this.invalidacoes.next('projecao');
-        }
-      },
-      { injector: this.injector },
-    );
+    // `reconexao$` (P-083) — só reconexões futuras à montagem; o coordenador de invalidação
+    // acima já agrupa/serializa esta com qualquer outra intenção concorrente.
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.invalidacoes.next('projecao') });
 
     const relogio = setInterval(() => this.agoraInterno.set(Date.now()), 5000);
     this.destroyRef.onDestroy(() => clearInterval(relogio));

@@ -1,13 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  computed,
-  effect,
-  inject,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -330,12 +321,13 @@ export class CriaturaVisualizar {
           this.historicoRolagens.update((atuais) => atuais.filter((rolagem) => rolagem.id !== excluida.id)),
       });
 
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0) {
-        this.fichaService.recuperarFichaCriatura(this.fichaId).subscribe({
-          next: (ficha) => untracked(() => this.absorverRemoto(ficha)),
-        });
-      }
+    // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
+    // abrir a ficha.
+    this.tempoRealService.reconexao$.pipe(takeUntilDestroyed()).subscribe({
+      next: () =>
+        this.fichaService
+          .recuperarFichaCriatura(this.fichaId)
+          .subscribe({ next: (ficha) => this.absorverRemoto(ficha) }),
     });
   }
 

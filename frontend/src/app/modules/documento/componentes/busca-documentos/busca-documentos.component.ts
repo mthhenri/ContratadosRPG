@@ -158,11 +158,9 @@ export class BuscaDocumentos {
         takeUntilDestroyed(),
       )
       .subscribe(() => this.refazer());
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0) {
-        untracked(() => this.refazer());
-      }
-    });
+    // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
+    // abrir a busca.
+    this.tempoRealService.reconexao$.pipe(takeUntilDestroyed()).subscribe(() => this.refazer());
 
     effect(() => {
       const ativa = this.ativa();

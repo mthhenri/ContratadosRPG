@@ -7,8 +7,8 @@
 > na ficha errada e dados antigos após reconexão. Carga inicial verificada em desktop/mobile.
 > Cenário isolado excluído; contas de teste mantidas conforme autorizado. Correções especificadas
 > em seis tasks no backlog, ordenadas em [requests-correcoes](../specs/backlog/requests-correcoes.spec.md).
-> `p-082` (1/6) **concluída** (spec em `done/`) — `P-082` fechado em `PROBLEMS.md`. Restam
-> `p-083`…`p-086` e o inventário sob demanda; próxima recomendada `p-083`.
+> `p-082` e `p-083` (2/6) **concluídas** (specs em `done/`) — `P-082`/`P-083` fechados em
+> `PROBLEMS.md`. Restam `p-084`…`p-086` e o inventário sob demanda; próxima recomendada `p-084`.
 
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
@@ -20,6 +20,24 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-27 · **Última decisão registrada:**
+> `p-083-reconexao-sem-carga-duplicada` concluída (spec em `done/`, `P-083` fechado em
+> `PROBLEMS.md`): `TempoRealService` ganhou `reconexao$` — um `Observable<void>` emitido a cada
+> reconexão real, no lugar do padrão `effect(() => reconexao() > 0)` que os 12 consumidores
+> espalhados pelo frontend usavam. Um `Subject` nunca reproduz eventos passados pra quem assina
+> depois; o `effect` antigo lia o contador **já** maior que zero no primeiro ciclo se qualquer
+> reconexão tivesse ocorrido antes da montagem, duplicando a carga inicial (achado da revisão:
+> reabrir a campanha depois de reconectar fazia 8 GETs em vez de 6, membros e fichas duplicados).
+> Migrados: `campanha-detalhe-dados.service.ts`, `campanha-previa-jogador-dados.service.ts`,
+> `encontro-painel-dados.service.ts`, `biblioteca-leitura.store.ts`, `biblioteca-mestre.page.ts`,
+> `hub-cenas.page.ts`, `busca-documentos.component.ts`, `anotacoes-janela.page.ts`,
+> `historico-rolagens-janela.page.ts` (campanha e ficha, esta sem spec até então — ganhou um
+> novo) e `visualizar.page.ts`/`visualizar-criatura.page.ts`. Nenhum coordenador genérico novo:
+> onde já existia `merge(...)+switchMap` pra recarga (hub de cenas, bibliotecas), `reconexao$`
+> só entrou nesse `merge`; os demais mantiveram a forma de recarregar que já tinham. Verificado
+> ao vivo contra backend real (matando e religando o processo — TCP cai na hora, sem esperar o
+> timeout de ping): carga inicial 2 GETs, reconexão com a tela aberta refaz os mesmos 2, e
+> reabrir a campanha depois da reconexão mede só 2 no total (não 4) — a reprodução exata do
+> achado original, confirmada corrigida. Antes:
 > `p-082-ficha-autosave-e-selecao` concluída (spec em `done/`, `P-082` fechado em `PROBLEMS.md`):
 > a intenção de salvamento do autosave debounced (`FichaEdicaoService`) agora é capturada com o
 > ID e o documento de origem no instante do ajuste (`agendarPersistencia`), não relidos na hora
@@ -40,7 +58,7 @@
 > seus dados corretos, botão "Ver ficha" desabilitado durante o flush, e a resposta de leitura
 > atrasada de uma seleção anterior não substitui a seleção mais recente. `requests-correcoes` é
 > guarda-chuva de 6 tasks (`P-082`…`P-086` + inventário sob demanda); esta foi a 1ª (`p-082`) —
-> seguem abertas `p-083`…`p-086` e a última. Antes:
+> seguem abertas `p-084`…`p-086` e a última (`p-083` também concluída, ver acima). Antes:
 > `m9-06-refinamento-mobile-biblioteca` concluída (spec em `done/`): passe de apresentação nos
 > quatro viewports (`360×800`, `960×1080`, `1366×768`, `1920×1080`) das três visões da Biblioteca.
 > Dois defeitos reais encontrados ao vivo (nenhum por leitura de CSS): (1) `.documento-cartao__nome`
@@ -660,14 +678,15 @@
 
 ## 1. Próxima Task
 
-**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 1/6
-concluída: `p-082` (autosave/seleção da ficha, ver cabeçalho deste arquivo). Próxima recomendada:
-`p-083-reconexao-sem-carga-duplicada`** (contador `reconexao()` global reagindo à montagem, não só
-a incrementos posteriores — `P-083` em `PROBLEMS.md`). `p-085`/`p-086` são independentes das
-primeiras mas compartilham arquivo com elas (`campanha-detalhe-dados.service.ts`) — integrar em
-sequência. Fontes e gates em
+**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 2/6
+concluídas: `p-082` (autosave/seleção da ficha) e `p-083` (reconexão sem carga duplicada — ver
+cabeçalho deste arquivo). Próxima recomendada: `p-084-ressincronizacao-recursos`** (a reconexão
+recupera só membros/resumos; estado operacional, inventário, rolagens, ficha embutida e o feed do
+Encontro podem continuar desatualizados até outra mutação — `P-084` em `PROBLEMS.md`).
+`p-085`/`p-086` são independentes das primeiras mas compartilham arquivo com elas
+(`campanha-detalhe-dados.service.ts`) — integrar em sequência. Fontes e gates em
 [requests-correcoes](../specs/backlog/requests-correcoes.spec.md); tasks em
-`docs/specs/backlog/p-08{3,4,5,6}-*.spec.md` e `requests-inventario-sob-demanda.spec.md`. Antes:
+`docs/specs/backlog/p-08{4,5,6}-*.spec.md` e `requests-inventario-sob-demanda.spec.md`. Antes:
 
 **Módulo de Cenas — `m7-25` (Investigação completa), desbloqueada: a `m9-02` (backend de
 documento) e a `m9-04` (`LeitorDocumento`) estão prontas.** `m7-21` (contrato + schema), `m7-22` (backend +

@@ -206,15 +206,12 @@ export class CampanhaDetalheDadosService {
         },
       });
 
-    // Ressincronização ao reconectar (§9): refaz o fetch.
-    effect(
-      () => {
-        if (this.tempoRealService.reconexao() > 0) {
-          this.recarregarMembrosEFichas();
-        }
-      },
-      { injector: this.injector },
-    );
+    // Ressincronização ao reconectar (§9): refaz o fetch. `reconexao$` (não `reconexao()` num
+    // `effect`, P-083) — só dispara em reconexões futuras à assinatura; um consumidor montado
+    // depois de uma reconexão já ocorrida não duplica a carga inicial.
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.recarregarMembrosEFichas() });
 
     // Relógio do "Atualizado há Xs" — só recomputa o texto, nunca refaz fetch.
     const relogio = setInterval(() => this.agoraInterno.set(Date.now()), 5000);

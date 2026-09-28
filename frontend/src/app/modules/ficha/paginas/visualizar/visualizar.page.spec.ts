@@ -142,6 +142,7 @@ describe('FichaVisualizar', () => {
     const acessoRevogado$ = new Subject<FichaAcessoRevogadoDto>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const reconexao = signal(0);
+    const reconexao$ = new Subject<void>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaFicha: vi.fn(),
@@ -153,6 +154,7 @@ describe('FichaVisualizar', () => {
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
       reconexao,
+      reconexao$: reconexao$.asObservable(),
       conectado: signal(true),
     };
     const notificacaoService = { notificar: vi.fn() };
@@ -211,6 +213,7 @@ describe('FichaVisualizar', () => {
       acessoRevogado$,
       rolagemRegistrada$,
       reconexao,
+      reconexao$,
       notificacaoService,
       navegarEspiao,
     };
@@ -1471,7 +1474,7 @@ describe('FichaVisualizar', () => {
   });
 
   it('o refetch da reconexão mescla em vez de engolir a edição local pendente (m3-17)', () => {
-    const { fixture, reconexao, fichaService } = montar({ usuarioLogadoId: 99 });
+    const { fixture, reconexao$, fichaService } = montar({ usuarioLogadoId: 99 });
     const componente = fixture.componentInstance;
 
     // Um save que nunca resolve mantém `edicaoPendente` verdadeiro (PUT em voo).
@@ -1482,7 +1485,7 @@ describe('FichaVisualizar', () => {
     fichaService.recuperarFicha.mockReturnValueOnce(
       of({ id: 42, campanhaId: 9, usuarioId: 7, nome: 'Kane Remoto', dados } as FichaRecuperadaDto),
     );
-    reconexao.set(1);
+    reconexao$.next();
     fixture.detectChanges();
 
     // O nome remoto entra; o ajuste local em voo não é descartado pelo refetch.
@@ -1490,15 +1493,21 @@ describe('FichaVisualizar', () => {
     expect(componente['ficha']()?.dados.estado.vidaAtual).toBe(4);
   });
 
-  it('ressincroniza a ficha aberta ao reconectar (§9)', () => {
-    const { fixture, reconexao, fichaService } = montar({ usuarioLogadoId: 99 });
+  it('ressincroniza a ficha aberta ao reconectar via reconexao$ (§9, P-083)', () => {
+    const { fixture, reconexao$, fichaService } = montar({ usuarioLogadoId: 99 });
     expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
 
-    // Uma reconexão bumpa o Signal → refetch da ficha aberta.
-    reconexao.set(1);
+    // Uma reconexão real emite em `reconexao$` → refetch da ficha aberta.
+    reconexao$.next();
     fixture.detectChanges();
 
     expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(2);
+  });
+
+  it('abrir a ficha depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
+    const { fichaService } = montar({ usuarioLogadoId: 99 });
+
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
   });
 
   // === Deep-link das abas (m3-11) ===

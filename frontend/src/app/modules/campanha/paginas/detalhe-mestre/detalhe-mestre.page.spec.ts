@@ -195,6 +195,7 @@ describe('CampanhaDetalheMestre', () => {
       paginaEsquadraoExcluida$: new Subject().asObservable(),
       presencaEsquadraoCaderno$: new Subject().asObservable(),
       reconexao: signal(0),
+      reconexao$: new Subject<void>().asObservable(),
       conectado: () => true,
     };
 

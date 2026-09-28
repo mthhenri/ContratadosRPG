@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { EMPTY, type Observable, catchError, filter, map, of, switchMap } from 'rxjs';
@@ -105,12 +105,14 @@ export class AnotacoesJanela {
       )
       .subscribe({ next: (ficha) => this.absorverRemoto(ficha) });
 
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0 && untracked(() => this.estado()) === 'pronto') {
-        this.recuperar().subscribe({
-          next: (ficha) => untracked(() => this.absorverRemoto(ficha)),
-        });
-      }
+    // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
+    // abrir a janela.
+    this.tempoRealService.reconexao$.pipe(takeUntilDestroyed()).subscribe({
+      next: () => {
+        if (this.estado() === 'pronto') {
+          this.recuperar().subscribe({ next: (ficha) => this.absorverRemoto(ficha) });
+        }
+      },
     });
   }
 

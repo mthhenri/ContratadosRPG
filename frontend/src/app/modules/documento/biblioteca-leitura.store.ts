@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, effect, inject, signal, untracked } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, filter, finalize, merge, switchMap, tap } from 'rxjs';
 
@@ -41,16 +41,8 @@ export class BibliotecaLeituraStore {
   readonly abertoId = signal<number | null>(null);
   readonly aberto = signal<DocumentoRecuperadoDto | null>(null);
 
-  /** Pedidos de recarga da lista (evento, reconexão). */
+  /** Pedidos de recarga da lista (evento). */
   private readonly recarregar$ = new Subject<void>();
-
-  constructor() {
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0) {
-        untracked(() => this.recarregar$.next());
-      }
-    });
-  }
 
   /** Carrega a lista e entra na sala da campanha; sai dela quando a página é destruída. */
   iniciar(campanhaId: number): void {
@@ -64,6 +56,8 @@ export class BibliotecaLeituraStore {
         filter((evento) => evento.campanhaId === campanhaId),
         tap((evento) => this.aoAlterarDocumento(evento)),
       ),
+      // `reconexao$` (P-083): só reconexões futuras a este `iniciar`, nunca uma já ocorrida antes.
+      this.tempoRealService.reconexao$,
     )
       .pipe(
         // `switchMap`: numa rajada de eventos, só a última lista vale.

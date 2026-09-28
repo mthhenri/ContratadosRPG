@@ -250,6 +250,21 @@ describe('EncontroPainelDadosService', () => {
       expect(tempoReal.sairSalaCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
     });
 
+    it('reconexao$ (reconexão real) refaz a carga da cena (P-083)', () => {
+      const { cenaService, reconexao$ } = montar();
+      cenaService.recuperarCena.mockClear();
+
+      reconexao$.next();
+
+      expect(cenaService.recuperarCena).toHaveBeenCalledWith(CENA_ID);
+    });
+
+    it('montar o painel depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
+      const { cenaService } = montar();
+
+      expect(cenaService.recuperarCena).toHaveBeenCalledTimes(1);
+    });
+
     it('absorve o broadcast `encontro:alterado` da própria campanha', () => {
       const { dados, encontroAlterado$ } = montar();
       encontroAlterado$.next({

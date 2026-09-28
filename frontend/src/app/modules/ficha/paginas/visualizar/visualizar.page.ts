@@ -1,13 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  computed,
-  effect,
-  inject,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -439,16 +430,13 @@ export class FichaVisualizar {
 
     // Ressincronização ao reconectar (§9 — o Render dorme e derruba a conexão): refaz o fetch da
     // ficha aberta. O documento buscado entra pelo mesmo merge, então uma edição local pendente
-    // sobrevive ao refetch em vez de bloqueá-lo.
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0) {
-        this.fichaService.recuperarFicha(this.fichaId).subscribe({
-          // `untracked`: o `absorverRemoto` lê e escreve `ficha`/`fichaBase`. Sem isso, uma resposta
-          // **síncrona** entregaria essas leituras dentro do contexto reativo do `effect`, que
-          // passaria a depender do que ele mesmo escreve — laço infinito.
-          next: (ficha) => untracked(() => this.absorverRemoto(ficha)),
-        });
-      }
+    // sobrevive ao refetch em vez de bloqueá-lo. `reconexao$` (P-083): só reconexões futuras à
+    // montagem, nunca uma já ocorrida antes de abrir a ficha.
+    this.tempoRealService.reconexao$.pipe(takeUntilDestroyed()).subscribe({
+      next: () =>
+        this.fichaService
+          .recuperarFicha(this.fichaId)
+          .subscribe({ next: (ficha) => this.absorverRemoto(ficha) }),
     });
   }
 

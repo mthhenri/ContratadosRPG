@@ -56,8 +56,17 @@ export const SOCKET_FACTORY = new InjectionToken<typeof io>('SOCKET_FACTORY', {
  *
  * **Ressincronização (§9):** o Render free tier dorme e derruba conexões. A cada **reconexão** o
  * serviço reingressa nas salas conhecidas (o servidor perde as salas ao cair o socket) e sinaliza
- * `reconexao` — as telas refazem o fetch da ficha aberta / da lista. A primeira conexão não conta
+ * a reconexão — as telas refazem o fetch da ficha aberta / da lista. A primeira conexão não conta
  * como reconexão (a tela já carregou pelo caminho normal).
+ *
+ * **`reconexao` vs. `reconexao$` (P-083):** `reconexao` é o contador total desde o boot da sessão
+ * — útil só para depuração/teste, nunca para decidir se **este** consumidor deve refazer algo: um
+ * consumidor montado depois de uma reconexão já veria `reconexao() > 0` no primeiro `effect()` e
+ * refaria a carga de novo, duplicando a carga inicial (achado da revisão de 2026-09-26). `reconexao$`
+ * é o mecanismo comum para isso — um evento por reconexão **real**, que só chega a quem já estava
+ * assinado quando ela aconteceu (semântica nativa de `Subject`: nunca reproduz o passado para quem
+ * assina depois). Todo consumidor que precisa ressincronizar ao reconectar assina `reconexao$`,
+ * nunca lê `reconexao()` num `effect()`.
  */
 @Injectable({ providedIn: 'root' })
 export class TempoRealService {
@@ -82,8 +91,11 @@ export class TempoRealService {
    * de qualquer tela de ficha/campanha jamais ter chamado `conectar()`.
    */
   readonly ativo = signal(false);
-  /** Contador que incrementa a cada **reconexão** — as telas ressincronizam quando ele muda. */
+  /** Contador que incrementa a cada **reconexão** — só depuração/teste, ver nota de classe acima. */
   readonly reconexao = signal(0);
+  private readonly reconexaoSubject = new Subject<void>();
+  /** Emite uma vez por **reconexão real** — mecanismo comum de ressincronização (P-083, nota acima). */
+  readonly reconexao$: Observable<void> = this.reconexaoSubject.asObservable();
 
   private readonly fichaAlteradaSubject = new Subject<FichaAlteradaDto>();
   private readonly fichaCriadaSubject = new Subject<FichaResumoDto>();
@@ -231,6 +243,7 @@ export class TempoRealService {
       this.reingressarSalas();
       if (this.jaConectou) {
         this.reconexao.update((contador) => contador + 1);
+        this.reconexaoSubject.next();
       }
       this.jaConectou = true;
     });

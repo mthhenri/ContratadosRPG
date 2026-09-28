@@ -83,11 +83,13 @@ describe('BibliotecaMestre', () => {
       ),
       enviarImagem: vi.fn(),
     };
+    const reconexao$ = new Subject<void>();
     const tempoReal = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       reconexao: signal(0),
+      reconexao$: reconexao$.asObservable(),
       documentoAlterado$,
     };
     TestBed.configureTestingModule({
@@ -126,6 +128,7 @@ describe('BibliotecaMestre', () => {
       listagem$,
       confirmar,
       notificar,
+      reconexao$,
     };
   }
 
@@ -222,12 +225,17 @@ describe('BibliotecaMestre', () => {
     expect(titulos(raiz)).toContain('Diário');
   });
 
-  it('refaz a lista na reconexão', () => {
-    const { fixture, documentoService, tempoReal } = montar();
+  it('refaz a lista na reconexão (reconexao$, P-083)', () => {
+    const { fixture, documentoService, reconexao$ } = montar();
     const chamadas = documentoService.listar.mock.calls.length;
-    tempoReal.reconexao.set(1);
+    reconexao$.next();
     fixture.detectChanges();
     expect(documentoService.listar.mock.calls.length).toBe(chamadas + 1);
+  });
+
+  it('abrir a biblioteca depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
+    const { documentoService } = montar();
+    expect(documentoService.listar).toHaveBeenCalledTimes(1);
   });
 
   // ── Documento aberto ──────────────────────────────────────────────────────

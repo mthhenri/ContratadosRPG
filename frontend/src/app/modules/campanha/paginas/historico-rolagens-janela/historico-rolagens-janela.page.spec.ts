@@ -34,8 +34,12 @@ describe('HistoricoRolagensCampanhaJanela', () => {
 
   const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
   let rolagensRest: RolagemResumoDto[] = [];
+  let reconexao$: Subject<void>;
+  let rolagemService: { listarPorCampanha: ReturnType<typeof vi.fn> };
 
   function montar(origem: string | null) {
+    reconexao$ = new Subject<void>();
+    rolagemService = { listarPorCampanha: vi.fn(() => of(rolagensRest)) };
     TestBed.configureTestingModule({
       imports: [HistoricoRolagensCampanhaJanela],
       providers: [
@@ -49,7 +53,7 @@ describe('HistoricoRolagensCampanhaJanela', () => {
             },
           },
         },
-        { provide: RolagemService, useValue: { listarPorCampanha: vi.fn(() => of(rolagensRest)) } },
+        { provide: RolagemService, useValue: rolagemService },
         {
           provide: TempoRealService,
           useValue: {
@@ -59,6 +63,7 @@ describe('HistoricoRolagensCampanhaJanela', () => {
             rolagemRegistrada$: rolagemRegistrada$.asObservable(),
             rolagemExcluida$: new Subject().asObservable(),
             reconexao: signal(0),
+            reconexao$: reconexao$.asObservable(),
           },
         },
       ],
@@ -106,5 +111,20 @@ describe('HistoricoRolagensCampanhaJanela', () => {
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Privada REST');
     rolagensRest = [];
+  });
+
+  it('reconexao$ (reconexão real) refaz o fetch (P-083)', () => {
+    montar(null);
+    rolagemService.listarPorCampanha.mockClear();
+
+    reconexao$.next();
+
+    expect(rolagemService.listarPorCampanha).toHaveBeenCalledWith(8);
+  });
+
+  it('montar a janela não duplica a carga inicial mesmo com o serviço já tendo reconectado antes (P-083)', () => {
+    montar(null);
+
+    expect(rolagemService.listarPorCampanha).toHaveBeenCalledTimes(1);
   });
 });

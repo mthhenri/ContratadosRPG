@@ -270,11 +270,11 @@ export class EncontroPainelDadosService {
           ),
       });
 
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0) {
-        untracked(() => this.carregar());
-      }
-    });
+    // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
+    // abrir o painel.
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.carregar() });
 
     // Fichas ao vivo na grade da cena sem iniciativa (m7-24) — o mecanismo do Esquadrão
     // (`CampanhaDetalheDadosService.sincronizarSalasFicha`): entra nas salas `ficha:<id>` das

@@ -60,11 +60,13 @@ describe('BibliotecaJogador', () => {
       recuperar: vi.fn((id: number) => of(completo(lista.find((item) => item.id === id)!))),
       buscar: vi.fn(),
     };
+    const reconexao$ = new Subject<void>();
     const tempoReal = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       reconexao: signal(0),
+      reconexao$: reconexao$.asObservable(),
       documentoAlterado$,
     };
     TestBed.configureTestingModule({
@@ -102,6 +104,7 @@ describe('BibliotecaJogador', () => {
       listagem$,
       alterarLista,
       evento,
+      reconexao$,
     };
   }
 
@@ -214,19 +217,25 @@ describe('BibliotecaJogador', () => {
     expect(tituloAberto(raiz)).toBe('Carta do informante (rasgada)');
   });
 
-  it('a reconexão refaz a lista; o aberto que sumiu sem evento fecha com o aviso', () => {
-    const { fixture, raiz, documentoService, tempoReal, notificar, alterarLista } = montar();
+  it('a reconexão (reconexao$, P-083) refaz a lista; o aberto que sumiu sem evento fecha com o aviso', () => {
+    const { fixture, raiz, documentoService, notificar, alterarLista, reconexao$ } = montar();
     abrir(fixture, 'Carta do informante');
     documentoService.listar.mockClear();
 
     alterarLista([mapa]);
-    tempoReal.reconexao.set(1);
+    reconexao$.next();
     fixture.detectChanges();
 
     expect(documentoService.listar).toHaveBeenCalledWith(CAMPANHA_ID);
     expect(titulos(raiz)).toEqual(['Mapa do porto']);
     expect(raiz.querySelector('.biblioteca__documento-titulo')).toBeNull();
     expect(notificar).toHaveBeenCalledTimes(1);
+  });
+
+  it('abrir a biblioteca depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
+    const { documentoService } = montar();
+
+    expect(documentoService.listar).toHaveBeenCalledTimes(1);
   });
 
   it('sai da sala da campanha ao ser destruída', () => {

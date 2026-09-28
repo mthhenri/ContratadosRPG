@@ -263,6 +263,7 @@ describe('CampanhaDetalheJogador', () => {
       paginaEsquadraoExcluida$: new Subject().asObservable(),
       presencaEsquadraoCaderno$: new Subject().asObservable(),
       reconexao: () => 0,
+      reconexao$: new Subject<void>().asObservable(),
       conectado: () => true,
     };
 

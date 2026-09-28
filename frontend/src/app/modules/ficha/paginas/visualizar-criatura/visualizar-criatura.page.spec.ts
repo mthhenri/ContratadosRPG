@@ -98,6 +98,7 @@ describe('CriaturaVisualizar', () => {
     const acessoRevogado$ = new Subject<FichaAcessoRevogadoDto>();
     const rolagemRegistrada$ = new Subject<RolagemResumoDto>();
     const reconexao = signal(0);
+    const reconexao$ = new Subject<void>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaFicha: vi.fn(),
@@ -109,6 +110,7 @@ describe('CriaturaVisualizar', () => {
       rolagemRegistrada$: rolagemRegistrada$.asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
       reconexao,
+      reconexao$: reconexao$.asObservable(),
       conectado: signal(true),
     };
     const notificacaoService = { notificar: vi.fn() };
@@ -158,6 +160,7 @@ describe('CriaturaVisualizar', () => {
       acessoRevogado$,
       rolagemRegistrada$,
       reconexao,
+      reconexao$,
       notificacaoService,
       navegarEspiao,
     };
@@ -167,6 +170,21 @@ describe('CriaturaVisualizar', () => {
     const { raiz, fichaService } = montar({ usuarioLogadoId: 7 });
     expect(fichaService.recuperarFichaCriatura).toHaveBeenCalledWith(4);
     expect(raiz.querySelector('app-criatura-visualizacao')).not.toBeNull();
+  });
+
+  it('reconexao$ (reconexão real) refaz o fetch da ficha de criatura (P-083)', () => {
+    const { fichaService, reconexao$ } = montar({ usuarioLogadoId: 7 });
+    fichaService.recuperarFichaCriatura.mockClear();
+
+    reconexao$.next();
+
+    expect(fichaService.recuperarFichaCriatura).toHaveBeenCalledWith(4);
+  });
+
+  it('abrir a ficha de criatura depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
+    const { fichaService } = montar({ usuarioLogadoId: 7 });
+
+    expect(fichaService.recuperarFichaCriatura).toHaveBeenCalledTimes(1);
   });
 
   it('enquanto carrega, mostra a silhueta da ficha de criatura', () => {

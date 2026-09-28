@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, signal } from "@angular/core";
+import { Component, DestroyRef, inject, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute } from "@angular/router";
 import { filter, map } from "rxjs";
@@ -81,11 +81,11 @@ export class HistoricoRolagensJanela {
         next: (rolagem) =>
           this.itens.update((atuais) => atuais.filter((item) => item.id !== rolagem.id)),
       });
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0 && !this.acessoNegado()) {
-        this.carregarPagina(1);
-      }
-    });
+    // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
+    // abrir a janela.
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => { if (!this.acessoNegado()) this.carregarPagina(1); } });
   }
 
   private carregarPagina(pagina: number): void {

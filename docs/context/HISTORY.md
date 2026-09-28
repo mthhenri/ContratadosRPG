@@ -1,5 +1,84 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-27 — p-083: reconexão só ressincroniza quem já estava montado (P-083 fechado)
+
+Segunda das 6 tasks de `requests-correcoes`. Corrige a duplicação de carga relatada na revisão:
+"depois de uma reconexão, sair e reabrir a campanha pela navegação interna: 8 GETs em vez de 6,
+com `/campanha/:id/membros` e `/ficha?campanhaId=:id` chamados duas vezes cada".
+
+**Causa raiz.** `TempoRealService.reconexao` é um `signal<number>` que só incrementa numa
+reconexão real (nunca na 1ª conexão), e os 12 consumidores espalhados pelo frontend reagiam a ele
+com `effect(() => { if (this.tempoRealService.reconexao() > 0) { ...refaz a carga... } })`. Um
+`effect()` roda a primeira vez assim que é criado, lendo o valor **atual** do sinal — se uma
+reconexão já tivesse acontecido em QUALQUER momento anterior à montagem deste consumidor
+específico (ex.: o usuário navegou para outra tela depois de reconectar, e só then abriu esta),
+`reconexao()` já valia `> 0` nesse primeiro ciclo do `effect`, e o consumidor refazia a carga
+inicial **de novo**, por cima da carga normal do boot — daí o dobro de GETs.
+
+**Correção — mecanismo comum em `TempoRealService` (P-083, entregável 1).** Novo
+`reconexao$: Observable<void>` (um `Subject` emitido no mesmo ponto em que `reconexao` já
+incrementava), documentado na classe como a substituição definitiva do padrão
+`effect(() => reconexao() > 0)`. A diferença central: um `Subject` nunca reproduz eventos
+passados para quem assina depois — um consumidor só vê reconexões que aconteceram **depois** da
+própria assinatura, resolvendo a causa raiz por construção, sem precisar guardar nenhum
+"instante de montagem" manualmente. `reconexao` (o contador `Signal`) continua existindo, só para
+depuração/teste — nenhum consumidor de produção deve mais lê-lo num `effect`.
+
+**Migração dos 12 consumidores (entregável 2).** Todos trocaram `effect(() =>
+{ if (reconexao() > 0) ... })` por `tempoRealService.reconexao$.pipe(takeUntilDestroyed(...))
+.subscribe(...)`, ou por um `merge(..., this.tempoRealService.reconexao$)` quando já existia um
+`Subject` de recarga (`recarregar$`) alimentando um `switchMap` — mais simples que manter o
+`effect`+`untracked()` ao lado: `campanha-detalhe-dados.service.ts`,
+`campanha-previa-jogador-dados.service.ts`, `encontro-painel-dados.service.ts`,
+`biblioteca-leitura.store.ts`, `biblioteca-mestre.page.ts`, `hub-cenas.page.ts`,
+`busca-documentos.component.ts`, `anotacoes-janela.page.ts` (ficha),
+`historico-rolagens-janela.page.ts` (campanha e ficha) e `visualizar.page.ts`/
+`visualizar-criatura.page.ts`. Em vários desses arquivos o `effect`/`untracked` deixou de ser
+usado para qualquer outra coisa e saiu do import. Nenhum comportamento de reconexão **real**
+mudou — só o instante em que o consumidor passa a "ouvir" reconexões futuras (a própria montagem,
+de forma implícita, em vez de um contador comparado a zero).
+
+**Corrida com a carga em andamento (entregável 3).** Onde a reconexão já entrava num `merge(...)`
+com `switchMap` (`hub-cenas.page.ts`, `biblioteca-leitura.store.ts`, `biblioteca-mestre.page.ts`),
+duas reconexões sucessivas ou uma reconexão durante outro evento já convivem sem duplicar pedidos
+em voo — comportamento herdado do coordenador que já existia ali, sem mudança. Os demais
+consumidores (services/páginas com uma única leitura por reconexão, sem lista que possa chegar
+fora de ordem) não tinham esse risco antes e não ganharam nenhum novo. Não foi construído um
+coordenador genérico para os 12 — cada um manteve a forma de recarregar que já tinha, só trocando
+a fonte do gatilho.
+
+**Testes.** `tempo-real.service.spec.ts` ganhou 3 casos provando a semântica de `reconexao$`
+(nunca emite na 1ª conexão; emite em cada reconexão real e sucessiva, na ordem; não reproduz para
+quem assina depois de uma reconexão já ocorrida). Cada um dos 12 consumidores ganhou (ou teve
+atualizado) teste focado com um `Subject` controlável de `reconexao$`, cobrindo tanto "reconexão
+real refaz a carga" quanto "montar depois de uma reconexão já ocorrida não duplica a carga
+inicial" — este último não existia como teste em nenhum dos 12 antes desta task, mesmo onde já
+havia teste de "reconexão refaz". `historico-rolagens-janela.page.ts` (ficha) não tinha spec
+nenhum; ganhou um novo, focado nesses três casos (carga no boot, reconexão real, sem duplicar).
+Suíte completa do frontend verde (171 arquivos / 2391 testes) — os únicos 3 arquivos afetados
+indiretamente (`detalhe-jogador.page.spec.ts`, `detalhe-mestre.page.spec.ts`,
+`detalhe-shell.page.spec.ts`, que montam `CampanhaDetalheDadosService` de verdade com um
+`TempoRealService` de mentira) só precisaram ganhar `reconexao$` no dublê para não quebrar — não
+são donos do comportamento migrado, então não ganharam teste novo.
+
+**Verificação ao vivo (Playwright + REST, backend/Postgres reais, reconexão de verdade — não
+simulada).** Jogador com uma ficha numa campanha: (1) abrir a campanha mede a carga normal (2
+GETs: membros e fichas); (2) o backend é **derrubado de verdade** (`taskkill` no processo, fecha o
+TCP na hora, não `context.setOffline` — que só percebe pelo timeout de ping) e depois
+**religado**; (3) com a mesma aba ainda aberta, a reconexão do socket dispara exatamente os 2 GETs
+esperados (o refetch legítimo de ressincronização, `campanha-detalhe-dados.service.ts`); (4) sair
+da campanha e reabri-la mede só **2 GETs no total** (membros e fichas, um de cada, não dois) — a
+reprodução exata do achado original (que media 8 no lugar de 6, com os dois duplicados)
+confirmada corrigida contra um backend real, não só contra dublês de teste.
+
+**Gate comum do guarda-chuva:** build de `frontend` verde; lint de todos os arquivos tocados sem
+erro (só os avisos pré-existentes de aspas do ESLint). `shared`/`backend` não foram alterados por
+esta task.
+
+Restam 4/6 tasks de `requests-correcoes`: `p-084` (ressincronização incompleta), `p-085`
+(invalidação seletiva), `p-086` (estado sem refetch) e o inventário sob demanda — `P-084`…`P-086`
+continuam abertos em `PROBLEMS.md`.
+
 ## 2026-09-27 — p-082: autosave e seleção de ficha isolados por origem (P-082 fechado)
 
 Primeira das 6 tasks de `requests-correcoes` (revisão de requests, 2026-09-26). Corrige o achado

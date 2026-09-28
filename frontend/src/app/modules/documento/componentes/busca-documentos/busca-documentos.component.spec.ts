@@ -69,10 +69,14 @@ describe('BuscaDocumentos', () => {
   function montar(buscar = vi.fn(() => of(pagina([resultado(1)])))) {
     const documentoAlterado$ = new Subject<DocumentoBibliotecaAlteradaDto>();
     const reconexao = signal(0);
+    const reconexao$ = new Subject<void>();
     TestBed.configureTestingModule({
       providers: [
         { provide: DocumentoService, useValue: { buscar } },
-        { provide: TempoRealService, useValue: { documentoAlterado$, reconexao } },
+        {
+          provide: TempoRealService,
+          useValue: { documentoAlterado$, reconexao, reconexao$: reconexao$.asObservable() },
+        },
       ],
     });
     const fixture = TestBed.createComponent(Hospedeiro);
@@ -85,7 +89,7 @@ describe('BuscaDocumentos', () => {
       vi.advanceTimersByTime(300);
       fixture.detectChanges();
     };
-    return { fixture, raiz, buscar, digitar, documentoAlterado$, reconexao };
+    return { fixture, raiz, buscar, digitar, documentoAlterado$, reconexao, reconexao$ };
   }
 
   const texto = (elemento: Element | null | undefined) =>
@@ -244,6 +248,24 @@ describe('BuscaDocumentos', () => {
     pendente.next(pagina([resultado(1)]));
     fixture.detectChanges();
     expect(raiz.querySelectorAll('.documento-cartao')).toHaveLength(1);
+  });
+
+  it('reconexao$ (reconexão real) refaz a busca ativa em silêncio (P-083)', () => {
+    const { digitar, buscar, reconexao$ } = montar();
+    digitar('porto');
+    buscar.mockClear();
+
+    reconexao$.next();
+
+    expect(buscar).toHaveBeenCalledTimes(1);
+  });
+
+  it('reconexao$ sem termo não dispara busca', () => {
+    const { buscar, reconexao$ } = montar();
+
+    reconexao$.next();
+
+    expect(buscar).not.toHaveBeenCalled();
   });
 
   it('sem termo, eventos não disparam busca', () => {

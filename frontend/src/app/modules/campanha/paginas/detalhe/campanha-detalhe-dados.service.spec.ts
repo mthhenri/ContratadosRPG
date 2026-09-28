@@ -85,6 +85,7 @@ describe('CampanhaDetalheDadosService', () => {
     const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
     const inventarioAlterado$ = new Subject<{ campanhaId: number }>();
     const reconexao = signal(0);
+    const reconexao$ = new Subject<void>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
@@ -102,6 +103,7 @@ describe('CampanhaDetalheDadosService', () => {
       estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: inventarioAlterado$.asObservable(),
       reconexao,
+      reconexao$: reconexao$.asObservable(),
     };
 
     TestBed.configureTestingModule({
@@ -132,6 +134,7 @@ describe('CampanhaDetalheDadosService', () => {
       fichaAlterada$,
       fichaRemovidaDaCampanha$,
       fichaCondicoesAlteradas$,
+      reconexao$,
     };
   }
 
@@ -204,6 +207,38 @@ describe('CampanhaDetalheDadosService', () => {
 
     expect(campanhaService.listarMembros).toHaveBeenCalledWith(CAMPANHA_ID);
     expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
+  });
+
+  // === P-083: reconexão via `reconexao$` (não `reconexao()` num `effect`) — só reconexões
+  // futuras à montagem do serviço refazem membros/fichas.
+
+  it('reconexao$ (reconexão real) refaz membros e fichas', () => {
+    const { campanhaService, fichaService, reconexao$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    campanhaService.listarMembros.mockClear();
+    fichaService.listarFichas.mockClear();
+
+    reconexao$.next();
+
+    expect(campanhaService.listarMembros).toHaveBeenCalledWith(CAMPANHA_ID);
+    expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
+  });
+
+  it('uma reconexão ocorrida antes de `inicializar` não duplica a carga inicial (P-083)', () => {
+    // `reconexao$` é um Subject comum — se o serviço fosse montado depois de uma reconexão já
+    // emitida em OUTRO Subject, ele nunca a veria (nada a assinar ainda existia). O achado
+    // original era o `effect(() => reconexao() > 0)`, que via o contador **já** maior que zero no
+    // primeiro ciclo e recarregava de novo; a troca para `reconexao$` elimina essa classe de
+    // bug por construção — não há nada além do fetch normal do boot.
+    const { campanhaService, fichaService } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+
+    expect(campanhaService.listarMembros).toHaveBeenCalledTimes(1);
+    expect(fichaService.listarFichas).toHaveBeenCalledTimes(1);
   });
 
   it('refaz somente o fetch de fichas ao receber ficha:alterada em tempo real', () => {

@@ -71,6 +71,7 @@ describe('AnotacoesJanela', () => {
       sairSalaFicha: vi.fn(),
       fichaAlterada$: fichaAlterada$.asObservable(),
       reconexao: signal(0),
+      reconexao$: new Subject<void>(),
     };
     TestBed.configureTestingModule({
       imports: [AnotacoesJanela],
@@ -157,6 +158,24 @@ describe('AnotacoesJanela', () => {
 
     expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(2);
     expect(editor()?.valor()).toBe('Escrito na aba principal.');
+  });
+
+  it('reconexao$ (reconexão real) busca o documento completo de novo (P-083)', () => {
+    const { fixture, editor, fichaService, tempoReal, servidor } = montar();
+    servidor.atual = ficha({ anotacoes: 'Escrito depois da reconexão.' });
+    fichaService.recuperarFicha.mockClear();
+
+    tempoReal.reconexao$.next();
+    fixture.detectChanges();
+
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
+    expect(editor()?.valor()).toBe('Escrito depois da reconexão.');
+  });
+
+  it('abrir a janela depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
+    const { fichaService } = montar();
+
+    expect(fichaService.recuperarFicha).toHaveBeenCalledTimes(1);
   });
 
   it('salvar na janela preserva a Vida alterada na aba principal durante o debounce', () => {

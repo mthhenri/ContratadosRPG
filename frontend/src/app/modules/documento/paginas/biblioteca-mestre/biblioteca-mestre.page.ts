@@ -1,13 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  computed,
-  effect,
-  inject,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -180,6 +171,9 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
         filter((evento) => evento.campanhaId === this.campanhaId),
         tap((evento) => this.aoAlterarDocumento(evento)),
       ),
+      // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
+      // abrir a biblioteca.
+      this.tempoRealService.reconexao$,
     )
       .pipe(
         // `switchMap`: numa rajada de eventos, só a última lista vale.
@@ -187,12 +181,6 @@ export class BibliotecaMestre implements TelaComRascunhoDocumento {
         takeUntilDestroyed(),
       )
       .subscribe({ next: (documentos) => this.aplicarLista(documentos) });
-
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0) {
-        untracked(() => this.recarregar$.next());
-      }
-    });
 
     this.documentoService
       .listar(this.campanhaId)

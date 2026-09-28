@@ -70,11 +70,13 @@ describe('HubCenas', () => {
       encerrarCena: vi.fn(() => of({ ...ativa, campanhaId: CAMPANHA_ID, encontro: null })),
       criarCena: vi.fn(),
     };
+    const reconexao$ = new Subject<void>();
     const tempoReal = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
       sairSalaCampanha: vi.fn(),
       reconexao: signal(0),
+      reconexao$: reconexao$.asObservable(),
       cenaAlterada$,
     };
     TestBed.configureTestingModule({
@@ -105,7 +107,7 @@ describe('HubCenas', () => {
     const fixture = TestBed.createComponent(HubCenas);
     fixture.detectChanges();
     const raiz = fixture.nativeElement as HTMLElement;
-    return { fixture, raiz, cenaService, tempoReal, cenaAlterada$, navegar };
+    return { fixture, raiz, cenaService, tempoReal, cenaAlterada$, reconexao$, navegar };
   }
 
   const texto = (elemento: Element | null | undefined): string =>
@@ -327,13 +329,20 @@ describe('HubCenas', () => {
       expect(cenaService.listarPorCampanha).toHaveBeenCalledTimes(1);
     });
 
-    it('refaz a lista quando o socket reconecta', () => {
-      const { fixture, cenaService, tempoReal } = montar();
+    it('refaz a lista quando o socket reconecta (reconexao$, P-083)', () => {
+      const { fixture, cenaService, reconexao$ } = montar();
+      cenaService.listarPorCampanha.mockClear();
 
-      tempoReal.reconexao.set(1);
+      reconexao$.next();
       fixture.detectChanges();
 
-      expect(cenaService.listarPorCampanha).toHaveBeenCalledTimes(2);
+      expect(cenaService.listarPorCampanha).toHaveBeenCalledTimes(1);
+    });
+
+    it('abrir o hub depois de uma reconexão já ocorrida não duplica a carga inicial (P-083)', () => {
+      const { cenaService } = montar();
+
+      expect(cenaService.listarPorCampanha).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -29,17 +29,6 @@
 
 ## Ativos
 
-### P-083 — Reconexão antiga duplica cargas ao navegar · `ABERTO` · frontend/tempo real
-
-- **Sintoma:** depois de uma reconexão, novas telas fazem carga inicial e refetch adicional.
-- **Causa:** effects testam o contador global `reconexao() > 0` na montagem.
-- **Correção:** observar apenas incrementos posteriores à montagem de cada consumidor.
-- **Reprodução:** Chromium, reabrir campanha após reconectar: 8 GETs em vez de 6; membros e
-  fichas duplicados.
-- **Desde:** revisão estática de 2026-09-26.
-- **Evidência:** [revisão de requests](../reviews/requests-2026-09-26.md), P-083.
-- **Spec:** [reconexão sem duplicação](../specs/backlog/p-083-reconexao-sem-carga-duplicada.spec.md).
-
 ### P-084 — Ressincronização incompleta da campanha · `ABERTO` · frontend/tempo real
 
 - **Sintoma:** após queda, estado operacional, inventário, rolagens e ficha embutida podem

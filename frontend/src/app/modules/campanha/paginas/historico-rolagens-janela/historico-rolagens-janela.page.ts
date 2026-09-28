@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs';
@@ -46,9 +46,11 @@ export class HistoricoRolagensCampanhaJanela {
     this.tempoRealService.rolagemExcluida$
       .pipe(filter((rolagem) => rolagem.campanhaId === this.campanhaId), takeUntilDestroyed())
       .subscribe({ next: (rolagem) => this.itens.update((atuais) => atuais.filter((item) => item.id !== rolagem.id)) });
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0 && !this.acessoNegado()) this.carregar();
-    });
+    // `reconexao$` (P-083) — só reconexões futuras à montagem, nunca uma já ocorrida antes de
+    // abrir esta janela (`effect(() => reconexao() > 0)` duplicava a carga inicial nesse caso).
+    this.tempoRealService.reconexao$
+      .pipe(takeUntilDestroyed())
+      .subscribe({ next: () => { if (!this.acessoNegado()) this.carregar(); } });
   }
 
   private carregar(): void {

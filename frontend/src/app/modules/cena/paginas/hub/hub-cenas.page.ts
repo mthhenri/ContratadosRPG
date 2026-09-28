@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -143,6 +143,9 @@ export class HubCenas {
       this.tempoRealService.cenaAlterada$.pipe(
         filter((evento) => evento.campanhaId === this.campanhaId),
       ),
+      // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
+      // abrir o hub — direto no `merge`, sem o `effect()`+`untracked()` que isso pedia antes.
+      this.tempoRealService.reconexao$,
     )
       .pipe(
         // `switchMap`: numa rajada (abrir uma cena emite a antiga e a nova), só a última lista vale.
@@ -150,12 +153,6 @@ export class HubCenas {
         takeUntilDestroyed(),
       )
       .subscribe({ next: (cenas) => this.cenas.set(cenas) });
-
-    effect(() => {
-      if (this.tempoRealService.reconexao() > 0) {
-        untracked(() => this.recarregar$.next());
-      }
-    });
 
     this.cenaService
       .listarPorCampanha(this.campanhaId)

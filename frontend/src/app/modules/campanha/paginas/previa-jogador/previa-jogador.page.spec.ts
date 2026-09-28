@@ -185,6 +185,7 @@ describe('CampanhaPreviaJogador', () => {
       listarAcessos: vi.fn(),
     };
     const rolagemService = { listarPorCampanha: vi.fn() };
+    const reconexao$ = new Subject<void>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
@@ -203,6 +204,7 @@ describe('CampanhaPreviaJogador', () => {
       inventarioAlterado$: new Subject().asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
       reconexao: () => 0,
+      reconexao$: reconexao$.asObservable(),
       conectado: () => true,
     };
 
@@ -246,6 +248,7 @@ describe('CampanhaPreviaJogador', () => {
       fichaCondicoesAlteradas$,
       fichaAlterada$,
       encontroAlterado$,
+      reconexao$,
     };
   }
 
@@ -417,6 +420,16 @@ describe('CampanhaPreviaJogador', () => {
         await esperarCoordenador();
         expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
       }
+    });
+
+    it('reconexao$ (reconexão real) refaz a projeção do alvo (P-083)', async () => {
+      const { campanhaProjecaoService, reconexao$ } = montar();
+      campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+      reconexao$.next();
+      await esperarCoordenador();
+
+      expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
     });
 
     it('ficha:alterada da ficha exibida é refeita pela rota da prévia — o payload do mestre nunca é exibido', async () => {
