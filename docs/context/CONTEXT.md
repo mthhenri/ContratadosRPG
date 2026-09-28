@@ -15,8 +15,29 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-28 · **Última decisão registrada:**
-> `requests-inventario-sob-demanda` concluída (spec em `done/`) — **`requests-correcoes` fechado,
-> 6/6**: o inventário de esquadrão saiu da carga inicial de `CampanhaDetalheDadosService.carregar()`
+> `m7-25-painel-investigacao` concluída (spec em `done/`) — **`m7-cenas` em 5/6, falta só `m7-26`**
+> (passe responsivo do módulo): o painel de cena sem iniciativa (`m7-24`) ganhou a coluna Documentos
+> da Investigação, consumindo a biblioteca da M9 (`m9-02`/`m9-04`) sem duplicar o estado de
+> visibilidade — "apresentar" chama `DocumentoService.revelarDocumento`, nunca o repository dela.
+> Nova tabela `cena_documento` (migration `0035`, molde `usuario_ficha_acesso`), só `ordem`/`em_foco`
+> como estado próprio da cena; `CenaDocumentoRepository`/`CenaDocumentoService` novos em
+> `backend/src/modules/cena/` (listar/anexar/remover/reordenar/focar/apresentar, mestre-only, cena
+> `ENCERRADA` é somente leitura); `CenaModule` importa `DocumentoModule` (mão única).
+> `CampanhaGateway.emitirCenaDocumentoAlterado` — dataless (`{ campanhaId, cenaId }`, molde de
+> `campanha:inventario-alterado`) — quem recebe refaz o `GET` já no próprio recorte; "focar" (palco
+> do mestre) não emite. Frontend: `EncontroPainelDadosService` ganhou `documentosCena`/
+> `ehInvestigacao`/`documentoEmFoco` + os métodos de mutação (cada um troca o sinal pela lista
+> completa que o backend devolve). `PainelCenaSemIniciativaMestre` ganhou a coluna Documentos
+> (subir/descer como o hub de cenas, apresentar, remover), "Anexar documento" na coluna de ações
+> (modal listando a biblioteca) e `app-leitor-documento` (M9) no palco acima da grade de Agentes.
+> `PainelCenaSemIniciativaJogador` ganhou "Documentos apresentados" — clicar abre o leitor num modal,
+> nada automático. Espectador tratado como jogador (ponto em aberto do milestone, decidido aqui por
+> falta de cenário que exija diferenciar os dois). Verificado ao vivo (Postgres nativo, backend/
+> frontend reais, mestre 1920×1080/jogador 360×800): mestre anexa, foca (sem revelar) e apresenta um
+> documento; o jogador, sem recarregar, vê "Documentos apresentados" aparecer via tempo real e abre o
+> documento num modal — sem overflow em nenhum viewport.
+> Antes: `requests-inventario-sob-demanda` concluída (spec em `done/`) — **`requests-correcoes`
+> fechado, 6/6**: o inventário de esquadrão saiu da carga inicial de `CampanhaDetalheDadosService.carregar()`
 > e só busca quando o painel "Inv. Esquadrão"/"Inventário" fica visível (`app-inventario-esquadrao`
 > é sempre montado, `[hidden]` — "abrir" é só o signal `painelLateralAtivo` da página mudando, sem
 > ciclo de vida do Angular pra ganchar). Novo `EstadoInventario`
@@ -761,15 +782,16 @@ Markdown como rascunho) concluídas, specs em `done/`. Permanecem no backlog `m9
 leitura — contrato e backend) e `m9-10` (presença — tela do mestre, depende da `m9-09`), cada uma
 com decisões assumidas a confirmar. Antes:
 
-**Módulo de Cenas — `m7-25` (Investigação completa), desbloqueada: a `m9-02` (backend de
-documento) e a `m9-04` (`LeitorDocumento`) estão prontas.** `m7-21` (contrato + schema), `m7-22` (backend +
-tempo real), `m7-23` (hub + "Nova cena" tipada) e `m7-24` (painel de cena sem iniciativa) concluídas
-em 2026-09-26. **Deploy: `m7-22` e `m7-23` sobem juntas** (os encontros de backfill em `MONTAGEM`
-vivem em cenas `PLANEJADA`, que só o hub deixa o mestre abrir); a `m7-24` é só frontend e pode ir
-junto ou depois. A mecânica da Resistência (Atributo, DT, Limiar) ficou fora e está em `IDEAS.md`
-`I-035`. A `m7-25` só começa depois de `m9-02` (backend de documento + revelar/ocultar) e `m9-04`
-(o `LeitorDocumento`). A Iniciativa do espectador (`campanhas/:id/espectador/iniciativa`) ficou fora
-da `m7-23` e segue com a rota e o rótulo de antes (ela já mostra só o encontro da cena ativa).
+**Módulo de Cenas — 5/6, falta só `m7-26` (passe responsivo dedicado do módulo inteiro).**
+`m7-21` (contrato + schema), `m7-22` (backend + tempo real), `m7-23` (hub + "Nova cena" tipada),
+`m7-24` (painel de cena sem iniciativa) e `m7-25` (coluna Documentos da Investigação, ver cabeçalho
+deste arquivo) concluídas — specs em `done/`. **Deploy: `m7-22` e `m7-23` sobem juntas** (os
+encontros de backfill em `MONTAGEM` vivem em cenas `PLANEJADA`, que só o hub deixa o mestre abrir);
+as demais são só frontend/backend aditivo e podem ir junto ou depois. A mecânica da Resistência
+(Atributo, DT, Limiar) ficou fora e está em `IDEAS.md` `I-035`. A Iniciativa do espectador
+(`campanhas/:id/espectador/iniciativa`) ficou fora da `m7-23` e segue com a rota e o rótulo de
+antes (ela já mostra só o encontro da cena ativa). Fonte: `docs/specs/active/m7-cenas.spec.md`
+(guarda-chuva, ainda ativo até a `m7-26` fechar).
 
 **M9 — Documentos de campanha ("Biblioteca"): concluída — `m9-01` a `m9-06`
 (2026-09-27).** `m9-01` (contrato +
@@ -2623,8 +2645,8 @@ estar no `frontend/proxy.conf.json` (entrou na `m7-23`) — sem ele, `GET /cena/
 server.
 
 **Painel de cena sem iniciativa (`m7-24`, `modules/cena/paginas/painel-sem-iniciativa-*`).**
-Resistência e Investigação (a `m7-25` acrescenta à Investigação a coluna de Documentos no mesmo
-componente). Casca `casca` da Iniciativa sem trilha — **coluna de ações | Rolagens | palco**; blocos
+Resistência e Investigação, com a coluna de Documentos da `m7-25` acrescentada ao mesmo componente
+para a Investigação (ver abaixo). Casca `casca` da Iniciativa sem trilha — **coluna de ações | Rolagens | palco**; blocos
 BEM `cena-mestre`/`cena-jogador`. Mestre: categoria "Cena" com "Abrir cena" (`PLANEJADA`) ou
 "Encerrar cena" (`ATIVA`), confirmação + `CenaService` + `definirCena`; encerrada é só leitura (só
 Ferramentas); palco "Agentes" = `app-espectador-ficha-card` das fichas `JOGADOR` de membros, na
@@ -2637,6 +2659,26 @@ Ferramentas, a própria ficha (primeira ficha `JOGADOR` dele na campanha) no mes
 `EncontroPainelDadosService` entra nas salas `ficha:<id>` do conjunto exibido **só quando
 `semIniciativa()`** e refaz `listarFichas` a cada `ficha:alterada` de uma delas; o painel de
 Iniciativa não entra em sala de ficha nenhuma (teste da casca prova).
+
+**Coluna Documentos — Investigação (`m7-25`, `backend/src/modules/cena/cena-documento.*`,
+tabela `cena_documento`, migration `0035`).** Vínculo cena↔documento da biblioteca da M9
+(`documento`, M9-02/M9-04): só `ordem`/`em_foco` são estado próprio da cena — quem sabe se um
+documento está revelado continua sendo `documento.revelado`, e "apresentar" chama
+`DocumentoService.revelarDocumento` (nunca o repository dela). `CenaDocumentoService`:
+`listar` (mestre vê tudo; jogador/espectador só o revelado; cena `PLANEJADA` nega quem não é
+mestre), `anexar`/`remover`/`reordenar` (mestre-only, cena `ENCERRADA` é só leitura), `focar` (abre
+no palco do mestre — não emite, não sincroniza entre dispositivos dele) e `apresentar` (revela +
+marca em foco). `CampanhaGateway.emitirCenaDocumentoAlterado` — dataless (`{ campanhaId, cenaId }`,
+molde de `campanha:inventario-alterado`) para as três salas; quem recebe refaz o `GET`.
+`EncontroPainelDadosService.documentosCena`/`ehInvestigacao`/`documentoEmFoco` carregam só quando
+`cena.tipo === INVESTIGACAO` e assinam `cenaDocumentoAlterado$` (`TempoRealService`) filtrado pela
+cena da tela. No mestre: coluna Documentos entre a de ações e Rolagens (`app-documento-cartao` da
+M9, subir/descer como `moverPlanejada` do hub, apresentar só quando oculto, remover), "Anexar
+documento" na categoria "Cena" (modal listando a biblioteca via `DocumentoService.listar`, menos o
+já anexado) e `app-leitor-documento` (M9) no palco acima da grade de Agentes quando há foco (busca
+o documento completo por `DocumentoService.recuperar`). No jogador: seção "Documentos apresentados"
+(a mesma lista, já recortada pelo backend) — clicar abre o leitor num modal, nada automático.
+Espectador tratado como o jogador (mesma visão).
 
 Tela de Iniciativa (painel de uma cena com iniciativa) com
 duas visões em páginas separadas (`ui-39`): `PainelCenaShell` (antes `PainelEncontroShell`) resolve o papel

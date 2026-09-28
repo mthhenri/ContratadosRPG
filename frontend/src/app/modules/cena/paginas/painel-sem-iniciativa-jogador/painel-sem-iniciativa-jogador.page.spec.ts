@@ -1,6 +1,10 @@
-import { CenaTipoEnum } from '@contratados-rpg/shared/enums';
+import { of } from 'rxjs';
+
+import { CenaTipoEnum, TipoDocumentoEnum } from '@contratados-rpg/shared/enums';
 
 import {
+  CAMPANHA_ID,
+  CENA_ID,
   USUARIO_JOGADOR,
   itemDaColuna,
   montarPainel,
@@ -61,5 +65,42 @@ describe('PainelCenaSemIniciativaJogador', () => {
     expect(texto(elemento.querySelector('.cena-jogador__palco app-estado-vazio'))).toContain(
       'não tem ficha',
     );
+  });
+
+  describe('documentos apresentados (m7-25)', () => {
+    it('sem documentos apresentados, a seção não aparece', () => {
+      const elemento = montar().fixture.nativeElement as HTMLElement;
+      expect(elemento.querySelector('.cena-jogador__documentos')).toBeNull();
+    });
+
+    it('lista os documentos já apresentados e abre um deles num modal de leitura', () => {
+      const montado = montar();
+      const { fixture, cenaService, documentoService, cenaDocumentoAlterado$ } = montado;
+      cenaService.listarDocumentos.mockReturnValue(
+        of([
+          {
+            documentoId: 40,
+            titulo: 'Relatório do informante',
+            tipo: TipoDocumentoEnum.TEXTO,
+            revelado: true,
+            ordem: 1,
+            emFoco: false,
+          },
+        ]),
+      );
+      cenaDocumentoAlterado$.next({ campanhaId: CAMPANHA_ID, cenaId: CENA_ID });
+      fixture.detectChanges();
+
+      const elemento = fixture.nativeElement as HTMLElement;
+      expect(texto(elemento.querySelector('.cena-jogador__documentos'))).toContain(
+        'Relatório do informante',
+      );
+
+      elemento.querySelector<HTMLButtonElement>('[app-documento-cartao]')!.click();
+      fixture.detectChanges();
+
+      expect(documentoService.recuperar).toHaveBeenCalledWith(40);
+      expect(elemento.querySelector('app-leitor-documento')).not.toBeNull();
+    });
   });
 });

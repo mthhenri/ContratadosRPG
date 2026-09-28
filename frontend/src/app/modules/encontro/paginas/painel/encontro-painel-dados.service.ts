@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, filter, finalize } from 'rxjs';
 
-import type { CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
+import type { CenaDocumentoResumoDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
 import type {
   EncontroCombatenteResumoDto,
   EncontroRecuperadoDto,
@@ -14,6 +14,7 @@ import type { FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
 import type { RolagemResumoDto } from '@contratados-rpg/shared/dtos/rolagem';
 import {
   CenaStatusEnum,
+  CenaTipoEnum,
   EncontroStatusEnum,
   NivelAmeacaEnum,
   TipoCampanhaMembroPapelEnum,
@@ -91,6 +92,8 @@ export class EncontroPainelDadosService {
   private readonly rolagensDoFeed = signal<readonly RolagemResumoDto[]>([]);
   private readonly carregandoFeed = signal(true);
   private readonly emOperacaoInterno = signal(false);
+  private readonly documentosDaCena = signal<readonly CenaDocumentoResumoDto[]>([]);
+  private readonly carregandoDocumentosInterno = signal(true);
 
   /** A cena da tela — `null` só enquanto carrega. */
   readonly cena = this.cenaAtual.asReadonly();
@@ -107,6 +110,9 @@ export class EncontroPainelDadosService {
   readonly carregandoRolagens = this.carregandoFeed.asReadonly();
   /** Uma chamada de escrita em voo — desabilita os controles para não duplicar a mutação. */
   readonly emOperacao = this.emOperacaoInterno.asReadonly();
+  /** Coluna Documentos da cena de Investigação (m7-25) — vazia para os demais tipos. */
+  readonly documentosCena = this.documentosDaCena.asReadonly();
+  readonly carregandoDocumentos = this.carregandoDocumentosInterno.asReadonly();
 
   /** `membros()` sem o `null` do carregamento — só existe pro input `membros` das Anotações. */
   readonly membrosDaCampanha = computed(() => this.membros() ?? []);
@@ -162,6 +168,14 @@ export class EncontroPainelDadosService {
     const cena = this.cena();
     return cena !== null && !cenaTemIniciativa(cena.tipo);
   });
+
+  /** `true` para a cena de Investigação (m7-25) — só ela tem a coluna Documentos. */
+  readonly ehInvestigacao = computed(() => this.cena()?.tipo === CenaTipoEnum.INVESTIGACAO);
+
+  /** O documento aberto no palco do mestre — `null` sem foco definido ou fora da Investigação. */
+  readonly documentoEmFoco = computed(
+    () => this.documentosCena().find((documento) => documento.emFoco) ?? null,
+  );
 
   /** Salas `ficha:<id>` em que esta tela entrou — só as da grade de agentes da cena sem iniciativa. */
   private readonly salasFichaAtivas = new Set<number>();
@@ -276,6 +290,19 @@ export class EncontroPainelDadosService {
             atual ? { ...atual, nome: cena.nome, tipo: cena.tipo, status: cena.status } : atual,
           ),
       });
+
+    // Coluna Documentos (m7-25): dataless como `campanha:inventario-alterado` — refaz o `GET` já no
+    // recorte de quem está olhando. Só a cena desta tela; anexar/remover/reordenar/apresentar de
+    // outra cena não arrasta quem está aqui.
+    this.tempoRealService.cenaDocumentoAlterado$
+      .pipe(
+        filter(
+          (evento) =>
+            evento.campanhaId === this.campanhaId && evento.cenaId === this.cenaIdDaRota(),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe({ next: () => this.carregarDocumentos() });
 
     // `reconexao$` (P-083): só reconexões futuras à montagem, nunca uma já ocorrida antes de
     // abrir o painel. `carregar()` já refaz cena/encontro/fichas/membros; faltava o histórico de
@@ -440,6 +467,80 @@ export class EncontroPainelDadosService {
     const { encontro, ...cena } = recuperada;
     this.cenaAtual.set(cena);
     this.encontroAtual.set(encontro);
+    if (cena.tipo === CenaTipoEnum.INVESTIGACAO) {
+      this.carregarDocumentos();
+    } else {
+      this.documentosDaCena.set([]);
+      this.carregandoDocumentosInterno.set(false);
+    }
+  }
+
+  /** Busca a coluna Documentos da cena de Investigação. */
+  private carregarDocumentos(): void {
+    const cenaId = this.cenaIdDaRota();
+    if (cenaId === null) {
+      return;
+    }
+    this.carregandoDocumentosInterno.set(true);
+    this.cenaService
+      .listarDocumentos(cenaId)
+      .pipe(finalize(() => this.carregandoDocumentosInterno.set(false)))
+      .subscribe({ next: (itens) => this.documentosDaCena.set(itens), error: () => undefined });
+  }
+
+  /** Anexa um documento da biblioteca à coluna Documentos desta cena. */
+  anexarDocumento(documentoId: number): void {
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || this.emOperacao()) {
+      return;
+    }
+    this.executar(this.cenaService.anexarDocumento(cenaId, documentoId), (itens) =>
+      this.documentosDaCena.set(itens),
+    );
+  }
+
+  /** Remove o vínculo do documento com a cena — nunca afeta a biblioteca. */
+  removerDocumentoDaCena(documentoId: number): void {
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || this.emOperacao()) {
+      return;
+    }
+    this.executar(this.cenaService.removerDocumento(cenaId, documentoId), (itens) =>
+      this.documentosDaCena.set(itens),
+    );
+  }
+
+  /** Reordena a coluna Documentos — `ordem` leva os `documentoId` de todos os itens da cena. */
+  reordenarDocumentosCena(ordem: readonly number[]): void {
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || this.emOperacao()) {
+      return;
+    }
+    this.executar(this.cenaService.reordenarDocumentos(cenaId, ordem), (itens) =>
+      this.documentosDaCena.set(itens),
+    );
+  }
+
+  /** Abre o documento no palco do mestre — não revela. */
+  focarDocumento(documentoId: number): void {
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || this.emOperacao()) {
+      return;
+    }
+    this.executar(this.cenaService.focarDocumento(cenaId, documentoId), (itens) =>
+      this.documentosDaCena.set(itens),
+    );
+  }
+
+  /** Revela o documento à mesa e o marca em foco — a ação "Apresentar". */
+  apresentarDocumento(documentoId: number): void {
+    const cenaId = this.cena()?.id;
+    if (cenaId === undefined || this.emOperacao()) {
+      return;
+    }
+    this.executar(this.cenaService.apresentarDocumento(cenaId, documentoId), (itens) =>
+      this.documentosDaCena.set(itens),
+    );
   }
 
   /** `true` quando é a vez deste combatente. */

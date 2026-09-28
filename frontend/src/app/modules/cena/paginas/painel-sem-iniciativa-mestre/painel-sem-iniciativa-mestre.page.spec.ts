@@ -3,11 +3,12 @@ import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 
 import type { FichaAlteradaDto, FichaResumoDto } from '@contratados-rpg/shared/dtos/ficha';
-import { CenaStatusEnum, CenaTipoEnum } from '@contratados-rpg/shared/enums';
+import { CenaStatusEnum, CenaTipoEnum, TipoDocumentoEnum } from '@contratados-rpg/shared/enums';
 
 import { ConfirmacaoService } from '../../../../shared/ui/confirmacao/confirmacao.service';
 import { EspectadorFichaCard } from '../../../campanha/componentes/espectador-ficha-card/espectador-ficha-card.component';
 import {
+  CAMPANHA_ID,
   CENA_ID,
   fichaResumoDoJogador,
   fichasDeTeste,
@@ -211,6 +212,127 @@ describe('PainelCenaSemIniciativaMestre', () => {
       fichaAlterada$.next(alterada(100));
 
       expect(fichaService.listarFichas).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('coluna Documentos — Investigação (m7-25)', () => {
+    const montarInvestigacao = (opcoes: OpcoesDoPainel = {}) =>
+      montar({ cenaTipo: CenaTipoEnum.INVESTIGACAO, ...opcoes });
+
+    it('mostra "Anexar documento" e a coluna Documentos só para Investigação', () => {
+      const elemento = montarInvestigacao().fixture.nativeElement as HTMLElement;
+      expect(itemDaColuna(elemento, 'Anexar documento')).toBeDefined();
+      expect(elemento.querySelector('.cena-mestre__documentos')).not.toBeNull();
+    });
+
+    it('não mostra a coluna Documentos nem "Anexar documento" na Resistência', () => {
+      const elemento = montar({ cenaTipo: CenaTipoEnum.RESISTENCIA }).fixture
+        .nativeElement as HTMLElement;
+      expect(itemDaColuna(elemento, 'Anexar documento')).toBeUndefined();
+      expect(elemento.querySelector('.cena-mestre__documentos')).toBeNull();
+    });
+
+    /** Reconfigura o retorno de `listarDocumentos` e força um refetch, como o backend faria. */
+    const comDocumentos = (
+      montado: ReturnType<typeof montarInvestigacao>,
+      documentos: readonly {
+        documentoId: number;
+        titulo: string;
+        tipo: typeof TipoDocumentoEnum.TEXTO;
+        revelado: boolean;
+        ordem: number;
+        emFoco: boolean;
+      }[],
+    ) => {
+      montado.cenaService.listarDocumentos.mockReturnValue(of([...documentos]));
+      montado.cenaDocumentoAlterado$.next({ campanhaId: CAMPANHA_ID, cenaId: CENA_ID });
+      montado.fixture.detectChanges();
+    };
+
+    it('lista os documentos da cena e focar um abre o leitor no palco', () => {
+      const montado = montarInvestigacao();
+      const { fixture, cenaService } = montado;
+      comDocumentos(montado, [
+        {
+          documentoId: 40,
+          titulo: 'Relatório do informante',
+          tipo: TipoDocumentoEnum.TEXTO,
+          revelado: false,
+          ordem: 1,
+          emFoco: false,
+        },
+      ]);
+      cenaService.focarDocumento.mockReturnValue(
+        of([
+          {
+            documentoId: 40,
+            titulo: 'Relatório do informante',
+            tipo: TipoDocumentoEnum.TEXTO,
+            revelado: false,
+            ordem: 1,
+            emFoco: true,
+          },
+        ]),
+      );
+      const elemento = fixture.nativeElement as HTMLElement;
+      expect(texto(elemento.querySelector('.cena-mestre__lista-documentos'))).toContain(
+        'Relatório do informante',
+      );
+
+      elemento.querySelector<HTMLButtonElement>('[app-documento-cartao]')!.click();
+      fixture.detectChanges();
+
+      expect(cenaService.focarDocumento).toHaveBeenCalledWith(CENA_ID, 40);
+    });
+
+    it('"Apresentar à mesa" revela o documento em foco', () => {
+      const montado = montarInvestigacao();
+      const { fixture, cenaService } = montado;
+      comDocumentos(montado, [
+        {
+          documentoId: 40,
+          titulo: 'Relatório do informante',
+          tipo: TipoDocumentoEnum.TEXTO,
+          revelado: false,
+          ordem: 1,
+          emFoco: false,
+        },
+      ]);
+      const elemento = fixture.nativeElement as HTMLElement;
+      // Documento ainda oculto: 4 botões de ação (subir/descer/apresentar/remover) — o terceiro é
+      // "Apresentar à mesa".
+      const botoesAcao = elemento.querySelectorAll<HTMLButtonElement>(
+        '.cena-mestre__item-documento-acoes button',
+      );
+      expect(botoesAcao.length).toBe(4);
+      botoesAcao[2].click();
+      fixture.detectChanges();
+
+      expect(cenaService.apresentarDocumento).toHaveBeenCalledWith(CENA_ID, 40);
+    });
+
+    it('remover tira o documento da coluna sem afetar a biblioteca', () => {
+      const montado = montarInvestigacao();
+      const { fixture, cenaService } = montado;
+      comDocumentos(montado, [
+        {
+          documentoId: 40,
+          titulo: 'Relatório do informante',
+          tipo: TipoDocumentoEnum.TEXTO,
+          revelado: true,
+          ordem: 1,
+          emFoco: false,
+        },
+      ]);
+      const elemento = fixture.nativeElement as HTMLElement;
+      const botoesAcao = elemento.querySelectorAll<HTMLButtonElement>(
+        '.cena-mestre__item-documento-acoes button',
+      );
+      // Revelado: só sobem 3 botões (subir/descer/remover) — o último é "Remover da cena".
+      expect(botoesAcao.length).toBe(3);
+      botoesAcao[2].click();
+
+      expect(cenaService.removerDocumento).toHaveBeenCalledWith(CENA_ID, 40);
     });
   });
 });

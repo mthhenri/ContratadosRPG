@@ -2,6 +2,8 @@ import { Component, computed, effect, inject, signal, untracked, viewChild } fro
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
+import type { CenaDocumentoResumoDto } from '@contratados-rpg/shared/dtos/cena';
+import type { DocumentoRecuperadoDto } from '@contratados-rpg/shared/dtos/documento';
 import type { FichaRecuperadaDto } from '@contratados-rpg/shared/dtos/ficha';
 import { TipoFichaEnum } from '@contratados-rpg/shared/enums';
 
@@ -18,6 +20,10 @@ import { ColunaAcoes } from '../../../../shared/ui/coluna-acoes/coluna-acoes.com
 import { ColunaAcoesItem } from '../../../../shared/ui/coluna-acoes/coluna-acoes-item.component';
 import { Esqueleto } from '../../../../shared/ui/esqueleto/esqueleto.component';
 import { EstadoVazio } from '../../../../shared/ui/estado-vazio/estado-vazio.component';
+import { Modal } from '../../../../shared/ui/modal/modal.component';
+import { DocumentoCartao } from '../../../documento/componentes/documento-cartao/documento-cartao.component';
+import { LeitorDocumento } from '../../../documento/componentes/leitor-documento/leitor-documento.component';
+import { DocumentoService } from '../../../documento/documento.service';
 import { resolverFichaParaAbrir } from '../../../encontro/encontro-leitura.util';
 import { EncontroPainelDadosService } from '../../../encontro/paginas/painel/encontro-painel-dados.service';
 import { FichaCampanhaCard } from '../../../ficha/componentes/ficha-campanha-card/ficha-campanha-card.component';
@@ -49,6 +55,9 @@ import { rotuloStatusCena, rotuloTipoCena } from '../../rotulos-cena';
     ColunaAcoesItem,
     Esqueleto,
     EstadoVazio,
+    Modal,
+    DocumentoCartao,
+    LeitorDocumento,
     CalculadoraFlutuante,
     CadernoFlutuante,
     HistoricoRolagensSidebar,
@@ -67,6 +76,7 @@ export class PainelCenaSemIniciativaJogador {
   protected readonly janelaHistorico = inject(HistoricoRolagensJanelaService);
   private readonly fichaService = inject(FichaService);
   private readonly sessaoService = inject(SessaoService);
+  private readonly documentoService = inject(DocumentoService);
   private readonly rolagemRegistro = inject(FichaRolagemRegistroService);
   protected readonly fichaEdicao = inject(FichaEdicaoService);
 
@@ -146,5 +156,27 @@ export class PainelCenaSemIniciativaJogador {
 
   protected alternarCaderno(): void {
     this.cadernoRef()?.alternar();
+  }
+
+  // ── Documentos apresentados — Investigação (m7-25) ─────────────────────────
+
+  protected readonly documentoAbertoModal = signal<DocumentoRecuperadoDto | null>(null);
+  protected readonly carregandoDocumentoModal = signal(false);
+
+  /** Abre o documento já apresentado num modal de leitura — nada disso abre sozinho (§spec). */
+  protected abrirDocumento(documento: CenaDocumentoResumoDto): void {
+    this.carregandoDocumentoModal.set(true);
+    this.documentoAbertoModal.set(null);
+    this.documentoService.recuperar(documento.documentoId).subscribe({
+      next: (recuperado) => {
+        this.documentoAbertoModal.set(recuperado);
+        this.carregandoDocumentoModal.set(false);
+      },
+      error: () => this.carregandoDocumentoModal.set(false),
+    });
+  }
+
+  protected fecharDocumento(): void {
+    this.documentoAbertoModal.set(null);
   }
 }

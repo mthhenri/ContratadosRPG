@@ -5,6 +5,7 @@ import { Observable, map } from 'rxjs';
 import type {
   CenaCriadaDto,
   CenaCriarDto,
+  CenaDocumentoResumoDto,
   CenaRecuperadaDto,
   CenaResumoDto,
 } from '@contratados-rpg/shared/dtos/cena';
@@ -73,5 +74,64 @@ export class CenaService {
     return this.httpClient
       .post<StandardResponse<CenaRecuperadaDto>>(`${this.base}/${id}/encerrar`, {})
       .pipe(map((resposta) => resposta.dados as CenaRecuperadaDto));
+  }
+
+  // ── Coluna Documentos (m7-25) ─────────────────────────────────────────────
+
+  /** A coluna Documentos da cena — mestre vê tudo; jogador/espectador, só o revelado. */
+  listarDocumentos(cenaId: number): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient
+      .get<StandardResponse<CenaDocumentoResumoDto[]>>(`${this.base}/${cenaId}/documento`)
+      .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
+  }
+
+  /** Anexa um documento da biblioteca à cena, no fim da fila. Idempotente. */
+  anexarDocumento(cenaId: number, documentoId: number): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient
+      .post<StandardResponse<CenaDocumentoResumoDto[]>>(`${this.base}/${cenaId}/documento`, {
+        documentoId,
+      })
+      .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
+  }
+
+  /** Reordena a coluna — `ordem` leva os `documentoId` de todos os itens da cena. */
+  reordenarDocumentos(
+    cenaId: number,
+    ordem: readonly number[],
+  ): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient
+      .put<StandardResponse<CenaDocumentoResumoDto[]>>(`${this.base}/${cenaId}/documento/ordem`, {
+        ordem,
+      })
+      .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
+  }
+
+  /** Remove o vínculo com a cena — nunca afeta o documento na biblioteca. */
+  removerDocumento(cenaId: number, documentoId: number): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient
+      .delete<StandardResponse<CenaDocumentoResumoDto[]>>(
+        `${this.base}/${cenaId}/documento/${documentoId}`,
+      )
+      .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
+  }
+
+  /** Abre o documento no palco do mestre — não revela. */
+  focarDocumento(cenaId: number, documentoId: number): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient
+      .post<StandardResponse<CenaDocumentoResumoDto[]>>(
+        `${this.base}/${cenaId}/documento/${documentoId}/focar`,
+        {},
+      )
+      .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
+  }
+
+  /** Revela o documento à mesa e o marca em foco — a ação "Apresentar". */
+  apresentarDocumento(cenaId: number, documentoId: number): Observable<CenaDocumentoResumoDto[]> {
+    return this.httpClient
+      .post<StandardResponse<CenaDocumentoResumoDto[]>>(
+        `${this.base}/${cenaId}/documento/${documentoId}/apresentar`,
+        {},
+      )
+      .pipe(map((resposta) => resposta.dados as CenaDocumentoResumoDto[]));
   }
 }

@@ -30,7 +30,19 @@
         >
             Encerrar cena
         </button>
-        } } }
+        }
+        @if (dados.ehInvestigacao()) {
+        <button
+            app-coluna-acoes-item
+            icone="documentos"
+            appTooltip="Anexar um documento da biblioteca a esta cena"
+            [disabled]="dados.emOperacao()"
+            (click)="abrirModalAnexar()"
+        >
+            Anexar documento
+        </button>
+        }
+        } }
         <div class="coluna-acoes__categoria">Ferramentas</div>
         <button
             app-coluna-acoes-item
@@ -78,6 +90,89 @@
         </header>
 
         <div class="cena-mestre__linha">
+            @if (dados.ehInvestigacao()) {
+            <section class="cena-mestre__documentos" aria-label="Documentos">
+                <header class="cena-mestre__secao">
+                    <h2 class="cena-mestre__secao-titulo">Documentos</h2>
+                    <span class="cena-mestre__secao-regua"></span>
+                </header>
+
+                @if (dados.carregandoDocumentos()) {
+                <div role="status" aria-label="Carregando documentos">
+                    @for (i of [0, 1]; track i) {
+                    <app-esqueleto class="cena-mestre__esqueleto-documento" />
+                    }
+                </div>
+                } @else if (dados.documentosCena().length) {
+                <ul class="cena-mestre__lista-documentos">
+                    @for (documento of dados.documentosCena(); track documento.documentoId) {
+                    <li class="cena-mestre__item-documento">
+                        <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
+                        <button
+                            app-documento-cartao
+                            [titulo]="documento.titulo"
+                            [tipo]="documento.tipo"
+                            [revelado]="documento.revelado"
+                            [aberto]="documento.emFoco"
+                            (click)="focarDocumento(documento)"
+                        ></button>
+                        <div class="cena-mestre__item-documento-acoes">
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                type="button"
+                                [attr.aria-label]="'Subir ' + documento.titulo"
+                                appTooltip="Subir na ordem"
+                                [disabled]="dados.emOperacao()"
+                                (click)="moverDocumento(documento, -1)"
+                            >
+                                <app-icone nome="chevron" class="cena-mestre__seta-cima" />
+                            </button>
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                type="button"
+                                [attr.aria-label]="'Descer ' + documento.titulo"
+                                appTooltip="Descer na ordem"
+                                [disabled]="dados.emOperacao()"
+                                (click)="moverDocumento(documento, 1)"
+                            >
+                                <app-icone nome="chevron" />
+                            </button>
+                            @if (!documento.revelado) {
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                appTooltip="Apresentar à mesa"
+                                [disabled]="dados.emOperacao()"
+                                (click)="apresentarDocumento(documento)"
+                            >
+                                <app-icone nome="olho" />
+                            </button>
+                            }
+                            <button
+                                app-botao-icone
+                                tamanho="compacto"
+                                appTooltip="Remover da cena"
+                                [disabled]="dados.emOperacao()"
+                                (click)="removerDocumentoDaCena(documento)"
+                            >
+                                <app-icone nome="excluir" />
+                            </button>
+                        </div>
+                    </li>
+                    }
+                </ul>
+                } @else {
+                <app-estado-vazio
+                    tamanho="compacto"
+                    titulo="Nenhum documento anexado ainda."
+                    linhaApoio="Use “Anexar documento” na coluna de ações."
+                />
+                }
+            </section>
+            }
+
             @if (!janelaHistorico.estaAbertaCampanha(dados.campanhaId)) {
             <div class="cena-mestre__rolagens">
                 <app-historico-rolagens-sidebar
@@ -91,6 +186,15 @@
             }
 
             <div class="cena-mestre__palco">
+                @if (dados.ehInvestigacao() && dados.documentoEmFoco()) {
+                <section class="cena-mestre__foco" aria-label="Documento em foco">
+                    @if (carregandoDocumentoFoco() || !documentoFoco()) {
+                    <app-esqueleto class="cena-mestre__esqueleto-foco" />
+                    } @else {
+                    <app-leitor-documento [documento]="documentoFoco()!" />
+                    }
+                </section>
+                }
                 <section class="cena-mestre__todos" aria-label="Agentes">
                     <header class="cena-mestre__secao">
                         <h2 class="cena-mestre__secao-titulo">Agentes</h2>
@@ -134,6 +238,39 @@
         </div>
     </div>
 </div>
+
+@if (dados.ehInvestigacao()) {
+<app-modal
+    [aberto]="modalAnexarAberto()"
+    titulo="Anexar documento"
+    (fechou)="fecharModalAnexar()"
+>
+    @if (bibliotecaCarregando()) {
+    <app-esqueleto class="cena-mestre__esqueleto-documento" />
+    } @else if (bibliotecaDisponivel().length) {
+    <ul class="cena-mestre__lista-biblioteca">
+        @for (documento of bibliotecaDisponivel(); track documento.id) {
+        <li>
+            <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
+            <button
+                app-documento-cartao
+                [titulo]="documento.titulo"
+                [tipo]="documento.tipo"
+                [revelado]="documento.revelado"
+                (click)="anexarDocumento(documento)"
+            ></button>
+        </li>
+        }
+    </ul>
+    } @else {
+    <app-estado-vazio
+        tamanho="compacto"
+        titulo="Nenhum documento disponível."
+        linhaApoio="Crie um na Biblioteca ou anexe todos os que já existem."
+    />
+    }
+</app-modal>
+}
 
 <!-- Sem gatilho próprio: a coluna de ações abre as duas janelas pelo `alternar()` delas. -->
 <app-calculadora-flutuante #calculadora [(aberta)]="calculadoraAberta" [mostrarGatilho]="false" />

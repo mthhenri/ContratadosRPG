@@ -1,5 +1,60 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — m7-25-painel-investigacao: coluna Documentos no painel de Investigação (M9 consumida, m7-cenas 5/6)
+
+Quinta task do guarda-chuva `m7-cenas`: o painel de cena sem iniciativa (`m7-24`) ganhou a coluna
+Documentos para a Investigação, consumindo a biblioteca da M9 (`m9-02`/`m9-04`) sem duplicar o
+estado de visibilidade dela — "apresentar" chama `DocumentoService.revelarDocumento`, nunca o
+repository. Nenhum componente novo de casca: confirmado o texto mais recente da `m7-24`
+("a coluna entra sem trocar de componente"), que já resolvia a tensão com a redação mais antiga do
+guarda-chuva ("painel próprio").
+
+**Contrato e banco.** `shared/src/dtos/cena/` ganhou os DTOs de `cena_documento` (anexar, resumo,
+reordenar, remover, focar, apresentar e o broadcast dataless `CenaDocumentoAlteradoDto`, molde de
+`CampanhaInventarioAlteradoDto`). Migration `0035` cria `cena_documento` — tabela filha simples
+(molde `usuario_ficha_acesso`, 0008), com índice único parcial garantindo no máximo um documento em
+foco por cena (mesmo desenho da cena ativa única). A tabela nunca guarda se o documento está
+revelado — só `ordem` e `em_foco` são estado próprio da cena.
+
+**Backend.** `CenaDocumentoRepository`/`CenaDocumentoService` novos em `backend/src/modules/cena/`:
+`listar` (mestre vê tudo; jogador/espectador só o revelado; cena `PLANEJADA` nega a quem não é
+mestre), `anexar` (idempotente, valida campanha do documento), `remover`, `reordenar` (mesmo padrão
+de `reordenarCenas`), `focar` (abre no palco do mestre — não emite, não muda o que a mesa vê) e
+`apresentar` (revela via `DocumentoService` + marca em foco). Mutação exige mestre e recusa cena
+`ENCERRADA`. `CenaModule` importa `DocumentoModule` (mão única). `CampanhaGateway.emitirCenaDocumentoAlterado`
+— dataless (`{ campanhaId, cenaId }`), vai às três salas; quem recebe refaz o `GET` já no próprio
+recorte.
+
+**Frontend.** `EncontroPainelDadosService` ganhou `documentosCena`/`ehInvestigacao`/`documentoEmFoco`
+e os métodos de mutação, cada um trocando o sinal pela lista completa que o backend devolve — sem
+patch local. Assina o novo `cenaDocumentoAlterado$` (`TempoRealService`, evento
+`cena:documento-alterado`) filtrado pela cena da tela. `PainelCenaSemIniciativaMestre` ganhou a
+coluna Documentos (subir/descer com o mesmo padrão do hub de cenas, apresentar, remover), "Anexar
+documento" na coluna de ações (abre um `app-modal` listando a biblioteca via `DocumentoService`) e
+`app-leitor-documento` (M9) no palco acima da grade de Agentes quando há foco.
+`PainelCenaSemIniciativaJogador` ganhou "Documentos apresentados" (a mesma lista, já recortada pelo
+backend) — clicar um abre `app-leitor-documento` num `app-modal`, nada abre sozinho.
+
+**Decisões registradas na spec fechada** (`docs/specs/done/m7-25-painel-investigacao.spec.md`):
+espectador tratado como jogador (ponto em aberto do milestone, decidido aqui por falta de cenário
+que exija diferenciar os dois); foco é local ao mestre, não sincroniza entre dispositivos dele
+(aceitável — não é caminho de uso real); reordenar é por botões, não arrastar, mesma interação já
+usada no hub.
+
+**Testado:** `npm test -w shared` (772), `-w backend` (729, com 14 novos de
+`CenaDocumentoService`) e `-w frontend` (2476, com os novos casos de `EncontroPainelDadosService`,
+`PainelCenaSemIniciativaMestre`, `PainelCenaSemIniciativaJogador` e `TempoRealService`) verdes; lint
+dos três workspaces sem erro novo; builds de frontend e backend limpos. Migration `0035`:
+`db:migrate` → `db:rollback` → `db:migrate` sem erro.
+
+**Verificado ao vivo** (`verify`, Postgres nativo + backend + frontend reais, Playwright): mestre
+cria uma cena de Investigação ativa, anexa um documento oculto da biblioteca, foca-o no palco
+(leitor aparece, documento continua oculto), apresenta-o — o jogador, numa aba separada e **sem
+recarregar**, vê a seção "Documentos apresentados" aparecer via o evento de tempo real e abre o
+documento num modal de leitura. Confirmado em `1920×1080` (mestre) e `360×800` (mestre e jogador):
+sem overflow, coerente com o painel de Resistência (`m7-24`) e com a Biblioteca (`m9-04`/`m9-05`).
+`m7-cenas` fica 5/6 — falta só `m7-26` (passe responsivo dedicado do módulo inteiro).
+
 ## 2026-09-28 — requests-inventario-sob-demanda: inventário só busca ao abrir o painel (guarda-chuva `requests-correcoes` fechado, 6/6)
 
 Sexta e última task de `requests-correcoes`. O inventário de esquadrão entrava na carga inicial de

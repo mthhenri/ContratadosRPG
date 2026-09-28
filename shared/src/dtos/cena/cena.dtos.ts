@@ -1,4 +1,4 @@
-import type { CenaStatusEnum, CenaTipoEnum } from '../../enums';
+import type { CenaStatusEnum, CenaTipoEnum, TipoDocumentoEnum } from '../../enums';
 import type { EncontroRecuperadoDto } from '../encontro/encontro.dtos';
 
 /**
@@ -83,4 +83,59 @@ export interface CenaRecuperadaDto {
 export interface CenaAlteradaDto {
   readonly campanhaId: number;
   readonly cena: CenaResumoDto;
+}
+
+/**
+ * DTOs do painel de Investigação (`m7-25`) — a coluna Documentos anexa itens da biblioteca da M9 a
+ * uma cena, em `cena_documento` (cena, documento, ordem, em foco). A visibilidade do documento em
+ * si nunca é duplicada aqui: quem sabe se está revelado é a `DocumentoService` (M9) — "apresentar" a
+ * chama, nunca o repository dela.
+ */
+
+/** Entrada de "anexar documento" — o `cenaId` vem da rota. */
+export interface CenaDocumentoAnexarDto {
+  readonly documentoId: number;
+}
+
+/**
+ * Item da coluna Documentos. Campos do documento embutidos direto (sem herança de DTO de negócio,
+ * §CONVENTIONS) — a coluna não busca o documento à parte para montar a lista.
+ */
+export interface CenaDocumentoResumoDto {
+  readonly documentoId: number;
+  readonly titulo: string;
+  readonly tipo: TipoDocumentoEnum;
+  readonly revelado: boolean;
+  readonly ordem: number;
+  readonly emFoco: boolean;
+}
+
+/** Entrada da reordenação — `ordem` lista os `documentoId` de todos os itens da cena, na nova ordem. */
+export interface CenaDocumentoReordenarDto {
+  readonly ordem: readonly number[];
+}
+
+/** Entrada de "remover da cena" — não afeta a biblioteca (M9), só o vínculo. */
+export interface CenaDocumentoRemoverDto {
+  readonly documentoId: number;
+}
+
+/** Entrada de "focar no palco" — só o mestre; não revela nem chega à mesa. */
+export interface CenaDocumentoFocarDto {
+  readonly documentoId: number;
+}
+
+/** Entrada de "apresentar" — revela o documento (M9) e o marca em foco no palco. */
+export interface CenaDocumentoApresentarDto {
+  readonly documentoId: number;
+}
+
+/**
+ * Payload de broadcast (`cena:documento-alterado`) — dataless como `campanha:inventario-alterado`:
+ * só avisa que a coluna Documentos desta cena mudou; quem recebe refaz o `GET` já no próprio
+ * recorte (mestre vê tudo; jogador/espectador, só o revelado).
+ */
+export interface CenaDocumentoAlteradoDto {
+  readonly campanhaId: number;
+  readonly cenaId: number;
 }

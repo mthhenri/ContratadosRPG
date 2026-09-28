@@ -34,6 +34,26 @@
         min-height: 480px;
     }
 
+    // Documentos apresentados (m7-25) — cartões da biblioteca, mesma receita do `documento-cartao`
+    // usada na Biblioteca e no painel do mestre.
+    &__documentos {
+        margin-bottom: var(--space-16);
+    }
+
+    &__lista-documentos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: var(--space-8);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__esqueleto-documento-modal {
+        display: block;
+        height: 220px;
+    }
+
     // Acima do tablet as Rolagens são uma coluna ao lado da ficha, que pode ser bem mais alta que a
     // janela: a coluna acompanha a rolagem da página (`sticky`) com a altura da janela.
     @media (min-width: #{bp.$bp-tablet + 1px}) {

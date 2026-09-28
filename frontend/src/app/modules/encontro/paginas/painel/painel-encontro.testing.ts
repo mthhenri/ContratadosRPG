@@ -4,7 +4,11 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { Observable, Subject, map, of } from 'rxjs';
 import { vi } from 'vitest';
 
-import type { CenaAlteradaDto, CenaRecuperadaDto } from '@contratados-rpg/shared/dtos/cena';
+import type {
+  CenaAlteradaDto,
+  CenaDocumentoResumoDto,
+  CenaRecuperadaDto,
+} from '@contratados-rpg/shared/dtos/cena';
 import type {
   EncontroAlteradoDto,
   EncontroRecuperadoDto,
@@ -38,6 +42,7 @@ import {
 import { SessaoService } from '../../../../core/services/sessao.service';
 import { TempoRealService } from '../../../../core/services/tempo-real.service';
 import { CampanhaService } from '../../../campanha/campanha.service';
+import { DocumentoService } from '../../../documento/documento.service';
 import { FichaService } from '../../../ficha/ficha.service';
 import { RolagemService } from '../../../ficha/rolagem.service';
 import { CenaService } from '../../../cena/cena.service';
@@ -288,6 +293,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   const membrosPendentes$ = new Subject<CampanhaMembroResumoDto[]>();
   const encontroPendente$ = new Subject<EncontroRecuperadoDto>();
   const cenaAlterada$ = new Subject<CenaAlteradaDto>();
+  const cenaDocumentoAlterado$ = new Subject<{ campanhaId: number; cenaId: number }>();
   const fichaAlterada$ = new Subject<FichaAlteradaDto>();
   const rolagemExcluida$ = new Subject<RolagemExcluidaDto>();
   const reconexao$ = new Subject<void>();
@@ -303,6 +309,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     reconexao$: reconexao$.asObservable(),
     encontroAlterado$,
     cenaAlterada$,
+    cenaDocumentoAlterado$,
     fichaAlterada$,
     encontroIniciativaPedido$,
     rolagemRegistrada$,
@@ -338,6 +345,13 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
         ),
       ),
     ),
+    // Coluna Documentos (m7-25) — vazia por padrão; testes de Investigação sobrescrevem.
+    listarDocumentos: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
+    anexarDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
+    removerDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
+    reordenarDocumentos: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
+    focarDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
+    apresentarDocumento: vi.fn((): Observable<CenaDocumentoResumoDto[]> => of([])),
   };
   const encontroService = {
     listarPorCampanha: vi.fn(() =>
@@ -401,6 +415,25 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
     ),
     registrarAvulso: vi.fn(),
   };
+  // Documento em foco/apresentado (m7-25) — a coluna Documentos só tem o resumo; as páginas buscam
+  // o documento completo (conteúdo/imagem) para o `app-leitor-documento` por aqui.
+  const documentoService = {
+    listar: vi.fn(() => of([])),
+    recuperar: vi.fn((id: number) =>
+      of({
+        id,
+        campanhaId: CAMPANHA_ID,
+        titulo: 'Relatório do informante',
+        tipo: 'TEXTO',
+        conteudoMarkdown: 'Segredos do Setor 7.',
+        imagemUrl: null,
+        revelado: true,
+        ordem: 1,
+        createdDate: '2026-08-20T15:00:00.000Z',
+        updatedDate: '2026-08-20T15:00:00.000Z',
+      }),
+    ),
+  };
 
   TestBed.configureTestingModule({
     providers: [
@@ -410,6 +443,7 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
       { provide: CenaService, useValue: cenaService },
       { provide: RolagemService, useValue: rolagemService },
       { provide: FichaService, useValue: fichaService },
+      { provide: DocumentoService, useValue: documentoService },
       { provide: SessaoService, useValue: { usuario: () => ({ id: usuarioId }) } },
       { provide: CampanhaService, useValue: campanhaService },
       {
@@ -433,7 +467,9 @@ export function configurarPainel(opcoes: OpcoesDoPainel = {}) {
   return {
     encontroService,
     cenaService,
+    documentoService,
     cenaAlterada$,
+    cenaDocumentoAlterado$,
     fichaAlterada$,
     tempoReal,
     fichaService,
