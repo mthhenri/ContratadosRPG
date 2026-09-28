@@ -173,6 +173,8 @@ describe('CampanhaDetalheMestre', () => {
       value: { writeText: vi.fn(() => Promise.resolve()) },
       configurable: true,
     });
+    const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
+    const reconexao$ = new Subject<void>();
     const tempoRealService = {
       conectar: vi.fn(),
       entrarSalaCampanha: vi.fn(),
@@ -188,14 +190,14 @@ describe('CampanhaDetalheMestre', () => {
       fichaRemovidaDaCampanha$: new Subject().asObservable(),
       rolagemRegistrada$: new Subject().asObservable(),
       rolagemExcluida$: new Subject().asObservable(),
-      estadoAlterado$: new Subject().asObservable(),
+      estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
       paginaEsquadraoCriada$: new Subject().asObservable(),
       paginaEsquadraoAlterada$: new Subject().asObservable(),
       paginaEsquadraoExcluida$: new Subject().asObservable(),
       presencaEsquadraoCaderno$: new Subject().asObservable(),
       reconexao: signal(0),
-      reconexao$: new Subject<void>().asObservable(),
+      reconexao$: reconexao$.asObservable(),
       conectado: () => true,
     };
 
@@ -234,6 +236,8 @@ describe('CampanhaDetalheMestre', () => {
       dados,
       navegar,
       rolagemService,
+      estadoAlterado$,
+      reconexao$,
     };
   }
 
@@ -283,6 +287,58 @@ describe('CampanhaDetalheMestre', () => {
       (el) => el.textContent?.trim() === 'Biblioteca',
     );
     expect(biblioteca?.getAttribute('href')).toMatch(/^\/campanhas\/\d+\/documentos$/);
+  });
+
+  // === P-086: clicar Na Base/Em Missão aplica a resposta do PUT direto — sem GET de campanha/
+  // inventário — e o eco de `estadoAlterado$` (mesmo autor, mesma sala) é idempotente.
+
+  it('clique em Na Base/Em Missão troca o texto pela resposta do PUT, sem refazer campanha/inventário', () => {
+    const { fixture, raiz, campanhaService } = montar();
+    campanhaService.recuperarCampanha.mockClear();
+    campanhaService.recuperarInventario.mockClear();
+    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe-mestre__estado-operacional')!;
+    expect(botao.textContent?.trim()).toContain('Na Base');
+
+    botao.click();
+    fixture.detectChanges();
+
+    expect(campanhaService.alterarEstado).toHaveBeenCalledWith(CAMPANHA_ID, false);
+    expect(botao.textContent?.trim()).toContain('Em Missão');
+    expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+    expect(campanhaService.recuperarInventario).not.toHaveBeenCalled();
+  });
+
+  it('o eco de estadoAlterado$ da própria mutação é idempotente — não refaz nem desfaz o PUT', () => {
+    const { fixture, raiz, campanhaService, estadoAlterado$ } = montar();
+    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe-mestre__estado-operacional')!;
+
+    botao.click();
+    fixture.detectChanges();
+    campanhaService.recuperarCampanha.mockClear();
+
+    estadoAlterado$.next({ id: CAMPANHA_ID, naBase: false });
+    fixture.detectChanges();
+
+    expect(botao.textContent?.trim()).toContain('Em Missão');
+    expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+  });
+
+  it('uma leitura de reconexão em voo não restaura o naBase anterior ao PUT (P-086)', () => {
+    const respostaLenta$ = new Subject<CampanhaRecuperadaDto>();
+    const { fixture, raiz, campanhaService, reconexao$ } = montar();
+    campanhaService.recuperarCampanha.mockReturnValue(respostaLenta$);
+    reconexao$.next();
+
+    const botao = raiz.querySelector<HTMLButtonElement>('.detalhe-mestre__estado-operacional')!;
+    botao.click();
+    fixture.detectChanges();
+    expect(botao.textContent?.trim()).toContain('Em Missão');
+
+    // Resposta antiga da reconexão (pedida antes do PUT) ainda traz o naBase anterior.
+    respostaLenta$.next({ ...campanhaBase, naBase: true });
+    fixture.detectChanges();
+
+    expect(botao.textContent?.trim()).toContain('Em Missão');
   });
 
   it('não renderiza banner de crítico nem coluna "Membros" ao lado do Esquadrão', () => {

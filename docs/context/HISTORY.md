@@ -1,5 +1,62 @@
 # HISTORY.md — Histórico do Projeto
 
+## 2026-09-28 — p-086: estado Na Base/Em Missão aplicado sem refetch (P-086 fechado)
+
+Quinta das 6 tasks de `requests-correcoes`. `CampanhaEstadoAlteradaDto` (payload de
+`campanha:estado-alterado`) só carrega `{ id, naBase }` — o consumidor de `estado-alterado$` em
+`CampanhaDetalheDadosService.inicializar()` chamava `recarregarCampanhaEInventario()` (2 GETs:
+campanha + inventário) mesmo o inventário nunca mudando por esse evento (só `alterarEstado` no
+backend, que nunca emite `inventario-alterado`). Agora aplica `naBase` direto no signal `campanha`
+via `campanha.update()`, preservando os demais campos — zero GET causado pelo evento, tanto para o
+mestre (autor) quanto para o jogador (só espectador do broadcast).
+
+**Corrida — resposta antiga restaurando `naBase` velho.** Entregável 2 da spec pede que nenhuma
+leitura de campanha em voo (carga inicial, `recarregarCampanhaEInventario` de `reconexao$`)
+sobrescreva um `naBase` mais novo aplicado por evento enquanto ela ainda não respondeu. Novo par
+`geracaoEstadoOperacional`/`mesclarEstadoOperacional<T>` (protegido, no service base): toda leitura
+que vai definir `campanha` captura a geração antes de disparar o GET; se um evento mais novo chegou
+durante o voo, a resposta (desatualizada) tem seu `naBase` trocado pelo último valor conhecido, em
+vez de restaurá-lo. `aplicarEstadoOperacional(naBase)` é o único ponto que aplica um `naBase` novo
+(incrementa a geração, guarda o valor, atualiza o signal) — usado tanto pelo eco de
+`estadoAlterado$` quanto, importante, pela **resposta do próprio PUT** em `detalhe-mestre.page.ts`
+(`alterarEstadoCampanha`): antes ela também escrevia direto no signal por fora, então uma
+ressincronização de reconexão já em voo no momento do clique podia terminar depois do PUT e
+restaurar o estado anterior à mutação do próprio mestre — corrigido roteando as duas fontes
+("resposta da mutação e eco do evento", como a spec nomeia) pela mesma reconciliação.
+
+**Prévia de jogador (m8-04).** `CampanhaPreviaJogadorDadosService.assinarTempoReal` tratava
+`estadoAlterado$` como qualquer outro evento de `'projecao'`, refazendo a projeção inteira
+(campanha+membros+fichas+rolagens) só por causa do `naBase`. Passou a aplicar `naBase` direto via
+`aplicarEstadoOperacional` (herdado), com a mesma reconciliação de geração em `aplicarPrevia`
+(capturada em `carregarPrevia`/no branch `'projecao'` do coordenador) para a mesma corrida.
+`podeAcessarInventarioEsquadrao` ficou **de fora de propósito**: é `identidade.naBase` 1:1 no
+backend (`campanha-projecao.service.ts`), mas uma primeira tentativa de espelhar essa igualdade no
+frontend (para também evitar refetch nesse campo) duplicava a regra do lado errado da fronteira —
+`convencoes-check`/CLAUDE.md proíbem — e o teste existente `previa-jogador.page.spec.ts` (que monta
+`naBase: true` e `podeAcessarInventarioEsquadrao: false` deliberadamente independentes num mesmo
+fixture) provou isso ao quebrar. Revertido: esse campo continua só do backend, atualizado pela
+próxima invalidação real de `'projecao'` (ficha/membro, reconexão) — não pelo evento de estado.
+
+**Testes.** `campanha-detalhe-dados.service.spec.ts`: troca do teste antigo (que provava o
+comportamento a corrigir) por 4 casos — aplica direto sem GET; evento de outra campanha não altera
+nada; eco/resposta duplicados são idempotentes; corrida evento-durante-reconexão preserva o valor
+novo. `previa-jogador.page.spec.ts`: `estadoAlterado$` virou um `Subject` controlável (antes um
+`Subject` fixo nunca exercitado) e ganhou 2 casos (aplica direto sem refazer a projeção; evento de
+outra campanha não altera nada). `detalhe-mestre.page.spec.ts` não tinha nenhum teste do botão
+Na Base/Em Missão até agora — ganhou 3: clique troca o texto pela resposta do PUT sem GET de
+campanha/inventário; o eco do próprio evento é idempotente; uma leitura de reconexão em voo não
+restaura o `naBase` anterior ao PUT. Suíte completa do frontend verde (173 arquivos / 2444 testes).
+`npm run lint` (raiz): zero erros, só os avisos de aspas/comprimento de linha já conhecidos do
+repositório. `npm run build -w frontend`: aprovado, mesmo aviso preexistente de orçamento do bundle
+(550,83 kB para 450 kB, P-004). `shared`/`backend` não foram tocados por esta task — nenhum gate
+deles precisou rodar de novo. `convencoes-check` sobre o diff: sem DTO/enum novo, sem
+`atualizar`/`atualizado`, sem `NgModule`/`ngModel`, nenhuma query/SQL tocada (só frontend); a
+leitura manual é o que pegou a duplicação de regra revertida acima — a busca mecânica sozinha não
+teria acusado.
+
+Restam 2/6 tasks de `requests-correcoes`: o inventário sob demanda (task 6) — `P-086` fechado
+nesta task.
+
 ## 2026-09-28 — m9-08: importar Markdown como rascunho na Biblioteca
 
 Executada após a m9-07. A edição de documento TEXTO ganhou "Importar Markdown" abaixo do editor,

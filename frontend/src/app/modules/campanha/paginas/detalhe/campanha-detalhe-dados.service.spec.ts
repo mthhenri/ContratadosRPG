@@ -449,7 +449,38 @@ describe('CampanhaDetalheDadosService', () => {
     expect(fichaService.listarFichas).toHaveBeenCalledWith(CAMPANHA_ID);
   });
 
-  it('recarrega campanha e inventário ao receber estadoAlterado$ da própria campanha', () => {
+  // === P-086: `estadoAlterado$` aplica `naBase` direto no signal, sem refazer campanha/
+  // inventário — a mutação/eco do próprio evento nunca produz GET.
+
+  it('aplica naBase de estadoAlterado$ direto no signal, sem GET de campanha nem inventário', () => {
+    const { service, campanhaService, estadoAlterado$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    campanhaService.recuperarCampanha.mockClear();
+    campanhaService.recuperarInventario.mockClear();
+
+    estadoAlterado$.next({ id: CAMPANHA_ID, naBase: false });
+
+    expect(service.campanha()?.naBase).toBe(false);
+    expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+    expect(campanhaService.recuperarInventario).not.toHaveBeenCalled();
+  });
+
+  it('estadoAlterado$ de outra campanha não altera naBase nem produz GET', () => {
+    const { service, campanhaService, estadoAlterado$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    campanhaService.recuperarCampanha.mockClear();
+
+    estadoAlterado$.next({ id: CAMPANHA_ID + 1, naBase: false });
+
+    expect(service.campanha()?.naBase).toBe(true);
+    expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+  });
+
+  it('resposta/eco duplicados do mesmo naBase são idempotentes, sem GET adicional', () => {
     const { service, campanhaService, estadoAlterado$ } = montar({
       usuarioId: 1,
       membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
@@ -457,9 +488,28 @@ describe('CampanhaDetalheDadosService', () => {
     campanhaService.recuperarCampanha.mockClear();
 
     estadoAlterado$.next({ id: CAMPANHA_ID, naBase: false });
+    estadoAlterado$.next({ id: CAMPANHA_ID, naBase: false });
 
-    expect(campanhaService.recuperarCampanha).toHaveBeenCalledWith(CAMPANHA_ID);
-    void service;
+    expect(service.campanha()?.naBase).toBe(false);
+    expect(campanhaService.recuperarCampanha).not.toHaveBeenCalled();
+  });
+
+  it('evento chega durante reconexão (GET lento): o naBase novo permanece após a leitura antiga terminar', () => {
+    const respostaLenta$ = new Subject<CampanhaRecuperadaDto>();
+    const { service, campanhaService, estadoAlterado$, reconexao$ } = montar({
+      usuarioId: 1,
+      membros: membrosCom(1, TipoCampanhaMembroPapelEnum.MESTRE),
+    });
+    campanhaService.recuperarCampanha.mockReturnValue(respostaLenta$);
+
+    reconexao$.next();
+    estadoAlterado$.next({ id: CAMPANHA_ID, naBase: false });
+    expect(service.campanha()?.naBase).toBe(false);
+
+    // Resposta antiga do GET (pedida antes do evento) ainda traz o naBase anterior.
+    respostaLenta$.next({ ...campanhaBase, naBase: true });
+
+    expect(service.campanha()?.naBase).toBe(false);
   });
 
   it('recarrega o inventário ao receber inventarioAlterado$ da própria campanha', () => {

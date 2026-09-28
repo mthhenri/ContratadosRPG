@@ -164,6 +164,7 @@ describe('CampanhaPreviaJogador', () => {
     }>();
     const fichaAlterada$ = new Subject<FichaRecuperadaDto>();
     const encontroAlterado$ = new Subject<{ encontro: { campanhaId: number } }>();
+    const estadoAlterado$ = new Subject<{ id: number; naBase: boolean }>();
 
     const campanhaProjecaoService = {
       recuperarPreviaJogador: vi.fn(() => of(opts.previaResposta ?? previa())),
@@ -204,7 +205,7 @@ describe('CampanhaPreviaJogador', () => {
       fichaRecortesAlterados$: fichaRecortesAlterados$.asObservable(),
       fichaRemovidaDaCampanha$: fichaRemovidaDaCampanha$.asObservable(),
       fichaAlterada$: fichaAlterada$.asObservable(),
-      estadoAlterado$: new Subject().asObservable(),
+      estadoAlterado$: estadoAlterado$.asObservable(),
       inventarioAlterado$: new Subject().asObservable(),
       encontroAlterado$: encontroAlterado$.asObservable(),
       reconexao: () => 0,
@@ -252,6 +253,7 @@ describe('CampanhaPreviaJogador', () => {
       fichaRecortesAlterados$,
       fichaAlterada$,
       encontroAlterado$,
+      estadoAlterado$,
       reconexao$,
     };
   }
@@ -438,6 +440,28 @@ describe('CampanhaPreviaJogador', () => {
       await esperarCoordenador();
 
       expect(campanhaProjecaoService.recuperarPreviaJogador).toHaveBeenCalledWith(CAMPANHA_ID, ALVO_ID);
+    });
+
+    it('estadoAlterado$ aplica naBase direto, sem refazer a projeção (P-086)', () => {
+      const { fixture, raiz, campanhaProjecaoService, estadoAlterado$ } = montar();
+      campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+      estadoAlterado$.next({ id: CAMPANHA_ID, naBase: false });
+      fixture.detectChanges();
+
+      expect(raiz.textContent).toContain('Em Missão');
+      expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
+    });
+
+    it('estadoAlterado$ de outra campanha não altera nada', () => {
+      const { fixture, raiz, campanhaProjecaoService, estadoAlterado$ } = montar();
+      campanhaProjecaoService.recuperarPreviaJogador.mockClear();
+
+      estadoAlterado$.next({ id: CAMPANHA_ID + 1, naBase: false });
+      fixture.detectChanges();
+
+      expect(raiz.textContent).toContain('Na Base');
+      expect(campanhaProjecaoService.recuperarPreviaJogador).not.toHaveBeenCalled();
     });
 
     it('ficha:alterada da ficha exibida é refeita pela rota da prévia — o payload do mestre nunca é exibido', async () => {

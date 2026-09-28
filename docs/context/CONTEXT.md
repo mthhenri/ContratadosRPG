@@ -7,8 +7,8 @@
 > na ficha errada e dados antigos após reconexão. Carga inicial verificada em desktop/mobile.
 > Cenário isolado excluído; contas de teste mantidas conforme autorizado. Correções especificadas
 > em seis tasks no backlog, ordenadas em [requests-correcoes](../specs/backlog/requests-correcoes.spec.md).
-> `p-082`…`p-085` (4/6) **concluídas** (specs em `done/`) — `P-082`…`P-085` fechados em
-> `PROBLEMS.md`. Restam `p-086` e o inventário sob demanda; próxima recomendada `p-086`.
+> `p-082`…`p-086` (5/6) **concluídas** (specs em `done/`) — `P-082`…`P-086` fechados em
+> `PROBLEMS.md`. Resta o inventário sob demanda (task 6, `requests-inventario-sob-demanda`).
 
 > **Avaliação de usabilidade aberta:** [relatório e cobertura dos quatro viewports](../reviews/usabilidade-2026-09-13/RELATORIO.md).
 > Oito propostas de melhoria aguardam revisão; specs no backlog somente após aprovação do autor.
@@ -20,7 +20,21 @@
 > manual. `.prettierignore` e `requirePragma` mantêm `.ts`/`.tsx` fora do alcance do Prettier.
 
 > **Última revisão:** 2026-09-28 · **Última decisão registrada:**
-> `p-085-invalidacao-seletiva-ficha` concluída (spec em `done/`, `P-085` fechado em
+> `p-086-estado-campanha-sem-refetch` concluída (spec em `done/`, `P-086` fechado em
+> `PROBLEMS.md`): `CampanhaEstadoAlteradaDto` (`{ id, naBase }`) passou a ser aplicado direto no
+> signal `campanha` (mestre, jogador e prévia de jogador do mestre) em vez de refazer
+> `recarregarCampanhaEInventario` (2 GETs) — o inventário nunca muda por esse evento, só
+> `campanha:inventario-alterado` o invalida de verdade. Reconciliação por geração
+> (`aplicarEstadoOperacional`/`mesclarEstadoOperacional`, no service base) protege tanto o eco do
+> evento quanto a resposta do próprio PUT do mestre (antes escrita direto no signal por fora)
+> contra uma leitura de campanha já em voo (reconexão) que responda depois e restaure o `naBase`
+> anterior à mutação. Na prévia de jogador, `podeAcessarInventarioEsquadrao` ficou de fora de
+> propósito — é `identidade.naBase` 1:1 só no backend (`campanha-projecao.service.ts`); uma
+> primeira tentativa de espelhar essa igualdade no frontend duplicava a regra do lado errado da
+> fronteira e quebrou um teste existente que as mantém deliberadamente independentes — revertida,
+> o campo continua atualizado só pela próxima invalidação real de `'projecao'`.
+> `requests-correcoes`: 5/6 (`p-082`…`p-086`) — resta o inventário sob demanda (task 6).
+> Antes: `p-085-invalidacao-seletiva-ficha` concluída (spec em `done/`, `P-085` fechado em
 > `PROBLEMS.md`): `FichaService`, com o estado persistido antes/depois, decide se os recortes
 > `fichas` e/ou `membros` mudaram e emite um único `ficha:recortes-alterados`; o gateway só
 > transporta. O frontend agrupa por recurso e protege a corrida entre invalidação e GET em voo —
@@ -28,7 +42,6 @@
 > listas; nome/condição fazem no máximo um por lista afetada; criatura nunca invalida membros.
 > `ficha:alterada` privado e a ponte para o Encontro foram preservados. Verificado com mestre
 > 1920×1080 e jogador 360×800, inclusive condição visível na carteirinha sem acesso ao documento.
-> `requests-correcoes`: 4/6 (`p-082`…`p-085`) — seguem abertas `p-086` e o inventário sob demanda.
 > Antes: `p-084-ressincronizacao-recursos` concluída (spec em `done/`, `P-084` fechado em `PROBLEMS.md`):
 > `reconexao$` (P-083) agora coordena tudo que uma queda sem broadcast pode ter deixado antigo
 > (§9, nenhum evento tem replay). `CampanhaDetalheDadosService` passou a refazer também
@@ -717,14 +730,13 @@
 
 ## 1. Próxima Task
 
-**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 4/6
+**Requests-correcoes (guarda-chuva de 6 tasks, `P-082`…`P-086` + inventário sob demanda) — 5/6
 concluídas: `p-082` (autosave/seleção da ficha), `p-083` (reconexão sem carga duplicada), `p-084`
-(ressincronização de recursos) e `p-085` (invalidação seletiva da ficha — ver cabeçalho deste
-arquivo). Próxima recomendada: `p-086-estado-campanha-sem-refetch`**. Ela compartilha
-`campanha-detalhe-dados.service.ts` com a task recém-concluída; preservar o coordenador seletivo ao
-integrá-la. Fontes e gates em
-[requests-correcoes](../specs/backlog/requests-correcoes.spec.md); tasks em
-`docs/specs/backlog/p-086-*.spec.md` e `requests-inventario-sob-demanda.spec.md`.
+(ressincronização de recursos), `p-085` (invalidação seletiva da ficha) e `p-086` (estado Na
+Base/Em Missão aplicado sem refetch, mestre/jogador/prévia — ver cabeçalho deste arquivo). Resta
+`requests-inventario-sob-demanda`** (task 6, única pendente do guarda-chuva). Fontes e gates em
+[requests-correcoes](../specs/backlog/requests-correcoes.spec.md); spec em
+`docs/specs/backlog/requests-inventario-sob-demanda.spec.md`.
 
 **Biblioteca — melhorias (2026-09-28):** `m9-07` (segundo clique fecha) e `m9-08` (importar
 Markdown como rascunho) concluídas, specs em `done/`. Permanecem no backlog `m9-09` (presença de

@@ -129,8 +129,42 @@ export class CampanhaDetalheDadosService {
   private membrosEmLeitura = false;
   private membrosInvalidos = false;
 
+  /**
+   * Geração do `naBase` aplicado por `estadoAlterado$` (P-086) — incrementada a cada evento.
+   * Qualquer leitura de `campanha` (`carregar`/`recarregarCampanhaEInventario`, e a projeção da
+   * prévia) captura a geração antes de disparar o GET; se um evento mais novo chegar enquanto
+   * o GET está em voo, `mesclarEstadoOperacional` troca o `naBase` da resposta (desatualizada)
+   * pelo último valor conhecido, em vez de deixar a leitura antiga restaurar estado velho.
+   */
+  protected geracaoEstadoOperacional = 0;
+  private naBaseMaisRecente: boolean | null = null;
+
   get id(): number {
     return this.idInterno;
+  }
+
+  /**
+   * Aplica `naBase` direto no signal — chamado tanto pela resposta do PUT (`detalhe-mestre.page.
+   * ts`, autor da mutação) quanto pelo eco de `estadoAlterado$` (demais consumidores da sala);
+   * nenhum dos dois busca campanha nem inventário de novo (P-086). Público (não só o `protected`
+   * que bastaria para o próprio `inicializar`) porque a página do mestre, dona da mutação, precisa
+   * chamá-lo de fora para que sua leitura otimista entre na mesma reconciliação de geração que
+   * protege contra uma leitura antiga (reconexão) em voo restaurar o `naBase` anterior.
+   */
+  aplicarEstadoOperacional(naBase: boolean): void {
+    this.naBaseMaisRecente = naBase;
+    this.geracaoEstadoOperacional++;
+    this.campanha.update((atual) => (atual ? { ...atual, naBase } : atual));
+  }
+
+  /** Reconcilia o `naBase` de uma leitura contra um evento mais recente chegado durante o voo. */
+  protected mesclarEstadoOperacional<T extends { naBase: boolean }>(
+    entidade: T,
+    geracaoNoInicio: number,
+  ): T {
+    return geracaoNoInicio === this.geracaoEstadoOperacional
+      ? entidade
+      : { ...entidade, naBase: this.naBaseMaisRecente! };
   }
 
   /**
@@ -200,15 +234,12 @@ export class CampanhaDetalheDadosService {
         },
       });
 
+    // P-086: `CampanhaEstadoAlteradaDto` só carrega `{ id, naBase }` — aplica direto no signal em
+    // vez de refazer campanha+inventário; o inventário não muda por este evento (só
+    // `campanha:inventario-alterado`, tratado abaixo, invalida o inventário de verdade).
     this.tempoRealService.estadoAlterado$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (evento) => {
-          if (evento.id === id) {
-            this.recarregarCampanhaEInventario();
-          }
-        },
-      });
+      .pipe(filter((evento) => evento.id === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (evento) => this.aplicarEstadoOperacional(evento.naBase) });
 
     this.tempoRealService.inventarioAlterado$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -280,6 +311,7 @@ export class CampanhaDetalheDadosService {
     this.fichasEmLeitura = true;
     this.membrosInvalidos = false;
     this.fichasInvalidas = false;
+    const geracaoEstadoNoInicio = this.geracaoEstadoOperacional;
     forkJoin({
       campanha: this.campanhaService.recuperarCampanha(this.idInterno),
       membros: this.campanhaService.listarMembros(this.idInterno),
@@ -296,7 +328,7 @@ export class CampanhaDetalheDadosService {
       )
       .subscribe({
         next: ({ campanha, membros, fichas }) => {
-          this.campanha.set(campanha);
+          this.campanha.set(this.mesclarEstadoOperacional(campanha, geracaoEstadoNoInicio));
           if (!this.membrosInvalidos) this.membros.set(membros);
           if (!this.fichasInvalidas) {
             this.fichas.set(fichas);
@@ -315,8 +347,9 @@ export class CampanhaDetalheDadosService {
   }
 
   recarregarCampanhaEInventario(): void {
+    const geracaoEstadoNoInicio = this.geracaoEstadoOperacional;
     this.campanhaService.recuperarCampanha(this.idInterno).subscribe((campanha) => {
-      this.campanha.set(campanha);
+      this.campanha.set(this.mesclarEstadoOperacional(campanha, geracaoEstadoNoInicio));
       this.carregarInventario();
     });
   }

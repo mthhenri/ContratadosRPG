@@ -119,6 +119,7 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
 
   private carregarPrevia(): void {
     this.carregando.set(true);
+    const geracaoEstadoNoInicio = this.geracaoEstadoOperacional;
     this.campanhaProjecaoService
       .recuperarPreviaJogador(this.idInterno, this.usuarioAlvoId)
       .pipe(
@@ -129,7 +130,7 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       )
       .subscribe({
         next: (previa) => {
-          this.aplicarPrevia(previa);
+          this.aplicarPrevia(previa, geracaoEstadoNoInicio);
           this.carregarInventario();
         },
       });
@@ -175,10 +176,18 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       this.tempoRealService.fichaRecortesAlterados$.pipe(
         filter((evento) => evento.campanhaId === id && (evento.fichas || evento.membros)),
       ),
-      this.tempoRealService.estadoAlterado$.pipe(filter((evento) => evento.id === id)),
     )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: () => this.invalidacoes.next('projecao') });
+
+    // P-086: mesmo evento/payload da visão real — aplica `naBase` direto no `campanha` herdado
+    // em vez de refazer a projeção inteira (campanha+membros+fichas+rolagens).
+    // `podeAcessarInventarioEsquadrao` fica de fora de propósito: é campo só do backend
+    // (`campanha-projecao.service.ts`), não uma regra pra duplicar aqui — continua atualizado
+    // pela próxima invalidação real de `'projecao'` (ficha/membro, reconexão).
+    this.tempoRealService.estadoAlterado$
+      .pipe(filter((evento) => evento.id === id), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (evento) => this.aplicarEstadoOperacional(evento.naBase) });
 
     this.tempoRealService.inventarioAlterado$
       .pipe(filter((evento) => evento.campanhaId === id), takeUntilDestroyed(this.destroyRef))
@@ -204,10 +213,11 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
           const requisicoes: Observable<unknown>[] = [];
 
           if (incluiProjecao) {
+            const geracaoEstadoNoInicio = this.geracaoEstadoOperacional;
             requisicoes.push(
               this.campanhaProjecaoService
                 .recuperarPreviaJogador(this.idInterno, this.usuarioAlvoId)
-                .pipe(tap((previa) => this.aplicarPrevia(previa))),
+                .pipe(tap((previa) => this.aplicarPrevia(previa, geracaoEstadoNoInicio))),
             );
           } else if (intencoes.includes('encontro')) {
             requisicoes.push(
@@ -250,7 +260,15 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       .subscribe();
   }
 
-  private aplicarPrevia(previa: CampanhaPreviaJogadorDto): void {
+  /**
+   * `geracaoEstadoNoInicio` (P-086, default = geração atual) reconcilia o `naBase` desta leitura
+   * contra um evento `estadoAlterado$` mais novo, chegado enquanto o GET da projeção estava em
+   * voo — sem isso, a resposta desatualizada restauraria o `naBase` velho em `campanha`.
+   */
+  private aplicarPrevia(
+    previa: CampanhaPreviaJogadorDto,
+    geracaoEstadoNoInicio: number = this.geracaoEstadoOperacional,
+  ): void {
     const alvo = previa.membros.find((membro) => membro.usuarioId === this.usuarioAlvoId);
     this.previa.set({
       usuarioAlvoId: this.usuarioAlvoId,
@@ -259,7 +277,12 @@ export class CampanhaPreviaJogadorDadosService extends CampanhaDetalheDadosServi
       encontroAtivo: previa.encontroAtivo,
     });
     // A identidade segura não traz convites — o jogador também nunca os recebe (`null`).
-    this.campanha.set({ ...previa.campanha, codigoConvite: null, codigoConviteEspectador: null });
+    this.campanha.set(
+      this.mesclarEstadoOperacional(
+        { ...previa.campanha, codigoConvite: null, codigoConviteEspectador: null },
+        geracaoEstadoNoInicio,
+      ),
+    );
     this.membros.set([...previa.membros]);
     this.fichas.set([...previa.fichas]);
     this.sincronizarSalasFicha(previa.fichas);

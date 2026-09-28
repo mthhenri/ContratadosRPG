@@ -249,7 +249,9 @@ export class CampanhaDetalheMestre {
       return;
     }
     this.campanhaService.alterarEstado(this.dados.id, !campanhaAtual.naBase).subscribe((estado) => {
-      this.dados.campanha.update((atual) => (atual ? { ...atual, naBase: estado.naBase } : atual));
+      // Mesma reconciliação do eco de `estadoAlterado$` (P-086) — a resposta do próprio PUT não
+      // pode ser sobrescrita por uma leitura de campanha já em voo (reconexão) mais antiga.
+      this.dados.aplicarEstadoOperacional(estado.naBase);
     });
   }
 
